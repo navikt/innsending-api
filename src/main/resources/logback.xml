@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="STDOUT_JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+    </appender>
+
+    <logger name="jdbc.sql" level="${log.level.jdbc.sql:-INFO}" />
+    <logger name="org.hibernate.SQL" level="${log.level.org.hibernate.SQL:-INFO}" />
+    <logger name="org.hibernate.SQL_SLOW" level="${log.level.org.hibernate.SQL_SLOW:-INFO}" />
+    <logger name="com.zaxxer.hikari" level="${log.level.com.zaxxer.hikari:-INFO}" />
+    <logger name="org.hibernate.type" level="${log.level.org.hibernate.type:-INFO}" />
+    <logger name="org.hibernate" level="${log.level.org.hibernate:-INFO}" />
+    <logger name="ch.qos.logback" level="${log.level.ch.qos.logback:-INFO}" />
+    <logger name="org.flywaydb" level="${log.level.org.flywaydb:-INFO}" />
+    <logger name="org.apache" level="${log.level.org.apache:-INFO}" />
+    <logger name="org.springframework" level="${log.level.org.springframework:-INFO}" />
+
+    <logger name="io" level="INFO"/>
+    <logger name="org" level="INFO"/>
+    <logger name="com" level="INFO"/>
+    <logger name="no.nav" level="DEBUG"/>
+    <logger name="no.nav.soknad.arkivering" level="DEBUG"/>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT_JSON"/>
+    </root>
+</configuration>

@@ -1,0 +1,19 @@
+server:
+  port: 9064
+
+spring:
+  codec:
+    max-in-memory-size=50MB
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints.web:
+    exposure:
+      include: info, health, metrics, refresh, prometheus
+    base-path: "/internal"
+  metrics:
+    export:
+      prometheus:
+        enabled: true
