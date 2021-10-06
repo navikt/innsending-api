@@ -149,6 +149,7 @@
     </dependencies>
 
     <build>
+        <finalName>innsending-api</finalName>
         <plugins>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
