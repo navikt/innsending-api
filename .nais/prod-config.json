@@ -2,6 +2,9 @@
   "INGRESS": "https://tilbakemeldingsmottak.nais.adeo.no",
   "DATABASE_HOST": "A01DBVL020.adeo.no",
   "DATABASE_PORT": "5432",
-  "DATABASE_NAME": "dokumentinnsending",
-  "APPLICATION_PROFILE": "prod"
+  "DATABASE_NAME": "dokumentinnsending-prod",
+  "VAULT_DB_PATH": "postgresql/prod-fss",
+  "APPLICATION_PROFILE": "prod",
+  "SRV_KV_PATH": "/serviceuser/data/prod/srvdokumentinnsending",
+  "APPDYN_KV_PATH": "/apikey/appdynamics/prod"
 }

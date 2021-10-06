@@ -33,9 +33,9 @@ spec:
     enabled: true
     paths:
       - mountPath: /var/run/secrets/nais.io/serviceuser
-        kvPath: /serviceuser/data/prod/srvinnsending-api
+        kvPath: {{ SRV_KV_PATH }}
       - mountPath: /var/run/secrets/nais.io/appdynamics
-        kvPath: /apikey/appdynamics/prod
+        kvPath: {{ APPDYN_KV_PATH }}
 
   env:
     - name: APP_VERSION
@@ -47,6 +47,6 @@ spec:
     - name: DATABASE_NAME
       value: {{ DATABASE_NAME }}
     - name: VAULT_DB_PATH
-      value: postgresql/prod-fss
+      value: {{ VAULT_DB_PATH }}
     - name: APPLICATION_PROFILE
       value: {{ APPLICATION_PROFILE }}
