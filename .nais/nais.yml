@@ -41,7 +41,7 @@ spec:
     - name: APP_VERSION
       value: '0.0.0.1'
     - name: DATABASE_PORT
-      value: {{ DATABASE_PORT}}
+      value: "5432"
     - name: DATABASE_HOST
       value: {{ DATABASE_HOST }}
     - name: DATABASE_NAME
