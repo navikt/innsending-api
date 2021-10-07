@@ -23,7 +23,6 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
 
         <otj-pg-embedded.version>0.13.4</otj-pg-embedded.version>
-        <flyway.version>7.11.1</flyway.version>
         <vault-java-driver.version>5.1.0</vault-java-driver.version>
 
         <konfig.version>1.6.10.0</konfig.version>
@@ -49,10 +48,6 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
         <dependency>
@@ -62,10 +57,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
         </dependency>
         <dependency>
             <groupId>io.micrometer</groupId>
@@ -79,16 +70,6 @@
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-kotlin</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-            <version>${flyway.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.opentable.components</groupId>
-            <artifactId>otj-pg-embedded</artifactId>
-            <version>${otj-pg-embedded.version}</version>
         </dependency>
         <dependency>
             <groupId>com.natpryce</groupId>
