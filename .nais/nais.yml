@@ -8,12 +8,6 @@ metadata:
 spec:
   image: {{image}}
   port: 9064
-  liveness:
-    path: /internal/isAlive
-    initialDelay: 20
-  readiness:
-    path: /internal/isReady
-    initialDelay: 20
   prometheus:
     enabled: true
     path: /internal/prometheus
@@ -29,24 +23,17 @@ spec:
       memory: 256Mi
   ingresses:
     - {{ INGRESS }}
-  vault:
-    enabled: true
-    paths:
-      - mountPath: /var/run/secrets/nais.io/serviceuser
-        kvPath: /serviceuser/data/prod/srvinnsending-api
-      - mountPath: /var/run/secrets/nais.io/appdynamics
-        kvPath: /apikey/appdynamics/prod
 
   env:
     - name: APP_VERSION
-      value: {{ app_version }}
+      value: "1"
     - name: DATABASE_PORT
-      value: {{ DATABASE_PORT}}
+      value: "5432"
     - name: DATABASE_HOST
-      value: {{ database_host }}
+      value: {{ DATABASE_HOST }}
     - name: DATABASE_NAME
       value: {{ DATABASE_NAME }}
     - name: VAULT_DB_PATH
-      value: postgresql/prod-fss
+      value: {{ VAULT_DB_PATH }}
     - name: APPLICATION_PROFILE
       value: {{ APPLICATION_PROFILE }}

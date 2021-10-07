@@ -93,6 +93,6 @@ jobs:
           PRINT_PAYLOAD: true
           CLUSTER: prod-sbs
           RESOURCE: .nais/nais.yml
-          VARS: .nais/p-config.json
+          VARS: .nais/prod-config.json
           DRY_RUN: true
           IMAGE: docker.pkg.github.com/${{ github.repository }}/innsending-api:${{env.TAG}}

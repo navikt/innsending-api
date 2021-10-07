@@ -91,7 +91,7 @@ jobs:
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           PRINT_PAYLOAD: true
-          CLUSTER: dev-fss
+          CLUSTER: dev-sbs
           RESOURCE: .nais/nais.yml
           VARS: .nais/preprod-config.json
           DRY_RUN: false
