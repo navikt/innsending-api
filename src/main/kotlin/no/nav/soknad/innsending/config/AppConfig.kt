@@ -5,6 +5,7 @@ import com.natpryce.konfig.ConfigurationProperties.Companion.systemProperties
 import org.springframework.context.annotation.Bean
 import java.io.File
 import no.nav.soknad.innsending.ApplicationState
+import no.nav.soknad.innsending.db.*
 
 private val defaultProperties = ConfigurationMap(
     mapOf(
@@ -58,8 +59,8 @@ data class AppConfiguration(val restConfig: RestConfig = RestConfig(), val dbCon
             requireNotNull("DATABASE_NAME".configProperty()) { "database name must be set if jdbc url is not provided" }),
         val embedded: Boolean = "spring" == profiles,
         val useVault: Boolean = profiles == "dev" || profiles == "prod",
-//        val credentialService: CredentialService = if (useVault) VaultCredentialService() else EmbeddedCredentialService(),
-//        val renewService: RenewService = if (useVault) RenewVaultService(credentialService) else EmbeddedRenewService(credentialService)
+        val credentialService: CredentialService = if (useVault) VaultCredentialService() else EmbeddedCredentialService(),
+        val renewService: RenewService = if (useVault) RenewVaultService(credentialService) else EmbeddedRenewService(credentialService)
     )
 }
 

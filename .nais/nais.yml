@@ -8,6 +8,12 @@ metadata:
 spec:
   image: {{image}}
   port: 9064
+  liveness:
+    path: /internal/isAlive
+    initialDelay: 20
+  readiness:
+    path: /internal/isReady
+    initialDelay: 20
   prometheus:
     enabled: true
     path: /internal/prometheus
@@ -23,6 +29,13 @@ spec:
       memory: 256Mi
   ingresses:
     - {{ INGRESS }}
+  vault:
+    enabled: true
+    paths:
+      - mountPath: /var/run/secrets/nais.io/serviceuser
+        kvPath: {{ SRV_KV_PATH }}
+      - mountPath: /var/run/secrets/nais.io/appdynamics
+        kvPath: {{ APPDYN_KV_PATH }}
 
   env:
     - name: APP_VERSION
