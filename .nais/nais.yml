@@ -39,7 +39,7 @@ spec:
 
   env:
     - name: APP_VERSION
-      value: {{ APP_VERSION }}
+      value: '0.0.0.1'
     - name: DATABASE_PORT
       value: {{ DATABASE_PORT}}
     - name: DATABASE_HOST
