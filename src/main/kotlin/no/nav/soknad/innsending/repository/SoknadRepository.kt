@@ -6,8 +6,8 @@ import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 
 @Repository
-interface SoknadRepository: JpaRepository<SoknadDbData, Long> {
+interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 
-    @Query("FROM SoknadDbData WHERE behandlingsid = :behandlingsid")
-    fun findByBehandlingsid(@Param("behandlingsid") b_id: String): SoknadDbData
+	@Query("FROM SoknadDbData WHERE behandlingsid = :behandlingsid")
+	fun findByBehandlingsid(@Param("behandlingsid") b_id: String): SoknadDbData
 }

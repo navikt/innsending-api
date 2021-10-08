@@ -3,39 +3,38 @@ package no.nav.soknad.innsending.consumerapis.skjema
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 class SkjemaOgVedleggsdata {
-    @JsonProperty("Skjemanummer")
-    var skjemanummer: String? = null
+	@JsonProperty("Skjemanummer")
+	var skjemanummer: String? = null
 
-    @JsonProperty("Vedleggsid")
-    val vedleggsid: String? = null
+	@JsonProperty("Vedleggsid")
+	val vedleggsid: String? = null
 
-    @JsonProperty("Tema")
-    var tema: String? = null
+	@JsonProperty("Tema")
+	var tema: String? = null
 
-    @JsonProperty("Tittel")
-    var tittel: String? = null
+	@JsonProperty("Tittel")
+	var tittel: String? = null
 
-    @JsonProperty("Lenke")
-    val url: String? = null
+	@JsonProperty("Lenke")
+	val url: String? = null
 
-    @JsonProperty("Lenke nynorsk skjema")
-    val url_nn: String? = null
+	@JsonProperty("Lenke nynorsk skjema")
+	val url_nn: String? = null
 
-    @JsonProperty("Tittel_nn")
-    var tittel_nn: String? = null
+	@JsonProperty("Tittel_nn")
+	var tittel_nn: String? = null
 
-    @JsonProperty("Lenke engelsk skjema")
-    val url_en: String? = null
+	@JsonProperty("Lenke engelsk skjema")
+	val url_en: String? = null
 
-    @JsonProperty("Tittel_en")
-    var tittel_en: String? = null
+	@JsonProperty("Tittel_en")
+	var tittel_en: String? = null
 
-    override fun toString(): String {
-        return "skjemanummer='" + skjemanummer + '\'' +
-                ", vedleggsid='" + vedleggsid + '\'' +
-                ", tittel='" + tittel + '\''
-    }
+	override fun toString(): String {
+		return "skjemanummer='" + skjemanummer + '\'' +
+			", vedleggsid='" + vedleggsid + '\'' +
+			", tittel='" + tittel + '\''
+	}
 }

@@ -10,21 +10,20 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 open class JpaConfig(private val appConfig: AppConfiguration) {
 
-    private val logger = LoggerFactory.getLogger(javaClass)
+	private val logger = LoggerFactory.getLogger(javaClass)
 
-    @Bean
-    open fun getDataSource() = initDatasource()
+	@Bean
+	open fun getDataSource() = initDatasource()
 
-    private fun initDatasource(): HikariDataSource {
-        val database = if (appConfig.dbConfig.embedded) {
-            EmbeddedDatabase(appConfig.dbConfig, appConfig.dbConfig.credentialService)
-        } else {
-            Database(appConfig.dbConfig, appConfig.dbConfig.credentialService)
-        }
-        appConfig.applicationState.ready = true
-        appConfig.dbConfig.renewService.startRenewTasks(appConfig.applicationState)
-        logger.info("Datasource is initialised")
-        return database.dataSource
-    }
-
+	private fun initDatasource(): HikariDataSource {
+		val database = if (appConfig.dbConfig.embedded) {
+			EmbeddedDatabase(appConfig.dbConfig, appConfig.dbConfig.credentialService)
+		} else {
+			Database(appConfig.dbConfig, appConfig.dbConfig.credentialService)
+		}
+		appConfig.applicationState.ready = true
+		appConfig.dbConfig.renewService.startRenewTasks(appConfig.applicationState)
+		logger.info("Datasource is initialised")
+		return database.dataSource
+	}
 }
