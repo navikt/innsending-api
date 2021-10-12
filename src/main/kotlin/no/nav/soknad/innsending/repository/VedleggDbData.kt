@@ -9,7 +9,6 @@ data class VedleggDbData(
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY) @Column(name = "id") val id: Long?,
 	@Column(name = "tittel", columnDefinition = "varchar") val tittel: String,
 	@Column(name = "vedleggsnr", columnDefinition = "varchar") val vedleggsnr: String?,
-	@Column(name = "vedleggsurl", columnDefinition = "varchar") val skjemaurl: String?,
 	@Column(name = "mimetype", columnDefinition = "varchar") val mimetype: String?,
 	@Column(name = "status", columnDefinition = "varchar") val status: OpplastingsStatus,
 	@Column(name = "erhoveddokument", columnDefinition = "boolean") val erhoveddokument: Boolean,

@@ -12,6 +12,7 @@ data class DokumentSoknadDto(
 	val tittel: String,
 	val tema: String,
 	val spraak: String?,
+	val skjemaurl: String?,
 	val status: SoknadsStatus,
 	val opprettetDato: LocalDateTime,
 	val endretDato: LocalDateTime?,

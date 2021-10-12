@@ -42,7 +42,7 @@ class SoknadServiceTest {
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, null)
 
 		assertEquals(brukerid, dokumentSoknadDto.brukerId)
 		assertEquals(skjemanr, dokumentSoknadDto.skjemanr)
@@ -74,7 +74,7 @@ class SoknadServiceTest {
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, null)
 
 		val dokumentSoknadDtoHentet = soknadService.hentSoknad(dokumentSoknadDto.id!!)
 
@@ -88,7 +88,7 @@ class SoknadServiceTest {
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, null)
 
 		assertFalse(dokumentSoknadDto.vedleggsListe.isEmpty())
 
@@ -104,7 +104,7 @@ class SoknadServiceTest {
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, null)
 		soknadService.slettSoknad(dokumentSoknadDto.id!!)
 
 		assertThrows<Exception> {
@@ -119,7 +119,7 @@ class SoknadServiceTest {
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, null)
 
 		assertEquals(brukerid, dokumentSoknadDto.brukerId)
 		assertEquals(skjemanr, dokumentSoknadDto.skjemanr)
@@ -140,7 +140,7 @@ class SoknadServiceTest {
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, null)
 
 		assertEquals(brukerid, dokumentSoknadDto.brukerId)
 		assertEquals(skjemanr, dokumentSoknadDto.skjemanr)
@@ -156,13 +156,13 @@ class SoknadServiceTest {
 	}
 
 	private fun lagDokumentSoknad(brukerId: String, skjemanr: String, spraak: String, tittel: String, tema: String): DokumentSoknadDto {
-			val vedleggDtoPdf = VedleggDto(null, skjemanr, tittel, null, UUID.randomUUID().toString(), "application/pdf",
+			val vedleggDtoPdf = VedleggDto(null, skjemanr, tittel, UUID.randomUUID().toString(), "application/pdf",
 					getBytesFromFile("/litenPdf.pdf"), true, erVariant = false, true, OpplastingsStatus.LastetOpp,  LocalDateTime.now())
-			val vedleggDtoJson = VedleggDto(null, skjemanr, tittel, null, UUID.randomUUID().toString(),"application/json",
+			val vedleggDtoJson = VedleggDto(null, skjemanr, tittel, UUID.randomUUID().toString(),"application/json",
 					getBytesFromFile("/sanity.json"), true, erVariant = true, false, OpplastingsStatus.LastetOpp, LocalDateTime.now())
 
 		val vedleggDtoList = listOf(vedleggDtoPdf, vedleggDtoJson)
-		return DokumentSoknadDto(null, null, null, brukerId, skjemanr, tittel, tema, spraak,
+		return DokumentSoknadDto(null, null, null, brukerId, skjemanr, tittel, tema, spraak, null,
 			SoknadsStatus.Opprettet, LocalDateTime.now(), LocalDateTime.now(), null, vedleggDtoList)
 	}
 
@@ -170,12 +170,12 @@ class SoknadServiceTest {
 		val vedleggDto = lastOppDokumentTilVedlegg(dokumentSoknadDto.vedleggsListe[0])
 		return DokumentSoknadDto(dokumentSoknadDto.id, dokumentSoknadDto.behandlingsId, dokumentSoknadDto.ettersendingsId,
 			dokumentSoknadDto.brukerId, dokumentSoknadDto.skjemanr, dokumentSoknadDto.tittel, dokumentSoknadDto.tema,
-			dokumentSoknadDto.spraak, SoknadsStatus.Opprettet, dokumentSoknadDto.opprettetDato, LocalDateTime.now(),
+			dokumentSoknadDto.spraak, dokumentSoknadDto.skjemaurl, SoknadsStatus.Opprettet, dokumentSoknadDto.opprettetDato, LocalDateTime.now(),
 			null, listOf(vedleggDto))
 	}
 
 	private fun lastOppDokumentTilVedlegg(vedleggDto: VedleggDto) =
-		VedleggDto(vedleggDto.id, vedleggDto.vedleggsnr, vedleggDto.tittel, vedleggDto.skjemaurl, UUID.randomUUID().toString(),
+		VedleggDto(vedleggDto.id, vedleggDto.vedleggsnr, vedleggDto.tittel, UUID.randomUUID().toString(),
 			"application/pdf", getBytesFromFile("/litenPdf.pdf"), true, erVariant = false,
 			true, OpplastingsStatus.LastetOpp, LocalDateTime.now())
 

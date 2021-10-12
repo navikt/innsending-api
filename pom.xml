@@ -23,7 +23,7 @@
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 
 		<otj-pg-embedded.version>0.13.4</otj-pg-embedded.version>
-		<flyway.version>7.11.1</flyway.version>
+		<flyway.version>8.0.0</flyway.version>
 		<vault-java-driver.version>5.1.0</vault-java-driver.version>
 
 		<konfig.version>1.6.10.0</konfig.version>

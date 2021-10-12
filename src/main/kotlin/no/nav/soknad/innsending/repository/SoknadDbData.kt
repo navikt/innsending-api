@@ -17,7 +17,8 @@ data class SoknadDbData(
 	@Column(name = "ettersendingsid", columnDefinition = "varchar") val ettersendingsid: String?,
 	@Column(name = "opprettetdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val opprettetdato: LocalDateTime,
 	@Column(name = "endretdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val endretdato: LocalDateTime?,
-	@Column(name = "innsendtdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val innsendtdato: LocalDateTime?
+	@Column(name = "innsendtdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val innsendtdato: LocalDateTime?,
+	@Column(name = "skjemaurl", columnDefinition = "varchar") val skjemaurl: String?
 ) {
 
 	override fun equals(other: Any?): Boolean {

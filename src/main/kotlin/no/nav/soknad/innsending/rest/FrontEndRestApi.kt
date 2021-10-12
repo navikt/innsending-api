@@ -25,12 +25,13 @@ class FrontEndRestApi {
 	fun opprettSoknad(
 		@RequestParam skjemanr: String,
 		@RequestParam sprak: String,
-		@RequestParam brukerId: String
+		@RequestParam brukerId: String,
+		@RequestParam vedleggListe: List<String>
 	): ResponseEntity<DokumentSoknadDto> {
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(lagDummySoknad(skjemanr, null, sprak, brukerId, null))
+			.body(lagDummySoknad(skjemanr, null, sprak, brukerId, null, vedleggListe))
 	}
 
 	@Operation(summary = "Requests creating a new application with reference to a prior sent in application.", tags = ["operations"])
@@ -41,12 +42,13 @@ class FrontEndRestApi {
 	@PostMapping("/ettersending")
 	fun opprettEttersending(
 		@RequestParam ettersendingTilBehandlingsId: String,
+		@RequestParam vedleggListe: List<String>,
 		@RequestParam brukerId: String
 	): ResponseEntity<DokumentSoknadDto> {
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(lagDummySoknad("NAV 10-07.73", null, "NO", brukerId, ettersendingTilBehandlingsId))
+			.body(lagDummySoknad("NAV 10-07.73", null, "NO", brukerId, ettersendingTilBehandlingsId, vedleggListe))
 	}
 
 	@Operation(summary = "Requests fetching a previously created application.", tags = ["operations"])
@@ -59,7 +61,7 @@ class FrontEndRestApi {
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(lagDummySoknad("NAV 10-07.73", null, "NO", "12345678901", null))
+			.body(lagDummySoknad("NAV 10-07.73", null, "NO", "12345678901", null, null))
 	}
 
 	@Operation(summary = "Requests fetching a list of attachments to previously created application.", tags = ["operations"])
@@ -171,13 +173,15 @@ class FrontEndRestApi {
 
 
 // Midlertidige dummy metoder
-	private fun lagDummySoknad(skjemanr: String, vedleggsnr: String?, sprak: String, brukerId: String, ettersendingId: String?) =
-			DokumentSoknadDto(1L, UUID.randomUUID().toString(), ettersendingId, brukerId, skjemanr, "Tittel", "Test", "NO",
-				SoknadsStatus.Opprettet, LocalDateTime.now(), LocalDateTime.now(), null, listOf(lagDummyVedlegg(vedleggsnr)))
+	private fun lagDummySoknad(skjemanr: String, vedleggsnr: String?, sprak: String
+			, brukerId: String, ettersendingId: String?, vedleggsListe: List<String>?) =
+			DokumentSoknadDto(1L, UUID.randomUUID().toString(), ettersendingId, brukerId, skjemanr, "Tittel", "Test", "NO"
+				, if (ettersendingId != null) "https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/dfdcae6ba6ac611e9a67d013fc2fe712645fb937.pdf" else null
+				, SoknadsStatus.Opprettet, LocalDateTime.now(), LocalDateTime.now(), null, lagVedleggsListe(skjemanr, vedleggsListe))
 
 	private fun lagDummyVedlegg(vedleggsnr: String?) =
-		 VedleggDto(1L, vedleggsnr, "Tittel", "https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/dfdcae6ba6ac611e9a67d013fc2fe712645fb937.pdf",
-			 UUID.randomUUID().toString(), null, null, true, false, true, OpplastingsStatus.IkkeLastetOpp, LocalDateTime.now())
+		 VedleggDto(1L, vedleggsnr ?: "N6", "Tittel",
+			 UUID.randomUUID().toString(), null, null, vedleggsnr != null && vedleggsnr.contains("NAV"), false, true, OpplastingsStatus.IkkeLastetOpp, LocalDateTime.now())
 
 	private fun lagDummyAktivSak(behandlingsId: String?, skjemanr: String, tema: String, ettersending: Boolean) =
 		AktivSakDto(
@@ -185,6 +189,13 @@ class FrontEndRestApi {
 				lagDummyInnsendtVedleggDto()
 			)
 		)
+
+	private fun lagVedleggsListe(skjemanr: String, vedleggsListe: List<String>?): List<VedleggDto> {
+		val mainListeDto = listOf(lagDummyVedlegg(skjemanr))
+ 		if (vedleggsListe == null ) return mainListeDto
+		val vedleggListeDto: List<VedleggDto> =  vedleggsListe.map { e -> lagDummyVedlegg(e) }.toList()
+		return mainListeDto + vedleggListeDto
+	}
 
 	private fun lagDummyVedleggsListe() = VedleggsListeDto(listOf("1234567890"))
 

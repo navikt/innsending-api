@@ -2,7 +2,7 @@ CREATE SEQUENCE soknad_id_seq;
 CREATE SEQUENCE vedlegg_id_seq;
 
 
-CREATE TABLE IF NOT EXISTS soknad
+CREATE TABLE soknad
 (
     id              BIGINT NOT NULL PRIMARY KEY DEFAULT nextval('soknad_id_seq'::regclass),
     behandlingsid   VARCHAR(255) NOT NULL,

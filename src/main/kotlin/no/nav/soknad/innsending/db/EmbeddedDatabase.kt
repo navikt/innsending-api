@@ -45,7 +45,7 @@ class EmbeddedDatabase(
 
 	private fun createHikariConfig(): HikariConfig {
 		return HikariConfig().apply {
-			jdbcUrl = embeddedPostgres.getJdbcUrl("postgres", "postgres")
+			jdbcUrl = embeddedPostgres.getJdbcUrl("postgres", env.databaseName)
 			maximumPoolSize = 2
 			minimumIdle = 0
 			idleTimeout = 10001

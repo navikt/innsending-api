@@ -18,7 +18,7 @@ private val defaultProperties = ConfigurationMap(
 		"SHARED_PASSWORD" to "password",
 		"DATABASE_HOST" to "localhost",
 		"DATABASE_PORT" to "5432",
-		"DATABASE_NAME" to "dokumentinnsending",
+		"DATABASE_NAME" to "postgres",
 		"DATABASE_JDBC_URL" to "",
 		"VAULT_DB_PATH" to "",
 		"HENT_FRA_HENVENDELSE" to "false",

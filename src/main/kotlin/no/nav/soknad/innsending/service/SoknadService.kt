@@ -17,7 +17,7 @@ open class SoknadService(
 ) {
 
 	@Transactional
-	open fun opprettSoknad(brukerId: String, skjemanr: String, spraak: String = "no"): DokumentSoknadDto {
+	open fun opprettSoknad(brukerId: String, skjemanr: String, spraak: String = "no", vedleggsnrListe: List<String>?): DokumentSoknadDto {
 		// hentSkjema informasjon gitt skjemanr
 		val kodeverkSkjema = skjemaService.hentSkjemaEllerVedlegg(skjemanr, spraak)
 
@@ -25,14 +25,16 @@ open class SoknadService(
 		val soknadDbData = soknadRepository.save(
 			SoknadDbData(null, UUID.randomUUID().toString(), kodeverkSkjema.tittel ?: "", kodeverkSkjema.skjemanummer ?: "",
 				kodeverkSkjema.tema ?: "", spraak, SoknadsStatus.Opprettet, brukerId, null, LocalDateTime.now(),
-				LocalDateTime.now(), null)
+				LocalDateTime.now(), null, kodeverkSkjema.url)
 		)
 
 		val vedleggDbData = vedleggRepository.save(
 			VedleggDbData(null,kodeverkSkjema.tittel ?: "", kodeverkSkjema.skjemanummer ?: kodeverkSkjema.vedleggsid,
-				kodeverkSkjema.url, null, OpplastingsStatus.IkkeLastetOpp, true, ervariant = false, true,
+				null, OpplastingsStatus.IkkeLastetOpp, true, ervariant = false, true,
 				UUID.randomUUID().toString(), null, soknadDbData.id ?: 1L, LocalDateTime.now(), LocalDateTime.now())
 		)
+
+		// TODO lagre vedlegg basert på vedleggsnrsliste
 
 		val vedleggsliste = listOf(lagVedleggDto(vedleggDbData))
 
@@ -115,17 +117,17 @@ open class SoknadService(
 	}
 
 	private fun lagVedleggDto(vedleggDbData: VedleggDbData) =
-		VedleggDto(vedleggDbData.id!!, vedleggDbData.vedleggsnr, vedleggDbData.tittel, vedleggDbData.skjemaurl,
+		VedleggDto(vedleggDbData.id!!, vedleggDbData.vedleggsnr, vedleggDbData.tittel,
 			vedleggDbData.uuid, vedleggDbData.mimetype, vedleggDbData.dokument, vedleggDbData.erhoveddokument,
 			vedleggDbData.ervariant, vedleggDbData.erpdfa, vedleggDbData.status, vedleggDbData.opprettetdato)
 
 	private fun lagDokumentSoknadDto(soknadDbData: SoknadDbData, vedleggDtoListe: List<VedleggDto>) =
 		DokumentSoknadDto(soknadDbData.id ?: 1L, soknadDbData.behandlingsid, soknadDbData.ettersendingsid,
-			soknadDbData.brukerid, soknadDbData.skjemanr, soknadDbData.tittel, soknadDbData.tema, soknadDbData.spraak,
+			soknadDbData.brukerid, soknadDbData.skjemanr, soknadDbData.tittel, soknadDbData.tema, soknadDbData.spraak, soknadDbData.skjemaurl,
 			soknadDbData.status, soknadDbData.opprettetdato, soknadDbData.endretdato, soknadDbData.innsendtdato, vedleggDtoListe)
 
 	private fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long) =
-		VedleggDbData(vedleggDto.id, vedleggDto.tittel, vedleggDto.vedleggsnr, vedleggDto.skjemaurl, vedleggDto.mimetype,
+		VedleggDbData(vedleggDto.id, vedleggDto.tittel, vedleggDto.vedleggsnr, vedleggDto.mimetype,
 			vedleggDto.opplastingsStatus, vedleggDto.erHoveddokument, vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.uuid,
 			vedleggDto.document, soknadsId, vedleggDto.opprettetdato, LocalDateTime.now())
 
@@ -133,5 +135,5 @@ open class SoknadService(
 		SoknadDbData(dokumentSoknadDto.id, dokumentSoknadDto.behandlingsId ?: UUID.randomUUID().toString(),
 			dokumentSoknadDto.tittel, dokumentSoknadDto.skjemanr, dokumentSoknadDto.tema, dokumentSoknadDto.spraak,
 			dokumentSoknadDto.status, dokumentSoknadDto.brukerId, dokumentSoknadDto.ettersendingsId,
-			dokumentSoknadDto.opprettetDato, LocalDateTime.now(), dokumentSoknadDto.innsendtDato)
+			dokumentSoknadDto.opprettetDato, LocalDateTime.now(), dokumentSoknadDto.innsendtDato,dokumentSoknadDto.skjemaurl)
 }
