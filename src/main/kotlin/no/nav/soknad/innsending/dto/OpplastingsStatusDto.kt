@@ -1,6 +1,6 @@
-package no.nav.soknad.innsending.repository
+package no.nav.soknad.innsending.dto
 
-enum class OpplastingsStatus {
+enum class OpplastingsStatusDto {
 	IKKE_VALGT,
 	SEND_SENERE,
 	LASTET_OPP,
@@ -9,4 +9,5 @@ enum class OpplastingsStatus {
 	SENDES_IKKE,
 	INNSENDT,
 	VEDLEGG_ALLEREDE_SENDT
+
 }

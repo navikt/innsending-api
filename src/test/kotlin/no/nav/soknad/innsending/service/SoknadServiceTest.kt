@@ -59,7 +59,8 @@ class SoknadServiceTest {
 		val tema = "tema"
 		val dokumentSoknadDto = lagDokumentSoknad(brukerid, skjemanr, spraak, tittel, tema)
 
-		val lagretDokumentSoknadDto = soknadService.opprettEllerOppdaterSoknad(dokumentSoknadDto)
+		val lagretDokumentSoknadId = soknadService.opprettEllerOppdaterSoknad(dokumentSoknadDto)
+		val lagretDokumentSoknadDto = soknadService.hentSoknad(lagretDokumentSoknadId)
 
 		assertNotNull(lagretDokumentSoknadDto.id)
 		assertNotNull(lagretDokumentSoknadDto.behandlingsId)
@@ -148,7 +149,8 @@ class SoknadServiceTest {
 
 		val dokumentSoknadDtoOppdatert = oppdaterDokumentSoknad(dokumentSoknadDto)
 
-		val dokumentSoknadDtoOppdatertDb = soknadService.opprettEllerOppdaterSoknad(dokumentSoknadDtoOppdatert)
+		val dokumentSoknadDtoOppdatertId = soknadService.opprettEllerOppdaterSoknad(dokumentSoknadDtoOppdatert)
+		val dokumentSoknadDtoOppdatertDb = soknadService.hentSoknad(dokumentSoknadDtoOppdatertId)
 
 		assertEquals(dokumentSoknadDtoOppdatertDb.id, dokumentSoknadDtoOppdatert.id)
 		assertEquals(dokumentSoknadDtoOppdatertDb.vedleggsListe[0].id, dokumentSoknadDtoOppdatert.vedleggsListe[0].id)
@@ -157,9 +159,9 @@ class SoknadServiceTest {
 
 	private fun lagDokumentSoknad(brukerId: String, skjemanr: String, spraak: String, tittel: String, tema: String): DokumentSoknadDto {
 			val vedleggDtoPdf = VedleggDto(null, skjemanr, tittel, UUID.randomUUID().toString(), "application/pdf",
-					getBytesFromFile("/litenPdf.pdf"), true, erVariant = false, true, OpplastingsStatus.LastetOpp,  LocalDateTime.now())
+					getBytesFromFile("/litenPdf.pdf"), true, erVariant = false, true, OpplastingsStatus.LASTET_OPP,  LocalDateTime.now())
 			val vedleggDtoJson = VedleggDto(null, skjemanr, tittel, UUID.randomUUID().toString(),"application/json",
-					getBytesFromFile("/sanity.json"), true, erVariant = true, false, OpplastingsStatus.LastetOpp, LocalDateTime.now())
+					getBytesFromFile("/sanity.json"), true, erVariant = true, false, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
 
 		val vedleggDtoList = listOf(vedleggDtoPdf, vedleggDtoJson)
 		return DokumentSoknadDto(null, null, null, brukerId, skjemanr, tittel, tema, spraak, null,
@@ -177,7 +179,7 @@ class SoknadServiceTest {
 	private fun lastOppDokumentTilVedlegg(vedleggDto: VedleggDto) =
 		VedleggDto(vedleggDto.id, vedleggDto.vedleggsnr, vedleggDto.tittel, UUID.randomUUID().toString(),
 			"application/pdf", getBytesFromFile("/litenPdf.pdf"), true, erVariant = false,
-			true, OpplastingsStatus.LastetOpp, LocalDateTime.now())
+			true, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
 
 	private fun getBytesFromFile(path: String): ByteArray {
 		val resourceAsStream = SoknadServiceTest::class.java.getResourceAsStream(path)

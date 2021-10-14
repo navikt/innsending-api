@@ -30,7 +30,7 @@ open class SoknadService(
 
 		val vedleggDbData = vedleggRepository.save(
 			VedleggDbData(null,kodeverkSkjema.tittel ?: "", kodeverkSkjema.skjemanummer ?: kodeverkSkjema.vedleggsid,
-				null, OpplastingsStatus.IkkeLastetOpp, true, ervariant = false, true,
+				null, OpplastingsStatus.IKKE_VALGT, true, ervariant = false, true,
 				UUID.randomUUID().toString(), null, soknadDbData.id ?: 1L, LocalDateTime.now(), LocalDateTime.now())
 		)
 
@@ -57,6 +57,20 @@ open class SoknadService(
 		throw RuntimeException("Ingen dokumentsoknad med id = $id funnet")
 	}
 
+	fun hentSoknad(behandlingsId: String): DokumentSoknadDto {
+
+		val soknadDbDataOpt = soknadRepository.findByBehandlingsid(behandlingsId)
+
+		if (soknadDbDataOpt.isPresent) {
+			val soknadDbData = soknadDbDataOpt.get()
+			val vedleggDbDataListe = vedleggRepository.findAllBySoknadsid(soknadDbData.id!!)
+			val vedleggDtoListe = vedleggDbDataListe.map { lagVedleggDto(it) }
+
+			return lagDokumentSoknadDto(soknadDbData, vedleggDtoListe)
+		}
+		throw RuntimeException("Ingen dokumentsoknad med id = $behandlingsId funnet")
+	}
+
 	fun hentVedlegg(id: Long): VedleggDto {
 
 		val vedleggDbData = vedleggRepository.findByVedleggsid(id)
@@ -65,7 +79,7 @@ open class SoknadService(
 	}
 
 	@Transactional
-	open fun opprettEllerOppdaterSoknad(dokumentSoknadDto: DokumentSoknadDto): DokumentSoknadDto {
+	fun opprettEllerOppdaterSoknad(dokumentSoknadDto: DokumentSoknadDto): Long {
 		var soknadsid = dokumentSoknadDto.id
 		// Hvis soknad ikke eksisterer må den lagres, før vedleggene
 		if (dokumentSoknadDto.id == null) {
@@ -76,18 +90,18 @@ open class SoknadService(
 			.map { mapTilVedleggDb(it, soknadsid!!) }
 			.forEach { vedleggRepository.save(it) }
 		soknadRepository.save(mapTilSoknadDb(dokumentSoknadDto))
-		return hentSoknad(soknadsid!!)
+		return soknadsid!!
 	}
 
 	@Transactional
-	open fun slettSoknad(soknadId: Long) {
+	fun slettSoknad(soknadId: Long) {
 		// slett vedlegg og soknad
 		val dokumentSoknadDto = hentSoknad(soknadId)
 		dokumentSoknadDto.vedleggsListe.forEach { v -> vedleggRepository.deleteById(v.id!!) }
 		soknadRepository.deleteById(dokumentSoknadDto.id!!)
 	}
 
-	open fun lagreVedlegg(vedleggDto: VedleggDto, soknadsId: Long): VedleggDto {
+	fun lagreVedlegg(vedleggDto: VedleggDto, soknadsId: Long): VedleggDto {
 		val vedleggDbData = vedleggRepository.save(mapTilVedleggDb(vedleggDto, soknadsId))
 		// Oppdatere soknad.sisteendret
 		val soknadDto = hentSoknad(soknadsId)

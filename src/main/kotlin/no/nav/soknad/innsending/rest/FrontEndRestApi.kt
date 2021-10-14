@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import no.nav.soknad.innsending.dto.*
 import no.nav.soknad.innsending.repository.OpplastingsStatus
 import no.nav.soknad.innsending.repository.SoknadsStatus
+import no.nav.soknad.innsending.service.SoknadService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -14,7 +15,7 @@ import java.util.*
 
 @RestController
 @RequestMapping("/frontend")
-class FrontEndRestApi {
+class FrontEndRestApi(val soknadService: SoknadService) {
 
 	@Operation(summary = "Requests creating a new application given main document id (skjemanr).", tags = ["operations"])
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
@@ -158,19 +159,6 @@ class FrontEndRestApi {
 			.body("Soknad $behandlingsId er sendt inn")
 	}
 
-	@Operation(summary = "Requests fetching list of active applications that have been sent to NAV by the applicant.", tags = ["operations"])
-	@ApiResponses(value = [ApiResponse(responseCode = "200",
-			description = "If successful, a list of already sent in applications is returned."
-	)])
-	@GetMapping("/hentAktiveSaker/{brukerId}")
-	fun aktiveSaker(@PathVariable brukerId: String, @RequestParam skjemanr: String?): ResponseEntity<List<AktivSakDto>> {
-
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(listOf(lagDummyAktivSak("123", "NAV 10-07.73", "Tema", false)))
-	}
-
-
 
 // Midlertidige dummy metoder
 	private fun lagDummySoknad(skjemanr: String, vedleggsnr: String?, sprak: String
@@ -181,14 +169,8 @@ class FrontEndRestApi {
 
 	private fun lagDummyVedlegg(vedleggsnr: String?) =
 		 VedleggDto(1L, vedleggsnr ?: "N6", "Tittel",
-			 UUID.randomUUID().toString(), null, null, vedleggsnr != null && vedleggsnr.contains("NAV"), false, true, OpplastingsStatus.IkkeLastetOpp, LocalDateTime.now())
+			 UUID.randomUUID().toString(), null, null, vedleggsnr != null && vedleggsnr.contains("NAV"), false, true, OpplastingsStatus.IKKE_VALGT, LocalDateTime.now())
 
-	private fun lagDummyAktivSak(behandlingsId: String?, skjemanr: String, tema: String, ettersending: Boolean) =
-		AktivSakDto(
-			behandlingsId, skjemanr, "Tittel", tema, LocalDateTime.now(), ettersending, listOf(
-				lagDummyInnsendtVedleggDto()
-			)
-		)
 
 	private fun lagVedleggsListe(skjemanr: String, vedleggsListe: List<String>?): List<VedleggDto> {
 		val mainListeDto = listOf(lagDummyVedlegg(skjemanr))
@@ -199,5 +181,4 @@ class FrontEndRestApi {
 
 	private fun lagDummyVedleggsListe() = VedleggsListeDto(listOf("1234567890"))
 
-	private fun lagDummyInnsendtVedleggDto() = InnsendtVedleggDto("NAV 10-07.73", "Tittel")
 }
