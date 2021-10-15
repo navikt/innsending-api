@@ -1,9 +1,9 @@
 {
-  "INGRESS": "https://tilbakemeldingsmottak.nais.adeo.no",
-  "DATABASE_HOST": "A01DBVL020.adeo.no",
+  "INGRESS": "https://innsending-api.dev.adeo.no",
+  "DATABASE_HOST": "b27dbvl024.preprod.local",
   "DATABASE_PORT": "5432",
   "DATABASE_NAME": "dokumentinnsending-dev",
-  "VAULT_DB_PATH": "postgresql/dev-fss",
+  "VAULT_DB_PATH": "postgresql/preprod-fss",
   "APPLICATION_PROFILE": "dev",
   "SRV_KV_PATH": "/serviceuser/data/dev/srvdokumentinnsending",
   "APPDYN_KV_PATH": "/apikey/appdynamics/dev"

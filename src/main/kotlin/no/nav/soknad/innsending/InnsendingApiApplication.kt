@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 open class InnsendingApiApplication
 
 fun main(args: Array<String>) {
-    runApplication<InnsendingApiApplication>(*args)
+	runApplication<InnsendingApiApplication>(*args)
 }
