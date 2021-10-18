@@ -22,7 +22,7 @@ class WebSecurityConfig(private val config: AppConfiguration) : WebSecurityConfi
 			.csrf().disable()
 			.authorizeRequests()
 			.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-			.antMatchers(HttpMethod.POST, "/login", "/register").permitAll()
+			.antMatchers(HttpMethod.POST, "/login", "/register", "/swagger-ui").permitAll()
 			.antMatchers("/frontend").hasAnyRole("USER", "ADMIN")
 			.antMatchers("/frontend").authenticated()
 			.antMatchers("/innsendt").hasAnyRole("USER", "ADMIN")
