@@ -22,7 +22,19 @@ private val defaultProperties = ConfigurationMap(
 		"DATABASE_JDBC_URL" to "",
 		"VAULT_DB_PATH" to "",
 		"HENT_FRA_HENVENDELSE" to "false",
-		"MAX_FILE_SIZE" to (1024 * 1024 * 100).toString()
+		"MAX_FILE_SIZE" to (1024 * 1024 * 100).toString(),
+		"SCHEMA_REGISTRY_URL" to "http://localhost:8081",
+		"KAFKA_BOOTSTRAP_SERVERS" to "localhost:29092",
+		"KAFKA_CLIENTID" to "kafkaproducer",
+		"KAFKA_SECURITY" to "",
+		"KAFKA_SECPROT" to "",
+		"KAFKA_SASLMEC" to "",
+		"KAFKA.TOPIC.BESKJED" to "aapen-brukernotifikasjon-nyBeskjed-v1",
+		"KAFKA.TOPIC.OPPGAVE" to "aapen-brukernotifikasjon-nyOppgave-v1",
+		"KAFKA.TOPIC.DONE" to "aapen-brukernotifikasjon-done-v1",
+		"PUBLISERE_BRUKERNOTIFIKASJONER" to "TRUE",
+		"TJENESTE_URL" to "https://tjenester-q1.nav.no"
+
 	)
 )
 
@@ -36,7 +48,7 @@ private fun String.configProperty(): String = appConfig[Key(this, stringType)]
 
 fun readFileAsText(fileName: String, default: String) = try { File(fileName).readText(Charsets.UTF_8) } catch (e: Exception ) { default }
 
-data class AppConfiguration(val restConfig: RestConfig = RestConfig(), val dbConfig: DBConfig = DBConfig()) {
+data class AppConfiguration(val restConfig: RestConfig = RestConfig(), val dbConfig: DBConfig = DBConfig(), val kafkaConfig: KafkaConfig = KafkaConfig()) {
 	val applicationState = ApplicationState()
 
 	data class RestConfig(
@@ -62,6 +74,26 @@ data class AppConfiguration(val restConfig: RestConfig = RestConfig(), val dbCon
 		val credentialService: CredentialService = if (useVault) VaultCredentialService() else EmbeddedCredentialService(),
 		val renewService: RenewService = if (useVault) RenewVaultService(credentialService) else EmbeddedRenewService(credentialService)
 	)
+
+	data class KafkaConfig(
+		val profiles: String = "APPLICATION_PROFILE".configProperty(),
+		val tjenesteUrl: String = "TJENESTE_URL".configProperty(),
+		val username: String = readFileAsText("/var/run/secrets/nais.io/serviceuser/username", "APPLICATION_USERNAME".configProperty()),
+		val password: String = readFileAsText("/var/run/secrets/nais.io/serviceuser/password", "APPLICATION_PASSWORD".configProperty()),
+		val servers: String = readFileAsText("/var/run/secrets/nais.io/kv/kafkaBootstrapServers", "KAFKA_BOOTSTRAP_SERVERS".configProperty()),
+		val schemaRegistryUrl: String = "SCHEMA_REGISTRY_URL".configProperty(),
+		val clientId: String = username,
+		val secure: String = "KAFKA_SECURITY".configProperty(),
+		val protocol: String = "KAFKA_SECPROT".configProperty(), // SASL_PLAINTEXT | SASL_SSL
+		val salsmec: String = "KAFKA_SASLMEC".configProperty(), // PLAIN
+		val saslJaasConfig: String = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$username\" password=\"$password\";",
+		val kafkaTopicBeskjed: String = "KAFKA.TOPIC.BESKJED".configProperty(),
+		val kafkaTopicOppgave: String = "KAFKA.TOPIC.OPPGAVE".configProperty(),
+		val kafkaTopicDone: String = "KAFKA.TOPIC.DONE".configProperty(),
+		val publisereEndringer: Boolean = "PUBLISERE_BRUKERNOTIFIKASJONER".configProperty().toBoolean()
+
+	)
+
 }
 
 @org.springframework.context.annotation.Configuration

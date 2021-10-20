@@ -9,6 +9,5 @@ import java.util.*
 @Repository
 interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 
-	@Query("FROM SoknadDbData WHERE behandlingsid = :behandlingsid")
-	fun findByBehandlingsid(@Param("behandlingsid") b_id: String): Optional<SoknadDbData>
+	fun findByInnsendingsid(innsendingsid: String): Optional<SoknadDbData>
 }

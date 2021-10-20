@@ -1,0 +1,80 @@
+package no.nav.soknad.innsending.brukernotifikasjon.kafka
+
+import no.nav.soknad.innsending.config.AppConfiguration
+import java.util.concurrent.TimeUnit
+import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig
+import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerializer
+import no.nav.brukernotifikasjon.schemas.Beskjed
+import no.nav.brukernotifikasjon.schemas.Done
+import no.nav.brukernotifikasjon.schemas.Nokkel
+import no.nav.brukernotifikasjon.schemas.Oppgave
+import org.apache.kafka.clients.CommonClientConfigs
+import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerConfig
+import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.clients.producer.RecordMetadata
+import org.apache.kafka.common.config.SaslConfigs
+import org.apache.kafka.common.header.Headers
+import org.apache.kafka.common.header.internals.RecordHeaders
+import org.springframework.stereotype.Service
+
+@Service
+class KafkaPublisher(appConfiguration: AppConfiguration) {
+
+	private val appConfig = appConfiguration.kafkaConfig
+
+/* TODO fjern utkommentering når innsending-api er registrert som bruker av Brukernotifikasjonstjenestene.
+	private val kafkaMessageProducer = KafkaProducer<Nokkel, Beskjed>(kafkaConfigMap())
+	private val kafkaTaskProducer = KafkaProducer<Nokkel, Oppgave>(kafkaConfigMap())
+	private val kafkaDoneProducer = KafkaProducer<Nokkel, Done>(kafkaConfigMap())
+*/
+
+	fun putApplicationMessageOnTopic(key: Nokkel, value: Beskjed, headers: Headers  = RecordHeaders()) {
+/* TODO fjern utkommentering når innsending-api er registrert som bruker av Brukernotifikasjonstjenestene.
+		val topic = appConfig.kafkaTopicBeskjed
+		val kafkaProducer = kafkaMessageProducer
+		putDataOnTopic(key, value, headers, topic, kafkaProducer)
+*/
+	}
+
+	fun putApplicationTaskOnTopic(key: Nokkel, value: Oppgave, headers: Headers  = RecordHeaders()) {
+/* TODO fjern utkommentering når innsending-api er registrert som bruker av Brukernotifikasjonstjenestene.
+		val topic = appConfig.kafkaTopicOppgave
+		val kafkaProducer = kafkaTaskProducer
+		putDataOnTopic(key, value, headers, topic, kafkaProducer)
+*/
+	}
+
+	fun putApplicationDoneOnTopic(key: Nokkel, value: Done, headers: Headers  = RecordHeaders()) {
+/* TODO fjern utkommentering når innsending-api er registrert som bruker av Brukernotifikasjonstjenestene.
+		val topic = appConfig.kafkaTopicDone
+		val kafkaProducer = kafkaDoneProducer
+		putDataOnTopic(key, value, headers, topic, kafkaProducer)
+*/
+	}
+
+	private fun <T> putDataOnTopic(key: Nokkel?, value: T, headers: Headers, topic: String,
+																 kafkaProducer: KafkaProducer<Nokkel, T>) {
+		val producerRecord = ProducerRecord(topic, key, value)
+		headers.forEach { h -> producerRecord.headers().add(h) }
+
+		val recordMetadata =  kafkaProducer
+			.send(producerRecord)
+			.get(9000, TimeUnit.MILLISECONDS) // Blocking call
+	}
+
+	private fun kafkaConfigMap(): MutableMap<String, Any> {
+		return HashMap<String, Any>().also {
+			it[AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG] = appConfig.schemaRegistryUrl
+			it[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = appConfig.servers
+			it[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = SpecificAvroSerializer::class.java
+			it[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = SpecificAvroSerializer::class.java
+			if (appConfig.secure == "TRUE") {
+				it[CommonClientConfigs.SECURITY_PROTOCOL_CONFIG] = appConfig.protocol
+				it[SaslConfigs.SASL_JAAS_CONFIG] = appConfig.saslJaasConfig
+				it[SaslConfigs.SASL_MECHANISM] = appConfig.salsmec
+			}
+		}
+	}
+
+}

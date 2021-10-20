@@ -27,9 +27,9 @@ class InnsendtListeApi {
 			.body(listOf(lagDummyAktivSak("123", "NAV 10-07.73", "Tema", false)))
 	}
 
-	private fun lagDummyAktivSak(behandlingsId: String?, skjemanr: String, tema: String, ettersending: Boolean) =
+	private fun lagDummyAktivSak(innsendingsId: String?, skjemanr: String, tema: String, ettersending: Boolean) =
 		AktivSakDto(
-			behandlingsId, skjemanr, "Tittel", tema, LocalDateTime.now(), ettersending, listOf(
+			innsendingsId, skjemanr, "Tittel", tema, LocalDateTime.now(), ettersending, listOf(
 				lagDummyInnsendtVedleggDto()
 			)
 		)

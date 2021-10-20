@@ -1,5 +1,8 @@
 package no.nav.soknad.innsending.service
 
+import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
+import no.nav.soknad.innsending.brukernotifikasjon.kafka.KafkaPublisher
+import no.nav.soknad.innsending.config.AppConfiguration
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.dto.DokumentSoknadDto
 import no.nav.soknad.innsending.dto.VedleggDto
@@ -11,8 +14,10 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.Mockito.mock
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
 import java.util.*
@@ -29,6 +34,15 @@ class SoknadServiceTest {
 	@Autowired
 	private lateinit var skjemaService: HentSkjemaDataConsumer
 
+	@Autowired
+	private lateinit var appConfiguration: AppConfiguration
+
+	@MockBean
+	private lateinit var kafkaPublisherMock: KafkaPublisher
+
+	@Autowired
+	private lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher
+
 	@AfterEach
 	fun ryddOpp() {
 		vedleggRepository.deleteAll()
@@ -37,21 +51,22 @@ class SoknadServiceTest {
 
 	@Test
 	fun opprettSoknadGittSkjemanr() {
-		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository)
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher)
 
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, null)
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
 
 		assertEquals(brukerid, dokumentSoknadDto.brukerId)
 		assertEquals(skjemanr, dokumentSoknadDto.skjemanr)
 		assertEquals(spraak, dokumentSoknadDto.spraak)
+		assertNotNull(dokumentSoknadDto.innsendingsId)
 	}
 
 	@Test
 	fun opprettSoknadGittSoknadDokument() {
-		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository)
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher)
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
@@ -59,11 +74,11 @@ class SoknadServiceTest {
 		val tema = "tema"
 		val dokumentSoknadDto = lagDokumentSoknad(brukerid, skjemanr, spraak, tittel, tema)
 
-		val lagretDokumentSoknadId = soknadService.opprettEllerOppdaterSoknad(dokumentSoknadDto)
-		val lagretDokumentSoknadDto = soknadService.hentSoknad(lagretDokumentSoknadId)
+		val lagretDokumentInnsendingsId = soknadService.opprettEllerOppdaterSoknad(dokumentSoknadDto)
+		val lagretDokumentSoknadDto = soknadService.hentSoknad(lagretDokumentInnsendingsId)
 
 		assertNotNull(lagretDokumentSoknadDto.id)
-		assertNotNull(lagretDokumentSoknadDto.behandlingsId)
+		assertNotNull(lagretDokumentSoknadDto.innsendingsId)
 		assertEquals(brukerid, lagretDokumentSoknadDto.brukerId)
 		assertTrue(lagretDokumentSoknadDto.vedleggsListe.isNotEmpty())
 	}
@@ -71,11 +86,11 @@ class SoknadServiceTest {
 	@Test
 	fun hentOpprettetSoknadDokument() {
 
-		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository)
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher)
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, null)
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
 
 		val dokumentSoknadDtoHentet = soknadService.hentSoknad(dokumentSoknadDto.id!!)
 
@@ -85,13 +100,14 @@ class SoknadServiceTest {
 	@Test
 	fun hentOpprettetVedlegg() {
 
-		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository)
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher)
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, null)
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, listOf("W1"))
 
 		assertFalse(dokumentSoknadDto.vedleggsListe.isEmpty())
+		assertTrue(dokumentSoknadDto.vedleggsListe.size == 2)
 
 		val vedleggDto = soknadService.hentVedlegg(dokumentSoknadDto.vedleggsListe[0].id!!)
 
@@ -101,12 +117,12 @@ class SoknadServiceTest {
 	@Test
 	fun slettOpprettetSoknadDokument() {
 
-		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository)
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher)
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, null)
-		soknadService.slettSoknad(dokumentSoknadDto.id!!)
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
+		soknadService.slettSoknad(dokumentSoknadDto.innsendingsId!!)
 
 		assertThrows<Exception> {
 			soknadService.hentSoknad(dokumentSoknadDto.id!!)
@@ -115,12 +131,12 @@ class SoknadServiceTest {
 
 	@Test
 	fun oppdaterVedlegg() {
-		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository)
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher)
 
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, null)
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
 
 		assertEquals(brukerid, dokumentSoknadDto.brukerId)
 		assertEquals(skjemanr, dokumentSoknadDto.skjemanr)
@@ -136,12 +152,12 @@ class SoknadServiceTest {
 
 	@Test
 	fun oppdaterSoknadOgVedlegg() {
-		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository)
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher)
 
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, null)
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, listOf("W1"))
 
 		assertEquals(brukerid, dokumentSoknadDto.brukerId)
 		assertEquals(skjemanr, dokumentSoknadDto.skjemanr)
@@ -170,10 +186,11 @@ class SoknadServiceTest {
 
 	private fun oppdaterDokumentSoknad(dokumentSoknadDto: DokumentSoknadDto): DokumentSoknadDto {
 		val vedleggDto = lastOppDokumentTilVedlegg(dokumentSoknadDto.vedleggsListe[0])
-		return DokumentSoknadDto(dokumentSoknadDto.id, dokumentSoknadDto.behandlingsId, dokumentSoknadDto.ettersendingsId,
+		val vedleggDtoListe = if (dokumentSoknadDto.vedleggsListe.size>1) listOf(dokumentSoknadDto.vedleggsListe[1]) else listOf()
+		return DokumentSoknadDto(dokumentSoknadDto.id, dokumentSoknadDto.innsendingsId, dokumentSoknadDto.ettersendingsId,
 			dokumentSoknadDto.brukerId, dokumentSoknadDto.skjemanr, dokumentSoknadDto.tittel, dokumentSoknadDto.tema,
 			dokumentSoknadDto.spraak, dokumentSoknadDto.skjemaurl, SoknadsStatus.Opprettet, dokumentSoknadDto.opprettetDato, LocalDateTime.now(),
-			null, listOf(vedleggDto))
+			null, listOf(vedleggDto) + vedleggDtoListe)
 	}
 
 	private fun lastOppDokumentTilVedlegg(vedleggDto: VedleggDto) =

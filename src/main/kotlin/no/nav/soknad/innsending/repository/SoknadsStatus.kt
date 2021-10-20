@@ -2,5 +2,7 @@ package no.nav.soknad.innsending.repository
 
 enum class SoknadsStatus {
 	Opprettet,
-	Innsendt
+	Innsendt,
+	Slettet_av_bruker,
+	Automatisk_slettet
 }

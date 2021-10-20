@@ -24,7 +24,7 @@ class SkjemaRestApi(val soknadService: SoknadService) {
 		soknadService.opprettEllerOppdaterSoknad(SkjemaDokumentSoknadTransformer(skjemaDto).apply())
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body("Videresendt med behandlingsId X")
+			.body("Videresendt med innsendingsId X")
 	}
 
 }

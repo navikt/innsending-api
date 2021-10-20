@@ -42,14 +42,14 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	)])
 	@PostMapping("/ettersending")
 	fun opprettEttersending(
-		@RequestParam ettersendingTilBehandlingsId: String,
+		@RequestParam ettersendingTilinnsendingsId: String,
 		@RequestParam vedleggListe: List<String>,
 		@RequestParam brukerId: String
 	): ResponseEntity<DokumentSoknadDto> {
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(lagDummySoknad("NAV 10-07.73", null, "NO", brukerId, ettersendingTilBehandlingsId, vedleggListe))
+			.body(lagDummySoknad("NAV 10-07.73", null, "NO", brukerId, ettersendingTilinnsendingsId, vedleggListe))
 	}
 
 	@Operation(summary = "Requests fetching a previously created application.", tags = ["operations"])
@@ -57,8 +57,8 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 			description = "If successful, it will return DokumentSoknadDto which contains the title, and a list of planned " +
 				"and uploaded attachments."
 	)])
-	@GetMapping("/soknad/{behandlingsId}")
-	fun hentSoknad(@PathVariable behandlingsId: String): ResponseEntity<DokumentSoknadDto> {
+	@GetMapping("/soknad/{innsendingsId}")
+	fun hentSoknad(@PathVariable innsendingsId: String): ResponseEntity<DokumentSoknadDto> {
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -69,8 +69,8 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
 		description = "If successful, it will return VedleggsListeDto which contains list of attachments to the specified application."
 	)])
-	@GetMapping("/soknad/{behandlingsId}/vedlegg")
-	fun hentVedleggsListe(@PathVariable behandlingsId: String): ResponseEntity<VedleggsListeDto> {
+	@GetMapping("/soknad/{innsendingsId}/vedlegg")
+	fun hentVedleggsListe(@PathVariable innsendingsId: String): ResponseEntity<VedleggsListeDto> {
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -81,8 +81,8 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
 		description = "If successful, it will return the specified VedleggDto."
 	)])
-	@GetMapping("/soknad/{behandlingsId}/vedlegg/{vedleggsId}")
-	fun hentVedlegg(@PathVariable behandlingsId: String, @PathVariable vedleggsId: String): ResponseEntity<VedleggDto> {
+	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}")
+	fun hentVedlegg(@PathVariable innsendingsId: String, @PathVariable vedleggsId: String): ResponseEntity<VedleggDto> {
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -93,8 +93,8 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
 			description = "If successful, the application is stored and an updated version of the DokumentSoknadDto is returned."
 	)])
-	@PostMapping("/soknad/{behandlingsId}")
-	fun lagreSoknad(@PathVariable behandlingsId: String, @RequestBody dokumentSoknadDto: DokumentSoknadDto): ResponseEntity<DokumentSoknadDto> {
+	@PostMapping("/soknad/{innsendingsId}")
+	fun lagreSoknad(@PathVariable innsendingsId: String, @RequestBody dokumentSoknadDto: DokumentSoknadDto): ResponseEntity<DokumentSoknadDto> {
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -107,9 +107,9 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
 			description = "If successful, the attachment is stored and an updated version of the VedleggDto is returned."
 	)])
-	@PostMapping("/soknad/{behandlingsId}/vedlegg/{vedleggsId}")
+	@PostMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}")
 	fun lagreVedlegg(
-		@PathVariable behandlingsId: String,
+		@PathVariable innsendingsId: String,
 		@RequestBody vedlegg: VedleggDto
 	): ResponseEntity<VedleggDto> {
 
@@ -126,7 +126,7 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 		value = [ApiResponse(responseCode = "200",
 			description = "If successful, the attachment is deleted from the database and a confirmation string is returned."
 	)])
-	@DeleteMapping("/soknad/{behandlingsId}/vedlegg/{vedleggsId}")
+	@DeleteMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}")
 	fun slettVedlegg(@PathVariable vedleggId: Long): ResponseEntity<String> {
 
 		return ResponseEntity
@@ -138,12 +138,12 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
 			description = "If successful, the application is deleted from the database and a confirmation string is returned."
 	)])
-	@DeleteMapping("/soknad/{behandlingsId}")
-	fun slettSoknad(@PathVariable behandlingsId: Long): ResponseEntity<String> {
+	@DeleteMapping("/soknad/{innsendingsId}")
+	fun slettSoknad(@PathVariable innsendingsId: Long): ResponseEntity<String> {
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body("Slettet $behandlingsId")
+			.body("Slettet $innsendingsId")
 	}
 
 
@@ -151,12 +151,12 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
 			description = "If successful, the application is sent to NAV, and a confirmation string is returned."
 	)])
-	@PostMapping("/sendInn/{behandlingsId}")
-	fun sendInnSoknad(@PathVariable behandlingsId: String): ResponseEntity<String> {
+	@PostMapping("/sendInn/{innsendingsId}")
+	fun sendInnSoknad(@PathVariable innsendingsId: String): ResponseEntity<String> {
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body("Soknad $behandlingsId er sendt inn")
+			.body("Soknad $innsendingsId er sendt inn")
 	}
 
 

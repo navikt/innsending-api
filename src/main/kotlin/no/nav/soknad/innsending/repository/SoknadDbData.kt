@@ -7,7 +7,7 @@ import javax.persistence.*
 @Table(name = "soknad")
 data class SoknadDbData(
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY) @Column(name = "id") val id: Long?,
-	@Column(name = "behandlingsid") val behandlingsid: String,
+	@Column(name = "innsendingsid") val innsendingsid: String,
 	@Column(name = "tittel", columnDefinition = "varchar") val tittel: String,
 	@Column(name = "skjemanr", columnDefinition = "varchar") val skjemanr: String,
 	@Column(name = "tema", columnDefinition = "varchar") val tema: String,

@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 
 data class DokumentSoknadDto(
 	val id: Long?,
-	val behandlingsId: String?,
+	val innsendingsId: String?,
 	val ettersendingsId: String?,
 	val brukerId: String,
 	val skjemanr: String,

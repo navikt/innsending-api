@@ -3,7 +3,7 @@ package no.nav.soknad.innsending.dto
 import java.time.LocalDateTime
 
 data class AktivSakDto(
-	val behandlingsId: String?,
+	val innsendingsId: String?,
 	val skjemanr: String,
 	val tittel: String,
 	val tema: String,
