@@ -5,10 +5,7 @@ import no.nav.brukernotifikasjon.schemas.Beskjed
 import no.nav.brukernotifikasjon.schemas.Done
 import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.Oppgave
-import no.nav.brukernotifikasjon.schemas.builders.BeskjedBuilder
-import no.nav.brukernotifikasjon.schemas.builders.DoneBuilder
-import no.nav.brukernotifikasjon.schemas.builders.NokkelBuilder
-import no.nav.brukernotifikasjon.schemas.builders.OppgaveBuilder
+import no.nav.brukernotifikasjon.schemas.builders.*
 import no.nav.soknad.innsending.brukernotifikasjon.kafka.KafkaPublisher
 import no.nav.soknad.innsending.config.AppConfiguration
 import no.nav.soknad.innsending.dto.DokumentSoknadDto
@@ -21,6 +18,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.net.URL
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.stream.Collectors
 
 @Service
@@ -36,6 +34,7 @@ class BrukernotifikasjonPublisher(appConfiguration: AppConfiguration, private va
 	val linkSoknader = "/soknadinnsending/soknad/"
 	val linkSoknaderEttersending = "/soknadinnsending/startettersending/"
 	val linkDokumentinnsending = "/dokumentinnsending/oversikt/"
+	val eksternVarsling = true
 
 	private val logger = LoggerFactory.getLogger(BrukernotifikasjonPublisher::class.java)
 	private val OBJECT_MAPPER = ObjectMapper()
@@ -115,10 +114,7 @@ class BrukernotifikasjonPublisher(appConfiguration: AppConfiguration, private va
 	}
 
 	private fun createKey(innsendingsId: String): Nokkel {
-		return NokkelBuilder()
-			.withEventId(innsendingsId)
-			.withSystembruker(appConfig.username)
-			.build()
+		return Nokkel(appConfig.username, innsendingsId)
 	}
 
 
@@ -157,37 +153,21 @@ class BrukernotifikasjonPublisher(appConfiguration: AppConfiguration, private va
 	private fun newTask(innsendingsId: String, groupId: String, title: String, dokumentInnsending: Boolean
 											, personId: String, tema: String, ettersending: Boolean, hendelsestidspunkt: LocalDateTime
 	): Oppgave {
-		return OppgaveBuilder()
-			.withFodselsnummer(personId)
-			.withGrupperingsId(groupId)
-			.withTekst(title)
-			.withLink(URL(createLink(innsendingsId, dokumentInnsending, tema, ettersending)))
-			.withSikkerhetsnivaa(securityLevel)
-			.withTidspunkt(hendelsestidspunkt)
-			.build()
+		return Oppgave(hendelsestidspunkt.toEpochSecond(ZoneOffset.UTC), personId, groupId, title,
+			createLink(innsendingsId, dokumentInnsending, tema, ettersending), securityLevel, eksternVarsling, emptyList())
 	}
 
 
 	private fun newApplication(innsendingsId: String, groupId: String, title: String, dokumentInnsending: Boolean
 														 , personId: String, tema: String, ettersending: Boolean, hendelsestidspunkt: LocalDateTime
 	): Beskjed {
-		return BeskjedBuilder()
-			.withFodselsnummer(personId)
-			.withGrupperingsId(groupId)
-			.withTekst(title)
-			.withLink(URL(createLink(innsendingsId, dokumentInnsending, tema, ettersending)))
-			.withSikkerhetsnivaa(securityLevel)
-			.withTidspunkt(hendelsestidspunkt)
-			.withSynligFremTil(LocalDateTime.now().plusDays(soknadLevetid))
-			.build()
+		return Beskjed(hendelsestidspunkt.toEpochSecond(ZoneOffset.UTC), LocalDateTime.now().plusDays(soknadLevetid).toEpochSecond(
+			ZoneOffset.UTC), personId, groupId, title,
+			createLink(innsendingsId, dokumentInnsending, tema, ettersending), securityLevel, eksternVarsling, emptyList())
 	}
 
 	private fun finishedApplication(personId: String, groupId: String, hendelsestidspunkt: LocalDateTime): Done {
-		return DoneBuilder()
-			.withFodselsnummer(personId)
-			.withGrupperingsId(groupId)
-			.withTidspunkt(hendelsestidspunkt)
-			.build()
+		return Done(hendelsestidspunkt.toEpochSecond(ZoneOffset.UTC), groupId, personId)
 	}
 
 	private fun createLink(innsendingsId: String, dokumentInnsending: Boolean, tema: String, ettersending: Boolean): String {

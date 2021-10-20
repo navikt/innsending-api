@@ -31,7 +31,10 @@
 		<prometheus-client.version>0.11.0</prometheus-client.version>
 		<logstash.version>6.6</logstash.version>
 		<springdoc.version>1.5.9</springdoc.version>
+<!--
 		<brukernotifikasjon-schemas.version>1.2021.01.18-11.12-b9c8c40b98d1</brukernotifikasjon-schemas.version>
+-->
+		<brukernotifikasjon-schemas.version>1.2021.10.04-10.52-1b464f9920b0</brukernotifikasjon-schemas.version>
 		<confluent.version>5.5.2</confluent.version>
 		<kafka.version>2.6.0</kafka.version>
 		<kafka-streams-avro-serde.version>5.5.0</kafka-streams-avro-serde.version>
@@ -131,6 +134,13 @@
 			<artifactId>springdoc-openapi-kotlin</artifactId>
 			<version>${springdoc.version}</version>
 		</dependency>
+<!--
+		<dependency>
+			<groupId>com.github.navikt</groupId>
+			<artifactId>brukernotifikasjon-schemas</artifactId>
+			<version>${brukernotifikasjon-schemas.version}</version>
+		</dependency>
+-->
 		<dependency>
 			<groupId>com.github.navikt</groupId>
 			<artifactId>brukernotifikasjon-schemas</artifactId>
@@ -242,6 +252,10 @@
 		<repository>
 			<id>central</id>
 			<url>https://repo1.maven.org/maven2</url>
+		</repository>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
 		</repository>
 	</repositories>
 
