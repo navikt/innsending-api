@@ -5,6 +5,6 @@
   "DATABASE_NAME": "dokumentinnsending-prod",
   "VAULT_DB_PATH": "postgresql/prod-fss",
   "APPLICATION_PROFILE": "prod",
-  "SRV_KV_PATH": "/serviceuser/data/prod/srvdokumentinnsending",
+  "SRV_KV_PATH": "/serviceuser/data/prod/srvinnsending-api",
   "APPDYN_KV_PATH": "/apikey/appdynamics/prod"
 }

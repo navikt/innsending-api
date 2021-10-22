@@ -6,7 +6,7 @@ import no.nav.brukernotifikasjon.schemas.Done
 import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.Oppgave
 import no.nav.brukernotifikasjon.schemas.builders.*
-import no.nav.soknad.innsending.brukernotifikasjon.kafka.KafkaPublisher
+import no.nav.soknad.innsending.brukernotifikasjon.kafka.KafkaPublisherInterface
 import no.nav.soknad.innsending.config.AppConfiguration
 import no.nav.soknad.innsending.dto.DokumentSoknadDto
 import no.nav.soknad.innsending.dto.VedleggDto
@@ -22,22 +22,18 @@ import java.time.ZoneOffset
 import java.util.stream.Collectors
 
 @Service
-class BrukernotifikasjonPublisher(appConfiguration: AppConfiguration, private val kafkaPublisher: KafkaPublisher) {
+class BrukernotifikasjonPublisher(appConfiguration: AppConfiguration, private val kafkaPublisher: KafkaPublisherInterface) {
 
 	private val appConfig = appConfiguration.kafkaConfig
 	private val securityLevel = 4 // Forutsetter at brukere har logget seg på f.eks. bankId slik at nivå 4 er oppnådd
 	private val soknadLevetid = 56L // Dager
 	val tittelPrefixEttersendelse = "Du har sagt du skal ettersende vedlegg til "
 	val tittelPrefixNySoknad = "Du har påbegynt en søknad om "
-	val linkDagpenger = "/soknaddagpenger-innsending/soknad/"
-	val linkDagpengerEttersending = "/soknaddagpenger-innsending/startettersending/"
-	val linkSoknader = "/soknadinnsending/soknad/"
-	val linkSoknaderEttersending = "/soknadinnsending/startettersending/"
-	val linkDokumentinnsending = "/dokumentinnsending/oversikt/"
+	val linkDokumentinnsending = appConfig.gjenopptaSoknadsArbeid
+	val linkDokumentinnsendingEttersending = appConfig.ettersendePaSoknad
 	val eksternVarsling = true
 
 	private val logger = LoggerFactory.getLogger(BrukernotifikasjonPublisher::class.java)
-	private val OBJECT_MAPPER = ObjectMapper()
 
 	fun soknadStatusChange(dokumentSoknad: DokumentSoknadDto): Boolean {
 
@@ -83,7 +79,7 @@ class BrukernotifikasjonPublisher(appConfiguration: AppConfiguration, private va
 
 		val vedlegg = getDocumentsToBeSentInLater(dokumentSoknad.vedleggsListe)
 		// Hvis det er ett eller flere dokumenter som skal ettersendes, lag en ettersendelsesoppgave
-		if (dokumentSoknad.ettersendingsId != null && !vedlegg.isEmpty()) {
+		if (dokumentSoknad.ettersendingsId == null && !vedlegg.isEmpty()) {
 			publishNewAttachmentTask( dokumentSoknad.innsendingsId, groupId, tittelPrefixEttersendelse + dokumentSoknad.tittel,
 				true, dokumentSoknad.brukerId, dokumentSoknad.tema, dokumentSoknad.endretDato)
 		} else {
@@ -167,31 +163,17 @@ class BrukernotifikasjonPublisher(appConfiguration: AppConfiguration, private va
 	}
 
 	private fun finishedApplication(personId: String, groupId: String, hendelsestidspunkt: LocalDateTime): Done {
-		return Done(hendelsestidspunkt.toEpochSecond(ZoneOffset.UTC), groupId, personId)
+		return Done(hendelsestidspunkt.toEpochSecond(ZoneOffset.UTC), personId, groupId)
 	}
 
 	private fun createLink(innsendingsId: String, dokumentInnsending: Boolean, tema: String, ettersending: Boolean): String {
 		// Eksempler:
-		// Ettersendingslink: https://tjenester-q1.nav.no/soknadinnsending/startettersending/10010WQEF
-		// Eksempel https://www.nav.no/soknader/nb/person/stonader-ved-dodsfall/barn-som-har-mistet-en-eller-begge-foreldrene/NAV%2018-01.05/ettersendelse/dokumentinnsending
-		// Fortsett dagpengesøknadlink: https://tjenester.nav.no/soknaddagpenger-innsending/soknad/10014Qi1G
-		if (dokumentInnsending) {
-			return appConfig.tjenesteUrl + linkDokumentinnsending + innsendingsId
-		} else {
-			if ("DAG".equals(tema, true)) {
-				if (ettersending) {
-					return appConfig.tjenesteUrl + linkDagpengerEttersending + innsendingsId
-				}
-				return appConfig.tjenesteUrl + linkDagpenger + innsendingsId
-			} else {
-				// Merk at det ikke sendes inn søknader relatert til BID via henvendelse, kun dokumentinnsending
-				if (ettersending) {
-					return appConfig.tjenesteUrl + linkSoknaderEttersending + innsendingsId
-				}
-				return appConfig.tjenesteUrl + linkSoknader + innsendingsId
+		// Fortsett senere: https://tjenester-q1.nav.no/dokumentinnsending/oversikt/10014Qi1G For å gjenoppta påbegynt søknad
+		// Ettersendingslink: https://tjenester-q1.nav.no/dokumentinnsending/ettersendelse/10010WQEF For å ettersende vedlegg på tidligere innsendt søknad (10010WQEF)
+			if (ettersending) {
+				return appConfig.tjenesteUrl + linkDokumentinnsendingEttersending + innsendingsId  // Nytt endepunkt
 			}
-		}
-
+			return appConfig.tjenesteUrl + linkDokumentinnsending + innsendingsId
 	}
 
 }

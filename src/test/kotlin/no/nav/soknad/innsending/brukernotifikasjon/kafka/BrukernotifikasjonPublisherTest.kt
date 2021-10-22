@@ -1,44 +1,163 @@
 package no.nav.soknad.innsending.brukernotifikasjon.kafka
 
 import no.nav.brukernotifikasjon.schemas.Beskjed
-import no.nav.soknad.innsending.repository.OpplastingsStatus
-import org.joda.time.DateTime
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
+import io.mockk.*
+import io.mockk.impl.annotations.InjectMockKs
+import io.mockk.impl.annotations.SpyK
+import no.nav.brukernotifikasjon.schemas.Done
+import no.nav.brukernotifikasjon.schemas.Nokkel
+import no.nav.brukernotifikasjon.schemas.Oppgave
+import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
+import no.nav.soknad.innsending.config.AppConfiguration
+import no.nav.soknad.innsending.repository.OpplastingsStatus
+import no.nav.soknad.innsending.repository.SoknadsStatus
+import no.nav.soknad.innsending.utils.lagDokumentSoknad
+import no.nav.soknad.innsending.utils.lagVedlegg
+
 
 internal class BrukernotifikasjonPublisherTest {
 
+	val appConfiguration = AppConfiguration()
 
-/*
+	@InjectMockKs
+	var kafkaPublisher = mockk<KafkaPublisher>()
+
+	@SpyK
+	var brukernotifikasjonPublisher = BrukernotifikasjonPublisher(appConfiguration, kafkaPublisher)
+
+	//private val kafkaPublisherMock: KafkaPublisherInterface = mock(KafkaPublisherInterface::class.java)
+
 
 	@Test
-	fun `sjekk melding om ny dokumentinnsending blir publisert`() {
-
-		val henvendelsesId = "123456"
-		val forrigeHenvendelse = null
-		val ettersendelse = false
-		val dokumentinnsending = true
+	fun `sjekk at Beskjed melding blir publisert ved oppretting av ny dokumentinnsending`() {
+		val innsendingsid = "123456"
+		val skjemanr = "NAV 95-00.11"
+		val spraak = "no"
 		val personId = "12125912345"
 		val tema = "PEN"
-		val endringsDato = DateTime.now()
-		val status = OpplastingsStatus.LASTET_OPP
 		val tittel = "Dokumentasjon av utdanning"
-		val xml = lagMetadataliste(false, "{\"tittel\":\"$tittel\",\"tema\":\"$tema\"}")
+		val id = 1L
 
 		val message = slot<Beskjed>()
 		every { kafkaPublisher.putApplicationMessageOnTopic(any(), capture(message)) } returns Unit
 
-		soknadStatusChangePublisher.soknadStatusChange(henvendelsesId, forrigeHenvendelse, ettersendelse, dokumentinnsending, personId, tema, endringsDato, status, marshal(xml))
+		brukernotifikasjonPublisher.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid))
 
 		assertTrue(message.isCaptured)
 		assertEquals(personId, message.captured.getFodselsnummer())
-		assertEquals(henvendelsesId, message.captured.getGrupperingsId())
+		assertEquals(innsendingsid, message.captured.getGrupperingsId())
 		assertTrue(message.captured.getTekst().contains(tittel))
-		assertEquals(soknadStatusChangePublisher.tittelPrefixNySoknad + tittel, message.captured.getTekst())
-		assertEquals("https://localhost" + soknadStatusChangePublisher.linkDokumentinnsending + henvendelsesId, message.captured.getLink())
+		assertEquals(brukernotifikasjonPublisher.tittelPrefixNySoknad + tittel, message.captured.getTekst())
+		assertEquals(appConfiguration.kafkaConfig.tjenesteUrl + appConfiguration.kafkaConfig.gjenopptaSoknadsArbeid + innsendingsid, message.captured.getLink())
+	}
+
+	@Test
+	fun `sjekk at Done melding blir publisert ved innsending av dokumentsoknad`() {
+		val innsendingsid = "123456"
+		val skjemanr = "NAV 95-00.11"
+		val spraak = "no"
+		val personId = "12125912345"
+		val tema = "PEN"
+		val tittel = "Dokumentasjon av utdanning"
+		val id = 2L
+
+		val done = slot<Done>()
+
+		every { kafkaPublisher.putApplicationDoneOnTopic(any(), capture(done)) } returns Unit
+
+		brukernotifikasjonPublisher.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatus.Innsendt))
+
+		assertTrue(done.isCaptured)
+		assertEquals(personId, done.captured.getFodselsnummer())
+	}
+
+	@Test
+	fun `sjekk at Done og Oppgave meldinger blir publisert ved innsending av dokumentsoknad med vedlegg som skal ettersendes`() {
+		val innsendingsid = "123456"
+		val skjemanr = "NAV 95-00.11"
+		val spraak = "no"
+		val personId = "12125912345"
+		val tema = "PEN"
+		val tittel = "Dokumentasjon av utdanning"
+		val id = 3L
+
+		val done = slot<Done>()
+		val oppgave = slot<Oppgave>()
+
+		every { kafkaPublisher.putApplicationDoneOnTopic(any(), capture(done)) } returns Unit
+		every { kafkaPublisher.putApplicationTaskOnTopic(any(), capture(oppgave)) } returns Unit
+
+		brukernotifikasjonPublisher.soknadStatusChange(
+			lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatus.Innsendt,
+		listOf(
+			lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatus.LASTET_OPP, false,"/litenPdf.pdf" ),
+			lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatus.SEND_SENERE, false)),
+		))
+
+		assertTrue(done.isCaptured)
+		assertEquals(personId, done.captured.getFodselsnummer())
+
+		assertTrue(oppgave.isCaptured)
+		assertEquals(personId, oppgave.captured.getFodselsnummer())
+		assertEquals(innsendingsid, oppgave.captured.getGrupperingsId())
+		assertTrue(oppgave.captured.getTekst().contains(tittel))
+		assertEquals(brukernotifikasjonPublisher.tittelPrefixEttersendelse + tittel, oppgave.captured.getTekst())
+		assertEquals(appConfiguration.kafkaConfig.tjenesteUrl + appConfiguration.kafkaConfig.ettersendePaSoknad + innsendingsid, oppgave.captured.getLink())
+	}
+
+	@Test
+	fun `sjekk at Done meldinger blir publisert ved ettersending av dokumentsoknad der alle obligatoriske vedlegg er ettersendt`() {
+		val innsendingsid = "123456"
+		val ettersendingsId = "123455"
+		val skjemanr = "NAV 95-00.11"
+		val spraak = "no"
+		val personId = "12125912345"
+		val tema = "PEN"
+		val tittel = "Dokumentasjon av utdanning"
+		val id = 3L
+
+		val nokler = mutableListOf<Nokkel>()
+		val done = slot<Done>()
+
+		every { kafkaPublisher.putApplicationDoneOnTopic(capture(nokler), capture(done)) } returns Unit   // Nokkel(appConfiguration.kafkaConfig.username, innsendingsid )
+		every { kafkaPublisher.putApplicationDoneOnTopic(capture(nokler), capture(done)) } returns Unit //
+
+		brukernotifikasjonPublisher.soknadStatusChange(
+			lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatus.Innsendt,
+				listOf(
+					lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatus.LASTET_OPP, false,"/litenPdf.pdf" ),
+					lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatus.LASTET_OPP, false, "/litenPdf.pdf")),
+				ettersendingsId))
+
+		assertTrue(done.isCaptured)
+		assertEquals(personId, done.captured.getFodselsnummer())
+		assertEquals(innsendingsid, nokler[0].getEventId())
+		assertEquals(ettersendingsId+ "-ettersending", nokler[1].getEventId())
 
 	}
-*/
+
+	@Test
+	fun `sjekk at Done melding blir publisert ved sletting av dokumentsoknad`() {
+		val innsendingsid = "123456"
+		val skjemanr = "NAV 95-00.11"
+		val spraak = "no"
+		val personId = "12125912345"
+		val tema = "PEN"
+		val tittel = "Dokumentasjon av utdanning"
+		val id = 2L
+
+		val done = slot<Done>()
+
+		every { kafkaPublisher.putApplicationDoneOnTopic(any(), capture(done)) } returns Unit
+
+		brukernotifikasjonPublisher.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatus.Slettet_av_bruker))
+
+		assertTrue(done.isCaptured)
+		assertEquals(personId, done.captured.getFodselsnummer())
+	}
+
 
 }

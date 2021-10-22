@@ -11,20 +11,20 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/innsending")
+@RequestMapping("/fyllUt")
 class SkjemaRestApi(val soknadService: SoknadService) {
 
-	@Operation(summary = "Requests to send application to NAV.", tags = ["operations"])
+	@Operation(summary = "Requests to add attachment and route to dialog for sending application to NAV.", tags = ["operations"])
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
-		description = "If successful, the application is sent to NAV to be archived and handled by case worker. If successful ok text is returned."
+		description = "Application is stored and applicant is guided to page to upload additional attachments if required else applicant is guided to summary page before committing it to NAV."
 	)])
-	@PostMapping("/soknad")
-	fun sendInnSoknad(@RequestBody skjemaDto: SkjemaDto): ResponseEntity<String> {
+	@PostMapping("/leggTilVedlegg")
+	fun soknadFraFyllUt(@RequestBody skjemaDto: SkjemaDto): ResponseEntity<String> {
 
 		soknadService.opprettEllerOppdaterSoknad(SkjemaDokumentSoknadTransformer(skjemaDto).apply())
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body("Videresendt med innsendingsId X")
+			.body("Opprettet med innsendingsId X")
 	}
 
 }

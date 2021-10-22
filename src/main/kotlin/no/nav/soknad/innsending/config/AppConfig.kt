@@ -33,7 +33,9 @@ private val defaultProperties = ConfigurationMap(
 		"KAFKA.TOPIC.OPPGAVE" to "aapen-brukernotifikasjon-nyOppgave-v1",
 		"KAFKA.TOPIC.DONE" to "aapen-brukernotifikasjon-done-v1",
 		"PUBLISERE_BRUKERNOTIFIKASJONER" to "TRUE",
-		"TJENESTE_URL" to "https://tjenester-q1.nav.no"
+		"TJENESTE_URL" to "https://localhost",
+		"GJENOPPTA_SOKNADS_ARBEID" to "/dokumentinnsending/oversikt/",
+		"ETTERSENDE_PA_SOKNAD" to "/dokumentinnsending/ettersending/"
 
 	)
 )
@@ -78,9 +80,11 @@ data class AppConfiguration(val restConfig: RestConfig = RestConfig(), val dbCon
 	data class KafkaConfig(
 		val profiles: String = "APPLICATION_PROFILE".configProperty(),
 		val tjenesteUrl: String = "TJENESTE_URL".configProperty(),
+		val gjenopptaSoknadsArbeid: String = "GJENOPPTA_SOKNADS_ARBEID".configProperty(),
+		val ettersendePaSoknad: String = "ETTERSENDE_PA_SOKNAD".configProperty(),
 		val username: String = readFileAsText("/var/run/secrets/nais.io/serviceuser/username", "APPLICATION_USERNAME".configProperty()),
 		val password: String = readFileAsText("/var/run/secrets/nais.io/serviceuser/password", "APPLICATION_PASSWORD".configProperty()),
-		val servers: String = readFileAsText("/var/run/secrets/nais.io/kv/kafkaBootstrapServers", "KAFKA_BOOTSTRAP_SERVERS".configProperty()),
+		val servers: String = "KAFKA_BOOTSTRAP_SERVERS".configProperty(),
 		val schemaRegistryUrl: String = "SCHEMA_REGISTRY_URL".configProperty(),
 		val clientId: String = username,
 		val secure: String = "KAFKA_SECURITY".configProperty(),
@@ -91,7 +95,6 @@ data class AppConfiguration(val restConfig: RestConfig = RestConfig(), val dbCon
 		val kafkaTopicOppgave: String = "KAFKA.TOPIC.OPPGAVE".configProperty(),
 		val kafkaTopicDone: String = "KAFKA.TOPIC.DONE".configProperty(),
 		val publisereEndringer: Boolean = "PUBLISERE_BRUKERNOTIFIKASJONER".configProperty().toBoolean()
-
 	)
 
 }

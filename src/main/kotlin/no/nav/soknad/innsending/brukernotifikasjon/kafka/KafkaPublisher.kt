@@ -19,7 +19,7 @@ import org.apache.kafka.common.header.internals.RecordHeaders
 import org.springframework.stereotype.Service
 
 @Service
-class KafkaPublisher(appConfiguration: AppConfiguration) {
+class KafkaPublisher(appConfiguration: AppConfiguration): KafkaPublisherInterface {
 
 	private val appConfig = appConfiguration.kafkaConfig
 
@@ -29,7 +29,7 @@ class KafkaPublisher(appConfiguration: AppConfiguration) {
 	private val kafkaDoneProducer = KafkaProducer<Nokkel, Done>(kafkaConfigMap())
 */
 
-	fun putApplicationMessageOnTopic(key: Nokkel, value: Beskjed, headers: Headers  = RecordHeaders()) {
+	override fun putApplicationMessageOnTopic(key: Nokkel, value: Beskjed, headers: Headers) {
 /* TODO fjern utkommentering når innsending-api er registrert som bruker av Brukernotifikasjonstjenestene.
 		val topic = appConfig.kafkaTopicBeskjed
 		val kafkaProducer = kafkaMessageProducer
@@ -37,7 +37,7 @@ class KafkaPublisher(appConfiguration: AppConfiguration) {
 */
 	}
 
-	fun putApplicationTaskOnTopic(key: Nokkel, value: Oppgave, headers: Headers  = RecordHeaders()) {
+	override fun putApplicationTaskOnTopic(key: Nokkel, value: Oppgave, headers: Headers) {
 /* TODO fjern utkommentering når innsending-api er registrert som bruker av Brukernotifikasjonstjenestene.
 		val topic = appConfig.kafkaTopicOppgave
 		val kafkaProducer = kafkaTaskProducer
@@ -45,7 +45,7 @@ class KafkaPublisher(appConfiguration: AppConfiguration) {
 */
 	}
 
-	fun putApplicationDoneOnTopic(key: Nokkel, value: Done, headers: Headers  = RecordHeaders()) {
+	override fun putApplicationDoneOnTopic(key: Nokkel, value: Done, headers: Headers) {
 /* TODO fjern utkommentering når innsending-api er registrert som bruker av Brukernotifikasjonstjenestene.
 		val topic = appConfig.kafkaTopicDone
 		val kafkaProducer = kafkaDoneProducer
