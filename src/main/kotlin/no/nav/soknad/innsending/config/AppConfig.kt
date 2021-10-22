@@ -29,9 +29,9 @@ private val defaultProperties = ConfigurationMap(
 		"KAFKA_SECURITY" to "",
 		"KAFKA_SECPROT" to "",
 		"KAFKA_SASLMEC" to "",
-		"KAFKA.TOPIC.BESKJED" to "aapen-brukernotifikasjon-nyBeskjed-v1",
-		"KAFKA.TOPIC.OPPGAVE" to "aapen-brukernotifikasjon-nyOppgave-v1",
-		"KAFKA.TOPIC.DONE" to "aapen-brukernotifikasjon-done-v1",
+		"KAFKA_TOPIC_BESKJED" to "aapen-brukernotifikasjon-nyBeskjed-v1",
+		"KAFKA_TOPIC_OPPGAVE" to "aapen-brukernotifikasjon-nyOppgave-v1",
+		"KAFKA_TOPIC_DONE" to "aapen-brukernotifikasjon-done-v1",
 		"PUBLISERE_BRUKERNOTIFIKASJONER" to "TRUE",
 		"TJENESTE_URL" to "https://localhost",
 		"GJENOPPTA_SOKNADS_ARBEID" to "/dokumentinnsending/oversikt/",
@@ -91,9 +91,9 @@ data class AppConfiguration(val restConfig: RestConfig = RestConfig(), val dbCon
 		val protocol: String = "KAFKA_SECPROT".configProperty(), // SASL_PLAINTEXT | SASL_SSL
 		val salsmec: String = "KAFKA_SASLMEC".configProperty(), // PLAIN
 		val saslJaasConfig: String = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$username\" password=\"$password\";",
-		val kafkaTopicBeskjed: String = "KAFKA.TOPIC.BESKJED".configProperty(),
-		val kafkaTopicOppgave: String = "KAFKA.TOPIC.OPPGAVE".configProperty(),
-		val kafkaTopicDone: String = "KAFKA.TOPIC.DONE".configProperty(),
+		val kafkaTopicBeskjed: String = "KAFKA_TOPIC_BESKJED".configProperty(),
+		val kafkaTopicOppgave: String = "KAFKA_TOPIC_OPPGAVE".configProperty(),
+		val kafkaTopicDone: String = "KAFKA_TOPIC_DONE".configProperty(),
 		val publisereEndringer: Boolean = "PUBLISERE_BRUKERNOTIFIKASJONER".configProperty().toBoolean()
 	)
 
