@@ -1,15 +1,34 @@
 package no.nav.soknad.innsending.consumerapis.skjema
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.stereotype.Component
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.config.ConfigurableBeanFactory
+import org.springframework.context.annotation.Scope
+import org.springframework.stereotype.Service
 import java.io.IOException
 import java.util.*
+import kotlin.concurrent.timerTask
 
-@Component
-class HentSkjemaDataConsumer {
+@Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
+@Service
+class HentSkjemaDataConsumer(private val hentSkjemaData: HentSkjemaData) {
 
+	private val logger = LoggerFactory.getLogger(javaClass)
 	private var sanityList = initSkjemaDataFromDisk() ?: emptyList()
 
+	init {
+		Timer().scheduleAtFixedRate(timerTask {
+			var skjemaFraDisk = initSkjemaDataFromDisk()
+			var skjemaFraSanity: List<SkjemaOgVedleggsdata>? = null
+			try {
+				skjemaFraSanity = hentSkjemaData()
+			} catch (e: Exception) {
+				logger.error("Feil ved henting av skjemadata fra Sanity", e.message)
+			}
+			sanityList = (if (skjemaFraSanity.isNullOrEmpty()) skjemaFraDisk else skjemaFraSanity) ?: emptyList()
+		}, 0, 3600*1000)
+
+	}
 
 	// TODO implementere språk avhengig oppslag?
 	fun hentSkjemaEllerVedlegg(id: String, spraak: String?): KodeverkSkjema {
@@ -49,8 +68,13 @@ class HentSkjemaDataConsumer {
 			sanity.url_en
 	}
 
+
+	private fun hentSkjemaData(): List<SkjemaOgVedleggsdata>? {
+		return hentSkjemaData.hent()
+	}
+
 	@Throws(IOException::class)
-	private fun initSkjemaDataFromDisk(): List<SkjemaOgVedleggsdata>? {
+	fun initSkjemaDataFromDisk(): List<SkjemaOgVedleggsdata>? {
 		val oldSanityResponse: String? = readJsonResponseDataFromDisk()
 		val jsonMapper = ObjectMapper()
 		return jsonMapper.readValue(

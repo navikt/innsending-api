@@ -28,7 +28,9 @@ spec:
       cpu: 200m
       memory: 256Mi
   ingresses:
-    - {{ INGRESS }}
+  {{#each INGRESSES as |url|}}
+     - {{url}}
+  {{/each}}
   vault:
     enabled: true
     paths:

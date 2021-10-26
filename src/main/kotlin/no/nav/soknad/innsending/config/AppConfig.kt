@@ -35,7 +35,8 @@ private val defaultProperties = ConfigurationMap(
 		"PUBLISERE_BRUKERNOTIFIKASJONER" to "TRUE",
 		"TJENESTE_URL" to "https://localhost",
 		"GJENOPPTA_SOKNADS_ARBEID" to "/dokumentinnsending/oversikt/",
-		"ETTERSENDE_PA_SOKNAD" to "/dokumentinnsending/ettersending/"
+		"ETTERSENDE_PA_SOKNAD" to "/dokumentinnsending/ettersending/",
+		"SANITY_URL" to "http://localhost:8080"
 
 	)
 )
@@ -59,7 +60,8 @@ data class AppConfiguration(val restConfig: RestConfig = RestConfig(), val dbCon
 		val password: String = readFileAsText("/var/run/secrets/nais.io/serviceuser/password", "APPLICATION_PASSWORD".configProperty()),
 		val soknadsfillagerUrl: String = "SOKNADSFILLAGER_URL".configProperty(),
 		val soknadsMottakerUrl: String = "SOKNADSMOTTAKER_URL".configProperty(),
-		val maxFileSize: Int = "MAX_FILE_SIZE".configProperty().toInt()
+		val maxFileSize: Int = "MAX_FILE_SIZE".configProperty().toInt(),
+		val sanityUrl: String = "SANITY_URL".configProperty()
 	)
 
 	data class DBConfig(

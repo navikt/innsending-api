@@ -1,8 +1,10 @@
 package no.nav.soknad.innsending.service
 
+import com.nhaarman.mockitokotlin2.whenever
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.brukernotifikasjon.kafka.KafkaPublisher
 import no.nav.soknad.innsending.config.AppConfiguration
+import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaData
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.dto.DokumentSoknadDto
 import no.nav.soknad.innsending.dto.VedleggDto
@@ -12,6 +14,7 @@ import no.nav.soknad.innsending.repository.SoknadsStatus
 import no.nav.soknad.innsending.repository.VedleggRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
@@ -30,6 +33,9 @@ class SoknadServiceTest {
 	@Autowired
 	private lateinit var vedleggRepository: VedleggRepository
 
+	@MockBean
+	private lateinit var hentSkjemaData: HentSkjemaData
+
 	@Autowired
 	private lateinit var skjemaService: HentSkjemaDataConsumer
 
@@ -42,6 +48,8 @@ class SoknadServiceTest {
 	@Autowired
 	private lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher
 
+
+
 	@AfterEach
 	fun ryddOpp() {
 		vedleggRepository.deleteAll()
@@ -50,6 +58,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun opprettSoknadGittSkjemanr() {
+		whenever (hentSkjemaData.hent()).thenReturn(skjemaService.initSkjemaDataFromDisk())
 		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher)
 
 		val brukerid = "12345678901"
