@@ -8,7 +8,6 @@ import no.nav.soknad.innsending.repository.*
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.*
-import java.util.stream.Collectors
 import javax.transaction.Transactional
 
 @Service
@@ -39,20 +38,18 @@ class SoknadService(
 		)
 
 		// for hvert vedleggsnr hent fra Sanity og opprett vedlegg.
-		val vedleggDbDataListe: List<VedleggDbData> = vedleggsnrListe.stream()
+		val vedleggDbDataListe = vedleggsnrListe
 			.map { nr -> skjemaService.hentSkjemaEllerVedlegg(nr, spraak) }
 			.map { v ->  vedleggRepository.save(VedleggDbData(null,v.tittel ?: "", v.vedleggsid,
 				null, OpplastingsStatus.IKKE_VALGT, false, ervariant = false, true,
-				UUID.randomUUID().toString(), null, savedSoknadDbData.id!!, LocalDateTime.now(), LocalDateTime.now())) }
-			.collect(Collectors.toList())
+				UUID.randomUUID().toString(), null, savedSoknadDbData.id, LocalDateTime.now(), LocalDateTime.now())) }
 
-		val savedVedleggDbDataListe: List<VedleggDbData> = listOf(skjemaDbData) + vedleggDbDataListe
+		val savedVedleggDbDataListe = listOf(skjemaDbData) + vedleggDbDataListe
 
 		val dokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbDataListe)
 		brukerNotifikasjon.soknadStatusChange(dokumentSoknadDto)
 		// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
 		return dokumentSoknadDto
-
 	}
 
 	fun hentSoknad(id: Long): DokumentSoknadDto {
@@ -97,7 +94,6 @@ class SoknadService(
 		val soknadsid = savedSoknadDbData.id
 		val savedVedleggDbData = dokumentSoknadDto.vedleggsListe
 			.map { vedleggRepository.save(mapTilVedleggDb(it, soknadsid!!)) }
-			.toList()
 
 		val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
 		brukerNotifikasjon.soknadStatusChange(savedDokumentSoknadDto)

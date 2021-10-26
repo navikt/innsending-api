@@ -1,25 +1,19 @@
 package no.nav.soknad.innsending.brukernotifikasjon
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import no.nav.brukernotifikasjon.schemas.Beskjed
 import no.nav.brukernotifikasjon.schemas.Done
 import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.Oppgave
-import no.nav.brukernotifikasjon.schemas.builders.*
 import no.nav.soknad.innsending.brukernotifikasjon.kafka.KafkaPublisherInterface
 import no.nav.soknad.innsending.config.AppConfiguration
 import no.nav.soknad.innsending.dto.DokumentSoknadDto
 import no.nav.soknad.innsending.dto.VedleggDto
 import no.nav.soknad.innsending.repository.OpplastingsStatus
 import no.nav.soknad.innsending.repository.SoknadsStatus
-import org.joda.time.DateTime
-import org.joda.time.DateTimeZone
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.net.URL
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-import java.util.stream.Collectors
 
 @Service
 class BrukernotifikasjonPublisher(appConfiguration: AppConfiguration, private val kafkaPublisher: KafkaPublisherInterface) {
@@ -45,11 +39,11 @@ class BrukernotifikasjonPublisher(appConfiguration: AppConfiguration, private va
 			logger.info("Publiser statusendring på søknad:" +
 				" innsendingsId=${dokumentSoknad.innsendingsId}, status=${dokumentSoknad.status}, groupId=$groupId" +
 				", isDokumentInnsending=true," + "isEttersendelse=${dokumentSoknad.ettersendingsId != null}, tema=${dokumentSoknad.tema}" )
+
 			when (dokumentSoknad.status) {
 				SoknadsStatus.Opprettet -> handleNewApplication(dokumentSoknad, groupId!!)
 				SoknadsStatus.Innsendt -> handleSentInApplication(dokumentSoknad, groupId!!)
 				SoknadsStatus.Slettet_av_bruker, SoknadsStatus.Automatisk_slettet -> handleDeletedApplication(dokumentSoknad, groupId!!)
-				else -> logger.warn("Ingen publiseringshåndtering for henvendelsesstatus = $dokumentSoknad.status")
 			}
 		}
 		return true
@@ -59,28 +53,27 @@ class BrukernotifikasjonPublisher(appConfiguration: AppConfiguration, private va
 	private fun handleNewApplication(dokumentSoknad: DokumentSoknadDto, groupId: String) {
 		// Ny søknad opprettet publiser data slik at søker kan plukke den opp fra Ditt Nav på et senere tidspunkt i tilfelle han/hun ikke ferdigstiller og sender inn
 		val key = createKey(dokumentSoknad.innsendingsId!!)
-		logger.info("$key: Varsel om ny $dokumentSoknad.innsendingsId skal publiseres")
+		logger.info("$key: Varsel om ny ${dokumentSoknad.innsendingsId} skal publiseres")
 		val beskjed = newApplication(dokumentSoknad.innsendingsId, groupId, tittelPrefixNySoknad+dokumentSoknad.tittel
 			, true, dokumentSoknad.brukerId, dokumentSoknad.tema, dokumentSoknad.ettersendingsId != null, dokumentSoknad.endretDato!!)
 
 		kafkaPublisher.putApplicationMessageOnTopic(key, beskjed)
-		logger.info("$key: Varsel om ny $dokumentSoknad.innsendingsId er publisert")
-
+		logger.info("$key: Varsel om ny ${dokumentSoknad.innsendingsId} er publisert")
 	}
 
 	private fun handleSentInApplication(dokumentSoknad: DokumentSoknadDto, groupId: String) {
 		// Søknad innsendt, fjern beskjed, og opprett eventuelle oppgaver for hvert vedlegg som skal ettersendes
 		val key = createKey(dokumentSoknad.innsendingsId!!)
 
-		logger.info("$key: Søknad med behandlingsId=$dokumentSoknad.innsendingsId er sendt inn, publiser done hendelse til Ditt NAV")
+		logger.info("$key: Søknad med behandlingsId=${dokumentSoknad.innsendingsId} er sendt inn, publiser done hendelse til Ditt NAV")
 		val done = finishedApplication(dokumentSoknad.brukerId, groupId, dokumentSoknad.endretDato!!)
 		kafkaPublisher.putApplicationDoneOnTopic(key, done)
-		logger.info("$key: Søknad med behandlingsId=$dokumentSoknad.innsendingsId er sendt inn, publisert done hendelse til Ditt NAV")
+		logger.info("$key: Søknad med behandlingsId=${dokumentSoknad.innsendingsId} er sendt inn, publisert done hendelse til Ditt NAV")
 
 		val vedlegg = getDocumentsToBeSentInLater(dokumentSoknad.vedleggsListe)
 		// Hvis det er ett eller flere dokumenter som skal ettersendes, lag en ettersendelsesoppgave
-		if (dokumentSoknad.ettersendingsId == null && !vedlegg.isEmpty()) {
-			publishNewAttachmentTask( dokumentSoknad.innsendingsId, groupId, tittelPrefixEttersendelse + dokumentSoknad.tittel,
+		if (dokumentSoknad.ettersendingsId == null && vedlegg.isNotEmpty()) {
+			publishNewAttachmentTask(dokumentSoknad.innsendingsId, groupId, tittelPrefixEttersendelse + dokumentSoknad.tittel,
 				true, dokumentSoknad.brukerId, dokumentSoknad.tema, dokumentSoknad.endretDato)
 		} else {
 			// Hvis ettersending, og ingen dokumenter som skal sendes inn senere, fjern eventuell ettersendingsoppgave
@@ -101,70 +94,59 @@ class BrukernotifikasjonPublisher(appConfiguration: AppConfiguration, private va
 	private fun handleDeletedApplication(dokumentSoknad: DokumentSoknadDto, groupId: String) {
 		// Søknad slettet, fjern beskjed
 		val key = createKey(dokumentSoknad.innsendingsId!!)
-		logger.info("$key: Varsel om fjerning av $dokumentSoknad.innsendingsId skal publiseres")
+		logger.info("$key: Varsel om fjerning av ${dokumentSoknad.innsendingsId} skal publiseres")
 		val done = finishedApplication(dokumentSoknad.brukerId, groupId, dokumentSoknad.endretDato!!)
 
 		kafkaPublisher.putApplicationDoneOnTopic(key, done)
-		logger.info("$key: Varsel om fjerning av $dokumentSoknad.innsendingsId er publisert")
-
+		logger.info("$key: Varsel om fjerning av ${dokumentSoknad.innsendingsId} er publisert")
 	}
 
-	private fun createKey(innsendingsId: String): Nokkel {
-		return Nokkel(appConfig.username, innsendingsId)
-	}
+	private fun createKey(innsendingsId: String) = Nokkel(appConfig.username, innsendingsId)
 
 
 	private fun getDocumentsToBeSentInLater(vedlegg: List<VedleggDto>): List<VedleggDto> {
-		return vedlegg.stream()
+		return vedlegg
 			.filter { f -> !f.erHoveddokument }
 			.filter { v -> v.opplastingsStatus == OpplastingsStatus.SEND_SENERE }
-			.collect(Collectors.toList())
 	}
 
 
 	private fun publishNewAttachmentTask(innsendingsId: String, groupId: String, title: String, dokumentInnsending: Boolean
 																			 , personId: String, tema: String, hendelsestidspunkt: LocalDateTime
 	) {
-		val key = createKey(innsendingsId + "-ettersending")
+		val key = createKey("$innsendingsId-ettersending")
 		logger.info("$key: Varsel om ettersendelsesoppgave til $innsendingsId skal publiseres")
 		val oppgave = newTask(innsendingsId, groupId, title, dokumentInnsending, personId, tema, true, hendelsestidspunkt)
 
 		kafkaPublisher.putApplicationTaskOnTopic(key, oppgave)
 		logger.info("$key: Varsel om Ettersendelsesoppgave til $innsendingsId er publisert")
-
 	}
 
 	private fun publishRemoveAttachmentTask(innsendingsId: String, groupId: String, title: String, dokumentInnsending: Boolean
 																					, personId: String, tema: String, hendelsestidspunkt: LocalDateTime
 	) {
-		val key = createKey(innsendingsId+ "-ettersending")
+		val key = createKey("$innsendingsId-ettersending")
 		logger.info("$key: Varsel om fjerning av ettersendelsesoppgave til $innsendingsId skal publiseres")
 		val done = finishedApplication(personId, groupId, hendelsestidspunkt)
 
 		kafkaPublisher.putApplicationDoneOnTopic(key, done)
 		logger.info("$key: Varsel om fjerning av ettersendelsesoppgave til $innsendingsId er publisert")
-
 	}
 
-	private fun newTask(innsendingsId: String, groupId: String, title: String, dokumentInnsending: Boolean
-											, personId: String, tema: String, ettersending: Boolean, hendelsestidspunkt: LocalDateTime
-	): Oppgave {
-		return Oppgave(hendelsestidspunkt.toEpochSecond(ZoneOffset.UTC), personId, groupId, title,
+	private fun newTask(innsendingsId: String, groupId: String, title: String, dokumentInnsending: Boolean,
+											personId: String, tema: String, ettersending: Boolean, hendelsestidspunkt: LocalDateTime
+	) = Oppgave(hendelsestidspunkt.toEpochSecond(ZoneOffset.UTC), personId, groupId, title,
 			createLink(innsendingsId, dokumentInnsending, tema, ettersending), securityLevel, eksternVarsling, emptyList())
-	}
 
 
 	private fun newApplication(innsendingsId: String, groupId: String, title: String, dokumentInnsending: Boolean
 														 , personId: String, tema: String, ettersending: Boolean, hendelsestidspunkt: LocalDateTime
-	): Beskjed {
-		return Beskjed(hendelsestidspunkt.toEpochSecond(ZoneOffset.UTC), LocalDateTime.now().plusDays(soknadLevetid).toEpochSecond(
+	) = Beskjed(hendelsestidspunkt.toEpochSecond(ZoneOffset.UTC), LocalDateTime.now().plusDays(soknadLevetid).toEpochSecond(
 			ZoneOffset.UTC), personId, groupId, title,
 			createLink(innsendingsId, dokumentInnsending, tema, ettersending), securityLevel, eksternVarsling, emptyList())
-	}
 
-	private fun finishedApplication(personId: String, groupId: String, hendelsestidspunkt: LocalDateTime): Done {
-		return Done(hendelsestidspunkt.toEpochSecond(ZoneOffset.UTC), personId, groupId)
-	}
+	private fun finishedApplication(personId: String, groupId: String, hendelsestidspunkt: LocalDateTime) =
+		Done(hendelsestidspunkt.toEpochSecond(ZoneOffset.UTC), personId, groupId)
 
 	private fun createLink(innsendingsId: String, dokumentInnsending: Boolean, tema: String, ettersending: Boolean): String {
 		// Eksempler:
@@ -175,5 +157,4 @@ class BrukernotifikasjonPublisher(appConfiguration: AppConfiguration, private va
 			}
 			return appConfig.tjenesteUrl + linkDokumentinnsending + innsendingsId
 	}
-
 }
