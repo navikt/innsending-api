@@ -43,7 +43,7 @@ class BrukernotifikasjonPublisher(appConfiguration: AppConfiguration, private va
 			when (dokumentSoknad.status) {
 				SoknadsStatus.Opprettet -> handleNewApplication(dokumentSoknad, groupId!!)
 				SoknadsStatus.Innsendt -> handleSentInApplication(dokumentSoknad, groupId!!)
-				SoknadsStatus.Slettet_av_bruker, SoknadsStatus.Automatisk_slettet -> handleDeletedApplication(dokumentSoknad, groupId!!)
+				SoknadsStatus.SlettetAvBruker, SoknadsStatus.AutomatiskSlettet -> handleDeletedApplication(dokumentSoknad, groupId!!)
 			}
 		}
 		return true

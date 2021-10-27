@@ -36,9 +36,11 @@ private val defaultProperties = ConfigurationMap(
 		"TJENESTE_URL" to "https://localhost",
 		"GJENOPPTA_SOKNADS_ARBEID" to "/dokumentinnsending/oversikt/",
 		"ETTERSENDE_PA_SOKNAD" to "/dokumentinnsending/ettersending/",
-		"SANITY_URL" to "http://localhost:8080"
-
-	)
+		"SANITY_URL" to "http://localhost:8080",
+		"FILESTORAGE_HOST" to "http://localhost:9042",
+		"FILESTORAGE_URL" to "/filer",
+		"FILESTORAGE_PARAMETERS" to "?ids="
+		)
 )
 
 val appConfig =
@@ -61,7 +63,10 @@ data class AppConfiguration(val restConfig: RestConfig = RestConfig(), val dbCon
 		val soknadsfillagerUrl: String = "SOKNADSFILLAGER_URL".configProperty(),
 		val soknadsMottakerUrl: String = "SOKNADSMOTTAKER_URL".configProperty(),
 		val maxFileSize: Int = "MAX_FILE_SIZE".configProperty().toInt(),
-		val sanityUrl: String = "SANITY_URL".configProperty()
+		val sanityUrl: String = "SANITY_URL".configProperty(),
+		val filestorageHost: String = "FILESTORAGE_HOST".configProperty(),
+		val filestorageUrl: String = "FILESTORAGE_URL".configProperty(),
+		val filestorageParameters: String = "FILESTORAGE_PARAMETERS".configProperty()
 	)
 
 	data class DBConfig(
@@ -102,7 +107,7 @@ data class AppConfiguration(val restConfig: RestConfig = RestConfig(), val dbCon
 }
 
 @org.springframework.context.annotation.Configuration
-open class ConfigConfig {
+class ConfigConfig {
 	@Bean
-	open fun appConfiguration() = AppConfiguration()
+	fun appConfiguration() = AppConfiguration()
 }

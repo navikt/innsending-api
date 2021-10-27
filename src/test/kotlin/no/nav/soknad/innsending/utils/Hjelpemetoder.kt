@@ -40,7 +40,7 @@ fun lagVedlegg(id: Long? = null, vedleggsnr: String, tittel: String
 	return VedleggDto(id, vedleggsnr, tittel, UUID.randomUUID().toString()
 		, if (vedleggsNavn != null && vedleggsNavn.contains(".pdf")) "application/pdf" else "application/json"
 		, if (opplastingsStatus == OpplastingsStatus.LASTET_OPP && vedleggsNavn != null) getBytesFromFile(vedleggsNavn) else null
-		, erHoveddokument, if (vedleggsNavn == null || (vedleggsNavn != null&& vedleggsNavn.contains(".pdf"))) false else true,
+		, erHoveddokument, if (vedleggsNavn == null || (vedleggsNavn != null && vedleggsNavn.contains(".pdf"))) false else true,
 		true, opplastingsStatus, LocalDateTime.now())
 }
 

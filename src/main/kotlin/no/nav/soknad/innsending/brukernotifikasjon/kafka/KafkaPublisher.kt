@@ -12,10 +12,8 @@ import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.clients.producer.RecordMetadata
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.header.Headers
-import org.apache.kafka.common.header.internals.RecordHeaders
 import org.springframework.stereotype.Service
 
 @Service
@@ -23,34 +21,26 @@ class KafkaPublisher(appConfiguration: AppConfiguration): KafkaPublisherInterfac
 
 	private val appConfig = appConfiguration.kafkaConfig
 
-/* TODO fjern utkommentering når innsending-api er registrert som bruker av Brukernotifikasjonstjenestene.
 	private val kafkaMessageProducer = KafkaProducer<Nokkel, Beskjed>(kafkaConfigMap())
 	private val kafkaTaskProducer = KafkaProducer<Nokkel, Oppgave>(kafkaConfigMap())
 	private val kafkaDoneProducer = KafkaProducer<Nokkel, Done>(kafkaConfigMap())
-*/
 
 	override fun putApplicationMessageOnTopic(key: Nokkel, value: Beskjed, headers: Headers) {
-/* TODO fjern utkommentering når innsending-api er registrert som bruker av Brukernotifikasjonstjenestene.
 		val topic = appConfig.kafkaTopicBeskjed
 		val kafkaProducer = kafkaMessageProducer
 		putDataOnTopic(key, value, headers, topic, kafkaProducer)
-*/
 	}
 
 	override fun putApplicationTaskOnTopic(key: Nokkel, value: Oppgave, headers: Headers) {
-/* TODO fjern utkommentering når innsending-api er registrert som bruker av Brukernotifikasjonstjenestene.
 		val topic = appConfig.kafkaTopicOppgave
 		val kafkaProducer = kafkaTaskProducer
 		putDataOnTopic(key, value, headers, topic, kafkaProducer)
-*/
 	}
 
 	override fun putApplicationDoneOnTopic(key: Nokkel, value: Done, headers: Headers) {
-/* TODO fjern utkommentering når innsending-api er registrert som bruker av Brukernotifikasjonstjenestene.
 		val topic = appConfig.kafkaTopicDone
 		val kafkaProducer = kafkaDoneProducer
 		putDataOnTopic(key, value, headers, topic, kafkaProducer)
-*/
 	}
 
 	private fun <T> putDataOnTopic(key: Nokkel?, value: T, headers: Headers, topic: String,

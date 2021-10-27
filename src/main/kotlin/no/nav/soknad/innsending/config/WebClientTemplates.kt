@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Lazy
+import org.springframework.context.annotation.Profile
 import org.springframework.context.annotation.Scope
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.http.codec.ClientCodecConfigurer
@@ -19,9 +21,24 @@ import java.util.concurrent.TimeUnit
 @Configuration
 class WebClientTemplates(private val appConfiguration: AppConfiguration) {
 
-	private val CONNECTION_TIMEOUT = 2000
-	private val READ_TIMEOUT = 60
-	private val WRITE_TIMEOUT = 60
+	private val connectionTimeout = 2000
+	private val readTimeout = 60
+	private val writeTimeout = 60
+
+	@Bean
+	@Profile("spring | test | docker | default")
+	@Qualifier("authClient")
+	@Scope("prototype")
+	@Lazy
+	fun archiveTestWebClient() = WebClient.builder().defaultHeader("testHeader","test_value").build()
+
+	@Bean
+	@Profile("prod | dev")
+	@Qualifier("authClient")
+	@Scope("prototype")
+	@Lazy
+	fun authWebClient() = WebClient.builder().defaultHeader("authHeader","test_value").build()
+
 
 	@Bean
 	@Qualifier("basicClient")
@@ -38,7 +55,7 @@ class WebClientTemplates(private val appConfiguration: AppConfiguration) {
 
 		return WebClient.builder()
 			.exchangeStrategies(exchangeStrategies)
-			.clientConnector(ReactorClientHttpConnector(buildHttpClient(CONNECTION_TIMEOUT, READ_TIMEOUT, WRITE_TIMEOUT)))
+			.clientConnector(ReactorClientHttpConnector(buildHttpClient(connectionTimeout, readTimeout, writeTimeout)))
 			.build()
 	}
 

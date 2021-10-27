@@ -12,5 +12,5 @@ interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
 	fun findAllBySoknadsid(@Param("soknadsid") soknadsid: Long): List<VedleggDbData>
 
 	@Query(value = "FROM VedleggDbData WHERE id = :vedleggsid")
-	fun findByVedleggsid(@Param("vedleggsid") vedleggsid: Long): VedleggDbData
+	fun findByVedleggsid(@Param("vedleggsid") vedleggsid: Long): VedleggDbData?
 }

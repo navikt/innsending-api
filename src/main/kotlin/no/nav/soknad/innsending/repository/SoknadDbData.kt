@@ -19,18 +19,4 @@ data class SoknadDbData(
 	@Column(name = "endretdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val endretdato: LocalDateTime?,
 	@Column(name = "innsendtdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val innsendtdato: LocalDateTime?,
 	@Column(name = "skjemaurl", columnDefinition = "varchar") val skjemaurl: String?
-) {
-
-	override fun equals(other: Any?): Boolean {
-		if (this === other) return true
-		if (javaClass != other?.javaClass) return false
-
-		other as SoknadDbData
-
-		if (id != other.id) return false
-
-		return true
-	}
-
-	override fun hashCode() = id.hashCode()
-}
+)

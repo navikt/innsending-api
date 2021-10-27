@@ -4,12 +4,11 @@ import no.nav.soknad.innsending.config.AppConfiguration
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 
 @Service
-class HentSkjemaData(private val appConfiguration: AppConfiguration,
-										 @Qualifier("basicClient") private val webClient: WebClient
+class SkjemaClient(private val appConfiguration: AppConfiguration,
+									 @Qualifier("basicClient") private val webClient: WebClient
 ) {
 
 	fun hent(): List<SkjemaOgVedleggsdata>? {

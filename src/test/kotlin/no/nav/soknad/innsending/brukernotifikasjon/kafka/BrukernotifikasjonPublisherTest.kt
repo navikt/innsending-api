@@ -20,16 +20,13 @@ import no.nav.soknad.innsending.utils.lagVedlegg
 
 internal class BrukernotifikasjonPublisherTest {
 
-	val appConfiguration = AppConfiguration()
+	private val appConfiguration = AppConfiguration()
 
 	@InjectMockKs
 	var kafkaPublisher = mockk<KafkaPublisher>()
 
 	@SpyK
 	var brukernotifikasjonPublisher = BrukernotifikasjonPublisher(appConfiguration, kafkaPublisher)
-
-	//private val kafkaPublisherMock: KafkaPublisherInterface = mock(KafkaPublisherInterface::class.java)
-
 
 	@Test
 	fun `sjekk at Beskjed melding blir publisert ved oppretting av ny dokumentinnsending`() {
@@ -153,7 +150,7 @@ internal class BrukernotifikasjonPublisherTest {
 
 		every { kafkaPublisher.putApplicationDoneOnTopic(any(), capture(done)) } returns Unit
 
-		brukernotifikasjonPublisher.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatus.Slettet_av_bruker))
+		brukernotifikasjonPublisher.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatus.SlettetAvBruker))
 
 		assertTrue(done.isCaptured)
 		assertEquals(personId, done.captured.getFodselsnummer())

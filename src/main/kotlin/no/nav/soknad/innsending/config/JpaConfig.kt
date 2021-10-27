@@ -8,12 +8,12 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-open class JpaConfig(private val appConfig: AppConfiguration) {
+class JpaConfig(private val appConfig: AppConfiguration) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Bean
-	open fun getDataSource() = initDatasource()
+	fun getDataSource() = initDatasource()
 
 	private fun initDatasource(): HikariDataSource {
 		val database = if (appConfig.dbConfig.embedded) {

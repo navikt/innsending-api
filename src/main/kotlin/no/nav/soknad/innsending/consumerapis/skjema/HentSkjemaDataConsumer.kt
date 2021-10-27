@@ -11,14 +11,14 @@ import kotlin.concurrent.timerTask
 
 @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 @Service
-class HentSkjemaDataConsumer(private val hentSkjemaData: HentSkjemaData) {
+class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
-	private var sanityList = initSkjemaDataFromDisk() ?: emptyList()
+	private var sanityList: List<SkjemaOgVedleggsdata> = emptyList()
 
 	init {
 		Timer().scheduleAtFixedRate(timerTask {
-			var skjemaFraDisk = initSkjemaDataFromDisk()
+			val skjemaFraDisk = initSkjemaDataFromDisk()
 			var skjemaFraSanity: List<SkjemaOgVedleggsdata>? = null
 			try {
 				skjemaFraSanity = hentSkjemaData()
