@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.service
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerAPI
+import no.nav.soknad.innsending.consumerapis.soknadsmottaker.SoknadsmottakerAPI
 import no.nav.soknad.innsending.dto.DokumentSoknadDto
 import no.nav.soknad.innsending.dto.VedleggDto
 import no.nav.soknad.innsending.repository.*
@@ -17,7 +18,8 @@ class SoknadService(
 	private val soknadRepository: SoknadRepository,
 	private val vedleggRepository: VedleggRepository,
 	private val brukerNotifikasjon: BrukernotifikasjonPublisher,
-	private val fillagerAPI: FillagerAPI
+	private val fillagerAPI: FillagerAPI,
+	private val soknadsmottakerAPI: SoknadsmottakerAPI
 ) {
 
 	@Transactional
@@ -54,34 +56,31 @@ class SoknadService(
 		return dokumentSoknadDto
 	}
 
+	// Hent soknad gitt id med alle vedlegg. Merk at eventuelt dokument til vedlegget hentes ikke
 	fun hentSoknad(id: Long): DokumentSoknadDto {
-
 		val soknadDbDataOpt = soknadRepository.findById(id)
-
-		if (soknadDbDataOpt.isPresent) {
-			val soknadDbData = soknadDbDataOpt.get()
-			val vedleggDbDataListe = vedleggRepository.findAllBySoknadsid(soknadDbData.id!!)
-
-			return lagDokumentSoknadDto(soknadDbData, vedleggDbDataListe)
-		}
-		throw RuntimeException("Ingen dokumentsoknad med id = $id funnet")
+		return hentAlleVedlegg(soknadDbDataOpt, id.toString())
 	}
 
+	// Hent soknad gitt innsendingsid med alle vedlegg. Merk at eventuelt dokument til vedlegget hentes ikke
 	fun hentSoknad(innsendingsId: String): DokumentSoknadDto {
-
 		val soknadDbDataOpt = soknadRepository.findByInnsendingsid(innsendingsId)
+		return hentAlleVedlegg(soknadDbDataOpt, innsendingsId)
+	}
 
+	private fun hentAlleVedlegg(soknadDbDataOpt: Optional<SoknadDbData>, ident: String): DokumentSoknadDto {
 		if (soknadDbDataOpt.isPresent) {
 			val soknadDbData = soknadDbDataOpt.get()
 			val vedleggDbDataListe = vedleggRepository.findAllBySoknadsid(soknadDbData.id!!)
 
 			return lagDokumentSoknadDto(soknadDbData, vedleggDbDataListe)
 		}
-		throw RuntimeException("Ingen dokumentsoknad med id = $innsendingsId funnet")
+		throw RuntimeException("Ingen dokumentsoknad med id = $ident funnet")
+
 	}
 
+	// Hent vedlegg med eventuelt opplastet dokument hentet fra fillager
 	fun hentVedlegg(id: Long): VedleggDto {
-
 		val vedleggDbData = vedleggRepository.findByVedleggsid(id)
 		if (vedleggDbData == null) throw Exception("Vedlegg med id=$id ikke funnet")
 		val soknadDbData = soknadRepository.findById(vedleggDbData.soknadsid)
@@ -105,33 +104,64 @@ class SoknadService(
 		return innsendingsId
 	}
 
+	// Slett opprettet soknad gitt innsendingsId
 	@Transactional
 	fun slettSoknad(innsendingsId: String) {
 		// slett vedlegg og soknad
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
+
+		if (dokumentSoknadDto.status == SoknadsStatus.Innsendt) throw Exception("${dokumentSoknadDto.innsendingsId}: Kan ikke slette allerede innsendt soknad")
+
 		dokumentSoknadDto.vedleggsListe.forEach { v -> vedleggRepository.deleteById(v.id!!) }
 		fillagerAPI.slettFiler(innsendingsId, dokumentSoknadDto.vedleggsListe)
 		soknadRepository.deleteById(dokumentSoknadDto.id!!)
+
+		val slettetSoknad = lagDokumentSoknadDto(mapTilSoknadDb(dokumentSoknadDto, innsendingsId, SoknadsStatus.SlettetAvBruker)
+			, dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id)})
+		brukerNotifikasjon.soknadStatusChange(slettetSoknad)
+	}
+
+	// Slett opprettet soknad gitt innsendingsId
+	@Transactional
+	fun slettSoknadAutomatisk(innsendingsId: String) {
+		// Ved automatisk sletting beholdes innslag i basen, men eventuelt opplastede dokumenter slettes
+		val dokumentSoknadDto = hentSoknad(innsendingsId)
+
+		if (dokumentSoknadDto.status == SoknadsStatus.Innsendt) throw Exception("${dokumentSoknadDto.innsendingsId}: Kan ikke slette allerede innsendt soknad")
+
+		fillagerAPI.slettFiler(innsendingsId, dokumentSoknadDto.vedleggsListe)
+		val slettetSoknadDb = soknadRepository.save(mapTilSoknadDb(dokumentSoknadDto, innsendingsId, SoknadsStatus.AutomatiskSlettet))
+
+		val slettetSoknadDto = lagDokumentSoknadDto(slettetSoknadDb
+			, dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id!!)})
+		brukerNotifikasjon.soknadStatusChange(slettetSoknadDto)
 	}
 
 	@Transactional
 	fun lagreVedlegg(vedleggDto: VedleggDto, soknadsId: Long): VedleggDto {
+
+		// Lagre vedlegget i databasen
 		val vedleggDbData = vedleggRepository.save(mapTilVedleggDb(vedleggDto, soknadsId))
-		// Oppdatere soknad.sisteendret
+
+		// Oppdater soknadens sist endret dato
 		val soknadDto = hentSoknad(soknadsId)
 		soknadRepository.save(mapTilSoknadDb(soknadDto, soknadDto.innsendingsId!!))
-		val vedleggDtoSaved = lagVedleggDto(vedleggDbData)
+
+		val vedleggDtoSaved = lagVedleggDto(vedleggDbData, vedleggDto.document)
+
+		// Lagre dokumentet i soknadsfillager
 		fillagerAPI.lagreFiler(soknadDto.innsendingsId, listOf(vedleggDtoSaved))
 		return vedleggDtoSaved
 	}
 
 	@Transactional
 	fun slettVedlegg(vedleggDto: VedleggDto, soknadsId: Long) {
-		// Ikke slette hovedskjema
+		// Ikke slette hovedskjema, og ikke obligatoriske? Slette kun dokumentet?
 		if (!vedleggDto.erHoveddokument) {
+			val soknadDto = hentSoknad(soknadsId)
+			if (soknadDto.status == SoknadsStatus.Innsendt) throw Exception("Kan ikke slette vedlegg til allerede innsendt søknad")
 			vedleggRepository.deleteById(vedleggDto.id!!)
 			// Oppdatere soknad.sisteendret
-			val soknadDto = hentSoknad(soknadsId)
 			soknadRepository.save(mapTilSoknadDb(soknadDto, soknadDto.innsendingsId!!))
 			fillagerAPI.slettFiler(soknadDto.innsendingsId, listOf(vedleggDto))
 		} else {
@@ -139,20 +169,25 @@ class SoknadService(
 		}
 	}
 
-	fun sendInnSoknad(soknadsId: Long) {
+	fun sendInnSoknad(innsendingsId: String) {
 
-		// opprett kvittering(L7)
+		// opprett kvittering(L7)?
 
 		// antar at vedlegg allerede sendt til soknadsfillager, men skal kanskje også sende kvittering?
+		// slett søknadens dokumenter i vedleggstabellen er ikke nødvendig da de lagres i soknadsfillager istedenfor
+
+		val soknadDto = hentSoknad(innsendingsId)
 		// send soknadmetada til soknadsmottaker
+		soknadsmottakerAPI.sendInnSoknad(soknadDto)
 		// oppdater databasen med innsendingsdato
-		// slett søknadens dokumenter i vedleggstabellen?
+		soknadRepository.saveAndFlush(mapTilSoknadDb(soknadDto, soknadDto.innsendingsId!!, SoknadsStatus.Innsendt ))
 		// send brukernotifikasjon
+		brukerNotifikasjon.soknadStatusChange(hentSoknad(innsendingsId))
 	}
 
-	private fun lagVedleggDto(vedleggDbData: VedleggDbData) =
+	private fun lagVedleggDto(vedleggDbData: VedleggDbData, document: ByteArray? = null) =
 		VedleggDto(vedleggDbData.id!!, vedleggDbData.vedleggsnr, vedleggDbData.tittel,
-			vedleggDbData.uuid, vedleggDbData.mimetype, vedleggDbData.dokument, vedleggDbData.erhoveddokument,
+			vedleggDbData.uuid, vedleggDbData.mimetype, document ?: vedleggDbData.dokument, vedleggDbData.erhoveddokument,
 			vedleggDbData.ervariant, vedleggDbData.erpdfa, vedleggDbData.status, vedleggDbData.opprettetdato)
 
 	private fun lagDokumentSoknadDto(soknadDbData: SoknadDbData, vedleggDbDataListe: List<VedleggDbData>) =
@@ -166,9 +201,9 @@ class SoknadService(
 			vedleggDto.opplastingsStatus, vedleggDto.erHoveddokument, vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.uuid,
 			vedleggDto.document, soknadsId, vedleggDto.opprettetdato, LocalDateTime.now())
 
-	private fun mapTilSoknadDb(dokumentSoknadDto: DokumentSoknadDto, innsendingsId: String) =
-		SoknadDbData(dokumentSoknadDto.id, innsendingsId ,
+	private fun mapTilSoknadDb(dokumentSoknadDto: DokumentSoknadDto, innsendingsId: String, status: SoknadsStatus? = SoknadsStatus.Opprettet) =
+		SoknadDbData(dokumentSoknadDto.id, innsendingsId,
 			dokumentSoknadDto.tittel, dokumentSoknadDto.skjemanr, dokumentSoknadDto.tema, dokumentSoknadDto.spraak,
-			dokumentSoknadDto.status, dokumentSoknadDto.brukerId, dokumentSoknadDto.ettersendingsId,
-			dokumentSoknadDto.opprettetDato, LocalDateTime.now(), dokumentSoknadDto.innsendtDato,dokumentSoknadDto.skjemaurl)
+			status ?: dokumentSoknadDto.status, dokumentSoknadDto.brukerId, dokumentSoknadDto.ettersendingsId,
+			dokumentSoknadDto.opprettetDato, LocalDateTime.now(), if (status == SoknadsStatus.Innsendt) LocalDateTime.now() else dokumentSoknadDto.innsendtDato, dokumentSoknadDto.skjemaurl)
 }

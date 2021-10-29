@@ -12,8 +12,6 @@ private val defaultProperties = ConfigurationMap(
 		"APP_VERSION" to "",
 		"APPLICATION_USERNAME" to "soknadinnsender",
 		"APPLICATION_PASSWORD" to "",
-		"SOKNADSFILLAGER_URL" to "http://localhost:8081",
-		"SOKNADSMOTTAKER_URL" to "http://localhost:8081",
 		"APPLICATION_PROFILE" to "spring",
 		"SHARED_PASSWORD" to "password",
 		"DATABASE_HOST" to "localhost",
@@ -38,8 +36,10 @@ private val defaultProperties = ConfigurationMap(
 		"ETTERSENDE_PA_SOKNAD" to "/dokumentinnsending/ettersending/",
 		"SANITY_URL" to "http://localhost:8080",
 		"FILESTORAGE_HOST" to "http://localhost:9042",
-		"FILESTORAGE_URL" to "/filer",
-		"FILESTORAGE_PARAMETERS" to "?ids="
+		"FILESTORAGE_ENDPOINT" to "/filer",
+		"FILESTORAGE_PARAMETERS" to "?ids=",
+		"SOKNADSMOTTAKER_HOST" to "http://localhost:9043",
+		"SOKNADSMOTTAKER_ENDPOINT" to "/save"
 		)
 )
 
@@ -60,13 +60,13 @@ data class AppConfiguration(val restConfig: RestConfig = RestConfig(), val dbCon
 		val version: String = "APP_VERSION".configProperty(),
 		val username: String = readFileAsText("/var/run/secrets/nais.io/serviceuser/username", "APPLICATION_USERNAME".configProperty()),
 		val password: String = readFileAsText("/var/run/secrets/nais.io/serviceuser/password", "APPLICATION_PASSWORD".configProperty()),
-		val soknadsfillagerUrl: String = "SOKNADSFILLAGER_URL".configProperty(),
-		val soknadsMottakerUrl: String = "SOKNADSMOTTAKER_URL".configProperty(),
 		val maxFileSize: Int = "MAX_FILE_SIZE".configProperty().toInt(),
 		val sanityUrl: String = "SANITY_URL".configProperty(),
 		val filestorageHost: String = "FILESTORAGE_HOST".configProperty(),
-		val filestorageUrl: String = "FILESTORAGE_URL".configProperty(),
-		val filestorageParameters: String = "FILESTORAGE_PARAMETERS".configProperty()
+		val filestorageEndpoint: String = "FILESTORAGE_ENDPOINT".configProperty(),
+		val filestorageParameters: String = "FILESTORAGE_PARAMETERS".configProperty(),
+		val soknadsMottakerHost: String = "SOKNADSMOTTAKER_HOST".configProperty(),
+		val soknadsMottakerEndpoint: String = "SOKNADSMOTTAKER_ENDPOINT".configProperty(),
 	)
 
 	data class DBConfig(

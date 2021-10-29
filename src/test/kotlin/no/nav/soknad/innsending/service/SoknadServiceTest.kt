@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.consumerapis.skjema.SkjemaClient
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerAPI
+import no.nav.soknad.innsending.consumerapis.soknadsmottaker.SoknadsmottakerAPI
 import no.nav.soknad.innsending.dto.DokumentSoknadDto
 import no.nav.soknad.innsending.dto.VedleggDto
 import no.nav.soknad.innsending.repository.OpplastingsStatus
@@ -31,17 +32,20 @@ class SoknadServiceTest {
 	@Autowired
 	private lateinit var vedleggRepository: VedleggRepository
 
-	@InjectMockKs
-	private var hentSkjemaData = mockk<SkjemaClient>()
-
 	@Autowired
 	private lateinit var skjemaService: HentSkjemaDataConsumer
 
 	@InjectMockKs
-	private var brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
+	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
 
 	@InjectMockKs
-	private var fillagerAPI = mockk<FillagerAPI>()
+	private val hentSkjemaData = mockk<SkjemaClient>()
+
+	@InjectMockKs
+	private val fillagerAPI = mockk<FillagerAPI>()
+
+	@InjectMockKs
+	private val soknadsmottakerAPI = mockk<SoknadsmottakerAPI>()
 
 	@BeforeEach
 	fun setup() {
@@ -58,7 +62,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun opprettSoknadGittSkjemanr() {
-		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher, fillagerAPI)
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher, fillagerAPI, soknadsmottakerAPI )
 
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
@@ -73,7 +77,8 @@ class SoknadServiceTest {
 
 	@Test
 	fun opprettSoknadGittSoknadDokument() {
-		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher, fillagerAPI)
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher, fillagerAPI, soknadsmottakerAPI )
+
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
@@ -93,7 +98,7 @@ class SoknadServiceTest {
 	@Test
 	fun hentOpprettetSoknadDokument() {
 
-		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher, fillagerAPI)
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher, fillagerAPI, soknadsmottakerAPI )
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
@@ -107,7 +112,7 @@ class SoknadServiceTest {
 	@Test
 	fun hentOpprettetVedlegg() {
 
-		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher, fillagerAPI)
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher, fillagerAPI, soknadsmottakerAPI )
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
@@ -127,7 +132,7 @@ class SoknadServiceTest {
 	@Test
 	fun slettOpprettetSoknadDokument() {
 
-		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher, fillagerAPI)
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher, fillagerAPI, soknadsmottakerAPI )
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
@@ -147,7 +152,8 @@ class SoknadServiceTest {
 
 	@Test
 	fun oppdaterVedlegg() {
-		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher, fillagerAPI)
+
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher, fillagerAPI, soknadsmottakerAPI )
 
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
@@ -173,7 +179,7 @@ class SoknadServiceTest {
 	@Test
 	fun slettOpprettetVedlegg() {
 
-		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher, fillagerAPI)
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher, fillagerAPI, soknadsmottakerAPI )
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
 		val vedleggsnr = "W1"
@@ -201,7 +207,8 @@ class SoknadServiceTest {
 
 	@Test
 	fun oppdaterSoknadOgVedlegg() {
-		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher, fillagerAPI)
+
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher, fillagerAPI, soknadsmottakerAPI )
 
 		val brukerid = "12345678901"
 		val skjemanr = "NAV 95-00.11"
@@ -220,6 +227,39 @@ class SoknadServiceTest {
 		assertEquals(dokumentSoknadDtoOppdatertDb.id, dokumentSoknadDtoOppdatert.id)
 		assertEquals(dokumentSoknadDtoOppdatertDb.vedleggsListe[0].id, dokumentSoknadDtoOppdatert.vedleggsListe[0].id)
 		assertEquals(dokumentSoknadDtoOppdatertDb.vedleggsListe[0].erHoveddokument, dokumentSoknadDtoOppdatert.vedleggsListe[0].erHoveddokument)
+	}
+
+
+	@Test
+	fun sendInnSoknad() {
+
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, brukernotifikasjonPublisher, fillagerAPI, soknadsmottakerAPI )
+		val brukerid = "12345678901"
+		val skjemanr = "NAV 95-00.11"
+		val spraak = "no"
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, listOf("W1"))
+
+		assertEquals(brukerid, dokumentSoknadDto.brukerId)
+		assertEquals(skjemanr, dokumentSoknadDto.skjemanr)
+		assertEquals(spraak, dokumentSoknadDto.spraak)
+
+		val dokumentSoknadDtoOppdatert = oppdaterDokumentSoknad(dokumentSoknadDto)
+
+		val dokumentSoknadDtoOppdatertId = soknadService.opprettEllerOppdaterSoknad(dokumentSoknadDtoOppdatert)
+		val dokumentSoknadDtoOppdatertDb = soknadService.hentSoknad(dokumentSoknadDtoOppdatertId)
+
+		assertEquals(dokumentSoknadDtoOppdatertDb.id, dokumentSoknadDtoOppdatert.id)
+		assertEquals(dokumentSoknadDtoOppdatertDb.vedleggsListe[0].id, dokumentSoknadDtoOppdatert.vedleggsListe[0].id)
+		assertEquals(dokumentSoknadDtoOppdatertDb.vedleggsListe[0].erHoveddokument, dokumentSoknadDtoOppdatert.vedleggsListe[0].erHoveddokument)
+
+		val soknad = slot<DokumentSoknadDto>()
+		every { soknadsmottakerAPI.sendInnSoknad(capture(soknad)) } returns Unit
+
+		soknadService.sendInnSoknad(dokumentSoknadDto.innsendingsId!!)
+
+		assertTrue(soknad.isCaptured)
+		assertTrue(soknad.captured.innsendingsId == dokumentSoknadDto.innsendingsId)
+
 	}
 
 	private fun lagDokumentSoknad(brukerId: String, skjemanr: String, spraak: String, tittel: String, tema: String): DokumentSoknadDto {

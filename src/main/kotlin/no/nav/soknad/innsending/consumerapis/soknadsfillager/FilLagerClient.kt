@@ -89,7 +89,7 @@ class FilLagerClient(private val appConfiguration: AppConfiguration,
 	}
 
 	private fun performGetCall(fileIds: String): List<FilElementDto>? {
-		val uri = appConfiguration.restConfig.filestorageHost + appConfiguration.restConfig.filestorageUrl + appConfiguration.restConfig.filestorageParameters + fileIds
+		val uri = appConfiguration.restConfig.filestorageHost + appConfiguration.restConfig.filestorageEndpoint + appConfiguration.restConfig.filestorageParameters + fileIds
 		val method = HttpMethod.GET
 		val webClient = setupWebClient(uri, method)
 
@@ -112,7 +112,7 @@ class FilLagerClient(private val appConfiguration: AppConfiguration,
 	}
 
 	private fun deleteFiles(fileIds: String) {
-		val uri = appConfiguration.restConfig.filestorageHost + appConfiguration.restConfig.filestorageUrl + appConfiguration.restConfig.filestorageParameters + fileIds
+		val uri = appConfiguration.restConfig.filestorageHost + appConfiguration.restConfig.filestorageEndpoint + appConfiguration.restConfig.filestorageParameters + fileIds
 		val method = HttpMethod.DELETE
 		val webClient = setupWebClient(uri, method)
 
@@ -126,7 +126,7 @@ class FilLagerClient(private val appConfiguration: AppConfiguration,
 	}
 
 	private fun saveFiles(files: List<FilElementDto>) {
-		val uri = appConfiguration.restConfig.filestorageHost + appConfiguration.restConfig.filestorageUrl
+		val uri = appConfiguration.restConfig.filestorageHost + appConfiguration.restConfig.filestorageEndpoint
 		val method = HttpMethod.POST
 		val webClient = setupWebClient(uri, method)
 
