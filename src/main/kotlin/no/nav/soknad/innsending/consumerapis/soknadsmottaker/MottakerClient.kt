@@ -34,8 +34,7 @@ class MottakerClient(private val appConfiguration: AppConfiguration,
 	}
 
 	private fun setupWebClient(uri: String, method: HttpMethod): WebClient.RequestBodySpec {
-
-		val auth = "${appConfiguration.restConfig.username}:${appConfiguration.restConfig.password}"
+		val auth = "${appConfiguration.restConfig.sharedUsername}:${appConfiguration.restConfig.sharedPassword}"
 		val encodedAuth: ByteArray = Base64.encodeBase64(auth.toByteArray())
 		val authHeader = "Basic " + String(encodedAuth)
 

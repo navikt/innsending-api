@@ -38,6 +38,8 @@ spec:
         kvPath: {{ SRV_KV_PATH }}
       - mountPath: /var/run/secrets/nais.io/appdynamics
         kvPath: {{ APPDYN_KV_PATH }}
+      - mountPath: /secrets/innsending-data
+        kvPath: secret/team-soknad/innsending/basicauth
 
   env:
     - name: APP_VERSION
