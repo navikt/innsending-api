@@ -6,17 +6,16 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
-import java.util.*
 
 @Repository
-interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
+interface FilRepository: JpaRepository<FilDbData, Long> {
 
-	fun findByInnsendingsid(innsendingsid: String): Optional<SoknadDbData>
+	@Query(value = "FROM FilDbData WHERE vedleggsid = :vedleggsid")
+	fun findAllByVedleggsid(@Param("vedleggsid") vedleggsid: Long): List<FilDbData>
 
 	@Transactional
 	@Modifying
-	@Query(value="UPDATE soknad SET endretdato = :endretdato WHERE id = :id", nativeQuery = true)
-	fun updateEndretDato(@Param("id") id: Long, @Param("endretdato") endretdato: LocalDateTime)
+	@Query(value = "DELETE FROM fil WHERE vedleggsid = :vedleggsid", nativeQuery = true)
+	fun deleteFilDbDataForVedlegg(@Param("vedleggsid") vedleggsid: Long)
 
 }

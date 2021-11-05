@@ -8,8 +8,10 @@ import no.nav.soknad.innsending.repository.OpplastingsStatus
 import no.nav.soknad.innsending.repository.SoknadsStatus
 import no.nav.soknad.innsending.service.SoknadService
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import java.time.LocalDateTime
 import java.util.*
 
@@ -94,11 +96,12 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 			description = "If successful, the application is stored and an updated version of the DokumentSoknadDto is returned."
 	)])
 	@PostMapping("/soknad/{innsendingsId}")
-	fun lagreSoknad(@PathVariable innsendingsId: String, @RequestBody dokumentSoknadDto: DokumentSoknadDto): ResponseEntity<DokumentSoknadDto> {
+	fun lagreSoknad(@PathVariable innsendingsId: String, @RequestBody dokumentSoknadDto: DokumentSoknadDto
+	): ResponseEntity<String> {
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(dokumentSoknadDto)
+			.body(innsendingsId)
 	}
 
 	// Hvis det er et nytt vedlegg, så vil ikke frontend ha vedleggsid da dette settes av backend ved oppretting av resssurs.
@@ -111,11 +114,62 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	fun lagreVedlegg(
 		@PathVariable innsendingsId: String,
 		@RequestBody vedlegg: VedleggDto
-	): ResponseEntity<VedleggDto> {
+	): ResponseEntity<Long> {
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(lagDummyVedlegg(vedlegg.vedleggsnr ?: "N6"))
+			.body(lagDummyVedlegg(vedlegg.vedleggsnr ?: "N6").id)
+	}
+
+	// Søker skal kunne laste opp ett eller flere filer på ett vedlegg. Dette endepunktet tillater opplasting av en fil.
+	@Operation(summary = "Requests adding a file to a specified attachment.", tags = ["operations"])
+	@ApiResponses(value = [ApiResponse(responseCode = "200",
+		description = "If successful, the file is stored and the allocated id is returned."
+	)])
+	@RequestMapping(path = ["/soknad/{innsendingsId}/vedlegg/{vedleggsId}"], method =[RequestMethod.POST], consumes = [ MediaType.MULTIPART_FORM_DATA_VALUE ])
+	fun lagreFil(
+		@PathVariable innsendingsId: String,
+		@PathVariable vedleggsId: String,
+		@RequestPart filDto: FilDto,
+		@RequestPart file: MultipartFile
+	): ResponseEntity<Long> {
+
+		return ResponseEntity
+			.status(HttpStatus.OK)
+			.body(lagDummyfil(vedleggsId.toLong()).id)
+	}
+
+	// Søker skal kunne laste opp ett eller flere filer på ett vedlegg. Dette endepunktet tillater opplasting av en fil.
+	@Operation(summary = "Requests adding or updating attachment to a previously created application.", tags = ["operations"])
+	@ApiResponses(value = [ApiResponse(responseCode = "200",
+		description = "If successful, the file is stored and the allocated id is returned."
+	)])
+	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}/{id}")
+	fun hentFil(
+		@PathVariable innsendingsId: String,
+		@PathVariable vedleggsId: String,
+		@PathVariable filId: String
+	): ResponseEntity<FilDto> {
+
+		return ResponseEntity
+			.status(HttpStatus.OK)
+			.body(lagDummyfil(vedleggsId.toLong(), filId.toLong()))
+	}
+
+	@Operation(summary = "Requests adding or updating attachment to a previously created application.", tags = ["operations"])
+	@ApiResponses(value = [ApiResponse(responseCode = "200",
+		description = "If successful, the file is stored and the allocated id is returned."
+	)])
+	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}/{filId}")
+	fun slettFil(
+		@PathVariable innsendingsId: String,
+		@PathVariable vedleggsId: String,
+		@PathVariable filId: String
+	): ResponseEntity<String> {
+
+		return ResponseEntity
+			.status(HttpStatus.OK)
+			.body("{\"status\": \"Slettet fil med id ${filId}\"}")
 	}
 
 	@Operation(
@@ -127,11 +181,11 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 			description = "If successful, the attachment is deleted from the database and a confirmation string is returned."
 	)])
 	@DeleteMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}")
-	fun slettVedlegg(@PathVariable vedleggId: Long): ResponseEntity<String> {
+	fun slettVedlegg(@PathVariable innsendingsId: String, @PathVariable vedleggsId: Long): ResponseEntity<String> {
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body("Slettet $vedleggId")
+			.body("{\"status\": \"Slettet vedlegg med id ${vedleggsId}\"}")
 	}
 
 	@Operation(summary = "Requests delete of an application.", tags = ["operations"])
@@ -143,7 +197,7 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body("Slettet $innsendingsId")
+			.body("{\"status\": \"Slettet soknad med id ${innsendingsId}\"}")
 	}
 
 
@@ -156,7 +210,7 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body("Soknad $innsendingsId er sendt inn")
+			.body("{\"status\": \"Soknad med id ${innsendingsId} er sendt inn til NAV\"}")
 	}
 
 
@@ -171,6 +225,8 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 		 VedleggDto(1L, vedleggsnr ?: "N6", "Tittel",
 			 UUID.randomUUID().toString(), null, null, vedleggsnr != null && vedleggsnr.contains("NAV"), false, true, OpplastingsStatus.IKKE_VALGT, LocalDateTime.now())
 
+	private fun lagDummyfil(vedleggsId: Long, filId: Long? = 1L) =
+		FilDto(filId, vedleggsId, "filnavn", "application/pdf", ByteArray(1), LocalDateTime.now())
 
 	private fun lagVedleggsListe(skjemanr: String, vedleggsListe: List<String>?): List<VedleggDto> {
 		val mainListeDto = listOf(lagDummyVedlegg(skjemanr))

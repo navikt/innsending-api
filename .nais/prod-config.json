@@ -1,5 +1,5 @@
 {
-  "INGRESSES": ["https://innsending-api.nais.adeo.no"],
+  "INGRESSES": ["https://www.nav.no/innsending-api","https://innsending-api.app.nais.oera.no"],
   "DATABASE_HOST": "A01DBVL022.adeo.no",
   "DATABASE_PORT": "5432",
   "DATABASE_NAME": "dokumentinnsending-prod",
