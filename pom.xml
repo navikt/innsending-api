@@ -23,7 +23,8 @@
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 
 		<otj-pg-embedded.version>0.13.4</otj-pg-embedded.version>
-		<flyway.version>8.0.0</flyway.version>
+		<embedded-postgres.version>1.3.1</embedded-postgres.version>
+		<flyway.version>8.0.3</flyway.version>
 		<vault-java-driver.version>5.1.0</vault-java-driver.version>
 
 		<konfig.version>1.6.10.0</konfig.version>
@@ -38,6 +39,9 @@
 		<confluent.version>5.5.2</confluent.version>
 		<kafka.version>2.6.0</kafka.version>
 		<kafka-streams-avro-serde.version>5.5.0</kafka-streams-avro-serde.version>
+		<tika-core.version>1.22</tika-core.version>
+		<pdfbox.version>2.0.24</pdfbox.version>
+		<imgscalr-lib.version>4.2</imgscalr-lib.version>
 
 		<mockito-kotlin.version>2.2.0</mockito-kotlin.version>
 		<mockk.version>1.12.0</mockk.version>
@@ -98,6 +102,22 @@
 			<artifactId>otj-pg-embedded</artifactId>
 			<version>${otj-pg-embedded.version}</version>
 		</dependency>
+<!--
+		<dependency>
+			<groupId>io.zonky.test</groupId>
+			<artifactId>embedded-postgres</artifactId>
+			<version>${embedded-postgres.version}</version>
+		</dependency>
+-->
+<!--
+		<dependency>
+			<groupId>io.zonky.test.postgres</groupId>
+			<artifactId>embedded-postgres-binaries-bom</artifactId>
+			<version>${zonky-postgresql.version}</version>
+			<type>pom</type>
+			<scope>import</scope>
+		</dependency>
+-->
 		<dependency>
 			<groupId>com.natpryce</groupId>
 			<artifactId>konfig</artifactId>
@@ -156,6 +176,52 @@
 			<groupId>io.confluent</groupId>
 			<artifactId>kafka-streams-avro-serde</artifactId>
 			<version>${kafka-streams-avro-serde.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-core</artifactId>
+			<version>${tika-core.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>pdfbox</artifactId>
+			<version>${pdfbox.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>xmpbox</artifactId>
+			<version>${pdfbox.version}</version>
+			<scope>compile</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>pdfbox-tools</artifactId>
+			<version>${pdfbox.version}</version>
+			<scope>compile</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.imgscalr</groupId>
+			<artifactId>imgscalr-lib</artifactId>
+			<version>${imgscalr-lib.version}</version>
 		</dependency>
 
 

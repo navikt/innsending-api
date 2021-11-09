@@ -7,6 +7,8 @@ import no.nav.soknad.innsending.dto.*
 import no.nav.soknad.innsending.repository.OpplastingsStatus
 import no.nav.soknad.innsending.repository.SoknadsStatus
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.pdfutilities.KonverterTilPdf
+import no.nav.soknad.pdfutilities.Validerer
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -134,9 +136,20 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 		@RequestPart file: MultipartFile
 	): ResponseEntity<Long> {
 
+		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
+		Validerer().validereFilformat(listOf(file.bytes))
+		val fil = KonverterTilPdf().tilPdf(file.bytes)
+		val vedleggsFiler = soknadService.hentFiler(innsendingsId, vedleggsId.toLong())
+		val opplastedeFiler: List<ByteArray> = vedleggsFiler.filter{ it.data != null }.map{ it.data!! }
+		Validerer().validerStorrelse((opplastedeFiler + listOf(fil)), 100 )
+
+		// Lagre
+		val lagretFilDto = soknadService.lagreFil(innsendingsId, FilDto(null, filDto.vedleggsid, filDto.filnavn, filDto.mimetype, fil, LocalDateTime.now()))
+
+		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(lagDummyfil(vedleggsId.toLong()).id)
+			.body(lagretFilDto.id)
 	}
 
 	// Søker skal kunne laste opp ett eller flere filer på ett vedlegg. Dette endepunktet tillater opplasting av en fil.
@@ -144,7 +157,7 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
 		description = "If successful, the file is stored and the allocated id is returned."
 	)])
-	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}/{id}")
+	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil/{id}")
 	fun hentFil(
 		@PathVariable innsendingsId: String,
 		@PathVariable vedleggsId: String,
@@ -156,11 +169,11 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 			.body(lagDummyfil(vedleggsId.toLong(), filId.toLong()))
 	}
 
-	@Operation(summary = "Requests adding or updating attachment to a previously created application.", tags = ["operations"])
+	@Operation(summary = "Requests get on a previously uploaded file to an attachment.", tags = ["operations"])
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
-		description = "If successful, the file is stored and the allocated id is returned."
+		description = "If successful, the file is downloaded to the client."
 	)])
-	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}/{filId}")
+	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil/{filId}")
 	fun slettFil(
 		@PathVariable innsendingsId: String,
 		@PathVariable vedleggsId: String,
@@ -173,7 +186,7 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	}
 
 	@Operation(
-		summary = "Requests delete to one of the application's attachments.",
+		summary = "Requests delete to one of the files attached to one of the application's attachments.",
 		tags = ["operations"]
 	)
 	@ApiResponses(

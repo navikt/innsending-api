@@ -16,7 +16,7 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 @Service
-class BrukernotifikasjonPublisher(appConfiguration: AppConfiguration, private val kafkaPublisher: KafkaPublisherInterface) {
+class BrukernotifikasjonPublisher(private val appConfiguration: AppConfiguration, private val kafkaPublisher: KafkaPublisherInterface) {
 
 	private val appConfig = appConfiguration.kafkaConfig
 	private val securityLevel = 4 // Forutsetter at brukere har logget seg på f.eks. bankId slik at nivå 4 er oppnådd

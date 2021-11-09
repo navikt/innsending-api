@@ -7,16 +7,16 @@ import javax.persistence.*
 @Table(name = "vedlegg")
 data class VedleggDbData(
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY) @Column(name = "id") val id: Long?,
-	@Column(name = "tittel", columnDefinition = "varchar") val tittel: String,
-	@Column(name = "vedleggsnr", columnDefinition = "varchar") val vedleggsnr: String?,
-	@Column(name = "mimetype", columnDefinition = "varchar") val mimetype: String?,
+	@Column(name = "soknadsid", columnDefinition = "long") val soknadsid: Long,
 	@Column(name = "status", columnDefinition = "varchar") val status: OpplastingsStatus,
 	@Column(name = "erhoveddokument", columnDefinition = "boolean") val erhoveddokument: Boolean,
 	@Column(name = "ervariant", columnDefinition = "boolean") val ervariant: Boolean,
 	@Column(name = "erpdfa", columnDefinition = "boolean") val erpdfa: Boolean,
+	@Column(name = "vedleggsnr", columnDefinition = "varchar") val vedleggsnr: String?,
+	@Column(name = "tittel", columnDefinition = "varchar") val tittel: String,
+	@Column(name = "mimetype", columnDefinition = "varchar") val mimetype: String?,
 	@Column(name = "uuid", columnDefinition = "varchar") val uuid: String?,
 	@Column(name = "dokument", columnDefinition = "bytea") val dokument: ByteArray?,
-	@Column(name = "soknadsid", columnDefinition = "long") val soknadsid: Long,
 	@Column(name = "opprettetdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val opprettetdato: LocalDateTime,
 	@Column(name = "endretdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val endretdato: LocalDateTime
 ) {

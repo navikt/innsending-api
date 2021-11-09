@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.db
 
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
+//import io.zonky.test.*
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.soknad.innsending.config.AppConfiguration

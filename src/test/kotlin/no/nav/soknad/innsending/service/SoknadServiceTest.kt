@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerAPI
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.SoknadsmottakerAPI
 import no.nav.soknad.innsending.dto.DokumentSoknadDto
+import no.nav.soknad.innsending.dto.FilDto
 import no.nav.soknad.innsending.dto.VedleggDto
 import no.nav.soknad.innsending.repository.*
 import org.junit.jupiter.api.*
@@ -58,6 +59,7 @@ class SoknadServiceTest {
 
 	@AfterEach
 	fun ryddOpp() {
+		filRepository.deleteAll()
 		vedleggRepository.deleteAll()
 		soknadRepository.deleteAll()
 	}
@@ -251,22 +253,73 @@ class SoknadServiceTest {
 		assertEquals(skjemanr, dokumentSoknadDto.skjemanr)
 		assertEquals(spraak, dokumentSoknadDto.spraak)
 
-		val dokumentSoknadDtoOppdatert = oppdaterDokumentSoknad(dokumentSoknadDto)
+		soknadService.lagreFil(dokumentSoknadDto.innsendingsId!!, lastOppFilTilVedlegg(dokumentSoknadDto.vedleggsListe.filter {it.erHoveddokument}.first()))
 
-		val dokumentSoknadDtoOppdatertId = soknadService.opprettEllerOppdaterSoknad(dokumentSoknadDtoOppdatert)
-		val dokumentSoknadDtoOppdatertDb = soknadService.hentSoknad(dokumentSoknadDtoOppdatertId)
-
-		assertEquals(dokumentSoknadDtoOppdatertDb.id, dokumentSoknadDtoOppdatert.id)
-		assertEquals(dokumentSoknadDtoOppdatertDb.vedleggsListe[0].id, dokumentSoknadDtoOppdatert.vedleggsListe[0].id)
-		assertEquals(dokumentSoknadDtoOppdatertDb.vedleggsListe[0].erHoveddokument, dokumentSoknadDtoOppdatert.vedleggsListe[0].erHoveddokument)
+		val vedleggDtos = slot<List<VedleggDto>>()
+		every { fillagerAPI.lagreFiler(dokumentSoknadDto.innsendingsId!!, capture(vedleggDtos)) } returns Unit
 
 		val soknad = slot<DokumentSoknadDto>()
 		every { soknadsmottakerAPI.sendInnSoknad(capture(soknad)) } returns Unit
 
 		soknadService.sendInnSoknad(dokumentSoknadDto.innsendingsId!!)
 
+		assertTrue(vedleggDtos.isCaptured)
+		assertTrue(vedleggDtos.captured.size == 1)
+
 		assertTrue(soknad.isCaptured)
 		assertTrue(soknad.captured.innsendingsId == dokumentSoknadDto.innsendingsId)
+
+	}
+
+	@Test
+	fun lastOppFilTilVedlegg() {
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, filRepository, brukernotifikasjonPublisher, fillagerAPI, soknadsmottakerAPI )
+
+		val brukerid = "12345678901"
+		val skjemanr = "NAV 95-00.11"
+		val spraak = "no"
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, listOf("W1"))
+
+		assertEquals(brukerid, dokumentSoknadDto.brukerId)
+		assertEquals(skjemanr, dokumentSoknadDto.skjemanr)
+		assertEquals(spraak, dokumentSoknadDto.spraak)
+		assertTrue(dokumentSoknadDto.innsendingsId != null)
+		assertTrue(dokumentSoknadDto.vedleggsListe.size == 2)
+
+		val vedleggDto = dokumentSoknadDto.vedleggsListe.filter { "W1".equals(it.vedleggsnr) }.first()
+		assertTrue(vedleggDto != null)
+
+		val filDtoSaved = soknadService.lagreFil(dokumentSoknadDto.innsendingsId!!, lastOppFilTilVedlegg(vedleggDto))
+
+		assertTrue(filDtoSaved != null)
+		assertTrue(filDtoSaved.id != null)
+
+	}
+
+	@Test
+	fun slettFilTilVedlegg() {
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, filRepository, brukernotifikasjonPublisher, fillagerAPI, soknadsmottakerAPI )
+
+		val brukerid = "12345678901"
+		val skjemanr = "NAV 95-00.11"
+		val spraak = "no"
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, listOf("W1"))
+
+		assertEquals(brukerid, dokumentSoknadDto.brukerId)
+		assertEquals(skjemanr, dokumentSoknadDto.skjemanr)
+		assertEquals(spraak, dokumentSoknadDto.spraak)
+		assertTrue(dokumentSoknadDto.innsendingsId != null)
+		assertTrue(dokumentSoknadDto.vedleggsListe.size == 2)
+
+		val vedleggDto = dokumentSoknadDto.vedleggsListe.filter { "W1".equals(it.vedleggsnr) }.first()
+		assertTrue(vedleggDto != null)
+
+		val filDtoSaved = soknadService.lagreFil(dokumentSoknadDto.innsendingsId!!, lastOppFilTilVedlegg(vedleggDto))
+
+		assertTrue(filDtoSaved != null)
+		assertTrue(filDtoSaved.id != null)
+
+		soknadService.slettFil(dokumentSoknadDto.innsendingsId!!, filDtoSaved.vedleggsid, filDtoSaved.id!!)
 
 	}
 
@@ -294,6 +347,10 @@ class SoknadServiceTest {
 		VedleggDto(vedleggDto.id, vedleggDto.vedleggsnr, vedleggDto.tittel, UUID.randomUUID().toString(),
 			"application/pdf", getBytesFromFile("/litenPdf.pdf"), true, erVariant = false,
 			true, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
+
+	private fun lastOppFilTilVedlegg(vedleggDto: VedleggDto) =
+		FilDto(null, vedleggDto.id!!, "Opplastet fil",
+			"application/pdf", getBytesFromFile("/litenPdf.pdf"),  LocalDateTime.now())
 
 	private fun getBytesFromFile(path: String): ByteArray {
 		val resourceAsStream = SoknadServiceTest::class.java.getResourceAsStream(path)
