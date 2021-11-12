@@ -9,8 +9,8 @@ import no.nav.soknad.innsending.dto.FilDto
 import no.nav.soknad.innsending.dto.VedleggDto
 import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.pdfutilities.PdfMerger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.*
@@ -25,6 +25,7 @@ class SoknadService(
 	private val fillagerAPI: FillagerAPI,
 	private val soknadsmottakerAPI: SoknadsmottakerAPI
 ) {
+	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Transactional
 	fun opprettSoknad(brukerId: String, skjemanr: String, spraak: String = "no", vedleggsnrListe: List<String> = emptyList()): DokumentSoknadDto {
@@ -42,7 +43,7 @@ class SoknadService(
 		val skjemaDbData = vedleggRepository.save(
 			VedleggDbData(null, savedSoknadDbData.id!!, OpplastingsStatus.IKKE_VALGT, true, ervariant = false, true
 				, kodeverkSkjema.skjemanummer ?: kodeverkSkjema.vedleggsid,kodeverkSkjema.tittel ?: "",
-				null, UUID.randomUUID().toString(), null, LocalDateTime.now(), LocalDateTime.now())
+				null, UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now())
 		)
 
 		// for hvert vedleggsnr hent fra Sanity og opprett vedlegg.
@@ -50,7 +51,7 @@ class SoknadService(
 			.map { nr -> skjemaService.hentSkjemaEllerVedlegg(nr, spraak) }
 			.map { v ->  vedleggRepository.save(VedleggDbData(null, savedSoknadDbData.id, OpplastingsStatus.IKKE_VALGT,
 				 false, ervariant = false, false, v.skjemanummer,v.tittel ?: "", null,
-				UUID.randomUUID().toString(), null, LocalDateTime.now(), LocalDateTime.now())) }
+				UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now())) }
 
 		val savedVedleggDbDataListe = listOf(skjemaDbData) + vedleggDbDataListe
 
@@ -58,6 +59,35 @@ class SoknadService(
 		brukerNotifikasjon.soknadStatusChange(dokumentSoknadDto)
 		// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
 		return dokumentSoknadDto
+	}
+
+	fun opprettSoknadForettersendingAvVedlegg(brukerId: String, ettersendingsId: String, spraak: String): DokumentSoknadDto {
+		// Skal opprette en soknad basert på status på vedlegg som skal ettersendes.
+		// Basere opplastingsstatus på nyeste innsending på ettersendingsId, dvs. nyeste soknad der innsendingsId eller ettersendingsId lik oppgitt ettersendingsId
+		// Det skal være mulig å ettersende allerede ettersendte vedlegg på nytt
+		val soknadDbDataList = soknadRepository.findNewestByEttersendingsId(ettersendingsId)
+
+		if (soknadDbDataList.isEmpty()) throw Exception("Soknad det skal ettersendes data for ikke funnet")
+
+		val nyesteSoknad = hentAlleVedlegg(soknadDbDataList.first())
+
+		val savedEttersendingsSoknad = soknadRepository.save(
+			SoknadDbData(null, Utilities.laginnsendingsId(), nyesteSoknad.tittel, nyesteSoknad.skjemanr,
+				nyesteSoknad.tema, spraak, SoknadsStatus.Opprettet, brukerId, ettersendingsId, LocalDateTime.now(),
+				LocalDateTime.now(), null, null)
+		)
+
+		val vedleggDbDataListe = nyesteSoknad.vedleggsListe
+			.map { v -> vedleggRepository.save (VedleggDbData(null, savedEttersendingsSoknad.id!!
+				, if (OpplastingsStatus.SEND_SENERE == v.opplastingsStatus) OpplastingsStatus.IKKE_VALGT else v.opplastingsStatus,
+				v.erHoveddokument, v.erVariant, v.erPdfa, v.vedleggsnr,v.tittel, v.mimetype,
+				UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now()) ) }
+
+		val dokumentSoknadDto = lagDokumentSoknadDto(savedEttersendingsSoknad, vedleggDbDataListe)
+		brukerNotifikasjon.soknadStatusChange(dokumentSoknadDto)
+
+		return dokumentSoknadDto
+
 	}
 
 	// Hent soknad gitt id med alle vedlegg. Merk at eventuelt dokument til vedlegget hentes ikke
@@ -74,13 +104,14 @@ class SoknadService(
 
 	private fun hentAlleVedlegg(soknadDbDataOpt: Optional<SoknadDbData>, ident: String): DokumentSoknadDto {
 		if (soknadDbDataOpt.isPresent) {
-			val soknadDbData = soknadDbDataOpt.get()
-			val vedleggDbDataListe = vedleggRepository.findAllBySoknadsid(soknadDbData.id!!)
-
-			return lagDokumentSoknadDto(soknadDbData, vedleggDbDataListe)
+			return hentAlleVedlegg(soknadDbDataOpt.get())
 		}
 		throw RuntimeException("Ingen dokumentsoknad med id = $ident funnet")
+	}
 
+	private fun hentAlleVedlegg(soknadDbData: SoknadDbData): DokumentSoknadDto {
+		val vedleggDbDataListe = vedleggRepository.findAllBySoknadsid(soknadDbData.id!!)
+		return lagDokumentSoknadDto(soknadDbData, vedleggDbDataListe)
 	}
 
 	// Hent vedlegg, merk filene knyttet til vedlegget ikke lastes opp
@@ -104,7 +135,11 @@ class SoknadService(
 		if (vedleggDbData == null) throw Exception("Vedlegg med id=${filDto.vedleggsid} ikke funnet")
 
 		val savedFilDbData = filRepository.save(mapTilFilDb(filDto))
-
+/* Oppdaterer kun opplastingsstatus i forbindelse med innsending av søknad.
+		if (vedleggDbData.status != OpplastingsStatus.LASTET_OPP) {
+			vedleggRepository.updateStatus(vedleggDbData.id!!, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
+		}
+*/
 		return lagFilDto(savedFilDbData)
 	}
 
@@ -135,6 +170,11 @@ class SoknadService(
 		if (vedleggDbData == null) throw Exception("Vedlegg med id=${vedleggsId} ikke funnet")
 
 		filRepository.deleteById(filId)
+/* Setter opplastingsstatus på vedlegg kun i forbindelse med innsending av søknad
+		if (filRepository.findNumberOfFilesByVedleggsid(vedleggDbData.id!!) == 0) {
+			vedleggRepository.updateStatus(vedleggDbData.id!!, OpplastingsStatus.IKKE_VALGT, LocalDateTime.now())
+		}
+*/
 	}
 
 	// Slette?
@@ -275,22 +315,33 @@ class SoknadService(
 
 		// Listen av varianter av hoveddokumenter, hent lagrede filer og opprett
 		soknadDto.vedleggsListe.filter{ it.erHoveddokument }.forEach {
-			vedleggDtos.add(lagVedleggDtoMedOpplastetFil(mergeFilDto(soknadDto.innsendingsId!!, it), it) ) }
+			vedleggDtos.add(lagVedleggDtoMedOpplastetFil(hentOgMergeVedleggsFiler(soknadDto.innsendingsId!!, it), it) ) }
 		// For hvert øvrige vedlegg merge filer og legg til
 		soknadDto.vedleggsListe.filter { !it.erHoveddokument }.forEach {
-			vedleggDtos.add(lagVedleggDtoMedOpplastetFil(mergeFilDto(soknadDto.innsendingsId!!, it), it)) }
+			vedleggDtos.add(lagVedleggDtoMedOpplastetFil(hentOgMergeVedleggsFiler(soknadDto.innsendingsId!!, it), it)) }
 		return vedleggDtos
 	}
 
-	private fun mergeFilDto(innsendingsId: String, vedleggDto: VedleggDto): FilDto? {
+	private fun hentOgMergeVedleggsFiler(innsendingsId: String, vedleggDto: VedleggDto): FilDto? {
 		val filer = hentFiler(innsendingsId, vedleggDto.id!!, true).filter { it.data != null }
-		val mergedFil = if (filer.isNotEmpty()) PdfMerger().mergePdfer(filer.map { it.data!! }) else return null
-		return FilDto(null, vedleggDto.id, vedleggDto.vedleggsnr!!, "application/pdf", mergedFil, filer.get(0).opprettetdato)
+		if (filer.isNullOrEmpty()) return null
+
+		val vedleggsFil: ByteArray? =
+			if (vedleggDto.erHoveddokument) {
+				if (filer.size > 1) {
+					logger.warn("Vedlegg ${vedleggDto.id}: ${vedleggDto.tittel} har flere opplastede filer, velger første")
+				}
+				filer.get(0).data
+			} else {
+				PdfMerger().mergePdfer(filer.map { it.data!! })
+			}
+
+		return FilDto(null, vedleggDto.id, vedleggDto.vedleggsnr!!, filer.get(0).mimetype, vedleggsFil, filer.get(0).opprettetdato)
 	}
 
 	private fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
 		VedleggDto(vedleggDto.id!!, vedleggDto.vedleggsnr, vedleggDto.tittel,
-			vedleggDto.uuid, filDto?.mimetype ?: vedleggDto.mimetype, filDto?.data,vedleggDto.erHoveddokument,
+			vedleggDto.uuid, filDto?.mimetype ?: vedleggDto.mimetype, filDto?.data, vedleggDto.erHoveddokument,
 			vedleggDto.erVariant, vedleggDto.erPdfa, if (filDto?.data != null) OpplastingsStatus.LASTET_OPP else vedleggDto.opplastingsStatus
 			, filDto?.opprettetdato ?: vedleggDto.opprettetdato)
 
@@ -301,7 +352,7 @@ class SoknadService(
 
 	private fun lagVedleggDto(vedleggDbData: VedleggDbData, document: ByteArray? = null) =
 		VedleggDto(vedleggDbData.id!!, vedleggDbData.vedleggsnr, vedleggDbData.tittel,
-			vedleggDbData.uuid, vedleggDbData.mimetype, document ?: vedleggDbData.dokument, vedleggDbData.erhoveddokument,
+			vedleggDbData.uuid, vedleggDbData.mimetype, document, vedleggDbData.erhoveddokument,
 			vedleggDbData.ervariant, vedleggDbData.erpdfa, vedleggDbData.status, vedleggDbData.opprettetdato)
 
 	private fun lagDokumentSoknadDto(soknadDbData: SoknadDbData, vedleggDbDataListe: List<VedleggDbData>) =
@@ -316,14 +367,12 @@ class SoknadService(
 	private fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, opplastingsStatus: OpplastingsStatus) =
 		VedleggDbData(vedleggDto.id, soknadsId, opplastingsStatus
 			, vedleggDto.erHoveddokument, vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.vedleggsnr, vedleggDto.tittel
-			, vedleggDto.mimetype, vedleggDto.uuid,	vedleggDto.document
-			, vedleggDto.opprettetdato, LocalDateTime.now())
+			, vedleggDto.mimetype, vedleggDto.uuid,	vedleggDto.opprettetdato, LocalDateTime.now())
 
 	private fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long) =
 		VedleggDbData(vedleggDto.id, soknadsId, vedleggDto.opplastingsStatus
 			, vedleggDto.erHoveddokument, vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.vedleggsnr, vedleggDto.tittel
-			, vedleggDto.mimetype, vedleggDto.uuid,	vedleggDto.document
-			, vedleggDto.opprettetdato, LocalDateTime.now())
+			, vedleggDto.mimetype, vedleggDto.uuid, vedleggDto.opprettetdato, LocalDateTime.now())
 
 	private fun mapTilSoknadDb(dokumentSoknadDto: DokumentSoknadDto, innsendingsId: String, status: SoknadsStatus? = SoknadsStatus.Opprettet) =
 		SoknadDbData(dokumentSoknadDto.id, innsendingsId,

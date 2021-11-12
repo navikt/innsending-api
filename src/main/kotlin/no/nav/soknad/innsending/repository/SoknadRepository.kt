@@ -14,9 +14,13 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 
 	fun findByInnsendingsid(innsendingsid: String): Optional<SoknadDbData>
 
+	@Query(value = "SELECT * FROM soknad WHERE innsendtdato is not null AND (innsendingsid = :ettersendingsid OR (ettersendingsid is not null AND ettersendingsid = :ettersendingsid)) ORDER BY innsendtdato DESC", nativeQuery = true)
+	fun findNewestByEttersendingsId(@Param("ettersendingsid") ettersendingsid: String): List<SoknadDbData>
+
+
 	@Transactional
 	@Modifying
-	@Query(value="UPDATE soknad SET endretdato = :endretdato WHERE id = :id", nativeQuery = true)
+	@Query(value="UPDATE SoknadDbData SET endretdato = :endretdato WHERE id = :id", nativeQuery = false)
 	fun updateEndretDato(@Param("id") id: Long, @Param("endretdato") endretdato: LocalDateTime)
 
 }

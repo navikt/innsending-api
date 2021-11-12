@@ -16,7 +16,6 @@ data class VedleggDbData(
 	@Column(name = "tittel", columnDefinition = "varchar") val tittel: String,
 	@Column(name = "mimetype", columnDefinition = "varchar") val mimetype: String?,
 	@Column(name = "uuid", columnDefinition = "varchar") val uuid: String?,
-	@Column(name = "dokument", columnDefinition = "bytea") val dokument: ByteArray?,
 	@Column(name = "opprettetdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val opprettetdato: LocalDateTime,
 	@Column(name = "endretdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val endretdato: LocalDateTime
 ) {

@@ -13,6 +13,9 @@ interface FilRepository: JpaRepository<FilDbData, Long> {
 	@Query(value = "FROM FilDbData WHERE vedleggsid = :vedleggsid")
 	fun findAllByVedleggsid(@Param("vedleggsid") vedleggsid: Long): List<FilDbData>
 
+	@Query(value = "SELECT count(*) FROM fil WHERE vedleggsid = :vedleggsid", nativeQuery = true)
+	fun findNumberOfFilesByVedleggsid(@Param("vedleggsid") vedleggsid: Long): Int
+
 	@Transactional
 	@Modifying
 	@Query(value = "DELETE FROM fil WHERE vedleggsid = :vedleggsid", nativeQuery = true)
