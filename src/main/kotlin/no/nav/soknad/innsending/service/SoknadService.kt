@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.dto.DokumentSoknadDto
 import no.nav.soknad.innsending.dto.FilDto
 import no.nav.soknad.innsending.dto.VedleggDto
 import no.nav.soknad.innsending.repository.*
+import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.PdfMerger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -26,6 +27,8 @@ class SoknadService(
 	private val soknadsmottakerAPI: SoknadsmottakerAPI
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
+
+	private val ukjentEttersendingsId = "-1"
 
 	@Transactional
 	fun opprettSoknad(brukerId: String, skjemanr: String, spraak: String = "no", vedleggsnrListe: List<String> = emptyList()): DokumentSoknadDto {
@@ -51,6 +54,40 @@ class SoknadService(
 			.map { nr -> skjemaService.hentSkjemaEllerVedlegg(nr, spraak) }
 			.map { v ->  vedleggRepository.save(VedleggDbData(null, savedSoknadDbData.id, OpplastingsStatus.IKKE_VALGT,
 				 false, ervariant = false, false, v.skjemanummer,v.tittel ?: "", null,
+				UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now())) }
+
+		val savedVedleggDbDataListe = listOf(skjemaDbData) + vedleggDbDataListe
+
+		val dokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbDataListe)
+		brukerNotifikasjon.soknadStatusChange(dokumentSoknadDto)
+		// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
+		return dokumentSoknadDto
+	}
+
+	@Transactional
+	fun opprettSoknadForEttersendingGittSkjemanr(brukerId: String, skjemanr: String, spraak: String = "no", vedleggsnrListe: List<String> = emptyList()): DokumentSoknadDto {
+		// hentSkjema informasjon gitt skjemanr
+		val kodeverkSkjema = skjemaService.hentSkjemaEllerVedlegg(skjemanr, spraak)
+
+		// lagre soknad og vedlegg
+		val savedSoknadDbData = soknadRepository.save(
+			SoknadDbData(null, Utilities.laginnsendingsId(), kodeverkSkjema.tittel ?: "", kodeverkSkjema.skjemanummer ?: "",
+				kodeverkSkjema.tema ?: "", spraak, SoknadsStatus.Opprettet, brukerId, ukjentEttersendingsId, LocalDateTime.now(),
+				LocalDateTime.now(), null, kodeverkSkjema.url)
+		)
+
+		// Lagre skjema
+		val skjemaDbData = vedleggRepository.save(
+			VedleggDbData(null, savedSoknadDbData.id!!, OpplastingsStatus.INNSENDT, true, ervariant = false, true
+				, kodeverkSkjema.skjemanummer ?: kodeverkSkjema.vedleggsid,kodeverkSkjema.tittel ?: "",
+				null, UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now())
+		)
+
+		// for hvert vedleggsnr hent fra Sanity og opprett vedlegg.
+		val vedleggDbDataListe = vedleggsnrListe
+			.map { nr -> skjemaService.hentSkjemaEllerVedlegg(nr, spraak) }
+			.map { v ->  vedleggRepository.save(VedleggDbData(null, savedSoknadDbData.id, OpplastingsStatus.IKKE_VALGT,
+				false, ervariant = false, false, v.skjemanummer,v.tittel ?: "", null,
 				UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now())) }
 
 		val savedVedleggDbDataListe = listOf(skjemaDbData) + vedleggDbDataListe
@@ -177,7 +214,6 @@ class SoknadService(
 */
 	}
 
-	// Slette?
 	@Transactional
 	fun opprettEllerOppdaterSoknad(dokumentSoknadDto: DokumentSoknadDto): String {
 		val nySoknad = dokumentSoknadDto.id == null
@@ -280,11 +316,20 @@ class SoknadService(
 
 		val soknadDto = hentSoknad(innsendingsId)
 
+		if (soknadDto.ettersendingsId != null) {
+			// Hvis ettersending, så må det genereres et dummy hoveddokument
+			val hovedDokumentDto = soknadDto.vedleggsListe.filter { it.erHoveddokument && !it.erVariant }.first()
+			val dummySkjema = PdfGenerator().lagForsideEttersending(soknadDto)
+			lagreFil(innsendingsId, FilDto(null, hovedDokumentDto.id!!, hovedDokumentDto.vedleggsnr!!, "application/pdf", dummySkjema, LocalDateTime.now() ))
+		}
+
 		// Vedleggsliste med opplastede dokument og status= LASTET_OPP for de som skal sendes soknadsfillager
 		val alleVedlegg: List<VedleggDto> = ferdigstillVedlegg(soknadDto)
 		val opplastedeVedlegg = alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatus.LASTET_OPP }.toList()
 
-		if (opplastedeVedlegg.isNullOrEmpty()) throw Exception("Innsending avbrutt da ingen opplastede filer å sende inn")
+		if (opplastedeVedlegg.isNullOrEmpty() || (soknadDto.ettersendingsId != null && opplastedeVedlegg.size == 1 )) {
+			throw Exception("Innsending avbrutt da ingen opplastede filer å sende inn")
+		}
 
 		fillagerAPI.lagreFiler(soknadDto.innsendingsId!!, opplastedeVedlegg)
 
@@ -292,10 +337,6 @@ class SoknadService(
 		soknadsmottakerAPI.sendInnSoknad(soknadDto)
 
 		// oppdater databasen med status og innsendingsdato
-/*
-		alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatus.LASTET_OPP }. forEach { vedleggRepository.updateStatus(it.id!!, OpplastingsStatus.INNSENDT, LocalDateTime.now()) }
-		alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatus.IKKE_VALGT }. forEach { vedleggRepository.updateStatus(it.id!!, OpplastingsStatus.SEND_SENERE, LocalDateTime.now()) }
-*/
 		opplastedeVedlegg. forEach { vedleggRepository.save(mapTilVedleggDb(it, soknadDto.id!!, OpplastingsStatus.INNSENDT)) }
 		alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatus.IKKE_VALGT }. forEach { vedleggRepository.save(mapTilVedleggDb(it, soknadDto.id!!, OpplastingsStatus.SEND_SENERE)) }
 		vedleggRepository.flush()

@@ -13,12 +13,14 @@ import no.nav.soknad.innsending.dto.DokumentSoknadDto
 import no.nav.soknad.innsending.dto.FilDto
 import no.nav.soknad.innsending.dto.VedleggDto
 import no.nav.soknad.innsending.repository.*
+import no.nav.soknad.pdfutilities.PdfGenerator
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.time.LocalDateTime
 import java.util.*
 
@@ -281,7 +283,7 @@ class SoknadServiceTest {
 		soknadService.sendInnSoknad(dokumentSoknadDto.innsendingsId!!)
 
 		assertTrue(vedleggDtos.isCaptured)
-		assertTrue(vedleggDtos.captured.size == 1)
+		assertTrue(vedleggDtos.captured.size >= 1)
 
 		assertTrue(soknad.isCaptured)
 		assertTrue(soknad.captured.innsendingsId == dokumentSoknadDto.innsendingsId)
@@ -365,5 +367,74 @@ class SoknadServiceTest {
 			}
 		}
 		return outputStream.toByteArray()
+	}
+
+	// Brukes for å skrive fil til disk for manuell sjekk av innhold.
+	private fun writeBytesToFile(navn: String, suffix: String, innhold: ByteArray?) {
+		val dest = kotlin.io.path.createTempFile(navn,suffix)
+
+		if (innhold != null)	dest.toFile().writeBytes(innhold)
+	}
+
+	@Test
+	fun lesOppTeksterTest() {
+		val prop = Properties()
+		val inputStream	=  SoknadServiceTest::class.java.getResourceAsStream("/tekster/innholdstekster_nb.properties")
+
+		inputStream.use {
+			prop.load(it)
+		}
+		assertTrue(!prop.isEmpty)
+	}
+
+	@Test
+	fun lagKvitteringsHoveddokument() {
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, filRepository, brukernotifikasjonPublisher, fillagerAPI, soknadsmottakerAPI )
+
+		// Opprett original soknad
+		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+
+		soknadService.lagreFil(dokumentSoknadDto.innsendingsId!!, lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.filter {it.erHoveddokument}.first()))
+
+		// Sender inn original soknad
+		testOgSjekkInnsendingAvSoknad(soknadService, dokumentSoknadDto)
+
+		// Test generering av kvittering for innsendt soknad
+		val innsendtSoknad = soknadService.hentSoknad(dokumentSoknadDto.innsendingsId!!)
+		val kvitteringsDokument = PdfGenerator().lagKvitteringsSide(innsendtSoknad, "Per Person")
+		assertTrue(kvitteringsDokument != null)
+
+		// Skriver til tmp fil for manuell sjekk av innholdet av generert PDF
+		//writeBytesToFile("dummy", ".pdf", kvitteringsDokument)
+
+	}
+
+
+	@Test
+	fun lagDummyHoveddokumentForEttersending() {
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, filRepository, brukernotifikasjonPublisher, fillagerAPI, soknadsmottakerAPI )
+
+		// Opprett original soknad
+		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+
+		soknadService.lagreFil(dokumentSoknadDto.innsendingsId!!, lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.filter {it.erHoveddokument}.first()))
+
+		// Sender inn original soknad
+		testOgSjekkInnsendingAvSoknad(soknadService, dokumentSoknadDto)
+
+		// Opprett ettersendingssoknad
+		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!, dokumentSoknadDto.spraak!!)
+
+		assertTrue(ettersendingsSoknadDto != null)
+		assertTrue(!ettersendingsSoknadDto.vedleggsListe.isEmpty())
+		assertTrue(!ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatus.INNSENDT }.toList().isEmpty())
+		assertTrue(!ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatus.IKKE_VALGT }.toList().isEmpty())
+
+		val dummyHovedDokument = PdfGenerator().lagForsideEttersending(ettersendingsSoknadDto)
+		assertTrue(dummyHovedDokument != null)
+
+		// Skriver til tmp fil for manuell sjekk av innholdet av generert PDF
+		//writeBytesToFile("dummy", ".pdf", dummyHovedDokument)
+
 	}
 }
