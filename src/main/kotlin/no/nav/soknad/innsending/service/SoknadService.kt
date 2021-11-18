@@ -98,7 +98,7 @@ class SoknadService(
 		return dokumentSoknadDto
 	}
 
-	fun opprettSoknadForettersendingAvVedlegg(brukerId: String, ettersendingsId: String, spraak: String): DokumentSoknadDto {
+	fun opprettSoknadForettersendingAvVedlegg(brukerId: String, ettersendingsId: String): DokumentSoknadDto {
 		// Skal opprette en soknad basert på status på vedlegg som skal ettersendes.
 		// Basere opplastingsstatus på nyeste innsending på ettersendingsId, dvs. nyeste soknad der innsendingsId eller ettersendingsId lik oppgitt ettersendingsId
 		// Det skal være mulig å ettersende allerede ettersendte vedlegg på nytt
@@ -110,7 +110,7 @@ class SoknadService(
 
 		val savedEttersendingsSoknad = soknadRepository.save(
 			SoknadDbData(null, Utilities.laginnsendingsId(), nyesteSoknad.tittel, nyesteSoknad.skjemanr,
-				nyesteSoknad.tema, spraak, SoknadsStatus.Opprettet, brukerId, ettersendingsId, LocalDateTime.now(),
+				nyesteSoknad.tema, nyesteSoknad.spraak, SoknadsStatus.Opprettet, brukerId, ettersendingsId, LocalDateTime.now(),
 				LocalDateTime.now(), null, null)
 		)
 
@@ -270,15 +270,20 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun lagreVedlegg(vedleggDto: VedleggDto, soknadsId: Long): VedleggDto {
+	fun lagreVedlegg(vedleggDto: VedleggDto, innsendingsId: String): VedleggDto {
+
+		val soknadDbOpt = soknadRepository.findByInnsendingsid(innsendingsId)
+		if (!soknadDbOpt.isPresent) throw Exception("Finner ikke soknaden med innsendingsId = $innsendingsId i databasen")
+		val soknadDb = soknadDbOpt.get()
+		if (soknadDb.status == SoknadsStatus.Innsendt) throw Exception("Kan ikke legge til vedlegg for en allerede innsendt søknad")
 
 		// Lagre vedlegget i databasen
-		val vedleggDbData = vedleggRepository.save(mapTilVedleggDb(vedleggDto, soknadsId))
+		val vedleggDbData = vedleggRepository.save(mapTilVedleggDb(vedleggDto, soknadDb.id!!))
 
 		// Oppdater soknadens sist endret dato
-		soknadRepository.updateEndretDato(soknadsId, LocalDateTime.now())
+		soknadRepository.updateEndretDato(soknadDb.id!!, LocalDateTime.now())
 
-		val soknadDto = hentSoknad(soknadsId)
+		val soknadDto = hentSoknad(soknadDb.id!!)
 		soknadRepository.save(mapTilSoknadDb(soknadDto, soknadDto.innsendingsId!!))
 
 		val vedleggDtoSaved = lagVedleggDto(vedleggDbData, vedleggDto.document)
@@ -287,22 +292,25 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun slettVedleggOgDensFiler(vedleggDto: VedleggDto, soknadsId: Long) {
+	fun slettVedlegg(innsendingsId: String, vedleggsId: Long) {
+		val soknadDto = hentSoknad(innsendingsId)
+		if (soknadDto.status == SoknadsStatus.Innsendt) throw RuntimeException("Kan ikke slette vedlegg til allerede innsendt søknad")
+
+		val vedleggDto = soknadDto.vedleggsListe.filter { it.id == vedleggsId }.firstOrNull()
+		if (vedleggDto == null) throw Exception("Angitt vedlegg eksisterer ikke")
+
+		if (vedleggDto.erHoveddokument) throw RuntimeException("Kan ikke slette hovedskjema på en søknad")
+		if (!vedleggDto.vedleggsnr.equals("N6")) throw RuntimeException("Kan ikke slette påkrevd vedlegg")
+
+		slettVedleggOgDensFiler(vedleggDto, soknadDto.id!!)
+
+	}
+
+	private fun slettVedleggOgDensFiler(vedleggDto: VedleggDto, soknadsId: Long) {
 		// Ikke slette hovedskjema, og ikke obligatoriske. Slette vedlegget og dens opplastede filer
-		if (!vedleggDto.erHoveddokument) {
-			val soknadDto = hentSoknad(soknadsId)
-
-			if (soknadDto.status == SoknadsStatus.Innsendt) throw Exception("Kan ikke slette vedlegg til allerede innsendt søknad")
-			if (!vedleggDto.vedleggsnr.equals("N6")) throw Exception("Kan ikke slette påkrevd vedlegg")
-			if (vedleggDto.opplastingsStatus==OpplastingsStatus.INNSENDT) throw Exception("Kan ikke slette ett allerede innsendt vedlegg")
-
 			slettVedleggOgDensFiler(vedleggDto)
 			// Oppdatere soknad.sisteendret
 			soknadRepository.updateEndretDato(soknadsId, LocalDateTime.now())
-			//fillagerAPI.slettFiler(soknadDto.innsendingsId!!, listOf(vedleggDto))
-		} else {
-			throw RuntimeException("Kan ikke slette hovedskjema på en søknad")
-		}
 	}
 
 	@Transactional

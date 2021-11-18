@@ -104,7 +104,7 @@ class SoknadServiceTest {
 		testOgSjekkInnsendingAvSoknad(soknadService, dokumentSoknadDto)
 
 		// Opprett ettersendingssoknad
-		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!, dokumentSoknadDto.spraak!!)
+		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 
 		assertTrue(ettersendingsSoknadDto != null)
 		assertTrue(!ettersendingsSoknadDto.vedleggsListe.isEmpty())
@@ -127,7 +127,7 @@ class SoknadServiceTest {
 		testOgSjekkInnsendingAvSoknad(soknadService, dokumentSoknadDto)
 
 		// Oppretter ettersendingssoknad
-		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!, dokumentSoknadDto.spraak!!)
+		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 
 		assertTrue(ettersendingsSoknadDto != null)
 		assertTrue(!ettersendingsSoknadDto.vedleggsListe.isEmpty())
@@ -143,7 +143,7 @@ class SoknadServiceTest {
 		testOgSjekkInnsendingAvSoknad(soknadService, ettersendingsSoknadDto)
 
 		// Oppretter ettersendingssoknad2
-		val ettersendingsSoknadDto2 = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!, dokumentSoknadDto.spraak!!)
+		val ettersendingsSoknadDto2 = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 
 		assertTrue(ettersendingsSoknadDto2 != null)
 		assertTrue(!ettersendingsSoknadDto2.vedleggsListe.isEmpty())
@@ -195,7 +195,7 @@ class SoknadServiceTest {
 		every { fillagerAPI.hentFiler(dokumentSoknadDto.innsendingsId!!, capture(vedleggDtos)) } returns dokumentSoknadDto.vedleggsListe
 
 		val vedleggDto = lagVedleggDto("N6", "Annet", null, null)
-		val lagretVedleggDto = soknadService.lagreVedlegg(vedleggDto,dokumentSoknadDto.id!!)
+		val lagretVedleggDto = soknadService.lagreVedlegg(vedleggDto,dokumentSoknadDto.innsendingsId!!)
 
 		assertTrue(lagretVedleggDto != null && lagretVedleggDto.id != null)
 	}
@@ -233,7 +233,7 @@ class SoknadServiceTest {
 		val vedleggDtos = slot<List<VedleggDto>>()
 		every { fillagerAPI.slettFiler(dokumentSoknadDto.innsendingsId!!, capture(vedleggDtos)) } returns Unit
 
-		soknadService.slettVedleggOgDensFiler(lagretVedlegg, dokumentSoknadDto.id!!)
+		soknadService.slettVedlegg(dokumentSoknadDto.innsendingsId!!, lagretVedlegg.id!!, )
 
 /* Sender ikke opplastede filer fortløpende til soknadsfillager
 		assertTrue(vedleggDtos.isCaptured)
@@ -423,7 +423,7 @@ class SoknadServiceTest {
 		testOgSjekkInnsendingAvSoknad(soknadService, dokumentSoknadDto)
 
 		// Opprett ettersendingssoknad
-		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!, dokumentSoknadDto.spraak!!)
+		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 
 		assertTrue(ettersendingsSoknadDto != null)
 		assertTrue(!ettersendingsSoknadDto.vedleggsListe.isEmpty())

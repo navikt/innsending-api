@@ -21,10 +21,10 @@ class SkjemaRestApi(val soknadService: SoknadService) {
 	@PostMapping("/leggTilVedlegg")
 	fun soknadFraFyllUt(@RequestBody skjemaDto: SkjemaDto): ResponseEntity<String> {
 
-		soknadService.opprettEllerOppdaterSoknad(SkjemaDokumentSoknadTransformer(skjemaDto).apply())
+		val opprettetSoknadId = soknadService.opprettEllerOppdaterSoknad(SkjemaDokumentSoknadTransformer(skjemaDto).apply())
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body("Opprettet med innsendingsId X")
+			.body("Opprettet med innsendingsId $opprettetSoknadId")
 	}
 
 }

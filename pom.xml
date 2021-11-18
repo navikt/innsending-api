@@ -46,6 +46,9 @@
 		<mockito-kotlin.version>2.2.0</mockito-kotlin.version>
 		<mockk.version>1.12.0</mockk.version>
 		<maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
+		<tomakehurst.version>2.19.0</tomakehurst.version>
+		<spring-cloud.version>1.2.5.RELEASE</spring-cloud.version>
+		<rest-assured.version>4.4.0</rest-assured.version>
 
 		<kotlin.version>1.5.30</kotlin.version>
 	</properties>
@@ -258,6 +261,24 @@
 			<groupId>io.mockk</groupId>
 			<artifactId>mockk-dsl-jvm</artifactId>
 			<version>${mockk.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.github.tomakehurst</groupId>
+			<artifactId>wiremock-standalone</artifactId>
+			<version>${tomakehurst.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.rest-assured</groupId>
+			<artifactId>spring-mock-mvc</artifactId>
+			<version>${rest-assured.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-contract-wiremock</artifactId>
+			<version>${spring-cloud.version}</version>
 			<scope>test</scope>
 		</dependency>
 

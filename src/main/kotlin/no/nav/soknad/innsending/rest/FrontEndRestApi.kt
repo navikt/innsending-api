@@ -31,12 +31,13 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 		@RequestParam skjemanr: String,
 		@RequestParam sprak: String,
 		@RequestParam brukerId: String,
-		@RequestParam vedleggListe: List<String>
+		@RequestParam vedleggListe: List<String>?
 	): ResponseEntity<DokumentSoknadDto> {
 
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerId, skjemanr, sprak, vedleggListe ?: emptyList())
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(lagDummySoknad(skjemanr, null, sprak, brukerId, null, vedleggListe))
+			.body(dokumentSoknadDto)
 	}
 
 	@Operation(summary = "Requests creating a new application with reference to a prior sent in application.", tags = ["operations"])
@@ -44,16 +45,36 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 		description = "If successful, it will return DokumentSoknadDto which contains the title, and allows for a user " +
 			"to add additional attachments."
 	)])
-	@PostMapping("/ettersending")
-	fun opprettEttersending(
+	@PostMapping("/ettersendingPaInnsendingsId")
+	fun opprettEttersendingGittInnsendingsId(
 		@RequestParam ettersendingTilinnsendingsId: String,
 		@RequestParam vedleggListe: List<String>,
 		@RequestParam brukerId: String
 	): ResponseEntity<DokumentSoknadDto> {
 
+		val dokumentSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(brukerId, ettersendingTilinnsendingsId)
+
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(lagDummySoknad("NAV 10-07.73", null, "NO", brukerId, ettersendingTilinnsendingsId, vedleggListe))
+			.body(dokumentSoknadDto)
+	}
+
+	@Operation(summary = "Requests creating a new application referencing a previous sent inn application by schema number.", tags = ["operations"])
+	@ApiResponses(value = [ApiResponse(responseCode = "200",
+		description = "If successful, it will return DokumentSoknadDto which contains the title and list of required attachment."
+	)])
+	@PostMapping("/ettersendPaSkjema")
+	fun opprettEttersendingGittSkjemanr(
+		@RequestParam skjemanr: String,
+		@RequestParam sprak: String,
+		@RequestParam brukerId: String,
+		@RequestParam vedleggListe: List<String>?
+	): ResponseEntity<DokumentSoknadDto> {
+
+		val dokumentSoknadDto = soknadService.opprettSoknadForEttersendingGittSkjemanr(brukerId, skjemanr, sprak, vedleggListe ?: emptyList())
+		return ResponseEntity
+			.status(HttpStatus.OK)
+			.body(dokumentSoknadDto)
 	}
 
 	@Operation(summary = "Requests fetching a previously created application.", tags = ["operations"])
@@ -64,9 +85,10 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@GetMapping("/soknad/{innsendingsId}")
 	fun hentSoknad(@PathVariable innsendingsId: String): ResponseEntity<DokumentSoknadDto> {
 
+		val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(lagDummySoknad("NAV 10-07.73", null, "NO", "12345678901", null, null))
+			.body(dokumentSoknadDto)
 	}
 
 	@Operation(summary = "Requests fetching a list of attachments to previously created application.", tags = ["operations"])
@@ -74,11 +96,12 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 		description = "If successful, it will return VedleggsListeDto which contains list of attachments to the specified application."
 	)])
 	@GetMapping("/soknad/{innsendingsId}/vedlegg")
-	fun hentVedleggsListe(@PathVariable innsendingsId: String): ResponseEntity<VedleggsListeDto> {
+	fun hentVedleggsListe(@PathVariable innsendingsId: String): ResponseEntity<List<VedleggDto>> {
 
+		val vedleggsListeDto = soknadService.hentSoknad(innsendingsId).vedleggsListe
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(lagDummyVedleggsListe())
+			.body(vedleggsListeDto)
 	}
 
 	@Operation(summary = "Requests fetching a specified attachment to a created application.", tags = ["operations"])
@@ -88,23 +111,12 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}")
 	fun hentVedlegg(@PathVariable innsendingsId: String, @PathVariable vedleggsId: String): ResponseEntity<VedleggDto> {
 
+		val vedleggDto = soknadService.hentSoknad(innsendingsId).vedleggsListe.filter { it.id.toString().equals(vedleggsId) }.first()
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(lagDummyVedlegg(vedleggsId))
+			.body(vedleggDto)
 	}
 
-	@Operation(summary = "Requests updating a previously created application.", tags = ["operations"])
-	@ApiResponses(value = [ApiResponse(responseCode = "200",
-			description = "If successful, the application is stored and an updated version of the DokumentSoknadDto is returned."
-	)])
-	@PostMapping("/soknad/{innsendingsId}")
-	fun lagreSoknad(@PathVariable innsendingsId: String, @RequestBody dokumentSoknadDto: DokumentSoknadDto
-	): ResponseEntity<String> {
-
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(innsendingsId)
-	}
 
 	// Hvis det er et nytt vedlegg, så vil ikke frontend ha vedleggsid da dette settes av backend ved oppretting av resssurs.
 	// Må derfor legge inn dummy id (f.eks. -1)?.
@@ -116,11 +128,12 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	fun lagreVedlegg(
 		@PathVariable innsendingsId: String,
 		@RequestBody vedlegg: VedleggDto
-	): ResponseEntity<Long> {
+	): ResponseEntity<VedleggDto> {
 
+		val vedleggDto = soknadService.lagreVedlegg(vedlegg, innsendingsId)
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(lagDummyVedlegg(vedlegg.vedleggsnr ?: "N6").id)
+			.body(vedleggDto)
 	}
 
 	// Søker skal kunne laste opp ett eller flere filer på ett vedlegg. Dette endepunktet tillater opplasting av en fil.
@@ -131,7 +144,7 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@RequestMapping(path = ["/soknad/{innsendingsId}/vedlegg/{vedleggsId}"], method =[RequestMethod.POST], consumes = [ MediaType.MULTIPART_FORM_DATA_VALUE ])
 	fun lagreFil(
 		@PathVariable innsendingsId: String,
-		@PathVariable vedleggsId: String,
+		@PathVariable vedleggsId: Long,
 		@RequestPart filDto: FilDto,
 		@RequestPart file: MultipartFile
 	): ResponseEntity<Long> {
@@ -139,7 +152,7 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
 		Validerer().validereFilformat(listOf(file.bytes))
 		val fil = KonverterTilPdf().tilPdf(file.bytes)
-		val vedleggsFiler = soknadService.hentFiler(innsendingsId, vedleggsId.toLong())
+		val vedleggsFiler = soknadService.hentFiler(innsendingsId, vedleggsId)
 		val opplastedeFiler: List<ByteArray> = vedleggsFiler.filter{ it.data != null }.map{ it.data!! }
 		Validerer().validerStorrelse((opplastedeFiler + listOf(fil)), 100 )
 
@@ -153,20 +166,37 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	}
 
 	// Søker skal kunne laste opp ett eller flere filer på ett vedlegg. Dette endepunktet tillater opplasting av en fil.
-	@Operation(summary = "Requests adding or updating attachment to a previously created application.", tags = ["operations"])
+	@Operation(summary = "Requests fetching a specific file uploaded to an attachment.", tags = ["operations"])
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
-		description = "If successful, the file is stored and the allocated id is returned."
+		description = "If successful, the specified file with content is returned."
 	)])
 	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil/{id}")
 	fun hentFil(
 		@PathVariable innsendingsId: String,
-		@PathVariable vedleggsId: String,
-		@PathVariable filId: String
+		@PathVariable vedleggsId: Long,
+		@PathVariable filId: Long
 	): ResponseEntity<FilDto> {
 
+		val filDto = soknadService.hentFil(innsendingsId, vedleggsId, filId)
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(lagDummyfil(vedleggsId.toLong(), filId.toLong()))
+			.body(filDto)
+	}
+
+	@Operation(summary = "Requests fetching information on all uploaded files on an attachment.", tags = ["operations"])
+	@ApiResponses(value = [ApiResponse(responseCode = "200",
+		description = "If successful, a list with file data is returned. Note the file content itself is not supplied, use /soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil/{id} for that."
+	)])
+	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil")
+	fun hentFilInfoForVedlegg(
+		@PathVariable innsendingsId: String,
+		@PathVariable vedleggsId: Long
+	): ResponseEntity<List<FilDto>> {
+
+		val filDtoListe = soknadService.hentFiler(innsendingsId, vedleggsId)
+		return ResponseEntity
+			.status(HttpStatus.OK)
+			.body(filDtoListe)
 	}
 
 	@Operation(summary = "Requests get on a previously uploaded file to an attachment.", tags = ["operations"])
@@ -176,10 +206,11 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil/{filId}")
 	fun slettFil(
 		@PathVariable innsendingsId: String,
-		@PathVariable vedleggsId: String,
-		@PathVariable filId: String
+		@PathVariable vedleggsId: Long,
+		@PathVariable filId: Long
 	): ResponseEntity<String> {
 
+		soknadService.slettFil(innsendingsId, vedleggsId, filId)
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body("{\"status\": \"Slettet fil med id ${filId}\"}")
@@ -196,6 +227,7 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@DeleteMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}")
 	fun slettVedlegg(@PathVariable innsendingsId: String, @PathVariable vedleggsId: Long): ResponseEntity<String> {
 
+		soknadService.slettVedlegg(innsendingsId, vedleggsId)
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body("{\"status\": \"Slettet vedlegg med id ${vedleggsId}\"}")
@@ -206,8 +238,9 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 			description = "If successful, the application is deleted from the database and a confirmation string is returned."
 	)])
 	@DeleteMapping("/soknad/{innsendingsId}")
-	fun slettSoknad(@PathVariable innsendingsId: Long): ResponseEntity<String> {
+	fun slettSoknad(@PathVariable innsendingsId: String): ResponseEntity<String> {
 
+		soknadService.slettSoknadAvBruker(innsendingsId)
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body("{\"status\": \"Slettet soknad med id ${innsendingsId}\"}")
@@ -221,6 +254,7 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@PostMapping("/sendInn/{innsendingsId}")
 	fun sendInnSoknad(@PathVariable innsendingsId: String): ResponseEntity<String> {
 
+		soknadService.sendInnSoknad(innsendingsId)
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body("{\"status\": \"Soknad med id ${innsendingsId} er sendt inn til NAV\"}")
