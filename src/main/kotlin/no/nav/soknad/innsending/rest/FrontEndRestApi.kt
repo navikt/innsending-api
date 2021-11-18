@@ -141,7 +141,7 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
 		description = "If successful, the file is stored and the allocated id is returned."
 	)])
-	@RequestMapping(path = ["/soknad/{innsendingsId}/vedlegg/{vedleggsId}"], method =[RequestMethod.POST], consumes = [ MediaType.MULTIPART_FORM_DATA_VALUE ])
+	@RequestMapping(path = ["/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil"], method =[RequestMethod.POST], consumes = [ MediaType.MULTIPART_FORM_DATA_VALUE ])
 	fun lagreFil(
 		@PathVariable innsendingsId: String,
 		@PathVariable vedleggsId: Long,
