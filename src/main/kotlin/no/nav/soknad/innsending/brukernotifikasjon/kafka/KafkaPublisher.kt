@@ -43,12 +43,12 @@ class KafkaPublisher(appConfiguration: AppConfiguration): KafkaPublisherInterfac
 		putDataOnTopic(key, value, headers, topic, kafkaProducer)
 	}
 
-	private fun <T> putDataOnTopic(key: Nokkel?, value: T, headers: Headers, topic: String,
+	private fun <T> putDataOnTopic(key: Nokkel, value: T, headers: Headers, topic: String,
 																 kafkaProducer: KafkaProducer<Nokkel, T>) {
 		val producerRecord = ProducerRecord(topic, key, value)
 		headers.forEach { h -> producerRecord.headers().add(h) }
 
-		val recordMetadata =  kafkaProducer
+		kafkaProducer
 			.send(producerRecord)
 			.get(9000, TimeUnit.MILLISECONDS) // Blocking call
 	}
@@ -66,5 +66,4 @@ class KafkaPublisher(appConfiguration: AppConfiguration): KafkaPublisherInterfac
 			}
 		}
 	}
-
 }
