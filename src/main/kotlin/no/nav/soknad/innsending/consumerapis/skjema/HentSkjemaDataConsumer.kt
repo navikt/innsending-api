@@ -18,16 +18,13 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 
 	init {
 		Timer().scheduleAtFixedRate(timerTask {
-			val skjemaFraDisk = initSkjemaDataFromDisk()
-			var skjemaFraSanity: List<SkjemaOgVedleggsdata>? = null
-			try {
-				skjemaFraSanity = hentSkjemaData()
+			sanityList = try {
+				hentSkjemaData()
 			} catch (e: Exception) {
 				logger.error("Feil ved henting av skjemadata fra Sanity", e.message)
+				initSkjemaDataFromDisk()
 			}
-			sanityList = (if (skjemaFraSanity.isNullOrEmpty()) skjemaFraDisk else skjemaFraSanity) ?: emptyList()
-		}, 0, 3600*1000)
-
+		}, 0, 3600 * 1000)
 	}
 
 	// TODO implementere språk avhengig oppslag?
@@ -69,18 +66,15 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 	}
 
 
-	private fun hentSkjemaData(): List<SkjemaOgVedleggsdata>? {
-		return hentSkjemaData.hent()
-	}
+	private fun hentSkjemaData() = hentSkjemaData.hent() ?: emptyList()
 
 	@Throws(IOException::class)
-	fun initSkjemaDataFromDisk(): List<SkjemaOgVedleggsdata>? {
-		val oldSanityResponse: String? = readJsonResponseDataFromDisk()
-		val jsonMapper = ObjectMapper()
-		return jsonMapper.readValue(
-			oldSanityResponse,
-			Skjemaer::class.java
-		).skjemaer
+	fun initSkjemaDataFromDisk(): List<SkjemaOgVedleggsdata> {
+		val oldSanityResponse = readJsonResponseDataFromDisk()
+		return ObjectMapper()
+			.readValue(oldSanityResponse, Skjemaer::class.java)
+			.skjemaer
+			?: emptyList()
 	}
 
 	@Throws(IOException::class)
@@ -90,7 +84,7 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 				assert(inputStream != null)
 				val s: Scanner = Scanner(inputStream!!).useDelimiter("\\A")
 				val json = if (s.hasNext()) s.next() else ""
-				assert("" != json)
+				assert(json != "")
 				return json
 			}
 	}
