@@ -108,7 +108,7 @@ class ApplicationTest(private val appConfig: AppConfiguration) {
 						.withBody("ok")
 				)
 		)
-/*
+/* TODO
 		WireMock.stubFor(
 			WireMock.get(WireMock.urlPathMatching(appConfig.restConfig.pdlEndpoint))
 				.willReturn(

@@ -39,14 +39,14 @@ class SoknadService(
 		val savedSoknadDbData = soknadRepository.save(
 			SoknadDbData(null, Utilities.laginnsendingsId(), kodeverkSkjema.tittel ?: "", kodeverkSkjema.skjemanummer ?: "",
 				kodeverkSkjema.tema ?: "", spraak, SoknadsStatus.Opprettet, brukerId, null, LocalDateTime.now(),
-				LocalDateTime.now(), null, kodeverkSkjema.url)
+				LocalDateTime.now(), null)
 		)
 
 		// Lagre skjema
 		val skjemaDbData = vedleggRepository.save(
 			VedleggDbData(null, savedSoknadDbData.id!!, OpplastingsStatus.IKKE_VALGT, true, ervariant = false, true
 				, kodeverkSkjema.skjemanummer ?: kodeverkSkjema.vedleggsid,kodeverkSkjema.tittel ?: "",
-				null, UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now())
+				null, UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now(), kodeverkSkjema.url)
 		)
 
 		// for hvert vedleggsnr hent fra Sanity og opprett vedlegg.
@@ -54,7 +54,7 @@ class SoknadService(
 			.map { nr -> skjemaService.hentSkjemaEllerVedlegg(nr, spraak) }
 			.map { v ->  vedleggRepository.save(VedleggDbData(null, savedSoknadDbData.id, OpplastingsStatus.IKKE_VALGT,
 				 false, ervariant = false, false, v.skjemanummer,v.tittel ?: "", null,
-				UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now())) }
+				UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now(), v.url)) }
 
 		val savedVedleggDbDataListe = listOf(skjemaDbData) + vedleggDbDataListe
 
@@ -73,14 +73,14 @@ class SoknadService(
 		val savedSoknadDbData = soknadRepository.save(
 			SoknadDbData(null, Utilities.laginnsendingsId(), kodeverkSkjema.tittel ?: "", kodeverkSkjema.skjemanummer ?: "",
 				kodeverkSkjema.tema ?: "", spraak, SoknadsStatus.Opprettet, brukerId, ukjentEttersendingsId, LocalDateTime.now(),
-				LocalDateTime.now(), null, kodeverkSkjema.url)
+				LocalDateTime.now(), null)
 		)
 
 		// Lagre skjema
 		val skjemaDbData = vedleggRepository.save(
 			VedleggDbData(null, savedSoknadDbData.id!!, OpplastingsStatus.INNSENDT, true, ervariant = false, true
 				, kodeverkSkjema.skjemanummer ?: kodeverkSkjema.vedleggsid,kodeverkSkjema.tittel ?: "",
-				null, UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now())
+				null, UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now(), kodeverkSkjema.url)
 		)
 
 		// for hvert vedleggsnr hent fra Sanity og opprett vedlegg.
@@ -88,7 +88,7 @@ class SoknadService(
 			.map { nr -> skjemaService.hentSkjemaEllerVedlegg(nr, spraak) }
 			.map { v ->  vedleggRepository.save(VedleggDbData(null, savedSoknadDbData.id, OpplastingsStatus.IKKE_VALGT,
 				false, ervariant = false, false, v.skjemanummer,v.tittel ?: "", null,
-				UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now())) }
+				UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now(), v.url)) }
 
 		val savedVedleggDbDataListe = listOf(skjemaDbData) + vedleggDbDataListe
 
@@ -111,14 +111,15 @@ class SoknadService(
 		val savedEttersendingsSoknad = soknadRepository.save(
 			SoknadDbData(null, Utilities.laginnsendingsId(), nyesteSoknad.tittel, nyesteSoknad.skjemanr,
 				nyesteSoknad.tema, nyesteSoknad.spraak, SoknadsStatus.Opprettet, brukerId, ettersendingsId, LocalDateTime.now(),
-				LocalDateTime.now(), null, null)
+				LocalDateTime.now(), null)
 		)
 
 		val vedleggDbDataListe = nyesteSoknad.vedleggsListe
 			.map { v -> vedleggRepository.save (VedleggDbData(null, savedEttersendingsSoknad.id!!
 				, if (OpplastingsStatus.SEND_SENERE == v.opplastingsStatus) OpplastingsStatus.IKKE_VALGT else v.opplastingsStatus,
 				v.erHoveddokument, v.erVariant, v.erPdfa, v.vedleggsnr,v.tittel, v.mimetype,
-				UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now()) ) }
+				UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now()
+				, if (v.vedleggsnr != null) skjemaService.hentSkjemaEllerVedlegg(v.vedleggsnr, nyesteSoknad.spraak ).url else null)) }
 
 		val dokumentSoknadDto = lagDokumentSoknadDto(savedEttersendingsSoknad, vedleggDbDataListe)
 		brukerNotifikasjon.soknadStatusChange(dokumentSoknadDto)
@@ -391,7 +392,8 @@ class SoknadService(
 	private fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
 		VedleggDto(vedleggDto.id!!, vedleggDto.vedleggsnr, vedleggDto.tittel,
 			vedleggDto.uuid, filDto?.mimetype ?: vedleggDto.mimetype, filDto?.data, vedleggDto.erHoveddokument,
-			vedleggDto.erVariant, vedleggDto.erPdfa, if (filDto?.data != null) OpplastingsStatus.LASTET_OPP else vedleggDto.opplastingsStatus
+			vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.skjemaurl,
+			if (filDto?.data != null) OpplastingsStatus.LASTET_OPP else vedleggDto.opplastingsStatus
 			, filDto?.opprettetdato ?: vedleggDto.opprettetdato)
 
 
@@ -402,11 +404,11 @@ class SoknadService(
 	private fun lagVedleggDto(vedleggDbData: VedleggDbData, document: ByteArray? = null) =
 		VedleggDto(vedleggDbData.id!!, vedleggDbData.vedleggsnr, vedleggDbData.tittel,
 			vedleggDbData.uuid, vedleggDbData.mimetype, document, vedleggDbData.erhoveddokument,
-			vedleggDbData.ervariant, vedleggDbData.erpdfa, vedleggDbData.status, vedleggDbData.opprettetdato)
+			vedleggDbData.ervariant, vedleggDbData.erpdfa, vedleggDbData.vedleggsurl, vedleggDbData.status, vedleggDbData.opprettetdato)
 
 	private fun lagDokumentSoknadDto(soknadDbData: SoknadDbData, vedleggDbDataListe: List<VedleggDbData>) =
 		DokumentSoknadDto(soknadDbData.id!!, soknadDbData.innsendingsid, soknadDbData.ettersendingsid,
-			soknadDbData.brukerid, soknadDbData.skjemanr, soknadDbData.tittel, soknadDbData.tema, soknadDbData.spraak, soknadDbData.skjemaurl,
+			soknadDbData.brukerid, soknadDbData.skjemanr, soknadDbData.tittel, soknadDbData.tema, soknadDbData.spraak,
 			soknadDbData.status, soknadDbData.opprettetdato, soknadDbData.endretdato, soknadDbData.innsendtdato
 			, vedleggDbDataListe.map { lagVedleggDto(it) })
 
@@ -416,16 +418,16 @@ class SoknadService(
 	private fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, opplastingsStatus: OpplastingsStatus) =
 		VedleggDbData(vedleggDto.id, soknadsId, opplastingsStatus
 			, vedleggDto.erHoveddokument, vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.vedleggsnr, vedleggDto.tittel
-			, vedleggDto.mimetype, vedleggDto.uuid,	vedleggDto.opprettetdato, LocalDateTime.now())
+			, vedleggDto.mimetype, vedleggDto.uuid,	vedleggDto.opprettetdato, LocalDateTime.now(), vedleggDto.skjemaurl)
 
 	private fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long) =
 		VedleggDbData(vedleggDto.id, soknadsId, vedleggDto.opplastingsStatus
 			, vedleggDto.erHoveddokument, vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.vedleggsnr, vedleggDto.tittel
-			, vedleggDto.mimetype, vedleggDto.uuid, vedleggDto.opprettetdato, LocalDateTime.now())
+			, vedleggDto.mimetype, vedleggDto.uuid, vedleggDto.opprettetdato, LocalDateTime.now(), vedleggDto.skjemaurl)
 
 	private fun mapTilSoknadDb(dokumentSoknadDto: DokumentSoknadDto, innsendingsId: String, status: SoknadsStatus? = SoknadsStatus.Opprettet) =
 		SoknadDbData(dokumentSoknadDto.id, innsendingsId,
 			dokumentSoknadDto.tittel, dokumentSoknadDto.skjemanr, dokumentSoknadDto.tema, dokumentSoknadDto.spraak,
 			status ?: dokumentSoknadDto.status, dokumentSoknadDto.brukerId, dokumentSoknadDto.ettersendingsId,
-			dokumentSoknadDto.opprettetDato, LocalDateTime.now(), if (status == SoknadsStatus.Innsendt) LocalDateTime.now() else dokumentSoknadDto.innsendtDato, dokumentSoknadDto.skjemaurl)
+			dokumentSoknadDto.opprettetDato, LocalDateTime.now(), if (status == SoknadsStatus.Innsendt) LocalDateTime.now() else dokumentSoknadDto.innsendtDato)
 }

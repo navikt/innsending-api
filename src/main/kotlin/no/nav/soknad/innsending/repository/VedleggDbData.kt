@@ -17,7 +17,8 @@ data class VedleggDbData(
 	@Column(name = "mimetype", columnDefinition = "varchar") val mimetype: String?,
 	@Column(name = "uuid", columnDefinition = "varchar") val uuid: String?,
 	@Column(name = "opprettetdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val opprettetdato: LocalDateTime,
-	@Column(name = "endretdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val endretdato: LocalDateTime
+	@Column(name = "endretdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val endretdato: LocalDateTime,
+	@Column(name = "vedleggsurl", columnDefinition = "varchar") val vedleggsurl: String?
 ) {
 
 	override fun equals(other: Any?): Boolean {

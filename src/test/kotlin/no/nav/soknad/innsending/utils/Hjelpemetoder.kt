@@ -21,7 +21,7 @@ fun lagDokumentSoknad(brukerId: String, skjemanr: String, spraak: String, tittel
 
 	val vedleggDtoList = listOf(vedleggDtoPdf, vedleggDtoJson) + (vedleggsListe ?: emptyList())
 
-	return DokumentSoknadDto(id, innsendingsid, ettersendingsId, brukerId, skjemanr, tittel, tema, spraak, null,
+	return DokumentSoknadDto(id, innsendingsid, ettersendingsId, brukerId, skjemanr, tittel, tema, spraak,
 		soknadsStatus, LocalDateTime.now(), LocalDateTime.now(), if (soknadsStatus == SoknadsStatus.Innsendt) LocalDateTime.now() else null, vedleggDtoList)
 }
 
@@ -30,7 +30,7 @@ fun oppdaterDokumentSoknad(dokumentSoknadDto: DokumentSoknadDto): DokumentSoknad
 	val vedleggDtoListe = if (dokumentSoknadDto.vedleggsListe.size>1) listOf(dokumentSoknadDto.vedleggsListe[1]) else listOf()
 	return DokumentSoknadDto(dokumentSoknadDto.id, dokumentSoknadDto.innsendingsId, dokumentSoknadDto.ettersendingsId,
 		dokumentSoknadDto.brukerId, dokumentSoknadDto.skjemanr, dokumentSoknadDto.tittel, dokumentSoknadDto.tema,
-		dokumentSoknadDto.spraak, dokumentSoknadDto.skjemaurl, SoknadsStatus.Opprettet, dokumentSoknadDto.opprettetDato, LocalDateTime.now(),
+		dokumentSoknadDto.spraak, SoknadsStatus.Opprettet, dokumentSoknadDto.opprettetDato, LocalDateTime.now(),
 		null, listOf(vedleggDto) + vedleggDtoListe)
 }
 
@@ -40,15 +40,16 @@ fun lagVedlegg(id: Long? = null, vedleggsnr: String, tittel: String
 	return VedleggDto(id, vedleggsnr, tittel, UUID.randomUUID().toString()
 		, if (vedleggsNavn != null && vedleggsNavn.contains(".pdf")) "application/pdf" else "application/json"
 		, if (opplastingsStatus == OpplastingsStatus.LASTET_OPP && vedleggsNavn != null) getBytesFromFile(vedleggsNavn) else null
-		, erHoveddokument, if (vedleggsNavn == null || (vedleggsNavn != null && vedleggsNavn.contains(".pdf"))) false else true,
-		true, opplastingsStatus, LocalDateTime.now())
+		, erHoveddokument, if (vedleggsNavn == null || (vedleggsNavn != null && vedleggsNavn.contains(".pdf"))) false else true, true
+		, if (erHoveddokument) "https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/1b736c8e28abcb80f654166318f130e5ed2a0aad.pdf" else null
+		,opplastingsStatus, LocalDateTime.now())
 }
 
 
 fun lastOppDokumentTilVedlegg(vedleggDto: VedleggDto) =
 	VedleggDto(vedleggDto.id, vedleggDto.vedleggsnr, vedleggDto.tittel, UUID.randomUUID().toString(),
 		"application/pdf", getBytesFromFile("/litenPdf.pdf"), true, erVariant = false,
-		true, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
+		true, vedleggDto.skjemaurl, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
 
 fun getBytesFromFile(path: String): ByteArray {
 	val resourceAsStream = SoknadServiceTest::class.java.getResourceAsStream(path)

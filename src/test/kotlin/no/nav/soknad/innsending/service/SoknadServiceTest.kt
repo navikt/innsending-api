@@ -326,17 +326,17 @@ class SoknadServiceTest {
 
 	private fun lagVedleggDto(skjemanr: String, tittel: String, mimeType: String?, fil: ByteArray?): VedleggDto {
 		return  VedleggDto(null, skjemanr, tittel, UUID.randomUUID().toString(), mimeType, fil
-			, false, erVariant = false, if ("application/pdf".equals(mimeType, true)) true else false, OpplastingsStatus.IKKE_VALGT,  LocalDateTime.now())
+			, false, erVariant = false, if ("application/pdf".equals(mimeType, true)) true else false, null, OpplastingsStatus.IKKE_VALGT,  LocalDateTime.now())
 
 	}
 	private fun lagDokumentSoknad(brukerId: String, skjemanr: String, spraak: String, tittel: String, tema: String): DokumentSoknadDto {
 			val vedleggDtoPdf = VedleggDto(null, skjemanr, tittel, UUID.randomUUID().toString(), "application/pdf",
-					getBytesFromFile("/litenPdf.pdf"), true, erVariant = false, true, OpplastingsStatus.LASTET_OPP,  LocalDateTime.now())
+					getBytesFromFile("/litenPdf.pdf"), true, erVariant = false, true, null, OpplastingsStatus.LASTET_OPP,  LocalDateTime.now())
 			val vedleggDtoJson = VedleggDto(null, skjemanr, tittel, UUID.randomUUID().toString(),"application/json",
-					getBytesFromFile("/sanity.json"), true, erVariant = true, false, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
+					getBytesFromFile("/sanity.json"), true, erVariant = true, false, null, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
 
 		val vedleggDtoList = listOf(vedleggDtoPdf, vedleggDtoJson)
-		return DokumentSoknadDto(null, null, null, brukerId, skjemanr, tittel, tema, spraak, null,
+		return DokumentSoknadDto(null, null, null, brukerId, skjemanr, tittel, tema, spraak,
 			SoknadsStatus.Opprettet, LocalDateTime.now(), LocalDateTime.now(), null, vedleggDtoList)
 	}
 
@@ -345,14 +345,14 @@ class SoknadServiceTest {
 		val vedleggDtoListe = if (dokumentSoknadDto.vedleggsListe.size>1) listOf(dokumentSoknadDto.vedleggsListe[1]) else listOf()
 		return DokumentSoknadDto(dokumentSoknadDto.id, dokumentSoknadDto.innsendingsId, dokumentSoknadDto.ettersendingsId,
 			dokumentSoknadDto.brukerId, dokumentSoknadDto.skjemanr, dokumentSoknadDto.tittel, dokumentSoknadDto.tema,
-			dokumentSoknadDto.spraak, dokumentSoknadDto.skjemaurl, SoknadsStatus.Opprettet, dokumentSoknadDto.opprettetDato, LocalDateTime.now(),
+			dokumentSoknadDto.spraak, SoknadsStatus.Opprettet, dokumentSoknadDto.opprettetDato, LocalDateTime.now(),
 			null, listOf(vedleggDto) + vedleggDtoListe)
 	}
 
 	private fun lastOppDokumentTilVedlegg(vedleggDto: VedleggDto) =
 		VedleggDto(vedleggDto.id, vedleggDto.vedleggsnr, vedleggDto.tittel, UUID.randomUUID().toString(),
 			"application/pdf", getBytesFromFile("/litenPdf.pdf"), true, erVariant = false,
-			true, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
+			true, vedleggDto.skjemaurl, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
 
 	private fun lagFilDtoMedFil(vedleggDto: VedleggDto) =
 		FilDto(null, vedleggDto.id!!, "Opplastet fil",

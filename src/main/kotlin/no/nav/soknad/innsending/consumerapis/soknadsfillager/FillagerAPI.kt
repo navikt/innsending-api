@@ -33,7 +33,7 @@ class FillagerAPI(private val filLagerClient: FilLagerClient) {
 		val hentedeFilerMap: Map<String, FilElementDto> = filLagerClient.hentFiler(filElementDtos).map { it.uuid to it }.toMap()
 		logger.info("$innsendingsId: Hentet følgende filer ${filElementDtos.map{it.uuid}.toList().joinToString { "," }}")
 
-		return vedleggDtos.map { VedleggDto( it.id, it.vedleggsnr, it.tittel, it.uuid, it.mimetype, hentedeFilerMap.get(it.uuid)?.fil, it.erHoveddokument, it.erVariant, it.erPdfa, it.opplastingsStatus, hentedeFilerMap.get(it.uuid)?.opprettet ?: it.opprettetdato) }.toList()
+		return vedleggDtos.map { VedleggDto( it.id, it.vedleggsnr, it.tittel, it.uuid, it.mimetype, hentedeFilerMap.get(it.uuid)?.fil, it.erHoveddokument, it.erVariant, it.erPdfa, null, it.opplastingsStatus, hentedeFilerMap.get(it.uuid)?.opprettet ?: it.opprettetdato) }.toList()
 
 	}
 

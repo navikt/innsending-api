@@ -13,6 +13,7 @@ data class VedleggDto(
 	val erHoveddokument: Boolean,
 	val erVariant: Boolean,
 	val erPdfa: Boolean,
+	val skjemaurl: String?,
 	val opplastingsStatus: OpplastingsStatus,
 	val opprettetdato: LocalDateTime
 ) {

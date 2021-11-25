@@ -265,12 +265,14 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	private fun lagDummySoknad(skjemanr: String, vedleggsnr: String?, sprak: String
 			, brukerId: String, ettersendingId: String?, vedleggsListe: List<String>?) =
 			DokumentSoknadDto(1L, UUID.randomUUID().toString(), ettersendingId, brukerId, skjemanr, "Tittel", "Test", "NO"
-				, if (ettersendingId != null) "https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/dfdcae6ba6ac611e9a67d013fc2fe712645fb937.pdf" else null
 				, SoknadsStatus.Opprettet, LocalDateTime.now(), LocalDateTime.now(), null, lagVedleggsListe(skjemanr, vedleggsListe))
 
 	private fun lagDummyVedlegg(vedleggsnr: String?) =
 		 VedleggDto(1L, vedleggsnr ?: "N6", "Tittel",
-			 UUID.randomUUID().toString(), null, null, vedleggsnr != null && vedleggsnr.contains("NAV"), false, true, OpplastingsStatus.IKKE_VALGT, LocalDateTime.now())
+			 UUID.randomUUID().toString(), null, null, vedleggsnr != null && vedleggsnr.contains("NAV")
+			 , false, true
+			 , if (vedleggsnr != null && vedleggsnr.length> 2) "https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/dfdcae6ba6ac611e9a67d013fc2fe712645fb937.pdf" else null
+			 , OpplastingsStatus.IKKE_VALGT, LocalDateTime.now())
 
 	private fun lagDummyfil(vedleggsId: Long, filId: Long? = 1L) =
 		FilDto(filId, vedleggsId, "filnavn", "application/pdf", ByteArray(1), LocalDateTime.now())
