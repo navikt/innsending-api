@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
+import no.nav.soknad.innsending.consumerapis.skjema.KodeverkSkjema
 import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerAPI
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.SoknadsmottakerAPI
 import no.nav.soknad.innsending.dto.DokumentSoknadDto
@@ -35,14 +36,14 @@ class SoknadService(
 		// hentSkjema informasjon gitt skjemanr
 		val kodeverkSkjema = skjemaService.hentSkjemaEllerVedlegg(skjemanr, spraak)
 
-		// lagre soknad og vedlegg
+		// lagre soknad
 		val savedSoknadDbData = soknadRepository.save(
 			SoknadDbData(null, Utilities.laginnsendingsId(), kodeverkSkjema.tittel ?: "", kodeverkSkjema.skjemanummer ?: "",
 				kodeverkSkjema.tema ?: "", spraak, SoknadsStatus.Opprettet, brukerId, null, LocalDateTime.now(),
 				LocalDateTime.now(), null)
 		)
 
-		// Lagre skjema
+		// Lagre skjema som hovedvedlegg
 		val skjemaDbData = vedleggRepository.save(
 			VedleggDbData(null, savedSoknadDbData.id!!, OpplastingsStatus.IKKE_VALGT, true, ervariant = false, true
 				, kodeverkSkjema.skjemanummer ?: kodeverkSkjema.vedleggsid,kodeverkSkjema.tittel ?: "",
@@ -127,6 +128,22 @@ class SoknadService(
 		return dokumentSoknadDto
 
 	}
+
+	@Transactional
+	fun opprettEllerOppdaterSoknad(dokumentSoknadDto: DokumentSoknadDto): String {
+		val innsendingsId = dokumentSoknadDto.innsendingsId ?: Utilities.laginnsendingsId()
+		// Hvis soknad ikke eksisterer må den lagres, før vedleggene
+		val savedSoknadDbData = soknadRepository.save(mapTilSoknadDb(dokumentSoknadDto, innsendingsId))
+		val soknadsid = savedSoknadDbData.id
+		val savedVedleggDbData = dokumentSoknadDto.vedleggsListe
+			.map { vedleggRepository.save(mapTilVedleggDb(it, soknadsid!!, skjemaService.hentSkjemaEllerVedlegg(it.vedleggsnr!!, savedSoknadDbData.spraak))) }
+
+		val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
+		brukerNotifikasjon.soknadStatusChange(savedDokumentSoknadDto)
+
+		return innsendingsId
+	}
+
 
 	// Hent soknad gitt id med alle vedlegg. Merk at eventuelt dokument til vedlegget hentes ikke
 	fun hentSoknad(id: Long): DokumentSoknadDto {
@@ -213,22 +230,6 @@ class SoknadService(
 			vedleggRepository.updateStatus(vedleggDbData.id!!, OpplastingsStatus.IKKE_VALGT, LocalDateTime.now())
 		}
 */
-	}
-
-	@Transactional
-	fun opprettEllerOppdaterSoknad(dokumentSoknadDto: DokumentSoknadDto): String {
-		val nySoknad = dokumentSoknadDto.id == null
-		val innsendingsId = dokumentSoknadDto.innsendingsId ?: Utilities.laginnsendingsId()
-		// Hvis soknad ikke eksisterer må den lagres, før vedleggene
-		val savedSoknadDbData = soknadRepository.save(mapTilSoknadDb(dokumentSoknadDto, innsendingsId))
-		val soknadsid = savedSoknadDbData.id
-		val savedVedleggDbData = dokumentSoknadDto.vedleggsListe
-			.map { vedleggRepository.save(mapTilVedleggDb(it, soknadsid!!)) }
-
-		val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
-		brukerNotifikasjon.soknadStatusChange(savedDokumentSoknadDto)
-
-		return innsendingsId
 	}
 
 	// Slett opprettet soknad gitt innsendingsId
@@ -415,15 +416,21 @@ class SoknadService(
 	private fun mapTilFilDb(filDto: FilDto) = FilDbData(filDto.id, filDto.vedleggsid, filDto.filnavn
 							, filDto.mimetype, filDto.data, filDto.opprettetdato ?: LocalDateTime.now())
 
+	private fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long) =
+		mapTilVedleggDb(vedleggDto, soknadsId, vedleggDto.skjemaurl, vedleggDto.opplastingsStatus)
+
 	private fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, opplastingsStatus: OpplastingsStatus) =
+		mapTilVedleggDb(vedleggDto, soknadsId, vedleggDto.skjemaurl, opplastingsStatus)
+
+	private fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, kodeverkSkjema: KodeverkSkjema?) =
+		mapTilVedleggDb(vedleggDto, soknadsId,  if (kodeverkSkjema != null ) kodeverkSkjema.url else vedleggDto.skjemaurl, vedleggDto.opplastingsStatus)
+
+	private fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, url: String?, opplastingsStatus: OpplastingsStatus) =
 		VedleggDbData(vedleggDto.id, soknadsId, opplastingsStatus
 			, vedleggDto.erHoveddokument, vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.vedleggsnr, vedleggDto.tittel
-			, vedleggDto.mimetype, vedleggDto.uuid,	vedleggDto.opprettetdato, LocalDateTime.now(), vedleggDto.skjemaurl)
+			, vedleggDto.mimetype, vedleggDto.uuid, vedleggDto.opprettetdato, LocalDateTime.now()
+			, if (url != null) url else vedleggDto.skjemaurl)
 
-	private fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long) =
-		VedleggDbData(vedleggDto.id, soknadsId, vedleggDto.opplastingsStatus
-			, vedleggDto.erHoveddokument, vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.vedleggsnr, vedleggDto.tittel
-			, vedleggDto.mimetype, vedleggDto.uuid, vedleggDto.opprettetdato, LocalDateTime.now(), vedleggDto.skjemaurl)
 
 	private fun mapTilSoknadDb(dokumentSoknadDto: DokumentSoknadDto, innsendingsId: String, status: SoknadsStatus? = SoknadsStatus.Opprettet) =
 		SoknadDbData(dokumentSoknadDto.id, innsendingsId,
