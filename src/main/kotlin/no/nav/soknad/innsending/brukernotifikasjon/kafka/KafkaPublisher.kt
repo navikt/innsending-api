@@ -14,9 +14,11 @@ import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.header.Headers
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 
 @Service
+@Profile("dev | prod")
 class KafkaPublisher(appConfiguration: AppConfiguration): KafkaPublisherInterface {
 
 	private val appConfig = appConfiguration.kafkaConfig
