@@ -27,14 +27,10 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 			"schema for the main document can be found."
 	)])
 	@PostMapping("/soknad")
-	fun opprettSoknad(
-		@RequestParam skjemanr: String,
-		@RequestParam sprak: String,
-		@RequestParam brukerId: String,
-		@RequestParam vedleggListe: List<String>?
+	fun opprettSoknad(@RequestBody opprettSoknad: OpprettSoknadBody
 	): ResponseEntity<DokumentSoknadDto> {
 
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerId, skjemanr, sprak, vedleggListe ?: emptyList())
+		val dokumentSoknadDto = soknadService.opprettSoknad(opprettSoknad.brukerId, opprettSoknad.skjemanr, opprettSoknad.sprak, opprettSoknad.vedleggListe ?: emptyList())
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(dokumentSoknadDto)
@@ -46,13 +42,10 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 			"to add additional attachments."
 	)])
 	@PostMapping("/ettersendingPaInnsendingsId")
-	fun opprettEttersendingGittInnsendingsId(
-		@RequestParam ettersendingTilinnsendingsId: String,
-		@RequestParam vedleggListe: List<String>,
-		@RequestParam brukerId: String
+	fun opprettEttersendingGittInnsendingsId(@RequestBody opprettEttersending: OpprettEttersendingGittInnsendingsId
 	): ResponseEntity<DokumentSoknadDto> {
 
-		val dokumentSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(brukerId, ettersendingTilinnsendingsId)
+		val dokumentSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(opprettEttersending.brukerId, opprettEttersending.ettersendingTilinnsendingsId)
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -64,14 +57,11 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 		description = "If successful, it will return DokumentSoknadDto which contains the title and list of required attachment."
 	)])
 	@PostMapping("/ettersendPaSkjema")
-	fun opprettEttersendingGittSkjemanr(
-		@RequestParam skjemanr: String,
-		@RequestParam sprak: String,
-		@RequestParam brukerId: String,
-		@RequestParam vedleggListe: List<String>?
+	fun opprettEttersendingGittSkjemanr(@RequestBody opprettEttersending: OpprettEttersendingGittSkjemaNr
 	): ResponseEntity<DokumentSoknadDto> {
 
-		val dokumentSoknadDto = soknadService.opprettSoknadForEttersendingGittSkjemanr(brukerId, skjemanr, sprak, vedleggListe ?: emptyList())
+		val dokumentSoknadDto = soknadService.opprettSoknadForEttersendingGittSkjemanr(
+			opprettEttersending.brukerId, opprettEttersending.skjemanr, opprettEttersending.sprak, opprettEttersending.vedleggListe ?: emptyList())
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(dokumentSoknadDto)
