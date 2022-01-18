@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.consumerapis.soknadsfillager
 
 import no.nav.soknad.arkivering.soknadsfillager.dto.FilElementDto
-import no.nav.soknad.innsending.config.AppConfiguration
+import no.nav.soknad.innsending.config.RestConfig
 import org.apache.tomcat.util.codec.binary.Base64
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -14,8 +14,8 @@ import org.springframework.web.reactive.function.BodyInserters
 import java.util.stream.Collectors
 
 @Service
-class FilLagerClient(private val appConfiguration: AppConfiguration,
-	@Qualifier("authClient") private val webClient: WebClient) {
+class FilLagerClient(private val restConfig: RestConfig,
+										 @Qualifier("authClient") private val webClient: WebClient) {
 
 	private val filesInOneRequestToFilestorage = 5
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -89,7 +89,7 @@ class FilLagerClient(private val appConfiguration: AppConfiguration,
 	}
 
 	private fun performGetCall(fileIds: String): List<FilElementDto>? {
-		val uri = appConfiguration.restConfig.filestorageHost + appConfiguration.restConfig.filestorageEndpoint + appConfiguration.restConfig.filestorageParameters + fileIds
+		val uri = restConfig.filestorageHost + restConfig.filestorageEndpoint + restConfig.filestorageParameters + fileIds
 		val method = HttpMethod.GET
 		val webClient = setupWebClient(uri, method)
 
@@ -112,7 +112,7 @@ class FilLagerClient(private val appConfiguration: AppConfiguration,
 	}
 
 	private fun deleteFiles(fileIds: String) {
-		val uri = appConfiguration.restConfig.filestorageHost + appConfiguration.restConfig.filestorageEndpoint + appConfiguration.restConfig.filestorageParameters + fileIds
+		val uri = restConfig.filestorageHost + restConfig.filestorageEndpoint + restConfig.filestorageParameters + fileIds
 		val method = HttpMethod.DELETE
 		val webClient = setupWebClient(uri, method)
 
@@ -126,7 +126,7 @@ class FilLagerClient(private val appConfiguration: AppConfiguration,
 	}
 
 	private fun saveFiles(files: List<FilElementDto>) {
-		val uri = appConfiguration.restConfig.filestorageHost + appConfiguration.restConfig.filestorageEndpoint
+		val uri = restConfig.filestorageHost + restConfig.filestorageEndpoint
 		val method = HttpMethod.POST
 		val webClient = setupWebClient(uri, method)
 
@@ -142,7 +142,7 @@ class FilLagerClient(private val appConfiguration: AppConfiguration,
 	}
 
 	private fun setupWebClient(uri: String, method: HttpMethod): WebClient.RequestBodySpec {
-		val auth = "${appConfiguration.restConfig.sharedUsername}:${appConfiguration.restConfig.sharedPassword}"
+		val auth = "${restConfig.sharedUsername}:${restConfig.sharedPassword}"
 		val encodedAuth: ByteArray = Base64.encodeBase64(auth.toByteArray())
 		val authHeader = "Basic " + String(encodedAuth)
 

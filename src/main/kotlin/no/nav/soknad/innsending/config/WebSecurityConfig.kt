@@ -13,7 +13,7 @@ import org.springframework.security.config.http.SessionCreationPolicy
 
 @Configuration
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
-class WebSecurityConfig(private val config: AppConfiguration) : WebSecurityConfigurerAdapter() {
+class WebSecurityConfig(private val config: RestConfig) : WebSecurityConfigurerAdapter() {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 

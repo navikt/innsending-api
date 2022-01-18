@@ -5,7 +5,7 @@ import no.nav.brukernotifikasjon.schemas.Done
 import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.Oppgave
 import no.nav.soknad.innsending.brukernotifikasjon.kafka.KafkaPublisherInterface
-import no.nav.soknad.innsending.config.AppConfiguration
+import no.nav.soknad.innsending.config.KafkaConfig
 import no.nav.soknad.innsending.dto.DokumentSoknadDto
 import no.nav.soknad.innsending.dto.VedleggDto
 import no.nav.soknad.innsending.repository.OpplastingsStatus
@@ -17,26 +17,25 @@ import java.time.ZoneOffset
 
 @Service
 class BrukernotifikasjonPublisher(
-	appConfiguration: AppConfiguration,
+	private val kafkaConfig: KafkaConfig,
 	private val kafkaPublisher: KafkaPublisherInterface
 ) {
 
 	private val logger = LoggerFactory.getLogger(BrukernotifikasjonPublisher::class.java)
 
-	private val appConfig = appConfiguration.kafkaConfig
 	private val securityLevel = 4 // Forutsetter at brukere har logget seg på f.eks. bankId slik at nivå 4 er oppnådd
 	private val soknadLevetid = 56L // Dager
 	val tittelPrefixEttersendelse = "Du har sagt du skal ettersende vedlegg til "
 	val tittelPrefixNySoknad = "Du har påbegynt en søknad om "
-	val linkDokumentinnsending = appConfig.gjenopptaSoknadsArbeid
-	val linkDokumentinnsendingEttersending = appConfig.ettersendePaSoknad
+	val linkDokumentinnsending = kafkaConfig.gjenopptaSoknadsArbeid
+	val linkDokumentinnsendingEttersending = kafkaConfig.ettersendePaSoknad
 	val eksternVarsling = true
 
 	fun soknadStatusChange(dokumentSoknad: DokumentSoknadDto): Boolean {
 
 		logger.debug("Skal publisere event relatert til ${dokumentSoknad.innsendingsId}")
 
-		if (appConfig.publisereEndringer) {
+		if (kafkaConfig.publisereEndringer) {
 			val groupId = dokumentSoknad.ettersendingsId ?: dokumentSoknad.innsendingsId
 
 			logger.info(
@@ -120,7 +119,7 @@ class BrukernotifikasjonPublisher(
 		logger.info("$key: Varsel om fjerning av ${dokumentSoknad.innsendingsId} er publisert")
 	}
 
-	private fun createKey(innsendingsId: String) = Nokkel(appConfig.username, innsendingsId)
+	private fun createKey(innsendingsId: String) = Nokkel(kafkaConfig.username, innsendingsId)
 
 
 	private fun getDocumentsToBeSentInLater(vedlegg: List<VedleggDto>): List<VedleggDto> {
@@ -185,8 +184,8 @@ class BrukernotifikasjonPublisher(
 		// Fortsett senere: https://tjenester-q1.nav.no/dokumentinnsending/oversikt/10014Qi1G For å gjenoppta påbegynt søknad
 		// Ettersendingslink: https://tjenester-q1.nav.no/dokumentinnsending/ettersendelse/10010WQEF For å ettersende vedlegg på tidligere innsendt søknad (10010WQEF)
 		return if (ettersending)
-			appConfig.tjenesteUrl + linkDokumentinnsendingEttersending + innsendingsId  // Nytt endepunkt
+			kafkaConfig.tjenesteUrl + linkDokumentinnsendingEttersending + innsendingsId  // Nytt endepunkt
 		else
-			appConfig.tjenesteUrl + linkDokumentinnsending + innsendingsId
+			kafkaConfig.tjenesteUrl + linkDokumentinnsending + innsendingsId
 	}
 }

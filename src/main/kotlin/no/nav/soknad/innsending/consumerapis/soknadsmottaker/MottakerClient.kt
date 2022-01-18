@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.consumerapis.soknadsmottaker
 
 import no.nav.soknad.arkivering.soknadsMottaker.dto.SoknadInnsendtDto
-import no.nav.soknad.innsending.config.AppConfiguration
+import no.nav.soknad.innsending.config.RestConfig
 import org.apache.tomcat.util.codec.binary.Base64
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -12,13 +12,13 @@ import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.WebClient
 
 @Service
-class MottakerClient(private val appConfiguration: AppConfiguration,
+class MottakerClient(private val restConfig: RestConfig,
 										 @Qualifier("authClient") private val webClient: WebClient
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	fun sendInn(soknad: SoknadInnsendtDto) {
-		val uri = appConfiguration.restConfig.soknadsMottakerHost + appConfiguration.restConfig.soknadsMottakerEndpoint
+		val uri = restConfig.soknadsMottakerHost + restConfig.soknadsMottakerEndpoint
 		val method = HttpMethod.POST
 		val webClient = setupWebClient(uri, method)
 
@@ -34,7 +34,7 @@ class MottakerClient(private val appConfiguration: AppConfiguration,
 	}
 
 	private fun setupWebClient(uri: String, method: HttpMethod): WebClient.RequestBodySpec {
-		val auth = "${appConfiguration.restConfig.sharedUsername}:${appConfiguration.restConfig.sharedPassword}"
+		val auth = "${restConfig.sharedUsername}:${restConfig.sharedPassword}"
 		val encodedAuth: ByteArray = Base64.encodeBase64(auth.toByteArray())
 		val authHeader = "Basic " + String(encodedAuth)
 

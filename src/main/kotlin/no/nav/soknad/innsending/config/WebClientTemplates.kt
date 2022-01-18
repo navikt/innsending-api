@@ -19,7 +19,7 @@ import reactor.netty.http.client.HttpClient
 import java.util.concurrent.TimeUnit
 
 @Configuration
-class WebClientTemplates(private val appConfiguration: AppConfiguration) {
+class WebClientTemplates(private val restConfig: RestConfig) {
 
 	private val connectionTimeout = 2000
 	private val readTimeout = 60
@@ -50,7 +50,7 @@ class WebClientTemplates(private val appConfiguration: AppConfiguration) {
 			.codecs { configurer: ClientCodecConfigurer ->
 				configurer
 					.defaultCodecs()
-					.maxInMemorySize(appConfiguration.restConfig.maxFileSize) }
+					.maxInMemorySize(restConfig.maxFileSize) }
 			.build()
 
 		return WebClient.builder()

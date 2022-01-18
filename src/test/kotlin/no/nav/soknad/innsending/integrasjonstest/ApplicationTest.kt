@@ -38,10 +38,10 @@ import javax.inject.Inject
 import javax.servlet.Filter
 
 import no.nav.soknad.innsending.InnsendingApiApplication
-import no.nav.soknad.innsending.config.AppConfiguration
+import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.utils.getBytesFromFile
 
-@ActiveProfiles("itest")
+@ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [InnsendingApiApplication::class])
 @ExtendWith(
 	SpringExtension::class
@@ -53,7 +53,7 @@ import no.nav.soknad.innsending.utils.getBytesFromFile
 @Transactional
 //@EnableMockOAuth2Server
 @AutoConfigureWireMock
-class ApplicationTest(private val appConfig: AppConfiguration) {
+class ApplicationTest(private val restConfig: RestConfig) {
 	@Autowired
 	private val webApplicationContext: WebApplicationContext? = null
 
@@ -85,7 +85,7 @@ class ApplicationTest(private val appConfig: AppConfiguration) {
 		}
 		RestAssuredMockMvc.webAppContextSetup(webApplicationContext, mockMvcConfigurer)
 		WireMock.stubFor(
-			WireMock.post(WireMock.urlPathMatching(appConfig.restConfig.sanityEndpoint))
+			WireMock.post(WireMock.urlPathMatching(restConfig.sanityEndpoint))
 				.willReturn(
 					aResponse().withStatus(HttpStatus.CREATED.value())
 						.withHeader(org.apache.http.HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -93,7 +93,7 @@ class ApplicationTest(private val appConfig: AppConfiguration) {
 				)
 		)
 		WireMock.stubFor(
-			WireMock.post(WireMock.urlPathMatching(appConfig.restConfig.filestorageEndpoint))
+			WireMock.post(WireMock.urlPathMatching(restConfig.filestorageEndpoint))
 				.willReturn(
 					aResponse().withStatus(HttpStatus.OK.value())
 						.withHeader(org.apache.http.HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -101,7 +101,7 @@ class ApplicationTest(private val appConfig: AppConfiguration) {
 				)
 		)
 		WireMock.stubFor(
-			WireMock.post(WireMock.urlPathMatching(appConfig.restConfig.soknadsMottakerEndpoint))
+			WireMock.post(WireMock.urlPathMatching(restConfig.soknadsMottakerEndpoint))
 				.willReturn(
 					aResponse().withStatus(HttpStatus.OK.value())
 						.withHeader(org.apache.http.HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -110,7 +110,7 @@ class ApplicationTest(private val appConfig: AppConfiguration) {
 		)
 /* TODO
 		WireMock.stubFor(
-			WireMock.get(WireMock.urlPathMatching(appConfig.restConfig.pdlEndpoint))
+			WireMock.get(WireMock.urlPathMatching(restConfig.pdlEndpoint))
 				.willReturn(
 					aResponse().withStatus(HttpStatus.OK.value())
 						.withHeader(org.apache.http.HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)

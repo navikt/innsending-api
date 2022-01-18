@@ -6,5 +6,6 @@
   "VAULT_DB_PATH": "postgresql/preprod-fss",
   "APPLICATION_PROFILE": "dev",
   "SRV_KV_PATH": "/serviceuser/data/dev/srvinnsending-api",
-  "APPDYN_KV_PATH": "/apikey/appdynamics/dev"
+  "APPDYN_KV_PATH": "/apikey/appdynamics/dev",
+	"VERSION": "0.1"
 }

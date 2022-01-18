@@ -1,6 +1,5 @@
 package no.nav.soknad.pdfutilities
 
-import no.nav.soknad.innsending.config.AppConfiguration
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import org.apache.pdfbox.pdmodel.PDDocument

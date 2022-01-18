@@ -18,13 +18,14 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.time.LocalDateTime
 import java.util.*
 
 @SpringBootTest
+@ActiveProfiles("test")
 @EnableTransactionManagement
 class SoknadServiceTest {
 

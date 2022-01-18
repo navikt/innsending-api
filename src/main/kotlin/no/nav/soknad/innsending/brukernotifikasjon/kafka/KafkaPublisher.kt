@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.brukernotifikasjon.kafka
 
-import no.nav.soknad.innsending.config.AppConfiguration
 import java.util.concurrent.TimeUnit
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerializer
@@ -8,6 +7,7 @@ import no.nav.brukernotifikasjon.schemas.Beskjed
 import no.nav.brukernotifikasjon.schemas.Done
 import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.Oppgave
+import no.nav.soknad.innsending.config.KafkaConfig
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
@@ -19,28 +19,26 @@ import org.springframework.stereotype.Service
 
 @Service
 @Profile("dev | prod")
-class KafkaPublisher(appConfiguration: AppConfiguration): KafkaPublisherInterface {
-
-	private val appConfig = appConfiguration.kafkaConfig
+class KafkaPublisher(private val kafkaConfig: KafkaConfig): KafkaPublisherInterface {
 
 	private val kafkaMessageProducer = KafkaProducer<Nokkel, Beskjed>(kafkaConfigMap())
 	private val kafkaTaskProducer = KafkaProducer<Nokkel, Oppgave>(kafkaConfigMap())
 	private val kafkaDoneProducer = KafkaProducer<Nokkel, Done>(kafkaConfigMap())
 
 	override fun putApplicationMessageOnTopic(key: Nokkel, value: Beskjed, headers: Headers) {
-		val topic = appConfig.kafkaTopicBeskjed
+		val topic = kafkaConfig.kafkaTopicBeskjed
 		val kafkaProducer = kafkaMessageProducer
 		putDataOnTopic(key, value, headers, topic, kafkaProducer)
 	}
 
 	override fun putApplicationTaskOnTopic(key: Nokkel, value: Oppgave, headers: Headers) {
-		val topic = appConfig.kafkaTopicOppgave
+		val topic = kafkaConfig.kafkaTopicOppgave
 		val kafkaProducer = kafkaTaskProducer
 		putDataOnTopic(key, value, headers, topic, kafkaProducer)
 	}
 
 	override fun putApplicationDoneOnTopic(key: Nokkel, value: Done, headers: Headers) {
-		val topic = appConfig.kafkaTopicDone
+		val topic = kafkaConfig.kafkaTopicDone
 		val kafkaProducer = kafkaDoneProducer
 		putDataOnTopic(key, value, headers, topic, kafkaProducer)
 	}
@@ -57,14 +55,14 @@ class KafkaPublisher(appConfiguration: AppConfiguration): KafkaPublisherInterfac
 
 	private fun kafkaConfigMap(): MutableMap<String, Any> {
 		return HashMap<String, Any>().also {
-			it[AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG] = appConfig.schemaRegistryUrl
-			it[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = appConfig.servers
+			it[AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG] = kafkaConfig.schemaRegistryUrl
+			it[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = kafkaConfig.servers
 			it[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = SpecificAvroSerializer::class.java
 			it[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = SpecificAvroSerializer::class.java
-			if (appConfig.secure == "TRUE") {
-				it[CommonClientConfigs.SECURITY_PROTOCOL_CONFIG] = appConfig.protocol
-				it[SaslConfigs.SASL_JAAS_CONFIG] = appConfig.saslJaasConfig
-				it[SaslConfigs.SASL_MECHANISM] = appConfig.salsmec
+			if (kafkaConfig.secure == "TRUE") {
+				it[CommonClientConfigs.SECURITY_PROTOCOL_CONFIG] = kafkaConfig.protocol
+				it[SaslConfigs.SASL_JAAS_CONFIG] = kafkaConfig.getSaslJaasConfig()
+				it[SaslConfigs.SASL_MECHANISM] = kafkaConfig.salsmec
 			}
 		}
 	}

@@ -6,27 +6,38 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
-import io.mockk.impl.annotations.SpyK
 import no.nav.brukernotifikasjon.schemas.Done
 import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.Oppgave
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
-import no.nav.soknad.innsending.config.AppConfiguration
+import no.nav.soknad.innsending.config.KafkaConfig
 import no.nav.soknad.innsending.repository.OpplastingsStatus
 import no.nav.soknad.innsending.repository.SoknadsStatus
 import no.nav.soknad.innsending.utils.lagDokumentSoknad
 import no.nav.soknad.innsending.utils.lagVedlegg
+import org.junit.jupiter.api.BeforeEach
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.ActiveProfiles
+import org.springframework.transaction.annotation.EnableTransactionManagement
 
-
+@SpringBootTest
+@ActiveProfiles("test")
+@EnableTransactionManagement
 internal class BrukernotifikasjonPublisherTest {
 
-	private val appConfiguration = AppConfiguration()
+	@Autowired
+	private val kafkaConfig: KafkaConfig = KafkaConfig()
 
 	@InjectMockKs
 	var kafkaPublisher = mockk<KafkaPublisher>()
 
-	@SpyK
-	var brukernotifikasjonPublisher = BrukernotifikasjonPublisher(appConfiguration, kafkaPublisher)
+	private var brukernotifikasjonPublisher: BrukernotifikasjonPublisher? = null
+
+	@BeforeEach
+	fun setUp() {
+		brukernotifikasjonPublisher = spyk(BrukernotifikasjonPublisher(kafkaConfig, kafkaPublisher))
+	}
 
 	@Test
 	fun `sjekk at Beskjed melding blir publisert ved oppretting av ny dokumentinnsending`() {
@@ -41,14 +52,14 @@ internal class BrukernotifikasjonPublisherTest {
 		val message = slot<Beskjed>()
 		every { kafkaPublisher.putApplicationMessageOnTopic(any(), capture(message)) } returns Unit
 
-		brukernotifikasjonPublisher.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid))
+		brukernotifikasjonPublisher?.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid))
 
 		assertTrue(message.isCaptured)
 		assertEquals(personId, message.captured.getFodselsnummer())
 		assertEquals(innsendingsid, message.captured.getGrupperingsId())
 		assertTrue(message.captured.getTekst().contains(tittel))
-		assertEquals(brukernotifikasjonPublisher.tittelPrefixNySoknad + tittel, message.captured.getTekst())
-		assertEquals(appConfiguration.kafkaConfig.tjenesteUrl + appConfiguration.kafkaConfig.gjenopptaSoknadsArbeid + innsendingsid, message.captured.getLink())
+		assertEquals(brukernotifikasjonPublisher?.tittelPrefixNySoknad + tittel, message.captured.getTekst())
+		assertEquals(kafkaConfig.tjenesteUrl + kafkaConfig.gjenopptaSoknadsArbeid + innsendingsid, message.captured.getLink())
 	}
 
 	@Test
@@ -65,7 +76,7 @@ internal class BrukernotifikasjonPublisherTest {
 
 		every { kafkaPublisher.putApplicationDoneOnTopic(any(), capture(done)) } returns Unit
 
-		brukernotifikasjonPublisher.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatus.Innsendt))
+		brukernotifikasjonPublisher?.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatus.Innsendt))
 
 		assertTrue(done.isCaptured)
 		assertEquals(personId, done.captured.getFodselsnummer())
@@ -87,7 +98,7 @@ internal class BrukernotifikasjonPublisherTest {
 		every { kafkaPublisher.putApplicationDoneOnTopic(any(), capture(done)) } returns Unit
 		every { kafkaPublisher.putApplicationTaskOnTopic(any(), capture(oppgave)) } returns Unit
 
-		brukernotifikasjonPublisher.soknadStatusChange(
+		brukernotifikasjonPublisher?.soknadStatusChange(
 			lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatus.Innsendt,
 		listOf(
 			lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatus.LASTET_OPP, false,"/litenPdf.pdf" ),
@@ -101,8 +112,8 @@ internal class BrukernotifikasjonPublisherTest {
 		assertEquals(personId, oppgave.captured.getFodselsnummer())
 		assertEquals(innsendingsid, oppgave.captured.getGrupperingsId())
 		assertTrue(oppgave.captured.getTekst().contains(tittel))
-		assertEquals(brukernotifikasjonPublisher.tittelPrefixEttersendelse + tittel, oppgave.captured.getTekst())
-		assertEquals(appConfiguration.kafkaConfig.tjenesteUrl + appConfiguration.kafkaConfig.ettersendePaSoknad + innsendingsid, oppgave.captured.getLink())
+		assertEquals(brukernotifikasjonPublisher?.tittelPrefixEttersendelse + tittel, oppgave.captured.getTekst())
+		assertEquals(kafkaConfig.tjenesteUrl + kafkaConfig.ettersendePaSoknad + innsendingsid, oppgave.captured.getLink())
 	}
 
 	@Test
@@ -122,7 +133,7 @@ internal class BrukernotifikasjonPublisherTest {
 		every { kafkaPublisher.putApplicationDoneOnTopic(capture(nokler), capture(done)) } returns Unit   // Nokkel(appConfiguration.kafkaConfig.username, innsendingsid )
 		every { kafkaPublisher.putApplicationDoneOnTopic(capture(nokler), capture(done)) } returns Unit //
 
-		brukernotifikasjonPublisher.soknadStatusChange(
+		brukernotifikasjonPublisher?.soknadStatusChange(
 			lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatus.Innsendt,
 				listOf(
 					lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatus.LASTET_OPP, false,"/litenPdf.pdf" ),
@@ -150,7 +161,7 @@ internal class BrukernotifikasjonPublisherTest {
 
 		every { kafkaPublisher.putApplicationDoneOnTopic(any(), capture(done)) } returns Unit
 
-		brukernotifikasjonPublisher.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatus.SlettetAvBruker))
+		brukernotifikasjonPublisher?.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatus.SlettetAvBruker))
 
 		assertTrue(done.isCaptured)
 		assertEquals(personId, done.captured.getFodselsnummer())

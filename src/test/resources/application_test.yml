@@ -1,0 +1,56 @@
+server:
+  port: 9064
+
+management:
+  endpoint:
+  health:
+  show-details: always
+  endpoints.web:
+  exposure:
+  include: info, health, metrics, refresh, prometheus
+  base-path: "/internal"
+  metrics:
+  export:
+  prometheus:
+  enabled: true
+
+restconfig:
+  version: 1.0
+  password: password
+  sharedUsername: shareduser
+  sharedPassword: password
+  maxFileSize: 104857600
+  sanityHost: http://localhost:8080
+  sanityEndpoint: /soknadsveiviserproxy/skjemautlisting
+  filestorageHost: http://localhost:9042}
+  filestorageEndpoint: /filer
+  filestorageParameters: ?ids=
+  soknadsMottakerHost: http://localhost:9043
+  soknadsMottakerEndpoint: /save
+
+dbconfig:
+  profiles: test
+  databaseName: postgres
+  mountPathVault: postgresql/preprod-fss
+  databaseUrl: jdbc:postgresql://localhost:5432/postgres
+  embedded: true
+  usevault: false
+
+kafkaconfig:
+  profiles: test
+  tjenesteUrl: https://localhost
+  gjenopptaSoknadsArbeid: /dokumentinnsending/oversikt/
+  ettersendePaSoknad: /dokumentinnsending/ettersending/
+  username: soknadinnsender
+  password:
+  servers: localhost:29092
+  chemaRegistryUrl: http://localhost:8081
+  clientId: kafkaproducer
+  secure:
+  protocol:
+  salsmec:
+  kafkaTopicBeskjed: aapen-brukernotifikasjon-nyBeskjed-v1
+  kafkaTopicOppgave: aapen-brukernotifikasjon-nyOppgave-v1
+  kafkaTopicDone: aapen-brukernotifikasjon-done-v1
+  publisereEndringer: TRUE
+

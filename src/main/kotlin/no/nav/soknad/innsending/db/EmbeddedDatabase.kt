@@ -4,13 +4,13 @@ import com.opentable.db.postgres.embedded.EmbeddedPostgres
 //import io.zonky.test.*
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import no.nav.soknad.innsending.config.AppConfiguration
+import no.nav.soknad.innsending.config.DBConfig
 import org.flywaydb.core.Flyway
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 
 class EmbeddedDatabase(
-	private val env: AppConfiguration.DBConfig,
+	private val env: DBConfig,
 	private val credentialService: CredentialService
 ) : DatabaseInterface {
 	private val logger = LoggerFactory.getLogger(javaClass)

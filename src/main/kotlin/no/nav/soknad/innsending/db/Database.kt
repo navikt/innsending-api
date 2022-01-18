@@ -2,13 +2,13 @@ package no.nav.soknad.innsending.db
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import no.nav.soknad.innsending.config.AppConfiguration
+import no.nav.soknad.innsending.config.DBConfig
 import org.flywaydb.core.Flyway
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 
 class Database(
-	private val env: AppConfiguration.DBConfig,
+	private val env: DBConfig,
 	private val vaultCredentialService: CredentialService
 ) : DatabaseInterface {
 	private val logger = LoggerFactory.getLogger(javaClass)

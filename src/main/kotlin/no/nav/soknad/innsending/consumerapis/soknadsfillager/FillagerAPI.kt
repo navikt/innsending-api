@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.consumerapis.soknadsfillager
 
 import no.nav.soknad.arkivering.soknadsfillager.dto.FilElementDto
-import no.nav.soknad.innsending.config.AppConfiguration
 import no.nav.soknad.innsending.dto.VedleggDto
 import no.nav.soknad.innsending.repository.OpplastingsStatus
 import org.slf4j.LoggerFactory

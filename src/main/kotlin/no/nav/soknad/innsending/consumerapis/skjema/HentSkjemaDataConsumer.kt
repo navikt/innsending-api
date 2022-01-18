@@ -34,7 +34,7 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 				return createKodeverkSkjema(data, spraak)
 			}
 		}
-		throw RuntimeException("Skjema med id = $id ikke funnet")
+		throw RuntimeException("Skjema med id = $id ikke funnet. Antall skjema/vedleggstyper lest opp = ${sanityList.size}")
 	}
 
 	private fun createKodeverkSkjema(sanity: SkjemaOgVedleggsdata, spraak: String?): KodeverkSkjema {

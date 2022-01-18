@@ -13,3 +13,94 @@ management:
     export:
       prometheus:
         enabled: true
+---
+spring:
+  config:
+    activate:
+      on-profile: test | default | spring
+
+restconfig:
+  version: 1.0
+  password: password
+  sharedUsername: shareduser
+  sharedPassword: password
+  maxFileSize: 104857600
+  sanityHost: http://localhost:8080
+  sanityEndpoint: /soknadsveiviserproxy/skjemautlisting
+  filestorageHost: http://localhost:9042
+  filestorageEndpoint: /filer
+  filestorageParameters: ?ids=
+  soknadsMottakerHost: http://localhost:9043
+  soknadsMottakerEndpoint: /save
+
+dbconfig:
+  profiles: test
+  databaseName: postgres
+  mountPathVault: postgresql/preprod-fss
+  url: jdbc:postgresql://localhost:5432/postgres
+  embedded: true
+  useVault: false
+
+kafkaconfig:
+  profiles: test
+  tjenesteUrl: https://localhost
+  gjenopptaSoknadsArbeid: /dokumentinnsending/oversikt/
+  ettersendePaSoknad: /dokumentinnsending/ettersending/
+  username: soknadinnsender
+  password:
+  servers: localhost:29092
+  chemaRegistryUrl: http://localhost:8081
+  clientId: kafkaproducer
+  secure:
+  protocol:
+  salsmec:
+  kafkaTopicBeskjed: aapen-brukernotifikasjon-nyBeskjed-v1
+  kafkaTopicOppgave: aapen-brukernotifikasjon-nyOppgave-v1
+  kafkaTopicDone: aapen-brukernotifikasjon-done-v1
+  publisereEndringer: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev | prod
+
+restconfig:
+  version: ${APP_VERSION}
+  password: ${APPLICATION_PASSWORD}
+  sharedUsername: ${SHARED_USERNAME}
+  sharedPassword: ${SHARED_PASSWORD}
+  maxFileSize: ${MAX_FILE_SIZE}
+  sanityHost: ${SANITY_HOST}
+  sanityEndpoint: ${SANITY_ENDPOINT}
+  filestorageHost: ${FILESTORAGE_HOST}
+  filestorageEndpoint: ${FILESTORAGE_ENDPOINT}
+  filestorageParameters: ${FILESTORAGE_PARAMETERS}
+  soknadsMottakerHost: ${SOKNADSMOTTAKER_HOST}
+  soknadsMottakerEndpoint: ${SOKNADSMOTTAKER_ENDPOINT}
+
+dbconfig:
+  profiles: ${APPLICATION_PROFILE}
+  databaseName: ${DATABASE_NAME}
+  mountPathVault: ${VAULT_DB_PATH}
+  databaseUrl: ${DATABASE_JDBC_URL}
+  embedded: false
+  useVault: true
+
+kafkaconfig:
+  profiles: ${APPLICATION_PROFILE}
+  tjenesteUrl: ${TJENESTE_URL}
+  gjenopptaSoknadsArbeid: ${GJENOPPTA_SOKNADS_ARBEID}
+  ettersendePaSoknad: ${ETTERSENDE_PA_SOKNAD}
+  username: ${APPLICATION_USERNAME}
+  password: ${APPLICATION_PASSWORD}
+  servers: ${KAFKA_BOOTSTRAP_SERVERS}
+  chemaRegistryUrl: ${SCHEMA_REGISTRY_URL}
+  clientId: ${username}
+  secure: ${KAFKA_SECURITY}
+  protocol: ${KAFKA_SECPROT}
+  salsmec: ${KAFKA_SASLMEC}
+  kafkaTopicBeskjed: ${KAFKA_TOPIC_BESKJED}
+  kafkaTopicOppgave: ${KAFKA_TOPIC_OPPGAVE}
+  kafkaTopicDone: ${KAFKA_TOPIC_DONE}
+  publisereEndringer: ${PUBLISERE_BRUKERNOTIFIKASJONER}
