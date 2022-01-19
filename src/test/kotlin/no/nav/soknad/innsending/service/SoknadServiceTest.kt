@@ -210,7 +210,7 @@ class SoknadServiceTest {
 		val slett = slot<List<VedleggDto>>()
 		every { fillagerAPI.slettFiler(any(), capture(slett)) } returns Unit
 
-		soknadService.slettSoknadAvBruker(dokumentSoknadDto.innsendingsId!!)
+		soknadService.slettSoknadAvBruker(dokumentSoknadDto.innsendingsId!!, dokumentSoknadDto)
 
 /*
 		assertTrue(slett.isCaptured)

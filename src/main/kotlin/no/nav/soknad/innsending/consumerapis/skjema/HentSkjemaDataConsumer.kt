@@ -31,16 +31,16 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 	fun hentSkjemaEllerVedlegg(id: String, spraak: String?): KodeverkSkjema {
 		for (data in sanityList) {
 			if (id == data.skjemanummer || id == data.vedleggsid) {
-				return createKodeverkSkjema(data, spraak)
+				return createKodeverkSkjema(data, spraak, id)
 			}
 		}
 		throw RuntimeException("Skjema med id = $id ikke funnet. Antall skjema/vedleggstyper lest opp = ${sanityList.size}")
 	}
 
-	private fun createKodeverkSkjema(sanity: SkjemaOgVedleggsdata, spraak: String?): KodeverkSkjema {
+	private fun createKodeverkSkjema(sanity: SkjemaOgVedleggsdata, spraak: String?, id: String): KodeverkSkjema {
 		val kodeverkSkjema = KodeverkSkjema()
 		kodeverkSkjema.url = getUrl(sanity, spraak)
-		kodeverkSkjema.skjemanummer = sanity.skjemanummer
+		kodeverkSkjema.skjemanummer = id
 		kodeverkSkjema.vedleggsid = sanity.vedleggsid
 		kodeverkSkjema.tittel = getTitle(sanity, spraak)
 		kodeverkSkjema.tema = sanity.tema
@@ -62,7 +62,7 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 		} else if ("en".equals(spraak, true) && !sanity.url_en.isNullOrBlank()) {
 			sanity.url_en
 		} else
-			sanity.url_en
+			sanity.url
 	}
 
 

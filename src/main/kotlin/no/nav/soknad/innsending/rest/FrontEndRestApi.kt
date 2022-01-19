@@ -30,7 +30,7 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	fun opprettSoknad(@RequestBody opprettSoknad: OpprettSoknadBody
 	): ResponseEntity<DokumentSoknadDto> {
 
-		val dokumentSoknadDto = soknadService.opprettSoknad(opprettSoknad.brukerId, opprettSoknad.skjemanr, opprettSoknad.sprak, opprettSoknad.vedleggListe ?: emptyList())
+		val dokumentSoknadDto = soknadService.opprettSoknad(opprettSoknad.brukerId, opprettSoknad.skjemanr, opprettSoknad.sprak, opprettSoknad.vedleggsListe ?: emptyList())
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(dokumentSoknadDto)
@@ -61,7 +61,7 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	): ResponseEntity<DokumentSoknadDto> {
 
 		val dokumentSoknadDto = soknadService.opprettSoknadForEttersendingGittSkjemanr(
-			opprettEttersending.brukerId, opprettEttersending.skjemanr, opprettEttersending.sprak, opprettEttersending.vedleggListe ?: emptyList())
+			opprettEttersending.brukerId, opprettEttersending.skjemanr, opprettEttersending.sprak, opprettEttersending.vedleggsListe ?: emptyList())
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(dokumentSoknadDto)
@@ -75,6 +75,8 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@GetMapping("/soknad/{innsendingsId}")
 	fun hentSoknad(@PathVariable innsendingsId: String): ResponseEntity<DokumentSoknadDto> {
 
+		val soknadDto = soknadService.hentSoknad(innsendingsId)
+		tilgangskontroll(soknadDto, null)
 		val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -88,6 +90,8 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@GetMapping("/soknad/{innsendingsId}/vedlegg")
 	fun hentVedleggsListe(@PathVariable innsendingsId: String): ResponseEntity<List<VedleggDto>> {
 
+		val soknadDto = soknadService.hentSoknad(innsendingsId)
+		tilgangskontroll(soknadDto, null)
 		val vedleggsListeDto = soknadService.hentSoknad(innsendingsId).vedleggsListe
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -101,6 +105,8 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}")
 	fun hentVedlegg(@PathVariable innsendingsId: String, @PathVariable vedleggsId: String): ResponseEntity<VedleggDto> {
 
+		val soknadDto = soknadService.hentSoknad(innsendingsId)
+		tilgangskontroll(soknadDto, null)
 		val vedleggDto = soknadService.hentSoknad(innsendingsId).vedleggsListe.filter { it.id.toString().equals(vedleggsId) }.first()
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -120,6 +126,8 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 		@RequestBody vedlegg: VedleggDto
 	): ResponseEntity<VedleggDto> {
 
+		val soknadDto = soknadService.hentSoknad(innsendingsId)
+		tilgangskontroll(soknadDto, null)
 		val vedleggDto = soknadService.lagreVedlegg(vedlegg, innsendingsId)
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -139,6 +147,8 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 		@RequestPart file: MultipartFile
 	): ResponseEntity<Long> {
 
+		val soknadDto = soknadService.hentSoknad(innsendingsId)
+		tilgangskontroll(soknadDto, null)
 		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
 		Validerer().validereFilformat(listOf(file.bytes))
 		val fil = KonverterTilPdf().tilPdf(file.bytes)
@@ -167,6 +177,8 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 		@PathVariable filId: Long
 	): ResponseEntity<FilDto> {
 
+		val soknadDto = soknadService.hentSoknad(innsendingsId)
+		tilgangskontroll(soknadDto, null)
 		val filDto = soknadService.hentFil(innsendingsId, vedleggsId, filId)
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -183,6 +195,8 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 		@PathVariable vedleggsId: Long
 	): ResponseEntity<List<FilDto>> {
 
+		val soknadDto = soknadService.hentSoknad(innsendingsId)
+		tilgangskontroll(soknadDto, null)
 		val filDtoListe = soknadService.hentFiler(innsendingsId, vedleggsId)
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -200,6 +214,8 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 		@PathVariable filId: Long
 	): ResponseEntity<String> {
 
+		val soknadDto = soknadService.hentSoknad(innsendingsId)
+		tilgangskontroll(soknadDto, null)
 		soknadService.slettFil(innsendingsId, vedleggsId, filId)
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -217,6 +233,8 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@DeleteMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}")
 	fun slettVedlegg(@PathVariable innsendingsId: String, @PathVariable vedleggsId: Long): ResponseEntity<String> {
 
+		val soknadDto = soknadService.hentSoknad(innsendingsId)
+		tilgangskontroll(soknadDto, null)
 		soknadService.slettVedlegg(innsendingsId, vedleggsId)
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -230,7 +248,9 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@DeleteMapping("/soknad/{innsendingsId}")
 	fun slettSoknad(@PathVariable innsendingsId: String): ResponseEntity<String> {
 
-		soknadService.slettSoknadAvBruker(innsendingsId)
+		val soknadDto = soknadService.hentSoknad(innsendingsId)
+		tilgangskontroll(soknadDto, null)
+		soknadService.slettSoknadAvBruker(innsendingsId, soknadDto)
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body("{\"status\": \"Slettet soknad med id ${innsendingsId}\"}")
@@ -244,12 +264,18 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	@PostMapping("/sendInn/{innsendingsId}")
 	fun sendInnSoknad(@PathVariable innsendingsId: String): ResponseEntity<String> {
 
+		val soknadDto = soknadService.hentSoknad(innsendingsId)
+		tilgangskontroll(soknadDto, null)
 		soknadService.sendInnSoknad(innsendingsId)
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body("{\"status\": \"Soknad med id ${innsendingsId} er sendt inn til NAV\"}")
 	}
 
+	private fun tilgangskontroll(soknadDto: DokumentSoknadDto?, brukerId: String?) {
+		if (brukerId == null || soknadDto?.brukerId.equals(brukerId)) return //TODO hente ut brukerId fra token
+		throw RuntimeException("Søknad finnes ikke eller er ikke tilgjengelig for innlogget bruker")
+	}
 
 // Midlertidige dummy metoder
 	private fun lagDummySoknad(skjemanr: String, vedleggsnr: String?, sprak: String
