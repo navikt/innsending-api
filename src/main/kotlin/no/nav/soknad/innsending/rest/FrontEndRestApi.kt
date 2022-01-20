@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.repository.SoknadsStatus
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.pdfutilities.KonverterTilPdf
 import no.nav.soknad.pdfutilities.Validerer
+import org.hibernate.annotations.common.util.impl.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -20,6 +21,8 @@ import java.util.*
 @RestController
 @RequestMapping("/frontend")
 class FrontEndRestApi(val soknadService: SoknadService) {
+
+	private val logger = LoggerFactory.logger(javaClass)
 
 	@Operation(summary = "Requests creating a new application given main document id (skjemanr).", tags = ["operations"])
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
@@ -74,13 +77,19 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	)])
 	@GetMapping("/soknad/{innsendingsId}")
 	fun hentSoknad(@PathVariable innsendingsId: String): ResponseEntity<DokumentSoknadDto> {
-
-		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll(soknadDto, null)
-		val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(dokumentSoknadDto)
+		try {
+			logger.info("Kall for å hente søknad med id ${innsendingsId}")
+			val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
+			tilgangskontroll(dokumentSoknadDto, null)
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(dokumentSoknadDto)
+		} catch (e: Throwable) {
+			logger.error("Feil ved henting av søknad med id ${innsendingsId}, ${e.message}")
+			return ResponseEntity
+				.status(HttpStatus.NOT_FOUND)
+				.body(emptyDokumentSoknad(innsendingsId))
+		}
 	}
 
 	@Operation(summary = "Requests fetching a list of attachments to previously created application.", tags = ["operations"])
@@ -247,13 +256,20 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	)])
 	@DeleteMapping("/soknad/{innsendingsId}")
 	fun slettSoknad(@PathVariable innsendingsId: String): ResponseEntity<String> {
-
-		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll(soknadDto, null)
-		soknadService.slettSoknadAvBruker(innsendingsId, soknadDto)
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body("{\"status\": \"Slettet soknad med id ${innsendingsId}\"}")
+		try {
+			logger.info("Kall for å slette søknad med id ${innsendingsId}")
+			val soknadDto = soknadService.hentSoknad(innsendingsId)
+			tilgangskontroll(soknadDto, null)
+			soknadService.slettSoknadAvBruker(innsendingsId, soknadDto)
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body("{\"status\": \"Slettet soknad med id ${innsendingsId}\"}")
+		} catch (e: Throwable) {
+			logger.error("Feil ved sletting av søknad med id ${innsendingsId}, ${e.message}")
+			return ResponseEntity
+				.status(HttpStatus.NOT_FOUND)
+				.body("{\"status\": \"Søknaden med id ${innsendingsId} kunne ikke slettes\"}")
+		}
 	}
 
 
@@ -277,7 +293,11 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 		throw RuntimeException("Søknad finnes ikke eller er ikke tilgjengelig for innlogget bruker")
 	}
 
-// Midlertidige dummy metoder
+	private fun emptyDokumentSoknad(innsendingsId: String): DokumentSoknadDto =
+		DokumentSoknadDto(null, innsendingsId, null, "", "", "", "", null,
+			SoknadsStatus.SlettetAvBruker, LocalDateTime.now(), null, null,emptyList())
+
+	// Midlertidige dummy metoder
 	private fun lagDummySoknad(skjemanr: String, vedleggsnr: String?, sprak: String
 			, brukerId: String, ettersendingId: String?, vedleggsListe: List<String>?) =
 			DokumentSoknadDto(1L, UUID.randomUUID().toString(), ettersendingId, brukerId, skjemanr, "Tittel", "Test", "NO"
