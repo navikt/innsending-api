@@ -46,6 +46,8 @@ spec:
       value: "1"
     - name: DATABASE_PORT
       value: "5432"
+    - name: DATABASE_JDBC_URL
+      value: jdbc:postgresql://{{ DATABASE_HOST }}/{{ DATABASE_NAME }}
     - name: DATABASE_HOST
       value: {{ DATABASE_HOST }}
     - name: DATABASE_NAME
