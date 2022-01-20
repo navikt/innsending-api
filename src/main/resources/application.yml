@@ -37,7 +37,7 @@ dbconfig:
   profiles: test
   databaseName: postgres
   mountPathVault: postgresql/preprod-fss
-  url: jdbc:postgresql://localhost:5432/postgres
+  databaseUrl: jdbc:postgresql://localhost:5432/postgres
   embedded: true
   useVault: false
 
