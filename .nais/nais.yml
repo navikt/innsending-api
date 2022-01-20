@@ -52,5 +52,5 @@ spec:
       value: {{ DATABASE_NAME }}
     - name: VAULT_DB_PATH
       value: {{ VAULT_DB_PATH }}
-    - name: APPLICATION_PROFILE
-      value: {{ APPLICATION_PROFILE }}
+    - name: SPRING_PROFILES_ACTIVE
+      value: {{ SPRING_PROFILES_ACTIVE }}

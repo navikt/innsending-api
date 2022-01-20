@@ -18,6 +18,7 @@ class JpaConfig(
 	fun getDataSource() = initDatasource()
 
 	private fun initDatasource(): HikariDataSource {
+		logger.info("Profile=${dbConfig.profiles}. Embedded=${dbConfig.embedded}. Klar for å initialisere database, ${dbConfig.databaseName} på ${dbConfig.url}")
 		val credentialService = if (dbConfig.embedded) EmbeddedCredentialService() else VaultCredentialService()
 		val renewService = if (dbConfig.embedded) EmbeddedRenewService(credentialService) else RenewVaultService(credentialService)
 		val database = if (dbConfig.embedded) EmbeddedDatabase(dbConfig, credentialService) else Database(dbConfig, credentialService)

@@ -4,7 +4,7 @@
   "DATABASE_PORT": "5432",
   "DATABASE_NAME": "dokumentinnsending-prod",
   "VAULT_DB_PATH": "postgresql/prod-fss",
-  "APPLICATION_PROFILE": "prod",
+  "SPRING_PROFILES_ACTIVE": "prod",
   "SRV_KV_PATH": "/serviceuser/data/prod/srvinnsending-api",
   "APPDYN_KV_PATH": "/apikey/appdynamics/prod"
 }

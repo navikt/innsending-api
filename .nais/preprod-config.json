@@ -4,7 +4,7 @@
   "DATABASE_PORT": "5432",
   "DATABASE_NAME": "dokumentinnsending-dev",
   "VAULT_DB_PATH": "postgresql/preprod-fss",
-  "APPLICATION_PROFILE": "dev",
+  "SPRING_PROFILES_ACTIVE": "dev",
   "SRV_KV_PATH": "/serviceuser/data/dev/srvinnsending-api",
   "APPDYN_KV_PATH": "/apikey/appdynamics/dev",
 	"VERSION": "0.1"

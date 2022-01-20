@@ -63,7 +63,7 @@ kafkaconfig:
 spring:
   config:
     activate:
-      on-profile: dev | prod
+      on-profile: dev | prod | docker
 
 restconfig:
   version: ${APP_VERSION}
@@ -80,7 +80,7 @@ restconfig:
   soknadsMottakerEndpoint: ${SOKNADSMOTTAKER_ENDPOINT}
 
 dbconfig:
-  profiles: ${APPLICATION_PROFILE}
+  profiles: ${SPRING_PROFILES_ACTIVE}
   databaseName: ${DATABASE_NAME}
   mountPathVault: ${VAULT_DB_PATH}
   databaseUrl: ${DATABASE_JDBC_URL}
@@ -88,7 +88,7 @@ dbconfig:
   useVault: true
 
 kafkaconfig:
-  profiles: ${APPLICATION_PROFILE}
+  profiles: ${SPRING_PROFILES_ACTIVE}
   tjenesteUrl: ${TJENESTE_URL}
   gjenopptaSoknadsArbeid: ${GJENOPPTA_SOKNADS_ARBEID}
   ettersendePaSoknad: ${ETTERSENDE_PA_SOKNAD}
