@@ -6,16 +6,19 @@ import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.Oppgave
 import no.nav.soknad.innsending.brukernotifikasjon.kafka.KafkaPublisherInterface
 import no.nav.soknad.innsending.config.KafkaConfig
+import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.dto.DokumentSoknadDto
 import no.nav.soknad.innsending.dto.VedleggDto
 import no.nav.soknad.innsending.repository.OpplastingsStatus
 import no.nav.soknad.innsending.repository.SoknadsStatus
 import org.slf4j.LoggerFactory
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 @Service
+@EnableConfigurationProperties(KafkaConfig::class)
 class BrukernotifikasjonPublisher(
 	private val kafkaConfig: KafkaConfig,
 	private val kafkaPublisher: KafkaPublisherInterface

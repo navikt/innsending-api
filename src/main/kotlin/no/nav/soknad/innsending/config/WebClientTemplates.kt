@@ -4,6 +4,7 @@ import io.netty.channel.ChannelOption
 import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.handler.timeout.WriteTimeoutHandler
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -19,6 +20,7 @@ import reactor.netty.http.client.HttpClient
 import java.util.concurrent.TimeUnit
 
 @Configuration
+@EnableConfigurationProperties(RestConfig::class)
 class WebClientTemplates(private val restConfig: RestConfig) {
 
 	private val connectionTimeout = 2000

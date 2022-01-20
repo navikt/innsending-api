@@ -5,10 +5,12 @@ import no.nav.soknad.innsending.ApplicationState
 import no.nav.soknad.innsending.ProfileConfig
 import no.nav.soknad.innsending.db.*
 import org.slf4j.LoggerFactory
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
+@EnableConfigurationProperties(DBConfig::class)
 class JpaConfig(
 	private val profileConfig: ProfileConfig,
 	private val dbConfig: DBConfig,
