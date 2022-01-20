@@ -44,7 +44,7 @@ kafkaconfig:
   username: soknadinnsender
   password:
   servers: localhost:29092
-  chemaRegistryUrl: http://localhost:8081
+  schemaRegistryUrl: http://localhost:8081
   clientId: kafkaproducer
   secure:
   protocol:

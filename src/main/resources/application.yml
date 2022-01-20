@@ -49,7 +49,7 @@ kafkaconfig:
   username: soknadinnsender
   password:
   servers: localhost:29092
-  chemaRegistryUrl: http://localhost:8081
+  schemaRegistryUrl: http://localhost:8081
   clientId: kafkaproducer
   secure:
   protocol:
@@ -95,7 +95,7 @@ kafkaconfig:
   username: ${APPLICATION_USERNAME}
   password: ${APPLICATION_PASSWORD}
   servers: ${KAFKA_BOOTSTRAP_SERVERS}
-  chemaRegistryUrl: ${SCHEMA_REGISTRY_URL}
+  schemaRegistryUrl: ${SCHEMA_REGISTRY_URL}
   clientId: ${username}
   secure: ${KAFKA_SECURITY}
   protocol: ${KAFKA_SECPROT}
