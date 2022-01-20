@@ -9,6 +9,7 @@ import io.mockk.impl.annotations.InjectMockKs
 import no.nav.brukernotifikasjon.schemas.Done
 import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.Oppgave
+import no.nav.soknad.innsending.ProfileConfig
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.config.KafkaConfig
 import no.nav.soknad.innsending.repository.OpplastingsStatus
@@ -27,7 +28,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 internal class BrukernotifikasjonPublisherTest {
 
 	@Autowired
-	private val kafkaConfig: KafkaConfig = KafkaConfig()
+	private val kafkaConfig: KafkaConfig = KafkaConfig(ProfileConfig("test"))
 
 	@InjectMockKs
 	var kafkaPublisher = mockk<KafkaPublisher>()

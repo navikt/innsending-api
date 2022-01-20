@@ -1,10 +1,11 @@
 package no.nav.soknad.innsending.config
 
+import no.nav.soknad.innsending.ProfileConfig
 import org.springframework.boot.context.properties.ConfigurationProperties
 import kotlin.properties.Delegates
 
 @ConfigurationProperties(prefix = "kafkaconfig")
-class KafkaConfig {
+class KafkaConfig(private val profileConfig: ProfileConfig) {
 	lateinit var profiles: String
 	lateinit var tjenesteUrl: String
 	lateinit var gjenopptaSoknadsArbeid: String
@@ -22,6 +23,7 @@ class KafkaConfig {
 	lateinit var kafkaTopicDone: String
 	var publisereEndringer by Delegates.notNull<Boolean>()
 
+	public fun setProfiles() {profiles = profileConfig.profil}
 	public fun getSaslJaasConfig(): String = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$username\" password=\"$password\";"
 
 }

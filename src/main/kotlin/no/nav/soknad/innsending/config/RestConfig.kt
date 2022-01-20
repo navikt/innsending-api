@@ -1,10 +1,11 @@
 package no.nav.soknad.innsending.config
 
+import no.nav.soknad.innsending.ProfileConfig
 import org.springframework.boot.context.properties.ConfigurationProperties
 import kotlin.properties.Delegates
 
 @ConfigurationProperties("restconfig")
-class RestConfig {
+class RestConfig(private val profileConfig: ProfileConfig) {
 	lateinit var version: String
 	lateinit var username: String
 	lateinit var password: String
