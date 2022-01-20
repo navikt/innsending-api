@@ -9,7 +9,7 @@ class DBConfig(private val profileConfig: ProfileConfig) {
 	lateinit var profiles: String
 	lateinit var  databaseName: String
 	lateinit var  mountPathVault: String
-	lateinit var  url: String
+	lateinit var  databaseUrl: String
 	var embedded by Delegates.notNull<Boolean>()
 	var useVault by Delegates.notNull<Boolean>()
 }

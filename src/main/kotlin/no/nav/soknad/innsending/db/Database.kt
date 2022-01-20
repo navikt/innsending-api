@@ -30,7 +30,7 @@ class Database(
 
 		logger.info("Database init. Set datasource")
 		dataSource = HikariDataSource(HikariConfig().apply {
-			jdbcUrl = env.url
+			jdbcUrl = env.databaseUrl
 			username = initialCredentials.username
 			password = initialCredentials.password
 			maximumPoolSize = 3
@@ -57,7 +57,7 @@ class Database(
 			databaseName = env.databaseName,
 			role = Role.ADMIN
 		)
-		dataSource(env.url, credentials.username, credentials.password)
+		dataSource(env.databaseUrl, credentials.username, credentials.password)
 		if (!"docker".equals(env.profiles, true)) {
 			val sql = "SET ROLE \"${env.databaseName}-${Role.ADMIN}\""
 			initSql(sql) // required for assigning proper owners for the tables
