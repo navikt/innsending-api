@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.brukernotifikasjon.kafka
 
 import java.util.concurrent.TimeUnit
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig
+import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerializer
 import no.nav.brukernotifikasjon.schemas.Beskjed
 import no.nav.brukernotifikasjon.schemas.Done
@@ -65,8 +66,9 @@ class KafkaPublisher(private val kafkaConfig: KafkaConfig): KafkaPublisherInterf
 		return HashMap<String, Any>().also {
 			it[AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG] = kafkaConfig.schemaRegistryUrl
 			it[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = kafkaConfig.servers
-			it[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = SpecificAvroSerializer::class.java
-			it[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = SpecificAvroSerializer::class.java
+			it[ProducerConfig.MAX_BLOCK_MS_CONFIG] = 4000
+			it[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = KafkaAvroSerializer::class.java
+			it[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = KafkaAvroSerializer::class.java
 			if (kafkaConfig.secure == "TRUE") {
 				it[CommonClientConfigs.SECURITY_PROTOCOL_CONFIG] = kafkaConfig.protocol
 				it[SaslConfigs.SASL_JAAS_CONFIG] = kafkaConfig.getSaslJaasConfig()
