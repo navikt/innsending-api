@@ -12,7 +12,7 @@ class SkjemaClient(private val restConfig: RestConfig,
 ) {
 
 	fun hent(): List<SkjemaOgVedleggsdata>? {
-			return webClient
+			val skjemaer = webClient
 				.get()
 				.uri(restConfig.sanityHost+restConfig.sanityEndpoint)
 				.accept(MediaType.APPLICATION_JSON)
@@ -24,9 +24,15 @@ class SkjemaClient(private val restConfig: RestConfig,
 						}
 					}
 				)
-				.bodyToFlux(SkjemaOgVedleggsdata::class.java)
+				.bodyToFlux(Skjemaer::class.java)
 				.collectList()
 				.block()
+
+			if (skjemaer != null && skjemaer.get(0) != null && skjemaer.get(0).skjemaer!!.isNotEmpty()) {
+				return skjemaer.get(0)?.skjemaer ?: emptyList()
+			}
+			throw RuntimeException("Feil ved forsøk på henting av skjema fra sanity")
+
 	}
 
 }
