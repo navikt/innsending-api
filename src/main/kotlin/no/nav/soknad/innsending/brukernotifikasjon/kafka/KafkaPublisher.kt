@@ -66,7 +66,6 @@ class KafkaPublisher(private val kafkaConfig: KafkaConfig): KafkaPublisherInterf
 		return HashMap<String, Any>().also {
 			it[AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG] = kafkaConfig.schemaRegistryUrl
 			it[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = kafkaConfig.servers
-			it[ProducerConfig.MAX_BLOCK_MS_CONFIG] = 4000
 			it[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = KafkaAvroSerializer::class.java
 			it[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = KafkaAvroSerializer::class.java
 			if (kafkaConfig.secure == "TRUE") {
