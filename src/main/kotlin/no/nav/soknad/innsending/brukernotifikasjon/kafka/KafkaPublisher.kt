@@ -14,12 +14,15 @@ import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.header.Headers
+import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 
 @Service
 @Profile("dev | prod")
 class KafkaPublisher(private val kafkaConfig: KafkaConfig): KafkaPublisherInterface {
+
+	private val logger = LoggerFactory.getLogger(javaClass)
 
 	private val kafkaMessageProducer = KafkaProducer<Nokkel, Beskjed>(kafkaConfigMap())
 	private val kafkaTaskProducer = KafkaProducer<Nokkel, Oppgave>(kafkaConfigMap())
@@ -48,9 +51,14 @@ class KafkaPublisher(private val kafkaConfig: KafkaConfig): KafkaPublisherInterf
 		val producerRecord = ProducerRecord(topic, key, value)
 		headers.forEach { h -> producerRecord.headers().add(h) }
 
-		kafkaProducer
-			.send(producerRecord)
-			.get(9000, TimeUnit.MILLISECONDS) // Blocking call
+		try {
+			kafkaProducer
+				.send(producerRecord)
+				.get(9000, TimeUnit.MILLISECONDS) // Blocking call
+		} catch (e: Throwable) {
+			logger.error("Publisering av brukernotifikasjon feilet", e)
+			throw e
+		}
 	}
 
 	private fun kafkaConfigMap(): MutableMap<String, Any> {
