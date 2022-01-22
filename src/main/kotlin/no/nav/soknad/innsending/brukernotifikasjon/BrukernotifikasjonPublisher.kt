@@ -48,10 +48,18 @@ class BrukernotifikasjonPublisher(
 					", tema=${dokumentSoknad.tema}"
 			)
 
-			when (dokumentSoknad.status) {
-				SoknadsStatus.Opprettet -> handleNewApplication(dokumentSoknad, groupId!!)
-				SoknadsStatus.Innsendt -> handleSentInApplication(dokumentSoknad, groupId!!)
-				SoknadsStatus.SlettetAvBruker, SoknadsStatus.AutomatiskSlettet -> handleDeletedApplication(dokumentSoknad, groupId!!)
+			try {
+				when (dokumentSoknad.status) {
+					SoknadsStatus.Opprettet -> handleNewApplication(dokumentSoknad, groupId!!)
+					SoknadsStatus.Innsendt -> handleSentInApplication(dokumentSoknad, groupId!!)
+					SoknadsStatus.SlettetAvBruker, SoknadsStatus.AutomatiskSlettet -> handleDeletedApplication(
+						dokumentSoknad,
+						groupId!!
+					)
+				}
+			} catch (e: Exception) {
+				logger.info("Publisering av brukernotifikasjon feilet med ${e.message}")
+				return false
 			}
 		}
 		return true
