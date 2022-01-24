@@ -68,7 +68,7 @@ class KafkaPublisher(private val kafkaConfig: KafkaConfig): KafkaPublisherInterf
 			it[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = kafkaConfig.servers
 			it[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = KafkaAvroSerializer::class.java
 			it[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = KafkaAvroSerializer::class.java
-			if (kafkaConfig.secure == "TRUE") {
+			if ("TRUE".equals(kafkaConfig.secure, true)) {
 				it[CommonClientConfigs.SECURITY_PROTOCOL_CONFIG] = kafkaConfig.protocol
 				it[SaslConfigs.SASL_JAAS_CONFIG] = kafkaConfig.getSaslJaasConfig()
 				it[SaslConfigs.SASL_MECHANISM] = kafkaConfig.salsmec

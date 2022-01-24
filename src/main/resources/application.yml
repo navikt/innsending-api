@@ -96,7 +96,7 @@ kafkaconfig:
   password: ${APPLICATION_PASSWORD}
   servers: ${KAFKA_BOOTSTRAP_SERVERS}
   schemaRegistryUrl: ${SCHEMA_REGISTRY_URL}
-  clientId: ${username}
+  clientId: ${APPLICATION_USERNAME}
   secure: ${KAFKA_SECURITY}
   protocol: ${KAFKA_SECPROT}
   salsmec: ${KAFKA_SASLMEC}

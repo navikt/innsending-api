@@ -23,7 +23,7 @@ class KafkaConfig(private val profileConfig: ProfileConfig) {
 	lateinit var kafkaTopicDone: String
 	var publisereEndringer by Delegates.notNull<Boolean>()
 
-	public fun setProfiles() {profiles = profileConfig.profil}
-	public fun getSaslJaasConfig(): String = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$username\" password=\"$password\";"
+	fun setProfiles() {profiles = profileConfig.profil}
+	fun getSaslJaasConfig(): String = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$username\" password=\"$password\";"
 
 }
