@@ -180,7 +180,7 @@ class FrontEndRestApi(val soknadService: SoknadService
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
 		description = "If successful, the specified file with content is returned."
 	)])
-	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil/{id}")
+	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil/{filId}")
 	fun hentFil(
 		@PathVariable innsendingsId: String,
 		@PathVariable vedleggsId: Long,
@@ -222,14 +222,14 @@ class FrontEndRestApi(val soknadService: SoknadService
 		@PathVariable innsendingsId: String,
 		@PathVariable vedleggsId: Long,
 		@PathVariable filId: Long
-	): ResponseEntity<String> {
+	): ResponseEntity<BodyStatusResponseDto> {
 
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll(soknadDto, null)
 		soknadService.slettFil(innsendingsId, vedleggsId, filId)
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body("{\"status\": \"Slettet fil med id ${filId}\"}")
+			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet fil med id ${filId}"))
 	}
 
 	@Operation(
@@ -241,14 +241,14 @@ class FrontEndRestApi(val soknadService: SoknadService
 			description = "If successful, the attachment is deleted from the database and a confirmation string is returned."
 	)])
 	@DeleteMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}")
-	fun slettVedlegg(@PathVariable innsendingsId: String, @PathVariable vedleggsId: Long): ResponseEntity<String> {
+	fun slettVedlegg(@PathVariable innsendingsId: String, @PathVariable vedleggsId: Long): ResponseEntity<BodyStatusResponseDto> {
 
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll(soknadDto, null)
 		soknadService.slettVedlegg(innsendingsId, vedleggsId)
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body("{\"status\": \"Slettet vedlegg med id ${vedleggsId}\"}")
+			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet vedlegg med id ${vedleggsId}"))
 	}
 
 	@Operation(summary = "Requests delete of an application.", tags = ["operations"])
@@ -256,7 +256,7 @@ class FrontEndRestApi(val soknadService: SoknadService
 			description = "If successful, the application is deleted from the database and a confirmation string is returned."
 	)])
 	@DeleteMapping("/soknad/{innsendingsId}")
-	fun slettSoknad(@PathVariable innsendingsId: String): ResponseEntity<String> {
+	fun slettSoknad(@PathVariable innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
 		try {
 			logger.info("Kall for å slette søknad med id ${innsendingsId}")
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
@@ -264,12 +264,12 @@ class FrontEndRestApi(val soknadService: SoknadService
 			soknadService.slettSoknadAvBruker(innsendingsId, soknadDto)
 			return ResponseEntity
 				.status(HttpStatus.OK)
-				.body("{\"status\": \"Slettet soknad med id ${innsendingsId}\"}")
+				.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet soknad med id ${innsendingsId}"))
 		} catch (e: Throwable) {
 			logger.error("Feil ved sletting av søknad med id ${innsendingsId}, ${e.message}")
 			return ResponseEntity
 				.status(HttpStatus.NOT_FOUND)
-				.body("{\"status\": \"Søknaden med id ${innsendingsId} kunne ikke slettes\"}")
+				.body(BodyStatusResponseDto(HttpStatus.NOT_FOUND.name, "Søknaden med id ${innsendingsId} kunne ikke slettes"))
 		}
 	}
 
@@ -279,14 +279,14 @@ class FrontEndRestApi(val soknadService: SoknadService
 			description = "If successful, the application is sent to NAV, and a confirmation string is returned."
 	)])
 	@PostMapping("/sendInn/{innsendingsId}")
-	fun sendInnSoknad(@PathVariable innsendingsId: String): ResponseEntity<String> {
+	fun sendInnSoknad(@PathVariable innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
 
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll(soknadDto, null)
 		soknadService.sendInnSoknad(innsendingsId)
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body("{\"status\": \"Soknad med id ${innsendingsId} er sendt inn til NAV\"}")
+			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Soknad med id ${innsendingsId} er sendt inn til NAV"))
 	}
 
 	private fun tilgangskontroll(soknadDto: DokumentSoknadDto?, brukerId: String?) {
