@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.rest
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
+import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.dto.*
 import no.nav.soknad.innsending.repository.OpplastingsStatus
 import no.nav.soknad.innsending.repository.SoknadsStatus
@@ -20,7 +21,8 @@ import java.util.*
 
 @RestController
 @RequestMapping("/frontend")
-class FrontEndRestApi(val soknadService: SoknadService) {
+class FrontEndRestApi(val soknadService: SoknadService
+, private val restConfig: RestConfig) {
 
 	private val logger = LoggerFactory.logger(javaClass)
 
@@ -152,9 +154,8 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 	fun lagreFil(
 		@PathVariable innsendingsId: String,
 		@PathVariable vedleggsId: Long,
-		@RequestPart filDto: FilDto,
 		@RequestPart file: MultipartFile
-	): ResponseEntity<Long> {
+	): ResponseEntity<FilIdDto> {
 
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll(soknadDto, null)
@@ -163,15 +164,15 @@ class FrontEndRestApi(val soknadService: SoknadService) {
 		val fil = KonverterTilPdf().tilPdf(file.bytes)
 		val vedleggsFiler = soknadService.hentFiler(innsendingsId, vedleggsId)
 		val opplastedeFiler: List<ByteArray> = vedleggsFiler.filter{ it.data != null }.map{ it.data!! }
-		Validerer().validerStorrelse((opplastedeFiler + listOf(fil)), 100 )
+		Validerer().validerStorrelse((opplastedeFiler + listOf(fil)), restConfig.maxFileSize )
 
 		// Lagre
-		val lagretFilDto = soknadService.lagreFil(innsendingsId, FilDto(null, filDto.vedleggsid, filDto.filnavn, filDto.mimetype, fil, LocalDateTime.now()))
+		val lagretFilDto = soknadService.lagreFil(innsendingsId, FilDto(null, vedleggsId, file.originalFilename ?:"", file.contentType ?: "", fil, LocalDateTime.now()))
 
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(lagretFilDto.id)
+			.body(FilIdDto(lagretFilDto.id))
 	}
 
 	// Søker skal kunne laste opp ett eller flere filer på ett vedlegg. Dette endepunktet tillater opplasting av en fil.

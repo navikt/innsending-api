@@ -8,12 +8,12 @@ import org.apache.pdfbox.pdmodel.graphics.PDXObject
 import org.apache.pdfbox.rendering.ImageType
 import org.apache.pdfbox.rendering.PDFRenderer
 import org.apache.pdfbox.tools.imageio.ImageIOUtil
+import org.imgscalr.Scalr
 import org.slf4j.LoggerFactory
 import java.awt.Dimension
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.IOException
-import org.imgscalr.Scalr
 
 
 class KonverterTilPng {
@@ -47,7 +47,7 @@ class KonverterTilPng {
 		try {
 			PDDocument.load(input, "", null, null, MemoryUsageSetting.setupMainMemoryOnly((500 * 1024 * 1024).toLong()))
 				.use { pd ->
-					ByteArrayOutputStream().use { byteArrayOutputStream ->
+					ByteArrayOutputStream().use { baos ->
 						pd.resourceCache = MyResourceCache()
 						val pdfRenderer = PDFRenderer(pd)
 						val pageIndex =
@@ -55,13 +55,16 @@ class KonverterTilPng {
 						var bim =
 							pdfRenderer.renderImageWithDPI(pageIndex, 100f, ImageType.RGB)
 						bim = scaleImage(bim, Dimension(600, 800), true)
-						ImageIOUtil.writeImage(bim, "PNG", byteArrayOutputStream, 300, 100.0F)
+						ImageIOUtil.writeImage(bim, "PNG", baos, 300, 1.0F)
 						bim.flush()
-						return byteArrayOutputStream.toByteArray()
+						return baos.toByteArray()
 					}
 				}
 		} catch (e: IOException) {
 			logger.error("Klarte ikke å konvertere pdf til png", e)
+			throw RuntimeException("Klarte ikke å konvertere pdf til png")
+		} catch (t: Throwable) {
+			logger.error("Klarte ikke å konvertere pdf til png", t)
 			throw RuntimeException("Klarte ikke å konvertere pdf til png")
 		}
 	}

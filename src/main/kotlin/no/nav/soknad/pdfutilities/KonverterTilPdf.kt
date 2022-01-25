@@ -68,6 +68,9 @@ class KonverterTilPdf {
 		} catch (ioe: IOException) {
 			logger.error("Klarte ikke å sjekke filtype til PDF. Feil: '{}'", ioe.message)
 			throw RuntimeException("vedlegg.opplasting.feil.generell")
+		} catch (t: Throwable) {
+			logger.error("Klarte ikke å sjekke filtype til PDF. Feil: '{}'", t)
+			throw RuntimeException("vedlegg.opplasting.feil.generell")
 		}
 	}
 
@@ -114,7 +117,7 @@ class KonverterTilPdf {
 			)
 		}
 		try {
-			KonverterTilPdf::class.java.getResourceAsStream("/icc/AdobeRGB1998.icc").use { colorProfile ->
+			KonverterTilPdf::class.java.getResourceAsStream("/fonts/icc/AdobeRGB1998.icc").use { colorProfile ->
 				// sRGB output intent
 				val intent = PDOutputIntent(doc, colorProfile)
 				intent.info = "AdobeRGB1998"

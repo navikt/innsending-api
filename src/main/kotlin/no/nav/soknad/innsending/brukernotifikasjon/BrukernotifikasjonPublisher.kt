@@ -6,7 +6,6 @@ import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.Oppgave
 import no.nav.soknad.innsending.brukernotifikasjon.kafka.KafkaPublisherInterface
 import no.nav.soknad.innsending.config.KafkaConfig
-import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.dto.DokumentSoknadDto
 import no.nav.soknad.innsending.dto.VedleggDto
 import no.nav.soknad.innsending.repository.OpplastingsStatus
