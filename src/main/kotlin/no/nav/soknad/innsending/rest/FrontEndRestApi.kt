@@ -215,9 +215,9 @@ class FrontEndRestApi(val soknadService: SoknadService
 
 	@Operation(summary = "Requests get on a previously uploaded file to an attachment.", tags = ["operations"])
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
-		description = "If successful, the file is downloaded to the client."
+		description = "If successful, the file is removed from the attachment."
 	)])
-	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil/{filId}")
+	@DeleteMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil/{filId}")
 	fun slettFil(
 		@PathVariable innsendingsId: String,
 		@PathVariable vedleggsId: Long,
