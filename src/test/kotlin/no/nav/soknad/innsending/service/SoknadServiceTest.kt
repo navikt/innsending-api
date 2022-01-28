@@ -12,6 +12,8 @@ import no.nav.soknad.innsending.consumerapis.soknadsmottaker.SoknadsmottakerAPI
 import no.nav.soknad.innsending.dto.DokumentSoknadDto
 import no.nav.soknad.innsending.dto.FilDto
 import no.nav.soknad.innsending.dto.VedleggDto
+import no.nav.soknad.innsending.exceptions.IllegalActionException
+import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.pdfutilities.PdfGenerator
 import org.junit.jupiter.api.*
@@ -130,7 +132,6 @@ class SoknadServiceTest {
 		// Oppretter ettersendingssoknad
 		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 
-		assertTrue(ettersendingsSoknadDto != null)
 		assertTrue(!ettersendingsSoknadDto.vedleggsListe.isEmpty())
 		assertTrue(!ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatus.IKKE_VALGT }.toList().isEmpty())
 
@@ -138,7 +139,7 @@ class SoknadServiceTest {
 		val lagretFil = soknadService.lagreFil(ettersendingsSoknadDto.innsendingsId!!
 			, lagFilDtoMedFil(ettersendingsSoknadDto.vedleggsListe.filter {!it.erHoveddokument && it.vedleggsnr.equals("W1", true)}.first()))
 
-		assertTrue(lagretFil != null && lagretFil.id != null && lagretFil.data != null)
+		assertTrue( lagretFil.id != null && lagretFil.data != null)
 		assertTrue(lagretFil.vedleggsid == ettersendingsSoknadDto.vedleggsListe.filter {!it.erHoveddokument && it.vedleggsnr.equals("W1", true)}.first().id)
 
 		testOgSjekkInnsendingAvSoknad(soknadService, ettersendingsSoknadDto)
@@ -156,8 +157,6 @@ class SoknadServiceTest {
 			, lagFilDtoMedFil(ettersendingsSoknadDto2.vedleggsListe.filter {!it.erHoveddokument && it.vedleggsnr.equals("W2", true)}.first()))
 
 		testOgSjekkInnsendingAvSoknad(soknadService, ettersendingsSoknadDto2)
-
-
 	}
 
 
@@ -181,7 +180,7 @@ class SoknadServiceTest {
 		val vedleggDtos = slot<List<VedleggDto>>()
 		every { fillagerAPI.hentFiler(dokumentSoknadDto.innsendingsId!!, capture(vedleggDtos)) } returns dokumentSoknadDto.vedleggsListe
 
-		val vedleggDto = soknadService.hentVedlegg(dokumentSoknadDto.vedleggsListe[0].id!!)
+		val vedleggDto = soknadService.hentVedleggDto(dokumentSoknadDto.vedleggsListe[0].id!!)
 
 		assertEquals(vedleggDto.id, dokumentSoknadDto.vedleggsListe[0].id!!)
 	}
@@ -242,7 +241,7 @@ class SoknadServiceTest {
 */
 
 		assertThrows<Exception> {
-			soknadService.hentVedlegg(lagretVedlegg.id!!)
+			soknadService.hentVedleggDto(lagretVedlegg.id!!)
 		}
 	}
 
@@ -256,6 +255,11 @@ class SoknadServiceTest {
 		soknadService.lagreFil(dokumentSoknadDto.innsendingsId!!, lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.filter {it.erHoveddokument}.first()))
 
 		testOgSjekkInnsendingAvSoknad(soknadService, dokumentSoknadDto)
+
+		assertThrows<IllegalActionException> {
+			soknadService.lagreVedlegg(lagVedleggDto("W2", "Nytt vedlegg", null, null), dokumentSoknadDto.innsendingsId!!)
+		}
+		soknadService.hentSoknad(dokumentSoknadDto.innsendingsId!!)
 
 	}
 
@@ -304,6 +308,9 @@ class SoknadServiceTest {
 
 		assertTrue(filDtoSaved != null)
 		assertTrue(filDtoSaved.id != null)
+
+		val hentetFilDto = soknadService.hentFil(dokumentSoknadDto.innsendingsId!!, vedleggDto.id!!, filDtoSaved.id!!)
+		assertTrue(filDtoSaved.id == hentetFilDto.id)
 
 	}
 
@@ -438,4 +445,31 @@ class SoknadServiceTest {
 		//writeBytesToFile("dummy", ".pdf", dummyHovedDokument)
 
 	}
+
+	@Test
+	fun hentingAvDokumentFeilerNarIngenDokumentOpplastet() {
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, filRepository, brukernotifikasjonPublisher, fillagerAPI, soknadsmottakerAPI )
+
+		// Opprett original soknad
+		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+
+		// Sender inn original soknad
+		assertThrows<ResourceNotFoundException> {
+			soknadService.hentFil(dokumentSoknadDto.innsendingsId!!, dokumentSoknadDto.vedleggsListe.get(0).id!!, 1L)
+		}
+	}
+
+	@Test
+	fun innsendingFeilerNarIngenDokumentOpplastet() {
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, filRepository, brukernotifikasjonPublisher, fillagerAPI, soknadsmottakerAPI )
+
+		// Opprett original soknad
+		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+
+		// Sender inn original soknad
+		assertThrows<IllegalActionException> {
+			testOgSjekkInnsendingAvSoknad(soknadService, dokumentSoknadDto)
+		}
+	}
+
 }

@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
+import java.util.*
 
 @Repository
 interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
@@ -15,7 +16,7 @@ interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
 	fun findAllBySoknadsid(@Param("soknadsid") soknadsid: Long): List<VedleggDbData>
 
 	@Query(value = "FROM VedleggDbData WHERE id = :vedleggsid")
-	fun findByVedleggsid(@Param("vedleggsid") vedleggsid: Long): VedleggDbData?
+	fun findByVedleggsid(@Param("vedleggsid") vedleggsid: Long): Optional<VedleggDbData>
 
 	@Transactional
 	@Modifying

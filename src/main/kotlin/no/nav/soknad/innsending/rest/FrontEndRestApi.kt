@@ -159,15 +159,16 @@ class FrontEndRestApi(val soknadService: SoknadService
 
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll(soknadDto, null)
+
 		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
 		Validerer().validereFilformat(listOf(file.bytes))
 		val fil = KonverterTilPdf().tilPdf(file.bytes)
-		val vedleggsFiler = soknadService.hentFiler(innsendingsId, vedleggsId)
+		val vedleggsFiler = soknadService.hentFiler(soknadDto.id!!, innsendingsId, vedleggsId, true, false)
 		val opplastedeFiler: List<ByteArray> = vedleggsFiler.filter{ it.data != null }.map{ it.data!! }
 		Validerer().validerStorrelse((opplastedeFiler + listOf(fil)), restConfig.maxFileSize )
 
 		// Lagre
-		val lagretFilDto = soknadService.lagreFil(innsendingsId, FilDto(null, vedleggsId, file.originalFilename ?:"", file.contentType ?: "", fil, LocalDateTime.now()))
+		val lagretFilDto = soknadService.lagreFil(innsendingsId, FilDto(null, vedleggsId, file.originalFilename ?:"", "application/pdf", fil, LocalDateTime.now()))
 
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
 		return ResponseEntity
@@ -207,7 +208,7 @@ class FrontEndRestApi(val soknadService: SoknadService
 
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll(soknadDto, null)
-		val filDtoListe = soknadService.hentFiler(innsendingsId, vedleggsId)
+		val filDtoListe = soknadService.hentFiler(soknadDto.id!!, innsendingsId, vedleggsId)
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(filDtoListe)
