@@ -284,14 +284,13 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun lagreFil(innsendingsId: String, filDto: FilDto): FilDto {
+	fun lagreFil(soknadDto: DokumentSoknadDto, filDto: FilDto): FilDto {
 		// TODO Valider opplastet fil, og konverter eventuelt til PDF
-		val soknadDto = hentSoknad(innsendingsId)
 		if (soknadDto.status != SoknadsStatus.Opprettet) {
 			when (soknadDto.status) {
 				SoknadsStatus.Innsendt -> throw IllegalActionException(
 					"Innsendte søknader kan ikke endres. Ønsker søker å gjøre oppdateringer, så må vedkommende ettersende dette",
-					"Søknad $innsendingsId er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til Ditt Nav og søk opp dine saker der")
+					"Søknad ${soknadDto.innsendingsId} er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til Ditt Nav og søk opp dine saker der")
 				SoknadsStatus.SlettetAvBruker, SoknadsStatus.AutomatiskSlettet -> throw IllegalActionException(
 					"Søknader markert som slettet kan ikke endres. Søker må eventuelt opprette ny søknad",
 					"Søknaden er slettet og ingen filer er tilgjengelig")
@@ -300,17 +299,12 @@ class SoknadService(
 		}
 
 		if (soknadDto.vedleggsListe.filter {it.id == filDto.vedleggsid }.isEmpty())
-			throw ResourceNotFoundException(null, "Vedlegg $filDto.vedleggsid til søknad $innsendingsId eksisterer ikke")
-
-		// Sjekk om vedlegget eksisterer
-		val vedleggDtoOpt = hentVedlegg(filDto.vedleggsid)
-		if (!vedleggDtoOpt.isPresent)
-			throw ResourceNotFoundException(null, "Lagring av fil feilet da vedlegg ${filDto.vedleggsid} til søknad $innsendingsId ikke finnes")
+			throw ResourceNotFoundException(null, "Vedlegg $filDto.vedleggsid til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
 		val savedFilDbData = try {
 			filRepository.save(mapTilFilDb(filDto))
 		} catch (ex: Exception) {
-			throw BackendErrorException(ex.message, "Feil ved lagring av fil til søknad $innsendingsId")
+			throw BackendErrorException(ex.message, "Feil ved lagring av fil til på vedlegg ${filDto.vedleggsid} søknad ${soknadDto.innsendingsId}")
 		}
 /* Oppdaterer kun opplastingsstatus i forbindelse med innsending av søknad.
 		if (vedleggDbData.status != OpplastingsStatus.LASTET_OPP) {
@@ -320,14 +314,13 @@ class SoknadService(
 		return lagFilDto(savedFilDbData)
 	}
 
-	fun hentFil(innsendingsId: String, vedleggsId: Long, filId: Long): FilDto {
+	fun hentFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long): FilDto {
 		// Sjekk om vedlegget eksisterer
-		val soknadDto = hentSoknad(innsendingsId)
 		if (soknadDto.status != SoknadsStatus.Opprettet) {
 			when (soknadDto.status) {
 				SoknadsStatus.Innsendt -> throw IllegalActionException(
 					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
-					"Søknad $innsendingsId er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til Ditt Nav og søk opp dine saker der")
+					"Søknad ${soknadDto.innsendingsId} er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til Ditt Nav og søk opp dine saker der")
 				SoknadsStatus.SlettetAvBruker, SoknadsStatus.AutomatiskSlettet -> throw IllegalActionException(
 					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
 					"Søknaden er slettet og ingen filer er tilgjengelig")
@@ -335,23 +328,22 @@ class SoknadService(
 			}
 		}
 		if (soknadDto.vedleggsListe.filter {it.id == vedleggsId }.isEmpty())
-			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad $innsendingsId eksisterer ikke")
+			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
-		val filDbDataOpt = hentFilDb(innsendingsId, vedleggsId, filId)
+		val filDbDataOpt = hentFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
 
 		if (!filDbDataOpt.isPresent)
-			throw ResourceNotFoundException(null, "Det finnes ikke fil med id=$filId for søknad $innsendingsId")
+			throw ResourceNotFoundException(null, "Det finnes ikke fil med id=$filId for søknad ${soknadDto.innsendingsId}")
 
 		return lagFilDto(filDbDataOpt.get())
 	}
 
-	fun hentFiler(id: Long, innsendingsId: String, vedleggsId: Long, medFil: Boolean = false): List<FilDto> {
-		return hentFiler(id, innsendingsId, vedleggsId, medFil, true)
+	fun hentFiler(soknadDto: DokumentSoknadDto, innsendingsId: String, vedleggsId: Long, medFil: Boolean = false): List<FilDto> {
+		return hentFiler(soknadDto, innsendingsId, vedleggsId, medFil, true)
 	}
 
-	fun hentFiler(id: Long, innsendingsId: String, vedleggsId: Long, medFil: Boolean = false, kastFeilNarNull: Boolean = true): List<FilDto> {
+	fun hentFiler(soknadDto: DokumentSoknadDto, innsendingsId: String, vedleggsId: Long, medFil: Boolean = false, kastFeilNarNull: Boolean = true): List<FilDto> {
 		// Sjekk om vedlegget eksisterer for soknad og at soknaden er i status opprettet
-		val soknadDto = hentSoknad(innsendingsId)
 		if (soknadDto.status != SoknadsStatus.Opprettet) {
 			when (soknadDto.status) {
 				SoknadsStatus.Innsendt -> throw IllegalActionException(
@@ -373,14 +365,13 @@ class SoknadService(
 		return filDbDataList.map { lagFilDto(it, medFil) }
 	}
 
-	fun slettFil(innsendingsId: String, vedleggsId: Long, filId: Long) {
+	fun slettFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long) {
 		// Sjekk og vedlegget eksisterer
-		val soknadDto = hentSoknad(innsendingsId)
 		if (soknadDto.status != SoknadsStatus.Opprettet) {
 			when (soknadDto.status) {
 				SoknadsStatus.Innsendt -> throw IllegalActionException(
 					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
-					"Søknad $innsendingsId er sendt inn og kan ikke endres.")
+					"Søknad ${soknadDto.innsendingsId} er sendt inn og kan ikke endres.")
 				SoknadsStatus.SlettetAvBruker, SoknadsStatus.AutomatiskSlettet -> throw IllegalActionException(
 					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
 					"Søknaden er slettet og ingen filer er tilgjengelig")
@@ -388,9 +379,9 @@ class SoknadService(
 			}
 		}
 		if (soknadDto.vedleggsListe.filter {it.id == vedleggsId }.isEmpty())
-			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad $innsendingsId eksisterer ikke")
+			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
-		slettFilDb(innsendingsId, vedleggsId, filId)
+		slettFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
 /* Setter opplastingsstatus på vedlegg kun i forbindelse med innsending av søknad
 		if (filRepository.findNumberOfFilesByVedleggsid(vedleggDbData.id!!) == 0) {
 			vedleggRepository.updateStatus(vedleggDbData.id!!, OpplastingsStatus.IKKE_VALGT, LocalDateTime.now())
@@ -400,7 +391,7 @@ class SoknadService(
 
 	// Slett opprettet soknad gitt innsendingsId
 	@Transactional
-	fun slettSoknadAvBruker(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
+	fun slettSoknadAvBruker(dokumentSoknadDto: DokumentSoknadDto) {
 		// slett vedlegg og soknad
 		if (dokumentSoknadDto.status != SoknadsStatus.Opprettet)
 			throw IllegalActionException(
@@ -411,7 +402,7 @@ class SoknadService(
 		//fillagerAPI.slettFiler(innsendingsId, dokumentSoknadDto.vedleggsListe)
 		slettSoknad(dokumentSoknadDto)
 
-		val slettetSoknad = lagDokumentSoknadDto(mapTilSoknadDb(dokumentSoknadDto, innsendingsId, SoknadsStatus.SlettetAvBruker)
+		val slettetSoknad = lagDokumentSoknadDto(mapTilSoknadDb(dokumentSoknadDto, dokumentSoknadDto.innsendingsId!!, SoknadsStatus.SlettetAvBruker)
 			, dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id!!)})
 		publiserBrukernotifikasjon(slettetSoknad)
 	}
@@ -462,16 +453,15 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun slettVedlegg(innsendingsId: String, vedleggsId: Long) {
-		val soknadDto = hentSoknad(innsendingsId)
+	fun slettVedlegg(soknadDto: DokumentSoknadDto, vedleggsId: Long) {
 		if (soknadDto.status != SoknadsStatus.Opprettet)
 			throw IllegalActionException(
 				"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
-				"Søknad $innsendingsId kan ikke endres da den allerede er innsendt")
+				"Søknad ${soknadDto.innsendingsId} kan ikke endres da den allerede er innsendt")
 
 		val vedleggDto = soknadDto.vedleggsListe.filter { it.id == vedleggsId }.firstOrNull()
 		if ( vedleggDto == null )
-			throw ResourceNotFoundException(null, "Angitt vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId")
+			throw ResourceNotFoundException(null, "Angitt vedlegg $vedleggsId eksisterer ikke for søknad ${soknadDto.innsendingsId}")
 
 		if (vedleggDto.erHoveddokument)
 			throw IllegalActionException("Søknaden må alltid ha sitt hovedskjema", "Kan ikke slette hovedskjema på en søknad")
@@ -490,7 +480,7 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun sendInnSoknad(innsendingsId: String) {
+	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto) {
 
 		// Det er ikke nødvendig å opprette og lagre kvittering(L7) i følge diskusjon 3/11.
 
@@ -498,8 +488,7 @@ class SoknadService(
 		// dersom det ikke er lastet opp filer på et obligatoris vedlegg, skal status settes SENDES_SENERE
 		// etter at vedleggsfilen er overført soknadsfillager, skal lokalt lagrede filer på vedlegget slettes.
 
-		var soknadDto = hentSoknad(innsendingsId)
-
+		var soknadDto = soknadDtoInput
 		if (soknadDto.ettersendingsId != null) {
 			// Hvis ettersending, så må det genereres et dummy hoveddokument
 			val hovedDokumentDto = soknadDto.vedleggsListe.filter { it.erHoveddokument && !it.erVariant }.first()
@@ -508,8 +497,8 @@ class SoknadService(
 			} catch (ex: Exception) {
 				throw BackendErrorException(ex.message, "Feil ved generering av skjema for ettersending")
 			}
-			lagreFil(innsendingsId, FilDto(null, hovedDokumentDto.id!!, hovedDokumentDto.vedleggsnr!!, "application/pdf", dummySkjema, LocalDateTime.now() ))
-			soknadDto = hentSoknad(innsendingsId)
+			lagreFil(soknadDto, FilDto(null, hovedDokumentDto.id!!, hovedDokumentDto.vedleggsnr!!, "application/pdf", dummySkjema, LocalDateTime.now() ))
+			soknadDto = hentSoknad(soknadDto.innsendingsId!!)
 		}
 
 		// Vedleggsliste med opplastede dokument og status= LASTET_OPP for de som skal sendes soknadsfillager
@@ -538,7 +527,7 @@ class SoknadService(
 
 		// oppdater databasen med status og innsendingsdato
 		opplastedeVedlegg. forEach { vedleggRepository.save(mapTilVedleggDb(it, soknadDto.id!!, OpplastingsStatus.INNSENDT)) }
-		alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatus.IKKE_VALGT }. forEach { oppdaterVedlegg(innsendingsId, mapTilVedleggDb(it, soknadDto.id!!, OpplastingsStatus.SEND_SENERE)) }
+		alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatus.IKKE_VALGT }. forEach { oppdaterVedlegg(soknadDto.innsendingsId!!, mapTilVedleggDb(it, soknadDto.id!!, OpplastingsStatus.SEND_SENERE)) }
 
 		try {
 			vedleggRepository.flush()
@@ -552,7 +541,7 @@ class SoknadService(
 			throw BackendErrorException(ex.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV")
 		}
 		// send brukernotifikasjon
-		publiserBrukernotifikasjon(hentSoknad(innsendingsId))
+		publiserBrukernotifikasjon(hentSoknad(soknadDto.innsendingsId!!))
 	}
 
 
@@ -564,16 +553,16 @@ class SoknadService(
 
 		// Listen av varianter av hoveddokumenter, hent lagrede filer og opprett
 		soknadDto.vedleggsListe.filter{ it.erHoveddokument }.forEach {
-			vedleggDtos.add(lagVedleggDtoMedOpplastetFil(hentOgMergeVedleggsFiler(soknadDto.id!!, soknadDto.innsendingsId!!, it), it) ) }
+			vedleggDtos.add(lagVedleggDtoMedOpplastetFil(hentOgMergeVedleggsFiler(soknadDto, soknadDto.innsendingsId!!, it), it) ) }
 		// For hvert øvrige vedlegg merge filer og legg til
 		soknadDto.vedleggsListe.filter { !it.erHoveddokument}.forEach {
-			val filDto = hentOgMergeVedleggsFiler(soknadDto.id!!, soknadDto.innsendingsId!!, it)
+			val filDto = hentOgMergeVedleggsFiler(soknadDto, soknadDto.innsendingsId!!, it)
 			if (filDto != null) vedleggDtos.add(lagVedleggDtoMedOpplastetFil(filDto, it)) }
 		return vedleggDtos
 	}
 
-	private fun hentOgMergeVedleggsFiler(id: Long, innsendingsId: String, vedleggDto: VedleggDto): FilDto? {
-		val filer = hentFiler(id, innsendingsId, vedleggDto.id!!, true, false).filter { it.data != null }
+	private fun hentOgMergeVedleggsFiler(soknadDto: DokumentSoknadDto, innsendingsId: String, vedleggDto: VedleggDto): FilDto? {
+		val filer = hentFiler(soknadDto, innsendingsId, vedleggDto.id!!, true, false).filter { it.data != null }
 		if (filer.isNullOrEmpty()) return null
 
 		val vedleggsFil: ByteArray? =
