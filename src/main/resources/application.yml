@@ -19,6 +19,11 @@ spring:
     activate:
       on-profile: test | default | spring
 
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
 restconfig:
   version: 1.0
   password: password
@@ -64,6 +69,11 @@ spring:
   config:
     activate:
       on-profile: dev | prod | docker
+
+  servlet:
+    multipart:
+      max-file-size: ${MAX_FILE_SIZE}MB
+      max-request-size: ${MAX_FILE_SIZE}MB
 
 restconfig:
   version: ${APP_VERSION}

@@ -362,9 +362,13 @@ class SoknadServiceTest {
 			"application/pdf", getBytesFromFile("/litenPdf.pdf"), true, erVariant = false,
 			true, vedleggDto.skjemaurl, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
 
-	private fun lagFilDtoMedFil(vedleggDto: VedleggDto) =
-		FilDto(null, vedleggDto.id!!, "Opplastet fil",
-			"application/pdf", getBytesFromFile("/litenPdf.pdf"),  LocalDateTime.now())
+	private fun lagFilDtoMedFil(vedleggDto: VedleggDto): FilDto {
+		val fil = getBytesFromFile("/litenPdf.pdf")
+		return FilDto(
+			null, vedleggDto.id!!, "Opplastet fil",
+			"application/pdf", fil.size, fil, LocalDateTime.now()
+		)
+	}
 
 	private fun getBytesFromFile(path: String): ByteArray {
 		val resourceAsStream = SoknadServiceTest::class.java.getResourceAsStream(path)

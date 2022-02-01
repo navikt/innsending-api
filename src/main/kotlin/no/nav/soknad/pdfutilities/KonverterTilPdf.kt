@@ -1,5 +1,7 @@
 package no.nav.soknad.pdfutilities
 
+import no.nav.soknad.innsending.exceptions.BackendErrorException
+import no.nav.soknad.innsending.exceptions.IllegalActionException
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -10,6 +12,7 @@ import org.apache.pdfbox.pdmodel.font.PDFont
 import org.apache.pdfbox.pdmodel.font.PDType0Font
 import org.apache.pdfbox.pdmodel.graphics.color.PDOutputIntent
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm
 import org.apache.xmpbox.XMPMetadata
 import org.apache.xmpbox.schema.DublinCoreSchema
 import org.apache.xmpbox.schema.PDFAIdentificationSchema
@@ -17,6 +20,7 @@ import org.apache.xmpbox.type.BadFieldValueException
 import org.apache.xmpbox.xml.XmpSerializer
 import org.slf4j.LoggerFactory
 import java.awt.Dimension
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import javax.xml.transform.TransformerException
@@ -27,19 +31,39 @@ class KonverterTilPdf {
 
 	fun tilPdf(fil: ByteArray): ByteArray {
 		if (FiltypeSjekker().isPdf(fil)) {
-			return flatUtPdf(fil)
+			return flatUtPdf(fil) // Bare hvis inneholder formfields?
 		} else if (FiltypeSjekker().isImage(fil)) {
 			return createPDFFromImage(fil)
 		}
-		throw Exception("Ulovlig filformat. Kan ikke konvertere til PDF")
+		throw IllegalActionException("","Ulovlig filformat. Kan ikke konvertere til PDF")
+	}
+
+	fun harSkrivbareFelt(input: ByteArray?): Boolean {
+		try {
+			ByteArrayInputStream(input).use { inputStream ->
+				PDDocument.load(inputStream).use { pdfDocument ->
+					val acroForm = getAcroForm(pdfDocument)
+					return acroForm != null
+				}
+			}
+		} catch (e: Exception) {
+			throw BackendErrorException(e.message, "Feil ved mottak av opplastet fil")
+		}
+	}
+
+	private fun getAcroForm(pdfDocument: PDDocument): PDAcroForm? {
+		return pdfDocument.documentCatalog.acroForm
 	}
 
 	fun flatUtPdf(fil: ByteArray): ByteArray {
 		// Konvertere fra PDF til bilde og tilbake til PDF
+		if (harSkrivbareFelt(fil)) {
 		val images = KonverterTilPng().konverterTilPng(fil)
 		val pdfList = mutableListOf<ByteArray>()
 		for (i in 0..images.size-1) pdfList.add(createPDFFromImage(images[i]))
 		return PdfMerger().mergePdfer(pdfList)
+		}
+		return fil
 	}
 
 	fun createPDFFromImage(image: ByteArray): ByteArray {

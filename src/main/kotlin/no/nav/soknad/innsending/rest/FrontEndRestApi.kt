@@ -12,11 +12,13 @@ import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.pdfutilities.KonverterTilPdf
 import no.nav.soknad.pdfutilities.Validerer
 import org.hibernate.annotations.common.util.impl.LoggerFactory
+import org.springframework.core.io.InputStreamResource
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import java.io.ByteArrayInputStream
 import java.time.LocalDateTime
 import java.util.*
 
@@ -171,12 +173,12 @@ class FrontEndRestApi(val soknadService: SoknadService
 		Validerer().validereFilformat(listOf(file.bytes))
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
 		val fil = KonverterTilPdf().tilPdf(file.bytes)
-		val vedleggsFiler = soknadService.hentFiler(soknadDto, innsendingsId, vedleggsId, true, false)
-		val opplastedeFiler: List<ByteArray> = vedleggsFiler.filter{ it.data != null }.map{ it.data!! }
-		Validerer().validerStorrelse((opplastedeFiler + listOf(fil)), restConfig.maxFileSize )
+		val vedleggsFiler = soknadService.hentFiler(soknadDto, innsendingsId, vedleggsId, false, false)
+		val opplastetFilStorrelse: Int = vedleggsFiler.filter {it.storrelse != null }.sumOf { it.storrelse!! }
+		Validerer().validerStorrelse(opplastetFilStorrelse + fil.size, restConfig.maxFileSize )
 
 		// Lagre
-		val lagretFilDto = soknadService.lagreFil(soknadDto, FilDto(null, vedleggsId, file.originalFilename ?:"", "application/pdf", fil, LocalDateTime.now()))
+		val lagretFilDto = soknadService.lagreFil(soknadDto, FilDto(null, vedleggsId, file.originalFilename ?:"", "application/pdf", fil.size, fil, LocalDateTime.now()))
 
 		logger.info("Lagret fil ${lagretFilDto.id} på vedlegg $vedleggsId til søknad $innsendingsId")
 		return ResponseEntity
@@ -204,7 +206,8 @@ class FrontEndRestApi(val soknadService: SoknadService
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.contentType(MediaType.APPLICATION_PDF)
-			.body(filDto.data!!)
+			.contentLength(filDto.data?.size?.toLong()!!)
+			.body(filDto.data)
 	}
 
 	@Operation(summary = "Requests fetching information on all uploaded files on an attachment.", tags = ["operations"])
@@ -323,7 +326,7 @@ class FrontEndRestApi(val soknadService: SoknadService
 			 , OpplastingsStatus.IKKE_VALGT, LocalDateTime.now())
 
 	private fun lagDummyfil(vedleggsId: Long, filId: Long? = 1L) =
-		FilDto(filId, vedleggsId, "filnavn", "application/pdf", ByteArray(1), LocalDateTime.now())
+		FilDto(filId, vedleggsId, "filnavn", "application/pdf", 1, ByteArray(1), LocalDateTime.now())
 
 	private fun lagVedleggsListe(skjemanr: String, vedleggsListe: List<String>?): List<VedleggDto> {
 		val mainListeDto = listOf(lagDummyVedlegg(skjemanr))

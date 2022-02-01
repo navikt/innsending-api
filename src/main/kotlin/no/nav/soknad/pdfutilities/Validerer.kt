@@ -28,10 +28,8 @@ class Validerer() {
 		}
 	}
 
-	fun validerStorrelse(files: List<ByteArray>, max: Int) {
-		var storrelse = 0
-		files.forEach {storrelse += it.size}
-		if (storrelse > max) {
+	fun validerStorrelse(opplastet: Int, max: Int) {
+		if (opplastet > max) {
 			throw Exception("Opplastede fil(er) er større enn maksimalt tillatt")
 		}
 	}
