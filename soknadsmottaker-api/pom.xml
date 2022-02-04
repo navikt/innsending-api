@@ -67,7 +67,7 @@
 							<inputSpec>${project.basedir}/src/main/resources/soknadsmottaker-api.yml</inputSpec>
 							<generatorName>kotlin</generatorName>
 							<apiPackage>no.nav.soknad.arkivering.soknadsmottaker.api</apiPackage>
-							<modelPackage>no.nav.soknad.arkivering.soknandsmottaker.model</modelPackage>
+							<modelPackage>no.nav.soknad.arkivering.soknadsmottaker.model</modelPackage>
 							<configOptions>
 								<serializationLibrary>jackson</serializationLibrary>
 								<omitGradlePluginVersions>true</omitGradlePluginVersions>

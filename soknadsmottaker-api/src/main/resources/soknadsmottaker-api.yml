@@ -8,7 +8,7 @@ info:
     email: team-soknad@nav.no
   license:
     name: MIT License
-    url: https://github.com/navikt/soknadsfillager/blob/main/LICENSE
+    url: https://github.com/navikt/soknadsmottaker/blob/main/LICENSE
 tags:
   - name: receive
     description: Receives benefit applications

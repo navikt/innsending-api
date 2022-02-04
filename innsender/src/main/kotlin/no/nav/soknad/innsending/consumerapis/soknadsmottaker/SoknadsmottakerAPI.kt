@@ -1,12 +1,12 @@
 package no.nav.soknad.innsending.consumerapis.soknadsmottaker
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import no.nav.soknad.arkivering.soknadsfillager.infrastructure.ApiClient
-import no.nav.soknad.arkivering.soknadsfillager.infrastructure.Serializer
-import no.nav.soknad.arkivering.soknandsmottaker.model.Soknad
-import no.nav.soknad.arkivering.soknandsmottaker.model.DocumentData
-import no.nav.soknad.arkivering.soknandsmottaker.model.Varianter
+import no.nav.soknad.arkivering.soknadsmottaker.model.Soknad
+import no.nav.soknad.arkivering.soknadsmottaker.model.DocumentData
+import no.nav.soknad.arkivering.soknadsmottaker.model.Varianter
 import no.nav.soknad.arkivering.soknadsmottaker.api.SoknadApi
+import no.nav.soknad.arkivering.soknadsmottaker.infrastructure.ApiClient
+import no.nav.soknad.arkivering.soknadsmottaker.infrastructure.Serializer
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.dto.DokumentSoknadDto
 import no.nav.soknad.innsending.dto.VedleggDto
