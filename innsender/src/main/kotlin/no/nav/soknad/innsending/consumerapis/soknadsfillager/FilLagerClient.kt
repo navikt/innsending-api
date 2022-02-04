@@ -20,6 +20,16 @@ class FilLagerClient(private val restConfig: RestConfig,
 	private val filesInOneRequestToFilestorage = 5
 	private val logger = LoggerFactory.getLogger(javaClass)
 
+	fun ping() = healthCheck(restConfig.filestorageHost + "/internal/ping")
+	fun isReady() = healthCheck(restConfig.filestorageHost + "/internal/isReady")
+
+	private fun healthCheck(uri: String) = webClient
+		.get()
+		.uri(uri)
+		.retrieve()
+		.bodyToMono(String::class.java)
+		.block()!!
+
 	fun hentFiler(filer: List<FilElementDto>): List<FilElementDto> {
 		val fileIds = filer.stream().map {e -> e.uuid}.collect(Collectors.toList())
 		try {

@@ -17,6 +17,7 @@ class RestConfig(private val profileConfig: ProfileConfig) {
 	lateinit var filestorageHost: String
 	lateinit var filestorageEndpoint: String
 	lateinit var filestorageParameters: String
+	var filesInOneRequestToFilestorage by Delegates.notNull<Int>()
 	lateinit var soknadsMottakerHost: String
 	lateinit var soknadsMottakerEndpoint: String
 

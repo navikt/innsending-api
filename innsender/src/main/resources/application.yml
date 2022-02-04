@@ -26,6 +26,7 @@ spring:
 
 restconfig:
   version: 1.0
+  username: srvuser
   password: password
   sharedUsername: shareduser
   sharedPassword: password
@@ -34,7 +35,8 @@ restconfig:
   sanityEndpoint: /soknadsveiviserproxy/skjemautlisting
   filestorageHost: http://localhost:9042
   filestorageEndpoint: /filer
-  filestorageParameters: ?ids=
+  filestorageParameters: /
+  filesInOneRequestToFilestorage: 10
   soknadsMottakerHost: http://localhost:9043
   soknadsMottakerEndpoint: /save
 
@@ -77,6 +79,7 @@ spring:
 
 restconfig:
   version: ${APP_VERSION}
+  username: ${APPLICATION_USERNAME}
   password: ${APPLICATION_PASSWORD}
   sharedUsername: ${SHARED_USERNAME}
   sharedPassword: ${SHARED_PASSWORD}
@@ -86,6 +89,7 @@ restconfig:
   filestorageHost: ${FILESTORAGE_HOST}
   filestorageEndpoint: ${FILESTORAGE_ENDPOINT}
   filestorageParameters: ${FILESTORAGE_PARAMETERS}
+  filesInOneRequestToFilestorage: 10
   soknadsMottakerHost: ${SOKNADSMOTTAKER_HOST}
   soknadsMottakerEndpoint: ${SOKNADSMOTTAKER_ENDPOINT}
 

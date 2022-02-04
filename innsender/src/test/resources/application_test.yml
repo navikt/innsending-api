@@ -25,6 +25,7 @@ restconfig:
   filestorageHost: http://localhost:9042}
   filestorageEndpoint: /filer
   filestorageParameters: ?ids=
+  filesInOneRequestToFilestorage: 10
   soknadsMottakerHost: http://localhost:9043
   soknadsMottakerEndpoint: /save
 

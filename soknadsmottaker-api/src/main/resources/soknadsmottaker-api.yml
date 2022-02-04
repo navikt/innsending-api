@@ -1,0 +1,141 @@
+openapi: 3.0.3
+info:
+  description: Receives metadata about benefit applications and puts them on a Kafka topic.
+  version: 2.0.0
+  title: Soknadsmottaker
+  contact:
+    name: team-soknad
+    email: team-soknad@nav.no
+  license:
+    name: MIT License
+    url: https://github.com/navikt/soknadsfillager/blob/main/LICENSE
+tags:
+  - name: receive
+    description: Receives benefit applications
+
+paths:
+  /soknad:
+    post:
+      summary: Receives benefit application
+      description: Receives a benefit application, which will lead to it being put on a Kafka topic and archived.
+      operationId: receive
+
+      requestBody:
+        description: Metadata about the benefit application being sent in.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Soknad"
+        required: true
+
+      responses:
+        200:
+          description: Successful operation
+      tags:
+        - soknad
+
+components:
+  schemas:
+    Soknad:
+      type: object
+      required:
+        - innsendingId
+        - erEttersendelse
+        - personId
+        - tema
+        - dokumenter
+      properties:
+        innsendingId:
+          type: string
+          description: >
+            Unik id for forsendelsen. Denne **må** være unik. Id brukes på flere måter;
+            dels for sporing gjennom verdikjeden, dels som key på Kafka-topicen som Soknadsarkiverer leser. I tillegg
+            blir id sendt inn til Joark. Id blir lagret i joark sin journalpost i kolonnen `eksternReferanseId`. Hvis id
+            ikke er unik vil Joark svare med, `HttpStatus=Conflict`. Dette for å hindre at samme forsendelse arkiveres
+            flere ganger.
+          example: 2f9b8d25-1056-4827-8ddd-cedab7fafaaf
+        erEttersendelse:
+          type: boolean
+          description: Markerer hvis dette er en ettersendelse til en tidligere insendt Soknad.
+          example: true
+        personId:
+          type: string
+          description: Brukerens fødselsnummer (11 siffer).
+          example: 10108000398
+        tema:
+          type: string
+          description: Temaet som forsendelsen tilhører.
+          example: AAP
+        dokumenter:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentData"
+          description: Hver Soknad kan ha flere vedlegg. Denne listen beskriver metadata om disse dokumentene.
+
+    DocumentData:
+      type: object
+      required:
+        - skjemanummer
+        - erHovedskjema
+        - tittel
+        - varianter
+      properties:
+        skjemanummer:
+          type: string
+          description: Skjemanummer/vedleggsnummer som dokumentet gjelder.
+          example: NAV 11-12.12
+        erHovedskjema:
+          type: boolean
+          description: >
+            Markerer hvis dette er hovedskjemaet for innsendingen. Kun ett dokument kan være markert med
+            `erHovedskjema = true`.
+          example: true
+        tittel:
+          type: string
+          description: Tittel på dokumentet.
+          example: Søknad om tilleggsstønader
+        varianter:
+          type: array
+          items:
+            $ref: "#/components/schemas/Varianter"
+          description: >
+            Det kan sendes inn flere varianter av samme dokument; for eksempel kan én søknaden sendes inn med en PDF/A
+            og en json variant av søknaden.
+            Denne lista inneholder metadata, der hver variant representerer en fysisk fil.
+
+    Varianter:
+      type: object
+      required:
+        - id
+        - mediaType
+        - filnavn
+        - filtype
+      properties:
+        id:
+          type: string
+          description: Unikt id på fila. En fil med dette id må ha blitt sendt til Soknadsfillager.
+          example: 18777177-eba3-4f58-b9b9-694e7171a030
+        mediaType:
+          type: string
+          description: Hva for [Media type](https://en.wikipedia.org/wiki/Media_type) fila har.
+          example: application/pdf
+        filnavn:
+          type: string
+          description: Navn for systemdefinerte filer, eller navn spesifisert av bruker.
+          example: tilleggsstonader.xml
+        filtype:
+          type: string
+          description: Metadata about attached documents
+          example: XML
+
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+
+security:
+  - basicAuth: []
+
+externalDocs:
+  description: Documentation of the whole archiving system
+  url: https://github.com/navikt/archiving-infrastructure/wiki
