@@ -242,9 +242,9 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun opprettEllerOppdaterSoknad(dokumentSoknadDto: DokumentSoknadDto): String {
-		val innsendingsId = dokumentSoknadDto.innsendingsId ?: Utilities.laginnsendingsId()
-		// Hvis soknad ikke eksisterer må den lagres, før vedleggene
+	fun opprettNySoknad(dokumentSoknadDto: DokumentSoknadDto): String {
+		val innsendingsId = Utilities.laginnsendingsId()
+		// Hvis soknad må lagres, før vedleggene
 		val savedSoknadDbData = lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId))
 		val soknadsid = savedSoknadDbData.id
 		val savedVedleggDbData = dokumentSoknadDto.vedleggsListe

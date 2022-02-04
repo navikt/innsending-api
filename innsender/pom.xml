@@ -211,6 +211,16 @@
 			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-ui</artifactId>
+			<version>${springdoc.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-kotlin</artifactId>
+			<version>${springdoc.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -331,10 +341,16 @@
 
 	<repositories>
 		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
+<!--
+		<repository>
 			<id>github</id>
 			<name>nav github</name>
 			<url>https://github-package-registry-mirror.gc.nav.no/cached/maven-release</url>
 		</repository>
+-->
 		<repository>
 			<id>confluent</id>
 			<url>https://packages.confluent.io/maven</url>
@@ -342,10 +358,6 @@
 		<repository>
 			<id>central</id>
 			<url>https://repo1.maven.org/maven2</url>
-		</repository>
-		<repository>
-			<id>jitpack.io</id>
-			<url>https://jitpack.io</url>
 		</repository>
 	</repositories>
 
