@@ -12,9 +12,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
-	<groupId>no.nav.soknad.dokument</groupId>
+	<groupId>no.nav.soknad.innsending</groupId>
 	<artifactId>innsending-api</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>innsending-api</name>
 	<description>Tjeneste for mottak av dokumenter og videresending til soknadsmottakstjenesten</description>
 

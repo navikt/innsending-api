@@ -3,9 +3,9 @@
 				 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>no.nav.soknad.dokument</groupId>
+		<groupId>no.nav.soknad.innsending</groupId>
 		<artifactId>innsending-api</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>1.0.0</version>
 	</parent>
 
 	<artifactId>soknadsfillager-api</artifactId>
@@ -65,7 +65,7 @@
 								<serializationLibrary>jackson</serializationLibrary>
 								<omitGradlePluginVersions>true</omitGradlePluginVersions>
 								<groupId>no.nav.soknad.arkivering</groupId>
-								<artifactId>soknadsfillager-api</artifactId>
+								<artifactId>soknadsfillager-client</artifactId>
 								<packageName>no.nav.soknad.arkivering.soknadsfillager</packageName>
 							</configOptions>
 						</configuration>

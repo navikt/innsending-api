@@ -2,12 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 				 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<parent>
-		<artifactId>innsending-api</artifactId>
-		<groupId>no.nav.soknad.dokument</groupId>
-		<version>1.0.0-SNAPSHOT</version>
-	</parent>
 	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>no.nav.soknad.innsending</groupId>
+		<artifactId>innsending-api</artifactId>
+		<version>1.0.0</version>
+	</parent>
 
 	<artifactId>innsender</artifactId>
 	<name>innsender</name>
@@ -201,14 +201,14 @@
 			<version>${imgscalr-lib.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>no.nav.soknad.dokument</groupId>
-			<artifactId>soknadsfillager-client</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<groupId>no.nav.soknad.innsending</groupId>
+			<artifactId>soknadsfillager-api</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>no.nav.soknad.dokument</groupId>
+			<groupId>no.nav.soknad.innsending</groupId>
 			<artifactId>soknadsmottaker-api</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 
 		<dependency>
