@@ -20,6 +20,8 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.collections.HashMap
+import kotlin.streams.toList
 
 @Service
 class SoknadService(
@@ -256,6 +258,20 @@ class SoknadService(
 		return innsendingsId
 	}
 
+	fun hentAktiveSoknader(brukerIds: List<String>): List<DokumentSoknadDto>  {
+		var soknader = mutableListOf<DokumentSoknadDto>()
+		brukerIds.stream()
+			.forEach {soknader.addAll(hentSoknadGittBrukerId(it))}
+		return soknader
+	}
+
+	private fun hentSoknadGittBrukerId(brukerId: String): List<DokumentSoknadDto> {
+		val soknader = soknadRepository.findByBrukeridAndStatus(brukerId, SoknadsStatus.Opprettet)
+
+		return soknader.stream()
+			.map { hentAlleVedlegg(it)}
+			.toList()
+	}
 
 	// Hent soknad gitt id med alle vedlegg. Merk at eventuelt dokument til vedlegget hentes ikke
 	fun hentSoknad(id: Long): DokumentSoknadDto {

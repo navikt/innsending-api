@@ -80,6 +80,22 @@ class FrontEndRestApi(val soknadService: SoknadService
 			.body(dokumentSoknadDto)
 	}
 
+	@Operation(summary = "Requests fetching all the aplicant's active applications.", tags = ["operations"])
+	@ApiResponses(value = [ApiResponse(responseCode = "200",
+		description = "If successful, it will return list of DokumentSoknadDto."
+	)])
+	@GetMapping("/soknad")
+	fun hentAktiveOpprettedeSoknader(): ResponseEntity<List<DokumentSoknadDto>> {
+		logger.info("Kall for å hente alle opprette ikke innsendte søknader")
+		val brukerIds = hentBrukerIdents()
+		val dokumentSoknadDtos = soknadService.hentAktiveSoknader(brukerIds)
+		logger.info("Hentet søknader opprettet av bruker")
+		return ResponseEntity
+			.status(HttpStatus.OK)
+			.body(dokumentSoknadDtos)
+	}
+
+
 	@Operation(summary = "Requests fetching a previously created application.", tags = ["operations"])
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
 			description = "If successful, it will return DokumentSoknadDto which contains the title, and a list of planned " +
@@ -304,8 +320,13 @@ class FrontEndRestApi(val soknadService: SoknadService
 	}
 
 	private fun tilgangskontroll(soknadDto: DokumentSoknadDto?, brukerId: String?) {
-		if (brukerId == null || soknadDto?.brukerId.equals(brukerId)) return //TODO hente ut brukerId fra token
+		val idents = hentBrukerIdents()
+		if (idents.contains(soknadDto?.brukerId)) return
 		throw RuntimeException("Søknad finnes ikke eller er ikke tilgjengelig for innlogget bruker")
+	}
+
+	private fun hentBrukerIdents(): List<String> { //TODO hente brukerId fra token og hent brukers identer fra PDL
+		return listOf("12345678901", "12345678902")
 	}
 
 	private fun emptyDokumentSoknad(innsendingsId: String): DokumentSoknadDto =

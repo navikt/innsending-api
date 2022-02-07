@@ -172,6 +172,23 @@ class SoknadServiceTest {
 	}
 
 	@Test
+	fun hentOpprettedeAktiveSoknadsDokument() {
+		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, filRepository, brukernotifikasjonPublisher, fillagerAPI, soknadsmottakerAPI )
+
+		testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"), "12345678901")
+		testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"), "12345678901")
+		testOgSjekkOpprettingAvSoknad(soknadService, listOf("W2"), "12345678902")
+		testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"), "12345678903")
+
+		val dokumentSoknadDtos = soknadService.hentAktiveSoknader(listOf("12345678901", "12345678902"))
+
+		assertTrue(dokumentSoknadDtos.filter { listOf("12345678901", "12345678902").contains(it.brukerId)}.size == 3)
+		assertTrue(dokumentSoknadDtos.filter { listOf("12345678903").contains(it.brukerId)}.size == 0)
+
+	}
+
+
+	@Test
 	fun hentOpprettetVedlegg() {
 		val soknadService = SoknadService(skjemaService, soknadRepository, vedleggRepository, filRepository, brukernotifikasjonPublisher, fillagerAPI, soknadsmottakerAPI )
 
@@ -263,8 +280,7 @@ class SoknadServiceTest {
 
 	}
 
-	private fun testOgSjekkOpprettingAvSoknad(soknadService: SoknadService, vedleggsListe: List<String> = listOf()): DokumentSoknadDto {
-		val brukerid = "12345678901"
+	private fun testOgSjekkOpprettingAvSoknad(soknadService: SoknadService, vedleggsListe: List<String> = listOf(), brukerid: String = "12345678901"): DokumentSoknadDto {
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
 		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, vedleggsListe)
@@ -276,6 +292,11 @@ class SoknadServiceTest {
 		assertTrue(dokumentSoknadDto.vedleggsListe.size == vedleggsListe.size+1)
 
 		return dokumentSoknadDto
+
+	}
+
+	private fun testOgSjekkOpprettingAvSoknad(soknadService: SoknadService, vedleggsListe: List<String> = listOf()): DokumentSoknadDto {
+		return testOgSjekkOpprettingAvSoknad(soknadService, vedleggsListe, "12345678901")
 	}
 
 	private fun testOgSjekkInnsendingAvSoknad(soknadService: SoknadService, dokumentSoknadDto: DokumentSoknadDto) {
