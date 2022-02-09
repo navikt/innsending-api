@@ -2,45 +2,55 @@ package no.nav.soknad.innsending.consumerapis.soknadsfillager
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import no.nav.soknad.arkivering.soknadsfillager.api.FilesApi
+import no.nav.soknad.arkivering.soknadsfillager.api.HealthApi
 //import no.nav.soknad.arkivering.soknadsfillager.api.HealthApi
 import no.nav.soknad.arkivering.soknadsfillager.infrastructure.ApiClient
 import no.nav.soknad.arkivering.soknadsfillager.infrastructure.Serializer.jacksonObjectMapper
 import no.nav.soknad.arkivering.soknadsfillager.model.FileData
 import no.nav.soknad.innsending.config.RestConfig
+import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.dto.VedleggDto
 import no.nav.soknad.innsending.repository.OpplastingsStatus
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import java.time.ZoneOffset
 import kotlin.streams.toList
 
 @Service
-class FillagerAPI(private val restConfig: RestConfig) {
+@Profile("dev | prod")
+@Qualifier("fillager")
+class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	private val filesApi: FilesApi
-//	private val healthApi: HealthApi
+	private val healthApi: HealthApi
 
 	init {
 		jacksonObjectMapper.registerModule(JavaTimeModule())
 		ApiClient.username = restConfig.sharedUsername
 		ApiClient.password = restConfig.sharedPassword
 		filesApi = FilesApi(restConfig.filestorageHost)
-//		healthApi = HealthApi(restConfig.filestorageHost)
+		healthApi = HealthApi(restConfig.filestorageHost)
 	}
 
-	fun ping(): String {
-//		healthApi.ping()
+	override fun ping(): String {
+		healthApi.ping()
 		return "pong"
 	}
-	fun isReady(): String {
-//		healthApi.isReady()
+	override fun isReady(): String {
+		//healthApi.isReady()
+		return "ok"
+	}
+	override fun isAlive(): String {
+		//healthApi.isReady()
 		return "ok"
 	}
 
 
-	fun lagreFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>) {
+	override fun lagreFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>) {
 		val fileData: List<FileData> = vedleggDtos.stream()
 			.filter {it.opplastingsStatus == OpplastingsStatus.LASTET_OPP}
 			.map { FileData(it.uuid!!, it.document, it.opprettetdato.atOffset(ZoneOffset.UTC)) }.toList()
@@ -49,14 +59,14 @@ class FillagerAPI(private val restConfig: RestConfig) {
 		logger.info("$innsendingsId: Lagret følgende filer ${fileData.map { it.id }.toList().joinToString { "," }}")
 	}
 
-	fun hentFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>): List<VedleggDto> {
+	override fun hentFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>): List<VedleggDto> {
 		val fileData: List<FileData> = vedleggDtos.stream()
 			.filter {it.opplastingsStatus == OpplastingsStatus.LASTET_OPP}
 			.map { FileData(it.uuid!!, it.document, it.opprettetdato.atOffset(ZoneOffset.UTC)) }.toList()
 
-		if (fileData.size == 0) return vedleggDtos
+		if (fileData.isEmpty()) return vedleggDtos
 
-		val hentedeFilerMap: Map<String, FileData> = hentFiler(fileData, innsendingsId).map { it.id to it }.toMap()
+		val hentedeFilerMap: Map<String, FileData> = hentFiler(fileData, innsendingsId).associateBy { it.id }
 		logger.info("$innsendingsId: Hentet følgende filer ${hentedeFilerMap.map{it.key}.toList().joinToString { "," }}")
 
 		return vedleggDtos.map { VedleggDto( it.id, it.vedleggsnr, it.tittel, it.uuid, it.mimetype,
@@ -80,7 +90,7 @@ class FillagerAPI(private val restConfig: RestConfig) {
 		return filesApi.findFilesByIds(fileIds.map{it}.toList().joinToString { "," }, innsendingsId)
 	}
 
-	fun slettFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>) {
+	override fun slettFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>) {
 		val fileids: String = vedleggDtos.stream()
 			.filter {it.opplastingsStatus == OpplastingsStatus.LASTET_OPP}
 			.map { it.uuid!! }.toList().joinToString { "," }

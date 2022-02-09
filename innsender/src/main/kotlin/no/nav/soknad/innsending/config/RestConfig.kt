@@ -1,11 +1,10 @@
 package no.nav.soknad.innsending.config
 
-import no.nav.soknad.innsending.ProfileConfig
 import org.springframework.boot.context.properties.ConfigurationProperties
 import kotlin.properties.Delegates
 
 @ConfigurationProperties("restconfig")
-class RestConfig(private val profileConfig: ProfileConfig) {
+class RestConfig {
 	lateinit var version: String
 	lateinit var username: String
 	lateinit var password: String
@@ -20,5 +19,6 @@ class RestConfig(private val profileConfig: ProfileConfig) {
 	var filesInOneRequestToFilestorage by Delegates.notNull<Int>()
 	lateinit var soknadsMottakerHost: String
 	lateinit var soknadsMottakerEndpoint: String
+	lateinit var frontEndFortsettEndpoint: String
 
 }

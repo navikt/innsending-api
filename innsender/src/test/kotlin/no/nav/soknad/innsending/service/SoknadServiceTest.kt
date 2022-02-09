@@ -8,7 +8,7 @@ import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.consumerapis.skjema.SkjemaClient
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerAPI
-import no.nav.soknad.innsending.consumerapis.soknadsmottaker.SoknadsmottakerAPI
+import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPI
 import no.nav.soknad.innsending.dto.DokumentSoknadDto
 import no.nav.soknad.innsending.dto.FilDto
 import no.nav.soknad.innsending.dto.VedleggDto
@@ -53,7 +53,7 @@ class SoknadServiceTest {
 	private val fillagerAPI = mockk<FillagerAPI>()
 
 	@InjectMockKs
-	private val soknadsmottakerAPI = mockk<SoknadsmottakerAPI>()
+	private val soknadsmottakerAPI = mockk<MottakerAPI>()
 
 	@BeforeEach
 	fun setup() {

@@ -6,26 +6,24 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.dto.*
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
-import no.nav.soknad.innsending.repository.OpplastingsStatus
-import no.nav.soknad.innsending.repository.SoknadsStatus
+import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.pdfutilities.KonverterTilPdf
 import no.nav.soknad.pdfutilities.Validerer
 import org.hibernate.annotations.common.util.impl.LoggerFactory
-import org.springframework.core.io.InputStreamResource
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import java.io.ByteArrayInputStream
 import java.time.LocalDateTime
-import java.util.*
 
 @RestController
 @RequestMapping("/frontend/v1")
-class FrontEndRestApi(val soknadService: SoknadService
-, private val restConfig: RestConfig) {
+class FrontEndRestApi(
+	val soknadService: SoknadService,
+	val tilgangskontroll: Tilgangskontroll,
+	private val restConfig: RestConfig) {
 
 	private val logger = LoggerFactory.logger(javaClass)
 
@@ -38,7 +36,8 @@ class FrontEndRestApi(val soknadService: SoknadService
 	fun opprettSoknad(@RequestBody opprettSoknad: OpprettSoknadBody
 	): ResponseEntity<DokumentSoknadDto> {
 		logger.info("Kall for å opprette søknad på skjema ${opprettSoknad.skjemanr}")
-		val dokumentSoknadDto = soknadService.opprettSoknad(opprettSoknad.brukerId, opprettSoknad.skjemanr, opprettSoknad.sprak, opprettSoknad.vedleggsListe ?: emptyList())
+		val brukerId = tilgangskontroll.hentBrukerFraToken(opprettSoknad.brukerId)
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerId, opprettSoknad.skjemanr, opprettSoknad.sprak, opprettSoknad.vedleggsListe ?: emptyList())
 		logger.info("Opprettet søknad ${dokumentSoknadDto.innsendingsId} på skjema ${opprettSoknad.skjemanr}")
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -55,9 +54,10 @@ class FrontEndRestApi(val soknadService: SoknadService
 	): ResponseEntity<DokumentSoknadDto> {
 		logger.info("Kall for å opprette ettersending på søknad ${opprettEttersending.ettersendingTilinnsendingsId}")
 		val origSoknad = soknadService.hentSoknad(opprettEttersending.ettersendingTilinnsendingsId)
-		tilgangskontroll(origSoknad, null)
+		val brukerId = tilgangskontroll.hentBrukerFraToken(opprettEttersending.brukerId)
+		tilgangskontroll.harTilgang(origSoknad, brukerId)
 
-		val dokumentSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(opprettEttersending.brukerId, opprettEttersending.ettersendingTilinnsendingsId)
+		val dokumentSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(brukerId, opprettEttersending.ettersendingTilinnsendingsId)
 		logger.info("Opprettet ettersending ${dokumentSoknadDto.innsendingsId} for innsendingsid ${opprettEttersending.ettersendingTilinnsendingsId}")
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -72,8 +72,9 @@ class FrontEndRestApi(val soknadService: SoknadService
 	fun opprettEttersendingGittSkjemanr(@RequestBody opprettEttersending: OpprettEttersendingGittSkjemaNr
 	): ResponseEntity<DokumentSoknadDto> {
 		logger.info("Kall for å opprette ettersending på skjema ${opprettEttersending.skjemanr}")
+		val brukerId = tilgangskontroll.hentBrukerFraToken(opprettEttersending.brukerId)
 		val dokumentSoknadDto = soknadService.opprettSoknadForEttersendingGittSkjemanr(
-			opprettEttersending.brukerId, opprettEttersending.skjemanr, opprettEttersending.sprak, opprettEttersending.vedleggsListe ?: emptyList())
+			brukerId, opprettEttersending.skjemanr, opprettEttersending.sprak, opprettEttersending.vedleggsListe ?: emptyList())
 		logger.info("Opprettet ettersending ${dokumentSoknadDto.innsendingsId} på skjema ${opprettEttersending.skjemanr}")
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -87,7 +88,7 @@ class FrontEndRestApi(val soknadService: SoknadService
 	@GetMapping("/soknad")
 	fun hentAktiveOpprettedeSoknader(): ResponseEntity<List<DokumentSoknadDto>> {
 		logger.info("Kall for å hente alle opprette ikke innsendte søknader")
-		val brukerIds = hentBrukerIdents()
+		val brukerIds = tilgangskontroll.hentPersonIdents()
 		val dokumentSoknadDtos = soknadService.hentAktiveSoknader(brukerIds)
 		logger.info("Hentet søknader opprettet av bruker")
 		return ResponseEntity
@@ -103,9 +104,9 @@ class FrontEndRestApi(val soknadService: SoknadService
 	)])
 	@GetMapping("/soknad/{innsendingsId}")
 	fun hentSoknad(@PathVariable innsendingsId: String): ResponseEntity<DokumentSoknadDto> {
-		logger.info("Kall for å hente søknad med id ${innsendingsId}")
+		logger.info("Kall for å hente søknad med id $innsendingsId")
 		val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll(dokumentSoknadDto, null)
+		tilgangskontroll.harTilgang(dokumentSoknadDto)
 		logger.info("Hentet søknad ${dokumentSoknadDto.innsendingsId}")
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -120,7 +121,7 @@ class FrontEndRestApi(val soknadService: SoknadService
 	fun hentVedleggsListe(@PathVariable innsendingsId: String): ResponseEntity<List<VedleggDto>> {
 		logger.info("Kall for å vedleggene til søknad $innsendingsId")
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll(soknadDto, null)
+		tilgangskontroll.harTilgang(soknadDto)
 		val vedleggsListeDto = soknadDto.vedleggsListe
 		logger.info("Hentet vedleggene til søknad $innsendingsId")
 		return ResponseEntity
@@ -136,10 +137,9 @@ class FrontEndRestApi(val soknadService: SoknadService
 	fun hentVedlegg(@PathVariable innsendingsId: String, @PathVariable vedleggsId: String): ResponseEntity<VedleggDto> {
 		logger.info("Kall for å hente vedlegg $vedleggsId til søknad $innsendingsId")
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll(soknadDto, null)
-		val vedleggDto = soknadDto.vedleggsListe.filter { it.id.toString().equals(vedleggsId) }.firstOrNull()
-		if (vedleggDto == null)
-			throw ResourceNotFoundException("", "Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId")
+		tilgangskontroll.harTilgang(soknadDto)
+		val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id.toString() == vedleggsId }
+				?: throw ResourceNotFoundException("", "Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId")
 		logger.info("Hentet vedlegg $vedleggsId til søknad $innsendingsId")
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -160,7 +160,7 @@ class FrontEndRestApi(val soknadService: SoknadService
 	): ResponseEntity<VedleggDto> {
 		logger.info("Kall for å lagre vedlegg til søknad $innsendingsId")
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll(soknadDto, null)
+		tilgangskontroll.harTilgang(soknadDto)
 		val vedleggDto = soknadService.lagreVedlegg(vedlegg, innsendingsId)
 		logger.info("Lagret vedlegg ${vedleggDto.id} til søknad $innsendingsId")
 		return ResponseEntity
@@ -181,8 +181,8 @@ class FrontEndRestApi(val soknadService: SoknadService
 	): ResponseEntity<FilIdDto> {
 		logger.info("Kall for å lagre fil på vedlegg $vedleggsId til søknad $innsendingsId")
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll(soknadDto, null)
-		if (vedleggsId == null || soknadDto.vedleggsListe.filter {it.id == vedleggsId}.isEmpty())
+		tilgangskontroll.harTilgang(soknadDto)
+		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
 			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId")
 
 		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
@@ -215,7 +215,7 @@ class FrontEndRestApi(val soknadService: SoknadService
 	): ResponseEntity<ByteArray> {
 		logger.info("Kall for å hente fil $filId på vedlegg $vedleggsId til søknad $innsendingsId")
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll(soknadDto, null)
+		tilgangskontroll.harTilgang(soknadDto)
 
 		val filDto = soknadService.hentFil(soknadDto, vedleggsId, filId)
 		logger.info("Hentet fil ${filDto.id} på vedlegg $vedleggsId til søknad $innsendingsId")
@@ -237,7 +237,7 @@ class FrontEndRestApi(val soknadService: SoknadService
 	): ResponseEntity<List<FilDto>> {
 		logger.info("Kall for å hente filinfo til vedlegg $vedleggsId til søknad $innsendingsId")
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll(soknadDto, null)
+		tilgangskontroll.harTilgang(soknadDto)
 		val filDtoListe = soknadService.hentFiler(soknadDto, innsendingsId, vedleggsId)
 		logger.info("Hentet informasjon om opplastede filer på vedlegg $vedleggsId til søknad $innsendingsId")
 		return ResponseEntity
@@ -257,13 +257,13 @@ class FrontEndRestApi(val soknadService: SoknadService
 	): ResponseEntity<BodyStatusResponseDto> {
 		logger.info("Kall for å slette fil $filId på vedlegg $vedleggsId til søknad $innsendingsId")
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll(soknadDto, null)
+		tilgangskontroll.harTilgang(soknadDto)
 
 		soknadService.slettFil(soknadDto, vedleggsId, filId)
 		logger.info("Slette fil $filId på vedlegg $vedleggsId til søknad $innsendingsId")
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet fil med id ${filId}"))
+			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet fil med id $filId"))
 	}
 
 	@Operation(
@@ -278,13 +278,13 @@ class FrontEndRestApi(val soknadService: SoknadService
 	fun slettVedlegg(@PathVariable innsendingsId: String, @PathVariable vedleggsId: Long): ResponseEntity<BodyStatusResponseDto> {
 		logger.info("Kall for å slette vedlegg $vedleggsId for søknad $innsendingsId")
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll(soknadDto, null)
+		tilgangskontroll.harTilgang(soknadDto)
 
 		soknadService.slettVedlegg(soknadDto, vedleggsId)
 		logger.info("Slettet vedlegg $vedleggsId for søknad $innsendingsId")
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet vedlegg med id ${vedleggsId}"))
+			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet vedlegg med id $vedleggsId"))
 	}
 
 	@Operation(summary = "Requests delete of an application.", tags = ["operations"])
@@ -293,14 +293,14 @@ class FrontEndRestApi(val soknadService: SoknadService
 	)])
 	@DeleteMapping("/soknad/{innsendingsId}")
 	fun slettSoknad(@PathVariable innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
-		logger.info("Kall for å slette søknad med id ${innsendingsId}")
+		logger.info("Kall for å slette søknad med id $innsendingsId")
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll(soknadDto, null)
+		tilgangskontroll.harTilgang(soknadDto)
 		soknadService.slettSoknadAvBruker(soknadDto)
-		logger.info("Slettet søknad med id ${innsendingsId}")
+		logger.info("Slettet søknad med id $innsendingsId")
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet soknad med id ${innsendingsId}"))
+			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet soknad med id $innsendingsId"))
 	}
 
 	@Operation(summary = "Requests that the application shall be sent to NAV.", tags = ["operations"])
@@ -311,51 +311,12 @@ class FrontEndRestApi(val soknadService: SoknadService
 	fun sendInnSoknad(@PathVariable innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
 		logger.info("Kall for å sende inn soknad $innsendingsId")
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll(soknadDto, null)
+		tilgangskontroll.harTilgang(soknadDto)
 		soknadService.sendInnSoknad(soknadDto)
 		logger.info("Sendt inn soknad $innsendingsId")
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Soknad med id ${innsendingsId} er sendt inn til NAV"))
+			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Soknad med id $innsendingsId er sendt inn til NAV"))
 	}
-
-	private fun tilgangskontroll(soknadDto: DokumentSoknadDto?, brukerId: String?) {
-		val idents = hentBrukerIdents()
-		if (idents.contains(soknadDto?.brukerId)) return
-		throw RuntimeException("Søknad finnes ikke eller er ikke tilgjengelig for innlogget bruker")
-	}
-
-	private fun hentBrukerIdents(): List<String> { //TODO hente brukerId fra token og hent brukers identer fra PDL
-		return listOf("12345678901", "12345678902")
-	}
-
-	private fun emptyDokumentSoknad(innsendingsId: String): DokumentSoknadDto =
-		DokumentSoknadDto(null, innsendingsId, null, "", "", "", "", null,
-			SoknadsStatus.SlettetAvBruker, LocalDateTime.now(), null, null,emptyList())
-
-	// Midlertidige dummy metoder
-	private fun lagDummySoknad(skjemanr: String, vedleggsnr: String?, sprak: String
-			, brukerId: String, ettersendingId: String?, vedleggsListe: List<String>?) =
-			DokumentSoknadDto(1L, UUID.randomUUID().toString(), ettersendingId, brukerId, skjemanr, "Tittel", "Test", "NO"
-				, SoknadsStatus.Opprettet, LocalDateTime.now(), LocalDateTime.now(), null, lagVedleggsListe(skjemanr, vedleggsListe))
-
-	private fun lagDummyVedlegg(vedleggsnr: String?) =
-		 VedleggDto(1L, vedleggsnr ?: "N6", "Tittel",
-			 UUID.randomUUID().toString(), null, null, vedleggsnr != null && vedleggsnr.contains("NAV")
-			 , false, true
-			 , if (vedleggsnr != null && vedleggsnr.length> 2) "https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/dfdcae6ba6ac611e9a67d013fc2fe712645fb937.pdf" else null
-			 , OpplastingsStatus.IKKE_VALGT, LocalDateTime.now())
-
-	private fun lagDummyfil(vedleggsId: Long, filId: Long? = 1L) =
-		FilDto(filId, vedleggsId, "filnavn", "application/pdf", 1, ByteArray(1), LocalDateTime.now())
-
-	private fun lagVedleggsListe(skjemanr: String, vedleggsListe: List<String>?): List<VedleggDto> {
-		val mainListeDto = listOf(lagDummyVedlegg(skjemanr))
- 		if (vedleggsListe == null ) return mainListeDto
-		val vedleggListeDto: List<VedleggDto> =  vedleggsListe.map { e -> lagDummyVedlegg(e) }.toList()
-		return mainListeDto + vedleggListeDto
-	}
-
-	private fun lagDummyVedleggsListe() = VedleggsListeDto(listOf("1234567890"))
 
 }

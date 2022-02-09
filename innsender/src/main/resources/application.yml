@@ -39,6 +39,7 @@ restconfig:
   filesInOneRequestToFilestorage: 10
   soknadsMottakerHost: http://localhost:9043
   soknadsMottakerEndpoint: /save
+  frontEndFortsettEndpoint: http://localhost:3000/dokumentinnsending/oversikt/
 
 dbconfig:
   profiles: test
@@ -92,6 +93,7 @@ restconfig:
   filesInOneRequestToFilestorage: 10
   soknadsMottakerHost: ${SOKNADSMOTTAKER_HOST}
   soknadsMottakerEndpoint: ${SOKNADSMOTTAKER_ENDPOINT}
+  frontEndFortsettEndpoint: https://${TJENESTE_URL}${GJENOPPTA_SOKNADS_ARBEID}
 
 dbconfig:
   profiles: ${SPRING_PROFILES_ACTIVE}

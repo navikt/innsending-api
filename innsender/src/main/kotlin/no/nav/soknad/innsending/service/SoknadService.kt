@@ -3,8 +3,8 @@ package no.nav.soknad.innsending.service
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.skjema.KodeverkSkjema
-import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerAPI
-import no.nav.soknad.innsending.consumerapis.soknadsmottaker.SoknadsmottakerAPI
+import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
+import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.dto.DokumentSoknadDto
 import no.nav.soknad.innsending.dto.FilDto
 import no.nav.soknad.innsending.dto.VedleggDto
@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.collections.HashMap
 import kotlin.streams.toList
 
 @Service
@@ -30,8 +29,8 @@ class SoknadService(
 	private val vedleggRepository: VedleggRepository,
 	private val filRepository: FilRepository,
 	private val brukerNotifikasjon: BrukernotifikasjonPublisher,
-	private val fillagerAPI: FillagerAPI,
-	private val soknadsmottakerAPI: SoknadsmottakerAPI
+	private val fillagerAPI: FillagerInterface,
+	private val soknadsmottakerAPI: MottakerInterface
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 

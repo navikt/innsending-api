@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.config
 
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod

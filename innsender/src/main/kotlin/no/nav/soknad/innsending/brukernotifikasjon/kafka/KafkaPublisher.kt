@@ -3,7 +3,6 @@ package no.nav.soknad.innsending.brukernotifikasjon.kafka
 import java.util.concurrent.TimeUnit
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig
 import io.confluent.kafka.serializers.KafkaAvroSerializer
-import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerializer
 import no.nav.brukernotifikasjon.schemas.Beskjed
 import no.nav.brukernotifikasjon.schemas.Done
 import no.nav.brukernotifikasjon.schemas.Nokkel
