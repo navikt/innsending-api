@@ -9,12 +9,13 @@ import no.nav.soknad.arkivering.soknadsmottaker.api.SoknadApi
 import no.nav.soknad.arkivering.soknadsmottaker.infrastructure.ApiClient
 import no.nav.soknad.arkivering.soknadsmottaker.infrastructure.Serializer
 import no.nav.soknad.innsending.config.RestConfig
+import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.dto.DokumentSoknadDto
 import no.nav.soknad.innsending.dto.VedleggDto
 import no.nav.soknad.innsending.repository.OpplastingsStatus
-import no.nav.soknad.innsending.supervision.HealthCheker
-import no.nav.soknad.innsending.supervision.HealthCheker.Ping
-import no.nav.soknad.innsending.supervision.HealthCheker.PingMetadata
+//import no.nav.soknad.innsending.supervision.HealthCheker
+//import no.nav.soknad.innsending.supervision.HealthCheker.Ping
+//import no.nav.soknad.innsending.supervision.HealthCheker.PingMetadata
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
@@ -23,7 +24,7 @@ import org.springframework.stereotype.Service
 @Service
 @Profile("dev | prod")
 @Qualifier("mottaker")
-class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, HealthCheker {
+class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -38,6 +39,7 @@ class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, Health
 		healthApi = HealthApi(restConfig.soknadsMottakerHost)
 	}
 
+/*
 	override fun ping(): Ping {
 		val start = System.currentTimeMillis()
 		try {
@@ -49,15 +51,20 @@ class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, Health
 				, e.message, e, System.currentTimeMillis()-start)
 		}
 	}
+*/
 
-	fun isReady(): String {
+	override fun isReady(): String {
 		//healthApi.isReady()
 		return "ok"
 	}
 
-	fun isAlive(): String {
+	override fun isAlive(): String {
 		healthApi.isAlive()
 		return "ok"
+	}
+	override fun ping(): String {
+		healthApi.isAlive()
+		return "pong"
 	}
 
 	override fun sendInnSoknad(soknadDto: DokumentSoknadDto) {

@@ -19,7 +19,7 @@ class HealthCheck(
 	@Qualifier("pdl")private val pdlAPI: HealthRequestInterface,
 	@Qualifier("saf")private val safAPI: HealthRequestInterface,
 	@Qualifier("fillager")private val fillagerAPI: HealthRequestInterface,
-	@Qualifier("mottaker")private val soknadsmottakerAPI: HealthRequestInterface,
+	@Qualifier("mottaker")private val mottakerAPI: HealthRequestInterface,
 	private val aliveRepository: AliveRepository)	 {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -42,7 +42,7 @@ class HealthCheck(
 	private fun applicationIsReady(): Boolean {
 		val dependencies = listOf(
 			Dependency({ fillagerAPI.isReady() }, "ok", "FileStorage"),
-			Dependency({ soknadsmottakerAPI.isReady() }, "ok", "SoknadsMottaker"),
+			Dependency({ mottakerAPI.isReady() }, "ok", "SoknadsMottaker"),
 			Dependency({ pdlAPI.isReady() }, "ok", "PDL"),
 			Dependency({ safAPI.isReady() }, "ok", "SAF"),
 			Dependency({ aliveRepository.findTestById(1L) }, "ok", "Database")
