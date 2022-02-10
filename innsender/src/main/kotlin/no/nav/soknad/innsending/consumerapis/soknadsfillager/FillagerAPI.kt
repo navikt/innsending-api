@@ -41,11 +41,11 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 		return "pong"
 	}
 	override fun isReady(): String {
-		//healthApi.isReady()
+		healthApi.isReady()
 		return "ok"
 	}
 	override fun isAlive(): String {
-		//healthApi.isReady()
+		healthApi.isReady()
 		return "ok"
 	}
 

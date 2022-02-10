@@ -54,7 +54,7 @@ class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, Health
 */
 
 	override fun isReady(): String {
-		//healthApi.isReady()
+		healthApi.isReady()
 		return "ok"
 	}
 
