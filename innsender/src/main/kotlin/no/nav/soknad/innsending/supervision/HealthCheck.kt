@@ -65,6 +65,7 @@ class HealthCheck(
 	}
 
 	private fun throwException(message: String? = null): String {
+		logger.warn(message)
 		val status = HttpStatus.INTERNAL_SERVER_ERROR
 		throw HttpServerErrorException(status, message ?: status.name)
 	}
