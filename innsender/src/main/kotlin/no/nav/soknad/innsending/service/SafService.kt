@@ -20,7 +20,8 @@ class SafService(val safApi: SafInterface) {
 	}
 
 	private fun konverterTilDateTime(dateString: String): LocalDateTime {
-		val formatter: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
+		if (dateString.isBlank()) return LocalDateTime.MIN
+		val formatter: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 		return LocalDateTime.parse(dateString, formatter)
 	}
 

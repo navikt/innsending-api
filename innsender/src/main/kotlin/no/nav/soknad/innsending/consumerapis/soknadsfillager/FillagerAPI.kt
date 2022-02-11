@@ -41,7 +41,9 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 		return "pong"
 	}
 	override fun isReady(): String {
+		logger.info("Fillager isReady start")
 		healthApi.isReady()
+		logger.info("Fillager isReady ok")
 		return "ok"
 	}
 	override fun isAlive(): String {
