@@ -30,7 +30,7 @@ class SafAPITest(private val restConfig: RestConfig): SafInterface, HealthReques
 		return dummyArkiverteSoknader.get(brukerId)
 	}
 
-	private val date = DateTimeFormatter.ISO_LOCAL_DATE.format( LocalDateTime.now())
+	private val date = DateTimeFormatter.ISO_LOCAL_DATE_TIME.format( LocalDateTime.now())
 
 	private val dummyArkiverteSoknader = mapOf (
 		"12345678901" to listOf (

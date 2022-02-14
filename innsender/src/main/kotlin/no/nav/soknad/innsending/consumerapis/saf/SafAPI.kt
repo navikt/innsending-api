@@ -34,7 +34,7 @@ class SafAPI(private val restConfig: RestConfig): SafInterface, HealthRequestInt
 		return dummyArkiverteSoknader.get(brukerId) // TODO erstatt med kall til SAF
 	}
 
-	private val date =  "2022-02-10T18:04:13.8371737"
+	private val date = DateTimeFormatter.ISO_LOCAL_DATE_TIME.format( LocalDateTime.now())
 
 	private val dummyArkiverteSoknader = mapOf (
 		"12345678901" to listOf (

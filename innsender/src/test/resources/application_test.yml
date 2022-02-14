@@ -22,7 +22,7 @@ restconfig:
   maxFileSize: 104857600
   sanityHost: http://localhost:8080
   sanityEndpoint: /soknadsveiviserproxy/skjemautlisting
-  filestorageHost: http://localhost:9042}
+  filestorageHost: http://localhost:9042
   filestorageEndpoint: /filer
   filestorageParameters: ?ids=
   filesInOneRequestToFilestorage: 10
