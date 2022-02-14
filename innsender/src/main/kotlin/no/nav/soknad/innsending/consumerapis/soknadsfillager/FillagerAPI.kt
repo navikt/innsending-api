@@ -42,7 +42,7 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 	}
 	override fun isReady(): String {
 		logger.info("Fillager isReady start")
-		healthApi.isReady()
+		//TODO healthApi.isReady()
 		logger.info("Fillager isReady ok")
 		return "ok"
 	}
