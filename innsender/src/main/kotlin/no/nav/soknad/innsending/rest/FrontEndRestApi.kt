@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.dto.*
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.pdfutilities.KonverterTilPdf
 import no.nav.soknad.pdfutilities.Validerer
 import org.hibernate.annotations.common.util.impl.LoggerFactory
@@ -37,7 +38,7 @@ class FrontEndRestApi(
 	): ResponseEntity<DokumentSoknadDto> {
 		logger.info("Kall for å opprette søknad på skjema ${opprettSoknad.skjemanr}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken(opprettSoknad.brukerId)
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerId, opprettSoknad.skjemanr, opprettSoknad.sprak, opprettSoknad.vedleggsListe ?: emptyList())
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerId, opprettSoknad.skjemanr, finnSpraakFraInput(opprettSoknad.sprak), opprettSoknad.vedleggsListe ?: emptyList())
 		logger.info("Opprettet søknad ${dokumentSoknadDto.innsendingsId} på skjema ${opprettSoknad.skjemanr}")
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -74,7 +75,7 @@ class FrontEndRestApi(
 		logger.info("Kall for å opprette ettersending på skjema ${opprettEttersending.skjemanr}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken(opprettEttersending.brukerId)
 		val dokumentSoknadDto = soknadService.opprettSoknadForEttersendingGittSkjemanr(
-			brukerId, opprettEttersending.skjemanr, opprettEttersending.sprak, opprettEttersending.vedleggsListe ?: emptyList())
+			brukerId, opprettEttersending.skjemanr, finnSpraakFraInput(opprettEttersending.sprak), opprettEttersending.vedleggsListe ?: emptyList())
 		logger.info("Opprettet ettersending ${dokumentSoknadDto.innsendingsId} på skjema ${opprettEttersending.skjemanr}")
 		return ResponseEntity
 			.status(HttpStatus.OK)

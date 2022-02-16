@@ -9,10 +9,10 @@ spec:
   image: {{image}}
   port: 9064
   liveness:
-    path: /internal/isAlive
+    path: /health/isAlive
     initialDelay: 20
   readiness:
-    path: /internal/isReady
+    path: /health/isReady
     initialDelay: 20
   prometheus:
     enabled: true

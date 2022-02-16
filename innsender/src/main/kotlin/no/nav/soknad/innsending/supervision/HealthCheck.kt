@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.client.HttpServerErrorException
 
 @RestController
-@RequestMapping(value = ["/internal"])
+@RequestMapping(value = ["/health"])
 class HealthCheck(
 	@Qualifier("pdl")private val pdlAPI: HealthRequestInterface,
 	@Qualifier("saf")private val safAPI: HealthRequestInterface,

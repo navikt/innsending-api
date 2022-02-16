@@ -35,24 +35,26 @@ paths:
         - soknad
 
 
-  /internal/ping:
+  /health/ping:
     get:
       summary: Pings the application to see if it responds
       description: Pings the application to see if it responds
       operationId: ping
 
+      security: []   # No security
       responses:
         '200':
           description: Successful operation; application is responding
       tags:
         - health
 
-  /internal/isAlive:
+  /health/isAlive:
     get:
       summary: Checks if the application and its dependencies up
       description: Checks if the application and its dependencies are up and running.
       operationId: isAlive
 
+      security: []   # No security
       responses:
         '200':
           description: Successful operation; application is alive
@@ -61,12 +63,13 @@ paths:
       tags:
         - health
 
-  /internal/isReady:
+  /health/isReady:
     get:
       summary: Checks if the application is ready to accept traffic
       description: Checks if the application is ready to accept traffic.
       operationId: isReady
 
+      security: []   # No security
       responses:
         '200':
           description: Successful operation; application is ready
@@ -144,7 +147,6 @@ components:
             Det kan sendes inn flere varianter av samme dokument; for eksempel kan én søknaden sendes inn med en PDF/A
             og en json variant av søknaden.
             Denne lista inneholder metadata, der hver variant representerer en fysisk fil.
-
     Varianter:
       type: object
       required:

@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.dto
 
 import no.nav.soknad.innsending.repository.OpplastingsStatus
 import no.nav.soknad.innsending.repository.SoknadsStatus
+import no.nav.soknad.innsending.util.finnSpraakFraInput
 import java.time.LocalDateTime
 
 class SkjemaDokumentSoknadTransformer(private val input: SkjemaDto) {
@@ -9,7 +10,7 @@ class SkjemaDokumentSoknadTransformer(private val input: SkjemaDto) {
 	fun apply(): DokumentSoknadDto = input.toDokumentSoknadDto()
 
 	private fun SkjemaDto.toDokumentSoknadDto() = DokumentSoknadDto(null, null, null, brukerId,
-		skjemanr, tittel, tema, spraak, SoknadsStatus.Opprettet, LocalDateTime.now(), LocalDateTime.now(), null, konverterTilvedleggsListe(vedleggsListe) )
+		skjemanr, tittel, tema, finnSpraakFraInput(spraak), SoknadsStatus.Opprettet, LocalDateTime.now(), LocalDateTime.now(), null, konverterTilvedleggsListe(vedleggsListe) )
 
 	private fun konverterTilvedleggsListe(List: List<SkjemaDokumentDto>) = List.map { it.toVedleggDto() }
 

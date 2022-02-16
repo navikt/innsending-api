@@ -29,7 +29,7 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 	}
 
 	// TODO implementere språk avhengig oppslag?
-	fun hentSkjemaEllerVedlegg(id: String, spraak: String?): KodeverkSkjema {
+	fun hentSkjemaEllerVedlegg(id: String, spraak: String = "no"): KodeverkSkjema {
 		for (data in sanityList) {
 			if (id == data.skjemanummer || id == data.vedleggsid) {
 				return createKodeverkSkjema(data, spraak, id)
@@ -40,7 +40,7 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 		throw SanityException(if (sanityList.isEmpty()) "Skjema cache er tom" else "Ikke funnet i skjema listen", message)
 	}
 
-	private fun createKodeverkSkjema(sanity: SkjemaOgVedleggsdata, spraak: String?, id: String): KodeverkSkjema {
+	private fun createKodeverkSkjema(sanity: SkjemaOgVedleggsdata, spraak: String, id: String): KodeverkSkjema {
 		val kodeverkSkjema = KodeverkSkjema()
 		kodeverkSkjema.url = getUrl(sanity, spraak)
 		kodeverkSkjema.skjemanummer = id
@@ -50,22 +50,32 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 		return kodeverkSkjema
 	}
 
-	private fun getTitle(sanity: SkjemaOgVedleggsdata, spraak: String?): String? {
+	private fun getTitle(sanity: SkjemaOgVedleggsdata, spraak: String): String? {
 		return if ("nn".equals(spraak, true) && !sanity.tittel_nn.isNullOrBlank()) {
 			sanity.tittel_nn
 		} else if ("en".equals(spraak, true) && !sanity.tittel_en.isNullOrBlank()) {
 			sanity.tittel_en
 		} else
-			sanity.tittel
+			sanity.tittel_no
 	}
 
-	private fun getUrl(sanity: SkjemaOgVedleggsdata, spraak: String?): String? {
+	private fun getUrl(sanity: SkjemaOgVedleggsdata, spraak: String): String? {
 		return if ("nn".equals(spraak, true) && !sanity.url_nn.isNullOrBlank()) {
 			sanity.url_nn
 		} else if ("en".equals(spraak, true) && !sanity.url_en.isNullOrBlank()) {
 			sanity.url_en
+		} else if ("de".equals(spraak, true) && !sanity.url_de.isNullOrBlank()) {
+			sanity.url_de
+		} else if ("fr".equals(spraak, true) && !sanity.url_fr.isNullOrBlank()) {
+			sanity.url_fr
+		} else if ("es".equals(spraak, true) && !sanity.url_es.isNullOrBlank()) {
+			sanity.url_es
+		} else if ("se".equals(spraak, true) && !sanity.url_se.isNullOrBlank()) {
+			sanity.url_se
+		} else if ("pl".equals(spraak, true) && !sanity.url_pl.isNullOrBlank()) {
+			sanity.url_pl
 		} else
-			sanity.url
+			sanity.url_no
 	}
 
 

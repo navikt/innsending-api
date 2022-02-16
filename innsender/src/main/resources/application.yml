@@ -31,7 +31,7 @@ restconfig:
   sharedUsername: shareduser
   sharedPassword: password
   maxFileSize: 104857600
-  sanityHost: http://localhost:8080
+  sanityHost: https://tjenester.nav.no
   sanityEndpoint: /soknadsveiviserproxy/skjemautlisting
   filestorageHost: http://localhost:9042
   filestorageEndpoint: /filer
