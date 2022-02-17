@@ -8,6 +8,8 @@ import no.nav.soknad.innsending.dto.*
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.supervision.InnsenderMetrics
+import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.pdfutilities.KonverterTilPdf
 import no.nav.soknad.pdfutilities.Validerer
@@ -24,7 +26,8 @@ import java.time.LocalDateTime
 class FrontEndRestApi(
 	val soknadService: SoknadService,
 	val tilgangskontroll: Tilgangskontroll,
-	private val restConfig: RestConfig) {
+	private val restConfig: RestConfig,
+	private val innsenderMetrics: InnsenderMetrics) {
 
 	private val logger = LoggerFactory.logger(javaClass)
 
@@ -37,12 +40,22 @@ class FrontEndRestApi(
 	fun opprettSoknad(@RequestBody opprettSoknad: OpprettSoknadBody
 	): ResponseEntity<DokumentSoknadDto> {
 		logger.info("Kall for å opprette søknad på skjema ${opprettSoknad.skjemanr}")
-		val brukerId = tilgangskontroll.hentBrukerFraToken(opprettSoknad.brukerId)
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerId, opprettSoknad.skjemanr, finnSpraakFraInput(opprettSoknad.sprak), opprettSoknad.vedleggsListe ?: emptyList())
-		logger.info("Opprettet søknad ${dokumentSoknadDto.innsendingsId} på skjema ${opprettSoknad.skjemanr}")
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(dokumentSoknadDto)
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
+		try {
+			val brukerId = tilgangskontroll.hentBrukerFraToken(opprettSoknad.brukerId)
+			val dokumentSoknadDto = soknadService.opprettSoknad(
+				brukerId,
+				opprettSoknad.skjemanr,
+				finnSpraakFraInput(opprettSoknad.sprak),
+				opprettSoknad.vedleggsListe ?: emptyList()
+			)
+			logger.info("Opprettet søknad ${dokumentSoknadDto.innsendingsId} på skjema ${opprettSoknad.skjemanr}")
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(dokumentSoknadDto)
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
 	}
 
 	@Operation(summary = "Requests creating a new application with reference to a prior sent in application.", tags = ["operations"])
@@ -54,15 +67,21 @@ class FrontEndRestApi(
 	fun opprettEttersendingGittInnsendingsId(@RequestBody opprettEttersending: OpprettEttersendingGittInnsendingsId
 	): ResponseEntity<DokumentSoknadDto> {
 		logger.info("Kall for å opprette ettersending på søknad ${opprettEttersending.ettersendingTilinnsendingsId}")
-		val origSoknad = soknadService.hentSoknad(opprettEttersending.ettersendingTilinnsendingsId)
-		val brukerId = tilgangskontroll.hentBrukerFraToken(opprettEttersending.brukerId)
-		tilgangskontroll.harTilgang(origSoknad, brukerId)
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
+		try {
+			val origSoknad = soknadService.hentSoknad(opprettEttersending.ettersendingTilinnsendingsId)
+			val brukerId = tilgangskontroll.hentBrukerFraToken(opprettEttersending.brukerId)
+			tilgangskontroll.harTilgang(origSoknad, brukerId)
 
-		val dokumentSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(brukerId, opprettEttersending.ettersendingTilinnsendingsId)
-		logger.info("Opprettet ettersending ${dokumentSoknadDto.innsendingsId} for innsendingsid ${opprettEttersending.ettersendingTilinnsendingsId}")
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(dokumentSoknadDto)
+			val dokumentSoknadDto =
+				soknadService.opprettSoknadForettersendingAvVedlegg(brukerId, opprettEttersending.ettersendingTilinnsendingsId)
+			logger.info("Opprettet ettersending ${dokumentSoknadDto.innsendingsId} for innsendingsid ${opprettEttersending.ettersendingTilinnsendingsId}")
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(dokumentSoknadDto)
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
 	}
 
 	@Operation(summary = "Requests creating a new application referencing a previous sent inn application by schema number.", tags = ["operations"])
@@ -73,13 +92,18 @@ class FrontEndRestApi(
 	fun opprettEttersendingGittSkjemanr(@RequestBody opprettEttersending: OpprettEttersendingGittSkjemaNr
 	): ResponseEntity<DokumentSoknadDto> {
 		logger.info("Kall for å opprette ettersending på skjema ${opprettEttersending.skjemanr}")
-		val brukerId = tilgangskontroll.hentBrukerFraToken(opprettEttersending.brukerId)
-		val dokumentSoknadDto = soknadService.opprettSoknadForEttersendingGittSkjemanr(
-			brukerId, opprettEttersending.skjemanr, finnSpraakFraInput(opprettEttersending.sprak), opprettEttersending.vedleggsListe ?: emptyList())
-		logger.info("Opprettet ettersending ${dokumentSoknadDto.innsendingsId} på skjema ${opprettEttersending.skjemanr}")
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(dokumentSoknadDto)
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
+		try {
+			val brukerId = tilgangskontroll.hentBrukerFraToken(opprettEttersending.brukerId)
+			val dokumentSoknadDto = soknadService.opprettSoknadForEttersendingGittSkjemanr(
+				brukerId, opprettEttersending.skjemanr, finnSpraakFraInput(opprettEttersending.sprak), opprettEttersending.vedleggsListe ?: emptyList())
+			logger.info("Opprettet ettersending ${dokumentSoknadDto.innsendingsId} på skjema ${opprettEttersending.skjemanr}")
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(dokumentSoknadDto)
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
 	}
 
 	@Operation(summary = "Requests fetching all the aplicant's active applications.", tags = ["operations"])
@@ -89,12 +113,17 @@ class FrontEndRestApi(
 	@GetMapping("/soknad")
 	fun hentAktiveOpprettedeSoknader(): ResponseEntity<List<DokumentSoknadDto>> {
 		logger.info("Kall for å hente alle opprette ikke innsendte søknader")
-		val brukerIds = tilgangskontroll.hentPersonIdents()
-		val dokumentSoknadDtos = soknadService.hentAktiveSoknader(brukerIds)
-		logger.info("Hentet søknader opprettet av bruker")
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(dokumentSoknadDtos)
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.HENT.name)
+		try {
+			val brukerIds = tilgangskontroll.hentPersonIdents()
+			val dokumentSoknadDtos = soknadService.hentAktiveSoknader(brukerIds)
+			logger.info("Hentet søknader opprettet av bruker")
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(dokumentSoknadDtos)
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
 	}
 
 
@@ -106,12 +135,17 @@ class FrontEndRestApi(
 	@GetMapping("/soknad/{innsendingsId}")
 	fun hentSoknad(@PathVariable innsendingsId: String): ResponseEntity<DokumentSoknadDto> {
 		logger.info("Kall for å hente søknad med id $innsendingsId")
-		val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll.harTilgang(dokumentSoknadDto)
-		logger.info("Hentet søknad ${dokumentSoknadDto.innsendingsId}")
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(dokumentSoknadDto)
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.HENT.name)
+		try {
+			val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
+			tilgangskontroll.harTilgang(dokumentSoknadDto)
+			logger.info("Hentet søknad ${dokumentSoknadDto.innsendingsId}")
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(dokumentSoknadDto)
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
 	}
 
 	@Operation(summary = "Requests fetching a list of attachments to previously created application.", tags = ["operations"])
@@ -121,13 +155,18 @@ class FrontEndRestApi(
 	@GetMapping("/soknad/{innsendingsId}/vedlegg")
 	fun hentVedleggsListe(@PathVariable innsendingsId: String): ResponseEntity<List<VedleggDto>> {
 		logger.info("Kall for å vedleggene til søknad $innsendingsId")
-		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll.harTilgang(soknadDto)
-		val vedleggsListeDto = soknadDto.vedleggsListe
-		logger.info("Hentet vedleggene til søknad $innsendingsId")
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(vedleggsListeDto)
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.HENT.name)
+		try {
+			val soknadDto = soknadService.hentSoknad(innsendingsId)
+			tilgangskontroll.harTilgang(soknadDto)
+			val vedleggsListeDto = soknadDto.vedleggsListe
+			logger.info("Hentet vedleggene til søknad $innsendingsId")
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(vedleggsListeDto)
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
 	}
 
 	@Operation(summary = "Requests fetching a specified attachment to a created application.", tags = ["operations"])
@@ -137,14 +176,19 @@ class FrontEndRestApi(
 	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}")
 	fun hentVedlegg(@PathVariable innsendingsId: String, @PathVariable vedleggsId: String): ResponseEntity<VedleggDto> {
 		logger.info("Kall for å hente vedlegg $vedleggsId til søknad $innsendingsId")
-		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll.harTilgang(soknadDto)
-		val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id.toString() == vedleggsId }
-				?: throw ResourceNotFoundException("", "Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId")
-		logger.info("Hentet vedlegg $vedleggsId til søknad $innsendingsId")
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(vedleggDto)
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.HENT.name)
+		try {
+			val soknadDto = soknadService.hentSoknad(innsendingsId)
+			tilgangskontroll.harTilgang(soknadDto)
+			val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id.toString() == vedleggsId }
+					?: throw ResourceNotFoundException("", "Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId")
+			logger.info("Hentet vedlegg $vedleggsId til søknad $innsendingsId")
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(vedleggDto)
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
 	}
 
 
@@ -160,13 +204,18 @@ class FrontEndRestApi(
 		@RequestBody vedlegg: VedleggDto
 	): ResponseEntity<VedleggDto> {
 		logger.info("Kall for å lagre vedlegg til søknad $innsendingsId")
-		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll.harTilgang(soknadDto)
-		val vedleggDto = soknadService.lagreVedlegg(vedlegg, innsendingsId)
-		logger.info("Lagret vedlegg ${vedleggDto.id} til søknad $innsendingsId")
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(vedleggDto)
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.LAST_OPP.name)
+		try {
+			val soknadDto = soknadService.hentSoknad(innsendingsId)
+			tilgangskontroll.harTilgang(soknadDto)
+			val vedleggDto = soknadService.lagreVedlegg(vedlegg, innsendingsId)
+			logger.info("Lagret vedlegg ${vedleggDto.id} til søknad $innsendingsId")
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(vedleggDto)
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
 	}
 
 	// Søker skal kunne laste opp ett eller flere filer på ett vedlegg. Dette endepunktet tillater opplasting av en fil.
@@ -181,26 +230,31 @@ class FrontEndRestApi(
 		@RequestPart file: MultipartFile
 	): ResponseEntity<FilIdDto> {
 		logger.info("Kall for å lagre fil på vedlegg $vedleggsId til søknad $innsendingsId")
-		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll.harTilgang(soknadDto)
-		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
-			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId")
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.LAST_OPP.name)
+		try {
+			val soknadDto = soknadService.hentSoknad(innsendingsId)
+			tilgangskontroll.harTilgang(soknadDto)
+			if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
+				throw ResourceNotFoundException(null, "Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId")
 
-		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
-		Validerer().validereFilformat(listOf(file.bytes))
-		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
-		val fil = KonverterTilPdf().tilPdf(file.bytes)
-		val vedleggsFiler = soknadService.hentFiler(soknadDto, innsendingsId, vedleggsId, false, false)
-		val opplastetFilStorrelse: Int = vedleggsFiler.filter {it.storrelse != null }.sumOf { it.storrelse!! }
-		Validerer().validerStorrelse(opplastetFilStorrelse + fil.size, restConfig.maxFileSize )
+			// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
+			Validerer().validereFilformat(listOf(file.bytes))
+			// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
+			val fil = KonverterTilPdf().tilPdf(file.bytes)
+			val vedleggsFiler = soknadService.hentFiler(soknadDto, innsendingsId, vedleggsId, false, false)
+			val opplastetFilStorrelse: Int = vedleggsFiler.filter {it.storrelse != null }.sumOf { it.storrelse!! }
+			Validerer().validerStorrelse(opplastetFilStorrelse + fil.size, restConfig.maxFileSize )
 
-		// Lagre
-		val lagretFilDto = soknadService.lagreFil(soknadDto, FilDto(null, vedleggsId, file.originalFilename ?:"", "application/pdf", fil.size, fil, LocalDateTime.now()))
+			// Lagre
+			val lagretFilDto = soknadService.lagreFil(soknadDto, FilDto(null, vedleggsId, file.originalFilename ?:"", "application/pdf", fil.size, fil, LocalDateTime.now()))
 
-		logger.info("Lagret fil ${lagretFilDto.id} på vedlegg $vedleggsId til søknad $innsendingsId")
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(FilIdDto(lagretFilDto.id))
+			logger.info("Lagret fil ${lagretFilDto.id} på vedlegg $vedleggsId til søknad $innsendingsId")
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(FilIdDto(lagretFilDto.id))
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
 	}
 
 	// Søker skal kunne laste opp ett eller flere filer på ett vedlegg. Dette endepunktet tillater henting av en allerede opplastet fil.
@@ -215,16 +269,21 @@ class FrontEndRestApi(
 		@PathVariable filId: Long
 	): ResponseEntity<ByteArray> {
 		logger.info("Kall for å hente fil $filId på vedlegg $vedleggsId til søknad $innsendingsId")
-		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll.harTilgang(soknadDto)
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.LAST_NED.name)
+		try {
+			val soknadDto = soknadService.hentSoknad(innsendingsId)
+			tilgangskontroll.harTilgang(soknadDto)
 
-		val filDto = soknadService.hentFil(soknadDto, vedleggsId, filId)
-		logger.info("Hentet fil ${filDto.id} på vedlegg $vedleggsId til søknad $innsendingsId")
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.contentType(MediaType.APPLICATION_PDF)
-			.contentLength(filDto.data?.size?.toLong()!!)
-			.body(filDto.data)
+			val filDto = soknadService.hentFil(soknadDto, vedleggsId, filId)
+			logger.info("Hentet fil ${filDto.id} på vedlegg $vedleggsId til søknad $innsendingsId")
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.contentType(MediaType.APPLICATION_PDF)
+				.contentLength(filDto.data?.size?.toLong()!!)
+				.body(filDto.data)
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
 	}
 
 	@Operation(summary = "Requests fetching information on all uploaded files on an attachment.", tags = ["operations"])
@@ -237,6 +296,8 @@ class FrontEndRestApi(
 		@PathVariable vedleggsId: Long
 	): ResponseEntity<List<FilDto>> {
 		logger.info("Kall for å hente filinfo til vedlegg $vedleggsId til søknad $innsendingsId")
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.HENT.name)
+		try {
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll.harTilgang(soknadDto)
 		val filDtoListe = soknadService.hentFiler(soknadDto, innsendingsId, vedleggsId)
@@ -244,6 +305,9 @@ class FrontEndRestApi(
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(filDtoListe)
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
 	}
 
 	@Operation(summary = "Requests get on a previously uploaded file to an attachment.", tags = ["operations"])
@@ -257,14 +321,19 @@ class FrontEndRestApi(
 		@PathVariable filId: Long
 	): ResponseEntity<BodyStatusResponseDto> {
 		logger.info("Kall for å slette fil $filId på vedlegg $vedleggsId til søknad $innsendingsId")
-		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll.harTilgang(soknadDto)
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.SLETT_FIL.name)
+		try {
+			val soknadDto = soknadService.hentSoknad(innsendingsId)
+			tilgangskontroll.harTilgang(soknadDto)
 
-		soknadService.slettFil(soknadDto, vedleggsId, filId)
-		logger.info("Slette fil $filId på vedlegg $vedleggsId til søknad $innsendingsId")
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet fil med id $filId"))
+			soknadService.slettFil(soknadDto, vedleggsId, filId)
+			logger.info("Slette fil $filId på vedlegg $vedleggsId til søknad $innsendingsId")
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet fil med id $filId"))
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
 	}
 
 	@Operation(
@@ -278,14 +347,19 @@ class FrontEndRestApi(
 	@DeleteMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}")
 	fun slettVedlegg(@PathVariable innsendingsId: String, @PathVariable vedleggsId: Long): ResponseEntity<BodyStatusResponseDto> {
 		logger.info("Kall for å slette vedlegg $vedleggsId for søknad $innsendingsId")
-		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll.harTilgang(soknadDto)
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.SLETT_FIL.name)
+		try {
+			val soknadDto = soknadService.hentSoknad(innsendingsId)
+			tilgangskontroll.harTilgang(soknadDto)
 
-		soknadService.slettVedlegg(soknadDto, vedleggsId)
-		logger.info("Slettet vedlegg $vedleggsId for søknad $innsendingsId")
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet vedlegg med id $vedleggsId"))
+			soknadService.slettVedlegg(soknadDto, vedleggsId)
+			logger.info("Slettet vedlegg $vedleggsId for søknad $innsendingsId")
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet vedlegg med id $vedleggsId"))
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
 	}
 
 	@Operation(summary = "Requests delete of an application.", tags = ["operations"])
@@ -295,13 +369,18 @@ class FrontEndRestApi(
 	@DeleteMapping("/soknad/{innsendingsId}")
 	fun slettSoknad(@PathVariable innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
 		logger.info("Kall for å slette søknad med id $innsendingsId")
-		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll.harTilgang(soknadDto)
-		soknadService.slettSoknadAvBruker(soknadDto)
-		logger.info("Slettet søknad med id $innsendingsId")
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet soknad med id $innsendingsId"))
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.SLETT.name)
+		try {
+			val soknadDto = soknadService.hentSoknad(innsendingsId)
+			tilgangskontroll.harTilgang(soknadDto)
+			soknadService.slettSoknadAvBruker(soknadDto)
+			logger.info("Slettet søknad med id $innsendingsId")
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet soknad med id $innsendingsId"))
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
 	}
 
 	@Operation(summary = "Requests that the application shall be sent to NAV.", tags = ["operations"])
@@ -311,13 +390,18 @@ class FrontEndRestApi(
 	@PostMapping("/sendInn/{innsendingsId}")
 	fun sendInnSoknad(@PathVariable innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
 		logger.info("Kall for å sende inn soknad $innsendingsId")
-		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll.harTilgang(soknadDto)
-		soknadService.sendInnSoknad(soknadDto)
-		logger.info("Sendt inn soknad $innsendingsId")
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Soknad med id $innsendingsId er sendt inn til NAV"))
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.SEND_INN.name)
+		try {
+			val soknadDto = soknadService.hentSoknad(innsendingsId)
+			tilgangskontroll.harTilgang(soknadDto)
+			soknadService.sendInnSoknad(soknadDto)
+			logger.info("Sendt inn soknad $innsendingsId")
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(BodyStatusResponseDto(HttpStatus.OK.name, "Soknad med id $innsendingsId er sendt inn til NAV"))
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
 	}
 
 }

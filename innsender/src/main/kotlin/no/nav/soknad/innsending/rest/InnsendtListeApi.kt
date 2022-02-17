@@ -6,14 +6,18 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import no.nav.soknad.innsending.dto.AktivSakDto
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.SafService
+import no.nav.soknad.innsending.supervision.InnsenderMetrics
+import no.nav.soknad.innsending.supervision.InnsenderOperation
+import org.hibernate.annotations.common.util.impl.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/innsendte")
-class InnsendtListeApi(val safService: SafService, val tilgangskontroll: Tilgangskontroll) {
+class InnsendtListeApi(val safService: SafService, val tilgangskontroll: Tilgangskontroll, val innsenderMetrics: InnsenderMetrics) {
 
+	private val logger = LoggerFactory.logger(javaClass)
 
 	@Operation(summary = "Requests fetching list of applications that have been sent to NAV by the applicant.", tags = ["operations"])
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
@@ -22,10 +26,16 @@ class InnsendtListeApi(val safService: SafService, val tilgangskontroll: Tilgang
 	@GetMapping("/hentAktiveSaker/{brukerId}")
 	fun aktiveSaker(@PathVariable brukerId: String, @RequestParam skjemanr: String?): ResponseEntity<List<AktivSakDto>> {
 
+		logger.info("Kall for å hente innsendte søknader for en bruker")
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
+		try {
 		val innsendteSoknader = safService.hentInnsendteSoknader(tilgangskontroll.hentBrukerFraToken(brukerId))
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(innsendteSoknader)
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
 	}
 
 

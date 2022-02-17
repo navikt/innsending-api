@@ -40,7 +40,7 @@ fun lagVedlegg(id: Long? = null, vedleggsnr: String, tittel: String
 	return VedleggDto(id, vedleggsnr, tittel, UUID.randomUUID().toString()
 		, if (vedleggsNavn != null && vedleggsNavn.contains(".pdf")) "application/pdf" else "application/json"
 		, if (opplastingsStatus == OpplastingsStatus.LASTET_OPP && vedleggsNavn != null) getBytesFromFile(vedleggsNavn) else null
-		, erHoveddokument, if (vedleggsNavn == null || (vedleggsNavn != null && vedleggsNavn.contains(".pdf"))) false else true, true
+		, erHoveddokument, if (vedleggsNavn == null || (vedleggsNavn != null && vedleggsNavn.contains(".pdf"))) false else true, true, true
 		, if (erHoveddokument) "https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/1b736c8e28abcb80f654166318f130e5ed2a0aad.pdf" else null
 		,opplastingsStatus, LocalDateTime.now())
 }
@@ -49,7 +49,7 @@ fun lagVedlegg(id: Long? = null, vedleggsnr: String, tittel: String
 fun lastOppDokumentTilVedlegg(vedleggDto: VedleggDto) =
 	VedleggDto(vedleggDto.id, vedleggDto.vedleggsnr, vedleggDto.tittel, UUID.randomUUID().toString(),
 		"application/pdf", getBytesFromFile("/litenPdf.pdf"), true, erVariant = false,
-		true, vedleggDto.skjemaurl, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
+		true, true, vedleggDto.skjemaurl, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
 
 fun getBytesFromFile(path: String): ByteArray {
 	val resourceAsStream = SoknadServiceTest::class.java.getResourceAsStream(path)

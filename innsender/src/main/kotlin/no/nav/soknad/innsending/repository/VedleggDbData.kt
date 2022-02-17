@@ -12,6 +12,7 @@ data class VedleggDbData(
 	@Column(name = "erhoveddokument", columnDefinition = "boolean") val erhoveddokument: Boolean,
 	@Column(name = "ervariant", columnDefinition = "boolean") val ervariant: Boolean,
 	@Column(name = "erpdfa", columnDefinition = "boolean") val erpdfa: Boolean,
+	@Column(name = "erpakrevd", columnDefinition = "boolean") val erpakrevd: Boolean,
 	@Column(name = "vedleggsnr", columnDefinition = "varchar") val vedleggsnr: String?,
 	@Column(name = "tittel", columnDefinition = "varchar") val tittel: String,
 	@Column(name = "mimetype", columnDefinition = "varchar") val mimetype: String?,

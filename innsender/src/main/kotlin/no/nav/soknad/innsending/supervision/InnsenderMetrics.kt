@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.supervision
 
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.Counter
+import io.prometheus.client.Histogram
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -26,9 +27,13 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 	private val error = "error"
 	private val ok = "ok"
 	private val all = "all"
+	private val latency = "innsending_latency"
+	private val latency_help = "Innsending latency distribution"
 
 	private val applicationCounter = registerCounter(name, help, operation_label)
 	private val applicationErrorCounter = registerCounter(errorName, helpError, operation_label)
+
+	private val operationLatencyHistogram = registerLatencyHistogram(latency, latency_help, operation_label)
 
 
 	private fun registerCounter(name: String, help: String, label: String): Counter =
@@ -40,10 +45,26 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 			.labelNames(label, tema_label, app_label)
 			.register(registry)
 
-	fun applicationCounterInc(operation: String, tema: String) = applicationCounter.labels(operation, tema, app_label).inc()
-	fun applicationCounterGet(operation: String, tema: String) = applicationCounter.labels(operation, tema, app_label)?.get()
+	private fun registerLatencyHistogram(name: String, help: String, label: String): Histogram =
+		Histogram
+			.build()
+			.namespace(soknadNamespace)
+			.name(name)
+			.help(help)
+			.labelNames(label, app_label)
+			.buckets(100.0, 200.0, 400.0, 1000.0, 2000.0, 4000.0, 15000.0, 30000.0)
+			.register(registry)
 
-	fun applicationErrorCounterInc(operation: String, tema: String) = applicationErrorCounter.labels(operation, tema, app_label).inc()
-	fun applicationErrorCounterGet(operation: String, tema: String) = applicationErrorCounter.labels(operation, tema, app_label)?.get()
+
+	fun applicationCounterInc(operation: String, tema: String) = applicationCounter.labels(operation, tema, appName).inc()
+	fun applicationCounterGet(operation: String, tema: String) = applicationCounter.labels(operation, tema, appName)?.get()
+
+	fun applicationErrorCounterInc(operation: String, tema: String) = applicationErrorCounter.labels(operation, tema, appName).inc()
+	fun applicationErrorCounterGet(operation: String, tema: String) = applicationErrorCounter.labels(operation, tema, appName)?.get()
+
+	fun operationHistogramLatencyStart(operation: String): Histogram.Timer =  operationLatencyHistogram.labels(operation, appName).startTimer()
+	fun operationHistogramLatencyEnd(timer: Histogram.Timer) {timer.observeDuration()}
+	fun operationHistogramGetLatency(operation: String): Histogram.Child.Value = operationLatencyHistogram.labels(operation, appName).get()
+
 
 }

@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.supervision
 
-enum class Operation(name: String) {
+enum class InnsenderOperation(name: String) {
 	UKJENT("Ukjent"),
 	OPPRETT("Opprett"),
 	HENT("Hent"),

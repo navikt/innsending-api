@@ -4,11 +4,8 @@ data class SkjemaDokumentDto(
 	val vedleggsnr: String,
 	val tittel: String,
 	val mimetype: String?,
+	val pakrevd: Boolean,
 	val document: ByteArray?,
-	val erHoveddokument: Boolean,
-	val erVariant: Boolean,
-	val erPdfa: Boolean?,
-	val opplastingsStatus: OpplastingsStatusDto
 ) {
 	override fun equals(other: Any?): Boolean {
 		if (this === other) return true
@@ -16,8 +13,7 @@ data class SkjemaDokumentDto(
 
 		other as SkjemaDokumentDto
 
-		if (vedleggsnr == other.vedleggsnr && erHoveddokument == other.erHoveddokument
-			&& erVariant == other.erVariant && mimetype.equals(other.mimetype)) return true
+		if (vedleggsnr == other.vedleggsnr && mimetype.equals(other.mimetype) && document.contentEquals(other.document)) return true
 
 		return false
 	}

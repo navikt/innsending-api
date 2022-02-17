@@ -6,5 +6,7 @@ data class SkjemaDto(
 	val tittel: String,
 	val tema: String,
 	val spraak: String,
-	val vedleggsListe: List<SkjemaDokumentDto>
+	val hoveddokument: SkjemaDokumentDto,
+	val hoveddokumentVariant: SkjemaDokumentDto,
+	val vedleggsListe: List<SkjemaDokumentDto>?
 )

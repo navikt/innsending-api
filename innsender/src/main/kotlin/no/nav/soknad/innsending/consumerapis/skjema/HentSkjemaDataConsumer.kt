@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.consumerapis.skjema
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import no.nav.soknad.innsending.exceptions.SanityException
+import no.nav.soknad.innsending.util.finnBackupLanguage
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -51,16 +52,20 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 	}
 
 	private fun getTitle(sanity: SkjemaOgVedleggsdata, spraak: String): String? {
-		return if ("nn".equals(spraak, true) && !sanity.tittel_nn.isNullOrBlank()) {
+		return if ("no".equals(spraak, true))
+			sanity.tittel_no
+		else if ("nn".equals(spraak, true) && !sanity.tittel_nn.isNullOrBlank()) {
 			sanity.tittel_nn
 		} else if ("en".equals(spraak, true) && !sanity.tittel_en.isNullOrBlank()) {
 			sanity.tittel_en
 		} else
-			sanity.tittel_no
+			return getTitle(sanity, finnBackupLanguage(spraak))
 	}
 
 	private fun getUrl(sanity: SkjemaOgVedleggsdata, spraak: String): String? {
-		return if ("nn".equals(spraak, true) && !sanity.url_nn.isNullOrBlank()) {
+		return if ("no".equals(spraak, true)) {
+			sanity.url_no
+		}	else if ("nn".equals(spraak, true) && !sanity.url_nn.isNullOrBlank()) {
 			sanity.url_nn
 		} else if ("en".equals(spraak, true) && !sanity.url_en.isNullOrBlank()) {
 			sanity.url_en
@@ -75,9 +80,8 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 		} else if ("pl".equals(spraak, true) && !sanity.url_pl.isNullOrBlank()) {
 			sanity.url_pl
 		} else
-			sanity.url_no
+			 return getUrl(sanity, finnBackupLanguage(spraak))
 	}
-
 
 	private fun hentSkjemaData() = hentSkjemaData.hent() ?: emptyList()
 

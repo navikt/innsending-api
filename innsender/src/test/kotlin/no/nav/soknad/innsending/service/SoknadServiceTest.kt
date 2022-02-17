@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
 import java.util.*
+import javax.activation.MimeType
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -99,13 +100,14 @@ class SoknadServiceTest {
 		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val brukerid = "12345678901"
-		val skjemanr = "NAV 95-00.11"
-		val spraak = Locale.FRENCH.displayLanguage
+		val skjemanr = "NAV 14-05.07"
+		val spraak = "fr"
 		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
 
 		assertEquals(brukerid, dokumentSoknadDto.brukerId)
 		assertEquals(skjemanr, dokumentSoknadDto.skjemanr)
-		assertEquals(spraak, dokumentSoknadDto.spraak)
+		assertEquals(spraak, dokumentSoknadDto.spraak) // Beholder ønsket språk
+		assertEquals("Application for lump-sum grant at birth", dokumentSoknadDto.tittel) // engelsk backup for fransk
 		assertNotNull(dokumentSoknadDto.innsendingsId)
 	}
 
@@ -337,8 +339,11 @@ class SoknadServiceTest {
 	}
 
 	private fun testOgSjekkOpprettingAvSoknad(soknadService: SoknadService, vedleggsListe: List<String> = listOf(), brukerid: String = "12345678901"): DokumentSoknadDto {
+		return testOgSjekkOpprettingAvSoknad(soknadService, vedleggsListe, brukerid, "no" )
+	}
+
+	private fun testOgSjekkOpprettingAvSoknad(soknadService: SoknadService, vedleggsListe: List<String> = listOf(), brukerid: String = "12345678901", spraak: String = "no"): DokumentSoknadDto {
 		val skjemanr = "NAV 95-00.11"
-		val spraak = "no"
 		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, vedleggsListe)
 
 		assertEquals(brukerid, dokumentSoknadDto.brukerId)
@@ -411,14 +416,14 @@ class SoknadServiceTest {
 
 	private fun lagVedleggDto(skjemanr: String, tittel: String, mimeType: String?, fil: ByteArray?): VedleggDto {
 		return  VedleggDto(null, skjemanr, tittel, UUID.randomUUID().toString(), mimeType, fil
-			, false, erVariant = false, if ("application/pdf".equals(mimeType, true)) true else false, null, OpplastingsStatus.IKKE_VALGT,  LocalDateTime.now())
+			, false, erVariant = false, if ("application/pdf".equals(mimeType, true)) true else false, true,null, OpplastingsStatus.IKKE_VALGT,  LocalDateTime.now())
 
 	}
 	private fun lagDokumentSoknad(brukerId: String, skjemanr: String, spraak: String, tittel: String, tema: String): DokumentSoknadDto {
 			val vedleggDtoPdf = VedleggDto(null, skjemanr, tittel, UUID.randomUUID().toString(), "application/pdf",
-					getBytesFromFile("/litenPdf.pdf"), true, erVariant = false, true, null, OpplastingsStatus.LASTET_OPP,  LocalDateTime.now())
+					getBytesFromFile("/litenPdf.pdf"), true, erVariant = false, true, true, null, OpplastingsStatus.LASTET_OPP,  LocalDateTime.now())
 			val vedleggDtoJson = VedleggDto(null, skjemanr, tittel, UUID.randomUUID().toString(),"application/json",
-					getBytesFromFile("/sanity.json"), true, erVariant = true, false, null, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
+					getBytesFromFile("/sanity.json"), true, erVariant = true, false, true, null, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
 
 		val vedleggDtoList = listOf(vedleggDtoPdf, vedleggDtoJson)
 		return DokumentSoknadDto(null, null, null, brukerId, skjemanr, tittel, tema, spraak,
@@ -437,7 +442,7 @@ class SoknadServiceTest {
 	private fun lastOppDokumentTilVedlegg(vedleggDto: VedleggDto) =
 		VedleggDto(vedleggDto.id, vedleggDto.vedleggsnr, vedleggDto.tittel, UUID.randomUUID().toString(),
 			"application/pdf", getBytesFromFile("/litenPdf.pdf"), true, erVariant = false,
-			true, vedleggDto.skjemaurl, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
+			true, true, vedleggDto.skjemaurl, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
 
 	private fun lagFilDtoMedFil(vedleggDto: VedleggDto): FilDto {
 		val fil = getBytesFromFile("/litenPdf.pdf")
@@ -553,4 +558,47 @@ class SoknadServiceTest {
 		}
 	}
 
+	@Test
+	fun opprettingAvSoknadVedKallFraFyllUt() {
+		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+
+		val tema = "HJE"
+		val skjemanr = "NAV 10-07.04"
+		val innsendingsId = soknadService.opprettNySoknad(lagDokumentSoknad(tema, skjemanr))
+
+		val soknad = soknadService.hentSoknad(innsendingsId)
+
+		assertTrue(soknad.tema == tema &&  soknad.skjemanr == skjemanr)
+		assertTrue(soknad.vedleggsListe.size == 3)
+		assertTrue(soknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant == false && it.opplastingsStatus == OpplastingsStatus.LASTET_OPP}.isNotEmpty())
+	}
+
+	private fun lagDokumentSoknad(tema: String, skjemanr: String): DokumentSoknadDto {
+		return DokumentSoknadDto(null, null, null, "12345678901", skjemanr,
+			"Fullmaktsskjema", tema, "nb_NO", SoknadsStatus.Opprettet, LocalDateTime.now(), null, null, lagVedleggsListe())
+	}
+
+	private fun lagVedleggsListe(): List<VedleggDto> {
+		// vedleggsliste fra fyllUt vil typisk inneholde hoveddokument (pdf), hoveddokumentvariant (json), vedlegg (påkrevkde) og vedlegg (ikke påkrevde, f.eks. Annet (=N6))
+		return listOf(
+			lagVedlegg("NAV 10-07.04", "Fullmaktsskjema", "application/pdf",
+			true, false, true, no.nav.soknad.innsending.utils.getBytesFromFile("/litenPdf.pdf")
+			),
+			lagVedlegg("NAV 10-07.04", "Fullmaktsskjema", "application/json",
+			true, true, true, no.nav.soknad.innsending.utils.getBytesFromFile("/sanity.json")
+			),
+			lagVedlegg("N6", "Annen informasjon", null,
+				true, true, false, null
+			)
+		)
+
+	}
+
+	private fun lagVedlegg(vedleggsnr: String, tittel: String, mimeType: String?, erHoveddokument: Boolean,
+												 erVariant: Boolean, erPakrevd: Boolean, document: ByteArray?): VedleggDto {
+		return VedleggDto(null, vedleggsnr, tittel, null, mimeType, document,
+			erHoveddokument, erVariant, mimeType?.contains("application/json") ?: false, erPakrevd, null,
+			if (document != null) OpplastingsStatus.LASTET_OPP else OpplastingsStatus.IKKE_VALGT, LocalDateTime.now() )
+
+	}
 }
