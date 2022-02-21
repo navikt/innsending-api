@@ -5,6 +5,7 @@ import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.consumerapis.saf.dto.Dokument
 import no.nav.soknad.innsending.service.Utilities
+import no.nav.soknad.innsending.util.testpersonid
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
@@ -33,7 +34,7 @@ class SafAPITest(private val restConfig: RestConfig): SafInterface, HealthReques
 	private val date = DateTimeFormatter.ISO_LOCAL_DATE_TIME.format( LocalDateTime.now())
 
 	private val dummyArkiverteSoknader = mapOf (
-		"12345678901" to listOf (
+		testpersonid to listOf (
 			ArkiverteSaker(
 				Utilities.laginnsendingsId(), "Test søknad", "BID", date
 				, listOf(

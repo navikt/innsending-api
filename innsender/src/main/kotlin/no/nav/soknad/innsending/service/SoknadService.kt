@@ -294,8 +294,14 @@ class SoknadService(
 			)
 		}
 
+		return opprettEttersendingsSoknad(hentAlleVedlegg(soknadDbDataList.first()), ettersendingsId)
+	}
+
+	private fun opprettEttersendingsSoknad (
+		nyesteSoknad: DokumentSoknadDto,
+		ettersendingsId: String
+	): DokumentSoknadDto {
 		try {
-			val nyesteSoknad = hentAlleVedlegg(soknadDbDataList.first())
 
 			val savedEttersendingsSoknad = lagreSoknad(
 				SoknadDbData(
@@ -306,7 +312,7 @@ class SoknadService(
 					nyesteSoknad.tema,
 					nyesteSoknad.spraak,
 					SoknadsStatus.Opprettet,
-					brukerId,
+					nyesteSoknad.brukerId,
 					ettersendingsId,
 					LocalDateTime.now(),
 					LocalDateTime.now(),
@@ -342,7 +348,7 @@ class SoknadService(
 			innsenderMetrics.applicationCounterInc(InnsenderOperation.OPPRETT.name, dokumentSoknadDto.tema)
 			return dokumentSoknadDto
 		} catch (e: Exception) {
-			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.OPPRETT.name, soknadDbDataList.first().tema)
+			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.OPPRETT.name, nyesteSoknad.tema)
 			throw e
 		}
 	}
@@ -713,9 +719,20 @@ class SoknadService(
 			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
 			throw BackendErrorException(ex.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV")
 		}
-		// send brukernotifikasjon
-		publiserBrukernotifikasjon(hentSoknad(soknadDto.innsendingsId!!))
+		// send brukernotifikasjon ved endring av søknadsstatus til innsendt
+		val innsendtSoknadDto = hentSoknad(soknadDto.innsendingsId!!)
+		publiserBrukernotifikasjon(innsendtSoknadDto)
+
+		if (skalEttersende(innsendtSoknadDto.vedleggsListe))  {
+			opprettEttersendingsSoknad(innsendtSoknadDto, innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!)
+		}
+
 		innsenderMetrics.applicationCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
+	}
+
+	private fun skalEttersende(vedlegg: List<VedleggDto>): Boolean {
+		return vedlegg
+			.any { !it.erHoveddokument && it.erPakrevd && it.opplastingsStatus == OpplastingsStatus.SEND_SENERE}
 	}
 
 

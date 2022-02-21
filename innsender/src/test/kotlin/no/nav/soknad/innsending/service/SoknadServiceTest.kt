@@ -17,6 +17,7 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
+import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.pdfutilities.PdfGenerator
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
@@ -83,10 +84,9 @@ class SoknadServiceTest {
 	fun opprettSoknadGittSkjemanr() {
 		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
-		val brukerid = "12345678901"
+		val brukerid = testpersonid
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
-		val selectedLanguage = Locale.FRENCH.language
 		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
 
 		assertEquals(brukerid, dokumentSoknadDto.brukerId)
@@ -99,7 +99,7 @@ class SoknadServiceTest {
 	fun opprettSoknadGittSkjemanrOgIkkeStottetSprak() {
 		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
-		val brukerid = "12345678901"
+		val brukerid = testpersonid
 		val skjemanr = "NAV 14-05.07"
 		val spraak = "fr"
 		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
@@ -120,7 +120,7 @@ class SoknadServiceTest {
 	fun opprettSoknadGittUkjentSkjemanrKasterException() {
 		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
-		val brukerid = "12345678901"
+		val brukerid = testpersonid
 		val skjemanr = "NAV XX-00.11"
 		val spraak = "no"
 		val exception = assertThrows(
@@ -234,14 +234,14 @@ class SoknadServiceTest {
 	fun hentOpprettedeAktiveSoknadsDokument() {
 		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
-		testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"), "12345678901")
-		testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"), "12345678901")
+		testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"), testpersonid)
+		testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"), testpersonid)
 		testOgSjekkOpprettingAvSoknad(soknadService, listOf("W2"), "12345678902")
 		testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"), "12345678903")
 
-		val dokumentSoknadDtos = soknadService.hentAktiveSoknader(listOf("12345678901", "12345678902"))
+		val dokumentSoknadDtos = soknadService.hentAktiveSoknader(listOf(testpersonid, "12345678902"))
 
-		assertTrue(dokumentSoknadDtos.filter { listOf("12345678901", "12345678902").contains(it.brukerId)}.size == 3)
+		assertTrue(dokumentSoknadDtos.filter { listOf(testpersonid, "12345678902").contains(it.brukerId)}.size == 3)
 		assertTrue(dokumentSoknadDtos.filter { listOf("12345678903").contains(it.brukerId)}.size == 0)
 
 	}
@@ -338,11 +338,11 @@ class SoknadServiceTest {
 
 	}
 
-	private fun testOgSjekkOpprettingAvSoknad(soknadService: SoknadService, vedleggsListe: List<String> = listOf(), brukerid: String = "12345678901"): DokumentSoknadDto {
+	private fun testOgSjekkOpprettingAvSoknad(soknadService: SoknadService, vedleggsListe: List<String> = listOf(), brukerid: String = testpersonid): DokumentSoknadDto {
 		return testOgSjekkOpprettingAvSoknad(soknadService, vedleggsListe, brukerid, "no" )
 	}
 
-	private fun testOgSjekkOpprettingAvSoknad(soknadService: SoknadService, vedleggsListe: List<String> = listOf(), brukerid: String = "12345678901", spraak: String = "no"): DokumentSoknadDto {
+	private fun testOgSjekkOpprettingAvSoknad(soknadService: SoknadService, vedleggsListe: List<String> = listOf(), brukerid: String = testpersonid, spraak: String = "no"): DokumentSoknadDto {
 		val skjemanr = "NAV 95-00.11"
 		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, vedleggsListe)
 
@@ -357,7 +357,7 @@ class SoknadServiceTest {
 	}
 
 	private fun testOgSjekkOpprettingAvSoknad(soknadService: SoknadService, vedleggsListe: List<String> = listOf()): DokumentSoknadDto {
-		return testOgSjekkOpprettingAvSoknad(soknadService, vedleggsListe, "12345678901")
+		return testOgSjekkOpprettingAvSoknad(soknadService, vedleggsListe, testpersonid)
 	}
 
 	private fun testOgSjekkInnsendingAvSoknad(soknadService: SoknadService, dokumentSoknadDto: DokumentSoknadDto) {
@@ -574,7 +574,7 @@ class SoknadServiceTest {
 	}
 
 	private fun lagDokumentSoknad(tema: String, skjemanr: String): DokumentSoknadDto {
-		return DokumentSoknadDto(null, null, null, "12345678901", skjemanr,
+		return DokumentSoknadDto(null, null, null, testpersonid, skjemanr,
 			"Fullmaktsskjema", tema, "nb_NO", SoknadsStatus.Opprettet, LocalDateTime.now(), null, null, lagVedleggsListe())
 	}
 

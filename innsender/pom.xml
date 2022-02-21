@@ -27,7 +27,7 @@
 		<prometheus-client.version>0.11.0</prometheus-client.version>
 		<logstash.version>6.6</logstash.version>
 		<springdoc.version>1.5.9</springdoc.version>
-		<brukernotifikasjon-schemas.version>1.2021.10.04-10.52-1b464f9920b0</brukernotifikasjon-schemas.version>
+		<brukernotifikasjon-schemas.version>1.3.1</brukernotifikasjon-schemas.version>
 		<confluent.version>5.5.2</confluent.version>
 		<kafka.version>2.6.0</kafka.version>
 		<kafka-streams-avro-serde.version>5.5.0</kafka-streams-avro-serde.version>

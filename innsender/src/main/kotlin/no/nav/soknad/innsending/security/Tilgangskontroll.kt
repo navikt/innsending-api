@@ -7,9 +7,10 @@ import org.springframework.stereotype.Component
 
 @Component
 class Tilgangskontroll(val pdlService: PdlInterface) {
+	val testbrukerid = "02097225454"
 
 	fun hentBrukerFraToken(brukerId: String?): String {
-		return brukerId ?: "12345678901" // // TODO endre til alltid å hente fra token
+		return brukerId ?: testbrukerid // // TODO endre til alltid å hente fra token
 	}
 
 	fun hentPersonIdents(brukerId: String): List<String> {

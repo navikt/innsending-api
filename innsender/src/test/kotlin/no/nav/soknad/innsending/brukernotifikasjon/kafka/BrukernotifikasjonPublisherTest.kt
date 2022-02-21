@@ -86,6 +86,7 @@ internal class BrukernotifikasjonPublisherTest {
 	@Test
 	fun `sjekk at Done og Oppgave meldinger blir publisert ved innsending av dokumentsoknad med vedlegg som skal ettersendes`() {
 		val innsendingsid = "123456"
+		val ettersendingsSoknadsId = "123457"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
 		val personId = "12125912345"
@@ -99,28 +100,37 @@ internal class BrukernotifikasjonPublisherTest {
 		every { kafkaPublisher.putApplicationDoneOnTopic(any(), capture(done)) } returns Unit
 		every { kafkaPublisher.putApplicationTaskOnTopic(any(), capture(oppgave)) } returns Unit
 
-		brukernotifikasjonPublisher?.soknadStatusChange(
-			lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatus.Innsendt,
-		listOf(
-			lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatus.LASTET_OPP, false,"/litenPdf.pdf" ),
-			lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatus.SEND_SENERE, false)),
-		))
+		val soknad = lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatus.Innsendt,
+			listOf(
+				lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatus.INNSENDT, false,"/litenPdf.pdf" ),
+				lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatus.SEND_SENERE, false)),
+		)
+
+		brukernotifikasjonPublisher?.soknadStatusChange(soknad)
 
 		assertTrue(done.isCaptured)
 		assertEquals(personId, done.captured.getFodselsnummer())
+
+		val ettersending = lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, ettersendingsSoknadsId, SoknadsStatus.Opprettet,
+			listOf(
+				lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatus.INNSENDT, false,"/litenPdf.pdf" ),
+				lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatus.IKKE_VALGT, false)), soknad.innsendingsId
+		)
+
+		brukernotifikasjonPublisher?.soknadStatusChange(ettersending)
 
 		assertTrue(oppgave.isCaptured)
 		assertEquals(personId, oppgave.captured.getFodselsnummer())
 		assertEquals(innsendingsid, oppgave.captured.getGrupperingsId())
 		assertTrue(oppgave.captured.getTekst().contains(tittel))
 		assertEquals(brukernotifikasjonPublisher?.tittelPrefixEttersendelse + tittel, oppgave.captured.getTekst())
-		assertEquals(kafkaConfig.tjenesteUrl + kafkaConfig.ettersendePaSoknad + innsendingsid, oppgave.captured.getLink())
+		assertEquals(kafkaConfig.tjenesteUrl + kafkaConfig.gjenopptaSoknadsArbeid + ettersendingsSoknadsId, oppgave.captured.getLink())
 	}
 
 	@Test
-	fun `sjekk at Done meldinger blir publisert ved ettersending av dokumentsoknad der alle obligatoriske vedlegg er ettersendt`() {
+	fun `sjekk at Done melding blir publisert ved ettersending av dokumentsoknad`() {
 		val innsendingsid = "123456"
-		val ettersendingsId = "123455"
+		val ettersendingsSoknadsId = "123457"
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "no"
 		val personId = "12125912345"
@@ -132,19 +142,17 @@ internal class BrukernotifikasjonPublisherTest {
 		val done = slot<Done>()
 
 		every { kafkaPublisher.putApplicationDoneOnTopic(capture(nokler), capture(done)) } returns Unit   // Nokkel(appConfiguration.kafkaConfig.username, innsendingsid )
-		every { kafkaPublisher.putApplicationDoneOnTopic(capture(nokler), capture(done)) } returns Unit //
 
 		brukernotifikasjonPublisher?.soknadStatusChange(
-			lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatus.Innsendt,
+			lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, ettersendingsSoknadsId, SoknadsStatus.Innsendt,
 				listOf(
 					lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatus.LASTET_OPP, false,"/litenPdf.pdf" ),
 					lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatus.LASTET_OPP, false, "/litenPdf.pdf")),
-				ettersendingsId))
+				innsendingsid))
 
 		assertTrue(done.isCaptured)
 		assertEquals(personId, done.captured.getFodselsnummer())
-		assertEquals(innsendingsid, nokler[0].getEventId())
-		assertEquals(ettersendingsId+ "-ettersending", nokler[1].getEventId())
+		assertEquals(ettersendingsSoknadsId, nokler[0].getEventId())
 
 	}
 

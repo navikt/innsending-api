@@ -31,7 +31,7 @@ class FrontEndRestApi(
 
 	private val logger = LoggerFactory.logger(javaClass)
 
-	@Operation(summary = "Requests creating a new application given main document id (skjemanr).", tags = ["operations"])
+	@Operation(summary = "Requests creating a new application given main document id (skjemanr). Use brukerId = 02097225454 for testing", tags = ["operations"])
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
 		description = "If successful, it will return DokumentSoknadDto which contains the title and url to where the " +
 			"schema for the main document can be found."

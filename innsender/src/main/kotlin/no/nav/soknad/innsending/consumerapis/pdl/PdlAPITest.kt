@@ -4,6 +4,7 @@ import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.*
 import no.nav.soknad.innsending.exceptions.BackendErrorException
+import no.nav.soknad.innsending.util.testpersonid
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
@@ -43,7 +44,7 @@ class PdlAPITest(private val restConfig: RestConfig): PdlInterface, HealthReques
 	}
 
 	private val dummyIdents = listOf(
-		listOf(PersonIdent("12345678901", "FOLKEREGISTERIDENT", false), PersonIdent("12345678902","FOLKEREGISTERIDENT", true)),
+		listOf(PersonIdent(testpersonid, "FOLKEREGISTERIDENT", false), PersonIdent("12345678902","FOLKEREGISTERIDENT", true)),
 		listOf(PersonIdent("12345678903", "FOLKEREGISTERIDENT", false)),
 		listOf(PersonIdent("12345678904", "NPID", false)),
 		listOf(
@@ -53,7 +54,7 @@ class PdlAPITest(private val restConfig: RestConfig): PdlInterface, HealthReques
 	)
 
 	private val dummyPersonDtos = mapOf(
-		"12345678901" to PersonDto(
+		testpersonid to PersonDto(
 			listOf(
 				NavnDto("F1", null, "E1",
 				MetadataDto("FOLKEREGISTERET", listOf(EndringDto("FOLKEREGISTERET", LocalDateTime.now(),""))),
