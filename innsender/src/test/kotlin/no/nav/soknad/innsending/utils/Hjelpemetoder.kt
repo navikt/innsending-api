@@ -37,7 +37,7 @@ fun oppdaterDokumentSoknad(dokumentSoknadDto: DokumentSoknadDto): DokumentSoknad
 fun lagVedlegg(id: Long? = null, vedleggsnr: String, tittel: String
 							 , opplastingsStatus: OpplastingsStatus = OpplastingsStatus.IKKE_VALGT
 							 , erHoveddokument: Boolean = false, vedleggsNavn: String? = null): VedleggDto {
-	return VedleggDto(id, vedleggsnr, tittel, UUID.randomUUID().toString()
+	return VedleggDto(id, vedleggsnr, tittel, tittel, "Beskrivelse", UUID.randomUUID().toString()
 		, if (vedleggsNavn != null && vedleggsNavn.contains(".pdf")) "application/pdf" else "application/json"
 		, if (opplastingsStatus == OpplastingsStatus.LASTET_OPP && vedleggsNavn != null) getBytesFromFile(vedleggsNavn) else null
 		, erHoveddokument, if (vedleggsNavn == null || (vedleggsNavn != null && vedleggsNavn.contains(".pdf"))) false else true, true, true
@@ -47,7 +47,7 @@ fun lagVedlegg(id: Long? = null, vedleggsnr: String, tittel: String
 
 
 fun lastOppDokumentTilVedlegg(vedleggDto: VedleggDto) =
-	VedleggDto(vedleggDto.id, vedleggDto.vedleggsnr, vedleggDto.tittel, UUID.randomUUID().toString(),
+	VedleggDto(vedleggDto.id, vedleggDto.vedleggsnr, vedleggDto.tittel, vedleggDto.tittel, vedleggDto.beskrivelse, UUID.randomUUID().toString(),
 		"application/pdf", getBytesFromFile("/litenPdf.pdf"), true, erVariant = false,
 		true, true, vedleggDto.skjemaurl, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
 

@@ -74,6 +74,8 @@ class SoknadService(
 					true,
 					kodeverkSkjema.skjemanummer ?: kodeverkSkjema.vedleggsid,
 					kodeverkSkjema.tittel ?: "",
+					kodeverkSkjema.tittel ?: "",
+					"",
 					null,
 					UUID.randomUUID().toString(),
 					LocalDateTime.now(),
@@ -110,7 +112,8 @@ class SoknadService(
 				lagreVedlegg(
 					VedleggDbData(
 						null, soknadsId, OpplastingsStatus.IKKE_VALGT,
-						false, ervariant = false, false,true, v.skjemanummer, v.tittel ?: "", null,
+						false, ervariant = false, false,true, v.skjemanummer, v.tittel ?: "",
+						v.tittel ?: "","",null,
 						UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now(), v.url
 					)
 				)
@@ -251,6 +254,8 @@ class SoknadService(
 					true,
 					kodeverkSkjema.skjemanummer ?: kodeverkSkjema.vedleggsid,
 					kodeverkSkjema.tittel ?: "",
+					kodeverkSkjema.tittel ?: "",
+					"",
 					null,
 					UUID.randomUUID().toString(),
 					LocalDateTime.now(),
@@ -333,6 +338,8 @@ class SoknadService(
 							v.erPakrevd,
 							v.vedleggsnr,
 							v.tittel,
+							v.label,
+							v.beskrivelse,
 							v.mimetype,
 							UUID.randomUUID().toString(),
 							LocalDateTime.now(),
@@ -770,7 +777,7 @@ class SoknadService(
 	}
 
 	private fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
-		VedleggDto(vedleggDto.id!!, vedleggDto.vedleggsnr, vedleggDto.tittel,
+		VedleggDto(vedleggDto.id!!, vedleggDto.vedleggsnr, vedleggDto.tittel, vedleggDto.label, vedleggDto.beskrivelse,
 			vedleggDto.uuid, filDto?.mimetype ?: vedleggDto.mimetype, filDto?.data, vedleggDto.erHoveddokument,
 			vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.erPakrevd, vedleggDto.skjemaurl,
 			if (filDto?.data != null) OpplastingsStatus.LASTET_OPP else vedleggDto.opplastingsStatus
@@ -782,7 +789,7 @@ class SoknadService(
 									, filDbData.filnavn, filDbData.mimetype, filDbData.storrelse, if (medFil) filDbData.data else null, filDbData.opprettetdato)
 
 	private fun lagVedleggDto(vedleggDbData: VedleggDbData, document: ByteArray? = null) =
-		VedleggDto(vedleggDbData.id!!, vedleggDbData.vedleggsnr, vedleggDbData.tittel,
+		VedleggDto(vedleggDbData.id!!, vedleggDbData.vedleggsnr, vedleggDbData.tittel, vedleggDbData.label, vedleggDbData.beskrivelse,
 			vedleggDbData.uuid, vedleggDbData.mimetype, document, vedleggDbData.erhoveddokument,
 			vedleggDbData.ervariant, vedleggDbData.erpdfa, vedleggDbData.erpakrevd, vedleggDbData.vedleggsurl, vedleggDbData.status, vedleggDbData.opprettetdato)
 
@@ -806,7 +813,8 @@ class SoknadService(
 
 	private fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, url: String?, opplastingsStatus: OpplastingsStatus) =
 		VedleggDbData(vedleggDto.id, soknadsId, opplastingsStatus
-			, vedleggDto.erHoveddokument, vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.erPakrevd, vedleggDto.vedleggsnr, vedleggDto.tittel
+			, vedleggDto.erHoveddokument, vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.erPakrevd, vedleggDto.vedleggsnr
+			, vedleggDto.tittel, vedleggDto.label, vedleggDto.beskrivelse
 			, vedleggDto.mimetype, vedleggDto.uuid ?: UUID.randomUUID().toString(), vedleggDto.opprettetdato, LocalDateTime.now()
 			, url ?: vedleggDto.skjemaurl
 		)

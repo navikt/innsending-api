@@ -7,6 +7,8 @@ data class VedleggDto(
 	val id: Long?,
 	val vedleggsnr: String?,
 	val tittel: String,
+	val label: String?,
+	val beskrivelse: String?,
 	val uuid: String?,
 	val mimetype: String?,
 	val document: ByteArray?,

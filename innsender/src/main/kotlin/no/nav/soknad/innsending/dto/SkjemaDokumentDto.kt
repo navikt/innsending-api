@@ -3,6 +3,8 @@ package no.nav.soknad.innsending.dto
 data class SkjemaDokumentDto(
 	val vedleggsnr: String,
 	val tittel: String,
+	val label: String,
+	val beskrivelse: String?,
 	val mimetype: String?,
 	val pakrevd: Boolean,
 	val document: ByteArray?,

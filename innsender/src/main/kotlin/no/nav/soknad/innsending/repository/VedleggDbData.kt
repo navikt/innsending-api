@@ -15,6 +15,8 @@ data class VedleggDbData(
 	@Column(name = "erpakrevd", columnDefinition = "boolean") val erpakrevd: Boolean,
 	@Column(name = "vedleggsnr", columnDefinition = "varchar") val vedleggsnr: String?,
 	@Column(name = "tittel", columnDefinition = "varchar") val tittel: String,
+	@Column(name = "label", columnDefinition = "varchar") val label: String?,
+	@Column(name = "beskrivelse", columnDefinition = "varchar") val beskrivelse: String?,
 	@Column(name = "mimetype", columnDefinition = "varchar") val mimetype: String?,
 	@Column(name = "uuid", columnDefinition = "varchar") val uuid: String?,
 	@Column(name = "opprettetdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val opprettetdato: LocalDateTime,

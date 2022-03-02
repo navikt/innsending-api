@@ -22,7 +22,7 @@ class SkjemaDokumentSoknadTransformer {
 	}
 
 	private fun konverterTilVedleggDto(skjemaDokumentDto: SkjemaDokumentDto, erHoveddokument: Boolean, erVariant: Boolean): VedleggDto =
-		VedleggDto(null, skjemaDokumentDto.vedleggsnr, skjemaDokumentDto.tittel, null, skjemaDokumentDto.mimetype, skjemaDokumentDto.document,
+		VedleggDto(null, skjemaDokumentDto.vedleggsnr, skjemaDokumentDto.tittel, skjemaDokumentDto.label,skjemaDokumentDto.beskrivelse,null, skjemaDokumentDto.mimetype, skjemaDokumentDto.document,
 		erHoveddokument, erVariant, skjemaDokumentDto.mimetype?.contains("application/pdf") ?: false, skjemaDokumentDto.pakrevd, null,if (skjemaDokumentDto.document != null) OpplastingsStatus.LASTET_OPP else OpplastingsStatus.IKKE_VALGT, LocalDateTime.now() )
 
 

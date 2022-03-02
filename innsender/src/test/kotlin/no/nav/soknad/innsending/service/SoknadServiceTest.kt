@@ -415,14 +415,14 @@ class SoknadServiceTest {
 	}
 
 	private fun lagVedleggDto(skjemanr: String, tittel: String, mimeType: String?, fil: ByteArray?): VedleggDto {
-		return  VedleggDto(null, skjemanr, tittel, UUID.randomUUID().toString(), mimeType, fil
+		return  VedleggDto(null, skjemanr, tittel, tittel, "Beskrivelse", UUID.randomUUID().toString(), mimeType, fil
 			, false, erVariant = false, if ("application/pdf".equals(mimeType, true)) true else false, true,null, OpplastingsStatus.IKKE_VALGT,  LocalDateTime.now())
 
 	}
 	private fun lagDokumentSoknad(brukerId: String, skjemanr: String, spraak: String, tittel: String, tema: String): DokumentSoknadDto {
-			val vedleggDtoPdf = VedleggDto(null, skjemanr, tittel, UUID.randomUUID().toString(), "application/pdf",
+			val vedleggDtoPdf = VedleggDto(null, skjemanr, tittel, tittel, "Beskrivelse", UUID.randomUUID().toString(), "application/pdf",
 					getBytesFromFile("/litenPdf.pdf"), true, erVariant = false, true, true, null, OpplastingsStatus.LASTET_OPP,  LocalDateTime.now())
-			val vedleggDtoJson = VedleggDto(null, skjemanr, tittel, UUID.randomUUID().toString(),"application/json",
+			val vedleggDtoJson = VedleggDto(null, skjemanr, tittel, tittel, "Beskrivelse", UUID.randomUUID().toString(),"application/json",
 					getBytesFromFile("/sanity.json"), true, erVariant = true, false, true, null, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
 
 		val vedleggDtoList = listOf(vedleggDtoPdf, vedleggDtoJson)
@@ -440,7 +440,7 @@ class SoknadServiceTest {
 	}
 
 	private fun lastOppDokumentTilVedlegg(vedleggDto: VedleggDto) =
-		VedleggDto(vedleggDto.id, vedleggDto.vedleggsnr, vedleggDto.tittel, UUID.randomUUID().toString(),
+		VedleggDto(vedleggDto.id, vedleggDto.vedleggsnr, vedleggDto.tittel,  vedleggDto.tittel, vedleggDto.beskrivelse, UUID.randomUUID().toString(),
 			"application/pdf", getBytesFromFile("/litenPdf.pdf"), true, erVariant = false,
 			true, true, vedleggDto.skjemaurl, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
 
@@ -596,7 +596,7 @@ class SoknadServiceTest {
 
 	private fun lagVedlegg(vedleggsnr: String, tittel: String, mimeType: String?, erHoveddokument: Boolean,
 												 erVariant: Boolean, erPakrevd: Boolean, document: ByteArray?): VedleggDto {
-		return VedleggDto(null, vedleggsnr, tittel, null, mimeType, document,
+		return VedleggDto(null, vedleggsnr, tittel, tittel, "Beskrivelse", null, mimeType, document,
 			erHoveddokument, erVariant, mimeType?.contains("application/json") ?: false, erPakrevd, null,
 			if (document != null) OpplastingsStatus.LASTET_OPP else OpplastingsStatus.IKKE_VALGT, LocalDateTime.now() )
 
