@@ -524,10 +524,10 @@ class SoknadService(
 	}
 
 	fun hentFiler(soknadDto: DokumentSoknadDto, innsendingsId: String, vedleggsId: Long, medFil: Boolean = false): List<FilDto> {
-		return hentFiler(soknadDto, innsendingsId, vedleggsId, medFil, true)
+		return hentFiler(soknadDto, innsendingsId, vedleggsId, medFil, false)
 	}
 
-	fun hentFiler(soknadDto: DokumentSoknadDto, innsendingsId: String, vedleggsId: Long, medFil: Boolean = false, kastFeilNarNull: Boolean = true): List<FilDto> {
+	fun hentFiler(soknadDto: DokumentSoknadDto, innsendingsId: String, vedleggsId: Long, medFil: Boolean = false, kastFeilNarNull: Boolean = false): List<FilDto> {
 		// Sjekk om vedlegget eksisterer for soknad og at soknaden er i status opprettet
 		if (soknadDto.status != SoknadsStatus.Opprettet) {
 			when (soknadDto.status) {

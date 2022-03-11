@@ -258,6 +258,9 @@ class SoknadServiceTest {
 		val vedleggDto = soknadService.hentVedleggDto(dokumentSoknadDto.vedleggsListe[0].id!!)
 
 		assertEquals(vedleggDto.id, dokumentSoknadDto.vedleggsListe[0].id!!)
+
+		val filDtoListe = soknadService.hentFiler(dokumentSoknadDto, dokumentSoknadDto.innsendingsId!!, vedleggDto.id!!, false)
+		assertTrue(filDtoListe.isEmpty())
 	}
 
 	@Test
