@@ -288,7 +288,8 @@ class FrontEndRestApi(
 
 	@Operation(summary = "Requests fetching information on all uploaded files on an attachment.", tags = ["operations"])
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
-		description = "If successful, a list with file data is returned. Note the file content itself is not supplied, use /soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil/{id} for that."
+		description = "If successful, a list with file data is returned. Empty list is returned if no files are uploaded. " +
+			"Note the file content itself is not supplied, use /soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil/{id} for that."
 	)])
 	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil")
 	fun hentFilInfoForVedlegg(
