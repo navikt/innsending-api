@@ -1,34 +1,27 @@
-FROM ubuntu:21.04
-RUN apt-get -y update
-RUN apt-get -y install openjdk-11-jdk
-RUN apt-get -y install maven
-RUN echo $(mvn -version)
+# syntax=docker/dockerfile:1
+
+FROM maven:3.8.4-jdk-11
+
 RUN useradd -ms /bin/bash newuser
 USER newuser
 WORKDIR /home/newuser/
-COPY pom.xml .
+
+COPY pom.xml ./
 COPY soknadsfillager-api/pom.xml ./soknadsfillager-api/pom.xml
 COPY soknadsmottaker-api/pom.xml ./soknadsmottaker-api/pom.xml
 COPY innsender/pom.xml ./innsender/pom.xml
+
+# DENNE DELEN ER VELDIG TIDKREVENDE, FORSIKTIG MED Å REDIGERE OVER ELLER I DEN
 RUN mvn dependency:go-offline
-COPY --chown=newuser soknadsfillager-api/target/ ./soknadsfillager-api/target
-COPY --chown=newuser soknadsmottaker-api/target/ ./soknadsmottaker-api/target
-COPY --chown=newuser innsender/target/ ./innsender/target
+# TIDKREVENDE DEL FERDIG
+
 COPY soknadsfillager-api/src/ ./soknadsfillager-api/src
 COPY soknadsmottaker-api/src/ ./soknadsmottaker-api/src
 COPY innsender/src/ ./innsender/src
-ENV KOTLIN_POST_PROCESS_FILE="/usr/local/bin/ktlint -F"
 
-RUN mvn install
-# RUN mvn clean install # virker ikke pga permissions når man sletter
+USER root
+RUN chown -R newuser: /home/newuser/
+USER newuser
+RUN mvn clean install
 EXPOSE 9064
 ENTRYPOINT ["java","-jar","/home/newuser/innsender/target/innsender.jar"]
-
-
-# build
-# docker build -t innsendings-api -f Dockerfile.dev .
-# run
-# docker run -p 127.0.0.1:9064:9064 -t innsendings-api
-
-# target dirs kopieres pga permission feil ved bygging ellers, litt rart at det skjer, kan være knyttet til en bug som ligner denne https://github.com/OpenAPITools/openapi-generator/issues/4627
-# man må altså kanske forsøke å bygge en gang lokalt før man forsøker i host
