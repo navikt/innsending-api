@@ -1,0 +1,7 @@
+services:
+  development:
+    build:
+      context: .
+      dockerfile: DockerfileDev
+    ports:
+      - "127.0.0.1:9064:9064"
