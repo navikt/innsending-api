@@ -5,15 +5,13 @@ import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.skjema.KodeverkSkjema
 import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
-import no.nav.soknad.innsending.dto.DokumentSoknadDto
-import no.nav.soknad.innsending.dto.FilDto
-import no.nav.soknad.innsending.dto.InnsendtVedleggDto
-import no.nav.soknad.innsending.dto.VedleggDto
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.exceptions.SanityException
+import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.*
+import no.nav.soknad.innsending.repository.SoknadsStatus
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.finnSpraakFraInput
@@ -23,6 +21,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.*
 import kotlin.streams.toList
 
@@ -331,7 +331,8 @@ class SoknadService(
 						VedleggDbData(
 							null,
 							savedEttersendingsSoknad.id!!,
-							if (OpplastingsStatus.SEND_SENERE == v.opplastingsStatus) OpplastingsStatus.IKKE_VALGT else v.opplastingsStatus,
+							if (OpplastingsStatusDto.sendSenere == v.opplastingsStatus)
+								OpplastingsStatus.IKKE_VALGT else mapTilDbOpplastingsStatus(v.opplastingsStatus),
 							v.erHoveddokument,
 							v.erVariant,
 							v.erPdfa,
@@ -340,11 +341,11 @@ class SoknadService(
 							v.tittel,
 							v.label,
 							v.beskrivelse,
-							v.mimetype,
+							mapTilDbMimetype(v.mimetype),
 							UUID.randomUUID().toString(),
 							LocalDateTime.now(),
 							LocalDateTime.now(),
-							if (v.vedleggsnr != null) hentSkjema(v.vedleggsnr, nyesteSoknad.spraak ?: "no").url else null
+							if (v.vedleggsnr != null) hentSkjema(v.vedleggsnr!!, nyesteSoknad.spraak ?: "no").url else null
 						)
 					)
 				}
@@ -380,7 +381,7 @@ class SoknadService(
 			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
 			// lagre mottatte filer i fil tabellen.
 			savedDokumentSoknadDto.vedleggsListe
-				.filter { it.opplastingsStatus == OpplastingsStatus.LASTET_OPP }
+				.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
 				.forEach { lagreFil(savedDokumentSoknadDto, it, dokumentSoknadDto.vedleggsListe )}
 			publiserBrukernotifikasjon(savedDokumentSoknadDto)
 
@@ -398,8 +399,8 @@ class SoknadService(
 				&& it.erHoveddokument == lagretVedleggDto.erHoveddokument && it.erVariant == lagretVedleggDto.erVariant }.firstOrNull()
 
 		if (matchInnsendtVedleggDto != null) {
-			val filDto = FilDto(null, lagretVedleggDto.id!!, lagFilNavn(matchInnsendtVedleggDto), lagretVedleggDto.mimetype!!,
-				matchInnsendtVedleggDto.document?.size, matchInnsendtVedleggDto.document, LocalDateTime.now()
+			val filDto = FilDto(lagretVedleggDto.id!!, null, lagFilNavn(matchInnsendtVedleggDto), lagretVedleggDto.mimetype!!,
+				matchInnsendtVedleggDto.document?.size, matchInnsendtVedleggDto.document, OffsetDateTime.now()
 				)
 			lagreFil(savedDokumentSoknadDto, filDto)
 			return
@@ -410,8 +411,17 @@ class SoknadService(
 
 	}
 
+	private fun filExtention(mimetype: Mimetype?): String =
+		when (mimetype) {
+			Mimetype.imageSlashPng -> ".png"
+			Mimetype.imageSlashJpeg -> ".jpeg"
+			Mimetype.applicationSlashJson -> ".json"
+			Mimetype.applicationSlashPdf -> ".pdf"
+			else -> ""
+		}
+
 	private fun lagFilNavn(vedleggDto: VedleggDto): String {
-		val ext = if (vedleggDto.mimetype.isNullOrBlank() || !vedleggDto.mimetype.contains("/")) "" else "." + vedleggDto.mimetype.substringAfter("/")
+		val ext = filExtention(vedleggDto.mimetype)
 		return (vedleggDto.vedleggsnr + ext)
 	}
 
@@ -472,12 +482,12 @@ class SoknadService(
 	@Transactional
 	fun lagreFil(soknadDto: DokumentSoknadDto, filDto: FilDto): FilDto {
 		// TODO Valider opplastet fil, og konverter eventuelt til PDF
-		if (soknadDto.status != SoknadsStatus.Opprettet) {
-			when (soknadDto.status) {
-				SoknadsStatus.Innsendt -> throw IllegalActionException(
+		if (soknadDto.status.equals(SoknadsStatus.Opprettet)) {
+			when (soknadDto.status.name) {
+				SoknadsStatus.Innsendt.name -> throw IllegalActionException(
 					"Innsendte søknader kan ikke endres. Ønsker søker å gjøre oppdateringer, så må vedkommende ettersende dette",
 					"Søknad ${soknadDto.innsendingsId} er sendt inn og nye filer kan ikke lastes opp på denne. Opprett ny søknad for ettersendelse av informasjon")
-				SoknadsStatus.SlettetAvBruker, SoknadsStatus.AutomatiskSlettet -> throw IllegalActionException(
+				SoknadsStatus.SlettetAvBruker.name, SoknadsStatus.AutomatiskSlettet.name -> throw IllegalActionException(
 					"Søknader markert som slettet kan ikke endres. Søker må eventuelt opprette ny søknad",
 					"Søknaden er slettet og ingen filer kan legges til")
 				else -> {} // Do nothing
@@ -500,12 +510,12 @@ class SoknadService(
 
 	fun hentFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long): FilDto {
 		// Sjekk om vedlegget eksisterer
-		if (soknadDto.status != SoknadsStatus.Opprettet) {
-			when (soknadDto.status) {
-				SoknadsStatus.Innsendt -> throw IllegalActionException(
+		if (soknadDto.status.equals(SoknadsStatus.Opprettet)) {
+			when (soknadDto.status.name) {
+				SoknadsStatus.Innsendt.name -> throw IllegalActionException(
 					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
 					"Søknad ${soknadDto.innsendingsId} er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til Ditt Nav og søk opp dine saker der")
-				SoknadsStatus.SlettetAvBruker, SoknadsStatus.AutomatiskSlettet -> throw IllegalActionException(
+				SoknadsStatus.SlettetAvBruker.name, SoknadsStatus.AutomatiskSlettet.name -> throw IllegalActionException(
 					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
 					"Søknaden er slettet og ingen filer er tilgjengelig")
 				else -> {} // Do nothing
@@ -529,12 +539,12 @@ class SoknadService(
 
 	fun hentFiler(soknadDto: DokumentSoknadDto, innsendingsId: String, vedleggsId: Long, medFil: Boolean = false, kastFeilNarNull: Boolean = false): List<FilDto> {
 		// Sjekk om vedlegget eksisterer for soknad og at soknaden er i status opprettet
-		if (soknadDto.status != SoknadsStatus.Opprettet) {
-			when (soknadDto.status) {
-				SoknadsStatus.Innsendt -> throw IllegalActionException(
+		if (soknadDto.status.equals(SoknadsStatus.Opprettet)) {
+			when (soknadDto.status.name) {
+				SoknadsStatus.Innsendt.name -> throw IllegalActionException(
 					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
 					"Søknad $innsendingsId er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til Ditt Nav og søk opp dine saker der")
-				SoknadsStatus.SlettetAvBruker, SoknadsStatus.AutomatiskSlettet -> throw IllegalActionException(
+				SoknadsStatus.SlettetAvBruker.name, SoknadsStatus.AutomatiskSlettet.name -> throw IllegalActionException(
 					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
 					"Søknaden er slettet og ingen filer er tilgjengelig")
 				else -> {} // Do nothing
@@ -552,12 +562,12 @@ class SoknadService(
 
 	fun slettFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long) {
 		// Sjekk om vedlegget eksisterer
-		if (soknadDto.status != SoknadsStatus.Opprettet) {
-			when (soknadDto.status) {
-				SoknadsStatus.Innsendt -> throw IllegalActionException(
+		if (soknadDto.status.equals(SoknadsStatus.Opprettet)) {
+			when (soknadDto.status.name) {
+				SoknadsStatus.Innsendt.name -> throw IllegalActionException(
 					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
 					"Søknad ${soknadDto.innsendingsId} er sendt inn og kan ikke endres.")
-				SoknadsStatus.SlettetAvBruker, SoknadsStatus.AutomatiskSlettet -> throw IllegalActionException(
+				SoknadsStatus.SlettetAvBruker.name, SoknadsStatus.AutomatiskSlettet.name -> throw IllegalActionException(
 					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
 					"Søknaden er slettet og ingen filer er tilgjengelig")
 				else -> {} // Do nothing
@@ -574,7 +584,7 @@ class SoknadService(
 	@Transactional
 	fun slettSoknadAvBruker(dokumentSoknadDto: DokumentSoknadDto) {
 		// slett vedlegg og soknad
-		if (dokumentSoknadDto.status != SoknadsStatus.Opprettet)
+		if (dokumentSoknadDto.status.equals(SoknadsStatus.Opprettet))
 			throw IllegalActionException(
 				"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
 				"Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den er innsendt eller slettet")
@@ -591,7 +601,7 @@ class SoknadService(
 
 	private fun slettVedleggOgDensFiler(vedleggDto: VedleggDto) {
 		slettFilerForVedlegg(vedleggDto.id!!)
-		slettVedlegg(vedleggDto.id)
+		slettVedlegg(vedleggDto.id!!)
 	}
 
 	// Slett opprettet soknad gitt innsendingsId
@@ -600,7 +610,7 @@ class SoknadService(
 		// Ved automatisk sletting beholdes innslag i basen, men eventuelt opplastede filer slettes
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
 
-		if (dokumentSoknadDto.status != SoknadsStatus.Opprettet)
+		if (dokumentSoknadDto.status.equals(SoknadsStatus.Opprettet))
 			throw IllegalActionException(
 				"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
 				"Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den allerede er innsendt")
@@ -619,7 +629,7 @@ class SoknadService(
 	fun lagreVedlegg(vedleggDto: VedleggDto, innsendingsId: String): VedleggDto {
 
 		val soknadDto = hentSoknad(innsendingsId)
-		if (soknadDto.status != SoknadsStatus.Opprettet)
+		if (!soknadDto.status.equals(SoknadsStatusDto.opprettet))
 			throw IllegalActionException(
 				"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
 				"Søknad $innsendingsId kan ikke endres da den er innsendt eller slettet")
@@ -628,14 +638,14 @@ class SoknadService(
 		val vedleggDbData = lagreVedlegg(mapTilVedleggDb(vedleggDto, soknadDto.id!!))
 
 		// Oppdater soknadens sist endret dato
-		oppdaterEndretDato(soknadDto.id)
+		oppdaterEndretDato(soknadDto.id!!)
 
 		return lagVedleggDto(vedleggDbData, vedleggDto.document)
 	}
 
 	@Transactional
 	fun slettVedlegg(soknadDto: DokumentSoknadDto, vedleggsId: Long) {
-		if (soknadDto.status != SoknadsStatus.Opprettet)
+		if (soknadDto.status.equals(SoknadsStatus.Opprettet))
 			throw IllegalActionException(
 				"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
 				"Søknad ${soknadDto.innsendingsId} kan ikke endres da den allerede er innsendt")
@@ -679,13 +689,16 @@ class SoknadService(
 				innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
 				throw BackendErrorException(ex.message, "Feil ved generering av skjema for ettersending")
 			}
-			lagreFil(soknadDto, FilDto(null, hovedDokumentDto.id!!, hovedDokumentDto.vedleggsnr!!, "application/pdf", dummySkjema.size, dummySkjema, LocalDateTime.now() ))
+			lagreFil(soknadDto, FilDto(hovedDokumentDto.id!!, null, hovedDokumentDto.vedleggsnr!!, Mimetype.applicationSlashPdf,
+				dummySkjema.size, dummySkjema, OffsetDateTime.now() ))
 			soknadDto = hentSoknad(soknadDto.innsendingsId!!)
 		}
 
+		validerAtMinstEnFilErLastetOpp(soknadDto)
+
 		// Vedleggsliste med opplastede dokument og status= LASTET_OPP for de som skal sendes soknadsfillager
 		val alleVedlegg: List<VedleggDto> = ferdigstillVedlegg(soknadDto)
-		val opplastedeVedlegg = alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatus.LASTET_OPP }.toList()
+		val opplastedeVedlegg = alleVedlegg.filter { it.opplastingsStatus.equals(OpplastingsStatusDto.lastetOpp) }.toList()
 
 		if (opplastedeVedlegg.isEmpty() || (soknadDto.ettersendingsId != null && opplastedeVedlegg.size == 1 )) {
 			throw IllegalActionException("Søker må ha lastet opp dokumenter til søknaden for at den skal kunne sendes inn", "Innsending avbrutt da ingen opplastede filer å sende inn")
@@ -711,7 +724,7 @@ class SoknadService(
 
 		// oppdater databasen med status og innsendingsdato
 		opplastedeVedlegg. forEach { vedleggRepository.save(mapTilVedleggDb(it, soknadDto.id!!, OpplastingsStatus.INNSENDT)) }
-		alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatus.IKKE_VALGT }. forEach { oppdaterVedlegg(soknadDto.innsendingsId!!, mapTilVedleggDb(it, soknadDto.id!!, OpplastingsStatus.SEND_SENERE)) }
+		alleVedlegg.filter { it.opplastingsStatus.equals(OpplastingsStatusDto.ikkeValgt) }. forEach { oppdaterVedlegg(soknadDto.innsendingsId!!, mapTilVedleggDb(it, soknadDto.id!!, OpplastingsStatus.SEND_SENERE)) }
 
 		try {
 			vedleggRepository.flush()
@@ -739,9 +752,12 @@ class SoknadService(
 
 	private fun skalEttersende(vedlegg: List<VedleggDto>): Boolean {
 		return vedlegg
-			.any { !it.erHoveddokument && it.erPakrevd && it.opplastingsStatus == OpplastingsStatus.SEND_SENERE}
+			.any { !it.erHoveddokument && it.erPakrevd && it.opplastingsStatus.equals(OpplastingsStatusDto.sendSenere) }
 	}
 
+	private fun vedleggHarFiler(vedleggsId: Long): Boolean {
+		return filRepository.findAllByVedleggsid(vedleggsId).any { it.data != null }
+	}
 
 	// For alle vedlegg til søknaden:
 	// Hoveddokument kan ha ulike varianter. Hver enkelt av disse sendes som ulike filer til soknadsfillager.
@@ -759,6 +775,35 @@ class SoknadService(
 		return vedleggDtos
 	}
 
+	private fun validerAtMinstEnFilErLastetOpp(soknadDto: DokumentSoknadDto) {
+		if (soknadDto.ettersendingsId == null) {
+			// For å sende inn en søknad må det være lastet opp en fil på hoveddokumentet
+			val harFil = soknadDto.vedleggsListe
+				.filter { it.erHoveddokument && !it.erVariant && it.id != null }
+				.map { it.id }
+				.any { vedleggHarFiler(it!!) }
+
+			if (!harFil) {
+				throw IllegalActionException(
+					"Søker må ha lastet opp dokumenter til søknaden for at den skal kunne sendes inn",
+					"Innsending avbrutt da hoveddokument ikke finnes"
+				)
+			}
+		} else {
+			// For å sende inn en ettersendingssøknad må det være lastet opp minst ett vedlegg
+			val harFil = soknadDto.vedleggsListe
+				.filter { !it.erHoveddokument }
+				.map { it.id }
+				.any { vedleggHarFiler(it!!) }
+			if (!harFil) {
+				throw IllegalActionException(
+					"Søker må ha ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
+					"Innsending avbrutt da ingen vedlegg er lastet opp"
+				)
+			}
+		}
+	}
+
 	private fun hentOgMergeVedleggsFiler(soknadDto: DokumentSoknadDto, innsendingsId: String, vedleggDto: VedleggDto): FilDto? {
 		val filer = hentFiler(soknadDto, innsendingsId, vedleggDto.id!!, true, false).filter { it.data != null }
 		if (filer.isEmpty()) return null
@@ -773,56 +818,129 @@ class SoknadService(
 				PdfMerger().mergePdfer(filer.map { it.data!! })
 			}
 
-		return FilDto(null, vedleggDto.id, vedleggDto.vedleggsnr!!, filer[0].mimetype, vedleggsFil?.size, vedleggsFil, filer[0].opprettetdato)
+		return FilDto(vedleggDto.id!!, null, vedleggDto.vedleggsnr!!, filer[0].mimetype, vedleggsFil?.size, vedleggsFil, filer[0].opprettetdato)
 	}
 
 	private fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
-		VedleggDto(vedleggDto.id!!, vedleggDto.vedleggsnr, vedleggDto.tittel, vedleggDto.label, vedleggDto.beskrivelse,
-			vedleggDto.uuid, filDto?.mimetype ?: vedleggDto.mimetype, filDto?.data, vedleggDto.erHoveddokument,
-			vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.erPakrevd, vedleggDto.skjemaurl,
-			if (filDto?.data != null) OpplastingsStatus.LASTET_OPP else vedleggDto.opplastingsStatus
-			, filDto?.opprettetdato ?: vedleggDto.opprettetdato)
+		VedleggDto(vedleggDto.tittel, vedleggDto.label, vedleggDto.erHoveddokument,
+			vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.erPakrevd,
+			if (filDto?.data != null) OpplastingsStatusDto.lastetOpp else vedleggDto.opplastingsStatus,
+			filDto?.opprettetdato ?: vedleggDto.opprettetdato, vedleggDto.id!!, vedleggDto.vedleggsnr, vedleggDto.beskrivelse,
+			vedleggDto.uuid, filDto?.mimetype ?: vedleggDto.mimetype, filDto?.data, vedleggDto.skjemaurl
+			 )
 
 
-
-	private  fun lagFilDto(filDbData: FilDbData, medFil: Boolean = true) = FilDto(filDbData.id, filDbData.vedleggsid
-									, filDbData.filnavn, filDbData.mimetype, filDbData.storrelse, if (medFil) filDbData.data else null, filDbData.opprettetdato)
+	private  fun lagFilDto(filDbData: FilDbData, medFil: Boolean = true) = FilDto(filDbData.vedleggsid, filDbData.id,
+									filDbData.filnavn, mapTilMimetype(filDbData.mimetype), filDbData.storrelse,
+									if (medFil) filDbData.data else null, filDbData.opprettetdato.atOffset(ZoneOffset.UTC))
 
 	private fun lagVedleggDto(vedleggDbData: VedleggDbData, document: ByteArray? = null) =
-		VedleggDto(vedleggDbData.id!!, vedleggDbData.vedleggsnr, vedleggDbData.tittel, vedleggDbData.label, vedleggDbData.beskrivelse,
-			vedleggDbData.uuid, vedleggDbData.mimetype, document, vedleggDbData.erhoveddokument,
-			vedleggDbData.ervariant, vedleggDbData.erpdfa, vedleggDbData.erpakrevd, vedleggDbData.vedleggsurl, vedleggDbData.status, vedleggDbData.opprettetdato)
+		VedleggDto(vedleggDbData.tittel, vedleggDbData.label ?: "", vedleggDbData.erhoveddokument,
+			vedleggDbData.ervariant, vedleggDbData.erpdfa, vedleggDbData.erpakrevd, mapTilOpplastingsStatusDto(vedleggDbData.status),
+			mapTilOffsetDateTime(vedleggDbData.opprettetdato)!!, vedleggDbData.id!!, vedleggDbData.vedleggsnr, vedleggDbData.beskrivelse,
+			vedleggDbData.uuid, mapTilMimetype(vedleggDbData.mimetype), document, vedleggDbData.vedleggsurl, )
 
 	private fun lagDokumentSoknadDto(soknadDbData: SoknadDbData, vedleggDbDataListe: List<VedleggDbData>) =
-		DokumentSoknadDto(soknadDbData.id!!, soknadDbData.innsendingsid, soknadDbData.ettersendingsid,
-			soknadDbData.brukerid, soknadDbData.skjemanr, soknadDbData.tittel, soknadDbData.tema, soknadDbData.spraak,
-			soknadDbData.status, soknadDbData.opprettetdato, soknadDbData.endretdato, soknadDbData.innsendtdato
-			, vedleggDbDataListe.map { lagVedleggDto(it) })
+		DokumentSoknadDto(soknadDbData.brukerid, soknadDbData.skjemanr, soknadDbData.tittel, soknadDbData.tema,
+			mapTilSoknadsStatusDto(soknadDbData.status) ?: SoknadsStatusDto.opprettet, mapTilOffsetDateTime(soknadDbData.opprettetdato)!!,
+			vedleggDbDataListe.map { lagVedleggDto(it) }, soknadDbData.id!!, soknadDbData.innsendingsid, soknadDbData.ettersendingsid,
+			soknadDbData.spraak, mapTilOffsetDateTime(soknadDbData.endretdato), mapTilOffsetDateTime(soknadDbData.innsendtdato)
+		)
 
-	private fun mapTilFilDb(filDto: FilDto) = FilDbData(filDto.id, filDto.vedleggsid, filDto.filnavn
-							, filDto.mimetype, if (filDto.data == null) null else filDto.data.size, filDto.data, filDto.opprettetdato ?: LocalDateTime.now())
+	private fun mapTilOffsetDateTime(localDateTime: LocalDateTime?): OffsetDateTime? =
+		if (localDateTime != null) localDateTime.atOffset(ZoneOffset.UTC) else null
+
+	private fun mapTilLocalDateTime(offsetDateTime: OffsetDateTime?): LocalDateTime? =
+		if (offsetDateTime != null) offsetDateTime.toLocalDateTime() else null
+
+	private fun mapTilFilDb(filDto: FilDto) = FilDbData(filDto.id, filDto.vedleggsid, filDto.filnavn ?: ""
+							, mapTilDbMimetype(filDto.mimetype) ?: "application/pdf"
+							, if (filDto.data == null) null else filDto.data?.size, filDto.data
+							, mapTilLocalDateTime(filDto.opprettetdato) ?: LocalDateTime.now())
 
 	private fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long) =
-		mapTilVedleggDb(vedleggDto, soknadsId, vedleggDto.skjemaurl, vedleggDto.opplastingsStatus)
+		mapTilVedleggDb(vedleggDto, soknadsId, vedleggDto.skjemaurl, mapTilDbOpplastingsStatus(vedleggDto.opplastingsStatus))
 
 	private fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, opplastingsStatus: OpplastingsStatus) =
 		mapTilVedleggDb(vedleggDto, soknadsId, vedleggDto.skjemaurl, opplastingsStatus)
 
 	private fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, kodeverkSkjema: KodeverkSkjema?) =
-		mapTilVedleggDb(vedleggDto, soknadsId,  if (kodeverkSkjema != null ) kodeverkSkjema.url else vedleggDto.skjemaurl, vedleggDto.opplastingsStatus)
+		mapTilVedleggDb(vedleggDto, soknadsId,  if (kodeverkSkjema != null ) kodeverkSkjema.url else vedleggDto.skjemaurl,
+			mapTilDbOpplastingsStatus(vedleggDto.opplastingsStatus))
 
 	private fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, url: String?, opplastingsStatus: OpplastingsStatus) =
 		VedleggDbData(vedleggDto.id, soknadsId, opplastingsStatus
 			, vedleggDto.erHoveddokument, vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.erPakrevd, vedleggDto.vedleggsnr
 			, vedleggDto.tittel, vedleggDto.label, vedleggDto.beskrivelse
-			, vedleggDto.mimetype, vedleggDto.uuid ?: UUID.randomUUID().toString(), vedleggDto.opprettetdato, LocalDateTime.now()
+			, mapTilDbMimetype(vedleggDto.mimetype), vedleggDto.uuid ?: UUID.randomUUID().toString()
+			, mapTilLocalDateTime(vedleggDto.opprettetdato)!!, LocalDateTime.now()
 			, url ?: vedleggDto.skjemaurl
 		)
-
 
 	private fun mapTilSoknadDb(dokumentSoknadDto: DokumentSoknadDto, innsendingsId: String, status: SoknadsStatus? = SoknadsStatus.Opprettet) =
 		SoknadDbData(dokumentSoknadDto.id, innsendingsId,
 			dokumentSoknadDto.tittel, dokumentSoknadDto.skjemanr, dokumentSoknadDto.tema, dokumentSoknadDto.spraak ?: "no",
-			status ?: dokumentSoknadDto.status, dokumentSoknadDto.brukerId, dokumentSoknadDto.ettersendingsId,
-			dokumentSoknadDto.opprettetDato, LocalDateTime.now(), if (status == SoknadsStatus.Innsendt) LocalDateTime.now() else dokumentSoknadDto.innsendtDato)
+			mapTilSoknadsStatus(dokumentSoknadDto.status, status), dokumentSoknadDto.brukerId, dokumentSoknadDto.ettersendingsId,
+			mapTilLocalDateTime(dokumentSoknadDto.opprettetDato)!!, LocalDateTime.now(),
+			if (status == SoknadsStatus.Innsendt) LocalDateTime.now()	else mapTilLocalDateTime(dokumentSoknadDto.innsendtDato))
+
+	fun mapTilSoknadsStatus(soknadsStatus: SoknadsStatusDto?, newStatus: SoknadsStatus? ): SoknadsStatus {
+		return newStatus ?:
+			when (soknadsStatus) {
+				SoknadsStatusDto.opprettet -> SoknadsStatus.Opprettet
+				SoknadsStatusDto.innsendt -> SoknadsStatus.Innsendt
+				SoknadsStatusDto.slettetAvBruker -> SoknadsStatus.SlettetAvBruker
+				SoknadsStatusDto.automatiskSlettet -> SoknadsStatus.AutomatiskSlettet
+				else -> SoknadsStatus.Opprettet
+			}
+	}
+
+	fun mapTilSoknadsStatusDto(soknadsStatus: SoknadsStatus?): SoknadsStatusDto? =
+		when (soknadsStatus) {
+			SoknadsStatus.Opprettet -> SoknadsStatusDto.opprettet
+			SoknadsStatus.Innsendt ->  SoknadsStatusDto.innsendt
+			SoknadsStatus.SlettetAvBruker  -> SoknadsStatusDto.slettetAvBruker
+			SoknadsStatus.AutomatiskSlettet -> SoknadsStatusDto.automatiskSlettet
+			else -> null
+		}
+
+	fun mapTilOpplastingsStatusDto(opplastingsStatus: OpplastingsStatus): OpplastingsStatusDto =
+		when (opplastingsStatus) {
+			OpplastingsStatus.IKKE_VALGT -> OpplastingsStatusDto.ikkeValgt
+			OpplastingsStatus.SEND_SENERE ->  OpplastingsStatusDto.sendSenere
+			OpplastingsStatus.LASTET_OPP  -> OpplastingsStatusDto.lastetOpp
+			OpplastingsStatus.INNSENDT -> OpplastingsStatusDto.innsendt
+			OpplastingsStatus.SENDES_AV_ANDRE -> OpplastingsStatusDto.sendesAvAndre
+			else -> OpplastingsStatusDto.ikkeValgt
+		}
+
+	fun mapTilMimetype(mimeString: String?): Mimetype ? =
+		when (mimeString) {
+			"application/pdf" -> Mimetype.applicationSlashPdf
+			"application/json" -> Mimetype.applicationSlashJson
+			"application/jpeg" -> Mimetype.imageSlashJpeg
+			"application/png" -> Mimetype.imageSlashPng
+			else -> null
+		}
+
+	fun mapTilDbOpplastingsStatus(opplastingsStatusDto: OpplastingsStatusDto): OpplastingsStatus =
+		when (opplastingsStatusDto) {
+			OpplastingsStatusDto.ikkeValgt -> OpplastingsStatus.IKKE_VALGT
+			OpplastingsStatusDto.sendSenere -> OpplastingsStatus.SEND_SENERE
+			OpplastingsStatusDto.lastetOpp ->  OpplastingsStatus.LASTET_OPP
+			OpplastingsStatusDto.innsendt -> OpplastingsStatus.INNSENDT
+			OpplastingsStatusDto.sendesAvAndre -> OpplastingsStatus.SENDES_AV_ANDRE
+			else -> OpplastingsStatus.IKKE_VALGT
+		}
+
+	fun mapTilDbMimetype(mimetype: Mimetype?): String? =
+		when (mimetype) {
+			Mimetype.applicationSlashPdf -> "application/pdf"
+			Mimetype.applicationSlashJson -> "application/json"
+			Mimetype.imageSlashJpeg -> "application/jpeg"
+			Mimetype.imageSlashPng -> "application/png"
+			else -> null
+		}
+
+
 }

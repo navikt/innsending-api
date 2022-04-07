@@ -7,8 +7,8 @@ import no.nav.brukernotifikasjon.schemas.Oppgave
 import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
 import no.nav.soknad.innsending.brukernotifikasjon.kafka.KafkaPublisherInterface
 import no.nav.soknad.innsending.config.KafkaConfig
-import no.nav.soknad.innsending.dto.DokumentSoknadDto
-import no.nav.soknad.innsending.repository.SoknadsStatus
+import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.SoknadsStatusDto
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service
@@ -27,7 +27,7 @@ class BrukernotifikasjonPublisher(
 
 	private val securityLevel = 4 // Forutsetter at brukere har logget seg på f.eks. bankId slik at nivå 4 er oppnådd
 	private val soknadLevetid = 56L // Dager
-	private val ettersendingsFrist = 14L // Dager
+	private val ettersendingsFrist = 56L // Dager
 	val tittelPrefixEttersendelse = "Du har sagt du skal ettersende vedlegg til "
 	val tittelPrefixNySoknad = "Du har påbegynt en søknad om "
 	val epostTittelNySoknad = "Ny soknad opprettet"
@@ -53,9 +53,9 @@ class BrukernotifikasjonPublisher(
 
 			try {
 				when (dokumentSoknad.status) {
-					SoknadsStatus.Opprettet -> handleNewApplication(dokumentSoknad, groupId!!)
-					SoknadsStatus.Innsendt -> handleSentInApplication(dokumentSoknad, groupId!!)
-					SoknadsStatus.SlettetAvBruker, SoknadsStatus.AutomatiskSlettet -> handleDeletedApplication(
+					SoknadsStatusDto.opprettet -> handleNewApplication(dokumentSoknad, groupId!!)
+					SoknadsStatusDto.innsendt -> handleSentInApplication(dokumentSoknad, groupId!!)
+					SoknadsStatusDto.slettetAvBruker, SoknadsStatusDto.automatiskSlettet -> handleDeletedApplication(
 						dokumentSoknad,
 						groupId!!
 					)
@@ -75,11 +75,13 @@ class BrukernotifikasjonPublisher(
 		val key = createKey(dokumentSoknad.innsendingsId!!)
 
 		if (erEttersending(dokumentSoknad)) {
-			publiserNyEttersendingsSoknadOppgave(dokumentSoknad.innsendingsId, groupId,
-				tittelPrefixEttersendelse + dokumentSoknad.tittel, dokumentSoknad.brukerId, dokumentSoknad.opprettetDato)
+			publiserNyEttersendingsSoknadOppgave(
+				dokumentSoknad.innsendingsId!!, groupId,
+				tittelPrefixEttersendelse + dokumentSoknad.tittel, dokumentSoknad.brukerId, dokumentSoknad.opprettetDato.toLocalDateTime())
 		} else {
-			publiserNySoknadBeskjed(dokumentSoknad.innsendingsId, groupId, tittelPrefixNySoknad + dokumentSoknad.tittel,
-				dokumentSoknad.brukerId, dokumentSoknad.opprettetDato)
+			publiserNySoknadBeskjed(
+				dokumentSoknad.innsendingsId!!, groupId, tittelPrefixNySoknad + dokumentSoknad.tittel,
+				dokumentSoknad.brukerId, dokumentSoknad.opprettetDato.toLocalDateTime())
 		}
 	}
 
@@ -95,7 +97,7 @@ class BrukernotifikasjonPublisher(
 
 	private fun publishDoneEvent(dokumentSoknad: DokumentSoknadDto, groupId: String, key: Nokkel) {
 		try {
-			val done = finishedApplication(dokumentSoknad.brukerId, groupId, dokumentSoknad.endretDato!!)
+			val done = finishedApplication(dokumentSoknad.brukerId, groupId, dokumentSoknad.endretDato!!.toLocalDateTime())
 			kafkaPublisher.putApplicationDoneOnTopic(key, done)
 
 			logger.info("$key: Søknad med behandlingsId=${dokumentSoknad.innsendingsId} er sendt inn, publisert " +
@@ -111,7 +113,7 @@ class BrukernotifikasjonPublisher(
 		// Søknad slettet, fjern beskjed
 		val key = createKey(dokumentSoknad.innsendingsId!!)
 		logger.info("$key: Varsel om fjerning av ${dokumentSoknad.innsendingsId} skal publiseres")
-		val done = finishedApplication(dokumentSoknad.brukerId, groupId, dokumentSoknad.endretDato!!)
+		val done = finishedApplication(dokumentSoknad.brukerId, groupId, dokumentSoknad.endretDato!!.toLocalDateTime())
 
 		kafkaPublisher.putApplicationDoneOnTopic(key, done)
 		logger.info("$key: Varsel om fjerning av ${dokumentSoknad.innsendingsId} er publisert")

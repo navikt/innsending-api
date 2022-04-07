@@ -9,7 +9,8 @@ import no.nav.soknad.arkivering.soknadsfillager.infrastructure.Serializer.jackso
 import no.nav.soknad.arkivering.soknadsfillager.model.FileData
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
-import no.nav.soknad.innsending.dto.VedleggDto
+import no.nav.soknad.innsending.model.OpplastingsStatusDto
+import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.repository.OpplastingsStatus
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -54,8 +55,8 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 
 	override fun lagreFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>) {
 		val fileData: List<FileData> = vedleggDtos.stream()
-			.filter {it.opplastingsStatus == OpplastingsStatus.LASTET_OPP}
-			.map { FileData(it.uuid!!, it.document, it.opprettetdato.atOffset(ZoneOffset.UTC)) }.toList()
+			.filter {it.opplastingsStatus.equals(OpplastingsStatusDto.lastetOpp) }
+			.map { FileData(it.uuid!!, it.document, it.opprettetdato) }.toList()
 
 		filesApi.addFiles(fileData, innsendingsId)
 		logger.info("$innsendingsId: Lagret følgende filer ${fileData.map { it.id }.toList().joinToString { "," }}")
@@ -63,17 +64,19 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 
 	override fun hentFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>): List<VedleggDto> {
 		val fileData: List<FileData> = vedleggDtos.stream()
-			.filter {it.opplastingsStatus == OpplastingsStatus.LASTET_OPP}
-			.map { FileData(it.uuid!!, it.document, it.opprettetdato.atOffset(ZoneOffset.UTC)) }.toList()
+			.filter {it.opplastingsStatus.equals(OpplastingsStatusDto.lastetOpp)}
+			.map { FileData(it.uuid!!, it.document, it.opprettetdato) }.toList()
 
 		if (fileData.isEmpty()) return vedleggDtos
 
 		val hentedeFilerMap: Map<String, FileData> = hentFiler(fileData, innsendingsId).associateBy { it.id }
 		logger.info("$innsendingsId: Hentet følgende filer ${hentedeFilerMap.map{it.key}.toList().joinToString { "," }}")
 
-		return vedleggDtos.map { VedleggDto( it.id, it.vedleggsnr, it.tittel, it.label, it.beskrivelse, it.uuid, it.mimetype,
-			hentedeFilerMap.get(it.uuid)?.content ?: it.document, it.erHoveddokument, it.erVariant, it.erPdfa, it.erPakrevd,
-			it.skjemaurl, it.opplastingsStatus, hentedeFilerMap.get(it.uuid)?.createdAt?.toLocalDateTime() ?: it.opprettetdato) }
+		return vedleggDtos.map { VedleggDto( it.tittel, it.label, it.erHoveddokument, it.erVariant, it.erPdfa, it.erPakrevd,
+			it.opplastingsStatus, hentedeFilerMap.get(it.uuid)?.createdAt ?: it.opprettetdato, it.id, it.vedleggsnr,
+			it.beskrivelse, it.uuid, it.mimetype,
+			hentedeFilerMap.get(it.uuid)?.content ?: it.document,
+			it.skjemaurl, ) }
 			.toList()
 
 	}
@@ -94,7 +97,7 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 
 	override fun slettFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>) {
 		val fileids: String = vedleggDtos.stream()
-			.filter {it.opplastingsStatus == OpplastingsStatus.LASTET_OPP}
+			.filter {it.opplastingsStatus.equals(OpplastingsStatusDto.lastetOpp) }
 			.map { it.uuid!! }.toList().joinToString { "," }
 
 		filesApi.deleteFiles(fileids, innsendingsId)

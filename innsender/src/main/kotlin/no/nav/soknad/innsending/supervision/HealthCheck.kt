@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.client.HttpServerErrorException
+import no.nav.soknad.innsending.api.HealthApi
+import org.springframework.http.ResponseEntity
 
 @RestController
 @RequestMapping(value = ["/health"])
@@ -20,23 +22,22 @@ class HealthCheck(
 	@Qualifier("saf")private val safAPI: HealthRequestInterface,
 	@Qualifier("fillager")private val fillagerAPI: HealthRequestInterface,
 	@Qualifier("mottaker")private val mottakerAPI: HealthRequestInterface,
-	private val aliveRepository: AliveRepository)	 {
+	private val aliveRepository: AliveRepository)	: HealthApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@GetMapping("/isAlive")
-	fun isAlive() = "ok"
+	override fun isAlive(): ResponseEntity<String> = ResponseEntity.status(HttpStatus.OK).body("ok")
 
 	@GetMapping("/isReady")
-	fun isReady() = if (applicationIsReady()) {
-		"Ready for action"
+	override fun isReady(): ResponseEntity<String> = if (applicationIsReady()) {
+		ResponseEntity.status(HttpStatus.OK).body("Ready for action")
 	} else {
-		logger.warn("/isReady called - application is not ready")
-		throwException()
+		ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("/isReady called - application is not ready")
 	}
 
 	@GetMapping("/ping")
-	fun ping() = "pong"
+	override fun ping() = ResponseEntity.status(HttpStatus.OK).body("pong")
 
 
 	private fun applicationIsReady(): Boolean {

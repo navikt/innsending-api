@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.security
 
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
-import no.nav.soknad.innsending.dto.DokumentSoknadDto
+import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import org.springframework.stereotype.Component
 

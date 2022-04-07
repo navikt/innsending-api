@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
@@ -31,7 +32,7 @@ class SafAPITest(private val restConfig: RestConfig): SafInterface, HealthReques
 		return dummyArkiverteSoknader.get(brukerId)
 	}
 
-	private val date = DateTimeFormatter.ISO_LOCAL_DATE_TIME.format( LocalDateTime.now())
+	private val date = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format( OffsetDateTime.now())
 
 	private val dummyArkiverteSoknader = mapOf (
 		testpersonid to listOf (

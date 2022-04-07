@@ -2,7 +2,7 @@ package no.nav.soknad.innsending.consumerapis.soknadsmottaker
 
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
-import no.nav.soknad.innsending.dto.DokumentSoknadDto
+import no.nav.soknad.innsending.model.DokumentSoknadDto
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service

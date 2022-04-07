@@ -9,12 +9,9 @@ import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.skjema.SkjemaClient
 import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
-import no.nav.soknad.innsending.dto.DokumentSoknadDto
-import no.nav.soknad.innsending.dto.FilDto
-import no.nav.soknad.innsending.dto.VedleggDto
-import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
+import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.testpersonid
@@ -30,6 +27,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.*
 import javax.activation.MimeType
 
@@ -159,8 +157,8 @@ class SoknadServiceTest {
 
 		assertTrue(ettersendingsSoknadDto != null)
 		assertTrue(!ettersendingsSoknadDto.vedleggsListe.isEmpty())
-		assertTrue(!ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatus.INNSENDT }.toList().isEmpty())
-		assertTrue(!ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatus.IKKE_VALGT }.toList().isEmpty())
+		assertTrue(!ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }.toList().isEmpty())
+		assertTrue(!ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt }.toList().isEmpty())
 
 	}
 
@@ -181,7 +179,7 @@ class SoknadServiceTest {
 		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 
 		assertTrue(!ettersendingsSoknadDto.vedleggsListe.isEmpty())
-		assertTrue(!ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatus.IKKE_VALGT }.toList().isEmpty())
+		assertTrue(!ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt }.toList().isEmpty())
 
 		// Laster opp fil til vedlegg W1 til ettersendingssøknaden
 		val lagretFil = soknadService.lagreFil(ettersendingsSoknadDto
@@ -197,8 +195,8 @@ class SoknadServiceTest {
 
 		assertTrue(ettersendingsSoknadDto2 != null)
 		assertTrue(!ettersendingsSoknadDto2.vedleggsListe.isEmpty())
-		assertTrue(!ettersendingsSoknadDto2.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatus.IKKE_VALGT }.toList().isEmpty())
-		assertTrue(ettersendingsSoknadDto2.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatus.INNSENDT }.toList().count() == 2 )
+		assertTrue(!ettersendingsSoknadDto2.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt }.toList().isEmpty())
+		assertTrue(ettersendingsSoknadDto2.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }.toList().count() == 2 )
 
 		// Laster opp fil til vedlegg W1 til ettersendingssøknaden
 		soknadService.lagreFil(ettersendingsSoknadDto2
@@ -341,6 +339,39 @@ class SoknadServiceTest {
 
 	}
 
+	@Test
+	fun sendInnSoknadFeilerUtenOpplastetHoveddokument() {
+		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+
+		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+
+		assertThrows<IllegalActionException> {
+			soknadService.sendInnSoknad(dokumentSoknadDto)
+		}
+		soknadService.hentSoknad(dokumentSoknadDto.innsendingsId!!)
+	}
+
+	@Test
+	fun sendInnEttersendingsSoknadFeilerUtenOpplastetVedlegg() {
+		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+
+		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+
+		soknadService.lagreFil(dokumentSoknadDto, lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.filter {it.erHoveddokument}.first()))
+
+		testOgSjekkInnsendingAvSoknad(soknadService, dokumentSoknadDto)
+
+		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
+
+		assertTrue(!ettersendingsSoknadDto.vedleggsListe.isEmpty())
+		assertTrue(!ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt }.toList().isEmpty())
+
+		assertThrows<IllegalActionException> {
+			soknadService.sendInnSoknad(ettersendingsSoknadDto)
+		}
+	}
+
+
 	private fun testOgSjekkOpprettingAvSoknad(soknadService: SoknadService, vedleggsListe: List<String> = listOf(), brukerid: String = testpersonid): DokumentSoknadDto {
 		return testOgSjekkOpprettingAvSoknad(soknadService, vedleggsListe, brukerid, "no" )
 	}
@@ -416,63 +447,6 @@ class SoknadServiceTest {
 		soknadService.slettFil(dokumentSoknadDto, filDtoSaved.vedleggsid, filDtoSaved.id!!)
 
 	}
-
-	private fun lagVedleggDto(skjemanr: String, tittel: String, mimeType: String?, fil: ByteArray?): VedleggDto {
-		return  VedleggDto(null, skjemanr, tittel, tittel, "Beskrivelse", UUID.randomUUID().toString(), mimeType, fil
-			, false, erVariant = false, if ("application/pdf".equals(mimeType, true)) true else false, true,null, OpplastingsStatus.IKKE_VALGT,  LocalDateTime.now())
-
-	}
-	private fun lagDokumentSoknad(brukerId: String, skjemanr: String, spraak: String, tittel: String, tema: String): DokumentSoknadDto {
-			val vedleggDtoPdf = VedleggDto(null, skjemanr, tittel, tittel, "Beskrivelse", UUID.randomUUID().toString(), "application/pdf",
-					getBytesFromFile("/litenPdf.pdf"), true, erVariant = false, true, true, null, OpplastingsStatus.LASTET_OPP,  LocalDateTime.now())
-			val vedleggDtoJson = VedleggDto(null, skjemanr, tittel, tittel, "Beskrivelse", UUID.randomUUID().toString(),"application/json",
-					getBytesFromFile("/sanity.json"), true, erVariant = true, false, true, null, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
-
-		val vedleggDtoList = listOf(vedleggDtoPdf, vedleggDtoJson)
-		return DokumentSoknadDto(null, null, null, brukerId, skjemanr, tittel, tema, spraak,
-			SoknadsStatus.Opprettet, LocalDateTime.now(), LocalDateTime.now(), null, vedleggDtoList)
-	}
-
-	private fun oppdaterDokumentSoknad(dokumentSoknadDto: DokumentSoknadDto): DokumentSoknadDto {
-		val vedleggDto = lastOppDokumentTilVedlegg(dokumentSoknadDto.vedleggsListe[0])
-		val vedleggDtoListe = if (dokumentSoknadDto.vedleggsListe.size>1) listOf(dokumentSoknadDto.vedleggsListe[1]) else listOf()
-		return DokumentSoknadDto(dokumentSoknadDto.id, dokumentSoknadDto.innsendingsId, dokumentSoknadDto.ettersendingsId,
-			dokumentSoknadDto.brukerId, dokumentSoknadDto.skjemanr, dokumentSoknadDto.tittel, dokumentSoknadDto.tema,
-			dokumentSoknadDto.spraak, SoknadsStatus.Opprettet, dokumentSoknadDto.opprettetDato, LocalDateTime.now(),
-			null, listOf(vedleggDto) + vedleggDtoListe)
-	}
-
-	private fun lastOppDokumentTilVedlegg(vedleggDto: VedleggDto) =
-		VedleggDto(vedleggDto.id, vedleggDto.vedleggsnr, vedleggDto.tittel,  vedleggDto.tittel, vedleggDto.beskrivelse, UUID.randomUUID().toString(),
-			"application/pdf", getBytesFromFile("/litenPdf.pdf"), true, erVariant = false,
-			true, true, vedleggDto.skjemaurl, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
-
-	private fun lagFilDtoMedFil(vedleggDto: VedleggDto): FilDto {
-		val fil = getBytesFromFile("/litenPdf.pdf")
-		return FilDto(
-			null, vedleggDto.id!!, "Opplastet fil",
-			"application/pdf", fil.size, fil, LocalDateTime.now()
-		)
-	}
-
-	private fun getBytesFromFile(path: String): ByteArray {
-		val resourceAsStream = SoknadServiceTest::class.java.getResourceAsStream(path)
-		val outputStream = ByteArrayOutputStream()
-		resourceAsStream.use { input ->
-			outputStream.use { output ->
-				input!!.copyTo(output)
-			}
-		}
-		return outputStream.toByteArray()
-	}
-
-	// Brukes for å skrive fil til disk for manuell sjekk av innhold.
-	private fun writeBytesToFile(navn: String, suffix: String, innhold: ByteArray?) {
-		val dest = kotlin.io.path.createTempFile(navn,suffix)
-
-		if (innhold != null)	dest.toFile().writeBytes(innhold)
-	}
-
 	@Test
 	fun lesOppTeksterTest() {
 		val prop = Properties()
@@ -524,8 +498,8 @@ class SoknadServiceTest {
 
 		assertTrue(ettersendingsSoknadDto != null)
 		assertTrue(!ettersendingsSoknadDto.vedleggsListe.isEmpty())
-		assertTrue(!ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatus.INNSENDT }.toList().isEmpty())
-		assertTrue(!ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatus.IKKE_VALGT }.toList().isEmpty())
+		assertTrue(!ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }.toList().isEmpty())
+		assertTrue(!ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt }.toList().isEmpty())
 
 		val dummyHovedDokument = PdfGenerator().lagForsideEttersending(ettersendingsSoknadDto)
 		assertTrue(dummyHovedDokument != null)
@@ -572,13 +546,73 @@ class SoknadServiceTest {
 		val soknad = soknadService.hentSoknad(innsendingsId)
 
 		assertTrue(soknad.tema == tema &&  soknad.skjemanr == skjemanr)
-		assertTrue(soknad.vedleggsListe.size == 3)
-		assertTrue(soknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant == false && it.opplastingsStatus == OpplastingsStatus.LASTET_OPP}.isNotEmpty())
+		assertTrue(soknad.vedleggsListe.size == 2)
+		assertTrue(soknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant == false && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }.isNotEmpty())
+	}
+
+
+	private fun lagVedleggDto(skjemanr: String, tittel: String, mimeType: String?, fil: ByteArray?, id: Long? = null,
+														erHoveddokument: Boolean? = true, erVariant: Boolean? = false, erPakrevd: Boolean? = true ): VedleggDto {
+		return  VedleggDto( tittel, tittel, erHoveddokument!!, erVariant!!,
+			if ("application/pdf".equals(mimeType, true)) true else false, erPakrevd!!,
+			if (fil != null) OpplastingsStatusDto.lastetOpp else OpplastingsStatusDto.ikkeValgt,  OffsetDateTime.now(), null,
+			skjemanr,"Beskrivelse", UUID.randomUUID().toString(),
+			if ("application/json".equals(mimeType)) Mimetype.applicationSlashJson else if (mimeType != null) Mimetype.applicationSlashPdf else null,
+			fil, null)
+
+	}
+
+	private fun lagDokumentSoknad(brukerId: String, skjemanr: String, spraak: String, tittel: String, tema: String): DokumentSoknadDto {
+		val vedleggDtoPdf = lagVedleggDto(skjemanr, tittel, "application/pdf", getBytesFromFile("/litenPdf.pdf"))
+
+		val vedleggDtoJson = lagVedleggDto(skjemanr, tittel, "application/json", getBytesFromFile("/sanity.json"))
+
+		val vedleggDtoList = listOf(vedleggDtoPdf, vedleggDtoJson)
+		return DokumentSoknadDto( brukerId, skjemanr, tittel, tema, SoknadsStatusDto.opprettet, OffsetDateTime.now(),
+			vedleggDtoList, 1L, UUID.randomUUID().toString(), null, spraak,
+			OffsetDateTime.now(), null )
+	}
+
+	private fun oppdaterDokumentSoknad(dokumentSoknadDto: DokumentSoknadDto): DokumentSoknadDto {
+		val vedleggDto = lastOppDokumentTilVedlegg(dokumentSoknadDto.vedleggsListe[0])
+		val vedleggDtoListe = if (dokumentSoknadDto.vedleggsListe.size>1) listOf(dokumentSoknadDto.vedleggsListe[1]) else listOf()
+		return DokumentSoknadDto(dokumentSoknadDto.brukerId, dokumentSoknadDto.skjemanr, dokumentSoknadDto.tittel,
+			dokumentSoknadDto.tema, SoknadsStatusDto.opprettet, dokumentSoknadDto.opprettetDato, listOf(vedleggDto) + vedleggDtoListe,
+			dokumentSoknadDto.id, dokumentSoknadDto.innsendingsId, dokumentSoknadDto.ettersendingsId,
+			dokumentSoknadDto.spraak, OffsetDateTime.now(), null )
+	}
+
+	private fun lastOppDokumentTilVedlegg(vedleggDto: VedleggDto) =
+		lagVedleggDto(vedleggDto.vedleggsnr ?: "N6", vedleggDto.tittel, "application/pdf",
+			getBytesFromFile("/litenPdf.pdf"), vedleggDto.id)
+
+	private fun lagFilDtoMedFil(vedleggDto: VedleggDto): FilDto {
+		val fil = getBytesFromFile("/litenPdf.pdf")
+		return FilDto(
+			vedleggDto.id!!, null, "OpplastetFil.pdf",
+			Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now())
+	}
+
+	private fun getBytesFromFile(path: String): ByteArray {
+		val resourceAsStream = SoknadServiceTest::class.java.getResourceAsStream(path)
+		val outputStream = ByteArrayOutputStream()
+		resourceAsStream.use { input ->
+			outputStream.use { output ->
+				input!!.copyTo(output)
+			}
+		}
+		return outputStream.toByteArray()
+	}
+
+	// Brukes for å skrive fil til disk for manuell sjekk av innhold.
+	private fun writeBytesToFile(navn: String, suffix: String, innhold: ByteArray?) {
+		val dest = kotlin.io.path.createTempFile(navn,suffix)
+
+		if (innhold != null)	dest.toFile().writeBytes(innhold)
 	}
 
 	private fun lagDokumentSoknad(tema: String, skjemanr: String): DokumentSoknadDto {
-		return DokumentSoknadDto(null, null, null, testpersonid, skjemanr,
-			"Fullmaktsskjema", tema, "nb_NO", SoknadsStatus.Opprettet, LocalDateTime.now(), null, null, lagVedleggsListe())
+		return lagDokumentSoknad(testpersonid, skjemanr, "nb_NO", "Fullmaktsskjema", tema )
 	}
 
 	private fun lagVedleggsListe(): List<VedleggDto> {
@@ -599,9 +633,7 @@ class SoknadServiceTest {
 
 	private fun lagVedlegg(vedleggsnr: String, tittel: String, mimeType: String?, erHoveddokument: Boolean,
 												 erVariant: Boolean, erPakrevd: Boolean, document: ByteArray?): VedleggDto {
-		return VedleggDto(null, vedleggsnr, tittel, tittel, "Beskrivelse", null, mimeType, document,
-			erHoveddokument, erVariant, mimeType?.contains("application/json") ?: false, erPakrevd, null,
-			if (document != null) OpplastingsStatus.LASTET_OPP else OpplastingsStatus.IKKE_VALGT, LocalDateTime.now() )
+		return lagVedleggDto(vedleggsnr, tittel, mimeType, document, 1, erHoveddokument, erVariant, erPakrevd)
 
 	}
 }

@@ -3,7 +3,8 @@ package no.nav.soknad.innsending.rest
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
-import no.nav.soknad.innsending.dto.AktivSakDto
+import no.nav.soknad.innsending.api.InnsendteApi
+import no.nav.soknad.innsending.model.AktivSakDto
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.SafService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
@@ -15,7 +16,9 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/innsendte")
-class InnsendtListeApi(val safService: SafService, val tilgangskontroll: Tilgangskontroll, val innsenderMetrics: InnsenderMetrics) {
+class InnsendtListeApi(
+	val safService: SafService, val tilgangskontroll: Tilgangskontroll, val innsenderMetrics: InnsenderMetrics) :
+	InnsendteApi {
 
 	private val logger = LoggerFactory.logger(javaClass)
 
@@ -23,16 +26,16 @@ class InnsendtListeApi(val safService: SafService, val tilgangskontroll: Tilgang
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
 		description = "If successful, a list of already sent in applications is returned."
 	)])
-	@GetMapping("/hentAktiveSaker/{brukerId}")
-	fun aktiveSaker(@PathVariable brukerId: String, @RequestParam skjemanr: String?): ResponseEntity<List<AktivSakDto>> {
+	@GetMapping("/hentAktiveSaker")
+	override fun aktiveSaker(): ResponseEntity<List<AktivSakDto>> {
 
 		logger.info("Kall for å hente innsendte søknader for en bruker")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
 		try {
-		val innsendteSoknader = safService.hentInnsendteSoknader(tilgangskontroll.hentBrukerFraToken(brukerId))
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(innsendteSoknader)
+			val innsendteSoknader = safService.hentInnsendteSoknader(tilgangskontroll.hentBrukerFraToken(null))
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(innsendteSoknader)
 		} finally {
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
 		}

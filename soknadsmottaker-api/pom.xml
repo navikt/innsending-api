@@ -14,7 +14,6 @@
 	<description>Soknadsmottaker api consumed by innsending-api</description>
 
 	<properties>
-		<java.version>11</java.version>
 		<kotlin.version>1.6.10</kotlin.version>
 		<jackson.version>2.13.1</jackson.version>
 		<okhttp.version>4.9.3</okhttp.version>

@@ -18,11 +18,16 @@
 	<name>innsending-api</name>
 	<description>Tjeneste for mottak av dokumenter og videresending til soknadsmottakstjenesten</description>
 
+	<properties>
+		<java.version>11</java.version>
+	</properties>
+
 	<modules>
 		<module>soknadsfillager-api</module>
 		<module>soknadsmottaker-api</module>
+		<module>api</module>
 		<module>innsender</module>
-  </modules>
+	</modules>
 
 	<repositories>
 		<repository>

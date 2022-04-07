@@ -12,8 +12,8 @@ import no.nav.brukernotifikasjon.schemas.Oppgave
 import no.nav.soknad.innsending.ProfileConfig
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.config.KafkaConfig
-import no.nav.soknad.innsending.repository.OpplastingsStatus
-import no.nav.soknad.innsending.repository.SoknadsStatus
+import no.nav.soknad.innsending.model.OpplastingsStatusDto
+import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.utils.lagDokumentSoknad
 import no.nav.soknad.innsending.utils.lagVedlegg
 import org.junit.jupiter.api.BeforeEach
@@ -31,7 +31,7 @@ internal class BrukernotifikasjonPublisherTest {
 	private val kafkaConfig: KafkaConfig = KafkaConfig(ProfileConfig("test"))
 
 	@InjectMockKs
-	var kafkaPublisher = mockk<KafkaPublisher>()
+	var kafkaPublisher = mockk<KafkaPublisherInterface>()
 
 	private var brukernotifikasjonPublisher: BrukernotifikasjonPublisher? = null
 
@@ -77,7 +77,7 @@ internal class BrukernotifikasjonPublisherTest {
 
 		every { kafkaPublisher.putApplicationDoneOnTopic(any(), capture(done)) } returns Unit
 
-		brukernotifikasjonPublisher?.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatus.Innsendt))
+		brukernotifikasjonPublisher?.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatusDto.innsendt))
 
 		assertTrue(done.isCaptured)
 		assertEquals(personId, done.captured.getFodselsnummer())
@@ -100,10 +100,10 @@ internal class BrukernotifikasjonPublisherTest {
 		every { kafkaPublisher.putApplicationDoneOnTopic(any(), capture(done)) } returns Unit
 		every { kafkaPublisher.putApplicationTaskOnTopic(any(), capture(oppgave)) } returns Unit
 
-		val soknad = lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatus.Innsendt,
+		val soknad = lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatusDto.innsendt,
 			listOf(
-				lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatus.INNSENDT, false,"/litenPdf.pdf" ),
-				lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatus.SEND_SENERE, false)),
+				lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.innsendt, false,"/litenPdf.pdf" ),
+				lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.sendSenere, false)),
 		)
 
 		brukernotifikasjonPublisher?.soknadStatusChange(soknad)
@@ -111,10 +111,10 @@ internal class BrukernotifikasjonPublisherTest {
 		assertTrue(done.isCaptured)
 		assertEquals(personId, done.captured.getFodselsnummer())
 
-		val ettersending = lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, ettersendingsSoknadsId, SoknadsStatus.Opprettet,
+		val ettersending = lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, ettersendingsSoknadsId, SoknadsStatusDto.opprettet,
 			listOf(
-				lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatus.INNSENDT, false,"/litenPdf.pdf" ),
-				lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatus.IKKE_VALGT, false)), soknad.innsendingsId
+				lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.innsendt, false,"/litenPdf.pdf" ),
+				lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.ikkeValgt, false)), soknad.innsendingsId
 		)
 
 		brukernotifikasjonPublisher?.soknadStatusChange(ettersending)
@@ -144,10 +144,10 @@ internal class BrukernotifikasjonPublisherTest {
 		every { kafkaPublisher.putApplicationDoneOnTopic(capture(nokler), capture(done)) } returns Unit   // Nokkel(appConfiguration.kafkaConfig.username, innsendingsid )
 
 		brukernotifikasjonPublisher?.soknadStatusChange(
-			lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, ettersendingsSoknadsId, SoknadsStatus.Innsendt,
+			lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, ettersendingsSoknadsId, SoknadsStatusDto.innsendt,
 				listOf(
-					lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatus.LASTET_OPP, false,"/litenPdf.pdf" ),
-					lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatus.LASTET_OPP, false, "/litenPdf.pdf")),
+					lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.lastetOpp, false,"/litenPdf.pdf" ),
+					lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.lastetOpp, false, "/litenPdf.pdf")),
 				innsendingsid))
 
 		assertTrue(done.isCaptured)
@@ -170,7 +170,7 @@ internal class BrukernotifikasjonPublisherTest {
 
 		every { kafkaPublisher.putApplicationDoneOnTopic(any(), capture(done)) } returns Unit
 
-		brukernotifikasjonPublisher?.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatus.SlettetAvBruker))
+		brukernotifikasjonPublisher?.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatusDto.slettetAvBruker))
 
 		assertTrue(done.isCaptured)
 		assertEquals(personId, done.captured.getFodselsnummer())

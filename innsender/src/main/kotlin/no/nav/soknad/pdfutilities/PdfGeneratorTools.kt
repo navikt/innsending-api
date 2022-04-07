@@ -1,7 +1,8 @@
 package no.nav.soknad.pdfutilities
 
-import no.nav.soknad.innsending.dto.DokumentSoknadDto
-import no.nav.soknad.innsending.dto.VedleggDto
+import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.OpplastingsStatusDto
+import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.repository.OpplastingsStatus.*
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
@@ -50,9 +51,9 @@ class PdfGenerator {
 		val vedleggSendtHeader = tekster.getProperty("kvittering.vedlegg.sendt")
 		val vedleggIkkeSendtHeader = tekster.getProperty("kvittering.vedlegg.ikkesendt")
 		val lastetOpp = soknad.vedleggsListe
-			.filter { !it.erVariant && (it.opplastingsStatus == LASTET_OPP || it.opplastingsStatus == INNSENDT) }
+			.filter { !it.erVariant && (it.opplastingsStatus.equals(OpplastingsStatusDto.lastetOpp) || it.opplastingsStatus.equals(OpplastingsStatusDto.innsendt)) }
 		val antallLastetOpp = lastetOpp.size
-		val ikkeLastetOppDenneGang = soknad.vedleggsListe.filter { it.opplastingsStatus == SEND_SENERE }
+		val ikkeLastetOppDenneGang = soknad.vedleggsListe.filter { it.opplastingsStatus.equals(OpplastingsStatusDto.sendSenere) }
 		val now = DateTime.now()
 		val antallInnsendt = java.lang.String.format(
 			tekster.getProperty("kvittering.erSendt"),

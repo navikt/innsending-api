@@ -2,7 +2,7 @@ package no.nav.soknad.innsending.consumerapis.soknadsfillager
 
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
-import no.nav.soknad.innsending.dto.VedleggDto
+import no.nav.soknad.innsending.model.VedleggDto
 import org.jboss.logging.Logger
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile

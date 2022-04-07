@@ -2,7 +2,6 @@ package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.saf.SafAPITest
-import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.util.testpersonid
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

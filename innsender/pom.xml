@@ -13,7 +13,6 @@
 	<name>innsender</name>
 
 	<properties>
-		<java.version>11</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 
@@ -217,6 +216,11 @@
 			<artifactId>soknadsmottaker-api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>no.nav.soknad.innsending</groupId>
+			<artifactId>api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -318,6 +322,7 @@
 						<plugin>spring</plugin>
 						<plugin>jpa</plugin>
 					</compilerPlugins>
+					<jvmTarget>${java.version}</jvmTarget>
 				</configuration>
 				<dependencies>
 					<dependency>

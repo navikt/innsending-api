@@ -1,55 +1,57 @@
 package no.nav.soknad.innsending.utils
 
-import no.nav.soknad.innsending.dto.DokumentSoknadDto
-import no.nav.soknad.innsending.dto.VedleggDto
-import no.nav.soknad.innsending.repository.OpplastingsStatus
-import no.nav.soknad.innsending.repository.SoknadsStatus
+import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.service.SoknadServiceTest
 import java.io.ByteArrayOutputStream
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.*
 
 
 fun lagDokumentSoknad(brukerId: String, skjemanr: String, spraak: String, tittel: String, tema: String, id: Long? = null
-											, innsendingsid: String? = null, soknadsStatus: SoknadsStatus = SoknadsStatus.Opprettet
+											, innsendingsid: String? = null, soknadsStatus: SoknadsStatusDto? = SoknadsStatusDto.opprettet
 											, vedleggsListe: List<VedleggDto>? = null, ettersendingsId: String? = null
-											): DokumentSoknadDto {
+): DokumentSoknadDto {
+	val vedleggDtoPdf = lagVedleggDto(skjemanr, tittel, "application/pdf", getBytesFromFile("/litenPdf.pdf"))
+	val vedleggDtoJson = lagVedleggDto(skjemanr, tittel, "application/json", getBytesFromFile("/sanity.json"))
 
-	// Lag varianter av hoveddokument
-	val vedleggDtoPdf = lagVedlegg(1L, skjemanr, tittel, OpplastingsStatus.LASTET_OPP, true,"/litenPdf.pdf"  )
-	val vedleggDtoJson = lagVedlegg(2L, skjemanr, tittel, OpplastingsStatus.LASTET_OPP, true,"/sanity.json"  )
-
-	val vedleggDtoList = listOf(vedleggDtoPdf, vedleggDtoJson) + (vedleggsListe ?: emptyList())
-
-	return DokumentSoknadDto(id, innsendingsid, ettersendingsId, brukerId, skjemanr, tittel, tema, spraak,
-		soknadsStatus, LocalDateTime.now(), LocalDateTime.now(), if (soknadsStatus == SoknadsStatus.Innsendt) LocalDateTime.now() else null, vedleggDtoList)
+	val vedleggDtoList = listOf(vedleggDtoPdf, vedleggDtoJson)
+	return DokumentSoknadDto( brukerId, skjemanr, tittel, tema, soknadsStatus!!, OffsetDateTime.now(),
+		vedleggDtoList, id, innsendingsid ?: UUID.randomUUID().toString(), ettersendingsId, spraak,
+		OffsetDateTime.now(), null )
 }
 
 fun oppdaterDokumentSoknad(dokumentSoknadDto: DokumentSoknadDto): DokumentSoknadDto {
 	val vedleggDto = lastOppDokumentTilVedlegg(dokumentSoknadDto.vedleggsListe[0])
 	val vedleggDtoListe = if (dokumentSoknadDto.vedleggsListe.size>1) listOf(dokumentSoknadDto.vedleggsListe[1]) else listOf()
-	return DokumentSoknadDto(dokumentSoknadDto.id, dokumentSoknadDto.innsendingsId, dokumentSoknadDto.ettersendingsId,
-		dokumentSoknadDto.brukerId, dokumentSoknadDto.skjemanr, dokumentSoknadDto.tittel, dokumentSoknadDto.tema,
-		dokumentSoknadDto.spraak, SoknadsStatus.Opprettet, dokumentSoknadDto.opprettetDato, LocalDateTime.now(),
-		null, listOf(vedleggDto) + vedleggDtoListe)
+	return DokumentSoknadDto(dokumentSoknadDto.brukerId, dokumentSoknadDto.skjemanr, dokumentSoknadDto.tittel,
+		dokumentSoknadDto.tema, SoknadsStatusDto.opprettet, dokumentSoknadDto.opprettetDato, listOf(vedleggDto) + vedleggDtoListe,
+		dokumentSoknadDto.id, dokumentSoknadDto.innsendingsId, dokumentSoknadDto.ettersendingsId,
+		dokumentSoknadDto.spraak, OffsetDateTime.now(), null )
 }
 
 fun lagVedlegg(id: Long? = null, vedleggsnr: String, tittel: String
-							 , opplastingsStatus: OpplastingsStatus = OpplastingsStatus.IKKE_VALGT
-							 , erHoveddokument: Boolean = false, vedleggsNavn: String? = null): VedleggDto {
-	return VedleggDto(id, vedleggsnr, tittel, tittel, "Beskrivelse", UUID.randomUUID().toString()
-		, if (vedleggsNavn != null && vedleggsNavn.contains(".pdf")) "application/pdf" else "application/json"
-		, if (opplastingsStatus == OpplastingsStatus.LASTET_OPP && vedleggsNavn != null) getBytesFromFile(vedleggsNavn) else null
-		, erHoveddokument, if (vedleggsNavn == null || (vedleggsNavn != null && vedleggsNavn.contains(".pdf"))) false else true, true, true
-		, if (erHoveddokument) "https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/1b736c8e28abcb80f654166318f130e5ed2a0aad.pdf" else null
-		,opplastingsStatus, LocalDateTime.now())
+							 , opplastingsStatus: OpplastingsStatusDto = OpplastingsStatusDto.ikkeValgt
+							 , erHoveddokument: Boolean = false, vedleggsNavn: String? = null): VedleggDto =
+	lagVedleggDto(vedleggsnr, tittel,
+		if (opplastingsStatus.equals(OpplastingsStatusDto.lastetOpp) )
+			(if (vedleggsNavn != null && vedleggsNavn.contains(".pdf")) "application/pdf" else "application/json") else null,
+		if (opplastingsStatus.equals(OpplastingsStatusDto.lastetOpp) && vedleggsNavn != null) getBytesFromFile(vedleggsNavn) else null,
+		id, erHoveddokument )
+
+
+fun lagVedleggDto(skjemanr: String, tittel: String, mimeType: String?, fil: ByteArray?, id: Long? = null,
+													erHoveddokument: Boolean? = true, erVariant: Boolean? = false, erPakrevd: Boolean? = true ): VedleggDto {
+	return  VedleggDto( tittel, tittel, erHoveddokument!!, erVariant!!,
+		if ("application/pdf".equals(mimeType, true)) true else false, erPakrevd!!,
+		if (fil != null) OpplastingsStatusDto.lastetOpp else OpplastingsStatusDto.ikkeValgt,  OffsetDateTime.now(), id,
+		skjemanr,"Beskrivelse", UUID.randomUUID().toString(), Mimetype.applicationSlashPdf, fil,
+		if (erHoveddokument) "https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/1b736c8e28abcb80f654166318f130e5ed2a0aad.pdf" else null)
+
 }
 
-
 fun lastOppDokumentTilVedlegg(vedleggDto: VedleggDto) =
-	VedleggDto(vedleggDto.id, vedleggDto.vedleggsnr, vedleggDto.tittel, vedleggDto.tittel, vedleggDto.beskrivelse, UUID.randomUUID().toString(),
-		"application/pdf", getBytesFromFile("/litenPdf.pdf"), true, erVariant = false,
-		true, true, vedleggDto.skjemaurl, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
+	lagVedleggDto(vedleggDto.vedleggsnr ?: "N6", vedleggDto.tittel, "application/pdf",
+		getBytesFromFile("/litenPdf.pdf"), vedleggDto.id)
 
 fun getBytesFromFile(path: String): ByteArray {
 	val resourceAsStream = SoknadServiceTest::class.java.getResourceAsStream(path)

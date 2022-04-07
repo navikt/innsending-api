@@ -2,7 +2,7 @@ package no.nav.soknad.innsending.dto
 
 import java.time.LocalDateTime
 
-data class FilDto(val id: Long?, val vedleggsid: Long, val filnavn: String, val mimetype: String, val storrelse: Int?, val data: ByteArray?, val opprettetdato: LocalDateTime?) {
+data class FilDto(val id: Long?, val vedleggsid: Long, val filnavn: String?, val mimetype: String?, val storrelse: Int?, val data: ByteArray?, val opprettetdato: LocalDateTime?) {
 	override fun equals(other: Any?): Boolean {
 		if (this === other) return true
 		if (javaClass != other?.javaClass) return false

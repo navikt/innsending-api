@@ -2,10 +2,10 @@ package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.consumerapis.saf.SafInterface
 import no.nav.soknad.innsending.consumerapis.saf.dto.Dokument
-import no.nav.soknad.innsending.dto.AktivSakDto
-import no.nav.soknad.innsending.dto.InnsendtVedleggDto
+import no.nav.soknad.innsending.model.AktivSakDto
+import no.nav.soknad.innsending.model.InnsendtVedleggDto
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
@@ -15,14 +15,14 @@ class SafService(val safApi: SafInterface) {
 		val innsendte = safApi.hentBrukersSakerIArkivet(brukerId)
 		if (innsendte == null) return emptyList()
 
-		return innsendte.map { AktivSakDto(it.eksternReferanseId, finnBrevKode(it.dokumenter), it.tittel, it.tema,
-				konverterTilDateTime(it.datoMottatt), erEttersending(it.dokumenter), konverterTilVedleggsliste(it.dokumenter) ) }.toList()
+		return innsendte.map { AktivSakDto(finnBrevKode(it.dokumenter), it.tittel, it.tema,
+				konverterTilDateTime(it.datoMottatt), erEttersending(it.dokumenter), konverterTilVedleggsliste(it.dokumenter), it.eksternReferanseId ) }.toList()
 	}
 
-	private fun konverterTilDateTime(dateString: String): LocalDateTime {
-		if (dateString.isBlank()) return LocalDateTime.MIN
-		val formatter: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
-		return LocalDateTime.parse(dateString, formatter)
+	private fun konverterTilDateTime(dateString: String): OffsetDateTime {
+		if (dateString.isBlank()) return OffsetDateTime.MIN
+		val formatter: DateTimeFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+		return OffsetDateTime.parse(dateString, formatter)
 	}
 
 	private fun erEttersending(dokumenter: List<Dokument>): Boolean {

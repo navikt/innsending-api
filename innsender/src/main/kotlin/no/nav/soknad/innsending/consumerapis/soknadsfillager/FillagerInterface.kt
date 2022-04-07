@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.consumerapis.soknadsfillager
 
-import no.nav.soknad.innsending.dto.VedleggDto
+import no.nav.soknad.innsending.model.VedleggDto
 
 interface FillagerInterface {
 
