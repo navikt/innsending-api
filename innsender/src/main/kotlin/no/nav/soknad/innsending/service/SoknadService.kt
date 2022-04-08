@@ -743,15 +743,15 @@ class SoknadService(
 		val innsendtSoknadDto = hentSoknad(soknadDto.innsendingsId!!)
 		publiserBrukernotifikasjon(innsendtSoknadDto)
 
-		if (skalEttersende(innsendtSoknadDto.vedleggsListe))  {
+		if (skalEttersende(innsendtSoknadDto))  {
 			opprettEttersendingsSoknad(innsendtSoknadDto, innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!)
 		}
 
 		innsenderMetrics.applicationCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
 	}
 
-	private fun skalEttersende(vedlegg: List<VedleggDto>): Boolean {
-		return vedlegg
+	private fun skalEttersende(innsendtSoknadDto: DokumentSoknadDto): Boolean {
+		return innsendtSoknadDto.tema != "DAG" && innsendtSoknadDto.vedleggsListe
 			.any { !it.erHoveddokument && it.erPakrevd && it.opplastingsStatus.equals(OpplastingsStatusDto.sendSenere) }
 	}
 

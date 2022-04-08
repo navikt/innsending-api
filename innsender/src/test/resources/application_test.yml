@@ -37,21 +37,10 @@ dbconfig:
   embedded: true
   usevault: false
 
-kafkaconfig:
+brukernotifikasjonconfig:
   profiles: test
   tjenesteUrl: https://localhost
   gjenopptaSoknadsArbeid: /dokumentinnsending/oversikt/
   ettersendePaSoknad: /dokumentinnsending/ettersending/
-  username: soknadinnsender
-  password:
-  servers: localhost:29092
-  schemaRegistryUrl: http://localhost:8081
-  clientId: kafkaproducer
-  secure:
-  protocol:
-  salsmec:
-  kafkaTopicBeskjed: aapen-brukernotifikasjon-nyBeskjed-v1
-  kafkaTopicOppgave: aapen-brukernotifikasjon-nyOppgave-v1
-  kafkaTopicDone: aapen-brukernotifikasjon-done-v1
-  publisereEndringer: TRUE
+  publisereEndringer: true
 

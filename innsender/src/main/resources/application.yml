@@ -49,22 +49,11 @@ dbconfig:
   embedded: true
   useVault: false
 
-kafkaconfig:
+brukernotifikasjonconfig:
   profiles: test
   tjenesteUrl: https://localhost
   gjenopptaSoknadsArbeid: /dokumentinnsending/oversikt/
   ettersendePaSoknad: /dokumentinnsending/ettersending/
-  username: soknadinnsender
-  password:
-  servers: localhost:29092
-  schemaRegistryUrl: http://localhost:8081
-  clientId: kafkaproducer
-  secure:
-  protocol:
-  salsmec:
-  kafkaTopicBeskjed: aapen-brukernotifikasjon-nyBeskjed-v1
-  kafkaTopicOppgave: aapen-brukernotifikasjon-nyOppgave-v1
-  kafkaTopicDone: aapen-brukernotifikasjon-done-v1
   publisereEndringer: true
 
 ---
@@ -103,20 +92,9 @@ dbconfig:
   embedded: false
   useVault: true
 
-kafkaconfig:
+brukernotifikasjonconfig:
   profiles: ${SPRING_PROFILES_ACTIVE}
   tjenesteUrl: ${TJENESTE_URL}
   gjenopptaSoknadsArbeid: ${GJENOPPTA_SOKNADS_ARBEID}
   ettersendePaSoknad: ${ETTERSENDE_PA_SOKNAD}
-  username: ${APPLICATION_USERNAME}
-  password: ${APPLICATION_PASSWORD}
-  servers: ${KAFKA_BOOTSTRAP_SERVERS}
-  schemaRegistryUrl: ${SCHEMA_REGISTRY_URL}
-  clientId: ${APPLICATION_USERNAME}
-  secure: ${KAFKA_SECURITY}
-  protocol: ${KAFKA_SECPROT}
-  salsmec: ${KAFKA_SASLMEC}
-  kafkaTopicBeskjed: ${KAFKA_TOPIC_BESKJED}
-  kafkaTopicOppgave: ${KAFKA_TOPIC_OPPGAVE}
-  kafkaTopicDone: ${KAFKA_TOPIC_DONE}
   publisereEndringer: ${PUBLISERE_BRUKERNOTIFIKASJONER}

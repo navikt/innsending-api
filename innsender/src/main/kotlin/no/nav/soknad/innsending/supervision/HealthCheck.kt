@@ -22,6 +22,7 @@ class HealthCheck(
 	@Qualifier("saf")private val safAPI: HealthRequestInterface,
 	@Qualifier("fillager")private val fillagerAPI: HealthRequestInterface,
 	@Qualifier("mottaker")private val mottakerAPI: HealthRequestInterface,
+	@Qualifier("notifikasjon")private val notifikasjonAPI: HealthRequestInterface,
 	private val aliveRepository: AliveRepository)	: HealthApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -44,6 +45,7 @@ class HealthCheck(
 		val dependencies = listOf(
 			Dependency({ fillagerAPI.isReady() }, "ok", "FileStorage"),
 			Dependency({ mottakerAPI.isReady() }, "ok", "SoknadsMottaker"),
+			Dependency({ notifikasjonAPI.isReady() }, "ok", "Notifikasjon"),
 			Dependency({ pdlAPI.isReady() }, "ok", "PDL"),
 			Dependency({ safAPI.isReady() }, "ok", "SAF"),
 			Dependency({ aliveRepository.findTestById(1L) }, "ok", "Database")

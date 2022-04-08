@@ -26,7 +26,7 @@ import org.springframework.stereotype.Service
 @Service
 @Profile("dev | prod")
 @Qualifier("mottaker")
-class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, HealthRequestInterface {
+class MottakerAPI(restConfig: RestConfig): MottakerInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
