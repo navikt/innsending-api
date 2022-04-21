@@ -7,6 +7,7 @@
 		"soknadsmottaker-team",
 		"soknadsfillager-q1"
 	],
+	"fssCluster": "dev-fss",
 	"DATABASE_NAME": "dokumentinnsending-dev",
 	"SPRING_PROFILES_ACTIVE": "dev",
 	"VERSION": "0.0.1"

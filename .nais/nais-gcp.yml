@@ -52,9 +52,9 @@ spec:
           namespace: skjemadigitalisering
     outbound:
       external:
-      { { #each outboundExternalHosts}}
-          - host: "{{this}}"
-      {{else } }
+      {{#each outboundExternalHosts}}
+        - host: "{{this}}"
+      {{else}}
         []
       {{/each}}
       rules:
@@ -65,9 +65,9 @@ spec:
       {{/each}}
       {{#each outboundRulesFssApplications}}
          - application: "{{this}}"
-             cluster: {{fssCluster}}
+           cluster: {{fssCluster}}
       {{else}}
-      []
+        []
       {{/each}}
 
   envFrom:
