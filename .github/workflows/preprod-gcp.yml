@@ -54,6 +54,6 @@ jobs:
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: dev-gcp
-          RESOURCE: nais/preprod-sbs/nais-gcp.yml
-          VARS: nais/preprod-gcp.json
+          RESOURCE: .nais/preprod-sbs/nais-gcp.yml
+          VARS: .nais/preprod-gcp.json
           DRY_RUN: true
