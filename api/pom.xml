@@ -21,6 +21,7 @@
 		<javax-servlet-api.version>4.0.1</javax-servlet-api.version>
 		<javax-validation-api.version>2.0.1.Final</javax-validation-api.version>
 		<jakarta.validation.version>2.0.2</jakarta.validation.version>
+		<jackson.coreutils.version>2.0</jackson.coreutils.version>
 
 		<springfox.version>3.0.0</springfox.version>
 		<jackson-databind-nullable.version>0.2.2</jackson-databind-nullable.version>
@@ -70,6 +71,11 @@
 			<groupId>org.openapitools</groupId>
 			<artifactId>jackson-databind-nullable</artifactId>
 			<version>${jackson-databind-nullable.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.java-json-tools</groupId>
+			<artifactId>jackson-coreutils</artifactId>
+			<version>${jackson.coreutils.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.springfox</groupId>
