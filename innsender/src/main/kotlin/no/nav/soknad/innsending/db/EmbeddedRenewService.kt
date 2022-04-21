@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.db
 
+/*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import no.nav.soknad.innsending.ApplicationState
@@ -22,3 +23,4 @@ class EmbeddedRenewService(private val credentialService: CredentialService) : R
 		}
 	}
 }
+*/

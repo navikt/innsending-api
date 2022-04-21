@@ -1,4 +1,5 @@
 package no.nav.soknad.innsending.db
+/*
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -68,3 +69,4 @@ class Database(
 		load().migrate()
 	}
 }
+*/

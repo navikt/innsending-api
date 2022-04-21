@@ -3,7 +3,6 @@ package no.nav.soknad.pdfutilities
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
-import no.nav.soknad.innsending.repository.OpplastingsStatus.*
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -13,10 +12,10 @@ import org.apache.pdfbox.pdmodel.font.PDFont
 import org.apache.pdfbox.pdmodel.font.PDType1Font
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
-import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 private const val FONT_EKSTRA_STOR = 18
@@ -54,7 +53,7 @@ class PdfGenerator {
 			.filter { !it.erVariant && (it.opplastingsStatus.equals(OpplastingsStatusDto.lastetOpp) || it.opplastingsStatus.equals(OpplastingsStatusDto.innsendt)) }
 		val antallLastetOpp = lastetOpp.size
 		val ikkeLastetOppDenneGang = soknad.vedleggsListe.filter { it.opplastingsStatus.equals(OpplastingsStatusDto.sendSenere) }
-		val now = DateTime.now()
+		val now = LocalDateTime.now()
 		val antallInnsendt = java.lang.String.format(
 			tekster.getProperty("kvittering.erSendt"),
 			antallLastetOpp,
@@ -91,14 +90,12 @@ class PdfGenerator {
 		}
 	}
 
-	private fun formaterKlokke(now: DateTime): String {
-		val time = DateTimeFormat.forPattern("HH.mm").withLocale(NO_LOCALE)
-		return time.print(now)
+	private fun formaterKlokke(now: LocalDateTime): String {
+		return now.format(DateTimeFormatter.ISO_LOCAL_TIME)
 	}
 
-	private fun formaterDato(now: DateTime): String {
-		val dato = DateTimeFormat.forPattern("d. MMMM yyyy").withLocale(NO_LOCALE)
-		return dato.print(now)
+	private fun formaterDato(now: LocalDateTime): String {
+		return now.format(DateTimeFormatter.ISO_LOCAL_DATE)
 	}
 
 	fun lagForsideEttersending(soknad: DokumentSoknadDto) = try {

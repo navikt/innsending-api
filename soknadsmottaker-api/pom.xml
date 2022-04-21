@@ -18,7 +18,9 @@
 		<jackson.version>2.13.1</jackson.version>
 		<okhttp.version>4.9.3</okhttp.version>
 
+<!--
 		<openapi-generator-maven-plugin.version>5.3.1</openapi-generator-maven-plugin.version>
+-->
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>

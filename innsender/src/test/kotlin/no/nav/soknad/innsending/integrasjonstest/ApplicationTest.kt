@@ -34,7 +34,6 @@ import org.springframework.test.web.servlet.setup.MockMvcConfigurer
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.context.WebApplicationContext
 import java.util.List
-import javax.inject.Inject
 import javax.servlet.Filter
 
 import no.nav.soknad.innsending.InnsendingApiApplication
@@ -58,7 +57,7 @@ class ApplicationTest(private val restConfig: RestConfig) {
 	private val webApplicationContext: WebApplicationContext? = null
 
 
-	@Inject
+	@Autowired
 	lateinit var restTemplate: TestRestTemplate
 
 /*

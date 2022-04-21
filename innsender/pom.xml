@@ -18,7 +18,7 @@
 
 		<otj-pg-embedded.version>0.13.4</otj-pg-embedded.version>
 		<embedded-postgres.version>1.3.1</embedded-postgres.version>
-		<flyway.version>8.0.3</flyway.version>
+		<flyway.version>8.5.7</flyway.version>
 		<vault-java-driver.version>5.1.0</vault-java-driver.version>
 
 		<konfig.version>1.6.10.0</konfig.version>
@@ -26,14 +26,11 @@
 		<prometheus-client.version>0.11.0</prometheus-client.version>
 		<logstash.version>6.6</logstash.version>
 		<springdoc.version>1.5.9</springdoc.version>
-		<brukernotifikasjon-schemas.version>1.3.1</brukernotifikasjon-schemas.version>
-		<confluent.version>5.5.2</confluent.version>
-		<kafka.version>2.6.0</kafka.version>
-		<kafka-streams-avro-serde.version>5.5.0</kafka-streams-avro-serde.version>
 		<tika-core.version>1.22</tika-core.version>
 		<pdfbox.version>2.0.25</pdfbox.version>
 		<imgscalr-lib.version>4.2</imgscalr-lib.version>
 		<okhttp.version>4.9.3</okhttp.version>
+		<token-validation.version>2.0.14</token-validation.version>
 
 		<mockito-kotlin.version>2.2.0</mockito-kotlin.version>
 		<mockk.version>1.12.0</mockk.version>
@@ -42,7 +39,6 @@
 		<spring-cloud.version>1.2.5.RELEASE</spring-cloud.version>
 		<rest-assured.version>4.4.0</rest-assured.version>
 
-		<kotlin.version>1.5.30</kotlin.version>
 	</properties>
 
 	<dependencies>
@@ -103,11 +99,6 @@
 			<version>${otj-pg-embedded.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.natpryce</groupId>
-			<artifactId>konfig</artifactId>
-			<version>${konfig.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>com.bettercloud</groupId>
 			<artifactId>vault-java-driver</artifactId>
 			<version>${vault-java-driver.version}</version>
@@ -144,21 +135,6 @@
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-kotlin</artifactId>
 			<version>${springdoc.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.github.navikt</groupId>
-			<artifactId>brukernotifikasjon-schemas</artifactId>
-			<version>${brukernotifikasjon-schemas.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.kafka</groupId>
-			<artifactId>kafka-clients</artifactId>
-			<version>${kafka.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.confluent</groupId>
-			<artifactId>kafka-streams-avro-serde</artifactId>
-			<version>${kafka-streams-avro-serde.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tika</groupId>
@@ -221,6 +197,16 @@
 			<artifactId>api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>no.nav.security</groupId>
+			<artifactId>token-validation-spring</artifactId>
+			<version>${token-validation.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>no.nav.security</groupId>
+			<artifactId>token-validation-jaxrs</artifactId>
+			<version>${token-validation.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -275,7 +261,6 @@
 			<version>${spring-cloud.version}</version>
 			<scope>test</scope>
 		</dependency>
-
 	</dependencies>
 
 	<build>

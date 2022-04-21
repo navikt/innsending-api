@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   description: API for å støtte oppretting av søknad og opplasting av vedlegg til disse.
-  version: 1.0.0
+  version: 1.0.1
   title: Innsending-api
   contact:
     name: team-soknad

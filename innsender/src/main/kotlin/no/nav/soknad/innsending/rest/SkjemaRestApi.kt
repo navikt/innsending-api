@@ -9,19 +9,27 @@ import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
-import org.hibernate.annotations.common.util.impl.LoggerFactory
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.net.URI
 import javax.validation.Valid
+import no.nav.security.token.support.core.api.ProtectedWithClaims
+import no.nav.soknad.innsending.security.Tilgangskontroll
+import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_LEVEL_4
+import no.nav.soknad.innsending.util.Constants.TOKENX
 
 @RestController
 @RequestMapping("/fyllUt/v1")
-class SkjemaRestApi(val restConfig: RestConfig, val soknadService: SoknadService, val innsenderMetrics: InnsenderMetrics)
+@ProtectedWithClaims(issuer = TOKENX, claimMap = [CLAIM_ACR_LEVEL_4])
+class SkjemaRestApi(val restConfig: RestConfig,
+										val soknadService: SoknadService,
+										val innsenderMetrics: InnsenderMetrics,
+										val tilgangskontroll: Tilgangskontroll)
 	: FyllUtApi {
 
-	private val logger = LoggerFactory.logger(javaClass)
+	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Operation(summary = "Requests to create application and redirect client to frontend application for adding attachments and sending application to NAV.", tags = ["operations"])
 	@ApiResponses(value = [ApiResponse(responseCode = "302",
@@ -37,7 +45,8 @@ class SkjemaRestApi(val restConfig: RestConfig, val soknadService: SoknadService
 		logger.info("Kall fra FyllUt for å opprette søknad for skjema ${skjemaDto.skjemanr}")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
 		try {
-			val opprettetSoknadId = soknadService.opprettNySoknad(SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(skjemaDto))
+			val brukerId = tilgangskontroll.hentBrukerFraToken()
+			val opprettetSoknadId = soknadService.opprettNySoknad(SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(skjemaDto, brukerId))
 			return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(restConfig.frontEndFortsettEndpoint+opprettetSoknadId)).build()
 		} finally {
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)

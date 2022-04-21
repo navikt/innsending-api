@@ -2,9 +2,6 @@ package no.nav.soknad.innsending.rest
 
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.responses.ApiResponse
-import io.swagger.v3.oas.annotations.responses.ApiResponses
 import no.nav.soknad.innsending.api.FrontendApi
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.IllegalActionException
@@ -20,18 +17,15 @@ import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.pdfutilities.KonverterTilPdf
 import no.nav.soknad.pdfutilities.Validerer
-import org.hibernate.annotations.common.util.impl.LoggerFactory
 import org.springframework.core.io.ByteArrayResource
-import org.springframework.core.io.FileUrlResource
 import org.springframework.core.io.Resource
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.multipart.MultipartFile
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import javax.validation.Valid
+import org.slf4j.LoggerFactory
 
 @RestController
 @RequestMapping("/frontend/v1")
@@ -41,7 +35,7 @@ class FrontEndRestApi(
 	private val restConfig: RestConfig,
 	private val innsenderMetrics: InnsenderMetrics): FrontendApi {
 
-	private val logger = LoggerFactory.logger(javaClass)
+	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@ApiOperation(
 		value = "Kall for å opprette en søknad basert på skjemanummer og med en eventuell liste av vedlegg.",
@@ -69,7 +63,7 @@ class FrontEndRestApi(
 		logger.info("Kall for å opprette søknad på skjema ${opprettSoknadBody.skjemanr}")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
 		try {
-			val brukerId = tilgangskontroll.hentBrukerFraToken(opprettSoknadBody.brukerId)
+			val brukerId = tilgangskontroll.hentBrukerFraToken()
 			val dokumentSoknadDto = soknadService.opprettSoknad(
 				brukerId,
 				opprettSoknadBody.skjemanr,
@@ -112,7 +106,7 @@ class FrontEndRestApi(
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
 		try {
 			val origSoknad = soknadService.hentSoknad(opprettEttersendingGittInnsendingsId.ettersendingTilinnsendingsId)
-			val brukerId = tilgangskontroll.hentBrukerFraToken(opprettEttersendingGittInnsendingsId.brukerId)
+			val brukerId = tilgangskontroll.hentBrukerFraToken()
 			tilgangskontroll.harTilgang(origSoknad, brukerId)
 
 			val dokumentSoknadDto =
@@ -152,7 +146,7 @@ class FrontEndRestApi(
 		logger.info("Kall for å opprette ettersending på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
 		try {
-			val brukerId = tilgangskontroll.hentBrukerFraToken(opprettEttersendingGittSkjemaNr.brukerId)
+			val brukerId = tilgangskontroll.hentBrukerFraToken()
 			val dokumentSoknadDto = soknadService.opprettSoknadForEttersendingGittSkjemanr(
 				brukerId, opprettEttersendingGittSkjemaNr.skjemanr, finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak), opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList())
 			logger.info("Opprettet ettersending ${dokumentSoknadDto.innsendingsId} på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}")

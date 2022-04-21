@@ -1,4 +1,5 @@
 package no.nav.soknad.innsending.db
+/*
 
 import com.bettercloud.vault.SslConfig
 import com.bettercloud.vault.Vault
@@ -63,3 +64,4 @@ object Vault {
 		else -> duration - MIN_REFRESH_MARGIN
 	}
 }
+*/

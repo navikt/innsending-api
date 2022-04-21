@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.db
 
+/*
 import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.delay
 import no.nav.soknad.innsending.ApplicationState
@@ -46,3 +47,4 @@ class EmbeddedCredentialService : CredentialService {
 		renewCredentialsTaskData = RenewCredentialsTaskData(dataSource, mountPath, databaseName, role)
 	}
 }
+*/

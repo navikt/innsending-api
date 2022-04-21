@@ -7,7 +7,7 @@ import java.time.ZoneOffset
 
 class SkjemaDokumentSoknadTransformer {
 
-	fun konverterTilDokumentSoknadDto(input: SkjemaDto): DokumentSoknadDto = DokumentSoknadDto(input.brukerId,
+	fun konverterTilDokumentSoknadDto(input: SkjemaDto, brukerId: String): DokumentSoknadDto = DokumentSoknadDto(brukerId,
 		input.skjemanr, input.tittel, input.tema, SoknadsStatusDto.opprettet, LocalDateTime.now().atOffset(ZoneOffset.UTC),
 		lagVedleggsListe(input), null, null, null, finnSpraakFraInput(input.spraak),
 		LocalDateTime.now().atOffset(ZoneOffset.UTC), null,  )

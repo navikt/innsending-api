@@ -1,0 +1,59 @@
+name: Build-Deploy-Pipelines
+on:
+  push:
+    branches:
+      - 'preprod-gcp-pipeline'
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    branches:
+      - 'preprod-gcp-pipeline'
+    paths-ignore:
+      - '**.md'
+      - '.github/workflows/main.yml'
+
+env:
+  IMAGE: docker.pkg.github.com/${{ github.repository }}/innsending-api:${{ github.sha }}
+
+jobs:
+  bygg-app-preprod-pipeline:
+    name: Build and push Docker container preprod
+    if: github.ref == 'refs/heads/preprod-gcp-pipeline'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - name: set timezone
+        uses: szenius/set-timezone@v1.0
+        with:
+          timezoneLinux: "Europe/Oslo"
+      - name: Build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: mvn -B package --file pom.xml
+      - name: Build and publish Docker image
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          docker build --tag ${IMAGE} .
+          docker login docker.pkg.github.com -u ${GITHUB_REPOSITORY} -p ${GITHUB_TOKEN}
+          docker push ${IMAGE}
+
+  deploy-preprod-pipeline:
+    name: Deploy to preprod-pipeline
+    needs: bygg-app-preprod-pipeline
+    if: github.ref == 'refs/heads/preprod-gcp-pipeline'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: dev-gcp
+          RESOURCE: nais/preprod-sbs/nais-gcp.yml
+          VARS: nais/preprod-gcp.json
+          DRY_RUN: true

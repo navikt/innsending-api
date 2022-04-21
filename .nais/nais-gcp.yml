@@ -1,0 +1,72 @@
+apiVersion: "nais.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: innsending-api
+  namespace: team-soknad
+  labels:
+    team: team-soknad
+spec:
+  image: {{image}}
+  port: 9064
+  liveness:
+    path: /health/isAlive
+    initialDelay: 20
+  readiness:
+    path: /health/isReady
+    initialDelay: 20
+  prometheus:
+    enabled: true
+    path: /internal/prometheus
+  replicas:
+    min: 2
+    max: 4
+  resources:
+    limits:
+      cpu: 3000m
+      memory: 2Gi
+    requests:
+      cpu: 200m
+      memory: 1Gi
+  ingresses:
+  {{#each INGRESSES as |url|}}
+     - {{url}}
+  {{/each}}
+
+  gcp:
+    sqlInstances:
+      - type: POSTGRES_14
+        databases:
+          - name: {{ DATABASE_NAME }}
+            envVarPrefix: DATABASE
+
+  tokenx:
+    enabled: true
+  azure:
+    application:
+      enabled: true
+  accessPolicy:
+    inbound:
+      rules:
+        - application: send-inn-frontend
+        - application: skjemautfylling
+          namespace: skjemadigitalisering
+    outbound:
+      external:
+        - host: soknad-fss-proxy.prod-fss-pub.nais.io
+        - host: https://www.nav.no/soknader/api/sanity/skjemautlisting
+
+  envFrom:
+    - secret: innsending-api-secret
+      metadata:
+        annotations:
+          reloader.stakater.com/match: "true"
+    - secret: basicauth
+      metadata:
+        annotations:
+          reloader.stakater.com/match: "true"
+
+  env:
+    - name: APP_VERSION
+      value: {{ VERSION }}
+    - name: SPRING_PROFILES_ACTIVE
+      value: {{ SPRING_PROFILES_ACTIVE }}

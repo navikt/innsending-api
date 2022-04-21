@@ -9,7 +9,7 @@ import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.SafService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
-import org.hibernate.annotations.common.util.impl.LoggerFactory
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -20,7 +20,7 @@ class InnsendtListeApi(
 	val safService: SafService, val tilgangskontroll: Tilgangskontroll, val innsenderMetrics: InnsenderMetrics) :
 	InnsendteApi {
 
-	private val logger = LoggerFactory.logger(javaClass)
+	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Operation(summary = "Requests fetching list of applications that have been sent to NAV by the applicant.", tags = ["operations"])
 	@ApiResponses(value = [ApiResponse(responseCode = "200",
@@ -32,7 +32,7 @@ class InnsendtListeApi(
 		logger.info("Kall for å hente innsendte søknader for en bruker")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
 		try {
-			val innsendteSoknader = safService.hentInnsendteSoknader(tilgangskontroll.hentBrukerFraToken(null))
+			val innsendteSoknader = safService.hentInnsendteSoknader(tilgangskontroll.hentBrukerFraToken())
 			return ResponseEntity
 				.status(HttpStatus.OK)
 				.body(innsendteSoknader)
@@ -40,6 +40,5 @@ class InnsendtListeApi(
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
 		}
 	}
-
 
 }

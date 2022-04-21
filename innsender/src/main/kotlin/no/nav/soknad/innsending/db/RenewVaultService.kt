@@ -1,4 +1,5 @@
 package no.nav.soknad.innsending.db
+/*
 
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -31,3 +32,4 @@ class RenewVaultService(private val vaultCredentialService: CredentialService) :
 		}
 	}
 }
+*/

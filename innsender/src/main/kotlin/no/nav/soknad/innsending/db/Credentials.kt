@@ -1,3 +1,4 @@
+/*
 package no.nav.soknad.innsending.db
 
 import com.zaxxer.hikari.HikariDataSource
@@ -14,3 +15,4 @@ data class Credentials(
 	val username: String,
 	val password: String
 )
+*/

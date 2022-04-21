@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.db
 
+/*
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 //import io.zonky.test.*
 import com.zaxxer.hikari.HikariConfig
@@ -67,3 +68,4 @@ class EmbeddedDatabase(
 		load().migrate()
 	}
 }
+*/

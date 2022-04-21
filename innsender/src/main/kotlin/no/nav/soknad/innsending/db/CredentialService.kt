@@ -1,4 +1,5 @@
 package no.nav.soknad.innsending.db
+/*
 
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.soknad.innsending.ApplicationState
@@ -18,3 +19,4 @@ interface CredentialService {
 		role: Role
 	)
 }
+*/

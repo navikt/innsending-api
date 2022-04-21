@@ -24,6 +24,12 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
 
+  flyway:
+    enabled: true
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres?user=postgres&password=postgres
+
 restconfig:
   version: 1.0
   username: srvuser
@@ -40,14 +46,7 @@ restconfig:
   soknadsMottakerHost: http://localhost:9043
   soknadsMottakerEndpoint: /save
   frontEndFortsettEndpoint: http://localhost:3000/dokumentinnsending/oversikt/
-
-dbconfig:
-  profiles: test
-  databaseName: postgres
-  mountPathVault: postgresql/preprod-fss
-  databaseUrl: jdbc:postgresql://localhost:5432/postgres
-  embedded: true
-  useVault: false
+  pdlUrl: http://pdf-api.pdl
 
 brukernotifikasjonconfig:
   profiles: test
@@ -55,6 +54,14 @@ brukernotifikasjonconfig:
   gjenopptaSoknadsArbeid: /dokumentinnsending/oversikt/
   ettersendePaSoknad: /dokumentinnsending/ettersending/
   publisereEndringer: true
+
+no.nav.security.jwt:
+  mock:
+    enable: true
+  issuers:
+    issuer_name: tokendingsTest
+    discoveryurl: http://metadata
+    accepted_audience: aud-localhost
 
 ---
 spring:
@@ -66,6 +73,18 @@ spring:
     multipart:
       max-file-size: ${MAX_FILE_SIZE}MB
       max-request-size: ${MAX_FILE_SIZE}MB
+
+  flyway:
+    enabled: true
+  datasource:
+    url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DATABASE}?user=${DATABASE_USERNAME}&password=${DATABASE_PASSWORD}
+    hikari:
+      minimum-idle: 1
+      maximum-pool-size: 10
+      connection-timeout: 10000
+      idle-timeout: 10001
+      max-lifetime: 30001
+      leak-detection-threshold: 30000
 
 restconfig:
   version: ${APP_VERSION}
@@ -83,14 +102,8 @@ restconfig:
   soknadsMottakerHost: ${SOKNADSMOTTAKER_HOST}
   soknadsMottakerEndpoint: ${SOKNADSMOTTAKER_ENDPOINT}
   frontEndFortsettEndpoint: https://${TJENESTE_URL}${GJENOPPTA_SOKNADS_ARBEID}
+  pdlUrl: http://pdf-api.pdl
 
-dbconfig:
-  profiles: ${SPRING_PROFILES_ACTIVE}
-  databaseName: ${DATABASE_NAME}
-  mountPathVault: ${VAULT_DB_PATH}
-  databaseUrl: ${DATABASE_JDBC_URL}
-  embedded: false
-  useVault: true
 
 brukernotifikasjonconfig:
   profiles: ${SPRING_PROFILES_ACTIVE}
@@ -98,3 +111,9 @@ brukernotifikasjonconfig:
   gjenopptaSoknadsArbeid: ${GJENOPPTA_SOKNADS_ARBEID}
   ettersendePaSoknad: ${ETTERSENDE_PA_SOKNAD}
   publisereEndringer: ${PUBLISERE_BRUKERNOTIFIKASJONER}
+
+no.nav.security.jwt:
+  issuer.tokenx:
+    discoveryurl: ${TOKEN_X_WELL_KNOWN_URL}
+    accepted_audience: ${TOKEN_X_CLIENT_ID}
+
