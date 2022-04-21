@@ -52,8 +52,23 @@ spec:
           namespace: skjemadigitalisering
     outbound:
       external:
-        - host: soknad-fss-proxy.prod-fss-pub.nais.io
-        - host: https://www.nav.no/soknader/api/sanity/skjemautlisting
+      { { #each outboundExternalHosts}}
+          - host: "{{this}}"
+      {{else } }
+        []
+      {{/each}}
+      rules:
+      {{#each outboundRulesGcpApplications}}
+         - application: "{{this}}"
+      {{else}}
+        []
+      {{/each}}
+      {{#each outboundRulesFssApplications}}
+         - application: "{{this}}"
+             cluster: {{fssCluster}}
+      {{else}}
+      []
+      {{/each}}
 
   envFrom:
     - secret: innsending-api-secret

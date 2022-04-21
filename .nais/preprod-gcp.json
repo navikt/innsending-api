@@ -1,5 +1,12 @@
 {
 	"INGRESSES": ["https://www.dev.nav.no/innsending-api-gcp", "https://innsending-api-gcp.dev.adeo.no","https://innsending-api-gcp.dev.nav.no"],
+	"outboundExternalHosts": [
+		"nav.no/soknader/api/sanity/skjemautlisting"
+	],
+	"outboundRulesFssApplications": [
+		"soknadsmottaker-team",
+		"soknadsfillager-q1"
+	],
 	"DATABASE_NAME": "dokumentinnsending-dev",
 	"SPRING_PROFILES_ACTIVE": "dev",
 	"VERSION": "0.0.1"
