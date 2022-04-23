@@ -1,10 +1,9 @@
 package no.nav.soknad.innsending.security
 
-import no.nav.security.token.support.core.context.TokenValidationContextHolder
-import no.nav.security.token.support.core.jwt.JwtToken
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
 @Component
@@ -12,10 +11,17 @@ class Tilgangskontroll(
 	val subjectHandler: SubjectHandlerInterface,
 	val pdlService: PdlInterface) {
 
+	private val logger = LoggerFactory.getLogger(javaClass)
+
 	val testbrukerid = "02097225454" // TODO slett etterhvert
 
 	fun hentBrukerFraToken(): String {
-		return subjectHandler.getUserIdFromToken()
+		try {
+			return subjectHandler.getUserIdFromToken()
+		} catch (ex: Exception) {
+			logger.warn("Midlertidig bruk av testbrukerid $testbrukerid")
+			return testbrukerid
+		}
 	}
 
 	fun hentPersonIdents(brukerId: String): List<String> {
