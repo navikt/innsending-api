@@ -29,7 +29,7 @@ class Validerer() {
 	}
 
 	fun validerStorrelse(opplastet: Int, max: Int) {
-		if (opplastet > max) {
+		if (opplastet > max*1024*1024) {
 			throw Exception("Opplastede fil(er) er større enn maksimalt tillatt")
 		}
 	}
