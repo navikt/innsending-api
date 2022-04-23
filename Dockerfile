@@ -1,4 +1,5 @@
-FROM eclipse-temurin:17-jdk-focal
+#FROM eclipse-temurin:17-jdk-focal
+FROM navikt/java:17
 
 ENV SPRING_PROFILES_ACTIVE=docker
 

@@ -5,6 +5,9 @@ metadata:
   namespace: team-soknad
   labels:
     team: team-soknad
+  annotations:
+    nais.io/read-only-file-system: "false"
+
 spec:
   image: {{image}}
   port: 9064
