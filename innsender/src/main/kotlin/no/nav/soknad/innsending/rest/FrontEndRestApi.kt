@@ -498,7 +498,7 @@ class FrontEndRestApi(
 	@RequestMapping(
 		method = [RequestMethod.DELETE],
 		value = ["/frontend/v1/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil/{filId}"],
-		produces = ["application/pdf"]
+		produces = ["application/json"]
 	)
 	override fun slettFil(
 		@PathVariable innsendingsId: String,
@@ -600,7 +600,7 @@ class FrontEndRestApi(
 	@RequestMapping(
 		method = [RequestMethod.POST],
 		value = ["/frontend/sendInn/{innsendingsId}"],
-		produces = ["application/pdf"]
+		produces = ["application/json"]
 	)
 	override fun sendInnSoknad(@PathVariable innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
 		logger.info("Kall for å sende inn soknad $innsendingsId")
