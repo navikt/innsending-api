@@ -512,7 +512,7 @@ class FrontEndRestApi(
 			tilgangskontroll.harTilgang(soknadDto)
 
 			soknadService.slettFil(soknadDto, vedleggsId, filId)
-			logger.info("Slette fil $filId på vedlegg $vedleggsId til søknad $innsendingsId")
+			logger.info("Slettet fil $filId på vedlegg $vedleggsId til søknad $innsendingsId")
 			return ResponseEntity
 				.status(HttpStatus.OK)
 				.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet fil med id $filId"))

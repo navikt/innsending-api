@@ -481,7 +481,7 @@ paths:
         200:
           description: Successful operation
           content:
-            application/pdf:
+            application/json:
               schema:
                 $ref: "#/components/schemas/BodyStatusResponseDto"
       tags:
@@ -506,7 +506,7 @@ paths:
         200:
           description: Successful operation
           content:
-            application/pdf:
+            application/json:
               schema:
                 $ref: "#/components/schemas/BodyStatusResponseDto"
       tags:
