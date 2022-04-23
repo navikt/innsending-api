@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.rest
 
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.FrontendApi
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.IllegalActionException
@@ -29,6 +30,7 @@ import org.slf4j.LoggerFactory
 
 @RestController
 @RequestMapping("/frontend/v1")
+@Unprotected
 class FrontEndRestApi(
 	val soknadService: SoknadService,
 	val tilgangskontroll: Tilgangskontroll,
