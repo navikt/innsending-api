@@ -26,7 +26,7 @@ import org.springframework.stereotype.Service
 @Service
 @Profile("dev | prod")
 @Qualifier("mottaker")
-class MottakerAPI(restConfig: RestConfig): MottakerInterface, HealthRequestInterface {
+class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -56,9 +56,9 @@ class MottakerAPI(restConfig: RestConfig): MottakerInterface, HealthRequestInter
 */
 
 	override fun isReady(): String {
-		logger.info("Soknadsmottaker isReady start")
+		logger.debug("Soknadsmottaker isReady start")
 		//TODO healthApi.isReady()
-		logger.info("Soknadsmottaker isReady ok")
+		logger.debug("Soknadsmottaker isReady ok")
 		return "ok"
 	}
 
@@ -75,7 +75,7 @@ class MottakerAPI(restConfig: RestConfig): MottakerInterface, HealthRequestInter
 
 		logger.info("${soknadDto.innsendingsId}: transformering før innsending")
 		val soknad = translate(soknadDto)
-		logger.info("${soknadDto.innsendingsId}: klar til å sende inn}")
+		logger.info("${soknadDto.innsendingsId}: klar til å sende inn til ${restConfig.soknadsMottakerHost}")
 		mottakerClient.receive(soknad)
 		logger.info("${soknadDto.innsendingsId}: sendt inn}")
 	}

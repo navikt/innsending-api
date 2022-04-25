@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service
 @Service
 @Profile("dev | prod")
 @Qualifier("notifikasjon")
-class SendTilPublisher(restConfig: RestConfig): PublisherInterface, HealthRequestInterface {
+class SendTilPublisher(private val restConfig: RestConfig): PublisherInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -40,13 +40,14 @@ class SendTilPublisher(restConfig: RestConfig): PublisherInterface, HealthReques
 	}
 
 	override fun opprettBrukernotifikasjon(nyNotifikasjon: AddNotification) {
+		logger.info("Send melding til ${restConfig.soknadsMottakerHost} for publisering av Brukernotifikasjon for ${nyNotifikasjon.soknadRef.innsendingId}")
 		notificationPublisherApi.newNotification(nyNotifikasjon)
 	}
 
 	override fun isReady(): String {
-		logger.info("Publisher isReady start")
+		logger.debug("Publisher isReady start")
 		//TODO healthApi.isReady()
-		logger.info("Publisher isReady ok")
+		logger.debug("Publisher isReady ok")
 		return "ok"
 	}
 
