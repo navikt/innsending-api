@@ -292,6 +292,47 @@ paths:
       tags:
         - hentVedlegg
 
+    patch:
+      summary: Kall for å endre tittel på et vedlegg.
+      description: Kall for å endre tittel på et vedlegg. Merk at dette kun kan gjøres på vedlegg av type Annet (vedleggsid=N6).
+      operationId: endreVedlegg
+
+      parameters:
+        - name: innsendingsId
+          in: path
+          description: identifisering av søknad som skal hentes
+          required: true
+          schema:
+            type: string
+          style: simple
+        - name: vedleggsId
+          in: path
+          description: identifisering av vedlegg som skal hentes
+          required: true
+          schema:
+            type: integer
+            format: int64
+          style: simple
+
+      requestBody:
+        required: true
+        description: Data om vedlegget som skal legges til
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VedleggDto"
+
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VedleggDto"
+
+      tags:
+        - endreVedlegg
+
     delete:
       summary: Kall for å slette ett spesifikt vedlegg med dens filer til søknad gitt innsendingsId.
       description: Dersom funnet og vedleggstypen=N6 slettes vedlegget.

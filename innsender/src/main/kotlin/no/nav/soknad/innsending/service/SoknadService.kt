@@ -175,6 +175,12 @@ class SoknadService(
 		BackendErrorException(ex.message, "Feil ved oppdatering av vedlegg ${vedleggDbData.id} for søknad $innsendingsId")
 	}
 
+	private fun oppdaterVedleggsTittel(vedleggDbData: VedleggDbData, nyTittel: String) = try {
+		vedleggRepository.updateTittelAndEndretdato(vedleggDbData.id!!, nyTittel, LocalDateTime.now() )
+	} catch (ex: Exception) {
+		BackendErrorException(ex.message, "Feil ved oppdatering av vedlegg ${vedleggDbData.id} for søknad ${vedleggDbData.soknadsid}")
+	}
+
 	private fun oppdaterEndretDato(soknadsId: Long) = try {
 		soknadRepository.updateEndretDato(soknadsId, LocalDateTime.now())
 	} catch (ex: Exception) {
@@ -641,6 +647,40 @@ class SoknadService(
 		oppdaterEndretDato(soknadDto.id!!)
 
 		return lagVedleggDto(vedleggDbData, vedleggDto.document)
+	}
+
+	@Transactional
+	fun endreVedlegg(vedleggDto: VedleggDto, soknadDto: DokumentSoknadDto): VedleggDto {
+
+		if (!soknadDto.status.equals(SoknadsStatusDto.opprettet))
+			throw IllegalActionException(
+				"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
+				"Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet")
+
+		val vedleggDbDataOpt = hentVedlegg(vedleggDto.id!!)
+		if (vedleggDbDataOpt.isEmpty)
+			throw IllegalActionException(
+				"Kan ikke endre vedlegg da det ikke ble funnet",
+				"Fant ikke vedlegg ${vedleggDto.id} på ${soknadDto.innsendingsId}")
+
+		val vedleggDbData = vedleggDbDataOpt.get()
+		if (vedleggDbData.soknadsid != soknadDto.id) {
+			throw IllegalActionException(
+				"Kan ikke endre vedlegg da søknaden ikke har et slikt vedlegg",
+				"Søknad ${soknadDto.innsendingsId} har ikke vedlegg med id ${vedleggDto.id}")
+		}
+		if (vedleggDbData.vedleggsnr != "N6") {
+			throw IllegalActionException(
+				"Kan ikke endre vedlegg av andre typer enn 'Annet'",
+				"Tittel kan ikke endret på vedlegg med id ${vedleggDto.id}")
+		}
+
+		oppdaterVedleggsTittel(vedleggDbData, vedleggDto.tittel)
+
+		// Oppdater soknadens sist endret dato
+		oppdaterEndretDato(soknadDto.id!!)
+
+		return lagVedleggDto(hentVedlegg(vedleggDbData.id!!).get(), vedleggDto.document)
 	}
 
 	@Transactional

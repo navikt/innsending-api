@@ -26,10 +26,10 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import java.io.ByteArrayOutputStream
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.*
-import javax.activation.MimeType
+import no.nav.soknad.innsending.utils.lagVedlegg
+
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -274,6 +274,26 @@ class SoknadServiceTest {
 		val lagretVedleggDto = soknadService.lagreVedlegg(vedleggDto,dokumentSoknadDto.innsendingsId!!)
 
 		assertTrue(lagretVedleggDto != null && lagretVedleggDto.id != null)
+	}
+
+	@Test
+	fun oppdaterVedleggEndrerKunTittel() {
+		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+
+		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+
+		val vedleggDtos = slot<List<VedleggDto>>()
+		every { fillagerAPI.hentFiler(dokumentSoknadDto.innsendingsId!!, capture(vedleggDtos)) } returns dokumentSoknadDto.vedleggsListe
+
+		val vedleggDto = lagVedleggDto("N6", "Annet", null, null)
+		val lagretVedleggDto = soknadService.lagreVedlegg(vedleggDto,dokumentSoknadDto.innsendingsId!!)
+		assertTrue(lagretVedleggDto != null && lagretVedleggDto.id != null)
+
+		val endretVedleggDto = lagVedlegg(lagretVedleggDto.id, "XX", "Ny tittel", lagretVedleggDto.opplastingsStatus, vedleggDto.erHoveddokument)
+		val oppdatertVedleggDto = soknadService.endreVedlegg(endretVedleggDto, dokumentSoknadDto)
+
+		assertTrue(oppdatertVedleggDto != null && oppdatertVedleggDto.id == lagretVedleggDto.id && oppdatertVedleggDto.tittel == "Ny tittel" && oppdatertVedleggDto.vedleggsnr == "N6"
+			&& oppdatertVedleggDto.label == lagretVedleggDto.label)
 	}
 
 	@Test

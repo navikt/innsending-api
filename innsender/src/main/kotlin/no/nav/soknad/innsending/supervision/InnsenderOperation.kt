@@ -8,5 +8,6 @@ enum class InnsenderOperation(name: String) {
 	LAST_OPP("LastOppFil"),
 	SLETT_FIL("SlettFil"),
 	LAST_NED("LastNedFil"),
-	SEND_INN("SendInn")
+	SEND_INN("SendInn"),
+	ENDRE("Endre")
 }

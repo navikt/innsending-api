@@ -23,4 +23,9 @@ interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
 	@Query(value="UPDATE VedleggDbData SET status = :status, endretdato = :endretdato WHERE id = :id", nativeQuery = false)
 	fun updateStatus(@Param("id") id: Long, @Param("status") status: OpplastingsStatus, @Param("endretdato") endretdato: LocalDateTime)
 
+	@Transactional
+	@Modifying
+	@Query(value="UPDATE VedleggDbData SET tittel = :tittel, endretdato = :endretdato WHERE id = :id", nativeQuery = false)
+	fun updateTittelAndEndretdato(@Param("id") id: Long, @Param("tittel") tittel: String, @Param("endretdato") endretdato: LocalDateTime)
+
 }

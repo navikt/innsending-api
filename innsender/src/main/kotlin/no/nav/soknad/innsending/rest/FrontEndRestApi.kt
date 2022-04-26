@@ -2,6 +2,8 @@ package no.nav.soknad.innsending.rest
 
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import io.swagger.annotations.ApiResponse
+import io.swagger.annotations.ApiResponses
 import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.FrontendApi
 import no.nav.soknad.innsending.config.RestConfig
@@ -292,6 +294,38 @@ class FrontEndRestApi(
 			val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
 					?: throw ResourceNotFoundException("", "Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId")
 			logger.info("Hentet vedlegg $vedleggsId til søknad $innsendingsId")
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(vedleggDto)
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
+	}
+
+	@ApiOperation(
+		value = "Kall for å endre tittel på et vedlegg.",
+		nickname = "endreVedlegg",
+		notes = "Kall for å endre tittel på et vedlegg. Merk at dette kun kan gjøres på vedlegg av type Annet (vedleggsid=N6).",
+		response = VedleggDto::class)
+	@ApiResponses(
+		value = [ApiResponse(code = 200, message = "Successful operation", response = VedleggDto::class)])
+	@RequestMapping(
+		method = [RequestMethod.PATCH],
+		value = ["/frontend/v1/soknad/{innsendingsId}/vedlegg/{vedleggsId}"],
+		produces = ["application/json"],
+		consumes = ["application/json"]
+	)
+	override fun endreVedlegg(@ApiParam(value = "identifisering av søknad som skal hentes", required=true) @PathVariable("innsendingsId") innsendingsId: kotlin.String
+									 ,@ApiParam(value = "identifisering av vedlegg som skal hentes", required=true) @PathVariable("vedleggsId") vedleggsId: kotlin.Long
+									 ,@ApiParam(value = "Data om vedlegget som skal legges til" ,required=true ) @Valid @RequestBody vedleggDto: VedleggDto
+	): ResponseEntity<VedleggDto> {
+		logger.info("Kall for å endre vedlegg til søknad $innsendingsId")
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.ENDRE.name)
+		try {
+			val soknadDto = soknadService.hentSoknad(innsendingsId)
+			tilgangskontroll.harTilgang(soknadDto)
+			val vedleggDto = soknadService.lagreVedlegg(vedleggDto, innsendingsId)
+			logger.info("Lagret vedlegg ${vedleggDto.id} til søknad $innsendingsId")
 			return ResponseEntity
 				.status(HttpStatus.OK)
 				.body(vedleggDto)
