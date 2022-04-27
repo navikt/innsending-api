@@ -31,6 +31,7 @@ import javax.validation.Valid
 import org.slf4j.LoggerFactory
 
 @RestController
+@CrossOrigin(methods = [RequestMethod.GET, RequestMethod.POST, RequestMethod.OPTIONS, RequestMethod.DELETE, RequestMethod.PATCH])
 @Unprotected
 class FrontEndRestApi(
 	val soknadService: SoknadService,
@@ -211,7 +212,6 @@ class FrontEndRestApi(
 		value = ["/frontend/v1/soknad/{innsendingsId}"],
 		produces = ["application/json"]
 	)
-	@CrossOrigin(methods = [RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST])
 	override fun hentSoknad(@PathVariable innsendingsId: String): ResponseEntity<DokumentSoknadDto> {
 		logger.info("Kall for å hente søknad med id $innsendingsId")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.HENT.name)
@@ -245,7 +245,6 @@ class FrontEndRestApi(
 		value = ["/frontend/v1/soknad/{innsendingsId}/vedlegg"],
 		produces = ["application/json"]
 	)
-	@CrossOrigin(methods = [RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST])
 	override fun hentVedleggsListe(@PathVariable innsendingsId: String): ResponseEntity<List<VedleggDto>> {
 		logger.info("Kall for å vedleggene til søknad $innsendingsId")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.HENT.name)
@@ -278,7 +277,6 @@ class FrontEndRestApi(
 		value = ["/frontend/v1/soknad/{innsendingsId}/vedlegg/{vedleggsId}"],
 		produces = ["application/json"]
 	)
-	@CrossOrigin(methods = [RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST, RequestMethod.PATCH])
 	override fun hentVedlegg(
 		@ApiParam(required = true, value = "identifisering av søknad som skal hentes") @PathVariable(
 			value = "innsendingsId"
@@ -317,7 +315,6 @@ class FrontEndRestApi(
 		produces = ["application/json"],
 		consumes = ["application/json"]
 	)
-	@CrossOrigin(methods = [RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST, RequestMethod.PATCH])
 	override fun endreVedlegg(@ApiParam(value = "identifisering av søknad som skal hentes", required=true) @PathVariable("innsendingsId") innsendingsId: kotlin.String
 									 ,@ApiParam(value = "identifisering av vedlegg som skal hentes", required=true) @PathVariable("vedleggsId") vedleggsId: kotlin.Long
 									 ,@ApiParam(value = "Data om vedlegget som skal legges til" ,required=true ) @Valid @RequestBody vedleggDto: VedleggDto
@@ -357,7 +354,6 @@ class FrontEndRestApi(
 		produces = ["application/json"],
 		consumes = ["application/json"]
 	)
-	@CrossOrigin(methods = [RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST])
 	override fun lagreVedlegg(
 		@PathVariable innsendingsId: String,
 		@RequestBody vedlegg: VedleggDto
@@ -391,7 +387,6 @@ class FrontEndRestApi(
 		produces = ["application/json"],
 		consumes = ["multipart/form-data"]
 	)
-	@CrossOrigin(methods = [RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST])
 	override fun lagreFil(
 		@ApiParam(required = true, value = "identifisering av søknad som skal hentes") @PathVariable(
 			value = "innsendingsId"
@@ -449,7 +444,6 @@ class FrontEndRestApi(
 		produces = ["application/pdf"]
 	)
 	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil/{filId}")
-	@CrossOrigin(methods = [RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST])
 	override fun hentFil(
 		@ApiParam(
 			required = true,
@@ -505,7 +499,6 @@ class FrontEndRestApi(
 		value = ["/frontend/v1/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil"],
 		produces = ["application/json"]
 	)
-	@CrossOrigin(methods = [RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST])
 	override fun hentFilInfoForVedlegg(
 		@PathVariable innsendingsId: String,
 		@PathVariable vedleggsId: Long
@@ -556,7 +549,6 @@ class FrontEndRestApi(
 			logger.info("Slettet fil $filId på vedlegg $vedleggsId til søknad $innsendingsId")
 			return ResponseEntity
 				.status(HttpStatus.OK)
-				.header("Access-Control-Allow-Methods", RequestMethod.DELETE.name)
 				.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet fil med id $filId"))
 		} finally {
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
@@ -579,7 +571,6 @@ class FrontEndRestApi(
 		value = ["/frontend/v1/soknad/{innsendingsId}/vedlegg/{vedleggsId}"],
 		produces = ["application/json"]
 	)
-	@CrossOrigin(methods = [RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST, RequestMethod.PATCH])
 	override fun slettVedlegg(@PathVariable innsendingsId: String, @PathVariable vedleggsId: Long): ResponseEntity<BodyStatusResponseDto> {
 		logger.info("Kall for å slette vedlegg $vedleggsId for søknad $innsendingsId")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.SLETT_FIL.name)
@@ -613,7 +604,6 @@ class FrontEndRestApi(
 		value = ["/frontend/v1/soknad/{innsendingsId}"],
 		produces = ["application/json"]
 	)
-	@CrossOrigin(methods = [RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST])
 	override fun slettSoknad(@PathVariable innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
 		logger.info("Kall for å slette søknad med id $innsendingsId")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.SLETT.name)
