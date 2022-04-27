@@ -314,6 +314,7 @@ class FrontEndRestApi(
 		produces = ["application/json"],
 		consumes = ["application/json"]
 	)
+	@CrossOrigin
 	override fun endreVedlegg(@ApiParam(value = "identifisering av søknad som skal hentes", required=true) @PathVariable("innsendingsId") innsendingsId: kotlin.String
 									 ,@ApiParam(value = "identifisering av vedlegg som skal hentes", required=true) @PathVariable("vedleggsId") vedleggsId: kotlin.Long
 									 ,@ApiParam(value = "Data om vedlegget som skal legges til" ,required=true ) @Valid @RequestBody vedleggDto: VedleggDto
@@ -567,6 +568,7 @@ class FrontEndRestApi(
 		value = ["/frontend/v1/soknad/{innsendingsId}/vedlegg/{vedleggsId}"],
 		produces = ["application/json"]
 	)
+	@CrossOrigin
 	override fun slettVedlegg(@PathVariable innsendingsId: String, @PathVariable vedleggsId: Long): ResponseEntity<BodyStatusResponseDto> {
 		logger.info("Kall for å slette vedlegg $vedleggsId for søknad $innsendingsId")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.SLETT_FIL.name)
@@ -600,6 +602,7 @@ class FrontEndRestApi(
 		value = ["/frontend/v1/soknad/{innsendingsId}"],
 		produces = ["application/json"]
 	)
+	@CrossOrigin
 	override fun slettSoknad(@PathVariable innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
 		logger.info("Kall for å slette søknad med id $innsendingsId")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.SLETT.name)

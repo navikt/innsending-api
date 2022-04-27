@@ -581,6 +581,8 @@ class SoknadService(
 		}
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
 			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
+		if (hentFilDb(soknadDto.innsendingsId!!, vedleggsId, filId ).isEmpty)
+			throw ResourceNotFoundException(null, "Fil $filId på vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
 		slettFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
 		innsenderMetrics.applicationCounterInc(InnsenderOperation.SLETT_FIL.name, soknadDto.tema)
