@@ -23,17 +23,9 @@ class WebSecurityConfig(private val config: RestConfig) : WebSecurityConfigurerA
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	override fun configure(http: HttpSecurity) {
-		val corsConfiguration = CorsConfiguration()
-		corsConfiguration.allowedHeaders = List.of("Authorization", "Cache-Control", "Content-Type")
-		corsConfiguration.allowedOrigins = List.of("*")
-		corsConfiguration.allowedMethods =
-			List.of(RequestMethod.GET.name, RequestMethod.POST.name, RequestMethod.DELETE.name, RequestMethod.OPTIONS.name, RequestMethod.PATCH.name)
-		corsConfiguration.allowCredentials = true
-		corsConfiguration.exposedHeaders = List.of("Authorization")
-
 		http
 			.csrf().disable()
-			.cors().configurationSource { request -> corsConfiguration }
+			.cors()
 			.and()
 			.authorizeRequests()
 			.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()

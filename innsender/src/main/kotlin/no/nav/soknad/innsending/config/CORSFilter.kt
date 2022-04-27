@@ -16,7 +16,7 @@ class CORSFilter : Filter {
 		val httpServletRequest: HttpServletRequest = servletRequest as HttpServletRequest
 
 		httpServletResponse.setHeader("Access-Control-Allow-Origin", "*")
-		httpServletResponse.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+		httpServletResponse.setHeader("Access-Control-Allow-Methods", "POST, GET, DELETE, PATCH, OPTIONS")
 		httpServletResponse.setHeader("Access-Control-Allow-Headers", "accept, authorization, X-requested-with, content-type")
 
 		if (httpServletRequest.method == "OPTIONS")
