@@ -19,6 +19,8 @@ class WebSecurityConfig(private val config: RestConfig) : WebSecurityConfigurerA
 	override fun configure(http: HttpSecurity) {
 		http
 			.csrf().disable()
+			.cors()
+			.and()
 			.authorizeRequests()
 			.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
 			.antMatchers(HttpMethod.GET, "/swagger-ui**").permitAll()
