@@ -31,6 +31,7 @@ import javax.validation.Valid
 import org.slf4j.LoggerFactory
 
 @RestController
+@CrossOrigin(maxAge = 3600)
 @Unprotected
 class FrontEndRestApi(
 	val soknadService: SoknadService,
