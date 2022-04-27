@@ -541,7 +541,6 @@ class FrontEndRestApi(
 		value = ["/frontend/v1/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil/{filId}"],
 		produces = ["application/json"]
 	)
-	@CrossOrigin(methods = [RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST])
 	override fun slettFil(
 		@PathVariable innsendingsId: String,
 		@PathVariable vedleggsId: Long,
@@ -557,6 +556,7 @@ class FrontEndRestApi(
 			logger.info("Slettet fil $filId på vedlegg $vedleggsId til søknad $innsendingsId")
 			return ResponseEntity
 				.status(HttpStatus.OK)
+				.header("Access-Control-Allow-Methods", RequestMethod.DELETE.name)
 				.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet fil med id $filId"))
 		} finally {
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
@@ -635,18 +635,13 @@ class FrontEndRestApi(
 		nickname = "sendInnSoknad",
 		notes = "Dersom funnet, sendes metadat om søknaden og opplastede filer inn til NAV.",
 		response = BodyStatusResponseDto::class)
-	@io.swagger.annotations.ApiResponses(
-		value = [io.swagger.annotations.ApiResponse(
-			code = 200,
-			message = "Successful operation",
-			response = BodyStatusResponseDto::class
-		)])
+	@ApiResponses(
+		value = [ApiResponse(code = 200, message = "Successful operation", response = BodyStatusResponseDto::class)])
 	@RequestMapping(
 		method = [RequestMethod.POST],
-		value = ["/frontend/sendInn/{innsendingsId}"],
+		value = ["/frontend/v1/sendInn/{innsendingsId}"],
 		produces = ["application/json"]
 	)
-	@CrossOrigin(methods = [RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST])
 	override fun sendInnSoknad(@PathVariable innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
 		logger.info("Kall for å sende inn soknad $innsendingsId")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.SEND_INN.name)

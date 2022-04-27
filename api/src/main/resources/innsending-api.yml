@@ -527,7 +527,7 @@ paths:
       tags:
         - slettFil
 
-  /frontend/sendInn/{innsendingsId}:
+  /frontend/v1/sendInn/{innsendingsId}:
     post:
       summary: Kall for å sende inn en søknad.
       description: Dersom funnet, sendes metadat om søknaden og opplastede filer inn til NAV.
