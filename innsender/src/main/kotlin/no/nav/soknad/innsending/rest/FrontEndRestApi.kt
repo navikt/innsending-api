@@ -31,7 +31,6 @@ import javax.validation.Valid
 import org.slf4j.LoggerFactory
 
 @RestController
-@CrossOrigin(methods = [RequestMethod.GET, RequestMethod.POST, RequestMethod.OPTIONS, RequestMethod.DELETE, RequestMethod.PATCH])
 @Unprotected
 class FrontEndRestApi(
 	val soknadService: SoknadService,
@@ -432,18 +431,14 @@ class FrontEndRestApi(
 		nickname = "hentFil",
 		notes = "Dersom funnet, returneres den lagrede file.",
 		response = org.springframework.core.io.Resource::class)
-	@io.swagger.annotations.ApiResponses(
-		value = [io.swagger.annotations.ApiResponse(
-			code = 200,
-			message = "Successful operation",
-			response = Resource::class
-		)])
+	@ApiResponses(
+		value = [ApiResponse(code = 200, message = "Successful operation", response = org.springframework.core.io.Resource::class)])
 	@RequestMapping(
 		method = [RequestMethod.GET],
 		value = ["/frontend/v1/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil/{filId}"],
 		produces = ["application/pdf"]
 	)
-	@GetMapping("/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil/{filId}")
+	@CrossOrigin
 	override fun hentFil(
 		@ApiParam(
 			required = true,
@@ -534,6 +529,7 @@ class FrontEndRestApi(
 		value = ["/frontend/v1/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil/{filId}"],
 		produces = ["application/json"]
 	)
+	@CrossOrigin
 	override fun slettFil(
 		@PathVariable innsendingsId: String,
 		@PathVariable vedleggsId: Long,
