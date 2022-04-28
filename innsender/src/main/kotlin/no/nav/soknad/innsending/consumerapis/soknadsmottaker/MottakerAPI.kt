@@ -56,9 +56,13 @@ class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, Health
 */
 
 	override fun isReady(): String {
-		logger.debug("Soknadsmottaker isReady start")
-		healthApi.isReady()
-		logger.debug("Soknadsmottaker isReady ok")
+		try {
+			logger.debug("Soknadsmottaker isReady start")
+			healthApi.isReady()
+			logger.debug("Soknadsmottaker isReady ok")
+		} catch (e: Exception) {
+			logger.warn("Kall for å sjekke om soknadsmottaker er oppe feiler med ${e.message}")
+		}
 		return "ok"
 	}
 

@@ -42,9 +42,13 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 		return "pong"
 	}
 	override fun isReady(): String {
-		logger.debug("Fillager isReady start")
-		healthApi.isReady()
-		logger.debug("Fillager isReady ok")
+		try {
+			logger.debug("Fillager isReady start")
+			healthApi.isReady()
+			logger.debug("Fillager isReady ok")
+		} catch (e: Exception) {
+			logger.warn("Kall for å sjekke om soknadsfillager er oppe feiler med ${e.message}")
+		}
 		return "ok"
 	}
 	override fun isAlive(): String {
