@@ -96,13 +96,13 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 	}
 
 	private fun performGetCall(innsendingsId: String, fileIds: List<String>): List<FileData> {
-		return filesApi.findFilesByIds(fileIds.map{it}.toList().joinToString { "," }, innsendingsId)
+		return filesApi.findFilesByIds(fileIds, innsendingsId)
 	}
 
 	override fun slettFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>) {
-		val fileids: String = vedleggDtos.stream()
+		val fileids: List<String> = vedleggDtos.stream()
 			.filter {it.opplastingsStatus.equals(OpplastingsStatusDto.lastetOpp) }
-			.map { it.uuid!! }.toList().joinToString { "," }
+			.map { it.uuid!! }.toList()
 
 		filesApi.deleteFiles(fileids, innsendingsId)
 

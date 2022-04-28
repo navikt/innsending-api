@@ -34,8 +34,8 @@ restconfig:
   version: 1.0
   username: srvuser
   password: password
-  sharedUsername: shareduser
-  sharedPassword: password
+  sharedUsername: shared
+  sharedPassword: passord
   maxFileSize: 104857600
   sanityHost: https://www.nav.no
   sanityEndpoint: /soknader/api/sanity/skjemautlisting
