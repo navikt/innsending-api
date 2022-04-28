@@ -56,21 +56,21 @@ spec:
         - application: skjemautfylling
           namespace: skjemadigitalisering
     outbound:
-      external:
-      {{#each outboundExternalHosts}}
-        - host: "{{this}}"
-      {{else}}
-        []
-      {{/each}}
       rules:
       {{#each outboundRulesGcpApplications}}
          - application: "{{this}}"
       {{else}}
         []
       {{/each}}
-      {{#each outboundRulesFssApplications}}
-         - application: "{{this}}"
-           cluster: {{fssCluster}}
+      #      {{#each outboundRulesFssApplications}}
+      #         - application: "{{this}}"
+      #           cluster: {{fssCluster}}
+      #      {{else}}
+      #        []
+      #      {{/each}}
+      external:
+      {{#each outboundExternalHosts}}
+        - host: "{{this}}"
       {{else}}
         []
       {{/each}}
