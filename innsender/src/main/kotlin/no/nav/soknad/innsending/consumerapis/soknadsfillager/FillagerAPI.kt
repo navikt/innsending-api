@@ -35,8 +35,6 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 		ApiClient.password = restConfig.sharedPassword
 		filesApi = FilesApi(restConfig.filestorageHost)
 		healthApi = HealthApi(restConfig.filestorageHost)
-		logger.info("Delt bruker er korrekt = ${!restConfig.sharedUsername.startsWith("s") }")
-		logger.info("Delt passord er korrekt = ${!restConfig.sharedPassword.startsWith("p") }")
 	}
 
 	override fun ping(): String {
