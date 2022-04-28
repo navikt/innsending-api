@@ -4,8 +4,10 @@
 		"nav.no/soknader/api/sanity/skjemautlisting"
 	],
 	"outboundRulesFssApplications": [
-		"soknadsmottaker-team",
-		"soknadsfillager-q1"
+	],
+	"outboundRulesGcpApplications": [
+		"soknadsmottaker",
+		"soknadsfillager"
 	],
 	"fssCluster": "dev-fss",
 	"DATABASE_NAME": "dokumentinnsending-dev",

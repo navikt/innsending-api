@@ -63,11 +63,11 @@ spec:
         []
       {{/each}}
       rules:
-#      {{#each outboundRulesGcpApplications}}
-#         - application: "{{this}}"
-#      {{else}}
-#        []
-#      {{/each}}
+      {{#each outboundRulesGcpApplications}}
+         - application: "{{this}}"
+      {{else}}
+        []
+      {{/each}}
       {{#each outboundRulesFssApplications}}
          - application: "{{this}}"
            cluster: {{fssCluster}}
