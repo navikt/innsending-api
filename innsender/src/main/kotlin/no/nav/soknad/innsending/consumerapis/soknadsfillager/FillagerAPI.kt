@@ -47,7 +47,7 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 			healthApi.isReady()
 			logger.debug("Fillager isReady ok")
 		} catch (e: Exception) {
-			logger.warn("Kall for å sjekke om soknadsfillager er oppe feiler med ${e.message}")
+			logger.warn("Kall mot ${restConfig.filestorageHost} for å sjekke om soknadsfillager er oppe feiler med ${e.message}")
 		}
 		return "ok"
 	}
