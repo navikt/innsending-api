@@ -636,7 +636,7 @@ class SoknadService(
 	fun leggTilVedlegg(soknadDto: DokumentSoknadDto): VedleggDto {
 
 		val soknadDbOpt = soknadRepository.findByInnsendingsid(soknadDto.innsendingsId!!)
-		if (soknadDbOpt.isEmpty || !soknadDbOpt.get().status.equals(SoknadsStatusDto.opprettet))
+		if (soknadDbOpt.isEmpty || !soknadDbOpt.get().status.equals(SoknadsStatus.Opprettet))
 			throw IllegalActionException(
 				"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
 				"Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet")
