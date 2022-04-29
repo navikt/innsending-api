@@ -215,14 +215,6 @@ paths:
             type: string
           style: simple
 
-      requestBody:
-        required: true
-        description: Data om vedlegget som skal legges til
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/VedleggDto"
-
       responses:
         200:
           description: Successful operation

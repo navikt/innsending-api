@@ -31,17 +31,17 @@ fun oppdaterDokumentSoknad(dokumentSoknadDto: DokumentSoknadDto): DokumentSoknad
 
 fun lagVedlegg(id: Long? = null, vedleggsnr: String, tittel: String
 							 , opplastingsStatus: OpplastingsStatusDto = OpplastingsStatusDto.ikkeValgt
-							 , erHoveddokument: Boolean = false, vedleggsNavn: String? = null): VedleggDto =
+							 , erHoveddokument: Boolean = false, vedleggsNavn: String? = null, label: String? = null): VedleggDto =
 	lagVedleggDto(vedleggsnr, tittel,
 		if (opplastingsStatus.equals(OpplastingsStatusDto.lastetOpp) )
 			(if (vedleggsNavn != null && vedleggsNavn.contains(".pdf")) "application/pdf" else "application/json") else null,
 		if (opplastingsStatus.equals(OpplastingsStatusDto.lastetOpp) && vedleggsNavn != null) getBytesFromFile(vedleggsNavn) else null,
-		id, erHoveddokument )
+		id, erHoveddokument, false,  false, label )
 
 
 fun lagVedleggDto(skjemanr: String, tittel: String, mimeType: String?, fil: ByteArray?, id: Long? = null,
-													erHoveddokument: Boolean? = true, erVariant: Boolean? = false, erPakrevd: Boolean? = true ): VedleggDto {
-	return  VedleggDto( tittel, tittel, erHoveddokument!!, erVariant!!,
+													erHoveddokument: Boolean? = true, erVariant: Boolean? = false, erPakrevd: Boolean? = true, label: String? = null ): VedleggDto {
+	return  VedleggDto( tittel, label ?: tittel, erHoveddokument!!, erVariant!!,
 		if ("application/pdf".equals(mimeType, true)) true else false, erPakrevd!!,
 		if (fil != null) OpplastingsStatusDto.lastetOpp else OpplastingsStatusDto.ikkeValgt,  OffsetDateTime.now(), id,
 		skjemanr,"Beskrivelse", UUID.randomUUID().toString(), Mimetype.applicationSlashPdf, fil,

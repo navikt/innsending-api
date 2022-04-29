@@ -325,7 +325,7 @@ class FrontEndRestApi(
 		try {
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
-			val vedleggDto = soknadService.lagreVedlegg(vedleggDto, innsendingsId)
+			val vedleggDto = soknadService.endreVedlegg(vedleggDto, soknadDto)
 			logger.info("Lagret vedlegg ${vedleggDto.id} til søknad $innsendingsId")
 			return ResponseEntity
 				.status(HttpStatus.OK)
@@ -336,35 +336,27 @@ class FrontEndRestApi(
 	}
 
 
-	// Hvis det er et nytt vedlegg, så vil ikke frontend ha vedleggsid da dette settes av backend ved oppretting av resssurs.
-	// Må derfor legge inn dummy id (f.eks. -1)?.
 	@ApiOperation(
 		value = "Kall for å legge til et nytt vedlegg til søknad gitt innsendingsId.",
 		nickname = "lagreVedlegg",
 		notes = "Det er kun vedlegg av type Annet( vedleggsnr=N6) som søker kan legge til søknaden. Hvis vellykket vedlegget med id returneres.",
 		response = VedleggDto::class)
-	@io.swagger.annotations.ApiResponses(
-		value = [io.swagger.annotations.ApiResponse(
-			code = 200,
-			message = "Successful operation",
-			response = VedleggDto::class
-		)])
+	@ApiResponses(
+		value = [ApiResponse(code = 200, message = "Successful operation", response = VedleggDto::class)])
 	@RequestMapping(
 		method = [RequestMethod.POST],
 		value = ["/frontend/v1/soknad/{innsendingsId}/vedlegg"],
-		produces = ["application/json"],
-		consumes = ["application/json"]
+		produces = ["application/json"]
 	)
 	override fun lagreVedlegg(
-		@PathVariable innsendingsId: String,
-		@RequestBody vedlegg: VedleggDto
+		@PathVariable innsendingsId: String
 	): ResponseEntity<VedleggDto> {
 		logger.info("Kall for å lagre vedlegg til søknad $innsendingsId")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.LAST_OPP.name)
 		try {
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
-			val vedleggDto = soknadService.lagreVedlegg(vedlegg, innsendingsId)
+			val vedleggDto = soknadService.leggTilVedlegg(soknadDto)
 			logger.info("Lagret vedlegg ${vedleggDto.id} til søknad $innsendingsId")
 			return ResponseEntity
 				.status(HttpStatus.OK)

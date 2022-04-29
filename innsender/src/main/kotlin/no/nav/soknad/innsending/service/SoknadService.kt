@@ -24,7 +24,6 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.*
-import kotlin.streams.toList
 
 @Service
 class SoknadService(
@@ -175,8 +174,8 @@ class SoknadService(
 		BackendErrorException(ex.message, "Feil ved oppdatering av vedlegg ${vedleggDbData.id} for søknad $innsendingsId")
 	}
 
-	private fun oppdaterVedleggsTittel(vedleggDbData: VedleggDbData, nyTittel: String) = try {
-		vedleggRepository.updateTittelAndEndretdato(vedleggDbData.id!!, nyTittel, LocalDateTime.now() )
+	private fun oppdaterVedleggsTittelOgLabel(vedleggDbData: VedleggDbData, nyTittel: String) = try {
+		vedleggRepository.updateTittelAndLabelAndEndretdato(vedleggDbData.id!!, nyTittel, LocalDateTime.now() )
 	} catch (ex: Exception) {
 		BackendErrorException(ex.message, "Feil ved oppdatering av vedlegg ${vedleggDbData.id} for søknad ${vedleggDbData.soknadsid}")
 	}
@@ -634,21 +633,21 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun lagreVedlegg(vedleggDto: VedleggDto, innsendingsId: String): VedleggDto {
+	fun leggTilVedlegg(soknadDto: DokumentSoknadDto): VedleggDto {
 
-		val soknadDto = hentSoknad(innsendingsId)
-		if (!soknadDto.status.equals(SoknadsStatusDto.opprettet))
+		val soknadDbOpt = soknadRepository.findByInnsendingsid(soknadDto.innsendingsId!!)
+		if (soknadDbOpt.isEmpty || !soknadDbOpt.get().status.equals(SoknadsStatusDto.opprettet))
 			throw IllegalActionException(
 				"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
-				"Søknad $innsendingsId kan ikke endres da den er innsendt eller slettet")
+				"Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet")
 
 		// Lagre vedlegget i databasen
-		val vedleggDbData = lagreVedlegg(mapTilVedleggDb(vedleggDto, soknadDto.id!!))
+		val vedleggDbDataList = opprettVedleggTilSoknad(soknadDbOpt.get().id!!, listOf("N6"), soknadDto.spraak!!)
 
 		// Oppdater soknadens sist endret dato
 		oppdaterEndretDato(soknadDto.id!!)
 
-		return lagVedleggDto(vedleggDbData, vedleggDto.document)
+		return lagVedleggDto(vedleggDbDataList.first())
 	}
 
 	@Transactional
@@ -677,7 +676,7 @@ class SoknadService(
 				"Tittel kan ikke endret på vedlegg med id ${vedleggDto.id}")
 		}
 
-		oppdaterVedleggsTittel(vedleggDbData, vedleggDto.tittel)
+		oppdaterVedleggsTittelOgLabel(vedleggDbData, vedleggDto.label)
 
 		// Oppdater soknadens sist endret dato
 		oppdaterEndretDato(soknadDto.id!!)

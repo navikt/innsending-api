@@ -270,14 +270,14 @@ class SoknadServiceTest {
 		val vedleggDtos = slot<List<VedleggDto>>()
 		every { fillagerAPI.hentFiler(dokumentSoknadDto.innsendingsId!!, capture(vedleggDtos)) } returns dokumentSoknadDto.vedleggsListe
 
-		val vedleggDto = lagVedleggDto("N6", "Annet", null, null)
-		val lagretVedleggDto = soknadService.lagreVedlegg(vedleggDto,dokumentSoknadDto.innsendingsId!!)
+		val lagretVedleggDto = soknadService.leggTilVedlegg(dokumentSoknadDto)
 
-		assertTrue(lagretVedleggDto != null && lagretVedleggDto.id != null)
+		assertTrue(lagretVedleggDto != null && lagretVedleggDto.id != null && lagretVedleggDto.vedleggsnr == "N6")
 	}
 
 	@Test
-	fun oppdaterVedleggEndrerKunTittel() {
+	fun oppdaterVedleggEndrerKunTittelOgLabel() {
+		// Når søker har endret label på et vedlegg av type annet (N6), skal tittel settes lik label og vedlegget i databasen oppdateres med disse endringene.
 		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
@@ -285,15 +285,14 @@ class SoknadServiceTest {
 		val vedleggDtos = slot<List<VedleggDto>>()
 		every { fillagerAPI.hentFiler(dokumentSoknadDto.innsendingsId!!, capture(vedleggDtos)) } returns dokumentSoknadDto.vedleggsListe
 
-		val vedleggDto = lagVedleggDto("N6", "Annet", null, null)
-		val lagretVedleggDto = soknadService.lagreVedlegg(vedleggDto,dokumentSoknadDto.innsendingsId!!)
+		val lagretVedleggDto = soknadService.leggTilVedlegg(dokumentSoknadDto)
 		assertTrue(lagretVedleggDto != null && lagretVedleggDto.id != null)
 
-		val endretVedleggDto = lagVedlegg(lagretVedleggDto.id, "XX", "Ny tittel", lagretVedleggDto.opplastingsStatus, vedleggDto.erHoveddokument)
+		val endretVedleggDto = lagVedlegg(lagretVedleggDto.id, "XX", lagretVedleggDto.tittel, lagretVedleggDto.opplastingsStatus, lagretVedleggDto.erHoveddokument, null, "Ny tittel")
 		val oppdatertVedleggDto = soknadService.endreVedlegg(endretVedleggDto, dokumentSoknadDto)
 
 		assertTrue(oppdatertVedleggDto != null && oppdatertVedleggDto.id == lagretVedleggDto.id && oppdatertVedleggDto.tittel == "Ny tittel" && oppdatertVedleggDto.vedleggsnr == "N6"
-			&& oppdatertVedleggDto.label == lagretVedleggDto.label)
+			&& oppdatertVedleggDto.label == oppdatertVedleggDto.tittel)
 	}
 
 	@Test
@@ -353,7 +352,7 @@ class SoknadServiceTest {
 		testOgSjekkInnsendingAvSoknad(soknadService, dokumentSoknadDto)
 
 		assertThrows<IllegalActionException> {
-			soknadService.lagreVedlegg(lagVedleggDto("W2", "Nytt vedlegg", null, null), dokumentSoknadDto.innsendingsId!!)
+			soknadService.leggTilVedlegg(dokumentSoknadDto)
 		}
 		soknadService.hentSoknad(dokumentSoknadDto.innsendingsId!!)
 

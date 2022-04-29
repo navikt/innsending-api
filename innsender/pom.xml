@@ -26,7 +26,7 @@
 		<prometheus-client.version>0.11.0</prometheus-client.version>
 		<logstash.version>6.6</logstash.version>
 		<springdoc.version>1.5.9</springdoc.version>
-		<tika-core.version>1.22</tika-core.version>
+		<tika-core.version>2.3.0</tika-core.version>
 		<pdfbox.version>2.0.25</pdfbox.version>
 		<imgscalr-lib.version>4.2</imgscalr-lib.version>
 		<okhttp.version>4.9.3</okhttp.version>
