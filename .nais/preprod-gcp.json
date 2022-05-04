@@ -12,5 +12,8 @@
 	"fssCluster": "dev-fss",
 	"DATABASE_NAME": "dokumentinnsending-dev",
 	"SPRING_PROFILES_ACTIVE": "dev",
-	"VERSION": "0.0.1"
+	"VERSION": "0.0.1",
+	"APPLICATION_USERNAME": "srvinnsending-api",
+	"PDL_URL": "https://api-gw-q1.oera.no/pdl-api/graphql",
+	"STS_URL": "https://api-gw-q1.oera.no/security-token-service/"
 }

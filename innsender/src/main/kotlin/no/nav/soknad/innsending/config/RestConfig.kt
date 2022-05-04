@@ -20,5 +20,7 @@ class RestConfig {
 	lateinit var soknadsMottakerHost: String
 	lateinit var soknadsMottakerEndpoint: String
 	lateinit var frontEndFortsettEndpoint: String
+	lateinit var pdlUrl: String
+	lateinit var stsUrl: String
 
 }

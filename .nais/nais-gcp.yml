@@ -55,6 +55,10 @@ spec:
         - application: send-inn-frontend
         - application: skjemautfylling
           namespace: skjemadigitalisering
+        - application: skjemautfylling-delingslenke
+          namespace: skjemadigitalisering
+        - application: skjemautfylling-experimental
+          namespace: skjemadigitalisering
     outbound:
       rules:
       {{#each outboundRulesGcpApplications}}

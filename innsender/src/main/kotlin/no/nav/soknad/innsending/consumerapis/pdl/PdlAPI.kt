@@ -7,13 +7,25 @@ import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.util.testpersonid
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
+import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
+import io.github.resilience4j.kotlin.retry.executeFunction
+import io.github.resilience4j.retry.Retry
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.bodyToMono
 
 @Service
 @Profile("dev | prod")
 @Qualifier("pdl")
-class PdlAPI(private val restConfig: RestConfig): PdlInterface, HealthRequestInterface {
+class PdlAPI(
+	private val restConfig: RestConfig,
+	private val pdlWebClient: WebClient,
+//	private val stsClient: StsClient,
+	private val retryPdl: Retry,
+	private val tokenUtil: SubjectHandlerInterface
+
+): PdlInterface, HealthRequestInterface {
 
 	override fun ping(): String {
 		//healthApi.ping()
@@ -38,6 +50,31 @@ class PdlAPI(private val restConfig: RestConfig): PdlInterface, HealthRequestInt
 		return dummyHentBrukerIdenter(brukerId)
 	}
 
+	private fun getPersonInfo(): PersonResponse {
+		var results = PersonResponse(PersonDto(null, null), null)
+
+		runCatching {
+			retryPdl.executeFunction {
+
+				results = pdlWebClient.post()
+					.header(HttpHeaders.AUTHORIZATION, "Bearer ${tokenUtil.getToken()}")
+					//.header("Nav-Consumer-Token", "Bearer ${stsClient.oidcToken()}")
+					.bodyValue(hentPersonQuery(tokenUtil.getUserIdFromToken(), true))
+					.retrieve()
+					.bodyToMono<PersonResponse>()
+					.block() ?: throw RuntimeException("Person not found")
+
+			}
+		}.onFailure {
+			throw RuntimeException("PDL could not be reached")
+		}
+
+		return results
+	}
+
+
+
+/*** Temporary methods-> ***/
 	private fun dummyHentBrukerIdenter(brukerId: String): List<PersonIdent> {
 		return dummyIdents.filter {inneholderBrukerId(brukerId, it)}.toList().flatten()
 	}
@@ -55,26 +92,22 @@ class PdlAPI(private val restConfig: RestConfig): PdlInterface, HealthRequestInt
 
 	private val dummyPersonDtos = mapOf(
 		testpersonid to PersonDto(
-			listOf(NavnDto("F1", null, "E1",
-				MetadataDto("FOLKEREGISTERET", listOf(EndringDto("FOLKEREGISTERET", LocalDateTime.now(),""))),
-				FolkeregisterMetadataDto(LocalDateTime.now(), "FOLKEREGISTERET")))),
-		"12345678902" to PersonDto(
-			listOf(NavnDto("F1", null, "E1",
-				MetadataDto("FOLKEREGISTERET", listOf(EndringDto("FOLKEREGISTERET", LocalDateTime.now(),""))),
-				FolkeregisterMetadataDto(LocalDateTime.now(), "FOLKEREGISTERET")))),
+			listOf(Navn("F1", null, "E1")),
+			listOf(Folkeregisteridentifikator(testpersonid, "FOLKEREGISTERIDENT", "gjeldende"),
+				Folkeregisteridentifikator("12345678902", "FOLKEREGISTERIDENT", "historisk"))
+		),
 		"12345678903" to PersonDto(
-			listOf(NavnDto("F3", null, "E3",
-				MetadataDto("FOLKEREGISTERET", listOf(EndringDto("FOLKEREGISTERET", LocalDateTime.now(),""))),
-				FolkeregisterMetadataDto(LocalDateTime.now(), "FOLKEREGISTERET")))),
+			listOf(Navn("F3", null, "E3")),
+			listOf(Folkeregisteridentifikator("12345678903", "FOLKEREGISTERET", "gjeldende"))
+		),
 		"12345678904" to PersonDto(
-			listOf(NavnDto("F4", null, "E4",
-				MetadataDto("NAV", listOf(EndringDto("NAV", LocalDateTime.now(),""))), null))),
+			listOf(Navn("F4", null, "E4")),
+			listOf(Folkeregisteridentifikator("12345678903", "FOLKEREGISTERET", "gjeldende"))
+		),
 		"12345678905" to PersonDto(
-			listOf(NavnDto("F5", null, "E5",
-				MetadataDto("NAV", listOf(EndringDto("NAV", LocalDateTime.now(),""))), null))),
-		"12345678906" to PersonDto(
-			listOf(NavnDto("F6", null, "E6",
-				MetadataDto("FOLKEREGISTERET", listOf(EndringDto("FOLKEREGISTERET", LocalDateTime.now(),""))),
-				FolkeregisterMetadataDto(LocalDateTime.now(), "FOLKEREGISTERET"))))
+			listOf(Navn("F5", null, "E5")),
+			listOf(Folkeregisteridentifikator("12345678905", "FOLKEREGISTERET", "gjeldende"),
+				Folkeregisteridentifikator("12345678906", "FOLKEREGISTERET", "historisk"))
+		)
 	)
 }

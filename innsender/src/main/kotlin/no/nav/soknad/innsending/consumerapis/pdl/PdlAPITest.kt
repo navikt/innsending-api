@@ -55,42 +55,44 @@ class PdlAPITest(private val restConfig: RestConfig): PdlInterface, HealthReques
 
 	private val dummyPersonDtos = mapOf(
 		testpersonid to PersonDto(
+			listOf(Navn("F1", null, "E1")),
 			listOf(
-				NavnDto("F1", null, "E1",
-				MetadataDto("FOLKEREGISTERET", listOf(EndringDto("FOLKEREGISTERET", LocalDateTime.now(),""))),
-				FolkeregisterMetadataDto(LocalDateTime.now(), "FOLKEREGISTERET")
+				Folkeregisteridentifikator("12345678901","FOLKEREGISTERIDENT", "gjeldende"),
+				Folkeregisteridentifikator("12345678902","FOLKEREGISTERIDENT", "utgått")
 				)
-			)),
+		),
 		"12345678902" to PersonDto(
+			listOf(Navn("F1", null, "E1")),
 			listOf(
-				NavnDto("F1", null, "E1",
-				MetadataDto("FOLKEREGISTERET", listOf(EndringDto("FOLKEREGISTERET", LocalDateTime.now(),""))),
-				FolkeregisterMetadataDto(LocalDateTime.now(), "FOLKEREGISTERET")
-				)
-			)),
+				Folkeregisteridentifikator("12345678901","FOLKEREGISTERIDENT", "gjeldende"),
+				Folkeregisteridentifikator("12345678902","FOLKEREGISTERIDENT", "utgått")
+			)
+		),
 		"12345678903" to PersonDto(
-			listOf(
-				NavnDto("F3", null, "E3",
-				MetadataDto("FOLKEREGISTERET", listOf(EndringDto("FOLKEREGISTERET", LocalDateTime.now(),""))),
-				FolkeregisterMetadataDto(LocalDateTime.now(), "FOLKEREGISTERET")
+				listOf(Navn("F3", null, "E3")),
+				listOf(
+					Folkeregisteridentifikator("12345678903","FOLKEREGISTERIDENT", "gjeldende")
 				)
-			)),
+			),
 		"12345678904" to PersonDto(
+			listOf(Navn("F4", null, "E4")),
 			listOf(
-				NavnDto("F4", null, "E4",
-				MetadataDto("NAV", listOf(EndringDto("NAV", LocalDateTime.now(),""))), null)
-			)),
+				Folkeregisteridentifikator("12345678904","NPID", "gjeldende")
+			)
+		),
 		"12345678905" to PersonDto(
+			listOf(Navn("F5", null, "E5")),
 			listOf(
-				NavnDto("F5", null, "E5",
-				MetadataDto("NAV", listOf(EndringDto("NAV", LocalDateTime.now(),""))), null)
-			)),
+				Folkeregisteridentifikator("12345678906","FOLKEREGISTERIDENT", "gjeldende"),
+				Folkeregisteridentifikator("12345678905","AKTORID", "gjeldende")
+			)
+		),
 		"12345678906" to PersonDto(
+			listOf(Navn("F5", null, "E5")),
 			listOf(
-				NavnDto("F6", null, "E6",
-				MetadataDto("FOLKEREGISTERET", listOf(EndringDto("FOLKEREGISTERET", LocalDateTime.now(),""))),
-				FolkeregisterMetadataDto(LocalDateTime.now(), "FOLKEREGISTERET")
-				)
-			))
+				Folkeregisteridentifikator("12345678906","FOLKEREGISTERIDENT", "gjeldende"),
+				Folkeregisteridentifikator("12345678905","AKTORID", "gjeldende")
+			)
+		)
 	)
 }
