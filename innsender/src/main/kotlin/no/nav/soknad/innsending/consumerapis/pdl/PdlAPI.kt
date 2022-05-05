@@ -11,7 +11,9 @@ import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
 import io.github.resilience4j.kotlin.retry.executeFunction
 import io.github.resilience4j.retry.Retry
+import no.nav.soknad.innsending.exceptions.PdlApiException
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
+import org.slf4j.LoggerFactory
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToMono
 
@@ -26,6 +28,8 @@ class PdlAPI(
 	private val tokenUtil: SubjectHandlerInterface
 
 ): PdlInterface, HealthRequestInterface {
+
+	private val logger = LoggerFactory.getLogger(javaClass)
 
 	override fun ping(): String {
 		//healthApi.ping()
@@ -43,11 +47,17 @@ class PdlAPI(
 	override fun hentPersonData(brukerId: String): PersonDto? {
 		val personDto = dummyPersonDtos.get(brukerId) // TODO erstatt med kall til PDL
 		if (personDto != null) return personDto
-		throw BackendErrorException("Pålogget bruker $brukerId ikke funnet i PDL", "Problem med å hente opp brukerdata")
+		throw BackendErrorException("Pålogget bruker $brukerId ikke funnet i PDL", "Problem med å hente brukerdata")
 	}
 
 	override fun hentPersonIdents(brukerId: String): List<PersonIdent> {
-		return dummyHentBrukerIdenter(brukerId)
+		try {
+			return getPersonInfo().personData.identifikatorer?.map {PersonIdent(it.identifikasjonsnummer, it.type, it.status == "gjeldende")}?.toList()
+				?: dummyHentBrukerIdenter(brukerId) // TODO fjern
+		} catch (ex: Exception) {
+			logger.warn(("Henting fra PDL feilet med ${ex.message}"))
+			return dummyHentBrukerIdenter(brukerId) // TODO fjern
+		}
 	}
 
 	private fun getPersonInfo(): PersonResponse {
@@ -62,11 +72,11 @@ class PdlAPI(
 					.bodyValue(hentPersonQuery(tokenUtil.getUserIdFromToken(), true))
 					.retrieve()
 					.bodyToMono<PersonResponse>()
-					.block() ?: throw RuntimeException("Person not found")
+					.block() ?: throw PdlApiException("Oppslag mot personregisteret feilet", "Fant ikke data for pålogget Person")
 
 			}
 		}.onFailure {
-			throw RuntimeException("PDL could not be reached")
+			throw PdlApiException("Oppslag mot personregisteret feilet", "Fant ikke data for pålogget Person")
 		}
 
 		return results
