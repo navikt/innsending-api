@@ -53,6 +53,7 @@ spec:
     inbound:
       rules:
         - application: send-inn-frontend
+        - application: send-inn-frontend-alt
         - application: skjemautfylling
           namespace: skjemadigitalisering
         - application: skjemautfylling-delingslenke
