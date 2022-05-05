@@ -1,10 +1,11 @@
 package no.nav.soknad.innsending.rest
 
+
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import io.swagger.annotations.ApiResponse
 import io.swagger.annotations.ApiResponses
-import no.nav.security.token.support.core.api.ProtectedWithClaims
+import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.FrontendApi
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.IllegalActionException
@@ -17,7 +18,6 @@ import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
-import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.pdfutilities.KonverterTilPdf
 import no.nav.soknad.pdfutilities.Validerer
@@ -33,8 +33,9 @@ import org.slf4j.LoggerFactory
 
 @RestController
 @CrossOrigin(maxAge = 3600)
-@ProtectedWithClaims(issuer = Constants.TOKENX, claimMap = [Constants.CLAIM_ACR_LEVEL_4])
-class FrontEndRestApi(
+@Unprotected
+@RequestMapping("/unprot")
+class UnprotectedFrontEndRestAPI(
 	val soknadService: SoknadService,
 	val tilgangskontroll: Tilgangskontroll,
 	private val restConfig: RestConfig,
@@ -293,7 +294,7 @@ class FrontEndRestApi(
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
 			val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
-					?: throw ResourceNotFoundException("", "Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId")
+				?: throw ResourceNotFoundException("", "Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId")
 			logger.info("Hentet vedlegg $vedleggsId til søknad $innsendingsId")
 			return ResponseEntity
 				.status(HttpStatus.OK)
@@ -318,8 +319,8 @@ class FrontEndRestApi(
 	)
 	@CrossOrigin
 	override fun endreVedlegg(@ApiParam(value = "identifisering av søknad som skal hentes", required=true) @PathVariable("innsendingsId") innsendingsId: kotlin.String
-									 ,@ApiParam(value = "identifisering av vedlegg som skal hentes", required=true) @PathVariable("vedleggsId") vedleggsId: kotlin.Long
-									 ,@ApiParam(value = "Data om vedlegget som skal legges til" ,required=true ) @Valid @RequestBody vedleggDto: VedleggDto
+														,@ApiParam(value = "identifisering av vedlegg som skal hentes", required=true) @PathVariable("vedleggsId") vedleggsId: kotlin.Long
+														,@ApiParam(value = "Data om vedlegget som skal legges til" ,required=true ) @Valid @RequestBody vedleggDto: VedleggDto
 	): ResponseEntity<VedleggDto> {
 		logger.info("Kall for å endre vedlegg til søknad $innsendingsId")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.ENDRE.name)
@@ -496,13 +497,13 @@ class FrontEndRestApi(
 		logger.info("Kall for å hente filinfo til vedlegg $vedleggsId til søknad $innsendingsId")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.HENT.name)
 		try {
-		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll.harTilgang(soknadDto)
-		val filDtoListe = soknadService.hentFiler(soknadDto, innsendingsId, vedleggsId)
-		logger.info("Hentet informasjon om opplastede filer på vedlegg $vedleggsId til søknad $innsendingsId")
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(filDtoListe)
+			val soknadDto = soknadService.hentSoknad(innsendingsId)
+			tilgangskontroll.harTilgang(soknadDto)
+			val filDtoListe = soknadService.hentFiler(soknadDto, innsendingsId, vedleggsId)
+			logger.info("Hentet informasjon om opplastede filer på vedlegg $vedleggsId til søknad $innsendingsId")
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(filDtoListe)
 		} finally {
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
 		}

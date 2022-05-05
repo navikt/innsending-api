@@ -76,7 +76,11 @@ class PdlAPI(
 
 /*** Temporary methods-> ***/
 	private fun dummyHentBrukerIdenter(brukerId: String): List<PersonIdent> {
-		return dummyIdents.filter {inneholderBrukerId(brukerId, it)}.toList().flatten()
+		val dummyList = dummyIdents.filter {inneholderBrukerId(brukerId, it)}.toList().flatten()
+		if (dummyList.isEmpty())
+			return listOf(PersonIdent(brukerId,"FOLKEREGISTERIDENT", false))
+		else
+			return dummyList
 	}
 
 	private fun inneholderBrukerId(brukerId: String, liste: List<PersonIdent>): Boolean {

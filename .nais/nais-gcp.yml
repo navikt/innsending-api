@@ -84,7 +84,7 @@ spec:
       metadata:
         annotations:
           reloader.stakater.com/match: "true"
-    - secret: basicauth
+    - secret: shared-innsending-secret
       metadata:
         annotations:
           reloader.stakater.com/match: "true"
