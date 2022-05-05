@@ -102,7 +102,7 @@ restconfig:
   filesInOneRequestToFilestorage: 10
   soknadsMottakerHost: ${SOKNADSMOTTAKER_HOST}
   soknadsMottakerEndpoint: ${SOKNADSMOTTAKER_ENDPOINT}
-  frontEndFortsettEndpoint: https://${TJENESTE_URL}${GJENOPPTA_SOKNADS_ARBEID}
+  frontEndFortsettEndpoint: ${TJENESTE_URL}${GJENOPPTA_SOKNADS_ARBEID}
   pdlUrl: ${PDL_URL}
   stsUrl: ${STS_URL}
 
