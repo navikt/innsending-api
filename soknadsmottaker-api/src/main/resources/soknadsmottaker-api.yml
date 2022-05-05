@@ -16,6 +16,26 @@ tags:
     description: Application health endpoint
 
 paths:
+  /soknad-test:
+    post:
+      summary: Test endpoint that does nothing
+      description: Endpoint used for testing that does nothing.
+      operationId: receiveTest
+
+      requestBody:
+        description: Metadata about the benefit application being sent in.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Soknad"
+        required: true
+
+      responses:
+        200:
+          description: Successful operation
+      tags:
+        - soknad
+
   /soknad:
     post:
       summary: Receives benefit application
@@ -189,6 +209,7 @@ components:
             Det kan sendes inn flere varianter av samme dokument; for eksempel kan én søknaden sendes inn med en PDF/A
             og en json variant av søknaden.
             Denne lista inneholder metadata, der hver variant representerer en fysisk fil.
+
     Varianter:
       type: object
       required:
@@ -258,7 +279,7 @@ components:
         tidpunktEndret:
           type: string
           format: date-time
-          description: Tidpunkt når forsendelsen sist endrets.
+          description: Tidpunkt når forsendelsen sist endrets, i UTC.
           example: 2022-04-06T14:10:00Z
 
     NotificationInfo:
@@ -267,6 +288,7 @@ components:
         - notifikasjonsTittel
         - lenke
         - antallAktiveDager
+        - eksternVarsling
       properties:
         notifikasjonsTittel:
           type: string
@@ -287,6 +309,34 @@ components:
           description:
             Antall dager Brukernotifikasjonen skal vises.
           example: 56
+        eksternVarsling:
+          type: array
+          description: Angir om varsel skal sendes til søker på f.eks. SMS eller epost.
+          items:
+            $ref: "#/components/schemas/Varsel"
+
+    Varsel:
+      type: object
+      required:
+        - kanal
+        - tekst
+      properties:
+        kanal:
+          type: string
+          description: Angir på hvilken kanal varsel skal sendes til søker.
+          example: epost
+          enum:
+            - sms
+            - epost
+        tekst:
+          type: string
+          description: Spesifiserer en overordnet beskrivelse av et varsel til søker.
+          example: Ny soknad opprettet. Logg inn på NAV for å finne lenke for å åpne denne.
+        tittel:
+          type: string
+          nullable: true
+          description: Spesifiserer en tittel på epost dersom det sendes varsel via epost.
+          example: Notifikasjon fra NAV
 
   securitySchemes:
     basicAuth:

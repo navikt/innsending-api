@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.brukernotifikasjon
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.NotificationInfo
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
+import no.nav.soknad.arkivering.soknadsmottaker.model.Varsel
 import no.nav.soknad.innsending.config.BrukerNotifikasjonConfig
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.DokumentSoknadDto
@@ -70,7 +71,7 @@ class BrukernotifikasjonPublisher(
 		val tittel = (if (ettersending) tittelPrefixEttersendelse else tittelPrefixNySoknad) + dokumentSoknad.tittel
 		val lenke = createLink(dokumentSoknad.innsendingsId!!, false)
 
-		val notificationInfo = NotificationInfo(tittel, lenke , if (ettersending) ettersendingsFrist else  soknadLevetid )
+		val notificationInfo = NotificationInfo(tittel, lenke , if (ettersending) ettersendingsFrist else  soknadLevetid , emptyList())
 		val soknadRef = SoknadRef(dokumentSoknad.innsendingsId!!, ettersending, groupId, dokumentSoknad.brukerId, dokumentSoknad.opprettetDato)
 
 		logger.info("${dokumentSoknad.innsendingsId}: Sende melding om ny brukernotifikasjon med lenke $lenke")
