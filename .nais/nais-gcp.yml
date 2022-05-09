@@ -78,6 +78,15 @@ spec:
         annotations:
           reloader.stakater.com/match: "true"
 
+
+
+
+
+
+
+
+
+
   env:
     - name: DATABASE_NAME
       value: {{DATABASE_NAME}}
