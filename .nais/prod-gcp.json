@@ -12,7 +12,7 @@
 	"fssCluster": "prod-fss",
 	"DATABASE_NAME": "dokumentinnsending",
 	"SPRING_PROFILES_ACTIVE": "prod",
-	"VERSION": "0.0.1",
+	"APP_VERSION": "0.0.1",
 	"APPLICATION_USERNAME": "srvinnsending-api",
 	"MAX_FILE_SIZE": "100",
 	"MAX_FILE_SIZE_SUM": "300",
