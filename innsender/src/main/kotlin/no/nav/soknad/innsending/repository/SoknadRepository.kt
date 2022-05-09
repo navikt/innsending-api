@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.*
 
 @Repository
@@ -27,4 +28,7 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 	@Query(value="UPDATE SoknadDbData SET endretdato = :endretdato WHERE id = :id", nativeQuery = false)
 	fun updateEndretDato(@Param("id") id: Long, @Param("endretdato") endretdato: LocalDateTime)
 
+
+	@Query(value = "SELECT * FROM soknad WHERE status = :status AND opprettetdato <= :opprettetFor ORDER BY opprettetdato", nativeQuery = true)
+	fun findAllByStatusAndWithOpprettetdatoBefore(@Param("status") status: String, @Param("opprettetFor") opprettetFor: OffsetDateTime): List<SoknadDbData>
 }

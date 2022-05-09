@@ -13,6 +13,10 @@ management:
     export:
       prometheus:
         enabled: true
+
+cron:
+  slettGamleIkkeInnsendteSoknader: 0 0 2 * * *
+  slettEldreEnn: 56
 ---
 spring:
   config:

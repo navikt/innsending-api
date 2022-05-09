@@ -629,6 +629,8 @@ class SoknadService(
 		val slettetSoknadDto = lagDokumentSoknadDto(slettetSoknadDb
 			, dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id!!)})
 		publiserBrukernotifikasjon(slettetSoknadDto)
+		logger.info("slettSoknadAutomatisk: Status for søknad $innsendingsId er satt til ${SoknadsStatus.AutomatiskSlettet}")
+
 		innsenderMetrics.applicationCounterInc(InnsenderOperation.SLETT.name, dokumentSoknadDto.tema)
 	}
 
@@ -790,6 +792,16 @@ class SoknadService(
 
 		innsenderMetrics.applicationCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
 	}
+
+
+	fun slettGamleIkkeInnsendteSoknader(dagerGamle: Long) {
+		val slettFor = LocalDateTime.now().minusDays(dagerGamle).atOffset(ZoneOffset.UTC)
+		logger.info("Finn opprettede søknader opprettet før ${slettFor}")
+		val soknadDbDataListe = soknadRepository.findAllByStatusAndWithOpprettetdatoBefore(SoknadsStatus.Opprettet.name, slettFor)
+		logger.info("SlettGamleIkkeInnsendteSoknader: Funnet ${soknadDbDataListe.size} søknader som skal slettes")
+		soknadDbDataListe.forEach { slettSoknadAutomatisk(it.innsendingsid!!)}
+	}
+
 
 	private fun skalEttersende(innsendtSoknadDto: DokumentSoknadDto): Boolean {
 		return innsendtSoknadDto.tema != "DAG" && innsendtSoknadDto.vedleggsListe
