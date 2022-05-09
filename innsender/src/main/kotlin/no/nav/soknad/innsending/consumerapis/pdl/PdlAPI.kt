@@ -23,7 +23,6 @@ import org.springframework.web.reactive.function.client.bodyToMono
 class PdlAPI(
 	private val restConfig: RestConfig,
 	private val pdlWebClient: WebClient,
-//	private val stsClient: StsClient,
 	private val retryPdl: Retry,
 	private val tokenUtil: SubjectHandlerInterface
 

@@ -1,24 +1,23 @@
-name: Build-Deploy-Pipelines
-on:
-  push:
-    branches:
-      - 'preprod-gcp-pipeline'
-    paths-ignore:
-      - '**.md'
-  pull_request:
-    branches:
-      - 'preprod-gcp-pipeline'
-    paths-ignore:
-      - '**.md'
-      - '.github/workflows/main.yml'
+name: Manually triggered deployment
 
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'preprod'
+        type: choice
+        options:
+          - none
+          - preprod
+          - prod
 env:
   IMAGE: docker.pkg.github.com/${{ github.repository }}/innsending-api:${{ github.sha }}
 
 jobs:
   build-and-push:
     name: Build and push Docker container preprod
-    if: github.ref == 'refs/heads/preprod-gcp-pipeline'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -43,10 +42,9 @@ jobs:
           docker login docker.pkg.github.com -u ${GITHUB_REPOSITORY} -p ${GITHUB_TOKEN}
           docker push ${IMAGE}
 
-  deploy-preprod-pipeline:
-    name: Deploy to preprod-pipeline
+  deploy-preprod:
     needs: build-and-push
-    if: github.ref == 'refs/heads/preprod-gcp-pipeline'
+    if: github.event.inputs.environment == 'preprod'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -57,3 +55,17 @@ jobs:
           RESOURCE: .nais/nais-gcp.yml
           VARS: .nais/preprod-gcp.json
           DRY_RUN: false
+
+  deploy-prod:
+    needs: build-and-push
+    if: github.event.inputs.environment == 'prod'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: prod-gcp
+          RESOURCE: .nais/nais-gcp.yml
+          VARS: .nais/prod-gcp.json
+          DRY_RUN: true

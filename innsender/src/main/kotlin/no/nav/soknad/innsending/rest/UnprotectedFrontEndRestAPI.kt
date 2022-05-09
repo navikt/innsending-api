@@ -399,18 +399,10 @@ class UnprotectedFrontEndRestAPI(
 			if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
 				throw ResourceNotFoundException(null, "Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId")
 
-			// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
-			if (!file.isReadable) throw IllegalActionException("Ingen fil opplastet", "Opplasting feilet")
-			val opplastet = (file as ByteArrayResource).byteArray
-			Validerer().validereFilformat(listOf(opplastet))
-			// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
-			val fil = KonverterTilPdf().tilPdf(opplastet)
-			val vedleggsFiler = soknadService.hentFiler(soknadDto, innsendingsId, vedleggsId, false, false)
-			val opplastetFilStorrelse: Int = vedleggsFiler.filter {it.storrelse != null }.sumOf { it.storrelse!! }
-			Validerer().validerStorrelse(opplastetFilStorrelse + fil.size, restConfig.maxFileSize )
+			val filPdf = validerOgKonverterFilTilPdf(soknadDto, vedleggsId, file)
 
 			// Lagre
-			val lagretFilDto = soknadService.lagreFil(soknadDto, FilDto(vedleggsId, null, file.filename ?:"", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now()))
+			val lagretFilDto = soknadService.lagreFil(soknadDto, FilDto(vedleggsId, null, file.filename ?:"", Mimetype.applicationSlashPdf, filPdf.size, filPdf, OffsetDateTime.now()))
 
 			logger.info("Lagret fil ${lagretFilDto.id} på vedlegg $vedleggsId til søknad $innsendingsId")
 			return ResponseEntity
@@ -419,6 +411,24 @@ class UnprotectedFrontEndRestAPI(
 		} finally {
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
 		}
+	}
+
+	private fun validerOgKonverterFilTilPdf(soknadDto: DokumentSoknadDto, vedleggsId: Long, file: Resource): ByteArray {
+
+		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
+		if (!file.isReadable) throw IllegalActionException("Ingen lesbar fil opplastet", "Opplasting feilet")
+		val opplastet = (file as ByteArrayResource).byteArray
+		Validerer().validereFilformat(listOf(opplastet))
+
+		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
+		val fil = KonverterTilPdf().tilPdf(opplastet)
+		Validerer().validerStorrelse(fil.size, restConfig.maxFileSize )
+
+		val vedleggsFiler = soknadService.hentFiler(soknadDto, soknadDto.innsendingsId!!, vedleggsId, false, false)
+		val opplastetFilStorrelse: Int = vedleggsFiler.filter {it.storrelse != null }.sumOf { it.storrelse!! }
+		Validerer().validerStorrelse(opplastetFilStorrelse + fil.size, restConfig.maxFileSizeSum )
+
+		return fil
 	}
 
 	// Søker skal kunne laste opp ett eller flere filer på ett vedlegg. Dette endepunktet tillater henting av en allerede opplastet fil.

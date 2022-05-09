@@ -52,7 +52,7 @@ class WebClientTemplates(private val restConfig: RestConfig) {
 			.codecs { configurer: ClientCodecConfigurer ->
 				configurer
 					.defaultCodecs()
-					.maxInMemorySize(restConfig.maxFileSize) }
+					.maxInMemorySize(restConfig.maxFileSizeSum) }
 			.build()
 
 		return WebClient.builder()

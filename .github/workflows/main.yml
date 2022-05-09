@@ -5,94 +5,58 @@ on:
       - 'main'
     paths-ignore:
       - '**.md'
+      - '**/**.md'
   pull_request:
     branches:
       - 'main'
     paths-ignore:
       - '**.md'
-      - '.github/workflows/preprod-pipeline.yml'
+      - '**/**.md'
+      - '.github/workflows/**.yml'
+      - 'docs/**'
+
+env:
+  IMAGE: docker.pkg.github.com/${{ github.repository }}/innsending-api:${{ github.sha }}
 
 jobs:
-  bygg-app-main:
-    name: Bygg app/image, push til github
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v1
-      - name: Define build environment
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "IMAGE_REGISTRY=docker.pkg.github.com/$(echo ${GITHUB_REPOSITORY})" >> $GITHUB_ENV
-          echo "IMAGE_NAME=$(echo ${GITHUB_REPOSITORY##/*})" >> $GITHUB_ENV
-          echo "IMAGE_VERSION=$(echo ${GITHUB_WORKFLOW})-$(echo ${GITHUB_SHA})" >> $GITHUB_ENV
-      - name: Read/save .m2 cache
-        uses: actions/cache@v1
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-      - name: Set up JDK 1.11
-        uses: actions/setup-java@v1
-        with:
-          java-version: '11.x'
-      - name: Build with maven
-        env:
-          GITHUB_USERNAME: x-access-token
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: mvn install --file pom.xml
-      - name: Create Docker tag
-        env:
-          NAME: innsending-api
-        run: |
-          echo "docker.pkg.github.com"/"$GITHUB_REPOSITORY"/"$NAME" > .docker_image
-          echo "$(date "+%Y.%m.%d")-$(git rev-parse --short HEAD)" > .docker_tag
-      - name: Build docker image
-        run: docker build . --pull -t $(cat .docker_image):$(cat .docker_tag)
-      - name: Login and push docker image
-        run: |
-          echo "$GITHUB_ACCESS_TOKEN" | docker login --username "x-access-token" --password-stdin https://docker.pkg.github.com
-          docker push $(cat .docker_image):$(cat .docker_tag)
-        env:
-          GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Pass tag file to next job.
-        uses: actions/upload-artifact@v1
-        with:
-          name: docker_tag
-          path: .docker_tag
-
-
-  deploy-main:
-    name: Deploy to main
-    needs: bygg-app-main
+  build-and-push:
+    name: Build and push Docker container preprod
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - name: Download tag file
-        uses: actions/download-artifact@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v2
         with:
-          name: docker_tag
-      - name: Unpack
-        run: |
-          cp docker_tag/.docker_tag .
-          TAG=$(cat .docker_tag)
-          echo "TAG=${TAG}" >> $GITHUB_ENV
-      - name: Checkout code
-        uses: actions/checkout@v1
-      - name: Login to Github Package Registry
+          distribution: 'temurin'
+          java-version: '17.x'
+          cache: 'maven'
+      - name: set timezone
+        uses: szenius/set-timezone@v1.0
+        with:
+          timezoneLinux: "Europe/Oslo"
+      - name: Build
         env:
-          DOCKER_USERNAME: x-access-token
-          DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: mvn -B package --file pom.xml
+      - name: Build and publish Docker image
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin docker.pkg.github.com
-      - name: Deploy
-        uses: nais/deploy/actions/deploy@v1
+          docker build --tag ${IMAGE} .
+          docker login docker.pkg.github.com -u ${GITHUB_REPOSITORY} -p ${GITHUB_TOKEN}
+          docker push ${IMAGE}
+
+  deploy-prod:
+    name: Deploy to prod
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: nais/deploy/actions/deploy@v1
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
-          PRINT_PAYLOAD: true
-          CLUSTER: prod-sbs
-          RESOURCE: .nais/nais.yml
-          VARS: .nais/prod-config.json
-          DRY_RUN: true
-          IMAGE: docker.pkg.github.com/${{ github.repository }}/innsending-api:${{env.TAG}}
+          CLUSTER: prod-gcp
+          RESOURCE: .nais/nais-gcp.yml
+          VARS: .nais/prod-gcp.json
+          DRY_RUN: false

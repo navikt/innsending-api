@@ -11,6 +11,7 @@ class RestConfig {
 	lateinit var sharedUsername: String
 	lateinit var sharedPassword: String
 	var maxFileSize by Delegates.notNull<Int>()
+	var maxFileSizeSum by Delegates.notNull<Int>()
 	lateinit var sanityHost: String
 	lateinit var sanityEndpoint: String
 	lateinit var filestorageHost: String

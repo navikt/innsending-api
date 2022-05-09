@@ -1,5 +1,5 @@
 {
-	"INGRESSES": ["https://www.dev.nav.no/innsending-api-gcp", "https://innsending-api-gcp.dev.adeo.no","https://innsending-api-gcp.dev.nav.no"],
+	"INGRESSES": ["https://www.nav.no/innsending-api-gcp", "https://innsending-api-gcp.adeo.no","https://innsending-api-gcp.nav.no"],
 	"outboundExternalHosts": [
 		"nav.no/soknader/api/sanity/skjemautlisting"
 	],
@@ -9,24 +9,24 @@
 		"soknadsmottaker",
 		"soknadsfillager"
 	],
-	"fssCluster": "dev-fss",
-	"DATABASE_NAME": "dokumentinnsending-dev",
-	"SPRING_PROFILES_ACTIVE": "dev",
+	"fssCluster": "prod-fss",
+	"DATABASE_NAME": "dokumentinnsending",
+	"SPRING_PROFILES_ACTIVE": "prod",
 	"VERSION": "0.0.1",
 	"APPLICATION_USERNAME": "srvinnsending-api",
 	"MAX_FILE_SIZE": "100",
 	"MAX_FILE_SIZE_SUM": "300",
-	"PDL_URL": "https://api-gw-q1.oera.no/pdl-api/graphql",
-	"STS_URL": "https://api-gw-q1.oera.no/security-token-service/",
+	"PDL_URL": "https://api-gw.oera.no/pdl-api/graphql",
+	"STS_URL": "https://api-gw.oera.no/security-token-service/",
 	"SANITY_HOST": "https://www.nav.no",
 	"SANITY_ENDPOINT": "/soknader/api/sanity/skjemautlisting",
-	"FILESTORAGE_HOST": "https://soknadsfillager-gcp.dev.nav.no",
+	"FILESTORAGE_HOST": "https://soknadsfillager-gcp.nav.no",
 	"FILESTORAGE_ENDPOINT": "/filer",
 	"FILESTORAGE_PARAMETERS": ",?ids=",
-	"SOKNADSMOTTAKER_HOST": "https://soknadsmottaker-gcp.dev.intern.nav.no",
+	"SOKNADSMOTTAKER_HOST": "https://soknadsmottaker-gcp.intern.nav.no",
 	"SOKNADSMOTTAKER_ENDPOINT": "/save",
 	"PUBLISERE_BRUKERNOTIFIKASJONER": "true",
-	"TJENESTE_URL": "https://send-inn-frontend.dev.nav.no",
+	"TJENESTE_URL": "https://send-inn-frontend.nav.no",
 	"GJENOPPTA_SOKNADS_ARBEID": "/dokumentinnsending/",
 	"ETTERSENDE_PA_SOKNAD": "/dokumentinnsending/ettersending/"
 }
