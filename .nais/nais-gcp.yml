@@ -44,11 +44,6 @@ spec:
           - name: {{ DATABASE_NAME }}
             envVarPrefix: DATABASE
 
-  tokenx:
-    enabled: true
-  azure:
-    application:
-      enabled: true
   accessPolicy:
     inbound:
       rules:
@@ -73,6 +68,12 @@ spec:
       {{else}}
         []
       {{/each}}
+
+  tokenx:
+    enabled: true
+  azure:
+    application:
+      enabled: true
 
   envFrom:
     - secret: shared-innsending-secret
