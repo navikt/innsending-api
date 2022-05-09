@@ -87,10 +87,6 @@ spec:
           reloader.stakater.com/match: "true"
 
   env:
-    - name: APP_VERSION
-      value: {{ APP_VERSION }}
-    - name: SPRING_PROFILES_ACTIVE
-      value: {{ SPRING_PROFILES_ACTIVE }}
     - name: SANITY_HOST
       value: {{ SANITY_HOST }}
     - name: SANITY_ENDPOINT
@@ -117,3 +113,7 @@ spec:
       value: {{ MAX_FILE_SIZE }}
     - name: MAX_FILE_SIZE_SUM
       value: {{ MAX_FILE_SIZE_SUM }}
+    - name: APP_VERSION
+      value: {{ APP_VERSION }}
+    - name: SPRING_PROFILES_ACTIVE
+      value: {{ SPRING_PROFILES_ACTIVE }}
