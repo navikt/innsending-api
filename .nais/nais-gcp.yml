@@ -33,6 +33,40 @@ spec:
       cpu: 200m
       memory: 1Gi
 
+  env:
+    - name: DATABASE_NAME
+      value: {{DATABASE_NAME}}
+    - name: SANITY_HOST
+      value: {{ SANITY_HOST }}
+    - name: SANITY_ENDPOINT
+      value: {{ SANITY_ENDPOINT }}
+    - name: FILESTORAGE_HOST
+      value: {{ FILESTORAGE_HOST }}
+    - name: FILESTORAGE_ENDPOINT
+      value: {{ FILESTORAGE_ENDPOINT }}
+    - name: FILESTORAGE_PARAMETERS
+      value: {{ FILESTORAGE_PARAMETERS }}
+    - name: SOKNADSMOTTAKER_HOST
+      value: {{ SOKNADSMOTTAKER_HOST }}
+    - name: SOKNADSMOTTAKER_ENDPOINT
+      value: {{ SOKNADSMOTTAKER_ENDPOINT }}
+    - name: PUBLISERE_BRUKERNOTIFIKASJONER
+      value: {{ PUBLISERE_BRUKERNOTIFIKASJONER }}
+    - name: TJENESTE_URL
+      value: {{ TJENESTE_URL }}
+    - name: GJENOPPTA_SOKNADS_ARBEID
+      value: {{ GJENOPPTA_SOKNADS_ARBEID }}
+    - name: ETTERSENDE_PA_SOKNAD
+      value: {{ ETTERSENDE_PA_SOKNAD }}
+    - name: MAX_FILE_SIZE
+      value: {{ MAX_FILE_SIZE }}
+    - name: MAX_FILE_SIZE_SUM
+      value: {{ MAX_FILE_SIZE_SUM }}
+    - name: APP_VERSION
+      value: {{ APP_VERSION }}
+    - name: SPRING_PROFILES_ACTIVE
+      value: {{ SPRING_PROFILES_ACTIVE }}
+
   tokenx:
     enabled: true
   azure:
@@ -77,46 +111,3 @@ spec:
       metadata:
         annotations:
           reloader.stakater.com/match: "true"
-
-
-
-
-
-
-
-
-
-
-  env:
-    - name: DATABASE_NAME
-      value: {{DATABASE_NAME}}
-    - name: SANITY_HOST
-      value: {{ SANITY_HOST }}
-    - name: SANITY_ENDPOINT
-      value: {{ SANITY_ENDPOINT }}
-    - name: FILESTORAGE_HOST
-      value: {{ FILESTORAGE_HOST }}
-    - name: FILESTORAGE_ENDPOINT
-      value: {{ FILESTORAGE_ENDPOINT }}
-    - name: FILESTORAGE_PARAMETERS
-      value: {{ FILESTORAGE_PARAMETERS }}
-    - name: SOKNADSMOTTAKER_HOST
-      value: {{ SOKNADSMOTTAKER_HOST }}
-    - name: SOKNADSMOTTAKER_ENDPOINT
-      value: {{ SOKNADSMOTTAKER_ENDPOINT }}
-    - name: PUBLISERE_BRUKERNOTIFIKASJONER
-      value: {{ PUBLISERE_BRUKERNOTIFIKASJONER }}
-    - name: TJENESTE_URL
-      value: {{ TJENESTE_URL }}
-    - name: GJENOPPTA_SOKNADS_ARBEID
-      value: {{ GJENOPPTA_SOKNADS_ARBEID }}
-    - name: ETTERSENDE_PA_SOKNAD
-      value: {{ ETTERSENDE_PA_SOKNAD }}
-    - name: MAX_FILE_SIZE
-      value: {{ MAX_FILE_SIZE }}
-    - name: MAX_FILE_SIZE_SUM
-      value: {{ MAX_FILE_SIZE_SUM }}
-    - name: APP_VERSION
-      value: {{ APP_VERSION }}
-    - name: SPRING_PROFILES_ACTIVE
-      value: {{ SPRING_PROFILES_ACTIVE }}
