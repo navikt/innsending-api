@@ -61,6 +61,12 @@ spec:
         - application: skjemautfylling-experimental
           namespace: skjemadigitalisering
     outbound:
+      external:
+      {{#each outboundExternalHosts}}
+         - host: "{{this}}"
+                   {{else}}
+      []
+      {{/each}}
       rules:
       {{#each outboundRulesGcpApplications}}
          - application: "{{this}}"
@@ -73,12 +79,6 @@ spec:
       #      {{else}}
       #        []
       #      {{/each}}
-      external:
-      {{#each outboundExternalHosts}}
-        - host: "{{this}}"
-      {{else}}
-        []
-      {{/each}}
 
   envFrom:
     - secret: shared-innsending-secret

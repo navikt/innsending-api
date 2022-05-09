@@ -3,8 +3,6 @@
 	"outboundExternalHosts": [
 		"nav.no/soknader/api/sanity/skjemautlisting"
 	],
-	"outboundRulesFssApplications": [
-	],
 	"outboundRulesGcpApplications": [
 		"soknadsmottaker",
 		"soknadsfillager"
