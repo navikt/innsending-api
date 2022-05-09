@@ -1,13 +1,4 @@
 {
-	"INGRESSES": ["https://www.dev.nav.no/innsending-api-gcp", "https://innsending-api-gcp.dev.adeo.no","https://innsending-api-gcp.dev.nav.no"],
-	"outboundExternalHosts": [
-		"nav.no/soknader/api/sanity/skjemautlisting"
-	],
-	"outboundRulesGcpApplications": [
-		"soknadsmottaker",
-		"soknadsfillager"
-	],
-	"fssCluster": "dev-fss",
 	"DATABASE_NAME": "dokumentinnsending-dev",
 	"SPRING_PROFILES_ACTIVE": "dev",
 	"APP_VERSION": "0.0.1",
@@ -26,5 +17,17 @@
 	"PUBLISERE_BRUKERNOTIFIKASJONER": "true",
 	"TJENESTE_URL": "https://send-inn-frontend.dev.nav.no",
 	"GJENOPPTA_SOKNADS_ARBEID": "/dokumentinnsending/",
-	"ETTERSENDE_PA_SOKNAD": "/dokumentinnsending/ettersending/"
+	"ETTERSENDE_PA_SOKNAD": "/dokumentinnsending/ettersending/",
+	"INGRESSES": [
+		"https://www.dev.nav.no/innsending-api-gcp",
+		"https://innsending-api-gcp.dev.adeo.no",
+		"https://innsending-api-gcp.dev.nav.no"
+	],
+	"outboundExternalHosts": [
+		"nav.no/soknader/api/sanity/skjemautlisting"
+	],
+	"outboundRulesGcpApplications": [
+		"soknadsmottaker",
+		"soknadsfillager"
+	]
 }

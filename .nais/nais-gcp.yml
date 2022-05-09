@@ -32,17 +32,12 @@ spec:
     requests:
       cpu: 200m
       memory: 1Gi
-  ingresses:
-  {{#each INGRESSES}}
-    - "{{this}}"
-  {{/each}}
 
-  gcp:
-    sqlInstances:
-      - type: POSTGRES_14
-        databases:
-          - name: {{ DATABASE_NAME }}
-            envVarPrefix: DATABASE
+  tokenx:
+    enabled: true
+  azure:
+    application:
+      enabled: true
 
   accessPolicy:
     inbound:
@@ -59,21 +54,23 @@ spec:
       external:
       {{#each outboundExternalHosts}}
        - host: "{{this}}"
-      {{else}}
-        []
       {{/each}}
       rules:
       {{#each outboundRulesGcpApplications}}
         - application: "{{this}}"
-      {{else}}
-        []
       {{/each}}
 
-  tokenx:
-    enabled: true
-  azure:
-    application:
-      enabled: true
+  ingresses:
+  {{#each INGRESSES}}
+    - "{{this}}"
+  {{/each}}
+
+  gcp:
+    sqlInstances:
+      - type: POSTGRES_14
+        databases:
+          - name: {{ DATABASE_NAME }}
+            envVarPrefix: DATABASE
 
   envFrom:
     - secret: shared-innsending-secret
@@ -82,6 +79,8 @@ spec:
           reloader.stakater.com/match: "true"
 
   env:
+    - name: DATABASE_NAME
+      value: {{DATABASE_NAME}}
     - name: SANITY_HOST
       value: {{ SANITY_HOST }}
     - name: SANITY_ENDPOINT
