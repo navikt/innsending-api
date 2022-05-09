@@ -63,22 +63,16 @@ spec:
     outbound:
       external:
       {{#each outboundExternalHosts}}
-         - host: "{{this}}"
-                   {{else}}
+       - host: "{{this}}"
+     {{else}}
       []
       {{/each}}
       rules:
       {{#each outboundRulesGcpApplications}}
-         - application: "{{this}}"
+       - application: "{{this}}"
       {{else}}
         []
       {{/each}}
-      #      {{#each outboundRulesFssApplications}}
-      #         - application: "{{this}}"
-      #           cluster: {{fssCluster}}
-      #      {{else}}
-      #        []
-      #      {{/each}}
 
   envFrom:
     - secret: shared-innsending-secret
