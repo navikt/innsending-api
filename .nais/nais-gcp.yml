@@ -91,10 +91,6 @@ spec:
       value: {{ VERSION }}
     - name: SPRING_PROFILES_ACTIVE
       value: {{ SPRING_PROFILES_ACTIVE }}
-    - name: MAX_FILE_SIZE
-      value: {{ MAX_FILE_SIZE }}
-    - name: MAX_FILE_SIZE_SUM
-      value: {{ MAX_FILE_SIZE_SUM }}
     - name: SANITY_HOST
       value: {{ SANITY_HOST }}
     - name: SANITY_ENDPOINT
@@ -117,3 +113,7 @@ spec:
       value: {{ GJENOPPTA_SOKNADS_ARBEID }}
     - name: ETTERSENDE_PA_SOKNAD
       value: {{ ETTERSENDE_PA_SOKNAD }}
+    - name: MAX_FILE_SIZE
+      value: {{ MAX_FILE_SIZE }}
+    - name: MAX_FILE_SIZE_SUM
+      value: {{ MAX_FILE_SIZE_SUM }}
