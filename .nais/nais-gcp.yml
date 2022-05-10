@@ -62,7 +62,7 @@ spec:
       {{/each}}
 
   ingresses:
-  {{#each INGRESSES}}
+  {{#each ingresses}}
     - "{{this}}"
   {{/each}}
 
@@ -80,35 +80,7 @@ spec:
           reloader.stakater.com/match: "true"
 
   env:
-    - name: DATABASE_NAME
-      value: {{ database-name }}
-    - name: SANITY_HOST
-      value: {{ sanity-host }}
-    - name: SANITY_ENDPOINT
-      value: {{ sanity-endpoint }}
-    - name: FILESTORAGE_HOST
-      value: {{ filestorage-host }}
-    - name: FILESTORAGE_ENDPOINT
-      value: {{ filestorage-endpoint }}
-    - name: FILESTORAGE_PARAMETERS
-      value: {{ filestorage-parameters }}
-    - name: SOKNADSMOTTAKER_HOST
-      value: {{ soknadsmottaker-host }}
-    - name: SOKNADSMOTTAKER_ENDPOINT
-      value: {{ soknadsmottaker-endpoint }}
-    - name: PUBLISERE_BRUKERNOTIFIKASJONER
-      value: {{ publisere-brukernotifikasjoner }}
-    - name: TJENESTE_URL
-      value: {{ tjeneste-url }}
-    - name: GJENOPPTA_SOKNADS_ARBEID
-      value: {{ gjenoppta-soknads-arbeid }}
-    - name: ETTERSENDE_PA_SOKNAD
-      value: {{ ettersende-pa-soknad }}
-    - name: MAX_FILE_SIZE
-      value: {{ max-file-size }}
-    - name: MAX_FILE_SIZE_SUM
-      value: {{ max-file-size-sum }}
-    - name: APP_VERSION
-      value: {{ app-version }}
-    - name: SPRING_PROFILES_ACTIVE
-      value: {{ spring-profiles-active }}
+  {{#each env}}
+    - name: {{@key}}
+      value: "{{this}}"
+  {{/each}}

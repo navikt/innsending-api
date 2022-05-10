@@ -1,23 +1,5 @@
 {
 	"database-name": "dokumentinnsending-dev",
-	"spring-profiles-active": "dev",
-	"app-version": "0.0.1",
-	"application-username": "srvinnsending-api",
-	"max-file-size": "100",
-	"max-file-size-sum": "300",
-	"pdl-url": "https://api-gw-q1.oera.no/pdl-api/graphql",
-	"sts-url": "https://api-gw-q1.oera.no/security-token-service/",
-	"sanity-host": "https://www.nav.no",
-	"sanity-endpoint": "/soknader/api/sanity/skjemautlisting",
-	"filestorage-host": "https://soknadsfillager-gcp.dev.nav.no",
-	"filestorage-endpoint": "/filer",
-	"filestorage-parameters": ",?ids=",
-	"soknadsmottaker-host": "https://soknadsmottaker-gcp.dev.intern.nav.no",
-	"soknadsmottaker-endpoint": "/save",
-	"publisere-brukernotifikasjoner": "true",
-	"tjeneste-url": "https://send-inn-frontend.dev.nav.no",
-	"gjenoppta-soknads-arbeid": "/dokumentinnsending/",
-	"ettersende-pa-soknad": "/dokumentinnsending/ettersending/",
 	"ingresses": [
 		"https://www.dev.nav.no/innsending-api-gcp",
 		"https://innsending-api-gcp.dev.adeo.no",
@@ -29,5 +11,26 @@
 	"outboundRulesGcpApplications": [
 		"soknadsmottaker",
 		"soknadsfillager"
-	]
+	],
+	"env": {
+		"DATABASE_NAME": "dokumentinnsending-dev",
+		"SPRING_PROFILES_ACTIVE": "dev",
+		"APP_VERSION": "0.0.1",
+		"APPLICATION_USERNAME": "srvinnsending-api",
+		"MAX_FILE_SIZE": "100",
+		"MAX_FILE_SIZE_SUM": "300",
+		"PDL_URL": "https://api-gw-q1.oera.no/pdl-api/graphql",
+		"STS_URL": "https://api-gw-q1.oera.no/security-token-service/",
+		"SANITY_HOST": "https://www.nav.no",
+		"SANITY_ENDPOINT": "/soknader/api/sanity/skjemautlisting",
+		"FILESTORAGE_HOST": "https://soknadsfillager-gcp.dev.nav.no",
+		"FILESTORAGE_ENDPOINT": "/filer",
+		"FILESTORAGE_PARAMETERS": ",?ids=",
+		"SOKNADSMOTTAKER_HOST": "https://soknadsmottaker-gcp.dev.intern.nav.no",
+		"SOKNADSMOTTAKER_ENDPOINT": "/save",
+		"PUBLISERE_BRUKERNOTIFIKASJONER": "true",
+		"TJENESTE_URL": "https://send-inn-frontend.dev.nav.no",
+		"GJENOPPTA_SOKNADS_ARBEID": "/dokumentinnsending/",
+		"ETTERSENDE_PA_SOKNAD": "/dokumentinnsending/ettersending/",
+	}
 }
