@@ -1,13 +1,16 @@
 package no.nav.soknad.innsending.cleanup
 
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import no.nav.soknad.innsending.service.SoknadService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.configurationprocessor.json.JSONObject
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.net.InetAddress
 import java.net.URL
+import java.time.LocalDateTime
 
 @Service
 class FjernGamleSoknader(private val soknadService: SoknadService) {
@@ -36,8 +39,9 @@ class FjernGamleSoknader(private val soknadService: SoknadService) {
 			val fullUrl = if (electorPath.contains(":/")) electorPath else "http://$electorPath"
 			val jsonString = URL(fullUrl).readText()
 			logger.info("Elector_path som jsonstring=$jsonString")
+			val format = Json { encodeDefaults = true }
+			val leader = format.decodeFromString<LeaderElection>(jsonString).name
 
-			val leader = JSONObject(jsonString).getString("name")
 			val hostname = InetAddress.getLocalHost().hostName
 
 			logger.info("isLeader=${hostname.equals(leader, true)}")
@@ -49,4 +53,9 @@ class FjernGamleSoknader(private val soknadService: SoknadService) {
 		}
 	}
 
+	@Serializable
+	data class LeaderElection(
+		val name: String,
+		val lastUpdate: LocalDateTime
+	)
 }
