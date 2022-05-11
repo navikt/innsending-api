@@ -20,6 +20,7 @@
 		"MAX_FILE_SIZE": "100",
 		"MAX_FILE_SIZE_SUM": "300",
 		"PDL_URL": "https://api-gw-q1.oera.no/pdl-api/graphql",
+		"SAF_URL": "https://safselvbetjening.dev-fss-pub.nais.io",
 		"STS_URL": "https://api-gw-q1.oera.no/security-token-service/",
 		"SANITY_HOST": "https://www.nav.no",
 		"SANITY_ENDPOINT": "/soknader/api/sanity/skjemautlisting",

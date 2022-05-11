@@ -21,7 +21,6 @@ import org.springframework.web.reactive.function.client.bodyToMono
 @Profile("dev | prod")
 @Qualifier("pdl")
 class PdlAPI(
-	private val restConfig: RestConfig,
 	private val pdlWebClient: WebClient,
 	private val retryPdl: Retry,
 	private val tokenUtil: SubjectHandlerInterface

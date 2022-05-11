@@ -15,8 +15,8 @@ management:
         enabled: true
 
 cron:
-  slettGamleIkkeInnsendteSoknader: 0 0 2 * * *
-  slettEldreEnn: 56
+  slettGamleIkkeInnsendteSoknader: 0 0 15 * * *
+  slettEldreEnn: 10
 ---
 spring:
   config:
@@ -52,6 +52,7 @@ restconfig:
   soknadsMottakerEndpoint: /save
   frontEndFortsettEndpoint: http://localhost:3000/dokumentinnsending/oversikt/
   pdlUrl: http://localhost:9043/pdf-api
+  safUrl: http://localhost:9043/saf-api
   stsUrl: http://localhost:9043/sts-api
 
 brukernotifikasjonconfig:
@@ -110,6 +111,7 @@ restconfig:
   soknadsMottakerEndpoint: ${SOKNADSMOTTAKER_ENDPOINT}
   frontEndFortsettEndpoint: ${TJENESTE_URL}${GJENOPPTA_SOKNADS_ARBEID}
   pdlUrl: ${PDL_URL}
+  safUrl: ${SAF_URL}
   stsUrl: ${STS_URL}
 
 

@@ -39,6 +39,7 @@
 		<spring-cloud.version>3.1.1</spring-cloud.version>
 		<rest-assured.version>5.0.1</rest-assured.version>
 		<resilience4j.version>1.7.1</resilience4j.version>
+		<graphq-dgs-client.version>4.10.2</graphq-dgs-client.version>
 
 	</properties>
 
@@ -70,7 +71,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-configuration-processor</artifactId>
-			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>io.github.resilience4j</groupId>
@@ -123,6 +123,11 @@
 			<groupId>net.logstash.logback</groupId>
 			<artifactId>logstash-logback-encoder</artifactId>
 			<version>${logstash.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.graphql.dgs</groupId>
+			<artifactId>graphql-dgs-client</artifactId>
+			<version>${graphq-dgs-client.version}</version>
 		</dependency>
 
 		<dependency>

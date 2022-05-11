@@ -24,6 +24,13 @@ class RetryConfiguration {
 		.retryExceptions(RuntimeException::class.java)
 		.build()
 
+	private val safRetryConfig: RetryConfig = RetryConfig
+		.custom<RetryConfig>()
+		.maxAttempts(2)
+		.waitDuration(Duration.ofSeconds(3))
+		.retryExceptions(RuntimeException::class.java)
+		.build()
+
 	private val retryRegistry = RetryRegistry.of(mapOf("sts" to stsRetryConfig, "pdl" to pdlRetryConfig))
 
 	@Bean
@@ -31,4 +38,7 @@ class RetryConfiguration {
 
 	@Bean
 	fun retryPdl(): Retry = retryRegistry.retry("PDL", pdlRetryConfig)
+
+	@Bean
+	fun retrySaf(): Retry = retryRegistry.retry("SAF", safRetryConfig)
 }
