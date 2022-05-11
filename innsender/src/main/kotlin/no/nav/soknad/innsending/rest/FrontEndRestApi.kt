@@ -30,9 +30,11 @@ import org.springframework.web.bind.annotation.*
 import java.time.OffsetDateTime
 import javax.validation.Valid
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 
 @RestController
 @CrossOrigin(maxAge = 3600)
+@Profile("dev | prod")
 @ProtectedWithClaims(issuer = Constants.TOKENX, claimMap = [Constants.CLAIM_ACR_LEVEL_4])
 class FrontEndRestApi(
 	val soknadService: SoknadService,
