@@ -34,7 +34,7 @@ import org.springframework.context.annotation.Profile
 
 @RestController
 @CrossOrigin(maxAge = 3600)
-@Profile("test | docker | spring | default")
+@Profile("dev | test | docker | spring | default")
 @Unprotected
 class FrontEndRestAPILocalTest(
 	val soknadService: SoknadService,

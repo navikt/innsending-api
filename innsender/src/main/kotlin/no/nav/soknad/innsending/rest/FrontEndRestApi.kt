@@ -34,7 +34,7 @@ import org.springframework.context.annotation.Profile
 
 @RestController
 @CrossOrigin(maxAge = 3600)
-@Profile("dev | prod")
+@Profile("prod")
 @ProtectedWithClaims(issuer = Constants.TOKENX, claimMap = [Constants.CLAIM_ACR_LEVEL_4])
 class FrontEndRestApi(
 	val soknadService: SoknadService,

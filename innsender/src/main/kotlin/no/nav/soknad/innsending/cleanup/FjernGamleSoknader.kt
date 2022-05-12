@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.cleanup
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -15,6 +16,14 @@ import java.time.LocalDateTime
 @Service
 class FjernGamleSoknader(private val soknadService: SoknadService) {
 
+	@OptIn(ExperimentalSerializationApi::class)
+	val format = Json { explicitNulls = false }
+	@Serializable
+	data class LeaderElection(
+		val name: String,
+		val lastUpdate: LocalDateTime
+	)
+
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Value("\${cron.slettEldreEnn}")
@@ -27,7 +36,7 @@ class FjernGamleSoknader(private val soknadService: SoknadService) {
 		}
 	}
 
-	private fun isLeader(): Boolean {
+	fun isLeader(): Boolean {
 		logger.info("Sjekk om leader")
 		val electorPath = System.getenv("ELECTOR_PATH") ?: System.getProperty("ELECTOR_PATH")
 		if (electorPath.isNullOrBlank()) {
@@ -39,7 +48,7 @@ class FjernGamleSoknader(private val soknadService: SoknadService) {
 			val fullUrl = if (electorPath.contains(":/")) electorPath else "http://$electorPath"
 			val jsonString = URL(fullUrl).readText()
 			logger.info("Elector_path som jsonstring=$jsonString")
-			val format = Json { encodeDefaults = true }
+			//val format = Json { encodeDefaults = true }
 			val leader = format.decodeFromString<LeaderElection>(jsonString).name
 
 			val hostname = InetAddress.getLocalHost().hostName
@@ -53,9 +62,4 @@ class FjernGamleSoknader(private val soknadService: SoknadService) {
 		}
 	}
 
-	@Serializable
-	data class LeaderElection(
-		val name: String,
-		val lastUpdate: LocalDateTime
-	)
 }
