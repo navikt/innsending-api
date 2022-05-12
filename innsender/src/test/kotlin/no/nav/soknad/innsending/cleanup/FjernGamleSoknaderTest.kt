@@ -14,7 +14,7 @@ import java.time.LocalDateTime
 class FjernGamleSoknaderTest {
 
 	@OptIn(ExperimentalSerializationApi::class)
-	val format = Json { explicitNulls = false }
+	val format = Json { explicitNulls = false; ignoreUnknownKeys = true }
 
 	@BeforeEach
 	fun setup() {

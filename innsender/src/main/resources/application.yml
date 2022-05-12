@@ -15,7 +15,7 @@ management:
         enabled: true
 
 cron:
-  slettGamleIkkeInnsendteSoknader: 0 0 13 * * *
+  slettGamleIkkeInnsendteSoknader: 0 30 13 * * *
   slettEldreEnn: 10
 ---
 spring:

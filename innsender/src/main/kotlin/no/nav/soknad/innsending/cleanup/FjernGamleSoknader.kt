@@ -18,7 +18,7 @@ import java.time.LocalDateTime
 class FjernGamleSoknader(private val soknadService: SoknadService) {
 
 	@OptIn(ExperimentalSerializationApi::class)
-	val format = Json { explicitNulls = false }
+	val format = Json { explicitNulls = false; ignoreUnknownKeys = true }
 	@Serializable
 	data class LeaderElection(
 		val name: String,
