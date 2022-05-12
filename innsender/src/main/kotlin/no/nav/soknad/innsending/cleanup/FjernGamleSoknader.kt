@@ -22,7 +22,7 @@ class FjernGamleSoknader(private val soknadService: SoknadService) {
 	@Serializable
 	data class LeaderElection(
 		val name: String,
-		val lastUpdate: String
+		val last_update: String? = LocalDateTime.now().toString()
 	)
 
 	val logger = LoggerFactory.getLogger(javaClass)
