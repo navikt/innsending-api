@@ -1,8 +1,7 @@
 package no.nav.soknad.innsending.rest
 
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.responses.ApiResponse
-import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.annotations.ApiOperation
+import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.InnsendteApi
 import no.nav.soknad.innsending.model.AktivSakDto
 import no.nav.soknad.innsending.security.Tilgangskontroll
@@ -15,18 +14,31 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/innsendte")
+@Unprotected
 class InnsendtListeApi(
 	val safService: SafService, val tilgangskontroll: Tilgangskontroll, val innsenderMetrics: InnsenderMetrics) :
 	InnsendteApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	@Operation(summary = "Requests fetching list of applications that have been sent to NAV by the applicant.", tags = ["operations"])
-	@ApiResponses(value = [ApiResponse(responseCode = "200",
-		description = "If successful, a list of already sent in applications is returned."
-	)])
-	@GetMapping("/hentAktiveSaker")
+	@ApiOperation(
+		value = "Hente liste over allerede innsendte søknader.",
+		nickname = "aktiveSaker",
+		notes = "For å hjelpe søker til å finne fram relevant søknad han/hun ønsker å få ettersendt dokumenter på, skal det være mulig å hente ut en liste av innsendte søknader.",
+		response = AktivSakDto::class,
+		responseContainer = "List")
+	@io.swagger.annotations.ApiResponses(
+		value = [io.swagger.annotations.ApiResponse(
+			code = 200,
+			message = "Vellykket operasjon. Liste av søkers innsendte søknader returneres.",
+			response = AktivSakDto::class,
+			responseContainer = "List"
+		), io.swagger.annotations.ApiResponse(code = 404, message = "Ingen innsendte søknader funnet.")])
+	@RequestMapping(
+		method = [RequestMethod.GET],
+		value = ["/innsendte/v1/hentAktiveSaker"],
+		produces = ["application/json"]
+	)
 	override fun aktiveSaker(): ResponseEntity<List<AktivSakDto>> {
 
 		logger.info("Kall for å hente innsendte søknader for en bruker")
