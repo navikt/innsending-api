@@ -16,11 +16,7 @@ import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.pdfutilities.PdfGenerator
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -29,6 +25,7 @@ import java.io.ByteArrayOutputStream
 import java.time.OffsetDateTime
 import java.util.*
 import no.nav.soknad.innsending.utils.lagVedlegg
+import org.junit.jupiter.api.*
 
 
 @SpringBootTest
@@ -569,6 +566,25 @@ class SoknadServiceTest {
 		assertTrue(soknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant == false && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }.isNotEmpty())
 	}
 
+
+	@Test
+	fun testAutomatiskSlettingAvGamleSoknader() {
+		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+
+		val brukerid = testpersonid
+		val skjemanr = "NAV 95-00.11"
+		val spraak = "no"
+
+		val dokumentSoknadDtoList = mutableListOf<DokumentSoknadDto>()
+		dokumentSoknadDtoList.add(soknadService.opprettSoknad(brukerid, skjemanr, spraak))
+		dokumentSoknadDtoList.add(soknadService.opprettSoknad(brukerid, skjemanr, spraak))
+
+		soknadService.slettGamleIkkeInnsendteSoknader(1L)
+		dokumentSoknadDtoList.forEach{ assertEquals(soknadService.hentSoknad(it.id!!).status, SoknadsStatusDto.opprettet) }
+
+		soknadService.slettGamleIkkeInnsendteSoknader(0L)
+		dokumentSoknadDtoList.forEach{ assertEquals(soknadService.hentSoknad(it.id!!).status, SoknadsStatusDto.automatiskSlettet) }
+	}
 
 	private fun lagVedleggDto(skjemanr: String, tittel: String, mimeType: String?, fil: ByteArray?, id: Long? = null,
 														erHoveddokument: Boolean? = true, erVariant: Boolean? = false, erPakrevd: Boolean? = true ): VedleggDto {

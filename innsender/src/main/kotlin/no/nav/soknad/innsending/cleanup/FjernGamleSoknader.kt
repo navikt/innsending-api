@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.cleanup
 
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
@@ -21,45 +22,46 @@ class FjernGamleSoknader(private val soknadService: SoknadService) {
 	@Serializable
 	data class LeaderElection(
 		val name: String,
-		val lastUpdate: LocalDateTime
+		val lastUpdate: String
 	)
 
-	private val logger = LoggerFactory.getLogger(javaClass)
+	val logger = LoggerFactory.getLogger(javaClass)
 
 	@Value("\${cron.slettEldreEnn}")
 	private lateinit var dagerGamleString: String
 
 	@Scheduled(cron = "\${cron.slettGamleIkkeInnsendteSoknader}")
 	fun fjernGamleIkkeInnsendteSoknader() {
-		if (isLeader()) {
-			soknadService.slettGamleIkkeInnsendteSoknader(dagerGamleString.toLong())
+		try {
+			if (isLeader()) {
+				soknadService.slettGamleIkkeInnsendteSoknader(dagerGamleString.toLong())
+			}
+		} catch (ex: Exception) {
+			logger.warn("Fjerning av gamle ikke innsendte søknader feilet med ${ex.message}")
 		}
 	}
 
 	fun isLeader(): Boolean {
-		logger.info("Sjekk om leader")
+		val hostname = InetAddress.getLocalHost().hostName
+		val jsonString = fetchLeaderSelection()
+		val leader = format.decodeFromString<LeaderElection>(jsonString).name
+
+		val isLeader = hostname.equals(leader, true)
+		logger.info("isLeader=$isLeader")
+		return isLeader
+	}
+
+	fun fetchLeaderSelection(): String {
 		val electorPath = System.getenv("ELECTOR_PATH") ?: System.getProperty("ELECTOR_PATH")
 		if (electorPath.isNullOrBlank()) {
 			logger.info("ELECTOR_PATH er null eller blank")
-			return false
+			throw RuntimeException("ELECTOR_PATH er null eller blank")
 		}
-		try {
-			logger.info("Elector_path=$electorPath")
-			val fullUrl = if (electorPath.contains(":/")) electorPath else "http://$electorPath"
-			val jsonString = URL(fullUrl).readText()
-			logger.info("Elector_path som jsonstring=$jsonString")
-			//val format = Json { encodeDefaults = true }
-			val leader = format.decodeFromString<LeaderElection>(jsonString).name
-
-			val hostname = InetAddress.getLocalHost().hostName
-
-			logger.info("isLeader=${hostname.equals(leader, true)}")
-			return hostname.equals(leader, true)
-
-		} catch (exception: Exception) {
-			logger.warn("Sjekk om leader feilet med:", exception)
-			return false
-		}
+		logger.info("Elector_path=$electorPath")
+		val fullUrl = if (electorPath.contains(":/")) electorPath else "http://$electorPath"
+		val jsonString = URL(fullUrl).readText()
+		logger.info("Elector_path som jsonstring=$jsonString")
+		return jsonString
 	}
 
 }
