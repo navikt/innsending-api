@@ -58,8 +58,7 @@ class SafAPI(
 				dummyArkiverteSoknader[brukerId] // TODO fjern
 */
 		} catch (ex: Exception) {
-			logger.warn(("Henting fra PDL feilet med ${ex.message}"))
-			return dummyArkiverteSoknader[brukerId] // TODO fjern
+			logger.warn("Henting fra SAF feilet med ${ex.message}")
 		}
 		return dummyArkiverteSoknader[brukerId] // TODO fjern
 	}
@@ -107,7 +106,7 @@ class SafAPI(
 
 	// ***** Midlertidig dummy data -> **********
 
-	private val date = DateTimeFormatter.ISO_LOCAL_DATE_TIME.format( LocalDateTime.now())
+	private val date = DateTimeFormatter.ISO_DATE_TIME.format( LocalDateTime.now())
 
 	private val dummyArkiverteSoknader = mapOf (
 		testpersonid to listOf (
