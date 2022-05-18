@@ -540,7 +540,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BodyStatusResponseDto"
+                $ref: "#/components/schemas/KvitteringsDto"
       tags:
         - sendInnSoknad
 
@@ -774,7 +774,7 @@ components:
 
     InnsendtVedleggDto:
       type: object
-      description: Data om et innsendt dokument på en søknad.
+      description: Data om et dokument på en søknad.
       required:
         - vedleggsnr
         - tittel
@@ -783,6 +783,40 @@ components:
           $ref: "#/components/schemas/Vedleggsnr"
         tittel:
           $ref: "#/components/schemas/Tittel"
+
+    KvitteringsDto:
+      type: object
+      description: Kvittering til søker etter vellykket innsending av søknad
+
+      properties:
+        innsendingsId:
+          $ref: "#/components/schemas/InnsendingsId"
+        label:
+          $ref: "#/components/schemas/Label"
+        hoveddokumentRef:
+          type: string
+          description: sub sti til midlertidig lagret fil
+          example: /frontend/v1/soknad/92ee15dd-dc49-4c95-b9b6-6224bae088bb/vedlegg/1234/fil/12345
+        innsendteVedlegg:
+          type: array
+          description: Liste av ingen, en eller flere vedlegg som er sendt inn.
+          items:
+            $ref: "#/components/schemas/InnsendtVedleggDto"
+        skalEttersendes:
+          type: array
+          description: Liste av obligatoriske av ingen, en eller flere vedlegg som søker må ettersende før søknaden kan behandles.
+          items:
+            $ref: "#/components/schemas/InnsendtVedleggDto"
+        mottattdato:
+          type: string
+          format: date-time
+          description: Tidspunkt  i UTC format søknaden er blitt sendt inn til NAV for behandling
+          example: 2022-04-01T15:10:00Z
+        ettersendingsfrist:
+          type: string
+          format: date-time
+          description: Tidspunkt  i UTC format for å ettersende eventuelle manglende obligatoriske vedlegg
+          example: 2022-05-13T15:10:00Z
 
     Label:
       type: string

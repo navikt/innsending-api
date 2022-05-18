@@ -714,7 +714,7 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto) {
+	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): KvitteringsDto {
 
 		// Det er ikke nødvendig å opprette og lagre kvittering(L7) i følge diskusjon 3/11.
 
@@ -791,8 +791,29 @@ class SoknadService(
 		}
 
 		innsenderMetrics.applicationCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
+
+
+		return lagKvittering(innsendtSoknadDto)
 	}
 
+	private fun lagKvittering(innsendtSoknadDto: DokumentSoknadDto): KvitteringsDto {
+		val hoveddokumentVedleggsId = innsendtSoknadDto.vedleggsListe.filter{it.erHoveddokument && !it.erVariant}.map{it.id}
+		val hoveddokumentFil =
+		if (!hoveddokumentVedleggsId.isEmpty() && hoveddokumentVedleggsId[0] != null) {
+			filRepository.findAllByVedleggsid( hoveddokumentVedleggsId[0]!!).firstOrNull()
+		} else {
+			null
+		}
+		return KvitteringsDto(innsendtSoknadDto.innsendingsId, innsendtSoknadDto.tittel,
+			lenkeTilDokument(innsendtSoknadDto.innsendingsId!!,hoveddokumentVedleggsId.first()!!, hoveddokumentFil?.id ),
+			innsendtSoknadDto.vedleggsListe.filter{!(it.erHoveddokument&& it.erVariant) && it.opplastingsStatus == OpplastingsStatusDto.innsendt}.map{InnsendtVedleggDto(it.vedleggsnr ?: "", it.tittel)}.toList(),
+			innsendtSoknadDto.vedleggsListe.filter{it.erPakrevd && it.opplastingsStatus == OpplastingsStatusDto.sendSenere}.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.tittel) }.toList(),
+			innsendtSoknadDto.innsendtDato, innsendtSoknadDto.innsendtDato!!.plusDays(7*6)
+		)
+
+	}
+
+	private fun lenkeTilDokument(innsendingsId: String, vedleggsId: Long, filId: Long?) = if (filId == null) null else "soknad/$innsendingsId/vedlegg/$vedleggsId/fil/$filId"
 
 	fun slettGamleIkkeInnsendteSoknader(dagerGamle: Long) {
 		val slettFor = LocalDateTime.now().minusDays(dagerGamle).atOffset(ZoneOffset.UTC)

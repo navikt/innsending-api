@@ -630,25 +630,25 @@ class FrontEndRestAPILocalTest(
 		value = "Kall for å sende inn en søknad.",
 		nickname = "sendInnSoknad",
 		notes = "Dersom funnet, sendes metadat om søknaden og opplastede filer inn til NAV.",
-		response = BodyStatusResponseDto::class)
+		response = KvitteringsDto::class)
 	@ApiResponses(
-		value = [ApiResponse(code = 200, message = "Successful operation", response = BodyStatusResponseDto::class)])
+		value = [ApiResponse(code = 200, message = "Successful operation", response = KvitteringsDto::class)])
 	@RequestMapping(
 		method = [RequestMethod.POST],
 		value = ["/frontend/v1/sendInn/{innsendingsId}"],
 		produces = ["application/json"]
 	)
-	override fun sendInnSoknad(@PathVariable innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
+	override fun sendInnSoknad(@PathVariable innsendingsId: String): ResponseEntity<KvitteringsDto> {
 		logger.info("Kall for å sende inn soknad $innsendingsId")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.SEND_INN.name)
 		try {
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
-			soknadService.sendInnSoknad(soknadDto)
+			val kvitteringsDto = soknadService.sendInnSoknad(soknadDto)
 			logger.info("Sendt inn soknad $innsendingsId")
 			return ResponseEntity
 				.status(HttpStatus.OK)
-				.body(BodyStatusResponseDto(HttpStatus.OK.name, "Soknad med id $innsendingsId er sendt inn til NAV"))
+				.body(kvitteringsDto)
 		} finally {
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
 		}

@@ -417,13 +417,15 @@ class SoknadServiceTest {
 		val soknad = slot<DokumentSoknadDto>()
 		every { soknadsmottakerAPI.sendInnSoknad(capture(soknad)) } returns Unit
 
-		soknadService.sendInnSoknad(dokumentSoknadDto)
+		val kvitteringsDto = soknadService.sendInnSoknad(dokumentSoknadDto)
 
 		assertTrue(vedleggDtos.isCaptured)
 		assertTrue(vedleggDtos.captured.size >= 1)
 
 		assertTrue(soknad.isCaptured)
 		assertTrue(soknad.captured.innsendingsId == dokumentSoknadDto.innsendingsId)
+
+		assertTrue(kvitteringsDto.innsendingsId == dokumentSoknadDto.innsendingsId )
 
 	}
 
