@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.service
 
+import org.slf4j.LoggerFactory
 import no.nav.soknad.innsending.consumerapis.saf.SafInterface
 import no.nav.soknad.innsending.consumerapis.saf.dto.Dokument
 import no.nav.soknad.innsending.model.AktivSakDto
@@ -11,17 +12,20 @@ import java.time.format.DateTimeFormatter
 @Service
 class SafService(val safApi: SafInterface) {
 
+	private val logger = LoggerFactory.getLogger(javaClass)
+
 	fun hentInnsendteSoknader(brukerId: String): List<AktivSakDto> {
 		val innsendte = safApi.hentBrukersSakerIArkivet(brukerId)
 		if (innsendte == null) return emptyList()
 
+		logger.info("Hentet ${innsendte.size} journalposter for bruker, skal mappe til AktivSakDto")
 		return innsendte.map { AktivSakDto(finnBrevKode(it.dokumenter), it.tittel, it.tema,
-				konverterTilDateTime(it.datoMottatt), erEttersending(it.dokumenter), konverterTilVedleggsliste(it.dokumenter), it.eksternReferanseId ) }.toList()
+				konverterTilDateTime(it.datoMottatt ?: ""), erEttersending(it.dokumenter), konverterTilVedleggsliste(it.dokumenter), it.eksternReferanseId ) }.toList()
 	}
 
 	private fun konverterTilDateTime(dateString: String): OffsetDateTime {
 		if (dateString.isBlank()) return OffsetDateTime.MIN
-		val formatter: DateTimeFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+		val formatter: DateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME
 		return OffsetDateTime.parse(dateString, formatter)
 	}
 

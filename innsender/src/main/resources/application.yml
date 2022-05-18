@@ -74,7 +74,25 @@ no.nav.security.jwt:
 spring:
   config:
     activate:
-      on-profile: dev | prod | docker
+      on-profile: docker
+
+  flyway:
+    enabled: true
+  datasource:
+    url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DATABASE}?user=${DATABASE_USERNAME}&password=${DATABASE_PASSWORD}
+    hikari:
+      minimum-idle: 1
+      maximum-pool-size: 10
+      connection-timeout: 10000
+      idle-timeout: 10001
+      max-lifetime: 30001
+      leak-detection-threshold: 30000
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev | prod
 
   servlet:
     multipart:
@@ -127,3 +145,14 @@ no.nav.security.jwt:
     discoveryurl: ${TOKEN_X_WELL_KNOWN_URL}
     accepted_audience: ${TOKEN_X_CLIENT_ID}
 
+  client:
+    registration:
+      tokenx-safselvbetjening:
+        token-endpoint-url: ${TOKENDINGS_BASE_URL}/token
+        grant-type: urn:ietf:params:oauth:grant-type:token-exchange
+        authentication:
+          client-auth-method: private_key_jwt
+          client-id: ${TOKEN_X_CLIENT_ID}
+          client-jwk: ${TOKEN_X_PRIVATE_JWK}
+        token-exchange:
+          audience: ${SAFSELVBETJENING_TOKEN_X_AUDIENCE}

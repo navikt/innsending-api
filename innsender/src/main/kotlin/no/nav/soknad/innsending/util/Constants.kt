@@ -6,6 +6,7 @@ object Constants {
 	const val TOKENX = "tokenx"
 
 	const val HEADER_CALL_ID = "Nav-Call-Id"
+	const val CORRELATION_ID = "correlation_id"
 	const val HEADER_CONSUMER_ID = "Nav-Consumer-Id"
 	const val HEADER_TEMA = "Tema"
 	const val HEADER_NAV_PERSONIDENT = "Nav-Personident"

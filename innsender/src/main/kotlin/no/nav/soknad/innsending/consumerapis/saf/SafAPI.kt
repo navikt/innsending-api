@@ -1,26 +1,24 @@
 package no.nav.soknad.innsending.consumerapis.saf
 
-import com.netflix.graphql.dgs.client.GraphQLError
-import com.netflix.graphql.dgs.client.GraphQLResponse
-import io.github.resilience4j.kotlin.retry.executeFunction
-import io.github.resilience4j.retry.Retry
+import com.expediagroup.graphql.client.spring.GraphQLWebClient
+import com.expediagroup.graphql.client.types.GraphQLClientError
+import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
-import no.nav.soknad.innsending.consumerapis.pdl.dto.HentPersonVariabler
-import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonGraphqlQuery
 import no.nav.soknad.innsending.consumerapis.saf.SafApiQuery.HENT_SOKNADER_QUERY
 import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.consumerapis.saf.dto.Dokument
 import no.nav.soknad.innsending.exceptions.SafApiException
+import no.nav.soknad.innsending.safselvbetjening.generated.HentDokumentOversikt
+import no.nav.soknad.innsending.safselvbetjening.generated.enums.Journalposttype
+import no.nav.soknad.innsending.safselvbetjening.generated.hentdokumentoversikt.DokumentInfo
+import no.nav.soknad.innsending.safselvbetjening.generated.hentdokumentoversikt.Dokumentoversikt
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.Utilities
 import no.nav.soknad.innsending.util.testpersonid
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
-import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
-import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.bodyToMono
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -28,12 +26,13 @@ import java.time.format.DateTimeFormatter
 @Profile("dev | prod")
 @Qualifier("saf")
 class SafAPI(
-	private val safWebClient: WebClient,
-	private val retrySaf: Retry,
+	private val safSelvbetjeningGraphQLClient: GraphQLWebClient,
 	private val tokenUtil: SubjectHandlerInterface
 ): SafInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
+
+	private val relevanteTema = listOf("AAP","BAR","BID","BIL","DAG","ENF","FOS","GEN","GRA","HJE","IND","KON","MED","OMS","OPP","PEN","SYK","TSO","TSR","UFO","VEN","YRK")
 
 	override fun ping(): String {
 //		healthApi.ping()
@@ -49,64 +48,83 @@ class SafAPI(
 		return "ok"
 	}
 
-	override fun hentBrukersSakerIArkivet(brukerId: String): List<ArkiverteSaker>? {
+
+	override fun hentBrukersSakerIArkivet(brukerId:String): List<ArkiverteSaker>? = runBlocking {
 		try {
-			val response = getSoknadsDataForPerson()
-			logger.info("Hentet fra safselvbetjening ${response.data.keys}")
-/*
-			return getSoknadsDataForPerson()?.extractValueAsObject("dokumentoversiktSelvbetjening", ArkiverteSaker[]::class.java)?.toList() ?:
-				dummyArkiverteSoknader[brukerId] // TODO fjern
-*/
-		} catch (ex: Exception) {
-			logger.warn("Henting fra SAF feilet med ${ex.message}")
-		}
-		return dummyArkiverteSoknader[brukerId] // TODO fjern
-	}
-
-
-	private fun getSoknadsDataForPerson(): GraphQLResponse {
-		var results = GraphQLResponse("")
-
-		runCatching {
-			retrySaf.executeFunction {
-
-				val response = safWebClient.post()
-					.header(HttpHeaders.AUTHORIZATION, "Bearer ${tokenUtil.getToken()}")
-					.bodyValue(hentPersonQuery(tokenUtil.getUserIdFromToken(), true))
-					.retrieve()
-					.bodyToMono<GraphQLResponse>()
-					.block() ?: throw SafApiException("Oppslag mot søknadsarkivet feilet", "Fant ikke søknadsdata for pålogget person")
-
-				checkForErrors(response)
-				results = response
-
+			val hentetDokumentoversikt = getSoknadsDataForPerson()
+			if (hentetDokumentoversikt == null || hentetDokumentoversikt.journalposter.isEmpty()) {
+				throw SafApiException("Ingen søknader funnet", "Fant ingen relevante søknader i søknadsarkivet")
+			} else {
+				val dokumentoversikt = filtrerPaJournalposttypeAndTema(
+					hentetDokumentoversikt,
+					listOf(Journalposttype.I), relevanteTema
+				)
+				dokumentoversikt.journalposter
+					.map {
+						ArkiverteSaker(
+							it.eksternReferanseId, it.tittel ?: "", it.tema ?: "",
+							it.relevanteDatoer?.get(0)?.dato?.toString(), konverterTilDokumentListe(it.dokumenter)
+						)
+					}
+					.toList()
 			}
-		}.onFailure {
-			throw SafApiException("Oppslag mot søknadsarkivet feilet", "Fant ikke søknadsdata for pålogget person")
+		} catch (ex: Exception) {
+			logger.warn("Bruker dummy data for SAF")
+			dummyArkiverteSoknader[brukerId] // TODO fjern
 		}
-		return results
 	}
 
-	private fun checkForErrors(results: GraphQLResponse) {
-		val errors = results.errors
+	private fun konverterTilDokumentListe(dokumentInfo: List<DokumentInfo?>?): List<Dokument> {
+		val dokumenter = mutableListOf<Dokument>()
+		if (dokumentInfo == null || dokumentInfo.isEmpty()) return dokumenter
+
+		dokumenter.add(Dokument(dokumentInfo.get(0)?.brevkode, dokumentInfo.get(0)?.tittel ?: "", "Hoveddokument" ))
+
+		if (dokumentInfo.size>1) {
+			dokumentInfo.subList(1, dokumentInfo.size - 1).forEach { dokumenter.add (Dokument(it?.brevkode ?: "", it?.tittel ?: "", "Vedlegg")) }
+		}
+		return dokumenter
+	}
+	fun filtrerPaJournalposttypeAndTema(dokumentOversikt: Dokumentoversikt,
+																			journalposttyper: List<Journalposttype>, temaer: List<String>): Dokumentoversikt {
+		return Dokumentoversikt(
+			journalposter = dokumentOversikt.journalposter
+				.filter { journalposttyper.contains(it.journalposttype) && temaer.contains(it.tema) }
+		)
+	}
+
+
+	suspend fun getSoknadsDataForPerson(): Dokumentoversikt? {
+			val response = safSelvbetjeningGraphQLClient.execute (
+				HentDokumentOversikt(
+					HentDokumentOversikt.Variables(tokenUtil.getToken())
+				)
+			)
+			if (response.data != null) {
+				checkForErrors(response.errors)
+				return response.data?.dokumentoversiktSelvbetjening
+			} else {
+				logger.error("Oppslag mot søknadsarkivet feilet. Fikk feil i kallet til søknadsarkivet")
+				throw SafApiException("Oppslag mot søknadsarkivet feilet", "Fikk feil i kallet til søknadsarkivet")
+			}
+	}
+
+	private fun checkForErrors(errors: List<GraphQLClientError>?) {
 		errors?.let { handleErrors(it) }
 	}
 
-	private fun handleErrors(errors: List<GraphQLError>) {
+	private fun handleErrors(errors: List<GraphQLClientError>) {
 		val errorMessage = errors
-			.map { "${it.message} (feilkode: ${it.path} ${it.pathAsString})" }
+			.map { "${it.message} (feilkode: ${it.path} ${it.path?.forEach {e-> e.toString() }}" }
 			.joinToString(prefix = "Error i respons fra safselvbetjening: ", separator = ", ") { it }
-		throw SafApiException("Oppslag mot søknadsarkivet feilet", errorMessage)
+		logger.error("Oppslag mot søknadsarkivet feilet med $errorMessage")
+		throw SafApiException("Oppslag mot søknadsarkivet feilet", "Fikk feil i responsen fra søknadsarkivet")
 	}
 
-	fun hentPersonQuery(fnr: String, historikk: Boolean): PersonGraphqlQuery {
-		val query = HENT_SOKNADER_QUERY.replace("[\n\r]", "")
-		return PersonGraphqlQuery(query, HentPersonVariabler(fnr, historikk))
-	}
 
 	// ***** Midlertidig dummy data -> **********
 
-	private val date = DateTimeFormatter.ISO_DATE_TIME.format( LocalDateTime.now())
+	private val date = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
 
 	private val dummyArkiverteSoknader = mapOf (
 		testpersonid to listOf (

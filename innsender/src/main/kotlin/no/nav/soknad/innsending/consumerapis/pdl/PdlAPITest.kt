@@ -8,7 +8,6 @@ import no.nav.soknad.innsending.util.testpersonid
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 @Profile("spring | test | docker | default")
@@ -31,68 +30,52 @@ class PdlAPITest(private val restConfig: RestConfig): PdlInterface, HealthReques
 		throw BackendErrorException("Pålogget bruker $brukerId ikke funnet i PDL", "Problem med å hente opp brukerdata")
 	}
 
-	override fun hentPersonIdents(brukerId: String): List<PersonIdent> {
+	override fun hentPersonIdents(brukerId: String): List<IdentDto> {
 		return dummyHentBrukerIdenter(brukerId)
 	}
 
-	private fun dummyHentBrukerIdenter(brukerId: String): List<PersonIdent> {
+	private fun dummyHentBrukerIdenter(brukerId: String): List<IdentDto> {
 		return dummyIdents.filter {inneholderBrukerId(brukerId, it)}.toList().flatten()
 	}
 
-	private fun inneholderBrukerId(brukerId: String, liste: List<PersonIdent>): Boolean {
+	private fun inneholderBrukerId(brukerId: String, liste: List<IdentDto>): Boolean {
 		return liste.any { it.ident == brukerId }
 	}
 
 	private val dummyIdents = listOf(
-		listOf(PersonIdent(testpersonid, "FOLKEREGISTERIDENT", false), PersonIdent("12345678902","FOLKEREGISTERIDENT", true)),
-		listOf(PersonIdent("12345678903", "FOLKEREGISTERIDENT", false)),
-		listOf(PersonIdent("12345678904", "NPID", false)),
+		listOf(IdentDto(testpersonid, "FOLKEREGISTERIDENT", false), IdentDto("12345678902","FOLKEREGISTERIDENT", true)),
+		listOf(IdentDto("12345678903", "FOLKEREGISTERIDENT", false)),
+		listOf(IdentDto("12345678904", "NPID", false)),
 		listOf(
-			PersonIdent("12345678906", "FOLKEREGISTERIDENT", false),
-			PersonIdent("12345678905", "AKTORID", true)
+			IdentDto("12345678906", "FOLKEREGISTERIDENT", false),
+			IdentDto("12345678905", "AKTORID", true)
 		)
 	)
 
 	private val dummyPersonDtos = mapOf(
 		testpersonid to PersonDto(
-			listOf(Navn("F1", null, "E1")),
-			listOf(
-				Folkeregisteridentifikator("12345678901","FOLKEREGISTERIDENT", "gjeldende"),
-				Folkeregisteridentifikator("12345678902","FOLKEREGISTERIDENT", "utgått")
-				)
+			testpersonid,
+			"F1", null, "E1"
 		),
 		"12345678902" to PersonDto(
-			listOf(Navn("F1", null, "E1")),
-			listOf(
-				Folkeregisteridentifikator("12345678901","FOLKEREGISTERIDENT", "gjeldende"),
-				Folkeregisteridentifikator("12345678902","FOLKEREGISTERIDENT", "utgått")
-			)
+			testpersonid,
+			"F1", null, "E1"
 		),
 		"12345678903" to PersonDto(
-				listOf(Navn("F3", null, "E3")),
-				listOf(
-					Folkeregisteridentifikator("12345678903","FOLKEREGISTERIDENT", "gjeldende")
-				)
-			),
+			"12345678903",
+				"F3", null, "E3"
+		),
 		"12345678904" to PersonDto(
-			listOf(Navn("F4", null, "E4")),
-			listOf(
-				Folkeregisteridentifikator("12345678904","NPID", "gjeldende")
-			)
+			"12345678904",
+			"F4", null, "E4"
 		),
 		"12345678905" to PersonDto(
-			listOf(Navn("F5", null, "E5")),
-			listOf(
-				Folkeregisteridentifikator("12345678906","FOLKEREGISTERIDENT", "gjeldende"),
-				Folkeregisteridentifikator("12345678905","AKTORID", "gjeldende")
-			)
+			"12345678905",
+			"F5", null, "E5"
 		),
 		"12345678906" to PersonDto(
-			listOf(Navn("F5", null, "E5")),
-			listOf(
-				Folkeregisteridentifikator("12345678906","FOLKEREGISTERIDENT", "gjeldende"),
-				Folkeregisteridentifikator("12345678905","AKTORID", "gjeldende")
-			)
+			"12345678906",
+			"F5", null, "E5"
 		)
 	)
 }

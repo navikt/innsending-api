@@ -1,28 +1,24 @@
 package no.nav.soknad.innsending.consumerapis.pdl
 
-import no.nav.soknad.innsending.config.RestConfig
+import com.expediagroup.graphql.client.spring.GraphQLWebClient
+import com.expediagroup.graphql.client.types.GraphQLClientError
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.*
-import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.util.testpersonid
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
-import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
-import io.github.resilience4j.kotlin.retry.executeFunction
-import io.github.resilience4j.retry.Retry
-import no.nav.soknad.innsending.exceptions.PdlApiException
+import kotlinx.coroutines.runBlocking
+import no.nav.soknad.innsending.exceptions.SafApiException
+import no.nav.soknad.innsending.pdl.generated.HentPersonInfo
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import org.slf4j.LoggerFactory
-import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.bodyToMono
 
 @Service
 @Profile("dev | prod")
 @Qualifier("pdl")
 class PdlAPI(
-	private val pdlWebClient: WebClient,
-	private val retryPdl: Retry,
+	private val pdlGraphQLClient: GraphQLWebClient,
 	private val tokenUtil: SubjectHandlerInterface
 
 ): PdlInterface, HealthRequestInterface {
@@ -42,84 +38,89 @@ class PdlAPI(
 		return "ok"
 	}
 
-	override fun hentPersonData(brukerId: String): PersonDto? {
-		val personDto = dummyPersonDtos.get(brukerId) // TODO erstatt med kall til PDL
-		if (personDto != null) return personDto
-		throw BackendErrorException("Pålogget bruker $brukerId ikke funnet i PDL", "Problem med å hente brukerdata")
-	}
-
-	override fun hentPersonIdents(brukerId: String): List<PersonIdent> {
+	override fun hentPersonIdents(brukerId: String): List<IdentDto> = runBlocking {
 		try {
-			return getPersonInfo().personData.identifikatorer?.map {PersonIdent(it.identifikasjonsnummer, it.type, it.status == "gjeldende")}?.toList()
+			hentPersonInfo()?.hentIdenter?.identer?.map {IdentDto(it.ident, it.gruppe.toString(), it.historisk)}?.toList()
 				?: dummyHentBrukerIdenter(brukerId) // TODO fjern
 		} catch (ex: Exception) {
 			logger.warn(("Henting fra PDL feilet med ${ex.message}"))
-			return dummyHentBrukerIdenter(brukerId) // TODO fjern
+			dummyHentBrukerIdenter(brukerId) // TODO fjern
 		}
 	}
 
-	private fun getPersonInfo(): PersonResponse {
-		var results = PersonResponse(PersonDto(null, null), null)
+	override fun hentPersonData(brukerId: String): PersonDto? = runBlocking {
 
-		runCatching {
-			retryPdl.executeFunction {
-
-				results = pdlWebClient.post()
-					.header(HttpHeaders.AUTHORIZATION, "Bearer ${tokenUtil.getToken()}")
-					//.header("Nav-Consumer-Token", "Bearer ${stsClient.oidcToken()}")
-					.bodyValue(hentPersonQuery(tokenUtil.getUserIdFromToken(), true))
-					.retrieve()
-					.bodyToMono<PersonResponse>()
-					.block() ?: throw PdlApiException("Oppslag mot personregisteret feilet", "Fant ikke data for pålogget Person")
-
-			}
-		}.onFailure {
-			throw PdlApiException("Oppslag mot personregisteret feilet", "Fant ikke data for pålogget Person")
+		try {
+			hentPersonInfo()?.hentPerson?.navn?.map {PersonDto(brukerId, it.fornavn, it.mellomnavn, it.etternavn)}?.first()
+				?: dummyPersonDtos[brukerId] // TODO erstatt med kall til PDL
+		} catch (ex: Exception) {
+			logger.warn(("Henting fra PDL feilet med ${ex.message}"))
+			dummyPersonDtos[brukerId] // TODO erstatt med kall til PDL
 		}
 
-		return results
 	}
 
+
+	suspend fun hentPersonInfo(): HentPersonInfo.Result? {
+		val response = pdlGraphQLClient.execute(
+			HentPersonInfo(
+				HentPersonInfo.Variables(tokenUtil.getToken())
+			)
+		)
+		if (response.data != null) {
+			checkForErrors(response.errors)
+			return response.data
+		} else {
+			logger.error("Oppslag mot personregisteret feilet. Fikk feil i kallet til personregisteret")
+			throw SafApiException("Oppslag mot personregisteret feilet", "Fikk feil i kallet til personregisteret")
+		}
+	}
+
+	private fun checkForErrors(errors: List<GraphQLClientError>?) {
+		errors?.let { handleErrors(it) }
+	}
+
+	private fun handleErrors(errors: List<GraphQLClientError>) {
+		val errorMessage = errors
+			.map { "${it.message} (feilkode: ${it.path} ${it.path?.forEach {e-> e.toString() }}" }
+			.joinToString(prefix = "Error i respons fra safselvbetjening: ", separator = ", ") { it }
+		logger.error("Oppslag mot søknadsarkivet feilet med $errorMessage")
+		throw SafApiException("Oppslag mot søknadsarkivet feilet", "Fikk feil i responsen fra søknadsarkivet")
+	}
 
 
 /*** Temporary methods-> ***/
-	private fun dummyHentBrukerIdenter(brukerId: String): List<PersonIdent> {
+	private fun dummyHentBrukerIdenter(brukerId: String): List<IdentDto> {
 		val dummyList = dummyIdents.filter {inneholderBrukerId(brukerId, it)}.toList().flatten()
 		if (dummyList.isEmpty())
-			return listOf(PersonIdent(brukerId,"FOLKEREGISTERIDENT", false))
+			return listOf(IdentDto(brukerId,"FOLKEREGISTERIDENT", false))
 		else
 			return dummyList
 	}
 
-	private fun inneholderBrukerId(brukerId: String, liste: List<PersonIdent>): Boolean {
+	private fun inneholderBrukerId(brukerId: String, liste: List<IdentDto>): Boolean {
 		return liste.any { it.ident == brukerId }
 	}
 
 	private val dummyIdents = listOf(
-	listOf(PersonIdent(testpersonid, "FOLKEREGISTERIDENT", false), PersonIdent("12345678902","FOLKEREGISTERIDENT", true)),
-	listOf(PersonIdent("12345678903", "FOLKEREGISTERIDENT", false)),
-	listOf(PersonIdent("12345678904", "NPID", false)),
-	listOf(PersonIdent("12345678906", "FOLKEREGISTERIDENT", false),PersonIdent("12345678905", "AKTORID", true))
+	listOf(IdentDto(testpersonid, "FOLKEREGISTERIDENT", false), IdentDto("12345678902","FOLKEREGISTERIDENT", true)),
+	listOf(IdentDto("12345678903", "FOLKEREGISTERIDENT", false)),
+	listOf(IdentDto("12345678904", "NPID", false)),
+	listOf(IdentDto("12345678906", "FOLKEREGISTERIDENT", false),IdentDto("12345678905", "AKTORID", true))
 	)
 
 	private val dummyPersonDtos = mapOf(
 		testpersonid to PersonDto(
-			listOf(Navn("F1", null, "E1")),
-			listOf(Folkeregisteridentifikator(testpersonid, "FOLKEREGISTERIDENT", "gjeldende"),
-				Folkeregisteridentifikator("12345678902", "FOLKEREGISTERIDENT", "historisk"))
+			testpersonid, "F1", null, "E1"
 		),
 		"12345678903" to PersonDto(
-			listOf(Navn("F3", null, "E3")),
-			listOf(Folkeregisteridentifikator("12345678903", "FOLKEREGISTERET", "gjeldende"))
+			"12345678903", "F3", null, "E3"
 		),
 		"12345678904" to PersonDto(
-			listOf(Navn("F4", null, "E4")),
-			listOf(Folkeregisteridentifikator("12345678903", "FOLKEREGISTERET", "gjeldende"))
+			"12345678904","F4", null, "E4"
 		),
 		"12345678905" to PersonDto(
-			listOf(Navn("F5", null, "E5")),
-			listOf(Folkeregisteridentifikator("12345678905", "FOLKEREGISTERET", "gjeldende"),
-				Folkeregisteridentifikator("12345678906", "FOLKEREGISTERET", "historisk"))
+			"12345678905", "F5", null, "E5"
 		)
 	)
 }

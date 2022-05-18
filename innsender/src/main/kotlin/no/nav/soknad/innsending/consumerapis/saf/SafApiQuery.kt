@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets
 import java.util.stream.Collectors
 
 object SafApiQuery {
-	val HENT_SOKNADER_QUERY = readGraphQLQueryFromFile("graphql/saf-soknad-query.graphql")
+	val HENT_SOKNADER_QUERY = readGraphQLQueryFromFile("graphql/safselvbetjening/hentDokumentOversikt.graphql")
 
 	private fun readGraphQLQueryFromFile(file: String): String {
 		val classPathResource = ClassPathResource(file)

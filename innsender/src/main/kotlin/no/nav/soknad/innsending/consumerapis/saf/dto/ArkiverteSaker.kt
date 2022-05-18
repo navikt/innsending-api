@@ -1,10 +1,10 @@
 package no.nav.soknad.innsending.consumerapis.saf.dto
 
 data class ArkiverteSaker(
-	val eksternReferanseId: String,
+	val eksternReferanseId: String?,
 	val tittel: String,
 	val tema: String,
-	val datoMottatt: String,
+	val datoMottatt: String?,
 	val dokumenter: List<Dokument>
 )
 

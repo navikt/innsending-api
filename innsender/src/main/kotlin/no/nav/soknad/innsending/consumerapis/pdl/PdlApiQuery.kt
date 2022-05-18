@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.consumerapis.pdl
 
-import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.PdlApiException
 import org.springframework.core.io.ClassPathResource
 import java.io.BufferedReader
@@ -10,7 +9,7 @@ import java.nio.charset.StandardCharsets
 import java.util.stream.Collectors
 
 object PdlApiQuery {
-	val HENT_PERSON = readGraphQLQueryFromFile("graphql/pdl-person-query.graphql")
+	val HENT_PERSON = readGraphQLQueryFromFile("graphql/pdl/hentPersonInfo.graphql")
 
 	private fun readGraphQLQueryFromFile(file: String): String {
 		val classPathResource = ClassPathResource(file)
