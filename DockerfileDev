@@ -1,0 +1,27 @@
+# syntax=docker/dockerfile:1
+
+FROM maven:3.8.4-jdk-17
+
+RUN useradd -ms /bin/bash newuser
+USER newuser
+WORKDIR /home/newuser/
+
+COPY pom.xml ./
+COPY soknadsfillager-api/pom.xml ./soknadsfillager-api/pom.xml
+COPY soknadsmottaker-api/pom.xml ./soknadsmottaker-api/pom.xml
+COPY innsender/pom.xml ./innsender/pom.xml
+
+# DENNE DELEN ER VELDIG TIDKREVENDE, FORSIKTIG MED Å REDIGERE OVER ELLER I DEN
+RUN mvn dependency:go-offline
+# TIDKREVENDE DEL FERDIG
+
+COPY soknadsfillager-api/src/ ./soknadsfillager-api/src
+COPY soknadsmottaker-api/src/ ./soknadsmottaker-api/src
+COPY innsender/src/ ./innsender/src
+
+USER root
+RUN chown -R newuser: /home/newuser/
+USER newuser
+RUN mvn clean install
+EXPOSE 9064
+ENTRYPOINT ["java","-jar","/home/newuser/innsender/target/innsender.jar"]
