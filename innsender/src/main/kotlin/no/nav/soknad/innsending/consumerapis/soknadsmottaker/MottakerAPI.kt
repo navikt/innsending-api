@@ -57,9 +57,9 @@ class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, Health
 
 	override fun isReady(): String {
 		try {
-			//logger.debug("Soknadsmottaker isReady start")
+			logger.info("Soknadsmottaker isReady start")
 			healthApi.isReady()
-			//logger.debug("Soknadsmottaker isReady ok")
+			logger.info("Soknadsmottaker isReady ok")
 		} catch (e: Exception) {
 			logger.warn("Kall for å sjekke om soknadsmottaker er oppe feiler med ${e.message}")
 		}
@@ -76,7 +76,6 @@ class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, Health
 	}
 
 	override fun sendInnSoknad(soknadDto: DokumentSoknadDto) {
-
 		logger.info("${soknadDto.innsendingsId}: transformering før innsending")
 		val soknad = translate(soknadDto)
 		logger.info("${soknadDto.innsendingsId}: klar til å sende inn til ${restConfig.soknadsMottakerHost}")

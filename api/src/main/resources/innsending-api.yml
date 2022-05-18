@@ -787,6 +787,10 @@ components:
     KvitteringsDto:
       type: object
       description: Kvittering til søker etter vellykket innsending av søknad
+      required:
+        innsendingsId
+        label
+        mottattdato
 
       properties:
         innsendingsId:

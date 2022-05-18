@@ -759,6 +759,7 @@ class SoknadService(
 			soknadsmottakerAPI.sendInnSoknad(soknadDto)
 		} catch (ex: Exception) {
 			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
+			logger.error("${soknadDto.innsendingsId}: Feil ved sending av søknad til soknadsmottaker ${ex.message}")
 			throw BackendErrorException(ex.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV")
 		}
 
