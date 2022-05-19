@@ -619,9 +619,9 @@ class FrontEndRestApi(
 		value = "Kall for å sende inn en søknad.",
 		nickname = "sendInnSoknad",
 		notes = "Dersom funnet, sendes metadat om søknaden og opplastede filer inn til NAV.",
-		response = BodyStatusResponseDto::class)
+		response = KvitteringsDto::class)
 	@ApiResponses(
-		value = [ApiResponse(code = 200, message = "Successful operation", response = BodyStatusResponseDto::class)])
+		value = [ApiResponse(code = 200, message = "Successful operation", response = KvitteringsDto::class)])
 	@RequestMapping(
 		method = [RequestMethod.POST],
 		value = ["/frontend/v1/sendInn/{innsendingsId}"],
