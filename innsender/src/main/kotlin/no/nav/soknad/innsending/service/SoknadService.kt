@@ -805,11 +805,11 @@ class SoknadService(
 		} else {
 			null
 		}
-		return KvitteringsDto(innsendtSoknadDto.innsendingsId, innsendtSoknadDto.tittel,
+		return KvitteringsDto(innsendtSoknadDto.innsendingsId!!, innsendtSoknadDto.tittel, innsendtSoknadDto.innsendtDato!!,
 			lenkeTilDokument(innsendtSoknadDto.innsendingsId!!,hoveddokumentVedleggsId.first()!!, hoveddokumentFil?.id ),
 			innsendtSoknadDto.vedleggsListe.filter{!(it.erHoveddokument&& it.erVariant) && it.opplastingsStatus == OpplastingsStatusDto.innsendt}.map{InnsendtVedleggDto(it.vedleggsnr ?: "", it.tittel)}.toList(),
 			innsendtSoknadDto.vedleggsListe.filter{it.erPakrevd && it.opplastingsStatus == OpplastingsStatusDto.sendSenere}.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.tittel) }.toList(),
-			innsendtSoknadDto.innsendtDato, innsendtSoknadDto.innsendtDato!!.plusDays(7*6)
+			 innsendtSoknadDto.innsendtDato!!.plusDays(7*6)
 		)
 
 	}

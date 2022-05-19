@@ -33,6 +33,7 @@
 		"TJENESTE_URL": "https://send-inn-frontend.dev.nav.no",
 		"GJENOPPTA_SOKNADS_ARBEID": "/dokumentinnsending/",
 		"ETTERSENDE_PA_SOKNAD": "/dokumentinnsending/ettersending/",
+		"ETTERSENDINGS_FRIST": "42",
 		"TOKENDINGS_BASE_URL": "https://tokendings.dev-gcp.nais.io",
 		"SAFSELVBETJENING_TOKEN_X_AUDIENCE": "dev-fss:team-soknad:safselvbetjening-q1"
 	}
