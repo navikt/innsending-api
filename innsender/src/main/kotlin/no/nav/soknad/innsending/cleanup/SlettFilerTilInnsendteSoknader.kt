@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.cleanup
 
-import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
@@ -15,7 +14,7 @@ import java.net.URL
 import java.time.LocalDateTime
 
 @Service
-class FjernGamleSoknader(private val soknadService: SoknadService) {
+class SlettFilerTilInnsendteSoknader(private val soknadService: SoknadService) {
 
 	@OptIn(ExperimentalSerializationApi::class)
 	val format = Json { explicitNulls = false; ignoreUnknownKeys = true }
@@ -27,17 +26,17 @@ class FjernGamleSoknader(private val soknadService: SoknadService) {
 
 	val logger = LoggerFactory.getLogger(javaClass)
 
-	@Value("\${cron.slettEldreEnn}")
-	private lateinit var dagerGamleString: String
+	@Value("\${cron.slettInnsendtFilEldreEnn}")
+	private lateinit var slettInnsendtFilEldreEnn: String
 
-	@Scheduled(cron = "\${cron.startSlettGamleIkkeInnsendteSoknader}")
-	fun fjernGamleIkkeInnsendteSoknader() {
+	@Scheduled(cron = "\${cron.startSlettInnsendteFiler}")
+	fun fjernFilerTilInnsendteSoknader() {
 		try {
 			if (isLeader()) {
-				soknadService.slettGamleIkkeInnsendteSoknader(dagerGamleString.toLong())
+				soknadService.slettfilerTilInnsendteSoknader(slettInnsendtFilEldreEnn.toInt())
 			}
 		} catch (ex: Exception) {
-			logger.warn("Fjerning av gamle ikke innsendte søknader feilet med ${ex.message}")
+			logger.warn("Fjerning av filer for innsendte søknader feilet med ${ex.message}")
 		}
 	}
 
@@ -63,5 +62,6 @@ class FjernGamleSoknader(private val soknadService: SoknadService) {
 		logger.info("Elector_path som jsonstring=$jsonString")
 		return jsonString
 	}
+
 
 }

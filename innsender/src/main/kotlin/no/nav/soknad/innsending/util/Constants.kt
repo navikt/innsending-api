@@ -11,8 +11,5 @@ object Constants {
 	const val HEADER_TEMA = "Tema"
 	const val HEADER_NAV_PERSONIDENT = "Nav-Personident"
 
-	const val HEADER_INTEGRASJON_ID = "IntegrasjonId"
-	const val HEADER_INTEGRASJON_PASSORD = "IntegrasjonPassord"
-
 	const val BEARER = "Bearer "
 }

@@ -44,3 +44,4 @@ brukernotifikasjonconfig:
   ettersendePaSoknad: /dokumentinnsending/ettersending/
   publisereEndringer: true
 
+ettersendingsfrist: 42

@@ -588,6 +588,51 @@ class SoknadServiceTest {
 		dokumentSoknadDtoList.forEach{ assertEquals(soknadService.hentSoknad(it.id!!).status, SoknadsStatusDto.automatiskSlettet) }
 	}
 
+
+	@Test
+	fun testAutomatiskSlettingAvFilerTilInnsendteSoknader() {
+		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+
+		val brukerid = testpersonid
+		val skjemanr = "NAV 95-00.11"
+		val spraak = "no"
+
+		val dokumentSoknadDtoList = mutableListOf<DokumentSoknadDto>()
+		dokumentSoknadDtoList.add(soknadService.opprettSoknad(brukerid, skjemanr, spraak, listOf("W1")))
+		dokumentSoknadDtoList.add(soknadService.opprettSoknad(brukerid, skjemanr, spraak, listOf("W1")))
+
+		dokumentSoknadDtoList.forEach {soknadService.lagreFil(it, lagFilDtoMedFil(it.vedleggsListe.filter {it.erHoveddokument}.first()))}
+		dokumentSoknadDtoList.forEach {soknadService.lagreFil(it, lagFilDtoMedFil(it.vedleggsListe.filter {!it.erHoveddokument}.first()))}
+
+		val vedleggDtos = slot<List<VedleggDto>>()
+
+		every { fillagerAPI.lagreFiler(any(), capture(vedleggDtos)) } returns Unit
+
+		val soknad = slot<DokumentSoknadDto>()
+		every { soknadsmottakerAPI.sendInnSoknad(capture(soknad)) } returns Unit
+
+		val kvitteringsDto = soknadService.sendInnSoknad(dokumentSoknadDtoList[0])
+		assertTrue(kvitteringsDto.hoveddokumentRef != null)
+
+		val filDtos = soknadService.hentFiler(dokumentSoknadDtoList[0], dokumentSoknadDtoList[0].innsendingsId!!, dokumentSoknadDtoList[0].vedleggsListe.filter {it.erHoveddokument && !it.erVariant}.first().id!!)
+		assertTrue(filDtos.isNotEmpty())
+
+		soknadService.slettfilerTilInnsendteSoknader(-1)
+		val innsendtFilDtos = soknadService.hentFiler(dokumentSoknadDtoList[0], dokumentSoknadDtoList[0].innsendingsId!!, dokumentSoknadDtoList[0].vedleggsListe.filter {it.erHoveddokument && !it.erVariant}.first().id!!)
+		assertTrue(innsendtFilDtos.isEmpty())
+
+		val ikkeInnsendtfilDtos = soknadService.hentFiler(dokumentSoknadDtoList[1], dokumentSoknadDtoList[1].innsendingsId!!, dokumentSoknadDtoList[1].vedleggsListe.filter {it.erHoveddokument && !it.erVariant}.first().id!!)
+		assertTrue(ikkeInnsendtfilDtos.isNotEmpty())
+
+		val kvitteringsDto1 = soknadService.sendInnSoknad(dokumentSoknadDtoList[1])
+		assertTrue(kvitteringsDto1.hoveddokumentRef != null)
+
+		soknadService.slettfilerTilInnsendteSoknader(1)
+		val filDtos1 = soknadService.hentFiler(dokumentSoknadDtoList[1], dokumentSoknadDtoList[1].innsendingsId!!, dokumentSoknadDtoList[1].vedleggsListe.filter {it.erHoveddokument && !it.erVariant}.first().id!!)
+		assertTrue(filDtos1.isNotEmpty())
+
+	}
+
 	private fun lagVedleggDto(skjemanr: String, tittel: String, mimeType: String?, fil: ByteArray?, id: Long? = null,
 														erHoveddokument: Boolean? = true, erVariant: Boolean? = false, erPakrevd: Boolean? = true ): VedleggDto {
 		return  VedleggDto( tittel, tittel, erHoveddokument!!, erVariant!!,

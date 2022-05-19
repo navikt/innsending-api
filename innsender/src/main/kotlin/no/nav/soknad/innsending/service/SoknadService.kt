@@ -18,6 +18,7 @@ import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.PdfMerger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -34,8 +35,12 @@ class SoknadService(
 	private val brukerNotifikasjon: BrukernotifikasjonPublisher,
 	private val fillagerAPI: FillagerInterface,
 	private val soknadsmottakerAPI: MottakerInterface,
-	private val innsenderMetrics: InnsenderMetrics
+	private val innsenderMetrics: InnsenderMetrics,
 ) {
+
+	@Value("\${ettersendingsfrist}")
+	private var ettersendingsfrist: Long = 42
+
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	private val ukjentEttersendingsId = "-1"
@@ -763,8 +768,8 @@ class SoknadService(
 			throw BackendErrorException(ex.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV")
 		}
 
-		// Slett opplastede vedlegg som er sendt til soknadsfillager.
-		opplastedeVedlegg.forEach { slettFilerForVedlegg(it.id!!) }
+		// Slett opplastede vedlegg untatt søknaden dersom ikke ettersendingssøknad, som er sendt til soknadsfillager.
+		opplastedeVedlegg.filter{ !(it.erHoveddokument && soknadDto.ettersendingsId.isNullOrBlank()) }.forEach { slettFilerForVedlegg(it.id!!) }
 
 		// oppdater databasen med status og innsendingsdato
 		opplastedeVedlegg. forEach { vedleggRepository.save(mapTilVedleggDb(it, soknadDto.id!!, OpplastingsStatus.INNSENDT)) }
@@ -791,13 +796,13 @@ class SoknadService(
 			opprettEttersendingsSoknad(innsendtSoknadDto, innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!)
 		}
 
+		val kvitteringsDto = lagKvittering(innsendtSoknadDto, opplastedeVedlegg)
 		innsenderMetrics.applicationCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
 
-
-		return lagKvittering(innsendtSoknadDto)
+		return kvitteringsDto
 	}
 
-	private fun lagKvittering(innsendtSoknadDto: DokumentSoknadDto): KvitteringsDto {
+	private fun lagKvittering(innsendtSoknadDto: DokumentSoknadDto, opplastedeVedlegg: List<VedleggDto>): KvitteringsDto {
 		val hoveddokumentVedleggsId = innsendtSoknadDto.vedleggsListe.filter{it.erHoveddokument && !it.erVariant}.map{it.id}
 		val hoveddokumentFil =
 		if (!hoveddokumentVedleggsId.isEmpty() && hoveddokumentVedleggsId[0] != null) {
@@ -807,9 +812,9 @@ class SoknadService(
 		}
 		return KvitteringsDto(innsendtSoknadDto.innsendingsId!!, innsendtSoknadDto.tittel, innsendtSoknadDto.innsendtDato!!,
 			lenkeTilDokument(innsendtSoknadDto.innsendingsId!!,hoveddokumentVedleggsId.first()!!, hoveddokumentFil?.id ),
-			innsendtSoknadDto.vedleggsListe.filter{!(it.erHoveddokument&& it.erVariant) && it.opplastingsStatus == OpplastingsStatusDto.innsendt}.map{InnsendtVedleggDto(it.vedleggsnr ?: "", it.tittel)}.toList(),
+			opplastedeVedlegg.filter{ !it.erHoveddokument }.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.tittel)}.toList(),
 			innsendtSoknadDto.vedleggsListe.filter{it.erPakrevd && it.opplastingsStatus == OpplastingsStatusDto.sendSenere}.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.tittel) }.toList(),
-			 innsendtSoknadDto.innsendtDato!!.plusDays(7*6)
+			innsendtSoknadDto.innsendtDato!!.plusDays(ettersendingsfrist)
 		)
 
 	}
@@ -823,6 +828,12 @@ class SoknadService(
 		logger.info("SlettGamleIkkeInnsendteSoknader: Funnet ${soknadDbDataListe.size} søknader som skal slettes")
 		soknadDbDataListe.forEach { slettSoknadAutomatisk(it.innsendingsid!!)}
 	}
+
+	fun slettfilerTilInnsendteSoknader(dagerGamle: Int) {
+		logger.info("Slett alle opplastede filer for innsendte søknader mellom ${100 + dagerGamle} til ${dagerGamle} dager siden")
+		filRepository.deleteAllBySoknadStatusAndInnsendtdato(dagerGamle)
+	}
+
 
 
 	private fun skalEttersende(innsendtSoknadDto: DokumentSoknadDto): Boolean {

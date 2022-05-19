@@ -15,8 +15,12 @@ management:
         enabled: true
 
 cron:
-  slettGamleIkkeInnsendteSoknader: 0 0 14 * * *
-  slettEldreEnn: 10
+  startSlettGamleIkkeInnsendteSoknader: 0 0 2 * * *
+  slettEldreEnn: 56
+  startSlettInnsendteFiler: 0 0 5 * * *
+  slettInnsendtFilEldreEnn: 1
+
+ettersendingsfrist: 42
 ---
 spring:
   config:
