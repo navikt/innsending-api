@@ -59,4 +59,4 @@ jobs:
           CLUSTER: prod-gcp
           RESOURCE: .nais/nais-gcp.yml
           VARS: .nais/prod-gcp.json
-          DRY_RUN: false
+          DRY_RUN: true
