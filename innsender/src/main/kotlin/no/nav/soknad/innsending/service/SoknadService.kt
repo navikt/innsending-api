@@ -491,16 +491,19 @@ class SoknadService(
 
 	@Transactional
 	fun lagreFil(soknadDto: DokumentSoknadDto, filDto: FilDto): FilDto {
-		// TODO Valider opplastet fil, og konverter eventuelt til PDF
-		if (soknadDto.status.equals(SoknadsStatus.Opprettet)) {
+		if (!soknadDto.status.equals(SoknadsStatusDto.opprettet)) {
 			when (soknadDto.status.name) {
-				SoknadsStatus.Innsendt.name -> throw IllegalActionException(
+				SoknadsStatusDto.innsendt.name -> throw IllegalActionException(
 					"Innsendte søknader kan ikke endres. Ønsker søker å gjøre oppdateringer, så må vedkommende ettersende dette",
 					"Søknad ${soknadDto.innsendingsId} er sendt inn og nye filer kan ikke lastes opp på denne. Opprett ny søknad for ettersendelse av informasjon")
-				SoknadsStatus.SlettetAvBruker.name, SoknadsStatus.AutomatiskSlettet.name -> throw IllegalActionException(
+				SoknadsStatusDto.slettetAvBruker.name, SoknadsStatusDto.automatiskSlettet.name -> throw IllegalActionException(
 					"Søknader markert som slettet kan ikke endres. Søker må eventuelt opprette ny søknad",
 					"Søknaden er slettet og ingen filer kan legges til")
-				else -> {} // Do nothing
+				else -> {
+					throw IllegalActionException(
+						"Ukjent status ${soknadDto.status.name}",
+						"Lagring av filer på søknad med status ${soknadDto.status.name} er ikke håndtert")
+				}
 			}
 		}
 
@@ -520,24 +523,23 @@ class SoknadService(
 
 	fun hentFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long): FilDto {
 		// Sjekk om vedlegget eksisterer
-		if (soknadDto.status.equals(SoknadsStatus.Opprettet)) {
-			when (soknadDto.status.name) {
-				SoknadsStatus.Innsendt.name -> throw IllegalActionException(
-					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
-					"Søknad ${soknadDto.innsendingsId} er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til Ditt Nav og søk opp dine saker der")
-				SoknadsStatus.SlettetAvBruker.name, SoknadsStatus.AutomatiskSlettet.name -> throw IllegalActionException(
-					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
-					"Søknaden er slettet og ingen filer er tilgjengelig")
-				else -> {} // Do nothing
-			}
-		}
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
 			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
 		val filDbDataOpt = hentFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
 
 		if (!filDbDataOpt.isPresent)
-			throw ResourceNotFoundException(null, "Det finnes ikke fil med id=$filId for søknad ${soknadDto.innsendingsId}")
+			when (soknadDto.status.name) {
+				SoknadsStatusDto.innsendt.name -> throw IllegalActionException(
+					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
+					"Søknad ${soknadDto.innsendingsId} er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til Ditt Nav og søk opp dine saker der")
+				SoknadsStatusDto.slettetAvBruker.name, SoknadsStatusDto.automatiskSlettet.name -> throw IllegalActionException(
+					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
+					"Søknaden er slettet og ingen filer er tilgjengelig")
+				else -> {
+					throw ResourceNotFoundException(null, "Det finnes ikke fil med id=$filId for søknad ${soknadDto.innsendingsId}")
+				}
+			}
 
 		innsenderMetrics.applicationCounterInc(InnsenderOperation.LAST_NED.name, soknadDto.tema)
 		return lagFilDto(filDbDataOpt.get())
@@ -548,41 +550,29 @@ class SoknadService(
 	}
 
 	fun hentFiler(soknadDto: DokumentSoknadDto, innsendingsId: String, vedleggsId: Long, medFil: Boolean = false, kastFeilNarNull: Boolean = false): List<FilDto> {
-		// Sjekk om vedlegget eksisterer for soknad og at soknaden er i status opprettet
-		if (soknadDto.status.equals(SoknadsStatus.Opprettet)) {
-			when (soknadDto.status.name) {
-				SoknadsStatus.Innsendt.name -> throw IllegalActionException(
-					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
-					"Søknad $innsendingsId er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til Ditt Nav og søk opp dine saker der")
-				SoknadsStatus.SlettetAvBruker.name, SoknadsStatus.AutomatiskSlettet.name -> throw IllegalActionException(
-					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
-					"Søknaden er slettet og ingen filer er tilgjengelig")
-				else -> {} // Do nothing
-			}
-		}
+		// Sjekk om vedlegget eksisterer for soknad
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
 			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad $innsendingsId eksisterer ikke")
 
 		val filDbDataList = hentFilerTilVedlegg(innsendingsId, vedleggsId)
 		if (filDbDataList.isEmpty() && kastFeilNarNull )
-			throw ResourceNotFoundException(null, "Ingen filer funnet for oppgitt vedlegg $vedleggsId til søknad $innsendingsId")
+			when (soknadDto.status.name) {
+				SoknadsStatusDto.innsendt.name -> throw IllegalActionException(
+					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
+					"Søknad $innsendingsId er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til Ditt Nav og søk opp dine saker der")
+				SoknadsStatusDto.slettetAvBruker.name, SoknadsStatusDto.automatiskSlettet.name -> throw IllegalActionException(
+					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
+					"Søknaden er slettet og ingen filer er tilgjengelig")
+				else -> {
+					throw ResourceNotFoundException(null, "Ingen filer funnet for oppgitt vedlegg $vedleggsId til søknad $innsendingsId")
+				}
+			}
 
 		return filDbDataList.map { lagFilDto(it, medFil) }
 	}
 
 	fun slettFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long) {
 		// Sjekk om vedlegget eksisterer
-		if (soknadDto.status.equals(SoknadsStatus.Opprettet)) {
-			when (soknadDto.status.name) {
-				SoknadsStatus.Innsendt.name -> throw IllegalActionException(
-					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
-					"Søknad ${soknadDto.innsendingsId} er sendt inn og kan ikke endres.")
-				SoknadsStatus.SlettetAvBruker.name, SoknadsStatus.AutomatiskSlettet.name -> throw IllegalActionException(
-					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
-					"Søknaden er slettet og ingen filer er tilgjengelig")
-				else -> {} // Do nothing
-			}
-		}
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
 			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 		if (hentFilDb(soknadDto.innsendingsId!!, vedleggsId, filId ).isEmpty)
