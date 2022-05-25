@@ -1,12 +1,9 @@
 package no.nav.soknad.innsending.config
 
-import com.expediagroup.graphql.client.spring.GraphQLWebClient
 import io.netty.channel.ChannelOption
 import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.handler.timeout.WriteTimeoutHandler
-import no.nav.soknad.innsending.util.Constants.HEADER_CALL_ID
-import no.nav.soknad.innsending.util.MDCUtil
-import org.slf4j.LoggerFactory
+import io.netty.resolver.AddressResolverGroup
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.client.RestTemplateBuilder
@@ -15,15 +12,12 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Lazy
 import org.springframework.context.annotation.Profile
 import org.springframework.context.annotation.Scope
-import org.springframework.http.HttpHeaders
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.http.codec.ClientCodecConfigurer
 import org.springframework.web.reactive.function.client.ExchangeStrategies
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.netty.Connection
 import reactor.netty.http.client.HttpClient
-import reactor.netty.http.client.HttpClientRequest
-import reactor.netty.http.client.HttpClientResponse
 import java.util.concurrent.TimeUnit
 
 @Configuration

@@ -42,7 +42,7 @@
 		<resilience4j.version>1.7.1</resilience4j.version>
 		<graphq-dgs-client.version>4.10.2</graphq-dgs-client.version>
 		<graphql-kotlin.version>5.4.1</graphql-kotlin.version>
-
+		<io.netty.version>4.1.77.Final</io.netty.version>
 
 	</properties>
 
@@ -74,6 +74,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-configuration-processor</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-resolver</artifactId>
+			<version>${io.netty.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.resilience4j</groupId>
