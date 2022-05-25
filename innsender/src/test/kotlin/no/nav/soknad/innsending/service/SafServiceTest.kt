@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.config.RestConfig
-import no.nav.soknad.innsending.consumerapis.saf.SafAPITest
+import no.nav.soknad.innsending.consumerapis.saf.SafAPITmp
 import no.nav.soknad.innsending.util.testpersonid
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -22,7 +22,7 @@ class SafServiceTest {
 	@Test
 	fun hentInnsendteSoknaderForBrukerTest() {
 		val brukerId = testpersonid
-		val safService = SafService(SafAPITest(restConfig))
+		val safService = SafService(SafAPITmp(restConfig))
 		val innsendteSoknader = safService.hentInnsendteSoknader(brukerId)
 
 		assertTrue(innsendteSoknader.isNotEmpty())
@@ -31,7 +31,7 @@ class SafServiceTest {
 	@Test
 	fun brukerHarIngenInnsendteSoknaderTest() {
 		val brukerId = "999999999999"
-		val safService = SafService(SafAPITest(restConfig))
+		val safService = SafService(SafAPITmp(restConfig))
 		val innsendteSoknader = safService.hentInnsendteSoknader(brukerId)
 
 		assertTrue(innsendteSoknader.isEmpty())

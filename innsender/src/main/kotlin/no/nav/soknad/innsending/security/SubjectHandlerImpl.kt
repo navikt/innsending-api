@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 
 @Component
-@Profile("dev | prod")
+@Profile("test | dev | prod")
 class SubjectHandlerImpl(private val ctxHolder: TokenValidationContextHolder) : SubjectHandlerInterface {
 
 	private val tokenValidationContext: TokenValidationContext
@@ -35,7 +35,7 @@ class SubjectHandlerImpl(private val ctxHolder: TokenValidationContextHolder) : 
 	}
 
 	override fun getToken(): String {
-		return tokenValidationContext.getJwtToken(SELVBETJENING).tokenAsString
+		return tokenValidationContext.getJwtToken(TOKENX).tokenAsString
 	}
 
 	override fun getConsumerId(): String {

@@ -847,7 +847,7 @@ class SoknadService(
 		// For hvert øvrige vedlegg merge filer og legg til
 		soknadDto.vedleggsListe.filter { !it.erHoveddokument}.forEach {
 			val filDto = hentOgMergeVedleggsFiler(soknadDto, soknadDto.innsendingsId!!, it)
-			if (filDto != null) vedleggDtos.add(lagVedleggDtoMedOpplastetFil(filDto, it)) }
+			vedleggDtos.add(lagVedleggDtoMedOpplastetFil(filDto, it)) }
 		return vedleggDtos
 	}
 

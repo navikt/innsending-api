@@ -5,3 +5,51 @@ services:
       dockerfile: DockerfileDev
     ports:
       - "127.0.0.1:9064:9064"
+
+  setup:
+  oidc-provider-gui:
+    container_name: oidc-provider-gui
+    networks:
+      - app-tier
+    image: "docker.pkg.github.com/navikt/flex-docker-compose/flex-oidc-provider-gui:latest"
+    ports:
+      - "5000:5000"
+    depends_on:
+      - oidc-provider
+    environment:
+      REDIRECT_URL: "http://localhost:3000"
+      AUTO_REDIRECT_TO_FRONTEND: "true"
+
+  oidc-provider:
+    container_name: oidc-provider
+    networks:
+      - app-tier
+    image: "docker.pkg.github.com/navikt/flex-docker-compose/flex-stub-oidc-provider:latest"
+    ports:
+      - "9000:9000"
+    environment:
+      PORT: "9000"
+      CALLBACK_URL: "http://localhost:5000/callback"
+      ISSUER: "https://localhost:9000"
+
+  wiremock:
+    container_name: wiremock
+    networks:
+      - app-tier
+    image: "rodolpheche/wiremock"
+    volumes:
+      - "./src/test/resources:/home/wiremock"
+    ports:
+      - "8000:8080"
+
+  db:
+    container_name: db
+    image: 'postgres:11'
+    networks:
+      - app-tier
+    restart: on-failure
+    hostname: localhost
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: password

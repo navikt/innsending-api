@@ -23,7 +23,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
-@Profile("dev | prod")
+@Profile("test | dev | prod")
 @Qualifier("saf")
 class SafAPI(
 	private val safSelvbetjeningGraphQLClient: GraphQLWebClient,
@@ -51,7 +51,7 @@ class SafAPI(
 
 	override fun hentBrukersSakerIArkivet(brukerId:String): List<ArkiverteSaker>? = runBlocking {
 		try {
-			val hentetDokumentoversikt = getSoknadsDataForPerson()
+			val hentetDokumentoversikt = getSoknadsDataForPerson(tokenUtil.getUserIdFromToken())
 			if (hentetDokumentoversikt == null || hentetDokumentoversikt.journalposter.isEmpty()) {
 				throw SafApiException("Ingen søknader funnet", "Fant ingen relevante søknader i søknadsarkivet")
 			} else {
@@ -69,7 +69,7 @@ class SafAPI(
 					.toList()
 			}
 		} catch (ex: Exception) {
-			logger.warn("Bruker dummy data for SAF")
+			logger.warn("hentBrukersSakerIArkivet feilet med ${ex.message}. Bruker midlertidig dummy data for SAF")
 			dummyArkiverteSoknader[brukerId] // TODO fjern
 		}
 	}
@@ -94,17 +94,17 @@ class SafAPI(
 	}
 
 
-	suspend fun getSoknadsDataForPerson(): Dokumentoversikt? {
+	suspend fun getSoknadsDataForPerson(brukerId: String): Dokumentoversikt? {
 			val response = safSelvbetjeningGraphQLClient.execute (
 				HentDokumentOversikt(
-					HentDokumentOversikt.Variables(tokenUtil.getToken())
+					HentDokumentOversikt.Variables(brukerId)
 				)
 			)
 			if (response.data != null) {
 				checkForErrors(response.errors)
 				return response.data?.dokumentoversiktSelvbetjening
 			} else {
-				logger.error("Oppslag mot søknadsarkivet feilet. Fikk feil i kallet til søknadsarkivet")
+				logger.error("Oppslag mot søknadsarkivet feilet, ingen data returnert.")
 				throw SafApiException("Oppslag mot søknadsarkivet feilet", "Fikk feil i kallet til søknadsarkivet")
 			}
 	}
@@ -139,6 +139,11 @@ class SafAPI(
 					Dokument("N6","Et vedleggEgenerklæring og sykmelding", "VEDLEGG")
 				))
 		),
+		"12345678901" to listOf(ArkiverteSaker(Utilities.laginnsendingsId(), "Test søknad", "BID", date
+			, listOf(
+				Dokument("NAV 08-09.06","Egenerklæring og sykmelding", "HOVEDDOKUMENT"),
+				Dokument("N6","Et vedleggEgenerklæring og sykmelding", "VEDLEGG")
+			))),
 		"12345678902" to listOf(ArkiverteSaker(Utilities.laginnsendingsId(), "Test søknad", "BID", date
 			, listOf(
 				Dokument("NAV 08-09.06","Egenerklæring og sykmelding", "HOVEDDOKUMENT"),

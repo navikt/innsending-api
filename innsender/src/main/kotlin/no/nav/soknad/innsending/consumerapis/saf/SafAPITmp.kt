@@ -9,14 +9,13 @@ import no.nav.soknad.innsending.util.testpersonid
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
-@Profile("spring | test | docker | default")
+@Profile("spring | docker | default")
 @Qualifier("saf")
-class SafAPITest(private val restConfig: RestConfig): SafInterface, HealthRequestInterface {
+class SafAPITmp(private val restConfig: RestConfig): SafInterface, HealthRequestInterface {
 
 	override fun ping(): String {
 		return "pong"

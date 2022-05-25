@@ -36,14 +36,14 @@ class WebClientTemplates(private val restConfig: RestConfig) {
 
 
 	@Bean
-	@Profile("spring | test | docker | default")
+	@Profile("spring | docker | default")
 	@Qualifier("authClient")
 	@Scope("prototype")
 	@Lazy
 	fun archiveTestWebClient() = WebClient.builder().defaultHeader("testHeader","test_value").build()
 
 	@Bean
-	@Profile("prod | dev")
+	@Profile("test | prod | dev")
 	@Qualifier("authClient")
 	@Scope("prototype")
 	@Lazy

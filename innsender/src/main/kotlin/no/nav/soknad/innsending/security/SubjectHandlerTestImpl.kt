@@ -4,7 +4,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 
 @Component
-@Profile("test | spring | default | docker")
+@Profile("spring | default | docker")
 class SubjectHandlerTestImpl: SubjectHandlerInterface {
 	private val DEFAULT_USER = "02097225454"
 	private val DEFAULT_TOKEN = "token"

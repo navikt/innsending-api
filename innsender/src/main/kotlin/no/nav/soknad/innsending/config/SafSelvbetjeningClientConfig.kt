@@ -18,10 +18,9 @@ import reactor.netty.http.client.HttpClientRequest
 import reactor.netty.http.client.HttpClientResponse
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
-import javax.inject.Qualifier
 
 @Configuration
-@Profile("prod | dev")
+@Profile("test | prod | dev")
 @EnableConfigurationProperties(RestConfig::class)
 class SafSelvbetjeningClientConfig(
 	private val restConfig: RestConfig,

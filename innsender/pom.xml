@@ -308,6 +308,50 @@
 			<version>${spring-cloud.version}</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter</artifactId>
+			<version>${spring-cloud.version}</version>
+			<scope>test</scope>
+		</dependency>
+<!--
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-contract-stub-runner</artifactId>
+			<version>${spring-cloud.version}</version>
+			<scope>test</scope>
+		</dependency>
+-->
+		<dependency>
+			<groupId>no.nav.security</groupId>
+			<artifactId>token-validation-spring-test</artifactId>
+			<version>${token-validation.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>no.nav.security</groupId>
+			<artifactId>mock-oauth2-server</artifactId>
+			<version>0.4.8</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>4.9.3</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>mockwebserver</artifactId>
+			<version>4.9.3</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.squareup.okio</groupId>
+			<artifactId>okio</artifactId>
+			<version>2.10.0</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
