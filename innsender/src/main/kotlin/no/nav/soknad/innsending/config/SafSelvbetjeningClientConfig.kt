@@ -30,8 +30,8 @@ class SafSelvbetjeningClientConfig(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Bean("safSelvbetjeningGraphQLClient")
-	@Scope("prototype")
-	@Lazy
+//	@Scope("prototype")
+//	@Lazy
 	fun graphQLClient() = GraphQLWebClient(
 		url = "${restConfig.safUrl}/graphql",
 		builder = WebClient.builder()

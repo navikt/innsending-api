@@ -1,4 +1,4 @@
-package no.nav.soknad.innsending.config
+package no.nav.soknad.innsending.filter
 
 import org.springframework.stereotype.Component
 import java.io.IOException

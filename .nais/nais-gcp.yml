@@ -1,10 +1,10 @@
 apiVersion: "nais.io/v1alpha1"
 kind: "Application"
 metadata:
-  name: innsending-api
-  namespace: team-soknad
+  name: {{application-name}}
+  namespace: {{namespace}}
   labels:
-    team: team-soknad
+    team: {{team}}
   annotations:
     nais.io/read-only-file-system: "false"
     nginx.ingress.kubernetes.io/proxy-body-size: "100M"

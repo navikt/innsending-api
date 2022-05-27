@@ -14,6 +14,7 @@ import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.repository.SoknadsStatus
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
+import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.PdfMerger
@@ -116,8 +117,8 @@ class SoknadService(
 				lagreVedlegg(
 					VedleggDbData(
 						null, soknadsId, OpplastingsStatus.IKKE_VALGT,
-						false, ervariant = false, false,true, v.skjemanummer, v.tittel ?: "",
-						v.tittel ?: "","",null,
+						false, ervariant = false, false, if (v.skjemanummer == "N6") false else true,
+						v.skjemanummer, v.tittel ?: "",v.tittel ?: "","",null,
 						UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now(), v.url
 					)
 				)

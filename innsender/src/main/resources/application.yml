@@ -27,6 +27,9 @@ spring:
     activate:
       on-profile: test | default | spring
 
+  application:
+    name:
+
   servlet:
     multipart:
       max-file-size: 100MB

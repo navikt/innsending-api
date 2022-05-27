@@ -13,10 +13,6 @@
 	<description>Soknadsfillager api consumed by innsending-api</description>
 
 	<properties>
-		<kotlin.version>1.6.10</kotlin.version>
-		<jackson.version>2.13.1</jackson.version>
-		<okhttp.version>4.9.3</okhttp.version>
-
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 

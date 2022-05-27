@@ -1,5 +1,6 @@
-package no.nav.soknad.innsending.service
+package no.nav.soknad.innsending.util
 
+import no.nav.soknad.innsending.util.Constants.CORRELATION_ID
 import java.util.*
 
 class Utilities {
@@ -7,7 +8,9 @@ class Utilities {
 
 	companion object {
 		fun laginnsendingsId(): String {
-			return UUID.randomUUID().toString()
+			val innsendingsId = UUID.randomUUID().toString()
+			MDCUtil.toMDC(CORRELATION_ID, innsendingsId)
+			return innsendingsId
 		}
 	/*
 		val innsendingAppPrefix = "20"

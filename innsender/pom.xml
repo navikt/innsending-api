@@ -30,7 +30,6 @@
 		<tika-core.version>2.3.0</tika-core.version>
 		<pdfbox.version>2.0.25</pdfbox.version>
 		<imgscalr-lib.version>4.2</imgscalr-lib.version>
-		<okhttp.version>4.9.3</okhttp.version>
 		<token-validation.version>2.0.20</token-validation.version>
 
 		<mockito-kotlin.version>2.2.0</mockito-kotlin.version>
@@ -42,7 +41,7 @@
 		<resilience4j.version>1.7.1</resilience4j.version>
 		<graphq-dgs-client.version>4.10.2</graphq-dgs-client.version>
 		<graphql-kotlin.version>5.4.1</graphql-kotlin.version>
-		<io.netty.version>4.1.77.Final</io.netty.version>
+		<mock.oauth2.server.version>0.4.8</mock.oauth2.server.version>
 
 	</properties>
 
@@ -74,6 +73,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-configuration-processor</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.squareup.okio</groupId>
+			<artifactId>okio</artifactId>
+			<version>${okio.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.netty</groupId>
@@ -157,11 +161,13 @@
 			<artifactId>graphql-java</artifactId>
 			<version>18.1</version>
 		</dependency>
+<!--
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>okhttp</artifactId>
 			<version>${okhttp.version}</version>
 		</dependency>
+-->
 
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
@@ -300,18 +306,14 @@
 			<version>${mockk.version}</version>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>com.github.tomakehurst</groupId>
-			<artifactId>wiremock-standalone</artifactId>
-			<version>${tomakehurst.version}</version>
-			<scope>test</scope>
-		</dependency>
+<!--
 		<dependency>
 			<groupId>io.rest-assured</groupId>
 			<artifactId>spring-mock-mvc</artifactId>
 			<version>${rest-assured.version}</version>
 			<scope>test</scope>
 		</dependency>
+-->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-contract-wiremock</artifactId>
@@ -324,14 +326,6 @@
 			<version>${spring-cloud.version}</version>
 			<scope>test</scope>
 		</dependency>
-<!--
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-contract-stub-runner</artifactId>
-			<version>${spring-cloud.version}</version>
-			<scope>test</scope>
-		</dependency>
--->
 		<dependency>
 			<groupId>no.nav.security</groupId>
 			<artifactId>token-validation-spring-test</artifactId>
@@ -341,7 +335,13 @@
 		<dependency>
 			<groupId>no.nav.security</groupId>
 			<artifactId>mock-oauth2-server</artifactId>
-			<version>0.4.8</version>
+			<version>${mock.oauth2.server.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>${okhttp.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -353,7 +353,7 @@
 		<dependency>
 			<groupId>com.squareup.okio</groupId>
 			<artifactId>okio</artifactId>
-			<version>2.10.0</version>
+			<version>${okio.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -367,6 +367,7 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<version>${spring.boot.version}</version>
 			</plugin>
 
 			<plugin>
@@ -470,13 +471,6 @@
 			<id>jitpack.io</id>
 			<url>https://jitpack.io</url>
 		</repository>
-<!--
-		<repository>
-			<id>github</id>
-			<name>nav github</name>
-			<url>https://github-package-registry-mirror.gc.nav.no/cached/maven-release</url>
-		</repository>
--->
 		<repository>
 			<id>confluent</id>
 			<url>https://packages.confluent.io/maven</url>

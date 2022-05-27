@@ -5,11 +5,9 @@ object Constants {
 	const val CLAIM_ACR_LEVEL_4 = "acr=Level4"
 	const val TOKENX = "tokenx"
 
+	const val NAV_CONSUMER_ID = "Nav-Consumer-Id"
 	const val HEADER_CALL_ID = "Nav-Call-Id"
 	const val CORRELATION_ID = "correlation_id"
-	const val HEADER_CONSUMER_ID = "Nav-Consumer-Id"
-	const val HEADER_TEMA = "Tema"
-	const val HEADER_NAV_PERSONIDENT = "Nav-Personident"
 
 	const val BEARER = "Bearer "
 }

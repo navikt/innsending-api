@@ -1,4 +1,7 @@
 {
+	"application-name": "innsending-api",
+	"namespace": "team-soknad",
+	"team": "team-soknad",
 	"database-name": "dokumentinnsending-dev",
 	"ingresses": [
 		"https://www.dev.nav.no/innsending-api-gcp",

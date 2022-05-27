@@ -57,9 +57,9 @@ class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, Health
 
 	override fun isReady(): String {
 		try {
-			logger.info("Soknadsmottaker isReady start")
+			//logger.info("Soknadsmottaker isReady start")
 			healthApi.isReady()
-			logger.info("Soknadsmottaker isReady ok")
+			//logger.info("Soknadsmottaker isReady ok")
 		} catch (e: Exception) {
 			logger.warn("Kall for å sjekke om soknadsmottaker er oppe feiler med ${e.message}")
 		}

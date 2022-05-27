@@ -4,7 +4,7 @@ import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.consumerapis.saf.dto.Dokument
-import no.nav.soknad.innsending.service.Utilities
+import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.testpersonid
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile

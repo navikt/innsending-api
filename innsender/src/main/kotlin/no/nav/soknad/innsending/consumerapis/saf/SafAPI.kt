@@ -4,7 +4,6 @@ import com.expediagroup.graphql.client.spring.GraphQLWebClient
 import com.expediagroup.graphql.client.types.GraphQLClientError
 import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
-import no.nav.soknad.innsending.consumerapis.saf.SafApiQuery.HENT_SOKNADER_QUERY
 import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.consumerapis.saf.dto.Dokument
 import no.nav.soknad.innsending.exceptions.SafApiException
@@ -13,7 +12,7 @@ import no.nav.soknad.innsending.safselvbetjening.generated.enums.Journalposttype
 import no.nav.soknad.innsending.safselvbetjening.generated.hentdokumentoversikt.DokumentInfo
 import no.nav.soknad.innsending.safselvbetjening.generated.hentdokumentoversikt.Dokumentoversikt
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
-import no.nav.soknad.innsending.service.Utilities
+import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.testpersonid
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -49,28 +48,31 @@ class SafAPI(
 	}
 
 
-	override fun hentBrukersSakerIArkivet(brukerId:String): List<ArkiverteSaker>? = runBlocking {
-		try {
-			val hentetDokumentoversikt = getSoknadsDataForPerson(tokenUtil.getUserIdFromToken())
-			if (hentetDokumentoversikt == null || hentetDokumentoversikt.journalposter.isEmpty()) {
-				throw SafApiException("Ingen søknader funnet", "Fant ingen relevante søknader i søknadsarkivet")
-			} else {
-				val dokumentoversikt = filtrerPaJournalposttypeAndTema(
-					hentetDokumentoversikt,
-					listOf(Journalposttype.I), relevanteTema
-				)
-				dokumentoversikt.journalposter
-					.map {
-						ArkiverteSaker(
-							it.eksternReferanseId, it.tittel ?: "", it.tema ?: "",
-							it.relevanteDatoer?.get(0)?.dato?.toString(), konverterTilDokumentListe(it.dokumenter)
-						)
-					}
-					.toList()
+	override fun hentBrukersSakerIArkivet(brukerId:String): List<ArkiverteSaker>? {
+		//val subject = tokenUtil.getUserIdFromToken()
+		return runBlocking	{
+			try {
+				val hentetDokumentoversikt = getSoknadsDataForPerson(brukerId)
+				if (hentetDokumentoversikt == null || hentetDokumentoversikt.journalposter.isEmpty()) {
+					throw SafApiException("Ingen søknader funnet", "Fant ingen relevante søknader i søknadsarkivet")
+				} else {
+					val dokumentoversikt = filtrerPaJournalposttypeAndTema(
+						hentetDokumentoversikt,
+						listOf(Journalposttype.I), relevanteTema
+					)
+					dokumentoversikt.journalposter
+						.map {
+							ArkiverteSaker(
+								it.eksternReferanseId, it.tittel ?: "", it.tema ?: "",
+								it.relevanteDatoer.get(0)?.dato?.toString(), konverterTilDokumentListe(it.dokumenter)
+							)
+						}
+						.toList()
+				}
+			} catch (ex: Exception) {
+				logger.warn("hentBrukersSakerIArkivet feilet med ${ex.message}. Bruker midlertidig dummy data for SAF")
+				dummyArkiverteSoknader[brukerId] // TODO fjern
 			}
-		} catch (ex: Exception) {
-			logger.warn("hentBrukersSakerIArkivet feilet med ${ex.message}. Bruker midlertidig dummy data for SAF")
-			dummyArkiverteSoknader[brukerId] // TODO fjern
 		}
 	}
 
@@ -128,28 +130,33 @@ class SafAPI(
 
 	private val dummyArkiverteSoknader = mapOf (
 		testpersonid to listOf (
-			ArkiverteSaker(Utilities.laginnsendingsId(), "Test søknad", "BID", date
+			ArkiverteSaker(
+				Utilities.laginnsendingsId(), "Test søknad", "BID", date
 			, listOf(
 				Dokument("NAV 08-09.06","Egenerklæring og sykmelding", "HOVEDDOKUMENT"),
 				Dokument("N6","Et vedleggEgenerklæring og sykmelding", "VEDLEGG")
 			)),
-			ArkiverteSaker(Utilities.laginnsendingsId(), "Ettersending til test søknad", "BID", date
+			ArkiverteSaker(
+				Utilities.laginnsendingsId(), "Ettersending til test søknad", "BID", date
 				, listOf(
 					Dokument("NAVe 08-09.06","Egenerklæring og sykmelding", "HOVEDDOKUMENT"),
 					Dokument("N6","Et vedleggEgenerklæring og sykmelding", "VEDLEGG")
 				))
 		),
-		"12345678901" to listOf(ArkiverteSaker(Utilities.laginnsendingsId(), "Test søknad", "BID", date
+		"12345678901" to listOf(ArkiverteSaker(
+			Utilities.laginnsendingsId(), "Test søknad", "BID", date
 			, listOf(
 				Dokument("NAV 08-09.06","Egenerklæring og sykmelding", "HOVEDDOKUMENT"),
 				Dokument("N6","Et vedleggEgenerklæring og sykmelding", "VEDLEGG")
 			))),
-		"12345678902" to listOf(ArkiverteSaker(Utilities.laginnsendingsId(), "Test søknad", "BID", date
+		"12345678902" to listOf(ArkiverteSaker(
+			Utilities.laginnsendingsId(), "Test søknad", "BID", date
 			, listOf(
 				Dokument("NAV 08-09.06","Egenerklæring og sykmelding", "HOVEDDOKUMENT"),
 				Dokument("N6","Et vedleggEgenerklæring og sykmelding", "VEDLEGG")
 			))),
-		"12345678903" to listOf(ArkiverteSaker(Utilities.laginnsendingsId(), "Test søknad", "BID", date
+		"12345678903" to listOf(ArkiverteSaker(
+			Utilities.laginnsendingsId(), "Test søknad", "BID", date
 			, listOf(
 				Dokument("NAV 08-09.06","Egenerklæring og sykmelding", "HOVEDDOKUMENT"),
 				Dokument("N6","Et vedleggEgenerklæring og sykmelding", "VEDLEGG")
