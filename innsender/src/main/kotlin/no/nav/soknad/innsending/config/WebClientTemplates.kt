@@ -5,7 +5,6 @@ import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.handler.timeout.WriteTimeoutHandler
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Lazy
@@ -46,9 +45,7 @@ class WebClientTemplates(private val restConfig: RestConfig) {
 	@Bean
 	@Qualifier("basicClient")
 	@Scope("prototype")
-	fun basicWebClientTemplate(
-		restTemplateBuilder: RestTemplateBuilder
-	): WebClient {
+	fun basicWebClientTemplate(): WebClient {
 		val exchangeStrategies = ExchangeStrategies.builder()
 			.codecs { configurer: ClientCodecConfigurer ->
 				configurer
@@ -61,9 +58,6 @@ class WebClientTemplates(private val restConfig: RestConfig) {
 			.clientConnector(ReactorClientHttpConnector(buildHttpClient(connectionTimeout, readTimeout, writeTimeout)))
 			.build()
 	}
-
-
-
 
 	private fun buildHttpClient(connection_timeout: Int, readTimeout: Int, writeTimeout: Int): HttpClient {
 		return HttpClient.create()
