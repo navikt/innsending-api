@@ -16,20 +16,22 @@ import org.springframework.web.reactive.function.client.WebClient
 import reactor.netty.http.client.HttpClient
 import reactor.netty.http.client.HttpClientRequest
 import reactor.netty.http.client.HttpClientResponse
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
+import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
+import org.springframework.beans.factory.annotation.Qualifier
 
 @Configuration
 @Profile("test | prod | dev")
 @EnableConfigurationProperties(RestConfig::class)
 class SafSelvbetjeningClientConfig(
 	private val restConfig: RestConfig,
-	private val oAuth2AccessTokenService: OAuth2AccessTokenService,
-	oauth2Config: ClientConfigurationProperties
+	oauth2Config: ClientConfigurationProperties,
+	private val oAuth2AccessTokenService: OAuth2AccessTokenService
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	@Bean("safSelvbetjeningGraphQLClient")
+	@Bean(
+		"safSelvbetjeningGraphQLClient")
 //	@Scope("prototype")
 //	@Lazy
 	fun graphQLClient() = GraphQLWebClient(

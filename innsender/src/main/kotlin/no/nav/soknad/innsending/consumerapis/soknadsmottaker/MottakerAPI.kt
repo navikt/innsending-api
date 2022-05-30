@@ -75,17 +75,17 @@ class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, Health
 		return "pong"
 	}
 
-	override fun sendInnSoknad(soknadDto: DokumentSoknadDto) {
+	override fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>) {
 		logger.info("${soknadDto.innsendingsId}: transformering før innsending")
-		val soknad = translate(soknadDto)
+		val soknad = translate(soknadDto, vedleggDtos)
 		logger.info("${soknadDto.innsendingsId}: klar til å sende inn til ${restConfig.soknadsMottakerHost}")
 		mottakerClient.receive(soknad)
 		logger.info("${soknadDto.innsendingsId}: sendt inn}")
 	}
 
-	private fun translate(soknadDto: DokumentSoknadDto): Soknad {
+	private fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>): Soknad {
 		return Soknad(soknadDto.innsendingsId!!, soknadDto.ettersendingsId != null, soknadDto.brukerId
-			, soknadDto.tema, translate(soknadDto.vedleggsListe))
+			, soknadDto.tema, translate(vedleggDtos))
 	}
 
 	private fun translate(vedleggDtos: List<VedleggDto>): List<DocumentData> {

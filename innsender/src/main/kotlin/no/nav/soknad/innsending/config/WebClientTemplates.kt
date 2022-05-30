@@ -3,8 +3,6 @@ package no.nav.soknad.innsending.config
 import io.netty.channel.ChannelOption
 import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.handler.timeout.WriteTimeoutHandler
-import io.netty.resolver.AddressResolverGroup
-import io.netty.handler.codec.DefaultHeaders
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.client.RestTemplateBuilder

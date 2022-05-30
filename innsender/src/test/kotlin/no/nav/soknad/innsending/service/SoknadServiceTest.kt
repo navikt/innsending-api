@@ -415,7 +415,8 @@ class SoknadServiceTest {
 		every { fillagerAPI.lagreFiler(dokumentSoknadDto.innsendingsId!!, capture(vedleggDtos)) } returns Unit
 
 		val soknad = slot<DokumentSoknadDto>()
-		every { soknadsmottakerAPI.sendInnSoknad(capture(soknad)) } returns Unit
+		val vedleggDtos2 = slot<List<VedleggDto>>()
+		every { soknadsmottakerAPI.sendInnSoknad(capture(soknad), capture(vedleggDtos2)) } returns Unit
 
 		val kvitteringsDto = soknadService.sendInnSoknad(dokumentSoknadDto)
 
@@ -609,7 +610,8 @@ class SoknadServiceTest {
 		every { fillagerAPI.lagreFiler(any(), capture(vedleggDtos)) } returns Unit
 
 		val soknad = slot<DokumentSoknadDto>()
-		every { soknadsmottakerAPI.sendInnSoknad(capture(soknad)) } returns Unit
+		val vedleggDtos2 = slot<List<VedleggDto>>()
+		every { soknadsmottakerAPI.sendInnSoknad(capture(soknad), capture(vedleggDtos2)) } returns Unit
 
 		val kvitteringsDto = soknadService.sendInnSoknad(dokumentSoknadDtoList[0])
 		assertTrue(kvitteringsDto.hoveddokumentRef != null)

@@ -6,6 +6,7 @@ import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.MDCUtil
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.*

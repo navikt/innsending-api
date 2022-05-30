@@ -752,7 +752,7 @@ class SoknadService(
 
 		// send soknadmetada til soknadsmottaker
 		try {
-			soknadsmottakerAPI.sendInnSoknad(soknadDto)
+			soknadsmottakerAPI.sendInnSoknad(soknadDto, opplastedeVedlegg)
 		} catch (ex: Exception) {
 			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
 			logger.error("${soknadDto.innsendingsId}: Feil ved sending av søknad til soknadsmottaker ${ex.message}")

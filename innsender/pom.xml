@@ -80,26 +80,6 @@
 			<version>${okhttp.version}</version>
 		</dependency>
 
-		<!--
-				<dependency>
-					<groupId>com.squareup.okio</groupId>
-					<artifactId>okio</artifactId>
-					<version>${okio.version}</version>
-					<scope>compile</scope>
-				</dependency>
-				<dependency>
-					<groupId>io.netty</groupId>
-					<artifactId>netty-resolver</artifactId>
-					<version>${io.netty.version}</version>
-					<scope>compile</scope>
-				</dependency>
-				<dependency>
-					<groupId>io.netty</groupId>
-					<artifactId>netty-codec</artifactId>
-					<version>${io.netty.version}</version>
-					<scope>compile</scope>
-				</dependency>
-		-->
 		<dependency>
 			<groupId>io.github.resilience4j</groupId>
 			<artifactId>resilience4j-retry</artifactId>
@@ -157,27 +137,12 @@
 			<artifactId>logstash-logback-encoder</artifactId>
 			<version>${logstash.version}</version>
 		</dependency>
-<!--
-		<dependency>
-			<groupId>com.netflix.graphql.dgs</groupId>
-			<artifactId>graphql-dgs-client</artifactId>
-			<version>${graphq-dgs-client.version}</version>
-			<scope>compile</scope>
-		</dependency>
--->
 		<dependency>
 			<groupId>com.expediagroup</groupId>
 			<artifactId>graphql-kotlin-spring-client</artifactId>
 			<version>${graphql-kotlin.version}</version>
 			<scope>compile</scope>
 		</dependency>
-<!--
-		<dependency>
-			<groupId>com.graphql-java</groupId>
-			<artifactId>graphql-java</artifactId>
-			<version>18.1</version>
-		</dependency>
--->
 
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
@@ -270,11 +235,13 @@
 			<artifactId>token-validation-jaxrs</artifactId>
 			<version>${token-validation.version}</version>
 		</dependency>
+<!--
 		<dependency>
 			<groupId>no.nav.security</groupId>
 			<artifactId>token-client-core</artifactId>
 			<version>${token-validation.version}</version>
 		</dependency>
+-->
 		<dependency>
 			<groupId>no.nav.security</groupId>
 			<artifactId>token-client-spring</artifactId>
@@ -332,7 +299,6 @@
 			<scope>test</scope>
 		</dependency>
 -->
-<!--
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-contract-wiremock</artifactId>
@@ -345,32 +311,34 @@
 			<version>${spring-cloud.version}</version>
 			<scope>test</scope>
 		</dependency>
--->
 		<dependency>
 			<groupId>no.nav.security</groupId>
 			<artifactId>token-validation-spring-test</artifactId>
 			<version>${token-validation.version}</version>
 			<scope>test</scope>
 		</dependency>
-<!--
+
 		<dependency>
 			<groupId>no.nav.security</groupId>
 			<artifactId>mock-oauth2-server</artifactId>
 			<version>${mock.oauth2.server.version}</version>
 			<scope>test</scope>
 		</dependency>
+<!--
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>okhttp</artifactId>
 			<version>${okhttp.version}</version>
 			<scope>test</scope>
 		</dependency>
+-->
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>mockwebserver</artifactId>
 			<version>${okhttp.version}</version>
 			<scope>test</scope>
 		</dependency>
+<!--
 		<dependency>
 			<groupId>com.squareup.okio</groupId>
 			<artifactId>okio</artifactId>
@@ -378,6 +346,7 @@
 			<scope>test</scope>
 		</dependency>
 -->
+
 	</dependencies>
 
 	<build>

@@ -7,11 +7,10 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.boot.test.context.SpringBootTest
-/*
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
 import org.springframework.test.util.AssertionErrors.assertTrue
-*/
+
 
 @Suppress("DEPRECATION")
 @ActiveProfiles("test")
@@ -19,10 +18,8 @@ import org.springframework.test.util.AssertionErrors.assertTrue
 	webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 	properties = ["spring.main.allow-bean-definition-overriding=true"])
 @ExtendWith(SpringExtension::class)
-/*
 @AutoConfigureWireMock
 @EnableMockOAuth2Server // Tilgjengliggjør en oicd-provider for test. Se application-test.yml -> no.nav.security.jwt.issuer.selvbetjening for konfigurasjon
-*/
 internal class SafAPITest {
 
 	@Autowired
@@ -31,7 +28,6 @@ internal class SafAPITest {
 	@Test
 	internal fun testHentJournalposter() {
 /*
-
 		val journalposter = safAPI.hentBrukersSakerIArkivet("12345678901")
 		assertTrue("Ingen journalposter funnet", journalposter != null)
 		runBlocking {
