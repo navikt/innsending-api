@@ -16,6 +16,9 @@ import reactor.netty.http.client.HttpClientRequest
 import reactor.netty.http.client.HttpClientResponse
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
+import no.nav.soknad.innsending.util.Constants.CORRELATION_ID
+import no.nav.soknad.innsending.util.Constants.NAV_CONSUMER_ID
+import org.springframework.beans.factory.annotation.Value
 
 @Configuration
 @Profile("test | prod | dev")
@@ -23,7 +26,8 @@ import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 class SafSelvbetjeningClientConfig(
 	private val restConfig: RestConfig,
 	oauth2Config: ClientConfigurationProperties,
-	private val oAuth2AccessTokenService: OAuth2AccessTokenService
+	private val oAuth2AccessTokenService: OAuth2AccessTokenService,
+	@Value("\$spring.application.name}") private val applicationName: String
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -46,10 +50,12 @@ class SafSelvbetjeningClientConfig(
 				)
 			)
 			.defaultRequest {
-				it.header(Constants.HEADER_CALL_ID, MDCUtil.callId())
+				it.header(Constants.HEADER_CALL_ID, MDCUtil.callIdOrNew())
+				it.header(CORRELATION_ID, MDCUtil.callIdOrNew())
+				it.header(NAV_CONSUMER_ID, applicationName)
 				it.header(
 					HttpHeaders.AUTHORIZATION,
-					"Bearer ${oAuth2AccessTokenService.getAccessToken(tokenxSafSelvbetjeningClientProperties).accessToken}"
+					"Bearer ${oAuth2AccessTokenService.getAccessToken(tokenxSafSelvbetjeningClientProperties).accessToken}",
 				)
 			}
 	)

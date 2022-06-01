@@ -43,7 +43,7 @@ class PdlClientConfig(
 				)
 			)
 			.defaultRequest {
-				it.header(Constants.HEADER_CALL_ID, MDCUtil.callId())
+				it.header(Constants.HEADER_CALL_ID, MDCUtil.callIdOrNew())
 				it.header(
 					HttpHeaders.AUTHORIZATION,
 					"Bearer ${oAuth2AccessTokenService.getAccessToken(tokenxSafSelvbetjeningClientProperties).accessToken}"

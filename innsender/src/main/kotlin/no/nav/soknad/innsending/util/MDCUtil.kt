@@ -12,7 +12,11 @@ object MDCUtil {
 	}
 
 	fun callIdOrNew(): String {
-		return Optional.ofNullable(callId()).orElse(GEN.create())
+		try {
+			return callId()
+		} catch (ex: Exception) {
+			return GEN.create()
+		}
 	}
 
 	fun toMDC(key: String?, value: Any?) {

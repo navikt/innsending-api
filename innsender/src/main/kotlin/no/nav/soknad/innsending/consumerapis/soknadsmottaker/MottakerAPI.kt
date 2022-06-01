@@ -76,11 +76,14 @@ class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, Health
 	}
 
 	override fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>) {
-		logger.info("${soknadDto.innsendingsId}: transformering før innsending")
 		val soknad = translate(soknadDto, vedleggDtos)
-		logger.info("${soknadDto.innsendingsId}: klar til å sende inn til ${restConfig.soknadsMottakerHost}")
+		logger.info("${soknadDto.innsendingsId}: klar til å sende inn\n${maskerFnr(soknad)}\ntil ${restConfig.soknadsMottakerHost}")
 		mottakerClient.receive(soknad)
 		logger.info("${soknadDto.innsendingsId}: sendt inn}")
+	}
+
+	private fun maskerFnr(soknad: Soknad): Soknad {
+		return Soknad(soknad.innsendingId, soknad.erEttersendelse, "*****", soknad.tema, soknad.dokumenter)
 	}
 
 	private fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>): Soknad {
@@ -112,7 +115,7 @@ class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, Health
 	}
 
 	private fun translate(dokumentDto: VedleggDto): Varianter {
-		return Varianter(dokumentDto.uuid!!, dokumentDto.mimetype.toString(),
+		return Varianter(dokumentDto.uuid!!, dokumentDto.mimetype?.value ?:  "application/pdf",
 			(dokumentDto.vedleggsnr ?: "N6") +"."+filExtention(dokumentDto),
 			filExtention(dokumentDto) )
 	}
