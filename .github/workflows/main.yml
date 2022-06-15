@@ -16,7 +16,7 @@ on:
       - 'docs/**'
 
 env:
-  IMAGE: docker.pkg.github.com/${{ github.repository }}/innsending-api:${{ github.sha }}
+  IMAGE: ghcr.io/${{ github.repository }}/innsending-api:${{ github.sha }}
 
 jobs:
   build-and-push:
