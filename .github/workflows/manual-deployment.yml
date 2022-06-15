@@ -13,7 +13,7 @@ on:
           - preprod
           - prod
 env:
-  IMAGE: docker.pkg.github.com/${{ github.repository }}/innsending-api:${{ github.sha }}
+  IMAGE: ghcr.io/${{ github.repository }}/innsending-api:${{ github.sha }}
 
 jobs:
   build-and-push:
@@ -39,7 +39,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           docker build --tag ${IMAGE} .
-          docker login docker.pkg.github.com -u ${GITHUB_REPOSITORY} -p ${GITHUB_TOKEN}
+          docker login ghcr.io -u ${GITHUB_REPOSITORY} -p ${GITHUB_TOKEN}
           docker push ${IMAGE}
 
   deploy-preprod:
