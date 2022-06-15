@@ -22,7 +22,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.EnableTransactionManagement
 
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("spring")
 @EnableTransactionManagement
 internal class BrukernotifikasjonPublisherTest {
 

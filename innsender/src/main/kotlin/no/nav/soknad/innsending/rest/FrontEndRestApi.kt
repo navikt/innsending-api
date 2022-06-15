@@ -31,10 +31,11 @@ import java.time.OffsetDateTime
 import javax.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
+import org.springframework.web.util.UriComponentsBuilder
 
 @RestController
 @CrossOrigin(maxAge = 3600)
-@Profile("dev | prod")
+@Profile("test | dev | prod")
 @ProtectedWithClaims(issuer = Constants.TOKENX, claimMap = [Constants.CLAIM_ACR_LEVEL_4])
 class FrontEndRestApi(
 	val soknadService: SoknadService,
@@ -629,6 +630,7 @@ class FrontEndRestApi(
 	)
 	override fun sendInnSoknad(@PathVariable innsendingsId: String): ResponseEntity<KvitteringsDto> {
 		logger.info("Kall for å sende inn soknad $innsendingsId")
+
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.SEND_INN.name)
 		try {
 			val soknadDto = soknadService.hentSoknad(innsendingsId)

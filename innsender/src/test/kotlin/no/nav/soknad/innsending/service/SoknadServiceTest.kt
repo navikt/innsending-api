@@ -29,7 +29,7 @@ import org.junit.jupiter.api.*
 
 
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("spring")
 @EnableTransactionManagement
 class SoknadServiceTest {
 

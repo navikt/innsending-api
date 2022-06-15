@@ -1,0 +1,18 @@
+{
+	"request": {
+		"urlPattern": "/default/token",
+		"method": "POST"
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": {
+			"expires_in": 8400,
+			"token_type": "Bearer",
+			"access_token": "eyJraWQiOiJ0b2tlbngiLCJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwMSIsImF1ZCI6ImF1ZC1sb2NhbGhvc3QiLCJhY3IiOiJMZXZlbDQiLCJuYmYiOjE2NTQ2MDU5NjgsImF6cCI6Ik1vY2tMb2dpbkNvbnRyb2xsZXIiLCJpc3MiOiJodHRwOlwvXC9rbXMuYWRlby5ubzoxMTIyMVwvdG9rZW54IiwiZXhwIjoxNjU0NjEzMTY4LCJpYXQiOjE2NTQ2MDU5NjgsImp0aSI6IjZiYTkwNGFjLWU0MWYtNDA2YS05NDg2LTM2MzczZTk1NjZlMiIsInRpZCI6InRva2VueCJ9.fG5mQGeDtONzYdUGOj-8-YcbgCv20AYzQM8yNkS3yMTBAF-4ZdiMNXZg2KvXohqnjnopFruUpb6rEJ4hNGDuzqAl-3UMe_m9hP0JpUHO-gHVs5LhEsgMh_AS7KVMyQDuXlAs5jpm-ZSUm_eQLOdzdU7N_nWSihWZrpeozKEWRRbu-wXf5DxVRa_Ht95eIHy_2ATpC579xhtARtzL1E5p_2-xsP1SR17HijxABFxcFyR5E-aG9Ufp806u10vi3_n0oSTnQB6nEwm5wIWSCkyFwKh0GwBpuwFUfDezUW7pbS2E2qrbAKyBPI4PU0-kiwPrlEU4B0a0Psq8kR_hVu7zLA"
+		}
+	}
+}
+

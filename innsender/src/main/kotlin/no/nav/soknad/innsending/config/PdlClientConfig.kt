@@ -6,6 +6,7 @@ import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.MDCUtil
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.*
 import org.springframework.http.HttpHeaders
@@ -16,7 +17,7 @@ import reactor.netty.http.client.HttpClientRequest
 import reactor.netty.http.client.HttpClientResponse
 
 @Configuration
-@Profile("prod | dev")
+@Profile("test | prod | dev")
 @EnableConfigurationProperties(RestConfig::class)
 class PdlClientConfig(
 	private val restConfig: RestConfig,
@@ -26,8 +27,6 @@ class PdlClientConfig(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Bean("pdlGraphQLClient")
-	@Scope("prototype")
-	@Lazy
 	fun graphQLClient() = GraphQLWebClient(
 		url = "${restConfig.pdlUrl}/graphql",
 		builder = WebClient.builder()

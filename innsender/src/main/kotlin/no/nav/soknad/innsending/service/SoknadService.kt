@@ -810,7 +810,7 @@ class SoknadService(
 
 	}
 
-	private fun lenkeTilDokument(innsendingsId: String, vedleggsId: Long, filId: Long?) = if (filId == null) null else "soknad/$innsendingsId/vedlegg/$vedleggsId/fil/$filId"
+	private fun lenkeTilDokument(innsendingsId: String, vedleggsId: Long, filId: Long?) = if (filId == null) null else "frontend/v1/soknad/$innsendingsId/vedlegg/$vedleggsId/fil/$filId"
 
 	fun slettGamleIkkeInnsendteSoknader(dagerGamle: Long) {
 		val slettFor = LocalDateTime.now().minusDays(dagerGamle).atOffset(ZoneOffset.UTC)

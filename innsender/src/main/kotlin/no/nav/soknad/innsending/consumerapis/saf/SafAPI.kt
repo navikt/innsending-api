@@ -64,7 +64,7 @@ class SafAPI(
 						.map {
 							ArkiverteSaker(
 								it.eksternReferanseId, it.tittel ?: "", it.tema ?: "",
-								it.relevanteDatoer.get(0)?.dato?.toString(), konverterTilDokumentListe(it.dokumenter)
+								it.relevanteDatoer.get(0)?.dato, konverterTilDokumentListe(it.dokumenter)
 							)
 						}
 						.toList()
@@ -83,7 +83,7 @@ class SafAPI(
 		dokumenter.add(Dokument(dokumentInfo.get(0)?.brevkode, dokumentInfo.get(0)?.tittel ?: "", "Hoveddokument" ))
 
 		if (dokumentInfo.size>1) {
-			dokumentInfo.subList(1, dokumentInfo.size - 1).forEach { dokumenter.add (Dokument(it?.brevkode ?: "", it?.tittel ?: "", "Vedlegg")) }
+			dokumentInfo.subList(1, dokumentInfo.size).forEach { dokumenter.add (Dokument(it?.brevkode ?: "", it?.tittel ?: "", "Vedlegg")) }
 		}
 		return dokumenter
 	}

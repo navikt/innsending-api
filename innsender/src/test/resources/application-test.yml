@@ -42,7 +42,7 @@ restconfig:
   soknadsMottakerHost: http://localhost:${wiremock.server.port}/soknadsmottaker-api
   soknadsMottakerEndpoint: /save
   frontEndFortsettEndpoint: http://localhost:3000/dokumentinnsending/oversikt/
-  pdlUrl: http://localhost:${wiremock.server.port}/pdf-api
+  pdlUrl: http://localhost:${wiremock.server.port}/pdl-api
   safUrl: http://localhost:${wiremock.server.port}/saf-api
   stsUrl: http://localhost:${wiremock.server.port}/sts-api
 
@@ -72,19 +72,16 @@ wiremock:
 no.nav.security.jwt:
   mock:
     enable: true
-  issuers:
-    issuer1:
-      discoveryurl: http://localhost:${mock-oauth2-server.port}/issuer1/.well-known/openid-configuration
-      accepted_audience: someaudience
-      cookiename=localhost-idtoken:
+  issuer:
     tokenx:
       discoveryurl: http://localhost:${mock-oauth2-server.port}/tokenx/.well-known/openid-configuration
       accepted_audience: aud-localhost
+      cookie_name: tokenx
 
   client:
     registration:
       tokenx-safselvbetjening:
-        token-endpoint-url: http://localhost:${mock-oauth2-server.port}/default/token
+        token-endpoint-url: http://kms.adeo.no:${mock-oauth2-server.port}/tokenx/token
         grant-type: urn:ietf:params:oauth:grant-type:token-exchange
         authentication:
           client-auth-method: private_key_jwt
@@ -92,3 +89,13 @@ no.nav.security.jwt:
           client-jwk: src/test/resources/tokenx-jwk.json
         token-exchange:
           audience: dev-fss:teamdokumenthandtering:safselvbetjening
+
+      tokenx-pdl:
+        token-endpoint-url: http://localhost:${mock-oauth2-server.port}/tokenx/token
+        grant-type: urn:ietf:params:oauth:grant-type:token-exchange
+        authentication:
+          client-auth-method: private_key_jwt
+          client-id: "dev-gcp:team-soknad:innsending-api"
+          client-jwk: src/test/resources/tokenx-jwk.json
+        token-exchange:
+          audience: dummyAudience

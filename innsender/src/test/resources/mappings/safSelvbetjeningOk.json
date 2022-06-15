@@ -27,42 +27,26 @@
 		},
 		"jsonBody": {
 			"data": {
-				"dokumentoversikt": {
-					"journalposter": {
-						"journalpost": {
-							"tittel": "Tittel",
-							"eksternReferanseId": "12345678",
-							"journalpoststatus": "JOURNALFOERT",
-							"journalposttype": "I",
-							"tema": "AAP",
-							"kanal": "NAV_NO",
-							"relevanteDatoer": {
-								"relevantDato": {
-									"dato": "2022-05-24",
-									"datoType": "DATO_OPPRETTET"
-								}
-							},
-							"avsender": {
-								"avsenderMottaker": {
-									"id": "12345678901"
-								}
-							},
-							"dokumenter": {
-								"dokument": {
-									"brevkode": "NAV 08-09.06",
-									"tittel": "NAV 08-09.06"
-								},
-								"dokument": {
-									"brevkode": "N6",
-									"tittel": "Et vedleggEgenerklæring og sykmelding"
-								}
-							},
-							"fagsakId": "1DM8RSQ",
-							"sakstype": "FAGSAK",
-							"fagsaksystem": "K9",
-							"datoOpprettet": "2021-04-16T11:02:30"
+				"dokumentoversiktSelvbetjening": {
+					"journalposter": [
+						{
+							"journalpostId":"123",
+							"tittel":"Tittel",
+							"eksternReferanseId":"12345678",
+							"journalstatus":"JOURNALFOERT",
+							"journalposttype":"I",
+							"tema":"AAP",
+							"kanal":"NAV_NO",
+							"relevanteDatoer":[
+								{"dato":"2022-05-24T11:02:30","datotype":"DATO_OPPRETTET"}
+							],
+							"avsender":{"id":"12345678901"},
+							"dokumenter":[
+								{"brevkode":"NAV 08-09.06","tittel":"NAV 08-09.06"},
+								{"brevkode":"N6","tittel":"Et vedleggEgenerklæring og sykmelding"}
+							]
 						}
-					}
+					]
 				}
 			}
 		}

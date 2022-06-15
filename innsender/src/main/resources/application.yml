@@ -25,7 +25,7 @@ ettersendingsfrist: 42
 spring:
   config:
     activate:
-      on-profile: test | default | spring
+      on-profile: default | spring
 
   application:
     name:
@@ -58,7 +58,7 @@ restconfig:
   soknadsMottakerHost: http://localhost:9043/soknadsmottaker-api
   soknadsMottakerEndpoint: /save
   frontEndFortsettEndpoint: http://localhost:3000/dokumentinnsending/oversikt/
-  pdlUrl: http://localhost:9043/pdf-api
+  pdlUrl: http://localhost:9043/pdl-api
   safUrl: http://localhost:9043/saf-api
   stsUrl: http://localhost:9043/sts-api
 
@@ -72,7 +72,7 @@ brukernotifikasjonconfig:
 no.nav.security.jwt:
   mock:
     enable: true
-  issuers:
+  issuer:
     issuer_name: tokendingsTest
     discoveryurl: http://metadata
     accepted_audience: aud-localhost
@@ -163,3 +163,13 @@ no.nav.security.jwt:
           client-jwk: ${TOKEN_X_PRIVATE_JWK}
         token-exchange:
           audience: ${SAFSELVBETJENING_TOKEN_X_AUDIENCE}
+
+      tokenx-pdl:
+        token-endpoint-url: ${TOKENDINGS_BASE_URL}/token
+        grant-type: urn:ietf:params:oauth:grant-type:token-exchange
+        authentication:
+          client-auth-method: private_key_jwt
+          client-id: ${TOKEN_X_CLIENT_ID}
+          client-jwk: ${TOKEN_X_PRIVATE_JWK}
+        token-exchange:
+          audience: ${PDL_TOKEN_X_AUDIENCE}

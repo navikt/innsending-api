@@ -37,6 +37,7 @@
 		"GJENOPPTA_SOKNADS_ARBEID": "/dokumentinnsending/",
 		"ETTERSENDE_PA_SOKNAD": "/dokumentinnsending/ettersending/",
 		"TOKENDINGS_BASE_URL": "https://tokendings.dev-gcp.nais.io",
-		"SAFSELVBETJENING_TOKEN_X_AUDIENCE": "dev-fss:teamdokumenthandtering:safselvbetjening-q1"
+		"SAFSELVBETJENING_TOKEN_X_AUDIENCE": "dev-fss:teamdokumenthandtering:safselvbetjening-q1",
+		"PDL_TOKEN_X_AUDIENCE": "dev-fss:pdl:pdl-api"
 	}
 }

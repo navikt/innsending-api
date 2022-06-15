@@ -2,6 +2,9 @@ package no.nav.soknad.innsending.utils
 
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.service.SoknadServiceTest
+import no.nav.soknad.innsending.util.Constants
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
 import java.io.ByteArrayOutputStream
 import java.time.OffsetDateTime
 import java.util.*
@@ -62,4 +65,12 @@ fun getBytesFromFile(path: String): ByteArray {
 		}
 	}
 	return outputStream.toByteArray()
+}
+
+fun createHeaders(token: String): HttpHeaders {
+	val headers = HttpHeaders()
+	headers.contentType = MediaType.APPLICATION_JSON
+	headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+	headers.add(Constants.CORRELATION_ID, UUID.randomUUID().toString())
+	return headers
 }

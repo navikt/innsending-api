@@ -9,13 +9,14 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import kotlinx.coroutines.runBlocking
+import no.nav.soknad.innsending.exceptions.PdlApiException
 import no.nav.soknad.innsending.exceptions.SafApiException
 import no.nav.soknad.innsending.pdl.generated.HentPersonInfo
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import org.slf4j.LoggerFactory
 
 @Service
-@Profile("dev | prod")
+@Profile("test | dev | prod")
 @Qualifier("pdl")
 class PdlAPI(
 	private val pdlGraphQLClient: GraphQLWebClient,
@@ -43,8 +44,8 @@ class PdlAPI(
 			hentPersonInfo()?.hentIdenter?.identer?.map {IdentDto(it.ident, it.gruppe.toString(), it.historisk)}?.toList()
 				?: dummyHentBrukerIdenter(brukerId) // TODO fjern
 		} catch (ex: Exception) {
-			logger.warn(("Henting fra PDL feilet med ${ex.message}"))
-			dummyHentBrukerIdenter(brukerId) // TODO fjern
+			logger.warn(("Henting fra PDL feilet med ${ex.message}. Returnerer pålogget ident"))
+			listOf(IdentDto(brukerId,"FOLKEREGISTERIDENT", false))
 		}
 	}
 
@@ -64,7 +65,7 @@ class PdlAPI(
 	suspend fun hentPersonInfo(): HentPersonInfo.Result? {
 		val response = pdlGraphQLClient.execute(
 			HentPersonInfo(
-				HentPersonInfo.Variables(tokenUtil.getToken())
+				HentPersonInfo.Variables(tokenUtil.getUserIdFromToken())
 			)
 		)
 		if (response.data != null) {
@@ -72,7 +73,7 @@ class PdlAPI(
 			return response.data
 		} else {
 			logger.error("Oppslag mot personregisteret feilet. Fikk feil i kallet til personregisteret")
-			throw SafApiException("Oppslag mot personregisteret feilet", "Fikk feil i kallet til personregisteret")
+			throw PdlApiException("Oppslag mot personregisteret feilet", "Fikk feil i kallet til personregisteret")
 		}
 	}
 

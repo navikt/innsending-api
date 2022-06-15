@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 
 @Service
-@Profile("spring | test | docker | default")
+@Profile("spring | docker | default")
 @Qualifier("pdl")
 class PdlAPITest(private val restConfig: RestConfig): PdlInterface, HealthRequestInterface {
 

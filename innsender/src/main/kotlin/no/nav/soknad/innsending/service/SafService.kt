@@ -1,13 +1,17 @@
 package no.nav.soknad.innsending.service
 
-import org.slf4j.LoggerFactory
 import no.nav.soknad.innsending.consumerapis.saf.SafInterface
 import no.nav.soknad.innsending.consumerapis.saf.dto.Dokument
 import no.nav.soknad.innsending.model.AktivSakDto
 import no.nav.soknad.innsending.model.InnsendtVedleggDto
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+
 
 @Service
 class SafService(val safApi: SafInterface) {
@@ -26,16 +30,18 @@ class SafService(val safApi: SafInterface) {
 	private fun konverterTilDateTime(dateString: String): OffsetDateTime {
 		if (dateString.isBlank()) return OffsetDateTime.MIN
 		val formatter: DateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME
-		return OffsetDateTime.parse(dateString, formatter)
+		val dateTime = LocalDateTime.parse(dateString, formatter)
+		val zoneOffSet = OffsetDateTime.now().offset
+		return dateTime.atOffset(zoneOffSet)
 	}
 
 	private fun erEttersending(dokumenter: List<Dokument>): Boolean {
-		val hoveddokumenter = dokumenter.filter { it.k_tilkn_jp_som == "HOVEDDOKUMENT"}.toList()
+		val hoveddokumenter = dokumenter.filter { it.k_tilkn_jp_som.equals("HOVEDDOKUMENT", true)}.toList()
 		return hoveddokumenter.map { it.brevkode }.toList().contains("NAVe")
 	}
 
 	private fun finnBrevKode(dokumenter: List<Dokument>): String {
-		val hoveddokumenter = dokumenter.filter { it.k_tilkn_jp_som == "HOVEDDOKUMENT"}.toList()
+		val hoveddokumenter = dokumenter.filter { it.k_tilkn_jp_som.equals("HOVEDDOKUMENT", true)}.toList()
 		return hoveddokumenter.map { it.brevkode }.first()!!.replace("NAVe", "NAV")
 	}
 

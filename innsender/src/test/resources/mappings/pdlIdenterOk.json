@@ -1,0 +1,58 @@
+{
+	"request": {
+		"urlPattern": "/pdl-api/graphql",
+		"method": "POST",
+		"headers": {
+			"Authorization": {
+				"matches": ".*"
+			}
+		},
+		"bodyPatterns": [
+			{
+				"equalToJson": {
+					"variables": {
+						"ident": "${json-unit.any-string}"
+					},
+					"query": "query($ident: ID!) {\n\thentPerson(ident: $ident) {\n\t\tnavn(historikk: false) {\n\t\t\tfornavn\n\t\t\tmellomnavn\n\t\t\tetternavn\n\t\t}\n\t},\n\thentIdenter(ident: $ident, grupper: [FOLKEREGISTERIDENT], historikk: true) {\n\t\tidenter {\n\t\t\tident,\n\t\t\tgruppe,\n\t\t\thistorisk\n\t\t}\n\t}\n}"
+				},
+				"ignoreExtraElements" : true,
+				"ignoreArrayOrder" : true
+			}
+		]
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+	"jsonBody": {
+		"data": {
+			"hentPerson": {
+				"navn": [
+					{
+						"fornavn": "Fornavn",
+						"mellomnavn": "Mellomnavn",
+						"etternavn": "Etternavn"
+					}
+					]
+				},
+				"hentIdenter": {
+					"identer": [
+						{
+							"ident": "12345678901",
+							"gruppe": "FOLKEREGISTERIDENT",
+							"historisk": "false"
+						},
+						{
+							"ident": "12345678902",
+							"gruppe": "FOLKEREGISTERIDENT",
+							"historisk": "true"
+						}
+					]
+				}
+			}
+		}
+	}
+}
+
+

@@ -60,7 +60,8 @@ class SafSelvbetjeningClientConfig(
 			}
 	)
 
-	private val tokenxSafSelvbetjeningClientProperties = oauth2Config.registration["tokenx-safselvbetjening"]
+	private val tokenxSafSelvbetjeningClientProperties =
+		oauth2Config.registration["tokenx-safselvbetjening"]
 		?: throw RuntimeException("could not find oauth2 client config for tokenx-safselvbetjening")
 
 }
