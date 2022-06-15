@@ -28,6 +28,10 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 	@Query(value="UPDATE SoknadDbData SET endretdato = :endretdato WHERE id = :id", nativeQuery = false)
 	fun updateEndretDato(@Param("id") id: Long, @Param("endretdato") endretdato: LocalDateTime)
 
+	@Transactional
+	@Modifying
+	@Query(value="UPDATE SoknadDbData SET endretdato = :endretdato, visningssteg = :visningssteg WHERE id = :id", nativeQuery = false)
+	fun updateVisningsStegAndEndretDato(@Param("id") id: Long, @Param("visningssteg") visningsSteg: Long, @Param("endretdato") endretdato: LocalDateTime)
 
 	@Query(value = "SELECT * FROM soknad WHERE status = :status AND opprettetdato <= :opprettetFor ORDER BY opprettetdato", nativeQuery = true)
 	fun findAllByStatusAndWithOpprettetdatoBefore(@Param("status") status: String, @Param("opprettetFor") opprettetFor: OffsetDateTime): List<SoknadDbData>

@@ -176,6 +176,34 @@ paths:
       tags:
         - hentSoknad
 
+    patch:
+      summary: Kall for å endre visningsSteg på søknad gitt innsendingsId.
+      description: Dersom endring er vellykket, returneres 204.
+      operationId: endreSoknad
+
+      parameters:
+        - name: innsendingsId
+          in: path
+          description: identifisering av søknad som skal oppdateres
+          required: true
+          schema:
+            type: string
+          style: simple
+
+      requestBody:
+        description: New value for visningsSteg.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VisningsSteg"
+        required: true
+
+      responses:
+        204:
+          description: Successful operation
+      tags:
+        - endreSoknad
+
     delete:
       summary: Kall for å slette opprettet søknad gitt innsendingsId.
       description: Dersom funnet, slettes søknaden.
@@ -719,6 +747,10 @@ components:
           description: Liste av dokumenter (hoveddokument og vedlegg) til søknad
           items:
             $ref: "#/components/schemas/VedleggDto"
+        visningsSteg:
+          $ref: "#/components/schemas/VisningsSteg"
+        visningsType:
+          $ref: "#/components/schemas/VisningsType"
 
     FilDto:
       type: object
@@ -1045,6 +1077,18 @@ components:
       type: string
       description: NAVs identifikasjon av dokumenttype enten som Skjemanummer eller vedleggsnummer.
       example: NAV 14-35.01 eller T7
+
+    VisningsSteg:
+      type: integer
+      format: int64
+      default: 0
+      description: Angir i hvilket steg i front-end søker står. Settes default til 0 ved oppretting av søknad.
+
+    VisningsType:
+      type: string
+      enum: ["fyllUt", "dokumentinnsending", "ettersending"]
+      description: Angir visningsmodus gitt opphav til søknaden
+
 
 security: []
 

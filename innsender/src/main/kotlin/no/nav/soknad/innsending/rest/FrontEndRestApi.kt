@@ -232,6 +232,33 @@ class FrontEndRestApi(
 	}
 
 	@ApiOperation(
+		value = "Kall for å endre visningsSteg på søknad gitt innsendingsId.",
+		nickname = "endreSoknad",
+		notes = "Dersom endring er vellykket, returneres 204.")
+	@ApiResponses(
+		value = [ApiResponse(code = 204, message = "Successful operation")])
+	@RequestMapping(
+		method = [RequestMethod.PATCH],
+		value = ["/frontend/v1/soknad/{innsendingsId}"],
+		consumes = ["application/json"]
+	)
+	override fun endreSoknad(@ApiParam(value = "identifisering av søknad som skal oppdateres", required=true) @PathVariable("innsendingsId") innsendingsId: kotlin.String
+									,@ApiParam(value = "New value for visningsSteg." ,required=true ) @Valid @RequestBody body: kotlin.Long
+	): ResponseEntity<Unit> {
+		logger.info("Kall for å endre søknad med id $innsendingsId")
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.ENDRE.name)
+		try {
+			val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
+			tilgangskontroll.harTilgang(dokumentSoknadDto)
+			soknadService.endreSoknad(dokumentSoknadDto.id!!, body)
+			logger.info("Oppdatert søknad ${dokumentSoknadDto.innsendingsId}")
+			return ResponseEntity(HttpStatus.NO_CONTENT)
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
+	}
+
+	@ApiOperation(
 		value = "Kall for å hente vedlegg (inkludert hoveddokument) til søknad gitt innsendingsId.",
 		nickname = "hentVedleggsListe",
 		notes = "Dersom funnet, returneres liste av søknadens vedlegg.",

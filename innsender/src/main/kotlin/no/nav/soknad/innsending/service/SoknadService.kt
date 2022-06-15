@@ -63,7 +63,7 @@ class SoknadService(
 				SoknadDbData(
 					null, Utilities.laginnsendingsId(), kodeverkSkjema.tittel ?: "", kodeverkSkjema.skjemanummer ?: "",
 					kodeverkSkjema.tema ?: "", spraak, SoknadsStatus.Opprettet, brukerId, null, LocalDateTime.now(),
-					LocalDateTime.now(), null
+					LocalDateTime.now(), null, 0, VisningsType.dokumentinnsending
 				)
 			)
 
@@ -142,6 +142,12 @@ class SoknadService(
 		soknadRepository.findByInnsendingsid(innsendingsId)
 	} catch (re: Exception) {
 		throw BackendErrorException(re.message, "Henting av søknad $innsendingsId fra databasen feilet")
+	}
+
+	private fun endreSoknadDb(id: Long, visningsSteg: Long) =  try {
+		soknadRepository.updateVisningsStegAndEndretDato(id, visningsSteg, LocalDateTime.now())
+	} catch (re: Exception) {
+		throw BackendErrorException(re.message, "Oppdatering av søknad med id= $id feilet")
 	}
 
 	private fun hentVedlegg(vedleggsId: Long): Optional<VedleggDbData> = try {
@@ -249,7 +255,9 @@ class SoknadService(
 					ukjentEttersendingsId,
 					LocalDateTime.now(),
 					LocalDateTime.now(),
-					null
+					null,
+					0,
+					VisningsType.ettersending
 				)
 			)
 
@@ -332,7 +340,9 @@ class SoknadService(
 					ettersendingsId,
 					LocalDateTime.now(),
 					LocalDateTime.now(),
-					null
+					null,
+					0,
+					VisningsType.ettersending
 				)
 			)
 
@@ -461,6 +471,10 @@ class SoknadService(
 	fun hentSoknad(innsendingsId: String): DokumentSoknadDto {
 		val soknadDbDataOpt = hentSoknadDb(innsendingsId)
 		return hentAlleVedlegg(soknadDbDataOpt, innsendingsId)
+	}
+
+	fun endreSoknad(id: Long, visningsSteg: Long) {
+		endreSoknadDb(id, visningsSteg)
 	}
 
 	private fun hentAlleVedlegg(soknadDbDataOpt: Optional<SoknadDbData>, ident: String): DokumentSoknadDto {
@@ -921,7 +935,8 @@ class SoknadService(
 		DokumentSoknadDto(soknadDbData.brukerid, soknadDbData.skjemanr, soknadDbData.tittel, soknadDbData.tema,
 			mapTilSoknadsStatusDto(soknadDbData.status) ?: SoknadsStatusDto.opprettet, mapTilOffsetDateTime(soknadDbData.opprettetdato)!!,
 			vedleggDbDataListe.map { lagVedleggDto(it) }, soknadDbData.id!!, soknadDbData.innsendingsid, soknadDbData.ettersendingsid,
-			soknadDbData.spraak, mapTilOffsetDateTime(soknadDbData.endretdato), mapTilOffsetDateTime(soknadDbData.innsendtdato)
+			soknadDbData.spraak, mapTilOffsetDateTime(soknadDbData.endretdato), mapTilOffsetDateTime(soknadDbData.innsendtdato),
+			soknadDbData.visningssteg, soknadDbData.visningstype
 		)
 
 	private fun mapTilOffsetDateTime(localDateTime: LocalDateTime?): OffsetDateTime? =
@@ -959,7 +974,9 @@ class SoknadService(
 			dokumentSoknadDto.tittel, dokumentSoknadDto.skjemanr, dokumentSoknadDto.tema, dokumentSoknadDto.spraak ?: "no",
 			mapTilSoknadsStatus(dokumentSoknadDto.status, status), dokumentSoknadDto.brukerId, dokumentSoknadDto.ettersendingsId,
 			mapTilLocalDateTime(dokumentSoknadDto.opprettetDato)!!, LocalDateTime.now(),
-			if (status == SoknadsStatus.Innsendt) LocalDateTime.now()	else mapTilLocalDateTime(dokumentSoknadDto.innsendtDato))
+			if (status == SoknadsStatus.Innsendt) LocalDateTime.now()	else mapTilLocalDateTime(dokumentSoknadDto.innsendtDato),
+			dokumentSoknadDto.visningsSteg, dokumentSoknadDto.visningsType
+		)
 
 	fun mapTilSoknadsStatus(soknadsStatus: SoknadsStatusDto?, newStatus: SoknadsStatus? ): SoknadsStatus {
 		return newStatus ?:

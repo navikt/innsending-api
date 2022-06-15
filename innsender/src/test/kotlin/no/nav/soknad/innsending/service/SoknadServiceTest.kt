@@ -654,7 +654,7 @@ class SoknadServiceTest {
 		val vedleggDtoList = listOf(vedleggDtoPdf, vedleggDtoJson)
 		return DokumentSoknadDto( brukerId, skjemanr, tittel, tema, SoknadsStatusDto.opprettet, OffsetDateTime.now(),
 			vedleggDtoList, 1L, UUID.randomUUID().toString(), null, spraak,
-			OffsetDateTime.now(), null )
+			OffsetDateTime.now(), null, 0, VisningsType.fyllUt )
 	}
 
 	private fun oppdaterDokumentSoknad(dokumentSoknadDto: DokumentSoknadDto): DokumentSoknadDto {
@@ -663,7 +663,7 @@ class SoknadServiceTest {
 		return DokumentSoknadDto(dokumentSoknadDto.brukerId, dokumentSoknadDto.skjemanr, dokumentSoknadDto.tittel,
 			dokumentSoknadDto.tema, SoknadsStatusDto.opprettet, dokumentSoknadDto.opprettetDato, listOf(vedleggDto) + vedleggDtoListe,
 			dokumentSoknadDto.id, dokumentSoknadDto.innsendingsId, dokumentSoknadDto.ettersendingsId,
-			dokumentSoknadDto.spraak, OffsetDateTime.now(), null )
+			dokumentSoknadDto.spraak, OffsetDateTime.now(), null, dokumentSoknadDto.visningsSteg, dokumentSoknadDto.visningsType )
 	}
 
 	private fun lastOppDokumentTilVedlegg(vedleggDto: VedleggDto) =

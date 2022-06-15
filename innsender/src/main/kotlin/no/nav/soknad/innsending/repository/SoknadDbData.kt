@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.repository
 
+import no.nav.soknad.innsending.model.VisningsType
 import java.time.LocalDateTime
 import javax.persistence.*
 
@@ -18,4 +19,6 @@ data class SoknadDbData(
 	@Column(name = "opprettetdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val opprettetdato: LocalDateTime,
 	@Column(name = "endretdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val endretdato: LocalDateTime?,
 	@Column(name = "innsendtdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val innsendtdato: LocalDateTime?,
+	@Column(name = "visningssteg", columnDefinition = "long") val visningssteg: Long? = 0,
+	@Column(name = "visningstype", columnDefinition = "varchar") val visningstype: VisningsType? = if (ettersendingsid != null) VisningsType.ettersending else VisningsType.dokumentinnsending
 )
