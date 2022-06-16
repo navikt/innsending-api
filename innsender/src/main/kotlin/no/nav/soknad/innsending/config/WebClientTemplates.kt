@@ -49,8 +49,7 @@ class WebClientTemplates(private val restConfig: RestConfig) {
 		val exchangeStrategies = ExchangeStrategies.builder()
 			.codecs { configurer: ClientCodecConfigurer ->
 				configurer
-					.defaultCodecs()
-					.maxInMemorySize(restConfig.maxFileSizeSum) }
+					.defaultCodecs().maxInMemorySize(restConfig.maxFileSizeSum*1024*1024) }
 			.build()
 
 		return WebClient.builder()
