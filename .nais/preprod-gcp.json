@@ -8,9 +8,7 @@
 		"https://innsending-api-gcp.dev.adeo.no",
 		"https://innsending-api-gcp.dev.nav.no"
 	],
-	"outboundExternalHosts": [
-		"nav.no/soknader/api/sanity/skjemautlisting"
-	],
+	"outboundExternalHosts": [],
 	"outboundRulesGcpApplications": [
 		"soknadsmottaker",
 		"soknadsfillager"
@@ -27,7 +25,7 @@
 		"STS_URL": "https://api-gw-q1.oera.no/security-token-service/",
 		"SANITY_HOST": "https://www.nav.no",
 		"SANITY_ENDPOINT": "/soknader/api/sanity/skjemautlisting",
-		"FILESTORAGE_HOST": "https://soknadsfillager-gcp.dev.nav.no",
+		"FILESTORAGE_HOST": "https://soknadsfillager-gcp.dev.intern.nav.no",
 		"FILESTORAGE_ENDPOINT": "/filer",
 		"FILESTORAGE_PARAMETERS": "?ids=",
 		"SOKNADSMOTTAKER_HOST": "https://soknadsmottaker-gcp.dev.intern.nav.no",

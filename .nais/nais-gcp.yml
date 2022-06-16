@@ -60,6 +60,9 @@ spec:
       {{#each outboundRulesGcpApplications}}
         - application: "{{this}}"
       {{/each}}
+        - application: soknadsveiviser
+          cluster: prod-gcp
+          namespace: skjemadigitalisering
 
   ingresses:
   {{#each ingresses}}
