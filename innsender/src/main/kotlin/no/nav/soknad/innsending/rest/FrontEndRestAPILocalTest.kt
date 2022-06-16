@@ -232,6 +232,33 @@ class FrontEndRestAPILocalTest(
 	}
 
 	@ApiOperation(
+		value = "Kall for å endre visningsSteg på søknad gitt innsendingsId.",
+		nickname = "endreSoknad",
+		notes = "Dersom endring er vellykket, returneres 204.")
+	@ApiResponses(
+		value = [ApiResponse(code = 204, message = "Successful operation")])
+	@RequestMapping(
+		method = [RequestMethod.PATCH],
+		value = ["/frontend/v1/soknad/{innsendingsId}"],
+		consumes = ["application/json"]
+	)
+	override fun endreSoknad(@ApiParam(value = "identifisering av søknad som skal oppdateres", required=true) @PathVariable("innsendingsId") innsendingsId: kotlin.String
+													 ,@ApiParam(value = "New value for visningsSteg." ,required=true ) @Valid @RequestBody body: kotlin.Long
+	): ResponseEntity<Unit> {
+		logger.info("Kall for å endre søknad med id $innsendingsId")
+		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.ENDRE.name)
+		try {
+			val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
+			tilgangskontroll.harTilgang(dokumentSoknadDto)
+			soknadService.endreSoknad(dokumentSoknadDto.id!!, body)
+			logger.info("Oppdatert søknad ${dokumentSoknadDto.innsendingsId}")
+			return ResponseEntity(HttpStatus.NO_CONTENT)
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+		}
+	}
+
+	@ApiOperation(
 		value = "Kall for å hente vedlegg (inkludert hoveddokument) til søknad gitt innsendingsId.",
 		nickname = "hentVedleggsListe",
 		notes = "Dersom funnet, returneres liste av søknadens vedlegg.",
@@ -401,10 +428,18 @@ class FrontEndRestAPILocalTest(
 			if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
 				throw ResourceNotFoundException(null, "Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId")
 
-			val filPdf = validerOgKonverterFilTilPdf(soknadDto, vedleggsId, file)
+			// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
+			if (!file.isReadable) throw IllegalActionException("Ingen fil opplastet", "Opplasting feilet")
+			val opplastet = (file as ByteArrayResource).byteArray
+			Validerer().validereFilformat(listOf(opplastet))
+			// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
+			val fil = KonverterTilPdf().tilPdf(opplastet)
+			val vedleggsFiler = soknadService.hentFiler(soknadDto, innsendingsId, vedleggsId, false, false)
+			val opplastetFilStorrelse: Int = vedleggsFiler.filter {it.storrelse != null }.sumOf { it.storrelse!! }
+			Validerer().validerStorrelse(opplastetFilStorrelse + fil.size, restConfig.maxFileSize )
 
 			// Lagre
-			val lagretFilDto = soknadService.lagreFil(soknadDto, FilDto(vedleggsId, null, file.filename ?:"", Mimetype.applicationSlashPdf, filPdf.size, filPdf, OffsetDateTime.now()))
+			val lagretFilDto = soknadService.lagreFil(soknadDto, FilDto(vedleggsId, null, file.filename ?:"", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now()))
 
 			logger.info("Lagret fil ${lagretFilDto.id} på vedlegg $vedleggsId til søknad $innsendingsId")
 			return ResponseEntity
@@ -413,24 +448,6 @@ class FrontEndRestAPILocalTest(
 		} finally {
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
 		}
-	}
-
-	private fun validerOgKonverterFilTilPdf(soknadDto: DokumentSoknadDto, vedleggsId: Long, file: Resource): ByteArray {
-
-		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
-		if (!file.isReadable) throw IllegalActionException("Ingen lesbar fil opplastet", "Opplasting feilet")
-		val opplastet = (file as ByteArrayResource).byteArray
-		Validerer().validereFilformat(listOf(opplastet))
-
-		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
-		val fil = KonverterTilPdf().tilPdf(opplastet)
-		Validerer().validerStorrelse(fil.size, restConfig.maxFileSize )
-
-		val vedleggsFiler = soknadService.hentFiler(soknadDto, soknadDto.innsendingsId!!, vedleggsId, false, false)
-		val opplastetFilStorrelse: Int = vedleggsFiler.filter {it.storrelse != null }.sumOf { it.storrelse!! }
-		Validerer().validerStorrelse(opplastetFilStorrelse + fil.size, restConfig.maxFileSizeSum )
-
-		return fil
 	}
 
 	// Søker skal kunne laste opp ett eller flere filer på ett vedlegg. Dette endepunktet tillater henting av en allerede opplastet fil.
@@ -640,6 +657,7 @@ class FrontEndRestAPILocalTest(
 	)
 	override fun sendInnSoknad(@PathVariable innsendingsId: String): ResponseEntity<KvitteringsDto> {
 		logger.info("Kall for å sende inn soknad $innsendingsId")
+
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.SEND_INN.name)
 		try {
 			val soknadDto = soknadService.hentSoknad(innsendingsId)

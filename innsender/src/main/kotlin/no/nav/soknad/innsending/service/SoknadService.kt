@@ -936,7 +936,8 @@ class SoknadService(
 			mapTilSoknadsStatusDto(soknadDbData.status) ?: SoknadsStatusDto.opprettet, mapTilOffsetDateTime(soknadDbData.opprettetdato)!!,
 			vedleggDbDataListe.map { lagVedleggDto(it) }, soknadDbData.id!!, soknadDbData.innsendingsid, soknadDbData.ettersendingsid,
 			soknadDbData.spraak, mapTilOffsetDateTime(soknadDbData.endretdato), mapTilOffsetDateTime(soknadDbData.innsendtdato),
-			soknadDbData.visningssteg, soknadDbData.visningstype
+			soknadDbData.visningssteg ?: 0,
+			if (soknadDbData.visningstype != null) soknadDbData.visningstype else if (soknadDbData.ettersendingsid != null) VisningsType.ettersending else VisningsType.dokumentinnsending
 		)
 
 	private fun mapTilOffsetDateTime(localDateTime: LocalDateTime?): OffsetDateTime? =
