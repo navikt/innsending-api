@@ -24,7 +24,9 @@ class SkjemaClient(private val restConfig: RestConfig,
 				.onStatus(
 					{ httpStatus -> httpStatus.is4xxClientError || httpStatus.is5xxServerError },
 						{ response -> response.bodyToMono(String::class.java).map {
-								Exception("Got ${response.statusCode()} when requesting GET ${restConfig.sanityHost} - response body: '$it'")
+							val errorString = "Got ${response.statusCode()} when requesting GET ${restConfig.sanityHost+restConfig.sanityEndpoint} - response body: '$it'"
+							logger.error(errorString)
+							RuntimeException(errorString)
 						}
 					}
 				)
