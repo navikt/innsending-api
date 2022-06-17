@@ -243,14 +243,14 @@ class FrontEndRestAPILocalTest(
 		consumes = ["application/json"]
 	)
 	override fun endreSoknad(@ApiParam(value = "identifisering av søknad som skal oppdateres", required=true) @PathVariable("innsendingsId") innsendingsId: kotlin.String
-													 ,@ApiParam(value = "New value for visningsSteg." ,required=true ) @Valid @RequestBody body: kotlin.Long
+													 ,@ApiParam(value = "New value for visningsSteg." ,required=true ) @Valid @RequestBody patchSoknadDto: PatchSoknadDto
 	): ResponseEntity<Unit> {
 		logger.info("Kall for å endre søknad med id $innsendingsId")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.ENDRE.name)
 		try {
 			val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(dokumentSoknadDto)
-			soknadService.endreSoknad(dokumentSoknadDto.id!!, body)
+			soknadService.endreSoknad(dokumentSoknadDto.id!!, patchSoknadDto.visningsSteg)
 			logger.info("Oppdatert søknad ${dokumentSoknadDto.innsendingsId}")
 			return ResponseEntity(HttpStatus.NO_CONTENT)
 		} finally {
