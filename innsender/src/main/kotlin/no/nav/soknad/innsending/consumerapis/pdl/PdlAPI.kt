@@ -14,6 +14,7 @@ import no.nav.soknad.innsending.exceptions.SafApiException
 import no.nav.soknad.innsending.pdl.generated.HentPersonInfo
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import org.slf4j.LoggerFactory
+import org.springframework.cache.annotation.Cacheable
 
 @Service
 @Profile("test | dev | prod")
@@ -62,6 +63,7 @@ class PdlAPI(
 	}
 
 
+	@Cacheable("personInfo")
 	suspend fun hentPersonInfo(): HentPersonInfo.Result? {
 		val response = pdlGraphQLClient.execute(
 			HentPersonInfo(

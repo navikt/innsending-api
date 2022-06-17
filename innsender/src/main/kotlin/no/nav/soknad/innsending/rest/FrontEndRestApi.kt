@@ -71,7 +71,9 @@ class FrontEndRestApi(
 		logger.info("Kall for å opprette søknad på skjema ${opprettSoknadBody.skjemanr}")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
 		try {
-			val brukerId = tilgangskontroll.hentBrukerFraToken()
+			val brukerId = tilgangskontroll.hentPersonsAktiveIdent()
+			val personDto = tilgangskontroll.hentPersonData()
+			logger.info("Skal opprette soknad for bruker ${personDto.fornavn.substring(0,1)+personDto.etternavn.substring(0,1)}")
 			val dokumentSoknadDto = soknadService.opprettSoknad(
 				brukerId,
 				opprettSoknadBody.skjemanr,
@@ -114,7 +116,7 @@ class FrontEndRestApi(
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
 		try {
 			val origSoknad = soknadService.hentSoknad(opprettEttersendingGittInnsendingsId.ettersendingTilinnsendingsId)
-			val brukerId = tilgangskontroll.hentBrukerFraToken()
+			val brukerId = tilgangskontroll.hentPersonsAktiveIdent()
 			tilgangskontroll.harTilgang(origSoknad, brukerId)
 
 			val dokumentSoknadDto =
@@ -154,7 +156,7 @@ class FrontEndRestApi(
 		logger.info("Kall for å opprette ettersending på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
 		try {
-			val brukerId = tilgangskontroll.hentBrukerFraToken()
+			val brukerId = tilgangskontroll.hentPersonsAktiveIdent()
 			val dokumentSoknadDto = soknadService.opprettSoknadForEttersendingGittSkjemanr(
 				brukerId, opprettEttersendingGittSkjemaNr.skjemanr, finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak), opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList())
 			logger.info("Opprettet ettersending ${dokumentSoknadDto.innsendingsId} på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}")
@@ -243,14 +245,14 @@ class FrontEndRestApi(
 		consumes = ["application/json"]
 	)
 	override fun endreSoknad(@ApiParam(value = "identifisering av søknad som skal oppdateres", required=true) @PathVariable("innsendingsId") innsendingsId: kotlin.String
-									,@ApiParam(value = "New value for visningsSteg." ,required=true ) @Valid @RequestBody body: kotlin.Long
+									,@ApiParam(value = "New value for visningsSteg." ,required=true ) @Valid @RequestBody patchSoknadDto: PatchSoknadDto
 	): ResponseEntity<Unit> {
 		logger.info("Kall for å endre søknad med id $innsendingsId")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.ENDRE.name)
 		try {
 			val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(dokumentSoknadDto)
-			soknadService.endreSoknad(dokumentSoknadDto.id!!, body)
+			soknadService.endreSoknad(dokumentSoknadDto.id!!, patchSoknadDto.visningsSteg)
 			logger.info("Oppdatert søknad ${dokumentSoknadDto.innsendingsId}")
 			return ResponseEntity(HttpStatus.NO_CONTENT)
 		} finally {

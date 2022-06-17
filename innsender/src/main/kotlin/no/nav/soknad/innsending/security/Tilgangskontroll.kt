@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.security
 
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
+import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import org.slf4j.LoggerFactory
@@ -24,6 +25,16 @@ class Tilgangskontroll(
 		}
 	}
 
+	fun hentPersonData(): PersonDto {
+		val ident = hentBrukerFraToken()
+		return pdlService.hentPersonData(ident) ?: PersonDto(ident, "Ukjent", "", "Navn")
+	}
+
+	fun hentPersonsAktiveIdent(): String {
+		val identer = pdlService.hentPersonIdents(hentBrukerFraToken())
+		return identer.filter{ !it.historisk }.map{ it.ident }.first()
+	}
+
 	fun hentPersonIdents(brukerId: String): List<String> {
 		return pdlService.hentPersonIdents(brukerId).map { it.ident }
 	}
@@ -39,8 +50,15 @@ class Tilgangskontroll(
 	}
 
 	fun harTilgang(soknadDto: DokumentSoknadDto?, brukerId: String?) {
+		if (soknadDto == null) {
+			logger.info("Bruker forsøker å hente soknad som ikke finnes i databasen")
+			throw ResourceNotFoundException(null, "Søknad finnes ikke eller er ikke tilgjengelig for innlogget bruker")
+		}
+
 		val idents = hentPersonIdents(hentBrukerFraToken())
 		if (idents.contains(soknadDto?.brukerId)) return
+
+		logger.info("Bruker har ikke tilgang til soknad ${soknadDto.innsendingsId}")
 		throw ResourceNotFoundException(null, "Søknad finnes ikke eller er ikke tilgjengelig for innlogget bruker")
 	}
 

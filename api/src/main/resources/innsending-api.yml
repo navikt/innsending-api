@@ -195,7 +195,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/VisningsSteg"
+              $ref: "#/components/schemas/PatchSoknadDto"
         required: true
 
       responses:
@@ -927,6 +927,17 @@ components:
       type: boolean
       description: Satt til true dersom dette vedlegget er påkrevd innsendt for behandling av søknad.
       example: true
+
+    PatchSoknadDto:
+      type: object
+      description: Data som kan patches på en soknad
+
+      required:
+        - visningsSteg
+
+      properties:
+        visningsSteg:
+          $ref: "#/components/schemas/VisningsSteg"
 
     SkjemaDokumentDto:
       type: object
