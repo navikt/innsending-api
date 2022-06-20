@@ -285,8 +285,8 @@ class SoknadServiceTest {
 		val lagretVedleggDto = soknadService.leggTilVedlegg(dokumentSoknadDto)
 		assertTrue(lagretVedleggDto != null && lagretVedleggDto.id != null)
 
-		val endretVedleggDto = lagVedlegg(lagretVedleggDto.id, "XX", lagretVedleggDto.tittel, lagretVedleggDto.opplastingsStatus, lagretVedleggDto.erHoveddokument, null, "Ny tittel")
-		val oppdatertVedleggDto = soknadService.endreVedlegg(endretVedleggDto, dokumentSoknadDto)
+		val patchVedleggDto = PatchVedleggDto("Ny tittel", lagretVedleggDto.opplastingsStatus)
+		val oppdatertVedleggDto = soknadService.endreVedlegg(patchVedleggDto, lagretVedleggDto.id!!, dokumentSoknadDto)
 
 		assertTrue(oppdatertVedleggDto != null && oppdatertVedleggDto.id == lagretVedleggDto.id && oppdatertVedleggDto.tittel == "Ny tittel" && oppdatertVedleggDto.vedleggsnr == "N6"
 			&& oppdatertVedleggDto.label == oppdatertVedleggDto.tittel)

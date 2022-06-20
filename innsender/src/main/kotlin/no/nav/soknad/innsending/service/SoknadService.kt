@@ -186,8 +186,9 @@ class SoknadService(
 		BackendErrorException(ex.message, "Feil ved oppdatering av vedlegg ${vedleggDbData.id} for søknad $innsendingsId")
 	}
 
-	private fun oppdaterVedleggsTittelOgLabel(vedleggDbData: VedleggDbData, nyTittel: String) = try {
-		vedleggRepository.updateTittelAndLabelAndEndretdato(vedleggDbData.id!!, nyTittel, LocalDateTime.now() )
+	private fun oppdaterVedleggsTittelOgLabelOgStatus(vedleggDbData: VedleggDbData, nyTittel: String?, nyVedleggsStatus: OpplastingsStatus?) = try {
+		vedleggRepository.updateTittelAndLabelAndStatusAndEndretdato(vedleggDbData.id!!, nyTittel ?: vedleggDbData.tittel,
+			nyVedleggsStatus ?: vedleggDbData.status, LocalDateTime.now() )
 	} catch (ex: Exception) {
 		BackendErrorException(ex.message, "Feil ved oppdatering av vedlegg ${vedleggDbData.id} for søknad ${vedleggDbData.soknadsid}")
 	}
@@ -213,7 +214,7 @@ class SoknadService(
 
 	private fun slettFilerForVedlegg(vedleggsId: Long) =
 		try {
-			filRepository.deleteFilDbDataForVedlegg(vedleggsId)
+			filRepository.deleteAllByVedleggsid(vedleggsId)
 		} catch (ex: Exception) {
 			throw BackendErrorException(ex.message, "Feil i forbindelse med sletting av filer til søknad")
 		}
@@ -586,6 +587,7 @@ class SoknadService(
 		return filDbDataList.map { lagFilDto(it, medFil) }
 	}
 
+	@Transactional
 	fun slettFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long) {
 		// Sjekk om vedlegget eksisterer
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
@@ -594,6 +596,9 @@ class SoknadService(
 			throw ResourceNotFoundException(null, "Fil $filId på vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
 		slettFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
+		if (hentFilerTilVedlegg(soknadDto.innsendingsId!!, vedleggsId).isEmpty()) {
+				vedleggRepository.updateStatus(vedleggsId, OpplastingsStatus.IKKE_VALGT, LocalDateTime.now())
+		}
 		innsenderMetrics.applicationCounterInc(InnsenderOperation.SLETT_FIL.name, soknadDto.tema)
 	}
 
@@ -663,38 +668,53 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun endreVedlegg(vedleggDto: VedleggDto, soknadDto: DokumentSoknadDto): VedleggDto {
+	fun endreVedlegg(patchVedleggDto: PatchVedleggDto, vedleggsId: Long, soknadDto: DokumentSoknadDto): VedleggDto {
 
 		if (!soknadDto.status.equals(SoknadsStatusDto.opprettet))
 			throw IllegalActionException(
 				"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
 				"Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet")
 
-		val vedleggDbDataOpt = hentVedlegg(vedleggDto.id!!)
+		val vedleggDbDataOpt = hentVedlegg(vedleggsId)
 		if (vedleggDbDataOpt.isEmpty)
 			throw IllegalActionException(
 				"Kan ikke endre vedlegg da det ikke ble funnet",
-				"Fant ikke vedlegg ${vedleggDto.id} på ${soknadDto.innsendingsId}")
+				"Fant ikke vedlegg ${vedleggsId} på ${soknadDto.innsendingsId}")
 
 		val vedleggDbData = vedleggDbDataOpt.get()
 		if (vedleggDbData.soknadsid != soknadDto.id) {
 			throw IllegalActionException(
 				"Kan ikke endre vedlegg da søknaden ikke har et slikt vedlegg",
-				"Søknad ${soknadDto.innsendingsId} har ikke vedlegg med id ${vedleggDto.id}")
+				"Søknad ${soknadDto.innsendingsId} har ikke vedlegg med id ${vedleggsId}")
 		}
-		if (vedleggDbData.vedleggsnr != "N6") {
+		if (vedleggDbData.vedleggsnr != "N6" && patchVedleggDto.tittel != null) {
 			throw IllegalActionException(
-				"Kan ikke endre vedlegg av andre typer enn 'Annet'",
-				"Tittel kan ikke endret på vedlegg med id ${vedleggDto.id}")
+				"Ulovlig endring av tittel på vedlegg",
+				"Vedlegg med id ${vedleggsId} er av type ${vedleggDbData.vedleggsnr}.Tittel kan kun endres på vedlegg av type N6 ('Annet').")
+		}
+		if (patchVedleggDto.opplastingsStatus != null && patchVedleggDto.opplastingsStatus != OpplastingsStatusDto.lastetOpp
+			&& filRepository.findAllByVedleggsid(vedleggsId).isNotEmpty() ) {
+			slettFilerForVedlegg(vedleggsId)
 		}
 
-		oppdaterVedleggsTittelOgLabel(vedleggDbData, vedleggDto.label)
+		oppdaterVedleggsTittelOgLabelOgStatus(vedleggDbData, patchVedleggDto.tittel, mapTilOpplastingsStatus(patchVedleggDto.opplastingsStatus))
 
 		// Oppdater soknadens sist endret dato
 		oppdaterEndretDato(soknadDto.id!!)
 
-		return lagVedleggDto(hentVedlegg(vedleggDbData.id!!).get(), vedleggDto.document)
+		return lagVedleggDto(hentVedlegg(vedleggDbData.id!!).get(), null)
 	}
+
+	private fun mapTilOpplastingsStatus(opplastingsStatusDto: OpplastingsStatusDto?): OpplastingsStatus? =
+			if (opplastingsStatusDto == null) null
+			else
+		 	when (opplastingsStatusDto) {
+			 OpplastingsStatusDto.sendSenere ->  OpplastingsStatus.SEND_SENERE
+			 OpplastingsStatusDto.ikkeValgt ->  OpplastingsStatus.IKKE_VALGT
+			 OpplastingsStatusDto.innsendt ->  OpplastingsStatus.INNSENDT
+			 OpplastingsStatusDto.sendesAvAndre -> OpplastingsStatus.SENDES_AV_ANDRE
+			 else -> throw IllegalActionException("Ulovlig endring av status på vedlegg", "Status ${opplastingsStatusDto} kan ikke settes på vedlegg.")
+ }
 
 	@Transactional
 	fun slettVedlegg(soknadDto: DokumentSoknadDto, vedleggsId: Long) {

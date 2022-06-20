@@ -313,21 +313,21 @@ paths:
         - hentVedlegg
 
     patch:
-      summary: Kall for å endre tittel på et vedlegg.
-      description: Kall for å endre tittel på et vedlegg. Merk at dette kun kan gjøres på vedlegg av type Annet (vedleggsid=N6).
+      summary: Kall for å endre tittel og status på et vedlegg.
+      description: Kall for å endre tittel og status på et vedlegg. Merk at tittel kun kan endres på vedlegg av type Annet (vedleggsid=N6).
       operationId: endreVedlegg
 
       parameters:
         - name: innsendingsId
           in: path
-          description: identifisering av søknad som skal hentes
+          description: identifisering av søknad hvis vedlegg skal endres
           required: true
           schema:
             type: string
           style: simple
         - name: vedleggsId
           in: path
-          description: identifisering av vedlegg som skal hentes
+          description: identifisering av vedlegg som skal endres
           required: true
           schema:
             type: integer
@@ -336,11 +336,11 @@ paths:
 
       requestBody:
         required: true
-        description: Data om vedlegget som skal legges til
+        description: Data som skal endres
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/VedleggDto"
+              $ref: "#/components/schemas/PatchVedleggDto"
 
       responses:
         200:
@@ -938,6 +938,16 @@ components:
       properties:
         visningsSteg:
           $ref: "#/components/schemas/VisningsSteg"
+
+    PatchVedleggDto:
+      type: object
+      description: Properties som skal endres på vedlegg. Merk at tittel bare kan endres på vedlegg av type andre
+
+      properties:
+        tittel:
+          $ref: "#/components/schemas/Tittel"
+        opplastingsStatus:
+          $ref: "#/components/schemas/OpplastingsStatusDto"
 
     SkjemaDokumentDto:
       type: object
