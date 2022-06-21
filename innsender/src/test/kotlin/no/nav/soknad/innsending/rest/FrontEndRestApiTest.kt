@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.rest
 
 import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import com.nimbusds.jose.JOSEObjectType
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
@@ -16,13 +15,11 @@ import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.IdentInformasjon
 import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.Identliste
 import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.Navn
 import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.Person
-import no.nav.soknad.innsending.safselvbetjening.generated.HentDokumentOversikt
 import no.nav.soknad.innsending.safselvbetjening.generated.enums.Datotype
 import no.nav.soknad.innsending.safselvbetjening.generated.enums.Journalposttype
 import no.nav.soknad.innsending.safselvbetjening.generated.enums.Journalstatus
 import no.nav.soknad.innsending.safselvbetjening.generated.enums.Kanal
 import no.nav.soknad.innsending.safselvbetjening.generated.hentdokumentoversikt.*
-import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.utils.createHeaders
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -32,13 +29,10 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
 import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
-import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.junit.jupiter.api.Assertions.*
-import java.util.*
 import java.util.List
 import java.util.Map
 
@@ -135,7 +129,6 @@ class FrontEndRestApiTest {
 		assertTrue(getResponse.body != null)
 		val getSoknadDto = getResponse.body
 		assertEquals(opprettetSoknadDto.innsendingsId, getSoknadDto!!.innsendingsId)
-
 	}
 
 	@Test
@@ -179,16 +172,11 @@ class FrontEndRestApiTest {
 		val patchedVedleggDto = patchResponse.body
 		assertEquals(vedleggDto.id, patchedVedleggDto!!.id)
 		assertEquals("Endret tittel", patchedVedleggDto.tittel)
-		assertEquals(OpplastingsStatusDto.sendesAvAndre, patchedVedleggDto.tittel)
-
-
-
-
+		assertEquals(OpplastingsStatusDto.sendesAvAndre, patchedVedleggDto.opplastingsStatus)
 	}
 
 	@Test
 	internal fun testResult() {
-		val hentPersonInfo = HentPersonInfo(HentPersonInfo.Variables(defaultUser))
 		val hentPerson = Person(listOf(Navn("Fornavn", "Mellomnavn","Etternavn")))
 		val hentIdenter = Identliste(listOf(IdentInformasjon(defaultUser, IdentGruppe.FOLKEREGISTERIDENT, false ), IdentInformasjon("12345678902", IdentGruppe.FOLKEREGISTERIDENT, true )))
 		val gson = Gson()
@@ -198,11 +186,5 @@ class FrontEndRestApiTest {
 		println(identJson)
 	}
 
-	private fun lagJournalpost(): Journalpost {
-		return Journalpost("123", "Tittel", "12345678", Journalstatus.JOURNALFOERT,
-			Journalposttype.I, "AAP", Kanal.NAV_NO, listOf(RelevantDato("2022-05-24T11:02:30", Datotype.DATO_OPPRETTET)),
-			AvsenderMottaker("12345678901"),
-			listOf(DokumentInfo("NAV 08-09.06", "NAV 08-09.06"), DokumentInfo("N6", "Et vedleggEgenerklæring og sykmelding")))
-	}
 
 }
