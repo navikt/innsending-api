@@ -36,7 +36,7 @@ class SoknadService(
 	private val brukerNotifikasjon: BrukernotifikasjonPublisher,
 	private val fillagerAPI: FillagerInterface,
 	private val soknadsmottakerAPI: MottakerInterface,
-	private val innsenderMetrics: InnsenderMetrics,
+	private val innsenderMetrics: InnsenderMetrics
 ) {
 
 	@Value("\${ettersendingsfrist}")
@@ -180,17 +180,19 @@ class SoknadService(
 		throw BackendErrorException(ex.message, "Feil i lagring av vedleggsdata ${vedleggDbData.vedleggsnr} til søknad")
 	}
 
-	private fun oppdaterVedlegg(innsendingsId: String, vedleggDbData: VedleggDbData) = try {
+	private fun oppdaterVedlegg(innsendingsId: String, vedleggDbData: VedleggDbData): Optional<VedleggDbData>  = try {
 		vedleggRepository.save(vedleggDbData)
+		vedleggRepository.findByVedleggsid(vedleggDbData.id!!)
 	} catch (ex: Exception) {
-		BackendErrorException(ex.message, "Feil ved oppdatering av vedlegg ${vedleggDbData.id} for søknad $innsendingsId")
+		throw BackendErrorException(ex.message, "Feil ved oppdatering av vedlegg ${vedleggDbData.id} for søknad $innsendingsId")
 	}
 
-	private fun oppdaterVedleggsTittelOgLabelOgStatus(vedleggDbData: VedleggDbData, nyTittel: String?, nyVedleggsStatus: OpplastingsStatus?) = try {
-		vedleggRepository.updateTittelAndLabelAndStatusAndEndretdato(vedleggDbData.id!!, nyTittel ?: vedleggDbData.tittel,
+	private fun oppdaterVedleggsTittelOgLabelOgStatus(vedleggDbData: VedleggDbData, nyTittel: String?, nyVedleggsStatus: OpplastingsStatus?): Optional<VedleggDbData> = try {
+		vedleggRepository.patchVedlegg(vedleggDbData.id!!, nyTittel ?: vedleggDbData.tittel,
 			nyVedleggsStatus ?: vedleggDbData.status, LocalDateTime.now() )
+		vedleggRepository.findByVedleggsid(vedleggDbData.id)
 	} catch (ex: Exception) {
-		BackendErrorException(ex.message, "Feil ved oppdatering av vedlegg ${vedleggDbData.id} for søknad ${vedleggDbData.soknadsid}")
+		throw BackendErrorException(ex.message, "Feil ved oppdatering av vedlegg ${vedleggDbData.id} for søknad ${vedleggDbData.soknadsid}")
 	}
 
 	private fun oppdaterEndretDato(soknadsId: Long) = try {
@@ -697,12 +699,16 @@ class SoknadService(
 			slettFilerForVedlegg(vedleggsId)
 		}
 
-		oppdaterVedleggsTittelOgLabelOgStatus(vedleggDbData, patchVedleggDto.tittel, mapTilOpplastingsStatus(patchVedleggDto.opplastingsStatus))
+		val oppdatertVedlegg = oppdaterVedlegg(soknadDto.innsendingsId!!, oppdaterVedleggDb(vedleggDbData, patchVedleggDto))
+
+		if (oppdatertVedlegg.isEmpty) {
+			throw BackendErrorException(null, "Vedlegg er ikke blitt oppdatert")
+		}
 
 		// Oppdater soknadens sist endret dato
 		oppdaterEndretDato(soknadDto.id!!)
 
-		return lagVedleggDto(hentVedlegg(vedleggDbData.id!!).get(), null)
+		return lagVedleggDto(oppdatertVedlegg.get(), null)
 	}
 
 	private fun mapTilOpplastingsStatus(opplastingsStatusDto: OpplastingsStatusDto?): OpplastingsStatus? =
@@ -989,6 +995,17 @@ class SoknadService(
 			, mapTilLocalDateTime(vedleggDto.opprettetdato)!!, LocalDateTime.now()
 			, url ?: vedleggDto.skjemaurl
 		)
+
+	private fun oppdaterVedleggDb(vedleggDbData: VedleggDbData, patchVedleggDto: PatchVedleggDto): VedleggDbData =
+		VedleggDbData(vedleggDbData.id, vedleggDbData.soknadsid,
+			if (patchVedleggDto.opplastingsStatus == null) vedleggDbData.status else mapTilDbOpplastingsStatus(patchVedleggDto.opplastingsStatus!!)
+			, vedleggDbData.erhoveddokument, vedleggDbData.ervariant, vedleggDbData.erpdfa, vedleggDbData.erpakrevd, vedleggDbData.vedleggsnr
+			, patchVedleggDto.tittel ?: vedleggDbData.tittel, patchVedleggDto.tittel ?: vedleggDbData.label, vedleggDbData.beskrivelse
+			, vedleggDbData.mimetype, vedleggDbData.uuid ?: UUID.randomUUID().toString()
+			, vedleggDbData.opprettetdato, LocalDateTime.now()
+			, vedleggDbData.vedleggsurl
+		)
+
 
 	private fun mapTilSoknadDb(dokumentSoknadDto: DokumentSoknadDto, innsendingsId: String, status: SoknadsStatus? = SoknadsStatus.Opprettet) =
 		SoknadDbData(dokumentSoknadDto.id, innsendingsId,

@@ -8,7 +8,7 @@ import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.security.token.support.spring.test.MockLoginController
 import no.nav.soknad.innsending.InnsendingApiApplication
-import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.model.OpprettSoknadBody
 import no.nav.soknad.innsending.pdl.generated.HentPersonInfo
 import no.nav.soknad.innsending.pdl.generated.enums.IdentGruppe
@@ -138,6 +138,53 @@ class FrontEndRestApiTest {
 
 	}
 
+	@Test
+	fun oppdaterVedleggTest() {
+		val skjemanr = "NAV 95-00.11"
+		val spraak = "NO_nb"
+		val vedlegg = listOf("N6")
+
+		val token: String = mockOAuth2Server.issueToken(
+			tokenx,
+			MockLoginController::class.java.simpleName,
+			DefaultOAuth2TokenCallback(
+				tokenx,
+				subject,
+				JOSEObjectType.JWT.type,
+				List.of(audience),
+				Map.of("acr", "Level4"),
+				if (expiry != null) expiry.toLong() else 3600
+			)
+		).serialize()
+
+		val opprettSoknadBody = OpprettSoknadBody(defaultUser, skjemanr, spraak, vedlegg)
+		val postRequestEntity =	HttpEntity(opprettSoknadBody, createHeaders(token))
+
+		val postResponse = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.POST,
+			postRequestEntity, DokumentSoknadDto::class.java
+		)
+
+		assertTrue(postResponse.body != null)
+		val opprettetSoknadDto = postResponse.body
+		assertTrue(opprettetSoknadDto!!.vedleggsListe.isNotEmpty())
+
+		val vedleggDto = opprettetSoknadDto.vedleggsListe.filter{!it.erHoveddokument}.first()
+		val patchVedleggDto = PatchVedleggDto("Endret tittel", OpplastingsStatusDto.sendesAvAndre)
+		val patchRequestEntity = HttpEntity(patchVedleggDto, createHeaders(token))
+		val patchResponse = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad/${opprettetSoknadDto!!.innsendingsId}/vedlegg/${vedleggDto.id}", HttpMethod.PATCH,
+			patchRequestEntity, VedleggDto::class.java
+		)
+
+		assertTrue(patchResponse.body != null)
+		val patchedVedleggDto = patchResponse.body
+		assertEquals(vedleggDto.id, patchedVedleggDto!!.id)
+		assertEquals("Endret tittel", patchedVedleggDto.tittel)
+		assertEquals(OpplastingsStatusDto.sendesAvAndre, patchedVedleggDto.tittel)
+
+
+
+
+	}
 
 	@Test
 	internal fun testResult() {
