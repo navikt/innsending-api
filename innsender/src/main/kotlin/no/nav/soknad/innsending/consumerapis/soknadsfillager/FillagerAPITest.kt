@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.consumerapis.soknadsfillager
 
-import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.model.VedleggDto
 import org.jboss.logging.Logger
@@ -11,9 +10,9 @@ import org.springframework.stereotype.Service
 @Service
 @Profile("default | test | spring | docker")
 @Qualifier("fillager")
-class FillagerAPITest(private val restConfig: RestConfig): FillagerInterface, HealthRequestInterface {
+class FillagerAPITest: FillagerInterface, HealthRequestInterface {
 
-	val logger = Logger.getLogger(javaClass)
+	val logger: Logger = Logger.getLogger(javaClass)
 
 	override fun ping(): String {
 		return "pong"

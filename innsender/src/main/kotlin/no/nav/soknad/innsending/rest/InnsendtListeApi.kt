@@ -2,7 +2,6 @@ package no.nav.soknad.innsending.rest
 
 import io.swagger.annotations.ApiOperation
 import no.nav.security.token.support.core.api.ProtectedWithClaims
-import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.InnsendteApi
 import no.nav.soknad.innsending.model.AktivSakDto
 import no.nav.soknad.innsending.security.Tilgangskontroll

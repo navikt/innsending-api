@@ -26,10 +26,6 @@ class BrukernotifikasjonPublisher(
 	val tittelPrefixNySoknad = "Du har påbegynt en søknad om "
 	val linkDokumentinnsending = notifikasjonConfig.gjenopptaSoknadsArbeid
 	val linkDokumentinnsendingEttersending = notifikasjonConfig.ettersendePaSoknad
-	val eksternVarsling = false
-	val epostTittelNySoknad = "Ny soknad opprettet"
-	val epostTittelNyEttersending = "Ny soknad for ettersending av dokumentasjon opprettet"
-	val epostTittelEttersending = "Husk å ettersende manglende dokumentasjon"
 
 	fun soknadStatusChange(dokumentSoknad: DokumentSoknadDto): Boolean {
 

@@ -18,18 +18,6 @@ class KodeverkSkjema {
 	var tema: String? = null
 	var gosysId: String? = null
 
-	fun getUrl(languageCode: Spraak?): String? = when (languageCode) {
-		Spraak.NB -> defaultIfNull(url)
-		Spraak.NN -> defaultIfNull(urlnynorsk)
-		Spraak.EN -> defaultIfNull(urlengelsk)
-		Spraak.PL -> defaultIfNull(urlpolsk)
-		Spraak.ES -> defaultIfNull(urlspansk)
-		Spraak.DE -> defaultIfNull(urltysk)
-		Spraak.FR -> defaultIfNull(urlfransk)
-		Spraak.SA -> defaultIfNull(urlsamisk)
-		else -> url
-	}
-
 	private fun defaultIfNull(url: String?): String? {
 		return if (StringUtils.isBlank(url)) {
 			url

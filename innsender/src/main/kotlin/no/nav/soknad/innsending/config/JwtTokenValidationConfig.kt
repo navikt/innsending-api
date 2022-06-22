@@ -15,5 +15,4 @@ import org.springframework.context.annotation.Profile
 ])
 @Profile("test | dev | prod")
 @Configuration
-class JwtTokenValidationConfig {
-}
+class JwtTokenValidationConfig

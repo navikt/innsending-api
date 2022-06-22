@@ -29,8 +29,6 @@ import org.springframework.http.HttpMethod
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.junit.jupiter.api.Assertions.*
-import java.util.List
-import java.util.Map
 
 
 @Suppress("DEPRECATION")
@@ -69,9 +67,9 @@ internal class InnsendtListeApiTest {
 				tokenx,
 				subject,
 				JOSEObjectType.JWT.type,
-				List.of(audience),
-				Map.of("acr", "Level4"),
-				if (expiry != null) expiry.toLong() else 3600
+				listOf(audience),
+				mapOf("acr" to "Level4"),
+				expiry.toLong()
 			)
 		).serialize()
 

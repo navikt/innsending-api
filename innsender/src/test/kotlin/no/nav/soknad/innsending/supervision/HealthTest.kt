@@ -1,10 +1,6 @@
 package no.nav.soknad.innsending.supervision
 
-import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
-import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
-import no.nav.soknad.innsending.consumerapis.saf.SafInterface
-import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerAPI
 import no.nav.soknad.innsending.repository.VedleggRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow

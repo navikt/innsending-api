@@ -9,17 +9,11 @@ import no.nav.security.token.support.spring.test.MockLoginController
 import no.nav.soknad.innsending.InnsendingApiApplication
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.model.OpprettSoknadBody
-import no.nav.soknad.innsending.pdl.generated.HentPersonInfo
 import no.nav.soknad.innsending.pdl.generated.enums.IdentGruppe
 import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.IdentInformasjon
 import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.Identliste
 import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.Navn
 import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.Person
-import no.nav.soknad.innsending.safselvbetjening.generated.enums.Datotype
-import no.nav.soknad.innsending.safselvbetjening.generated.enums.Journalposttype
-import no.nav.soknad.innsending.safselvbetjening.generated.enums.Journalstatus
-import no.nav.soknad.innsending.safselvbetjening.generated.enums.Kanal
-import no.nav.soknad.innsending.safselvbetjening.generated.hentdokumentoversikt.*
 import no.nav.soknad.innsending.utils.createHeaders
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -33,8 +27,6 @@ import org.springframework.http.HttpMethod
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.junit.jupiter.api.Assertions.*
-import java.util.List
-import java.util.Map
 
 @Suppress("DEPRECATION")
 @ActiveProfiles("test")
@@ -67,7 +59,7 @@ class FrontEndRestApiTest {
 	@Test
 	fun opprettSoknadTest() {
 		val skjemanr = "NAV 95-00.11"
-		val spraak = "NO_nb"
+		val spraak = "nb_NO"
 
 		val token: String = mockOAuth2Server.issueToken(
 			tokenx,
@@ -76,9 +68,9 @@ class FrontEndRestApiTest {
 				tokenx,
 				subject,
 				JOSEObjectType.JWT.type,
-				List.of(audience),
-				Map.of("acr", "Level4"),
-				if (expiry != null) expiry.toLong() else 3600
+				listOf(audience),
+				mapOf("acr" to "Level4"),
+				expiry.toLong()
 			)
 		).serialize()
 
@@ -96,7 +88,7 @@ class FrontEndRestApiTest {
 	@Test
 	fun hentOpprettetSoknadTest() {
 		val skjemanr = "NAV 95-00.11"
-		val spraak = "NO_nb"
+		val spraak = "nb_NO"
 
 		val token: String = mockOAuth2Server.issueToken(
 			tokenx,
@@ -105,9 +97,9 @@ class FrontEndRestApiTest {
 				tokenx,
 				subject,
 				JOSEObjectType.JWT.type,
-				List.of(audience),
-				Map.of("acr", "Level4"),
-				if (expiry != null) expiry.toLong() else 3600
+				listOf(audience),
+				mapOf("acr" to "Level4"),
+				expiry.toLong()
 			)
 		).serialize()
 
@@ -134,7 +126,7 @@ class FrontEndRestApiTest {
 	@Test
 	fun oppdaterVedleggTest() {
 		val skjemanr = "NAV 95-00.11"
-		val spraak = "NO_nb"
+		val spraak = "nb_NO"
 		val vedlegg = listOf("N6")
 
 		val token: String = mockOAuth2Server.issueToken(
@@ -144,9 +136,9 @@ class FrontEndRestApiTest {
 				tokenx,
 				subject,
 				JOSEObjectType.JWT.type,
-				List.of(audience),
-				Map.of("acr", "Level4"),
-				if (expiry != null) expiry.toLong() else 3600
+				listOf(audience),
+				mapOf("acr" to "Level4"),
+				expiry.toLong()
 			)
 		).serialize()
 
@@ -161,10 +153,10 @@ class FrontEndRestApiTest {
 		val opprettetSoknadDto = postResponse.body
 		assertTrue(opprettetSoknadDto!!.vedleggsListe.isNotEmpty())
 
-		val vedleggDto = opprettetSoknadDto.vedleggsListe.filter{!it.erHoveddokument}.first()
+		val vedleggDto = opprettetSoknadDto.vedleggsListe.first { !it.erHoveddokument }
 		val patchVedleggDto = PatchVedleggDto("Endret tittel", OpplastingsStatusDto.sendesAvAndre)
 		val patchRequestEntity = HttpEntity(patchVedleggDto, createHeaders(token))
-		val patchResponse = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad/${opprettetSoknadDto!!.innsendingsId}/vedlegg/${vedleggDto.id}", HttpMethod.PATCH,
+		val patchResponse = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad/${opprettetSoknadDto.innsendingsId}/vedlegg/${vedleggDto.id}", HttpMethod.PATCH,
 			patchRequestEntity, VedleggDto::class.java
 		)
 

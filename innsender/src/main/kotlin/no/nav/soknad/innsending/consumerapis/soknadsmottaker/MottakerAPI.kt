@@ -14,7 +14,6 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.Mimetype
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
-import no.nav.soknad.innsending.repository.OpplastingsStatus
 //import no.nav.soknad.innsending.supervision.HealthCheker
 //import no.nav.soknad.innsending.supervision.HealthCheker.Ping
 //import no.nav.soknad.innsending.supervision.HealthCheker.PingMetadata
@@ -75,8 +74,8 @@ class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, Health
 		return "pong"
 	}
 
-	override fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>) {
-		val soknad = translate(soknadDto, vedleggDtos)
+	override fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggsListe: List<VedleggDto>) {
+		val soknad = translate(soknadDto, vedleggsListe)
 		logger.info("${soknadDto.innsendingsId}: klar til å sende inn\n${maskerFnr(soknad)}\ntil ${restConfig.soknadsMottakerHost}")
 		mottakerClient.receive(soknad)
 		logger.info("${soknadDto.innsendingsId}: sendt inn}")
@@ -99,16 +98,16 @@ class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, Health
 		 */
 		// Lag documentdata for hoveddokumentet (finn alle vedleggdto markert som hoveddokument)
 		val hoveddokumentVedlegg: List<Varianter> =
-			vedleggDtos.filter{ it.erHoveddokument && it.opplastingsStatus.equals(OpplastingsStatusDto.lastetOpp) }.map { translate(it)}
+			vedleggDtos.filter{ it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }.map { translate(it)}
 
 		val hovedDokument: DocumentData = vedleggDtos
-			.filter{ it.erHoveddokument && it.opplastingsStatus.equals(OpplastingsStatusDto.lastetOpp)  && !it.erVariant}
+			.filter{ it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp && !it.erVariant}
 			.map { DocumentData(it.vedleggsnr!!, it.erHoveddokument, it.tittel, hoveddokumentVedlegg)}
 			.first()
 
 		// Merk: at det  er antatt at vedlegg ikke har varianter. Hvis vi skal støtte dette må varianter av samme vedlegg linkes sammen
 		val vedlegg: List<DocumentData> = vedleggDtos
-			.filter { !it.erHoveddokument && it.opplastingsStatus.equals(OpplastingsStatusDto.lastetOpp) }
+			.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
 			.map { DocumentData(it.vedleggsnr!!, it.erHoveddokument, it.tittel, listOf(translate(it)))}
 
 		return listOf(hovedDokument) + vedlegg

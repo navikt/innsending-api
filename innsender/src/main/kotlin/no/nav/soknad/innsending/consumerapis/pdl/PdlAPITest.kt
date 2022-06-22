@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.consumerapis.pdl
 
-import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.*
 import no.nav.soknad.innsending.exceptions.BackendErrorException
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Service
 @Service
 @Profile("spring | docker | default")
 @Qualifier("pdl")
-class PdlAPITest(private val restConfig: RestConfig): PdlInterface, HealthRequestInterface {
+class PdlAPITest: PdlInterface, HealthRequestInterface {
 
 	override fun ping(): String {
 		return "pong"
@@ -25,7 +24,7 @@ class PdlAPITest(private val restConfig: RestConfig): PdlInterface, HealthReques
 	}
 
 	override fun hentPersonData(brukerId: String): PersonDto? {
-		val personDto = dummyPersonDtos.get(brukerId)
+		val personDto = dummyPersonDtos[brukerId]
 		if (personDto != null) return personDto
 		throw BackendErrorException("Pålogget bruker $brukerId ikke funnet i PDL", "Problem med å hente opp brukerdata")
 	}

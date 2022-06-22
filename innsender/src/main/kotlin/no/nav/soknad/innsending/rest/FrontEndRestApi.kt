@@ -31,7 +31,6 @@ import java.time.OffsetDateTime
 import javax.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
-import org.springframework.web.util.UriComponentsBuilder
 
 @RestController
 @CrossOrigin(maxAge = 3600)
@@ -94,7 +93,7 @@ class FrontEndRestApi(
 		nickname = "ettersendingPaInnsendingsId",
 		notes = "På basis av oppgitt innsendingsid, blir det opprettet en ettersendingssøknad som inviterer søker til å laste opp vedlegg.",
 		response = DokumentSoknadDto::class)
-	@io.swagger.annotations.ApiResponses(
+	@ApiResponses(
 		value = [io.swagger.annotations.ApiResponse(
 			code = 200,
 			message = "Successful operation",
@@ -135,7 +134,7 @@ class FrontEndRestApi(
 		nickname = "opprettEttersendingGittSkjemanr",
 		notes = "På basis av oppgitt skjemanummer, blir det opprettet en ettersendingssøknad som inviterer søker til å laste opp vedlegg.",
 		response = DokumentSoknadDto::class)
-	@io.swagger.annotations.ApiResponses(
+	@ApiResponses(
 		value = [io.swagger.annotations.ApiResponse(
 			code = 200,
 			message = "Successful operation",
@@ -174,7 +173,7 @@ class FrontEndRestApi(
 		notes = "Det returneres en liste av alle søknader som søker ikke har sendt inn.",
 		response = DokumentSoknadDto::class,
 		responseContainer = "List")
-	@io.swagger.annotations.ApiResponses(
+	@ApiResponses(
 		value = [io.swagger.annotations.ApiResponse(
 			code = 200,
 			message = "Successful operation",
@@ -207,7 +206,7 @@ class FrontEndRestApi(
 		nickname = "hentSoknad",
 		notes = "Dersom funnet, returneres søknaden.",
 		response = DokumentSoknadDto::class)
-	@io.swagger.annotations.ApiResponses(
+	@ApiResponses(
 		value = [io.swagger.annotations.ApiResponse(
 			code = 200,
 			message = "Successful operation",
@@ -244,7 +243,7 @@ class FrontEndRestApi(
 		value = ["/frontend/v1/soknad/{innsendingsId}"],
 		consumes = ["application/json"]
 	)
-	override fun endreSoknad(@ApiParam(value = "identifisering av søknad som skal oppdateres", required=true) @PathVariable("innsendingsId") innsendingsId: kotlin.String
+	override fun endreSoknad(@ApiParam(value = "identifisering av søknad som skal oppdateres", required=true) @PathVariable("innsendingsId") innsendingsId: String
 									,@ApiParam(value = "New value for visningsSteg." ,required=true ) @Valid @RequestBody patchSoknadDto: PatchSoknadDto
 	): ResponseEntity<Unit> {
 		logger.info("Kall for å endre søknad med id $innsendingsId")
@@ -266,7 +265,7 @@ class FrontEndRestApi(
 		notes = "Dersom funnet, returneres liste av søknadens vedlegg.",
 		response = VedleggDto::class,
 		responseContainer = "List")
-	@io.swagger.annotations.ApiResponses(
+	@ApiResponses(
 		value = [io.swagger.annotations.ApiResponse(
 			code = 200,
 			message = "Successful operation",
@@ -299,7 +298,7 @@ class FrontEndRestApi(
 		nickname = "hentVedlegg",
 		notes = "Dersom funnet, returneres spesifisert vedlegg.",
 		response = VedleggDto::class)
-	@io.swagger.annotations.ApiResponses(
+	@ApiResponses(
 		value = [io.swagger.annotations.ApiResponse(
 			code = 200,
 			message = "Successful operation",
@@ -348,8 +347,8 @@ class FrontEndRestApi(
 		produces = ["application/json"],
 		consumes = ["application/json"]
 	)
-	override fun endreVedlegg(@ApiParam(value = "identifisering av søknad hvis vedlegg skal endres", required=true) @PathVariable("innsendingsId") innsendingsId: kotlin.String
-									 ,@ApiParam(value = "identifisering av vedlegg som skal endres", required=true) @PathVariable("vedleggsId") vedleggsId: kotlin.Long
+	override fun endreVedlegg(@ApiParam(value = "identifisering av søknad hvis vedlegg skal endres", required=true) @PathVariable("innsendingsId") innsendingsId: String
+									 ,@ApiParam(value = "identifisering av vedlegg som skal endres", required=true) @PathVariable("vedleggsId") vedleggsId: Long
 									 ,@ApiParam(value = "Data som skal endres" ,required=true ) @Valid @RequestBody patchVedleggDto: PatchVedleggDto
 	): ResponseEntity<VedleggDto> {
 		logger.info("Kall for å endre vedlegg til søknad $innsendingsId")
@@ -508,7 +507,7 @@ class FrontEndRestApi(
 		notes = "Dersom funnet, returneres liste med informasjon om opplastede filer, hvis ingen filer lastet opp returneres en tom liste.",
 		response = FilDto::class,
 		responseContainer = "List")
-	@io.swagger.annotations.ApiResponses(
+	@ApiResponses(
 		value = [io.swagger.annotations.ApiResponse(
 			code = 200,
 			message = "Successful operation",
@@ -544,7 +543,7 @@ class FrontEndRestApi(
 		nickname = "slettFil",
 		notes = "Dersom funnet, slettes filen.",
 		response = BodyStatusResponseDto::class)
-	@io.swagger.annotations.ApiResponses(
+	@ApiResponses(
 		value = [io.swagger.annotations.ApiResponse(
 			code = 200,
 			message = "Successful operation",
@@ -582,7 +581,7 @@ class FrontEndRestApi(
 		nickname = "slettVedlegg",
 		notes = "Dersom funnet og vedleggstypen=N6 slettes vedlegget.",
 		response = BodyStatusResponseDto::class)
-	@io.swagger.annotations.ApiResponses(
+	@ApiResponses(
 		value = [io.swagger.annotations.ApiResponse(
 			code = 200,
 			message = "Successful operation",
@@ -616,7 +615,7 @@ class FrontEndRestApi(
 		nickname = "slettSoknad",
 		notes = "Dersom funnet, slettes søknaden.",
 		response = BodyStatusResponseDto::class)
-	@io.swagger.annotations.ApiResponses(
+	@ApiResponses(
 		value = [io.swagger.annotations.ApiResponse(
 			code = 200,
 			message = "Successful operation",

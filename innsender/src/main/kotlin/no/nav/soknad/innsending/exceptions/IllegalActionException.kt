@@ -1,5 +1,3 @@
 package no.nav.soknad.innsending.exceptions
 
-class IllegalActionException(arsak: String?, message: String): RuntimeException(message) {
-	val arsak = arsak
-}
+class IllegalActionException(val arsak: String?, message: String): RuntimeException(message)

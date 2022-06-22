@@ -11,7 +11,6 @@ import no.nav.soknad.innsending.model.SkjemaDokumentDto
 import no.nav.soknad.innsending.model.SkjemaDto
 import no.nav.soknad.innsending.utils.createHeaders
 import no.nav.soknad.innsending.utils.getBytesFromFile
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,8 +22,6 @@ import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import java.util.List
-import java.util.Map
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -63,9 +60,9 @@ class SkjemaRestApiTest {
 				tokenx,
 				subject,
 				JOSEObjectType.JWT.type,
-				List.of(audience),
-				Map.of("acr", "Level4"),
-				if (expiry != null) expiry.toLong() else 3600
+				listOf(audience),
+				mapOf("acr" to "Level4"),
+				expiry.toLong()
 			)
 		).serialize()
 
@@ -87,7 +84,7 @@ class SkjemaRestApiTest {
 		assertTrue(response != null)
 
 		assertEquals(302, response.statusCodeValue)
-		assertTrue(response.headers.get("Location") != null)
+		assertTrue(response.headers["Location"] != null)
 
 	}
 
@@ -95,12 +92,12 @@ class SkjemaRestApiTest {
 		return SkjemaDokumentDto(vedleggsnr, tittel, tittel, pakrevd, tittel+ "- Beskrivelse", mimetype, hentFil(mimetype))
 	}
 
-	private fun hentFil(mimetype: Mimetype?): ByteArray? {
+	private fun hentFil(mimetype: Mimetype?): ByteArray? =
 		when(mimetype) {
-			null -> return null
-			Mimetype.applicationSlashPdf -> return getBytesFromFile("/litenPdf.pdf")
-			Mimetype.applicationSlashJson -> return getBytesFromFile("/sanity.json")
+			null ->  null
+			Mimetype.applicationSlashPdf ->  getBytesFromFile("/litenPdf.pdf")
+			Mimetype.applicationSlashJson ->  getBytesFromFile("/sanity.json")
 			else -> throw RuntimeException("Testing med mimetype = $mimetype er ikke støttet")
 		}
-	}
+
 }

@@ -34,10 +34,10 @@ class SkjemaClient(private val restConfig: RestConfig,
 				.collectList()
 				.block()
 
-		logger.info("Skjema hentet fra Sanity ${skjemaer}")
+		logger.info("Skjema hentet fra Sanity $skjemaer")
 
-		if (skjemaer != null && skjemaer.get(0) != null && skjemaer.get(0).skjemaer!!.isNotEmpty()) {
-				return skjemaer.get(0)?.skjemaer ?: emptyList()
+		if (skjemaer?.get(0) != null && skjemaer.get(0)?.skjemaer!!.isNotEmpty()) {
+				return skjemaer[0]?.skjemaer ?: emptyList()
 			}
 			throw RuntimeException("Feil ved forsøk på henting av skjema fra sanity")
 

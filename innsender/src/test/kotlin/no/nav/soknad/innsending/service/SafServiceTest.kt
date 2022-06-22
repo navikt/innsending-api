@@ -19,14 +19,10 @@ import java.time.format.DateTimeFormatter
 @EnableTransactionManagement
 class SafServiceTest {
 
-	@Autowired
-	private lateinit var restConfig: RestConfig
-
-
 	@Test
 	fun hentInnsendteSoknaderForBrukerTest() {
 		val brukerId = testpersonid
-		val safService = SafService(SafAPITmp(restConfig))
+		val safService = SafService(SafAPITmp())
 		val innsendteSoknader = safService.hentInnsendteSoknader(brukerId)
 
 		assertTrue(innsendteSoknader.isNotEmpty())
@@ -35,7 +31,7 @@ class SafServiceTest {
 	@Test
 	fun brukerHarIngenInnsendteSoknaderTest() {
 		val brukerId = "999999999999"
-		val safService = SafService(SafAPITmp(restConfig))
+		val safService = SafService(SafAPITmp())
 		val innsendteSoknader = safService.hentInnsendteSoknader(brukerId)
 
 		assertTrue(innsendteSoknader.isEmpty())

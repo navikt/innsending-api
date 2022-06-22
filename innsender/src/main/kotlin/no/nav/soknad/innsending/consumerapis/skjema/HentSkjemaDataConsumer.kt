@@ -23,7 +23,7 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 			sanityList = try {
 				hentSkjemaData()
 			} catch (e: Exception) {
-				logger.error("Feil ved henting av skjemadata fra Sanity", e.message)
+				logger.error("Feil ved henting av skjemadata fra Sanity, ${e.message}")
 				initSkjemaDataFromDisk()
 			}
 			if (sanityList.isEmpty()) sanityList = initSkjemaDataFromDisk()

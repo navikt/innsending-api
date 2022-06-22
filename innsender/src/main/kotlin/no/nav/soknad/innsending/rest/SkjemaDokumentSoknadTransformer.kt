@@ -15,7 +15,7 @@ class SkjemaDokumentSoknadTransformer {
 
 	private fun lagVedleggsListe(skjemaDto: SkjemaDto): List<VedleggDto> {
 		val hoveddok = konverterTilVedleggDto(skjemaDto.hoveddokument, true, false)
-		val variant = konverterTilVedleggDto(skjemaDto.hoveddokumentVariant, true, false)
+		val variant = konverterTilVedleggDto(skjemaDto.hoveddokumentVariant, true, true)
 		val vedleggListe: List<VedleggDto>? = skjemaDto.vedleggsListe?.map { konverterTilVedleggDto(it, false, false) }
 			?.toList()
 

@@ -11,7 +11,6 @@ import no.nav.soknad.innsending.safselvbetjening.generated.HentDokumentOversikt
 import no.nav.soknad.innsending.safselvbetjening.generated.enums.Journalposttype
 import no.nav.soknad.innsending.safselvbetjening.generated.hentdokumentoversikt.DokumentInfo
 import no.nav.soknad.innsending.safselvbetjening.generated.hentdokumentoversikt.Dokumentoversikt
-import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.testpersonid
 import org.slf4j.LoggerFactory
@@ -26,7 +25,6 @@ import java.time.format.DateTimeFormatter
 @Qualifier("saf")
 class SafAPI(
 	private val safSelvbetjeningGraphQLClient: GraphQLWebClient,
-	private val tokenUtil: SubjectHandlerInterface
 ): SafInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -64,7 +62,7 @@ class SafAPI(
 						.map {
 							ArkiverteSaker(
 								it.eksternReferanseId, it.tittel ?: "", it.tema ?: "",
-								it.relevanteDatoer.get(0)?.dato, konverterTilDokumentListe(it.dokumenter)
+								it.relevanteDatoer[0]?.dato, konverterTilDokumentListe(it.dokumenter)
 							)
 						}
 						.toList()
@@ -80,7 +78,7 @@ class SafAPI(
 		val dokumenter = mutableListOf<Dokument>()
 		if (dokumentInfo == null || dokumentInfo.isEmpty()) return dokumenter
 
-		dokumenter.add(Dokument(dokumentInfo.get(0)?.brevkode, dokumentInfo.get(0)?.tittel ?: "", "Hoveddokument" ))
+		dokumenter.add(Dokument(dokumentInfo[0]?.brevkode, dokumentInfo[0]?.tittel ?: "", "Hoveddokument" ))
 
 		if (dokumentInfo.size>1) {
 			dokumentInfo.subList(1, dokumentInfo.size).forEach { dokumenter.add (Dokument(it?.brevkode ?: "", it?.tittel ?: "", "Vedlegg")) }

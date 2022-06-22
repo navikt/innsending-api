@@ -11,12 +11,11 @@ data class ProfileConfig(val profil: String)
 @Priority(-1)
 class ProfileConfiguration(private val env: ConfigurableEnvironment) {
 
-		@Bean
+	@Bean
 	fun profileConfig(): ProfileConfig {
 		val profil = System.getenv("SPRING_PROFILES_ACTIVE") ?: "test"
 		env.setActiveProfiles(profil)
 
-		val appProfil = ProfileConfig(profil)
-		return appProfil
+		return ProfileConfig(profil)
 	}
 }

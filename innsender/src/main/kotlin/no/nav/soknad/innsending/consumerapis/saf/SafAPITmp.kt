@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.consumerapis.saf
 
-import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.consumerapis.saf.dto.Dokument
@@ -15,7 +14,7 @@ import java.time.format.DateTimeFormatter
 @Service
 @Profile("spring | docker | default")
 @Qualifier("saf")
-class SafAPITmp(private val restConfig: RestConfig): SafInterface, HealthRequestInterface {
+class SafAPITmp: SafInterface, HealthRequestInterface {
 
 	override fun ping(): String {
 		return "pong"
@@ -28,7 +27,7 @@ class SafAPITmp(private val restConfig: RestConfig): SafInterface, HealthRequest
 	}
 
 	override fun hentBrukersSakerIArkivet(brukerId: String): List<ArkiverteSaker>? {
-		return dummyArkiverteSoknader.get(brukerId)
+		return dummyArkiverteSoknader[brukerId]
 	}
 
 	private val date = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format( OffsetDateTime.now())

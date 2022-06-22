@@ -7,7 +7,6 @@ import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
-import no.nav.soknad.innsending.ProfileConfig
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.config.BrukerNotifikasjonConfig
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
@@ -27,7 +26,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 internal class BrukernotifikasjonPublisherTest {
 
 	@Autowired
-	private val notifikasjonConfig: BrukerNotifikasjonConfig = BrukerNotifikasjonConfig(ProfileConfig("test"))
+	private val notifikasjonConfig: BrukerNotifikasjonConfig = BrukerNotifikasjonConfig()
 
 	@InjectMockKs
 	var sendTilPublisher = mockk<PublisherInterface>()

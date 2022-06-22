@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import no.nav.soknad.innsending.service.SoknadService
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
@@ -16,6 +17,8 @@ import java.time.LocalDateTime
 @Service
 class SlettFilerTilInnsendteSoknader(private val soknadService: SoknadService) {
 
+	val logger: Logger = LoggerFactory.getLogger(javaClass)
+
 	@OptIn(ExperimentalSerializationApi::class)
 	val format = Json { explicitNulls = false; ignoreUnknownKeys = true }
 	@Serializable
@@ -23,8 +26,6 @@ class SlettFilerTilInnsendteSoknader(private val soknadService: SoknadService) {
 		val name: String,
 		val last_update: String? = LocalDateTime.now().toString()
 	)
-
-	val logger = LoggerFactory.getLogger(javaClass)
 
 	@Value("\${cron.slettInnsendtFilEldreEnn}")
 	private lateinit var slettInnsendtFilEldreEnn: String

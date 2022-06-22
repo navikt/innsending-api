@@ -5,7 +5,6 @@ import kotlin.properties.Delegates
 
 @ConfigurationProperties("restconfig")
 class RestConfig {
-	lateinit var version: String
 	lateinit var username: String
 	lateinit var password: String
 	lateinit var sharedUsername: String
@@ -15,11 +14,8 @@ class RestConfig {
 	lateinit var sanityHost: String
 	lateinit var sanityEndpoint: String
 	lateinit var filestorageHost: String
-	lateinit var filestorageEndpoint: String
-	lateinit var filestorageParameters: String
 	var filesInOneRequestToFilestorage by Delegates.notNull<Int>()
 	lateinit var soknadsMottakerHost: String
-	lateinit var soknadsMottakerEndpoint: String
 	lateinit var frontEndFortsettEndpoint: String
 	lateinit var pdlUrl: String
 	lateinit var safUrl: String
