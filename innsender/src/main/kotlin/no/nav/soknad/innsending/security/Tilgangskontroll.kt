@@ -4,6 +4,7 @@ import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.util.testpersonid
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
@@ -14,14 +15,12 @@ class Tilgangskontroll(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	val testbrukerid = "02097225454" // TODO slett etterhvert
-
 	fun hentBrukerFraToken(): String {
 		try {
 			return subjectHandler.getUserIdFromToken()
 		} catch (ex: Exception) {
-			logger.warn("Midlertidig bruk av testbrukerid $testbrukerid")
-			return testbrukerid
+			logger.warn("Midlertidig bruk av testpersonid $testpersonid")
+			return testpersonid
 		}
 	}
 
