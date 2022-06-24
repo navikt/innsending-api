@@ -124,7 +124,7 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun opprettSoknadForEttersendingGittSkjemanr(brukerId: String, skjemanr: String, spraak: String = "no", vedleggsnrListe: List<String> = emptyList()): DokumentSoknadDto {
+	fun opprettSoknadForEttersendingGittSkjemanr(brukerId: String, skjemanr: String, spraak: String = "nb", vedleggsnrListe: List<String> = emptyList()): DokumentSoknadDto {
 		val kodeverkSkjema = try {
 			// hentSkjema informasjon gitt skjemanr
 			hentSkjema(skjemanr, finnSpraakFraInput(spraak))
@@ -261,7 +261,7 @@ class SoknadService(
 							UUID.randomUUID().toString(),
 							LocalDateTime.now(),
 							LocalDateTime.now(),
-							if (v.vedleggsnr != null) hentSkjema(v.vedleggsnr!!, nyesteSoknad.spraak ?: "no").url else null
+							if (v.vedleggsnr != null) hentSkjema(v.vedleggsnr!!, nyesteSoknad.spraak ?: "nb").url else null
 						)
 					)
 				}
@@ -289,7 +289,7 @@ class SoknadService(
 						mapTilVedleggDb(
 							it,
 							soknadsid!!,
-							skjemaService.hentSkjemaEllerVedlegg(it.vedleggsnr!!, savedSoknadDbData.spraak ?: "no")
+							skjemaService.hentSkjemaEllerVedlegg(it.vedleggsnr!!, savedSoknadDbData.spraak ?: "nb")
 						)
 					)
 				}

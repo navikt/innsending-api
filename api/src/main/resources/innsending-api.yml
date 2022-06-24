@@ -1022,8 +1022,8 @@ components:
 
     Spraak:
       type: string
-      description: Søkers foretrukne språk.
-      example: no_NO
+      description: Søkers foretrukne språk. Det er alltid støtte for nb_NO (norsk bokmål). Det er varierende støtte for andre språk på ulike skjema.
+      example: nb_NO
 
     Tema:
       type: string
