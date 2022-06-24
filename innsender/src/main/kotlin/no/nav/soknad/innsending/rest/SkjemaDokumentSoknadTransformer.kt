@@ -10,7 +10,8 @@ class SkjemaDokumentSoknadTransformer {
 	fun konverterTilDokumentSoknadDto(input: SkjemaDto, brukerId: String): DokumentSoknadDto = DokumentSoknadDto(brukerId,
 		input.skjemanr, input.tittel, input.tema, SoknadsStatusDto.opprettet, LocalDateTime.now().atOffset(ZoneOffset.UTC),
 		lagVedleggsListe(input), null, null, null, finnSpraakFraInput(input.spraak),
-		LocalDateTime.now().atOffset(ZoneOffset.UTC), null, 0, VisningsType.fyllUt )
+		LocalDateTime.now().atOffset(ZoneOffset.UTC), null, 0, VisningsType.fyllUt,
+		input.vedleggsListe?.any { it.vedleggsnr == "N6"})
 
 
 	private fun lagVedleggsListe(skjemaDto: SkjemaDto): List<VedleggDto> {

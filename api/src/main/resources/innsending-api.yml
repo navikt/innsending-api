@@ -751,6 +751,10 @@ components:
           $ref: "#/components/schemas/VisningsSteg"
         visningsType:
           $ref: "#/components/schemas/VisningsType"
+        kanLasteOppAnnet:
+          type: boolean
+          description: Angir om det skal være mulig å opprette og laste opp filer på vedlegg av type Annet (N6) på søknaden.
+          default: true
 
     FilDto:
       type: object
@@ -867,7 +871,7 @@ components:
 
     OpplastingsStatusDto:
       type: string
-      enum: ["IkkeValgt", "LastetOpp", "Innsendt", "SendSenere", "SendesAvAndre"]
+      enum: ["IkkeValgt", "LastetOpp", "Innsendt", "SendSenere", "SendesAvAndre", "SendesIkke"]
       description: Status på om et vedlegg til søknad er enda ikke er lastet opp, lastet opp eller innsendt
 
     OpprettEttersendingGittInnsendingsId:

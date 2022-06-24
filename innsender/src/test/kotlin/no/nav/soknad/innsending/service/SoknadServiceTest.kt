@@ -42,6 +42,9 @@ class SoknadServiceTest {
 	private lateinit var filRepository: FilRepository
 
 	@Autowired
+	private lateinit var repo: RepositoryUtils
+
+	@Autowired
 	private lateinit var skjemaService: HentSkjemaDataConsumer
 
 	@Autowired
@@ -76,7 +79,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun opprettSoknadGittSkjemanr() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val brukerid = testpersonid
 		val skjemanr = "NAV 95-00.11"
@@ -91,7 +94,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun opprettSoknadGittSkjemanrOgIkkeStottetSprak() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val brukerid = testpersonid
 		val skjemanr = "NAV 14-05.07"
@@ -108,7 +111,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun opprettSoknadGittUkjentSkjemanrKasterException() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val brukerid = testpersonid
 		val skjemanr = "NAV XX-00.11"
@@ -124,7 +127,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun opprettSoknadGittSoknadDokument() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf())
 
@@ -134,7 +137,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun opprettSoknadForettersendingAvVedlegg() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		// Opprett original soknad
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
@@ -156,7 +159,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun testFlereEttersendingerPaSoknad() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		// Opprett original soknad
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1", "W2"))
@@ -216,7 +219,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun hentOpprettetSoknadDokument() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
@@ -227,7 +230,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun hentIkkeEksisterendeSoknadDokumentKasterFeil() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val exception = assertThrows(
 			ResourceNotFoundException::class.java,
@@ -239,7 +242,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun hentOpprettedeAktiveSoknadsDokument() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"), testpersonid)
 		testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"), testpersonid)
@@ -255,7 +258,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun hentOpprettetVedlegg() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
@@ -272,7 +275,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun leggTilVedlegg() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
@@ -287,7 +290,7 @@ class SoknadServiceTest {
 	@Test
 	fun oppdaterVedleggEndrerKunTittelOgLabel() {
 		// Når søker har endret label på et vedlegg av type annet (N6), skal tittel settes lik label og vedlegget i databasen oppdateres med disse endringene.
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
@@ -306,7 +309,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun slettOpprettetSoknadDokument() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf())
 
@@ -327,7 +330,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun slettOpprettetVedlegg() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val vedleggsnr = "N6"
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf(vedleggsnr))
@@ -352,7 +355,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun sendInnSoknad() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
@@ -369,7 +372,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun sendInnSoknadFeilerUtenOpplastetHoveddokument() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
@@ -381,7 +384,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun sendInnEttersendingsSoknadFeilerUtenOpplastetVedlegg() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
@@ -445,7 +448,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun lastOppFilTilVedlegg() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
@@ -464,7 +467,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun slettFilTilVedlegg() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
@@ -492,7 +495,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun lagKvitteringsHoveddokument() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		// Opprett original soknad
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
@@ -515,7 +518,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun lagDummyHoveddokumentForEttersending() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		// Opprett original soknad
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
@@ -545,7 +548,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun hentingAvDokumentFeilerNarIngenDokumentOpplastet() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		// Opprett original soknad
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
@@ -558,7 +561,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun innsendingFeilerNarIngenDokumentOpplastet() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		// Opprett original soknad
 		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
@@ -571,7 +574,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun opprettingAvSoknadVedKallFraFyllUt() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val tema = "HJE"
 		val skjemanr = "NAV 10-07.04"
@@ -587,7 +590,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun testAutomatiskSlettingAvGamleSoknader() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val brukerid = testpersonid
 		val skjemanr = "NAV 95-00.11"
@@ -607,7 +610,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun testAutomatiskSlettingAvFilerTilInnsendteSoknader() {
-		val soknadService = SoknadService(skjemaService,	soknadRepository,	vedleggRepository, filRepository,	brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		val brukerid = testpersonid
 		val skjemanr = "NAV 95-00.11"

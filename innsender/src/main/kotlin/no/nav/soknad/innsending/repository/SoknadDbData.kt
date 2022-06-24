@@ -20,5 +20,6 @@ data class SoknadDbData(
 	@Column(name = "endretdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val endretdato: LocalDateTime?,
 	@Column(name = "innsendtdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val innsendtdato: LocalDateTime?,
 	@Column(name = "visningssteg", columnDefinition = "long") val visningssteg: Long? = 0,
-	@Column(name = "visningstype", columnDefinition = "varchar") val visningstype: VisningsType? = if (ettersendingsid != null) VisningsType.ettersending else VisningsType.dokumentinnsending
+	@Column(name = "visningstype", columnDefinition = "varchar") val visningstype: VisningsType? = if (ettersendingsid != null) VisningsType.ettersending else VisningsType.dokumentinnsending,
+	@Column(name = "kanlasteoppannet", columnDefinition = "boolean") val kanlasteoppannet: Boolean? = true
 )
