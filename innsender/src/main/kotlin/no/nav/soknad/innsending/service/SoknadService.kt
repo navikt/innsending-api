@@ -741,23 +741,23 @@ class SoknadService(
 	}
 
 	private fun lagKvittering(innsendtSoknadDto: DokumentSoknadDto, opplastedeVedlegg: List<VedleggDto>): KvitteringsDto {
-		val hoveddokumentVedleggsId = innsendtSoknadDto.vedleggsListe.filter{it.erHoveddokument && !it.erVariant}.map{it.id}
-		val hoveddokumentFil =
-		if (hoveddokumentVedleggsId.isNotEmpty() && hoveddokumentVedleggsId[0] != null) {
-			repo.findAllByVedleggsid(innsendtSoknadDto.innsendingsId!!, hoveddokumentVedleggsId[0]!!).firstOrNull()
+		val hoveddokumentVedleggsId = innsendtSoknadDto.vedleggsListe.firstOrNull{ it.erHoveddokument && !it.erVariant }?.id
+		val hoveddokumentFilId =
+		if (hoveddokumentVedleggsId != null) {
+			repo.findAllByVedleggsid(innsendtSoknadDto.innsendingsId!!, hoveddokumentVedleggsId).firstOrNull()?.id
 		} else {
 			null
 		}
 		return KvitteringsDto(innsendtSoknadDto.innsendingsId!!, innsendtSoknadDto.tittel, innsendtSoknadDto.innsendtDato!!,
-			lenkeTilDokument(innsendtSoknadDto.innsendingsId!!,hoveddokumentVedleggsId.first()!!, hoveddokumentFil?.id ),
-			opplastedeVedlegg.filter{ !it.erHoveddokument }.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.tittel)}.toList(),
-			innsendtSoknadDto.vedleggsListe.filter{it.erPakrevd && it.opplastingsStatus == OpplastingsStatusDto.sendSenere}.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.tittel) }.toList(),
+			lenkeTilDokument(innsendtSoknadDto.innsendingsId!!, hoveddokumentVedleggsId, hoveddokumentFilId ),
+			opplastedeVedlegg.filter{ !it.erHoveddokument }.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.label)}.toList(),
+			innsendtSoknadDto.vedleggsListe.filter{it.erPakrevd && it.opplastingsStatus == OpplastingsStatusDto.sendSenere}.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }.toList(),
 			innsendtSoknadDto.innsendtDato!!.plusDays(ettersendingsfrist)
 		)
 
 	}
 
-	private fun lenkeTilDokument(innsendingsId: String, vedleggsId: Long, filId: Long?) = if (filId == null) null else "frontend/v1/soknad/$innsendingsId/vedlegg/$vedleggsId/fil/$filId"
+	private fun lenkeTilDokument(innsendingsId: String, vedleggsId: Long?, filId: Long?) = if (filId == null) null else "frontend/v1/soknad/$innsendingsId/vedlegg/$vedleggsId/fil/$filId"
 
 	fun slettGamleIkkeInnsendteSoknader(dagerGamle: Long) {
 		val slettFor = LocalDateTime.now().minusDays(dagerGamle).atOffset(ZoneOffset.UTC)

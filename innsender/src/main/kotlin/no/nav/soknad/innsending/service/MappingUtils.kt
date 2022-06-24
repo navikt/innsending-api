@@ -19,15 +19,16 @@ fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
 private fun avledOpplastingsstatus(filDto: FilDto?, vedleggDto: VedleggDto): OpplastingsStatusDto {
 	return if (filDto?.data != null) {
 		OpplastingsStatusDto.lastetOpp
-	} else {
+	} else if (vedleggDto.opplastingsStatus == OpplastingsStatusDto.ikkeValgt) {
+		if (vedleggDto.erPakrevd) OpplastingsStatusDto.sendSenere else OpplastingsStatusDto.sendesIkke
+	} else
 		if (vedleggDto.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre || vedleggDto.opplastingsStatus == OpplastingsStatusDto.sendSenere || vedleggDto.opplastingsStatus == OpplastingsStatusDto.innsendt) {
 			vedleggDto.opplastingsStatus
 		} else {
-			if (vedleggDto.erPakrevd) OpplastingsStatusDto.sendSenere
-			else OpplastingsStatusDto.sendesIkke
+			if (vedleggDto.erPakrevd) OpplastingsStatusDto.sendSenere	else OpplastingsStatusDto.sendesIkke
 		}
-	}
 }
+
 
 fun lagFilDto(filDbData: FilDbData, medFil: Boolean = true) = FilDto(filDbData.vedleggsid, filDbData.id,
 	filDbData.filnavn, mapTilMimetype(filDbData.mimetype), filDbData.storrelse,
