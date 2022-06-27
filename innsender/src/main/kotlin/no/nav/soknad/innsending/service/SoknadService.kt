@@ -41,8 +41,6 @@ class SoknadService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	private val ukjentEttersendingsId = "-1"
-
 	@Transactional
 	fun opprettSoknad(brukerId: String, skjemanr: String, spraak: String, vedleggsnrListe: List<String> = emptyList()): DokumentSoknadDto {
 			// hentSkjema informasjon gitt skjemanr
@@ -134,18 +132,19 @@ class SoknadService(
 		}
 
 		try {
+			val innsendingsId = Utilities.laginnsendingsId()
 			// lagre soknad
 			val savedSoknadDbData = repo.lagreSoknad(
 				SoknadDbData(
 					null,
-					Utilities.laginnsendingsId(),
+					innsendingsId,
 					kodeverkSkjema.tittel ?: "",
 					kodeverkSkjema.skjemanummer ?: "",
 					kodeverkSkjema.tema ?: "",
 					finnSpraakFraInput(spraak),
 					SoknadsStatus.Opprettet,
 					brukerId,
-					ukjentEttersendingsId,
+					innsendingsId, // har ikke referanse til tidligere innsendt søknad, bruker søknadens egen innsendingsId istedenfor
 					LocalDateTime.now(),
 					LocalDateTime.now(),
 					null,

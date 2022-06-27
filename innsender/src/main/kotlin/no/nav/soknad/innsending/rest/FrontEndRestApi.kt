@@ -14,7 +14,9 @@ import no.nav.soknad.innsending.model.OpprettEttersendingGittInnsendingsId
 import no.nav.soknad.innsending.model.OpprettEttersendingGittSkjemaNr
 import no.nav.soknad.innsending.model.OpprettSoknadBody
 import no.nav.soknad.innsending.security.Tilgangskontroll
+import no.nav.soknad.innsending.service.SafService
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.service.ukjentEttersendingsId
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
@@ -40,7 +42,8 @@ class FrontEndRestApi(
 	val soknadService: SoknadService,
 	val tilgangskontroll: Tilgangskontroll,
 	private val restConfig: RestConfig,
-	private val innsenderMetrics: InnsenderMetrics): FrontendApi {
+	private val innsenderMetrics: InnsenderMetrics,
+	private val safService: SafService): FrontendApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -71,6 +74,14 @@ class FrontEndRestApi(
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
 		try {
 			val brukerId = tilgangskontroll.hentPersonsAktiveIdent()
+
+			// Kall for å teste saf tjenesten.
+			val innsendteSoknader = safService.hentInnsendteSoknader(brukerId)
+				.filter { opprettSoknadBody.skjemanr == it.skjemanr }
+				.sortedBy { it.innsendtDato }
+				.toList()
+			logger.info("Bruker har tidligere sendt inn ${innsendteSoknader.size} på skjema ${opprettSoknadBody.skjemanr}")
+
 			val personDto = tilgangskontroll.hentPersonData()
 			logger.info("Skal opprette soknad for bruker ${personDto.fornavn.substring(0,1)+personDto.etternavn.substring(0,1)}")
 			val dokumentSoknadDto = soknadService.opprettSoknad(
@@ -156,8 +167,32 @@ class FrontEndRestApi(
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
 		try {
 			val brukerId = tilgangskontroll.hentPersonsAktiveIdent()
-			val dokumentSoknadDto = soknadService.opprettSoknadForEttersendingGittSkjemanr(
-				brukerId, opprettEttersendingGittSkjemaNr.skjemanr, finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak), opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList())
+			val innsendtSoknad = safService.hentInnsendteSoknader(brukerId)
+				.filter { opprettEttersendingGittSkjemaNr.skjemanr == it.skjemanr && it.innsendingsId != null }
+				.sortedBy { it.innsendtDato }
+				.lastOrNull()
+			val innsendtDokumentDto = if (innsendtSoknad != null)
+				try {
+					soknadService.hentSoknad(innsendtSoknad.innsendingsId!!)
+				} catch (e: Exception) {
+					logger.info("Ingen søknad funnet i basen på innsendingsid = ${innsendtSoknad.innsendingsId}")
+					null
+				} else {
+					null
+			}
+
+			val dokumentSoknadDto =
+				if (innsendtDokumentDto != null) {
+					soknadService.opprettSoknadForettersendingAvVedlegg(brukerId,
+						if (innsendtDokumentDto.ettersendingsId != null && innsendtDokumentDto.ettersendingsId != ukjentEttersendingsId) innsendtDokumentDto.ettersendingsId!! else innsendtDokumentDto.innsendingsId!!)
+				} else {
+					soknadService.opprettSoknadForEttersendingGittSkjemanr(
+						brukerId,
+						opprettEttersendingGittSkjemaNr.skjemanr,
+						finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
+						opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
+					)
+				}
 			logger.info("Opprettet ettersending ${dokumentSoknadDto.innsendingsId} på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}")
 			return ResponseEntity
 				.status(HttpStatus.OK)

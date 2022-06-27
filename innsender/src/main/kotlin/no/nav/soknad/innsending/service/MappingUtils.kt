@@ -8,6 +8,8 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.*
 
+public const val ukjentEttersendingsId = "-1" // sette lik innsendingsid istedenfor?
+
 fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
 	VedleggDto(vedleggDto.tittel, vedleggDto.label, vedleggDto.erHoveddokument,
 		vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.erPakrevd,

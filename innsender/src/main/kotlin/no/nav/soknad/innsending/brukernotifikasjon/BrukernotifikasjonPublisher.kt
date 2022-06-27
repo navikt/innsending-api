@@ -7,6 +7,8 @@ import no.nav.soknad.innsending.config.BrukerNotifikasjonConfig
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
+import no.nav.soknad.innsending.model.VisningsType
+import no.nav.soknad.innsending.service.ukjentEttersendingsId
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service
@@ -32,12 +34,15 @@ class BrukernotifikasjonPublisher(
 		logger.debug("Skal publisere event relatert til ${dokumentSoknad.innsendingsId}")
 
 		if (notifikasjonConfig.publisereEndringer) {
-			val groupId = dokumentSoknad.ettersendingsId ?: dokumentSoknad.innsendingsId
+			val groupId = if (dokumentSoknad.ettersendingsId != null && dokumentSoknad.ettersendingsId != ukjentEttersendingsId)
+					dokumentSoknad.ettersendingsId
+				else
+					dokumentSoknad.innsendingsId
 
 			logger.info(
 				"Publiser statusendring på søknad" +
 					": innsendingsId=${dokumentSoknad.innsendingsId}, status=${dokumentSoknad.status}, groupId=$groupId" +
-					", isDokumentInnsending=true, isEttersendelse=${dokumentSoknad.ettersendingsId != null}" +
+					", isDokumentInnsending=true, isEttersendelse=${erEttersending(dokumentSoknad)}" +
 					", tema=${dokumentSoknad.tema}"
 			)
 
@@ -77,7 +82,8 @@ class BrukernotifikasjonPublisher(
 		}
 	}
 
-	private fun erEttersending(dokumentSoknad: DokumentSoknadDto): Boolean = dokumentSoknad.ettersendingsId != null
+	private fun erEttersending(dokumentSoknad: DokumentSoknadDto): Boolean =
+		(dokumentSoknad.ettersendingsId != null) || (dokumentSoknad.visningsType == VisningsType.ettersending)
 
 	private fun handleSentInApplication(dokumentSoknad: DokumentSoknadDto, groupId: String) {
 		// Søknad innsendt, fjern beskjed, og opprett eventuelle oppgaver for hvert vedlegg som skal ettersendes
