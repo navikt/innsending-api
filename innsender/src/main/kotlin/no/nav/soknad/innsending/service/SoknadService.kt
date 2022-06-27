@@ -676,6 +676,7 @@ class SoknadService(
 			throw IllegalActionException("Søker må ha lastet opp dokumenter til søknaden for at den skal kunne sendes inn", "Innsending avbrutt da ingen opplastede filer å sende inn")
 		}
 
+		logger.info("Opplastet ${opplastedeVedlegg.size} filer")
 		try {
 			fillagerAPI.lagreFiler(soknadDto.innsendingsId!!, opplastedeVedlegg)
 		} catch (ex: Exception) {
@@ -721,6 +722,7 @@ class SoknadService(
 		publiserBrukernotifikasjon(innsendtSoknadDto)
 
 		if (skalEttersende(innsendtSoknadDto))  {
+			logger.info("Skal opprette ettersendingssoknad for ${innsendtSoknadDto.innsendingsId}")
 			opprettEttersendingsSoknad(innsendtSoknadDto, innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!)
 		}
 
@@ -794,6 +796,7 @@ class SoknadService(
 		// For hvert øvrige vedlegg merge filer og legg til
 		soknadDto.vedleggsListe.filter { !it.erHoveddokument }.forEach {
 			val filDto = hentOgMergeVedleggsFiler(soknadDto, soknadDto.innsendingsId!!, it)
+			logger.info("${soknadDto.innsendingsId}: Vedlegg ${it.vedleggsnr} har opplastet fil ${filDto != null && filDto.data != null} ")
 			vedleggDtos.add(lagVedleggDtoMedOpplastetFil(filDto, it)) }
 		return vedleggDtos
 	}

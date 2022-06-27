@@ -78,7 +78,7 @@ class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, Health
 		val soknad = translate(soknadDto, vedleggsListe)
 		logger.info("${soknadDto.innsendingsId}: klar til å sende inn\n${maskerFnr(soknad)}\ntil ${restConfig.soknadsMottakerHost}")
 		mottakerClient.receive(soknad)
-		logger.info("${soknadDto.innsendingsId}: sendt inn}")
+		logger.info("${soknadDto.innsendingsId}: sendt inn")
 	}
 
 	private fun maskerFnr(soknad: Soknad): Soknad {

@@ -19,7 +19,7 @@ fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
 	)
 
 private fun avledOpplastingsstatus(filDto: FilDto?, vedleggDto: VedleggDto): OpplastingsStatusDto {
-	return if (filDto?.data != null) {
+	return if (filDto != null && filDto.data != null) {
 		OpplastingsStatusDto.lastetOpp
 	} else if (vedleggDto.opplastingsStatus == OpplastingsStatusDto.ikkeValgt) {
 		if (vedleggDto.erPakrevd) OpplastingsStatusDto.sendSenere else OpplastingsStatusDto.sendesIkke

@@ -55,7 +55,7 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 
 	override fun lagreFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>) {
 		val fileData: List<FileData> = vedleggDtos.stream()
-			.filter {it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
+			.filter {it.document != null }
 			.map { FileData(it.uuid!!, it.document, it.opprettetdato) }.toList()
 
 		filesApi.addFiles(fileData, innsendingsId)
