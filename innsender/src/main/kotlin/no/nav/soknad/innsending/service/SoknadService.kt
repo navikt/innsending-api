@@ -694,14 +694,14 @@ class SoknadService(
 		}
 
 		// Slett alle opplastede vedlegg untatt søknaden dersom ikke ettersendingssøknad, som er sendt til soknadsfillager.
-		alleVedlegg.filter{ !(it.erHoveddokument && soknadDto.ettersendingsId.isNullOrBlank()) }.forEach { repo.slettFilerForVedlegg(it.id!!) }
+		alleVedlegg.filter{ !(it.erHoveddokument && soknadDto.visningsType != VisningsType.ettersending) }.forEach { repo.slettFilerForVedlegg(it.id!!) }
 
 		// oppdater vedleggstabelen med status og innsendingsdato for opplastede vedlegg.
 		opplastedeVedlegg.forEach { repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, it.id!!, OpplastingsStatus.INNSENDT, LocalDateTime.now()) }
 		val opplastedeVedleggIds = opplastedeVedlegg.map{it.id}.toList()
 		val inputMap = soknadDto.vedleggsListe.map { it.id!! to it.opplastingsStatus }.toMap()
 		// oppdater vedleggstabellen med endringer på vedlegg som ikke er lastet opp
-		alleVedlegg.filter { !opplastedeVedleggIds.contains(it.id) && (inputMap[it.id!!] == null || inputMap[it.id!!] != it.opplastingsStatus) }
+		alleVedlegg.filter { !opplastedeVedleggIds.contains(it.id)  }
 			.forEach { repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, it.id!!, mapTilDbOpplastingsStatus(it.opplastingsStatus), LocalDateTime.now()) }
 
 		try {
@@ -721,6 +721,7 @@ class SoknadService(
 		val innsendtSoknadDto = hentSoknad(soknadDto.innsendingsId!!)
 		publiserBrukernotifikasjon(innsendtSoknadDto)
 
+		logger.info("${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes ${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size }")
 		if (skalEttersende(innsendtSoknadDto))  {
 			logger.info("Skal opprette ettersendingssoknad for ${innsendtSoknadDto.innsendingsId}")
 			opprettEttersendingsSoknad(innsendtSoknadDto, innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!)

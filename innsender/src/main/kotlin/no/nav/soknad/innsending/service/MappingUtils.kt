@@ -142,7 +142,6 @@ fun mapTilDbOpplastingsStatus(opplastingsStatusDto: OpplastingsStatusDto): Oppla
 		OpplastingsStatusDto.innsendt -> OpplastingsStatus.INNSENDT
 		OpplastingsStatusDto.sendesAvAndre -> OpplastingsStatus.SENDES_AV_ANDRE
 		OpplastingsStatusDto.sendesIkke -> OpplastingsStatus.SENDES_IKKE
-		else -> OpplastingsStatus.IKKE_VALGT
 	}
 
 fun mapTilMimetype(mimeString: String?): Mimetype? =
