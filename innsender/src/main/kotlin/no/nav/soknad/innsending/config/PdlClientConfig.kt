@@ -4,6 +4,7 @@ import com.expediagroup.graphql.client.spring.GraphQLWebClient
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.Constants.CONSUMER_TOKEN
 import no.nav.soknad.innsending.util.MDCUtil
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -44,12 +45,20 @@ class PdlClientConfig(
 				it.header(Constants.HEADER_CALL_ID, MDCUtil.callIdOrNew())
 				it.header(
 					HttpHeaders.AUTHORIZATION,
-					"Bearer ${oAuth2AccessTokenService.getAccessToken(tokenxSafSelvbetjeningClientProperties).accessToken}"
+					"Bearer ${oAuth2AccessTokenService.getAccessToken(tokenxPdlClientProperties).accessToken}"
 				)
+				//it.header(CONSUMER_TOKEN, consumerToken())
 			}
 	)
 
-	private val tokenxSafSelvbetjeningClientProperties = oauth2Config.registration["tokenx-safselvbetjening"]
-		?: throw RuntimeException("could not find oauth2 client config for tokenx-safselvbetjening")
+	private val tokenxPdlClientProperties = oauth2Config.registration["tokenx-pdl"]
+		?: throw RuntimeException("could not find oauth2 client config for tokenx-pdl")
+
+/*
+	private fun consumerToken(): String? {
+		return "Bearer" + " " + getServiceUserAccessToken()
+	}
+*/
+
 }
 

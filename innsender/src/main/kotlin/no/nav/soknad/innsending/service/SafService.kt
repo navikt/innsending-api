@@ -21,6 +21,7 @@ class SafService(val safApi: SafInterface) {
 		if (innsendte == null) return emptyList()
 
 		logger.info("Hentet ${innsendte.size} journalposter for bruker, skal mappe til AktivSakDto")
+		logger.info("Hentet ${innsendte.forEach { it.toString() }}")
 		return innsendte.map { AktivSakDto(finnBrevKode(it.dokumenter), it.tittel, it.tema,
 				konverterTilDateTime(it.datoMottatt ?: ""), erEttersending(it.dokumenter), konverterTilVedleggsliste(it.dokumenter), it.eksternReferanseId ) }.toList()
 	}

@@ -73,7 +73,7 @@ class FrontEndRestApi(
 		logger.info("Kall for å opprette søknad på skjema ${opprettSoknadBody.skjemanr}")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
 		try {
-			val brukerId = tilgangskontroll.hentPersonsAktiveIdent()
+			val brukerId = tilgangskontroll.hentBrukerFraToken()
 
 			// Kall for å teste saf tjenesten.
 			val innsendteSoknader = safService.hentInnsendteSoknader(brukerId)
@@ -126,7 +126,7 @@ class FrontEndRestApi(
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
 		try {
 			val origSoknad = soknadService.hentSoknad(opprettEttersendingGittInnsendingsId.ettersendingTilinnsendingsId)
-			val brukerId = tilgangskontroll.hentPersonsAktiveIdent()
+			val brukerId = tilgangskontroll.hentBrukerFraToken()
 			tilgangskontroll.harTilgang(origSoknad, brukerId)
 
 			val dokumentSoknadDto =
@@ -166,7 +166,7 @@ class FrontEndRestApi(
 		logger.info("Kall for å opprette ettersending på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
 		try {
-			val brukerId = tilgangskontroll.hentPersonsAktiveIdent()
+			val brukerId = tilgangskontroll.hentBrukerFraToken()
 			val innsendtSoknad = safService.hentInnsendteSoknader(brukerId)
 				.filter { opprettEttersendingGittSkjemaNr.skjemanr == it.skjemanr && it.innsendingsId != null }
 				.sortedBy { it.innsendtDato }
