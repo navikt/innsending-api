@@ -689,7 +689,7 @@ class FrontEndRestApi(
 			tilgangskontroll.harTilgang(soknadDto)
 			val kvitteringsDto = soknadService.sendInnSoknad(soknadDto)
 			logger.info("Sendt inn soknad $innsendingsId.\n" +
-				"InnsendteVedlegg=${kvitteringsDto.innsendteVedlegg!!.size}, SkalEttersendes=${kvitteringsDto.innsendteVedlegg!!.size}")
+				"InnsendteVedlegg=${kvitteringsDto.innsendteVedlegg?.size}, SkalEttersendes=${kvitteringsDto.innsendteVedlegg?.size}")
 			return ResponseEntity
 				.status(HttpStatus.OK)
 				.body(kvitteringsDto)
