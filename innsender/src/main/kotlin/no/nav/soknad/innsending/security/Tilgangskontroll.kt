@@ -48,14 +48,14 @@ class Tilgangskontroll(
 		harTilgang(soknadDto, brukerId)
 	}
 
-	fun harTilgang(soknadDto: DokumentSoknadDto?, brukerId: String?) {
+	fun harTilgang(soknadDto: DokumentSoknadDto?, brukerId: String?): Boolean {
 		if (soknadDto == null) {
 			logger.info("Bruker forsøker å hente soknad som ikke finnes i databasen")
 			throw ResourceNotFoundException(null, "Søknad finnes ikke eller er ikke tilgjengelig for innlogget bruker")
 		}
 
 		val idents = hentPersonIdents(hentBrukerFraToken())
-		if (idents.contains(soknadDto.brukerId)) return
+		if (idents.contains(soknadDto.brukerId)) return true
 
 		logger.info("Bruker har ikke tilgang til soknad ${soknadDto.innsendingsId}")
 		throw ResourceNotFoundException(null, "Søknad finnes ikke eller er ikke tilgjengelig for innlogget bruker")

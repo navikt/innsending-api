@@ -652,7 +652,7 @@ class SoknadService(
 		// etter at vedleggsfilen er overført soknadsfillager, skal lokalt lagrede filer på vedlegget slettes.
 
 		var soknadDto = soknadDtoInput
-		if (soknadDto.ettersendingsId != null) {
+		if (erEttersending(soknadDto)) {
 			// Hvis ettersending, så må det genereres et dummy hoveddokument
 			val hovedDokumentDto = soknadDto.vedleggsListe.first { it.erHoveddokument && !it.erVariant }
 			val dummySkjema = try {
@@ -671,12 +671,10 @@ class SoknadService(
 		// Vedleggsliste med opplastede dokument og status= LASTET_OPP for de som skal sendes soknadsfillager
 		val alleVedlegg: List<VedleggDto> = ferdigstillVedlegg(soknadDto)
 		val opplastedeVedlegg = alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }.toList()
+		val manglendePakrevdeVedlegg = alleVedlegg.filter { !it.erHoveddokument && it.erPakrevd && (it.opplastingsStatus == OpplastingsStatusDto.sendSenere || it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt) }.toList()
 
-		if (opplastedeVedlegg.isEmpty() || (soknadDto.ettersendingsId != null && opplastedeVedlegg.size == 1 )) {
-			throw IllegalActionException("Søker må ha lastet opp dokumenter til søknaden for at den skal kunne sendes inn", "Innsending avbrutt da ingen opplastede filer å sende inn")
-		}
-
-		logger.info("Opplastet ${opplastedeVedlegg.size} filer")
+		logger.info("${soknadDtoInput.innsendingsId}: Antall opplastede vedlegg = ${opplastedeVedlegg.size}")
+		logger.info("${soknadDtoInput.innsendingsId}: Antall ikke opplastede påkrevde vedlegg = ${manglendePakrevdeVedlegg.size}")
 		try {
 			fillagerAPI.lagreFiler(soknadDto.innsendingsId!!, opplastedeVedlegg)
 		} catch (ex: Exception) {
@@ -698,11 +696,7 @@ class SoknadService(
 
 		// oppdater vedleggstabelen med status og innsendingsdato for opplastede vedlegg.
 		opplastedeVedlegg.forEach { repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, it.id!!, OpplastingsStatus.INNSENDT, LocalDateTime.now()) }
-		val opplastedeVedleggIds = opplastedeVedlegg.map{it.id}.toList()
-		val inputMap = soknadDto.vedleggsListe.map { it.id!! to it.opplastingsStatus }.toMap()
-		// oppdater vedleggstabellen med endringer på vedlegg som ikke er lastet opp
-		alleVedlegg.filter { !opplastedeVedleggIds.contains(it.id)  }
-			.forEach { repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, it.id!!, mapTilDbOpplastingsStatus(it.opplastingsStatus), LocalDateTime.now()) }
+		manglendePakrevdeVedlegg.forEach { repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, it.id!!, OpplastingsStatus.SEND_SENERE, LocalDateTime.now()) }
 
 		try {
 			repo.flushVedlegg()
@@ -722,12 +716,12 @@ class SoknadService(
 		publiserBrukernotifikasjon(innsendtSoknadDto)
 
 		logger.info("${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes ${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size }")
-		if (skalEttersende(innsendtSoknadDto))  {
-			logger.info("Skal opprette ettersendingssoknad for ${innsendtSoknadDto.innsendingsId}")
+		if (manglendePakrevdeVedlegg.isNotEmpty())  {
+			logger.info("${soknadDtoInput.innsendingsId}: Skal opprette ettersendingssoknad")
 			opprettEttersendingsSoknad(innsendtSoknadDto, innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!)
 		}
 
-		val kvitteringsDto = lagKvittering(innsendtSoknadDto, opplastedeVedlegg)
+		val kvitteringsDto = lagKvittering(innsendtSoknadDto, opplastedeVedlegg, manglendePakrevdeVedlegg)
 		innsenderMetrics.applicationCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
 
 		return kvitteringsDto
@@ -742,7 +736,8 @@ class SoknadService(
 		)
 	}
 
-	private fun lagKvittering(innsendtSoknadDto: DokumentSoknadDto, opplastedeVedlegg: List<VedleggDto>): KvitteringsDto {
+	private fun lagKvittering(innsendtSoknadDto: DokumentSoknadDto,
+														opplastedeVedlegg: List<VedleggDto>, manglendePakrevdeVedlegg: List<VedleggDto>): KvitteringsDto {
 		val hoveddokumentVedleggsId = innsendtSoknadDto.vedleggsListe.firstOrNull{ it.erHoveddokument && !it.erVariant }?.id
 		val hoveddokumentFilId =
 		if (hoveddokumentVedleggsId != null) {
@@ -753,7 +748,7 @@ class SoknadService(
 		return KvitteringsDto(innsendtSoknadDto.innsendingsId!!, innsendtSoknadDto.tittel, innsendtSoknadDto.innsendtDato!!,
 			lenkeTilDokument(innsendtSoknadDto.innsendingsId!!, hoveddokumentVedleggsId, hoveddokumentFilId ),
 			opplastedeVedlegg.filter{ !it.erHoveddokument }.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.label)}.toList(),
-			innsendtSoknadDto.vedleggsListe.filter{it.erPakrevd && it.opplastingsStatus == OpplastingsStatusDto.sendSenere}.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }.toList(),
+			manglendePakrevdeVedlegg.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }.toList(),
 			innsendtSoknadDto.innsendtDato!!.plusDays(ettersendingsfrist)
 		)
 
@@ -778,7 +773,7 @@ class SoknadService(
 
 	private fun skalEttersende(innsendtSoknadDto: DokumentSoknadDto): Boolean {
 		return innsendtSoknadDto.tema != "DAG" && innsendtSoknadDto.vedleggsListe
-			.any { !it.erHoveddokument && it.erPakrevd && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }
+			.any { !it.erHoveddokument && it.erPakrevd && (it.opplastingsStatus == OpplastingsStatusDto.sendSenere || it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt) }
 	}
 
 	private fun vedleggHarFiler(innsendingsId: String, vedleggsId: Long): Boolean {
@@ -797,13 +792,13 @@ class SoknadService(
 		// For hvert øvrige vedlegg merge filer og legg til
 		soknadDto.vedleggsListe.filter { !it.erHoveddokument }.forEach {
 			val filDto = hentOgMergeVedleggsFiler(soknadDto, soknadDto.innsendingsId!!, it)
-			logger.info("${soknadDto.innsendingsId}: Vedlegg ${it.vedleggsnr} har opplastet fil ${filDto != null && filDto.data != null} ")
+			logger.info("${soknadDto.innsendingsId}: Vedlegg ${it.vedleggsnr} har opplastet fil= ${filDto != null && filDto.data != null} og erPakrevd=${it.erPakrevd} ")
 			vedleggDtos.add(lagVedleggDtoMedOpplastetFil(filDto, it)) }
 		return vedleggDtos
 	}
 
 	private fun validerAtMinstEnFilErLastetOpp(soknadDto: DokumentSoknadDto) {
-		if (soknadDto.ettersendingsId == null) {
+		if (!erEttersending(soknadDto)) {
 			// For å sende inn en søknad må det være lastet opp en fil på hoveddokumentet
 			val harFil = soknadDto.vedleggsListe
 				.filter { it.erHoveddokument && !it.erVariant && it.id != null }

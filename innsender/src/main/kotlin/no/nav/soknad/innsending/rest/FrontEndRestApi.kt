@@ -75,15 +75,6 @@ class FrontEndRestApi(
 		try {
 			val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-			// Kall for å teste saf tjenesten.
-			val innsendteSoknader = safService.hentInnsendteSoknader(brukerId)
-				.filter { opprettSoknadBody.skjemanr == it.skjemanr }
-				.sortedBy { it.innsendtDato }
-				.toList()
-			logger.info("Bruker har tidligere sendt inn ${innsendteSoknader.size} på skjema ${opprettSoknadBody.skjemanr}")
-
-			val personDto = tilgangskontroll.hentPersonData()
-			logger.info("Skal opprette soknad for bruker ${personDto.fornavn.substring(0,1)+personDto.etternavn.substring(0,1)}")
 			val dokumentSoknadDto = soknadService.opprettSoknad(
 				brukerId,
 				opprettSoknadBody.skjemanr,
@@ -234,7 +225,6 @@ class FrontEndRestApi(
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
 		}
 	}
-
 
 	@ApiOperation(
 		value = "Kall for å hente opprettet søknad gitt innsendingsId.",

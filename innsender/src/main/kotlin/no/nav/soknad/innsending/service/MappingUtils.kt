@@ -10,27 +10,28 @@ import java.util.*
 
 public const val ukjentEttersendingsId = "-1" // sette lik innsendingsid istedenfor?
 
+fun erEttersending(dokumentSoknad: DokumentSoknadDto): Boolean =
+	(dokumentSoknad.ettersendingsId != null) || (dokumentSoknad.visningsType == VisningsType.ettersending)
+
 fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
 	VedleggDto(vedleggDto.tittel, vedleggDto.label, vedleggDto.erHoveddokument,
 		vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.erPakrevd,
-		avledOpplastingsstatus(filDto, vedleggDto),
+		avledOpplastingsstatusVedInnsending(filDto, vedleggDto),
 		filDto?.opprettetdato ?: vedleggDto.opprettetdato, vedleggDto.id!!, vedleggDto.vedleggsnr, vedleggDto.beskrivelse,
 		vedleggDto.uuid, filDto?.mimetype ?: vedleggDto.mimetype, filDto?.data, vedleggDto.skjemaurl
 	)
 
-private fun avledOpplastingsstatus(filDto: FilDto?, vedleggDto: VedleggDto): OpplastingsStatusDto {
-	return if (filDto != null && filDto.data != null) {
-		OpplastingsStatusDto.lastetOpp
-	} else if (vedleggDto.opplastingsStatus == OpplastingsStatusDto.ikkeValgt) {
-		if (vedleggDto.erPakrevd) OpplastingsStatusDto.sendSenere else OpplastingsStatusDto.sendesIkke
-	} else
-		if (vedleggDto.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre || vedleggDto.opplastingsStatus == OpplastingsStatusDto.sendSenere || vedleggDto.opplastingsStatus == OpplastingsStatusDto.innsendt) {
-			vedleggDto.opplastingsStatus
-		} else {
-			if (vedleggDto.erPakrevd) OpplastingsStatusDto.sendSenere	else OpplastingsStatusDto.sendesIkke
-		}
-}
 
+private fun avledOpplastingsstatusVedInnsending(filDto: FilDto?, vedleggDto: VedleggDto): OpplastingsStatusDto {
+	if (filDto?.data != null) return OpplastingsStatusDto.lastetOpp
+	return when (vedleggDto.opplastingsStatus) {
+		OpplastingsStatusDto.ikkeValgt -> if (vedleggDto.erPakrevd) OpplastingsStatusDto.sendSenere else OpplastingsStatusDto.sendesIkke
+		OpplastingsStatusDto.sendesAvAndre,
+		OpplastingsStatusDto.sendSenere,
+		OpplastingsStatusDto.innsendt -> 	vedleggDto.opplastingsStatus
+		else -> if (vedleggDto.erPakrevd) OpplastingsStatusDto.sendSenere	else OpplastingsStatusDto.sendesIkke
+	}
+}
 
 fun lagFilDto(filDbData: FilDbData, medFil: Boolean = true) = FilDto(filDbData.vedleggsid, filDbData.id,
 	filDbData.filnavn, mapTilMimetype(filDbData.mimetype), filDbData.storrelse,
