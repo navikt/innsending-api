@@ -724,8 +724,6 @@ class SoknadService(
 		val kvitteringsDto = lagKvittering(innsendtSoknadDto, opplastedeVedlegg, manglendePakrevdeVedlegg)
 		innsenderMetrics.applicationCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
 
-		logger.info("${innsendtSoknadDto.innsendingsId}: " +
-			"kvittering returneres, antall innsendtevedlegg=${kvitteringsDto.innsendteVedlegg?.size}, manglendevedlegg=${kvitteringsDto.skalEttersendes?.size}")
 		return kvitteringsDto
 	}
 
