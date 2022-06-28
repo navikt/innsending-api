@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service
 import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.exceptions.PdlApiException
 import no.nav.soknad.innsending.exceptions.SafApiException
+import no.nav.soknad.innsending.pdl.generated.HentIdenter
+import no.nav.soknad.innsending.pdl.generated.HentPerson
 import no.nav.soknad.innsending.pdl.generated.HentPersonInfo
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import org.slf4j.LoggerFactory
@@ -20,9 +22,7 @@ import org.springframework.cache.annotation.Cacheable
 @Profile("test | dev | prod")
 @Qualifier("pdl")
 class PdlAPI(
-	private val pdlGraphQLClient: GraphQLWebClient,
-	private val tokenUtil: SubjectHandlerInterface
-
+	private val pdlGraphQLClient: GraphQLWebClient
 ): PdlInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -42,7 +42,7 @@ class PdlAPI(
 
 	override fun hentPersonIdents(brukerId: String): List<IdentDto> = runBlocking {
 		try {
-			hentPersonInfo()?.hentIdenter?.identer?.map {IdentDto(it.ident, it.gruppe.toString(), it.historisk)}?.toList()
+			hentIdenter(brukerId)?.hentIdenter?.identer?.map {IdentDto(it.ident, it.gruppe.toString(), it.historisk)}?.toList()
 				?: dummyHentBrukerIdenter(brukerId) // TODO fjern
 		} catch (ex: Exception) {
 			logger.warn(("Henting fra PDL feilet med ${ex.message}. Returnerer pålogget ident"))
@@ -53,7 +53,7 @@ class PdlAPI(
 	override fun hentPersonData(brukerId: String): PersonDto? = runBlocking {
 
 		try {
-			hentPersonInfo()?.hentPerson?.navn?.map {PersonDto(brukerId, it.fornavn, it.mellomnavn, it.etternavn)}?.first()
+			hentPerson(brukerId)?.hentPerson?.navn?.map {PersonDto(brukerId, it.fornavn, it.mellomnavn, it.etternavn)}?.first()
 				?: dummyPersonDtos[brukerId] // TODO erstatt med kall til PDL
 		} catch (ex: Exception) {
 			logger.warn(("Henting fra PDL feilet med ${ex.message}"))
@@ -63,11 +63,11 @@ class PdlAPI(
 	}
 
 
-	@Cacheable("personInfo")
-	suspend fun hentPersonInfo(): HentPersonInfo.Result? {
+	@Cacheable("hentPerson")
+	suspend fun hentPerson(ident: String): HentPerson.Result? {
 		val response = pdlGraphQLClient.execute(
-			HentPersonInfo(
-				HentPersonInfo.Variables(tokenUtil.getUserIdFromToken())
+			HentPerson(
+				HentPerson.Variables(ident)
 			)
 		)
 		if (response.data != null) {
@@ -75,7 +75,24 @@ class PdlAPI(
 			return response.data
 		} else {
 			logger.error("Oppslag mot personregisteret feilet. Fikk feil i kallet til personregisteret")
-			throw PdlApiException("Oppslag mot personregisteret feilet", "Fikk feil i kallet til personregisteret")
+			throw PdlApiException("Oppslag mot personregisteret feilet", "Fikk feil i kallet for å hente person fra personregisteret")
+		}
+	}
+
+
+	@Cacheable("hentIdenter")
+	suspend fun hentIdenter(ident: String): HentIdenter.Result? {
+		val response = pdlGraphQLClient.execute(
+			HentIdenter(
+				HentIdenter.Variables(ident)
+			)
+		)
+		if (response.data != null) {
+			checkForErrors(response.errors)
+			return response.data
+		} else {
+			logger.error("Oppslag mot personregisteret feilet. Fikk feil i kall for å hente identer fra personregisteret")
+			throw PdlApiException("Oppslag mot personregisteret feilet", "Fikk feil i kallet for å hente identer fra personregisteret")
 		}
 	}
 
