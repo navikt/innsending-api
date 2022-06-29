@@ -30,5 +30,4 @@ class SkjemaDokumentSoknadTransformer {
 			LocalDateTime.now().atOffset(ZoneOffset.UTC), null, skjemaDokumentDto.vedleggsnr,  skjemaDokumentDto.beskrivelse,
 			null, skjemaDokumentDto.mimetype, skjemaDokumentDto.document,null )
 
-
 }

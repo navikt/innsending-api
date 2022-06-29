@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
+import no.nav.soknad.innsending.consumerapis.skjema.KodeverkSkjema
 import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.BackendErrorException
@@ -115,10 +116,14 @@ class SoknadService(
 		return vedleggDbDataListe
 	}
 
-	private fun hentSkjema(nr: String, spraak: String) =  try {
+	private fun hentSkjema(nr: String, spraak: String, kastException: Boolean = true) =  try {
 		skjemaService.hentSkjemaEllerVedlegg(nr, spraak)
 	} catch (re: SanityException) {
-		throw ResourceNotFoundException(re.arsak, re.message ?: "")
+		if (kastException) {
+			throw ResourceNotFoundException(re.arsak, re.message ?: "")
+		} else {
+			KodeverkSkjema()
+		}
 	}
 
 	@Transactional
@@ -284,13 +289,7 @@ class SoknadService(
 			val soknadsid = savedSoknadDbData.id
 			val savedVedleggDbData = dokumentSoknadDto.vedleggsListe
 				.map {
-					repo.lagreVedlegg(
-						mapTilVedleggDb(
-							it,
-							soknadsid!!,
-							skjemaService.hentSkjemaEllerVedlegg(it.vedleggsnr!!, savedSoknadDbData.spraak ?: "nb")
-						)
-					)
+					repo.lagreVedlegg(mapTilVedleggDb(it,	soknadsid!!))
 				}
 
 			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
