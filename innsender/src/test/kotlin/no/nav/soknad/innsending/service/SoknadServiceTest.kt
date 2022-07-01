@@ -5,6 +5,7 @@ import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
 import io.mockk.slot
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
+import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.skjema.SkjemaClient
 import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
@@ -14,6 +15,7 @@ import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
+import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.pdfutilities.PdfGenerator
 import org.junit.jupiter.api.Assertions.*
@@ -140,7 +142,7 @@ class SoknadServiceTest {
 		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 
 		// Opprett original soknad
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1", "W2"))
 
 		soknadService.lagreFil(dokumentSoknadDto, lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument }))
 
@@ -213,7 +215,7 @@ class SoknadServiceTest {
 		assertTrue(ettersendingsSoknadDto2.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt }.toList()
 			.isNotEmpty())
 		assertTrue(ettersendingsSoknadDto2.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }.toList().count() == 2 )
-
+		assertTrue(ettersendingsSoknadDto2.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }.all { it.innsendtdato  != null })
 		// Laster opp fil til vedlegg W1 til ettersendingssøknaden
 		soknadService.lagreFil(ettersendingsSoknadDto2
 			, lagFilDtoMedFil(ettersendingsSoknadDto2.vedleggsListe.first {
@@ -266,6 +268,56 @@ class SoknadServiceTest {
 
 		assertTrue(dokumentSoknadDtos.filter { listOf(testpersonid, "12345678902").contains(it.brukerId)}.size == 3)
 		assertTrue(dokumentSoknadDtos.none { listOf("12345678903").contains(it.brukerId) })
+
+	}
+
+	@Test
+	fun opprettSoknadForEttersendingAvVedleggGittArkivertSoknadTest() {
+
+		val brukerid = testpersonid
+		val skjemanr = "NAV 10-07.20"
+		val tittel = "Test av ettersending gitt arkivertsoknad"
+		val spraak = "nb_NO"
+		val tema = "HJE"
+		val arkivertInnsendingsId = "1234567890123345"
+		val arkivertSoknad = AktivSakDto(skjemanr, tittel, tema,
+			OffsetDateTime.now().minusDays(2L), false,
+			listOf(
+				InnsendtVedleggDto(skjemanr,tittel ),
+				InnsendtVedleggDto("C1","Vedlegg til $tittel" )),
+			arkivertInnsendingsId)
+
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+
+		val dokumentSoknadDto = soknadService.opprettSoknadForEttersendingAvVedleggGittArkivertSoknad(brukerid, arkivertSoknad, spraak, listOf("C1", "N6", "L8") )
+
+		assertTrue(dokumentSoknadDto.innsendingsId != null  && VisningsType.ettersending.equals(dokumentSoknadDto.visningsType) && dokumentSoknadDto.ettersendingsId==arkivertInnsendingsId )
+		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
+		assertTrue(dokumentSoknadDto.vedleggsListe.size == 4)
+		assertTrue(dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })
+		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.innsendt })
+		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "N6" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+
+	}
+	@Test
+	fun opprettSoknadForEttersendingGittSkjemanrTest() {
+
+		val brukerid = testpersonid
+		val skjemanr = "NAV 10-07.20"
+		val tittel = "Test av ettersending gitt arkivertsoknad"
+		val spraak = "nb_NO"
+		val tema = "HJE"
+
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val dokumentSoknadDto = soknadService.opprettSoknadForEttersendingGittSkjemanr(brukerid, skjemanr,	spraak,	listOf("C1", "L8"))
+
+		assertTrue(dokumentSoknadDto.innsendingsId != null  && VisningsType.ettersending.equals(dokumentSoknadDto.visningsType) && dokumentSoknadDto.ettersendingsId==dokumentSoknadDto.innsendingsId )
+		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
+		assertTrue(dokumentSoknadDto.vedleggsListe.size == 3)
+		assertTrue(dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })
+		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 
 	}
 

@@ -117,11 +117,14 @@ class RepositoryUtils(
 	}
 
 	fun oppdaterVedleggStatus(innsendingsId: String, vedleggsId: Long, opplastingsStatus: OpplastingsStatus, localDateTime: LocalDateTime) = try {
-		vedleggRepository.updateStatus(vedleggsId, opplastingsStatus, localDateTime)
+		if (opplastingsStatus != OpplastingsStatus.INNSENDT)
+			vedleggRepository.updateStatus(vedleggsId, opplastingsStatus, localDateTime)
+		else
+			vedleggRepository.updateStatusAndInnsendtdato(vedleggsId, opplastingsStatus, localDateTime, LocalDateTime.now())
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
-			"Feil ved oppdatering av status forvedlegg $vedleggsId for søknad $innsendingsId"
+			"Feil ved oppdatering av status for vedlegg $vedleggsId for søknad $innsendingsId"
 		)
 	}
 

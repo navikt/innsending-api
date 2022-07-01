@@ -1097,6 +1097,11 @@ components:
           format: date-time
           description: Opprettet dato og tid som UTC
           example: 2021-12-03T14:10:00Z
+        innsendtdato:
+          type: string
+          format: date-time
+          description: Endret dato og tid som UTC
+          example: 2021-12-03T14:10:00Z
 
     Vedleggsnr:
       type: string

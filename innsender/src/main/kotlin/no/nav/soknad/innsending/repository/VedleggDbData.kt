@@ -21,6 +21,7 @@ data class VedleggDbData(
 	@Column(name = "uuid", columnDefinition = "varchar") val uuid: String?,
 	@Column(name = "opprettetdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val opprettetdato: LocalDateTime,
 	@Column(name = "endretdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val endretdato: LocalDateTime,
+	@Column(name = "innsendtdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val innsendtdato: LocalDateTime?,
 	@Column(name = "vedleggsurl", columnDefinition = "varchar") val vedleggsurl: String?
 ) {
 

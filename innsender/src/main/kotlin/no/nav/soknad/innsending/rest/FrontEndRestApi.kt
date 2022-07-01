@@ -20,6 +20,7 @@ import no.nav.soknad.innsending.service.ukjentEttersendingsId
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.Constants.MAX_AKTIVE_DAGER
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.pdfutilities.KonverterTilPdf
 import no.nav.soknad.pdfutilities.Validerer
@@ -158,32 +159,28 @@ class FrontEndRestApi(
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
 		try {
 			val brukerId = tilgangskontroll.hentBrukerFraToken()
-			val innsendtSoknad = safService.hentInnsendteSoknader(brukerId)
-				.filter { opprettEttersendingGittSkjemaNr.skjemanr == it.skjemanr && it.innsendingsId != null }
-				.sortedBy { it.innsendtDato }
-				.lastOrNull()
-			val innsendtDokumentDto = if (innsendtSoknad != null)
-				try {
-					soknadService.hentSoknad(innsendtSoknad.innsendingsId!!)
-				} catch (e: Exception) {
-					logger.info("Ingen søknad funnet i basen på innsendingsid = ${innsendtSoknad.innsendingsId}")
-					null
-				} else {
-					null
-			}
 
-			val dokumentSoknadDto =
-				if (innsendtDokumentDto != null) {
-					soknadService.opprettSoknadForettersendingAvVedlegg(brukerId,
-						if (innsendtDokumentDto.ettersendingsId != null && innsendtDokumentDto.ettersendingsId != ukjentEttersendingsId) innsendtDokumentDto.ettersendingsId!! else innsendtDokumentDto.innsendingsId!!)
-				} else {
-					soknadService.opprettSoknadForEttersendingGittSkjemanr(
-						brukerId,
-						opprettEttersendingGittSkjemaNr.skjemanr,
-						finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
-						opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
-					)
+			val arkiverteSoknader = safService.hentInnsendteSoknader(brukerId)
+				.filter { opprettEttersendingGittSkjemaNr.skjemanr == it.skjemanr && it.innsendingsId != null }
+				.filter { it.innsendtDato.isAfter(OffsetDateTime.now().minusDays(MAX_AKTIVE_DAGER)) }
+				.sortedByDescending { it.innsendtDato }
+				.toList()
+			val innsendteSoknader =
+				try {
+					soknadService.hentInnsendteSoknader(tilgangskontroll.hentPersonIdents())
+						.filter{it.skjemanr == opprettEttersendingGittSkjemaNr.skjemanr}
+						.filter{it.innsendtDato!!.isAfter(OffsetDateTime.now().minusDays(MAX_AKTIVE_DAGER))}
+						.sortedByDescending { it.innsendtDato }
+						.toList()
+				} catch (e: Exception) {
+					logger.info("Ingen søknader funnet i basen for bruker på skjemanr = ${opprettEttersendingGittSkjemaNr.skjemanr}")
+					emptyList<DokumentSoknadDto>()
 				}
+
+			logger.info("Gitt skjemaNr ${opprettEttersendingGittSkjemaNr.skjemanr}: Antall innsendteSoknader=${innsendteSoknader.size} og Antall arkiverteSoknader=${arkiverteSoknader.size}")
+			val dokumentSoknadDto =
+				opprettDokumentSoknadDto(innsendteSoknader, arkiverteSoknader, brukerId, opprettEttersendingGittSkjemaNr)
+
 			logger.info("${dokumentSoknadDto.innsendingsId}: Opprettet ettersending på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}")
 			return ResponseEntity
 				.status(HttpStatus.OK)
@@ -192,6 +189,59 @@ class FrontEndRestApi(
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
 		}
 	}
+
+	private fun opprettDokumentSoknadDto(
+		innsendteSoknader: List<DokumentSoknadDto>,
+		arkiverteSoknader: List<AktivSakDto>,
+		brukerId: String,
+		opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr
+	): DokumentSoknadDto  =
+			if (innsendteSoknader.isNotEmpty()) {
+				if (arkiverteSoknader.isNotEmpty()) {
+					if (innsendteSoknader[0].innsendingsId == arkiverteSoknader[0].innsendingsId ||
+						innsendteSoknader[0].innsendtDato!!.isAfter(arkiverteSoknader[0].innsendtDato)
+					) {
+						soknadService.opprettSoknadForettersendingAvVedlegg(
+							brukerId,
+							if (innsendteSoknader[0].ettersendingsId != null && innsendteSoknader[0].ettersendingsId != ukjentEttersendingsId)
+								innsendteSoknader[0].ettersendingsId!!
+							else innsendteSoknader[0].innsendingsId!!
+						)
+					} else {
+						// Det er blitt sendt inn en søknad en annen vei til arkivet, knytt ettersendingen til denne ved å liste innsendte dokumenter
+						// Opprett en ettersendingssøknad med innsendte vedlegg fra arkiverteSoknader[0]+ eventuelle ekstra vedlegg fra input.
+						soknadService.opprettSoknadForEttersendingAvVedleggGittArkivertSoknad(
+							brukerId,
+							arkiverteSoknader[0],
+							finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
+							opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
+						)
+					}
+				} else {
+					soknadService.opprettSoknadForettersendingAvVedlegg(
+						brukerId,
+						if (innsendteSoknader[0].ettersendingsId != null && innsendteSoknader[0].ettersendingsId != ukjentEttersendingsId)
+							innsendteSoknader[0].ettersendingsId!!
+						else innsendteSoknader[0].innsendingsId!!
+					)
+				}
+			} else if (arkiverteSoknader.isNotEmpty()) {
+				// Det er blitt sendt inn en søknad en annen vei til arkivet, knytt ettersendingen til denne ved å liste innsendte dokumenter
+				// Opprett en ettersendingssøknad med innsendte vedlegg fra arkiverteSoknader[0]+ eventuelle ekstra vedlegg fra input.
+				soknadService.opprettSoknadForEttersendingAvVedleggGittArkivertSoknad(
+					brukerId,
+					arkiverteSoknader[0],
+					finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
+					opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
+				)
+			} else {
+				soknadService.opprettSoknadForEttersendingGittSkjemanr(
+					brukerId,
+					opprettEttersendingGittSkjemaNr.skjemanr,
+					finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
+					opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
+				)
+			}
 
 	@ApiOperation(
 		value = "Kall for å hente alle opprettede ikke innsendte søknader.",

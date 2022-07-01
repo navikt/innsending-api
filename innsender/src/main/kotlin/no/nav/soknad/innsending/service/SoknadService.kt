@@ -75,6 +75,7 @@ class SoknadService(
 					UUID.randomUUID().toString(),
 					LocalDateTime.now(),
 					LocalDateTime.now(),
+					null,
 					kodeverkSkjema.url
 				)
 			)
@@ -109,7 +110,29 @@ class SoknadService(
 						null, soknadsId, OpplastingsStatus.IKKE_VALGT,
 						false, ervariant = false, false, v.skjemanummer != "N6",
 						v.skjemanummer, v.tittel ?: "",v.tittel ?: "","",null,
-						UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now(), v.url
+						UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now(), null, v.url
+					)
+				)
+			}
+		return vedleggDbDataListe
+	}
+
+	private fun opprettInnsendteVedleggTilSoknad(
+		soknadsId: Long,
+		arkivertSoknad: AktivSakDto
+	): List<VedleggDbData> {
+		val vedleggDbDataListe = arkivertSoknad.innsendtVedleggDtos
+			.filter{ it.vedleggsnr != arkivertSoknad.skjemanr }
+			.map { v ->
+				repo.lagreVedlegg(
+					VedleggDbData(
+						null, soknadsId, OpplastingsStatus.INNSENDT,
+						false, ervariant = false, true, true,
+						v.vedleggsnr, v.tittel ?: "",v.tittel ?: "","",null,
+						UUID.randomUUID().toString(),
+						mapTilLocalDateTime(arkivertSoknad.innsendtDato) ?: LocalDateTime.now(),
+						mapTilLocalDateTime(arkivertSoknad.innsendtDato) ?: LocalDateTime.now(),
+						mapTilLocalDateTime(arkivertSoknad.innsendtDato) ?: LocalDateTime.now(), null
 					)
 				)
 			}
@@ -122,6 +145,7 @@ class SoknadService(
 		if (kastException) {
 			throw ResourceNotFoundException(re.arsak, re.message ?: "")
 		} else {
+			logger.warn("Skjemanr=$nr ikke funnet i Sanity. Fortsetter behandling")
 			KodeverkSkjema()
 		}
 	}
@@ -176,6 +200,7 @@ class SoknadService(
 					UUID.randomUUID().toString(),
 					LocalDateTime.now(),
 					LocalDateTime.now(),
+					null,
 					kodeverkSkjema.url
 				)
 			)
@@ -218,6 +243,61 @@ class SoknadService(
 		}
 
 		return opprettEttersendingsSoknad(hentAlleVedlegg(soknadDbDataList.first()), ettersendingsId)
+	}
+
+	fun opprettSoknadForEttersendingAvVedleggGittArkivertSoknad(brukerId: String, arkivertSoknad: AktivSakDto, sprak: String, vedleggsnrListe: List<String>): DokumentSoknadDto {
+		val innsendingsId = Utilities.laginnsendingsId()
+		// lagre soknad
+		val savedSoknadDbData = repo.lagreSoknad(
+			SoknadDbData(
+				null,
+				innsendingsId,
+				arkivertSoknad.tittel ?: "",
+				arkivertSoknad.skjemanr ?: "",
+				arkivertSoknad.tema ?: "",
+				finnSpraakFraInput(sprak),
+				SoknadsStatus.Opprettet,
+				brukerId,
+				arkivertSoknad.innsendingsId ?: innsendingsId, // har ikke referanse til tidligere innsendt søknad, bruker søknadens egen innsendingsId istedenfor
+				LocalDateTime.now(),
+				LocalDateTime.now(),
+				null,
+				0,
+				VisningsType.ettersending
+			)
+		)
+		// Lagre vedlegget for søknadens hoveddokument
+		val skjemaDbData = repo.lagreVedlegg(
+			VedleggDbData(
+				null,
+				savedSoknadDbData.id!!,
+				OpplastingsStatus.INNSENDT,
+				true,
+				ervariant = false,
+				true,
+				true,
+				arkivertSoknad.skjemanr ?: "",
+				arkivertSoknad.tittel ?: "",
+				arkivertSoknad.tittel ?: "",
+				"",
+				null,
+				UUID.randomUUID().toString(),
+				LocalDateTime.now(),
+				LocalDateTime.now(),
+				null,
+				null
+			)
+		)
+
+		val innsendtVedleggsnrListe: List<String> = arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map { it.vedleggsnr }.toList()
+		val vedleggDbDataListe = opprettVedleggTilSoknad(savedSoknadDbData.id, vedleggsnrListe.filter { !innsendtVedleggsnrListe.contains(it) }, sprak)
+		val innsendtVedleggDbDataListe = opprettInnsendteVedleggTilSoknad(savedSoknadDbData.id, arkivertSoknad)
+		val savedVedleggDbDataListe = listOf(skjemaDbData) + vedleggDbDataListe + innsendtVedleggDbDataListe
+
+		val dokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbDataListe)
+		publiserBrukernotifikasjon(dokumentSoknadDto)
+
+		return dokumentSoknadDto
 	}
 
 	private fun opprettEttersendingsSoknad (
@@ -263,8 +343,9 @@ class SoknadService(
 							v.beskrivelse,
 							mapTilDbMimetype(v.mimetype),
 							UUID.randomUUID().toString(),
+							v.opprettetdato.toLocalDateTime(),
 							LocalDateTime.now(),
-							LocalDateTime.now(),
+							v.innsendtdato?.toLocalDateTime(),
 							if (v.vedleggsnr != null) hentSkjema(v.vedleggsnr!!, nyesteSoknad.spraak ?: "nb").url else null
 						)
 					)
@@ -347,8 +428,15 @@ class SoknadService(
 		return soknader
 	}
 
-	private fun hentSoknadGittBrukerId(brukerId: String): List<DokumentSoknadDto> {
-		val soknader = repo.finnAlleSoknaderGittBrukerIdOgStatus(brukerId, SoknadsStatus.Opprettet)
+	fun hentInnsendteSoknader(brukerIds: List<String>): List<DokumentSoknadDto>  {
+		val soknader = mutableListOf<DokumentSoknadDto>()
+		brukerIds.stream()
+			.forEach {soknader.addAll(hentSoknadGittBrukerId(it, SoknadsStatus.Innsendt))}
+		return soknader
+	}
+
+	private fun hentSoknadGittBrukerId(brukerId: String, soknadsStatus: SoknadsStatus = SoknadsStatus.Opprettet): List<DokumentSoknadDto> {
+		val soknader = repo.finnAlleSoknaderGittBrukerIdOgStatus(brukerId, soknadsStatus)
 
 		return soknader.stream()
 			.map { hentAlleVedlegg(it)}

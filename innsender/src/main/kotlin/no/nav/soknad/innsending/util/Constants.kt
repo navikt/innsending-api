@@ -10,6 +10,7 @@ object Constants {
 	const val CORRELATION_ID = "correlation_id"
 	const val CONSUMER_TOKEN = "Nav-Consumer-Token"
 
-
 	const val BEARER = "Bearer "
+
+	const val MAX_AKTIVE_DAGER = 3*365L
 }
