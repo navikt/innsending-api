@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.config
 
 import com.expediagroup.graphql.client.spring.GraphQLWebClient
+import jdk.jfr.ContentType
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.soknad.innsending.util.Constants
@@ -69,11 +70,16 @@ class PdlClientConfig(
 			"scope" to restConfig.pdlScope,
 			"grant_type" to "client_credentials"
 		)
-		return azureWebClient.post()
-			.body(BodyInserters.fromValue(map))
-			.retrieve()
-			.bodyToMono<AzureADV2TokenResponse>()
-			.block()
+		try {
+			return azureWebClient.post()
+				.body(BodyInserters.fromValue(map))
+				.retrieve()
+				.bodyToMono<AzureADV2TokenResponse>()
+				.block()
+		} catch (ex: Exception) {
+			logger.error("Henting av token på url ${restConfig.azureUrl} for client ${restConfig.clientId} feilet med:\n${ex.message}")
+			throw ex
+		}
 	}
 
 }

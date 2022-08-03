@@ -37,6 +37,7 @@
 		"TOKENDINGS_BASE_URL": "https://tokendings.dev-gcp.nais.io",
 		"SAFSELVBETJENING_TOKEN_X_AUDIENCE": "dev-fss:teamdokumenthandtering:safselvbetjening-q1",
 		"PDL_TOKEN_X_AUDIENCE": "dev-fss:pdl:pdl-api",
-		"PDL_SCOPE": "api://dev-fss.pdl.pdl-api/.default"
+		"PDL_SCOPE": "api://dev-fss.pdl.pdl-api/.default",
+		"AZURE_TENANT": "trygdeetaten.no"
 	}
 }

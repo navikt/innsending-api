@@ -1,9 +1,11 @@
 package no.nav.soknad.innsending.config
 
-import org.apache.tomcat.util.http.Parameters
+import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.MDCUtil
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.client.WebClient
 import java.util.*
 
@@ -16,7 +18,10 @@ class AzureClientConfig(
 	fun azureWebClient(): WebClient {
 		return webClientBuilder
 			.baseUrl("${restConfig.azureUrl}")
-			.defaultHeader("Nav-Consumer-Id", restConfig.username)
+			.defaultRequest{
+				it.header(Constants.HEADER_CALL_ID, MDCUtil.callIdOrNew())
+				it.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+			}
 			.build()
 	}
 
