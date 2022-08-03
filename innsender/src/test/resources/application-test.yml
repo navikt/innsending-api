@@ -42,9 +42,12 @@ restconfig:
   soknadsMottakerHost: http://localhost:${wiremock.server.port}/soknadsmottaker-api
   soknadsMottakerEndpoint: /save
   frontEndFortsettEndpoint: http://localhost:3000/dokumentinnsending/oversikt/
+  clientId: clientId
+  clientSecret: clientSecret
+  pdlScope: api://dev-fss.pdl.pdl-api/.default
   pdlUrl: http://localhost:${wiremock.server.port}/pdl-api
   safUrl: http://localhost:${wiremock.server.port}/saf-api
-  stsUrl: http://localhost:${wiremock.server.port}/sts-api
+  azureUrl: http://localhost:${wiremock.server.port}/azure-api
 
 dbconfig:
   profiles: test

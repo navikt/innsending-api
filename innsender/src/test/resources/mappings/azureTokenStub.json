@@ -1,0 +1,18 @@
+{
+	"request": {
+		"urlPattern": "/azure-api",
+		"method": "POST"
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": {
+			"expires_in": 1000,
+			"token_type": "Bearer",
+			"access_token": "ey"
+		}
+	}
+}
+

@@ -38,6 +38,7 @@
 		"ETTERSENDE_PA_SOKNAD": "/dokumentinnsending/ettersending/",
 		"TOKENDINGS_BASE_URL": "https://tokendings.prod-gcp.nais.io",
 		"SAFSELVBETJENING_TOKEN_X_AUDIENCE": "prod-fss:teamdokumenthandtering:safselvbetjening",
-		"PDL_TOKEN_X_AUDIENCE": "prod-fss:pdl:pdl-api"
+		"PDL_TOKEN_X_AUDIENCE": "prod-fss:pdl:pdl-api",
+		"PDL_SCOPE": "api://prod-fss.pdl.pdl-api/.default"
 	}
 }

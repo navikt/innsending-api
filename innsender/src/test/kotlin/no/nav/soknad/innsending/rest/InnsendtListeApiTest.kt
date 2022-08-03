@@ -85,7 +85,6 @@ internal class InnsendtListeApiTest {
 
 	@Test
 	internal fun testResult() {
-		val hentDokumentOversikt = HentDokumentOversikt(HentDokumentOversikt.Variables("12345678901"))
 		val dokumentoversikt = Dokumentoversikt(listOf(lagJournalpost()))
 
 		val gson = Gson()

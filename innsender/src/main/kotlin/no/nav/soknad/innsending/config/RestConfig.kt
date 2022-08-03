@@ -9,6 +9,8 @@ class RestConfig {
 	lateinit var password: String
 	lateinit var sharedUsername: String
 	lateinit var sharedPassword: String
+	lateinit var clientId: String
+	lateinit var clientSecret: String
 	var maxFileSize by Delegates.notNull<Int>()
 	var maxFileSizeSum by Delegates.notNull<Int>()
 	lateinit var sanityHost: String
@@ -17,8 +19,9 @@ class RestConfig {
 	var filesInOneRequestToFilestorage by Delegates.notNull<Int>()
 	lateinit var soknadsMottakerHost: String
 	lateinit var frontEndFortsettEndpoint: String
+	lateinit var pdlScope: String
 	lateinit var pdlUrl: String
 	lateinit var safUrl: String
-	lateinit var stsUrl: String
+	lateinit var azureUrl: String
 
 }

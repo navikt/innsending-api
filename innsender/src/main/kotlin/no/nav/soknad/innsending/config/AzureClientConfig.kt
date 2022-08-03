@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.config
 
+import org.apache.tomcat.util.http.Parameters
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpHeaders
@@ -7,15 +8,14 @@ import org.springframework.web.reactive.function.client.WebClient
 import java.util.*
 
 @Configuration
-class StsClientConfig(
+class AzureClientConfig(
 	private val webClientBuilder: WebClient.Builder,
 	private val restConfig: RestConfig) {
 
 	@Bean
-	fun stsWebClient(): WebClient {
+	fun azureWebClient(): WebClient {
 		return webClientBuilder
-			.baseUrl("${restConfig.stsUrl}/rest/v1/sts/token")
-			.defaultHeader(HttpHeaders.AUTHORIZATION, "Basic ${credentials()}")
+			.baseUrl("${restConfig.azureUrl}")
 			.defaultHeader("Nav-Consumer-Id", restConfig.username)
 			.build()
 	}
