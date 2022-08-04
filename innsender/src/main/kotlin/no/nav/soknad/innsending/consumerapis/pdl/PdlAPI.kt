@@ -41,7 +41,7 @@ class PdlAPI(
 	override fun hentPersonIdents(brukerId: String): List<IdentDto> = runBlocking {
 		try {
 			hentIdenter(brukerId)?.hentIdenter?.identer?.map {IdentDto(it.ident, it.gruppe.toString(), it.historisk)}?.toList()
-				?: dummyHentBrukerIdenter(brukerId) // TODO fjern
+				?: listOf(IdentDto(brukerId, "FOLKEREGISTERIDENT", false))
 		} catch (ex: Exception) {
 			logger.warn(("Henting fra PDL feilet med ${ex.message}. Returnerer pålogget ident"))
 			listOf(IdentDto(brukerId,"FOLKEREGISTERIDENT", false))
@@ -49,15 +49,12 @@ class PdlAPI(
 	}
 
 	override fun hentPersonData(brukerId: String): PersonDto? = runBlocking {
-
 		try {
 			hentPerson(brukerId)?.hentPerson?.navn?.map {PersonDto(brukerId, it.fornavn, it.mellomnavn, it.etternavn)}?.first()
-				?: dummyPersonDtos[brukerId] // TODO erstatt med kall til PDL
 		} catch (ex: Exception) {
 			logger.warn(("Henting fra PDL feilet med ${ex.message}"))
-			dummyPersonDtos[brukerId] // TODO erstatt med kall til PDL
+			null
 		}
-
 	}
 
 
@@ -103,39 +100,7 @@ class PdlAPI(
 			.map { "${it.message} (feilkode: ${it.path} ${it.path?.forEach {e-> e.toString() }}" }
 			.joinToString(prefix = "Error i respons fra safselvbetjening: ", separator = ", ") { it }
 		logger.error("Oppslag mot søknadsarkivet feilet med $errorMessage")
-		throw SafApiException("Oppslag mot søknadsarkivet feilet", "Fikk feil i responsen fra søknadsarkivet")
+		throw PdlApiException("Oppslag mot søknadsarkivet feilet", "Fikk feil i responsen fra søknadsarkivet")
 	}
 
-
-/*** Temporary methods-> ***/
-	private fun dummyHentBrukerIdenter(brukerId: String): List<IdentDto> {
-		val dummyList = dummyIdents.filter {inneholderBrukerId(brukerId, it)}.toList().flatten()
-	return dummyList.ifEmpty { listOf(IdentDto(brukerId,"FOLKEREGISTERIDENT", false)) }
-	}
-
-	private fun inneholderBrukerId(brukerId: String, liste: List<IdentDto>): Boolean {
-		return liste.any { it.ident == brukerId }
-	}
-
-	private val dummyIdents = listOf(
-	listOf(IdentDto(testpersonid, "FOLKEREGISTERIDENT", false), IdentDto("12345678902","FOLKEREGISTERIDENT", true)),
-	listOf(IdentDto("12345678903", "FOLKEREGISTERIDENT", false)),
-	listOf(IdentDto("12345678904", "NPID", false)),
-	listOf(IdentDto("12345678906", "FOLKEREGISTERIDENT", false),IdentDto("12345678905", "AKTORID", true))
-	)
-
-	private val dummyPersonDtos = mapOf(
-		testpersonid to PersonDto(
-			testpersonid, "F1", null, "E1"
-		),
-		"12345678903" to PersonDto(
-			"12345678903", "F3", null, "E3"
-		),
-		"12345678904" to PersonDto(
-			"12345678904","F4", null, "E4"
-		),
-		"12345678905" to PersonDto(
-			"12345678905", "F5", null, "E5"
-		)
-	)
 }

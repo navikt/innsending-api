@@ -1,6 +1,7 @@
-package no.nav.soknad.innsending.config
+package no.nav.soknad.innsending.consumerapis.azure
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import no.nav.soknad.innsending.consumerapis.azure.dto.AzureAdV2Token
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component

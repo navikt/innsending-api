@@ -1,4 +1,4 @@
-package no.nav.soknad.innsending.config
+package no.nav.soknad.innsending.consumerapis.azure.dto
 
 import java.time.OffsetDateTime
 

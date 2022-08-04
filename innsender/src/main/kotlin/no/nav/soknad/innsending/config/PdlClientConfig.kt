@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.config
 
 import com.expediagroup.graphql.client.spring.GraphQLWebClient
+import no.nav.soknad.innsending.consumerapis.azure.AzureInterface
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.MDCUtil
 import org.slf4j.LoggerFactory
@@ -19,7 +20,7 @@ import reactor.netty.http.client.HttpClientResponse
 @EnableConfigurationProperties(RestConfig::class)
 class PdlClientConfig(
 	private val restConfig: RestConfig,
-	private val azureClient: AzureClientConfig
+	private val azureClient: AzureInterface
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
