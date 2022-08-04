@@ -1,22 +1,14 @@
 package no.nav.soknad.innsending.config
 
 import com.expediagroup.graphql.client.spring.GraphQLWebClient
-import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.soknad.innsending.util.Constants
-import no.nav.soknad.innsending.util.Constants.BEARER
 import no.nav.soknad.innsending.util.MDCUtil
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.*
 import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
-import org.springframework.util.CollectionUtils
-import org.springframework.util.LinkedMultiValueMap
-import org.springframework.util.MultiValueMap
-import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.netty.http.client.HttpClient
 import reactor.netty.http.client.HttpClientRequest
 import reactor.netty.http.client.HttpClientResponse
@@ -27,9 +19,7 @@ import reactor.netty.http.client.HttpClientResponse
 @EnableConfigurationProperties(RestConfig::class)
 class PdlClientConfig(
 	private val restConfig: RestConfig,
-//	private val oAuth2AccessTokenService: OAuth2AccessTokenService,
-	private val azureWebClient: WebClient,
-	oauth2Config: ClientConfigurationProperties
+	private val azureClient: AzureClientConfig
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -50,38 +40,11 @@ class PdlClientConfig(
 			)
 			.defaultRequest {
 				it.header(Constants.HEADER_CALL_ID, MDCUtil.callIdOrNew())
-				it.header(HttpHeaders.AUTHORIZATION, consumerToken())
+				it.header(HttpHeaders.AUTHORIZATION, azureClient.consumerToken())
 				it.header("Tema","AAP")
 			}
 	)
 
-	private val tokenxPdlClientProperties = oauth2Config.registration["tokenx-pdl"]
-		?: throw RuntimeException("could not find oauth2 client config for tokenx-pdl")
-
-	private fun consumerToken(): String? {
-		val tokenResponse = getServiceUserAccessToken()
-		return BEARER + tokenResponse?.access_token
-	}
-
-	private fun getServiceUserAccessToken(): AzureADV2TokenResponse? {
-		val map: MultiValueMap<String, String> = LinkedMultiValueMap()
-		map.add("client_id",restConfig.clientId)
-		map.add("client_secret",restConfig.clientSecret)
-		map.add("scope",restConfig.pdlScope)
-		map.add("grant_type","client_credentials")
-
-		try {
-			return azureWebClient.post()
-				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
-				.body(BodyInserters.fromFormData(map))
-				.retrieve()
-				.bodyToMono<AzureADV2TokenResponse>()
-				.block()
-		} catch (ex: Exception) {
-			logger.error("Henting av token på url ${restConfig.azureUrl} for client ${restConfig.clientId} feilet med:\n${ex.message}")
-			throw ex
-		}
-	}
 
 }
 

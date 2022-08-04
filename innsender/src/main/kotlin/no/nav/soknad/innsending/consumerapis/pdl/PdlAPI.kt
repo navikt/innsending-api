@@ -13,8 +13,6 @@ import no.nav.soknad.innsending.exceptions.PdlApiException
 import no.nav.soknad.innsending.exceptions.SafApiException
 import no.nav.soknad.innsending.pdl.generated.HentIdenter
 import no.nav.soknad.innsending.pdl.generated.HentPerson
-import no.nav.soknad.innsending.pdl.generated.HentPersonInfo
-import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 
