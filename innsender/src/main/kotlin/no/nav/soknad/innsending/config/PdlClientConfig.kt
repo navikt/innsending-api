@@ -32,10 +32,10 @@ class PdlClientConfig(
 				ReactorClientHttpConnector(
 					HttpClient.create()
 						.doOnRequest { request: HttpClientRequest, _ ->
-							logger.info("{} {} {}", request.version(), request.method(), request.resourceUrl())
+							logger.info("OnRequest: {} {} {}", request.version(), request.method(), request.resourceUrl())
 						}
 						.doOnResponse { response: HttpClientResponse, _ ->
-							logger.info("{} - {} {} {}", response.status().toString(), response.version(), response.method(), response.resourceUrl())
+							logger.info("OnResponse: {} - {} {} {}", response.status().toString(), response.version(), response.method(), response.resourceUrl())
 						}
 				)
 			)

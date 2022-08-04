@@ -19,7 +19,7 @@ class Tilgangskontroll(
 		try {
 			return subjectHandler.getUserIdFromToken()
 		} catch (ex: Exception) {
-			logger.warn("Midlertidig bruk av testpersonid $testpersonid")
+			logger.warn("Midlertidig bruk av testpersonid $testpersonid fordi følgende feil ved hentBrukerFraToken ${ex.message}")
 			return testpersonid
 		}
 	}

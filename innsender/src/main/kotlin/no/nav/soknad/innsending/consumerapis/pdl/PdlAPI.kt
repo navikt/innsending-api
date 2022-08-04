@@ -4,13 +4,11 @@ import com.expediagroup.graphql.client.spring.GraphQLWebClient
 import com.expediagroup.graphql.client.types.GraphQLClientError
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.*
-import no.nav.soknad.innsending.util.testpersonid
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.exceptions.PdlApiException
-import no.nav.soknad.innsending.exceptions.SafApiException
 import no.nav.soknad.innsending.pdl.generated.HentIdenter
 import no.nav.soknad.innsending.pdl.generated.HentPerson
 import org.slf4j.LoggerFactory
@@ -39,6 +37,7 @@ class PdlAPI(
 	}
 
 	override fun hentPersonIdents(brukerId: String): List<IdentDto> = runBlocking {
+		logger.info("Skal hente en personsidendter fra PDL")
 		try {
 			hentIdenter(brukerId)?.hentIdenter?.identer?.map {IdentDto(it.ident, it.gruppe.toString(), it.historisk)}?.toList()
 				?: listOf(IdentDto(brukerId, "FOLKEREGISTERIDENT", false))
