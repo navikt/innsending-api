@@ -20,6 +20,7 @@ class AzureClientConfig(
 			.baseUrl("${restConfig.azureUrl}")
 			.defaultRequest{
 				it.header(Constants.HEADER_CALL_ID, MDCUtil.callIdOrNew())
+				it.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
 				it.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
 			}
 			.build()
