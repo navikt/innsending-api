@@ -45,9 +45,11 @@ class SendTilPublisher(private val restConfig: RestConfig): PublisherInterface, 
 	}
 
 	override fun isReady(): String {
-		logger.debug("Publisher isReady start")
-		//TODO healthApi.isReady()
-		logger.debug("Publisher isReady ok")
+		try {
+			healthApi.isReady()
+		} catch (e: Exception) {
+			logger.warn("Kall mot ${restConfig.soknadsMottakerHost} for å sjekke om publisher for brukernotifikasjoner er oppe, feiler med ${e.message}")
+		}
 		return "ok"
 	}
 

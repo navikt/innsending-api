@@ -6,6 +6,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.consumerapis.saf.dto.Dokument
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.SafApiException
 import no.nav.soknad.innsending.safselvbetjening.generated.HentDokumentOversikt
 import no.nav.soknad.innsending.safselvbetjening.generated.enums.Journalposttype
@@ -29,6 +30,7 @@ class SafAPI(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
+	// Følgende liste er generert på basis av ulike temaer på dokumentinnsending søknader funnet i henvendelsesbasen for 2021/2022
 	private val relevanteTema = listOf("AAP","BAR","BID","BIL","DAG","ENF","FOS","GEN","GRA","HJE","IND","KON","MED","OMS","OPP","PEN","SYK","TSO","TSR","UFO","VEN","YRK")
 
 	override fun ping(): String {
@@ -36,7 +38,7 @@ class SafAPI(
 		return "pong"
 	}
 	override fun isReady(): String {
-//		healthApi.isReady()
+		// Ikke implementert kall mot SAF for å sjekke om tjenesten er oppe.
 		return "ok"
 	}
 
@@ -47,7 +49,6 @@ class SafAPI(
 
 
 	override fun hentBrukersSakerIArkivet(brukerId:String): List<ArkiverteSaker>? {
-		//val subject = tokenUtil.getUserIdFromToken()
 		return runBlocking	{
 			try {
 				val hentetDokumentoversikt = getSoknadsDataForPerson(brukerId)
@@ -69,7 +70,7 @@ class SafAPI(
 				}
 			} catch (ex: Exception) {
 				logger.warn("hentBrukersSakerIArkivet feilet med ${ex.message}. Bruker midlertidig dummy data for SAF")
-				dummyArkiverteSoknader[brukerId] // TODO fjern
+				throw BackendErrorException(ex.message, "Henting av brukers innsendte søknader feilet")
 			}
 		}
 	}
@@ -121,43 +122,4 @@ class SafAPI(
 		throw SafApiException("Oppslag mot søknadsarkivet feilet", "Fikk feil i responsen fra søknadsarkivet")
 	}
 
-
-	// ***** Midlertidig dummy data -> **********
-
-	private val date = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
-
-	private val dummyArkiverteSoknader = mapOf (
-		testpersonid to listOf (
-			ArkiverteSaker(
-				Utilities.laginnsendingsId(), "Test søknad", "BID", date
-			, listOf(
-				Dokument("NAV 08-09.06","Egenerklæring og sykmelding", "HOVEDDOKUMENT"),
-				Dokument("N6","Et vedleggEgenerklæring og sykmelding", "VEDLEGG")
-			)),
-			ArkiverteSaker(
-				Utilities.laginnsendingsId(), "Ettersending til test søknad", "BID", date
-				, listOf(
-					Dokument("NAVe 08-09.06","Egenerklæring og sykmelding", "HOVEDDOKUMENT"),
-					Dokument("N6","Et vedleggEgenerklæring og sykmelding", "VEDLEGG")
-				))
-		),
-		"12345678901" to listOf(ArkiverteSaker(
-			Utilities.laginnsendingsId(), "Test søknad", "BID", date
-			, listOf(
-				Dokument("NAV 08-09.06","Egenerklæring og sykmelding", "HOVEDDOKUMENT"),
-				Dokument("N6","Et vedleggEgenerklæring og sykmelding", "VEDLEGG")
-			))),
-		"12345678902" to listOf(ArkiverteSaker(
-			Utilities.laginnsendingsId(), "Test søknad", "BID", date
-			, listOf(
-				Dokument("NAV 08-09.06","Egenerklæring og sykmelding", "HOVEDDOKUMENT"),
-				Dokument("N6","Et vedleggEgenerklæring og sykmelding", "VEDLEGG")
-			))),
-		"12345678903" to listOf(ArkiverteSaker(
-			Utilities.laginnsendingsId(), "Test søknad", "BID", date
-			, listOf(
-				Dokument("NAV 08-09.06","Egenerklæring og sykmelding", "HOVEDDOKUMENT"),
-				Dokument("N6","Et vedleggEgenerklæring og sykmelding", "VEDLEGG")
-			)))
-	)
 }

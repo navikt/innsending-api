@@ -14,9 +14,6 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.Mimetype
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
-//import no.nav.soknad.innsending.supervision.HealthCheker
-//import no.nav.soknad.innsending.supervision.HealthCheker.Ping
-//import no.nav.soknad.innsending.supervision.HealthCheker.PingMetadata
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
@@ -40,25 +37,10 @@ class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, Health
 		healthApi = HealthApi(restConfig.soknadsMottakerHost)
 	}
 
-/*
-	override fun ping(): Ping {
-		val start = System.currentTimeMillis()
-		try {
-			healthApi.ping()
-			return Ping(PingMetadata(restConfig.soknadsMottakerHost, "Endepunkt for innsending av søknad", true )
-				, null, null, System.currentTimeMillis()-start)
-		} catch (e: Exception) {
-			return Ping(PingMetadata(restConfig.soknadsMottakerHost, "Endepunkt for innsending av søknad", true )
-				, e.message, e, System.currentTimeMillis()-start)
-		}
-	}
-*/
 
 	override fun isReady(): String {
 		try {
-			//logger.info("Soknadsmottaker isReady start")
 			healthApi.isReady()
-			//logger.info("Soknadsmottaker isReady ok")
 		} catch (e: Exception) {
 			logger.warn("Kall for å sjekke om soknadsmottaker er oppe feiler med ${e.message}")
 		}

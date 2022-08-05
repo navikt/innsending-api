@@ -24,15 +24,13 @@ class PdlAPI(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	override fun ping(): String {
-		//healthApi.ping()
 		return "pong"
 	}
 	override fun isReady(): String {
-		//healthApi.isReady()
+		// Ikke implementert kall mot PDL for å sjekke om tjenesten er oppe.
 		return "ok"
 	}
 	override fun isAlive(): String {
-		//healthApi.isAlive()
 		return "ok"
 	}
 
