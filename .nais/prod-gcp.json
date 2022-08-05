@@ -8,9 +8,7 @@
 		"https://innsending-api-gcp.adeo.no",
 		"https://innsending-api-gcp.nav.no"
 	],
-	"outboundExternalHosts": [
-		"nav.no/soknader/api/sanity/skjemautlisting"
-	],
+	"outboundExternalHosts": [],
 	"outboundRulesGcpApplications": [
 		"soknadsmottaker",
 		"soknadsfillager"
@@ -27,10 +25,10 @@
 		"STS_URL": "https://api-gw.oera.no/security-token-service/",
 		"SANITY_HOST": "https://www.nav.no",
 		"SANITY_ENDPOINT": "/soknader/api/sanity/skjemautlisting",
-		"FILESTORAGE_HOST": "https://soknadsfillager-gcp.nav.no",
+		"FILESTORAGE_HOST": "https://soknadsfillager.intern.nav.no",
 		"FILESTORAGE_ENDPOINT": "/filer",
 		"FILESTORAGE_PARAMETERS": "?ids=",
-		"SOKNADSMOTTAKER_HOST": "https://soknadsmottaker-gcp.intern.nav.no",
+		"SOKNADSMOTTAKER_HOST": "https://soknadsmottaker.intern.nav.no",
 		"SOKNADSMOTTAKER_ENDPOINT": "/save",
 		"PUBLISERE_BRUKERNOTIFIKASJONER": "true",
 		"TJENESTE_URL": "https://send-inn-frontend.nav.no",
