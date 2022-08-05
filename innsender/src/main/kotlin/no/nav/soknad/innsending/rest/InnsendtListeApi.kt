@@ -46,6 +46,7 @@ class InnsendtListeApi(
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
 		try {
 			val innsendteSoknader = safService.hentInnsendteSoknader(tilgangskontroll.hentBrukerFraToken())
+			logger.info("Hentet ${innsendteSoknader.size} innsendteSoknader. Innsendtdato=${innsendteSoknader[0].innsendtDato}")
 			return ResponseEntity
 				.status(HttpStatus.OK)
 				.body(innsendteSoknader)
