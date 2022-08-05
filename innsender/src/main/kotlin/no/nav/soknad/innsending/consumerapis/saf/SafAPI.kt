@@ -69,7 +69,7 @@ class SafAPI(
 						.toList()
 				}
 			} catch (ex: Exception) {
-				logger.warn("hentBrukersSakerIArkivet feilet med ${ex.message}. Bruker midlertidig dummy data for SAF")
+				logger.warn("hentBrukersSakerIArkivet feilet med ${ex.message}.")
 				throw BackendErrorException(ex.message, "Henting av brukers innsendte søknader feilet")
 			}
 		}
