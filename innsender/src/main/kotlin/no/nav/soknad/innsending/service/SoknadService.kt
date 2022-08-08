@@ -631,6 +631,19 @@ class SoknadService(
 	}
 
 	@Transactional
+	fun slettSoknadPermanent(innsendingsId: String) {
+		val dokumentSoknadDto = hentSoknad(innsendingsId)
+
+		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettFilerForVedlegg(it.id!!) }
+		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettVedlegg(it.id!!) }
+		repo.slettSoknad(dokumentSoknadDto)
+
+		logger.info("slettSoknadPermanent: Søknad $innsendingsId er permanent slettet")
+
+		innsenderMetrics.applicationCounterInc(InnsenderOperation.SLETT.name, dokumentSoknadDto.tema)
+	}
+
+	@Transactional
 	fun leggTilVedlegg(soknadDto: DokumentSoknadDto): VedleggDto {
 
 		val soknadDbOpt = repo.hentSoknadDb(soknadDto.innsendingsId!!)
@@ -843,19 +856,24 @@ class SoknadService(
 
 	private fun lenkeTilDokument(innsendingsId: String, vedleggsId: Long?, filId: Long?) = if (filId == null) null else "frontend/v1/soknad/$innsendingsId/vedlegg/$vedleggsId/fil/$filId"
 
-	fun slettGamleIkkeInnsendteSoknader(dagerGamle: Long) {
+	fun slettGamleSoknader(dagerGamle: Long, permanent: Boolean = false ) {
 		val slettFor = LocalDateTime.now().minusDays(dagerGamle).atOffset(ZoneOffset.UTC)
-		logger.info("Finn opprettede søknader opprettet før $slettFor")
-		val soknadDbDataListe = repo.findAllByStatusAndWithOpprettetdatoBefore(SoknadsStatus.Opprettet.name, slettFor)
-		logger.info("SlettGamleIkkeInnsendteSoknader: Funnet ${soknadDbDataListe.size} søknader som skal slettes")
-		soknadDbDataListe.forEach { slettSoknadAutomatisk(it.innsendingsid)}
+		logger.info("Finn opprettede søknader opprettet før $slettFor permanent=$permanent")
+		if (permanent) {
+			val soknadDbDataListe = repo.findAllByOpprettetdatoBefore(slettFor)
+			logger.info("SlettPermanentSoknader: Funnet ${soknadDbDataListe.size} søknader som skal permanent slettes")
+			soknadDbDataListe.forEach { slettSoknadPermanent(it.innsendingsid) }
+		} else {
+			val soknadDbDataListe = repo.findAllByStatusAndWithOpprettetdatoBefore(SoknadsStatus.Opprettet.name, slettFor)
+			logger.info("SlettGamleIkkeInnsendteSoknader: Funnet ${soknadDbDataListe.size} søknader som skal slettes")
+			soknadDbDataListe.forEach { slettSoknadAutomatisk(it.innsendingsid) }
+		}
 	}
 
 	fun slettfilerTilInnsendteSoknader(dagerGamle: Int) {
 		logger.info("Slett alle opplastede filer for innsendte søknader mellom ${100 + dagerGamle} til $dagerGamle dager siden")
 		repo.deleteAllBySoknadStatusAndInnsendtdato(dagerGamle)
 	}
-
 
 
 	private fun skalEttersende(innsendtSoknadDto: DokumentSoknadDto): Boolean {

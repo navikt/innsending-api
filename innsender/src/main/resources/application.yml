@@ -19,6 +19,8 @@ cron:
   slettEldreEnn: 56
   startSlettInnsendteFiler: 0 0 5 * * *
   slettInnsendtFilEldreEnn: 1
+  startSlettPermanentIkkeInnsendteSoknader: 0 0 3 * * *
+  slettPermanentEldreEnn: 365
 
 ettersendingsfrist: 42
 ---

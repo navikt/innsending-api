@@ -1,36 +1,30 @@
 package no.nav.soknad.innsending.cleanup
 
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 import no.nav.soknad.innsending.service.SoknadService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.net.InetAddress
-import java.net.URL
-import java.time.LocalDateTime
 
 @Service
-class FjernGamleSoknader(private val soknadService: SoknadService) {
+class SlettPermanentGamleSoknader(private val soknadService: SoknadService) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 
-	@Value("\${cron.slettEldreEnn}")
+	@Value("\${cron.slettPermanentEldreEnn}")
 	private lateinit var dagerGamleString: String
 
-	@Scheduled(cron = "\${cron.startSlettGamleIkkeInnsendteSoknader}")
-	fun fjernGamleIkkeInnsendteSoknader() {
+	@Scheduled(cron = "\${cron.startSlettPermanentIkkeInnsendteSoknader}")
+	fun fjernPermanentGamleIkkeInnsendteSoknader() {
 		try {
 			if (LeaderSelectionUtility().isLeader()) {
-				soknadService.slettGamleSoknader(dagerGamleString.toLong())
+				soknadService.slettGamleSoknader(dagerGamleString.toLong(), true)
 			}
 		} catch (ex: Exception) {
 			logger.warn("Fjerning av gamle ikke innsendte søknader feilet med ${ex.message}")
 		}
 	}
+
 
 }

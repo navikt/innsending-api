@@ -39,6 +39,12 @@ class RepositoryUtils(
 		throw BackendErrorException(ex.message, "Feil ved henting av alle soknader med status $status opprettet før $opprettetFor")
 	}
 
+	fun findAllByOpprettetdatoBefore(opprettetFor: OffsetDateTime) = try {
+		soknadRepository.findAllByOpprettetdatoBefore(opprettetFor)
+	} catch (ex: Exception) {
+		throw BackendErrorException(ex.message, "Feil ved henting av alle soknader opprettet før $opprettetFor")
+	}
+
 	fun finnAlleSoknaderGittBrukerIdOgStatus(brukerId: String, status: SoknadsStatus) = try {
 		soknadRepository.findByBrukeridAndStatus(brukerId, status)
 	} catch (ex: Exception) {
