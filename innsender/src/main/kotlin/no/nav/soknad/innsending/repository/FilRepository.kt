@@ -11,7 +11,7 @@ import java.util.*
 @Repository
 interface FilRepository: JpaRepository<FilDbData, Long> {
 
-	@Query(value = "FROM FilDbData WHERE vedleggsid = :vedleggsid")
+	@Query(value = "FROM FilDbData WHERE vedleggsid = :vedleggsid order by id")
 	fun findAllByVedleggsid(@Param("vedleggsid") vedleggsid: Long): List<FilDbData>
 
 	@Query(value = "SELECT count(*) FROM fil WHERE vedleggsid = :vedleggsid", nativeQuery = true)

@@ -12,7 +12,7 @@ import java.util.*
 @Repository
 interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
 
-	@Query(value = "FROM VedleggDbData WHERE soknadsid = :soknadsid")
+	@Query(value = "FROM VedleggDbData WHERE soknadsid = :soknadsid order by id")
 	fun findAllBySoknadsid(@Param("soknadsid") soknadsid: Long): List<VedleggDbData>
 
 	@Query(value = "FROM VedleggDbData WHERE id = :vedleggsid")
