@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.service
 
-import no.nav.soknad.innsending.consumerapis.skjema.KodeverkSkjema
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.*
 import java.time.LocalDateTime
@@ -8,7 +7,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.*
 
-public const val ukjentEttersendingsId = "-1" // sette lik innsendingsid istedenfor?
+const val ukjentEttersendingsId = "-1" // sette lik innsendingsid istedenfor?
 
 fun erEttersending(dokumentSoknad: DokumentSoknadDto): Boolean =
 	(dokumentSoknad.ettersendingsId != null) || (dokumentSoknad.visningsType == VisningsType.ettersending)

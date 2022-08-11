@@ -4,6 +4,7 @@ import com.expediagroup.graphql.client.spring.GraphQLWebClient
 import com.expediagroup.graphql.client.types.GraphQLClientError
 import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
+import no.nav.soknad.innsending.consumerapis.handleErrors
 import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.consumerapis.saf.dto.Dokument
 import no.nav.soknad.innsending.exceptions.BackendErrorException
@@ -12,14 +13,10 @@ import no.nav.soknad.innsending.safselvbetjening.generated.HentDokumentOversikt
 import no.nav.soknad.innsending.safselvbetjening.generated.enums.Journalposttype
 import no.nav.soknad.innsending.safselvbetjening.generated.hentdokumentoversikt.DokumentInfo
 import no.nav.soknad.innsending.safselvbetjening.generated.hentdokumentoversikt.Dokumentoversikt
-import no.nav.soknad.innsending.util.Utilities
-import no.nav.soknad.innsending.util.testpersonid
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @Service
 @Profile("test | dev | prod")
@@ -111,15 +108,7 @@ class SafAPI(
 	}
 
 	private fun checkForErrors(errors: List<GraphQLClientError>?) {
-		errors?.let { handleErrors(it) }
-	}
-
-	private fun handleErrors(errors: List<GraphQLClientError>) {
-		val errorMessage = errors
-			.map { "${it.message} (feilkode: ${it.path} ${it.path?.forEach {e-> e.toString() }}" }
-			.joinToString(prefix = "Error i respons fra safselvbetjening: ", separator = ", ") { it }
-		logger.error("Oppslag mot søknadsarkivet feilet med $errorMessage")
-		throw SafApiException("Oppslag mot søknadsarkivet feilet", "Fikk feil i responsen fra søknadsarkivet")
+		errors?.let { handleErrors(it, "søknadsarkiv") }
 	}
 
 }

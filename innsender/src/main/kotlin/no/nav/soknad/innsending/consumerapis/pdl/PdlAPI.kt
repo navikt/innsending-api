@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import kotlinx.coroutines.runBlocking
+import no.nav.soknad.innsending.consumerapis.handleErrors
 import no.nav.soknad.innsending.exceptions.PdlApiException
 import no.nav.soknad.innsending.pdl.generated.HentIdenter
 import no.nav.soknad.innsending.pdl.generated.HentPerson
@@ -89,15 +90,8 @@ class PdlAPI(
 	}
 
 	private fun checkForErrors(errors: List<GraphQLClientError>?) {
-		errors?.let { handleErrors(it) }
+		errors?.let { handleErrors(it, "Personregister") }
 	}
 
-	private fun handleErrors(errors: List<GraphQLClientError>) {
-		val errorMessage = errors
-			.map { "${it.message} (feilkode: ${it.path} ${it.path?.forEach {e-> e.toString() }}" }
-			.joinToString(prefix = "Error i respons fra safselvbetjening: ", separator = ", ") { it }
-		logger.error("Oppslag mot søknadsarkivet feilet med $errorMessage")
-		throw PdlApiException("Oppslag mot søknadsarkivet feilet", "Fikk feil i responsen fra søknadsarkivet")
-	}
 
 }

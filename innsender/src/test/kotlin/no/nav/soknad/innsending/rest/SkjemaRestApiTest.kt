@@ -89,7 +89,7 @@ class SkjemaRestApiTest {
 	}
 
 	private fun lagDokument(vedleggsnr: String, tittel: String, pakrevd: Boolean, mimetype: Mimetype? = null): SkjemaDokumentDto {
-		return SkjemaDokumentDto(vedleggsnr, tittel, tittel, pakrevd, tittel+ "- Beskrivelse", mimetype, hentFil(mimetype))
+		return SkjemaDokumentDto(vedleggsnr, tittel, tittel, pakrevd, "$tittel- Beskrivelse", mimetype, hentFil(mimetype))
 	}
 
 	private fun hentFil(mimetype: Mimetype?): ByteArray? =

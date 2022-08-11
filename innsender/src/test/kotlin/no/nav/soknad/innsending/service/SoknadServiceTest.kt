@@ -289,7 +289,7 @@ class SoknadServiceTest {
 
 		val dokumentSoknadDto = soknadService.opprettSoknadForEttersendingAvVedleggGittArkivertSoknad(brukerid, arkivertSoknad, spraak, listOf("C1", "N6", "L8") )
 
-		assertTrue(dokumentSoknadDto.innsendingsId != null  && VisningsType.ettersending.equals(dokumentSoknadDto.visningsType) && dokumentSoknadDto.ettersendingsId==arkivertInnsendingsId )
+		assertTrue(dokumentSoknadDto.innsendingsId != null  && VisningsType.ettersending == dokumentSoknadDto.visningsType && dokumentSoknadDto.ettersendingsId==arkivertInnsendingsId )
 		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
 		assertTrue(dokumentSoknadDto.vedleggsListe.size == 4)
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })
@@ -303,14 +303,12 @@ class SoknadServiceTest {
 
 		val brukerid = testpersonid
 		val skjemanr = "NAV 10-07.20"
-		val tittel = "Test av ettersending gitt arkivertsoknad"
 		val spraak = "nb_NO"
-		val tema = "HJE"
 
 		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
 		val dokumentSoknadDto = soknadService.opprettSoknadForEttersendingGittSkjemanr(brukerid, skjemanr,	spraak,	listOf("C1", "L8"))
 
-		assertTrue(dokumentSoknadDto.innsendingsId != null  && VisningsType.ettersending.equals(dokumentSoknadDto.visningsType) && dokumentSoknadDto.ettersendingsId==dokumentSoknadDto.innsendingsId )
+		assertTrue(dokumentSoknadDto.innsendingsId != null  && VisningsType.ettersending == dokumentSoknadDto.visningsType && dokumentSoknadDto.ettersendingsId==dokumentSoknadDto.innsendingsId )
 		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
 		assertTrue(dokumentSoknadDto.vedleggsListe.size == 3)
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })

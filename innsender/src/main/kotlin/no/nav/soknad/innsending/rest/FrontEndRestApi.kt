@@ -53,7 +53,7 @@ class FrontEndRestApi(
 		nickname = "opprettSoknad",
 		notes = "På basis av oppgitt skjemanummer og eventuelle vedlegg, blir det opprettet en søknad som inviterer søker til å laste ned skjema for utfylling og opplasting av dette og eventuelle vedlegg.",
 		response = DokumentSoknadDto::class)
-	@io.swagger.annotations.ApiResponses(
+	@ApiResponses(
 		value = [io.swagger.annotations.ApiResponse(
 			code = 200,
 			message = "Successful operation",
@@ -174,7 +174,7 @@ class FrontEndRestApi(
 						.toList()
 				} catch (e: Exception) {
 					logger.info("Ingen søknader funnet i basen for bruker på skjemanr = ${opprettEttersendingGittSkjemaNr.skjemanr}")
-					emptyList<DokumentSoknadDto>()
+					emptyList()
 				}
 
 			logger.info("Gitt skjemaNr ${opprettEttersendingGittSkjemaNr.skjemanr}: Antall innsendteSoknader=${innsendteSoknader.size} og Antall arkiverteSoknader=${arkiverteSoknader.size}")

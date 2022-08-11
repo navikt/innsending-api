@@ -27,7 +27,6 @@ import org.springframework.http.HttpMethod
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.junit.jupiter.api.Assertions.*
-import org.springframework.core.io.Resource
 
 @Suppress("DEPRECATION")
 @ActiveProfiles("test")

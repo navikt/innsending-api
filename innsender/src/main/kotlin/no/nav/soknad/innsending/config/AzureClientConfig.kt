@@ -15,7 +15,7 @@ class AzureClientConfig(
 	@Bean
 	fun azureWebClient(): WebClient {
 		return webClientBuilder
-			.baseUrl("${restConfig.azureUrl}")
+			.baseUrl(restConfig.azureUrl)
 			.defaultRequest{
 				it.header(Constants.HEADER_CALL_ID, MDCUtil.callIdOrNew())
 			}

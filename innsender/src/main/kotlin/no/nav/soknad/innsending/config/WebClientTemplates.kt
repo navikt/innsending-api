@@ -63,8 +63,8 @@ class WebClientTemplates(private val restConfig: RestConfig) {
 			.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connection_timeout)
 			.doOnConnected { conn: Connection ->
 				conn
-					.addHandler(ReadTimeoutHandler(readTimeout.toLong(), TimeUnit.SECONDS))
-					.addHandler(WriteTimeoutHandler(writeTimeout))
+					.addHandlerLast(ReadTimeoutHandler(readTimeout.toLong(), TimeUnit.SECONDS))
+					.addHandlerLast(WriteTimeoutHandler(writeTimeout))
 			}
 	}
 

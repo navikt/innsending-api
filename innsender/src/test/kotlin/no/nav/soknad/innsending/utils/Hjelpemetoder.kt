@@ -24,14 +24,6 @@ fun lagDokumentSoknad(brukerId: String, skjemanr: String, spraak: String, tittel
 		OffsetDateTime.now(), null )
 }
 
-fun oppdaterDokumentSoknad(dokumentSoknadDto: DokumentSoknadDto): DokumentSoknadDto {
-	val vedleggDto = lastOppDokumentTilVedlegg(dokumentSoknadDto.vedleggsListe[0])
-	val vedleggDtoListe = if (dokumentSoknadDto.vedleggsListe.size>1) listOf(dokumentSoknadDto.vedleggsListe[1]) else listOf()
-	return DokumentSoknadDto(dokumentSoknadDto.brukerId, dokumentSoknadDto.skjemanr, dokumentSoknadDto.tittel,
-		dokumentSoknadDto.tema, SoknadsStatusDto.opprettet, dokumentSoknadDto.opprettetDato, listOf(vedleggDto) + vedleggDtoListe,
-		dokumentSoknadDto.id, dokumentSoknadDto.innsendingsId, dokumentSoknadDto.ettersendingsId,
-		dokumentSoknadDto.spraak, OffsetDateTime.now(), null )
-}
 
 fun lagVedlegg(id: Long? = null, vedleggsnr: String, tittel: String
 							 , opplastingsStatus: OpplastingsStatusDto = OpplastingsStatusDto.ikkeValgt
@@ -40,7 +32,8 @@ fun lagVedlegg(id: Long? = null, vedleggsnr: String, tittel: String
 		if (opplastingsStatus == OpplastingsStatusDto.lastetOpp )
 			(if (vedleggsNavn != null && vedleggsNavn.contains(".pdf")) "application/pdf" else "application/json") else null,
 		if (opplastingsStatus == OpplastingsStatusDto.lastetOpp && vedleggsNavn != null) getBytesFromFile(vedleggsNavn) else null,
-		id, erHoveddokument, false,  false, label )
+		id, erHoveddokument, erVariant = false, erPakrevd = false, label = label
+	)
 
 
 fun lagVedleggDto(skjemanr: String, tittel: String, mimeType: String?, fil: ByteArray?, id: Long? = null,
@@ -52,10 +45,6 @@ fun lagVedleggDto(skjemanr: String, tittel: String, mimeType: String?, fil: Byte
 		if (erHoveddokument) "https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/1b736c8e28abcb80f654166318f130e5ed2a0aad.pdf" else null)
 
 }
-
-fun lastOppDokumentTilVedlegg(vedleggDto: VedleggDto) =
-	lagVedleggDto(vedleggDto.vedleggsnr ?: "N6", vedleggDto.tittel, "application/pdf",
-		getBytesFromFile("/litenPdf.pdf"), vedleggDto.id)
 
 fun getBytesFromFile(path: String): ByteArray {
 	val resourceAsStream = SoknadServiceTest::class.java.getResourceAsStream(path)

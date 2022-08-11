@@ -31,7 +31,7 @@ import java.time.OffsetDateTime
 import javax.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
-
+//TODO slett når testing er i mål
 @RestController
 @CrossOrigin(maxAge = 3600)
 @Profile("dev | docker | spring | default")

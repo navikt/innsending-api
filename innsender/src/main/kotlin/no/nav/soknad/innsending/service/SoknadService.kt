@@ -66,17 +66,17 @@ class SoknadService(
 					true,
 					ervariant = false,
 					true,
-					true,
-					kodeverkSkjema.skjemanummer ?: kodeverkSkjema.vedleggsid,
-					kodeverkSkjema.tittel ?: "",
-					kodeverkSkjema.tittel ?: "",
-					"",
-					null,
-					UUID.randomUUID().toString(),
-					LocalDateTime.now(),
-					LocalDateTime.now(),
-					null,
-					kodeverkSkjema.url
+					erpakrevd = true,
+					vedleggsnr = kodeverkSkjema.skjemanummer ?: kodeverkSkjema.vedleggsid,
+					tittel = kodeverkSkjema.tittel ?: "",
+					label = kodeverkSkjema.tittel ?: "",
+					beskrivelse = "",
+					mimetype = null,
+					uuid = UUID.randomUUID().toString(),
+					opprettetdato = LocalDateTime.now(),
+					endretdato = LocalDateTime.now(),
+					innsendtdato = null,
+					vedleggsurl = kodeverkSkjema.url
 				)
 			)
 
@@ -127,12 +127,12 @@ class SoknadService(
 				repo.lagreVedlegg(
 					VedleggDbData(
 						null, soknadsId, OpplastingsStatus.INNSENDT,
-						false, ervariant = false, true, true,
-						v.vedleggsnr, v.tittel ?: "",v.tittel ?: "","",null,
-						UUID.randomUUID().toString(),
-						mapTilLocalDateTime(arkivertSoknad.innsendtDato) ?: LocalDateTime.now(),
-						mapTilLocalDateTime(arkivertSoknad.innsendtDato) ?: LocalDateTime.now(),
-						mapTilLocalDateTime(arkivertSoknad.innsendtDato) ?: LocalDateTime.now(), null
+						false, ervariant = false, erpdfa = true, erpakrevd = true,
+						vedleggsnr = v.vedleggsnr, tittel = v.tittel, label = v.tittel, beskrivelse = "", mimetype = null,
+						uuid = UUID.randomUUID().toString(),
+						opprettetdato = mapTilLocalDateTime(arkivertSoknad.innsendtDato) ?: LocalDateTime.now(),
+						endretdato = mapTilLocalDateTime(arkivertSoknad.innsendtDato) ?: LocalDateTime.now(),
+						innsendtdato = mapTilLocalDateTime(arkivertSoknad.innsendtDato) ?: LocalDateTime.now(), vedleggsurl = null
 					)
 				)
 			}
@@ -190,8 +190,8 @@ class SoknadService(
 					OpplastingsStatus.INNSENDT,
 					true,
 					ervariant = false,
-					true,
-					true,
+					erpdfa = true,
+					erpakrevd = true,
 					kodeverkSkjema.skjemanummer ?: kodeverkSkjema.vedleggsid,
 					kodeverkSkjema.tittel ?: "",
 					kodeverkSkjema.tittel ?: "",
@@ -252,9 +252,9 @@ class SoknadService(
 			SoknadDbData(
 				null,
 				innsendingsId,
-				arkivertSoknad.tittel ?: "",
-				arkivertSoknad.skjemanr ?: "",
-				arkivertSoknad.tema ?: "",
+				arkivertSoknad.tittel,
+				arkivertSoknad.skjemanr,
+				arkivertSoknad.tema,
 				finnSpraakFraInput(sprak),
 				SoknadsStatus.Opprettet,
 				brukerId,
@@ -272,13 +272,13 @@ class SoknadService(
 				null,
 				savedSoknadDbData.id!!,
 				OpplastingsStatus.INNSENDT,
-				true,
+				erhoveddokument = true,
 				ervariant = false,
-				true,
-				true,
-				arkivertSoknad.skjemanr ?: "",
-				arkivertSoknad.tittel ?: "",
-				arkivertSoknad.tittel ?: "",
+				erpdfa = true,
+				erpakrevd = true,
+				arkivertSoknad.skjemanr,
+				arkivertSoknad.tittel,
+				arkivertSoknad.tittel,
 				"",
 				null,
 				UUID.randomUUID().toString(),
@@ -703,6 +703,7 @@ class SoknadService(
 		return lagVedleggDto(oppdatertVedlegg.get(), null)
 	}
 
+	// Beholder inntil avklaring rundt om vi automatisk skal slette eventuelle opplastede filer på vedlegg hvis søker spesifiserer send-senere eller sendes-av-andre
 	private fun slettFilerDersomStatusUlikLastetOpp(
 		patchVedleggDto: PatchVedleggDto,
 		soknadDto: DokumentSoknadDto,
@@ -816,7 +817,7 @@ class SoknadService(
 		publiserBrukernotifikasjon(innsendtSoknadDto)
 
 		logger.info("${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes ${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size }")
-		if (manglendePakrevdeVedlegg.isNotEmpty())  {
+		if (manglendePakrevdeVedlegg.isNotEmpty())  { // TODO avklare lage unntak for søknader på tema DAG?
 			logger.info("${soknadDtoInput.innsendingsId}: Skal opprette ettersendingssoknad")
 			opprettEttersendingsSoknad(innsendtSoknadDto, innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!)
 		}
@@ -876,11 +877,6 @@ class SoknadService(
 	}
 
 
-	private fun skalEttersende(innsendtSoknadDto: DokumentSoknadDto): Boolean {
-		return innsendtSoknadDto.tema != "DAG" && innsendtSoknadDto.vedleggsListe
-			.any { !it.erHoveddokument && it.erPakrevd && (it.opplastingsStatus == OpplastingsStatusDto.sendSenere || it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt) }
-	}
-
 	private fun vedleggHarFiler(innsendingsId: String, vedleggsId: Long): Boolean {
 		return repo.findAllByVedleggsid(innsendingsId, vedleggsId).any { it.data != null }
 	}
@@ -897,7 +893,7 @@ class SoknadService(
 		// For hvert øvrige vedlegg merge filer og legg til
 		soknadDto.vedleggsListe.filter { !it.erHoveddokument }.forEach {
 			val filDto = hentOgMergeVedleggsFiler(soknadDto, soknadDto.innsendingsId!!, it)
-			logger.info("${soknadDto.innsendingsId}: Vedlegg ${it.vedleggsnr} har opplastet fil= ${filDto != null && filDto.data != null} og erPakrevd=${it.erPakrevd} ")
+			logger.info("${soknadDto.innsendingsId}: Vedlegg ${it.vedleggsnr} har opplastet fil= ${filDto?.data != null} og erPakrevd=${it.erPakrevd} ")
 			vedleggDtos.add(lagVedleggDtoMedOpplastetFil(filDto, it)) }
 		return vedleggDtos
 	}
@@ -932,7 +928,7 @@ class SoknadService(
 	}
 
 	private fun hentOgMergeVedleggsFiler(soknadDto: DokumentSoknadDto, innsendingsId: String, vedleggDto: VedleggDto): FilDto? {
-		val filer = hentFiler(soknadDto, innsendingsId, vedleggDto.id!!, true, false).filter { it.data != null }
+		val filer = hentFiler(soknadDto, innsendingsId, vedleggDto.id!!, medFil = true, kastFeilNarNull = false).filter { it.data != null }
 		if (filer.isEmpty()) return null
 
 		val vedleggsFil: ByteArray? =
