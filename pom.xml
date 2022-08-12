@@ -26,9 +26,6 @@
 		<okhttp.version>4.9.3</okhttp.version>
 		<io.netty.version>4.1.77.Final</io.netty.version>
 		<okio.version>3.1.0</okio.version>
-<!--
-		<okio.version>2.10.0</okio.version>
--->
 		<jackson.version>2.13.2</jackson.version>
 	</properties>
 

@@ -74,7 +74,7 @@ class FrontEndRestApiTest {
 			)
 		).serialize()
 
-		val opprettSoknadBody = OpprettSoknadBody(defaultUser, skjemanr, spraak)
+		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak)
 		val requestEntity =	HttpEntity(opprettSoknadBody, createHeaders(token))
 
 		val response = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.POST,
@@ -103,7 +103,7 @@ class FrontEndRestApiTest {
 			)
 		).serialize()
 
-		val opprettSoknadBody = OpprettSoknadBody(defaultUser, skjemanr, spraak)
+		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak)
 		val postRequestEntity =	HttpEntity(opprettSoknadBody, createHeaders(token))
 
 		val postResponse = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.POST,
@@ -142,7 +142,7 @@ class FrontEndRestApiTest {
 			)
 		).serialize()
 
-		val opprettSoknadBody = OpprettSoknadBody(defaultUser, skjemanr, spraak, vedlegg)
+		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak, vedlegg)
 		val postRequestEntity =	HttpEntity(opprettSoknadBody, createHeaders(token))
 
 		val postResponse = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.POST,

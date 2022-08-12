@@ -149,11 +149,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.jetbrains.kotlin</groupId>
-			<artifactId>kotlin-stdlib-jdk8</artifactId>
-			<version>${kotlin.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-ui</artifactId>
 			<version>${springdoc.version}</version>
@@ -162,14 +157,6 @@
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-kotlin</artifactId>
 			<version>${springdoc.version}</version>
-<!--
-			<exclusions>
-				<exclusion>
-					<groupId>io.github.classgraph</groupId>
-					<artifactId>classgraph</artifactId>
-				</exclusion>
-			</exclusions>
--->
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tika</groupId>
@@ -247,13 +234,6 @@
 			<artifactId>token-validation-jaxrs</artifactId>
 			<version>${token-validation.version}</version>
 		</dependency>
-<!--
-		<dependency>
-			<groupId>no.nav.security</groupId>
-			<artifactId>token-client-core</artifactId>
-			<version>${token-validation.version}</version>
-		</dependency>
--->
 		<dependency>
 			<groupId>no.nav.security</groupId>
 			<artifactId>token-client-spring</artifactId>
@@ -308,14 +288,6 @@
 			<version>${mockk.version}</version>
 			<scope>test</scope>
 		</dependency>
-<!--
-		<dependency>
-			<groupId>io.rest-assured</groupId>
-			<artifactId>spring-mock-mvc</artifactId>
-			<version>${rest-assured.version}</version>
-			<scope>test</scope>
-		</dependency>
--->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-contract-wiremock</artifactId>
@@ -341,14 +313,6 @@
 			<version>${mock.oauth2.server.version}</version>
 			<scope>test</scope>
 		</dependency>
-<!--
-		<dependency>
-			<groupId>com.squareup.okhttp3</groupId>
-			<artifactId>okhttp</artifactId>
-			<version>${okhttp.version}</version>
-			<scope>test</scope>
-		</dependency>
--->
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>mockwebserver</artifactId>
@@ -362,15 +326,6 @@
 			<version>2.8.5</version>
 			<scope>test</scope>
 		</dependency>
-
-		<!--
-				<dependency>
-					<groupId>com.squareup.okio</groupId>
-					<artifactId>okio</artifactId>
-					<version>${okio.version}</version>
-					<scope>test</scope>
-				</dependency>
-		-->
 
 	</dependencies>
 

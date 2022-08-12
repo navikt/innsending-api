@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.util
 
-const val testpersonid = "27928799005"
+const val testpersonid = "19876898104"
 
 val supportedLanguages = listOf("no", "nb", "nn", "se", "en", "de", "fr", "es", "pl")
 val backupLanguage = mapOf( "no" to "no", "nb" to "no", "nn" to "no", "se" to "no", "en" to "no", "de" to "en", "fr" to "en", "es" to "en", "pl" to "en")

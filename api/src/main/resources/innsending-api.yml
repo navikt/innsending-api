@@ -76,8 +76,8 @@ paths:
         required: true
 
       responses:
-        200:
-          description: Successful operation
+        201:
+          description: Created
           content:
             application/json:
               schema:
@@ -118,8 +118,8 @@ paths:
         required: true
 
       responses:
-        200:
-          description: Successful operation
+        201:
+          description: Created
           content:
             application/json:
               schema:
@@ -142,8 +142,8 @@ paths:
         required: true
 
       responses:
-        200:
-          description: Successful operation
+        201:
+          description: Created
           content:
             application/json:
               schema:
@@ -200,7 +200,7 @@ paths:
 
       responses:
         204:
-          description: Successful operation
+          description: No content
       tags:
         - endreSoknad
 
@@ -244,8 +244,8 @@ paths:
           style: simple
 
       responses:
-        200:
-          description: Successful operation
+        201:
+          description: Created
           content:
             application/json:
               schema:
@@ -421,8 +421,8 @@ paths:
                   format: binary
 
       responses:
-        200:
-          description: Successful operation
+        201:
+          description: Created
           content:
             application/json:
               schema:
@@ -878,11 +878,8 @@ components:
       type: object
       description: Data for å angi hvilken søknad søker ønsker å ettersende på
       required:
-        - brukerId
         - ettersendingTilinnsendingsId
       properties:
-        brukerId:
-          $ref: "#/components/schemas/BrukerId"
         ettersendingTilinnsendingsId:
           $ref: "#/components/schemas/InnsendingsId"
 
@@ -890,12 +887,9 @@ components:
       type: object
       description: Data for å opprette en søknad gitt skjemanummer
       required:
-        - brukerId
         - skjemanr
         - sprak
       properties:
-        brukerId:
-          $ref: "#/components/schemas/BrukerId"
         skjemanr:
           $ref: "#/components/schemas/Skjemanr"
         sprak:
@@ -910,13 +904,10 @@ components:
       type: object
       description: Data for å opprette soknad basert på skjemanummer.
       required:
-        - brukerId
         - skjemanr
         - sprak
 
       properties:
-        brukerId:
-          $ref: "#/components/schemas/BrukerId"
         skjemanr:
           $ref: "#/components/schemas/Skjemanr"
         sprak:
