@@ -343,9 +343,9 @@ class SoknadServiceTest {
 		val vedleggDtos = slot<List<VedleggDto>>()
 		every { fillagerAPI.hentFiler(dokumentSoknadDto.innsendingsId!!, capture(vedleggDtos)) } returns dokumentSoknadDto.vedleggsListe
 
-		val lagretVedleggDto = soknadService.leggTilVedlegg(dokumentSoknadDto)
+		val lagretVedleggDto = soknadService.leggTilVedlegg(dokumentSoknadDto, "Litt mer info")
 
-		assertTrue( lagretVedleggDto.id != null && lagretVedleggDto.vedleggsnr == "N6" )
+		assertTrue( lagretVedleggDto.id != null && lagretVedleggDto.vedleggsnr == "N6" && lagretVedleggDto.tittel == "Litt mer info" )
 	}
 
 	@Test
@@ -358,8 +358,8 @@ class SoknadServiceTest {
 		val vedleggDtos = slot<List<VedleggDto>>()
 		every { fillagerAPI.hentFiler(dokumentSoknadDto.innsendingsId!!, capture(vedleggDtos)) } returns dokumentSoknadDto.vedleggsListe
 
-		val lagretVedleggDto = soknadService.leggTilVedlegg(dokumentSoknadDto)
-		assertTrue(lagretVedleggDto.id != null)
+		val lagretVedleggDto = soknadService.leggTilVedlegg(dokumentSoknadDto, null)
+		assertTrue(lagretVedleggDto.id != null && lagretVedleggDto.tittel == "Annet")
 
 		val patchVedleggDto = PatchVedleggDto("Ny tittel", lagretVedleggDto.opplastingsStatus)
 		val oppdatertVedleggDto = soknadService.endreVedlegg(patchVedleggDto, lagretVedleggDto.id!!, dokumentSoknadDto)
@@ -428,7 +428,7 @@ class SoknadServiceTest {
 		assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty() )
 
 		assertThrows<IllegalActionException> {
-			soknadService.leggTilVedlegg(dokumentSoknadDto)
+			soknadService.leggTilVedlegg(dokumentSoknadDto, null)
 		}
 		soknadService.hentSoknad(dokumentSoknadDto.innsendingsId!!)
 

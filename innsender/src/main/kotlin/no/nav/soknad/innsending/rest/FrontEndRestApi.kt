@@ -444,14 +444,14 @@ class FrontEndRestApi(
 		consumes = ["application/json"]
 	)
 	override fun lagreVedlegg(
-		@PathVariable innsendingsId: String, tittel: String
+		@PathVariable innsendingsId: String, body: String?
 	): ResponseEntity<VedleggDto> {
 		logger.info("$innsendingsId: Kall for å lagre vedlegg til søknad")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.LAST_OPP.name)
 		try {
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
-			val vedleggDto = soknadService.leggTilVedlegg(soknadDto, tittel)
+			val vedleggDto = soknadService.leggTilVedlegg(soknadDto, body)
 			logger.info("$innsendingsId: Lagret vedlegg ${vedleggDto.id} til søknad")
 			return ResponseEntity
 				.status(HttpStatus.CREATED)
