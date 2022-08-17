@@ -178,7 +178,8 @@ class SoknadService(
 					LocalDateTime.now(),
 					null,
 					0,
-					VisningsType.ettersending
+					VisningsType.ettersending,
+					kanlasteoppannet = true
 				)
 			)
 
@@ -729,7 +730,7 @@ class SoknadService(
 
 		if (vedleggDto.erHoveddokument)
 			throw IllegalActionException("Søknaden må alltid ha sitt hovedskjema", "Kan ikke slette hovedskjema på en søknad")
-		if (!vedleggDto.vedleggsnr.equals("N6"))
+		if (!vedleggDto.vedleggsnr.equals("N6") || (vedleggDto.vedleggsnr.equals("N6") && vedleggDto.erPakrevd))
 			throw IllegalActionException("Vedlegg som er obligatorisk for søknaden kan ikke slettes av søker", "Kan ikke slette påkrevd vedlegg")
 
 		slettVedleggOgDensFiler(vedleggDto, soknadDto.id!!)
