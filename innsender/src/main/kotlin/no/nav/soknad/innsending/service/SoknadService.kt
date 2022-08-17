@@ -100,7 +100,8 @@ class SoknadService(
 	private fun opprettVedleggTilSoknad(
 		soknadsId: Long,
 		vedleggsnrListe: List<String>,
-		spraak: String
+		spraak: String,
+		tittel: String? = null
 	): List<VedleggDbData> {
 		val vedleggDbDataListe = vedleggsnrListe
 			.map { nr -> hentSkjema(nr, spraak) }
@@ -109,7 +110,7 @@ class SoknadService(
 					VedleggDbData(
 						null, soknadsId, OpplastingsStatus.IKKE_VALGT,
 						false, ervariant = false, false, v.skjemanummer != "N6",
-						v.skjemanummer, v.tittel ?: "",v.tittel ?: "","",null,
+						v.skjemanummer, tittel ?: v.tittel ?: "",tittel ?: v.tittel ?: "","",null,
 						UUID.randomUUID().toString(), LocalDateTime.now(), LocalDateTime.now(), null, v.url
 					)
 				)
@@ -645,7 +646,7 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun leggTilVedlegg(soknadDto: DokumentSoknadDto): VedleggDto {
+	fun leggTilVedlegg(soknadDto: DokumentSoknadDto, tittel: String?): VedleggDto {
 
 		val soknadDbOpt = repo.hentSoknadDb(soknadDto.innsendingsId!!)
 		if (soknadDbOpt.isEmpty || soknadDbOpt.get().status != SoknadsStatus.Opprettet)
@@ -654,7 +655,7 @@ class SoknadService(
 				"Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet")
 
 		// Lagre vedlegget i databasen
-		val vedleggDbDataList = opprettVedleggTilSoknad(soknadDbOpt.get().id!!, listOf("N6"), soknadDto.spraak!!)
+		val vedleggDbDataList = opprettVedleggTilSoknad(soknadDbOpt.get().id!!, listOf("N6"), soknadDto.spraak!!, tittel)
 
 		// Oppdater soknadens sist endret dato
 		repo.oppdaterEndretDato(soknadDto.id!!)

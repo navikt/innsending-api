@@ -243,6 +243,15 @@ paths:
             type: string
           style: simple
 
+      requestBody:
+        required: false
+        description: Data som skal endres
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Tittel"
+
+
       responses:
         201:
           description: Created
