@@ -249,7 +249,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Tittel"
+              $ref: "#/components/schemas/PostVedleggDto"
 
 
       responses:
@@ -957,6 +957,14 @@ components:
           $ref: "#/components/schemas/Tittel"
         opplastingsStatus:
           $ref: "#/components/schemas/OpplastingsStatusDto"
+
+    PostVedleggDto:
+      type: object
+      description: Properties som skal settes på vedlegg som skal opprettes.
+
+      properties:
+        tittel:
+          $ref: "#/components/schemas/Tittel"
 
     SkjemaDokumentDto:
       type: object
