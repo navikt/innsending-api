@@ -168,6 +168,49 @@ class FrontEndRestApiTest {
 	}
 
 	@Test
+	fun oppdrettVedleggTest() {
+		val skjemanr = "NAV 95-00.11"
+		val spraak = "nb_NO"
+		val vedlegg = emptyList<String>()
+
+		val token: String = mockOAuth2Server.issueToken(
+			tokenx,
+			MockLoginController::class.java.simpleName,
+			DefaultOAuth2TokenCallback(
+				tokenx,
+				subject,
+				JOSEObjectType.JWT.type,
+				listOf(audience),
+				mapOf("acr" to "Level4"),
+				expiry.toLong()
+			)
+		).serialize()
+
+		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak, vedlegg)
+		val postRequestEntity =	HttpEntity(opprettSoknadBody, createHeaders(token))
+
+		val postResponse = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.POST,
+			postRequestEntity, DokumentSoknadDto::class.java
+		)
+
+		assertTrue(postResponse.body != null)
+		val opprettetSoknadDto = postResponse.body
+		assertTrue(opprettetSoknadDto!!.vedleggsListe.isNotEmpty())
+
+		val postVedleggDto = PostVedleggDto("Nytt vedlegg")
+		val postVedleggRequestEntity = HttpEntity(postVedleggDto, createHeaders(token))
+		val postVedleggResponse = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad/${opprettetSoknadDto.innsendingsId}/vedlegg", HttpMethod.POST,
+			postVedleggRequestEntity, VedleggDto::class.java
+		)
+
+		assertTrue(postVedleggResponse.body != null)
+		val nyttVedleggDto = postVedleggResponse.body
+		assertTrue(nyttVedleggDto != null)
+		assertEquals("Nytt vedlegg", nyttVedleggDto!!.tittel)
+	}
+
+
+	@Test
 	internal fun testResult() {
 		val hentPerson = Person(listOf(Navn("Fornavn", "Mellomnavn","Etternavn")))
 		val hentIdenter = Identliste(listOf(IdentInformasjon(defaultUser, IdentGruppe.FOLKEREGISTERIDENT, false ), IdentInformasjon("12345678902", IdentGruppe.FOLKEREGISTERIDENT, true )))
