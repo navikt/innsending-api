@@ -944,7 +944,17 @@ class SoknadService(
 				.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
 				.map { it.id }
 				.any { vedleggHarFiler(soknadDto.innsendingsId!!, it!!) }
-			if (!harFil) {
+			val allePakrevdeBehandlet = soknadDto.vedleggsListe
+				.filter { !it.erHoveddokument && it.erPakrevd }
+				.filter { !(it.opplastingsStatus == OpplastingsStatusDto.innsendt || it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp) }
+				.isEmpty()
+			if (!harFil && !allePakrevdeBehandlet) {
+				// Hvis status for alle vedlegg som har erPakrevd=true er lastetOpp eller Innsendt eller SendesAvAndre, ikke kast feil. Merk at kun dummy forside vil bli sendt til arkivet.
+				if (allePakrevdeBehandlet) {
+					val separator = ","
+					logger.warn("Søker har ikke lastet opp filer på ettersendingssøknad ${soknadDto.innsendingsId}, " +
+						"men det er ikke gjenstående arbeid på noen av de påkrevde vedleggene. ${soknadDto.vedleggsListe.map { it.erPakrevd.toString() + it.opplastingsStatus}.joinToString(separator)}")
+				}
 				throw IllegalActionException(
 					"Søker må ha ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
 					"Innsending avbrutt da ingen vedlegg er lastet opp"
