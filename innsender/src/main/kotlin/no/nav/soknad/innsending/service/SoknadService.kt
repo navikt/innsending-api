@@ -876,6 +876,7 @@ class SoknadService(
 			lenkeTilDokument(innsendtSoknadDto.innsendingsId!!, hoveddokumentVedleggsId, hoveddokumentFilId ),
 			opplastedeVedlegg.filter{ !it.erHoveddokument }.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.label)}.toList(),
 			manglendePakrevdeVedlegg.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }.toList(),
+			innsendtSoknadDto.vedleggsListe.filter{ !it.erHoveddokument && it.erPakrevd && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre}.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.label)}.toList(),
 			innsendtSoknadDto.innsendtDato!!.plusDays(ettersendingsfrist)
 		)
 
