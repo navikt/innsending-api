@@ -155,7 +155,7 @@ class SoknadServiceTest {
 
 		assertTrue(ettersendingsSoknadDto != null)
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }.toList().isNotEmpty())
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }.toList().isEmpty())
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt }.toList().isNotEmpty())
 
 	}
@@ -212,7 +212,7 @@ class SoknadServiceTest {
 		assertTrue(ettersendingsSoknadDto2.vedleggsListe.isNotEmpty())
 		assertTrue(ettersendingsSoknadDto2.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt }.toList()
 			.isNotEmpty())
-		assertTrue(ettersendingsSoknadDto2.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }.toList().count() == 2 )
+		assertEquals(1, ettersendingsSoknadDto2.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }.toList().count() )
 		assertTrue(ettersendingsSoknadDto2.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }.all { it.innsendtdato  != null })
 		// Laster opp fil til vedlegg W1 til ettersendingssøknaden
 		soknadService.lagreFil(ettersendingsSoknadDto2
@@ -291,8 +291,8 @@ class SoknadServiceTest {
 
 		assertTrue(dokumentSoknadDto.innsendingsId != null  && VisningsType.ettersending == dokumentSoknadDto.visningsType && dokumentSoknadDto.ettersendingsId==arkivertInnsendingsId )
 		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
-		assertTrue(dokumentSoknadDto.vedleggsListe.size == 4)
-		assertTrue(dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })
+		assertEquals(3, dokumentSoknadDto.vedleggsListe.size)
+		assertTrue(!dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.innsendt })
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "N6" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
@@ -310,8 +310,8 @@ class SoknadServiceTest {
 
 		assertTrue(dokumentSoknadDto.innsendingsId != null  && VisningsType.ettersending == dokumentSoknadDto.visningsType && dokumentSoknadDto.ettersendingsId==dokumentSoknadDto.innsendingsId )
 		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
-		assertTrue(dokumentSoknadDto.vedleggsListe.size == 3)
-		assertTrue(dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })
+		assertEquals(2, dokumentSoknadDto.vedleggsListe.size)
+		assertTrue(!dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 
@@ -610,7 +610,7 @@ class SoknadServiceTest {
 		assertTrue(ettersendingsSoknadDto != null)
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }.toList()
-			.isNotEmpty())
+			.isEmpty())
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt }.toList()
 			.isNotEmpty())
 
