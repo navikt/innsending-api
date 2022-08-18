@@ -23,7 +23,7 @@ class SafService(val safApi: SafInterface) {
 		logger.info("Hentet ${innsendte.size} journalposter for bruker, skal mappe til AktivSakDto")
 		logger.info("Hentet ${innsendte.forEach { it.toString() }}")
 		return innsendte.map { AktivSakDto(finnBrevKode(it.dokumenter), it.tittel, it.tema,
-				konverterTilDateTime(it.datoMottatt ?: ""), erEttersending(it.dokumenter), konverterTilVedleggsliste(it.dokumenter), it.eksternReferanseId ) }.toList()
+				konverterTilDateTime(it.datoMottatt ?: ""), erEttersending(it.dokumenter), konverterTilVedleggsliste(it.dokumenter), it.eksternReferanseId ) }
 	}
 
 	private fun konverterTilDateTime(dateString: String): OffsetDateTime {
@@ -35,16 +35,16 @@ class SafService(val safApi: SafInterface) {
 	}
 
 	private fun erEttersending(dokumenter: List<Dokument>): Boolean {
-		val hoveddokumenter = dokumenter.filter { it.k_tilkn_jp_som.equals("HOVEDDOKUMENT", true)}.toList()
-		return hoveddokumenter.map { it.brevkode }.toList().contains("NAVe")
+		val hoveddokumenter = dokumenter.filter { it.k_tilkn_jp_som.equals("HOVEDDOKUMENT", true) }
+		return hoveddokumenter.map { it.brevkode }.contains("NAVe")
 	}
 
 	private fun finnBrevKode(dokumenter: List<Dokument>): String {
-		val hoveddokumenter = dokumenter.filter { it.k_tilkn_jp_som.equals("HOVEDDOKUMENT", true)}.toList()
+		val hoveddokumenter = dokumenter.filter { it.k_tilkn_jp_som.equals("HOVEDDOKUMENT", true) }
 		return hoveddokumenter.map { it.brevkode }.first()!!.replace("NAVe", "NAV")
 	}
 
 	private fun konverterTilVedleggsliste(dokumenter: List<Dokument>): List<InnsendtVedleggDto> {
-		return dokumenter.map {InnsendtVedleggDto(it.k_tilkn_jp_som, it.tittel)}.toList()
+		return dokumenter.map { InnsendtVedleggDto(it.k_tilkn_jp_som, it.tittel) }
 	}
 }

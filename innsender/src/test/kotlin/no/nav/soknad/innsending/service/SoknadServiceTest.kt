@@ -122,7 +122,6 @@ class SoknadServiceTest {
 				"ResourceNotFoundException was expected")
 
 		assertEquals("Skjema med id = $skjemanr ikke funnet", exception.message)
-
 	}
 
 	@Test
@@ -153,11 +152,9 @@ class SoknadServiceTest {
 		// Opprett ettersendingssoknad
 		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 
-		assertTrue(ettersendingsSoknadDto != null)
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }.toList().isEmpty())
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt }.toList().isNotEmpty())
-
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.none { it.opplastingsStatus == OpplastingsStatusDto.innsendt })
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 	}
 
 	@Test
@@ -180,8 +177,7 @@ class SoknadServiceTest {
 		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt }.toList()
-			.isNotEmpty())
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 
 		// Laster opp fil til vedlegg W1 til ettersendingssøknaden
 		val lagretFil = soknadService.lagreFil(ettersendingsSoknadDto
@@ -208,11 +204,9 @@ class SoknadServiceTest {
 		// Oppretter ettersendingssoknad2
 		val ettersendingsSoknadDto2 = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 
-		assertTrue(ettersendingsSoknadDto2 != null)
 		assertTrue(ettersendingsSoknadDto2.vedleggsListe.isNotEmpty())
-		assertTrue(ettersendingsSoknadDto2.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt }.toList()
-			.isNotEmpty())
-		assertEquals(1, ettersendingsSoknadDto2.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }.toList().count() )
+		assertTrue(ettersendingsSoknadDto2.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+		assertEquals(1, ettersendingsSoknadDto2.vedleggsListe.count { it.opplastingsStatus == OpplastingsStatusDto.innsendt })
 		assertTrue(ettersendingsSoknadDto2.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }.all { it.innsendtdato  != null })
 		// Laster opp fil til vedlegg W1 til ettersendingssøknaden
 		soknadService.lagreFil(ettersendingsSoknadDto2
@@ -227,7 +221,6 @@ class SoknadServiceTest {
 		assertTrue(ettersendingsKvitteringsDto2.hoveddokumentRef == null )
 		assertTrue(ettersendingsKvitteringsDto2.innsendteVedlegg!!.isNotEmpty() )
 		assertTrue(ettersendingsKvitteringsDto2.skalEttersendes!!.isEmpty() )
-
 	}
 
 	@Test
@@ -266,7 +259,6 @@ class SoknadServiceTest {
 
 		assertTrue(dokumentSoknadDtos.filter { listOf(testpersonid, "12345678902").contains(it.brukerId)}.size == 3)
 		assertTrue(dokumentSoknadDtos.none { listOf("12345678903").contains(it.brukerId) })
-
 	}
 
 	@Test
@@ -296,8 +288,8 @@ class SoknadServiceTest {
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.innsendt })
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "N6" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
-
 	}
+
 	@Test
 	fun opprettSoknadForEttersendingGittSkjemanrTest() {
 
@@ -314,7 +306,6 @@ class SoknadServiceTest {
 		assertTrue(!dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
-
 	}
 
 	@Test
@@ -462,8 +453,7 @@ class SoknadServiceTest {
 		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt }.toList()
-			.isNotEmpty())
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 
 		assertThrows<IllegalActionException> {
 			soknadService.sendInnSoknad(ettersendingsSoknadDto)
@@ -530,7 +520,6 @@ class SoknadServiceTest {
 
 		val hentetFilDto = soknadService.hentFil(dokumentSoknadDto, vedleggDto.id!!, filDtoSaved.id!!)
 		assertTrue(filDtoSaved.id == hentetFilDto.id)
-
 	}
 
 	@Test
@@ -548,7 +537,6 @@ class SoknadServiceTest {
 		assertTrue(filDtoSaved.id != null)
 
 		soknadService.slettFil(dokumentSoknadDto, filDtoSaved.vedleggsid, filDtoSaved.id!!)
-
 	}
 	@Test
 	fun lesOppTeksterTest() {
@@ -607,19 +595,15 @@ class SoknadServiceTest {
 		// Opprett ettersendingssoknad
 		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 
-		assertTrue(ettersendingsSoknadDto != null)
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }.toList()
-			.isEmpty())
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt }.toList()
-			.isNotEmpty())
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.none { it.opplastingsStatus == OpplastingsStatusDto.innsendt })
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 
 		val dummyHovedDokument = PdfGenerator().lagForsideEttersending(ettersendingsSoknadDto)
 		assertTrue(dummyHovedDokument != null)
 
 		// Skriver til tmp fil for manuell sjekk av innholdet av generert PDF
 		//writeBytesToFile("dummy", ".pdf", dummyHovedDokument)
-
 	}
 
 	@Test
@@ -741,7 +725,6 @@ class SoknadServiceTest {
 			skjemanr,"Beskrivelse", UUID.randomUUID().toString(),
 			if ("application/json" == mimeType) Mimetype.applicationSlashJson else if (mimeType != null) Mimetype.applicationSlashPdf else null,
 			fil, null)
-
 	}
 
 	private fun lagDokumentSoknad(brukerId: String, skjemanr: String, spraak: String, tittel: String, tema: String): DokumentSoknadDto {
@@ -786,5 +769,4 @@ class SoknadServiceTest {
 	private fun lagDokumentSoknad(tema: String, skjemanr: String): DokumentSoknadDto {
 		return lagDokumentSoknad(testpersonid, skjemanr, "nb_NO", "Fullmaktsskjema", tema )
 	}
-
 }

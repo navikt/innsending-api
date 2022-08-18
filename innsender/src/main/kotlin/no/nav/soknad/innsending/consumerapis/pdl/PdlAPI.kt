@@ -38,7 +38,7 @@ class PdlAPI(
 	override fun hentPersonIdents(brukerId: String): List<IdentDto> = runBlocking {
 		logger.info("Skal hente en personsidendter fra PDL")
 		try {
-			hentIdenter(brukerId)?.hentIdenter?.identer?.map {IdentDto(it.ident, it.gruppe.toString(), it.historisk)}?.toList()
+			hentIdenter(brukerId)?.hentIdenter?.identer?.map { IdentDto(it.ident, it.gruppe.toString(), it.historisk) }
 				?: listOf(IdentDto(brukerId, "FOLKEREGISTERIDENT", false))
 		} catch (ex: Exception) {
 			logger.warn(("Henting fra PDL feilet med ${ex.message}. Returnerer pålogget ident"))

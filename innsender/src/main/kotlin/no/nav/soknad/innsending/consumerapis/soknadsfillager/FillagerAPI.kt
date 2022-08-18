@@ -52,36 +52,34 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 
 
 	override fun lagreFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>) {
-		val fileData: List<FileData> = vedleggDtos.stream()
+		val fileData: List<FileData> = vedleggDtos
 			.filter {it.document != null }
-			.map { FileData(it.uuid!!, it.document, it.opprettetdato) }.toList()
+			.map { FileData(it.uuid!!, it.document, it.opprettetdato) }
 
 		filesApi.addFiles(fileData, innsendingsId)
-		logger.info("$innsendingsId: Lagret følgende filer ${fileData.map { it.id }.toList().joinToString { "," }}")
+		logger.info("$innsendingsId: Lagret følgende filer ${fileData.map { it.id }}")
 	}
 
 	override fun hentFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>): List<VedleggDto> {
-		val fileData: List<FileData> = vedleggDtos.stream()
+		val fileData: List<FileData> = vedleggDtos
 			.filter {it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
-			.map { FileData(it.uuid!!, it.document, it.opprettetdato) }.toList()
+			.map { FileData(it.uuid!!, it.document, it.opprettetdato) }
 
 		if (fileData.isEmpty()) return vedleggDtos
 
 		val hentedeFilerMap: Map<String, FileData> = hentFiler(fileData, innsendingsId).associateBy { it.id }
-		logger.info("$innsendingsId: Hentet følgende filer ${hentedeFilerMap.map{it.key}.toList().joinToString { "," }}")
+		logger.info("$innsendingsId: Hentet følgende filer ${hentedeFilerMap.map{ it.key }}")
 
 		return vedleggDtos.map { VedleggDto( it.tittel, it.label, it.erHoveddokument, it.erVariant, it.erPdfa, it.erPakrevd,
 			it.opplastingsStatus, hentedeFilerMap[it.uuid]?.createdAt ?: it.opprettetdato, it.id, it.vedleggsnr,
 			it.beskrivelse, it.uuid, it.mimetype,
 			hentedeFilerMap[it.uuid]?.content ?: it.document,
 			it.skjemaurl, ) }
-			.toList()
-
 	}
 
 	private fun hentFiler(filData: List<FileData>, innsendingsId: String): List<FileData> {
 
-		val idChunks = filData.stream().map{ it.id}.toList()
+		val idChunks = filData.map { it.id }
 			.chunked(restConfig.filesInOneRequestToFilestorage)
 
 		return idChunks
@@ -94,14 +92,12 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 	}
 
 	override fun slettFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>) {
-		val fileids: List<String> = vedleggDtos.stream()
-			.filter {it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
-			.map { it.uuid!! }.toList()
+		val fileids = vedleggDtos
+			.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
+			.map { it.uuid!! }
 
 		filesApi.deleteFiles(fileids, innsendingsId)
 
 		logger.info("$innsendingsId: Slettet følgende filer $fileids")
-
 	}
-
 }

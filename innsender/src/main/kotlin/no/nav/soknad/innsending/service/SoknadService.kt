@@ -303,7 +303,7 @@ class SoknadService(
 		)
 */
 
-		val innsendtVedleggsnrListe: List<String> = arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map { it.vedleggsnr }.toList()
+		val innsendtVedleggsnrListe: List<String> = arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map { it.vedleggsnr }
 		val vedleggDbDataListe = opprettVedleggTilSoknad(savedSoknadDbData.id!!, vedleggsnrListe.filter { !innsendtVedleggsnrListe.contains(it) }, sprak)
 		val innsendtVedleggDbDataListe = opprettInnsendteVedleggTilSoknad(savedSoknadDbData.id, arkivertSoknad)
 		val savedVedleggDbDataListe = vedleggDbDataListe + innsendtVedleggDbDataListe
@@ -419,7 +419,6 @@ class SoknadService(
 		logger.error("Fant ikke matchende lagret vedlegg med innsendt vedlegg")
 		throw BackendErrorException("Fant ikke matchende lagret vedlegg ${lagretVedleggDto.tittel} med innsendt vedlegg, er variant = ${lagretVedleggDto.erVariant}",
 			"Feil ved lagring av dokument ${lagretVedleggDto.tittel}, prøv igjen")
-
 	}
 
 	private fun filExtention(mimetype: Mimetype?): String =
@@ -437,25 +436,17 @@ class SoknadService(
 	}
 
 	fun hentAktiveSoknader(brukerIds: List<String>): List<DokumentSoknadDto>  {
-		val soknader = mutableListOf<DokumentSoknadDto>()
-		brukerIds.stream()
-			.forEach {soknader.addAll(hentSoknadGittBrukerId(it))}
-		return soknader
+		return brukerIds.flatMap { hentSoknadGittBrukerId(it) }
 	}
 
 	fun hentInnsendteSoknader(brukerIds: List<String>): List<DokumentSoknadDto>  {
-		val soknader = mutableListOf<DokumentSoknadDto>()
-		brukerIds.stream()
-			.forEach {soknader.addAll(hentSoknadGittBrukerId(it, SoknadsStatus.Innsendt))}
-		return soknader
+		return brukerIds.flatMap { hentSoknadGittBrukerId(it, SoknadsStatus.Innsendt) }
 	}
 
 	private fun hentSoknadGittBrukerId(brukerId: String, soknadsStatus: SoknadsStatus = SoknadsStatus.Opprettet): List<DokumentSoknadDto> {
 		val soknader = repo.finnAlleSoknaderGittBrukerIdOgStatus(brukerId, soknadsStatus)
 
-		return soknader.stream()
-			.map { hentAlleVedlegg(it)}
-			.toList()
+		return soknader.map { hentAlleVedlegg(it) }
 	}
 
 	// Hent soknad gitt id med alle vedlegg. Merk at eventuelt dokument til vedlegget hentes ikke
@@ -776,8 +767,8 @@ class SoknadService(
 
 		// Vedleggsliste med opplastede dokument og status= LASTET_OPP for de som skal sendes soknadsfillager
 		val alleVedlegg: List<VedleggDto> = ferdigstillVedlegg(soknadDto)
-		val opplastedeVedlegg = alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }.toList()
-		val manglendePakrevdeVedlegg = alleVedlegg.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") && (it.opplastingsStatus == OpplastingsStatusDto.sendSenere || it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt) }.toList()
+		val opplastedeVedlegg = alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
+		val manglendePakrevdeVedlegg = alleVedlegg.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") && (it.opplastingsStatus == OpplastingsStatusDto.sendSenere || it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt) }
 
 		logger.info("${soknadDtoInput.innsendingsId}: Antall opplastede vedlegg = ${opplastedeVedlegg.size}")
 		logger.info("${soknadDtoInput.innsendingsId}: Antall ikke opplastede påkrevde vedlegg = ${manglendePakrevdeVedlegg.size}")
@@ -841,7 +832,7 @@ class SoknadService(
 			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
 			throw BackendErrorException(ex.message, "Feil ved generering av forside for ettersendingssøknad ${soknadDto.innsendingsId}")
 		}
-		val hovedDokumentDto = soknadDto.vedleggsListe.filter { it.erHoveddokument && !it.erVariant }.firstOrNull()
+		val hovedDokumentDto = soknadDto.vedleggsListe.firstOrNull { it.erHoveddokument && !it.erVariant }
 			?: lagVedleggDto(opprettHovedddokumentVedlegg(
 					mapTilSoknadDb(soknadDto, soknadDto.innsendingsId!!,
 					mapTilSoknadsStatus(soknadDto.status, null)),
@@ -866,20 +857,18 @@ class SoknadService(
 	private fun lagKvittering(innsendtSoknadDto: DokumentSoknadDto,
 														opplastedeVedlegg: List<VedleggDto>, manglendePakrevdeVedlegg: List<VedleggDto>): KvitteringsDto {
 		val hoveddokumentVedleggsId = innsendtSoknadDto.vedleggsListe.firstOrNull{ it.erHoveddokument && !it.erVariant }?.id
-		val hoveddokumentFilId =
-		if (hoveddokumentVedleggsId != null) {
+		val hoveddokumentFilId = if (hoveddokumentVedleggsId != null) {
 			repo.findAllByVedleggsid(innsendtSoknadDto.innsendingsId!!, hoveddokumentVedleggsId).firstOrNull()?.id
 		} else {
 			null
 		}
 		return KvitteringsDto(innsendtSoknadDto.innsendingsId!!, innsendtSoknadDto.tittel, innsendtSoknadDto.innsendtDato!!,
 			lenkeTilDokument(innsendtSoknadDto.innsendingsId!!, hoveddokumentVedleggsId, hoveddokumentFilId ),
-			opplastedeVedlegg.filter{ !it.erHoveddokument }.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.label)}.toList(),
-			manglendePakrevdeVedlegg.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }.toList(),
-			innsendtSoknadDto.vedleggsListe.filter{ !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre}.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.label)}.toList(),
+			opplastedeVedlegg.filter { !it.erHoveddokument }.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) },
+			manglendePakrevdeVedlegg.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) },
+			innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre }.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.label)},
 			innsendtSoknadDto.innsendtDato!!.plusDays(ettersendingsfrist)
 		)
-
 	}
 
 	private fun lenkeTilDokument(innsendingsId: String, vedleggsId: Long?, filId: Long?) = if (filId == null) null else "frontend/v1/soknad/$innsendingsId/vedlegg/$vedleggsId/fil/$filId"
@@ -946,9 +935,8 @@ class SoknadService(
 				.map { it.id }
 				.any { vedleggHarFiler(soknadDto.innsendingsId!!, it!!) }
 			val allePakrevdeBehandlet = soknadDto.vedleggsListe
-				.filter { !it.erHoveddokument && ( (it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") }
-				.filter { !(it.opplastingsStatus == OpplastingsStatusDto.innsendt || it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp) }
-				.isEmpty()
+				.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") }
+				.none { !(it.opplastingsStatus == OpplastingsStatusDto.innsendt || it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp) }
 			if (!harFil && !allePakrevdeBehandlet) {
 				// Hvis status for alle vedlegg som foventes sendt inn er lastetOpp, Innsendt eller SendesAvAndre, ikke kast feil. Merk at kun dummy forside vil bli sendt til arkivet.
 				if (allePakrevdeBehandlet) {
@@ -980,7 +968,4 @@ class SoknadService(
 
 		return FilDto(vedleggDto.id!!, null, vedleggDto.vedleggsnr!!, filer[0].mimetype, vedleggsFil?.size, vedleggsFil, filer[0].opprettetdato)
 	}
-
-
-
 }

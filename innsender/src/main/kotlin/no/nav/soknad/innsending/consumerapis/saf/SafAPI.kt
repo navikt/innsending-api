@@ -63,7 +63,6 @@ class SafAPI(
 								it.relevanteDatoer[0]?.dato, konverterTilDokumentListe(it.dokumenter)
 							)
 						}
-						.toList()
 				}
 			} catch (ex: Exception) {
 				logger.warn("hentBrukersSakerIArkivet feilet med ${ex.message}.")
