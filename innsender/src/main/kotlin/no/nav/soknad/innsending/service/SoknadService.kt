@@ -777,7 +777,7 @@ class SoknadService(
 		// Vedleggsliste med opplastede dokument og status= LASTET_OPP for de som skal sendes soknadsfillager
 		val alleVedlegg: List<VedleggDto> = ferdigstillVedlegg(soknadDto)
 		val opplastedeVedlegg = alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }.toList()
-		val manglendePakrevdeVedlegg = alleVedlegg.filter { !it.erHoveddokument && it.erPakrevd && (it.opplastingsStatus == OpplastingsStatusDto.sendSenere || it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt) }.toList()
+		val manglendePakrevdeVedlegg = alleVedlegg.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") && (it.opplastingsStatus == OpplastingsStatusDto.sendSenere || it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt) }.toList()
 
 		logger.info("${soknadDtoInput.innsendingsId}: Antall opplastede vedlegg = ${opplastedeVedlegg.size}")
 		logger.info("${soknadDtoInput.innsendingsId}: Antall ikke opplastede påkrevde vedlegg = ${manglendePakrevdeVedlegg.size}")
@@ -800,7 +800,7 @@ class SoknadService(
 		// Slett alle opplastede vedlegg untatt søknaden dersom ikke ettersendingssøknad, som er sendt til soknadsfillager.
 		alleVedlegg.filter{ !(it.erHoveddokument && soknadDto.visningsType != VisningsType.ettersending) }.forEach { repo.slettFilerForVedlegg(it.id!!) }
 
-		// oppdater vedleggstabelen med status og innsendingsdato for opplastede vedlegg.
+		// oppdater vedleggstabellen med status og innsendingsdato for opplastede vedlegg.
 		opplastedeVedlegg.forEach { repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, it.id!!, OpplastingsStatus.INNSENDT, LocalDateTime.now()) }
 		manglendePakrevdeVedlegg.forEach { repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, it.id!!, OpplastingsStatus.SEND_SENERE, LocalDateTime.now()) }
 
@@ -876,7 +876,7 @@ class SoknadService(
 			lenkeTilDokument(innsendtSoknadDto.innsendingsId!!, hoveddokumentVedleggsId, hoveddokumentFilId ),
 			opplastedeVedlegg.filter{ !it.erHoveddokument }.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.label)}.toList(),
 			manglendePakrevdeVedlegg.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }.toList(),
-			innsendtSoknadDto.vedleggsListe.filter{ !it.erHoveddokument && it.erPakrevd && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre}.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.label)}.toList(),
+			innsendtSoknadDto.vedleggsListe.filter{ !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre}.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.label)}.toList(),
 			innsendtSoknadDto.innsendtDato!!.plusDays(ettersendingsfrist)
 		)
 
@@ -946,20 +946,20 @@ class SoknadService(
 				.map { it.id }
 				.any { vedleggHarFiler(soknadDto.innsendingsId!!, it!!) }
 			val allePakrevdeBehandlet = soknadDto.vedleggsListe
-				.filter { !it.erHoveddokument && it.erPakrevd }
+				.filter { !it.erHoveddokument && ( (it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") }
 				.filter { !(it.opplastingsStatus == OpplastingsStatusDto.innsendt || it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp) }
 				.isEmpty()
 			if (!harFil && !allePakrevdeBehandlet) {
-				// Hvis status for alle vedlegg som har erPakrevd=true er lastetOpp eller Innsendt eller SendesAvAndre, ikke kast feil. Merk at kun dummy forside vil bli sendt til arkivet.
+				// Hvis status for alle vedlegg som foventes sendt inn er lastetOpp, Innsendt eller SendesAvAndre, ikke kast feil. Merk at kun dummy forside vil bli sendt til arkivet.
 				if (allePakrevdeBehandlet) {
-					val separator = ","
+					val separator = "\n"
 					logger.warn("Søker har ikke lastet opp filer på ettersendingssøknad ${soknadDto.innsendingsId}, " +
-						"men det er ikke gjenstående arbeid på noen av de påkrevde vedleggene. ${soknadDto.vedleggsListe.map { it.erPakrevd.toString() + it.opplastingsStatus}.joinToString(separator)}")
+						"men det er ikke gjenstående arbeid på noen av de påkrevde vedleggene. Vedleggsstatus:\n${soknadDto.vedleggsListe.map { it.tittel +", med status = " + it.opplastingsStatus +"\n"}.joinToString(separator)}")
+				} else {
+					throw IllegalActionException(
+						"Søker må ha ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
+						"Innsending avbrutt da ingen vedlegg er lastet opp")
 				}
-				throw IllegalActionException(
-					"Søker må ha ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
-					"Innsending avbrutt da ingen vedlegg er lastet opp"
-				)
 			}
 		}
 	}
