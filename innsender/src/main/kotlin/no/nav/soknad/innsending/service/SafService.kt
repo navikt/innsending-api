@@ -17,7 +17,11 @@ class SafService(val safApi: SafInterface) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	fun hentInnsendteSoknader(brukerId: String): List<AktivSakDto> {
-		val innsendte = safApi.hentBrukersSakerIArkivet(brukerId)
+		val innsendte = try {
+			safApi.hentBrukersSakerIArkivet(brukerId)
+		} catch (_: Exception) {
+			null
+		}
 		if (innsendte == null) return emptyList()
 
 		logger.info("Hentet ${innsendte.size} journalposter for bruker, skal mappe til AktivSakDto")
