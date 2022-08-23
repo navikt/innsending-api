@@ -547,7 +547,12 @@ class SoknadServiceTest {
 		assertTrue(filDtoSaved != null)
 		assertTrue(filDtoSaved.id != null)
 
-		soknadService.slettFil(dokumentSoknadDto, filDtoSaved.vedleggsid, filDtoSaved.id!!)
+		val oppdatertSoknadDto = soknadService.hentSoknad(dokumentSoknadDto.id!!)
+		assertEquals(OpplastingsStatusDto.lastetOpp, oppdatertSoknadDto.vedleggsListe.first { it.id == vedleggDto.id!! }.opplastingsStatus)
+
+		val oppdatertVedleggDto = soknadService.slettFil(oppdatertSoknadDto, filDtoSaved.vedleggsid, filDtoSaved.id!!)
+
+		assertEquals(OpplastingsStatusDto.ikkeValgt, oppdatertVedleggDto.opplastingsStatus)
 
 	}
 	@Test

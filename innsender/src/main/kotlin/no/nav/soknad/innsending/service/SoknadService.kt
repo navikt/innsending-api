@@ -584,7 +584,7 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun slettFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long) {
+	fun slettFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long): VedleggDto {
 		// Sjekk om vedlegget eksisterer
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
 			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
@@ -593,9 +593,13 @@ class SoknadService(
 
 		repo.slettFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
 		if (repo.hentFilerTilVedlegg(soknadDto.innsendingsId!!, vedleggsId).isEmpty()) {
-			repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, vedleggsId, OpplastingsStatus.IKKE_VALGT, LocalDateTime.now())
+			val vedleggDto = soknadDto.vedleggsListe.first {it.id == vedleggsId}
+			val nyOpplastingsStatus = if (vedleggDto.innsendtdato != null) OpplastingsStatus.INNSENDT else OpplastingsStatus.IKKE_VALGT
+			repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, vedleggsId, nyOpplastingsStatus, LocalDateTime.now())
 		}
+		val vedleggDto = hentVedleggDto(vedleggsId)
 		innsenderMetrics.applicationCounterInc(InnsenderOperation.SLETT_FIL.name, soknadDto.tema)
+		return vedleggDto
 	}
 
 	// Slett opprettet soknad gitt innsendingsId
