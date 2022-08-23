@@ -5,7 +5,6 @@
 	"database-name": "dokumentinnsending-dev",
 	"ingresses": [
 		"https://www.dev.nav.no/innsending-api-gcp",
-		"https://innsending-api-gcp.dev.adeo.no",
 		"https://innsending-api-gcp.dev.nav.no"
 	],
 	"outboundExternalHosts": [],
