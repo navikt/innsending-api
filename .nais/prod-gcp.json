@@ -30,7 +30,7 @@
 		"SOKNADSMOTTAKER_HOST": "https://soknadsmottaker-gcp.intern.nav.no",
 		"SOKNADSMOTTAKER_ENDPOINT": "/save",
 		"PUBLISERE_BRUKERNOTIFIKASJONER": "true",
-		"TJENESTE_URL": "https://send-inn-frontend.nav.no",
+		"TJENESTE_URL": "https://nav.no/sendinn",
 		"GJENOPPTA_SOKNADS_ARBEID": "/dokumentinnsending/",
 		"ETTERSENDE_PA_SOKNAD": "/dokumentinnsending/ettersending/",
 		"TOKENDINGS_BASE_URL": "https://tokendings.prod-gcp.nais.io",
