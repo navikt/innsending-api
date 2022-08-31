@@ -530,7 +530,7 @@ class SoknadService(
 		}
 		repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, filDto.vedleggsid, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
 		innsenderMetrics.applicationCounterInc(InnsenderOperation.LAST_OPP.name, soknadDto.tema)
-		return lagFilDto(savedFilDbData)
+		return lagFilDto(savedFilDbData, false)
 	}
 
 	fun hentFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long): FilDto {
