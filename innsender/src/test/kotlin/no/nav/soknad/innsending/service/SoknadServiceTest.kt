@@ -192,7 +192,7 @@ class SoknadServiceTest {
 				)
 			}))
 
-		assertTrue( lagretFil.id != null && lagretFil.data != null)
+		assertTrue( lagretFil.id != null)
 		assertTrue(lagretFil.vedleggsid == ettersendingsSoknadDto.vedleggsListe.first {
 			!it.erHoveddokument && it.vedleggsnr.equals(
 				"W1",
