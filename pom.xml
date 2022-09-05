@@ -20,13 +20,13 @@
 
 	<properties>
 		<java.version>17</java.version>
-		<kotlin.version>1.6.21</kotlin.version>
+		<kotlin.version>1.7.10</kotlin.version>
 		<spring.boot.version>2.6.8</spring.boot.version>
-		<openapi-generator-maven-plugin.version>5.4.0</openapi-generator-maven-plugin.version>
-		<okhttp.version>4.9.3</okhttp.version>
+		<openapi-generator-maven-plugin.version>6.0.1</openapi-generator-maven-plugin.version>
+		<okhttp.version>4.10.0</okhttp.version>
 		<io.netty.version>4.1.77.Final</io.netty.version>
 		<okio.version>3.1.0</okio.version>
-		<jackson.version>2.13.2</jackson.version>
+		<jackson.version>2.13.4</jackson.version>
 	</properties>
 
 	<modules>

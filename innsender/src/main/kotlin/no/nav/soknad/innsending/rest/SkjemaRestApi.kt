@@ -1,24 +1,22 @@
 package no.nav.soknad.innsending.rest
 
-import io.swagger.annotations.ApiParam
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.responses.ApiResponse
-import io.swagger.v3.oas.annotations.responses.ApiResponses
+import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.FyllUtApi
 import no.nav.soknad.innsending.config.RestConfig
+import no.nav.soknad.innsending.model.SkjemaDto
+import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
+import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_LEVEL_4
+import no.nav.soknad.innsending.util.Constants.TOKENX
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import java.net.URI
-import javax.validation.Valid
-import no.nav.security.token.support.core.api.ProtectedWithClaims
-import no.nav.soknad.innsending.security.Tilgangskontroll
-import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_LEVEL_4
-import no.nav.soknad.innsending.util.Constants.TOKENX
 
 @RestController
 @RequestMapping("/fyllUt/v1")
@@ -31,17 +29,8 @@ class SkjemaRestApi(val restConfig: RestConfig,
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	@Operation(summary = "Requests to create application and redirect client to frontend application for adding attachments and sending application to NAV.", tags = ["operations"])
-	@ApiResponses(value = [ApiResponse(responseCode = "302",
-		description = "Application is stored and applicant is redirected to page to upload additional attachments if required else applicant is guided to summary page before committing it to NAV."
-	)])
 	@PostMapping("/leggTilVedlegg")
-	override fun fyllUt(
-		@ApiParam(
-			required = true,
-			value = "Søknadsmetadata og søknad som PDF og Json samt liste over eventuelle obligatoriske og valgfrie vedlegg som skal/kan legges til."
-		) @Valid @RequestBody skjemaDto: no.nav.soknad.innsending.model.SkjemaDto
-	): ResponseEntity<Unit> {
+	override fun fyllUt(skjemaDto: SkjemaDto): ResponseEntity<Unit> {
 		logger.info("Kall fra FyllUt for å opprette søknad for skjema ${skjemaDto.skjemanr}")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
 		try {
@@ -52,7 +41,4 @@ class SkjemaRestApi(val restConfig: RestConfig,
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
 		}
 	}
-
 }
-
-
