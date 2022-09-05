@@ -11,7 +11,7 @@ class SkjemaDokumentSoknadTransformer {
 		input.skjemanr, input.tittel, input.tema, SoknadsStatusDto.opprettet, LocalDateTime.now().atOffset(ZoneOffset.UTC),
 		lagVedleggsListe(input), null, null, null, finnSpraakFraInput(input.spraak),
 		LocalDateTime.now().atOffset(ZoneOffset.UTC), null, 0, VisningsType.fyllUt,
-		kanLasteOppAnnet = input.vedleggsListe?.any { it.vedleggsnr == "N6"})
+		kanLasteOppAnnet = input.vedleggsListe?.any { it.vedleggsnr == "N6" && !it.pakrevd })
 
 
 	/**

@@ -188,7 +188,7 @@ class SoknadServiceTest {
 				)
 			}))
 
-		assertTrue( lagretFil.id != null && lagretFil.data != null)
+		assertTrue( lagretFil.id != null)
 		assertTrue(lagretFil.vedleggsid == ettersendingsSoknadDto.vedleggsListe.first {
 			!it.erHoveddokument && it.vedleggsnr.equals(
 				"W1",
@@ -536,9 +536,15 @@ class SoknadServiceTest {
 		assertTrue(filDtoSaved != null)
 		assertTrue(filDtoSaved.id != null)
 
-		soknadService.slettFil(dokumentSoknadDto, filDtoSaved.vedleggsid, filDtoSaved.id!!)
+		val oppdatertSoknadDto = soknadService.hentSoknad(dokumentSoknadDto.id!!)
+		assertEquals(OpplastingsStatusDto.lastetOpp, oppdatertSoknadDto.vedleggsListe.first { it.id == vedleggDto.id!! }.opplastingsStatus)
+
+		val oppdatertVedleggDto = soknadService.slettFil(oppdatertSoknadDto, filDtoSaved.vedleggsid, filDtoSaved.id!!)
+
+		assertEquals(OpplastingsStatusDto.ikkeValgt, oppdatertVedleggDto.opplastingsStatus)
 	}
-	@Test
+
+  @Test
 	fun lesOppTeksterTest() {
 		val prop = Properties()
 		val inputStream	=  SoknadServiceTest::class.java.getResourceAsStream("/tekster/innholdstekster_nb.properties")
