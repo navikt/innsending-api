@@ -153,7 +153,6 @@ class SoknadServiceTest {
 		// Opprett ettersendingssoknad
 		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 
-		assertTrue(ettersendingsSoknadDto != null)
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }.toList().isEmpty())
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt }.toList().isNotEmpty())
@@ -208,7 +207,6 @@ class SoknadServiceTest {
 		// Oppretter ettersendingssoknad2
 		val ettersendingsSoknadDto2 = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 
-		assertTrue(ettersendingsSoknadDto2 != null)
 		assertTrue(ettersendingsSoknadDto2.vedleggsListe.isNotEmpty())
 		assertTrue(ettersendingsSoknadDto2.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt }.toList()
 			.isNotEmpty())

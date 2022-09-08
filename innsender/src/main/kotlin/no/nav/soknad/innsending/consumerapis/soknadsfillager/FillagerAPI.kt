@@ -68,7 +68,7 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 		if (fileData.isEmpty()) return vedleggDtos
 
 		val hentedeFilerMap: Map<String, FileData> = hentFiler(fileData, innsendingsId).associateBy { it.id }
-		logger.info("$innsendingsId: Hentet følgende filer ${hentedeFilerMap.map{it.key}.toList().joinToString { "," }}")
+		logger.info("$innsendingsId: Hentet følgende filer ${hentedeFilerMap.map{it.key}}")
 
 		return vedleggDtos.map { VedleggDto( it.tittel, it.label, it.erHoveddokument, it.erVariant, it.erPdfa, it.erPakrevd,
 			it.opplastingsStatus, hentedeFilerMap[it.uuid]?.createdAt ?: it.opprettetdato, it.id, it.vedleggsnr,

@@ -45,7 +45,7 @@ class SafAPI(
 	}
 
 
-	override fun hentBrukersSakerIArkivet(brukerId:String): List<ArkiverteSaker>? {
+	override fun hentBrukersSakerIArkivet(brukerId:String): List<ArkiverteSaker> {
 		return runBlocking	{
 			try {
 				val hentetDokumentoversikt = getSoknadsDataForPerson(brukerId)

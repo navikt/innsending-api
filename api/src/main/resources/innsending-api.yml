@@ -18,7 +18,7 @@ tags:
     description: Endepunkt for å opprette søknad gitt utfylt skjema, slik at søker kan bruke frontend til å legge til vedlegg og sende inn.
 
 paths:
-  /fyllUt/v1:
+  /fyllUt/v1/leggTilVedlegg:
     post:
       summary: Motta ferdig utfylt søknad og metadata til denne.
       description: FyllUt tjenesten gir søker mulighet til å fylle ut en søknad. Når vedkommende er ferdig med dette kalles dette endepunktet for å mellomlagre søknaden og gi søker mulighet til å laste opp eventuelle vedlegg og sende inn søknaden og disse til NAV.
@@ -34,8 +34,8 @@ paths:
         required: true
 
       responses:
-        200:
-          description: Successful operation
+        302:
+          description: Found
       tags:
         - soknadFraFyllUt
 
