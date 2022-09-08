@@ -104,6 +104,8 @@
 								<exceptionHandler>false</exceptionHandler>
 								<interfaceOnly>true</interfaceOnly>
 								<swaggerAnnotations>true</swaggerAnnotations>
+								<annotationLibrary>swagger1</annotationLibrary> <!-- TODO: This should be changed to swagger2 -->
+								<documentationProvider>none</documentationProvider> <!-- TODO: This should be changed to springdoc -->
 							</configOptions>
 						</configuration>
 					</execution>

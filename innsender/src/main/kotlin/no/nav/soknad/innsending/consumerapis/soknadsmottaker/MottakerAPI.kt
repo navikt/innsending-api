@@ -14,6 +14,7 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.Mimetype
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
+import okhttp3.OkHttpClient
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
@@ -22,7 +23,10 @@ import org.springframework.stereotype.Service
 @Service
 @Profile("dev | prod")
 @Qualifier("mottaker")
-class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, HealthRequestInterface {
+class MottakerAPI(
+	private val restConfig: RestConfig,
+	soknadsmottakerClient: OkHttpClient
+): MottakerInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -33,7 +37,8 @@ class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, Health
 		Serializer.jacksonObjectMapper.registerModule(JavaTimeModule())
 		ApiClient.username = restConfig.sharedUsername
 		ApiClient.password = restConfig.sharedPassword
-		mottakerClient = SoknadApi(restConfig.soknadsMottakerHost)
+
+		mottakerClient = SoknadApi(restConfig.soknadsMottakerHost, soknadsmottakerClient)
 		healthApi = HealthApi(restConfig.soknadsMottakerHost)
 	}
 
@@ -109,5 +114,4 @@ class MottakerAPI(private val restConfig: RestConfig): MottakerInterface, Health
 			Mimetype.applicationSlashPdf -> if (dokumentDto.erPdfa) "pdfa" else "pdf"
 			else -> ""
 		}
-
 }
