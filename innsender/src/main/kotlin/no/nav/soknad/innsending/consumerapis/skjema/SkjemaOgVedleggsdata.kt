@@ -2,7 +2,6 @@ package no.nav.soknad.innsending.consumerapis.skjema
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import java.util.*
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 class SkjemaOgVedleggsdata {

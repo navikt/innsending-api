@@ -4,6 +4,7 @@ import no.nav.security.token.support.core.context.TokenValidationContext
 import no.nav.security.token.support.core.context.TokenValidationContextHolder
 import no.nav.soknad.innsending.util.Constants.TOKENX
 import no.nav.soknad.innsending.util.Constants.SELVBETJENING
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 
@@ -13,11 +14,13 @@ import org.springframework.stereotype.Component
 @Profile("test | dev | prod")
 class SubjectHandlerImpl(private val ctxHolder: TokenValidationContextHolder) : SubjectHandlerInterface {
 
+	private val logger: Logger = LoggerFactory.getLogger(javaClass)
+
 	private val tokenValidationContext: TokenValidationContext
 		get() {
 			return ctxHolder.tokenValidationContext
 				?: throw RuntimeException("Could not find TokenValidationContext. Possibly no token in request.")
-					.also { log.error("Could not find TokenValidationContext. Possibly no token in request and request was not captured by token-validation filters.") }
+					.also { logger.error("Could not find TokenValidationContext. Possibly no token in request and request was not captured by token-validation filters.") }
 		}
 
 	override fun getUserIdFromToken(): String {
@@ -44,7 +47,6 @@ class SubjectHandlerImpl(private val ctxHolder: TokenValidationContextHolder) : 
 
 	companion object {
 		private const val CLAIM_PID = "pid"
-		private val log = LoggerFactory.getLogger(javaClass)
 	}
 }
 

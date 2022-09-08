@@ -53,12 +53,8 @@ class FrontEndRestApi(
 		nickname = "opprettSoknad",
 		notes = "På basis av oppgitt skjemanummer og eventuelle vedlegg, blir det opprettet en søknad som inviterer søker til å laste ned skjema for utfylling og opplasting av dette og eventuelle vedlegg.",
 		response = DokumentSoknadDto::class)
-	@io.swagger.annotations.ApiResponses(
-		value = [io.swagger.annotations.ApiResponse(
-			code = 200,
-			message = "Successful operation",
-			response = DokumentSoknadDto::class
-		)])
+	@ApiResponses(
+		value = [ApiResponse(code = 201, message = "Created", response = DokumentSoknadDto::class)])
 	@RequestMapping(
 		method = [RequestMethod.POST],
 		value = ["/frontend/v1/soknad"],
@@ -84,7 +80,7 @@ class FrontEndRestApi(
 			)
 			logger.info("${dokumentSoknadDto.innsendingsId}: Opprettet søknad på skjema ${opprettSoknadBody.skjemanr}")
 			return ResponseEntity
-				.status(HttpStatus.OK)
+				.status(HttpStatus.CREATED)
 				.body(dokumentSoknadDto)
 		} finally {
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
@@ -97,11 +93,7 @@ class FrontEndRestApi(
 		notes = "På basis av oppgitt innsendingsid, blir det opprettet en ettersendingssøknad som inviterer søker til å laste opp vedlegg.",
 		response = DokumentSoknadDto::class)
 	@ApiResponses(
-		value = [io.swagger.annotations.ApiResponse(
-			code = 200,
-			message = "Successful operation",
-			response = DokumentSoknadDto::class
-		)])
+		value = [ApiResponse(code = 201, message = "Created", response = DokumentSoknadDto::class)])
 	@RequestMapping(
 		method = [RequestMethod.POST],
 		value = ["/frontend/v1/ettersendingPaInnsendingsId"],
@@ -125,7 +117,7 @@ class FrontEndRestApi(
 				soknadService.opprettSoknadForettersendingAvVedlegg(brukerId, opprettEttersendingGittInnsendingsId.ettersendingTilinnsendingsId)
 			logger.info("${dokumentSoknadDto.innsendingsId}: Opprettet ettersending for innsendingsid ${opprettEttersendingGittInnsendingsId.ettersendingTilinnsendingsId}")
 			return ResponseEntity
-				.status(HttpStatus.OK)
+				.status(HttpStatus.CREATED)
 				.body(dokumentSoknadDto)
 		} finally {
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
@@ -138,11 +130,7 @@ class FrontEndRestApi(
 		notes = "På basis av oppgitt skjemanummer, blir det opprettet en ettersendingssøknad som inviterer søker til å laste opp vedlegg.",
 		response = DokumentSoknadDto::class)
 	@ApiResponses(
-		value = [io.swagger.annotations.ApiResponse(
-			code = 200,
-			message = "Successful operation",
-			response = DokumentSoknadDto::class
-		)])
+		value = [ApiResponse(code = 201, message = "Created", response = DokumentSoknadDto::class)])
 	@RequestMapping(
 		method = [RequestMethod.POST],
 		value = ["/frontend/v1/ettersendPaSkjema"],
@@ -174,7 +162,7 @@ class FrontEndRestApi(
 						.toList()
 				} catch (e: Exception) {
 					logger.info("Ingen søknader funnet i basen for bruker på skjemanr = ${opprettEttersendingGittSkjemaNr.skjemanr}")
-					emptyList<DokumentSoknadDto>()
+					emptyList()
 				}
 
 			logger.info("Gitt skjemaNr ${opprettEttersendingGittSkjemaNr.skjemanr}: Antall innsendteSoknader=${innsendteSoknader.size} og Antall arkiverteSoknader=${arkiverteSoknader.size}")
@@ -183,7 +171,7 @@ class FrontEndRestApi(
 
 			logger.info("${dokumentSoknadDto.innsendingsId}: Opprettet ettersending på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}")
 			return ResponseEntity
-				.status(HttpStatus.OK)
+				.status(HttpStatus.CREATED)
 				.body(dokumentSoknadDto)
 		} finally {
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
@@ -312,7 +300,7 @@ class FrontEndRestApi(
 		nickname = "endreSoknad",
 		notes = "Dersom endring er vellykket, returneres 204.")
 	@ApiResponses(
-		value = [ApiResponse(code = 204, message = "Successful operation")])
+		value = [ApiResponse(code = 204, message = "No content")])
 	@RequestMapping(
 		method = [RequestMethod.PATCH],
 		value = ["/frontend/v1/soknad/{innsendingsId}"],
@@ -448,24 +436,25 @@ class FrontEndRestApi(
 		notes = "Det er kun vedlegg av type Annet( vedleggsnr=N6) som søker kan legge til søknaden. Hvis vellykket vedlegget med id returneres.",
 		response = VedleggDto::class)
 	@ApiResponses(
-		value = [ApiResponse(code = 200, message = "Successful operation", response = VedleggDto::class)])
+		value = [ApiResponse(code = 201, message = "Created", response = VedleggDto::class)])
 	@RequestMapping(
 		method = [RequestMethod.POST],
 		value = ["/frontend/v1/soknad/{innsendingsId}/vedlegg"],
-		produces = ["application/json"]
+		produces = ["application/json"],
+		consumes = ["application/json"]
 	)
 	override fun lagreVedlegg(
-		@PathVariable innsendingsId: String
+		@PathVariable innsendingsId: String, postVedleggDto: PostVedleggDto?
 	): ResponseEntity<VedleggDto> {
 		logger.info("$innsendingsId: Kall for å lagre vedlegg til søknad")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.LAST_OPP.name)
 		try {
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
-			val vedleggDto = soknadService.leggTilVedlegg(soknadDto)
+			val vedleggDto = soknadService.leggTilVedlegg(soknadDto, postVedleggDto?.tittel)
 			logger.info("$innsendingsId: Lagret vedlegg ${vedleggDto.id} til søknad")
 			return ResponseEntity
-				.status(HttpStatus.OK)
+				.status(HttpStatus.CREATED)
 				.body(vedleggDto)
 		} finally {
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
@@ -479,7 +468,7 @@ class FrontEndRestApi(
 		notes = "Dersom funnet, returneres id til filen som er lagret.",
 		response = FilDto::class)
 	@ApiResponses(
-		value = [ApiResponse(code = 200, message = "Successful operation", response = FilDto::class)])
+		value = [ApiResponse(code = 201, message = "Created", response = FilDto::class)])
 	@RequestMapping(
 		method = [RequestMethod.POST],
 		value = ["/frontend/v1/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil"],
@@ -518,7 +507,7 @@ class FrontEndRestApi(
 
 			logger.info("$innsendingsId: Lagret fil ${lagretFilDto.id} på vedlegg $vedleggsId til søknad")
 			return ResponseEntity
-				.status(HttpStatus.OK)
+				.status(HttpStatus.CREATED)
 				.body(lagretFilDto)
 		} finally {
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)

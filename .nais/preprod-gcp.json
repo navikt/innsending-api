@@ -5,7 +5,6 @@
 	"database-name": "dokumentinnsending-dev",
 	"ingresses": [
 		"https://www.dev.nav.no/innsending-api-gcp",
-		"https://innsending-api-gcp.dev.adeo.no",
 		"https://innsending-api-gcp.dev.nav.no"
 	],
 	"outboundExternalHosts": [],
@@ -31,7 +30,7 @@
 		"SOKNADSMOTTAKER_HOST": "https://soknadsmottaker-gcp.dev.intern.nav.no",
 		"SOKNADSMOTTAKER_ENDPOINT": "/save",
 		"PUBLISERE_BRUKERNOTIFIKASJONER": "true",
-		"TJENESTE_URL": "https://send-inn-frontend.dev.nav.no",
+		"TJENESTE_URL": "https://www.dev.nav.no/sendinn",
 		"GJENOPPTA_SOKNADS_ARBEID": "/dokumentinnsending/",
 		"ETTERSENDE_PA_SOKNAD": "/dokumentinnsending/ettersending/",
 		"TOKENDINGS_BASE_URL": "https://tokendings.dev-gcp.nais.io",

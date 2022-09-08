@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.security
 
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
-import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.util.testpersonid
@@ -16,22 +15,12 @@ class Tilgangskontroll(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	fun hentBrukerFraToken(): String {
-		try {
-			return subjectHandler.getUserIdFromToken()
+		return try {
+			subjectHandler.getUserIdFromToken()
 		} catch (ex: Exception) {
 			logger.warn("Midlertidig bruk av testpersonid $testpersonid fordi følgende feil ved hentBrukerFraToken ${ex.message}")
-			return testpersonid
+			testpersonid
 		}
-	}
-
-	fun hentPersonData(): PersonDto {
-		val ident = hentBrukerFraToken()
-		return pdlService.hentPersonData(ident) ?: PersonDto(ident, "Ukjent", "", "Navn")
-	}
-
-	fun hentPersonsAktiveIdent(): String {
-		val identer = pdlService.hentPersonIdents(hentBrukerFraToken())
-		return identer.filter{ !it.historisk }.map{ it.ident }.first()
 	}
 
 	fun hentPersonIdents(brukerId: String): List<String> {

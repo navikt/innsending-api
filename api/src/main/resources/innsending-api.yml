@@ -18,7 +18,7 @@ tags:
     description: Endepunkt for å opprette søknad gitt utfylt skjema, slik at søker kan bruke frontend til å legge til vedlegg og sende inn.
 
 paths:
-  /fyllUt/v1:
+  /fyllUt/v1/leggTilVedlegg:
     post:
       summary: Motta ferdig utfylt søknad og metadata til denne.
       description: FyllUt tjenesten gir søker mulighet til å fylle ut en søknad. Når vedkommende er ferdig med dette kalles dette endepunktet for å mellomlagre søknaden og gi søker mulighet til å laste opp eventuelle vedlegg og sende inn søknaden og disse til NAV.
@@ -34,8 +34,8 @@ paths:
         required: true
 
       responses:
-        200:
-          description: Successful operation
+        302:
+          description: Found
       tags:
         - soknadFraFyllUt
 
@@ -76,8 +76,8 @@ paths:
         required: true
 
       responses:
-        200:
-          description: Successful operation
+        201:
+          description: Created
           content:
             application/json:
               schema:
@@ -118,8 +118,8 @@ paths:
         required: true
 
       responses:
-        200:
-          description: Successful operation
+        201:
+          description: Created
           content:
             application/json:
               schema:
@@ -142,8 +142,8 @@ paths:
         required: true
 
       responses:
-        200:
-          description: Successful operation
+        201:
+          description: Created
           content:
             application/json:
               schema:
@@ -200,7 +200,7 @@ paths:
 
       responses:
         204:
-          description: Successful operation
+          description: No content
       tags:
         - endreSoknad
 
@@ -243,9 +243,18 @@ paths:
             type: string
           style: simple
 
+      requestBody:
+        required: false
+        description: Data som skal endres
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostVedleggDto"
+
+
       responses:
-        200:
-          description: Successful operation
+        201:
+          description: Created
           content:
             application/json:
               schema:
@@ -421,8 +430,8 @@ paths:
                   format: binary
 
       responses:
-        200:
-          description: Successful operation
+        201:
+          description: Created
           content:
             application/json:
               schema:
@@ -847,6 +856,11 @@ components:
           description: Liste av obligatoriske av ingen, en eller flere vedlegg som søker må ettersende før søknaden kan behandles.
           items:
             $ref: "#/components/schemas/InnsendtVedleggDto"
+        skalSendesAvAndre:
+          type: array
+          description: Liste av obligatoriske av ingen, en eller flere vedlegg som søker har sagt skal bli sendt inn av andre.
+          items:
+            $ref: "#/components/schemas/InnsendtVedleggDto"
         mottattdato:
           type: string
           format: date-time
@@ -878,11 +892,8 @@ components:
       type: object
       description: Data for å angi hvilken søknad søker ønsker å ettersende på
       required:
-        - brukerId
         - ettersendingTilinnsendingsId
       properties:
-        brukerId:
-          $ref: "#/components/schemas/BrukerId"
         ettersendingTilinnsendingsId:
           $ref: "#/components/schemas/InnsendingsId"
 
@@ -890,12 +901,9 @@ components:
       type: object
       description: Data for å opprette en søknad gitt skjemanummer
       required:
-        - brukerId
         - skjemanr
         - sprak
       properties:
-        brukerId:
-          $ref: "#/components/schemas/BrukerId"
         skjemanr:
           $ref: "#/components/schemas/Skjemanr"
         sprak:
@@ -910,13 +918,10 @@ components:
       type: object
       description: Data for å opprette soknad basert på skjemanummer.
       required:
-        - brukerId
         - skjemanr
         - sprak
 
       properties:
-        brukerId:
-          $ref: "#/components/schemas/BrukerId"
         skjemanr:
           $ref: "#/components/schemas/Skjemanr"
         sprak:
@@ -952,6 +957,14 @@ components:
           $ref: "#/components/schemas/Tittel"
         opplastingsStatus:
           $ref: "#/components/schemas/OpplastingsStatusDto"
+
+    PostVedleggDto:
+      type: object
+      description: Properties som skal settes på vedlegg som skal opprettes.
+
+      properties:
+        tittel:
+          $ref: "#/components/schemas/Tittel"
 
     SkjemaDokumentDto:
       type: object

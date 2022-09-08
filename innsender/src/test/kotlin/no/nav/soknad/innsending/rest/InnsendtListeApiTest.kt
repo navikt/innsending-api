@@ -58,7 +58,7 @@ internal class InnsendtListeApiTest {
 	private val expiry = 2*3600
 
 
-	// Disabled test da den feiler i på GitHub (men fungerer på
+	// Disabled test da den feiler i på GitHub (men fungerer lokalt)
 	@Test
 	@Disabled
 	internal fun testHentJournalposter() {
@@ -81,7 +81,7 @@ internal class InnsendtListeApiTest {
 			requestEntity, object : ParameterizedTypeReference<List<AktivSakDto>>() {})
 
 		assertTrue(response.body != null && response.body!!.isNotEmpty())
-		assertEquals(2, response.body!!.get(0).innsendtVedleggDtos.size)
+		assertEquals(2, response.body!![0].innsendtVedleggDtos.size)
 
 	}
 

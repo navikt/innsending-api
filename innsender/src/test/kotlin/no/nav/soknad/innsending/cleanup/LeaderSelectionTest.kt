@@ -11,7 +11,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
-class FjernGamleSoknaderTest {
+class LeaderSelectionTest {
 
 	@OptIn(ExperimentalSerializationApi::class)
 	val format = Json { explicitNulls = false; ignoreUnknownKeys = true }
@@ -26,17 +26,18 @@ class FjernGamleSoknaderTest {
 
 	@Test
 	fun testLeaderSelection() {
-		val leaderElection = FjernGamleSoknader.LeaderElection("localhost", LocalDateTime.now().toString())
+		val leaderElection = LeaderElection("localhost", LocalDateTime.now().toString())
 		val jsonString = format.encodeToString(leaderElection)
+		System.setProperty("ELECTOR_PATH", "localhost")
 
-		val fjernGamleSoknader = mockk<FjernGamleSoknader>()
-		every {fjernGamleSoknader.fetchLeaderSelection()} returns jsonString
-		every {fjernGamleSoknader.logger.warn(any())} returns Unit
-		every {fjernGamleSoknader.logger.info(any())} returns Unit
-		every {fjernGamleSoknader.format.decodeFromString<FjernGamleSoknader.LeaderElection>(any())} returns leaderElection
-		every {fjernGamleSoknader.isLeader()} answers { callOriginal() }
+		val leaderSelector = mockk<LeaderSelectionUtility>()
+		every {leaderSelector.fetchLeaderSelection()} returns jsonString
+		every {leaderSelector.logger.warn(any())} returns Unit
+		every {leaderSelector.logger.info(any())} returns Unit
+		every {leaderSelector.format.decodeFromString<LeaderElection>(any())} returns leaderElection
+		every {leaderSelector.isLeader()} answers { callOriginal() }
 
-		fjernGamleSoknader.isLeader()
+		leaderSelector.isLeader()
 
 	}
 

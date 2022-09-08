@@ -35,4 +35,7 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 
 	@Query(value = "SELECT * FROM soknad WHERE status = :status AND opprettetdato <= :opprettetFor ORDER BY opprettetdato", nativeQuery = true)
 	fun findAllByStatusAndWithOpprettetdatoBefore(@Param("status") status: String, @Param("opprettetFor") opprettetFor: OffsetDateTime): List<SoknadDbData>
+
+	@Query(value = "SELECT * FROM soknad WHERE opprettetdato <= :opprettetFor ORDER BY opprettetdato", nativeQuery = true)
+	fun findAllByOpprettetdatoBefore(@Param("opprettetFor") opprettetFor: OffsetDateTime): List<SoknadDbData>
 }
