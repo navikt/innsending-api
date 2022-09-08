@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.rest
 
+import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -21,7 +22,6 @@ import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_LEVEL_4
 import no.nav.soknad.innsending.util.Constants.TOKENX
 
 @RestController
-@RequestMapping("/fyllUt/v1")
 @ProtectedWithClaims(issuer = TOKENX, claimMap = [CLAIM_ACR_LEVEL_4])
 class SkjemaRestApi(val restConfig: RestConfig,
 										val soknadService: SoknadService,
@@ -31,11 +31,17 @@ class SkjemaRestApi(val restConfig: RestConfig,
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	@Operation(summary = "Requests to create application and redirect client to frontend application for adding attachments and sending application to NAV.", tags = ["operations"])
-	@ApiResponses(value = [ApiResponse(responseCode = "302",
-		description = "Application is stored and applicant is redirected to page to upload additional attachments if required else applicant is guided to summary page before committing it to NAV."
-	)])
-	@PostMapping("/leggTilVedlegg")
+	@ApiOperation(
+		value = "Motta ferdig utfylt søknad og metadata til denne.",
+		nickname = "fyllUt",
+		notes = "FyllUt tjenesten gir søker mulighet til å fylle ut en søknad. Når vedkommende er ferdig med dette kalles dette endepunktet for å mellomlagre søknaden og gi søker mulighet til å laste opp eventuelle vedlegg og sende inn søknaden og disse til NAV.")
+	@io.swagger.annotations.ApiResponses(
+		value = [io.swagger.annotations.ApiResponse(code = 302, message = "Found")])
+	@RequestMapping(
+		method = [RequestMethod.POST],
+		value = ["/fyllUt/v1/leggTilVedlegg"],
+		consumes = ["application/json"]
+	)
 	override fun fyllUt(
 		@ApiParam(
 			required = true,
