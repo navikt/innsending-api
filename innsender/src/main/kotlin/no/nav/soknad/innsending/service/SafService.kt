@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.consumerapis.saf.SafInterface
+import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.consumerapis.saf.dto.Dokument
 import no.nav.soknad.innsending.model.AktivSakDto
 import no.nav.soknad.innsending.model.InnsendtVedleggDto
@@ -17,12 +18,13 @@ class SafService(val safApi: SafInterface) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	fun hentInnsendteSoknader(brukerId: String): List<AktivSakDto> {
-		val innsendte = try {
-			safApi.hentBrukersSakerIArkivet(brukerId)
-		} catch (_: Exception) {
-			null
-		}
-		if (innsendte == null) return emptyList()
+		val innsendte: List<ArkiverteSaker> =
+			try {
+				safApi.hentBrukersSakerIArkivet(brukerId)
+			} catch (ex: Exception) {
+				logger.info("Oppslag mot SAF gav ingen resultat pga feilen ${ex.message}")
+				emptyList()
+			}
 
 		logger.info("Hentet ${innsendte.size} journalposter for bruker, skal mappe til AktivSakDto")
 		logger.info("Hentet ${innsendte.forEach { it.toString() }}")

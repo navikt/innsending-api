@@ -8,7 +8,7 @@ import org.springframework.security.core.Authentication
 
 
 @Configuration
-class ApplicationConfiguration {
+class AuthenticationConfiguration {
 	@Bean
 	fun noopAuthenticationManager(): AuthenticationManager? {
 		return AuthenticationManager { authentication: Authentication? ->

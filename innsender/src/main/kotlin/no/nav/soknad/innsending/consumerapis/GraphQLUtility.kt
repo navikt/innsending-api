@@ -5,7 +5,7 @@ import no.nav.soknad.innsending.exceptions.PdlApiException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-val logger: Logger = LoggerFactory.getLogger("no.nav.soknad.innsending.GrapQLUtility")
+val logger: Logger = LoggerFactory.getLogger("no.nav.soknad.innsending.consumerapis.GrapQLUtility")
 
 fun handleErrors(errors: List<GraphQLClientError>, system: String) {
 	val errorMessage = errors

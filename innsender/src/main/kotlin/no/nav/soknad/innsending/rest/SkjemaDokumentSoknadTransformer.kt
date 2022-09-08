@@ -29,7 +29,6 @@ class SkjemaDokumentSoknadTransformer {
 			skjemaDto.vedleggsListe
 				?.filter{ it.vedleggsnr != "N6" || it.label != "Annet" || it.pakrevd }
 				?.map { konverterTilVedleggDto(it, false, false) }
-				?.toList()
 
 		return listOf(hoveddok, variant) + if (vedleggListe.isNullOrEmpty()) emptyList() else vedleggListe
 	}

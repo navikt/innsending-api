@@ -26,8 +26,8 @@ class SafAPITmp: SafInterface, HealthRequestInterface {
 		return "ok"
 	}
 
-	override fun hentBrukersSakerIArkivet(brukerId: String): List<ArkiverteSaker>? {
-		return dummyArkiverteSoknader[brukerId]
+	override fun hentBrukersSakerIArkivet(brukerId: String): List<ArkiverteSaker> {
+		return dummyArkiverteSoknader[brukerId] ?: emptyList()
 	}
 
 	private val date = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format( OffsetDateTime.now())

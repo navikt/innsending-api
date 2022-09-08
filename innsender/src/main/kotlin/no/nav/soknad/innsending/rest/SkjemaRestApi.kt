@@ -13,13 +13,10 @@ import no.nav.soknad.innsending.util.Constants.TOKENX
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.net.URI
 
 @RestController
-@RequestMapping("/fyllUt/v1")
 @ProtectedWithClaims(issuer = TOKENX, claimMap = [CLAIM_ACR_LEVEL_4])
 class SkjemaRestApi(val restConfig: RestConfig,
 										val soknadService: SoknadService,
@@ -29,7 +26,6 @@ class SkjemaRestApi(val restConfig: RestConfig,
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	@PostMapping("/leggTilVedlegg")
 	override fun fyllUt(skjemaDto: SkjemaDto): ResponseEntity<Unit> {
 		logger.info("Kall fra FyllUt for å opprette søknad for skjema ${skjemaDto.skjemanr}")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
