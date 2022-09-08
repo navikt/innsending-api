@@ -25,12 +25,12 @@ class SkjemaDokumentSoknadTransformer {
 	private fun lagVedleggsListe(skjemaDto: SkjemaDto): List<VedleggDto> {
 		val hoveddok = konverterTilVedleggDto(skjemaDto.hoveddokument, erHoveddokument = true, erVariant = false)
 		val variant = konverterTilVedleggDto(skjemaDto.hoveddokumentVariant, erHoveddokument = true, erVariant = true)
-		val vedleggListe: List<VedleggDto>? =
-			skjemaDto.vedleggsListe
-				?.filter{ it.vedleggsnr != "N6" || it.label != "Annet" || it.pakrevd }
-				?.map { konverterTilVedleggDto(it, erHoveddokument = false, erVariant = false) }
+		val vedleggListe: List<VedleggDto> =
+			(skjemaDto.vedleggsListe ?: emptyList())
+				.filter { it.vedleggsnr != "N6" || it.label != "Annet" || it.pakrevd }
+				.map { konverterTilVedleggDto(it, erHoveddokument = false, erVariant = false) }
 
-		return listOf(hoveddok, variant) + if (vedleggListe.isNullOrEmpty()) emptyList() else vedleggListe
+		return listOf(hoveddok, variant) + vedleggListe
 	}
 
 	private fun konverterTilVedleggDto(skjemaDokumentDto: SkjemaDokumentDto, erHoveddokument: Boolean, erVariant: Boolean): VedleggDto =
