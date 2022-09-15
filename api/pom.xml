@@ -20,11 +20,10 @@
 		<spring-web.version>5.3.20</spring-web.version>
 		<javax-servlet-api.version>4.0.1</javax-servlet-api.version>
 		<javax-validation-api.version>2.0.1.Final</javax-validation-api.version>
-
-		<springfox.version>3.0.0</springfox.version>
-		<jackson-databind-nullable.version>0.2.2</jackson-databind-nullable.version>
-		<jackson.version>2.13.1</jackson.version>
-
+		<jakarta-annotation.version>2.1.0</jakarta-annotation.version>
+		<swagger-annotations.version>2.2.2</swagger-annotations.version>
+		<springdoc-openapi.version>1.6.11</springdoc-openapi.version>
+		<jackson-databind-nullable.version>0.2.3</jackson-databind-nullable.version>
 	</properties>
 
 
@@ -50,6 +49,16 @@
 			<artifactId>javax.annotation-api</artifactId>
 			<version>${javax-annotation.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
+			<version>${jakarta-annotation.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<version>${swagger-annotations.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
@@ -63,21 +72,10 @@
 			<version>${jackson-databind-nullable.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-swagger2</artifactId>
-			<version>${springfox.version}</version>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-ui</artifactId>
+			<version>${springdoc-openapi.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.module</groupId>
-			<artifactId>jackson-module-kotlin</artifactId>
-			<version>${jackson.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.github.java-json-tools</groupId>
-			<artifactId>jackson-coreutils</artifactId>
-			<version>2.0</version>
-		</dependency>
-
 	</dependencies>
 
 
