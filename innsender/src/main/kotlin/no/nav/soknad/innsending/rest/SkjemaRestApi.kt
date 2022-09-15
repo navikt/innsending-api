@@ -1,25 +1,20 @@
 package no.nav.soknad.innsending.rest
 
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.responses.ApiResponse
-import io.swagger.v3.oas.annotations.responses.ApiResponses
+import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.FyllUtApi
 import no.nav.soknad.innsending.config.RestConfig
+import no.nav.soknad.innsending.model.SkjemaDto
+import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
+import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_LEVEL_4
+import no.nav.soknad.innsending.util.Constants.TOKENX
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.RestController
 import java.net.URI
-import javax.validation.Valid
-import no.nav.security.token.support.core.api.ProtectedWithClaims
-import no.nav.soknad.innsending.security.Tilgangskontroll
-import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_LEVEL_4
-import no.nav.soknad.innsending.util.Constants.TOKENX
 
 @RestController
 @ProtectedWithClaims(issuer = TOKENX, claimMap = [CLAIM_ACR_LEVEL_4])
@@ -31,23 +26,7 @@ class SkjemaRestApi(val restConfig: RestConfig,
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	@ApiOperation(
-		value = "Motta ferdig utfylt søknad og metadata til denne.",
-		nickname = "fyllUt",
-		notes = "FyllUt tjenesten gir søker mulighet til å fylle ut en søknad. Når vedkommende er ferdig med dette kalles dette endepunktet for å mellomlagre søknaden og gi søker mulighet til å laste opp eventuelle vedlegg og sende inn søknaden og disse til NAV.")
-	@io.swagger.annotations.ApiResponses(
-		value = [io.swagger.annotations.ApiResponse(code = 302, message = "Found")])
-	@RequestMapping(
-		method = [RequestMethod.POST],
-		value = ["/fyllUt/v1/leggTilVedlegg"],
-		consumes = ["application/json"]
-	)
-	override fun fyllUt(
-		@ApiParam(
-			required = true,
-			value = "Søknadsmetadata og søknad som PDF og Json samt liste over eventuelle obligatoriske og valgfrie vedlegg som skal/kan legges til."
-		) @Valid @RequestBody skjemaDto: no.nav.soknad.innsending.model.SkjemaDto
-	): ResponseEntity<Unit> {
+	override fun fyllUt(skjemaDto: SkjemaDto): ResponseEntity<Unit> {
 		logger.info("Kall fra FyllUt for å opprette søknad for skjema ${skjemaDto.skjemanr}")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
 		try {
@@ -58,7 +37,4 @@ class SkjemaRestApi(val restConfig: RestConfig,
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
 		}
 	}
-
 }
-
-
