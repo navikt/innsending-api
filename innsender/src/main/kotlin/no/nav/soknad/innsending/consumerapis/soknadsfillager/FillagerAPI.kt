@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
+import okhttp3.OkHttpClient
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
@@ -18,7 +19,10 @@ import org.springframework.stereotype.Service
 @Service
 @Profile("dev | prod")
 @Qualifier("fillager")
-class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, HealthRequestInterface {
+class FillagerAPI(
+	private val restConfig: RestConfig,
+	soknadsfillagerClient: OkHttpClient
+): FillagerInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -29,7 +33,8 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 		jacksonObjectMapper.registerModule(JavaTimeModule())
 		ApiClient.username = restConfig.sharedUsername
 		ApiClient.password = restConfig.sharedPassword
-		filesApi = FilesApi(restConfig.filestorageHost)
+
+		filesApi = FilesApi(restConfig.filestorageHost, soknadsfillagerClient)
 		healthApi = HealthApi(restConfig.filestorageHost)
 	}
 
@@ -76,7 +81,6 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 			hentedeFilerMap[it.uuid]?.content ?: it.document,
 			it.skjemaurl, ) }
 			.toList()
-
 	}
 
 	private fun hentFiler(filData: List<FileData>, innsendingsId: String): List<FileData> {
@@ -101,7 +105,5 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 		filesApi.deleteFiles(fileids, innsendingsId)
 
 		logger.info("$innsendingsId: Slettet følgende filer $fileids")
-
 	}
-
 }
