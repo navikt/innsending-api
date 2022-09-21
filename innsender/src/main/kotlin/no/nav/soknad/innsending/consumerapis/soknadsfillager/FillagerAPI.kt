@@ -57,18 +57,18 @@ class FillagerAPI(
 
 
 	override fun lagreFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>) {
-		val fileData: List<FileData> = vedleggDtos.stream()
+		val fileData: List<FileData> = vedleggDtos
 			.filter {it.document != null }
-			.map { FileData(it.uuid!!, it.document, it.opprettetdato) }.toList()
+			.map { FileData(it.uuid!!, it.document, it.opprettetdato) }
 
 		filesApi.addFiles(fileData, innsendingsId)
-		logger.info("$innsendingsId: Lagret følgende filer ${fileData.map { it.id }.toList().joinToString { "," }}")
+		logger.info("$innsendingsId: Lagret følgende filer ${fileData.map { it.id }}")
 	}
 
 	override fun hentFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>): List<VedleggDto> {
-		val fileData: List<FileData> = vedleggDtos.stream()
+		val fileData: List<FileData> = vedleggDtos
 			.filter {it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
-			.map { FileData(it.uuid!!, it.document, it.opprettetdato) }.toList()
+			.map { FileData(it.uuid!!, it.document, it.opprettetdato) }
 
 		if (fileData.isEmpty()) return vedleggDtos
 
@@ -79,13 +79,12 @@ class FillagerAPI(
 			it.opplastingsStatus, hentedeFilerMap[it.uuid]?.createdAt ?: it.opprettetdato, it.id, it.vedleggsnr,
 			it.beskrivelse, it.uuid, it.mimetype,
 			hentedeFilerMap[it.uuid]?.content ?: it.document,
-			it.skjemaurl, ) }
-			.toList()
+			it.skjemaurl) }
 	}
 
 	private fun hentFiler(filData: List<FileData>, innsendingsId: String): List<FileData> {
 
-		val idChunks = filData.stream().map{ it.id}.toList()
+		val idChunks = filData.map { it.id }
 			.chunked(restConfig.filesInOneRequestToFilestorage)
 
 		return idChunks
@@ -98,9 +97,9 @@ class FillagerAPI(
 	}
 
 	override fun slettFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>) {
-		val fileids: List<String> = vedleggDtos.stream()
-			.filter {it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
-			.map { it.uuid!! }.toList()
+		val fileids = vedleggDtos
+			.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
+			.map { it.uuid!! }
 
 		filesApi.deleteFiles(fileids, innsendingsId)
 

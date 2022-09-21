@@ -23,14 +23,14 @@ class SkjemaDokumentSoknadTransformer {
 	 * FyllUt spesifiserer pr vedlegg om pakrevd. Dersom pakrevd=false OG skjemanr=N6, så skal søker kunne slette vedlegget.
 	 */
 	private fun lagVedleggsListe(skjemaDto: SkjemaDto): List<VedleggDto> {
-		val hoveddok = konverterTilVedleggDto(skjemaDto.hoveddokument, true, false)
-		val variant = konverterTilVedleggDto(skjemaDto.hoveddokumentVariant, true, true)
-		val vedleggListe: List<VedleggDto>? =
-			skjemaDto.vedleggsListe
-				?.filter{ it.vedleggsnr != "N6" || it.label != "Annet" || it.pakrevd }
-				?.map { konverterTilVedleggDto(it, false, false) }
+		val hoveddok = konverterTilVedleggDto(skjemaDto.hoveddokument, erHoveddokument = true, erVariant = false)
+		val variant = konverterTilVedleggDto(skjemaDto.hoveddokumentVariant, erHoveddokument = true, erVariant = true)
+		val vedleggListe: List<VedleggDto> =
+			(skjemaDto.vedleggsListe ?: emptyList())
+				.filter { it.vedleggsnr != "N6" || it.label != "Annet" || it.pakrevd }
+				.map { konverterTilVedleggDto(it, erHoveddokument = false, erVariant = false) }
 
-		return listOf(hoveddok, variant) + if (vedleggListe.isNullOrEmpty()) emptyList() else vedleggListe
+		return listOf(hoveddok, variant) + vedleggListe
 	}
 
 	private fun konverterTilVedleggDto(skjemaDokumentDto: SkjemaDokumentDto, erHoveddokument: Boolean, erVariant: Boolean): VedleggDto =
@@ -39,5 +39,4 @@ class SkjemaDokumentSoknadTransformer {
 			if (skjemaDokumentDto.document != null) OpplastingsStatusDto.lastetOpp else OpplastingsStatusDto.ikkeValgt,
 			LocalDateTime.now().atOffset(ZoneOffset.UTC), null, skjemaDokumentDto.vedleggsnr,  skjemaDokumentDto.beskrivelse,
 			null, skjemaDokumentDto.mimetype, skjemaDokumentDto.document,null )
-
 }

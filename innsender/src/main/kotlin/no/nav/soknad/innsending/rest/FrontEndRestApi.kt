@@ -91,14 +91,12 @@ class FrontEndRestApi(
 				.filter { opprettEttersendingGittSkjemaNr.skjemanr == it.skjemanr && it.innsendingsId != null }
 				.filter { it.innsendtDato.isAfter(OffsetDateTime.now().minusDays(MAX_AKTIVE_DAGER)) }
 				.sortedByDescending { it.innsendtDato }
-				.toList()
 			val innsendteSoknader =
 				try {
 					soknadService.hentInnsendteSoknader(tilgangskontroll.hentPersonIdents())
 						.filter{it.skjemanr == opprettEttersendingGittSkjemaNr.skjemanr}
 						.filter{it.innsendtDato!!.isAfter(OffsetDateTime.now().minusDays(MAX_AKTIVE_DAGER))}
 						.sortedByDescending { it.innsendtDato }
-						.toList()
 				} catch (e: Exception) {
 					logger.info("Ingen søknader funnet i basen for bruker på skjemanr = ${opprettEttersendingGittSkjemaNr.skjemanr}")
 					emptyList()

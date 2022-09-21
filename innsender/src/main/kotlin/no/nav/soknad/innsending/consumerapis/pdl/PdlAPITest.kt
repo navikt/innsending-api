@@ -34,7 +34,7 @@ class PdlAPITest: PdlInterface, HealthRequestInterface {
 	}
 
 	private fun dummyHentBrukerIdenter(brukerId: String): List<IdentDto> {
-		return dummyIdents.filter {inneholderBrukerId(brukerId, it)}.toList().flatten()
+		return dummyIdents.filter { inneholderBrukerId(brukerId, it) }.flatten()
 	}
 
 	private fun inneholderBrukerId(brukerId: String, liste: List<IdentDto>): Boolean {
