@@ -72,9 +72,9 @@ class BrukernotifikasjonPublisher(
 		val notificationInfo = NotificationInfo(tittel, lenke , if (ettersending) ettersendingsFrist else  soknadLevetid , emptyList())
 		val soknadRef = SoknadRef(dokumentSoknad.innsendingsId!!, ettersending, groupId, dokumentSoknad.brukerId, dokumentSoknad.opprettetDato)
 
-		logger.info("${dokumentSoknad.innsendingsId}: Sende melding om ny brukernotifikasjon med lenke $lenke")
 		try {
 			sendTilKafkaPublisher.opprettBrukernotifikasjon(AddNotification(soknadRef, notificationInfo))
+			logger.info("${dokumentSoknad.innsendingsId}: Har sendt melding om ny brukernotifikasjon med lenke $lenke")
 		} catch (e: Exception) {
 			logger.error("${dokumentSoknad.innsendingsId}: Sending av melding om ny brukernotifikasjon feilet", e)
 		}
@@ -92,9 +92,9 @@ class BrukernotifikasjonPublisher(
 			val ettersending = erEttersending(dokumentSoknad)
 			val soknadRef = SoknadRef(dokumentSoknad.innsendingsId!!, ettersending, groupId, dokumentSoknad.brukerId, dokumentSoknad.opprettetDato)
 
-			logger.info("${dokumentSoknad.innsendingsId}: Sende melding om avslutning av brukernotifikasjon")
 			try {
 				sendTilKafkaPublisher.avsluttBrukernotifikasjon(soknadRef)
+				logger.info("${dokumentSoknad.innsendingsId}: Har sendt melding om avslutning av brukernotifikasjon")
 			} catch (e: Exception) {
 				logger.error("${dokumentSoknad.innsendingsId}: Sending av melding om avslutning av brukernotifikasjon feilet", e)
 			}
