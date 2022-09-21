@@ -19,7 +19,6 @@ class BrukernotifikasjonPublisher(
 	private val notifikasjonConfig: BrukerNotifikasjonConfig,
 	private val sendTilKafkaPublisher: PublisherInterface
 ) {
-
 	private val logger = LoggerFactory.getLogger(BrukernotifikasjonPublisher::class.java)
 
 	private val soknadLevetid = 56 // Dager
@@ -30,8 +29,7 @@ class BrukernotifikasjonPublisher(
 	val linkDokumentinnsendingEttersending = notifikasjonConfig.ettersendePaSoknad
 
 	fun soknadStatusChange(dokumentSoknad: DokumentSoknadDto): Boolean {
-
-		logger.debug("Skal publisere event relatert til ${dokumentSoknad.innsendingsId}")
+		logger.debug("${dokumentSoknad.innsendingsId}: Skal publisere Brukernotifikasjon")
 
 		if (notifikasjonConfig.publisereEndringer) {
 			val groupId = if (dokumentSoknad.ettersendingsId != null && dokumentSoknad.ettersendingsId != ukjentEttersendingsId)
@@ -40,7 +38,7 @@ class BrukernotifikasjonPublisher(
 					dokumentSoknad.innsendingsId
 
 			logger.info(
-				"Publiser statusendring på søknad" +
+				"${dokumentSoknad.innsendingsId}: Publiser statusendring på søknad" +
 					": innsendingsId=${dokumentSoknad.innsendingsId}, status=${dokumentSoknad.status}, groupId=$groupId" +
 					", isDokumentInnsending=true, isEttersendelse=${erEttersending(dokumentSoknad)}" +
 					", tema=${dokumentSoknad.tema}"
@@ -56,7 +54,7 @@ class BrukernotifikasjonPublisher(
 					)
 				}
 			} catch (e: Exception) {
-				logger.info("Publisering av brukernotifikasjon feilet med ${e.message}")
+				logger.info("${dokumentSoknad.innsendingsId}: Publisering av brukernotifikasjon feilet", e)
 				return false
 			}
 		}
@@ -77,8 +75,8 @@ class BrukernotifikasjonPublisher(
 		logger.info("${dokumentSoknad.innsendingsId}: Sende melding om ny brukernotifikasjon med lenke $lenke")
 		try {
 			sendTilKafkaPublisher.opprettBrukernotifikasjon(AddNotification(soknadRef, notificationInfo))
-		} catch (ex: Exception) {
-			logger.error("${dokumentSoknad.innsendingsId}: Sending av melding om ny brukernotifikasjon feilet: ${ex.message}")
+		} catch (e: Exception) {
+			logger.error("${dokumentSoknad.innsendingsId}: Sending av melding om ny brukernotifikasjon feilet", e)
 		}
 	}
 
@@ -88,7 +86,6 @@ class BrukernotifikasjonPublisher(
 	private fun handleSentInApplication(dokumentSoknad: DokumentSoknadDto, groupId: String) {
 		// Søknad innsendt, fjern beskjed, og opprett eventuelle oppgaver for hvert vedlegg som skal ettersendes
 		publishDoneEvent(dokumentSoknad, groupId)
-
 	}
 
 	private fun publishDoneEvent(dokumentSoknad: DokumentSoknadDto, groupId: String) {
@@ -98,8 +95,8 @@ class BrukernotifikasjonPublisher(
 			logger.info("${dokumentSoknad.innsendingsId}: Sende melding om avslutning av brukernotifikasjon")
 			try {
 				sendTilKafkaPublisher.avsluttBrukernotifikasjon(soknadRef)
-			} catch (ex: Exception) {
-				logger.error("${dokumentSoknad.innsendingsId}: Sending av melding om avslutning av brukernotifikasjon feilet med: ${ex.message}")
+			} catch (e: Exception) {
+				logger.error("${dokumentSoknad.innsendingsId}: Sending av melding om avslutning av brukernotifikasjon feilet", e)
 			}
 	}
 
@@ -117,5 +114,4 @@ class BrukernotifikasjonPublisher(
 		else
 			notifikasjonConfig.tjenesteUrl + linkDokumentinnsending + innsendingsId
 	}
-
 }
