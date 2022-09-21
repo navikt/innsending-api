@@ -10,6 +10,7 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
+import okhttp3.OkHttpClient
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
@@ -18,7 +19,10 @@ import org.springframework.stereotype.Service
 @Service
 @Profile("dev | prod")
 @Qualifier("notifikasjon")
-class SendTilPublisher(private val restConfig: RestConfig): PublisherInterface, HealthRequestInterface {
+class SendTilPublisher(
+	private val restConfig: RestConfig,
+	soknadsmottakerClient: OkHttpClient
+): PublisherInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -30,8 +34,8 @@ class SendTilPublisher(private val restConfig: RestConfig): PublisherInterface, 
 		jacksonObjectMapper.registerModule(JavaTimeModule())
 		ApiClient.username = restConfig.sharedUsername
 		ApiClient.password = restConfig.sharedPassword
-		notificationPublisherApi = NewNotificationApi(restConfig.soknadsMottakerHost)
-		cancelNotificationPublisherApi = CancelNotificationApi(restConfig.soknadsMottakerHost)
+		notificationPublisherApi = NewNotificationApi(restConfig.soknadsMottakerHost, soknadsmottakerClient)
+		cancelNotificationPublisherApi = CancelNotificationApi(restConfig.soknadsMottakerHost, soknadsmottakerClient)
 		healthApi = HealthApi(restConfig.soknadsMottakerHost)
 	}
 
@@ -48,7 +52,7 @@ class SendTilPublisher(private val restConfig: RestConfig): PublisherInterface, 
 		try {
 			healthApi.isReady()
 		} catch (e: Exception) {
-			logger.warn("Kall mot ${restConfig.soknadsMottakerHost} for å sjekke om publisher for brukernotifikasjoner er oppe, feiler med ${e.message}")
+			logger.warn("Kall mot ${restConfig.soknadsMottakerHost} for å sjekke om publisher for brukernotifikasjoner er oppe, feiler", e)
 		}
 		return "ok"
 	}
@@ -61,6 +65,4 @@ class SendTilPublisher(private val restConfig: RestConfig): PublisherInterface, 
 		healthApi.isAlive()
 		return "pong"
 	}
-
-
 }
