@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service
 class FillagerAPI(
 	private val restConfig: RestConfig,
 	soknadsfillagerClient: OkHttpClient
-): FillagerInterface, HealthRequestInterface {
+) : FillagerInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -42,6 +42,7 @@ class FillagerAPI(
 		healthApi.ping()
 		return "pong"
 	}
+
 	override fun isReady(): String {
 		try {
 			healthApi.isReady()
@@ -50,6 +51,7 @@ class FillagerAPI(
 		}
 		return "ok"
 	}
+
 	override fun isAlive(): String {
 		healthApi.isReady()
 		return "ok"
@@ -58,7 +60,7 @@ class FillagerAPI(
 
 	override fun lagreFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>) {
 		val fileData: List<FileData> = vedleggDtos
-			.filter {it.document != null }
+			.filter { it.document != null }
 			.map { FileData(it.uuid!!, it.document, it.opprettetdato) }
 
 		filesApi.addFiles(fileData, innsendingsId)
@@ -67,19 +69,23 @@ class FillagerAPI(
 
 	override fun hentFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>): List<VedleggDto> {
 		val fileData: List<FileData> = vedleggDtos
-			.filter {it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
+			.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
 			.map { FileData(it.uuid!!, it.document, it.opprettetdato) }
 
 		if (fileData.isEmpty()) return vedleggDtos
 
 		val hentedeFilerMap: Map<String, FileData> = hentFiler(fileData, innsendingsId).associateBy { it.id }
-		logger.info("$innsendingsId: Hentet følgende filer ${hentedeFilerMap.map{it.key}}")
+		logger.info("$innsendingsId: Hentet følgende filer ${hentedeFilerMap.map { it.key }}")
 
-		return vedleggDtos.map { VedleggDto( it.tittel, it.label, it.erHoveddokument, it.erVariant, it.erPdfa, it.erPakrevd,
-			it.opplastingsStatus, hentedeFilerMap[it.uuid]?.createdAt ?: it.opprettetdato, it.id, it.vedleggsnr,
-			it.beskrivelse, it.uuid, it.mimetype,
-			hentedeFilerMap[it.uuid]?.content ?: it.document,
-			it.skjemaurl) }
+		return vedleggDtos.map {
+			VedleggDto(
+				it.tittel, it.label, it.erHoveddokument, it.erVariant, it.erPdfa, it.erPakrevd,
+				it.opplastingsStatus, hentedeFilerMap[it.uuid]?.createdAt ?: it.opprettetdato, it.id, it.vedleggsnr,
+				it.beskrivelse, it.uuid, it.mimetype,
+				hentedeFilerMap[it.uuid]?.content ?: it.document,
+				it.skjemaurl
+			)
+		}
 	}
 
 	private fun hentFiler(filData: List<FileData>, innsendingsId: String): List<FileData> {
