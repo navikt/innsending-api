@@ -65,7 +65,7 @@ class MottakerAPI(
 	override fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggsListe: List<VedleggDto>) {
 		val soknad = translate(soknadDto, vedleggsListe)
 		logger.info("${soknadDto.innsendingsId}: klar til å sende inn\n${maskerFnr(soknad)}\ntil ${restConfig.soknadsMottakerHost}")
-		mottakerClient.receive(soknad)
+		mottakerClient.receive(soknad, "disabled")
 		logger.info("${soknadDto.innsendingsId}: sendt inn")
 	}
 

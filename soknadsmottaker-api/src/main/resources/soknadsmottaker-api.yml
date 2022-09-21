@@ -1,6 +1,12 @@
 openapi: 3.0.3
 info:
-  description: Receives metadata about benefit applications and puts them on a Kafka topic.
+  description: >
+    When a user applies for a benefit (_sender inn en søknad_), one or more documents are
+    sent in to NAV. This component acts as a REST-endpoint to which the systems that the user uses can send
+    metadata about the benefit. The documents themselves **must** be sent to a different system,
+    [Soknadsfillager](https://www.github.com/navikt/soknadsfillager), before calling Soknadsmottaker.
+    When Soknadsmottaker receives data, it will be converted, serialized as an Avro message and put on a
+    Kafka topic.
   version: 2.0.0
   title: Soknadsmottaker
   contact:
@@ -8,7 +14,7 @@ info:
     email: team-soknad@nav.no
   license:
     name: MIT License
-    url: https://github.com/navikt/soknadsfillager/blob/main/LICENSE
+    url: https://github.com/navikt/soknadsmottaker/blob/main/LICENSE
 tags:
   - name: receive
     description: Receives benefit applications
@@ -16,31 +22,22 @@ tags:
     description: Application health endpoint
 
 paths:
-  /soknad-test:
-    post:
-      summary: Test endpoint that does nothing
-      description: Endpoint used for testing that does nothing.
-      operationId: receiveTest
-
-      requestBody:
-        description: Metadata about the benefit application being sent in.
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Soknad"
-        required: true
-
-      responses:
-        200:
-          description: Successful operation
-      tags:
-        - soknad
-
   /soknad:
     post:
       summary: Receives benefit application
       description: Receives a benefit application, which will lead to it being put on a Kafka topic and archived.
       operationId: receive
+
+      parameters:
+        - in: header
+          name: X-dryRun
+          description: >
+            If set to "enabled" or if omitted, the service will only log the requests sent,
+            nothing will be sent to Kafka topics. Set to "disabled" to enable proper archiving.
+          example: enabled
+          required: false
+          schema:
+            type: string
 
       requestBody:
         description: Metadata about the benefit application being sent in.

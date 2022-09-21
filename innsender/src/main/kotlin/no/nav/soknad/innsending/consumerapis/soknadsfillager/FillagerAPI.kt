@@ -63,7 +63,7 @@ class FillagerAPI(
 			.filter { it.document != null }
 			.map { FileData(it.uuid!!, it.document, it.opprettetdato) }
 
-		filesApi.addFiles(fileData, innsendingsId)
+		filesApi.addFiles(fileData, innsendingsId, "disabled")
 		logger.info("$innsendingsId: Lagret følgende filer ${fileData.map { it.id }}")
 	}
 
@@ -99,7 +99,7 @@ class FillagerAPI(
 	}
 
 	private fun performGetCall(innsendingsId: String, fileIds: List<String>): List<FileData> {
-		return filesApi.findFilesByIds(fileIds, innsendingsId)
+		return filesApi.findFilesByIds(fileIds, false, innsendingsId)
 	}
 
 	override fun slettFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>) {
