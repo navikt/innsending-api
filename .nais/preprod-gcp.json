@@ -37,6 +37,8 @@
 		"SAFSELVBETJENING_TOKEN_X_AUDIENCE": "dev-fss:teamdokumenthandtering:safselvbetjening-q1",
 		"PDL_TOKEN_X_AUDIENCE": "dev-fss:pdl:pdl-api",
 		"PDL_SCOPE": "api://dev-fss.pdl.pdl-api/.default",
-		"AZURE_TENANT": "trygdeetaten.no"
+		"AZURE_TENANT": "trygdeetaten.no",
+		"SOKNADSFILLAGER_SCOPE": "api://dev-gcp.team-soknad.soknadsfillager/.default",
+		"SOKNADSMOTTAKER_SCOPE": "api://dev-gcp.team-soknad.soknadsmottaker/.default"
 	}
 }

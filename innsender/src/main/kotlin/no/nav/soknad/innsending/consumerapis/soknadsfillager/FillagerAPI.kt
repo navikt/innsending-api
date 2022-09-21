@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
+import okhttp3.OkHttpClient
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
@@ -18,7 +19,10 @@ import org.springframework.stereotype.Service
 @Service
 @Profile("dev | prod")
 @Qualifier("fillager")
-class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, HealthRequestInterface {
+class FillagerAPI(
+	private val restConfig: RestConfig,
+	soknadsfillagerClient: OkHttpClient
+): FillagerInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -29,7 +33,8 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 		jacksonObjectMapper.registerModule(JavaTimeModule())
 		ApiClient.username = restConfig.sharedUsername
 		ApiClient.password = restConfig.sharedPassword
-		filesApi = FilesApi(restConfig.filestorageHost)
+
+		filesApi = FilesApi(restConfig.filestorageHost, soknadsfillagerClient)
 		healthApi = HealthApi(restConfig.filestorageHost)
 	}
 
@@ -74,7 +79,7 @@ class FillagerAPI(private val restConfig: RestConfig): FillagerInterface, Health
 			it.opplastingsStatus, hentedeFilerMap[it.uuid]?.createdAt ?: it.opprettetdato, it.id, it.vedleggsnr,
 			it.beskrivelse, it.uuid, it.mimetype,
 			hentedeFilerMap[it.uuid]?.content ?: it.document,
-			it.skjemaurl, ) }
+			it.skjemaurl) }
 	}
 
 	private fun hentFiler(filData: List<FileData>, innsendingsId: String): List<FileData> {
