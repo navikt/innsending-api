@@ -221,6 +221,9 @@ class SoknadServiceTest {
 		assertTrue(ettersendingsKvitteringsDto2.hoveddokumentRef == null )
 		assertTrue(ettersendingsKvitteringsDto2.innsendteVedlegg!!.isNotEmpty() )
 		assertTrue(ettersendingsKvitteringsDto2.skalEttersendes!!.isEmpty() )
+
+		val vedleggDto = soknadService.hentFiler(ettersendingsSoknadDto2, ettersendingsSoknadDto2.innsendingsId!!, ettersendingsSoknadDto2.vedleggsListe.last().id!!, true)
+		assertTrue(vedleggDto.isEmpty())
 	}
 
 	@Test
