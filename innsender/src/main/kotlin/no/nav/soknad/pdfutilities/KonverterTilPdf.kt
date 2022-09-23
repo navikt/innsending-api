@@ -58,10 +58,10 @@ class KonverterTilPdf {
 	fun flatUtPdf(fil: ByteArray): ByteArray {
 		// Konvertere fra PDF til bilde og tilbake til PDF
 		if (harSkrivbareFelt(fil)) {
-		val images = KonverterTilPng().konverterTilPng(fil)
-		val pdfList = mutableListOf<ByteArray>()
-		for (i in 0..images.size-1) pdfList.add(createPDFFromImage(images[i]))
-		return PdfMerger().mergePdfer(pdfList)
+			val images = KonverterTilPng().konverterTilPng(fil)
+			val pdfList = mutableListOf<ByteArray>()
+			for (i in 0..images.size-1) pdfList.add(createPDFFromImage(images[i]))
+			return PdfMerger().mergePdfer(pdfList)
 		}
 		return fil
 	}

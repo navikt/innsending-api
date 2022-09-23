@@ -11,6 +11,7 @@ import no.nav.soknad.innsending.utils.createHeaders
 import no.nav.soknad.innsending.utils.getBytesFromFile
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -146,14 +147,11 @@ class SkjemaRestApiTest {
 		assertEquals(2, kvitteringsDto!!.skalSendesAvAndre!!.size)
 		assertTrue(kvitteringsDto.hoveddokumentRef != null)
 
-		try {
+		assertThrows<Exception> {
 			val hentSoknadRespons = restTemplate.exchange(
 				"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}", HttpMethod.GET,
 				HttpEntity<Unit>(createHeaders(token)), DokumentSoknadDto::class.java
 			)
-			assertTrue(hentSoknadRespons != null)
-		} catch (e: Exception) {
-			assertTrue(1==1)
 		}
 
 		val hentFilURL = "http://localhost:${serverPort}/${kvitteringsDto.hoveddokumentRef}"
