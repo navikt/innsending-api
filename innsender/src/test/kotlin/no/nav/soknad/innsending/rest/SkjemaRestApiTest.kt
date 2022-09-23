@@ -17,10 +17,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
+import org.springframework.core.io.Resource
+import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import kotlin.test.assertEquals
@@ -146,6 +144,26 @@ class SkjemaRestApiTest {
 		assertTrue(sendInnRespons.statusCode == HttpStatus.OK && sendInnRespons.body != null)
 		val kvitteringsDto = sendInnRespons.body
 		assertEquals(2, kvitteringsDto!!.skalSendesAvAndre!!.size)
+		assertTrue(kvitteringsDto.hoveddokumentRef != null)
+
+		try {
+			val hentSoknadRespons = restTemplate.exchange(
+				"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}", HttpMethod.GET,
+				HttpEntity<Unit>(createHeaders(token)), DokumentSoknadDto::class.java
+			)
+			assertTrue(hentSoknadRespons != null)
+		} catch (e: Exception) {
+			assertTrue(1==1)
+		}
+
+		val hentFilURL = "http://localhost:${serverPort}/${kvitteringsDto.hoveddokumentRef}"
+		val filRespons = restTemplate.exchange(
+			hentFilURL, HttpMethod.GET,
+			HttpEntity<Unit>(createHeaders(token, MediaType.APPLICATION_PDF)), ByteArray::class.java
+		)
+		assertEquals(HttpStatus.OK, filRespons.statusCode)
+		assertTrue(filRespons.body != null)
+
 	}
 
 	private fun lagDokument(vedleggsnr: String, tittel: String, pakrevd: Boolean, mimetype: Mimetype? = null, erVedlegg: Boolean = false): SkjemaDokumentDto {

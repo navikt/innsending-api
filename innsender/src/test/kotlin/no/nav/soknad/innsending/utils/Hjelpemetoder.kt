@@ -64,3 +64,11 @@ fun createHeaders(token: String): HttpHeaders {
 	headers.add(Constants.CORRELATION_ID, UUID.randomUUID().toString())
 	return headers
 }
+
+fun createHeaders(token: String, contentType: MediaType): HttpHeaders {
+	val headers = HttpHeaders()
+	headers.contentType = contentType
+	headers.add(HttpHeaders.AUTHORIZATION, "$BEARER$token")
+	headers.add(Constants.CORRELATION_ID, UUID.randomUUID().toString())
+	return headers
+}
