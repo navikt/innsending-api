@@ -190,6 +190,9 @@ class FrontEndRestApi(
 			val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(dokumentSoknadDto)
 			logger.info("$innsendingsId: Hentet søknad")
+			if (dokumentSoknadDto.status != SoknadsStatusDto.opprettet) {
+				throw IllegalActionException("Søknaden kan ikke vises", "Søknaden er slettet eller innsendt og kan ikke vises eller endres.")
+			}
 			return ResponseEntity
 				.status(HttpStatus.OK)
 				.body(dokumentSoknadDto)
@@ -204,6 +207,9 @@ class FrontEndRestApi(
 		try {
 			val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(dokumentSoknadDto)
+			if (dokumentSoknadDto.status != SoknadsStatusDto.opprettet) {
+				throw IllegalActionException("Søknaden kan ikke vises", "Søknaden er slettet eller innsendt og kan ikke vises eller endres.")
+			}
 			soknadService.endreSoknad(dokumentSoknadDto.id!!, patchSoknadDto.visningsSteg)
 			logger.info("$innsendingsId: Oppdatert søknad")
 			return ResponseEntity(HttpStatus.NO_CONTENT)
@@ -218,6 +224,9 @@ class FrontEndRestApi(
 		try {
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
+			if (soknadDto.status != SoknadsStatusDto.opprettet) {
+				throw IllegalActionException("Søknaden kan ikke vises", "Søknaden er slettet eller innsendt og kan ikke vises eller endres.")
+			}
 			val vedleggsListeDto = soknadDto.vedleggsListe
 			logger.info("$innsendingsId: Hentet vedleggene til søknad")
 			return ResponseEntity
@@ -234,6 +243,9 @@ class FrontEndRestApi(
 		try {
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
+			if (soknadDto.status != SoknadsStatusDto.opprettet) {
+				throw IllegalActionException("Søknaden kan ikke vises", "Søknaden er slettet eller innsendt og kan ikke vises eller endres.")
+			}
 			val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
 					?: throw ResourceNotFoundException("", "Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId")
 			logger.info("$innsendingsId: Hentet vedlegg $vedleggsId til søknad")
@@ -251,6 +263,9 @@ class FrontEndRestApi(
 		try {
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
+			if (soknadDto.status != SoknadsStatusDto.opprettet) {
+				throw IllegalActionException("Søknaden kan ikke vises", "Søknaden er slettet eller innsendt og kan ikke vises eller endres.")
+			}
 			val vedleggDto = soknadService.endreVedlegg(patchVedleggDto, vedleggsId, soknadDto)
 			logger.info("$innsendingsId: Lagret vedlegg ${vedleggDto.id} til søknad")
 			return ResponseEntity
@@ -268,6 +283,9 @@ class FrontEndRestApi(
 		try {
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
+			if (soknadDto.status != SoknadsStatusDto.opprettet) {
+				throw IllegalActionException("Søknaden kan ikke vises", "Søknaden er slettet eller innsendt og kan ikke vises eller endres.")
+			}
 			val vedleggDto = soknadService.leggTilVedlegg(soknadDto, postVedleggDto?.tittel)
 			logger.info("$innsendingsId: Lagret vedlegg ${vedleggDto.id} til søknad")
 			return ResponseEntity
@@ -285,6 +303,9 @@ class FrontEndRestApi(
 		try {
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
+			if (soknadDto.status != SoknadsStatusDto.opprettet) {
+				throw IllegalActionException("Søknaden kan ikke vises", "Søknaden er slettet eller innsendt og kan ikke vises eller endres.")
+			}
 			if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
 				throw ResourceNotFoundException(null, "Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId")
 
@@ -318,6 +339,10 @@ class FrontEndRestApi(
 		try {
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
+			if (soknadDto.status != SoknadsStatusDto.opprettet &&
+				soknadDto.vedleggsListe.any { it.id != vedleggsId && !it.erHoveddokument}) {
+				throw IllegalActionException("Søknaden kan ikke vises", "Søknaden er slettet eller innsendt og kan ikke vises eller endres.")
+			}
 
 			val filDto = soknadService.hentFil(soknadDto, vedleggsId, filId)
 			logger.info("$innsendingsId: Hentet fil ${filDto.id} på vedlegg $vedleggsId til søknad")
@@ -342,6 +367,9 @@ class FrontEndRestApi(
 		try {
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll.harTilgang(soknadDto)
+		if (soknadDto.status != SoknadsStatusDto.opprettet) {
+			throw IllegalActionException("Søknaden kan ikke vises", "Søknaden er slettet eller innsendt og kan ikke vises eller endres.")
+		}
 		val filDtoListe = soknadService.hentFiler(soknadDto, innsendingsId, vedleggsId)
 		logger.info("$innsendingsId: Hentet informasjon om opplastede filer på vedlegg $vedleggsId til søknad")
 		return ResponseEntity
@@ -359,6 +387,9 @@ class FrontEndRestApi(
 		try {
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
+			if (soknadDto.status != SoknadsStatusDto.opprettet) {
+				throw IllegalActionException("Søknaden kan ikke vises", "Søknaden er slettet eller innsendt og kan ikke vises eller endres.")
+			}
 
 			soknadService.slettFil(soknadDto, vedleggsId, filId)
 			logger.info("$innsendingsId: Slettet fil $filId på vedlegg $vedleggsId til søknad")
@@ -377,6 +408,9 @@ class FrontEndRestApi(
 		try {
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
+			if (soknadDto.status != SoknadsStatusDto.opprettet) {
+				throw IllegalActionException("Søknaden kan ikke vises", "Søknaden er slettet eller innsendt og kan ikke vises eller endres.")
+			}
 
 			soknadService.slettVedlegg(soknadDto, vedleggsId)
 			logger.info("$innsendingsId: Slettet vedlegg $vedleggsId for søknad")
@@ -395,6 +429,9 @@ class FrontEndRestApi(
 		try {
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
+			if (soknadDto.status != SoknadsStatusDto.opprettet) {
+				throw IllegalActionException("Søknaden kan ikke vises", "Søknaden er slettet eller innsendt og kan ikke vises eller endres.")
+			}
 			soknadService.slettSoknadAvBruker(soknadDto)
 			logger.info("Slettet søknad med id $innsendingsId")
 			return ResponseEntity
@@ -413,6 +450,9 @@ class FrontEndRestApi(
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
 			val kvitteringsDto = soknadService.sendInnSoknad(soknadDto)
+			if (soknadDto.status != SoknadsStatusDto.opprettet) {
+				throw IllegalActionException("Søknaden kan ikke vises", "Søknaden er slettet eller innsendt og kan ikke vises eller endres.")
+			}
 			logger.info("$innsendingsId: Sendt inn soknad.\n" +
 				"InnsendteVedlegg=${kvitteringsDto.innsendteVedlegg?.size}, SkalEttersendes=${kvitteringsDto.skalEttersendes?.size}")
 			return ResponseEntity
