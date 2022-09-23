@@ -14,7 +14,7 @@ class KonverterTilPdfTest {
 		assertTrue(KonverterTilPdf().harSkrivbareFelt(skrivbarPdf))
 
 		val flatetPdf = KonverterTilPdf().flatUtPdf(skrivbarPdf)
-		writeBytesToFile(flatetPdf, "./delme.pdf")
+		//writeBytesToFile(flatetPdf, "./delme.pdf")
 		assertEquals(false, KonverterTilPdf().harSkrivbareFelt(flatetPdf))
 
 		val antallSider = AntallSider().finnAntallSider(skrivbarPdf)
