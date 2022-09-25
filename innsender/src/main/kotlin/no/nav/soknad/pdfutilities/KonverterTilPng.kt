@@ -53,9 +53,9 @@ class KonverterTilPng {
 						val pageIndex =
 							if (pd.numberOfPages - 1 < side) pd.numberOfPages - 1 else Math.max(side, 0)
 						var bim =
-							pdfRenderer.renderImageWithDPI(pageIndex, 1200f, ImageType.RGB)
+							pdfRenderer.renderImageWithDPI(pageIndex, 100f, ImageType.RGB)
 						bim = scaleImage(bim, Dimension(600, 800), true)
-						ImageIOUtil.writeImage(bim, "PNG", baos, 600, 1.0F)
+						ImageIOUtil.writeImage(bim, "PNG", baos, 300, 1.0F)
 						bim.flush()
 						return baos.toByteArray()
 					}
