@@ -340,7 +340,7 @@ class FrontEndRestApi(
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
 			if (!(soknadDto.status == SoknadsStatusDto.opprettet ||
-				(soknadDto.status == SoknadsStatusDto.innsendt && soknadDto.vedleggsListe.any { it.id != vedleggsId && !it.erHoveddokument}))) {
+				(soknadDto.status == SoknadsStatusDto.innsendt && soknadDto.vedleggsListe.any { it.id == vedleggsId && it.erHoveddokument && !it.erVariant}))) {
 				throw IllegalActionException("Søknaden kan ikke vises", "Søknaden er slettet eller innsendt og kan ikke vises eller endres.")
 			}
 
