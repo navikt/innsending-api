@@ -63,7 +63,7 @@ class FillagerAPI(
 			.filter { it.document != null }
 			.map { FileData(it.uuid!!, it.document, it.opprettetdato) }
 
-		filesApi.addFiles(fileData, innsendingsId, "disabled")
+		filesApi.addFiles(fileData, innsendingsId)
 		logger.info("$innsendingsId: Lagret følgende filer ${fileData.map { it.id }}")
 	}
 
