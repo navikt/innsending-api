@@ -43,12 +43,13 @@ paths:
         - in: header
           name: X-dryRun
           description: >
-            If set to "enabled" or if omitted, the service will not store files to the database.
-            Set to "disabled" to enable proper storing.
+            If this value is passed in, the service will only log the requests sent, nothing will be
+            stored in the database. Omit setting this header to store properly in the database.
           example: enabled
           required: false
           schema:
             type: string
+            default: null
 
       responses:
         200:
@@ -202,13 +203,6 @@ components:
           type: string
           description: current state of the file. Can be `deleted`, `not-found`, `ok`
           example: not-found
-  securitySchemes:
-    basicAuth:
-      type: http
-      scheme: basic
-
-security:
-  - basicAuth: []
 
 externalDocs:
   description: Documentation of the whole archiving system
