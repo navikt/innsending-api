@@ -574,6 +574,14 @@ class SoknadService(
 		return filDbDataList.map { lagFilDto(it, medFil) }
 	}
 
+	fun finnFilStorrelseSum(soknadDto: DokumentSoknadDto, vedleggsId: Long): Long {
+		return repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, vedleggsId)
+	}
+
+	fun finnFilStorrelseSum(soknadDto: DokumentSoknadDto): Long {
+		return soknadDto.vedleggsListe.filter{it.opplastingsStatus==OpplastingsStatusDto.ikkeValgt || it.opplastingsStatus==OpplastingsStatusDto.lastetOpp}.sumOf{ repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, it.id!!) }
+	}
+
 	@Transactional
 	fun slettFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long): VedleggDto {
 		// Sjekk om vedlegget eksisterer

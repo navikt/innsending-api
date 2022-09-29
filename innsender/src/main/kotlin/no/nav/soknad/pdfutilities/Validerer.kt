@@ -1,5 +1,6 @@
 package no.nav.soknad.pdfutilities
 
+import no.nav.soknad.innsending.exceptions.IllegalActionException
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import org.apache.pdfbox.pdmodel.PDDocument
@@ -19,18 +20,18 @@ class Validerer() {
 			try {
 				erGyldig(file)
 			} catch (e: Exception) {
-				throw Exception("Kan ikke laste opp kryptert fil", e
+				throw IllegalActionException("Opplastet fil er ikke lesbar", "Kan ikke laste opp kryptert fil"
 				)
 			}
 		} else if (!isImage(file)) {
-			throw Exception("Ugyldig filtype for opplasting"
+			throw IllegalActionException("Ugyldig filtype for opplasting", "Kan kun laste opp filer av type PDF, PNG og IMG"
 			)
 		}
 	}
 
-	fun validerStorrelse(opplastet: Int, max: Int) {
+	fun validerStorrelse(opplastet: Long, max: Long) {
 		if (opplastet > max*1024*1024) {
-			throw Exception("Opplastede fil(er) er større enn maksimalt tillatt")
+			throw IllegalActionException("Ulovlig filstørrelse", "Opplastede fil(er) er større enn maksimalt tillatt")
 		}
 	}
 
@@ -41,14 +42,14 @@ class Validerer() {
 			logger.error(
 				"Klarte ikke å sjekke om vedlegget er gyldig {}",	e.message
 			)
-			throw RuntimeException("Klarte ikke å sjekke om vedlegget er gyldig")
+			throw IllegalActionException("Ukjent filtype", "Klarte ikke å sjekke om vedlegget er gyldig")
 		}
 	}
 
 	private fun erGyldigPdDocument(document: PDDocument) {
 		if (document.isEncrypted()) {
 			logger.error("Opplasting av vedlegg feilet da PDF er kryptert")
-			throw RuntimeException("opplasting.feilmelding.pdf.kryptert")
+			throw IllegalActionException("Opplastet fil er ikke lesbar", "Kan ikke laste opp kryptert fil")
 		}
 	}
 

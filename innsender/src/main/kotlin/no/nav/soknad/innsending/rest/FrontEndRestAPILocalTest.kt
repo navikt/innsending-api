@@ -299,8 +299,9 @@ class FrontEndRestAPILocalTest(
 			// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
 			val fil = KonverterTilPdf().tilPdf(opplastet)
 			val vedleggsFiler = soknadService.hentFiler(soknadDto, innsendingsId, vedleggsId, false, false)
-			val opplastetFilStorrelse: Int = vedleggsFiler.filter {it.storrelse != null }.sumOf { it.storrelse!! }
-			Validerer().validerStorrelse(opplastetFilStorrelse + fil.size, restConfig.maxFileSize )
+
+			val opplastetPaSoknad: Long = soknadService.finnFilStorrelseSum(soknadDto)
+			Validerer().validerStorrelse(opplastetPaSoknad + fil.size, restConfig.maxFileSizeSum.toLong() )
 
 			// Lagre
 			val lagretFilDto = soknadService.lagreFil(soknadDto, FilDto(vedleggsId, null, file.filename ?:"", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now()))

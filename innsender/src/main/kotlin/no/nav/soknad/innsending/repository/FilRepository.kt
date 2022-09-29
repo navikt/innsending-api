@@ -20,6 +20,9 @@ interface FilRepository: JpaRepository<FilDbData, Long> {
 	@Query(value = "FROM FilDbData WHERE vedleggsid = :vedleggsid and id = :id")
 	fun findByVedleggsidAndId(@Param("vedleggsid") vedleggsid: Long, @Param("id") id: Long): Optional<FilDbData>
 
+	@Query(value = "SELECT sum(storrelse) FROM FilDbData WHERE vedleggsid = :vedleggsid")
+	fun findSumByVedleggsid(@Param("vedleggsid") vedleggsid: Long): Long?
+
 	@Transactional
 	@Modifying
 	@Query(value = "DELETE FROM fil WHERE vedleggsid = :vedleggsid", nativeQuery = true)

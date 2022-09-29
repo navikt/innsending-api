@@ -156,6 +156,15 @@ class RepositoryUtils(
 		)
 	}
 
+	fun hentSumFilstorrelseTilVedlegg(innsendingsId: String, vedleggsId: Long): Long = try {
+		filRepository.findSumByVedleggsid(vedleggsId) ?: 0L
+	} catch (ex: Exception) {
+		throw ResourceNotFoundException(
+			ex.message,
+			"Feil ved henting av filer for  vedlegg $vedleggsId til søknad $innsendingsId"
+		)
+	}
+
 	fun slettFilerForVedlegg(vedleggsId: Long) =
 		try {
 			filRepository.deleteAllByVedleggsid(vedleggsId)

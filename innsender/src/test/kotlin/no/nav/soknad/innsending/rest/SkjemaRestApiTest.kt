@@ -18,13 +18,15 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
-import org.springframework.core.io.Resource
+import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import org.springframework.util.LinkedMultiValueMap
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+
 
 @Suppress("DEPRECATION")
 @ActiveProfiles("test")
@@ -126,7 +128,7 @@ class SkjemaRestApiTest {
 		assertEquals(OpplastingsStatusDto.sendesAvAndre, patchResponseT7.body!!.opplastingsStatus)
 
 		val vedleggN6 = getSoknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
-		val patchVedleggN6 = PatchVedleggDto(null, OpplastingsStatusDto.sendesAvAndre)
+		val patchVedleggN6 = PatchVedleggDto(null, OpplastingsStatusDto.ikkeValgt)
 		val patchRequestN6 = HttpEntity(patchVedleggN6, createHeaders(token))
 		val patchResponseN6 = restTemplate.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggN6.id}", HttpMethod.PATCH,
@@ -134,7 +136,21 @@ class SkjemaRestApiTest {
 		)
 
 		assertTrue(patchResponseN6.body != null)
-		assertEquals(OpplastingsStatusDto.sendesAvAndre, patchResponseN6.body!!.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.ikkeValgt, patchResponseN6.body!!.opplastingsStatus)
+		assertEquals(vedleggN6.id, patchResponseN6.body!!.id)
+
+		val multipart = LinkedMultiValueMap<Any, Any>()
+		multipart.add("file", ClassPathResource("/litenPdf.pdf"))
+
+		val postFilRequestN6 = HttpEntity(multipart, createHeaders(token, MediaType.MULTIPART_FORM_DATA))
+		val postFilResponseN6 = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggN6.id}/fil", HttpMethod.POST,
+			postFilRequestN6, FilDto::class.java
+		)
+
+		assertEquals(HttpStatus.CREATED, postFilResponseN6.statusCode)
+		assertTrue(postFilResponseN6.body != null)
+		assertEquals(Mimetype.applicationSlashPdf, postFilResponseN6.body!!.mimetype)
 
 		///frontend/v1/sendInn/{innsendingsId}
 		val sendInnRespons = restTemplate.exchange(
@@ -144,7 +160,7 @@ class SkjemaRestApiTest {
 
 		assertTrue(sendInnRespons.statusCode == HttpStatus.OK && sendInnRespons.body != null)
 		val kvitteringsDto = sendInnRespons.body
-		assertEquals(2, kvitteringsDto!!.skalSendesAvAndre!!.size)
+		assertEquals(1, kvitteringsDto!!.skalSendesAvAndre!!.size)
 		assertTrue(kvitteringsDto.hoveddokumentRef != null)
 
 		assertThrows<Exception> {
