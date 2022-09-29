@@ -152,7 +152,7 @@ class SoknadService(
 		skjemaService.hentSkjemaEllerVedlegg(nr, spraak)
 	} catch (re: SanityException) {
 		if (kastException) {
-			throw ResourceNotFoundException(re.arsak, re.message ?: "")
+			throw ResourceNotFoundException(re.arsak, re.message ?: "", "errorCode.resourceNotFound.schemaNotFound")
 		} else {
 			logger.warn("Skjemanr=$nr ikke funnet i Sanity. Fortsetter behandling")
 			KodeverkSkjema()
@@ -243,14 +243,15 @@ class SoknadService(
 			repo.finnNyesteSoknadGittEttersendingsId(ettersendingsId)
 		} catch (ex: Exception) {
 			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.OPPRETT.name, "Ukjent")
-			throw BackendErrorException(ex.message, "Feil ved henting av søknad $ettersendingsId")
+			throw BackendErrorException(ex.message, "Feil ved henting av søknad $ettersendingsId", "errorCode.backendError.applicationFetchError")
 		}
 
 		if (soknadDbDataList.isEmpty()) {
 			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.OPPRETT.name, "Ukjent")
 			throw ResourceNotFoundException(
 				"Kan ikke opprette søknad for ettersending",
-				"Soknad med id $ettersendingsId som det skal ettersendes data for ble ikke funnet"
+				"Soknad med id $ettersendingsId som det skal ettersendes data for ble ikke funnet",
+				"errorCode.resourceNotFound.applicationUnknown"
 			)
 		}
 
@@ -418,7 +419,7 @@ class SoknadService(
 		}
 		logger.error("Fant ikke matchende lagret vedlegg med innsendt vedlegg")
 		throw BackendErrorException("Fant ikke matchende lagret vedlegg ${lagretVedleggDto.tittel} med innsendt vedlegg, er variant = ${lagretVedleggDto.erVariant}",
-			"Feil ved lagring av dokument ${lagretVedleggDto.tittel}, prøv igjen")
+			"Feil ved lagring av dokument ${lagretVedleggDto.tittel}, prøv igjen", "errorCode.backendError.fileInconsistencyError")
 	}
 
 	private fun filExtention(mimetype: Mimetype?): String =
@@ -471,14 +472,15 @@ class SoknadService(
 			return hentAlleVedlegg(soknadDbDataOpt.get())
 		}
 		innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.HENT.name, "Ukjent")
-		throw ResourceNotFoundException(null, "Ingen soknad med id = $ident funnet")
+		throw ResourceNotFoundException(null, "Ingen soknad med id = $ident funnet", "errorCode.resourceNotFound.applicationNotFound")
 	}
 
 	private fun hentAlleVedlegg(soknadDbData: SoknadDbData): DokumentSoknadDto {
 		val vedleggDbDataListe = try {
 			repo.hentAlleVedleggGittSoknadsid(soknadDbData.id!!)
 		} catch (ex: Exception) {
-			throw ResourceNotFoundException("Ved oppretting av søknad skal det minimum være opprettet et vedlegg for selve søknaden", "Fant ingen vedlegg til soknad ${soknadDbData.innsendingsid}")
+			throw ResourceNotFoundException("Ved oppretting av søknad skal det minimum være opprettet et vedlegg for selve søknaden",
+				"Fant ingen vedlegg til soknad ${soknadDbData.innsendingsid}", "errorCode.resourceNotFound.noAttachmentsFound")
 		}
 		return lagDokumentSoknadDto(soknadDbData, vedleggDbDataListe)
 	}
@@ -487,7 +489,7 @@ class SoknadService(
 	fun hentVedleggDto(vedleggsId: Long): VedleggDto  {
 		val vedleggDbDataOpt = repo.hentVedlegg(vedleggsId)
 		if (!vedleggDbDataOpt.isPresent)
-			throw ResourceNotFoundException(null, "Vedlegg med id $vedleggsId ikke funnet")
+			throw ResourceNotFoundException(null, "Vedlegg med id $vedleggsId ikke funnet", "errorCode.resourceNotFound.attachmentNotFound")
 
 		return lagVedleggDto(vedleggDbDataOpt.get())
 	}
@@ -498,20 +500,23 @@ class SoknadService(
 			when (soknadDto.status.name) {
 				SoknadsStatusDto.innsendt.name -> throw IllegalActionException(
 					"Innsendte søknader kan ikke endres. Ønsker søker å gjøre oppdateringer, så må vedkommende ettersende dette",
-					"Søknad ${soknadDto.innsendingsId} er sendt inn og nye filer kan ikke lastes opp på denne. Opprett ny søknad for ettersendelse av informasjon")
+					"Søknad ${soknadDto.innsendingsId} er sendt inn og nye filer kan ikke lastes opp på denne. Opprett ny søknad for ettersendelse av informasjon",
+					"errorCode.illegalAction.applicationSentInOrDeleted")
 				SoknadsStatusDto.slettetAvBruker.name, SoknadsStatusDto.automatiskSlettet.name -> throw IllegalActionException(
 					"Søknader markert som slettet kan ikke endres. Søker må eventuelt opprette ny søknad",
-					"Søknaden er slettet og ingen filer kan legges til")
+					"Søknaden er slettet og ingen filer kan legges til",
+					"errorCode.illegalAction.applicationSentInOrDeleted")
 				else -> {
-					throw IllegalActionException(
+					throw BackendErrorException(
 						"Ukjent status ${soknadDto.status.name}",
-						"Lagring av filer på søknad med status ${soknadDto.status.name} er ikke håndtert")
+						"Lagring av filer på søknad med status ${soknadDto.status.name} er ikke håndtert",
+						"errorCode.backendError.fileSaveError")
 				}
 			}
 		}
 
 		if (soknadDto.vedleggsListe.none { it.id == filDto.vedleggsid })
-			throw ResourceNotFoundException(null, "Vedlegg $filDto.vedleggsid til søknad ${soknadDto.innsendingsId} eksisterer ikke")
+			throw ResourceNotFoundException(null, "Vedlegg $filDto.vedleggsid til søknad ${soknadDto.innsendingsId} eksisterer ikke", "errorCode.resourceNotFound.attachmentNotFound")
 
 		val savedFilDbData = try {
 			repo.saveFilDbData(soknadDto.innsendingsId!!, mapTilFilDb(filDto))
@@ -527,7 +532,7 @@ class SoknadService(
 	fun hentFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long): FilDto {
 		// Sjekk om vedlegget eksisterer
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
-			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
+			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke", "errorCode.resourceNotFound.attachmentNotFound")
 
 		val filDbDataOpt = repo.hentFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
 
@@ -540,7 +545,7 @@ class SoknadService(
 					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
 					"Søknaden er slettet og ingen filer er tilgjengelig")
 				else -> {
-					throw ResourceNotFoundException(null, "Det finnes ikke fil med id=$filId for søknad ${soknadDto.innsendingsId}")
+					throw ResourceNotFoundException(null, "Det finnes ikke fil med id=$filId for søknad ${soknadDto.innsendingsId}", "errorCode.resourceNotFound.fileNotFound")
 				}
 			}
 
@@ -555,7 +560,7 @@ class SoknadService(
 	fun hentFiler(soknadDto: DokumentSoknadDto, innsendingsId: String, vedleggsId: Long, medFil: Boolean = false, kastFeilNarNull: Boolean = false): List<FilDto> {
 		// Sjekk om vedlegget eksisterer for soknad
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
-			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad $innsendingsId eksisterer ikke")
+			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad $innsendingsId eksisterer ikke", "errorCode.resourceNotFound.attachmentNotFound")
 
 		val filDbDataList = repo.hentFilerTilVedlegg(innsendingsId, vedleggsId)
 		if (filDbDataList.isEmpty() && kastFeilNarNull )
@@ -567,7 +572,7 @@ class SoknadService(
 					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
 					"Søknaden er slettet og ingen filer er tilgjengelig")
 				else -> {
-					throw ResourceNotFoundException(null, "Ingen filer funnet for oppgitt vedlegg $vedleggsId til søknad $innsendingsId")
+					throw ResourceNotFoundException(null, "Ingen filer funnet for oppgitt vedlegg $vedleggsId til søknad $innsendingsId", "errorCode.resourceNotFound.fileNotFound")
 				}
 			}
 
@@ -586,9 +591,9 @@ class SoknadService(
 	fun slettFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long): VedleggDto {
 		// Sjekk om vedlegget eksisterer
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
-			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
+			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke", "errorCode.resourceNotFound.attachmentNotFound")
 		if (repo.hentFilDb(soknadDto.innsendingsId!!, vedleggsId, filId ).isEmpty)
-			throw ResourceNotFoundException(null, "Fil $filId på vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
+			throw ResourceNotFoundException(null, "Fil $filId på vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke", "errorCode.resourceNotFound.fileNotFound")
 
 		repo.slettFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
 		if (repo.hentFilerTilVedlegg(soknadDto.innsendingsId!!, vedleggsId).isEmpty()) {
@@ -712,7 +717,7 @@ class SoknadService(
 		val oppdatertVedlegg = repo.oppdaterVedlegg(soknadDto.innsendingsId!!, oppdaterVedleggDb(vedleggDbData, patchVedleggDto))
 
 		if (oppdatertVedlegg.isEmpty) {
-			throw BackendErrorException(null, "Vedlegg er ikke blitt oppdatert")
+			throw BackendErrorException(null, "Vedlegg er ikke blitt oppdatert", "errorCode.backendError.attachmentUpdateError")
 		}
 
 		// Oppdater soknadens sist endret dato
@@ -743,7 +748,7 @@ class SoknadService(
 				"Søknad ${soknadDto.innsendingsId} kan ikke endres da den allerede er innsendt")
 
 		val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
-			?: throw ResourceNotFoundException(null, "Angitt vedlegg $vedleggsId eksisterer ikke for søknad ${soknadDto.innsendingsId}")
+			?: throw ResourceNotFoundException(null, "Angitt vedlegg $vedleggsId eksisterer ikke for søknad ${soknadDto.innsendingsId}", "errorCode.resourceNotFound.attachmentNotFound")
 
 		if (vedleggDto.erHoveddokument)
 			throw IllegalActionException("Søknaden må alltid ha sitt hovedskjema", "Kan ikke slette hovedskjema på en søknad")
@@ -788,7 +793,7 @@ class SoknadService(
 			fillagerAPI.lagreFiler(soknadDto.innsendingsId!!, opplastedeVedlegg)
 		} catch (ex: Exception) {
 			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
-			throw BackendErrorException(ex.message, "Feil ved sending av filer for søknad ${soknadDto.innsendingsId} til NAV")
+			throw BackendErrorException(ex.message, "Feil ved sending av filer for søknad ${soknadDto.innsendingsId} til NAV", "errorCode.backendError.sendToNAVError")
 		}
 
 		// send soknadmetada til soknadsmottaker
@@ -797,7 +802,7 @@ class SoknadService(
 		} catch (ex: Exception) {
 			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
 			logger.error("${soknadDto.innsendingsId}: Feil ved sending av søknad til soknadsmottaker ${ex.message}")
-			throw BackendErrorException(ex.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV")
+			throw BackendErrorException(ex.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV", "errorCode.backendError.sendToNAVError")
 		}
 
 		// Slett alle opplastede vedlegg untatt søknaden dersom ikke ettersendingssøknad, som er sendt til soknadsfillager.
@@ -811,14 +816,14 @@ class SoknadService(
 			repo.flushVedlegg()
 		} catch (ex: Exception) {
 			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
-			throw BackendErrorException(ex.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV")
+			throw BackendErrorException(ex.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV", "errorCode.backendError.sendToNAVError")
 		}
 
 		try {
 			repo.soknadSaveAndFlush(mapTilSoknadDb(soknadDto, soknadDto.innsendingsId!!, SoknadsStatus.Innsendt ))
 		} catch (ex: Exception) {
 			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
-			throw BackendErrorException(ex.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV")
+			throw BackendErrorException(ex.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV", "errorCode.backendError.sendToNAVError")
 		}
 		// send brukernotifikasjon ved endring av søknadsstatus til innsendt
 		val innsendtSoknadDto = hentSoknad(soknadDto.innsendingsId!!)
@@ -842,7 +847,7 @@ class SoknadService(
 			PdfGenerator().lagForsideEttersending(soknadDto)
 		} catch (ex: Exception) {
 			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
-			throw BackendErrorException(ex.message, "Feil ved generering av forside for ettersendingssøknad ${soknadDto.innsendingsId}")
+			throw BackendErrorException(ex.message, "Feil ved generering av forside for ettersendingssøknad ${soknadDto.innsendingsId}", "errorCode.backendError.sendToNAVError")
 		}
 		val hovedDokumentDto = soknadDto.vedleggsListe.firstOrNull { it.erHoveddokument && !it.erVariant }
 			?: lagVedleggDto(opprettHovedddokumentVedlegg(
@@ -862,7 +867,8 @@ class SoknadService(
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
-			"Feil i lagring av informasjon om søknad ${dokumentSoknadDto.tittel} til Ditt NAV"
+			"Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}",
+			"errorCode.backendError.sendToNAVError"
 		)
 	}
 
@@ -937,7 +943,8 @@ class SoknadService(
 			if (!harFil) {
 				throw IllegalActionException(
 					"Søker må ha lastet opp dokumenter til søknaden for at den skal kunne sendes inn",
-					"Innsending avbrutt da hoveddokument ikke finnes"
+					"Innsending avbrutt da hoveddokument ikke finnes",
+					"errorCode.illegalAction.sendInErrorNoApplication"
 				)
 			}
 		} else {
@@ -958,7 +965,8 @@ class SoknadService(
 				} else {
 					throw IllegalActionException(
 						"Søker må ha ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
-						"Innsending avbrutt da ingen vedlegg er lastet opp")
+						"Innsending avbrutt da ingen vedlegg er lastet opp",
+						"errorCode.illegalAction.sendInErrorNoChange")
 				}
 			}
 		}

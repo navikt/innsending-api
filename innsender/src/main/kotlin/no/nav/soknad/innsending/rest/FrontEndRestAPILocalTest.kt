@@ -239,7 +239,7 @@ class FrontEndRestAPILocalTest(
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
 			val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
-				?: throw ResourceNotFoundException("", "Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId")
+				?: throw ResourceNotFoundException("", "Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId", "errorCode.resourceNotFound.attachmentNotFound")
 			logger.info("$innsendingsId: Hentet vedlegg $vedleggsId til søknad")
 			return ResponseEntity
 				.status(HttpStatus.OK)
@@ -290,10 +290,10 @@ class FrontEndRestAPILocalTest(
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
 			if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
-				throw ResourceNotFoundException(null, "Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId")
+				throw ResourceNotFoundException(null, "Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId", "errorCode.resourceNotFound.attachmentNotFound")
 
 			// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
-			if (!file.isReadable) throw IllegalActionException("Ingen fil opplastet", "Opplasting feilet")
+			if (!file.isReadable) throw IllegalActionException("Ingen fil opplastet", "Opplasting feilet", "errorCode.illegalAction.fileCannotBeRead")
 			val opplastet = (file as ByteArrayResource).byteArray
 			Validerer().validereFilformat(listOf(opplastet))
 			// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
@@ -337,7 +337,7 @@ class FrontEndRestAPILocalTest(
 	}
 
 	private fun mapTilResource(filDto: FilDto): Resource {
-		if (filDto.data == null) throw ResourceNotFoundException("Fant ikke fil", "Fant ikke angitt fil på ${filDto.id}")
+		if (filDto.data == null) throw ResourceNotFoundException("Fant ikke fil", "Fant ikke angitt fil på ${filDto.id}", "errorCode.resourceNotFound.fileNotFound")
 		return ByteArrayResource(filDto.data!!)
 	}
 

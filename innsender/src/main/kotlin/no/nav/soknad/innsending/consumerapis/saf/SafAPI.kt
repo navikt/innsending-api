@@ -66,7 +66,7 @@ class SafAPI(
 				}
 			} catch (ex: Exception) {
 				logger.warn("hentBrukersSakerIArkivet feilet med ${ex.message}.")
-				throw BackendErrorException(ex.message, "Henting av brukers innsendte søknader feilet")
+				throw BackendErrorException(ex.message, "Henting av brukers innsendte søknader feilet", "errorCode.backendError.safError")
 			}
 		}
 	}

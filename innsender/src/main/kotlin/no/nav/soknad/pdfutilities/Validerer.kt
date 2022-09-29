@@ -20,18 +20,18 @@ class Validerer() {
 			try {
 				erGyldig(file)
 			} catch (e: Exception) {
-				throw IllegalActionException("Opplastet fil er ikke lesbar", "Kan ikke laste opp kryptert fil"
+				throw IllegalActionException("Opplastet fil er ikke lesbar", "Kan ikke laste opp kryptert fil", "errorCode.illegalAction.fileCannotBeRead"
 				)
 			}
 		} else if (!isImage(file)) {
-			throw IllegalActionException("Ugyldig filtype for opplasting", "Kan kun laste opp filer av type PDF, PNG og IMG"
+			throw IllegalActionException("Ugyldig filtype for opplasting", "Kan kun laste opp filer av type PDF, JPEG, PNG og IMG", "errorCode.illegalAction.notSupportedFileFormat"
 			)
 		}
 	}
 
 	fun validerStorrelse(opplastet: Long, max: Long) {
 		if (opplastet > max*1024*1024) {
-			throw IllegalActionException("Ulovlig filstørrelse", "Opplastede fil(er) er større enn maksimalt tillatt")
+			throw IllegalActionException("Ulovlig filstørrelse", "Opplastede fil(er) er større enn maksimalt tillatt", "errorCode.illegalAction.fileSizeSumTooLarge")
 		}
 	}
 
@@ -42,14 +42,14 @@ class Validerer() {
 			logger.error(
 				"Klarte ikke å sjekke om vedlegget er gyldig {}",	e.message
 			)
-			throw IllegalActionException("Ukjent filtype", "Klarte ikke å sjekke om vedlegget er gyldig")
+			throw IllegalActionException("Ukjent filtype", "Klarte ikke å sjekke om vedlegget er gyldig", "errorCode.illegalAction.notSupportedFileFormat")
 		}
 	}
 
 	private fun erGyldigPdDocument(document: PDDocument) {
 		if (document.isEncrypted()) {
 			logger.error("Opplasting av vedlegg feilet da PDF er kryptert")
-			throw IllegalActionException("Opplastet fil er ikke lesbar", "Kan ikke laste opp kryptert fil")
+			throw IllegalActionException("Opplastet fil er ikke lesbar", "Kan ikke laste opp kryptert fil", "errorCode.illegalAction.fileCannotBeRead")
 		}
 	}
 

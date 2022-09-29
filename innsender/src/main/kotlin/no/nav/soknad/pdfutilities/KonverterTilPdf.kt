@@ -35,7 +35,7 @@ class KonverterTilPdf {
 		} else if (FiltypeSjekker().isImage(fil)) {
 			return createPDFFromImage(fil)
 		}
-		throw IllegalActionException("","Ulovlig filformat. Kan ikke konvertere til PDF")
+		throw IllegalActionException("","Ulovlig filformat. Kan ikke konvertere til PDF", "errorCode.illegalAction.notSupportedFileFormat")
 	}
 
 	fun harSkrivbareFelt(input: ByteArray?): Boolean {
@@ -47,7 +47,7 @@ class KonverterTilPdf {
 				}
 			}
 		} catch (e: Exception) {
-			throw BackendErrorException(e.message, "Feil ved mottak av opplastet fil")
+			throw BackendErrorException(e.message, "Feil ved mottak av opplastet fil", "errorCode.backendError.FileUploadError")
 		}
 	}
 
@@ -91,10 +91,10 @@ class KonverterTilPdf {
 			}
 		} catch (ioe: IOException) {
 			logger.error("Klarte ikke å sjekke filtype til PDF. Feil: '{}'", ioe.message)
-			throw RuntimeException("vedlegg.opplasting.feil.generell")
+			throw BackendErrorException(ioe.message, "Feil ved mottak av opplastet fil", "errorCode.backendError.FileUploadError")
 		} catch (t: Throwable) {
 			logger.error("Klarte ikke å sjekke filtype til PDF. Feil: '{}'", t)
-			throw RuntimeException("vedlegg.opplasting.feil.generell")
+			throw BackendErrorException(t.message, "Feil ved mottak av opplastet fil", "errorCode.backendError.FileUploadError")
 		}
 	}
 
