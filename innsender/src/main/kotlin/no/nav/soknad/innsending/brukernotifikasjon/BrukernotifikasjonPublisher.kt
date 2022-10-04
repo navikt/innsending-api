@@ -88,7 +88,7 @@ class BrukernotifikasjonPublisher(
 
 	private fun tittelPrefixGittSprak(ettersendelse: Boolean, sprak: String): String {
 		return if (ettersendelse)
-			tittelPrefixEttersendelse[sprak] ?: tittelPrefixEttersendelse["nb"]!!
+			tittelPrefixEttersendelse[sprak] ?: tittelPrefixEttersendelse["no"]!!
 		else tittelPrefixNySoknad[sprak] ?: tittelPrefixNySoknad["no"]!!
 	}
 
