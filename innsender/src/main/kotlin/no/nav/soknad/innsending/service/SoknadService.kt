@@ -446,6 +446,9 @@ class SoknadService(
 			publiserBrukernotifikasjon(dokumentSoknadDto)
 
 			innsenderMetrics.applicationCounterInc(InnsenderOperation.OPPRETT.name, dokumentSoknadDto.tema)
+			logger.info("opprettEttersendingsSoknad: Opprettet ${dokumentSoknadDto.innsendingsId} basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
+				"Med vedleggsstatus ${dokumentSoknadDto.vedleggsListe.map { it.vedleggsnr+':'+it.opplastingsStatus }.toList()}")
+
 			return dokumentSoknadDto
 		} catch (e: Exception) {
 			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.OPPRETT.name, nyesteSoknad.tema)
