@@ -562,7 +562,11 @@ class SoknadService(
 			throw ResourceNotFoundException("Ved oppretting av søknad skal det minimum være opprettet et vedlegg for selve søknaden",
 				"Fant ingen vedlegg til soknad ${soknadDbData.innsendingsid}", "errorCode.resourceNotFound.noAttachmentsFound")
 		}
-		return lagDokumentSoknadDto(soknadDbData, vedleggDbDataListe)
+		val dokumentSoknadDto = lagDokumentSoknadDto(soknadDbData, vedleggDbDataListe)
+		logger.debug("hentAlleVedlegg: Hentet ${dokumentSoknadDto.innsendingsId}. " +
+			"Med vedleggsstatus ${dokumentSoknadDto.vedleggsListe.map { it.vedleggsnr+':'+it.opplastingsStatus }.toList()}")
+
+		return dokumentSoknadDto
 	}
 
 	// Hent vedlegg, merk filene knyttet til vedlegget ikke lastes opp
