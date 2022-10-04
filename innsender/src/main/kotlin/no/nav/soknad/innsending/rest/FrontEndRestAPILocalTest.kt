@@ -130,38 +130,38 @@ class FrontEndRestAPILocalTest(
 				if (innsendteSoknader[0].innsendingsId == arkiverteSoknader[0].innsendingsId ||
 					innsendteSoknader[0].innsendtDato!!.isAfter(arkiverteSoknader[0].innsendtDato)
 				) {
-					soknadService.opprettSoknadForettersendingAvVedlegg(
-						brukerId,
-						if (innsendteSoknader[0].ettersendingsId != null && innsendteSoknader[0].ettersendingsId != ukjentEttersendingsId)
-							innsendteSoknader[0].ettersendingsId!!
-						else innsendteSoknader[0].innsendingsId!!
+					soknadService.opprettSoknadForettersendingAvVedleggGittSoknadOgVedlegg(
+						brukerId = brukerId,
+						nyesteSoknad = innsendteSoknader[0],
+						sprak = opprettEttersendingGittSkjemaNr.sprak,
+						vedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
 					)
 				} else {
 					// Det er blitt sendt inn en søknad en annen vei til arkivet, knytt ettersendingen til denne ved å liste innsendte dokumenter
 					// Opprett en ettersendingssøknad med innsendte vedlegg fra arkiverteSoknader[0]+ eventuelle ekstra vedlegg fra input.
-					soknadService.opprettSoknadForEttersendingAvVedleggGittArkivertSoknad(
-						brukerId,
-						arkiverteSoknader[0],
-						finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
-						opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
+					soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(
+						brukerId = brukerId,
+						arkivertSoknad = arkiverteSoknader[0],
+						sprak = opprettEttersendingGittSkjemaNr.sprak,
+						vedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
 					)
 				}
 			} else {
-				soknadService.opprettSoknadForettersendingAvVedlegg(
-					brukerId,
-					if (innsendteSoknader[0].ettersendingsId != null && innsendteSoknader[0].ettersendingsId != ukjentEttersendingsId)
-						innsendteSoknader[0].ettersendingsId!!
-					else innsendteSoknader[0].innsendingsId!!
+				soknadService.opprettSoknadForettersendingAvVedleggGittSoknadOgVedlegg(
+					brukerId = brukerId,
+					nyesteSoknad = innsendteSoknader[0],
+					sprak = opprettEttersendingGittSkjemaNr.sprak,
+					vedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
 				)
 			}
 		} else if (arkiverteSoknader.isNotEmpty()) {
 			// Det er blitt sendt inn en søknad en annen vei til arkivet, knytt ettersendingen til denne ved å liste innsendte dokumenter
 			// Opprett en ettersendingssøknad med innsendte vedlegg fra arkiverteSoknader[0]+ eventuelle ekstra vedlegg fra input.
-			soknadService.opprettSoknadForEttersendingAvVedleggGittArkivertSoknad(
-				brukerId,
-				arkiverteSoknader[0],
-				finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
-				opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
+			soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(
+				brukerId = brukerId,
+				arkivertSoknad = arkiverteSoknader[0],
+				sprak = opprettEttersendingGittSkjemaNr.sprak,
+				vedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
 			)
 		} else {
 			soknadService.opprettSoknadForEttersendingGittSkjemanr(

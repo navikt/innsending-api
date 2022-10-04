@@ -5,6 +5,7 @@ import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
 import io.mockk.slot
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
+import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.skjema.SkjemaClient
 import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
@@ -14,6 +15,7 @@ import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
+import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.pdfutilities.PdfGenerator
 import org.junit.jupiter.api.Assertions.*
@@ -25,6 +27,7 @@ import java.io.ByteArrayOutputStream
 import java.time.OffsetDateTime
 import java.util.*
 import org.junit.jupiter.api.*
+import java.time.LocalDateTime
 
 
 @SpringBootTest
@@ -310,6 +313,58 @@ class SoknadServiceTest {
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 	}
+
+	@Test
+	fun opprettSoknadForEttersendingGittSoknadOgVedleggTest() {
+
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+
+		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1", "C1", "L8"))
+
+		soknadService.lagreFil(dokumentSoknadDto, lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument }))
+		soknadService.lagreFil(dokumentSoknadDto, lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.vedleggsnr== "W1" }))
+
+		val kvitteringsDto = testOgSjekkInnsendingAvSoknad(soknadService, dokumentSoknadDto)
+		assertTrue(kvitteringsDto.hoveddokumentRef != null )
+		assertTrue(kvitteringsDto.innsendteVedlegg!!.isNotEmpty() )
+		assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty() )
+
+		val innsendtSoknadDto = soknadService.hentSoknad(dokumentSoknadDto.innsendingsId!!)
+
+		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedleggGittSoknadOgVedlegg(brukerId = testpersonid, nyesteSoknad = innsendtSoknadDto, sprak = "nb_NO", vedleggsnrListe = listOf("N6", "W1"))
+
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
+		assertTrue(ettersendingsSoknadDto.innsendingsId != null  && VisningsType.ettersending == ettersendingsSoknadDto.visningsType && ettersendingsSoknadDto.ettersendingsId==dokumentSoknadDto.innsendingsId )
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
+		assertEquals(4, ettersendingsSoknadDto.vedleggsListe.size)
+		assertTrue(!ettersendingsSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == dokumentSoknadDto.skjemanr })
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "N6" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "W1" && it.opplastingsStatus == OpplastingsStatusDto.innsendt })
+
+	}
+
+
+	@Test
+	fun opprettSoknadForEttersendingGittArkivertSoknadOgVedleggTest() {
+
+		val brukerid = testpersonid
+		val skjemanr = "NAV 10-07.20"
+		val spraak = "nb_NO"
+		val arkivertSoknad = AktivSakDto(skjemanr,  "Tittel", "Tema", OffsetDateTime.now(), false, listOf(InnsendtVedleggDto(skjemanr, "Tittel")), Utilities.laginnsendingsId() )
+
+		val soknadService = SoknadService(skjemaService, repo, brukernotifikasjonPublisher , fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics)
+		val dokumentSoknadDto = soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(brukerid, arkivertSoknad, listOf("C1", "L8"),	spraak )
+
+		assertTrue(dokumentSoknadDto.innsendingsId != null  && VisningsType.ettersending == dokumentSoknadDto.visningsType && dokumentSoknadDto.ettersendingsId==arkivertSoknad.innsendingsId )
+		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
+		assertEquals(2, dokumentSoknadDto.vedleggsListe.size)
+		assertTrue(!dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })
+		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+	}
+
 
 	@Test
 	fun hentOpprettetVedlegg() {
