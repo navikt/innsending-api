@@ -176,6 +176,9 @@ class SoknadServiceTest {
 		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty() )
 		assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty() )
 
+		val soknader = soknadService.hentAktiveSoknader(listOf(dokumentSoknadDto.brukerId))
+		assertTrue(soknader.isNotEmpty())
+
 		// Oppretter ettersendingssoknad
 		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 

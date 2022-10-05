@@ -913,6 +913,12 @@ class SoknadService(
 		}
 		// send brukernotifikasjon ved endring av søknadsstatus til innsendt
 		val innsendtSoknadDto = hentSoknad(soknadDto.innsendingsId!!)
+		if (opplastedeVedlegg.isNotEmpty() && !opplastedeVedlegg.filter { !it.erHoveddokument }.isEmpty()) {
+			val opplastetVedleggDto = opplastedeVedlegg.first { !it.erHoveddokument }
+			if (!innsendtSoknadDto.vedleggsListe.any { it.id == opplastetVedleggDto.id }) {
+				logger.error("Sendinn: innsendtdato ikke satt på vedlegg med status innsendt.")
+			}
+		}
 		publiserBrukernotifikasjon(innsendtSoknadDto)
 
 		logger.info("${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes ${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size }")
