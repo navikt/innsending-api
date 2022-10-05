@@ -27,6 +27,9 @@ import org.springframework.http.HttpMethod
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.junit.jupiter.api.Assertions.*
+import org.springframework.core.ParameterizedTypeReference
+import org.springframework.http.HttpStatus
+import java.util.LinkedList
 
 @Suppress("DEPRECATION")
 @ActiveProfiles("test")
@@ -166,6 +169,72 @@ class FrontEndRestApiTest {
 		assertEquals("Endret tittel", patchedVedleggDto.tittel)
 		assertEquals(OpplastingsStatusDto.sendesAvAndre, patchedVedleggDto.opplastingsStatus)
 	}
+
+	private fun opprettEnSoknad(token: String, skjemanr: String, spraak: String, vedlegg: List<String>): DokumentSoknadDto {
+
+		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak, vedlegg)
+		val postRequestEntity =	HttpEntity(opprettSoknadBody, createHeaders(token))
+
+		val postResponse = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.POST,
+			postRequestEntity, DokumentSoknadDto::class.java
+		)
+
+		assertTrue(postResponse.body != null)
+		val opprettetSoknadDto = postResponse.body
+		assertTrue(opprettetSoknadDto!!.vedleggsListe.isNotEmpty())
+
+		return opprettetSoknadDto
+	}
+
+	private fun getToken(): String {
+		val token: String = mockOAuth2Server.issueToken(
+			tokenx,
+			MockLoginController::class.java.simpleName,
+			DefaultOAuth2TokenCallback(
+				tokenx,
+				subject,
+				JOSEObjectType.JWT.type,
+				listOf(audience),
+				mapOf("acr" to "Level4"),
+				expiry.toLong()
+			)
+		).serialize()
+		return token
+	}
+
+	@Test
+	fun hentSokersAktiveSoknaderTest() {
+		val token: String = getToken()
+
+		// Initiell liste
+		val soknaderInitRespons = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.GET,
+			HttpEntity<Unit>(createHeaders(token)), object : ParameterizedTypeReference<List<DokumentSoknadDto>>() {}
+		)
+		kotlin.test.assertTrue(soknaderInitRespons.statusCode == HttpStatus.OK && soknaderInitRespons.body != null)
+		val hentetInitListe = soknaderInitRespons.body
+
+		val forventetListe = LinkedList<DokumentSoknadDto>()
+
+		forventetListe.add(opprettEnSoknad(token = token, skjemanr = "NAV 95-00.11", spraak = "nb_NO", listOf("X2")))
+		forventetListe.add(opprettEnSoknad(token = token, skjemanr = "NAV 10-07.17", spraak = "nn_NO", listOf("X2", "M3")))
+
+		if (hentetInitListe != null) {
+			forventetListe.addAll(hentetInitListe)
+		}
+
+		// Test endepunkt for å hente opprettede aktive søknader
+		val soknaderRespons = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.GET,
+			HttpEntity<Unit>(createHeaders(token)), object : ParameterizedTypeReference<List<DokumentSoknadDto>>() {}
+		)
+		kotlin.test.assertTrue(soknaderRespons.statusCode == HttpStatus.OK && soknaderRespons.body != null)
+		val hentetListe = soknaderRespons.body
+		assertTrue(hentetListe != null)
+		assertTrue(forventetListe.size == hentetListe!!.size)
+
+	}
+
 
 	@Test
 	fun oppdrettVedleggTest() {
