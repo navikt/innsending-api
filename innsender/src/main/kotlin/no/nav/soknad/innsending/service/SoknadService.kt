@@ -412,7 +412,7 @@ class SoknadService(
 	): DokumentSoknadDto {
 		try {
 			logger.info("opprettEttersendingsSoknad: Skal opprette ettersendingssøknad basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
-				"Status for vedleggene til original søknad ${nyesteSoknad.vedleggsListe.map { it.vedleggsnr+':'+it.opplastingsStatus+':'+it.innsendtdato }.toList()}")
+				"Status for vedleggene til original søknad ${nyesteSoknad.vedleggsListe.map { it.vedleggsnr+':'+it.opplastingsStatus+':'+it.innsendtdato+':'+it.opprettetdato }.toList()}")
 
 			val savedEttersendingsSoknad  = opprettEttersendingsSoknad(brukerId = nyesteSoknad.brukerId, ettersendingsId = ettersendingsId,
 				tittel = nyesteSoknad.tittel, skjemanr = nyesteSoknad.skjemanr, tema = nyesteSoknad.tema, sprak = nyesteSoknad.spraak!!)
@@ -422,24 +422,26 @@ class SoknadService(
 				.map { v ->
 					repo.lagreVedlegg(
 						VedleggDbData(
-							null,
-							savedEttersendingsSoknad.id!!,
-							if (OpplastingsStatusDto.sendSenere == v.opplastingsStatus)
+							id = null,
+							soknadsid = savedEttersendingsSoknad.id!!,
+							status = if (OpplastingsStatusDto.sendSenere == v.opplastingsStatus)
 								OpplastingsStatus.IKKE_VALGT else mapTilDbOpplastingsStatus(v.opplastingsStatus),
-							v.erHoveddokument,
-							v.erVariant,
-							v.erPdfa,
-							v.erPakrevd,
-							v.vedleggsnr,
-							v.tittel,
-							v.label,
-							v.beskrivelse,
-							mapTilDbMimetype(v.mimetype),
-							UUID.randomUUID().toString(),
-							v.opprettetdato.toLocalDateTime(),
-							LocalDateTime.now(),
-							v.innsendtdato?.toLocalDateTime(),
-							if (v.vedleggsnr != null) hentSkjema(v.vedleggsnr!!, nyesteSoknad.spraak ?: "nb").url else null
+							erhoveddokument = v.erHoveddokument,
+							ervariant = v.erVariant,
+							erpdfa = v.erPdfa,
+							erpakrevd = v.erPakrevd,
+							vedleggsnr = v.vedleggsnr,
+							tittel = v.tittel,
+							label = v.label,
+							beskrivelse = v.beskrivelse,
+							mimetype = mapTilDbMimetype(v.mimetype),
+							uuid = UUID.randomUUID().toString(),
+							opprettetdato = v.opprettetdato.toLocalDateTime(),
+							endretdato = LocalDateTime.now(),
+							innsendtdato = if (v.opplastingsStatus == OpplastingsStatusDto.innsendt && v.innsendtdato == null)
+								nyesteSoknad.innsendtDato?.toLocalDateTime() else v.innsendtdato?.toLocalDateTime(),
+							vedleggsurl = if (v.vedleggsnr != null)
+								hentSkjema(v.vedleggsnr!!, nyesteSoknad.spraak ?: "nb").url else null
 						)
 					)
 				}
@@ -913,11 +915,9 @@ class SoknadService(
 		}
 		// send brukernotifikasjon ved endring av søknadsstatus til innsendt
 		val innsendtSoknadDto = hentSoknad(soknadDto.innsendingsId!!)
-		if (opplastedeVedlegg.isNotEmpty() && !opplastedeVedlegg.filter { !it.erHoveddokument }.isEmpty()) {
-			val opplastetVedleggDto = opplastedeVedlegg.first { !it.erHoveddokument }
-			if (!innsendtSoknadDto.vedleggsListe.any { it.id == opplastetVedleggDto.id }) {
-				logger.error("Sendinn: innsendtdato ikke satt på vedlegg med status innsendt.")
-			}
+		if (!opplastedeVedlegg.filter { !it.erHoveddokument }.isEmpty()) {
+			logger.info("Sendinn: innsendtdato på vedlegg med status innsendt= " +
+				"${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus==OpplastingsStatusDto.innsendt}.map { it.vedleggsnr+':'+it.innsendtdato }}")
 		}
 		publiserBrukernotifikasjon(innsendtSoknadDto)
 
