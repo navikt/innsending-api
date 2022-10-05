@@ -916,7 +916,7 @@ class SoknadService(
 		// send brukernotifikasjon ved endring av søknadsstatus til innsendt
 		val innsendtSoknadDto = hentSoknad(soknadDto.innsendingsId!!)
 		if (!opplastedeVedlegg.filter { !it.erHoveddokument }.isEmpty()) {
-			logger.info("Sendinn: innsendtdato på vedlegg med status innsendt= " +
+			logger.info("Sendinn: Innsendtdato på vedlegg med status innsendt= " +
 				"${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus==OpplastingsStatusDto.innsendt}.map { it.vedleggsnr+':'+it.innsendtdato }}")
 		}
 		publiserBrukernotifikasjon(innsendtSoknadDto)
