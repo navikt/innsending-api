@@ -1,9 +1,11 @@
 package no.nav.soknad.innsending.service
 
+import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.repository.*
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -15,6 +17,9 @@ class RepositoryUtils(
 	private val vedleggRepository: VedleggRepository,
 	private val filRepository: FilRepository
 ) {
+
+	private val logger = LoggerFactory.getLogger(BrukernotifikasjonPublisher::class.java)
+
 	fun hentSoknadDb(id: Long): Optional<SoknadDbData> = try {
 		soknadRepository.findById(id)
 	} catch (re: Exception) {
@@ -120,9 +125,15 @@ class RepositoryUtils(
 	fun oppdaterVedleggStatus(innsendingsId: String, vedleggsId: Long, opplastingsStatus: OpplastingsStatus, localDateTime: LocalDateTime) = try {
 		if (opplastingsStatus != OpplastingsStatus.INNSENDT)
 			vedleggRepository.updateStatus(id = vedleggsId, status = opplastingsStatus, endretdato = localDateTime)
-		else
+		else {
 			vedleggRepository.updateStatusAndInnsendtdato(
-				id = vedleggsId, status = opplastingsStatus, endretdato = localDateTime, innsendtdato = LocalDateTime.now())
+				id = vedleggsId, status = opplastingsStatus, endretdato = localDateTime, innsendtdato = LocalDateTime.now()
+			)
+			val vedleggDbDataOpt = vedleggRepository.findByVedleggsid(vedleggsId)
+			vedleggDbDataOpt.isPresent.let {
+				logger.info("Lagret vedleggDbData id=${vedleggDbDataOpt.get().id}, vedleggsnr=${vedleggDbDataOpt.get().vedleggsnr}, innsendingsdato=${vedleggDbDataOpt.get().innsendtdato} ")
+			}
+		}
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
