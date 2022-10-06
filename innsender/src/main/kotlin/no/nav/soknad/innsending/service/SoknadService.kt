@@ -855,7 +855,7 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): KvitteringsDto {
+	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto): List<List<VedleggDto>> {
 
 		// Det er ikke nødvendig å opprette og lagre kvittering(L7) i følge diskusjon 3/11.
 
@@ -915,24 +915,59 @@ class SoknadService(
 			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
 			throw BackendErrorException(ex.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV", "errorCode.backendError.sendToNAVError")
 		}
-		// send brukernotifikasjon ved endring av søknadsstatus til innsendt
-		val innsendtSoknadDto = hentSoknad(soknadDto.innsendingsId!!)
-		if (!opplastedeVedlegg.filter { !it.erHoveddokument }.isEmpty()) {
-			logger.info("Sendinn: innsendtdato på vedlegg med status innsendt= " +
-				"${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus==OpplastingsStatusDto.innsendt}.map { it.vedleggsnr+':'+it.innsendtdato }}")
+		return listOf(opplastedeVedlegg, manglendePakrevdeVedlegg)
+
+		/*
+				// send brukernotifikasjon ved endring av søknadsstatus til innsendt
+				val innsendtSoknadDto = hentSoknad(soknadDto.innsendingsId!!)
+				logger.info("${innsendtSoknadDto.innsendingsId}: Sendinn: innsendtdato på vedlegg med status innsendt= " +
+					"${innsendtSoknadDto.vedleggsListe.filter { it.opplastingsStatus==OpplastingsStatusDto.innsendt}.map { it.vedleggsnr+':'+it.innsendtdato }}")
+				publiserBrukernotifikasjon(innsendtSoknadDto)
+
+				logger.info("${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes ${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size }")
+				if (manglendePakrevdeVedlegg.isNotEmpty())  { // TODO avklare lage unntak for søknader på tema DAG?
+					logger.info("${soknadDtoInput.innsendingsId}: Skal opprette ettersendingssoknad")
+					opprettEttersendingsSoknad(innsendtSoknadDto, innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!)
+				}
+
+				val kvitteringsDto = lagKvittering(innsendtSoknadDto, opplastedeVedlegg, manglendePakrevdeVedlegg)
+				innsenderMetrics.applicationCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
+
+				return kvitteringsDto
+		*/
+
+	}
+
+	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): KvitteringsDto {
+		try {
+			val opplastetOgManglende = sendInnSoknadStart(soknadDtoInput)
+
+			// send brukernotifikasjon ved endring av søknadsstatus til innsendt
+			val innsendtSoknadDto = hentSoknad(soknadDtoInput.innsendingsId!!)
+			logger.info("${innsendtSoknadDto.innsendingsId}: Sendinn: innsendtdato på vedlegg med status innsendt= " +
+				"${
+					innsendtSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }
+						.map { it.vedleggsnr + ':' + it.innsendtdato }
+				}"
+			)
+			publiserBrukernotifikasjon(innsendtSoknadDto)
+
+			logger.info("${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes ${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size}")
+			if (opplastetOgManglende[1].isNotEmpty()) { // TODO avklare lage unntak for søknader på tema DAG?
+				logger.info("${soknadDtoInput.innsendingsId}: Skal opprette ettersendingssoknad")
+				opprettEttersendingsSoknad(
+					innsendtSoknadDto,
+					innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!
+				)
+			}
+
+			val kvitteringsDto = lagKvittering(innsendtSoknadDto, opplastetOgManglende[0], opplastetOgManglende[1])
+
+			return kvitteringsDto
+		} finally {
+			innsenderMetrics.applicationCounterInc(InnsenderOperation.SEND_INN.name, soknadDtoInput.tema)
 		}
-		publiserBrukernotifikasjon(innsendtSoknadDto)
 
-		logger.info("${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes ${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size }")
-		if (manglendePakrevdeVedlegg.isNotEmpty())  { // TODO avklare lage unntak for søknader på tema DAG?
-			logger.info("${soknadDtoInput.innsendingsId}: Skal opprette ettersendingssoknad")
-			opprettEttersendingsSoknad(innsendtSoknadDto, innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!)
-		}
-
-		val kvitteringsDto = lagKvittering(innsendtSoknadDto, opplastedeVedlegg, manglendePakrevdeVedlegg)
-		innsenderMetrics.applicationCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
-
-		return kvitteringsDto
 	}
 
 	private fun opprettOgLagreDummyHovedDokument(soknadDto: DokumentSoknadDto): DokumentSoknadDto {
