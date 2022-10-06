@@ -966,6 +966,11 @@ components:
         tittel:
           $ref: "#/components/schemas/Tittel"
 
+    PropertyNavn:
+      type: string
+      description: Nøkkelnavn på property. Brukt på vedlegg av type Annet (skjemanr=N6), for å sjekke om dette er default Annet vedlegg eller ikke
+      example: annenDokumentasjon,  tilleggsVedleggForSkjemaXX.
+
     SkjemaDokumentDto:
       type: object
       required:
@@ -988,6 +993,8 @@ components:
           $ref: "#/components/schemas/Pakrevd"
         document:
           $ref: "#/components/schemas/Document"
+        propertyNavn:
+          $ref: "#/components/schemas/PropertyNavn"
 
     SkjemaDto:
       type: object
