@@ -138,6 +138,20 @@ class RepositoryUtils(
 		)
 	}
 
+	fun oppdaterVedleggStatusOgInnsendtdato(innsendingsId: String, vedleggsId: Long, opplastingsStatus: OpplastingsStatus,
+																					endretDato: LocalDateTime, innsendtDato: LocalDateTime) = try {
+		logger.info("oppdaterVedleggStatusOgInnsendtdato: vedlegg=$vedleggsId, innsendtdato=$innsendtDato ")
+		vedleggRepository.updateStatusAndInnsendtdato(
+			id = vedleggsId, status = opplastingsStatus, endretdato = endretDato, innsendtdato = innsendtDato
+		)
+	} catch (ex: Exception) {
+		throw BackendErrorException(
+			ex.message,
+			"Feil ved oppdatering av status for vedlegg $vedleggsId for søknad $innsendingsId",
+			"errorCode.backendError.attachmentSaveError"
+		)
+	}
+
 	fun slettVedlegg(vedleggsId: Long) =
 		try {
 			vedleggRepository.deleteById(vedleggsId)
