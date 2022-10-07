@@ -139,11 +139,15 @@ class RepositoryUtils(
 	}
 
 	fun oppdaterVedleggStatusOgInnsendtdato(innsendingsId: String, vedleggsId: Long, opplastingsStatus: OpplastingsStatus,
-																					endretDato: LocalDateTime, innsendtDato: LocalDateTime) = try {
+																					endretDato: LocalDateTime, innsendtDato: LocalDateTime): Int = try {
 		logger.info("oppdaterVedleggStatusOgInnsendtdato: vedlegg=$vedleggsId, innsendtdato=$innsendtDato ")
-		vedleggRepository.updateStatusAndInnsendtdato(
+		val raderEndret = vedleggRepository.updateStatusAndInnsendtdato(
 			id = vedleggsId, status = opplastingsStatus, endretdato = endretDato, innsendtdato = innsendtDato
 		)
+		if (raderEndret != 1) {
+			logger.error("$innsendingsId: oppdaterVedleggStatusOgInnsendtdato: uventet antall, $raderEndret, rader endret for vedlegg $vedleggsId")
+		}
+		raderEndret
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
