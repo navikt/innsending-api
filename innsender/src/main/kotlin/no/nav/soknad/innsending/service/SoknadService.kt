@@ -898,9 +898,7 @@ class SoknadService(
 		alleVedlegg.filter{ !(it.erHoveddokument && !it.erVariant && !erEttersending(soknadDto)) }.forEach { repo.slettFilerForVedlegg(it.id!!) }
 
 		// oppdater vedleggstabellen med status og innsendingsdato for opplastede vedlegg.
-		opplastedeVedlegg.forEach { repo.oppdaterVedleggStatusOgInnsendtdato(
-			innsendingsId = soknadDto.innsendingsId!!, vedleggsId = it.id!!, opplastingsStatus = OpplastingsStatus.INNSENDT,
-			endretDato = LocalDateTime.now(), innsendtDato = LocalDateTime.now()) }
+		opplastedeVedlegg.forEach { repo.lagreVedlegg(mapTilVedleggDb(it, soknadDto.id!!)) }
 		manglendePakrevdeVedlegg.forEach { repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, it.id!!, OpplastingsStatus.SEND_SENERE, LocalDateTime.now()) }
 
 /*

@@ -13,11 +13,13 @@ fun erEttersending(dokumentSoknad: DokumentSoknadDto): Boolean =
 	(dokumentSoknad.ettersendingsId != null) || (dokumentSoknad.visningsType == VisningsType.ettersending)
 
 fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
-	VedleggDto(vedleggDto.tittel, vedleggDto.label, vedleggDto.erHoveddokument,
-		vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.erPakrevd,
-		avledOpplastingsstatusVedInnsending(filDto, vedleggDto),
-		filDto?.opprettetdato ?: vedleggDto.opprettetdato, vedleggDto.id!!, vedleggDto.vedleggsnr, vedleggDto.beskrivelse,
-		vedleggDto.uuid, filDto?.mimetype ?: vedleggDto.mimetype, filDto?.data, vedleggDto.skjemaurl
+	VedleggDto(tittel = vedleggDto.tittel, label = vedleggDto.label, erHoveddokument = vedleggDto.erHoveddokument,
+		erVariant = vedleggDto.erVariant, erPdfa = vedleggDto.erPdfa, erPakrevd = vedleggDto.erPakrevd,
+		opplastingsStatus = avledOpplastingsstatusVedInnsending(filDto, vedleggDto),
+		opprettetdato = filDto?.opprettetdato ?: vedleggDto.opprettetdato, id = vedleggDto.id!!,
+		vedleggsnr = vedleggDto.vedleggsnr, beskrivelse = vedleggDto.beskrivelse,
+		uuid = vedleggDto.uuid, mimetype = filDto?.mimetype ?: vedleggDto.mimetype, document = filDto?.data, skjemaurl = vedleggDto.skjemaurl,
+		innsendtdato = OffsetDateTime.now()
 	)
 
 
@@ -69,12 +71,12 @@ fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long) =
 
 
 fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, url: String?, opplastingsStatus: OpplastingsStatus) =
-	VedleggDbData(vedleggDto.id, soknadsId, opplastingsStatus
-		, vedleggDto.erHoveddokument, vedleggDto.erVariant, vedleggDto.erPdfa, vedleggDto.erPakrevd, vedleggDto.vedleggsnr
-		, vedleggDto.tittel, vedleggDto.label, vedleggDto.beskrivelse
-		, mapTilDbMimetype(vedleggDto.mimetype), vedleggDto.uuid ?: UUID.randomUUID().toString()
-		, mapTilLocalDateTime(vedleggDto.opprettetdato)!!, LocalDateTime.now(), mapTilLocalDateTime(vedleggDto.innsendtdato)
-		, url ?: vedleggDto.skjemaurl
+	VedleggDbData(id = vedleggDto.id, soknadsid =  soknadsId, status = opplastingsStatus
+		, erhoveddokument = vedleggDto.erHoveddokument, ervariant = vedleggDto.erVariant, erpdfa = vedleggDto.erPdfa, erpakrevd = vedleggDto.erPakrevd
+		, vedleggsnr = vedleggDto.vedleggsnr, tittel = vedleggDto.tittel, label = vedleggDto.label, beskrivelse = vedleggDto.beskrivelse
+		, mimetype =  mapTilDbMimetype(vedleggDto.mimetype), uuid = vedleggDto.uuid ?: UUID.randomUUID().toString()
+		, opprettetdato = mapTilLocalDateTime(vedleggDto.opprettetdato)!!, endretdato = LocalDateTime.now(), innsendtdato = mapTilLocalDateTime(vedleggDto.innsendtdato)
+		, vedleggsurl = url ?: vedleggDto.skjemaurl
 	)
 
 fun oppdaterVedleggDb(vedleggDbData: VedleggDbData, patchVedleggDto: PatchVedleggDto): VedleggDbData =

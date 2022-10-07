@@ -262,7 +262,8 @@ class FrontEndRestApi(
 	}
 
 	override fun endreVedlegg(innsendingsId: String, vedleggsId: Long, patchVedleggDto: PatchVedleggDto): ResponseEntity<VedleggDto> {
-		logger.info("$innsendingsId: Kall for å endre vedlegg til søknad")
+		logger.info("$innsendingsId: Kall for å endre vedlegg $vedleggsId til søknad. " +
+			"Status=${patchVedleggDto.opplastingsStatus} og tittel = ${patchVedleggDto.tittel}")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.ENDRE.name)
 		try {
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
