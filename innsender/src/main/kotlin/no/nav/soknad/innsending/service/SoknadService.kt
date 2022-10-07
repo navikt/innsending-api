@@ -411,7 +411,7 @@ class SoknadService(
 		ettersendingsId: String
 	): DokumentSoknadDto {
 		try {
-			logger.info("opprettEttersendingsSoknad: Skal opprette ettersendingssøknad basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
+			logger.debug("opprettEttersendingsSoknad: Skal opprette ettersendingssøknad basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
 				"Status for vedleggene til original søknad ${nyesteSoknad.vedleggsListe.map
 				{ it.vedleggsnr+':'+it.opplastingsStatus+':'+mapTilLocalDateTime(it.innsendtdato)+':'+ mapTilLocalDateTime(it.opprettetdato) }.toList()}")
 
@@ -451,7 +451,7 @@ class SoknadService(
 			publiserBrukernotifikasjon(dokumentSoknadDto)
 
 			innsenderMetrics.applicationCounterInc(InnsenderOperation.OPPRETT.name, dokumentSoknadDto.tema)
-			logger.info("opprettEttersendingsSoknad: opprettet ${dokumentSoknadDto.innsendingsId} basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
+			logger.debug("opprettEttersendingsSoknad: opprettet ${dokumentSoknadDto.innsendingsId} basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
 				"Med vedleggsstatus ${dokumentSoknadDto.vedleggsListe.map { it.vedleggsnr+':'+it.opplastingsStatus+':'+ mapTilLocalDateTime(it.innsendtdato) }.toList()}")
 
 			return dokumentSoknadDto
@@ -863,7 +863,6 @@ class SoknadService(
 		// anta at filene til et vedlegg allerede er konvertert til PDF ved lagring, men må merges og sendes til soknadsfillager
 		// dersom det ikke er lastet opp filer på et obligatorisk vedlegg, skal status settes SENDES_SENERE
 		// etter at vedleggsfilen er overført soknadsfillager, skal lokalt lagrede filer på vedlegget slettes.
-
 		var soknadDto = soknadDtoInput
 		if (erEttersending(soknadDto)) {
 			soknadDto = opprettOgLagreDummyHovedDokument(soknadDto)
@@ -901,15 +900,6 @@ class SoknadService(
 		opplastedeVedlegg.forEach { repo.lagreVedlegg(mapTilVedleggDb(it, soknadsId = soknadDto.id!!, it.skjemaurl, opplastingsStatus = OpplastingsStatus.INNSENDT)) }
 		manglendePakrevdeVedlegg.forEach { repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, it.id!!, OpplastingsStatus.SEND_SENERE, LocalDateTime.now()) }
 
-/*
-		try {
-			repo.flushVedlegg()
-		} catch (ex: Exception) {
-			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
-			throw BackendErrorException(ex.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV", "errorCode.backendError.sendToNAVError")
-		}
-*/
-
 		try {
 			repo.lagreSoknad(mapTilSoknadDb(soknadDto, soknadDto.innsendingsId!!, SoknadsStatus.Innsendt ))
 		} catch (ex: Exception) {
@@ -918,58 +908,52 @@ class SoknadService(
 		}
 		return listOf(opplastedeVedlegg, manglendePakrevdeVedlegg)
 
-		/*
-				// send brukernotifikasjon ved endring av søknadsstatus til innsendt
-				val innsendtSoknadDto = hentSoknad(soknadDto.innsendingsId!!)
-				logger.info("${innsendtSoknadDto.innsendingsId}: Sendinn: innsendtdato på vedlegg med status innsendt= " +
-					"${innsendtSoknadDto.vedleggsListe.filter { it.opplastingsStatus==OpplastingsStatusDto.innsendt}.map { it.vedleggsnr+':'+it.innsendtdato }}")
-				publiserBrukernotifikasjon(innsendtSoknadDto)
-
-				logger.info("${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes ${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size }")
-				if (manglendePakrevdeVedlegg.isNotEmpty())  { // TODO avklare lage unntak for søknader på tema DAG?
-					logger.info("${soknadDtoInput.innsendingsId}: Skal opprette ettersendingssoknad")
-					opprettEttersendingsSoknad(innsendtSoknadDto, innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!)
-				}
-
-				val kvitteringsDto = lagKvittering(innsendtSoknadDto, opplastedeVedlegg, manglendePakrevdeVedlegg)
-				innsenderMetrics.applicationCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
-
-				return kvitteringsDto
-		*/
-
 	}
 
 	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): KvitteringsDto {
 		try {
 			val opplastetOgManglende = sendInnSoknadStart(soknadDtoInput)
 
-			// send brukernotifikasjon ved endring av søknadsstatus til innsendt
-			val innsendtSoknadDto = hentSoknad(soknadDtoInput.innsendingsId!!)
-			logger.info("${innsendtSoknadDto.innsendingsId}: Sendinn: innsendtdato på vedlegg med status innsendt= " +
-				"${
-					innsendtSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }
-						.map { it.vedleggsnr + ':' + mapTilLocalDateTime( it.innsendtdato) }
-				}"
-			)
-			publiserBrukernotifikasjon(innsendtSoknadDto)
+			val innsendtSoknadDto = kansellerBrukernotifikasjon(soknadDtoInput)
 
-			logger.info("${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes " +
-				"${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size}")
-			if (opplastetOgManglende[1].isNotEmpty()) { // TODO avklare lage unntak for søknader på tema DAG?
-				logger.info("${soknadDtoInput.innsendingsId}: Skal opprette ettersendingssoknad")
-				opprettEttersendingsSoknad(
-					innsendtSoknadDto,
-					innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!
-				)
-			}
+			sjekkOgOpprettEttersendingsSoknad(innsendtSoknadDto, opplastetOgManglende, soknadDtoInput)
 
-			val kvitteringsDto = lagKvittering(innsendtSoknadDto, opplastetOgManglende[0], opplastetOgManglende[1])
+			return lagKvittering(innsendtSoknadDto, opplastetOgManglende[0], opplastetOgManglende[1])
 
-			return kvitteringsDto
 		} finally {
 			innsenderMetrics.applicationCounterInc(InnsenderOperation.SEND_INN.name, soknadDtoInput.tema)
 		}
 
+	}
+
+	private fun sjekkOgOpprettEttersendingsSoknad(
+		innsendtSoknadDto: DokumentSoknadDto,
+		opplastetOgManglende: List<List<VedleggDto>>,
+		soknadDtoInput: DokumentSoknadDto
+	) {
+		logger.info("${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes " +
+			"${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size}"
+		)
+		if (opplastetOgManglende[1].isNotEmpty()) { // TODO avklare lage unntak for søknader på tema DAG?
+			logger.info("${soknadDtoInput.innsendingsId}: Skal opprette ettersendingssoknad")
+			opprettEttersendingsSoknad(
+				innsendtSoknadDto,
+				innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!
+			)
+		}
+	}
+
+	private fun kansellerBrukernotifikasjon(soknadDtoInput: DokumentSoknadDto): DokumentSoknadDto {
+		// send brukernotifikasjon ved endring av søknadsstatus til innsendt
+		val innsendtSoknadDto = hentSoknad(soknadDtoInput.innsendingsId!!)
+		logger.info("${innsendtSoknadDto.innsendingsId}: Sendinn: innsendtdato på vedlegg med status innsendt= " +
+			"${
+				innsendtSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }
+					.map { it.vedleggsnr + ':' + mapTilLocalDateTime(it.innsendtdato) }
+			}"
+		)
+		publiserBrukernotifikasjon(innsendtSoknadDto)
+		return innsendtSoknadDto
 	}
 
 	private fun opprettOgLagreDummyHovedDokument(soknadDto: DokumentSoknadDto): DokumentSoknadDto {

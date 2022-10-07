@@ -123,13 +123,7 @@ class RepositoryUtils(
 	}
 
 	fun oppdaterVedleggStatus(innsendingsId: String, vedleggsId: Long, opplastingsStatus: OpplastingsStatus, localDateTime: LocalDateTime) = try {
-		if (opplastingsStatus != OpplastingsStatus.INNSENDT)
 			vedleggRepository.updateStatus(id = vedleggsId, status = opplastingsStatus, endretdato = localDateTime)
-		else {
-			vedleggRepository.updateStatusAndInnsendtdato(
-				id = vedleggsId, status = opplastingsStatus, endretdato = localDateTime, innsendtdato = LocalDateTime.now()
-			)
-		}
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
@@ -138,6 +132,7 @@ class RepositoryUtils(
 		)
 	}
 
+	//NB! metoden vedleggRepository.updateStatusAndInnsendtdato fungerer ved lokal testing, men feiler når kjøring på nais.
 	fun oppdaterVedleggStatusOgInnsendtdato(innsendingsId: String, vedleggsId: Long, opplastingsStatus: OpplastingsStatus,
 																					endretDato: LocalDateTime, innsendtDato: LocalDateTime): Int = try {
 		logger.info("oppdaterVedleggStatusOgInnsendtdato: vedlegg=$vedleggsId, innsendtdato=$innsendtDato ")
