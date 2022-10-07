@@ -129,10 +129,6 @@ class RepositoryUtils(
 			vedleggRepository.updateStatusAndInnsendtdato(
 				id = vedleggsId, status = opplastingsStatus, endretdato = localDateTime, innsendtdato = LocalDateTime.now()
 			)
-			val vedleggDbDataOpt = vedleggRepository.findByVedleggsid(vedleggsId)
-			vedleggDbDataOpt.isPresent.let {
-				logger.info("Lagret vedleggDbData id=${vedleggDbDataOpt.get().id}, vedleggsnr=${vedleggDbDataOpt.get().vedleggsnr}, innsendingsdato=${vedleggDbDataOpt.get().innsendtdato} ")
-			}
 		}
 	} catch (ex: Exception) {
 		throw BackendErrorException(
