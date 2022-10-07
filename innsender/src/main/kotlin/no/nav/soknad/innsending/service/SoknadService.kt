@@ -412,7 +412,8 @@ class SoknadService(
 	): DokumentSoknadDto {
 		try {
 			logger.info("opprettEttersendingsSoknad: Skal opprette ettersendingssøknad basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
-				"Status for vedleggene til original søknad ${nyesteSoknad.vedleggsListe.map { it.vedleggsnr+':'+it.opplastingsStatus+':'+it.innsendtdato+':'+it.opprettetdato }.toList()}")
+				"Status for vedleggene til original søknad ${nyesteSoknad.vedleggsListe.map
+				{ it.vedleggsnr+':'+it.opplastingsStatus+':'+mapTilLocalDateTime(it.innsendtdato)+':'+ mapTilLocalDateTime(it.opprettetdato) }.toList()}")
 
 			val savedEttersendingsSoknad  = opprettEttersendingsSoknad(brukerId = nyesteSoknad.brukerId, ettersendingsId = ettersendingsId,
 				tittel = nyesteSoknad.tittel, skjemanr = nyesteSoknad.skjemanr, tema = nyesteSoknad.tema, sprak = nyesteSoknad.spraak!!)
@@ -451,7 +452,7 @@ class SoknadService(
 
 			innsenderMetrics.applicationCounterInc(InnsenderOperation.OPPRETT.name, dokumentSoknadDto.tema)
 			logger.info("opprettEttersendingsSoknad: opprettet ${dokumentSoknadDto.innsendingsId} basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
-				"Med vedleggsstatus ${dokumentSoknadDto.vedleggsListe.map { it.vedleggsnr+':'+it.opplastingsStatus+':'+it.innsendtdato }.toList()}")
+				"Med vedleggsstatus ${dokumentSoknadDto.vedleggsListe.map { it.vedleggsnr+':'+it.opplastingsStatus+':'+ mapTilLocalDateTime(it.innsendtdato) }.toList()}")
 
 			return dokumentSoknadDto
 		} catch (e: Exception) {
@@ -947,12 +948,13 @@ class SoknadService(
 			logger.info("${innsendtSoknadDto.innsendingsId}: Sendinn: innsendtdato på vedlegg med status innsendt= " +
 				"${
 					innsendtSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }
-						.map { it.vedleggsnr + ':' + it.innsendtdato }
+						.map { it.vedleggsnr + ':' + mapTilLocalDateTime( it.innsendtdato) }
 				}"
 			)
 			publiserBrukernotifikasjon(innsendtSoknadDto)
 
-			logger.info("${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes ${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size}")
+			logger.info("${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes " +
+				"${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size}")
 			if (opplastetOgManglende[1].isNotEmpty()) { // TODO avklare lage unntak for søknader på tema DAG?
 				logger.info("${soknadDtoInput.innsendingsId}: Skal opprette ettersendingssoknad")
 				opprettEttersendingsSoknad(

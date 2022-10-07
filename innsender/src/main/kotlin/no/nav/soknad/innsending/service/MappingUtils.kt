@@ -54,7 +54,7 @@ fun lagDokumentSoknadDto(soknadDbData: SoknadDbData, vedleggDbDataListe: List<Ve
 	)
 
 fun mapTilOffsetDateTime(localDateTime: LocalDateTime?): OffsetDateTime? =
-	localDateTime?.atOffset(ZoneOffset.UTC)
+	localDateTime?.atOffset(ZoneOffset.UTC) //TODO, er dette riktig?
 
 fun mapTilLocalDateTime(offsetDateTime: OffsetDateTime?): LocalDateTime? =
 	offsetDateTime?.toLocalDateTime()
@@ -88,7 +88,7 @@ fun oppdaterVedleggDb(vedleggDbData: VedleggDbData, patchVedleggDto: PatchVedleg
 	)
 
 
-fun mapTilSoknadDb(dokumentSoknadDto: DokumentSoknadDto, innsendingsId: String, status: SoknadsStatus? = SoknadsStatus.Opprettet) =
+fun mapTilSoknadDb(dokumentSoknadDto: DokumentSoknadDto, innsendingsId: String, status: SoknadsStatus = SoknadsStatus.Opprettet) =
 	SoknadDbData(dokumentSoknadDto.id, innsendingsId,
 		dokumentSoknadDto.tittel, dokumentSoknadDto.skjemanr, dokumentSoknadDto.tema, dokumentSoknadDto.spraak ?: "no",
 		mapTilSoknadsStatus(dokumentSoknadDto.status, status), dokumentSoknadDto.brukerId, dokumentSoknadDto.ettersendingsId,

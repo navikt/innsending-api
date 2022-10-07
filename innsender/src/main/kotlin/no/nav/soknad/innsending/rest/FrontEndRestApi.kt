@@ -483,6 +483,10 @@ class FrontEndRestApi(
 			}
 			logger.info("$innsendingsId: Sendt inn soknad.\n" +
 				"InnsendteVedlegg=${kvitteringsDto.innsendteVedlegg?.size}, SkalEttersendes=${kvitteringsDto.skalEttersendes?.size}")
+			//TMP
+			val innsendtSoknadDto = soknadService.hentSoknad(innsendingsId)
+			logger.info("$innsendingsId: sendInnSoknad: vedleggstatus ${innsendtSoknadDto.vedleggsListe.map { it.vedleggsnr+':'+it.opplastingsStatus+':'+it.innsendtdato} }")
+
 			return ResponseEntity
 				.status(HttpStatus.OK)
 				.body(kvitteringsDto)
