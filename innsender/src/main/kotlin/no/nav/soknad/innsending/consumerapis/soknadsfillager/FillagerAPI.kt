@@ -62,6 +62,7 @@ class FillagerAPI(
 		vedleggDtos
 			.filter { it.document != null }
 			.map { FileData(it.uuid!!, it.document, it.opprettetdato) }
+			.onEach { logger.info("$innsendingsId: Skal sende ${it.id} med størrelse ${it.content?.size}") }
 			.forEach { filesApi.addFiles(listOf(it), innsendingsId) }
 
 		logger.info("$innsendingsId: Lagret følgende filer ${vedleggDtos.filter{it.document != null }.map { it.id }}")
