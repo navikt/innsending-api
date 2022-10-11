@@ -28,7 +28,10 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.junit.jupiter.api.Assertions.*
 import org.springframework.core.ParameterizedTypeReference
+import org.springframework.core.io.ClassPathResource
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.util.LinkedMultiValueMap
 import java.util.LinkedList
 
 @Suppress("DEPRECATION")
@@ -170,6 +173,52 @@ class FrontEndRestApiTest {
 		assertEquals(OpplastingsStatusDto.sendesAvAndre, patchedVedleggDto.opplastingsStatus)
 	}
 
+	@Test
+	fun slettFilPaVedleggTest() {
+		val skjemanr = "NAV 95-00.11"
+		val spraak = "nb_NO"
+		val vedlegg = listOf("N6", "W2")
+		val token = getToken()
+
+		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
+
+		val vedleggN6 = soknadDto.vedleggsListe.first{it.vedleggsnr == "N6"}
+		assertEquals(OpplastingsStatusDto.ikkeValgt, vedleggN6.opplastingsStatus)
+
+		val multipart = LinkedMultiValueMap<Any, Any>()
+		multipart.add("file", ClassPathResource("/litenPdf.pdf"))
+
+		val postFilRequestN6 = HttpEntity(multipart, createHeaders(token, MediaType.MULTIPART_FORM_DATA))
+		val postFilResponseN6 = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil", HttpMethod.POST,
+			postFilRequestN6, FilDto::class.java
+		)
+
+		assertEquals(HttpStatus.CREATED, postFilResponseN6.statusCode)
+		assertTrue(postFilResponseN6.body != null)
+		assertEquals(Mimetype.applicationSlashPdf, postFilResponseN6.body!!.mimetype)
+		val opplastetFilDto = postFilResponseN6.body
+
+		val vedleggN6Request = HttpEntity<Unit>(createHeaders(token))
+		val oppdatertVedleggN6Response = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}", HttpMethod.GET,
+			vedleggN6Request, VedleggDto::class.java
+		)
+
+		assertTrue(oppdatertVedleggN6Response.body != null)
+		val oppdatertVedleggN6 = oppdatertVedleggN6Response.body
+		assertEquals(OpplastingsStatusDto.lastetOpp, oppdatertVedleggN6!!.opplastingsStatus)
+
+		val slettFilRequest = HttpEntity<Unit>(createHeaders(token))
+		val slettetFilVedleggN6Response = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil/${opplastetFilDto!!.id}", HttpMethod.DELETE,
+			slettFilRequest, VedleggDto::class.java
+		)
+
+		assertEquals(HttpStatus.OK, slettetFilVedleggN6Response.statusCode)
+		assertTrue(slettetFilVedleggN6Response.body != null)
+		val oppdatertEtterSlettetFilVedleggN6 = slettetFilVedleggN6Response.body
+		assertEquals(OpplastingsStatusDto.ikkeValgt, oppdatertEtterSlettetFilVedleggN6!!.opplastingsStatus)
+
+	}
 	private fun opprettEnSoknad(token: String, skjemanr: String, spraak: String, vedlegg: List<String>): DokumentSoknadDto {
 
 		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak, vedlegg)

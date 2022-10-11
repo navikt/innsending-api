@@ -688,7 +688,7 @@ class SoknadService(
 		if (repo.hentFilerTilVedlegg(soknadDto.innsendingsId!!, vedleggsId).isEmpty()) {
 			val vedleggDto = soknadDto.vedleggsListe.first {it.id == vedleggsId}
 			val nyOpplastingsStatus = if (vedleggDto.innsendtdato != null) OpplastingsStatus.INNSENDT else OpplastingsStatus.IKKE_VALGT
-			repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, vedleggsId, nyOpplastingsStatus, LocalDateTime.now())
+			repo.lagreVedlegg(mapTilVedleggDb(vedleggDto, soknadsId = soknadDto.id!!, vedleggDto.skjemaurl, opplastingsStatus = nyOpplastingsStatus))
 		}
 		val vedleggDto = hentVedleggDto(vedleggsId)
 		innsenderMetrics.applicationCounterInc(InnsenderOperation.SLETT_FIL.name, soknadDto.tema)

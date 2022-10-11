@@ -122,7 +122,7 @@ class RepositoryUtils(
 		)
 	}
 
-	fun oppdaterVedleggStatus(innsendingsId: String, vedleggsId: Long, opplastingsStatus: OpplastingsStatus, localDateTime: LocalDateTime) = try {
+	fun oppdaterVedleggStatus(innsendingsId: String, vedleggsId: Long, opplastingsStatus: OpplastingsStatus, localDateTime: LocalDateTime): Int = try {
 			vedleggRepository.updateStatus(id = vedleggsId, status = opplastingsStatus, endretdato = localDateTime)
 	} catch (ex: Exception) {
 		throw BackendErrorException(
