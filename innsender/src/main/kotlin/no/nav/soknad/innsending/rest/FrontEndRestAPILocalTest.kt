@@ -358,18 +358,18 @@ class FrontEndRestAPILocalTest(
 	}
 
 	@CrossOrigin
-	override fun slettFil(innsendingsId: String, vedleggsId: Long, filId: Long): ResponseEntity<BodyStatusResponseDto> {
+	override fun slettFil(innsendingsId: String, vedleggsId: Long, filId: Long): ResponseEntity<VedleggDto> {
 		logger.info("Kall for å slette fil $filId på vedlegg $vedleggsId til søknad $innsendingsId")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.SLETT_FIL.name)
 		try {
 			val soknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(soknadDto)
 
-			soknadService.slettFil(soknadDto, vedleggsId, filId)
+			val vedleggDto = soknadService.slettFil(soknadDto, vedleggsId, filId)
 			logger.info("$innsendingsId: Slettet fil $filId på vedlegg $vedleggsId til søknad")
 			return ResponseEntity
 				.status(HttpStatus.OK)
-				.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet fil med id $filId"))
+				.body(vedleggDto)
 		} finally {
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
 		}

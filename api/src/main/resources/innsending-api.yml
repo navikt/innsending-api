@@ -552,7 +552,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BodyStatusResponseDto"
+                $ref: "#/components/schemas/VedleggDto"
       tags:
         - slettFil
 
