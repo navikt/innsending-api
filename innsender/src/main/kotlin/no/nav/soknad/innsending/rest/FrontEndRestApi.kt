@@ -275,9 +275,11 @@ class FrontEndRestApi(
 			}
 			if ((patchVedleggDto.opplastingsStatus == OpplastingsStatusDto.ikkeValgt || patchVedleggDto.opplastingsStatus == OpplastingsStatusDto.lastetOpp)
 				&& soknadDto.vedleggsListe.first{it.id==vedleggsId}.opplastingsStatus != patchVedleggDto.opplastingsStatus) {
+
 				val opplastetPaVedlegg: Long = soknadService.finnFilStorrelseSum(soknadDto, vedleggsId)
 				val opplastetPaSoknad: Long = soknadService.finnFilStorrelseSum(soknadDto)
-				Validerer().validerStorrelse(opplastetPaSoknad + opplastetPaVedlegg, restConfig.maxFileSizeSum.toLong() )
+
+				Validerer().validerStorrelse(opplastetPaSoknad + opplastetPaVedlegg, restConfig.maxFileSizeSum.toLong(),  "errorCode.illegalAction.fileSizeSumTooLarge")
 			}
 			val vedleggDto = soknadService.endreVedlegg(patchVedleggDto, vedleggsId, soknadDto)
 			logger.info("$innsendingsId: Lagret vedlegg ${vedleggDto.id} til søknad")
@@ -333,8 +335,10 @@ class FrontEndRestApi(
 			// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
 			val fil = KonverterTilPdf().tilPdf(opplastet)
 
+			val opplastPaVedlegg: Long = soknadService.finnFilStorrelseSum(soknadDto, vedleggsId)
 			val opplastetPaSoknad: Long = soknadService.finnFilStorrelseSum(soknadDto)
-			Validerer().validerStorrelse(opplastetPaSoknad + fil.size, restConfig.maxFileSizeSum.toLong() )
+			Validerer().validerStorrelse(opplastPaVedlegg + fil.size, restConfig.maxFileSize.toLong(), "errorCode.illegalAction.vedleggFileSizeSumTooLarge" )
+			Validerer().validerStorrelse(opplastetPaSoknad + fil.size, restConfig.maxFileSizeSum.toLong(), "errorCode.illegalAction.fileSizeSumTooLarge" )
 
 			// Lagre
 			val lagretFilDto = soknadService.lagreFil(soknadDto, FilDto(vedleggsId, null, file.filename ?:"", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now()))

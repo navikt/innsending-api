@@ -300,8 +300,10 @@ class FrontEndRestAPILocalTest(
 			val fil = KonverterTilPdf().tilPdf(opplastet)
 			val vedleggsFiler = soknadService.hentFiler(soknadDto, innsendingsId, vedleggsId, false, false)
 
+			val opplastetPaVedlegg: Long = soknadService.finnFilStorrelseSum(soknadDto, vedleggsId)
 			val opplastetPaSoknad: Long = soknadService.finnFilStorrelseSum(soknadDto)
-			Validerer().validerStorrelse(opplastetPaSoknad + fil.size, restConfig.maxFileSizeSum.toLong() )
+			Validerer().validerStorrelse(opplastetPaVedlegg + fil.size, restConfig.maxFileSize.toLong(),"errorCode.illegalAction.vedleggFileSizeSumTooLarge" )
+			Validerer().validerStorrelse(opplastetPaSoknad + fil.size, restConfig.maxFileSizeSum.toLong(),"errorCode.illegalAction.fileSizeSumTooLarge" )
 
 			// Lagre
 			val lagretFilDto = soknadService.lagreFil(soknadDto, FilDto(vedleggsId, null, file.filename ?:"", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now()))

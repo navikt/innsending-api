@@ -52,8 +52,8 @@ restconfig:
   password: password
   sharedUsername: innsending
   sharedPassword: password
-  maxFileSize: 100
-  maxFileSizeSum: 300
+  maxFileSize: 50
+  maxFileSizeSum: 150
   sanityHost: https://www.nav.no
   sanityEndpoint: /soknader/api/sanity/skjemautlisting
   filestorageHost: http://localhost:9043/filestorage-api
