@@ -879,8 +879,9 @@ class SoknadService(
 
 		logger.info("${soknadDtoInput.innsendingsId}: Opplastede vedlegg = ${opplastedeVedlegg.map { it.vedleggsnr+':'+it.uuid+':'+it.opprettetdato+':'+it.document?.size }}")
 		logger.info("${soknadDtoInput.innsendingsId}: Ikke opplastede påkrevde vedlegg = ${manglendePakrevdeVedlegg.map { it.vedleggsnr+':'+it.opprettetdato }}")
+		val kvitteringForArkivering = lagInnsendingsKvittering(soknadDto, opplastedeVedlegg, manglendePakrevdeVedlegg)
 		try {
-			fillagerAPI.lagreFiler(soknadDto.innsendingsId!!, opplastedeVedlegg + lagInnsendingsKvittering(soknadDto, opplastedeVedlegg, manglendePakrevdeVedlegg))
+			fillagerAPI.lagreFiler(soknadDto.innsendingsId!!, opplastedeVedlegg + kvitteringForArkivering)
 		} catch (ex: Exception) {
 			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
 			logger.error("Feil ved sending av filer for søknad ${soknadDto.innsendingsId} til NAV, ${ex.message}")
@@ -889,7 +890,7 @@ class SoknadService(
 
 		// send soknadmetada til soknadsmottaker
 		try {
-			soknadsmottakerAPI.sendInnSoknad(soknadDto, opplastedeVedlegg)
+			soknadsmottakerAPI.sendInnSoknad(soknadDto, opplastedeVedlegg + kvitteringForArkivering)
 		} catch (ex: Exception) {
 			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
 			logger.error("${soknadDto.innsendingsId}: Feil ved sending av søknad til soknadsmottaker ${ex.message}")
