@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
+import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.skjema.KodeverkSkjema
 import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
@@ -34,11 +35,12 @@ class SoknadService(
 	private val brukerNotifikasjon: BrukernotifikasjonPublisher,
 	private val fillagerAPI: FillagerInterface,
 	private val soknadsmottakerAPI: MottakerInterface,
-	private val innsenderMetrics: InnsenderMetrics
+	private val innsenderMetrics: InnsenderMetrics,
+	private val pdlInterface: PdlInterface
 ) {
 
 	@Value("\${ettersendingsfrist}")
-	private var ettersendingsfrist: Long = 42
+	private var ettersendingsfrist: Long = 14
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -878,7 +880,7 @@ class SoknadService(
 		logger.info("${soknadDtoInput.innsendingsId}: Opplastede vedlegg = ${opplastedeVedlegg.map { it.vedleggsnr+':'+it.uuid+':'+it.opprettetdato+':'+it.document?.size }}")
 		logger.info("${soknadDtoInput.innsendingsId}: Ikke opplastede påkrevde vedlegg = ${manglendePakrevdeVedlegg.map { it.vedleggsnr+':'+it.opprettetdato }}")
 		try {
-			fillagerAPI.lagreFiler(soknadDto.innsendingsId!!, opplastedeVedlegg)
+			fillagerAPI.lagreFiler(soknadDto.innsendingsId!!, opplastedeVedlegg + lagInnsendingsKvittering(soknadDto, opplastedeVedlegg, manglendePakrevdeVedlegg))
 		} catch (ex: Exception) {
 			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
 			logger.error("Feil ved sending av filer for søknad ${soknadDto.innsendingsId} til NAV, ${ex.message}")
@@ -925,6 +927,18 @@ class SoknadService(
 			innsenderMetrics.applicationCounterInc(InnsenderOperation.SEND_INN.name, soknadDtoInput.tema)
 		}
 
+	}
+
+	private fun lagInnsendingsKvittering(soknadDto: DokumentSoknadDto, opplastedeVedlegg: List<VedleggDto>, manglendeVedlegg: List<VedleggDto>): VedleggDto {
+		val person = pdlInterface.hentPersonData(soknadDto.brukerId)
+		val sammensattNavn = person?.fornavn + (if (person?.mellomnavn != null) " " + person.mellomnavn else "")  + " " + person?.etternavn
+
+		val kvittering = PdfGenerator().lagKvitteringsSide(soknadDto, if (sammensattNavn.trim().isEmpty()) "NN" else sammensattNavn, opplastedeVedlegg, manglendeVedlegg )
+		return VedleggDto(id = null, uuid = UUID.randomUUID().toString(), vedleggsnr = "L7", tittel = "Kvitteringsside for dokumentinnsending", label = "Kvitteringsside for dokumentinnsending", beskrivelse = null,
+			erHoveddokument = false, erVariant = true, erPdfa = true, erPakrevd = false,
+			opplastingsStatus = OpplastingsStatusDto.lastetOpp, opprettetdato = OffsetDateTime.now(), innsendtdato = OffsetDateTime.now(),
+			mimetype = Mimetype.applicationSlashPdf, document = kvittering, skjemaurl = null
+		)
 	}
 
 	private fun sjekkOgOpprettEttersendingsSoknad(

@@ -64,7 +64,7 @@ brukernotifikasjonconfig:
   ettersendePaSoknad: /dokumentinnsending/ettersending/
   publisereEndringer: true
 
-ettersendingsfrist: 42
+ettersendingsfrist: 14
 
 wiremock:
   reset-mappings-after-each-test: true

@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.service.ukjentEttersendingsId
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service
 
@@ -22,7 +23,10 @@ class BrukernotifikasjonPublisher(
 	private val logger = LoggerFactory.getLogger(BrukernotifikasjonPublisher::class.java)
 
 	private val soknadLevetid = 56 // Dager
-	private val ettersendingsFrist = 56 // Dager
+
+	@Value("\${ettersendingsfrist}")
+	private var ettersendingsfrist: Long = 14
+
 	val tittelPrefixEttersendelse = mapOf("no" to "Klikk her for å ettersende vedlegg til: ",
 		"nn" to "Klikk her for å ettersende vedlegg til: ",
 		"en" to "Click here to send missing attachments to: "
@@ -75,7 +79,7 @@ class BrukernotifikasjonPublisher(
 		val tittel = tittelPrefixGittSprak(ettersending, dokumentSoknad.spraak ?: "no") + dokumentSoknad.tittel
 		val lenke = createLink(dokumentSoknad.innsendingsId!!, false)
 
-		val notificationInfo = NotificationInfo(tittel, lenke , if (ettersending) ettersendingsFrist else  soknadLevetid , emptyList())
+		val notificationInfo = NotificationInfo(tittel, lenke , if (ettersending) ettersendingsfrist.toInt() else  soknadLevetid , emptyList())
 		val soknadRef = SoknadRef(dokumentSoknad.innsendingsId!!, ettersending, groupId, dokumentSoknad.brukerId, dokumentSoknad.opprettetDato)
 
 		try {

@@ -19,6 +19,7 @@
 		"APPLICATION_USERNAME": "srvinnsending-api",
 		"MAX_FILE_SIZE": "50",
 		"MAX_FILE_SIZE_SUM": "150",
+		"ETTERSENDINGSFRIST": 14,
 		"PDL_URL": "https://pdl-api.prod-fss-pub.nais.io",
 		"SAF_URL": "https://safselvbetjening.prod-fss-pub.nais.io",
 		"STS_URL": "https://api-gw.oera.no/security-token-service/",

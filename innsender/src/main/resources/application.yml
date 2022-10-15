@@ -22,7 +22,7 @@ cron:
   startSlettPermanentIkkeInnsendteSoknader: 0 0 3 * * *
   slettPermanentEldreEnn: 365
 
-ettersendingsfrist: 42
+ettersendingsfrist: 14
 ---
 spring:
   config:
@@ -153,6 +153,8 @@ brukernotifikasjonconfig:
   gjenopptaSoknadsArbeid: ${GJENOPPTA_SOKNADS_ARBEID}
   ettersendePaSoknad: ${ETTERSENDE_PA_SOKNAD}
   publisereEndringer: ${PUBLISERE_BRUKERNOTIFIKASJONER}
+
+ettersendingsfrist: ${ETTERSENDINGSFRIST}
 
 no.nav.security.jwt:
   issuer.tokenx:

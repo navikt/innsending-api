@@ -78,7 +78,7 @@ class SafAPI(
 		dokumenter.add(Dokument(dokumentInfo[0]?.brevkode, dokumentInfo[0]?.tittel ?: "", "Hoveddokument" ))
 
 		if (dokumentInfo.size>1) {
-			dokumentInfo.subList(1, dokumentInfo.size).forEach { dokumenter.add (Dokument(it?.brevkode ?: "", it?.tittel ?: "", "Vedlegg")) }
+			dokumentInfo.subList(1, dokumentInfo.size).filter{it?.brevkode != "L7"}.forEach { dokumenter.add (Dokument(it?.brevkode ?: "", it?.tittel ?: "", "Vedlegg")) }
 		}
 		return dokumenter
 	}

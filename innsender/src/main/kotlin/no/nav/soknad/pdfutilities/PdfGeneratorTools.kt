@@ -39,7 +39,7 @@ class PdfGenerator {
 		Properties().apply { load(it) }
 	}
 
-	fun lagKvitteringsSide(soknad: DokumentSoknadDto, sammensattNavn: String?): ByteArray {
+	fun lagKvitteringsSide(soknad: DokumentSoknadDto, sammensattNavn: String?, opplastedeVedlegg: List<VedleggDto>, manglendeObligatoriskeVedlegg: List<VedleggDto>): ByteArray {
 		val kvitteringHeader = tekster.getProperty("kvittering.tittel")
 		val tittel = soknad.tittel
 		val ettersendelseTittel = tekster.getProperty("kvittering.ettersendelse.tittel")
@@ -49,10 +49,9 @@ class PdfGenerator {
 		val del2 = tekster.getProperty("kvittering.informasjonstekst.del2")
 		val vedleggSendtHeader = tekster.getProperty("kvittering.vedlegg.sendt")
 		val vedleggIkkeSendtHeader = tekster.getProperty("kvittering.vedlegg.ikkesendt")
-		val lastetOpp = soknad.vedleggsListe
-			.filter { !it.erVariant && (it.opplastingsStatus.equals(OpplastingsStatusDto.lastetOpp) || it.opplastingsStatus.equals(OpplastingsStatusDto.innsendt)) }
+		val lastetOpp = opplastedeVedlegg
 		val antallLastetOpp = lastetOpp.size
-		val ikkeLastetOppDenneGang = soknad.vedleggsListe.filter { it.opplastingsStatus.equals(OpplastingsStatusDto.sendSenere) }
+		val ikkeLastetOppDenneGang = manglendeObligatoriskeVedlegg
 		val now = LocalDateTime.now()
 		val antallInnsendt = java.lang.String.format(
 			tekster.getProperty("kvittering.erSendt"),
