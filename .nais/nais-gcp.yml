@@ -23,15 +23,15 @@ spec:
     enabled: true
     path: /internal/prometheus
   replicas:
-    min: 2
-    max: 4
+    min: 4
+    max: 6
   resources:
     limits:
       cpu: 3000m
-      memory: 4Gi
+      memory: 6Gi
     requests:
       cpu: 200m
-      memory: 2Gi
+      memory: 1Gi
   leaderElection: true
 
   tokenx:
