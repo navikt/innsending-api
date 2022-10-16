@@ -15,7 +15,8 @@ import java.util.*
 class RepositoryUtils(
 	private val soknadRepository: SoknadRepository,
 	private val vedleggRepository: VedleggRepository,
-	private val filRepository: FilRepository
+	private val filRepository: FilRepository,
+	private val filWithoutDataRepository: FilWithoutDataRepository
 ) {
 
 	private val logger = LoggerFactory.getLogger(BrukernotifikasjonPublisher::class.java)
@@ -180,6 +181,21 @@ class RepositoryUtils(
 			ex.message,
 			"Feil ved henting av filer for  vedlegg $vedleggsId til søknad $innsendingsId", "errorCode.resourceNotFound.noFiles"
 		)
+	}
+
+	fun hentFilerTilVedleggUtenFilData(innsendingsId: String, vedleggsId: Long): List<FilDbData> = try {
+		mapTilFilDbData(filWithoutDataRepository.findFilDbWIthoutFileDataByVedleggsid(vedleggsId))
+	} catch (ex: Exception) {
+		throw ResourceNotFoundException(
+			ex.message,
+			"Feil ved henting av filer for  vedlegg $vedleggsId til søknad $innsendingsId", "errorCode.resourceNotFound.noFiles"
+		)
+	}
+
+	private fun mapTilFilDbData(filerUtenFilData: List<FilDbWithoutFileData>): List<FilDbData> {
+		return filerUtenFilData.map{
+			FilDbData(id = it.id, vedleggsid = it.vedleggsid, filnavn = it.filnavn, mimetype = it.mimetype,
+				storrelse = it.storrelse, data = null, opprettetdato = it.opprettetdato )}.toList()
 	}
 
 	fun hentSumFilstorrelseTilVedlegg(innsendingsId: String, vedleggsId: Long): Long = try {

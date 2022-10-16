@@ -653,12 +653,16 @@ class SoknadService(
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
 			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad $innsendingsId eksisterer ikke", "errorCode.resourceNotFound.attachmentNotFound")
 
-		val filDbDataList = repo.hentFilerTilVedlegg(innsendingsId, vedleggsId)
+		val filDbDataList = if (medFil)
+			repo.hentFilerTilVedlegg(innsendingsId, vedleggsId)
+		else
+			repo.hentFilerTilVedleggUtenFilData(innsendingsId, vedleggsId)
+
 		if (filDbDataList.isEmpty() && kastFeilNarNull )
 			when (soknadDto.status.name) {
 				SoknadsStatusDto.innsendt.name -> throw IllegalActionException(
 					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
-					"Søknad $innsendingsId er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til Ditt Nav og søk opp dine saker der")
+					"Søknad $innsendingsId er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til https://www.nav.no/minside og søk opp dine saker der")
 				SoknadsStatusDto.slettetAvBruker.name, SoknadsStatusDto.automatiskSlettet.name -> throw IllegalActionException(
 					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
 					"Søknaden er slettet og ingen filer er tilgjengelig")
