@@ -954,7 +954,7 @@ class SoknadService(
 		logger.info("${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes " +
 			"${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size}"
 		)
-		if (opplastetOgManglende.first.isNotEmpty()) { // TODO avklare lage unntak for søknader på tema DAG?
+		if (opplastetOgManglende.second.isNotEmpty() && !"DAG".equals(innsendtSoknadDto.tema, true)) {
 			logger.info("${soknadDtoInput.innsendingsId}: Skal opprette ettersendingssoknad")
 			opprettEttersendingsSoknad(
 				innsendtSoknadDto,
