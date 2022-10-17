@@ -487,7 +487,8 @@ class FrontEndRestApi(
 					"errorCode.illegalAction.applicationSentInOrDeleted")
 			}
 			logger.info("$innsendingsId: Sendt inn soknad.\n" +
-				"InnsendteVedlegg=${kvitteringsDto.innsendteVedlegg?.size}, SkalEttersendes=${kvitteringsDto.skalEttersendes?.size}")
+				"InnsendteVedlegg=${kvitteringsDto.innsendteVedlegg?.size}, " +
+				"SkalEttersendes=${kvitteringsDto.skalEttersendes?.size}, ettersendelsesfrist=${kvitteringsDto.ettersendingsfrist}")
 
 			return ResponseEntity
 				.status(HttpStatus.OK)
