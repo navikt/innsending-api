@@ -31,7 +31,7 @@ class Validerer() {
 
 	fun validerStorrelse(opplastet: Long, max: Long, errorCode: String) {
 		if (opplastet > max*1024*1024) {
-			throw IllegalActionException("Ulovlig filstørrelse", "Opplastede fil(er) er større enn maksimalt tillatt", "errorCode.illegalAction.fileSizeSumTooLarge")
+			throw IllegalActionException("Ulovlig filstørrelse", "Opplastede fil(er) er større enn maksimalt tillatt", errorCode)
 		}
 	}
 
