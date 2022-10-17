@@ -119,7 +119,7 @@ spring:
       maximum-pool-size: 10
       connection-timeout: 10000
       idle-timeout: 10001
-      max-lifetime: 30001
+      max-lifetime: 60001
       leak-detection-threshold: 60000
 
 restconfig:
