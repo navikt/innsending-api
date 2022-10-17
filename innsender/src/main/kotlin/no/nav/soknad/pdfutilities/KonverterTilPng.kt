@@ -22,13 +22,11 @@ class KonverterTilPng {
 
 	fun konverterTilPng(fil: ByteArray): List<ByteArray> {
 		val antallSider = AntallSider().finnAntallSider(fil)
-		var imageList = mutableListOf<ByteArray>()
-		for (i in 0..antallSider-1) imageList.add(konverterTilPng(fil, i))
-		return imageList
+		return (0 until antallSider).map { konverterTilPng(fil, it) }
 	}
 
-	fun konverterTilPng(input: ByteArray?, sideNr: Int): ByteArray {
-		if (input == null || input.size == 0) {
+	private fun konverterTilPng(input: ByteArray, sideNr: Int): ByteArray {
+		if (input.isEmpty()) {
 			logger.error("Kan ikke konvertere en tom fil til PNG")
 			throw RuntimeException("Kan ikke konvertere en tom fil til PNG")
 		}

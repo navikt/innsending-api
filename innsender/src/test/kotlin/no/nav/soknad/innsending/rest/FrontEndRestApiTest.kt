@@ -174,7 +174,7 @@ class FrontEndRestApiTest {
 	}
 
 	@Test
-	fun slettFilPaVedleggTest() {
+	fun sjekkOpplastingsstatusEtterOpplastingOgSlettingAvFilPaVedleggTest() {
 		val skjemanr = "NAV 95-00.11"
 		val spraak = "nb_NO"
 		val vedlegg = listOf("N6", "W2")
@@ -252,7 +252,7 @@ class FrontEndRestApiTest {
 	}
 
 	@Test
-	fun hentSokersAktiveSoknaderTest() {
+	fun sjekkAtKorrektListeAvSokersAktiveSoknaderHentesTest() {
 		val token: String = getToken()
 
 		// Initiell liste

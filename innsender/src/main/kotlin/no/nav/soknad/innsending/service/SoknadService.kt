@@ -226,7 +226,7 @@ class SoknadService(
 				nyesteSoknad.tittel, nyesteSoknad.skjemanr, nyesteSoknad.tema, nyesteSoknad.spraak!!)
 
 			val nyesteSoknadVedleggsNrListe = nyesteSoknad.vedleggsListe.filter { !it.erHoveddokument }.map {it.vedleggsnr}
-			val filtrertVedleggsnrListe = vedleggsnrListe.filter { !nyesteSoknadVedleggsNrListe.contains(it) }.toList()
+			val filtrertVedleggsnrListe = vedleggsnrListe.filter { !nyesteSoknadVedleggsNrListe.contains(it) }
 
 			val vedleggDbDataListe = opprettVedleggTilSoknad(ettersendingsSoknadDb.id!!, filtrertVedleggsnrListe, sprak)
 
@@ -255,7 +255,7 @@ class SoknadService(
 				arkivertSoknad.tittel, arkivertSoknad.skjemanr, arkivertSoknad.tema, sprak ?: "nb")
 
 			val nyesteSoknadVedleggsNrListe = arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map {it.vedleggsnr}
-			val filtrertVedleggsnrListe = vedleggsnrListe.filter { !nyesteSoknadVedleggsNrListe.contains(it) }.toList()
+			val filtrertVedleggsnrListe = vedleggsnrListe.filter { !nyesteSoknadVedleggsNrListe.contains(it) }
 
 			val vedleggDbDataListe = opprettVedleggTilSoknad(ettersendingsSoknadDb.id!!, filtrertVedleggsnrListe, sprak ?: "nb")
 
@@ -415,7 +415,7 @@ class SoknadService(
 		try {
 			logger.debug("opprettEttersendingsSoknad: Skal opprette ettersendingssøknad basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
 				"Status for vedleggene til original søknad ${nyesteSoknad.vedleggsListe.map
-				{ it.vedleggsnr+':'+it.opplastingsStatus+':'+mapTilLocalDateTime(it.innsendtdato)+':'+ mapTilLocalDateTime(it.opprettetdato) }.toList()}")
+				{ it.vedleggsnr+':'+it.opplastingsStatus+':'+mapTilLocalDateTime(it.innsendtdato)+':'+ mapTilLocalDateTime(it.opprettetdato) }}")
 
 			val savedEttersendingsSoknad  = opprettEttersendingsSoknad(brukerId = nyesteSoknad.brukerId, ettersendingsId = ettersendingsId,
 				tittel = nyesteSoknad.tittel, skjemanr = nyesteSoknad.skjemanr, tema = nyesteSoknad.tema, sprak = nyesteSoknad.spraak!!)
@@ -454,7 +454,7 @@ class SoknadService(
 
 			innsenderMetrics.applicationCounterInc(InnsenderOperation.OPPRETT.name, dokumentSoknadDto.tema)
 			logger.debug("opprettEttersendingsSoknad: opprettet ${dokumentSoknadDto.innsendingsId} basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
-				"Med vedleggsstatus ${dokumentSoknadDto.vedleggsListe.map { it.vedleggsnr+':'+it.opplastingsStatus+':'+ mapTilLocalDateTime(it.innsendtdato) }.toList()}")
+				"Med vedleggsstatus ${dokumentSoknadDto.vedleggsListe.map { it.vedleggsnr+':'+it.opplastingsStatus+':'+ mapTilLocalDateTime(it.innsendtdato) }}")
 
 			return dokumentSoknadDto
 		} catch (e: Exception) {
@@ -571,7 +571,7 @@ class SoknadService(
 		}
 		val dokumentSoknadDto = lagDokumentSoknadDto(soknadDbData, vedleggDbDataListe)
 		logger.debug("hentAlleVedlegg: Hentet ${dokumentSoknadDto.innsendingsId}. " +
-			"Med vedleggsstatus ${dokumentSoknadDto.vedleggsListe.map { it.vedleggsnr+':'+it.opplastingsStatus+':'+it.innsendtdato }.toList()}")
+			"Med vedleggsstatus ${dokumentSoknadDto.vedleggsListe.map { it.vedleggsnr+':'+it.opplastingsStatus+':'+it.innsendtdato }}")
 
 		return dokumentSoknadDto
 	}
@@ -862,7 +862,7 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto): List<List<VedleggDto>> {
+	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto): Pair<List<VedleggDto>, List<VedleggDto>> {
 
 		// Det er ikke nødvendig å opprette og lagre kvittering(L7) i følge diskusjon 3/11.
 
@@ -914,7 +914,7 @@ class SoknadService(
 			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
 			throw BackendErrorException(ex.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV", "errorCode.backendError.sendToNAVError")
 		}
-		return listOf(opplastedeVedlegg, manglendePakrevdeVedlegg)
+		return Pair(opplastedeVedlegg, manglendePakrevdeVedlegg)
 
 	}
 
@@ -926,7 +926,7 @@ class SoknadService(
 
 			sjekkOgOpprettEttersendingsSoknad(innsendtSoknadDto, opplastetOgManglende, soknadDtoInput)
 
-			return lagKvittering(innsendtSoknadDto, opplastetOgManglende[0], opplastetOgManglende[1])
+			return lagKvittering(innsendtSoknadDto, opplastetOgManglende.first, opplastetOgManglende.second)
 
 		} finally {
 			innsenderMetrics.applicationCounterInc(InnsenderOperation.SEND_INN.name, soknadDtoInput.tema)
@@ -948,13 +948,13 @@ class SoknadService(
 
 	private fun sjekkOgOpprettEttersendingsSoknad(
 		innsendtSoknadDto: DokumentSoknadDto,
-		opplastetOgManglende: List<List<VedleggDto>>,
+		opplastetOgManglende: Pair<List<VedleggDto>, List<VedleggDto>>,
 		soknadDtoInput: DokumentSoknadDto
 	) {
 		logger.info("${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes " +
 			"${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size}"
 		)
-		if (opplastetOgManglende[1].isNotEmpty()) { // TODO avklare lage unntak for søknader på tema DAG?
+		if (opplastetOgManglende.first.isNotEmpty()) { // TODO avklare lage unntak for søknader på tema DAG?
 			logger.info("${soknadDtoInput.innsendingsId}: Skal opprette ettersendingssoknad")
 			opprettEttersendingsSoknad(
 				innsendtSoknadDto,

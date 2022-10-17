@@ -56,7 +56,7 @@ fun lagDokumentSoknadDto(soknadDbData: SoknadDbData, vedleggDbDataListe: List<Ve
 	)
 
 fun mapTilOffsetDateTime(localDateTime: LocalDateTime?): OffsetDateTime? =
-	localDateTime?.atOffset(ZoneOffset.UTC) //TODO, er dette riktig?
+	localDateTime?.atOffset(ZoneOffset.UTC)
 
 fun mapTilLocalDateTime(offsetDateTime: OffsetDateTime?): LocalDateTime? =
 	offsetDateTime?.toLocalDateTime()

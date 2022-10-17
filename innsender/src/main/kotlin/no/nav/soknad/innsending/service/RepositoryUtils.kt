@@ -19,7 +19,7 @@ class RepositoryUtils(
 	private val filWithoutDataRepository: FilWithoutDataRepository
 ) {
 
-	private val logger = LoggerFactory.getLogger(BrukernotifikasjonPublisher::class.java)
+	private val logger = LoggerFactory.getLogger(javaClass)
 
 	fun hentSoknadDb(id: Long): Optional<SoknadDbData> = try {
 		soknadRepository.findById(id)
