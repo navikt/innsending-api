@@ -281,6 +281,9 @@ class FrontEndRestApi(
 
 				Validerer().validerStorrelse(opplastetPaSoknad + opplastetPaVedlegg, restConfig.maxFileSizeSum.toLong(),  "errorCode.illegalAction.fileSizeSumTooLarge")
 			}
+			if (!patchVedleggDto.tittel.isNullOrEmpty()) {
+				Validerer().validerStorrelse(patchVedleggDto.tittel!!.length.toLong(), 255L, "errorCode.illegalAction.titleStringTooLong")
+			}
 			val vedleggDto = soknadService.endreVedlegg(patchVedleggDto, vedleggsId, soknadDto)
 			logger.info("$innsendingsId: Lagret vedlegg ${vedleggDto.id} til søknad")
 			return ResponseEntity
