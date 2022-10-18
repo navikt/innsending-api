@@ -35,7 +35,7 @@ class KonverterTilPdf {
 		} else if (FiltypeSjekker().isImage(fil)) {
 			return createPDFFromImage(fil)
 		}
-		throw IllegalActionException("","Ulovlig filformat. Kan ikke konvertere til PDF")
+		throw IllegalActionException("","Ulovlig filformat. Kan ikke konvertere til PDF", "errorCode.illegalAction.notSupportedFileFormat")
 	}
 
 	fun harSkrivbareFelt(input: ByteArray?): Boolean {
@@ -47,7 +47,7 @@ class KonverterTilPdf {
 				}
 			}
 		} catch (e: Exception) {
-			throw BackendErrorException(e.message, "Feil ved mottak av opplastet fil")
+			throw BackendErrorException(e.message, "Feil ved mottak av opplastet fil", "errorCode.backendError.FileUploadError")
 		}
 	}
 
@@ -58,10 +58,10 @@ class KonverterTilPdf {
 	fun flatUtPdf(fil: ByteArray): ByteArray {
 		// Konvertere fra PDF til bilde og tilbake til PDF
 		if (harSkrivbareFelt(fil)) {
-		val images = KonverterTilPng().konverterTilPng(fil)
-		val pdfList = mutableListOf<ByteArray>()
-		for (i in 0..images.size-1) pdfList.add(createPDFFromImage(images[i]))
-		return PdfMerger().mergePdfer(pdfList)
+			val images = KonverterTilPng().konverterTilPng(fil)
+			val pdfList = mutableListOf<ByteArray>()
+			for (i in 0..images.size-1) pdfList.add(createPDFFromImage(images[i]))
+			return PdfMerger().mergePdfer(pdfList)
 		}
 		return fil
 	}
@@ -91,10 +91,10 @@ class KonverterTilPdf {
 			}
 		} catch (ioe: IOException) {
 			logger.error("Klarte ikke å sjekke filtype til PDF. Feil: '{}'", ioe.message)
-			throw RuntimeException("vedlegg.opplasting.feil.generell")
+			throw BackendErrorException(ioe.message, "Feil ved mottak av opplastet fil", "errorCode.backendError.FileUploadError")
 		} catch (t: Throwable) {
 			logger.error("Klarte ikke å sjekke filtype til PDF. Feil: '{}'", t)
-			throw RuntimeException("vedlegg.opplasting.feil.generell")
+			throw BackendErrorException(t.message, "Feil ved mottak av opplastet fil", "errorCode.backendError.FileUploadError")
 		}
 	}
 

@@ -22,7 +22,7 @@ cron:
   startSlettPermanentIkkeInnsendteSoknader: 0 0 3 * * *
   slettPermanentEldreEnn: 365
 
-ettersendingsfrist: 42
+ettersendingsfrist: 14
 ---
 spring:
   config:
@@ -52,8 +52,8 @@ restconfig:
   password: password
   sharedUsername: innsending
   sharedPassword: password
-  maxFileSize: 100
-  maxFileSizeSum: 300
+  maxFileSize: 50
+  maxFileSizeSum: 150
   sanityHost: https://www.nav.no
   sanityEndpoint: /soknader/api/sanity/skjemautlisting
   filestorageHost: http://localhost:9043/filestorage-api
@@ -119,8 +119,8 @@ spring:
       maximum-pool-size: 10
       connection-timeout: 10000
       idle-timeout: 10001
-      max-lifetime: 30001
-      leak-detection-threshold: 30000
+      max-lifetime: 60001
+      leak-detection-threshold: 60000
 
 restconfig:
   version: ${APP_VERSION}
@@ -153,6 +153,8 @@ brukernotifikasjonconfig:
   gjenopptaSoknadsArbeid: ${GJENOPPTA_SOKNADS_ARBEID}
   ettersendePaSoknad: ${ETTERSENDE_PA_SOKNAD}
   publisereEndringer: ${PUBLISERE_BRUKERNOTIFIKASJONER}
+
+ettersendingsfrist: ${ETTERSENDINGSFRIST}
 
 no.nav.security.jwt:
   issuer.tokenx:

@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.util.Constants.BEARER
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -57,9 +58,21 @@ fun getBytesFromFile(path: String): ByteArray {
 	return outputStream.toByteArray()
 }
 
+fun writeBytesToFile(data: ByteArray, filePath: String) {
+	File(filePath).writeBytes(data)
+}
+
 fun createHeaders(token: String): HttpHeaders {
 	val headers = HttpHeaders()
 	headers.contentType = MediaType.APPLICATION_JSON
+	headers.add(HttpHeaders.AUTHORIZATION, "$BEARER$token")
+	headers.add(Constants.CORRELATION_ID, UUID.randomUUID().toString())
+	return headers
+}
+
+fun createHeaders(token: String, contentType: MediaType): HttpHeaders {
+	val headers = HttpHeaders()
+	headers.contentType = contentType
 	headers.add(HttpHeaders.AUTHORIZATION, "$BEARER$token")
 	headers.add(Constants.CORRELATION_ID, UUID.randomUUID().toString())
 	return headers

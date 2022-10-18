@@ -59,12 +59,13 @@ class FillagerAPI(
 
 
 	override fun lagreFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>) {
-		val fileData: List<FileData> = vedleggDtos
+		vedleggDtos
 			.filter { it.document != null }
 			.map { FileData(it.uuid!!, it.document, it.opprettetdato) }
+			.onEach { logger.info("$innsendingsId: Skal sende ${it.id} med størrelse ${it.content?.size}") }
+			.forEach { filesApi.addFiles(listOf(it), innsendingsId) }
 
-		filesApi.addFiles(fileData, innsendingsId)
-		logger.info("$innsendingsId: Lagret følgende filer ${fileData.map { it.id }}")
+		logger.info("$innsendingsId: Lagret følgende filer ${vedleggDtos.filter{it.document != null }.map { it.id }}")
 	}
 
 	override fun hentFiler(innsendingsId: String, vedleggDtos: List<VedleggDto>): List<VedleggDto> {

@@ -11,21 +11,23 @@ import no.nav.soknad.innsending.utils.createHeaders
 import no.nav.soknad.innsending.utils.getBytesFromFile
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
+import org.springframework.core.ParameterizedTypeReference
+import org.springframework.core.io.ClassPathResource
+import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import org.springframework.util.LinkedMultiValueMap
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+
 
 @Suppress("DEPRECATION")
 @ActiveProfiles("test")
@@ -99,6 +101,8 @@ class SkjemaRestApiTest {
 		response: ResponseEntity<Unit>,
 		token: String
 	) {
+
+		// Hent søknaden opprettet fra FyllUt og kjør gjennom løp for opplasting av vedlegg og innsending av søknad
 		val innsendingsId = response.headers["Location"]?.first()?.substringAfterLast("/")
 		assertNotNull(innsendingsId)
 
@@ -127,7 +131,7 @@ class SkjemaRestApiTest {
 		assertEquals(OpplastingsStatusDto.sendesAvAndre, patchResponseT7.body!!.opplastingsStatus)
 
 		val vedleggN6 = getSoknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
-		val patchVedleggN6 = PatchVedleggDto(null, OpplastingsStatusDto.sendesAvAndre)
+		val patchVedleggN6 = PatchVedleggDto(null, OpplastingsStatusDto.ikkeValgt)
 		val patchRequestN6 = HttpEntity(patchVedleggN6, createHeaders(token))
 		val patchResponseN6 = restTemplate.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggN6.id}", HttpMethod.PATCH,
@@ -135,7 +139,21 @@ class SkjemaRestApiTest {
 		)
 
 		assertTrue(patchResponseN6.body != null)
-		assertEquals(OpplastingsStatusDto.sendesAvAndre, patchResponseN6.body!!.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.ikkeValgt, patchResponseN6.body!!.opplastingsStatus)
+		assertEquals(vedleggN6.id, patchResponseN6.body!!.id)
+
+		val multipart = LinkedMultiValueMap<Any, Any>()
+		multipart.add("file", ClassPathResource("/litenPdf.pdf"))
+
+		val postFilRequestN6 = HttpEntity(multipart, createHeaders(token, MediaType.MULTIPART_FORM_DATA))
+		val postFilResponseN6 = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggN6.id}/fil", HttpMethod.POST,
+			postFilRequestN6, FilDto::class.java
+		)
+
+		assertEquals(HttpStatus.CREATED, postFilResponseN6.statusCode)
+		assertTrue(postFilResponseN6.body != null)
+		assertEquals(Mimetype.applicationSlashPdf, postFilResponseN6.body!!.mimetype)
 
 		///frontend/v1/sendInn/{innsendingsId}
 		val sendInnRespons = restTemplate.exchange(
@@ -145,7 +163,24 @@ class SkjemaRestApiTest {
 
 		assertTrue(sendInnRespons.statusCode == HttpStatus.OK && sendInnRespons.body != null)
 		val kvitteringsDto = sendInnRespons.body
-		assertEquals(2, kvitteringsDto!!.skalSendesAvAndre!!.size)
+		assertEquals(1, kvitteringsDto!!.skalSendesAvAndre!!.size)
+		assertTrue(kvitteringsDto.hoveddokumentRef != null)
+
+		assertThrows<Exception> {
+			val hentSoknadRespons = restTemplate.exchange(
+				"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}", HttpMethod.GET,
+				HttpEntity<Unit>(createHeaders(token)), DokumentSoknadDto::class.java
+			)
+		}
+
+		val hentFilURL = "http://localhost:${serverPort}/${kvitteringsDto.hoveddokumentRef}"
+		val filRespons = restTemplate.exchange(
+			hentFilURL, HttpMethod.GET,
+			HttpEntity<Unit>(createHeaders(token, MediaType.APPLICATION_PDF)), ByteArray::class.java
+		)
+		assertEquals(HttpStatus.OK, filRespons.statusCode)
+		assertTrue(filRespons.body != null)
+
 	}
 
 	private fun lagDokument(vedleggsnr: String, tittel: String, pakrevd: Boolean, mimetype: Mimetype? = null, erVedlegg: Boolean = false): SkjemaDokumentDto {

@@ -31,8 +31,8 @@ restconfig:
   password: password
   sharedUsername: innsending
   sharedPassword: password
-  maxFileSize: 100
-  maxFileSizeSum: 300
+  maxFileSize: 50
+  maxFileSizeSum: 150
   sanityHost: https://www.nav.no
   sanityEndpoint: /soknader/api/sanity/skjemautlisting
   filestorageHost: http://localhost:${wiremock.server.port}/filestorage-api
@@ -64,7 +64,7 @@ brukernotifikasjonconfig:
   ettersendePaSoknad: /dokumentinnsending/ettersending/
   publisereEndringer: true
 
-ettersendingsfrist: 42
+ettersendingsfrist: 14
 
 wiremock:
   reset-mappings-after-each-test: true

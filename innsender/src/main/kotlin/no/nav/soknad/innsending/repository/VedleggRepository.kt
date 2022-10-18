@@ -21,12 +21,12 @@ interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
 	@Transactional
 	@Modifying
 	@Query(value="UPDATE VedleggDbData v SET v.status = :status, v.endretdato = :endretdato WHERE v.id = :id")
-	fun updateStatus(@Param("id") id: Long, @Param("status") status: OpplastingsStatus, @Param("endretdato") endretdato: LocalDateTime)
+	fun updateStatus(@Param("id") id: Long, @Param("status") status: OpplastingsStatus, @Param("endretdato") endretdato: LocalDateTime): Int
 
 	@Transactional
 	@Modifying
-	@Query(value="UPDATE VedleggDbData v SET v.status = :status, v.endretdato = :endretdato, v.innsendtdato = :innsendtdato WHERE v.id = :id")
-	fun updateStatusAndInnsendtdato(@Param("id") id: Long, @Param("status") status: OpplastingsStatus, @Param("endretdato") endretdato: LocalDateTime, @Param("innsendtdato") innsendtdato: LocalDateTime)
+	@Query(value="UPDATE VedleggDbData v SET v.status = :status, v.innsendtdato = :innsendtdato, v.endretdato = :endretdato WHERE v.id = :id")
+	fun updateStatusAndInnsendtdato(@Param("id") id: Long, @Param("status") status: OpplastingsStatus, @Param("endretdato") endretdato: LocalDateTime, @Param("innsendtdato") innsendtdato: LocalDateTime): Int
 
 	@Transactional
 	@Modifying

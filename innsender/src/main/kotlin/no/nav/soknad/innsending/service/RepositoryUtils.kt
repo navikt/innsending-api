@@ -1,9 +1,11 @@
 package no.nav.soknad.innsending.service
 
+import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.repository.*
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -13,97 +15,101 @@ import java.util.*
 class RepositoryUtils(
 	private val soknadRepository: SoknadRepository,
 	private val vedleggRepository: VedleggRepository,
-	private val filRepository: FilRepository
+	private val filRepository: FilRepository,
+	private val filWithoutDataRepository: FilWithoutDataRepository
 ) {
+
+	private val logger = LoggerFactory.getLogger(javaClass)
+
 	fun hentSoknadDb(id: Long): Optional<SoknadDbData> = try {
 		soknadRepository.findById(id)
 	} catch (re: Exception) {
-		throw BackendErrorException(re.message, "Henting av søknad $id fra databasen feilet")
+		throw BackendErrorException(re.message, "Henting av søknad $id fra databasen feilet", "errorCode.backendError.applicationFetchError")
 	}
 
 	fun hentSoknadDb(innsendingsId: String): Optional<SoknadDbData> = try {
 		soknadRepository.findByInnsendingsid(innsendingsId)
 	} catch (re: Exception) {
-		throw BackendErrorException(re.message, "Henting av søknad $innsendingsId fra databasen feilet")
+		throw BackendErrorException(re.message, "Henting av søknad $innsendingsId fra databasen feilet", "errorCode.backendError.applicationFetchError")
 	}
 
 	fun endreSoknadDb(id: Long, visningsSteg: Long) = try {
 		soknadRepository.updateVisningsStegAndEndretDato(id, visningsSteg, LocalDateTime.now())
 	} catch (re: Exception) {
-		throw BackendErrorException(re.message, "Oppdatering av søknad med id= $id feilet")
+		throw BackendErrorException(re.message, "Oppdatering av søknad med id= $id feilet", "errorCode.backendError.errorCode.backendError.applicationUpdateErro")
 	}
 
 	fun findAllByStatusAndWithOpprettetdatoBefore(status: String, opprettetFor: OffsetDateTime) = try {
 		soknadRepository.findAllByStatusAndWithOpprettetdatoBefore(status, opprettetFor)
 	} catch (ex: Exception) {
-		throw BackendErrorException(ex.message, "Feil ved henting av alle soknader med status $status opprettet før $opprettetFor")
+		throw BackendErrorException(ex.message, "Feil ved henting av alle soknader med status $status opprettet før $opprettetFor", "errorCode.backendError.applicationFetchError")
 	}
 
 	fun findAllByOpprettetdatoBefore(opprettetFor: OffsetDateTime) = try {
 		soknadRepository.findAllByOpprettetdatoBefore(opprettetFor)
 	} catch (ex: Exception) {
-		throw BackendErrorException(ex.message, "Feil ved henting av alle soknader opprettet før $opprettetFor")
+		throw BackendErrorException(ex.message, "Feil ved henting av alle soknader opprettet før $opprettetFor", "errorCode.backendError.applicationFetchError")
 	}
 
 	fun finnAlleSoknaderGittBrukerIdOgStatus(brukerId: String, status: SoknadsStatus) = try {
 		soknadRepository.findByBrukeridAndStatus(brukerId, status)
 	} catch (ex: Exception) {
-		throw BackendErrorException(ex.message, "Feil ved henting av alle soknader for bruker xxxx med status $status")
+		throw BackendErrorException(ex.message, "Feil ved henting av alle soknader for bruker xxxx med status $status", "errorCode.backendError.applicationFetchError")
 	}
 
 	fun finnNyesteSoknadGittEttersendingsId(ettersendingsId: String): List<SoknadDbData> = try {
 		soknadRepository.findNewestByEttersendingsId(ettersendingsId)
 	} catch (ex: Exception) {
-		throw BackendErrorException(ex.message, "Feil ved henting av nyeste søknad gitt ettersendingsid $$ettersendingsId")
+		throw BackendErrorException(ex.message, "Feil ved henting av nyeste søknad gitt ettersendingsid $$ettersendingsId", "errorCode.backendError.applicationFetchError")
 	}
 
 	fun lagreSoknad(soknadDbData: SoknadDbData): SoknadDbData = try {
 		soknadRepository.save(soknadDbData)
 	} catch (ex: Exception) {
-		throw BackendErrorException(ex.message, "Feil i lagring av søknad ${soknadDbData.tittel}")
+		throw BackendErrorException(ex.message, "Feil i lagring av søknad ${soknadDbData.tittel}", "errorCode.backendError.applicationSaveError")
 	}
 
 	fun soknadSaveAndFlush(soknadDbData: SoknadDbData): SoknadDbData  = try {
 		soknadRepository.saveAndFlush(soknadDbData)
 	} catch (ex: Exception) {
-		throw BackendErrorException(ex.message, "Feil ved lagring og flush av søknad ${soknadDbData.innsendingsid}")
+		throw BackendErrorException(ex.message, "Feil ved lagring og flush av søknad ${soknadDbData.innsendingsid}", "errorCode.backendError.applicationSaveError")
 	}
 
 	fun slettSoknad(dokumentSoknadDto: DokumentSoknadDto) = try {
 		soknadRepository.deleteById(dokumentSoknadDto.id!!)
 	} catch (ex: Exception) {
-		throw BackendErrorException(ex.message, "Feil ved sletting av søknad ${dokumentSoknadDto.innsendingsId}")
+		throw BackendErrorException(ex.message, "Feil ved sletting av søknad ${dokumentSoknadDto.innsendingsId}", "errorCode.backendError.applicationDeleteError")
 	}
 
 	fun oppdaterEndretDato(soknadsId: Long) = try {
 		soknadRepository.updateEndretDato(soknadsId, LocalDateTime.now())
 	} catch (ex: Exception) {
-		throw BackendErrorException(ex.message, "Feil ved oppdatering av søknad med id $soknadsId")
+		throw BackendErrorException(ex.message, "Feil ved oppdatering av søknad med id $soknadsId", "errorCode.backendError.applicationUpdateError")
 	}
 
 	fun hentVedlegg(vedleggsId: Long): Optional<VedleggDbData> = try {
 		vedleggRepository.findByVedleggsid(vedleggsId)
 	} catch (ex: Exception) {
-		throw BackendErrorException(ex.message, "Feil ved forsøk på henting av vedlegg med id $vedleggsId")
+		throw BackendErrorException(ex.message, "Feil ved forsøk på henting av vedlegg med id $vedleggsId", "errorCode.backendError.attachmentFetchError" )
 	}
 
 	fun hentAlleVedleggGittSoknadsid(soknadsId: Long): List<VedleggDbData> = try {
 		vedleggRepository.findAllBySoknadsid(soknadsId)
 	} catch (ex: Exception) {
-		throw BackendErrorException(ex.message, "Feil ved forsøk på henting av alle vedlegg til søknad med id $soknadsId")
+		throw BackendErrorException(ex.message, "Feil ved forsøk på henting av alle vedlegg til søknad med id $soknadsId", "errorCode.backendError.attachmentFetchError")
 
 	}
 
 	fun lagreVedlegg(vedleggDbData: VedleggDbData): VedleggDbData = try {
 		vedleggRepository.save(vedleggDbData)
 	} catch (ex: Exception) {
-		throw BackendErrorException(ex.message, "Feil i lagring av vedleggsdata ${vedleggDbData.vedleggsnr} til søknad")
+		throw BackendErrorException(ex.message, "Feil i lagring av vedleggsdata ${vedleggDbData.vedleggsnr} til søknad", "errorCode.backendError.attachmentSaveError")
 	}
 
 	fun flushVedlegg() = try {
 		vedleggRepository.flush()
 	} catch (ex: Exception) {
-		throw BackendErrorException(ex.message, "Feil ved flush av vedlegg")
+		throw BackendErrorException(ex.message, "Feil ved flush av vedlegg", "errorCode.backendError.attachmentSaveError")
 	}
 
 	fun oppdaterVedlegg(innsendingsId: String, vedleggDbData: VedleggDbData): Optional<VedleggDbData> = try {
@@ -112,19 +118,37 @@ class RepositoryUtils(
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
-			"Feil ved oppdatering av vedlegg ${vedleggDbData.id} for søknad $innsendingsId"
+			"Feil ved oppdatering av vedlegg ${vedleggDbData.id} for søknad $innsendingsId",
+			"errorCode.backendError.attachmentSaveError"
 		)
 	}
 
-	fun oppdaterVedleggStatus(innsendingsId: String, vedleggsId: Long, opplastingsStatus: OpplastingsStatus, localDateTime: LocalDateTime) = try {
-		if (opplastingsStatus != OpplastingsStatus.INNSENDT)
-			vedleggRepository.updateStatus(vedleggsId, opplastingsStatus, localDateTime)
-		else
-			vedleggRepository.updateStatusAndInnsendtdato(vedleggsId, opplastingsStatus, localDateTime, LocalDateTime.now())
+	fun oppdaterVedleggStatus(innsendingsId: String, vedleggsId: Long, opplastingsStatus: OpplastingsStatus, localDateTime: LocalDateTime): Int = try {
+			vedleggRepository.updateStatus(id = vedleggsId, status = opplastingsStatus, endretdato = localDateTime)
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
-			"Feil ved oppdatering av status for vedlegg $vedleggsId for søknad $innsendingsId"
+			"Feil ved oppdatering av status for vedlegg $vedleggsId for søknad $innsendingsId",
+			"errorCode.backendError.attachmentSaveError"
+		)
+	}
+
+	//NB! metoden vedleggRepository.updateStatusAndInnsendtdato fungerer ved lokal testing, men feiler når kjøring på nais.
+	fun oppdaterVedleggStatusOgInnsendtdato(innsendingsId: String, vedleggsId: Long, opplastingsStatus: OpplastingsStatus,
+																					endretDato: LocalDateTime, innsendtDato: LocalDateTime): Int = try {
+		logger.info("oppdaterVedleggStatusOgInnsendtdato: vedlegg=$vedleggsId, innsendtdato=$innsendtDato ")
+		val raderEndret = vedleggRepository.updateStatusAndInnsendtdato(
+			id = vedleggsId, status = opplastingsStatus, endretdato = endretDato, innsendtdato = innsendtDato
+		)
+		if (raderEndret != 1) {
+			logger.error("$innsendingsId: oppdaterVedleggStatusOgInnsendtdato: uventet antall, $raderEndret, rader endret for vedlegg $vedleggsId")
+		}
+		raderEndret
+	} catch (ex: Exception) {
+		throw BackendErrorException(
+			ex.message,
+			"Feil ved oppdatering av status for vedlegg $vedleggsId for søknad $innsendingsId",
+			"errorCode.backendError.attachmentSaveError"
 		)
 	}
 
@@ -132,19 +156,22 @@ class RepositoryUtils(
 		try {
 			vedleggRepository.deleteById(vedleggsId)
 		} catch (ex: Exception) {
-			throw BackendErrorException(ex.message, "Feil i forbindelse med sletting av vedlegg til søknad")
+			throw BackendErrorException(ex.message, "Feil i forbindelse med sletting av vedlegg til søknad", "errorCode.backendError.attachmentDeleteError")
 		}
 
 	fun saveFilDbData(innsendingsId: String, filDbData: FilDbData): FilDbData = try {
 		filRepository.save(filDbData)
 	} catch (ex: Exception) {
-		throw BackendErrorException(ex.message, "Feil ved lagring av filDbData for vedlegg ${filDbData.vedleggsid} til søknad $innsendingsId")
+		throw BackendErrorException(ex.message,
+			"Feil ved lagring av filDbData for vedlegg ${filDbData.vedleggsid} til søknad $innsendingsId",
+			"errorCode.backendError.fileSaveError")
 	}
 
 	fun hentFilDb(innsendingsId: String, vedleggsId: Long, filId: Long): Optional<FilDbData> = try {
 		filRepository.findByVedleggsidAndId(vedleggsId, filId)
 	} catch (ex: Exception) {
-		throw BackendErrorException(ex.message, "Feil ved henting av fil med id=$filId for søknad $innsendingsId")
+		throw BackendErrorException(ex.message, "Feil ved henting av fil med id=$filId for søknad $innsendingsId",
+			"errorCode.backendError.fileFetchError")
 	}
 
 	fun hentFilerTilVedlegg(innsendingsId: String, vedleggsId: Long): List<FilDbData> = try {
@@ -152,7 +179,31 @@ class RepositoryUtils(
 	} catch (ex: Exception) {
 		throw ResourceNotFoundException(
 			ex.message,
-			"Feil ved henting av filer for  vedlegg $vedleggsId til søknad $innsendingsId"
+			"Feil ved henting av filer for  vedlegg $vedleggsId til søknad $innsendingsId", "errorCode.resourceNotFound.noFiles"
+		)
+	}
+
+	fun hentFilerTilVedleggUtenFilData(innsendingsId: String, vedleggsId: Long): List<FilDbData> = try {
+		mapTilFilDbData(filWithoutDataRepository.findFilDbWIthoutFileDataByVedleggsid(vedleggsId))
+	} catch (ex: Exception) {
+		throw ResourceNotFoundException(
+			ex.message,
+			"Feil ved henting av filer for  vedlegg $vedleggsId til søknad $innsendingsId", "errorCode.resourceNotFound.noFiles"
+		)
+	}
+
+	private fun mapTilFilDbData(filerUtenFilData: List<FilDbWithoutFileData>): List<FilDbData> {
+		return filerUtenFilData.map{
+			FilDbData(id = it.id, vedleggsid = it.vedleggsid, filnavn = it.filnavn, mimetype = it.mimetype,
+				storrelse = it.storrelse, data = null, opprettetdato = it.opprettetdato )}.toList()
+	}
+
+	fun hentSumFilstorrelseTilVedlegg(innsendingsId: String, vedleggsId: Long): Long = try {
+		filRepository.findSumByVedleggsid(vedleggsId) ?: 0L
+	} catch (ex: Exception) {
+		throw BackendErrorException(
+			ex.message,
+			"Feil ved henting av filer for  vedlegg $vedleggsId til søknad $innsendingsId", "errorCode.backendError.fileFetchError"
 		)
 	}
 
@@ -160,7 +211,7 @@ class RepositoryUtils(
 		try {
 			filRepository.deleteAllByVedleggsid(vedleggsId)
 		} catch (ex: Exception) {
-			throw BackendErrorException(ex.message, "Feil i forbindelse med sletting av filer til vedlegg $vedleggsId")
+			throw BackendErrorException(ex.message, "Feil i forbindelse med sletting av filer til vedlegg $vedleggsId", "errorCode.backendError.fileDeleteError")
 		}
 
 	fun slettFilDb(innsendingsId: String, vedleggsId: Long, filId: Long) = try {
@@ -168,7 +219,7 @@ class RepositoryUtils(
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
-			"Feil ved sletting av fil til vedlegg $vedleggsId til søknad $innsendingsId"
+			"Feil ved sletting av fil til vedlegg $vedleggsId til søknad $innsendingsId", "errorCode.backendError.fileDeleteError"
 		)
 	}
 
@@ -177,7 +228,7 @@ class RepositoryUtils(
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
-			"Feil ved sletting av fil til vedlegg $vedleggsId til søknad $innsendingsId"
+			"Feil ved sletting av fil til vedlegg $vedleggsId til søknad $innsendingsId", "errorCode.backendError.attachmentFetchError"
 		)
 	}
 
@@ -186,7 +237,8 @@ class RepositoryUtils(
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
-			"Feil ved sletting av filer til vedlegg på søknader eldre enn $eldreEnn dager"
+			"Feil ved sletting av filer til vedlegg på søknader eldre enn $eldreEnn dager",
+			"errorCode.backendError.deleteFilesForOldApplicationsError"
 		)
 	}
 }

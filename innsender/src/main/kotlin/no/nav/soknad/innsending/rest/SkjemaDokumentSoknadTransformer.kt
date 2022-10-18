@@ -11,8 +11,9 @@ class SkjemaDokumentSoknadTransformer {
 		input.skjemanr, input.tittel, input.tema, SoknadsStatusDto.opprettet, LocalDateTime.now().atOffset(ZoneOffset.UTC),
 		lagVedleggsListe(input), null, null, null, finnSpraakFraInput(input.spraak),
 		LocalDateTime.now().atOffset(ZoneOffset.UTC), null, 0, VisningsType.fyllUt,
-		kanLasteOppAnnet = input.vedleggsListe?.any { it.vedleggsnr == "N6" && !it.pakrevd })
+		kanLasteOppAnnet = input.vedleggsListe?.any { it.propertyNavn != null && it.propertyNavn == "annenDokumentasjon" })
 
+//	kanLasteOppAnnet = input.vedleggsListe?.any { it.property == "annenDokumentasjon" : it.vedleggsnr == "N6" && it.label == "Annen dokumentasjon" })
 
 	/**
 	 * Behandling av vedlegg av type Annet (skjemanr=N6):
@@ -27,7 +28,7 @@ class SkjemaDokumentSoknadTransformer {
 		val variant = konverterTilVedleggDto(skjemaDto.hoveddokumentVariant, erHoveddokument = true, erVariant = true)
 		val vedleggListe: List<VedleggDto> =
 			(skjemaDto.vedleggsListe ?: emptyList())
-				.filter { it.vedleggsnr != "N6" || it.label != "Annet" || it.pakrevd }
+				.filter { !(it.propertyNavn != null && it.propertyNavn == "annenDokumentasjon") }
 				.map { konverterTilVedleggDto(it, erHoveddokument = false, erVariant = false) }
 
 		return listOf(hoveddok, variant) + vedleggListe

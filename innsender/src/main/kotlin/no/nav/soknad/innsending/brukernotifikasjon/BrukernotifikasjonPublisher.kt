@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.service.ukjentEttersendingsId
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service
 
@@ -22,9 +23,18 @@ class BrukernotifikasjonPublisher(
 	private val logger = LoggerFactory.getLogger(BrukernotifikasjonPublisher::class.java)
 
 	private val soknadLevetid = 56 // Dager
-	private val ettersendingsFrist = 56 // Dager
-	val tittelPrefixEttersendelse = "Du har sagt du skal ettersende vedlegg til "
-	val tittelPrefixNySoknad = "Du har påbegynt en søknad om "
+
+	@Value("\${ettersendingsfrist}")
+	private var ettersendingsfrist: Long = 14
+
+	val tittelPrefixEttersendelse = mapOf("no" to "Klikk her for å ettersende vedlegg til: ",
+		"nn" to "Klikk her for å ettersende vedlegg til: ",
+		"en" to "Click here to send missing attachments to: "
+	)
+	val tittelPrefixNySoknad = mapOf("no" to "Klikk her for å åpne påbegynt søknad om: ",
+		"nn" to "Klikk her for å åpne startet søknad om: ",
+		"en" to "Click here to open started application for: "
+	)
 	val linkDokumentinnsending = notifikasjonConfig.gjenopptaSoknadsArbeid
 	val linkDokumentinnsendingEttersending = notifikasjonConfig.ettersendePaSoknad
 
@@ -66,10 +76,10 @@ class BrukernotifikasjonPublisher(
 		// Ny søknad opprettet publiser data slik at søker kan plukke den opp fra Ditt Nav på et senere tidspunkt
 		// i tilfelle han/hun ikke ferdigstiller og sender inn
 		val ettersending = erEttersending(dokumentSoknad)
-		val tittel = (if (ettersending) tittelPrefixEttersendelse else tittelPrefixNySoknad) + dokumentSoknad.tittel
+		val tittel = tittelPrefixGittSprak(ettersending, dokumentSoknad.spraak ?: "no") + dokumentSoknad.tittel
 		val lenke = createLink(dokumentSoknad.innsendingsId!!, false)
 
-		val notificationInfo = NotificationInfo(tittel, lenke , if (ettersending) ettersendingsFrist else  soknadLevetid , emptyList())
+		val notificationInfo = NotificationInfo(tittel, lenke , if (ettersending) ettersendingsfrist.toInt() else  soknadLevetid , emptyList())
 		val soknadRef = SoknadRef(dokumentSoknad.innsendingsId!!, ettersending, groupId, dokumentSoknad.brukerId, dokumentSoknad.opprettetDato)
 
 		try {
@@ -78,6 +88,12 @@ class BrukernotifikasjonPublisher(
 		} catch (e: Exception) {
 			logger.error("${dokumentSoknad.innsendingsId}: Sending av melding om ny brukernotifikasjon feilet", e)
 		}
+	}
+
+	private fun tittelPrefixGittSprak(ettersendelse: Boolean, sprak: String): String {
+		return if (ettersendelse)
+			tittelPrefixEttersendelse[sprak] ?: tittelPrefixEttersendelse["no"]!!
+		else tittelPrefixNySoknad[sprak] ?: tittelPrefixNySoknad["no"]!!
 	}
 
 	private fun erEttersending(dokumentSoknad: DokumentSoknadDto): Boolean =
