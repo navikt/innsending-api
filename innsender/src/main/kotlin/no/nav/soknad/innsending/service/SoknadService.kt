@@ -1112,9 +1112,9 @@ class SoknadService(
 		if (filer.isEmpty()) return null
 
 		val vedleggsFil: ByteArray? =
-			if (vedleggDto.erHoveddokument) {
+			if (vedleggDto.erHoveddokument && vedleggDto.erVariant ) {
 				if (filer.size > 1) {
-					logger.warn("Vedlegg ${vedleggDto.id}: ${vedleggDto.tittel} har flere opplastede filer, velger første")
+					logger.warn("${soknadDto.innsendingsId}: soknadDtoVedlegg ${vedleggDto.id} erVariant${vedleggDto.erVariant} - ${vedleggDto.tittel} har flere opplastede filer, velger første")
 				}
 				filer[0].data
 			} else {

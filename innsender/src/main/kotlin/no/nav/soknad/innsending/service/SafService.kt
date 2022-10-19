@@ -27,9 +27,14 @@ class SafService(val safApi: SafInterface) {
 			}
 
 		logger.info("Hentet ${innsendte.size} journalposter for bruker, skal mappe til AktivSakDto")
-		logger.info("Hentet ${innsendte.forEach { it.toString() }}")
-		return innsendte.map { AktivSakDto(finnBrevKode(it.dokumenter), it.tittel, it.tema,
+		val innsendteMedHovedDokMedBrevkode = innsendte.filter { harHoveddokumentMedBrevkodeSatt(it.dokumenter) }
+		logger.debug("innsendteMedHovedDokMedBrevkode ${innsendteMedHovedDokMedBrevkode.size}")
+		return innsendteMedHovedDokMedBrevkode.map { AktivSakDto(finnBrevKode(it.dokumenter), it.tittel, it.tema,
 				konverterTilDateTime(it.datoMottatt ?: ""), erEttersending(it.dokumenter), konverterTilVedleggsliste(it.dokumenter), it.eksternReferanseId ) }
+	}
+
+	private fun harHoveddokumentMedBrevkodeSatt(innsendteDokumenter: List<Dokument>): Boolean {
+		return innsendteDokumenter.count { it.k_tilkn_jp_som.equals("HOVEDDOKUMENT", true) && it.brevkode != null } > 0
 	}
 
 	private fun konverterTilDateTime(dateString: String): OffsetDateTime {
