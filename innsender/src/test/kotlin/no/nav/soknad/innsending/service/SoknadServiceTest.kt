@@ -366,9 +366,10 @@ class SoknadServiceTest {
 		val skjemanr = "NAV 10-07.20"
 		val spraak = "nb_NO"
 		val arkivertSoknad = AktivSakDto(skjemanr,  "Tittel", "Tema", OffsetDateTime.now(), false, listOf(InnsendtVedleggDto(skjemanr, "Tittel")), Utilities.laginnsendingsId() )
+		val opprettEttersendingGittSkjemaNr = OpprettEttersendingGittSkjemaNr(skjemanr, spraak, listOf("C1", "L8"))
 
 		val soknadService = lagSoknadService()
-		val dokumentSoknadDto = soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(brukerid, arkivertSoknad, listOf("C1", "L8"),	spraak )
+		val dokumentSoknadDto = soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(brukerid, arkivertSoknad, opprettEttersendingGittSkjemaNr,	spraak )
 
 		assertTrue(dokumentSoknadDto.innsendingsId != null  && VisningsType.ettersending == dokumentSoknadDto.visningsType && dokumentSoknadDto.ettersendingsId==arkivertSoknad.innsendingsId )
 		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
