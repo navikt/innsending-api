@@ -34,7 +34,7 @@ class SafService(val safApi: SafInterface) {
 	}
 
 	private fun harHoveddokumentMedBrevkodeSatt(innsendteDokumenter: List<Dokument>): Boolean {
-		return innsendteDokumenter.count { it.k_tilkn_jp_som.equals("HOVEDDOKUMENT", true) && it.brevkode != null } > 0
+		return innsendteDokumenter.count { it.k_tilkn_jp_som.equals("Hoveddokument", true) && it.brevkode != null && it.brevkode.startsWith("NAV")} > 0
 	}
 
 	private fun konverterTilDateTime(dateString: String): OffsetDateTime {
@@ -46,16 +46,16 @@ class SafService(val safApi: SafInterface) {
 	}
 
 	private fun erEttersending(dokumenter: List<Dokument>): Boolean {
-		val hoveddokumenter = dokumenter.filter { it.k_tilkn_jp_som.equals("HOVEDDOKUMENT", true) }
+		val hoveddokumenter = dokumenter.filter { it.k_tilkn_jp_som.equals("Hoveddokument", true) }
 		return hoveddokumenter.map { it.brevkode }.contains("NAVe")
 	}
 
 	private fun finnBrevKode(dokumenter: List<Dokument>): String {
-		val hoveddokumenter = dokumenter.filter { it.k_tilkn_jp_som.equals("HOVEDDOKUMENT", true) }
+		val hoveddokumenter = dokumenter.filter { it.k_tilkn_jp_som.equals("Hoveddokument", true) }
 		return hoveddokumenter.map { it.brevkode }.first()!!.replace("NAVe", "NAV")
 	}
 
 	private fun konverterTilVedleggsliste(dokumenter: List<Dokument>): List<InnsendtVedleggDto> {
-		return dokumenter.map { InnsendtVedleggDto(it.k_tilkn_jp_som, it.tittel) }
+		return dokumenter.filter {!it.brevkode.isNullOrBlank()}.map { InnsendtVedleggDto(vedleggsnr = it.brevkode!!, it.tittel) }
 	}
 }
