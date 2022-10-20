@@ -163,6 +163,7 @@ class SoknadService(
 
 	@Transactional
 	fun opprettSoknadForEttersendingGittSkjemanr(brukerId: String, skjemanr: String, spraak: String = "nb", vedleggsnrListe: List<String> = emptyList()): DokumentSoknadDto {
+		logger.info("opprettSoknadForEttersendingGittSkjemanr: for skjemanr=$skjemanr")
 		val kodeverkSkjema = try {
 			// hentSkjema informasjon gitt skjemanr
 			hentSkjema(skjemanr, finnSpraakFraInput(spraak))
@@ -249,13 +250,14 @@ class SoknadService(
 
 	@Transactional
 	fun opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(
-		brukerId: String, arkivertSoknad: AktivSakDto, vedleggsnrListe: List<String>, sprak: String?): DokumentSoknadDto {
+		brukerId: String, arkivertSoknad: AktivSakDto, opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr, sprak: String?): DokumentSoknadDto {
+		logger.info("opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg: for skjemanr=${arkivertSoknad.skjemanr}")
 		try {
-			val ettersendingsSoknadDb = opprettEttersendingsSoknad(brukerId, arkivertSoknad.innsendingsId,
-				arkivertSoknad.tittel, arkivertSoknad.skjemanr, arkivertSoknad.tema, sprak ?: "nb")
+			val ettersendingsSoknadDb = opprettEttersendingsSoknad(brukerId = brukerId, ettersendingsId = arkivertSoknad.innsendingsId,
+				tittel = arkivertSoknad.tittel, skjemanr = arkivertSoknad.skjemanr, tema = arkivertSoknad.tema, sprak = sprak ?: "nb")
 
 			val nyesteSoknadVedleggsNrListe = arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map {it.vedleggsnr}
-			val filtrertVedleggsnrListe = vedleggsnrListe.filter { !nyesteSoknadVedleggsNrListe.contains(it) }
+			val filtrertVedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe?.filter { !nyesteSoknadVedleggsNrListe.contains(it) }.orEmpty()
 
 			val vedleggDbDataListe = opprettVedleggTilSoknad(ettersendingsSoknadDb.id!!, filtrertVedleggsnrListe, sprak ?: "nb")
 

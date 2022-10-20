@@ -104,7 +104,8 @@ class FrontEndRestApi(
 
 			logger.info("Gitt skjemaNr ${opprettEttersendingGittSkjemaNr.skjemanr}: Antall innsendteSoknader=${innsendteSoknader.size} og Antall arkiverteSoknader=${arkiverteSoknader.size}")
 			val dokumentSoknadDto =
-				opprettDokumentSoknadDto(innsendteSoknader, arkiverteSoknader, brukerId, opprettEttersendingGittSkjemaNr)
+				opprettDokumentSoknadDto(innsendteSoknader = innsendteSoknader, arkiverteSoknader = arkiverteSoknader,
+					brukerId = brukerId, opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr)
 
 			logger.info("${dokumentSoknadDto.innsendingsId}: Opprettet ettersending på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}")
 			return ResponseEntity
@@ -136,7 +137,7 @@ class FrontEndRestApi(
 						// Opprett en ettersendingssøknad med innsendte vedlegg fra arkiverteSoknader[0]+ eventuelle ekstra vedlegg fra input.
 						soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(
 							brukerId = brukerId, arkivertSoknad =  arkiverteSoknader[0],
-							vedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList(),
+							opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr,
 							sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak)
 						)
 					}
@@ -152,15 +153,15 @@ class FrontEndRestApi(
 				// Opprett en ettersendingssøknad med innsendte vedlegg fra arkiverteSoknader[0]+ eventuelle ekstra vedlegg fra input.
 				soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(
 					brukerId = brukerId, arkivertSoknad =  arkiverteSoknader[0],
-					vedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList(),
+					opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr,
 					sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak)
 				)
 			} else {
 				soknadService.opprettSoknadForEttersendingGittSkjemanr(
-					brukerId,
-					opprettEttersendingGittSkjemaNr.skjemanr,
-					finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
-					opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
+					brukerId = brukerId,
+					skjemanr = opprettEttersendingGittSkjemaNr.skjemanr,
+					spraak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
+					vedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
 				)
 			}
 
