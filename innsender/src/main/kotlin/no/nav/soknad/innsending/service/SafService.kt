@@ -29,8 +29,10 @@ class SafService(val safApi: SafInterface) {
 		logger.info("Hentet ${innsendte.size} journalposter for bruker, skal mappe til AktivSakDto")
 		val innsendteMedHovedDokMedBrevkode = innsendte.filter { harHoveddokumentMedBrevkodeSatt(it.dokumenter) }
 		logger.debug("innsendteMedHovedDokMedBrevkode ${innsendteMedHovedDokMedBrevkode.size}")
-		return innsendteMedHovedDokMedBrevkode.map { AktivSakDto(finnBrevKode(it.dokumenter), it.tittel, it.tema,
-				konverterTilDateTime(it.datoMottatt ?: ""), erEttersending(it.dokumenter), konverterTilVedleggsliste(it.dokumenter), it.eksternReferanseId ) }
+		return innsendteMedHovedDokMedBrevkode.map {
+			AktivSakDto(finnBrevKodeForHoveddokument(it.dokumenter), it.tittel, it.tema,
+				konverterTilDateTime(it.datoMottatt ?: ""), erEttersending(it.dokumenter),
+				konverterTilVedleggsliste(it.dokumenter), it.eksternReferanseId ) }
 	}
 
 	private fun harHoveddokumentMedBrevkodeSatt(innsendteDokumenter: List<Dokument>): Boolean {
@@ -50,12 +52,18 @@ class SafService(val safApi: SafInterface) {
 		return hoveddokumenter.map { it.brevkode }.contains("NAVe")
 	}
 
-	private fun finnBrevKode(dokumenter: List<Dokument>): String {
+	private fun finnBrevKodeForHoveddokument(dokumenter: List<Dokument>): String {
 		val hoveddokumenter = dokumenter.filter { it.k_tilkn_jp_som.equals("Hoveddokument", true) }
-		return hoveddokumenter.map { it.brevkode }.first()!!.replace("NAVe", "NAV")
+		return fjernEttersendingsMerkeFraSkjemanr(hoveddokumenter.map { it.brevkode }.first()!!)
 	}
 
 	private fun konverterTilVedleggsliste(dokumenter: List<Dokument>): List<InnsendtVedleggDto> {
-		return dokumenter.filter {!it.brevkode.isNullOrBlank()}.map { InnsendtVedleggDto(vedleggsnr = it.brevkode!!, it.tittel) }
+		return dokumenter
+			.filter {!it.brevkode.isNullOrBlank() && !"L7".equals(it.brevkode, true)}
+			.map { InnsendtVedleggDto(vedleggsnr = fjernEttersendingsMerkeFraSkjemanr(it.brevkode!!), it.tittel) }
+	}
+
+	private fun fjernEttersendingsMerkeFraSkjemanr(brevkode: String): String {
+		return brevkode.replace("NAVe", "NAV")
 	}
 }

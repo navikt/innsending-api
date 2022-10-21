@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.test.assertEquals
 
 @SpringBootTest
 @ActiveProfiles("spring")
@@ -23,6 +24,10 @@ class SafServiceTest {
 		val innsendteSoknader = safService.hentInnsendteSoknader(brukerId)
 
 		assertTrue(innsendteSoknader.isNotEmpty())
+		assertEquals(5, innsendteSoknader.size)
+		assertTrue(innsendteSoknader.all{ it.innsendtVedleggDtos.isNotEmpty()} )
+		assertTrue(innsendteSoknader.all{ it.innsendtVedleggDtos.filter { "L7".equals(it.vedleggsnr, true) }.isEmpty()} )
+		assertTrue(innsendteSoknader.all{ it.innsendtVedleggDtos.filter { it.vedleggsnr.startsWith("NAVe") }.isEmpty()} )
 	}
 
 	@Test
