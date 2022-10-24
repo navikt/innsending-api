@@ -60,7 +60,7 @@ class SafAPI(
 						.map {
 							ArkiverteSaker(
 								it.eksternReferanseId, it.tittel ?: "", it.tema ?: "",
-								it.relevanteDatoer[0]?.dato, konverterTilDokumentListe(it.dokumenter)
+								it.relevanteDatoer[0]?.dato, konverterTilDokumentListe(it.dokumenter ?: emptyList())
 							)
 						}
 				}
@@ -71,17 +71,17 @@ class SafAPI(
 		}
 	}
 
-	private fun konverterTilDokumentListe(dokumentInfo: List<DokumentInfo?>?): List<Dokument> {
-		val dokumenter = mutableListOf<Dokument>()
-		if (dokumentInfo == null || dokumentInfo.isEmpty()) return dokumenter
+	private fun konverterTilDokumentListe(dokumentInfo: List<DokumentInfo?>): List<Dokument> {
+		if (dokumentInfo.isEmpty()) return emptyList()
 
-		dokumenter.add(Dokument(dokumentInfo[0]?.brevkode, dokumentInfo[0]?.tittel ?: "", "Hoveddokument" ))
+		val hoveddokument = dokumentInfo.first()
+		val vedlegg = dokumentInfo.drop(1)
+		fun konverter(dokument: DokumentInfo?, type: String) = Dokument(dokument?.brevkode ?: "", dokument?.tittel ?: "", type)
 
-		if (dokumentInfo.size>1) {
-			dokumentInfo.subList(1, dokumentInfo.size).forEach { dokumenter.add (Dokument(it?.brevkode ?: "", it?.tittel ?: "", "Vedlegg")) }
-		}
-		return dokumenter
+		return listOf(konverter(hoveddokument, "Hoveddokument"))
+			.plus(vedlegg.map { konverter(it, "Vedlegg") })
 	}
+
 	fun filtrerPaJournalposttypeAndTema(dokumentOversikt: Dokumentoversikt,
 																			journalposttyper: List<Journalposttype>, temaer: List<String>): Dokumentoversikt {
 		return Dokumentoversikt(
@@ -109,5 +109,4 @@ class SafAPI(
 	private fun checkForErrors(errors: List<GraphQLClientError>?) {
 		errors?.let { handleErrors(it, "søknadsarkiv") }
 	}
-
 }

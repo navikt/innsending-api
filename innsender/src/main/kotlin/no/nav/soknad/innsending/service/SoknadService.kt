@@ -12,7 +12,6 @@ import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.exceptions.SanityException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.*
-import no.nav.soknad.innsending.repository.SoknadsStatus
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Utilities
@@ -245,7 +244,6 @@ class SoknadService(
 		} finally {
 			innsenderMetrics.applicationCounterInc(InnsenderOperation.OPPRETT.name, nyesteSoknad.tema)
 		}
-
 	}
 
 	@Transactional
@@ -275,7 +273,6 @@ class SoknadService(
 		} finally {
 			innsenderMetrics.applicationCounterInc(InnsenderOperation.OPPRETT.name, arkivertSoknad.tema)
 		}
-
 	}
 
 
@@ -332,7 +329,6 @@ class SoknadService(
 					)
 				)
 			}
-
 	}
 
 	private fun opprettVedleggTilSoknad(soknadDbData: SoknadDbData,  arkivertSoknad: AktivSakDto)
@@ -363,7 +359,6 @@ class SoknadService(
 					)
 				)
 			}
-
 	}
 
 
@@ -853,7 +848,6 @@ class SoknadService(
 			throw IllegalActionException("Vedlegg som er obligatorisk for søknaden kan ikke slettes av søker", "Kan ikke slette påkrevd vedlegg")
 
 		slettVedleggOgDensFiler(vedleggDto, soknadDto.id!!)
-
 	}
 
 	private fun slettVedleggOgDensFiler(vedleggDto: VedleggDto, soknadsId: Long) {
@@ -871,10 +865,10 @@ class SoknadService(
 		// anta at filene til et vedlegg allerede er konvertert til PDF ved lagring, men må merges og sendes til soknadsfillager
 		// dersom det ikke er lastet opp filer på et obligatorisk vedlegg, skal status settes SENDES_SENERE
 		// etter at vedleggsfilen er overført soknadsfillager, skal lokalt lagrede filer på vedlegget slettes.
-		var soknadDto = soknadDtoInput
-		if (erEttersending(soknadDto)) {
-			soknadDto = opprettOgLagreDummyHovedDokument(soknadDto)
-		}
+		val soknadDto = if (erEttersending(soknadDtoInput))
+			opprettOgLagreDummyHovedDokument(soknadDtoInput)
+		else
+			soknadDtoInput
 
 		validerAtMinstEnFilErLastetOpp(soknadDto)
 
@@ -917,31 +911,31 @@ class SoknadService(
 			throw BackendErrorException(ex.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV", "errorCode.backendError.sendToNAVError")
 		}
 		return Pair(opplastedeVedlegg, manglendePakrevdeVedlegg)
-
 	}
 
 	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): KvitteringsDto {
 		try {
-			val opplastetOgManglende = sendInnSoknadStart(soknadDtoInput)
+			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput)
 
 			val innsendtSoknadDto = kansellerBrukernotifikasjon(soknadDtoInput)
 
-			sjekkOgOpprettEttersendingsSoknad(innsendtSoknadDto, opplastetOgManglende, soknadDtoInput)
+			sjekkOgOpprettEttersendingsSoknad(innsendtSoknadDto, manglende, soknadDtoInput)
 
-			return lagKvittering(innsendtSoknadDto, opplastetOgManglende.first, opplastetOgManglende.second)
+			return lagKvittering(innsendtSoknadDto, opplastet, manglende)
 
 		} finally {
 			innsenderMetrics.applicationCounterInc(InnsenderOperation.SEND_INN.name, soknadDtoInput.tema)
 		}
-
 	}
 
 	private fun lagInnsendingsKvittering(soknadDto: DokumentSoknadDto, opplastedeVedlegg: List<VedleggDto>, manglendeVedlegg: List<VedleggDto>): VedleggDto {
 		val person = pdlInterface.hentPersonData(soknadDto.brukerId)
-		val sammensattNavn = person?.fornavn + (if (person?.mellomnavn != null) " " + person.mellomnavn else "")  + " " + person?.etternavn
+		val sammensattNavn = listOfNotNull(person?.fornavn, person?.mellomnavn, person?.etternavn).joinToString(" ")
 
-		val kvittering = PdfGenerator().lagKvitteringsSide(soknadDto, if (sammensattNavn.trim().isEmpty()) "NN" else sammensattNavn, opplastedeVedlegg, manglendeVedlegg )
-		return VedleggDto(id = null, uuid = UUID.randomUUID().toString(), vedleggsnr = "L7", tittel = "Kvitteringsside for dokumentinnsending", label = "Kvitteringsside for dokumentinnsending", beskrivelse = null,
+		val kvittering = PdfGenerator().lagKvitteringsSide(soknadDto, sammensattNavn.ifBlank { "NN" }, opplastedeVedlegg, manglendeVedlegg)
+
+		return VedleggDto(id = null, uuid = UUID.randomUUID().toString(), vedleggsnr = "L7",
+			tittel = "Kvitteringsside for dokumentinnsending", label = "Kvitteringsside for dokumentinnsending", beskrivelse = null,
 			erHoveddokument = false, erVariant = true, erPdfa = true, erPakrevd = false,
 			opplastingsStatus = OpplastingsStatusDto.lastetOpp, opprettetdato = OffsetDateTime.now(), innsendtdato = OffsetDateTime.now(),
 			mimetype = Mimetype.applicationSlashPdf, document = kvittering, skjemaurl = null
@@ -950,13 +944,13 @@ class SoknadService(
 
 	private fun sjekkOgOpprettEttersendingsSoknad(
 		innsendtSoknadDto: DokumentSoknadDto,
-		opplastetOgManglende: Pair<List<VedleggDto>, List<VedleggDto>>,
+		manglende: List<VedleggDto>,
 		soknadDtoInput: DokumentSoknadDto
 	) {
 		logger.info("${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes " +
 			"${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size}"
 		)
-		if (opplastetOgManglende.second.isNotEmpty() && !"DAG".equals(innsendtSoknadDto.tema, true)) {
+		if (manglende.isNotEmpty() && !"DAG".equals(innsendtSoknadDto.tema, true)) {
 			logger.info("${soknadDtoInput.innsendingsId}: Skal opprette ettersendingssoknad")
 			opprettEttersendingsSoknad(
 				innsendtSoknadDto,
@@ -969,10 +963,8 @@ class SoknadService(
 		// send brukernotifikasjon ved endring av søknadsstatus til innsendt
 		val innsendtSoknadDto = hentSoknad(soknadDtoInput.innsendingsId!!)
 		logger.info("${innsendtSoknadDto.innsendingsId}: Sendinn: innsendtdato på vedlegg med status innsendt= " +
-			"${
-				innsendtSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }
-					.map { it.vedleggsnr + ':' + mapTilLocalDateTime(it.innsendtdato) }
-			}"
+			innsendtSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }
+				.map { it.vedleggsnr + ":" + mapTilLocalDateTime(it.innsendtdato) }
 		)
 		publiserBrukernotifikasjon(innsendtSoknadDto)
 		return innsendtSoknadDto
@@ -1056,17 +1048,12 @@ class SoknadService(
 	// Hoveddokument kan ha ulike varianter. Hver enkelt av disse sendes som ulike filer til soknadsfillager.
 	// Bruker kan ha lastet opp flere filer for øvrige vedlegg. Disse må merges og sendes som en fil.
 	private fun ferdigstillVedlegg(soknadDto: DokumentSoknadDto): List<VedleggDto> {
-		val vedleggDtos = mutableListOf<VedleggDto>()
-
-		// Listen av varianter av hoveddokumenter, hent lagrede filer og opprett
-		soknadDto.vedleggsListe.filter{ it.erHoveddokument }.forEach {
-			vedleggDtos.add(lagVedleggDtoMedOpplastetFil(hentOgMergeVedleggsFiler(soknadDto, soknadDto.innsendingsId!!, it), it) ) }
-		// For hvert øvrige vedlegg merge filer og legg til
-		soknadDto.vedleggsListe.filter { !it.erHoveddokument }.forEach {
-			val filDto = hentOgMergeVedleggsFiler(soknadDto, soknadDto.innsendingsId!!, it)
-			logger.info("${soknadDto.innsendingsId}: Vedlegg ${it.vedleggsnr} har opplastet fil= ${filDto?.data != null} og erPakrevd=${it.erPakrevd} ")
-			vedleggDtos.add(lagVedleggDtoMedOpplastetFil(filDto, it)) }
-		return vedleggDtos
+		return soknadDto.vedleggsListe
+			.map { lagVedleggDtoMedOpplastetFil(hentOgMergeVedleggsFiler(soknadDto, soknadDto.innsendingsId!!, it), it) }
+			.sortedByDescending { it.erHoveddokument } // Hoveddokument first
+			.onEach { if (!it.erHoveddokument)
+				logger.info("${soknadDto.innsendingsId}: Vedlegg ${it.vedleggsnr} har opplastet fil=${it.document != null} og erPakrevd=${it.erPakrevd}")
+			}
 	}
 
 	private fun validerAtMinstEnFilErLastetOpp(soknadDto: DokumentSoknadDto) {
@@ -1098,7 +1085,8 @@ class SoknadService(
 				if (allePakrevdeBehandlet) {
 					val separator = "\n"
 					logger.warn("Søker har ikke lastet opp filer på ettersendingssøknad ${soknadDto.innsendingsId}, " +
-						"men det er ikke gjenstående arbeid på noen av de påkrevde vedleggene. Vedleggsstatus:\n${soknadDto.vedleggsListe.map { it.tittel +", med status = " + it.opplastingsStatus +"\n"}.joinToString(separator)}")
+						"men det er ikke gjenstående arbeid på noen av de påkrevde vedleggene. Vedleggsstatus:\n" +
+						soknadDto.vedleggsListe.joinToString(separator) { it.tittel + ", med status = " + it.opplastingsStatus + "\n" })
 				} else {
 					throw IllegalActionException(
 						"Søker må ha ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
