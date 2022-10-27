@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 class InnsenderMetrics(private val registry: CollectorRegistry) {
 
 	// Skal telle opp antall opprettede, slettede og innsendte søknader pr tema
-	private val soknadNamespace = "innsending-api"
+	private val soknadNamespace = "innsendingapi"
 	private val appLabel = "soknadsinnsender"
 	private val temaLabel = "tema"
 	private val operationLabel = "operation"
