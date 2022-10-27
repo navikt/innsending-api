@@ -1,5 +1,6 @@
 server:
   port: 9064
+  max-http-header-size: 8192
 
 management:
   endpoint:
