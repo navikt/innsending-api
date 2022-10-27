@@ -12,20 +12,20 @@ import org.springframework.stereotype.Component
 class InnsenderMetrics(private val registry: CollectorRegistry) {
 
 	// Skal telle opp antall opprettede, slettede og innsendte søknader pr tema
-	private val soknadNamespace = "soknadinnsending"
+	private val soknadNamespace = "innsending-api"
 	private val appLabel = "soknadsinnsender"
 	private val temaLabel = "tema"
 	private val operationLabel = "operation"
-	private val name = "number_of_applications"
-	private val help = "Number of applications"
+	private val name = "number_of_operations"
+	private val help = "Number of operations"
 	private val appName = "app"
 	private val errorName = "number_of_errors"
 	private val helpError = "Number of errors"
 	private val latency = "innsending_latency"
 	private val latencyHelp = "Innsending latency distribution"
 
-	private val applicationCounter = registerCounter(name, help, operationLabel)
-	private val applicationErrorCounter = registerCounter(errorName, helpError, operationLabel)
+	private val operationsCounter = registerCounter(name, help, operationLabel)
+	private val operationsErrorCounter = registerCounter(errorName, helpError, operationLabel)
 
 	private val operationLatencyHistogram = registerLatencyHistogram(latency, latencyHelp, operationLabel)
 
@@ -50,15 +50,15 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 			.register(registry)
 
 
-	fun applicationCounterInc(operation: String, tema: String) = applicationCounter.labels(operation, tema, appName).inc()
-	fun applicationCounterGet(operation: String, tema: String) = applicationCounter.labels(operation, tema, appName)?.get()
+	fun operationsCounterInc(operation: String, tema: String) = operationsCounter.labels(operation, tema, appName).inc()
+	fun operationsCounterGet(operation: String, tema: String) = operationsCounter.labels(operation, tema, appName)?.get()
 
-	fun applicationErrorCounterInc(operation: String, tema: String) = applicationErrorCounter.labels(operation, tema, appName).inc()
-	fun applicationErrorCounterGet(operation: String, tema: String) = applicationErrorCounter.labels(operation, tema, appName)?.get()
+	fun operationsErrorCounterInc(operation: String, tema: String) = operationsErrorCounter.labels(operation, tema, appName).inc()
+	fun operationsErrorCounterGet(operation: String, tema: String) = operationsErrorCounter.labels(operation, tema, appName)?.get()
 
-	fun operationHistogramLatencyStart(operation: String): Histogram.Timer =  operationLatencyHistogram.labels(operation, appName).startTimer()
-	fun operationHistogramLatencyEnd(timer: Histogram.Timer) {timer.observeDuration()}
+	fun operationHistogramLatencyStart(operation: String): Histogram.Timer = operationLatencyHistogram.labels(operation, appName).startTimer()
+	fun operationHistogramLatencyEnd(timer: Histogram.Timer) {
+		timer.observeDuration()
+	}
 	fun operationHistogramGetLatency(operation: String): Histogram.Child.Value = operationLatencyHistogram.labels(operation, appName).get()
-
-
 }
