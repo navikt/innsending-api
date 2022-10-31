@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.supervision
 
+import no.nav.soknad.innsending.cleanup.LeaderSelectionUtility
 import no.nav.soknad.innsending.repository.FilRepository
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.EnableScheduling
@@ -17,7 +18,9 @@ class DatabaseSupervision(
 	@Scheduled(cron = everyFiveMinutes)
 	fun databaseSupervisionStart() {
 		try {
-			collectDbStat()
+			if (LeaderSelectionUtility().isLeader()) {
+				collectDbStat()
+			}
 		} catch (e: Exception) {
 			logger.error("Something went wrong when performing database supervision", e)
 		}
