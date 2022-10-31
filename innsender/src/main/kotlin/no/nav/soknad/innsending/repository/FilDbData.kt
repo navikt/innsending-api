@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import javax.persistence.*
 
 @Entity
-@Table(name = filDbDataTableName)
+@Table(name = "fil")
 data class FilDbData(
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY) @Column(name = "id") val id: Long?,
 	@Column(name = "vedleggsid", columnDefinition = "long") val vedleggsid: Long,
@@ -28,5 +28,3 @@ data class FilDbData(
 
 	override fun hashCode() = id.hashCode()
 }
-
-const val filDbDataTableName = "fil"

@@ -49,6 +49,6 @@ interface FilRepository : JpaRepository<FilDbData, Long> {
 		")", nativeQuery = true)
 	fun deleteAllBySoknadStatusAndInnsendtdato(@Param("eldreEnn") eldreEnn: Int)
 
-	@Query(value = "select pg_database_size('$filDbDataTableName')", nativeQuery = true)
+	@Query(value = "SELECT sum(pg_database_size(pg_database.datname)) FROM pg_database", nativeQuery = true)
 	fun totalDbSize(): Long
 }
