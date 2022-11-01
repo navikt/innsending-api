@@ -19,7 +19,6 @@
 		<kotlin-serialization.version>1.4.1</kotlin-serialization.version>
 		<otj-pg-embedded.version>1.0.1</otj-pg-embedded.version>
 		<flyway.version>9.6.0</flyway.version>
-		<vault-java-driver.version>5.1.0</vault-java-driver.version>
 
 		<coroutines.version>1.6.4</coroutines.version>
 		<prometheus-client.version>0.16.0</prometheus-client.version>
@@ -115,11 +114,6 @@
 			<groupId>com.opentable.components</groupId>
 			<artifactId>otj-pg-embedded</artifactId>
 			<version>${otj-pg-embedded.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.bettercloud</groupId>
-			<artifactId>vault-java-driver</artifactId>
-			<version>${vault-java-driver.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jetbrains.kotlinx</groupId>
