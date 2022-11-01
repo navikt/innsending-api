@@ -9,7 +9,6 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.SafService
 import no.nav.soknad.innsending.service.SoknadService
-import no.nav.soknad.innsending.service.ukjentEttersendingsId
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
@@ -37,7 +36,8 @@ class FrontEndRestApi(
 	val tilgangskontroll: Tilgangskontroll,
 	private val restConfig: RestConfig,
 	private val innsenderMetrics: InnsenderMetrics,
-	private val safService: SafService): FrontendApi {
+	private val safService: SafService
+): FrontendApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -54,6 +54,7 @@ class FrontEndRestApi(
 				opprettSoknadBody.vedleggsListe ?: emptyList()
 			)
 			logger.info("${dokumentSoknadDto.innsendingsId}: Opprettet søknad på skjema ${opprettSoknadBody.skjemanr}")
+
 			return ResponseEntity
 				.status(HttpStatus.CREATED)
 				.body(dokumentSoknadDto)
@@ -73,6 +74,7 @@ class FrontEndRestApi(
 			val dokumentSoknadDto =
 				soknadService.opprettSoknadForettersendingAvVedlegg(brukerId, opprettEttersendingGittInnsendingsId.ettersendingTilinnsendingsId)
 			logger.info("${dokumentSoknadDto.innsendingsId}: Opprettet ettersending for innsendingsid ${opprettEttersendingGittInnsendingsId.ettersendingTilinnsendingsId}")
+
 			return ResponseEntity
 				.status(HttpStatus.CREATED)
 				.body(dokumentSoknadDto)
@@ -108,6 +110,7 @@ class FrontEndRestApi(
 					brukerId = brukerId, opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr)
 
 			logger.info("${dokumentSoknadDto.innsendingsId}: Opprettet ettersending på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}")
+
 			return ResponseEntity
 				.status(HttpStatus.CREATED)
 				.body(dokumentSoknadDto)
@@ -172,6 +175,7 @@ class FrontEndRestApi(
 			val brukerIds = tilgangskontroll.hentPersonIdents()
 			val dokumentSoknadDtos = soknadService.hentAktiveSoknader(brukerIds)
 			logger.info("Hentet ${dokumentSoknadDtos.size} søknader opprettet av bruker")
+
 			return ResponseEntity
 				.status(HttpStatus.OK)
 				.body(dokumentSoknadDtos)
@@ -184,17 +188,12 @@ class FrontEndRestApi(
 		logger.info("$innsendingsId: Kall for å hente søknad")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.HENT.name)
 		try {
-			val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
-			tilgangskontroll.harTilgang(dokumentSoknadDto)
+			val soknadDto = hentOgValiderSoknad(innsendingsId)
 			logger.info("$innsendingsId: Hentet søknad")
-			if (dokumentSoknadDto.status != SoknadsStatusDto.opprettet) {
-				throw IllegalActionException("Søknaden kan ikke vises",
-					"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
-				"errorCode.illegalAction.applicationSentInOrDeleted")
-			}
+
 			return ResponseEntity
 				.status(HttpStatus.OK)
-				.body(dokumentSoknadDto)
+				.body(soknadDto)
 		} finally {
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
 		}
@@ -204,15 +203,10 @@ class FrontEndRestApi(
 		logger.info("$innsendingsId: Kall for å endre søknad")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.ENDRE.name)
 		try {
-			val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
-			tilgangskontroll.harTilgang(dokumentSoknadDto)
-			if (dokumentSoknadDto.status != SoknadsStatusDto.opprettet) {
-				throw IllegalActionException("Søknaden kan ikke vises",
-					"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
-					"errorCode.illegalAction.applicationSentInOrDeleted")
-			}
-			soknadService.endreSoknad(dokumentSoknadDto.id!!, patchSoknadDto.visningsSteg)
+			val soknadDto = hentOgValiderSoknad(innsendingsId)
+			soknadService.endreSoknad(soknadDto.id!!, patchSoknadDto.visningsSteg)
 			logger.info("$innsendingsId: Oppdatert søknad")
+
 			return ResponseEntity(HttpStatus.NO_CONTENT)
 		} finally {
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
@@ -223,15 +217,10 @@ class FrontEndRestApi(
 		logger.info("$innsendingsId: Kall for å vedleggene til søknad")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.HENT.name)
 		try {
-			val soknadDto = soknadService.hentSoknad(innsendingsId)
-			tilgangskontroll.harTilgang(soknadDto)
-			if (soknadDto.status != SoknadsStatusDto.opprettet) {
-				throw IllegalActionException("Søknaden kan ikke vises",
-					"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
-					"errorCode.illegalAction.applicationSentInOrDeleted")
-			}
+			val soknadDto = hentOgValiderSoknad(innsendingsId)
 			val vedleggsListeDto = soknadDto.vedleggsListe
 			logger.info("$innsendingsId: Hentet vedleggene til søknad")
+
 			return ResponseEntity
 				.status(HttpStatus.OK)
 				.body(vedleggsListeDto)
@@ -244,16 +233,11 @@ class FrontEndRestApi(
 		logger.info("$innsendingsId: Kall for å hente vedlegg $vedleggsId til søknad")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.HENT.name)
 		try {
-			val soknadDto = soknadService.hentSoknad(innsendingsId)
-			tilgangskontroll.harTilgang(soknadDto)
-			if (soknadDto.status != SoknadsStatusDto.opprettet) {
-				throw IllegalActionException("Søknaden kan ikke vises",
-					"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
-					"errorCode.illegalAction.applicationSentInOrDeleted")
-			}
+			val soknadDto = hentOgValiderSoknad(innsendingsId)
 			val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
 					?: throw ResourceNotFoundException("", "Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId", "errorCode.resourceNotFound.applicationNotFound")
 			logger.info("$innsendingsId: Hentet vedlegg $vedleggsId til søknad")
+
 			return ResponseEntity
 				.status(HttpStatus.OK)
 				.body(vedleggDto)
@@ -267,13 +251,7 @@ class FrontEndRestApi(
 			"Status=${patchVedleggDto.opplastingsStatus} og tittel = ${patchVedleggDto.tittel}")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.ENDRE.name)
 		try {
-			val soknadDto = soknadService.hentSoknad(innsendingsId)
-			tilgangskontroll.harTilgang(soknadDto)
-			if (soknadDto.status != SoknadsStatusDto.opprettet) {
-				throw IllegalActionException("Søknaden kan ikke vises",
-					"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
-					"errorCode.illegalAction.applicationSentInOrDeleted")
-			}
+			val soknadDto = hentOgValiderSoknad(innsendingsId)
 			if ((patchVedleggDto.opplastingsStatus == OpplastingsStatusDto.ikkeValgt || patchVedleggDto.opplastingsStatus == OpplastingsStatusDto.lastetOpp)
 				&& soknadDto.vedleggsListe.first{it.id==vedleggsId}.opplastingsStatus != patchVedleggDto.opplastingsStatus) {
 
@@ -287,6 +265,7 @@ class FrontEndRestApi(
 			}
 			val vedleggDto = soknadService.endreVedlegg(patchVedleggDto, vedleggsId, soknadDto)
 			logger.info("$innsendingsId: Lagret vedlegg ${vedleggDto.id} til søknad")
+
 			return ResponseEntity
 				.status(HttpStatus.OK)
 				.body(vedleggDto)
@@ -300,15 +279,10 @@ class FrontEndRestApi(
 		logger.info("$innsendingsId: Kall for å lagre vedlegg til søknad")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.LAST_OPP.name)
 		try {
-			val soknadDto = soknadService.hentSoknad(innsendingsId)
-			tilgangskontroll.harTilgang(soknadDto)
-			if (soknadDto.status != SoknadsStatusDto.opprettet) {
-				throw IllegalActionException("Søknaden kan ikke vises",
-					"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
-					"errorCode.illegalAction.applicationSentInOrDeleted")
-			}
+			val soknadDto = hentOgValiderSoknad(innsendingsId)
 			val vedleggDto = soknadService.leggTilVedlegg(soknadDto, postVedleggDto?.tittel)
 			logger.info("$innsendingsId: Lagret vedlegg ${vedleggDto.id} til søknad")
+
 			return ResponseEntity
 				.status(HttpStatus.CREATED)
 				.body(vedleggDto)
@@ -322,13 +296,7 @@ class FrontEndRestApi(
 		logger.info("$innsendingsId: Kall for å lagre fil på vedlegg $vedleggsId til søknad")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.LAST_OPP.name)
 		try {
-			val soknadDto = soknadService.hentSoknad(innsendingsId)
-			tilgangskontroll.harTilgang(soknadDto)
-			if (soknadDto.status != SoknadsStatusDto.opprettet) {
-				throw IllegalActionException("Søknaden kan ikke vises",
-					"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
-					"errorCode.illegalAction.applicationSentInOrDeleted")
-			}
+			val soknadDto = hentOgValiderSoknad(innsendingsId)
 			if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
 				throw ResourceNotFoundException(null, "Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId", "errorCode.resourceNotFound.attachmentNotFound")
 
@@ -346,8 +314,8 @@ class FrontEndRestApi(
 
 			// Lagre
 			val lagretFilDto = soknadService.lagreFil(soknadDto, FilDto(vedleggsId, null, file.filename ?:"", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now()))
-
 			logger.info("$innsendingsId: Lagret fil ${lagretFilDto.id} på vedlegg $vedleggsId til søknad")
+
 			return ResponseEntity
 				.status(HttpStatus.CREATED)
 				.body(lagretFilDto)
@@ -373,6 +341,7 @@ class FrontEndRestApi(
 
 			val filDto = soknadService.hentFil(soknadDto, vedleggsId, filId)
 			logger.info("$innsendingsId: Hentet fil ${filDto.id} på vedlegg $vedleggsId til søknad")
+
 			return ResponseEntity
 				.status(HttpStatus.OK)
 				.contentType(MediaType.APPLICATION_PDF)
@@ -392,18 +361,13 @@ class FrontEndRestApi(
 		logger.info("$innsendingsId: Kall for å hente filinfo til vedlegg $vedleggsId til søknad")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.HENT.name)
 		try {
-		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll.harTilgang(soknadDto)
-		if (soknadDto.status != SoknadsStatusDto.opprettet) {
-			throw IllegalActionException("Søknaden kan ikke vises",
-				"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
-				"errorCode.illegalAction.applicationSentInOrDeleted")
-		}
-		val filDtoListe = soknadService.hentFiler(soknadDto, innsendingsId, vedleggsId)
-		logger.info("$innsendingsId: Hentet informasjon om opplastede filer på vedlegg $vedleggsId til søknad")
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(filDtoListe)
+			val soknadDto = hentOgValiderSoknad(innsendingsId)
+			val filDtoListe = soknadService.hentFiler(soknadDto, innsendingsId, vedleggsId)
+			logger.info("$innsendingsId: Hentet informasjon om opplastede filer på vedlegg $vedleggsId til søknad")
+
+			return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(filDtoListe)
 		} finally {
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
 		}
@@ -414,16 +378,11 @@ class FrontEndRestApi(
 		logger.info("Kall for å slette fil $filId på vedlegg $vedleggsId til søknad $innsendingsId")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.SLETT_FIL.name)
 		try {
-			val soknadDto = soknadService.hentSoknad(innsendingsId)
-			tilgangskontroll.harTilgang(soknadDto)
-			if (soknadDto.status != SoknadsStatusDto.opprettet) {
-				throw IllegalActionException("Søknaden kan ikke vises",
-					"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
-					"errorCode.illegalAction.applicationSentInOrDeleted")
-			}
+			val soknadDto = hentOgValiderSoknad(innsendingsId)
 
 			val vedleggDto = soknadService.slettFil(soknadDto, vedleggsId, filId)
 			logger.info("$innsendingsId: Slettet fil $filId på vedlegg $vedleggsId til søknad")
+
 			return ResponseEntity
 				.status(HttpStatus.OK)
 				.body(vedleggDto)
@@ -437,16 +396,11 @@ class FrontEndRestApi(
 		logger.info("$innsendingsId: Kall for å slette vedlegg $vedleggsId for søknad")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.SLETT_FIL.name)
 		try {
-			val soknadDto = soknadService.hentSoknad(innsendingsId)
-			tilgangskontroll.harTilgang(soknadDto)
-			if (soknadDto.status != SoknadsStatusDto.opprettet) {
-				throw IllegalActionException("Søknaden kan ikke vises",
-					"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
-					"errorCode.illegalAction.applicationSentInOrDeleted")
-			}
+			val soknadDto = hentOgValiderSoknad(innsendingsId)
 
 			soknadService.slettVedlegg(soknadDto, vedleggsId)
 			logger.info("$innsendingsId: Slettet vedlegg $vedleggsId for søknad")
+
 			return ResponseEntity
 				.status(HttpStatus.OK)
 				.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet vedlegg med id $vedleggsId"))
@@ -460,15 +414,10 @@ class FrontEndRestApi(
 		logger.info("$innsendingsId: Kall for å slette søknad")
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.SLETT.name)
 		try {
-			val soknadDto = soknadService.hentSoknad(innsendingsId)
-			tilgangskontroll.harTilgang(soknadDto)
-			if (soknadDto.status != SoknadsStatusDto.opprettet) {
-				throw IllegalActionException("Søknaden kan ikke vises",
-					"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
-					"errorCode.illegalAction.applicationSentInOrDeleted")
-			}
+			val soknadDto = hentOgValiderSoknad(innsendingsId)
 			soknadService.slettSoknadAvBruker(soknadDto)
 			logger.info("Slettet søknad med id $innsendingsId")
+
 			return ResponseEntity
 				.status(HttpStatus.OK)
 				.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet soknad med id $innsendingsId"))
@@ -482,14 +431,8 @@ class FrontEndRestApi(
 
 		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.SEND_INN.name)
 		try {
-			val soknadDto = soknadService.hentSoknad(innsendingsId)
-			tilgangskontroll.harTilgang(soknadDto)
+			val soknadDto = hentOgValiderSoknad(innsendingsId)
 			val kvitteringsDto = soknadService.sendInnSoknad(soknadDto)
-			if (soknadDto.status != SoknadsStatusDto.opprettet) {
-				throw IllegalActionException("Søknaden kan ikke vises",
-					"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
-					"errorCode.illegalAction.applicationSentInOrDeleted")
-			}
 			logger.info("$innsendingsId: Sendt inn soknad.\n" +
 				"InnsendteVedlegg=${kvitteringsDto.innsendteVedlegg?.size}, " +
 				"SkalEttersendes=${kvitteringsDto.skalEttersendes?.size}, ettersendelsesfrist=${kvitteringsDto.ettersendingsfrist}")
@@ -500,5 +443,18 @@ class FrontEndRestApi(
 		} finally {
 			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
 		}
+	}
+
+	private fun hentOgValiderSoknad(innsendingsId: String): DokumentSoknadDto {
+		val soknadDto = soknadService.hentSoknad(innsendingsId)
+		tilgangskontroll.harTilgang(soknadDto)
+		if (soknadDto.status != SoknadsStatusDto.opprettet) {
+			throw IllegalActionException(
+				"Søknaden kan ikke vises",
+				"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
+				"errorCode.illegalAction.applicationSentInOrDeleted"
+			)
+		}
+		return soknadDto
 	}
 }
