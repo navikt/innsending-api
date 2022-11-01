@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
 @Repository
-interface FilRepository: JpaRepository<FilDbData, Long> {
+interface FilRepository : JpaRepository<FilDbData, Long> {
 
 	@Query(value = "FROM FilDbData WHERE vedleggsid = :vedleggsid order by id")
 	fun findAllByVedleggsid(@Param("vedleggsid") vedleggsid: Long): List<FilDbData>
@@ -40,7 +40,15 @@ interface FilRepository: JpaRepository<FilDbData, Long> {
 
 	@Transactional
 	@Modifying
-	@Query(value = "DELETE FROM fil WHERE vedleggsId in (select v.id from vedlegg v, soknad s where s.status = 'Innsendt' and s.innsendtdato between current_date - (100 + :eldreEnn) and current_date - :eldreEnn and s.id = v.soknadsid ) ", nativeQuery = true)
+	@Query(value = "DELETE FROM fil WHERE vedleggsId in " +
+		"(select v.id from vedlegg v, soknad s where " +
+		"  s.status = 'Innsendt' and" +
+		"  s.innsendtdato between current_date - (100 + :eldreEnn) and" +
+		"  current_date - :eldreEnn and" +
+		"  s.id = v.soknadsid" +
+		")", nativeQuery = true)
 	fun deleteAllBySoknadStatusAndInnsendtdato(@Param("eldreEnn") eldreEnn: Int)
 
+	@Query(value = "SELECT sum(pg_database_size(pg_database.datname)) FROM pg_database", nativeQuery = true)
+	fun totalDbSize(): Long
 }
