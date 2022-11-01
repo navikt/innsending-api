@@ -17,13 +17,13 @@
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 
-		<spring-web.version>5.3.20</spring-web.version>
+		<springdoc-openapi.version>1.6.12</springdoc-openapi.version>
+		<swagger-annotations.version>2.2.4</swagger-annotations.version>
+		<spring-web.version>5.3.23</spring-web.version>
 		<javax-servlet-api.version>4.0.1</javax-servlet-api.version>
 		<javax-validation-api.version>2.0.1.Final</javax-validation-api.version>
-		<jakarta-annotation.version>2.1.0</jakarta-annotation.version>
-		<swagger-annotations.version>2.2.2</swagger-annotations.version>
-		<springdoc-openapi.version>1.6.11</springdoc-openapi.version>
-		<jackson-databind-nullable.version>0.2.3</jackson-databind-nullable.version>
+		<jakarta-annotation.version>2.1.1</jakarta-annotation.version>
+		<jackson-databind-nullable.version>0.2.4</jackson-databind-nullable.version>
 	</properties>
 
 
