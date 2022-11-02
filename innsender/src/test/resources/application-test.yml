@@ -52,10 +52,8 @@ restconfig:
 dbconfig:
   profiles: test
   databaseName: postgres
-  mountPathVault: postgresql/preprod-fss
   databaseUrl: jdbc:postgresql://localhost:5432/postgres
   embedded: true
-  usevault: false
 
 brukernotifikasjonconfig:
   profiles: test
