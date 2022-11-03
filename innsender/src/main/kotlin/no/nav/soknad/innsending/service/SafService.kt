@@ -11,7 +11,6 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
-
 @Service
 class SafService(val safApi: SafInterface) {
 
@@ -32,11 +31,11 @@ class SafService(val safApi: SafInterface) {
 		return innsendteMedHovedDokMedBrevkode.map {
 			AktivSakDto(finnBrevKodeForHoveddokument(it.dokumenter), it.tittel, it.tema,
 				konverterTilDateTime(it.datoMottatt ?: ""), erEttersending(it.dokumenter),
-				konverterTilVedleggsliste(it.dokumenter), it.eksternReferanseId ) }
+				konverterTilVedleggsliste(it.dokumenter), it.eksternReferanseId) }
 	}
 
 	private fun harHoveddokumentMedBrevkodeSatt(innsendteDokumenter: List<Dokument>): Boolean {
-		return innsendteDokumenter.count { it.k_tilkn_jp_som.equals("Hoveddokument", true) && it.brevkode != null && it.brevkode.startsWith("NAV")} > 0
+		return getHoveddokumenter(innsendteDokumenter).any { it.brevkode != null && it.brevkode.startsWith("NAV") }
 	}
 
 	private fun konverterTilDateTime(dateString: String): OffsetDateTime {
@@ -48,22 +47,23 @@ class SafService(val safApi: SafInterface) {
 	}
 
 	private fun erEttersending(dokumenter: List<Dokument>): Boolean {
-		val hoveddokumenter = dokumenter.filter { it.k_tilkn_jp_som.equals("Hoveddokument", true) }
+		val hoveddokumenter = getHoveddokumenter(dokumenter)
 		return hoveddokumenter.map { it.brevkode }.contains("NAVe")
 	}
 
 	private fun finnBrevKodeForHoveddokument(dokumenter: List<Dokument>): String {
-		val hoveddokumenter = dokumenter.filter { it.k_tilkn_jp_som.equals("Hoveddokument", true) }
+		val hoveddokumenter = getHoveddokumenter(dokumenter)
 		return fjernEttersendingsMerkeFraSkjemanr(hoveddokumenter.map { it.brevkode }.first()!!)
 	}
 
+	private fun getHoveddokumenter(dokumenter: List<Dokument>) =
+		dokumenter.filter { it.k_tilkn_jp_som.equals("Hoveddokument", true) }
+
 	private fun konverterTilVedleggsliste(dokumenter: List<Dokument>): List<InnsendtVedleggDto> {
 		return dokumenter
-			.filter {!it.brevkode.isNullOrBlank() && !"L7".equals(it.brevkode, true)}
+			.filter { !it.brevkode.isNullOrBlank() && !"L7".equals(it.brevkode, true) }
 			.map { InnsendtVedleggDto(vedleggsnr = fjernEttersendingsMerkeFraSkjemanr(it.brevkode!!), it.tittel) }
 	}
 
-	private fun fjernEttersendingsMerkeFraSkjemanr(brevkode: String): String {
-		return brevkode.replace("NAVe", "NAV")
-	}
+	private fun fjernEttersendingsMerkeFraSkjemanr(brevkode: String) = brevkode.replace("NAVe", "NAV")
 }
