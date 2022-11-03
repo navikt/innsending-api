@@ -1119,6 +1119,7 @@ class SoknadService(
 					"errorCode.illegalAction.sendInErrorNoApplication"
 				)
 			}
+
 		} else {
 			// For å sende inn en ettersendingssøknad må det være lastet opp minst ett vedlegg
 			val harFil = soknadDto.vedleggsListe
@@ -1128,7 +1129,8 @@ class SoknadService(
 			val allePakrevdeBehandlet = soknadDto.vedleggsListe
 				.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") }
 				.none { !(it.opplastingsStatus == OpplastingsStatusDto.innsendt || it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp) }
-			if (!harFil && !allePakrevdeBehandlet) {
+
+			if (!harFil) {
 				// Hvis status for alle vedlegg som foventes sendt inn er lastetOpp, Innsendt eller SendesAvAndre, ikke kast feil. Merk at kun dummy forside vil bli sendt til arkivet.
 				if (allePakrevdeBehandlet) {
 					val separator = "\n"
@@ -1152,7 +1154,8 @@ class SoknadService(
 		val vedleggsFil: ByteArray? =
 			if (vedleggDto.erHoveddokument && vedleggDto.erVariant) {
 				if (filer.size > 1) {
-					logger.warn("${soknadDto.innsendingsId}: soknadDtoVedlegg ${vedleggDto.id} erVariant${vedleggDto.erVariant} - ${vedleggDto.tittel} har flere opplastede filer, velger første")
+					logger.warn("${soknadDto.innsendingsId}: soknadDtoVedlegg ${vedleggDto.id} er hoveddokument og er variant - " +
+						"${vedleggDto.tittel} har flere opplastede filer, velger første")
 				}
 				filer[0].data
 			} else {
