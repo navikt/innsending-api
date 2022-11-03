@@ -84,7 +84,8 @@ class SoknadService(
 		savedSoknadDbData: SoknadDbData,
 		kodeverkSkjema: KodeverkSkjema
 	): VedleggDbData {
-		val skjemaDbData = repo.lagreVedlegg(
+
+		return repo.lagreVedlegg(
 			VedleggDbData(
 				null,
 				savedSoknadDbData.id!!,
@@ -105,7 +106,6 @@ class SoknadService(
 				vedleggsurl = kodeverkSkjema.url
 			)
 		)
-		return skjemaDbData
 	}
 
 	private fun opprettVedleggTilSoknad(
@@ -134,7 +134,7 @@ class SoknadService(
 		arkivertSoknad: AktivSakDto
 	): List<VedleggDbData> {
 		val vedleggDbDataListe = arkivertSoknad.innsendtVedleggDtos
-			.filter{ it.vedleggsnr != arkivertSoknad.skjemanr }
+			.filter { it.vedleggsnr != arkivertSoknad.skjemanr }
 			.map { v ->
 				repo.lagreVedlegg(
 					VedleggDbData(
@@ -233,7 +233,7 @@ class SoknadService(
 			val ettersendingsSoknadDb = opprettEttersendingsSoknad(brukerId, nyesteSoknad.ettersendingsId ?: nyesteSoknad.innsendingsId!!,
 				nyesteSoknad.tittel, nyesteSoknad.skjemanr, nyesteSoknad.tema, nyesteSoknad.spraak!!)
 
-			val nyesteSoknadVedleggsNrListe = nyesteSoknad.vedleggsListe.filter { !it.erHoveddokument }.map {it.vedleggsnr}
+			val nyesteSoknadVedleggsNrListe = nyesteSoknad.vedleggsListe.filter { !it.erHoveddokument }.map { it.vedleggsnr }
 			val filtrertVedleggsnrListe = vedleggsnrListe.filter { !nyesteSoknadVedleggsNrListe.contains(it) }
 
 			val vedleggDbDataListe = opprettVedleggTilSoknad(ettersendingsSoknadDb.id!!, filtrertVedleggsnrListe, sprak)
@@ -264,7 +264,7 @@ class SoknadService(
 			val ettersendingsSoknadDb = opprettEttersendingsSoknad(brukerId = brukerId, ettersendingsId = arkivertSoknad.innsendingsId,
 				tittel = arkivertSoknad.tittel, skjemanr = arkivertSoknad.skjemanr, tema = arkivertSoknad.tema, sprak = sprak ?: "nb")
 
-			val nyesteSoknadVedleggsNrListe = arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map {it.vedleggsnr}
+			val nyesteSoknadVedleggsNrListe = arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map { it.vedleggsnr }
 			val filtrertVedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe?.filter { !nyesteSoknadVedleggsNrListe.contains(it) }.orEmpty()
 
 			val vedleggDbDataListe = opprettVedleggTilSoknad(ettersendingsSoknadDb.id!!, filtrertVedleggsnrListe, sprak ?: "nb")
@@ -484,15 +484,13 @@ class SoknadService(
 			val savedSoknadDbData = repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId))
 			val soknadsid = savedSoknadDbData.id
 			val savedVedleggDbData = dokumentSoknadDto.vedleggsListe
-				.map {
-					repo.lagreVedlegg(mapTilVedleggDb(it,	soknadsid!!))
-				}
+				.map { repo.lagreVedlegg(mapTilVedleggDb(it, soknadsid!!)) }
 
 			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
 			// lagre mottatte filer i fil tabellen.
 			savedDokumentSoknadDto.vedleggsListe
 				.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
-				.forEach { lagreFil(savedDokumentSoknadDto, it, dokumentSoknadDto.vedleggsListe )}
+				.forEach { lagreFil(savedDokumentSoknadDto, it, dokumentSoknadDto.vedleggsListe) }
 			publiserBrukernotifikasjon(savedDokumentSoknadDto)
 
 			innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
@@ -512,7 +510,7 @@ class SoknadService(
 		if (matchInnsendtVedleggDto != null) {
 			val filDto = FilDto(lagretVedleggDto.id!!, null, lagFilNavn(matchInnsendtVedleggDto), lagretVedleggDto.mimetype!!,
 				matchInnsendtVedleggDto.document?.size, matchInnsendtVedleggDto.document, OffsetDateTime.now()
-				)
+			)
 			lagreFil(savedDokumentSoknadDto, filDto)
 			return
 		}
@@ -703,9 +701,9 @@ class SoknadService(
 		return repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, vedleggsId)
 	}
 
-	fun finnFilStorrelseSum(soknadDto: DokumentSoknadDto): Long {
-		return soknadDto.vedleggsListe.filter{it.opplastingsStatus==OpplastingsStatusDto.ikkeValgt || it.opplastingsStatus==OpplastingsStatusDto.lastetOpp}.sumOf{ repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, it.id!!) }
-	}
+	fun finnFilStorrelseSum(soknadDto: DokumentSoknadDto) = soknadDto.vedleggsListe
+		.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
+		.sumOf { repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, it.id!!) }
 
 	@Transactional
 	fun slettFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long): VedleggDto {
@@ -713,13 +711,15 @@ class SoknadService(
 
 		// Sjekk om vedlegget eksisterer
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
-			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke", "errorCode.resourceNotFound.attachmentNotFound")
-		if (repo.hentFilDb(soknadDto.innsendingsId!!, vedleggsId, filId ).isEmpty)
-			throw ResourceNotFoundException(null, "Fil $filId på vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke", "errorCode.resourceNotFound.fileNotFound")
+			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke",
+				"errorCode.resourceNotFound.attachmentNotFound")
+		if (repo.hentFilDb(soknadDto.innsendingsId!!, vedleggsId, filId).isEmpty)
+			throw ResourceNotFoundException(null, "Fil $filId på vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke",
+				"errorCode.resourceNotFound.fileNotFound")
 
 		repo.slettFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
 		if (repo.hentFilerTilVedlegg(soknadDto.innsendingsId!!, vedleggsId).isEmpty()) {
-			val vedleggDto = soknadDto.vedleggsListe.first {it.id == vedleggsId}
+			val vedleggDto = soknadDto.vedleggsListe.first { it.id == vedleggsId }
 			val nyOpplastingsStatus = if (vedleggDto.innsendtdato != null) OpplastingsStatus.INNSENDT else OpplastingsStatus.IKKE_VALGT
 			repo.lagreVedlegg(mapTilVedleggDb(vedleggDto, soknadsId = soknadDto.id!!, vedleggDto.skjemaurl, opplastingsStatus = nyOpplastingsStatus))
 		}
@@ -743,8 +743,8 @@ class SoknadService(
 		//fillagerAPI.slettFiler(innsendingsId, dokumentSoknadDto.vedleggsListe)
 		repo.slettSoknad(dokumentSoknadDto)
 
-		val slettetSoknad = lagDokumentSoknadDto(mapTilSoknadDb(dokumentSoknadDto, dokumentSoknadDto.innsendingsId!!, SoknadsStatus.SlettetAvBruker)
-			, dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id!!)})
+		val soknadDbData = mapTilSoknadDb(dokumentSoknadDto, dokumentSoknadDto.innsendingsId!!, SoknadsStatus.SlettetAvBruker)
+		val slettetSoknad = lagDokumentSoknadDto(soknadDbData, dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id!!) })
 		publiserBrukernotifikasjon(slettetSoknad)
 		innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
 	}
@@ -771,8 +771,8 @@ class SoknadService(
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettFilerForVedlegg(it.id!!) }
 		val slettetSoknadDb = repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId, SoknadsStatus.AutomatiskSlettet))
 
-		val slettetSoknadDto = lagDokumentSoknadDto(slettetSoknadDb
-			, dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id!!)})
+		val slettetSoknadDto = lagDokumentSoknadDto(slettetSoknadDb,
+			dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id!!) })
 		publiserBrukernotifikasjon(slettetSoknadDto)
 		logger.info("slettSoknadAutomatisk: Status for søknad $innsendingsId er satt til ${SoknadsStatus.AutomatiskSlettet}")
 
@@ -931,21 +931,25 @@ class SoknadService(
 		} catch (e: Exception) {
 			reportException(e, operation, soknadDto.tema)
 			logger.error("${soknadDto.innsendingsId}: Feil ved sending av søknad til soknadsmottaker ${e.message}")
-			throw BackendErrorException(e.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV", "errorCode.backendError.sendToNAVError")
+			throw BackendErrorException(e.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV",
+				"errorCode.backendError.sendToNAVError")
 		}
 
 		// Slett alle opplastede vedlegg untatt søknaden dersom ikke ettersendingssøknad, som er sendt til soknadsfillager.
-		alleVedlegg.filter{ !(it.erHoveddokument && !it.erVariant && !erEttersending(soknadDto)) }.forEach { repo.slettFilerForVedlegg(it.id!!) }
+		alleVedlegg
+			.filter { !(it.erHoveddokument && !it.erVariant && !erEttersending(soknadDto)) }
+			.forEach { repo.slettFilerForVedlegg(it.id!!) }
 
 		// oppdater vedleggstabellen med status og innsendingsdato for opplastede vedlegg.
 		opplastedeVedlegg.forEach { repo.lagreVedlegg(mapTilVedleggDb(it, soknadsId = soknadDto.id!!, it.skjemaurl, opplastingsStatus = OpplastingsStatus.INNSENDT)) }
 		manglendePakrevdeVedlegg.forEach { repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, it.id!!, OpplastingsStatus.SEND_SENERE, LocalDateTime.now()) }
 
 		try {
-			repo.lagreSoknad(mapTilSoknadDb(soknadDto, soknadDto.innsendingsId!!, SoknadsStatus.Innsendt ))
+			repo.lagreSoknad(mapTilSoknadDb(soknadDto, soknadDto.innsendingsId!!, SoknadsStatus.Innsendt))
 		} catch (e: Exception) {
 			reportException(e, operation, soknadDto.tema)
-			throw BackendErrorException(e.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV", "errorCode.backendError.sendToNAVError")
+			throw BackendErrorException(e.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV",
+				"errorCode.backendError.sendToNAVError")
 		}
 		return Pair(opplastedeVedlegg, manglendePakrevdeVedlegg)
 	}
@@ -1044,17 +1048,20 @@ class SoknadService(
 
 	private fun lagKvittering(innsendtSoknadDto: DokumentSoknadDto,
 														opplastedeVedlegg: List<VedleggDto>, manglendePakrevdeVedlegg: List<VedleggDto>): KvitteringsDto {
-		val hoveddokumentVedleggsId = innsendtSoknadDto.vedleggsListe.firstOrNull{ it.erHoveddokument && !it.erVariant }?.id
+		val hoveddokumentVedleggsId = innsendtSoknadDto.vedleggsListe.firstOrNull { it.erHoveddokument && !it.erVariant }?.id
 		val hoveddokumentFilId = if (hoveddokumentVedleggsId != null) {
 			repo.findAllByVedleggsid(innsendtSoknadDto.innsendingsId!!, hoveddokumentVedleggsId).firstOrNull()?.id
 		} else {
 			null
 		}
 		return KvitteringsDto(innsendtSoknadDto.innsendingsId!!, innsendtSoknadDto.tittel, innsendtSoknadDto.innsendtDato!!,
-			lenkeTilDokument(innsendtSoknadDto.innsendingsId!!, hoveddokumentVedleggsId, hoveddokumentFilId ),
+			lenkeTilDokument(innsendtSoknadDto.innsendingsId!!, hoveddokumentVedleggsId, hoveddokumentFilId),
 			opplastedeVedlegg.filter { !it.erHoveddokument }.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) },
 			manglendePakrevdeVedlegg.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) },
-			innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre }.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.label)},
+
+			innsendtSoknadDto.vedleggsListe
+				.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre }
+				.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) },
 			innsendtSoknadDto.innsendtDato!!.plusDays(ettersendingsfrist)
 		)
 	}
@@ -1143,7 +1150,7 @@ class SoknadService(
 		if (filer.isEmpty()) return null
 
 		val vedleggsFil: ByteArray? =
-			if (vedleggDto.erHoveddokument && vedleggDto.erVariant ) {
+			if (vedleggDto.erHoveddokument && vedleggDto.erVariant) {
 				if (filer.size > 1) {
 					logger.warn("${soknadDto.innsendingsId}: soknadDtoVedlegg ${vedleggDto.id} erVariant${vedleggDto.erVariant} - ${vedleggDto.tittel} har flere opplastede filer, velger første")
 				}
