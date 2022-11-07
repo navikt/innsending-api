@@ -5,8 +5,8 @@ import no.nav.soknad.innsending.api.InnsendteApi
 import no.nav.soknad.innsending.model.AktivSakDto
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.SafService
-import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
+import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -16,23 +16,20 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @ProtectedWithClaims(issuer = Constants.TOKENX, claimMap = [Constants.CLAIM_ACR_LEVEL_4])
 class InnsendtListeApi(
-	val safService: SafService, val tilgangskontroll: Tilgangskontroll, val innsenderMetrics: InnsenderMetrics) :
-	InnsendteApi {
+	val safService: SafService,
+	val tilgangskontroll: Tilgangskontroll,
+) : InnsendteApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
+	@Timed(InnsenderOperation.OPPRETT)
 	override fun aktiveSaker(): ResponseEntity<List<AktivSakDto>> {
-
 		logger.info("Kall for å hente innsendte søknader for en bruker")
-		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
-		try {
-			val innsendteSoknader = safService.hentInnsendteSoknader(tilgangskontroll.hentBrukerFraToken())
-			logger.info("Hentet ${innsendteSoknader.size} innsendteSoknader. Innsendtdato=${innsendteSoknader[0].innsendtDato}")
-			return ResponseEntity
-				.status(HttpStatus.OK)
-				.body(innsendteSoknader)
-		} finally {
-			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
-		}
+
+		val innsendteSoknader = safService.hentInnsendteSoknader(tilgangskontroll.hentBrukerFraToken())
+		logger.info("Hentet ${innsendteSoknader.size} innsendteSoknader. Innsendtdato=${innsendteSoknader[0].innsendtDato}")
+		return ResponseEntity
+			.status(HttpStatus.OK)
+			.body(innsendteSoknader)
 	}
 }
