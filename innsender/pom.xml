@@ -28,7 +28,7 @@
 		<logstash.version>6.6</logstash.version>
 		<springdoc.version>1.6.11</springdoc.version>
 		<tika-core.version>2.3.0</tika-core.version>
-		<pdfbox.version>2.0.25</pdfbox.version>
+		<pdfbox.version>2.0.27</pdfbox.version>
 		<imgscalr-lib.version>4.2</imgscalr-lib.version>
 		<token-validation.version>2.0.20</token-validation.version>
 

@@ -208,6 +208,11 @@ class FrontEndRestAPILocalTest(
 		try {
 			val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
 			tilgangskontroll.harTilgang(dokumentSoknadDto)
+			if (dokumentSoknadDto.status != SoknadsStatusDto.opprettet) {
+				throw IllegalActionException("Søknaden kan ikke vises",
+					"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
+					"errorCode.illegalAction.applicationSentInOrDeleted")
+			}
 			soknadService.endreSoknad(dokumentSoknadDto.id!!, patchSoknadDto.visningsSteg)
 			logger.info("$innsendingsId: Oppdatert søknad")
 			return ResponseEntity(HttpStatus.NO_CONTENT)
