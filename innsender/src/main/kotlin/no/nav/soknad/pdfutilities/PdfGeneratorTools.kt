@@ -198,7 +198,7 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 
 	private fun hentArial(): PDFont {
 		if (arialFont == null) {
-			val res: URL? = javaClass.classLoader.getResource("fonts/arial/Arial.ttf")
+			val res: URL? = javaClass.classLoader.getResource("fonts/arial/arial.ttf")
 			if (res == null) {
 				throw BackendErrorException("Arial font ikke funnet", "Feil ved generering av PDF")
 			}
@@ -215,7 +215,7 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 		if (arialBoldFont == null) {
 			val res: URL? = javaClass.classLoader.getResource("fonts/arial/arialbd.ttf")
 			if (res == null) {
-				throw BackendErrorException("Arialbld font ikke funnet", "Feil ved generering av PDF")
+				throw BackendErrorException("Arialbld font ikke funnet ", "Feil ved generering av PDF")
 			}
 			val file: File = Paths.get(res.toURI()).toFile()
 			val absolutePath = file.absolutePath
