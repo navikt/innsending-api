@@ -156,7 +156,8 @@ class PageBuilder(private val pdfBuilder: PdfBuilder) {
 		}
 	}
 
-	fun getFont(path: String, doc: PDDocument): PDFont = PDType0Font.load(doc, File(this::class.java.getResource(path).file))
+	fun getFont(path: String): PDFont = PDType0Font.load(pdfBuilder.getPdDocument(), File(javaClass.classLoader.getResource(path)?.file
+		?: throw BackendErrorException("Fant ikke ressursfil $path", "Feil ved generering av PDF")))
 
 	fun getPdDocument() = pdfBuilder.getPdDocument()
 
@@ -198,6 +199,8 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 
 	private fun hentArial(): PDFont {
 		if (arialFont == null) {
+			arialFont = pageBuilder.getFont("fonts/arial/arial.ttf")
+/*
 			val res: URL? = javaClass.classLoader.getResource("fonts/arial/arial.ttf")
 			if (res == null) {
 				throw BackendErrorException("Arial font ikke funnet", "Feil ved generering av PDF")
@@ -206,6 +209,7 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 			val absolutePath = file.absolutePath
 			//arialFont = pageBuilder.getFont(absolutePath, pageBuilder.getPdDocument())
 			arialFont = PDType0Font.load(pageBuilder.getPdDocument(), File(absolutePath))
+*/
 			return arialFont as PDFont
 		} else {
 			return arialFont as PDFont
@@ -213,6 +217,8 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 	}
 	private fun hentArialBold(): PDFont {
 		if (arialBoldFont == null) {
+			arialBoldFont = pageBuilder.getFont("fonts/arial/arialbd.ttf")
+/*
 			val res: URL? = javaClass.classLoader.getResource("fonts/arial/arialbd.ttf")
 			if (res == null) {
 				throw BackendErrorException("Arialbld font ikke funnet ", "Feil ved generering av PDF")
@@ -221,6 +227,7 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 			val absolutePath = file.absolutePath
 			//arialBoldFont = pageBuilder.getFont(absolutePath, pageBuilder.getPdDocument())
 			arialBoldFont = PDType0Font.load(pageBuilder.getPdDocument(), File(absolutePath))
+*/
 			return arialBoldFont as PDFont
 		} else {
 			return arialBoldFont as PDFont
