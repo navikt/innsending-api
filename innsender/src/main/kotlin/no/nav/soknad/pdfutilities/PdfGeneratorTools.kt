@@ -1,5 +1,6 @@
 package no.nav.soknad.pdfutilities
 
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.VedleggDto
 import org.apache.pdfbox.pdmodel.PDDocument
@@ -197,10 +198,14 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 
 	private fun hentArial(): PDFont {
 		if (arialFont == null) {
-			val res: URL = javaClass.classLoader.getResource("/fonts/arial/Arial.ttf")
+			val res: URL? = javaClass.classLoader.getResource("fonts/arial/Arial.ttf")
+			if (res == null) {
+				throw BackendErrorException("Arial font ikke funnet", "Feil ved generering av PDF")
+			}
 			val file: File = Paths.get(res.toURI()).toFile()
 			val absolutePath = file.absolutePath
-			arialFont = pageBuilder.getFont(absolutePath, pageBuilder.getPdDocument())
+			//arialFont = pageBuilder.getFont(absolutePath, pageBuilder.getPdDocument())
+			arialFont = PDType0Font.load(pageBuilder.getPdDocument(), File(absolutePath))
 			return arialFont as PDFont
 		} else {
 			return arialFont as PDFont
@@ -208,10 +213,14 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 	}
 	private fun hentArialBold(): PDFont {
 		if (arialBoldFont == null) {
-			val res: URL = javaClass.classLoader.getResource("/fonts/arial/arialbd.ttf")
+			val res: URL? = javaClass.classLoader.getResource("fonts/arial/arialbd.ttf")
+			if (res == null) {
+				throw BackendErrorException("Arialbld font ikke funnet", "Feil ved generering av PDF")
+			}
 			val file: File = Paths.get(res.toURI()).toFile()
 			val absolutePath = file.absolutePath
-			arialBoldFont = pageBuilder.getFont(absolutePath, pageBuilder.getPdDocument())
+			//arialBoldFont = pageBuilder.getFont(absolutePath, pageBuilder.getPdDocument())
+			arialBoldFont = PDType0Font.load(pageBuilder.getPdDocument(), File(absolutePath))
 			return arialBoldFont as PDFont
 		} else {
 			return arialBoldFont as PDFont
