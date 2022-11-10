@@ -185,41 +185,42 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 	private val contentStream = pageBuilder.getContentStream()
 
 	private val logger = LoggerFactory.getLogger(javaClass)
-	private val arialFont = pageBuilder.getFont("/fonts/arial/Arial.ttf", pageBuilder.getPdDocument())
-	private val arialBoldFont = pageBuilder.getFont("/fonts/arial/arialbd.ttf", pageBuilder.getPdDocument())
 	private val regex = Regex("\t")
-
+	private var arialFont: PDFont? = null
+	private var arialBoldFont: PDFont? = null
 	init {
 		contentStream.beginText()
 		pageWidth = pageBuilder.getPage().mediaBox.width
 		tekstBredde = pageWidth - INNRYKK * 2
+		arialFont = pageBuilder.getFont("/fonts/arial/Arial.ttf", pageBuilder.getPdDocument())
+		arialBoldFont = pageBuilder.getFont("/fonts/arial/arialbd.ttf", pageBuilder.getPdDocument())
 	}
 
 	@Throws(IOException::class)
 	fun leggTilHeaderMidstilt(tekst: String, storrelse: Int, font: PDFont): TextBuilder {
 		contentStream.setFont(arialBoldFont, storrelse.toFloat())
-		brytAvTekstSomErForBredForSiden(tekst, arialBoldFont, storrelse, LINJEAVSTAND_HEADER, true)
+		brytAvTekstSomErForBredForSiden(tekst, arialBoldFont!!, storrelse, LINJEAVSTAND_HEADER, true)
 		return this
 	}
 
 	@Throws(IOException::class)
 	fun leggTilHeader(tekst: String, storrelse: Int): TextBuilder {
 		contentStream.setFont(arialBoldFont, storrelse.toFloat())
-		brytAvTekstSomErForBredForSiden(tekst, arialBoldFont, storrelse, LINJEAVSTAND_HEADER, false)
+		brytAvTekstSomErForBredForSiden(tekst, arialBoldFont!!, storrelse, LINJEAVSTAND_HEADER, false)
 		return this
 	}
 
 	@Throws(IOException::class)
 	fun leggTilTekst(tekst: String, storrelse: Int, linjeavstand: Float): TextBuilder {
 		contentStream.setFont(arialFont, storrelse.toFloat())
-		brytAvTekstSomErForBredForSiden(tekst, arialFont, storrelse, linjeavstand, false)
+		brytAvTekstSomErForBredForSiden(tekst, arialFont!!, storrelse, linjeavstand, false)
 		return this
 	}
 
 	@Throws(IOException::class)
 	fun leggTilTekstMidtstilt(tekst: String, storrelse: Int, linjeavstand: Float): TextBuilder {
 		contentStream.setFont(arialFont, storrelse.toFloat())
-		brytAvTekstSomErForBredForSiden(tekst, arialFont, storrelse, linjeavstand, true)
+		brytAvTekstSomErForBredForSiden(tekst, arialFont!!, storrelse, linjeavstand, true)
 		return this
 	}
 
