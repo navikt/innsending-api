@@ -188,39 +188,59 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 	private val regex = Regex("\t")
 	private var arialFont: PDFont? = null
 	private var arialBoldFont: PDFont? = null
+
 	init {
 		contentStream.beginText()
 		pageWidth = pageBuilder.getPage().mediaBox.width
 		tekstBredde = pageWidth - INNRYKK * 2
-		arialFont = pageBuilder.getFont("/fonts/arial/Arial.ttf", pageBuilder.getPdDocument())
-		arialBoldFont = pageBuilder.getFont("/fonts/arial/arialbd.ttf", pageBuilder.getPdDocument())
+	}
+
+	private fun hentArial(): PDFont {
+		if (arialFont == null) {
+			arialFont = pageBuilder.getFont("/fonts/arial/Arial.ttf", pageBuilder.getPdDocument())
+			return arialFont as PDFont
+		} else {
+			return arialFont as PDFont
+		}
+	}
+	private fun hentArialBold(): PDFont {
+		if (arialBoldFont == null) {
+			arialBoldFont = pageBuilder.getFont("/fonts/arial/arialbd.ttf", pageBuilder.getPdDocument())
+			return arialBoldFont as PDFont
+		} else {
+			return arialBoldFont as PDFont
+		}
 	}
 
 	@Throws(IOException::class)
 	fun leggTilHeaderMidstilt(tekst: String, storrelse: Int, font: PDFont): TextBuilder {
-		contentStream.setFont(arialBoldFont, storrelse.toFloat())
-		brytAvTekstSomErForBredForSiden(tekst, arialBoldFont!!, storrelse, LINJEAVSTAND_HEADER, true)
+		val useFont = hentArialBold()
+		contentStream.setFont(useFont, storrelse.toFloat())
+		brytAvTekstSomErForBredForSiden(tekst, useFont, storrelse, LINJEAVSTAND_HEADER, true)
 		return this
 	}
 
 	@Throws(IOException::class)
 	fun leggTilHeader(tekst: String, storrelse: Int): TextBuilder {
-		contentStream.setFont(arialBoldFont, storrelse.toFloat())
-		brytAvTekstSomErForBredForSiden(tekst, arialBoldFont!!, storrelse, LINJEAVSTAND_HEADER, false)
+		val useFont = hentArialBold()
+		contentStream.setFont(useFont, storrelse.toFloat())
+		brytAvTekstSomErForBredForSiden(tekst, useFont, storrelse, LINJEAVSTAND_HEADER, false)
 		return this
 	}
 
 	@Throws(IOException::class)
 	fun leggTilTekst(tekst: String, storrelse: Int, linjeavstand: Float): TextBuilder {
-		contentStream.setFont(arialFont, storrelse.toFloat())
-		brytAvTekstSomErForBredForSiden(tekst, arialFont!!, storrelse, linjeavstand, false)
+		val useFont = hentArial()
+		contentStream.setFont(useFont, storrelse.toFloat())
+		brytAvTekstSomErForBredForSiden(tekst, useFont, storrelse, linjeavstand, false)
 		return this
 	}
 
 	@Throws(IOException::class)
 	fun leggTilTekstMidtstilt(tekst: String, storrelse: Int, linjeavstand: Float): TextBuilder {
-		contentStream.setFont(arialFont, storrelse.toFloat())
-		brytAvTekstSomErForBredForSiden(tekst, arialFont!!, storrelse, linjeavstand, true)
+		val useFont = hentArial()
+		contentStream.setFont(useFont, storrelse.toFloat())
+		brytAvTekstSomErForBredForSiden(tekst, useFont, storrelse, linjeavstand, true)
 		return this
 	}
 
