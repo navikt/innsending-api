@@ -12,7 +12,6 @@ import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.exceptions.SanityException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.*
-import no.nav.soknad.innsending.repository.SoknadsStatus
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Utilities
@@ -46,7 +45,9 @@ class SoknadService(
 
 	@Transactional
 	fun opprettSoknad(brukerId: String, skjemanr: String, spraak: String, vedleggsnrListe: List<String> = emptyList()): DokumentSoknadDto {
-			// hentSkjema informasjon gitt skjemanr
+		val operation = InnsenderOperation.OPPRETT.name
+
+		// hentSkjema informasjon gitt skjemanr
 		val kodeverkSkjema = hentSkjema(skjemanr, spraak)
 
 		try {
@@ -72,10 +73,10 @@ class SoknadService(
 
 			return dokumentSoknadDto
 		} catch (e: Exception) {
-			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.OPPRETT.name, kodeverkSkjema.tema ?: "Ukjent")
+			reportException(e, operation, kodeverkSkjema.tema ?: "Ukjent")
 			throw e
 		} finally {
-			innsenderMetrics.applicationCounterInc(InnsenderOperation.OPPRETT.name, kodeverkSkjema.tema ?: "Ukjent")
+			innsenderMetrics.operationsCounterInc(operation, kodeverkSkjema.tema ?: "Ukjent")
 		}
 	}
 
@@ -83,7 +84,8 @@ class SoknadService(
 		savedSoknadDbData: SoknadDbData,
 		kodeverkSkjema: KodeverkSkjema
 	): VedleggDbData {
-		val skjemaDbData = repo.lagreVedlegg(
+
+		return repo.lagreVedlegg(
 			VedleggDbData(
 				null,
 				savedSoknadDbData.id!!,
@@ -104,7 +106,6 @@ class SoknadService(
 				vedleggsurl = kodeverkSkjema.url
 			)
 		)
-		return skjemaDbData
 	}
 
 	private fun opprettVedleggTilSoknad(
@@ -133,7 +134,7 @@ class SoknadService(
 		arkivertSoknad: AktivSakDto
 	): List<VedleggDbData> {
 		val vedleggDbDataListe = arkivertSoknad.innsendtVedleggDtos
-			.filter{ it.vedleggsnr != arkivertSoknad.skjemanr }
+			.filter { it.vedleggsnr != arkivertSoknad.skjemanr }
 			.map { v ->
 				repo.lagreVedlegg(
 					VedleggDbData(
@@ -163,13 +164,15 @@ class SoknadService(
 
 	@Transactional
 	fun opprettSoknadForEttersendingGittSkjemanr(brukerId: String, skjemanr: String, spraak: String = "nb", vedleggsnrListe: List<String> = emptyList()): DokumentSoknadDto {
+		val operation = InnsenderOperation.OPPRETT.name
 		logger.info("opprettSoknadForEttersendingGittSkjemanr: for skjemanr=$skjemanr")
+
 		val kodeverkSkjema = try {
 			// hentSkjema informasjon gitt skjemanr
 			hentSkjema(skjemanr, finnSpraakFraInput(spraak))
-		} catch (ex: Exception) {
-			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.OPPRETT.name, "Ukjent")
-			throw ex
+		} catch (e: Exception) {
+			reportException(e, operation, "Ukjent")
+			throw e
 		}
 
 		try {
@@ -187,27 +190,29 @@ class SoknadService(
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
 			return dokumentSoknadDto
 		} catch (e: Exception) {
-			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.OPPRETT.name, kodeverkSkjema.tema ?: "Ukjent")
+			reportException(e, operation, kodeverkSkjema.tema ?: "Ukjent")
 			throw e
 		} finally {
-			innsenderMetrics.applicationCounterInc(InnsenderOperation.OPPRETT.name, kodeverkSkjema.tema ?: "Ukjent")
+			innsenderMetrics.operationsCounterInc(operation, kodeverkSkjema.tema ?: "Ukjent")
 		}
 	}
 
 	@Transactional
 	fun opprettSoknadForettersendingAvVedlegg(brukerId: String, ettersendingsId: String): DokumentSoknadDto {
+		val operation = InnsenderOperation.OPPRETT.name
+
 		// Skal opprette en soknad basert på status på vedlegg som skal ettersendes.
 		// Basere opplastingsstatus på nyeste innsending på ettersendingsId, dvs. nyeste soknad der innsendingsId eller ettersendingsId lik oppgitt ettersendingsId
 		// Det skal være mulig å ettersende allerede ettersendte vedlegg på nytt
 		val soknadDbDataList = try {
 			repo.finnNyesteSoknadGittEttersendingsId(ettersendingsId)
-		} catch (ex: Exception) {
-			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.OPPRETT.name, "Ukjent")
-			throw BackendErrorException(ex.message, "Feil ved henting av søknad $ettersendingsId", "errorCode.backendError.applicationFetchError")
+		} catch (e: Exception) {
+			reportException(e, operation, "Ukjent")
+			throw BackendErrorException(e.message, "Feil ved henting av søknad $ettersendingsId", "errorCode.backendError.applicationFetchError")
 		}
 
 		if (soknadDbDataList.isEmpty()) {
-			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.OPPRETT.name, "Ukjent")
+			reportException(Exception("No SoknadDbData found"), operation, "Ukjent")
 			throw ResourceNotFoundException(
 				"Kan ikke opprette søknad for ettersending",
 				"Soknad med id $ettersendingsId som det skal ettersendes data for ble ikke funnet",
@@ -221,12 +226,14 @@ class SoknadService(
 	@Transactional
 	fun opprettSoknadForettersendingAvVedleggGittSoknadOgVedlegg(
 		brukerId: String, nyesteSoknad: DokumentSoknadDto, sprak: String, vedleggsnrListe: List<String>): DokumentSoknadDto {
+		val operation = InnsenderOperation.OPPRETT.name
+
 		try {
 			logger.info("opprettSoknadForettersendingAvVedleggGittSoknadOgVedlegg fra ${nyesteSoknad.innsendingsId} og vedleggsliste = $vedleggsnrListe")
 			val ettersendingsSoknadDb = opprettEttersendingsSoknad(brukerId, nyesteSoknad.ettersendingsId ?: nyesteSoknad.innsendingsId!!,
 				nyesteSoknad.tittel, nyesteSoknad.skjemanr, nyesteSoknad.tema, nyesteSoknad.spraak!!)
 
-			val nyesteSoknadVedleggsNrListe = nyesteSoknad.vedleggsListe.filter { !it.erHoveddokument }.map {it.vedleggsnr}
+			val nyesteSoknadVedleggsNrListe = nyesteSoknad.vedleggsListe.filter { !it.erHoveddokument }.map { it.vedleggsnr }
 			val filtrertVedleggsnrListe = vedleggsnrListe.filter { !nyesteSoknadVedleggsNrListe.contains(it) }
 
 			val vedleggDbDataListe = opprettVedleggTilSoknad(ettersendingsSoknadDb.id!!, filtrertVedleggsnrListe, sprak)
@@ -240,23 +247,24 @@ class SoknadService(
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
 			return dokumentSoknadDto
 		} catch (e: Exception) {
-			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.OPPRETT.name, nyesteSoknad.tema )
+			reportException(e, operation, nyesteSoknad.tema)
 			throw e
 		} finally {
-			innsenderMetrics.applicationCounterInc(InnsenderOperation.OPPRETT.name, nyesteSoknad.tema)
+			innsenderMetrics.operationsCounterInc(operation, nyesteSoknad.tema)
 		}
-
 	}
 
 	@Transactional
 	fun opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(
 		brukerId: String, arkivertSoknad: AktivSakDto, opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr, sprak: String?): DokumentSoknadDto {
+		val operation = InnsenderOperation.OPPRETT.name
+
 		logger.info("opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg: for skjemanr=${arkivertSoknad.skjemanr}")
 		try {
 			val ettersendingsSoknadDb = opprettEttersendingsSoknad(brukerId = brukerId, ettersendingsId = arkivertSoknad.innsendingsId,
 				tittel = arkivertSoknad.tittel, skjemanr = arkivertSoknad.skjemanr, tema = arkivertSoknad.tema, sprak = sprak ?: "nb")
 
-			val nyesteSoknadVedleggsNrListe = arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map {it.vedleggsnr}
+			val nyesteSoknadVedleggsNrListe = arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map { it.vedleggsnr }
 			val filtrertVedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe?.filter { !nyesteSoknadVedleggsNrListe.contains(it) }.orEmpty()
 
 			val vedleggDbDataListe = opprettVedleggTilSoknad(ettersendingsSoknadDb.id!!, filtrertVedleggsnrListe, sprak ?: "nb")
@@ -270,12 +278,11 @@ class SoknadService(
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
 			return dokumentSoknadDto
 		} catch (e: Exception) {
-			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.OPPRETT.name, arkivertSoknad.tema )
+			reportException(e, operation, arkivertSoknad.tema)
 			throw e
 		} finally {
-			innsenderMetrics.applicationCounterInc(InnsenderOperation.OPPRETT.name, arkivertSoknad.tema)
+			innsenderMetrics.operationsCounterInc(operation, arkivertSoknad.tema)
 		}
-
 	}
 
 
@@ -332,7 +339,6 @@ class SoknadService(
 					)
 				)
 			}
-
 	}
 
 	private fun opprettVedleggTilSoknad(soknadDbData: SoknadDbData,  arkivertSoknad: AktivSakDto)
@@ -363,12 +369,13 @@ class SoknadService(
 					)
 				)
 			}
-
 	}
 
 
 	@Transactional
 	fun opprettSoknadForEttersendingAvVedleggGittArkivertSoknad(brukerId: String, arkivertSoknad: AktivSakDto, sprak: String, vedleggsnrListe: List<String>): DokumentSoknadDto {
+		val operation = InnsenderOperation.OPPRETT.name
+
 		try {
 			val innsendingsId = Utilities.laginnsendingsId()
 			// lagre soknad
@@ -403,10 +410,10 @@ class SoknadService(
 
 			return dokumentSoknadDto
 		} catch (e: Exception) {
-			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.OPPRETT.name, arkivertSoknad.tema)
+			reportException(e, operation, arkivertSoknad.tema)
 			throw e
 		} finally {
-			innsenderMetrics.applicationCounterInc(InnsenderOperation.OPPRETT.name, arkivertSoknad.tema)
+			innsenderMetrics.operationsCounterInc(operation, arkivertSoknad.tema)
 		}
 	}
 
@@ -414,6 +421,7 @@ class SoknadService(
 		nyesteSoknad: DokumentSoknadDto,
 		ettersendingsId: String
 	): DokumentSoknadDto {
+		val operation = InnsenderOperation.OPPRETT.name
 		try {
 			logger.debug("opprettEttersendingsSoknad: Skal opprette ettersendingssøknad basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
 				"Status for vedleggene til original søknad ${nyesteSoknad.vedleggsListe.map
@@ -454,13 +462,14 @@ class SoknadService(
 			val dokumentSoknadDto = lagDokumentSoknadDto(savedEttersendingsSoknad, vedleggDbDataListe)
 			publiserBrukernotifikasjon(dokumentSoknadDto)
 
+			innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
 			logger.debug("opprettEttersendingsSoknad: opprettet ${dokumentSoknadDto.innsendingsId} basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
 				"Med vedleggsstatus ${dokumentSoknadDto.vedleggsListe.map { it.vedleggsnr+':'+it.opplastingsStatus+':'+ mapTilLocalDateTime(it.innsendtdato) }}")
 
-			innsenderMetrics.applicationCounterInc(InnsenderOperation.OPPRETT.name, dokumentSoknadDto.tema)
+			innsenderMetrics.operationsCounterInc(operation, nyesteSoknad.tema)
 			return dokumentSoknadDto
 		} catch (e: Exception) {
-			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.OPPRETT.name, nyesteSoknad.tema)
+			reportException(e, operation, nyesteSoknad.tema)
 			throw e
 		} finally {
 		}
@@ -468,26 +477,26 @@ class SoknadService(
 
 	@Transactional
 	fun opprettNySoknad(dokumentSoknadDto: DokumentSoknadDto): String {
+		val operation = InnsenderOperation.OPPRETT.name
+
 		val innsendingsId = Utilities.laginnsendingsId()
 		try {
 			val savedSoknadDbData = repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId))
 			val soknadsid = savedSoknadDbData.id
 			val savedVedleggDbData = dokumentSoknadDto.vedleggsListe
-				.map {
-					repo.lagreVedlegg(mapTilVedleggDb(it,	soknadsid!!))
-				}
+				.map { repo.lagreVedlegg(mapTilVedleggDb(it, soknadsid!!)) }
 
 			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
 			// lagre mottatte filer i fil tabellen.
 			savedDokumentSoknadDto.vedleggsListe
 				.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
-				.forEach { lagreFil(savedDokumentSoknadDto, it, dokumentSoknadDto.vedleggsListe )}
+				.forEach { lagreFil(savedDokumentSoknadDto, it, dokumentSoknadDto.vedleggsListe) }
 			publiserBrukernotifikasjon(savedDokumentSoknadDto)
 
-			innsenderMetrics.applicationCounterInc(InnsenderOperation.OPPRETT.name, dokumentSoknadDto.tema)
+			innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
 			return innsendingsId
 		} catch (e: Exception) {
-			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.OPPRETT.name, dokumentSoknadDto.tema)
+			reportException(e, operation, dokumentSoknadDto.tema)
 			throw e
 		}
 	}
@@ -501,7 +510,7 @@ class SoknadService(
 		if (matchInnsendtVedleggDto != null) {
 			val filDto = FilDto(lagretVedleggDto.id!!, null, lagFilNavn(matchInnsendtVedleggDto), lagretVedleggDto.mimetype!!,
 				matchInnsendtVedleggDto.document?.size, matchInnsendtVedleggDto.document, OffsetDateTime.now()
-				)
+			)
 			lagreFil(savedDokumentSoknadDto, filDto)
 			return
 		}
@@ -555,18 +564,27 @@ class SoknadService(
 	}
 
 	private fun hentAlleVedlegg(soknadDbDataOpt: Optional<SoknadDbData>, ident: String): DokumentSoknadDto {
+		val operation = InnsenderOperation.HENT.name
+
 		if (soknadDbDataOpt.isPresent) {
-			innsenderMetrics.applicationCounterInc(InnsenderOperation.HENT.name, soknadDbDataOpt.get().tema)
+			innsenderMetrics.operationsCounterInc(operation, soknadDbDataOpt.get().tema)
 			return hentAlleVedlegg(soknadDbDataOpt.get())
+
+		} else {
+			val e = ResourceNotFoundException(
+				null,
+				"Ingen soknad med id = $ident funnet",
+				"errorCode.resourceNotFound.applicationNotFound"
+			)
+			reportException(e, operation, "Ukjent")
+			throw e
 		}
-		innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.HENT.name, "Ukjent")
-		throw ResourceNotFoundException(null, "Ingen soknad med id = $ident funnet", "errorCode.resourceNotFound.applicationNotFound")
 	}
 
 	private fun hentAlleVedlegg(soknadDbData: SoknadDbData): DokumentSoknadDto {
 		val vedleggDbDataListe = try {
 			repo.hentAlleVedleggGittSoknadsid(soknadDbData.id!!)
-		} catch (ex: Exception) {
+		} catch (e: Exception) {
 			throw ResourceNotFoundException("Ved oppretting av søknad skal det minimum være opprettet et vedlegg for selve søknaden",
 				"Fant ingen vedlegg til soknad ${soknadDbData.innsendingsid}", "errorCode.resourceNotFound.noAttachmentsFound")
 		}
@@ -588,6 +606,8 @@ class SoknadService(
 
 	@Transactional
 	fun lagreFil(soknadDto: DokumentSoknadDto, filDto: FilDto): FilDto {
+		val operation = InnsenderOperation.LAST_OPP.name
+
 		if (soknadDto.status != SoknadsStatusDto.opprettet) {
 			when (soknadDto.status.name) {
 				SoknadsStatusDto.innsendt.name -> throw IllegalActionException(
@@ -612,16 +632,18 @@ class SoknadService(
 
 		val savedFilDbData = try {
 			repo.saveFilDbData(soknadDto.innsendingsId!!, mapTilFilDb(filDto))
-		} catch (ex: Exception) {
-			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.LAST_OPP.name, soknadDto.tema)
-			throw ex
+		} catch (e: Exception) {
+			reportException(e, operation, soknadDto.tema)
+			throw e
 		}
 		repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, filDto.vedleggsid, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
-		innsenderMetrics.applicationCounterInc(InnsenderOperation.LAST_OPP.name, soknadDto.tema)
+		innsenderMetrics.operationsCounterInc(operation, soknadDto.tema)
 		return lagFilDto(savedFilDbData, false)
 	}
 
 	fun hentFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long): FilDto {
+		val operation = InnsenderOperation.LAST_NED.name
+
 		// Sjekk om vedlegget eksisterer
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
 			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke", "errorCode.resourceNotFound.attachmentNotFound")
@@ -641,7 +663,7 @@ class SoknadService(
 				}
 			}
 
-		innsenderMetrics.applicationCounterInc(InnsenderOperation.LAST_NED.name, soknadDto.tema)
+		innsenderMetrics.operationsCounterInc(operation, soknadDto.tema)
 		return lagFilDto(filDbDataOpt.get())
 	}
 
@@ -679,32 +701,38 @@ class SoknadService(
 		return repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, vedleggsId)
 	}
 
-	fun finnFilStorrelseSum(soknadDto: DokumentSoknadDto): Long {
-		return soknadDto.vedleggsListe.filter{it.opplastingsStatus==OpplastingsStatusDto.ikkeValgt || it.opplastingsStatus==OpplastingsStatusDto.lastetOpp}.sumOf{ repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, it.id!!) }
-	}
+	fun finnFilStorrelseSum(soknadDto: DokumentSoknadDto) = soknadDto.vedleggsListe
+		.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
+		.sumOf { repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, it.id!!) }
 
 	@Transactional
 	fun slettFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long): VedleggDto {
+		val operation = InnsenderOperation.SLETT_FIL.name
+
 		// Sjekk om vedlegget eksisterer
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
-			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke", "errorCode.resourceNotFound.attachmentNotFound")
-		if (repo.hentFilDb(soknadDto.innsendingsId!!, vedleggsId, filId ).isEmpty)
-			throw ResourceNotFoundException(null, "Fil $filId på vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke", "errorCode.resourceNotFound.fileNotFound")
+			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke",
+				"errorCode.resourceNotFound.attachmentNotFound")
+		if (repo.hentFilDb(soknadDto.innsendingsId!!, vedleggsId, filId).isEmpty)
+			throw ResourceNotFoundException(null, "Fil $filId på vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke",
+				"errorCode.resourceNotFound.fileNotFound")
 
 		repo.slettFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
 		if (repo.hentFilerTilVedlegg(soknadDto.innsendingsId!!, vedleggsId).isEmpty()) {
-			val vedleggDto = soknadDto.vedleggsListe.first {it.id == vedleggsId}
+			val vedleggDto = soknadDto.vedleggsListe.first { it.id == vedleggsId }
 			val nyOpplastingsStatus = if (vedleggDto.innsendtdato != null) OpplastingsStatus.INNSENDT else OpplastingsStatus.IKKE_VALGT
 			repo.lagreVedlegg(mapTilVedleggDb(vedleggDto, soknadsId = soknadDto.id!!, vedleggDto.skjemaurl, opplastingsStatus = nyOpplastingsStatus))
 		}
 		val vedleggDto = hentVedleggDto(vedleggsId)
-		innsenderMetrics.applicationCounterInc(InnsenderOperation.SLETT_FIL.name, soknadDto.tema)
+		innsenderMetrics.operationsCounterInc(operation, soknadDto.tema)
 		return vedleggDto
 	}
 
 	// Slett opprettet soknad gitt innsendingsId
 	@Transactional
 	fun slettSoknadAvBruker(dokumentSoknadDto: DokumentSoknadDto) {
+		val operation = InnsenderOperation.SLETT.name
+
 		// slett vedlegg og soknad
 		if (dokumentSoknadDto.status != SoknadsStatusDto.opprettet)
 			throw IllegalActionException(
@@ -715,10 +743,10 @@ class SoknadService(
 		//fillagerAPI.slettFiler(innsendingsId, dokumentSoknadDto.vedleggsListe)
 		repo.slettSoknad(dokumentSoknadDto)
 
-		val slettetSoknad = lagDokumentSoknadDto(mapTilSoknadDb(dokumentSoknadDto, dokumentSoknadDto.innsendingsId!!, SoknadsStatus.SlettetAvBruker)
-			, dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id!!)})
+		val soknadDbData = mapTilSoknadDb(dokumentSoknadDto, dokumentSoknadDto.innsendingsId!!, SoknadsStatus.SlettetAvBruker)
+		val slettetSoknad = lagDokumentSoknadDto(soknadDbData, dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id!!) })
 		publiserBrukernotifikasjon(slettetSoknad)
-		innsenderMetrics.applicationCounterInc(InnsenderOperation.SLETT.name, dokumentSoknadDto.tema)
+		innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
 	}
 
 	private fun slettVedleggOgDensFiler(vedleggDto: VedleggDto) {
@@ -729,6 +757,8 @@ class SoknadService(
 	// Slett opprettet soknad gitt innsendingsId
 	@Transactional
 	fun slettSoknadAutomatisk(innsendingsId: String) {
+		val operation = InnsenderOperation.SLETT.name
+
 		// Ved automatisk sletting beholdes innslag i basen, men eventuelt opplastede filer slettes
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
 
@@ -741,16 +771,18 @@ class SoknadService(
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettFilerForVedlegg(it.id!!) }
 		val slettetSoknadDb = repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId, SoknadsStatus.AutomatiskSlettet))
 
-		val slettetSoknadDto = lagDokumentSoknadDto(slettetSoknadDb
-			, dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id!!)})
+		val slettetSoknadDto = lagDokumentSoknadDto(slettetSoknadDb,
+			dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id!!) })
 		publiserBrukernotifikasjon(slettetSoknadDto)
 		logger.info("slettSoknadAutomatisk: Status for søknad $innsendingsId er satt til ${SoknadsStatus.AutomatiskSlettet}")
 
-		innsenderMetrics.applicationCounterInc(InnsenderOperation.SLETT.name, dokumentSoknadDto.tema)
+		innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
 	}
 
 	@Transactional
 	fun slettSoknadPermanent(innsendingsId: String) {
+		val operation = InnsenderOperation.SLETT.name
+
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
 
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettFilerForVedlegg(it.id!!) }
@@ -759,7 +791,7 @@ class SoknadService(
 
 		logger.info("slettSoknadPermanent: Søknad $innsendingsId er permanent slettet")
 
-		innsenderMetrics.applicationCounterInc(InnsenderOperation.SLETT.name, dokumentSoknadDto.tema)
+		innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
 	}
 
 	@Transactional
@@ -852,7 +884,6 @@ class SoknadService(
 			throw IllegalActionException("Vedlegg som er obligatorisk for søknaden kan ikke slettes av søker", "Kan ikke slette påkrevd vedlegg")
 
 		slettVedleggOgDensFiler(vedleggDto, soknadDto.id!!)
-
 	}
 
 	private fun slettVedleggOgDensFiler(vedleggDto: VedleggDto, soknadsId: Long) {
@@ -864,16 +895,17 @@ class SoknadService(
 
 	@Transactional
 	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto): Pair<List<VedleggDto>, List<VedleggDto>> {
+		val operation = InnsenderOperation.SEND_INN.name
 
 		// Det er ikke nødvendig å opprette og lagre kvittering(L7) i følge diskusjon 3/11.
 
 		// anta at filene til et vedlegg allerede er konvertert til PDF ved lagring, men må merges og sendes til soknadsfillager
 		// dersom det ikke er lastet opp filer på et obligatorisk vedlegg, skal status settes SENDES_SENERE
 		// etter at vedleggsfilen er overført soknadsfillager, skal lokalt lagrede filer på vedlegget slettes.
-		var soknadDto = soknadDtoInput
-		if (erEttersending(soknadDto)) {
-			soknadDto = opprettOgLagreDummyHovedDokument(soknadDto)
-		}
+		val soknadDto = if (erEttersending(soknadDtoInput))
+			opprettOgLagreDummyHovedDokument(soknadDtoInput)
+		else
+			soknadDtoInput
 
 		validerAtMinstEnFilErLastetOpp(soknadDto)
 
@@ -887,60 +919,66 @@ class SoknadService(
 		val kvitteringForArkivering = lagInnsendingsKvittering(soknadDto, opplastedeVedlegg, manglendePakrevdeVedlegg)
 		try {
 			fillagerAPI.lagreFiler(soknadDto.innsendingsId!!, opplastedeVedlegg + kvitteringForArkivering)
-		} catch (ex: Exception) {
-			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
-			logger.error("Feil ved sending av filer for søknad ${soknadDto.innsendingsId} til NAV, ${ex.message}")
-			throw BackendErrorException(ex.message, "Feil ved sending av filer for søknad ${soknadDto.innsendingsId} til NAV", "errorCode.backendError.sendToNAVError")
+		} catch (e: Exception) {
+			reportException(e, operation, soknadDto.tema)
+			logger.error("Feil ved sending av filer for søknad ${soknadDto.innsendingsId} til NAV, ${e.message}")
+			throw BackendErrorException(e.message, "Feil ved sending av filer for søknad ${soknadDto.innsendingsId} til NAV", "errorCode.backendError.sendToNAVError")
 		}
 
 		// send soknadmetada til soknadsmottaker
 		try {
 			soknadsmottakerAPI.sendInnSoknad(soknadDto, opplastedeVedlegg + kvitteringForArkivering)
-		} catch (ex: Exception) {
-			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
-			logger.error("${soknadDto.innsendingsId}: Feil ved sending av søknad til soknadsmottaker ${ex.message}")
-			throw BackendErrorException(ex.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV", "errorCode.backendError.sendToNAVError")
+		} catch (e: Exception) {
+			reportException(e, operation, soknadDto.tema)
+			logger.error("${soknadDto.innsendingsId}: Feil ved sending av søknad til soknadsmottaker ${e.message}")
+			throw BackendErrorException(e.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV",
+				"errorCode.backendError.sendToNAVError")
 		}
 
 		// Slett alle opplastede vedlegg untatt søknaden dersom ikke ettersendingssøknad, som er sendt til soknadsfillager.
-		alleVedlegg.filter{ !(it.erHoveddokument && !it.erVariant && !erEttersending(soknadDto)) }.forEach { repo.slettFilerForVedlegg(it.id!!) }
+		alleVedlegg
+			.filter { !(it.erHoveddokument && !it.erVariant && !erEttersending(soknadDto)) }
+			.forEach { repo.slettFilerForVedlegg(it.id!!) }
 
 		// oppdater vedleggstabellen med status og innsendingsdato for opplastede vedlegg.
 		opplastedeVedlegg.forEach { repo.lagreVedlegg(mapTilVedleggDb(it, soknadsId = soknadDto.id!!, it.skjemaurl, opplastingsStatus = OpplastingsStatus.INNSENDT)) }
 		manglendePakrevdeVedlegg.forEach { repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, it.id!!, OpplastingsStatus.SEND_SENERE, LocalDateTime.now()) }
 
 		try {
-			repo.lagreSoknad(mapTilSoknadDb(soknadDto, soknadDto.innsendingsId!!, SoknadsStatus.Innsendt ))
-		} catch (ex: Exception) {
-			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
-			throw BackendErrorException(ex.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV", "errorCode.backendError.sendToNAVError")
+			repo.lagreSoknad(mapTilSoknadDb(soknadDto, soknadDto.innsendingsId!!, SoknadsStatus.Innsendt))
+		} catch (e: Exception) {
+			reportException(e, operation, soknadDto.tema)
+			throw BackendErrorException(e.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV",
+				"errorCode.backendError.sendToNAVError")
 		}
 		return Pair(opplastedeVedlegg, manglendePakrevdeVedlegg)
-
 	}
 
 	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): KvitteringsDto {
+		val operation = InnsenderOperation.SEND_INN.name
+
 		try {
-			val opplastetOgManglende = sendInnSoknadStart(soknadDtoInput)
+			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput)
 
 			val innsendtSoknadDto = kansellerBrukernotifikasjon(soknadDtoInput)
 
-			sjekkOgOpprettEttersendingsSoknad(innsendtSoknadDto, opplastetOgManglende, soknadDtoInput)
+			sjekkOgOpprettEttersendingsSoknad(innsendtSoknadDto, manglende, soknadDtoInput)
 
-			return lagKvittering(innsendtSoknadDto, opplastetOgManglende.first, opplastetOgManglende.second)
+			return lagKvittering(innsendtSoknadDto, opplastet, manglende)
 
 		} finally {
-			innsenderMetrics.applicationCounterInc(InnsenderOperation.SEND_INN.name, soknadDtoInput.tema)
+			innsenderMetrics.operationsCounterInc(operation, soknadDtoInput.tema)
 		}
-
 	}
 
 	private fun lagInnsendingsKvittering(soknadDto: DokumentSoknadDto, opplastedeVedlegg: List<VedleggDto>, manglendeVedlegg: List<VedleggDto>): VedleggDto {
 		val person = pdlInterface.hentPersonData(soknadDto.brukerId)
-		val sammensattNavn = person?.fornavn + (if (person?.mellomnavn != null) " " + person.mellomnavn else "")  + " " + person?.etternavn
+		val sammensattNavn = listOfNotNull(person?.fornavn, person?.mellomnavn, person?.etternavn).joinToString(" ")
 
-		val kvittering = PdfGenerator().lagKvitteringsSide(soknadDto, if (sammensattNavn.trim().isEmpty()) "NN" else sammensattNavn, opplastedeVedlegg, manglendeVedlegg )
-		return VedleggDto(id = null, uuid = UUID.randomUUID().toString(), vedleggsnr = "L7", tittel = "Kvitteringsside for dokumentinnsending", label = "Kvitteringsside for dokumentinnsending", beskrivelse = null,
+		val kvittering = PdfGenerator().lagKvitteringsSide(soknadDto, sammensattNavn.ifBlank { "NN" }, opplastedeVedlegg, manglendeVedlegg)
+
+		return VedleggDto(id = null, uuid = UUID.randomUUID().toString(), vedleggsnr = "L7",
+			tittel = "Kvitteringsside for dokumentinnsending", label = "Kvitteringsside for dokumentinnsending", beskrivelse = null,
 			erHoveddokument = false, erVariant = true, erPdfa = true, erPakrevd = false,
 			opplastingsStatus = OpplastingsStatusDto.lastetOpp, opprettetdato = OffsetDateTime.now(), innsendtdato = OffsetDateTime.now(),
 			mimetype = Mimetype.applicationSlashPdf, document = kvittering, skjemaurl = null
@@ -949,13 +987,13 @@ class SoknadService(
 
 	private fun sjekkOgOpprettEttersendingsSoknad(
 		innsendtSoknadDto: DokumentSoknadDto,
-		opplastetOgManglende: Pair<List<VedleggDto>, List<VedleggDto>>,
+		manglende: List<VedleggDto>,
 		soknadDtoInput: DokumentSoknadDto
 	) {
 		logger.info("${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes " +
 			"${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size}"
 		)
-		if (opplastetOgManglende.second.isNotEmpty() && !"DAG".equals(innsendtSoknadDto.tema, true)) {
+		if (manglende.isNotEmpty() && !"DAG".equals(innsendtSoknadDto.tema, true)) {
 			logger.info("${soknadDtoInput.innsendingsId}: Skal opprette ettersendingssoknad")
 			opprettEttersendingsSoknad(
 				innsendtSoknadDto,
@@ -968,22 +1006,22 @@ class SoknadService(
 		// send brukernotifikasjon ved endring av søknadsstatus til innsendt
 		val innsendtSoknadDto = hentSoknad(soknadDtoInput.innsendingsId!!)
 		logger.info("${innsendtSoknadDto.innsendingsId}: Sendinn: innsendtdato på vedlegg med status innsendt= " +
-			"${
-				innsendtSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }
-					.map { it.vedleggsnr + ':' + mapTilLocalDateTime(it.innsendtdato) }
-			}"
+			innsendtSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }
+				.map { it.vedleggsnr + ":" + mapTilLocalDateTime(it.innsendtdato) }
 		)
 		publiserBrukernotifikasjon(innsendtSoknadDto)
 		return innsendtSoknadDto
 	}
 
 	private fun opprettOgLagreDummyHovedDokument(soknadDto: DokumentSoknadDto): DokumentSoknadDto {
+		val operation = InnsenderOperation.SEND_INN.name
+
 		// Hvis ettersending, så må det genereres et dummy hoveddokument
 		val dummySkjema = try {
 			PdfGenerator().lagForsideEttersending(soknadDto)
-		} catch (ex: Exception) {
-			innsenderMetrics.applicationErrorCounterInc(InnsenderOperation.SEND_INN.name, soknadDto.tema)
-			throw BackendErrorException(ex.message, "Feil ved generering av forside for ettersendingssøknad ${soknadDto.innsendingsId}", "errorCode.backendError.sendToNAVError")
+		} catch (e: Exception) {
+			reportException(e, operation, soknadDto.tema)
+			throw BackendErrorException(e.message, "Feil ved generering av forside for ettersendingssøknad ${soknadDto.innsendingsId}", "errorCode.backendError.sendToNAVError")
 		}
 		val hovedDokumentDto = soknadDto.vedleggsListe.firstOrNull { it.erHoveddokument && !it.erVariant }
 			?: lagVedleggDto(opprettHovedddokumentVedlegg(
@@ -1000,9 +1038,9 @@ class SoknadService(
 
 	private fun publiserBrukernotifikasjon(dokumentSoknadDto: DokumentSoknadDto): Boolean = try {
 		brukerNotifikasjon.soknadStatusChange(dokumentSoknadDto)
-	} catch (ex: Exception) {
+	} catch (e: Exception) {
 		throw BackendErrorException(
-			ex.message,
+			e.message,
 			"Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}",
 			"errorCode.backendError.sendToNAVError"
 		)
@@ -1010,17 +1048,20 @@ class SoknadService(
 
 	private fun lagKvittering(innsendtSoknadDto: DokumentSoknadDto,
 														opplastedeVedlegg: List<VedleggDto>, manglendePakrevdeVedlegg: List<VedleggDto>): KvitteringsDto {
-		val hoveddokumentVedleggsId = innsendtSoknadDto.vedleggsListe.firstOrNull{ it.erHoveddokument && !it.erVariant }?.id
+		val hoveddokumentVedleggsId = innsendtSoknadDto.vedleggsListe.firstOrNull { it.erHoveddokument && !it.erVariant }?.id
 		val hoveddokumentFilId = if (hoveddokumentVedleggsId != null) {
 			repo.findAllByVedleggsid(innsendtSoknadDto.innsendingsId!!, hoveddokumentVedleggsId).firstOrNull()?.id
 		} else {
 			null
 		}
 		return KvitteringsDto(innsendtSoknadDto.innsendingsId!!, innsendtSoknadDto.tittel, innsendtSoknadDto.innsendtDato!!,
-			lenkeTilDokument(innsendtSoknadDto.innsendingsId!!, hoveddokumentVedleggsId, hoveddokumentFilId ),
+			lenkeTilDokument(innsendtSoknadDto.innsendingsId!!, hoveddokumentVedleggsId, hoveddokumentFilId),
 			opplastedeVedlegg.filter { !it.erHoveddokument }.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) },
 			manglendePakrevdeVedlegg.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) },
-			innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre }.map {InnsendtVedleggDto(it.vedleggsnr ?: "", it.label)},
+
+			innsendtSoknadDto.vedleggsListe
+				.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre }
+				.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) },
 			innsendtSoknadDto.innsendtDato!!.plusDays(ettersendingsfrist)
 		)
 	}
@@ -1055,17 +1096,12 @@ class SoknadService(
 	// Hoveddokument kan ha ulike varianter. Hver enkelt av disse sendes som ulike filer til soknadsfillager.
 	// Bruker kan ha lastet opp flere filer for øvrige vedlegg. Disse må merges og sendes som en fil.
 	private fun ferdigstillVedlegg(soknadDto: DokumentSoknadDto): List<VedleggDto> {
-		val vedleggDtos = mutableListOf<VedleggDto>()
-
-		// Listen av varianter av hoveddokumenter, hent lagrede filer og opprett
-		soknadDto.vedleggsListe.filter{ it.erHoveddokument }.forEach {
-			vedleggDtos.add(lagVedleggDtoMedOpplastetFil(hentOgMergeVedleggsFiler(soknadDto, soknadDto.innsendingsId!!, it), it) ) }
-		// For hvert øvrige vedlegg merge filer og legg til
-		soknadDto.vedleggsListe.filter { !it.erHoveddokument }.forEach {
-			val filDto = hentOgMergeVedleggsFiler(soknadDto, soknadDto.innsendingsId!!, it)
-			logger.info("${soknadDto.innsendingsId}: Vedlegg ${it.vedleggsnr} har opplastet fil= ${filDto?.data != null} og erPakrevd=${it.erPakrevd} ")
-			vedleggDtos.add(lagVedleggDtoMedOpplastetFil(filDto, it)) }
-		return vedleggDtos
+		return soknadDto.vedleggsListe
+			.map { lagVedleggDtoMedOpplastetFil(hentOgMergeVedleggsFiler(soknadDto, soknadDto.innsendingsId!!, it), it) }
+			.sortedByDescending { it.erHoveddokument } // Hoveddokument first
+			.onEach { if (!it.erHoveddokument)
+				logger.info("${soknadDto.innsendingsId}: Vedlegg ${it.vedleggsnr} har opplastet fil=${it.document != null} og erPakrevd=${it.erPakrevd}")
+			}
 	}
 
 	private fun validerAtMinstEnFilErLastetOpp(soknadDto: DokumentSoknadDto) {
@@ -1083,6 +1119,7 @@ class SoknadService(
 					"errorCode.illegalAction.sendInErrorNoApplication"
 				)
 			}
+
 		} else {
 			// For å sende inn en ettersendingssøknad må det være lastet opp minst ett vedlegg
 			val harFil = soknadDto.vedleggsListe
@@ -1092,12 +1129,14 @@ class SoknadService(
 			val allePakrevdeBehandlet = soknadDto.vedleggsListe
 				.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") }
 				.none { !(it.opplastingsStatus == OpplastingsStatusDto.innsendt || it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp) }
-			if (!harFil && !allePakrevdeBehandlet) {
+
+			if (!harFil) {
 				// Hvis status for alle vedlegg som foventes sendt inn er lastetOpp, Innsendt eller SendesAvAndre, ikke kast feil. Merk at kun dummy forside vil bli sendt til arkivet.
 				if (allePakrevdeBehandlet) {
 					val separator = "\n"
 					logger.warn("Søker har ikke lastet opp filer på ettersendingssøknad ${soknadDto.innsendingsId}, " +
-						"men det er ikke gjenstående arbeid på noen av de påkrevde vedleggene. Vedleggsstatus:\n${soknadDto.vedleggsListe.map { it.tittel +", med status = " + it.opplastingsStatus +"\n"}.joinToString(separator)}")
+						"men det er ikke gjenstående arbeid på noen av de påkrevde vedleggene. Vedleggsstatus:\n" +
+						soknadDto.vedleggsListe.joinToString(separator) { it.tittel + ", med status = " + it.opplastingsStatus + "\n" })
 				} else {
 					throw IllegalActionException(
 						"Søker må ha ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
@@ -1113,9 +1152,10 @@ class SoknadService(
 		if (filer.isEmpty()) return null
 
 		val vedleggsFil: ByteArray? =
-			if (vedleggDto.erHoveddokument && vedleggDto.erVariant ) {
+			if (vedleggDto.erHoveddokument && vedleggDto.erVariant) {
 				if (filer.size > 1) {
-					logger.warn("${soknadDto.innsendingsId}: soknadDtoVedlegg ${vedleggDto.id} erVariant${vedleggDto.erVariant} - ${vedleggDto.tittel} har flere opplastede filer, velger første")
+					logger.warn("${soknadDto.innsendingsId}: soknadDtoVedlegg ${vedleggDto.id} er hoveddokument og er variant - " +
+						"${vedleggDto.tittel} har flere opplastede filer, velger første")
 				}
 				filer[0].data
 			} else {
@@ -1123,5 +1163,10 @@ class SoknadService(
 			}
 
 		return FilDto(vedleggDto.id!!, null, vedleggDto.vedleggsnr!!, filer[0].mimetype, vedleggsFil?.size, vedleggsFil, filer[0].opprettetdato)
+	}
+
+	private fun reportException(e: Exception, operation: String, tema: String) {
+		logger.error("Feil ved operasjon $operation", e)
+		innsenderMetrics.operationsErrorCounterInc(operation, tema)
 	}
 }

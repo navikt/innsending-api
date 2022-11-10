@@ -6,8 +6,8 @@ import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.model.SkjemaDto
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.SoknadService
-import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
+import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_LEVEL_4
 import no.nav.soknad.innsending.util.Constants.TOKENX
 import org.slf4j.LoggerFactory
@@ -18,23 +18,20 @@ import java.net.URI
 
 @RestController
 @ProtectedWithClaims(issuer = TOKENX, claimMap = [CLAIM_ACR_LEVEL_4])
-class SkjemaRestApi(val restConfig: RestConfig,
-										val soknadService: SoknadService,
-										val innsenderMetrics: InnsenderMetrics,
-										val tilgangskontroll: Tilgangskontroll)
-	: FyllUtApi {
+class SkjemaRestApi(
+	val restConfig: RestConfig,
+	val soknadService: SoknadService,
+	val tilgangskontroll: Tilgangskontroll,
+) : FyllUtApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
+	@Timed(InnsenderOperation.OPPRETT)
 	override fun fyllUt(skjemaDto: SkjemaDto): ResponseEntity<Unit> {
 		logger.info("Kall fra FyllUt for å opprette søknad for skjema ${skjemaDto.skjemanr}")
-		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.OPPRETT.name)
-		try {
-			val brukerId = tilgangskontroll.hentBrukerFraToken()
-			val opprettetSoknadId = soknadService.opprettNySoknad(SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(skjemaDto, brukerId))
-			return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(restConfig.frontEndFortsettEndpoint+opprettetSoknadId)).build()
-		} finally {
-			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
-		}
+
+		val brukerId = tilgangskontroll.hentBrukerFraToken()
+		val opprettetSoknadId = soknadService.opprettNySoknad(SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(skjemaDto, brukerId))
+		return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(restConfig.frontEndFortsettEndpoint+opprettetSoknadId)).build()
 	}
 }
