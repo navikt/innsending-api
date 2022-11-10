@@ -27,7 +27,7 @@ class GenererPdfTest {
 		val sammensattnavn = "śander Ełmer"
 		val kvittering = PdfGenerator().lagKvitteringsSide(soknad, sammensattnavn, vedleggDtos, emptyList())
 
-		writeBytesToFile(kvittering, "./delme.pdf")
+		//writeBytesToFile(kvittering, "./delme.pdf")
 
 		assertEquals(1, AntallSider().finnAntallSider(kvittering))
 
@@ -51,7 +51,7 @@ class GenererPdfTest {
 		val sammensattnavn2 = "śusan Mellomnavn Etternavn"
 		val kvittering = PdfGenerator().lagKvitteringsSide(soknad, sammensattnavn, vedleggDtos, emptyList())
 
-		writeBytesToFile(kvittering, "./delme2.pdf")
+		//writeBytesToFile(kvittering, "./delme2.pdf")
 
 		assertEquals(1, AntallSider().finnAntallSider(kvittering))
 

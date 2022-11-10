@@ -1,7 +1,6 @@
 package no.nav.soknad.pdfutilities
 
 import no.nav.soknad.innsending.model.DokumentSoknadDto
-import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
@@ -17,7 +16,8 @@ import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
-import java.lang.IllegalArgumentException
+import java.net.URL
+import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -197,7 +197,10 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 
 	private fun hentArial(): PDFont {
 		if (arialFont == null) {
-			arialFont = pageBuilder.getFont("/fonts/arial/Arial.ttf", pageBuilder.getPdDocument())
+			val res: URL = javaClass.classLoader.getResource("/fonts/arial/Arial.ttf")
+			val file: File = Paths.get(res.toURI()).toFile()
+			val absolutePath = file.absolutePath
+			arialFont = pageBuilder.getFont(absolutePath, pageBuilder.getPdDocument())
 			return arialFont as PDFont
 		} else {
 			return arialFont as PDFont
@@ -205,7 +208,10 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 	}
 	private fun hentArialBold(): PDFont {
 		if (arialBoldFont == null) {
-			arialBoldFont = pageBuilder.getFont("/fonts/arial/arialbd.ttf", pageBuilder.getPdDocument())
+			val res: URL = javaClass.classLoader.getResource("/fonts/arial/arialbd.ttf")
+			val file: File = Paths.get(res.toURI()).toFile()
+			val absolutePath = file.absolutePath
+			arialBoldFont = pageBuilder.getFont(absolutePath, pageBuilder.getPdDocument())
 			return arialBoldFont as PDFont
 		} else {
 			return arialBoldFont as PDFont
