@@ -160,9 +160,18 @@ class PageBuilder(private val pdfBuilder: PdfBuilder) {
 	}
 
 	fun getFont(path: String): PDFont {
+/*
 		try {
-			val file: File = ResourceUtils.getFile("classpath:" + path)
+			val file: File = ResourceUtils.getFile("classpath:$path")
 			return PDType0Font.load(getPdDocument(), file)
+		} catch (ex: IOException) {
+			logger.warn("Fant ikke ressursfil $path", ex.message)
+			throw BackendErrorException("Fant ikke ressursfil $path", "Feil ved generering av PDF")
+		}
+*/
+		try	{
+			val inputStream = ClassPathResource(path).getInputStream()
+			return PDType0Font.load(getPdDocument(), inputStream)
 		} catch (ex: IOException) {
 			logger.warn("Fant ikke ressursfil $path", ex.message)
 			throw BackendErrorException("Fant ikke ressursfil $path", "Feil ved generering av PDF")
