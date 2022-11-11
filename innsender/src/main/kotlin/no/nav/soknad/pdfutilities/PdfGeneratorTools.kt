@@ -8,9 +8,8 @@ import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode
 import org.apache.pdfbox.pdmodel.common.PDRectangle
-import org.apache.pdfbox.pdmodel.font.PDFont
-import org.apache.pdfbox.pdmodel.font.PDType0Font
-import org.apache.pdfbox.pdmodel.font.PDType1Font
+import org.apache.pdfbox.pdmodel.font.*
+import org.apache.pdfbox.pdmodel.font.encoding.WinAnsiEncoding
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import org.slf4j.LoggerFactory
@@ -34,6 +33,8 @@ private const val LINJEAVSTAND_HEADER = 1f
 private val FONT_HEADER = PDType1Font.HELVETICA_BOLD
 private val FONT_DOKUMENT = PDType1Font.HELVETICA
 private val NO_LOCALE = Locale("nb", "no")
+private val ARIAL_FONT_PATH = "fonts/arial/arial.ttf"
+private val ARIALBOLD_FONT_PATH = "fonts/arial/arialbd.ttf"
 
 const val INNRYKK = 50f
 
@@ -156,8 +157,15 @@ class PageBuilder(private val pdfBuilder: PdfBuilder) {
 		}
 	}
 
-	fun getFont(path: String): PDFont = PDType0Font.load(pdfBuilder.getPdDocument(), File(javaClass.classLoader.getResource(path)?.file
-		?: throw BackendErrorException("Fant ikke ressursfil $path", "Feil ved generering av PDF")))
+	fun getFont(path: String): PDFont {
+		val res: URL ? = javaClass.classLoader.getResource(path)
+		if (res == null) {
+			throw BackendErrorException("Fant ikke ressursfil $path", "Feil ved generering av PDF")
+		}
+		val file: File = Paths.get(res.toURI()).toFile()
+		val absolutePath = file.absolutePath
+		return PDType0Font.load(getPdDocument(), File(absolutePath))
+	}
 
 	fun getPdDocument() = pdfBuilder.getPdDocument()
 
@@ -199,17 +207,7 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 
 	private fun hentArial(): PDFont {
 		if (arialFont == null) {
-			arialFont = pageBuilder.getFont("fonts/arial/arial.ttf")
-/*
-			val res: URL? = javaClass.classLoader.getResource("fonts/arial/arial.ttf")
-			if (res == null) {
-				throw BackendErrorException("Arial font ikke funnet", "Feil ved generering av PDF")
-			}
-			val file: File = Paths.get(res.toURI()).toFile()
-			val absolutePath = file.absolutePath
-			//arialFont = pageBuilder.getFont(absolutePath, pageBuilder.getPdDocument())
-			arialFont = PDType0Font.load(pageBuilder.getPdDocument(), File(absolutePath))
-*/
+			arialFont = pageBuilder.getFont(ARIAL_FONT_PATH)
 			return arialFont as PDFont
 		} else {
 			return arialFont as PDFont
@@ -217,17 +215,7 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 	}
 	private fun hentArialBold(): PDFont {
 		if (arialBoldFont == null) {
-			arialBoldFont = pageBuilder.getFont("fonts/arial/arialbd.ttf")
-/*
-			val res: URL? = javaClass.classLoader.getResource("fonts/arial/arialbd.ttf")
-			if (res == null) {
-				throw BackendErrorException("Arialbld font ikke funnet ", "Feil ved generering av PDF")
-			}
-			val file: File = Paths.get(res.toURI()).toFile()
-			val absolutePath = file.absolutePath
-			//arialBoldFont = pageBuilder.getFont(absolutePath, pageBuilder.getPdDocument())
-			arialBoldFont = PDType0Font.load(pageBuilder.getPdDocument(), File(absolutePath))
-*/
+			arialBoldFont = pageBuilder.getFont(ARIALBOLD_FONT_PATH)
 			return arialBoldFont as PDFont
 		} else {
 			return arialBoldFont as PDFont
