@@ -14,6 +14,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ClassPathResource
+import org.springframework.util.ResourceUtils
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -34,8 +35,8 @@ private const val LINJEAVSTAND_HEADER = 1f
 private val FONT_HEADER = PDType1Font.HELVETICA_BOLD
 private val FONT_DOKUMENT = PDType1Font.HELVETICA
 private val NO_LOCALE = Locale("nb", "no")
-private val ARIAL_FONT_PATH = "/fonts/arial/arial.ttf"
-private val ARIALBOLD_FONT_PATH = "/fonts/arial/arialbd.ttf"
+private val ARIAL_FONT_PATH = "fonts/arial/arial.ttf"
+private val ARIALBOLD_FONT_PATH = "fonts/arial/arialbd.ttf"
 
 const val INNRYKK = 50f
 
@@ -160,7 +161,7 @@ class PageBuilder(private val pdfBuilder: PdfBuilder) {
 
 	fun getFont(path: String): PDFont {
 		try {
-			val file: File = ClassPathResource(path).getFile()
+			val file: File = ResourceUtils.getFile("classpath:" + path)
 			return PDType0Font.load(getPdDocument(), file)
 		} catch (ex: IOException) {
 			logger.warn("Fant ikke ressursfil $path", ex.message)
