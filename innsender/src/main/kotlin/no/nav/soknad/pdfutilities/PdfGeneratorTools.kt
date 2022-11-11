@@ -1,6 +1,5 @@
 package no.nav.soknad.pdfutilities
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.VedleggDto
@@ -14,12 +13,8 @@ import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ClassPathResource
-import org.springframework.util.ResourceUtils
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.io.IOException
-import java.net.URL
-import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -33,8 +28,6 @@ private const val FONT_INFORMASJON = 11
 private const val LINJEAVSTAND = 1.4f
 private const val LINJEAVSTAND_HEADER = 1f
 private val FONT_HEADER = PDType1Font.HELVETICA_BOLD
-private val FONT_DOKUMENT = PDType1Font.HELVETICA
-private val NO_LOCALE = Locale("nb", "no")
 private val ARIAL_FONT_PATH = "fonts/arial/arial.ttf"
 private val ARIALBOLD_FONT_PATH = "fonts/arial/arialbd.ttf"
 
@@ -76,10 +69,10 @@ class PdfGenerator {
 				.leggTilNavLogo()
 				.startTekst()
 				.flyttTilTopp()
-				.leggTilHeaderMidstilt(kvitteringHeader, FONT_EKSTRA_STOR, FONT_HEADER)
+				.leggTilHeaderMidstilt(kvitteringHeader, FONT_EKSTRA_STOR)
 				.flyttNedMed(5f)
 				.leggTilEttersendelseTeksOgFlyttNedHvisEttersendelse(soknad, ettersendelseTittel, 0)
-				.leggTilHeaderMidstilt(tittel, FONT_SUB_HEADER, FONT_DOKUMENT)
+				.leggTilHeaderMidstilt(tittel, FONT_SUB_HEADER)
 				.leggTilTekstMidtstilt(personInfo, FONT_STOR, LINJEAVSTAND)
 				.flyttNedMed(30f)
 				.leggTilTekst(antallInnsendt, FONT_VANLIG, LINJEAVSTAND)
@@ -160,15 +153,6 @@ class PageBuilder(private val pdfBuilder: PdfBuilder) {
 	}
 
 	fun getFont(path: String): PDFont {
-/*
-		try {
-			val file: File = ResourceUtils.getFile("classpath:$path")
-			return PDType0Font.load(getPdDocument(), file)
-		} catch (ex: IOException) {
-			logger.warn("Fant ikke ressursfil $path", ex.message)
-			throw BackendErrorException("Fant ikke ressursfil $path", "Feil ved generering av PDF")
-		}
-*/
 		try	{
 			val inputStream = ClassPathResource(path).getInputStream()
 			return PDType0Font.load(getPdDocument(), inputStream)
@@ -234,7 +218,7 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 	}
 
 	@Throws(IOException::class)
-	fun leggTilHeaderMidstilt(tekst: String, storrelse: Int, font: PDFont): TextBuilder {
+	fun leggTilHeaderMidstilt(tekst: String, storrelse: Int): TextBuilder {
 		val useFont = hentArialBold()
 		contentStream.setFont(useFont, storrelse.toFloat())
 		brytAvTekstSomErForBredForSiden(tekst, useFont, storrelse, LINJEAVSTAND_HEADER, true)
@@ -364,7 +348,7 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 	): TextBuilder {
 
 		if (soknad.ettersendingsId != null) {
-			leggTilHeaderMidstilt(ettersendelseTittel, FONT_SUB_HEADER, FONT_DOKUMENT)
+			leggTilHeaderMidstilt(ettersendelseTittel, FONT_SUB_HEADER)
 				.flyttNedMed(flyttNedMed.toFloat())
 		}
 		return this
