@@ -34,8 +34,8 @@ private const val LINJEAVSTAND_HEADER = 1f
 private val FONT_HEADER = PDType1Font.HELVETICA_BOLD
 private val FONT_DOKUMENT = PDType1Font.HELVETICA
 private val NO_LOCALE = Locale("nb", "no")
-private val ARIAL_FONT_PATH = "fonts/arial/arial.ttf"
-private val ARIALBOLD_FONT_PATH = "fonts/arial/arialbd.ttf"
+private val ARIAL_FONT_PATH = "/fonts/arial/arial.ttf"
+private val ARIALBOLD_FONT_PATH = "/fonts/arial/arialbd.ttf"
 
 const val INNRYKK = 50f
 
