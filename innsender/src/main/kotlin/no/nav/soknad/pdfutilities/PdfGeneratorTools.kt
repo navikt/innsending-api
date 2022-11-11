@@ -1,5 +1,6 @@
 package no.nav.soknad.pdfutilities
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.VedleggDto
@@ -9,10 +10,10 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.font.*
-import org.apache.pdfbox.pdmodel.font.encoding.WinAnsiEncoding
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import org.slf4j.LoggerFactory
+import org.springframework.core.io.ClassPathResource
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -158,13 +159,13 @@ class PageBuilder(private val pdfBuilder: PdfBuilder) {
 	}
 
 	fun getFont(path: String): PDFont {
-		val res: URL ? = javaClass.classLoader.getResource(path)
-		if (res == null) {
+		try {
+			val file: File = ClassPathResource(path).getFile()
+			return PDType0Font.load(getPdDocument(), file)
+		} catch (ex: IOException) {
+			logger.warn("Fant ikke ressursfil $path", ex.message)
 			throw BackendErrorException("Fant ikke ressursfil $path", "Feil ved generering av PDF")
 		}
-		val file: File = Paths.get(res.toURI()).toFile()
-		val absolutePath = file.absolutePath
-		return PDType0Font.load(getPdDocument(), File(absolutePath))
 	}
 
 	fun getPdDocument() = pdfBuilder.getPdDocument()
