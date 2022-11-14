@@ -1,17 +1,18 @@
 package no.nav.soknad.pdfutilities
 
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
-import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode
 import org.apache.pdfbox.pdmodel.common.PDRectangle
-import org.apache.pdfbox.pdmodel.font.PDFont
-import org.apache.pdfbox.pdmodel.font.PDType1Font
+import org.apache.pdfbox.pdmodel.font.*
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
+import org.slf4j.LoggerFactory
+import org.springframework.core.io.ClassPathResource
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.time.LocalDateTime
@@ -26,9 +27,6 @@ private const val FONT_VANLIG = 10
 private const val FONT_INFORMASJON = 11
 private const val LINJEAVSTAND = 1.4f
 private const val LINJEAVSTAND_HEADER = 1f
-private val FONT_HEADER = PDType1Font.HELVETICA_BOLD
-private val FONT_DOKUMENT = PDType1Font.HELVETICA
-private val NO_LOCALE = Locale("nb", "no")
 
 const val INNRYKK = 50f
 
@@ -66,10 +64,10 @@ class PdfGenerator {
 				.leggTilNavLogo()
 				.startTekst()
 				.flyttTilTopp()
-				.leggTilHeaderMidstilt(kvitteringHeader, FONT_EKSTRA_STOR, FONT_HEADER)
+				.leggTilHeaderMidstilt(kvitteringHeader, FONT_EKSTRA_STOR)
 				.flyttNedMed(5f)
 				.leggTilEttersendelseTeksOgFlyttNedHvisEttersendelse(soknad, ettersendelseTittel, 0)
-				.leggTilHeaderMidstilt(tittel, FONT_SUB_HEADER, FONT_DOKUMENT)
+				.leggTilHeaderMidstilt(tittel, FONT_SUB_HEADER)
 				.leggTilTekstMidtstilt(personInfo, FONT_STOR, LINJEAVSTAND)
 				.flyttNedMed(30f)
 				.leggTilTekst(antallInnsendt, FONT_VANLIG, LINJEAVSTAND)
@@ -137,6 +135,7 @@ class PageBuilder(private val pdfBuilder: PdfBuilder) {
 	private var page = PDPage(PDRectangle.A4)
 	private var logo: PDImageXObject
 	private var contentStream: PDPageContentStream
+	private val logger = LoggerFactory.getLogger(javaClass)
 
 	init {
 		pdfBuilder.getPdDocument().addPage(page)
@@ -147,6 +146,18 @@ class PageBuilder(private val pdfBuilder: PdfBuilder) {
 			throw Exception("navlogo.jpg er fjernet fra prosjektet, eller feilet under åpning av contentStream.", e)
 		}
 	}
+
+	fun getFont(path: String): PDFont {
+		try	{
+			val inputStream = ClassPathResource(path).getInputStream()
+			return PDType0Font.load(getPdDocument(), inputStream)
+		} catch (ex: IOException) {
+			logger.warn("Fant ikke ressursfil $path", ex.message)
+			throw BackendErrorException("Fant ikke ressursfil $path", "Feil ved generering av PDF")
+		}
+	}
+
+	fun getPdDocument() = pdfBuilder.getPdDocument()
 
 	fun getContentStream() = contentStream
 
@@ -173,37 +184,65 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 	private val pageWidth: Float
 	private val contentStream = pageBuilder.getContentStream()
 
+	private val logger = LoggerFactory.getLogger(javaClass)
+	private val regex = Regex("\t")
+	private var arialFont: PDFont? = null
+	private var arialBoldFont: PDFont? = null
+	private val ARIAL_FONT_PATH = "fonts/arial/arial.ttf"
+	private val ARIALBOLD_FONT_PATH = "fonts/arial/arialbd.ttf"
+
 	init {
 		contentStream.beginText()
 		pageWidth = pageBuilder.getPage().mediaBox.width
 		tekstBredde = pageWidth - INNRYKK * 2
 	}
 
+	private fun hentArial(): PDFont {
+		if (arialFont == null) {
+			arialFont = pageBuilder.getFont(ARIAL_FONT_PATH)
+			return arialFont as PDFont
+		} else {
+			return arialFont as PDFont
+		}
+	}
+	private fun hentArialBold(): PDFont {
+		if (arialBoldFont == null) {
+			arialBoldFont = pageBuilder.getFont(ARIALBOLD_FONT_PATH)
+			return arialBoldFont as PDFont
+		} else {
+			return arialBoldFont as PDFont
+		}
+	}
+
 	@Throws(IOException::class)
-	fun leggTilHeaderMidstilt(tekst: String, storrelse: Int, font: PDFont): TextBuilder {
-		contentStream.setFont(font, storrelse.toFloat())
-		brytAvTekstSomErForBredForSiden(tekst, font, storrelse, LINJEAVSTAND_HEADER, true)
+	fun leggTilHeaderMidstilt(tekst: String, storrelse: Int): TextBuilder {
+		val useFont = hentArialBold()
+		contentStream.setFont(useFont, storrelse.toFloat())
+		brytAvTekstSomErForBredForSiden(tekst, useFont, storrelse, LINJEAVSTAND_HEADER, true)
 		return this
 	}
 
 	@Throws(IOException::class)
 	fun leggTilHeader(tekst: String, storrelse: Int): TextBuilder {
-		contentStream.setFont(FONT_HEADER, storrelse.toFloat())
-		brytAvTekstSomErForBredForSiden(tekst, FONT_HEADER, storrelse, LINJEAVSTAND_HEADER, false)
+		val useFont = hentArialBold()
+		contentStream.setFont(useFont, storrelse.toFloat())
+		brytAvTekstSomErForBredForSiden(tekst, useFont, storrelse, LINJEAVSTAND_HEADER, false)
 		return this
 	}
 
 	@Throws(IOException::class)
 	fun leggTilTekst(tekst: String, storrelse: Int, linjeavstand: Float): TextBuilder {
-		contentStream.setFont(FONT_DOKUMENT, storrelse.toFloat())
-		brytAvTekstSomErForBredForSiden(tekst, FONT_DOKUMENT, storrelse, linjeavstand, false)
+		val useFont = hentArial()
+		contentStream.setFont(useFont, storrelse.toFloat())
+		brytAvTekstSomErForBredForSiden(tekst, useFont, storrelse, linjeavstand, false)
 		return this
 	}
 
 	@Throws(IOException::class)
 	fun leggTilTekstMidtstilt(tekst: String, storrelse: Int, linjeavstand: Float): TextBuilder {
-		contentStream.setFont(FONT_DOKUMENT, storrelse.toFloat())
-		brytAvTekstSomErForBredForSiden(tekst, FONT_DOKUMENT, storrelse, linjeavstand, true)
+		val useFont = hentArial()
+		contentStream.setFont(useFont, storrelse.toFloat())
+		brytAvTekstSomErForBredForSiden(tekst, useFont, storrelse, linjeavstand, true)
 		return this
 	}
 
@@ -215,11 +254,12 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 		linjeavstand: Float,
 		midstilt: Boolean
 	) {
+		val konvertertTekst = regex.replace(tekst," ")
 		var startIndex = 0
 		val height = font.fontDescriptor.fontBoundingBox.height / 1000 * fontSize
-		while (startIndex < tekst.length - 1) {
-			val linje = finnLinje(tekst.substring(startIndex), font, fontSize)
-			val sluttIndex = tekst.indexOf(linje) + linje.length
+		while (startIndex < konvertertTekst.length - 1) {
+			val linje = finnLinje(konvertertTekst.substring(startIndex), font, fontSize)
+			val sluttIndex = konvertertTekst.indexOf(linje) + linje.length
 			if (midstilt) {
 				skrivLinjeMidtstilt(linje, font, fontSize)
 			} else {
@@ -250,6 +290,9 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 			val linjeBredde = font.getStringWidth(linje) / 1000.0f * fontSize
 			linjeBredde > tekstBredde
 		} catch (e: IOException) {
+			false
+		} catch (e2: IllegalArgumentException) {
+			logger.warn("Feil i forbindelse med av generering av PDF med ${sb.toString()} + $nestOrd")
 			false
 		}
 	}
@@ -302,7 +345,7 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 	): TextBuilder {
 
 		if (soknad.ettersendingsId != null) {
-			leggTilHeaderMidstilt(ettersendelseTittel, FONT_SUB_HEADER, FONT_DOKUMENT)
+			leggTilHeaderMidstilt(ettersendelseTittel, FONT_SUB_HEADER)
 				.flyttNedMed(flyttNedMed.toFloat())
 		}
 		return this

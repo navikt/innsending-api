@@ -466,12 +466,11 @@ class SoknadService(
 			logger.debug("opprettEttersendingsSoknad: opprettet ${dokumentSoknadDto.innsendingsId} basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
 				"Med vedleggsstatus ${dokumentSoknadDto.vedleggsListe.map { it.vedleggsnr+':'+it.opplastingsStatus+':'+ mapTilLocalDateTime(it.innsendtdato) }}")
 
+			innsenderMetrics.operationsCounterInc(operation, nyesteSoknad.tema)
 			return dokumentSoknadDto
 		} catch (e: Exception) {
 			reportException(e, operation, nyesteSoknad.tema)
 			throw e
-		} finally {
-			innsenderMetrics.operationsCounterInc(operation, nyesteSoknad.tema)
 		}
 	}
 
