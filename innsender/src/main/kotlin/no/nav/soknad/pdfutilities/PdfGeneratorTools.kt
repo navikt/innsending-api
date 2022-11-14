@@ -27,16 +27,11 @@ private const val FONT_VANLIG = 10
 private const val FONT_INFORMASJON = 11
 private const val LINJEAVSTAND = 1.4f
 private const val LINJEAVSTAND_HEADER = 1f
-private val FONT_HEADER = PDType1Font.HELVETICA_BOLD
-private val ARIAL_FONT_PATH = "fonts/arial/arial.ttf"
-private val ARIALBOLD_FONT_PATH = "fonts/arial/arialbd.ttf"
 
 const val INNRYKK = 50f
 
 
 class PdfGenerator {
-
-	val logger = LoggerFactory.getLogger(javaClass)
 
 	private val tekster: Properties = PdfGenerator::class.java.getResourceAsStream("/tekster/innholdstekster_nb.properties").use {
 		Properties().apply { load(it) }
@@ -140,7 +135,7 @@ class PageBuilder(private val pdfBuilder: PdfBuilder) {
 	private var page = PDPage(PDRectangle.A4)
 	private var logo: PDImageXObject
 	private var contentStream: PDPageContentStream
-	val logger = LoggerFactory.getLogger(javaClass)
+	private val logger = LoggerFactory.getLogger(javaClass)
 
 	init {
 		pdfBuilder.getPdDocument().addPage(page)
@@ -193,6 +188,8 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 	private val regex = Regex("\t")
 	private var arialFont: PDFont? = null
 	private var arialBoldFont: PDFont? = null
+	private val ARIAL_FONT_PATH = "fonts/arial/arial.ttf"
+	private val ARIALBOLD_FONT_PATH = "fonts/arial/arialbd.ttf"
 
 	init {
 		contentStream.beginText()

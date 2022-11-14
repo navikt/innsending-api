@@ -471,7 +471,6 @@ class SoknadService(
 		} catch (e: Exception) {
 			reportException(e, operation, nyesteSoknad.tema)
 			throw e
-		} finally {
 		}
 	}
 
