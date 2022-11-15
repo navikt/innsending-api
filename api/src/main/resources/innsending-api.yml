@@ -761,9 +761,7 @@ components:
         visningsType:
           $ref: "#/components/schemas/VisningsType"
         kanLasteOppAnnet:
-          type: boolean
-          description: Angir om det skal være mulig å opprette og laste opp filer på vedlegg av type Annet (N6) på søknaden.
-          default: true
+          $ref: "#/components/schemas/KanLasteOppAnnet"
 
     FilDto:
       type: object
@@ -828,6 +826,11 @@ components:
           $ref: "#/components/schemas/Vedleggsnr"
         tittel:
           $ref: "#/components/schemas/Tittel"
+
+    KanLasteOppAnnet:
+      type: boolean
+      description: Angir om det skal være mulig å opprette og laste opp filer på vedlegg av type Annet (N6) på søknaden.
+      default: false
 
     KvitteringsDto:
       type: object
@@ -1028,6 +1031,8 @@ components:
           description: Liste av obligatoriske og valgfrie vedlegg som kan lastes opp til søknaden.
           items:
             $ref: "#/components/schemas/SkjemaDokumentDto"
+        kanLasteOppAnnet:
+          $ref: "#/components/schemas/KanLasteOppAnnet"
 
     Skjemanr:
       type: string
