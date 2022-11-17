@@ -267,7 +267,7 @@ class SoknadService(
 			val nyesteSoknadVedleggsNrListe = arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map { it.vedleggsnr }
 			val filtrertVedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe?.filter { !nyesteSoknadVedleggsNrListe.contains(it) }.orEmpty()
 
-			val vedleggDbDataListe = opprettVedleggTilSoknad(ettersendingsSoknadDb.id!!, filtrertVedleggsnrListe, sprak ?: "nb")
+			val vedleggDbDataListe = opprettVedleggTilSoknad(ettersendingsSoknadDb.id!!, filtrertVedleggsnrListe, sprak ?: "nb" )
 
 			val innsendtDbDataListe = opprettVedleggTilSoknad(ettersendingsSoknadDb, arkivertSoknad)
 
@@ -335,7 +335,7 @@ class SoknadService(
 						opprettetdato = v.opprettetdato.toLocalDateTime(),
 						endretdato = LocalDateTime.now(),
 						innsendtdato = v.innsendtdato?.toLocalDateTime(),
-						vedleggsurl = if (v.vedleggsnr != null) hentSkjema(v.vedleggsnr!!, soknadDbData.spraak ?: "nb").url else null
+						vedleggsurl = if (v.vedleggsnr != null) hentSkjema(v.vedleggsnr!!, soknadDbData.spraak ?: "nb", false).url else null
 					)
 				)
 			}
@@ -365,7 +365,7 @@ class SoknadService(
 						opprettetdato = arkivertSoknad.innsendtDato.toLocalDateTime(),
 						endretdato = LocalDateTime.now(),
 						innsendtdato = arkivertSoknad.innsendtDato.toLocalDateTime(),
-						vedleggsurl = hentSkjema(v.vedleggsnr, soknadDbData.spraak ?: "nb").url
+						vedleggsurl = hentSkjema(v.vedleggsnr, soknadDbData.spraak ?: "nb", false).url
 					)
 				)
 			}
@@ -454,7 +454,7 @@ class SoknadService(
 							innsendtdato = if (v.opplastingsStatus == OpplastingsStatusDto.innsendt && v.innsendtdato == null)
 								nyesteSoknad.innsendtDato?.toLocalDateTime() else v.innsendtdato?.toLocalDateTime(),
 							vedleggsurl = if (v.vedleggsnr != null)
-								hentSkjema(v.vedleggsnr!!, nyesteSoknad.spraak ?: "nb").url else null
+								hentSkjema(v.vedleggsnr!!, nyesteSoknad.spraak ?: "nb", false).url else null
 						)
 					)
 				}
@@ -1026,7 +1026,7 @@ class SoknadService(
 			?: lagVedleggDto(opprettHovedddokumentVedlegg(
 					mapTilSoknadDb(soknadDto, soknadDto.innsendingsId!!,
 					mapTilSoknadsStatus(soknadDto.status, null)),
-					hentSkjema(soknadDto.skjemanr, soknadDto.spraak ?: "NB_NO") ), null)
+					KodeverkSkjema(tittel = soknadDto.tittel, skjemanummer = soknadDto.skjemanr, beskrivelse = soknadDto.tittel, tema = soknadDto.tema ) ), null)
 
 		val oppdatertSoknadDto = hentSoknad(soknadDto.id!!)
 		lagreFil(oppdatertSoknadDto, FilDto(hovedDokumentDto.id!!, null, hovedDokumentDto.vedleggsnr!!, Mimetype.applicationSlashPdf,

@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service
 @Profile("test | dev | prod")
 @Qualifier("saf")
 class SafAPI(
-	private val safSelvbetjeningGraphQLClient: GraphQLWebClient,
+	private val safSelvbetjeningGraphQLClient: GraphQLWebClient
 ): SafInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -76,7 +76,7 @@ class SafAPI(
 
 		val hoveddokument = dokumentInfo.first()
 		val vedlegg = dokumentInfo.drop(1)
-		fun konverter(dokument: DokumentInfo?, type: String) = Dokument(dokument?.brevkode ?: "", dokument?.tittel ?: "", type)
+		fun konverter(dokument: DokumentInfo?, type: String) = Dokument(KonverteringsUtility().brevKodeKontroll(dokument?.brevkode), dokument?.tittel ?: "", type)
 
 		return listOf(konverter(hoveddokument, "Hoveddokument"))
 			.plus(vedlegg.map { konverter(it, "Vedlegg") })
