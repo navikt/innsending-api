@@ -30,6 +30,7 @@ import java.time.OffsetDateTime
 import java.util.*
 import org.junit.jupiter.api.*
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 
 @SpringBootTest
@@ -240,6 +241,24 @@ class SoknadServiceTest {
 
 		val vedleggDto = soknadService.hentFiler(ettersendingsSoknadDto2, ettersendingsSoknadDto2.innsendingsId!!, ettersendingsSoknadDto2.vedleggsListe.last().id!!, true)
 		assertTrue(vedleggDto.isEmpty())
+	}
+
+
+
+	@Test
+	fun opprettSoknadForettersendingAvVedleggGittArkivertSoknadTest_MedUkjentSkjemanr() {
+
+		val soknadService = lagSoknadService()
+		val arkiverteVedlegg: List<InnsendtVedleggDto> = listOf(InnsendtVedleggDto(vedleggsnr = "NAV 08-09.10", tittel = "Søknad om å beholde sykepenger under opphold i utlandet"))
+
+		val arkivertSoknad = AktivSakDto("NAV 08-07.04D", "Søknad om Sykepenger",  "SYK",
+			LocalDateTime.now().minusDays(10L).atOffset(ZoneOffset.UTC), ettersending = false, innsendingsId = UUID.randomUUID().toString(), innsendtVedleggDtos = arkiverteVedlegg )
+
+		val ettersending = soknadService.opprettSoknadForEttersendingAvVedleggGittArkivertSoknad(brukerId = "1234", arkivertSoknad = arkivertSoknad, "no_NO", listOf("W1") )
+
+		assertTrue(ettersending != null)
+		assertEquals(2, ettersending.vedleggsListe.size)
+
 	}
 
 	@Test

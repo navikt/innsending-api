@@ -42,15 +42,8 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 		throw SanityException(if (sanityList.isEmpty()) "Skjema cache er tom" else "Ikke funnet i skjema listen", message)
 	}
 
-	private fun createKodeverkSkjema(sanity: SkjemaOgVedleggsdata, spraak: String, id: String): KodeverkSkjema {
-		val kodeverkSkjema = KodeverkSkjema()
-		kodeverkSkjema.url = getUrl(sanity, spraak)
-		kodeverkSkjema.skjemanummer = id
-		kodeverkSkjema.vedleggsid = sanity.vedleggsid
-		kodeverkSkjema.tittel = getTitle(sanity, spraak)
-		kodeverkSkjema.tema = sanity.tema
-		return kodeverkSkjema
-	}
+	private fun createKodeverkSkjema(sanity: SkjemaOgVedleggsdata, spraak: String, id: String): KodeverkSkjema =
+		 KodeverkSkjema(url = getUrl(sanity, spraak), skjemanummer = id, vedleggsid = sanity.vedleggsid, tittel = getTitle(sanity, spraak), tema = sanity.tema )
 
 	private fun getTitle(sanity: SkjemaOgVedleggsdata, spraak: String): String? {
 		return if ("no".equals(spraak, true))

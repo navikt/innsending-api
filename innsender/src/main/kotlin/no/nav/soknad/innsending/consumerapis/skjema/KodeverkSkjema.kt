@@ -2,9 +2,7 @@ package no.nav.soknad.innsending.consumerapis.skjema
 
 import org.apache.commons.lang3.StringUtils
 
-class KodeverkSkjema {
-	var tittel: String? = null
-	var url: String? = null
+data class KodeverkSkjema (val tittel: String? = null, val beskrivelse: String? = null, val skjemanummer: String? = null, val vedleggsid: String? = null, val tema: String? = null, val url: String? = null) {
 	var urlengelsk: String? = null
 	var urlnynorsk: String? = null
 	var urlpolsk: String? = null
@@ -12,10 +10,6 @@ class KodeverkSkjema {
 	var urlspansk: String? = null
 	var urltysk: String? = null
 	var urlsamisk: String? = null
-	var vedleggsid: String? = null
-	var beskrivelse: String? = null
-	var skjemanummer: String? = null
-	var tema: String? = null
 	var gosysId: String? = null
 
 	private fun defaultIfNull(url: String?): String? {

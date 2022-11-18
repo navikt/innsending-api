@@ -58,7 +58,7 @@ internal class InnsendtListeApiTest {
 	private val expiry = 2*3600
 
 
-	// Disabled test da den feiler i på GitHub (men fungerer lokalt)
+	// Disabled test da den feiler på GitHub (men fungerer lokalt)
 	@Test
 	@Disabled
 	internal fun testHentJournalposter() {
