@@ -28,6 +28,8 @@ class SafService(val safApi: SafInterface) {
 		logger.info("Hentet ${innsendte.size} journalposter for bruker, skal mappe til AktivSakDto")
 		val innsendteMedHovedDokMedBrevkode = innsendte.filter { harHoveddokumentMedBrevkodeSatt(it.dokumenter) }
 		logger.debug("innsendteMedHovedDokMedBrevkode ${innsendteMedHovedDokMedBrevkode.size}")
+		val innsendtStreng = innsendte.map{it.eksternReferanseId +  ": " + it.datoMottatt + " tema="+it.tema + " tittel=" + it.tittel}.joinToString("\n")
+		logger.debug("Innsendte søknader:\n$innsendtStreng")
 		return innsendteMedHovedDokMedBrevkode.map {
 			AktivSakDto(finnBrevKodeForHoveddokument(it.dokumenter), it.tittel, it.tema,
 				konverterTilDateTime(it.datoMottatt ?: ""), erEttersending(it.dokumenter),
