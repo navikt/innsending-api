@@ -830,7 +830,6 @@ components:
     KanLasteOppAnnet:
       type: boolean
       description: Angir om det skal være mulig å opprette og laste opp filer på vedlegg av type Annet (N6) på søknaden.
-      default: false
 
     KvitteringsDto:
       type: object
