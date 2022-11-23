@@ -27,13 +27,13 @@ class BrukernotifikasjonPublisher(
 	@Value("\${ettersendingsfrist}")
 	private var ettersendingsfrist: Long = 14
 
-	val tittelPrefixEttersendelse = mapOf("no" to "Klikk her for å ettersende vedlegg til: ",
-		"nn" to "Klikk her for å ettersende vedlegg til: ",
-		"en" to "Click here to send missing attachments to: "
+	val tittelPrefixEttersendelse = mapOf("no" to "Ettersend manglende vedlegg til: ",
+		"nn" to "Ettersend manglande vedlegg til: ",
+		"en" to "Submit missing documentation to: "
 	)
-	val tittelPrefixNySoknad = mapOf("no" to "Klikk her for å åpne påbegynt søknad om: ",
-		"nn" to "Klikk her for å åpne startet søknad om: ",
-		"en" to "Click here to open started application for: "
+	val tittelPrefixNySoknad = mapOf("no" to "Fortsett på påbegynt søknad: ",
+		"nn" to "Hald fram på påbyrja søknad: ",
+		"en" to "Complete application: "
 	)
 	val linkDokumentinnsending = notifikasjonConfig.gjenopptaSoknadsArbeid
 	val linkDokumentinnsendingEttersending = notifikasjonConfig.ettersendePaSoknad
