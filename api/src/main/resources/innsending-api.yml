@@ -762,6 +762,19 @@ components:
           $ref: "#/components/schemas/VisningsType"
         kanLasteOppAnnet:
           $ref: "#/components/schemas/KanLasteOppAnnet"
+        innsendingsFristDato:
+          type: string
+          format: date-time
+          description: Frist for innsending av søknad / ettersendingssøknad. Dato og tid som UTC
+          example: 20221-12-03T15:10:00Z
+        forsteInnsendingsDato:
+          type: string
+          format: date-time
+          description: Tidspunkt for innsending av første søknad, kun relevant for ettersendinger. Dato og tid som UTC
+          example: 20221-12-03T15:10:00Z
+        fristForEttersendelse:
+          $ref: "#/components/schemas/FristForEttersendelse"
+
 
     FilDto:
       type: object
@@ -803,6 +816,12 @@ components:
       type: boolean
       description: Satt til 'true' dersom dette er en ettersendingssøknad.
       example: true
+
+    FristForEttersendelse:
+      type: integer
+      format: int64
+      description: Frist i antall dager etter innsending av søknad for ettersending av vedlegg
+      example: 14
 
     InnsendingsId:
       type: string
@@ -1032,6 +1051,8 @@ components:
             $ref: "#/components/schemas/SkjemaDokumentDto"
         kanLasteOppAnnet:
           $ref: "#/components/schemas/KanLasteOppAnnet"
+        fristForEttersendelse:
+          $ref: "#/components/schemas/FristForEttersendelse"
 
     Skjemanr:
       type: string

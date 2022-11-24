@@ -1,17 +1,20 @@
 package no.nav.soknad.innsending.rest
 
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 class SkjemaDokumentSoknadTransformer {
 
-	fun konverterTilDokumentSoknadDto(input: SkjemaDto, brukerId: String): DokumentSoknadDto = DokumentSoknadDto(brukerId,
-		input.skjemanr, input.tittel, input.tema, SoknadsStatusDto.opprettet, LocalDateTime.now().atOffset(ZoneOffset.UTC),
-		lagVedleggsListe(input), null, null, null, finnSpraakFraInput(input.spraak),
-		LocalDateTime.now().atOffset(ZoneOffset.UTC), null, 0, VisningsType.fyllUt,
-		kanLasteOppAnnet = input.kanLasteOppAnnet ?: input.vedleggsListe?.any { it.propertyNavn != null && it.propertyNavn == "annenDokumentasjon" })
+	fun konverterTilDokumentSoknadDto(input: SkjemaDto, brukerId: String): DokumentSoknadDto = DokumentSoknadDto(
+		brukerId = brukerId, skjemanr =	input.skjemanr, tittel = input.tittel, tema = input.tema, status = SoknadsStatusDto.opprettet,
+		opprettetDato =  LocalDateTime.now().atOffset(ZoneOffset.UTC), endretDato = LocalDateTime.now().atOffset(ZoneOffset.UTC),
+		vedleggsListe = lagVedleggsListe(input), id = null, innsendingsId = null, ettersendingsId = null, spraak = finnSpraakFraInput(input.spraak),
+		innsendtDato = null, visningsSteg = 0, visningsType = VisningsType.fyllUt,
+		kanLasteOppAnnet = input.kanLasteOppAnnet ?: input.vedleggsListe?.any { it.propertyNavn != null && it.propertyNavn == "annenDokumentasjon"},
+			forsteInnsendingsDato = null, fristForEttersendelse = input.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE )
 
 //	kanLasteOppAnnet = input.vedleggsListe?.any { it.property == "annenDokumentasjon" : it.vedleggsnr == "N6" && it.label == "Annen dokumentasjon" })
 

@@ -14,6 +14,7 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
+import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.pdfutilities.PdfGenerator
@@ -56,7 +57,8 @@ class SoknadService(
 				SoknadDbData(
 					null, Utilities.laginnsendingsId(), kodeverkSkjema.tittel ?: "", kodeverkSkjema.skjemanummer ?: "",
 					kodeverkSkjema.tema ?: "", spraak, SoknadsStatus.Opprettet, brukerId, null, LocalDateTime.now(),
-					LocalDateTime.now(), null, 0, VisningsType.dokumentinnsending, true
+					LocalDateTime.now(), null, 0, VisningsType.dokumentinnsending, true,
+						forsteinnsendingsdato = null, ettersendingsfrist = null
 				)
 			)
 
@@ -178,7 +180,7 @@ class SoknadService(
 		try {
 			// lagre soknad
 			val ettersendingsSoknadDb = opprettEttersendingsSoknad(brukerId = brukerId, ettersendingsId = null,
-				kodeverkSkjema.tittel ?: "", skjemanr, kodeverkSkjema.tema ?: "", spraak)
+				kodeverkSkjema.tittel ?: "", skjemanr, kodeverkSkjema.tema ?: "", spraak, OffsetDateTime.now())
 
 			// For hvert vedleggsnr hent definisjonen fra Sanity og lagr vedlegg.
 			val vedleggDbDataListe = opprettVedleggTilSoknad(ettersendingsSoknadDb.id!!, vedleggsnrListe, spraak, null)
@@ -231,7 +233,9 @@ class SoknadService(
 		try {
 			logger.info("opprettSoknadForettersendingAvVedleggGittSoknadOgVedlegg fra ${nyesteSoknad.innsendingsId} og vedleggsliste = $vedleggsnrListe")
 			val ettersendingsSoknadDb = opprettEttersendingsSoknad(brukerId, nyesteSoknad.ettersendingsId ?: nyesteSoknad.innsendingsId!!,
-				nyesteSoknad.tittel, nyesteSoknad.skjemanr, nyesteSoknad.tema, nyesteSoknad.spraak!!)
+				nyesteSoknad.tittel, nyesteSoknad.skjemanr, nyesteSoknad.tema, nyesteSoknad.spraak!!,
+				nyesteSoknad.forsteInnsendingsDato ?: nyesteSoknad.innsendtDato ?: nyesteSoknad.endretDato ?: nyesteSoknad.opprettetDato,
+				nyesteSoknad.fristForEttersendelse)
 
 			val nyesteSoknadVedleggsNrListe = nyesteSoknad.vedleggsListe.filter { !it.erHoveddokument }.map { it.vedleggsnr }
 			val filtrertVedleggsnrListe = vedleggsnrListe.filter { !nyesteSoknadVedleggsNrListe.contains(it) }
@@ -262,7 +266,8 @@ class SoknadService(
 		logger.info("opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg: for skjemanr=${arkivertSoknad.skjemanr}")
 		try {
 			val ettersendingsSoknadDb = opprettEttersendingsSoknad(brukerId = brukerId, ettersendingsId = arkivertSoknad.innsendingsId,
-				tittel = arkivertSoknad.tittel, skjemanr = arkivertSoknad.skjemanr, tema = arkivertSoknad.tema, sprak = sprak ?: "nb")
+				tittel = arkivertSoknad.tittel, skjemanr = arkivertSoknad.skjemanr, tema = arkivertSoknad.tema, sprak = sprak ?: "nb",
+			arkivertSoknad.innsendtDato)
 
 			val nyesteSoknadVedleggsNrListe = arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map { it.vedleggsnr }
 			val filtrertVedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe?.filter { !nyesteSoknadVedleggsNrListe.contains(it) }.orEmpty()
@@ -286,7 +291,8 @@ class SoknadService(
 	}
 
 
-	private fun opprettEttersendingsSoknad(brukerId: String, ettersendingsId: String?, tittel: String, skjemanr: String, tema: String, sprak: String )
+	private fun opprettEttersendingsSoknad(brukerId: String, ettersendingsId: String?, tittel: String, skjemanr: String, tema: String, sprak: String,
+																				 forsteInnsendingsDato: OffsetDateTime, fristForEttersendelse: Long ? = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE )
 		: SoknadDbData {
 		val innsendingsId = Utilities.laginnsendingsId()
 		// lagre soknad
@@ -305,7 +311,9 @@ class SoknadService(
 				endretdato = LocalDateTime.now(),
 				innsendtdato = null,
 				visningssteg = 0,
-				visningstype = VisningsType.ettersending
+				visningstype = VisningsType.ettersending,
+				forsteinnsendingsdato = mapTilLocalDateTime(forsteInnsendingsDato),
+				ettersendingsfrist = fristForEttersendelse
 			)
 		)
 	}
@@ -394,7 +402,10 @@ class SoknadService(
 					LocalDateTime.now(),
 					null,
 					0,
-					VisningsType.ettersending
+					VisningsType.ettersending,
+					true,
+					mapTilLocalDateTime(arkivertSoknad.innsendtDato),
+					Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
 				)
 			)
 
@@ -428,7 +439,8 @@ class SoknadService(
 				{ it.vedleggsnr+':'+it.opplastingsStatus+':'+mapTilLocalDateTime(it.innsendtdato)+':'+ mapTilLocalDateTime(it.opprettetdato) }}")
 
 			val savedEttersendingsSoknad  = opprettEttersendingsSoknad(brukerId = nyesteSoknad.brukerId, ettersendingsId = ettersendingsId,
-				tittel = nyesteSoknad.tittel, skjemanr = nyesteSoknad.skjemanr, tema = nyesteSoknad.tema, sprak = nyesteSoknad.spraak!!)
+				tittel = nyesteSoknad.tittel, skjemanr = nyesteSoknad.skjemanr, tema = nyesteSoknad.tema, sprak = nyesteSoknad.spraak!!,
+				nyesteSoknad.forsteInnsendingsDato ?: nyesteSoknad.innsendtDato ?: nyesteSoknad.endretDato ?: nyesteSoknad.opprettetDato, nyesteSoknad.fristForEttersendelse )
 
 			val vedleggDbDataListe = nyesteSoknad.vedleggsListe
 				.filter { !it.erHoveddokument }
@@ -1061,7 +1073,7 @@ class SoknadService(
 			innsendtSoknadDto.vedleggsListe
 				.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre }
 				.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) },
-			innsendtSoknadDto.innsendtDato!!.plusDays(ettersendingsfrist)
+			innsendtSoknadDto.innsendtDato!!.plusDays(innsendtSoknadDto.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE)
 		)
 	}
 
