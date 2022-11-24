@@ -29,6 +29,7 @@ class SkjemaRestApi(
 	@Timed(InnsenderOperation.OPPRETT)
 	override fun fyllUt(skjemaDto: SkjemaDto): ResponseEntity<Unit> {
 		logger.info("Kall fra FyllUt for å opprette søknad for skjema ${skjemaDto.skjemanr}")
+		logger.debug("Skal opprette søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
 
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		val opprettetSoknadId = soknadService.opprettNySoknad(SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(skjemaDto, brukerId))
