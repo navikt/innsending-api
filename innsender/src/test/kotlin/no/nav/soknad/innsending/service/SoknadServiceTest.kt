@@ -388,7 +388,7 @@ class SoknadServiceTest {
 		val opprettEttersendingGittSkjemaNr = OpprettEttersendingGittSkjemaNr(skjemanr, spraak, listOf("C1", "L8"))
 
 		val soknadService = lagSoknadService()
-		val dokumentSoknadDto = soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(brukerid, arkivertSoknad, opprettEttersendingGittSkjemaNr,	spraak )
+		val dokumentSoknadDto = soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(brukerid, arkivertSoknad, opprettEttersendingGittSkjemaNr,	spraak, null )
 
 		assertTrue(dokumentSoknadDto.innsendingsId != null  && VisningsType.ettersending == dokumentSoknadDto.visningsType && dokumentSoknadDto.ettersendingsId==arkivertSoknad.innsendingsId )
 		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
