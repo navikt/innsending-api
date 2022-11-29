@@ -59,7 +59,7 @@ fun lagDokumentSoknadDto(soknadDbData: SoknadDbData, vedleggDbDataListe: List<Ve
 		kanLasteOppAnnet = soknadDbData.kanlasteoppannet ?: true,
 		innsendingsFristDato = beregnInnsendingsFrist(soknadDbData),
 		forsteInnsendingsDato = mapTilOffsetDateTime(soknadDbData.forsteinnsendingsdato),
-		fristForEttersendelse = soknadDbData.ettersendingsfrist?: if (soknadDbData.ettersendingsid == null) Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD else Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
+		fristForEttersendelse = soknadDbData.ettersendingsfrist?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
 	)
 
 private fun beregnInnsendingsFrist(soknadDbData: SoknadDbData): OffsetDateTime {

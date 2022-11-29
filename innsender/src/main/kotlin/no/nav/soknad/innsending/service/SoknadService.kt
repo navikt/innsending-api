@@ -59,7 +59,7 @@ class SoknadService(
 					null, Utilities.laginnsendingsId(), kodeverkSkjema.tittel ?: "", kodeverkSkjema.skjemanummer ?: "",
 					kodeverkSkjema.tema ?: "", spraak, SoknadsStatus.Opprettet, brukerId, null, LocalDateTime.now(),
 					LocalDateTime.now(), null, 0, VisningsType.dokumentinnsending, true,
-						forsteinnsendingsdato = null, ettersendingsfrist = null
+						forsteinnsendingsdato = null, ettersendingsfrist = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
 				)
 			)
 
