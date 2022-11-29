@@ -132,7 +132,8 @@ class FrontEndRestAPILocalTest(
 						brukerId = brukerId,
 						arkivertSoknad = arkiverteSoknader[0],
 						sprak = opprettEttersendingGittSkjemaNr.sprak,
-						opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr
+						opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr,
+						forsteInnsendingsDato = innsendteSoknader[0].forsteInnsendingsDato
 					)
 				}
 			} else {
@@ -150,7 +151,8 @@ class FrontEndRestAPILocalTest(
 				brukerId = brukerId,
 				arkivertSoknad = arkiverteSoknader[0],
 				sprak = opprettEttersendingGittSkjemaNr.sprak,
-				opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr
+				opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr,
+				forsteInnsendingsDato = innsendteSoknader[0].forsteInnsendingsDato
 			)
 		} else {
 			soknadService.opprettSoknadForEttersendingGittSkjemanr(
