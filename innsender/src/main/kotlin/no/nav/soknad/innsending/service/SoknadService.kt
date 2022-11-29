@@ -19,6 +19,7 @@ import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.PdfMerger
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -222,6 +223,7 @@ class SoknadService(
 			)
 		}
 
+		sjekkHarAlleredeSoknadUnderArbeid(brukerId, soknadDbDataList.first().skjemanr, true)
 		return opprettEttersendingsSoknad(hentAlleVedlegg(soknadDbDataList.first()), ettersendingsId)
 	}
 
@@ -260,14 +262,15 @@ class SoknadService(
 
 	@Transactional
 	fun opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(
-		brukerId: String, arkivertSoknad: AktivSakDto, opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr, sprak: String?): DokumentSoknadDto {
+		brukerId: String, arkivertSoknad: AktivSakDto, opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr,
+		sprak: String?, forsteInnsendingsDato: OffsetDateTime?): DokumentSoknadDto {
 		val operation = InnsenderOperation.OPPRETT.name
 
 		logger.info("opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg: for skjemanr=${arkivertSoknad.skjemanr}")
 		try {
 			val ettersendingsSoknadDb = opprettEttersendingsSoknad(brukerId = brukerId, ettersendingsId = arkivertSoknad.innsendingsId,
 				tittel = arkivertSoknad.tittel, skjemanr = arkivertSoknad.skjemanr, tema = arkivertSoknad.tema, sprak = sprak ?: "nb",
-			arkivertSoknad.innsendtDato)
+				forsteInnsendingsDato ?: arkivertSoknad.innsendtDato)
 
 			val nyesteSoknadVedleggsNrListe = arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map { it.vedleggsnr }
 			val filtrertVedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe?.filter { !nyesteSoknadVedleggsNrListe.contains(it) }.orEmpty()
@@ -1180,4 +1183,15 @@ class SoknadService(
 		logger.error("Feil ved operasjon $operation", e)
 		innsenderMetrics.operationsErrorCounterInc(operation, tema)
 	}
+
+	fun sjekkHarAlleredeSoknadUnderArbeid(brukerId: String, skjemanr: String, ettersending: Boolean ) {
+
+		val aktiveSoknaderGittSkjemanr = hentAktiveSoknader(listOf( brukerId)).filter { it.skjemanr == skjemanr && erEttersending(it) == ettersending }.toList()
+
+		if (!aktiveSoknaderGittSkjemanr.isEmpty()) {
+			logger.warn("Dupliserer søknad på skjemanr=$skjemanr, søker har allerede ${aktiveSoknaderGittSkjemanr.size} under arbeid")
+		}
+
+	}
+
 }

@@ -45,6 +45,8 @@ class FrontEndRestApi(
 		logger.info("Kall for å opprette søknad på skjema ${opprettSoknadBody.skjemanr}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
+		soknadService.sjekkHarAlleredeSoknadUnderArbeid(brukerId, opprettSoknadBody.skjemanr, false)
+
 		val dokumentSoknadDto = soknadService.opprettSoknad(
 			brukerId,
 			opprettSoknadBody.skjemanr,
@@ -78,6 +80,8 @@ class FrontEndRestApi(
 	override fun opprettEttersendingGittSkjemanr(opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr): ResponseEntity<DokumentSoknadDto> {
 		logger.info("Kall for å opprette ettersending på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
+
+		soknadService.sjekkHarAlleredeSoknadUnderArbeid(brukerId, opprettEttersendingGittSkjemaNr.skjemanr, true)
 
 		val arkiverteSoknader = safService.hentInnsendteSoknader(brukerId)
 			.filter { opprettEttersendingGittSkjemaNr.skjemanr == it.skjemanr && it.innsendingsId != null }
@@ -128,7 +132,8 @@ class FrontEndRestApi(
 						soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(
 							brukerId = brukerId, arkivertSoknad =  arkiverteSoknader[0],
 							opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr,
-							sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak)
+							sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
+							forsteInnsendingsDato = innsendteSoknader[0].forsteInnsendingsDato
 						)
 					}
 				} else {
@@ -144,7 +149,8 @@ class FrontEndRestApi(
 				soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(
 					brukerId = brukerId, arkivertSoknad =  arkiverteSoknader[0],
 					opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr,
-					sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak)
+					sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
+					forsteInnsendingsDato = arkiverteSoknader[0].innsendtDato
 				)
 			} else {
 				soknadService.opprettSoknadForEttersendingGittSkjemanr(
