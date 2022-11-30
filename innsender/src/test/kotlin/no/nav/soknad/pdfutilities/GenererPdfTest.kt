@@ -18,7 +18,7 @@ class GenererPdfTest {
 		val soknad = lagSoknadForTesting(tittel)
 
 		val sammensattnavn = "śander Ełmer"
-		val kvittering = PdfGenerator().lagKvitteringsSide(soknad, sammensattnavn, soknad.vedleggsListe, emptyList())
+		val kvittering = PdfGenerator().lagKvitteringsSide(soknad, sammensattnavn, soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }, soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.sendSenere})
 
 		//writeBytesToFile(kvittering, "./delme.pdf")
 
@@ -34,9 +34,9 @@ class GenererPdfTest {
 		val soknad = lagSoknadForTesting(tittel)
 
 		val sammensattnavn = "Fornavn Elmer"
-		val kvittering = PdfGenerator().lagKvitteringsSide(soknad, sammensattnavn, soknad.vedleggsListe, emptyList())
+		val kvittering = PdfGenerator().lagKvitteringsSide(soknad, sammensattnavn, soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }, soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.sendSenere})
 
-		//writeBytesToFile(kvittering, "./delme2.pdf")
+		writeBytesToFile(kvittering, "./delme2.pdf")
 
 		assertEquals(1, AntallSider().finnAntallSider(kvittering))
 
@@ -46,9 +46,32 @@ class GenererPdfTest {
 		val brukerid = "20128012345"
 		val skjemanr = "NAV 06-08.01"
 		val vedleggDtos = listOf(
-			VedleggDto(tittel=tittel, label=tittel,
+			VedleggDto(tittel=tittel, label=tittel+", " + skjemanr,
 				erHoveddokument = true, erVariant=false, erPdfa=true, erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.innsendt, opprettetdato= OffsetDateTime.MIN))
+				opplastingsStatus = OpplastingsStatusDto.innsendt, opprettetdato= OffsetDateTime.MIN),
+			VedleggDto(tittel=tittel, label=tittel+", " + skjemanr,
+				erHoveddokument = true, erVariant=true, erPdfa=true, erPakrevd = true,
+				opplastingsStatus = OpplastingsStatusDto.innsendt, opprettetdato= OffsetDateTime.MIN),
+			VedleggDto(tittel="Vedlegg1", label="Vedlegg1, NAV 08-36.02",
+				erHoveddokument = false, erVariant=false, erPdfa=true, erPakrevd = true,
+				opplastingsStatus = OpplastingsStatusDto.innsendt, opprettetdato= OffsetDateTime.MIN),
+			VedleggDto(tittel="Vedlegg2", label="Vedlegg2, NAV 08-36.03",
+				erHoveddokument = false, erVariant=false, erPdfa=true, erPakrevd = true,
+				opplastingsStatus = OpplastingsStatusDto.sendSenere, opprettetdato= OffsetDateTime.MIN),
+			VedleggDto(tittel="Vedlegg3", label="Vedlegg3, NAV 08-36.04",
+				erHoveddokument = false, erVariant=false, erPdfa=true, erPakrevd = true,
+				opplastingsStatus = OpplastingsStatusDto.sendSenere, opprettetdato= OffsetDateTime.MIN),
+			VedleggDto(tittel="Vedlegg4", label="Vedlegg4",
+				erHoveddokument = false, erVariant=false, erPdfa=true, erPakrevd = false,
+				opplastingsStatus = OpplastingsStatusDto.sendesAvAndre, opprettetdato= OffsetDateTime.MIN),
+			VedleggDto(tittel="Vedlegg5", label="Vedlegg5",
+				erHoveddokument = false, erVariant=false, erPdfa=true, erPakrevd = true,
+				opplastingsStatus = OpplastingsStatusDto.sendesIkke, opprettetdato= OffsetDateTime.MIN),
+			VedleggDto(tittel="Vedlegg6", label="Vedlegg6",
+				erHoveddokument = false, erVariant=false, erPdfa=true, erPakrevd = false,
+				opplastingsStatus = OpplastingsStatusDto.sendesIkke, opprettetdato= OffsetDateTime.MIN)
+
+			)
 		return DokumentSoknadDto(brukerId = brukerid, skjemanr=skjemanr, tittel=tittel, tema="TMA",
 			status=SoknadsStatusDto.innsendt, innsendtDato = OffsetDateTime.now(),
 			innsendingsId = UUID.randomUUID().toString(), opprettetDato = OffsetDateTime.now(), vedleggsListe = vedleggDtos

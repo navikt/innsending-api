@@ -2,6 +2,7 @@ package no.nav.soknad.pdfutilities
 
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
@@ -38,23 +39,33 @@ class PdfGenerator {
 	}
 
 	fun lagKvitteringsSide(soknad: DokumentSoknadDto, sammensattNavn: String?, opplastedeVedlegg: List<VedleggDto>, manglendeObligatoriskeVedlegg: List<VedleggDto>): ByteArray {
+		val vedleggOpplastet = opplastedeVedlegg.filter { !it.erHoveddokument }
+		val sendSenere = manglendeObligatoriskeVedlegg
+		val sendesIkke = soknad.vedleggsListe.filter{ !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesIkke }
+		val sendesAvAndre = soknad.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre }
+
+		val fnr = soknad.brukerId
+		val personInfo = if (sammensattNavn == null) fnr else "$sammensattNavn, $fnr"
+
 		val kvitteringHeader = tekster.getProperty("kvittering.tittel")
 		val tittel = soknad.tittel
 		val ettersendelseTittel = tekster.getProperty("kvittering.ettersendelse.tittel")
-		val fnr = soknad.brukerId
-		val personInfo = if (sammensattNavn == null) fnr else "$sammensattNavn, $fnr"
+/*
 		val del1 = tekster.getProperty("kvittering.informasjonstekst.del1")
 		val del2 = tekster.getProperty("kvittering.informasjonstekst.del2")
+*/
 		val vedleggSendtHeader = tekster.getProperty("kvittering.vedlegg.sendt")
 		val vedleggIkkeSendtHeader = tekster.getProperty("kvittering.vedlegg.ikkesendt")
-		val lastetOpp = opplastedeVedlegg
+		val vedleggSendesAvAndreHeader = tekster.getProperty("kvittering.vedlegg.sendesAvAndre")
+		val vedleggSendesIkkeHeader = tekster.getProperty("kvittering.vedlegg.sendesIkke")
+
+		val lastetOpp = vedleggOpplastet
 		val antallLastetOpp = lastetOpp.size
-		val ikkeLastetOppDenneGang = manglendeObligatoriskeVedlegg
 		val now = LocalDateTime.now()
 		val antallInnsendt = java.lang.String.format(
 			tekster.getProperty("kvittering.erSendt"),
 			antallLastetOpp,
-			ikkeLastetOppDenneGang.size + antallLastetOpp,
+			sendSenere.size + sendesAvAndre.size + antallLastetOpp,
 			formaterDato(now),
 			formaterKlokke(now)
 		)
@@ -72,13 +83,20 @@ class PdfGenerator {
 				.flyttNedMed(30f)
 				.leggTilTekst(antallInnsendt, FONT_VANLIG, LINJEAVSTAND)
 				.flyttNedMed(20f)
-				.leggTilDokumenter(lastetOpp, vedleggSendtHeader)
+				.leggTilDokumenter(vedleggOpplastet, vedleggSendtHeader)
 				.flyttNedMed(20f)
-				.leggTilDokumenter(ikkeLastetOppDenneGang, vedleggIkkeSendtHeader)
-				.flyttNedMed(25f)
-				.leggTilTekst(del1, FONT_INFORMASJON, LINJEAVSTAND)
-				.flyttNedMed(15f)
-				.leggTilTekst(del2, FONT_INFORMASJON, LINJEAVSTAND)
+				.leggTilDokumenter(sendSenere, vedleggIkkeSendtHeader)
+				.flyttNedMed(20f)
+				.leggTilDokumenter(sendesAvAndre, vedleggSendesAvAndreHeader)
+				.flyttNedMed(20f)
+				.leggTilDokumenter(sendesIkke, vedleggSendesIkkeHeader)
+
+				/*
+								.flyttNedMed(25f)
+								.leggTilTekst(del1, FONT_INFORMASJON, LINJEAVSTAND)
+								.flyttNedMed(15f)
+								.leggTilTekst(del2, FONT_INFORMASJON, LINJEAVSTAND)
+				*/
 				.avsluttTekst()
 				.avsluttSide()
 				.generer()
@@ -325,7 +343,7 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 				.leggTilHeader(overskrift, FONT_LITEN_HEADER)
 				.flyttNedMed(5f)
 			for (dokument in dokumenter) {
-				textBuilder = textBuilder.leggTilTekst(dokument.tittel, FONT_VANLIG, LINJEAVSTAND)
+				textBuilder = textBuilder.leggTilTekst(dokument.label ?: dokument.tittel, FONT_VANLIG, LINJEAVSTAND)
 			}
 		}
 		return textBuilder
