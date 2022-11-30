@@ -73,8 +73,7 @@ private fun beregnInnsendingsFrist(soknadDbData: SoknadDbData): OffsetDateTime {
 fun mapTilOffsetDateTime(localDateTime: LocalDateTime?): OffsetDateTime? =
 	localDateTime?.atOffset(ZoneOffset.UTC)
 
-fun mapTilOffsetDateTime(localDateTime: LocalDateTime?, offset: Long): OffsetDateTime {
-	if(localDateTime == null) return OffsetDateTime.now()
+fun mapTilOffsetDateTime(localDateTime: LocalDateTime, offset: Long): OffsetDateTime {
 	return localDateTime.atOffset(ZoneOffset.UTC).plusDays(offset)
 }
 

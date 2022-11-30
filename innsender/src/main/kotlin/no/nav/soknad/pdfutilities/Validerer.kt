@@ -4,6 +4,7 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException
 
 
 class Validerer() {
@@ -14,7 +15,7 @@ class Validerer() {
 		files.forEach { kontroller(innsendingId, it) }
 	}
 
-	fun kontroller(innsendingId: String, file: ByteArray) {
+	private fun kontroller(innsendingId: String, file: ByteArray) {
 		if (isPDF(file)) {
 			// Kontroller at PDF er lovlig, dvs. ikke encrypted og passordbeskyttet
 			erGyldigPdf(innsendingId, file)
@@ -33,7 +34,17 @@ class Validerer() {
 	}
 
 	private fun erGyldigPdf(innsendingId: String, input: ByteArray?) {
-			ByteArrayInputStream(input).use { bais -> PDDocument.load(bais).use { document -> erGyldigPdDocument(innsendingId, document) } }
+		try {
+			ByteArrayInputStream(input).use { bais ->
+				PDDocument.load(bais).use { document -> erGyldigPdDocument(innsendingId, document) }
+			}
+		} catch (ex: InvalidPasswordException) {
+			logger.error("$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert, ${ex.message}")
+			throw IllegalActionException("Opplastet fil er ikke lesbar", "Kan ikke laste opp kryptert fil", "errorCode.illegalAction.fileCannotBeRead")
+		} catch (ex2: Exception) {
+			logger.error("$innsendingId: Opplasting av vedlegg feilet av ukjent årsak, ${ex2.message}")
+			throw IllegalActionException("Opplastet fil er ikke lesbar", "Lesing av filen feilet", "errorCode.illegalAction.fileCannotBeRead")
+		}
 	}
 
 	private fun erGyldigPdDocument(innsendingId: String, document: PDDocument) {

@@ -1186,9 +1186,9 @@ class SoknadService(
 
 	fun sjekkHarAlleredeSoknadUnderArbeid(brukerId: String, skjemanr: String, ettersending: Boolean ) {
 
-		val aktiveSoknaderGittSkjemanr = hentAktiveSoknader(listOf( brukerId)).filter { it.skjemanr == skjemanr && erEttersending(it) == ettersending }.toList()
+		val aktiveSoknaderGittSkjemanr = hentAktiveSoknader(listOf( brukerId)).filter { it.skjemanr == skjemanr && erEttersending(it) == ettersending }
 
-		if (!aktiveSoknaderGittSkjemanr.isEmpty()) {
+		if (aktiveSoknaderGittSkjemanr.isNotEmpty()) {
 			logger.warn("Dupliserer søknad på skjemanr=$skjemanr, søker har allerede ${aktiveSoknaderGittSkjemanr.size} under arbeid")
 		}
 

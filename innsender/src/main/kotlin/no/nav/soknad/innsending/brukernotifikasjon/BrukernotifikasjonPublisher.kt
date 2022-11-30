@@ -77,7 +77,7 @@ class BrukernotifikasjonPublisher(
 		val tittel = tittelPrefixGittSprak(ettersending, dokumentSoknad.spraak ?: "no") + dokumentSoknad.tittel
 		val lenke = createLink(dokumentSoknad.innsendingsId!!, false)
 
-		val notificationInfo = NotificationInfo(tittel, lenke , if (ettersending) soknadLevetid else  soknadLevetid , emptyList())
+		val notificationInfo = NotificationInfo(tittel, lenke , soknadLevetid , emptyList())
 		val soknadRef = SoknadRef(dokumentSoknad.innsendingsId!!, ettersending, groupId, dokumentSoknad.brukerId, dokumentSoknad.opprettetDato)
 
 		try {
