@@ -270,6 +270,7 @@ class FrontEndRestApi(
 		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
 		if (!file.isReadable) throw IllegalActionException("Ingen fil opplastet", "Opplasting feilet", "errorCode.illegalAction.fileCannotBeRead")
 		val opplastet = (file as ByteArrayResource).byteArray
+		Validerer().validerStorrelse(innsendingsId, 0, opplastet.size.toLong(), restConfig.maxFileSize.toLong(), "errorCode.illegalAction.vedleggFileSizeSumTooLarge" )
 		Validerer().validereFilformat(innsendingsId, listOf(opplastet))
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
 		val fil = KonverterTilPdf().tilPdf(opplastet)
