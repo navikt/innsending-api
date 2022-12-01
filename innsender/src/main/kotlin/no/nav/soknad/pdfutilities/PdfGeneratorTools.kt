@@ -43,6 +43,8 @@ class PdfGenerator {
 		val sendSenere = manglendeObligatoriskeVedlegg
 		val sendesIkke = soknad.vedleggsListe.filter{ !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesIkke }
 		val sendesAvAndre = soknad.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre }
+		val alleredeInnsendt = soknad.vedleggsListe.filter { !it.erHoveddokument &&
+			it.opplastingsStatus == OpplastingsStatusDto.innsendt && (it.innsendtdato ?: it.opprettetdato) < soknad.opprettetDato }
 
 		val fnr = soknad.brukerId
 		val personInfo = if (sammensattNavn == null) fnr else "$sammensattNavn, $fnr"
@@ -50,14 +52,12 @@ class PdfGenerator {
 		val kvitteringHeader = tekster.getProperty("kvittering.tittel")
 		val tittel = soknad.tittel
 		val ettersendelseTittel = tekster.getProperty("kvittering.ettersendelse.tittel")
-/*
-		val del1 = tekster.getProperty("kvittering.informasjonstekst.del1")
-		val del2 = tekster.getProperty("kvittering.informasjonstekst.del2")
-*/
+
 		val vedleggSendtHeader = tekster.getProperty("kvittering.vedlegg.sendt")
 		val vedleggIkkeSendtHeader = tekster.getProperty("kvittering.vedlegg.ikkesendt")
 		val vedleggSendesAvAndreHeader = tekster.getProperty("kvittering.vedlegg.sendesAvAndre")
 		val vedleggSendesIkkeHeader = tekster.getProperty("kvittering.vedlegg.sendesIkke")
+		val tiligereInnsendtHeader = tekster.getProperty("kvittering.vedlegg.tidligereInnsendt")
 
 		val lastetOpp = vedleggOpplastet
 		val antallLastetOpp = lastetOpp.size
@@ -65,7 +65,7 @@ class PdfGenerator {
 		val antallInnsendt = java.lang.String.format(
 			tekster.getProperty("kvittering.erSendt"),
 			antallLastetOpp,
-			sendSenere.size + sendesAvAndre.size + antallLastetOpp,
+			alleredeInnsendt.size + sendSenere.size + sendesAvAndre.size + antallLastetOpp,
 			formaterDato(now),
 			formaterKlokke(now)
 		)
@@ -90,13 +90,8 @@ class PdfGenerator {
 				.leggTilDokumenter(sendesAvAndre, vedleggSendesAvAndreHeader)
 				.flyttNedMed(20f)
 				.leggTilDokumenter(sendesIkke, vedleggSendesIkkeHeader)
-
-				/*
-								.flyttNedMed(25f)
-								.leggTilTekst(del1, FONT_INFORMASJON, LINJEAVSTAND)
-								.flyttNedMed(15f)
-								.leggTilTekst(del2, FONT_INFORMASJON, LINJEAVSTAND)
-				*/
+				.flyttNedMed(20f)
+				.leggTilDokumenter(alleredeInnsendt, tiligereInnsendtHeader)
 				.avsluttTekst()
 				.avsluttSide()
 				.generer()
@@ -343,7 +338,7 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 				.leggTilHeader(overskrift, FONT_LITEN_HEADER)
 				.flyttNedMed(5f)
 			for (dokument in dokumenter) {
-				textBuilder = textBuilder.leggTilTekst(dokument.label ?: dokument.tittel, FONT_VANLIG, LINJEAVSTAND)
+				textBuilder = textBuilder.leggTilTekst("* "+ dokument.label, FONT_VANLIG, LINJEAVSTAND)
 			}
 		}
 		return textBuilder
