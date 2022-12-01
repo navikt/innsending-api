@@ -8,31 +8,34 @@ import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.security.token.support.spring.test.MockLoginController
 import no.nav.soknad.innsending.InnsendingApiApplication
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.model.OpprettSoknadBody
 import no.nav.soknad.innsending.pdl.generated.enums.IdentGruppe
 import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.IdentInformasjon
 import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.Identliste
 import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.Navn
 import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.Person
 import no.nav.soknad.innsending.utils.createHeaders
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpMethod
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.junit.jupiter.SpringExtension
-import org.junit.jupiter.api.Assertions.*
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.core.io.ClassPathResource
+import org.springframework.http.HttpEntity
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.util.LinkedMultiValueMap
-import java.util.LinkedList
+import org.springframework.web.client.RestClientException
+import java.time.Duration
+import java.util.*
+
 
 @Suppress("DEPRECATION")
 @ActiveProfiles("test")
@@ -217,6 +220,74 @@ class FrontEndRestApiTest {
 		assertTrue(slettetFilVedleggN6Response.body != null)
 		val oppdatertEtterSlettetFilVedleggN6 = slettetFilVedleggN6Response.body
 		assertEquals(OpplastingsStatusDto.ikkeValgt, oppdatertEtterSlettetFilVedleggN6!!.opplastingsStatus)
+
+	}
+
+	@Test
+	fun sjekkAtOpplastingAvForStorFilGirFeilTest() {
+		val skjemanr = "NAV 95-00.11"
+		val spraak = "nb_NO"
+		val vedlegg = listOf("N6", "W2")
+		val token = getToken()
+
+		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
+
+		val vedleggN6 = soknadDto.vedleggsListe.first{it.vedleggsnr == "N6"}
+		assertEquals(OpplastingsStatusDto.ikkeValgt, vedleggN6.opplastingsStatus)
+
+		val multipart = LinkedMultiValueMap<Any, Any>()
+		multipart.add("file", ClassPathResource("/NAV 54-editert.pdf"))
+
+		val postFilRequestN6 = HttpEntity(multipart, createHeaders(token, MediaType.MULTIPART_FORM_DATA))
+
+		assertThrows(Exception::class.java) {
+			for (i in 1..100) {
+				val postFilResponseN6 = restTemplate.exchange(
+					"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil",
+					HttpMethod.POST,
+					postFilRequestN6,
+					FilDto::class.java
+				)
+
+				assertEquals(HttpStatus.CREATED, postFilResponseN6.statusCode)
+				assertNotNull(postFilResponseN6.body)
+				assertEquals(Mimetype.applicationSlashPdf, postFilResponseN6.body!!.mimetype)
+			}
+		}
+
+	}
+
+	@Test
+	fun sjekkAtOpplastingAvKryptertFilGirFeilTest() {
+		val skjemanr = "NAV 95-00.11"
+		val spraak = "nb_NO"
+		val vedlegg = listOf("N6", "W2")
+		val token = getToken()
+
+		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
+
+		val vedleggN6 = soknadDto.vedleggsListe.first{it.vedleggsnr == "N6"}
+		assertEquals(OpplastingsStatusDto.ikkeValgt, vedleggN6.opplastingsStatus)
+
+		val multipart = LinkedMultiValueMap<Any, Any>()
+		multipart.add("file", ClassPathResource("/skjema-passordbeskyttet.pdf"))
+
+		val postFilRequestN6 = HttpEntity(multipart, createHeaders(token, MediaType.MULTIPART_FORM_DATA))
+
+		assertThrows(Exception::class.java) {
+			for (i in 1..100) {
+				val postFilResponseN6 = restTemplate.exchange(
+					"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil",
+					HttpMethod.POST,
+					postFilRequestN6,
+					FilDto::class.java
+				)
+
+				assertEquals(HttpStatus.CREATED, postFilResponseN6.statusCode)
+				assertNotNull(postFilResponseN6.body)
+				assertEquals(Mimetype.applicationSlashPdf, postFilResponseN6.body!!.mimetype)
+			}
+		}
 
 	}
 	private fun opprettEnSoknad(token: String, skjemanr: String, spraak: String, vedlegg: List<String>): DokumentSoknadDto {

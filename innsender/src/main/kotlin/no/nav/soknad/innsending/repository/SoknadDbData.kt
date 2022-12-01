@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.repository
 
 import no.nav.soknad.innsending.model.VisningsType
+import no.nav.soknad.innsending.util.Constants
 import java.time.LocalDateTime
 import javax.persistence.*
 
@@ -21,5 +22,7 @@ data class SoknadDbData(
 	@Column(name = "innsendtdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val innsendtdato: LocalDateTime?,
 	@Column(name = "visningssteg", columnDefinition = "long") val visningssteg: Long? = 0,
 	@Column(name = "visningstype", columnDefinition = "varchar") val visningstype: VisningsType? = if (ettersendingsid != null) VisningsType.ettersending else VisningsType.dokumentinnsending,
-	@Column(name = "kanlasteoppannet", columnDefinition = "boolean") val kanlasteoppannet: Boolean? = true
+	@Column(name = "kanlasteoppannet", columnDefinition = "boolean") val kanlasteoppannet: Boolean? = true,
+	@Column(name = "forsteinnsendingsdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val forsteinnsendingsdato: LocalDateTime?,
+	@Column(name = "ettersendingsfrist", columnDefinition = "int") val ettersendingsfrist: Long? = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
 )

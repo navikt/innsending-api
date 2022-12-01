@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.*
+import no.nav.soknad.innsending.util.Constants
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -45,18 +46,36 @@ fun lagVedleggDto(vedleggDbData: VedleggDbData, document: ByteArray? = null) =
 		vedleggDbData.uuid, mapTilMimetype(vedleggDbData.mimetype), document, vedleggDbData.vedleggsurl, mapTilOffsetDateTime(vedleggDbData.innsendtdato))
 
 fun lagDokumentSoknadDto(soknadDbData: SoknadDbData, vedleggDbDataListe: List<VedleggDbData>) =
-	DokumentSoknadDto(soknadDbData.brukerid, soknadDbData.skjemanr, soknadDbData.tittel, soknadDbData.tema,
-		mapTilSoknadsStatusDto(soknadDbData.status) ?: SoknadsStatusDto.opprettet, mapTilOffsetDateTime(soknadDbData.opprettetdato)!!,
-		vedleggDbDataListe.map { lagVedleggDto(it) }, soknadDbData.id!!, soknadDbData.innsendingsid, soknadDbData.ettersendingsid,
-		soknadDbData.spraak, mapTilOffsetDateTime(soknadDbData.endretdato), mapTilOffsetDateTime(soknadDbData.innsendtdato),
-		soknadDbData.visningssteg ?: 0,
-		soknadDbData.visningstype
+	DokumentSoknadDto(brukerId = soknadDbData.brukerid, skjemanr = soknadDbData.skjemanr, tittel = soknadDbData.tittel,
+		tema = soknadDbData.tema, status = mapTilSoknadsStatusDto(soknadDbData.status) ?: SoknadsStatusDto.opprettet,
+		vedleggsListe = vedleggDbDataListe.map { lagVedleggDto(it) }, id = soknadDbData.id!!, innsendingsId = soknadDbData.innsendingsid,
+		ettersendingsId = soknadDbData.ettersendingsid,	spraak = soknadDbData.spraak,
+		opprettetDato = mapTilOffsetDateTime(soknadDbData.opprettetdato)!!,
+		endretDato = mapTilOffsetDateTime(soknadDbData.endretdato),
+		innsendtDato = mapTilOffsetDateTime(soknadDbData.innsendtdato),
+		visningsSteg = soknadDbData.visningssteg ?: 0,
+		visningsType = soknadDbData.visningstype
 			?: if (soknadDbData.ettersendingsid != null) VisningsType.ettersending else VisningsType.dokumentinnsending,
-		soknadDbData.kanlasteoppannet ?: true
+		kanLasteOppAnnet = soknadDbData.kanlasteoppannet ?: true,
+		innsendingsFristDato = beregnInnsendingsFrist(soknadDbData),
+		forsteInnsendingsDato = mapTilOffsetDateTime(soknadDbData.forsteinnsendingsdato),
+		fristForEttersendelse = soknadDbData.ettersendingsfrist?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
 	)
+
+private fun beregnInnsendingsFrist(soknadDbData: SoknadDbData): OffsetDateTime {
+	if (soknadDbData.ettersendingsid == null) {
+		return mapTilOffsetDateTime(soknadDbData.opprettetdato, Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD)
+	}
+	return mapTilOffsetDateTime(soknadDbData.forsteinnsendingsdato ?: soknadDbData.opprettetdato,
+		soknadDbData.ettersendingsfrist ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE)
+}
 
 fun mapTilOffsetDateTime(localDateTime: LocalDateTime?): OffsetDateTime? =
 	localDateTime?.atOffset(ZoneOffset.UTC)
+
+fun mapTilOffsetDateTime(localDateTime: LocalDateTime, offset: Long): OffsetDateTime {
+	return localDateTime.atOffset(ZoneOffset.UTC).plusDays(offset)
+}
 
 fun mapTilLocalDateTime(offsetDateTime: OffsetDateTime?): LocalDateTime? =
 	offsetDateTime?.toLocalDateTime()
@@ -91,12 +110,13 @@ fun oppdaterVedleggDb(vedleggDbData: VedleggDbData, patchVedleggDto: PatchVedleg
 
 
 fun mapTilSoknadDb(dokumentSoknadDto: DokumentSoknadDto, innsendingsId: String, status: SoknadsStatus = SoknadsStatus.Opprettet) =
-	SoknadDbData(dokumentSoknadDto.id, innsendingsId,
-		dokumentSoknadDto.tittel, dokumentSoknadDto.skjemanr, dokumentSoknadDto.tema, dokumentSoknadDto.spraak ?: "no",
-		mapTilSoknadsStatus(dokumentSoknadDto.status, status), dokumentSoknadDto.brukerId, dokumentSoknadDto.ettersendingsId,
-		mapTilLocalDateTime(dokumentSoknadDto.opprettetDato)!!, LocalDateTime.now(),
-		if (status == SoknadsStatus.Innsendt) LocalDateTime.now()	else mapTilLocalDateTime(dokumentSoknadDto.innsendtDato),
-		dokumentSoknadDto.visningsSteg, dokumentSoknadDto.visningsType, dokumentSoknadDto.kanLasteOppAnnet ?: true
+	SoknadDbData(id = dokumentSoknadDto.id, innsendingsid = innsendingsId,
+		tittel = dokumentSoknadDto.tittel, skjemanr = dokumentSoknadDto.skjemanr, tema = dokumentSoknadDto.tema, spraak = dokumentSoknadDto.spraak ?: "no",
+		status = mapTilSoknadsStatus(dokumentSoknadDto.status, status), brukerid = dokumentSoknadDto.brukerId, ettersendingsid = dokumentSoknadDto.ettersendingsId,
+		opprettetdato = mapTilLocalDateTime(dokumentSoknadDto.opprettetDato)!!, endretdato = LocalDateTime.now(),
+		innsendtdato = if (status == SoknadsStatus.Innsendt) LocalDateTime.now()	else mapTilLocalDateTime(dokumentSoknadDto.innsendtDato),
+		visningssteg = dokumentSoknadDto.visningsSteg, visningstype = dokumentSoknadDto.visningsType, kanlasteoppannet = dokumentSoknadDto.kanLasteOppAnnet ?: true,
+		forsteinnsendingsdato = mapTilLocalDateTime(dokumentSoknadDto.forsteInnsendingsDato), ettersendingsfrist = dokumentSoknadDto.fristForEttersendelse
 	)
 
 fun mapTilSoknadsStatus(soknadsStatus: SoknadsStatusDto?, newStatus: SoknadsStatus? ): SoknadsStatus {

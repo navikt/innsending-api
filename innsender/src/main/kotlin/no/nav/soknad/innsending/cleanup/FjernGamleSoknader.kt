@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.cleanup
 
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.util.Constants
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -12,14 +13,11 @@ class FjernGamleSoknader(private val soknadService: SoknadService) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 
-	@Value("\${cron.slettEldreEnn}")
-	private lateinit var dagerGamleString: String
-
 	@Scheduled(cron = "\${cron.startSlettGamleIkkeInnsendteSoknader}")
 	fun fjernGamleIkkeInnsendteSoknader() {
 		try {
 			if (LeaderSelectionUtility().isLeader()) {
-				soknadService.slettGamleSoknader(dagerGamleString.toLong())
+				soknadService.slettGamleSoknader(Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD)
 			}
 		} catch (ex: Exception) {
 			logger.warn("Fjerning av gamle ikke innsendte søknader feilet med ${ex.message}")

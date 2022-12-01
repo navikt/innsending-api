@@ -41,7 +41,7 @@ class RestExceptionHandler {
 
 	@ExceptionHandler
 	fun illegalActionException(exception: IllegalActionException): ResponseEntity<RestErrorResponseDto> {
-		logger.error(exception.message, exception)
+		logger.warn(exception.message, exception)
 		return ResponseEntity(RestErrorResponseDto(exception.arsak ?: "", exception.message ?: "", LocalDateTime.now(), exception.errorCode), HttpStatus.METHOD_NOT_ALLOWED)
 	}
 
