@@ -340,6 +340,8 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 			for (dokument in dokumenter) {
 				textBuilder = textBuilder.leggTilTekst("* "+ dokument.label, FONT_VANLIG, LINJEAVSTAND)
 			}
+		} else {
+			textBuilder = textBuilder.leggTilTekst("", FONT_VANLIG, 0f)
 		}
 		return textBuilder
 	}
