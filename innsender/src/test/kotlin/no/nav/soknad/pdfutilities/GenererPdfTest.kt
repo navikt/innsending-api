@@ -4,8 +4,8 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
-import no.nav.soknad.innsending.service.erEttersending
 import no.nav.soknad.innsending.utils.writeBytesToFile
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.OffsetDateTime
 import java.util.*
@@ -15,6 +15,18 @@ class GenererPdfTest {
 
 	private val skjemanr = "NAV 10-07.03"
 	private val tittel = "Søknad om hjelpemidler"
+
+	@Test
+	fun verifiserlagForsideEttersending() {
+		val soknad = 	lagSoknadForTesting(tittel)
+
+		val forside = PdfGenerator().lagForsideEttersending(soknad)
+
+		assertEquals(1, AntallSider().finnAntallSider(forside))
+		val erPdfa = Validerer().isPDFa(forside)
+		assertTrue(erPdfa)
+
+	}
 
 	@Test
 	fun verifiserGenereringAvKvitteringsPdf_medSpesialtegn() {
@@ -30,6 +42,8 @@ class GenererPdfTest {
 		//writeBytesToFile(kvittering, "./delme.pdf")
 
 		assertEquals(1, AntallSider().finnAntallSider(kvittering))
+		val erPdfa = Validerer().isPDFa(kvittering)
+		assertTrue(erPdfa)
 
 	}
 
@@ -49,6 +63,8 @@ class GenererPdfTest {
 		//writeBytesToFile(kvittering, "./soknadskvittering.pdf")
 
 		assertEquals(1, AntallSider().finnAntallSider(kvittering))
+		val erPdfa = Validerer().isPDFa(kvittering)
+		assertTrue(erPdfa)
 
 	}
 
@@ -67,6 +83,8 @@ class GenererPdfTest {
 		//writeBytesToFile(kvittering, "./ettersendingskvittering.pdf")
 
 		assertEquals(1, AntallSider().finnAntallSider(kvittering))
+		val erPdfa = Validerer().isPDFa(kvittering)
+		assertTrue(erPdfa)
 
 	}
 
@@ -85,6 +103,8 @@ class GenererPdfTest {
 		//writeBytesToFile(kvittering, "./ettersendingskvittering2.pdf")
 
 		assertEquals(1, AntallSider().finnAntallSider(kvittering))
+		val erPdfa = Validerer().isPDFa(kvittering)
+		assertTrue(erPdfa)
 
 	}
 	private fun lagSoknadForTesting(tittel: String): DokumentSoknadDto {

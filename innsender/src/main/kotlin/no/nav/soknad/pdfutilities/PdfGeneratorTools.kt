@@ -8,17 +8,25 @@ import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode
+import org.apache.pdfbox.pdmodel.common.PDMetadata
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.font.*
+import org.apache.pdfbox.pdmodel.graphics.color.PDOutputIntent
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
+import org.apache.xmpbox.XMPMetadata
+import org.apache.xmpbox.schema.PDFAIdentificationSchema
+import org.apache.xmpbox.type.BadFieldValueException
+import org.apache.xmpbox.xml.XmpSerializer
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ClassPathResource
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+
 
 private const val FONT_EKSTRA_STOR = 18
 private const val FONT_SUB_HEADER = 16
@@ -70,7 +78,7 @@ class PdfGenerator {
 			formaterKlokke(now)
 		)
 		return try {
-			PdfBuilder()
+			PdfBuilder(tittel)
 				.startSide()
 				.leggTilNavLogo()
 				.startTekst()
@@ -94,6 +102,8 @@ class PdfGenerator {
 				.leggTilDokumenter(alleredeInnsendt, tiligereInnsendtHeader)
 				.avsluttTekst()
 				.avsluttSide()
+				.leggTilFargeProfil()
+				.leggTilXMPMetablokk()
 				.generer()
 		} catch (e: IOException) {
 			throw RuntimeException("Kunne ikke generere kvitteringside", e)
@@ -109,7 +119,7 @@ class PdfGenerator {
 	}
 
 	fun lagForsideEttersending(soknad: DokumentSoknadDto) = try {
-		PdfBuilder()
+		PdfBuilder(soknad.tittel)
 			.startSide()
 			.leggTilNavLogo()
 			.startTekst()
@@ -119,20 +129,61 @@ class PdfGenerator {
 			.leggTilHeader(soknad.tittel, FONT_STOR)
 			.avsluttTekst()
 			.avsluttSide()
+			.leggTilFargeProfil()
+			.leggTilXMPMetablokk()
 			.generer()
 	} catch (e: IOException) {
 		throw RuntimeException("Kunne ikke generere kvitteringside", e)
 	}
 }
 
-class PdfBuilder {
+class PdfBuilder(private val tittel: String) {
+	private val logger = LoggerFactory.getLogger(javaClass)
+	private val COLOR_RESOURCE = "/fonts/icc/sRGB.icc"
+
 	private val pdDocument = PDDocument()
 
-	fun start() = PdfBuilder()
+	fun start() = PdfBuilder("Dokument")
 
 	fun startSide() = PageBuilder(this)
 
 	fun getPdDocument() = pdDocument
+
+	fun leggTilFargeProfil(): PdfBuilder {
+		val colorProfile: InputStream? = PdfBuilder::class.java.getResourceAsStream(COLOR_RESOURCE)
+		if (colorProfile == null) {
+			logger.warn("Fant ikke ressursfil for setting av fargeprofil i folder $COLOR_RESOURCE. Dette er nødvendig for generering av PDF/A-1b. Ignorerer feilen")
+			return this
+		}
+		val intent = PDOutputIntent(pdDocument, colorProfile)
+		intent.info = "sRGB IEC61966-2.1"
+		intent.outputCondition = "sRGB IEC61966-2.1"
+		intent.outputConditionIdentifier = "sRGB IEC61966-2.1"
+		intent.registryName = "http://www.color.org"
+		pdDocument.getDocumentCatalog().addOutputIntent(intent)
+		return this
+	}
+
+	fun leggTilXMPMetablokk(): PdfBuilder {
+		val xmp = XMPMetadata.createXMPMetadata()
+		try {
+			val dc = xmp.createAndAddDublinCoreSchema()
+			dc.title = tittel
+			val id: PDFAIdentificationSchema = xmp.createAndAddPFAIdentificationSchema()
+			id.part = 1
+			id.conformance = "B"
+			val serializer = XmpSerializer()
+			val baos = ByteArrayOutputStream()
+			serializer.serialize(xmp, baos, true)
+			val metadata = PDMetadata(pdDocument)
+			metadata.importXMPMetadata(baos.toByteArray())
+			pdDocument.getDocumentCatalog().setMetadata(metadata)
+		} catch (e: BadFieldValueException) {
+			// won't happen here, as the provided value is valid
+			throw IllegalArgumentException(e)
+		}
+		return this
+	}
 
 	@Throws(IOException::class)
 	fun generer(): ByteArray {

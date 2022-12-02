@@ -443,7 +443,7 @@ class SoknadService(
 
 			val savedEttersendingsSoknad  = opprettEttersendingsSoknad(brukerId = nyesteSoknad.brukerId, ettersendingsId = ettersendingsId,
 				tittel = nyesteSoknad.tittel, skjemanr = nyesteSoknad.skjemanr, tema = nyesteSoknad.tema, sprak = nyesteSoknad.spraak!!,
-				nyesteSoknad.forsteInnsendingsDato ?: nyesteSoknad.innsendtDato ?: nyesteSoknad.endretDato ?: nyesteSoknad.opprettetDato, nyesteSoknad.fristForEttersendelse )
+				forsteInnsendingsDato = nyesteSoknad.forsteInnsendingsDato ?: nyesteSoknad.innsendtDato ?: nyesteSoknad.endretDato ?: nyesteSoknad.opprettetDato, nyesteSoknad.fristForEttersendelse )
 
 			val vedleggDbDataListe = nyesteSoknad.vedleggsListe
 				.filter { !it.erHoveddokument }
