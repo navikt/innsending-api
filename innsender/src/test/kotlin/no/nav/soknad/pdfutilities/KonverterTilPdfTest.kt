@@ -16,7 +16,7 @@ class KonverterTilPdfTest {
 		val start = System.currentTimeMillis()
 		val flatetPdf = KonverterTilPdf().flatUtPdf(skrivbarPdf)
 		val ferdig = System.currentTimeMillis()
-		System.out.println("Tid til flate ut PDF = ${ferdig-start}")
+		println("Tid til flate ut PDF = ${ferdig-start}")
 		//writeBytesToFile(flatetPdf, "./delme.pdf")
 		assertEquals(false, KonverterTilPdf().harSkrivbareFelt(flatetPdf))
 
@@ -47,7 +47,7 @@ class KonverterTilPdfTest {
 		val start = System.currentTimeMillis()
 		val pdf = KonverterTilPdf().tilPdf(jpg)
 		val ferdig = System.currentTimeMillis()
-		System.out.println("Tid til konvertering av mellomstorJpg = ${ferdig-start}")
+		println("Tid til konvertering av mellomstorJpg = ${ferdig-start}")
 		val antallSider = AntallSider().finnAntallSider(pdf)
 		assertEquals(1, antallSider)
 

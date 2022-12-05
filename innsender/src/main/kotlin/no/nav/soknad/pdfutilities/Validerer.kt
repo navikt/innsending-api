@@ -77,31 +77,33 @@ class Validerer() {
 	}
 
 	fun isPDFa(bytes: ByteArray): Boolean {
-		val stream = ByteArrayDataSource(ByteArrayInputStream(bytes))
-		var document: PreflightDocument? = null
-		var result: ValidationResult? = null
-		try {
-			val parser = PreflightParser(stream)
-			parser.parse()
-			document = parser.preflightDocument
-			document.validate()
-			result = document.result
-			return result.isValid
-		} catch (ex: SyntaxValidationException) {
-			logger.error("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
-			if (result != null) {
-				val sb = StringBuilder()
-				for (error in result.errorsList) {
-					sb.append(error.errorCode + " : " + error.details + "\n")
+		ByteArrayInputStream(bytes).use { byteArrayInputStream ->
+			var result: ValidationResult? = null
+			var document: PreflightDocument? = null
+			try {
+				val stream = ByteArrayDataSource(ByteArrayInputStream(bytes))
+				val parser = PreflightParser(stream)
+				parser.parse()
+				document = parser.preflightDocument
+				document.validate()
+				result = document.result
+				return result.isValid
+			} catch (ex: SyntaxValidationException) {
+				logger.error("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
+				if (result != null) {
+					val sb = StringBuilder()
+					for (error in result.errorsList) {
+						sb.append(error.errorCode + " : " + error.details + "\n")
+					}
+					logger.error("Feil liste:\n"+sb.toString())
 				}
-				logger.error("Feil liste:\n"+sb.toString())
-			}
-		} catch (ex: Error) {
-			logger.error("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
-		} finally {
-		    if (document != null) {
+			} catch (ex: Error) {
+				logger.error("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
+			}	finally {
+				if (document != null) {
 					document.close()
 				}
+			}
 		}
 		return false
 	}

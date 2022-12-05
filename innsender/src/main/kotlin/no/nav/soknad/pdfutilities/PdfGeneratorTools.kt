@@ -173,11 +173,12 @@ class PdfBuilder(private val tittel: String) {
 			id.part = 1
 			id.conformance = "B"
 			val serializer = XmpSerializer()
-			val baos = ByteArrayOutputStream()
-			serializer.serialize(xmp, baos, true)
-			val metadata = PDMetadata(pdDocument)
-			metadata.importXMPMetadata(baos.toByteArray())
-			pdDocument.getDocumentCatalog().setMetadata(metadata)
+			ByteArrayOutputStream().use {
+				serializer.serialize(xmp, it, true)
+				val metadata = PDMetadata(pdDocument)
+				metadata.importXMPMetadata(it.toByteArray())
+				pdDocument.getDocumentCatalog().setMetadata(metadata)
+			}
 		} catch (e: BadFieldValueException) {
 			// won't happen here, as the provided value is valid
 			throw IllegalArgumentException(e)
