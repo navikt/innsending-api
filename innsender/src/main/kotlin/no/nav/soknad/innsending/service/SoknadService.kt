@@ -443,7 +443,7 @@ class SoknadService(
 
 			val savedEttersendingsSoknad  = opprettEttersendingsSoknad(brukerId = nyesteSoknad.brukerId, ettersendingsId = ettersendingsId,
 				tittel = nyesteSoknad.tittel, skjemanr = nyesteSoknad.skjemanr, tema = nyesteSoknad.tema, sprak = nyesteSoknad.spraak!!,
-				nyesteSoknad.forsteInnsendingsDato ?: nyesteSoknad.innsendtDato ?: nyesteSoknad.endretDato ?: nyesteSoknad.opprettetDato, nyesteSoknad.fristForEttersendelse )
+				forsteInnsendingsDato = nyesteSoknad.forsteInnsendingsDato ?: nyesteSoknad.innsendtDato ?: nyesteSoknad.endretDato ?: nyesteSoknad.opprettetDato, nyesteSoknad.fristForEttersendelse )
 
 			val vedleggDbDataListe = nyesteSoknad.vedleggsListe
 				.filter { !it.erHoveddokument }
@@ -1072,12 +1072,19 @@ class SoknadService(
 			lenkeTilDokument(innsendtSoknadDto.innsendingsId!!, hoveddokumentVedleggsId, hoveddokumentFilId),
 			opplastedeVedlegg.filter { !it.erHoveddokument }.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) },
 			manglendePakrevdeVedlegg.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) },
-
 			innsendtSoknadDto.vedleggsListe
 				.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre }
 				.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) },
-			innsendtSoknadDto.innsendtDato!!.plusDays(innsendtSoknadDto.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE)
+			beregnInnsendingsfrist(innsendtSoknadDto)
 		)
+	}
+
+	private fun beregnInnsendingsfrist(innsendtSoknadDto: DokumentSoknadDto): OffsetDateTime {
+		if (erEttersending(innsendtSoknadDto)) {
+			return innsendtSoknadDto.forsteInnsendingsDato!!.plusDays(innsendtSoknadDto.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE)
+		} else {
+			return innsendtSoknadDto.innsendtDato!!.plusDays(innsendtSoknadDto.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE)
+		}
 	}
 
 	private fun lenkeTilDokument(innsendingsId: String, vedleggsId: Long?, filId: Long?) = if (filId == null) null else "frontend/v1/soknad/$innsendingsId/vedlegg/$vedleggsId/fil/$filId"

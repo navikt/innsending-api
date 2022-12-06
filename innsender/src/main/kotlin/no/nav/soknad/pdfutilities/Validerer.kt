@@ -1,10 +1,20 @@
 package no.nav.soknad.pdfutilities
 
 import no.nav.soknad.innsending.exceptions.IllegalActionException
-import org.slf4j.LoggerFactory
-import java.io.ByteArrayInputStream
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException
+import org.apache.pdfbox.preflight.PreflightDocument
+import org.apache.pdfbox.preflight.ValidationResult
+import org.apache.pdfbox.preflight.exception.SyntaxValidationException
+import org.apache.pdfbox.preflight.parser.PreflightParser
+import org.apache.pdfbox.preflight.utils.ByteArrayDataSource
+import org.slf4j.LoggerFactory
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.InputStream
+import java.io.OutputStreamWriter
+import javax.print.attribute.standard.OutputDeviceAssigned
 
 
 class Validerer() {
@@ -66,5 +76,36 @@ class Validerer() {
 		return FiltypeSjekker().isImage(bytes)
 	}
 
+	fun isPDFa(bytes: ByteArray): Boolean {
+		ByteArrayInputStream(bytes).use { byteArrayInputStream ->
+			var result: ValidationResult? = null
+			var document: PreflightDocument? = null
+			try {
+				val stream = ByteArrayDataSource(ByteArrayInputStream(bytes))
+				val parser = PreflightParser(stream)
+				parser.parse()
+				document = parser.preflightDocument
+				document.validate()
+				result = document.result
+				return result.isValid
+			} catch (ex: SyntaxValidationException) {
+				logger.error("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
+				if (result != null) {
+					val sb = StringBuilder()
+					for (error in result.errorsList) {
+						sb.append(error.errorCode + " : " + error.details + "\n")
+					}
+					logger.error("Feil liste:\n"+sb.toString())
+				}
+			} catch (ex: Error) {
+				logger.error("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
+			}	finally {
+				if (document != null) {
+					document.close()
+				}
+			}
+		}
+		return false
+	}
 
 }

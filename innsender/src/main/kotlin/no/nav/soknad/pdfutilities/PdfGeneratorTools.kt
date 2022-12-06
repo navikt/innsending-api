@@ -2,22 +2,31 @@ package no.nav.soknad.pdfutilities
 
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode
+import org.apache.pdfbox.pdmodel.common.PDMetadata
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.font.*
+import org.apache.pdfbox.pdmodel.graphics.color.PDOutputIntent
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
+import org.apache.xmpbox.XMPMetadata
+import org.apache.xmpbox.schema.PDFAIdentificationSchema
+import org.apache.xmpbox.type.BadFieldValueException
+import org.apache.xmpbox.xml.XmpSerializer
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ClassPathResource
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+
 
 private const val FONT_EKSTRA_STOR = 18
 private const val FONT_SUB_HEADER = 16
@@ -38,28 +47,38 @@ class PdfGenerator {
 	}
 
 	fun lagKvitteringsSide(soknad: DokumentSoknadDto, sammensattNavn: String?, opplastedeVedlegg: List<VedleggDto>, manglendeObligatoriskeVedlegg: List<VedleggDto>): ByteArray {
+		val vedleggOpplastet = opplastedeVedlegg.filter { !it.erHoveddokument }
+		val sendSenere = manglendeObligatoriskeVedlegg
+		val sendesIkke = soknad.vedleggsListe.filter{ !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesIkke }
+		val sendesAvAndre = soknad.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre }
+		val alleredeInnsendt = soknad.vedleggsListe.filter { !it.erHoveddokument &&
+			it.opplastingsStatus == OpplastingsStatusDto.innsendt && (it.innsendtdato ?: it.opprettetdato) < soknad.opprettetDato }
+
+		val fnr = soknad.brukerId
+		val personInfo = if (sammensattNavn == null) fnr else "$sammensattNavn, $fnr"
+
 		val kvitteringHeader = tekster.getProperty("kvittering.tittel")
 		val tittel = soknad.tittel
 		val ettersendelseTittel = tekster.getProperty("kvittering.ettersendelse.tittel")
-		val fnr = soknad.brukerId
-		val personInfo = if (sammensattNavn == null) fnr else "$sammensattNavn, $fnr"
-		val del1 = tekster.getProperty("kvittering.informasjonstekst.del1")
-		val del2 = tekster.getProperty("kvittering.informasjonstekst.del2")
+
 		val vedleggSendtHeader = tekster.getProperty("kvittering.vedlegg.sendt")
 		val vedleggIkkeSendtHeader = tekster.getProperty("kvittering.vedlegg.ikkesendt")
-		val lastetOpp = opplastedeVedlegg
+		val vedleggSendesAvAndreHeader = tekster.getProperty("kvittering.vedlegg.sendesAvAndre")
+		val vedleggSendesIkkeHeader = tekster.getProperty("kvittering.vedlegg.sendesIkke")
+		val tiligereInnsendtHeader = tekster.getProperty("kvittering.vedlegg.tidligereInnsendt")
+
+		val lastetOpp = vedleggOpplastet
 		val antallLastetOpp = lastetOpp.size
-		val ikkeLastetOppDenneGang = manglendeObligatoriskeVedlegg
 		val now = LocalDateTime.now()
 		val antallInnsendt = java.lang.String.format(
 			tekster.getProperty("kvittering.erSendt"),
 			antallLastetOpp,
-			ikkeLastetOppDenneGang.size + antallLastetOpp,
+			alleredeInnsendt.size + sendSenere.size + sendesAvAndre.size + antallLastetOpp,
 			formaterDato(now),
 			formaterKlokke(now)
 		)
 		return try {
-			PdfBuilder()
+			PdfBuilder(tittel)
 				.startSide()
 				.leggTilNavLogo()
 				.startTekst()
@@ -72,15 +91,19 @@ class PdfGenerator {
 				.flyttNedMed(30f)
 				.leggTilTekst(antallInnsendt, FONT_VANLIG, LINJEAVSTAND)
 				.flyttNedMed(20f)
-				.leggTilDokumenter(lastetOpp, vedleggSendtHeader)
-				.flyttNedMed(20f)
-				.leggTilDokumenter(ikkeLastetOppDenneGang, vedleggIkkeSendtHeader)
-				.flyttNedMed(25f)
-				.leggTilTekst(del1, FONT_INFORMASJON, LINJEAVSTAND)
-				.flyttNedMed(15f)
-				.leggTilTekst(del2, FONT_INFORMASJON, LINJEAVSTAND)
+				.leggTilDokumenter(vedleggOpplastet, vedleggSendtHeader)
+				.flyttNedMed(if(vedleggOpplastet.isEmpty()) 0f else 20f)
+				.leggTilDokumenter(sendSenere, vedleggIkkeSendtHeader)
+				.flyttNedMed(if (sendSenere.isEmpty()) 0f else 20f)
+				.leggTilDokumenter(sendesAvAndre, vedleggSendesAvAndreHeader)
+				.flyttNedMed(if (sendesAvAndre.isEmpty()) 0f else 20f)
+				.leggTilDokumenter(sendesIkke, vedleggSendesIkkeHeader)
+				.flyttNedMed(if (sendesIkke.isEmpty()) 0f else 20f)
+				.leggTilDokumenter(alleredeInnsendt, tiligereInnsendtHeader)
 				.avsluttTekst()
 				.avsluttSide()
+				.leggTilFargeProfil()
+				.leggTilXMPMetablokk()
 				.generer()
 		} catch (e: IOException) {
 			throw RuntimeException("Kunne ikke generere kvitteringside", e)
@@ -96,7 +119,7 @@ class PdfGenerator {
 	}
 
 	fun lagForsideEttersending(soknad: DokumentSoknadDto) = try {
-		PdfBuilder()
+		PdfBuilder(soknad.tittel)
 			.startSide()
 			.leggTilNavLogo()
 			.startTekst()
@@ -106,20 +129,62 @@ class PdfGenerator {
 			.leggTilHeader(soknad.tittel, FONT_STOR)
 			.avsluttTekst()
 			.avsluttSide()
+			.leggTilFargeProfil()
+			.leggTilXMPMetablokk()
 			.generer()
 	} catch (e: IOException) {
 		throw RuntimeException("Kunne ikke generere kvitteringside", e)
 	}
 }
 
-class PdfBuilder {
+class PdfBuilder(private val tittel: String) {
+	private val logger = LoggerFactory.getLogger(javaClass)
+	private val COLOR_RESOURCE = "/fonts/icc/sRGB.icc"
+
 	private val pdDocument = PDDocument()
 
-	fun start() = PdfBuilder()
+	fun start() = PdfBuilder("Dokument")
 
 	fun startSide() = PageBuilder(this)
 
 	fun getPdDocument() = pdDocument
+
+	fun leggTilFargeProfil(): PdfBuilder {
+		val colorProfile: InputStream? = PdfBuilder::class.java.getResourceAsStream(COLOR_RESOURCE)
+		if (colorProfile == null) {
+			logger.warn("Fant ikke ressursfil for setting av fargeprofil i folder $COLOR_RESOURCE. Dette er nødvendig for generering av PDF/A-1b. Ignorerer feilen")
+			return this
+		}
+		val intent = PDOutputIntent(pdDocument, colorProfile)
+		intent.info = "sRGB IEC61966-2.1"
+		intent.outputCondition = "sRGB IEC61966-2.1"
+		intent.outputConditionIdentifier = "sRGB IEC61966-2.1"
+		intent.registryName = "http://www.color.org"
+		pdDocument.getDocumentCatalog().addOutputIntent(intent)
+		return this
+	}
+
+	fun leggTilXMPMetablokk(): PdfBuilder {
+		val xmp = XMPMetadata.createXMPMetadata()
+		try {
+			val dc = xmp.createAndAddDublinCoreSchema()
+			dc.title = tittel
+			val id: PDFAIdentificationSchema = xmp.createAndAddPFAIdentificationSchema()
+			id.part = 1
+			id.conformance = "B"
+			val serializer = XmpSerializer()
+			ByteArrayOutputStream().use {
+				serializer.serialize(xmp, it, true)
+				val metadata = PDMetadata(pdDocument)
+				metadata.importXMPMetadata(it.toByteArray())
+				pdDocument.getDocumentCatalog().setMetadata(metadata)
+			}
+		} catch (e: BadFieldValueException) {
+			// won't happen here, as the provided value is valid
+			throw IllegalArgumentException(e)
+		}
+		return this
+	}
 
 	@Throws(IOException::class)
 	fun generer(): ByteArray {
@@ -325,8 +390,10 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 				.leggTilHeader(overskrift, FONT_LITEN_HEADER)
 				.flyttNedMed(5f)
 			for (dokument in dokumenter) {
-				textBuilder = textBuilder.leggTilTekst(dokument.tittel, FONT_VANLIG, LINJEAVSTAND)
+				textBuilder = textBuilder.leggTilTekst("* "+ dokument.label, FONT_VANLIG, LINJEAVSTAND)
 			}
+		} else {
+			textBuilder = textBuilder.leggTilTekst("", FONT_VANLIG, 0f)
 		}
 		return textBuilder
 	}
