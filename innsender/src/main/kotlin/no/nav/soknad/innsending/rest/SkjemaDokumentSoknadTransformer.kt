@@ -3,10 +3,13 @@ package no.nav.soknad.innsending.rest
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.finnSpraakFraInput
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 class SkjemaDokumentSoknadTransformer {
+
+	private val logger = LoggerFactory.getLogger(javaClass)
 
 	fun konverterTilDokumentSoknadDto(input: SkjemaDto, brukerId: String): DokumentSoknadDto = DokumentSoknadDto(
 		brukerId = brukerId, skjemanr =	input.skjemanr, tittel = input.tittel, tema = input.tema, status = SoknadsStatusDto.opprettet,
@@ -34,6 +37,7 @@ class SkjemaDokumentSoknadTransformer {
 				.filter { !(it.propertyNavn != null && it.propertyNavn == "annenDokumentasjon") }
 				.map { konverterTilVedleggDto(it, erHoveddokument = false, erVariant = false) }
 
+		logger.debug("Skal opprette søknad på skjemanr ${hoveddok.vedleggsnr} med vedleggene ${vedleggListe.map { it.vedleggsnr }.joinToString(", ")}")
 		return listOf(hoveddok, variant) + vedleggListe
 	}
 

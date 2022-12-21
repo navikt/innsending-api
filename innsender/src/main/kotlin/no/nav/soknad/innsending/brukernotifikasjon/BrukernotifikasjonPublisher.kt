@@ -29,9 +29,9 @@ class BrukernotifikasjonPublisher(
 		"nn" to "Ettersend manglande vedlegg til: ",
 		"en" to "Submit missing documentation to: "
 	)
-	val tittelPrefixNySoknad = mapOf("no" to "Fortsett på påbegynt søknad: ",
-		"nn" to "Hald fram på påbyrja søknad: ",
-		"en" to "Complete application: "
+	val tittelPrefixNySoknad = mapOf("no" to "",
+		"nn" to "",
+		"en" to ""
 	)
 	val linkDokumentinnsending = notifikasjonConfig.gjenopptaSoknadsArbeid
 	val linkDokumentinnsendingEttersending = notifikasjonConfig.ettersendePaSoknad
