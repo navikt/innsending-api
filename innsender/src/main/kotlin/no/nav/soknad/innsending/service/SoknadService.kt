@@ -19,15 +19,17 @@ import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.PdfMerger
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.lang.management.ManagementFactory
+import java.lang.management.MemoryMXBean
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.*
+
 
 @Service
 class SoknadService(
@@ -44,6 +46,15 @@ class SoknadService(
 	private var ettersendingsfrist: Long = 14
 
 	private val logger = LoggerFactory.getLogger(javaClass)
+
+	init {
+		val mb = 1024 * 1024
+		val memoryBean: MemoryMXBean = ManagementFactory.getMemoryMXBean()
+		val xmx = memoryBean.heapMemoryUsage.max / mb
+		val xms = memoryBean.heapMemoryUsage.init / mb
+		logger.debug("Initial Memory (xms) : $xms mb")
+		logger.debug("Max Memory (xmx) : $xmx mb")
+	}
 
 	@Transactional
 	fun opprettSoknad(brukerId: String, skjemanr: String, spraak: String, vedleggsnrListe: List<String> = emptyList()): DokumentSoknadDto {
