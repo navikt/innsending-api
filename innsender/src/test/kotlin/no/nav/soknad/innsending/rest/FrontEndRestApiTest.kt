@@ -290,6 +290,39 @@ class FrontEndRestApiTest {
 		}
 
 	}
+
+	@Test
+	fun sjekkAtOpplastingAvUlovligFilformatGirFeilTest() {
+		val skjemanr = "NAV 95-00.11"
+		val spraak = "nb_NO"
+		val vedlegg = listOf("N6", "W2")
+		val token = getToken()
+
+		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
+
+		val vedleggN6 = soknadDto.vedleggsListe.first{it.vedleggsnr == "N6"}
+		assertEquals(OpplastingsStatusDto.ikkeValgt, vedleggN6.opplastingsStatus)
+
+		val multipart = LinkedMultiValueMap<Any, Any>()
+		multipart.add("file", ClassPathResource("/ikke.jpg"))
+
+		val postFilRequestN6 = HttpEntity(multipart, createHeaders(token, MediaType.MULTIPART_FORM_DATA))
+
+		assertThrows(Exception::class.java) {
+				val postFilResponseN6 = restTemplate.exchange(
+					"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil",
+					HttpMethod.POST,
+					postFilRequestN6,
+					FilDto::class.java
+				)
+
+				assertEquals(HttpStatus.CREATED, postFilResponseN6.statusCode)
+				assertNotNull(postFilResponseN6.body)
+				assertEquals(Mimetype.applicationSlashPdf, postFilResponseN6.body!!.mimetype)
+		}
+
+	}
+
 	private fun opprettEnSoknad(token: String, skjemanr: String, spraak: String, vedlegg: List<String>): DokumentSoknadDto {
 
 		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak, vedlegg)
