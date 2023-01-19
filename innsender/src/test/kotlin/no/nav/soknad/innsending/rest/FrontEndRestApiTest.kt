@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.core.io.ClassPathResource
@@ -32,8 +31,6 @@ import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.util.LinkedMultiValueMap
-import org.springframework.web.client.RestClientException
-import java.time.Duration
 import java.util.*
 
 
@@ -290,6 +287,37 @@ class FrontEndRestApiTest {
 		}
 
 	}
+
+	@Test
+	fun sjekkAtOpplastingAvUlovligFilformatGirFeilTest() {
+		val skjemanr = "NAV 95-00.11"
+		val spraak = "nb_NO"
+		val vedlegg = listOf("N6", "W2")
+		val token = getToken()
+
+		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
+
+		val vedleggN6 = soknadDto.vedleggsListe.first{it.vedleggsnr == "N6"}
+		assertEquals(OpplastingsStatusDto.ikkeValgt, vedleggN6.opplastingsStatus)
+
+		val multipart = LinkedMultiValueMap<Any, Any>()
+		multipart.add("file", ClassPathResource("/ikke.jpg"))
+
+		val postFilRequestN6 = HttpEntity(multipart, createHeaders(token, MediaType.MULTIPART_FORM_DATA))
+
+		var ok = true
+		assertThrows(Exception::class.java) {
+			val postFilResponseN6 = restTemplate.exchange(
+				"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil",
+				HttpMethod.POST,
+				postFilRequestN6,
+				FilDto::class.java
+			)
+			ok = false
+		}
+		assertTrue(ok)
+	}
+
 	private fun opprettEnSoknad(token: String, skjemanr: String, spraak: String, vedlegg: List<String>): DokumentSoknadDto {
 
 		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak, vedlegg)

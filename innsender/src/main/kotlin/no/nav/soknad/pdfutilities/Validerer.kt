@@ -25,12 +25,16 @@ class Validerer() {
 		files.forEach { kontroller(innsendingId, it) }
 	}
 
-	private fun kontroller(innsendingId: String, file: ByteArray) {
+	fun validereFilformat(innsendingId: String, file: ByteArray, fileName: String?) {
+		kontroller(innsendingId, file, fileName)
+	}
+
+	private fun kontroller(innsendingId: String, file: ByteArray, fileName: String? = "") {
 		if (isPDF(file)) {
 			// Kontroller at PDF er lovlig, dvs. ikke encrypted og passordbeskyttet
 			erGyldigPdf(innsendingId, file)
 		} else if (!isImage(file)) {
-			logger.error("$innsendingId: Ugylding filtype for opplasting. Filstart = ${if (file.size>=4) (file[0] + file[1] + file[3] + file[4]) else file[0]}")
+			logger.error("$innsendingId: $fileName har ugylding filtype for opplasting. Filstart = ${if (file.size>=4) (file[0] + file[1] + file[3] + file[4]) else file[0]}")
 			throw IllegalActionException("$innsendingId: Ugyldig filtype for opplasting", "Kan kun laste opp filer av type PDF, JPEG, PNG og IMG", "errorCode.illegalAction.notSupportedFileFormat"
 			)
 		}

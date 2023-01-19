@@ -270,12 +270,15 @@ class FrontEndRestAPILocalTest(
 			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId", "errorCode.resourceNotFound.attachmentNotFound")
 
 		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
+		val fileName = file.filename
+		if (!fileName.isNullOrEmpty()) {
+			logger.info("$innsendingsId: Skal validere $fileName")
+		}
 		if (!file.isReadable) throw IllegalActionException("Ingen fil opplastet", "Opplasting feilet", "errorCode.illegalAction.fileCannotBeRead")
 		val opplastet = (file as ByteArrayResource).byteArray
-		Validerer().validereFilformat(innsendingsId, listOf(opplastet))
+		Validerer().validereFilformat(innsendingsId, opplastet, fileName)
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
 		val fil = KonverterTilPdf().tilPdf(opplastet)
-		val vedleggsFiler = soknadService.hentFiler(soknadDto, innsendingsId, vedleggsId, false, false)
 
 		val opplastetPaVedlegg: Long = soknadService.finnFilStorrelseSum(soknadDto, vedleggsId)
 		val opplastetPaSoknad: Long = soknadService.finnFilStorrelseSum(soknadDto)
@@ -283,7 +286,7 @@ class FrontEndRestAPILocalTest(
 		Validerer().validerStorrelse(innsendingsId, opplastetPaSoknad, fil.size.toLong(), restConfig.maxFileSizeSum.toLong(),"errorCode.illegalAction.fileSizeSumTooLarge" )
 
 		// Lagre
-		val lagretFilDto = soknadService.lagreFil(soknadDto, FilDto(vedleggsId, null, file.filename ?:"", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now()))
+		val lagretFilDto = soknadService.lagreFil(soknadDto, FilDto(vedleggsId, null, fileName ?:"", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now()))
 		logger.info("$innsendingsId: Lagret fil ${lagretFilDto.id} på vedlegg $vedleggsId til søknad")
 
 		return ResponseEntity
