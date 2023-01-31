@@ -55,6 +55,10 @@ spec:
           namespace: skjemadigitalisering
         - application: skjemautfylling-experimental
           namespace: skjemadigitalisering
+        - application: skjemautfylling-preprod
+          namespace: skjemadigitalisering
+        - application: skjemautfylling-preprod-alt
+          namespace: skjemadigitalisering
     outbound:
       external:
       {{#each outboundExternalHosts}}
