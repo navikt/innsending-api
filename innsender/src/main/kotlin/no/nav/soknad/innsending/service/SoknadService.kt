@@ -1090,7 +1090,7 @@ class SoknadService(
 	private fun lenkeTilDokument(innsendingsId: String, vedleggsId: Long?, filId: Long?) = if (filId == null) null else "frontend/v1/soknad/$innsendingsId/vedlegg/$vedleggsId/fil/$filId"
 
 	fun slettGamleSoknader(dagerGamle: Long, permanent: Boolean = false ) {
-		val slettFor = LocalDateTime.now().minusDays(dagerGamle).atOffset(ZoneOffset.UTC)
+		val slettFor = mapTilOffsetDateTime(LocalDateTime.now(), -dagerGamle)
 		logger.info("Finn opprettede søknader opprettet før $slettFor permanent=$permanent")
 		if (permanent) {
 			val soknadDbDataListe = repo.findAllByOpprettetdatoBefore(slettFor)

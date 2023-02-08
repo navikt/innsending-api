@@ -9,6 +9,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.test.assertEquals
 
@@ -41,8 +42,12 @@ class SafServiceTest {
 
 	@Test
 	fun testDatoKonvertering() {
-		val dateString = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
 		val formatter: DateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME
+		val summerDateString = "2022-08-01T12:00:00.000000"
+		val summerDateTime = LocalDateTime.parse(summerDateString, formatter)
+		val summerZoneOffset = summerDateTime.atOffset(ZoneId.of("CET").rules.getOffset(summerDateTime))
+		assertEquals("+02:00", summerZoneOffset.offset.id)
+		val dateString = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
 		val dateTime = LocalDateTime.parse(dateString, formatter)
 		val zoneOffSet = OffsetDateTime.now().offset
 		val dateOffset = dateTime.atOffset(zoneOffSet)

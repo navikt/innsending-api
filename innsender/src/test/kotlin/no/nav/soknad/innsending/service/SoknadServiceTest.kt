@@ -256,7 +256,7 @@ class SoknadServiceTest {
 		val arkiverteVedlegg: List<InnsendtVedleggDto> = listOf(InnsendtVedleggDto(vedleggsnr = "NAV 08-09.10", tittel = "Søknad om å beholde sykepenger under opphold i utlandet"))
 
 		val arkivertSoknad = AktivSakDto("NAV 08-07.04D", "Søknad om Sykepenger",  "SYK",
-			LocalDateTime.now().minusDays(10L).atOffset(ZoneOffset.UTC), ettersending = false, innsendingsId = UUID.randomUUID().toString(), innsendtVedleggDtos = arkiverteVedlegg )
+			mapTilOffsetDateTime(LocalDateTime.now(), -10L), ettersending = false, innsendingsId = UUID.randomUUID().toString(), innsendtVedleggDtos = arkiverteVedlegg )
 
 		val ettersending = soknadService.opprettSoknadForEttersendingAvVedleggGittArkivertSoknad(brukerId = "1234", arkivertSoknad = arkivertSoknad, "no_NO", listOf("W1") )
 

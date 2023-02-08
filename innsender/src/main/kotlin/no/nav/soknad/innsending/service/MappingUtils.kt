@@ -5,8 +5,10 @@ import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.util.Constants
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.*
+import kotlin.math.absoluteValue
 
 const val ukjentEttersendingsId = "-1" // sette lik innsendingsid istedenfor?
 
@@ -40,7 +42,7 @@ private fun avledOpplastingsstatusVedInnsending(filDto: FilDto?, vedleggDto: Ved
 
 fun lagFilDto(filDbData: FilDbData, medFil: Boolean = true) = FilDto(filDbData.vedleggsid, filDbData.id,
 	filDbData.filnavn, mapTilMimetype(filDbData.mimetype), filDbData.storrelse,
-	if (medFil) filDbData.data else null, filDbData.opprettetdato.atOffset(ZoneOffset.UTC))
+	if (medFil) filDbData.data else null, mapTilOffsetDateTime(filDbData.opprettetdato) )
 
 fun lagVedleggDto(vedleggDbData: VedleggDbData, document: ByteArray? = null) =
 	VedleggDto(vedleggDbData.tittel, vedleggDbData.label ?: "", vedleggDbData.erhoveddokument,
@@ -74,10 +76,13 @@ private fun beregnInnsendingsFrist(soknadDbData: SoknadDbData): OffsetDateTime {
 }
 
 fun mapTilOffsetDateTime(localDateTime: LocalDateTime?): OffsetDateTime? =
-	localDateTime?.atOffset(ZoneOffset.UTC)
+	if (localDateTime == null) null else localDateTime.atOffset(ZoneId.of("CET").rules.getOffset(localDateTime))
 
 fun mapTilOffsetDateTime(localDateTime: LocalDateTime, offset: Long): OffsetDateTime {
-	return localDateTime.atOffset(ZoneOffset.UTC).plusDays(offset)
+	if (offset < 0) {
+		return localDateTime.atOffset(ZoneId.of("CET").rules.getOffset(localDateTime)).minusDays(offset.absoluteValue)
+	}
+	return localDateTime.atOffset(ZoneId.of("CET").rules.getOffset(localDateTime)).plusDays(offset)
 }
 
 fun mapTilLocalDateTime(offsetDateTime: OffsetDateTime?): LocalDateTime? =
