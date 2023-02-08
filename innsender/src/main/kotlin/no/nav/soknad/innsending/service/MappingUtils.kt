@@ -25,7 +25,10 @@ fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
 
 
 private fun avledOpplastingsstatusVedInnsending(filDto: FilDto?, vedleggDto: VedleggDto): OpplastingsStatusDto {
-	if (filDto?.data != null) return OpplastingsStatusDto.lastetOpp
+	if (filDto?.data != null
+		&& (vedleggDto.opplastingsStatus == OpplastingsStatusDto.ikkeValgt || vedleggDto.opplastingsStatus == OpplastingsStatusDto.lastetOpp)) {
+		return OpplastingsStatusDto.lastetOpp
+	}
 	return when (vedleggDto.opplastingsStatus) {
 		OpplastingsStatusDto.ikkeValgt -> if (vedleggDto.erPakrevd) OpplastingsStatusDto.sendSenere else OpplastingsStatusDto.sendesIkke
 		OpplastingsStatusDto.sendesAvAndre,

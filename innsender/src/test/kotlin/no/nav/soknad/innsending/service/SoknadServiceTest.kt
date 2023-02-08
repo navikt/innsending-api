@@ -71,6 +71,9 @@ class SoknadServiceTest {
 	@InjectMockKs
 	private val pdlInterface = mockk<PdlInterface>()
 
+	private val defaultSkjemanr = "NAV 55-00.60"
+	private val defaultTema = "BID"
+	private val defaultTittel = "Avtale om barnebidrag"
 
 	@BeforeEach
 	fun setup() {
@@ -96,7 +99,7 @@ class SoknadServiceTest {
 		val soknadService = lagSoknadService()
 
 		val brukerid = testpersonid
-		val skjemanr = "NAV 95-00.11"
+		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
 
@@ -111,14 +114,15 @@ class SoknadServiceTest {
 		val soknadService = lagSoknadService()
 
 		val brukerid = testpersonid
-		val skjemanr = "NAV 14-05.07"
+		val skjemanr = defaultSkjemanr
+		val skjemaTittel_en = "Agreement regarding child support"
 		val spraak = "fr"
 		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
 
 		assertEquals(brukerid, dokumentSoknadDto.brukerId)
 		assertEquals(skjemanr, dokumentSoknadDto.skjemanr)
 		assertEquals(spraak, dokumentSoknadDto.spraak) // Beholder ønsket språk
-		assertEquals("Application for lump-sum grant at birth", dokumentSoknadDto.tittel) // engelsk backup for fransk
+		assertEquals(skjemaTittel_en, dokumentSoknadDto.tittel) // engelsk backup for fransk
 		assertNotNull(dokumentSoknadDto.innsendingsId)
 	}
 
@@ -557,7 +561,7 @@ class SoknadServiceTest {
 	}
 
 	private fun testOgSjekkOpprettingAvSoknad(soknadService: SoknadService, vedleggsListe: List<String> = listOf(), brukerid: String = testpersonid, spraak: String = "nb_NO"): DokumentSoknadDto {
-		val skjemanr = "NAV 95-00.11"
+		val skjemanr = defaultSkjemanr
 		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, vedleggsListe)
 
 		assertEquals(brukerid, dokumentSoknadDto.brukerId)
@@ -752,7 +756,7 @@ class SoknadServiceTest {
 		val soknadService = lagSoknadService()
 
 		val brukerid = testpersonid
-		val skjemanr = "NAV 95-00.11"
+		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 
 		val dokumentSoknadDtoList = mutableListOf<DokumentSoknadDto>()
@@ -772,7 +776,7 @@ class SoknadServiceTest {
 		val soknadService = lagSoknadService()
 
 		val brukerid = testpersonid
-		val skjemanr = "NAV 95-00.11"
+		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 
 		val dokumentSoknadDtoList = mutableListOf<DokumentSoknadDto>()
