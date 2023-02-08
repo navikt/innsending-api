@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.rest
 
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.service.mapTilOffsetDateTime
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import org.slf4j.LoggerFactory
@@ -13,7 +14,7 @@ class SkjemaDokumentSoknadTransformer {
 
 	fun konverterTilDokumentSoknadDto(input: SkjemaDto, brukerId: String): DokumentSoknadDto = DokumentSoknadDto(
 		brukerId = brukerId, skjemanr =	input.skjemanr, tittel = input.tittel, tema = input.tema, status = SoknadsStatusDto.opprettet,
-		opprettetDato =  LocalDateTime.now().atOffset(ZoneOffset.UTC), endretDato = LocalDateTime.now().atOffset(ZoneOffset.UTC),
+		opprettetDato =  mapTilOffsetDateTime(LocalDateTime.now())!!, endretDato = mapTilOffsetDateTime(LocalDateTime.now()),
 		vedleggsListe = lagVedleggsListe(input), id = null, innsendingsId = null, ettersendingsId = null, spraak = finnSpraakFraInput(input.spraak),
 		innsendtDato = null, visningsSteg = 0, visningsType = VisningsType.fyllUt,
 		kanLasteOppAnnet = input.kanLasteOppAnnet ?: input.vedleggsListe?.any { it.propertyNavn != null && it.propertyNavn == "annenDokumentasjon"},
@@ -45,6 +46,6 @@ class SkjemaDokumentSoknadTransformer {
 		VedleggDto(skjemaDokumentDto.tittel, skjemaDokumentDto.label,erHoveddokument, erVariant,
 			skjemaDokumentDto.mimetype?.equals(Mimetype.applicationSlashPdf) ?: false, skjemaDokumentDto.pakrevd,
 			if (skjemaDokumentDto.document != null) OpplastingsStatusDto.lastetOpp else OpplastingsStatusDto.ikkeValgt,
-			LocalDateTime.now().atOffset(ZoneOffset.UTC), null, skjemaDokumentDto.vedleggsnr,  skjemaDokumentDto.beskrivelse,
+			mapTilOffsetDateTime(LocalDateTime.now())!!, null, skjemaDokumentDto.vedleggsnr,  skjemaDokumentDto.beskrivelse,
 			null, skjemaDokumentDto.mimetype, skjemaDokumentDto.document,null )
 }

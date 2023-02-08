@@ -60,11 +60,14 @@ class FrontEndRestApiTest {
 	private val audience = "aud-localhost"
 	private val expiry = 2*3600
 	private val defaultUser = "12345678901"
+	private val defaultSkjemanr = "NAV 55-00.60"
+	private val defaultTema = "BID"
+	private val defaultTittel = "Avtale om barnebidrag"
 
 
 	@Test
 	fun opprettSoknadTest() {
-		val skjemanr = "NAV 95-00.11"
+		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 
 		val token: String = mockOAuth2Server.issueToken(
@@ -93,7 +96,7 @@ class FrontEndRestApiTest {
 
 	@Test
 	fun hentOpprettetSoknadTest() {
-		val skjemanr = "NAV 95-00.11"
+		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 
 		val token: String = mockOAuth2Server.issueToken(
@@ -131,7 +134,7 @@ class FrontEndRestApiTest {
 
 	@Test
 	fun oppdaterVedleggTest() {
-		val skjemanr = "NAV 95-00.11"
+		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 		val vedlegg = listOf("N6")
 
@@ -175,7 +178,7 @@ class FrontEndRestApiTest {
 
 	@Test
 	fun sjekkOpplastingsstatusEtterOpplastingOgSlettingAvFilPaVedleggTest() {
-		val skjemanr = "NAV 95-00.11"
+		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 		val vedlegg = listOf("N6", "W2")
 		val token = getToken()
@@ -222,7 +225,7 @@ class FrontEndRestApiTest {
 
 	@Test
 	fun sjekkAtOpplastingAvForStorFilGirFeilTest() {
-		val skjemanr = "NAV 95-00.11"
+		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 		val vedlegg = listOf("N6", "W2")
 		val token = getToken()
@@ -256,7 +259,7 @@ class FrontEndRestApiTest {
 
 	@Test
 	fun sjekkAtOpplastingAvKryptertFilGirFeilTest() {
-		val skjemanr = "NAV 95-00.11"
+		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 		val vedlegg = listOf("N6", "W2")
 		val token = getToken()
@@ -290,7 +293,7 @@ class FrontEndRestApiTest {
 
 	@Test
 	fun sjekkAtOpplastingAvUlovligFilformatGirFeilTest() {
-		val skjemanr = "NAV 95-00.11"
+		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 		val vedlegg = listOf("N6", "W2")
 		val token = getToken()
@@ -364,7 +367,7 @@ class FrontEndRestApiTest {
 
 		val forventetListe = LinkedList<DokumentSoknadDto>()
 
-		forventetListe.add(opprettEnSoknad(token = token, skjemanr = "NAV 95-00.11", spraak = "nb_NO", listOf("X2")))
+		forventetListe.add(opprettEnSoknad(token = token, skjemanr = defaultSkjemanr, spraak = "nb_NO", listOf("X2")))
 		forventetListe.add(opprettEnSoknad(token = token, skjemanr = "NAV 10-07.17", spraak = "nn_NO", listOf("X2", "M3")))
 
 		if (hentetInitListe != null) {
@@ -386,7 +389,7 @@ class FrontEndRestApiTest {
 
 	@Test
 	fun oppdrettVedleggTest() {
-		val skjemanr = "NAV 95-00.11"
+		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 		val vedlegg = emptyList<String>()
 

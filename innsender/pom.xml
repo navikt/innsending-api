@@ -13,8 +13,8 @@
 	<name>innsender</name>
 
 	<properties>
-		<token-validation.version>2.0.20</token-validation.version>
-		<mock-oauth2-server.version>0.4.8</mock-oauth2-server.version>
+		<token-validation.version>2.1.7</token-validation.version>
+		<mock-oauth2-server.version>0.5.7</mock-oauth2-server.version>
 
 		<kotlin-serialization.version>1.4.1</kotlin-serialization.version>
 		<otj-pg-embedded.version>1.0.1</otj-pg-embedded.version>
@@ -329,7 +329,6 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<version>${spring-boot.version}</version>
 			</plugin>
 
 			<plugin>
