@@ -32,6 +32,9 @@ internal class BrukernotifikasjonPublisherTest {
 	var sendTilPublisher = mockk<PublisherInterface>()
 
 	private var brukernotifikasjonPublisher: BrukernotifikasjonPublisher? = null
+	private val defaultSkjemanr = "NAV 55-00.60"
+	private val defaultTema = "BID"
+	private val defaultTittel = "Avtale om barnebidrag"
 
 	@BeforeEach
 	fun setUp() {
@@ -41,10 +44,10 @@ internal class BrukernotifikasjonPublisherTest {
 	@Test
 	fun `sjekk at melding for å publisere Oppgave eller Beskjed blir sendt ved oppretting av ny søknad`() {
 		val innsendingsid = "123456"
-		val skjemanr = "NAV 95-00.11"
+		val skjemanr = defaultSkjemanr
+		val tema = defaultTema
 		val spraak = "no"
 		val personId = "12125912345"
-		val tema = "PEN"
 		val tittel = "Dokumentasjon av utdanning"
 		val id = 1L
 
@@ -64,10 +67,10 @@ internal class BrukernotifikasjonPublisherTest {
 	@Test
 	fun `sjekk at melding for å publisere Done blir sendt ved innsending av søknad`() {
 		val innsendingsid = "123456"
-		val skjemanr = "NAV 95-00.11"
+		val skjemanr = defaultSkjemanr
+		val tema = defaultTema
 		val spraak = "no"
 		val personId = "12125912345"
-		val tema = "PEN"
 		val tittel = "Dokumentasjon av utdanning"
 		val id = 2L
 
@@ -86,10 +89,10 @@ internal class BrukernotifikasjonPublisherTest {
 	fun `sjekk at melding om publisering av Done og Oppgave blir sendt ved innsending av søknad med vedlegg som skal ettersendes`() {
 		val innsendingsid = "123456"
 		val ettersendingsSoknadsId = "123457"
-		val skjemanr = "NAV 95-00.11"
+		val skjemanr = defaultSkjemanr
+		val tema = defaultTema
 		val spraak = "no"
 		val personId = "12125912345"
-		val tema = "PEN"
 		val tittel = "Dokumentasjon av utdanning"
 		val id = 3L
 
@@ -132,10 +135,10 @@ internal class BrukernotifikasjonPublisherTest {
 	fun `sjekk at melding blir sendt for publisering av Done etter innsending av ettersendingssøknad`() {
 		val innsendingsid = "123456"
 		val ettersendingsSoknadsId = "123457"
-		val skjemanr = "NAV 95-00.11"
+		val skjemanr = defaultSkjemanr
+		val tema = defaultTema
 		val spraak = "no"
 		val personId = "12125912345"
-		val tema = "PEN"
 		val tittel = "Dokumentasjon av utdanning"
 		val id = 3L
 
@@ -159,11 +162,11 @@ internal class BrukernotifikasjonPublisherTest {
 	@Test
 	fun `sjekk at melding blir sendt for publisering av Done etter sletting av søknad`() {
 		val innsendingsid = "123456"
-		val skjemanr = "NAV 95-00.11"
+		val skjemanr = defaultSkjemanr
+		val tema = defaultTema
+		val tittel = defaultTittel
 		val spraak = "no"
 		val personId = "12125912345"
-		val tema = "PEN"
-		val tittel = "Dokumentasjon av utdanning"
 		val id = 2L
 
 		val done = slot<SoknadRef>()
