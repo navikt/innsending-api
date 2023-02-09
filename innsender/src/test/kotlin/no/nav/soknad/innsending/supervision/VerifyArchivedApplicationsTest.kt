@@ -1,0 +1,139 @@
+package no.nav.soknad.innsending.supervision
+
+import io.mockk.*
+import io.mockk.impl.annotations.InjectMockKs
+import no.nav.soknad.innsending.cleanup.LeaderSelectionUtility
+import no.nav.soknad.innsending.repository.SoknadRepository
+import no.nav.soknad.innsending.service.SafService
+import no.nav.soknad.innsending.utils.AktivSakDtoTestdataBuilder
+import no.nav.soknad.innsending.utils.SoknadDbDataTestdataBuilder
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.ActiveProfiles
+import org.springframework.transaction.annotation.EnableTransactionManagement
+import java.time.LocalDateTime
+
+@SpringBootTest
+@ActiveProfiles("spring")
+@EnableTransactionManagement
+class VerifyArchivedApplicationsTest {
+
+	@Autowired
+	private lateinit var soknadRepository: SoknadRepository
+
+	@InjectMockKs
+	private val safService = mockk<SafService>()
+
+	@BeforeEach
+	fun setup() {
+		mockkConstructor(LeaderSelectionUtility::class)
+		every { anyConstructed<LeaderSelectionUtility>().isLeader() } returns true
+	}
+
+	@AfterEach
+	fun cleanup() {
+		soknadRepository.deleteAll()
+	}
+
+	private fun lagVerifyArchivedApplications() = VerifyArchivedApplications(
+		soknadRepository, safService
+	)
+
+	@Test
+	fun testAtSoknadSomIkkeEksistererIArkivetIkkeBlirMarkertSomArkivert() {
+		val innsendtdato = LocalDateTime.now().minusHours(3)
+		val soknad = SoknadDbDataTestdataBuilder().innsendtdato(innsendtdato).build()
+		soknadRepository.save(soknad)
+
+		every { safService.hentInnsendteSoknader(soknad.brukerid) } returns emptyList()
+
+		val job = lagVerifyArchivedApplications()
+		job.run()
+
+		val lagretSoknad = soknadRepository.findById(soknad.id!!)
+		assertTrue(lagretSoknad.isPresent)
+		assertNull(lagretSoknad.get().erarkivert)
+	}
+
+	@Test
+	fun testAtSoknadSomEksistererIArkivetBlirMarkertSomArkivert() {
+		val innsendtdato = LocalDateTime.now().minusHours(3)
+		val soknad = SoknadDbDataTestdataBuilder().innsendtdato(innsendtdato).build()
+		soknadRepository.save(soknad)
+
+		val sak = AktivSakDtoTestdataBuilder().fromSoknad(soknad).build()
+		every { safService.hentInnsendteSoknader(soknad.brukerid) } returns listOf(sak)
+
+		val job = lagVerifyArchivedApplications()
+		job.run()
+
+		val lagretSoknad = soknadRepository.findById(soknad.id!!)
+		assertTrue(lagretSoknad.isPresent)
+		assertEquals(true, lagretSoknad.get().erarkivert)
+	}
+
+	@Test
+	fun testAtSoknadSomNyligHarBlittSendtInnIkkeBlirProsessert() {
+		val innsendtdato = LocalDateTime.now().minusMinutes(1)
+		val soknad = SoknadDbDataTestdataBuilder().innsendtdato(innsendtdato).build()
+		soknadRepository.save(soknad)
+
+		val sak = AktivSakDtoTestdataBuilder().fromSoknad(soknad).build()
+		every { safService.hentInnsendteSoknader(soknad.brukerid) } returns listOf(sak)
+
+		val job = lagVerifyArchivedApplications()
+		job.run()
+
+		verify { safService wasNot called }
+
+		val lagretSoknad = soknadRepository.findById(soknad.id!!)
+		assertTrue(lagretSoknad.isPresent)
+		assertNull(lagretSoknad.get().erarkivert)
+	}
+
+	@Test
+	fun testAtToSoknaderHandteresRiktig() {
+		val innsendtdatoA = LocalDateTime.now().minusHours(3)
+		val soknadA = SoknadDbDataTestdataBuilder().innsendtdato(innsendtdatoA).build()
+		soknadRepository.save(soknadA)
+
+		val innsendtdatoB = LocalDateTime.now().minusHours(4)
+		val soknadB = SoknadDbDataTestdataBuilder().brukerId(soknadA.brukerid).innsendtdato(innsendtdatoB).build()
+		soknadRepository.save(soknadB)
+
+		val sakB = AktivSakDtoTestdataBuilder().fromSoknad(soknadB).build()
+		every { safService.hentInnsendteSoknader(soknadA.brukerid) } returns listOf(sakB)
+
+		val job = lagVerifyArchivedApplications()
+		job.run()
+
+		val lagretSoknadA = soknadRepository.findById(soknadA.id!!)
+		assertTrue(lagretSoknadA.isPresent)
+		assertNull(lagretSoknadA.get().erarkivert)
+
+		val lagretSoknadB = soknadRepository.findById(soknadB.id!!)
+		assertTrue(lagretSoknadB.isPresent)
+		assertEquals(true, lagretSoknadB.get().erarkivert)
+	}
+
+	@Test
+	fun testFeilhandtering() {
+		val innsendtdato = LocalDateTime.now().minusHours(3)
+		val soknad = SoknadDbDataTestdataBuilder().innsendtdato(innsendtdato).build()
+		soknadRepository.save(soknad)
+
+		every { safService.hentInnsendteSoknader(soknad.brukerid) } throws Exception("Test :: Saf is unavailable")
+
+		val job = lagVerifyArchivedApplications()
+		job.run()
+
+		val lagretSoknad = soknadRepository.findById(soknad.id!!)
+		assertTrue(lagretSoknad.isPresent)
+		assertNull(lagretSoknad.get().erarkivert)
+	}
+
+}
