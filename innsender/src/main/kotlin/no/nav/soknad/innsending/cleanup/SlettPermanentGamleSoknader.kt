@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
 @Service
-class SlettPermanentGamleSoknader(private val soknadService: SoknadService) {
+class SlettPermanentGamleSoknader(private val soknadService: SoknadService, private val leaderSelectionUtility: LeaderSelectionUtility) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -18,7 +18,7 @@ class SlettPermanentGamleSoknader(private val soknadService: SoknadService) {
 	@Scheduled(cron = "\${cron.startSlettPermanentIkkeInnsendteSoknader}")
 	fun fjernPermanentGamleIkkeInnsendteSoknader() {
 		try {
-			if (LeaderSelectionUtility().isLeader()) {
+			if (leaderSelectionUtility.isLeader()) {
 				soknadService.slettGamleSoknader(dagerGamleString.toLong(), true)
 			}
 		} catch (ex: Exception) {
