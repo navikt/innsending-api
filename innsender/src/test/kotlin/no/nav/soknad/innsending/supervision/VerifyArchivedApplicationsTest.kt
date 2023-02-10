@@ -118,6 +118,8 @@ class VerifyArchivedApplicationsTest {
 		val lagretSoknadB = soknadRepository.findById(soknadB.id!!)
 		assertTrue(lagretSoknadB.isPresent)
 		assertEquals(true, lagretSoknadB.get().erarkivert)
+
+		verify(exactly = 1) { safService.hentInnsendteSoknader(soknadA.brukerid) }
 	}
 
 	@Test

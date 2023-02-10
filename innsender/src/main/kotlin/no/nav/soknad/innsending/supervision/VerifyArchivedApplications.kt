@@ -32,9 +32,14 @@ class VerifyArchivedApplications(
 				val (existsInJoark, absentInJoark) = soknadRepository
 					.findAllInnsendtdatoBetween(start, end)
 					.filter { soknad -> soknad.erarkivert == null }
-					.partition { existsInJoark(it) }
+					.groupBy { soknad -> soknad.brukerid }
+					.map { entry -> existsInJoark(entry.key, entry.value) }
+					.reduce { acc, pair -> Pair(acc.first + pair.first, acc.second + pair.second) }
 
-				soknadRepository.updateErArkivert(true, existsInJoark.map { soknad -> soknad.innsendingsid });
+				if (existsInJoark.isNotEmpty()) {
+					soknadRepository.updateErArkivert(true, existsInJoark.map { soknad -> soknad.innsendingsid })
+				}
+
 				if (absentInJoark.isNotEmpty()) {
 					val innsendingsIdList = absentInJoark.map { soknad -> soknad.innsendingsid }
 					logger.error("Detected ${absentInJoark.size} submitted application(s) [$start -> $end] which do not exist in Joark: $innsendingsIdList")
@@ -47,10 +52,11 @@ class VerifyArchivedApplications(
 		}
 	}
 
-	private fun existsInJoark(soknad: SoknadDbData): Boolean {
-		return safService.hentInnsendteSoknader(soknad.brukerid)
-			.find { sak -> sak.innsendingsId == soknad.innsendingsid } !== null
+	private fun existsInJoark(brukerid: String, soknader: List<SoknadDbData>): Pair<List<SoknadDbData>, List<SoknadDbData>> {
+		val arkiverteSoknader = safService.hentInnsendteSoknader(brukerid)
+		return soknader.partition { soknad -> arkiverteSoknader.any { sak -> sak.innsendingsId == soknad.innsendingsid } }
 	}
+
 }
 
 private const val everyHour = "0 * * * * *"
