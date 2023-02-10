@@ -46,7 +46,7 @@ class VerifyArchivedApplicationsTest {
 	@Test
 	fun testAtSoknadSomIkkeEksistererIArkivetBlirMarkertSomIkkeArkivert() {
 		val innsendtdato = LocalDateTime.now().minusHours(3)
-		val soknad = SoknadDbDataTestdataBuilder().innsendtdato(innsendtdato).build()
+		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 
 		every { safService.hentInnsendteSoknader(soknad.brukerid) } returns emptyList()
@@ -62,7 +62,7 @@ class VerifyArchivedApplicationsTest {
 	@Test
 	fun testAtSoknadSomEksistererIArkivetBlirMarkertSomArkivert() {
 		val innsendtdato = LocalDateTime.now().minusHours(3)
-		val soknad = SoknadDbDataTestdataBuilder().innsendtdato(innsendtdato).build()
+		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 
 		val sak = AktivSakDtoTestdataBuilder().fromSoknad(soknad).build()
@@ -79,7 +79,7 @@ class VerifyArchivedApplicationsTest {
 	@Test
 	fun testAtSoknadSomNyligHarBlittSendtInnIkkeBlirProsessert() {
 		val innsendtdato = LocalDateTime.now().minusMinutes(1)
-		val soknad = SoknadDbDataTestdataBuilder().innsendtdato(innsendtdato).build()
+		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 
 		val sak = AktivSakDtoTestdataBuilder().fromSoknad(soknad).build()
@@ -98,11 +98,11 @@ class VerifyArchivedApplicationsTest {
 	@Test
 	fun testAtToSoknaderHandteresRiktig() {
 		val innsendtdatoA = LocalDateTime.now().minusHours(3)
-		val soknadA = SoknadDbDataTestdataBuilder().innsendtdato(innsendtdatoA).build()
+		val soknadA = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdatoA).build()
 		soknadRepository.save(soknadA)
 
 		val innsendtdatoB = LocalDateTime.now().minusHours(4)
-		val soknadB = SoknadDbDataTestdataBuilder().brukerId(soknadA.brukerid).innsendtdato(innsendtdatoB).build()
+		val soknadB = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdatoB, brukerId = soknadA.brukerid).build()
 		soknadRepository.save(soknadB)
 
 		val sakB = AktivSakDtoTestdataBuilder().fromSoknad(soknadB).build()
@@ -125,7 +125,7 @@ class VerifyArchivedApplicationsTest {
 	@Test
 	fun testAtSoknadSomForstMarkeresSomIkkeArkivertMarkeresSomArkivertVedNesteSjekk() {
 		val innsendtdato = LocalDateTime.now().minusHours(3)
-		val soknad = SoknadDbDataTestdataBuilder().innsendtdato(innsendtdato).build()
+		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 
 		val sak = AktivSakDtoTestdataBuilder().fromSoknad(soknad).build()
@@ -147,7 +147,7 @@ class VerifyArchivedApplicationsTest {
 	@Test
 	fun testFeilhandtering() {
 		val innsendtdato = LocalDateTime.now().minusHours(3)
-		val soknad = SoknadDbDataTestdataBuilder().innsendtdato(innsendtdato).build()
+		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 
 		every { safService.hentInnsendteSoknader(soknad.brukerid) } throws Exception("Test :: Saf is unavailable")

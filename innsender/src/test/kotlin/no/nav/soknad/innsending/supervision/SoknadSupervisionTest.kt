@@ -40,7 +40,7 @@ class SoknadSupervisionTest {
 
 	@Test
 	fun testAbsentInArchiveWhenErarkivertIsNull() {
-		val soknad = SoknadDbDataTestdataBuilder().erarkivert(null).build()
+		val soknad = SoknadDbDataTestdataBuilder(erarkivert = null).build()
 		soknadRepository.save(soknad)
 
 		val job = SoknadSupervision(soknadRepository, innsenderMetrics)
@@ -51,7 +51,7 @@ class SoknadSupervisionTest {
 
 	@Test
 	fun testAbsentInArchiveWhenErarkivertIsTrue() {
-		val soknad = SoknadDbDataTestdataBuilder().erarkivert(true).build()
+		val soknad = SoknadDbDataTestdataBuilder(erarkivert = true).build()
 		soknadRepository.save(soknad)
 
 		val job = SoknadSupervision(soknadRepository, innsenderMetrics)
@@ -62,7 +62,7 @@ class SoknadSupervisionTest {
 
 	@Test
 	fun testAbsentInArchiveWhenErarkivertIsFalse() {
-		val soknad = SoknadDbDataTestdataBuilder().erarkivert(false).build()
+		val soknad = SoknadDbDataTestdataBuilder(erarkivert = false).build()
 		soknadRepository.save(soknad)
 
 		val job = SoknadSupervision(soknadRepository, innsenderMetrics)
