@@ -12,12 +12,14 @@ data class SoknadDbDataTestdataBuilder(
 	var skjematittel: String = "Avtale om barnebidrag",
 	var tema: String = "BID",
 	var innsendtdato: LocalDateTime? = null,
-	var innsendingsId: String = UUID.randomUUID().toString()
+	var innsendingsId: String = UUID.randomUUID().toString(),
+	var erarkivert: Boolean? = null
 ) {
 	fun brukerId(brukerId: String) = apply { this.brukerId = brukerId }
 	fun skjemanr(skjemanr: String) = apply { this.skjemanr = skjemanr }
 	fun skjematittel(skjematittel: String) = apply { this.skjematittel = skjematittel }
 	fun tema(tema: String) = apply { this.tema = tema }
 	fun innsendtdato(innsendtdato: LocalDateTime?) = apply { this.innsendtdato = innsendtdato }
-	fun build() = SoknadDbData(null, innsendingsId, skjematittel, skjemanr, tema, "nb", SoknadsStatus.Innsendt, brukerId, null, LocalDateTime.now(), LocalDateTime.now(), innsendtdato, 0, VisningsType.fyllUt, true, null, 14, null)
+	fun erarkivert(erarkivert: Boolean?) = apply { this.erarkivert = erarkivert }
+	fun build() = SoknadDbData(null, innsendingsId, skjematittel, skjemanr, tema, "nb", SoknadsStatus.Innsendt, brukerId, null, LocalDateTime.now(), LocalDateTime.now(), innsendtdato, 0, VisningsType.fyllUt, true, null, 14, this.erarkivert)
 }

@@ -44,7 +44,7 @@ class VerifyArchivedApplicationsTest {
 	)
 
 	@Test
-	fun testAtSoknadSomIkkeEksistererIArkivetIkkeBlirMarkertSomArkivert() {
+	fun testAtSoknadSomIkkeEksistererIArkivetBlirMarkertSomIkkeArkivert() {
 		val innsendtdato = LocalDateTime.now().minusHours(3)
 		val soknad = SoknadDbDataTestdataBuilder().innsendtdato(innsendtdato).build()
 		soknadRepository.save(soknad)
@@ -56,7 +56,7 @@ class VerifyArchivedApplicationsTest {
 
 		val lagretSoknad = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad.isPresent)
-		assertNull(lagretSoknad.get().erarkivert)
+		assertEquals(false, lagretSoknad.get().erarkivert)
 	}
 
 	@Test
@@ -113,13 +113,35 @@ class VerifyArchivedApplicationsTest {
 
 		val lagretSoknadA = soknadRepository.findById(soknadA.id!!)
 		assertTrue(lagretSoknadA.isPresent)
-		assertNull(lagretSoknadA.get().erarkivert)
+		assertEquals(false, lagretSoknadA.get().erarkivert)
 
 		val lagretSoknadB = soknadRepository.findById(soknadB.id!!)
 		assertTrue(lagretSoknadB.isPresent)
 		assertEquals(true, lagretSoknadB.get().erarkivert)
 
 		verify(exactly = 1) { safService.hentInnsendteSoknader(soknadA.brukerid) }
+	}
+
+	@Test
+	fun testAtSoknadSomForstMarkeresSomIkkeArkivertMarkeresSomArkivertVedNesteSjekk() {
+		val innsendtdato = LocalDateTime.now().minusHours(3)
+		val soknad = SoknadDbDataTestdataBuilder().innsendtdato(innsendtdato).build()
+		soknadRepository.save(soknad)
+
+		val sak = AktivSakDtoTestdataBuilder().fromSoknad(soknad).build()
+		every { safService.hentInnsendteSoknader(soknad.brukerid) } returns emptyList() andThen listOf(sak)
+
+		val job = lagVerifyArchivedApplications()
+
+		job.run()
+		val lagretSoknad1 = soknadRepository.findById(soknad.id!!)
+		assertTrue(lagretSoknad1.isPresent)
+		assertEquals(false, lagretSoknad1.get().erarkivert)
+
+		job.run()
+		val lagretSoknad2 = soknadRepository.findById(soknad.id!!)
+		assertTrue(lagretSoknad2.isPresent)
+		assertEquals(true, lagretSoknad2.get().erarkivert)
 	}
 
 	@Test

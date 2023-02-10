@@ -44,6 +44,9 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 
 	@Transactional
 	@Modifying
-	@Query(value="UPDATE SoknadDbData SET erarkivert = :erArkivert WHERE innsendingsid in (:innsendingsids)", nativeQuery = false)
+	@Query(value = "UPDATE SoknadDbData SET erarkivert = :erArkivert WHERE innsendingsid in (:innsendingsids)", nativeQuery = false)
 	fun updateErArkivert(erArkivert: Boolean, @Param("innsendingsids") innsendingsids: List<String>)
+
+	@Query(value = "SELECT COUNT(*) FROM soknad WHERE erarkivert = :erarkivert", nativeQuery = true)
+	fun countErarkivertIs(@Param("erarkivert") erarkivert: Boolean): Long
 }

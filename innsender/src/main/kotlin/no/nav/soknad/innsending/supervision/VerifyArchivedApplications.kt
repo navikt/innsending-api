@@ -31,7 +31,7 @@ class VerifyArchivedApplications(
 
 				val (existsInJoark, absentInJoark) = soknadRepository
 					.findAllInnsendtdatoBetween(start, end)
-					.filter { soknad -> soknad.erarkivert == null }
+					.filter { soknad -> soknad.erarkivert != true }
 					.groupBy { soknad -> soknad.brukerid }
 					.map { entry -> existsInJoark(entry.key, entry.value) }
 					.reduce { acc, pair -> Pair(acc.first + pair.first, acc.second + pair.second) }
@@ -42,6 +42,7 @@ class VerifyArchivedApplications(
 
 				if (absentInJoark.isNotEmpty()) {
 					val innsendingsIdList = absentInJoark.map { soknad -> soknad.innsendingsid }
+					soknadRepository.updateErArkivert(false, innsendingsIdList)
 					logger.error("Detected ${absentInJoark.size} submitted application(s) [$start -> $end] which do not exist in Joark: $innsendingsIdList")
 				}
 

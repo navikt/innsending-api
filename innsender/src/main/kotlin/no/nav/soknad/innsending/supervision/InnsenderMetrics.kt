@@ -26,11 +26,14 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 	private val latencyHelp = "Innsending latency distribution"
 	private val databaseSizeName = "database_size"
 	private val databaseSizeHelp = "Database size"
+	private val absentInArchiveName = "absent_in_archive"
+	private val absentInArchiveHelp = "Number of applications absent in archive"
 
 	private val operationsCounter = registerCounter(name, help, operationLabel)
 	private val operationsErrorCounter = registerCounter(errorName, helpError, operationLabel)
 	private val operationLatencyHistogram = registerLatencyHistogram(latency, latencyHelp, operationLabel)
 	private val databaseGauge = registerGauge(databaseSizeName, databaseSizeHelp, operationLabel)
+	private val absentInArchiveGauge = registerGauge(absentInArchiveName, absentInArchiveHelp, operationLabel)
 
 
 	private fun registerCounter(name: String, help: String, label: String): Counter =
@@ -76,4 +79,6 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 
 	fun databaseSizeSet(number: Long) = databaseGauge.labels("dbsize", appName).set(number.toDouble())
 	fun databaseSizeGet() = databaseGauge.labels("dbsize", appName)?.get()
+
+	fun absentInArchive(number: Long) = absentInArchiveGauge.labels("soknad", appName).set(number.toDouble())
 }
