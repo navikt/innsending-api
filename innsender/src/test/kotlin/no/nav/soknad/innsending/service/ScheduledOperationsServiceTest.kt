@@ -3,10 +3,12 @@ package no.nav.soknad.innsending.service
 import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
 import no.nav.soknad.innsending.repository.SoknadRepository
+import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.AktivSakDtoTestdataBuilder
 import no.nav.soknad.innsending.utils.SoknadDbDataTestdataBuilder
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -28,18 +30,26 @@ class ScheduledOperationsServiceTest {
 	@InjectMockKs
 	private val safService = mockk<SafService>()
 
+	@InjectMockKs
+	private val innsenderMetrics = mockk<InnsenderMetrics>()
+
+	@BeforeEach
+	fun setup() {
+		every { innsenderMetrics.absentInArchive(any()) } just runs
+	}
+
 	@AfterEach
 	fun cleanup() {
 		soknadRepository.deleteAll()
 	}
 
 	private fun lagScheduledOperationsService() = ScheduledOperationsService(
-		soknadRepository, safService
+		soknadRepository, safService, innsenderMetrics
 	)
 
 	@Test
 	fun testAtSoknadSomIkkeEksistererIArkivetBlirMarkertSomIkkeArkivert() {
-		val innsendtdato = LocalDateTime.now().minusHours(3)
+		val innsendtdato = LocalDateTime.now().minusHours(OFFSET_HOURS + 1)
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 
@@ -51,11 +61,13 @@ class ScheduledOperationsServiceTest {
 		val lagretSoknad = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad.isPresent)
 		assertEquals(false, lagretSoknad.get().erarkivert)
+
+		verify { innsenderMetrics.absentInArchive(1) }
 	}
 
 	@Test
 	fun testAtSoknadSomEksistererIArkivetBlirMarkertSomArkivert() {
-		val innsendtdato = LocalDateTime.now().minusHours(3)
+		val innsendtdato = LocalDateTime.now().minusHours(OFFSET_HOURS + 1)
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 
@@ -68,6 +80,8 @@ class ScheduledOperationsServiceTest {
 		val lagretSoknad = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad.isPresent)
 		assertEquals(true, lagretSoknad.get().erarkivert)
+
+		verify { innsenderMetrics.absentInArchive(0) }
 	}
 
 	@Test
@@ -87,15 +101,17 @@ class ScheduledOperationsServiceTest {
 		val lagretSoknad = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad.isPresent)
 		assertNull(lagretSoknad.get().erarkivert)
+
+		verify { innsenderMetrics.absentInArchive(0) }
 	}
 
 	@Test
 	fun testAtSoknadAIkkeMarkeresSomArkivertOgSoknadBMarkeresSomArkivert() {
-		val innsendtdatoA = LocalDateTime.now().minusHours(3)
+		val innsendtdatoA = LocalDateTime.now().minusHours(OFFSET_HOURS + 1)
 		val soknadA = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdatoA).build()
 		soknadRepository.save(soknadA)
 
-		val innsendtdatoB = LocalDateTime.now().minusHours(4)
+		val innsendtdatoB = LocalDateTime.now().minusHours(OFFSET_HOURS + 2)
 		val soknadB = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdatoB, brukerId = soknadA.brukerid).build()
 		soknadRepository.save(soknadB)
 
@@ -113,12 +129,13 @@ class ScheduledOperationsServiceTest {
 		assertTrue(lagretSoknadB.isPresent)
 		assertEquals(true, lagretSoknadB.get().erarkivert)
 
+		verify { innsenderMetrics.absentInArchive(1) }
 		verify(exactly = 1) { safService.hentInnsendteSoknader(soknadA.brukerid) }
 	}
 
 	@Test
 	fun testAtSoknadSomForstMarkeresSomIkkeArkivertMarkeresSomArkivertVedNesteSjekk() {
-		val innsendtdato = LocalDateTime.now().minusHours(3)
+		val innsendtdato = LocalDateTime.now().minusHours(OFFSET_HOURS + 1)
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 
@@ -136,11 +153,16 @@ class ScheduledOperationsServiceTest {
 		val lagretSoknad2 = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad2.isPresent)
 		assertEquals(true, lagretSoknad2.get().erarkivert)
+
+		verifySequence {
+			innsenderMetrics.absentInArchive(1)
+			innsenderMetrics.absentInArchive(0)
+		}
 	}
 
 	@Test
 	fun testAtExceptionKastesDersomKallMotSafFeiler() {
-		val innsendtdato = LocalDateTime.now().minusHours(3)
+		val innsendtdato = LocalDateTime.now().minusHours(OFFSET_HOURS + 1)
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 
@@ -158,6 +180,29 @@ class ScheduledOperationsServiceTest {
 		val lagretSoknad = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad.isPresent)
 		assertNull(lagretSoknad.get().erarkivert)
+
+		verify(exactly = 0) { innsenderMetrics.absentInArchive(any()) }
+	}
+
+	@Test
+	fun testAtSoknadInnsendtIForkantAvTimespanOgMarkertSomIkkeArkivertTellesMedVedRegistreringAvMetrics() {
+		val innsendtdato = LocalDateTime.now().minusHours(TIMESPAN_HOURS + OFFSET_HOURS + 2)
+		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato, erarkivert = false).build()
+		soknadRepository.save(soknad)
+
+		val sak = AktivSakDtoTestdataBuilder().fromSoknad(soknad).build()
+		every { safService.hentInnsendteSoknader(soknad.brukerid) } returns listOf(sak)
+
+		val service = lagScheduledOperationsService()
+		service.updateSoknadErArkivert(TIMESPAN_HOURS, OFFSET_HOURS)
+
+		verify { safService wasNot called }
+
+		val lagretSoknad = soknadRepository.findById(soknad.id!!)
+		assertTrue(lagretSoknad.isPresent)
+		assertEquals(false, lagretSoknad.get().erarkivert)
+
+		verify { innsenderMetrics.absentInArchive(1) }
 	}
 
 }

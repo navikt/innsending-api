@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.repository.SoknadDbData
 import no.nav.soknad.innsending.repository.SoknadRepository
+import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -9,7 +10,8 @@ import java.time.LocalDateTime
 @Service
 class ScheduledOperationsService(
 	private val soknadRepository: SoknadRepository,
-	private val safService: SafService
+	private val safService: SafService,
+	private val innsenderMetrics: InnsenderMetrics
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -39,6 +41,10 @@ class ScheduledOperationsService(
 		}
 
 		logger.info("Done verifying applications submitted between [$start -> $end]")
+
+		val soknaderAbsentInArchive = soknadRepository.countErarkivertIs(false)
+		logger.info("Total number of applications absent in archive: $soknaderAbsentInArchive")
+		innsenderMetrics.absentInArchive(soknaderAbsentInArchive)
 	}
 
 	private fun existsInJoark(brukerid: String, soknader: List<SoknadDbData>): Pair<List<SoknadDbData>, List<SoknadDbData>> {
