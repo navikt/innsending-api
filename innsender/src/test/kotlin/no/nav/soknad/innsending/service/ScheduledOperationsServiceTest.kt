@@ -205,4 +205,23 @@ class ScheduledOperationsServiceTest {
 		verify { innsenderMetrics.absentInArchive(1) }
 	}
 
+	@Test
+	fun testAtSoknadSomAlleredeErMarkertSomArkivertIkkeProsesseresIgjen() {
+		val innsendtdato = LocalDateTime.now().minusHours(OFFSET_HOURS + 1)
+		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato, erarkivert = true).build()
+		soknadRepository.save(soknad)
+
+		val sak = AktivSakDtoTestdataBuilder().fromSoknad(soknad).build()
+		every { safService.hentInnsendteSoknader(soknad.brukerid) } returns listOf(sak)
+
+		val service = lagScheduledOperationsService()
+		service.updateSoknadErArkivert(TIMESPAN_HOURS, OFFSET_HOURS)
+
+		verify { safService wasNot called }
+
+		val lagretSoknad = soknadRepository.findById(soknad.id!!)
+		assertTrue(lagretSoknad.isPresent)
+		assertEquals(true, lagretSoknad.get().erarkivert)
+	}
+
 }

@@ -24,8 +24,7 @@ class ScheduledOperationsService(
 
 		val emptyPair = Pair(emptyList<SoknadDbData>(), emptyList<SoknadDbData>())
 		val (existsInJoark, absentInJoark) = soknadRepository
-			.findAllInnsendtdatoBetween(start, end)
-			.filter { soknad -> soknad.erarkivert != true }
+			.findAllNotArchivedAndInnsendtdatoBetween(start, end)
 			.groupBy { soknad -> soknad.brukerid }
 			.map { entry -> existsInJoark(entry.key, entry.value) }
 			.fold(emptyPair) { acc, pair -> Pair(acc.first + pair.first, acc.second + pair.second) }

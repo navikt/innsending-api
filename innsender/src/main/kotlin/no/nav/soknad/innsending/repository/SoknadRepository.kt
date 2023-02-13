@@ -39,8 +39,8 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 	@Query(value = "SELECT * FROM soknad WHERE opprettetdato <= :opprettetFor ORDER BY opprettetdato", nativeQuery = true)
 	fun findAllByOpprettetdatoBefore(@Param("opprettetFor") opprettetFor: OffsetDateTime): List<SoknadDbData>
 
-	@Query(value = "SELECT * FROM soknad WHERE innsendtdato >= :start AND innsendtdato <= :end ORDER BY innsendtdato", nativeQuery = true)
-	fun findAllInnsendtdatoBetween(@Param("start") start: LocalDateTime, @Param("end") end: LocalDateTime): List<SoknadDbData>
+	@Query(value = "SELECT * FROM soknad WHERE erarkivert IS NOT TRUE AND innsendtdato >= :start AND innsendtdato <= :end ORDER BY innsendtdato", nativeQuery = true)
+	fun findAllNotArchivedAndInnsendtdatoBetween(@Param("start") start: LocalDateTime, @Param("end") end: LocalDateTime): List<SoknadDbData>
 
 	@Transactional
 	@Modifying
