@@ -22,8 +22,13 @@ cron:
   slettInnsendtFilEldreEnn: 1
   startSlettPermanentIkkeInnsendteSoknader: 0 0 3 * * *
   slettPermanentEldreEnn: 365
+  runVerifyArchivedApplications: 0 * * * * *
 
 ettersendingsfrist: 14
+
+verifyArchivedApplications:
+  offsetHours: 2
+  timespanHours: 24
 ---
 spring:
   config:
