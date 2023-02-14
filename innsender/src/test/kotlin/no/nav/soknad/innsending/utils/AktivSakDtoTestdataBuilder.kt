@@ -8,9 +8,9 @@ import java.time.ZoneOffset
 import java.util.*
 
 data class AktivSakDtoTestdataBuilder(
-	var skjemanr: String = "NAV 12.13-14",
-	var tittel: String = "Test",
-	var tema: String = "BIL",
+	var skjemanr: String = "NAV 55-00.60",
+	var tittel: String = "Avtale om barnebidrag",
+	var tema: String = "BID",
 	var innsendtdato: OffsetDateTime = LocalDateTime.now().atOffset(ZoneOffset.UTC),
 	var innsendingsid: String = UUID.randomUUID().toString(),
 ) {

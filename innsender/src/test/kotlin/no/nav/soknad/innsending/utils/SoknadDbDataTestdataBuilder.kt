@@ -9,7 +9,7 @@ import java.util.*
 data class SoknadDbDataTestdataBuilder(
 	var brukerId: String = "12345678901",
 	var skjemanr: String = "NAV 55-00.60",
-	var skjematittel: String = "Avtale om barnebidrag",
+	var tittel: String = "Avtale om barnebidrag",
 	var tema: String = "BID",
 	var innsendtdato: LocalDateTime? = null,
 	var innsendingsId: String = UUID.randomUUID().toString(),
@@ -17,9 +17,9 @@ data class SoknadDbDataTestdataBuilder(
 ) {
 	fun brukerId(brukerId: String) = apply { this.brukerId = brukerId }
 	fun skjemanr(skjemanr: String) = apply { this.skjemanr = skjemanr }
-	fun skjematittel(skjematittel: String) = apply { this.skjematittel = skjematittel }
+	fun tittel(skjematittel: String) = apply { this.tittel = skjematittel }
 	fun tema(tema: String) = apply { this.tema = tema }
 	fun innsendtdato(innsendtdato: LocalDateTime?) = apply { this.innsendtdato = innsendtdato }
 	fun erarkivert(erarkivert: Boolean?) = apply { this.erarkivert = erarkivert }
-	fun build() = SoknadDbData(null, innsendingsId, skjematittel, skjemanr, tema, "nb", SoknadsStatus.Innsendt, brukerId, null, LocalDateTime.now(), LocalDateTime.now(), innsendtdato, 0, VisningsType.fyllUt, true, null, 14, this.erarkivert)
+	fun build() = SoknadDbData(null, innsendingsId, tittel, skjemanr, tema, "nb", SoknadsStatus.Innsendt, brukerId, null, LocalDateTime.now(), LocalDateTime.now(), innsendtdato, 0, VisningsType.fyllUt, true, null, 14, this.erarkivert)
 }
