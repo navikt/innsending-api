@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component
 @EnableScheduling
 @Component
 class VerifyArchivedApplications(
+	private val leaderSelectionUtility: LeaderSelectionUtility,
 	private val scheduledOperationsService: ScheduledOperationsService,
 	@Value("\${verifyArchivedApplications.offsetHours}") private val offsetHours: Long,
 	@Value("\${verifyArchivedApplications.timespanHours}") private val timespanHours: Long,
@@ -25,7 +26,7 @@ class VerifyArchivedApplications(
 	@Scheduled(cron = "\${cron.runVerifyArchivedApplications}")
 	fun run() {
 		try {
-			if (LeaderSelectionUtility().isLeader()) {
+			if (leaderSelectionUtility.isLeader()) {
 				scheduledOperationsService.updateSoknadErArkivert(timespanHours, offsetHours)
 			}
 		} catch (e: Exception) {
