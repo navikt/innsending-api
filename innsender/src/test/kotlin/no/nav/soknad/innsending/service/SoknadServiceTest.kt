@@ -7,7 +7,6 @@ import io.mockk.slot
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
-import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.skjema.SkjemaClient
 import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
@@ -30,7 +29,6 @@ import java.time.OffsetDateTime
 import java.util.*
 import org.junit.jupiter.api.*
 import java.time.LocalDateTime
-import java.time.ZoneOffset
 
 
 @SpringBootTest

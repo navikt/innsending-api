@@ -14,13 +14,13 @@ import java.util.*
 
 fun lagDokumentSoknad(brukerId: String, skjemanr: String, spraak: String, tittel: String, tema: String, id: Long? = null
 											, innsendingsid: String? = null, soknadsStatus: SoknadsStatusDto? = SoknadsStatusDto.opprettet
-											, vedleggsListe: List<VedleggDto>? = null, ettersendingsId: String? = null
+											, vedleggsListe: List<VedleggDto>? = null, ettersendingsId: String? = null, opprettetDato: OffsetDateTime? = OffsetDateTime.now()
 ): DokumentSoknadDto {
 	val vedleggDtoPdf = lagVedleggDto(skjemanr, tittel, "application/pdf", getBytesFromFile("/litenPdf.pdf"))
 	val vedleggDtoJson = lagVedleggDto(skjemanr, tittel, "application/json", getBytesFromFile("/sanity.json"))
 
 	val vedleggDtoList = vedleggsListe ?: listOf(vedleggDtoPdf, vedleggDtoJson)
-	return DokumentSoknadDto( brukerId, skjemanr, tittel, tema, soknadsStatus!!, OffsetDateTime.now(),
+	return DokumentSoknadDto( brukerId, skjemanr, tittel, tema, soknadsStatus!!, opprettetDato ?: OffsetDateTime.now(),
 		vedleggDtoList, id, innsendingsid ?: UUID.randomUUID().toString(), ettersendingsId, spraak,
 		OffsetDateTime.now(), null )
 }
