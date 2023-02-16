@@ -7,7 +7,6 @@ import io.mockk.slot
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
-import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.skjema.SkjemaClient
 import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
@@ -30,7 +29,6 @@ import java.time.OffsetDateTime
 import java.util.*
 import org.junit.jupiter.api.*
 import java.time.LocalDateTime
-import java.time.ZoneOffset
 
 
 @SpringBootTest
@@ -176,6 +174,46 @@ class SoknadServiceTest {
 	}
 
 	@Test
+	fun testAtFilerIkkeSlettesVedInnsending() {
+		val soknadService = lagSoknadService()
+		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+
+		// Laster opp skjema (hoveddokumentet) til soknaden
+		soknadService.lagreFil(dokumentSoknadDto, lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument }))
+
+		// laster opp fil til vedlegget
+		val lagretFilForVedlegg = soknadService.lagreFil(dokumentSoknadDto
+			, lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first {
+				!it.erHoveddokument && it.vedleggsnr.equals(
+					"W1",
+					true
+				)
+			}))
+
+		assertTrue( lagretFilForVedlegg.id != null)
+		assertTrue(lagretFilForVedlegg.vedleggsid == dokumentSoknadDto.vedleggsListe.first {
+			!it.erHoveddokument && it.vedleggsnr.equals(
+				"W1",
+				true
+			)
+		}.id)
+
+		// Sender inn søknaden
+		val kvitteringsDto = testOgSjekkInnsendingAvSoknad(soknadService, dokumentSoknadDto)
+		assertTrue(kvitteringsDto.hoveddokumentRef != null )
+		assertTrue(kvitteringsDto.innsendteVedlegg!!.isNotEmpty() )
+		assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty() )
+
+		// Test at filen til hoveddokumentet ikke er slettet
+		val filerForHovedDokument = soknadService.hentFiler(dokumentSoknadDto, dokumentSoknadDto.innsendingsId!!, (dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument}).id!!, true)
+		assertTrue(filerForHovedDokument.isNotEmpty())
+
+		// Test at filen til vedlegget ikke er slettet
+		val filerForVedlegg = soknadService.hentFiler(dokumentSoknadDto, dokumentSoknadDto.innsendingsId!!, lagretFilForVedlegg.vedleggsid, true)
+		assertTrue(filerForVedlegg.isNotEmpty())
+	}
+
+	@Test
 	fun testFlereEttersendingerPaSoknad() {
 		val soknadService = lagSoknadService()
 
@@ -218,7 +256,7 @@ class SoknadServiceTest {
 		}.id)
 
 		val ettersendingsKvitteringsDto = testOgSjekkInnsendingAvSoknad(soknadService, ettersendingsSoknadDto)
-		assertTrue(ettersendingsKvitteringsDto.hoveddokumentRef == null )
+		assertTrue(ettersendingsKvitteringsDto.hoveddokumentRef != null )
 		assertTrue(ettersendingsKvitteringsDto.innsendteVedlegg!!.isNotEmpty() )
 		assertTrue(ettersendingsKvitteringsDto.skalEttersendes!!.isNotEmpty() )
 
@@ -239,12 +277,12 @@ class SoknadServiceTest {
 			}))
 
 		val ettersendingsKvitteringsDto2 = testOgSjekkInnsendingAvSoknad(soknadService, ettersendingsSoknadDto2)
-		assertTrue(ettersendingsKvitteringsDto2.hoveddokumentRef == null )
+		assertTrue(ettersendingsKvitteringsDto2.hoveddokumentRef != null )
 		assertTrue(ettersendingsKvitteringsDto2.innsendteVedlegg!!.isNotEmpty() )
 		assertTrue(ettersendingsKvitteringsDto2.skalEttersendes!!.isEmpty() )
 
 		val vedleggDto = soknadService.hentFiler(ettersendingsSoknadDto2, ettersendingsSoknadDto2.innsendingsId!!, ettersendingsSoknadDto2.vedleggsListe.last().id!!, true)
-		assertTrue(vedleggDto.isEmpty())
+		assertTrue(vedleggDto.isNotEmpty())
 	}
 
 

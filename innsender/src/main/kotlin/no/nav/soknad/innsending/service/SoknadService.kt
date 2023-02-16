@@ -949,11 +949,6 @@ class SoknadService(
 				"errorCode.backendError.sendToNAVError")
 		}
 
-		// Slett alle opplastede vedlegg untatt søknaden dersom ikke ettersendingssøknad, som er sendt til soknadsfillager.
-		alleVedlegg
-			.filter { !(it.erHoveddokument && !it.erVariant && !erEttersending(soknadDto)) }
-			.forEach { repo.slettFilerForVedlegg(it.id!!) }
-
 		// oppdater vedleggstabellen med status og innsendingsdato for opplastede vedlegg.
 		opplastedeVedlegg.forEach { repo.lagreVedlegg(mapTilVedleggDb(it, soknadsId = soknadDto.id!!, it.skjemaurl, opplastingsStatus = OpplastingsStatus.INNSENDT)) }
 		manglendePakrevdeVedlegg.forEach { repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, it.id!!, OpplastingsStatus.SEND_SENERE, LocalDateTime.now()) }
