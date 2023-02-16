@@ -19,7 +19,7 @@ cron:
   startSlettGamleIkkeInnsendteSoknader: 0 0 2 * * *
   slettEldreEnn: 56
   startSlettInnsendteFiler: 0 0 5 * * *
-  slettInnsendtFilEldreEnn: 1
+  slettInnsendtFilEldreEnn: 21
   startSlettPermanentIkkeInnsendteSoknader: 0 0 3 * * *
   slettPermanentEldreEnn: 365
 
