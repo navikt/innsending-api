@@ -4,9 +4,11 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 import java.net.InetAddress
 import java.net.URL
 
+@Component
 class LeaderSelectionUtility {
 	val logger = LoggerFactory.getLogger(javaClass)
 

@@ -9,14 +9,14 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
 @Service
-class FjernGamleSoknader(private val soknadService: SoknadService) {
+class FjernGamleSoknader(private val soknadService: SoknadService, private val leaderSelectionUtility: LeaderSelectionUtility) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 
 	@Scheduled(cron = "\${cron.startSlettGamleIkkeInnsendteSoknader}")
 	fun fjernGamleIkkeInnsendteSoknader() {
 		try {
-			if (LeaderSelectionUtility().isLeader()) {
+			if (leaderSelectionUtility.isLeader()) {
 				soknadService.slettGamleSoknader(Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD)
 			}
 		} catch (ex: Exception) {
