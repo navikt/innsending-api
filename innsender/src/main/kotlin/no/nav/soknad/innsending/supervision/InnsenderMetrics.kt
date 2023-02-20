@@ -26,7 +26,7 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 	private val latencyHelp = "Innsending latency distribution"
 	private val databaseSizeName = "database_size"
 	private val databaseSizeHelp = "Database size"
-	private val absentInArchiveName = "absent_in_archive"
+	private val absentInArchiveName = "applications_absent_in_archive_total"
 	private val absentInArchiveHelp = "Number of applications absent in archive"
 
 	private val operationsCounter = registerCounter(name, help, operationLabel)
@@ -35,6 +35,13 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 	private val databaseGauge = registerGauge(databaseSizeName, databaseSizeHelp, operationLabel)
 	private val absentInArchiveGauge = registerGauge(absentInArchiveName, absentInArchiveHelp, operationLabel)
 
+	private val jobLastSuccessGauge = Gauge
+		.build()
+		.namespace(soknadNamespace)
+		.name("job_last_success_timestamp")
+		.help("Last time a job succeeded (unixtime)")
+		.labelNames("job_name")
+		.register(registry)
 
 	private fun registerCounter(name: String, help: String, label: String): Counter =
 		Counter
@@ -81,4 +88,6 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 	fun databaseSizeGet() = databaseGauge.labels("dbsize", appName)?.get()
 
 	fun absentInArchive(number: Long) = absentInArchiveGauge.labels("soknad", appName).set(number.toDouble())
+
+	fun updateJobLastSuccess(jobName: String) = jobLastSuccessGauge.labels(jobName).setToCurrentTime()
 }

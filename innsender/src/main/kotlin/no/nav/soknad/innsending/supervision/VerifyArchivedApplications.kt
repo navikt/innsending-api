@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component
 class VerifyArchivedApplications(
 	private val leaderSelectionUtility: LeaderSelectionUtility,
 	private val scheduledOperationsService: ScheduledOperationsService,
+	private val metrics: InnsenderMetrics,
 	@Value("\${verifyArchivedApplications.offsetHours}") private val offsetHours: Long,
 	@Value("\${verifyArchivedApplications.timespanHours}") private val timespanHours: Long,
 ) {
@@ -28,6 +29,7 @@ class VerifyArchivedApplications(
 		try {
 			if (leaderSelectionUtility.isLeader()) {
 				scheduledOperationsService.updateSoknadErArkivert(timespanHours, offsetHours)
+				metrics.updateJobLastSuccess(javaClass.kotlin.simpleName!!)
 			}
 		} catch (e: Exception) {
 			logger.error("Something went wrong running scheduled job ${javaClass.kotlin.simpleName}", e)
