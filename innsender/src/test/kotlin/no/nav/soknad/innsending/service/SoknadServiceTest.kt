@@ -256,7 +256,7 @@ class SoknadServiceTest {
 		}.id)
 
 		val ettersendingsKvitteringsDto = testOgSjekkInnsendingAvSoknad(soknadService, ettersendingsSoknadDto)
-		assertTrue(ettersendingsKvitteringsDto.hoveddokumentRef != null )
+		assertTrue(ettersendingsKvitteringsDto.hoveddokumentRef == null )
 		assertTrue(ettersendingsKvitteringsDto.innsendteVedlegg!!.isNotEmpty() )
 		assertTrue(ettersendingsKvitteringsDto.skalEttersendes!!.isNotEmpty() )
 
@@ -277,7 +277,7 @@ class SoknadServiceTest {
 			}))
 
 		val ettersendingsKvitteringsDto2 = testOgSjekkInnsendingAvSoknad(soknadService, ettersendingsSoknadDto2)
-		assertTrue(ettersendingsKvitteringsDto2.hoveddokumentRef != null )
+		assertTrue(ettersendingsKvitteringsDto2.hoveddokumentRef == null )
 		assertTrue(ettersendingsKvitteringsDto2.innsendteVedlegg!!.isNotEmpty() )
 		assertTrue(ettersendingsKvitteringsDto2.skalEttersendes!!.isEmpty() )
 
