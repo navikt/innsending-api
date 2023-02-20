@@ -32,8 +32,8 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 	private val operationsCounter = registerCounter(name, help, operationLabel)
 	private val operationsErrorCounter = registerCounter(errorName, helpError, operationLabel)
 	private val operationLatencyHistogram = registerLatencyHistogram(latency, latencyHelp, operationLabel)
-	private val databaseGauge = registerGauge(databaseSizeName, databaseSizeHelp, operationLabel)
-	private val absentInArchiveGauge = registerGauge(absentInArchiveName, absentInArchiveHelp, operationLabel)
+	private val databaseGauge = registerGauge(databaseSizeName, databaseSizeHelp)
+	private val absentInArchiveGauge = registerGauge(absentInArchiveName, absentInArchiveHelp)
 
 	private val jobLastSuccessGauge = Gauge
 		.build()
@@ -62,13 +62,12 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 			.buckets(100.0, 200.0, 400.0, 1000.0, 2000.0, 4000.0, 15000.0, 30000.0)
 			.register(registry)
 
-	private fun registerGauge(name: String, help: String, label: String): Gauge =
+	private fun registerGauge(name: String, help: String): Gauge =
 		Gauge
 			.build()
 			.namespace(soknadNamespace)
 			.name(name)
 			.help(help)
-			.labelNames(label, appLabel)
 			.register(registry)
 
 
@@ -84,10 +83,10 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 	}
 	fun operationHistogramGetLatency(operation: String): Histogram.Child.Value = operationLatencyHistogram.labels(operation, appName).get()
 
-	fun databaseSizeSet(number: Long) = databaseGauge.labels("dbsize", appName).set(number.toDouble())
-	fun databaseSizeGet() = databaseGauge.labels("dbsize", appName)?.get()
+	fun databaseSizeSet(number: Long) = databaseGauge.set(number.toDouble())
+	fun databaseSizeGet() = databaseGauge.get()
 
-	fun absentInArchive(number: Long) = absentInArchiveGauge.labels("soknad", appName).set(number.toDouble())
+	fun absentInArchive(number: Long) = absentInArchiveGauge.set(number.toDouble())
 
 	fun updateJobLastSuccess(jobName: String) = jobLastSuccessGauge.labels(jobName).setToCurrentTime()
 }
