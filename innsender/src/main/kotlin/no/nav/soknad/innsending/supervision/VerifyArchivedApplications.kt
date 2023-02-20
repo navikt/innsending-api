@@ -29,7 +29,7 @@ class VerifyArchivedApplications(
 		try {
 			if (leaderSelectionUtility.isLeader()) {
 				scheduledOperationsService.updateSoknadErArkivert(timespanHours, offsetHours)
-				metrics.updateJobLastSuccess(javaClass.kotlin.simpleName!!)
+				metrics.updateJobLastSuccess(JOB_NAME)
 			}
 		} catch (e: Exception) {
 			logger.error("Something went wrong running scheduled job ${javaClass.kotlin.simpleName}", e)
@@ -37,3 +37,5 @@ class VerifyArchivedApplications(
 	}
 
 }
+
+private const val JOB_NAME = "SoknadArkiveringskontroll"
