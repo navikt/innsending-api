@@ -21,7 +21,7 @@
 		"MAX_FILE_SIZE_SUM": "150",
 		"ETTERSENDINGSFRIST": 14,
 		"PDL_URL": "https://pdl-api.prod-fss-pub.nais.io",
-		"SAF_URL": "https://safselvbetjening.prod-fss-pub.nais.io",
+		"SAFSELVBETJENING_URL": "https://safselvbetjening.prod-fss-pub.nais.io",
 		"STS_URL": "https://api-gw.oera.no/security-token-service/",
 		"SANITY_HOST": "https://www.nav.no",
 		"SANITY_ENDPOINT": "/soknader/api/sanity/skjemautlisting",

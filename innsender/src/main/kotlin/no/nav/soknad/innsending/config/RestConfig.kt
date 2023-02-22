@@ -21,7 +21,7 @@ class RestConfig {
 	lateinit var frontEndFortsettEndpoint: String
 	lateinit var pdlScope: String
 	lateinit var pdlUrl: String
-	lateinit var safUrl: String
+	lateinit var safselvbetjeningUrl: String
 	lateinit var azureUrl: String
 
 }

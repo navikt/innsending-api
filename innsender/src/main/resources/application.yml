@@ -73,7 +73,7 @@ restconfig:
   clientSecret: clientSecret
   pdlScope: api://dev-fss.pdl.pdl-api/.default
   pdlUrl: http://localhost:9043/pdl-api
-  safUrl: http://localhost:9043/saf-api
+  safselvbetjeningUrl: http://localhost:9043/saf-api
   azureUrl: http://localhost:9043/azure-api
 
 brukernotifikasjonconfig:
@@ -149,7 +149,7 @@ restconfig:
   clientSecret: ${AZURE_APP_CLIENT_SECRET}
   pdlScope: ${PDL_SCOPE}
   pdlUrl: ${PDL_URL}
-  safUrl: ${SAF_URL}
+  safselvbetjeningUrl: ${SAFSELVBETJENING_URL}
   azureUrl: ${AZURE_OPENID_CONFIG_TOKEN_ENDPOINT}
 
 

@@ -36,7 +36,7 @@ class SafSelvbetjeningClientConfig(
 //	@Scope("prototype")
 //	@Lazy
 	fun graphQLClient() = GraphQLWebClient(
-		url = "${restConfig.safUrl}/graphql",
+		url = "${restConfig.safselvbetjeningUrl}/graphql",
 		builder = WebClient.builder()
 			.clientConnector(
 				ReactorClientHttpConnector(
