@@ -46,7 +46,7 @@ restconfig:
   clientSecret: clientSecret
   pdlScope: api://dev-fss.pdl.pdl-api/.default
   pdlUrl: http://localhost:${wiremock.server.port}/pdl-api
-  safUrl: http://localhost:${wiremock.server.port}/saf-api
+  safselvbetjeningUrl: http://localhost:${wiremock.server.port}/saf-api
   azureUrl: http://localhost:${wiremock.server.port}/azure-api
 
 dbconfig:
