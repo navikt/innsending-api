@@ -1,0 +1,13 @@
+query ($brukerId: String!) {
+	dokumentoversiktBruker(brukerId: $brukerId) {
+		journalposter {
+			journalpostId
+			tittel
+			eksternReferanseId
+			journalstatus
+			journalposttype
+			kanal,
+			tema
+		}
+	}
+}
