@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.service
 
+import no.nav.soknad.innsending.consumerapis.saf.SafClientInterface
 import no.nav.soknad.innsending.consumerapis.saf.SafInterface
 import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.consumerapis.saf.dto.Dokument
@@ -12,7 +13,7 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
-class SafService(val safApi: SafInterface) {
+class SafService(val safApi: SafInterface, val safClient: SafClientInterface) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -68,4 +69,6 @@ class SafService(val safApi: SafInterface) {
 	}
 
 	private fun fjernEttersendingsMerkeFraSkjemanr(brevkode: String) = brevkode.replace("NAVe", "NAV")
+
+	fun hentArkiverteSaker(brukerId: String): List<ArkiverteSaker> = safClient.hentDokumentoversiktBruker(brukerId)
 }

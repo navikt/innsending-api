@@ -8,19 +8,17 @@ import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.saf.generated.HentDokumentoversiktBruker
 import no.nav.soknad.innsending.saf.generated.hentdokumentoversiktbruker.Dokumentoversikt
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 
 @Component
 @Profile("test | dev | prod")
-@Qualifier("safClient")
 class SafClient(
 	private val safGraphQLWebClient: GraphQLWebClient
-) {
+) : SafClientInterface {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-fun hentDokumentoversiktBruker(brukerId: String): List<ArkiverteSaker> {
+override fun hentDokumentoversiktBruker(brukerId: String): List<ArkiverteSaker> {
 	return runBlocking {
 		try {
 			val dokumentoversikt = execute(brukerId)
