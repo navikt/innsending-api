@@ -6,7 +6,9 @@ import no.nav.soknad.innsending.consumerapis.handleErrors
 import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.saf.generated.HentDokumentoversiktBruker
+import no.nav.soknad.innsending.saf.generated.enums.BrukerIdType
 import no.nav.soknad.innsending.saf.generated.hentdokumentoversiktbruker.Dokumentoversikt
+import no.nav.soknad.innsending.saf.generated.inputs.BrukerIdInput
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
@@ -18,28 +20,29 @@ class SafClient(
 ) : SafClientInterface {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-override fun hentDokumentoversiktBruker(brukerId: String): List<ArkiverteSaker> {
-	return runBlocking {
-		try {
-			val dokumentoversikt = execute(brukerId)
-			dokumentoversikt.journalposter.filterNotNull().map {
-				ArkiverteSaker(
-					it.eksternReferanseId, it.tittel ?: "", it.tema.toString(),
-					it.datoOpprettet, emptyList()
-				)
+	override fun hentDokumentoversiktBruker(brukerId: String): List<ArkiverteSaker> {
+		return runBlocking {
+			try {
+				val dokumentoversikt = execute(brukerId)
+				dokumentoversikt.journalposter.filterNotNull().map {
+					ArkiverteSaker(
+						it.eksternReferanseId, it.tittel ?: "", it.tema.toString(),
+						it.datoOpprettet, emptyList()
+					)
+				}
+			} catch (ex: Exception) {
+				logger.warn("hentDokumentoversiktBruker feilet med ${ex.message}.")
+				throw BackendErrorException(ex.message, "Henting av brukers dokumentoversikt feilet", "errorCode.backendError.safError")
 			}
-		} catch (ex: Exception) {
-			logger.warn("hentDokumentoversiktBruker feilet med ${ex.message}.")
-			throw BackendErrorException(ex.message, "Henting av brukers innsendte søknader feilet", "errorCode.backendError.safError")
 		}
 	}
-}
-
 
 	suspend fun execute(brukerId: String): Dokumentoversikt {
 		val response = safGraphQLWebClient.execute(
 			HentDokumentoversiktBruker(
-				HentDokumentoversiktBruker.Variables(brukerId)
+				HentDokumentoversiktBruker.Variables(
+					BrukerIdInput(id = brukerId, type = BrukerIdType.FNR)
+				)
 			)
 		)
 		if (!response.errors.isNullOrEmpty()) {

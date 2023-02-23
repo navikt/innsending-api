@@ -1,4 +1,4 @@
-query ($brukerId: String!) {
+query ($brukerId: BrukerIdInput!) {
 	dokumentoversiktBruker(brukerId: $brukerId) {
 		journalposter {
 			journalpostId
