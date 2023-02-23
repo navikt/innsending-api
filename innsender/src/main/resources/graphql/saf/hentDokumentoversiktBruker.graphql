@@ -1,5 +1,5 @@
-query ($brukerId: BrukerIdInput!) {
-	dokumentoversiktBruker(brukerId: $brukerId) {
+query ($brukerId: BrukerIdInput!, $foerste: Int!) {
+	dokumentoversiktBruker(brukerId: $brukerId, foerste: $foerste) {
 		journalposter {
 			journalpostId
 			tittel

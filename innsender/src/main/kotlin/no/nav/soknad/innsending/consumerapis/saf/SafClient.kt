@@ -41,7 +41,8 @@ class SafClient(
 		val response = safGraphQLWebClient.execute(
 			HentDokumentoversiktBruker(
 				HentDokumentoversiktBruker.Variables(
-					BrukerIdInput(id = brukerId, type = BrukerIdType.FNR)
+					BrukerIdInput(id = brukerId, type = BrukerIdType.FNR),
+					10
 				)
 			)
 		)
