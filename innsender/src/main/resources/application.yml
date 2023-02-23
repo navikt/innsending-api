@@ -74,8 +74,6 @@ restconfig:
 brukernotifikasjonconfig:
   profiles: test
   tjenesteUrl: https://localhost
-  gjenopptaSoknadsArbeid: /dokumentinnsending/oversikt/
-  ettersendePaSoknad: /dokumentinnsending/ettersending/
   publisereEndringer: true
 
 no.nav.security.jwt:
@@ -139,7 +137,7 @@ restconfig:
   filesInOneRequestToFilestorage: 10
   soknadsMottakerHost: ${SOKNADSMOTTAKER_HOST}
   soknadsMottakerEndpoint: ${SOKNADSMOTTAKER_ENDPOINT}
-  frontEndFortsettEndpoint: ${TJENESTE_URL}${GJENOPPTA_SOKNADS_ARBEID}
+  frontEndFortsettEndpoint: ${TJENESTE_URL}
   clientId: ${AZURE_APP_CLIENT_ID}
   clientSecret: ${AZURE_APP_CLIENT_SECRET}
   pdlScope: ${PDL_SCOPE}
@@ -151,8 +149,6 @@ restconfig:
 brukernotifikasjonconfig:
   profiles: ${SPRING_PROFILES_ACTIVE}
   tjenesteUrl: ${TJENESTE_URL}
-  gjenopptaSoknadsArbeid: ${GJENOPPTA_SOKNADS_ARBEID}
-  ettersendePaSoknad: ${ETTERSENDE_PA_SOKNAD}
   publisereEndringer: ${PUBLISERE_BRUKERNOTIFIKASJONER}
 
 ettersendingsfrist: ${ETTERSENDINGSFRIST}
