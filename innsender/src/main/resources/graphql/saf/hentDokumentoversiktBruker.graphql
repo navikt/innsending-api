@@ -7,7 +7,8 @@ query ($brukerId: String!) {
 			journalstatus
 			journalposttype
 			kanal,
-			tema
+			tema,
+			datoOpprettet
 		}
 	}
 }
