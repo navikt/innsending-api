@@ -105,7 +105,18 @@ spring:
       idle-timeout: 10001
       max-lifetime: 30001
       leak-detection-threshold: 30000
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
 
+cron:
+  runVerifyArchivedApplications: 0 */15 * ? * *
+
+verifyArchivedApplications:
+  offsetHours: 1
+  timespanHours: 24
 ---
 spring:
   config:
