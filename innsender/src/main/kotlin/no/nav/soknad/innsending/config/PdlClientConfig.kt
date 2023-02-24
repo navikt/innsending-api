@@ -35,14 +35,20 @@ class PdlClientConfig(
 							logger.info("OnRequest: {} {} {}", request.version(), request.method(), request.resourceUrl())
 						}
 						.doOnResponse { response: HttpClientResponse, _ ->
-							logger.info("OnResponse: {} - {} {} {}", response.status().toString(), response.version(), response.method(), response.resourceUrl())
+							logger.info(
+								"OnResponse: {} - {} {} {}",
+								response.status().toString(),
+								response.version(),
+								response.method(),
+								response.resourceUrl()
+							)
 						}
 				)
 			)
 			.defaultRequest {
 				it.header(Constants.HEADER_CALL_ID, MDCUtil.callIdOrNew())
 				it.header(HttpHeaders.AUTHORIZATION, azureClient.consumerToken())
-				it.header("Tema","AAP")
+				it.header("Tema", "AAP")
 			}
 	)
 

@@ -2,12 +2,11 @@ package no.nav.soknad.innsending.security
 
 import no.nav.security.token.support.core.context.TokenValidationContext
 import no.nav.security.token.support.core.context.TokenValidationContextHolder
-import no.nav.soknad.innsending.util.Constants.TOKENX
 import no.nav.soknad.innsending.util.Constants.SELVBETJENING
+import no.nav.soknad.innsending.util.Constants.TOKENX
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
-
 import org.springframework.stereotype.Component
 
 @Component
@@ -32,7 +31,7 @@ class SubjectHandlerImpl(private val ctxHolder: TokenValidationContextHolder) : 
 
 	private fun getUserIdFromTokenWithIssuer(issuer: String): String {
 		val token = tokenValidationContext.getClaims(issuer)
-		val pid: String? =  token?.getStringClaim(CLAIM_PID)
+		val pid: String? = token?.getStringClaim(CLAIM_PID)
 		val sub: String? = token?.subject
 		return pid ?: sub ?: throw RuntimeException("Could not find any userId for token in pid or sub claim")
 	}

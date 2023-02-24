@@ -8,7 +8,10 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
 @Service
-class SlettFilerTilInnsendteSoknader(private val soknadService: SoknadService, private val leaderSelectionUtility: LeaderSelectionUtility) {
+class SlettFilerTilInnsendteSoknader(
+	private val soknadService: SoknadService,
+	private val leaderSelectionUtility: LeaderSelectionUtility
+) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 

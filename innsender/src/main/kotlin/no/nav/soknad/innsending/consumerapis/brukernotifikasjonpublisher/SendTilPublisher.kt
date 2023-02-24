@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service
 class SendTilPublisher(
 	private val restConfig: RestConfig,
 	soknadsmottakerClient: OkHttpClient
-): PublisherInterface, HealthRequestInterface {
+) : PublisherInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -52,7 +52,10 @@ class SendTilPublisher(
 		try {
 			healthApi.isReady()
 		} catch (e: Exception) {
-			logger.warn("Kall mot ${restConfig.soknadsMottakerHost} for å sjekke om publisher for brukernotifikasjoner er oppe, feiler", e)
+			logger.warn(
+				"Kall mot ${restConfig.soknadsMottakerHost} for å sjekke om publisher for brukernotifikasjoner er oppe, feiler",
+				e
+			)
 		}
 		return "ok"
 	}
@@ -61,6 +64,7 @@ class SendTilPublisher(
 		healthApi.isAlive()
 		return "ok"
 	}
+
 	override fun ping(): String {
 		healthApi.isAlive()
 		return "pong"

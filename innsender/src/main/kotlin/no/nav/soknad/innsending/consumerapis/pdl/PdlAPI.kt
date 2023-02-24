@@ -2,35 +2,37 @@ package no.nav.soknad.innsending.consumerapis.pdl
 
 import com.expediagroup.graphql.client.spring.GraphQLWebClient
 import com.expediagroup.graphql.client.types.GraphQLClientError
-import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
-import no.nav.soknad.innsending.consumerapis.pdl.dto.*
-import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.context.annotation.Profile
-import org.springframework.stereotype.Service
 import kotlinx.coroutines.runBlocking
+import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.consumerapis.handleErrors
+import no.nav.soknad.innsending.consumerapis.pdl.dto.*
 import no.nav.soknad.innsending.exceptions.PdlApiException
 import no.nav.soknad.innsending.pdl.generated.HentIdenter
 import no.nav.soknad.innsending.pdl.generated.HentPerson
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.context.annotation.Profile
+import org.springframework.stereotype.Service
 
 @Service
 @Profile("test | dev | prod")
 @Qualifier("pdl")
 class PdlAPI(
 	private val pdlGraphQLClient: GraphQLWebClient
-): PdlInterface, HealthRequestInterface {
+) : PdlInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	override fun ping(): String {
 		return "pong"
 	}
+
 	override fun isReady(): String {
 		// Ikke implementert kall mot PDL for å sjekke om tjenesten er oppe.
 		return "ok"
 	}
+
 	override fun isAlive(): String {
 		return "ok"
 	}
@@ -42,13 +44,14 @@ class PdlAPI(
 				?: listOf(IdentDto(brukerId, "FOLKEREGISTERIDENT", false))
 		} catch (ex: Exception) {
 			logger.warn(("Henting fra PDL feilet med ${ex.message}. Returnerer pålogget ident"))
-			listOf(IdentDto(brukerId,"FOLKEREGISTERIDENT", false))
+			listOf(IdentDto(brukerId, "FOLKEREGISTERIDENT", false))
 		}
 	}
 
 	override fun hentPersonData(brukerId: String): PersonDto? = runBlocking {
 		try {
-			hentPerson(brukerId)?.hentPerson?.navn?.map {PersonDto(brukerId, it.fornavn, it.mellomnavn, it.etternavn)}?.first()
+			hentPerson(brukerId)?.hentPerson?.navn?.map { PersonDto(brukerId, it.fornavn, it.mellomnavn, it.etternavn) }
+				?.first()
 		} catch (ex: Exception) {
 			logger.warn(("Henting fra PDL feilet med ${ex.message}"))
 			null
@@ -68,7 +71,10 @@ class PdlAPI(
 			return response.data
 		} else {
 			logger.error("Oppslag mot personregisteret feilet. Fikk feil i kallet til personregisteret")
-			throw PdlApiException("Oppslag mot personregisteret feilet", "Fikk feil i kallet for å hente person fra personregisteret")
+			throw PdlApiException(
+				"Oppslag mot personregisteret feilet",
+				"Fikk feil i kallet for å hente person fra personregisteret"
+			)
 		}
 	}
 
@@ -85,7 +91,10 @@ class PdlAPI(
 			return response.data
 		} else {
 			logger.error("Oppslag mot personregisteret feilet. Fikk feil i kall for å hente identer fra personregisteret")
-			throw PdlApiException("Oppslag mot personregisteret feilet", "Fikk feil i kallet for å hente identer fra personregisteret")
+			throw PdlApiException(
+				"Oppslag mot personregisteret feilet",
+				"Fikk feil i kallet for å hente identer fra personregisteret"
+			)
 		}
 	}
 

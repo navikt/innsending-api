@@ -10,12 +10,12 @@ import javax.ws.rs.container.ContainerRequestFilter
 import javax.ws.rs.ext.Provider
 
 @Provider
-class MdcFilter(@Value("\$spring.application.name}") private val applicationName: String): ContainerRequestFilter {
+class MdcFilter(@Value("\$spring.application.name}") private val applicationName: String) : ContainerRequestFilter {
 
 	override fun filter(requestContext: ContainerRequestContext) {
 
 		MDCUtil.toMDC(NAV_CONSUMER_ID, requestContext.getHeaderString(NAV_CONSUMER_ID), applicationName)
-		MDCUtil.toMDC(HEADER_CALL_ID, requestContext.getHeaderString(HEADER_CALL_ID),  MDCUtil.callIdOrNew())
+		MDCUtil.toMDC(HEADER_CALL_ID, requestContext.getHeaderString(HEADER_CALL_ID), MDCUtil.callIdOrNew())
 		MDCUtil.toMDC(CORRELATION_ID, requestContext.getHeaderString(CORRELATION_ID), MDCUtil.callIdOrNew())
 
 	}

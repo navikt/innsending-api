@@ -6,19 +6,32 @@ import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import java.time.ZoneOffset
 
 class SkjemaDokumentSoknadTransformer {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	fun konverterTilDokumentSoknadDto(input: SkjemaDto, brukerId: String): DokumentSoknadDto = DokumentSoknadDto(
-		brukerId = brukerId, skjemanr =	input.skjemanr, tittel = input.tittel, tema = input.tema, status = SoknadsStatusDto.opprettet,
-		opprettetDato =  mapTilOffsetDateTime(LocalDateTime.now())!!, endretDato = mapTilOffsetDateTime(LocalDateTime.now()),
-		vedleggsListe = lagVedleggsListe(input), id = null, innsendingsId = null, ettersendingsId = null, spraak = finnSpraakFraInput(input.spraak),
-		innsendtDato = null, visningsSteg = 0, visningsType = VisningsType.fyllUt,
-		kanLasteOppAnnet = input.kanLasteOppAnnet ?: input.vedleggsListe?.any { it.propertyNavn != null && it.propertyNavn == "annenDokumentasjon"},
-			forsteInnsendingsDato = null, fristForEttersendelse = input.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE )
+		brukerId = brukerId,
+		skjemanr = input.skjemanr,
+		tittel = input.tittel,
+		tema = input.tema,
+		status = SoknadsStatusDto.opprettet,
+		opprettetDato = mapTilOffsetDateTime(LocalDateTime.now())!!,
+		endretDato = mapTilOffsetDateTime(LocalDateTime.now()),
+		vedleggsListe = lagVedleggsListe(input),
+		id = null,
+		innsendingsId = null,
+		ettersendingsId = null,
+		spraak = finnSpraakFraInput(input.spraak),
+		innsendtDato = null,
+		visningsSteg = 0,
+		visningsType = VisningsType.fyllUt,
+		kanLasteOppAnnet = input.kanLasteOppAnnet
+			?: input.vedleggsListe?.any { it.propertyNavn != null && it.propertyNavn == "annenDokumentasjon" },
+		forsteInnsendingsDato = null,
+		fristForEttersendelse = input.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
+	)
 
 //	kanLasteOppAnnet = input.vedleggsListe?.any { it.property == "annenDokumentasjon" : it.vedleggsnr == "N6" && it.label == "Annen dokumentasjon" })
 
@@ -38,14 +51,24 @@ class SkjemaDokumentSoknadTransformer {
 				.filter { !(it.propertyNavn != null && it.propertyNavn == "annenDokumentasjon") }
 				.map { konverterTilVedleggDto(it, erHoveddokument = false, erVariant = false) }
 
-		logger.debug("Skal opprette søknad på skjemanr ${hoveddok.vedleggsnr} med vedleggene ${vedleggListe.map { it.vedleggsnr }.joinToString(", ")}")
+		logger.debug(
+			"Skal opprette søknad på skjemanr ${hoveddok.vedleggsnr} med vedleggene ${
+				vedleggListe.map { it.vedleggsnr }.joinToString(", ")
+			}"
+		)
 		return listOf(hoveddok, variant) + vedleggListe
 	}
 
-	private fun konverterTilVedleggDto(skjemaDokumentDto: SkjemaDokumentDto, erHoveddokument: Boolean, erVariant: Boolean): VedleggDto =
-		VedleggDto(skjemaDokumentDto.tittel, skjemaDokumentDto.label,erHoveddokument, erVariant,
+	private fun konverterTilVedleggDto(
+		skjemaDokumentDto: SkjemaDokumentDto,
+		erHoveddokument: Boolean,
+		erVariant: Boolean
+	): VedleggDto =
+		VedleggDto(
+			skjemaDokumentDto.tittel, skjemaDokumentDto.label, erHoveddokument, erVariant,
 			skjemaDokumentDto.mimetype?.equals(Mimetype.applicationSlashPdf) ?: false, skjemaDokumentDto.pakrevd,
 			if (skjemaDokumentDto.document != null) OpplastingsStatusDto.lastetOpp else OpplastingsStatusDto.ikkeValgt,
-			mapTilOffsetDateTime(LocalDateTime.now())!!, null, skjemaDokumentDto.vedleggsnr,  skjemaDokumentDto.beskrivelse,
-			null, skjemaDokumentDto.mimetype, skjemaDokumentDto.document,null )
+			mapTilOffsetDateTime(LocalDateTime.now())!!, null, skjemaDokumentDto.vedleggsnr, skjemaDokumentDto.beskrivelse,
+			null, skjemaDokumentDto.mimetype, skjemaDokumentDto.document, null
+		)
 }

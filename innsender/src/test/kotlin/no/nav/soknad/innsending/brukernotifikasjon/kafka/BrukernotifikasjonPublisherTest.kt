@@ -1,8 +1,5 @@
 package no.nav.soknad.innsending.brukernotifikasjon.kafka
 
-import org.junit.jupiter.api.Test
-
-import org.junit.jupiter.api.Assertions.*
 import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
@@ -14,7 +11,9 @@ import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.utils.lagDokumentSoknad
 import no.nav.soknad.innsending.utils.lagVedlegg
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -54,14 +53,30 @@ internal class BrukernotifikasjonPublisherTest {
 		val message = slot<AddNotification>()
 		every { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) } returns Unit
 
-		brukernotifikasjonPublisher?.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid))
+		brukernotifikasjonPublisher?.soknadStatusChange(
+			lagDokumentSoknad(
+				personId,
+				skjemanr,
+				spraak,
+				tittel,
+				tema,
+				id,
+				innsendingsid
+			)
+		)
 
 		assertTrue(message.isCaptured)
 		assertEquals(personId, message.captured.soknadRef.personId)
 		assertEquals(innsendingsid, message.captured.soknadRef.innsendingId)
 		assertTrue(message.captured.brukernotifikasjonInfo.notifikasjonsTittel.contains(tittel))
-		assertEquals(brukernotifikasjonPublisher?.tittelPrefixNySoknad?.get(spraak)!! + tittel, message.captured.brukernotifikasjonInfo.notifikasjonsTittel)
-		assertEquals(notifikasjonConfig.tjenesteUrl + notifikasjonConfig.gjenopptaSoknadsArbeid + innsendingsid, message.captured.brukernotifikasjonInfo.lenke)
+		assertEquals(
+			brukernotifikasjonPublisher?.tittelPrefixNySoknad?.get(spraak)!! + tittel,
+			message.captured.brukernotifikasjonInfo.notifikasjonsTittel
+		)
+		assertEquals(
+			notifikasjonConfig.tjenesteUrl + notifikasjonConfig.gjenopptaSoknadsArbeid + innsendingsid,
+			message.captured.brukernotifikasjonInfo.lenke
+		)
 	}
 
 	@Test
@@ -76,9 +91,20 @@ internal class BrukernotifikasjonPublisherTest {
 
 		val done = slot<SoknadRef>()
 
-		every { sendTilPublisher.avsluttBrukernotifikasjon( capture(done) ) } returns Unit
+		every { sendTilPublisher.avsluttBrukernotifikasjon(capture(done)) } returns Unit
 
-		brukernotifikasjonPublisher?.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatusDto.innsendt))
+		brukernotifikasjonPublisher?.soknadStatusChange(
+			lagDokumentSoknad(
+				personId,
+				skjemanr,
+				spraak,
+				tittel,
+				tema,
+				id,
+				innsendingsid,
+				SoknadsStatusDto.innsendt
+			)
+		)
 
 		assertTrue(done.isCaptured)
 		assertEquals(personId, done.captured.personId)
@@ -99,13 +125,15 @@ internal class BrukernotifikasjonPublisherTest {
 		val done = slot<SoknadRef>()
 		val oppgave = slot<AddNotification>()
 
-		every { sendTilPublisher.avsluttBrukernotifikasjon( capture(done) ) } returns Unit
-		every { sendTilPublisher.opprettBrukernotifikasjon( capture(oppgave) ) } returns Unit
+		every { sendTilPublisher.avsluttBrukernotifikasjon(capture(done)) } returns Unit
+		every { sendTilPublisher.opprettBrukernotifikasjon(capture(oppgave)) } returns Unit
 
-		val soknad = lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatusDto.innsendt,
+		val soknad = lagDokumentSoknad(
+			personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatusDto.innsendt,
 			listOf(
-				lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.innsendt, false,"/litenPdf.pdf" ),
-				lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.sendSenere, false)),
+				lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.innsendt, false, "/litenPdf.pdf"),
+				lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.sendSenere, false)
+			),
 		)
 
 		brukernotifikasjonPublisher?.soknadStatusChange(soknad)
@@ -114,10 +142,12 @@ internal class BrukernotifikasjonPublisherTest {
 		assertEquals(personId, done.captured.personId)
 		assertEquals(innsendingsid, done.captured.innsendingId)
 
-		val ettersending = lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, ettersendingsSoknadsId, SoknadsStatusDto.opprettet,
+		val ettersending = lagDokumentSoknad(
+			personId, skjemanr, spraak, tittel, tema, id, ettersendingsSoknadsId, SoknadsStatusDto.opprettet,
 			listOf(
-				lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.innsendt, false,"/litenPdf.pdf" ),
-				lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.ikkeValgt, false)), soknad.innsendingsId
+				lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.innsendt, false, "/litenPdf.pdf"),
+				lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.ikkeValgt, false)
+			), soknad.innsendingsId
 		)
 
 		brukernotifikasjonPublisher?.soknadStatusChange(ettersending)
@@ -127,8 +157,14 @@ internal class BrukernotifikasjonPublisherTest {
 		assertEquals(ettersending.innsendingsId, oppgave.captured.soknadRef.innsendingId)
 		assertEquals(ettersending.ettersendingsId, oppgave.captured.soknadRef.groupId)
 		assertTrue(oppgave.captured.brukernotifikasjonInfo.notifikasjonsTittel.contains(tittel))
-		assertEquals(brukernotifikasjonPublisher?.tittelPrefixEttersendelse?.get(spraak)!! + tittel, oppgave.captured.brukernotifikasjonInfo.notifikasjonsTittel)
-		assertEquals(notifikasjonConfig.tjenesteUrl + notifikasjonConfig.gjenopptaSoknadsArbeid + ettersendingsSoknadsId, oppgave.captured.brukernotifikasjonInfo.lenke)
+		assertEquals(
+			brukernotifikasjonPublisher?.tittelPrefixEttersendelse?.get(spraak)!! + tittel,
+			oppgave.captured.brukernotifikasjonInfo.notifikasjonsTittel
+		)
+		assertEquals(
+			notifikasjonConfig.tjenesteUrl + notifikasjonConfig.gjenopptaSoknadsArbeid + ettersendingsSoknadsId,
+			oppgave.captured.brukernotifikasjonInfo.lenke
+		)
 	}
 
 	@Test
@@ -147,11 +183,15 @@ internal class BrukernotifikasjonPublisherTest {
 		every { sendTilPublisher.avsluttBrukernotifikasjon(capture(avslutninger)) } returns Unit   // Nokkel(appConfiguration.kafkaConfig.username, innsendingsid )
 
 		brukernotifikasjonPublisher?.soknadStatusChange(
-			lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, ettersendingsSoknadsId, SoknadsStatusDto.innsendt,
+			lagDokumentSoknad(
+				personId, skjemanr, spraak, tittel, tema, id, ettersendingsSoknadsId, SoknadsStatusDto.innsendt,
 				listOf(
-					lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.lastetOpp, false,"/litenPdf.pdf" ),
-					lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.lastetOpp, false, "/litenPdf.pdf")),
-				innsendingsid))
+					lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.lastetOpp, false, "/litenPdf.pdf"),
+					lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.lastetOpp, false, "/litenPdf.pdf")
+				),
+				innsendingsid
+			)
+		)
 
 		assertTrue(avslutninger.isNotEmpty())
 		assertEquals(personId, avslutninger[0].personId)
@@ -171,9 +211,20 @@ internal class BrukernotifikasjonPublisherTest {
 
 		val done = slot<SoknadRef>()
 
-		every { sendTilPublisher.avsluttBrukernotifikasjon( capture(done) ) } returns Unit
+		every { sendTilPublisher.avsluttBrukernotifikasjon(capture(done)) } returns Unit
 
-		brukernotifikasjonPublisher?.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatusDto.slettetAvBruker))
+		brukernotifikasjonPublisher?.soknadStatusChange(
+			lagDokumentSoknad(
+				personId,
+				skjemanr,
+				spraak,
+				tittel,
+				tema,
+				id,
+				innsendingsid,
+				SoknadsStatusDto.slettetAvBruker
+			)
+		)
 
 		assertTrue(done.isCaptured)
 		assertEquals(personId, done.captured.personId)

@@ -26,9 +26,9 @@ class SafServiceTest {
 
 		assertTrue(innsendteSoknader.isNotEmpty())
 		assertEquals(5, innsendteSoknader.size)
-		assertTrue(innsendteSoknader.all{ it.innsendtVedleggDtos.isNotEmpty()} )
-		assertTrue(innsendteSoknader.all{ it.innsendtVedleggDtos.filter { "L7".equals(it.vedleggsnr, true) }.isEmpty()} )
-		assertTrue(innsendteSoknader.all{ it.innsendtVedleggDtos.filter { it.vedleggsnr.startsWith("NAVe") }.isEmpty()} )
+		assertTrue(innsendteSoknader.all { it.innsendtVedleggDtos.isNotEmpty() })
+		assertTrue(innsendteSoknader.all { it.innsendtVedleggDtos.filter { "L7".equals(it.vedleggsnr, true) }.isEmpty() })
+		assertTrue(innsendteSoknader.all { it.innsendtVedleggDtos.filter { it.vedleggsnr.startsWith("NAVe") }.isEmpty() })
 	}
 
 	@Test

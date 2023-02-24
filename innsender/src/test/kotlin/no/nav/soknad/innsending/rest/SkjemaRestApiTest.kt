@@ -18,7 +18,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
-import org.springframework.core.ParameterizedTypeReference
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
@@ -34,7 +33,8 @@ import kotlin.test.assertTrue
 @SpringBootTest(
 	webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
 	properties = ["spring.main.allow-bean-definition-overriding=true"],
-	classes = [InnsendingApiApplication::class])
+	classes = [InnsendingApiApplication::class]
+)
 @ExtendWith(SpringExtension::class)
 @AutoConfigureWireMock
 @EnableMockOAuth2Server(port = 9898)
@@ -53,7 +53,7 @@ class SkjemaRestApiTest {
 	private val tokenx = "tokenx"
 	private val subject = "12345678901"
 	private val audience = "aud-localhost"
-	private val expiry = 2*3600
+	private val expiry = 2 * 3600
 
 	@Test
 	internal fun testOpprettSoknadPaFyllUtApi() {
@@ -75,18 +75,27 @@ class SkjemaRestApiTest {
 		val tema = "FOR"
 		val sprak = "no_nb"
 
-		val fraFyllUt = SkjemaDto(subject, skjemanr, tittel, tema, sprak,
+		val fraFyllUt = SkjemaDto(
+			subject, skjemanr, tittel, tema, sprak,
 			lagDokument(skjemanr, tittel, true, Mimetype.applicationSlashPdf),
 			lagDokument(skjemanr, tittel, true, Mimetype.applicationSlashJson),
 			listOf(
-				lagDokument("T7", "Inntektsopplysninger for selvstendig næringsdrivende og frilansere som skal ha foreldrepenger eller svangerskapspenger", true, null, true),
+				lagDokument(
+					"T7",
+					"Inntektsopplysninger for selvstendig næringsdrivende og frilansere som skal ha foreldrepenger eller svangerskapspenger",
+					true,
+					null,
+					true
+				),
 				lagDokument("N6", "Dokumentasjon av veiforhold", true, null, true)
 			)
 		)
-		val requestEntity =	HttpEntity(fraFyllUt, createHeaders(token))
+		val requestEntity = HttpEntity(fraFyllUt, createHeaders(token))
 
-		val response = restTemplate.exchange("http://localhost:${serverPort}/fyllUt/v1/leggTilVedlegg", HttpMethod.POST,
-			requestEntity, Unit::class.java)
+		val response = restTemplate.exchange(
+			"http://localhost:${serverPort}/fyllUt/v1/leggTilVedlegg", HttpMethod.POST,
+			requestEntity, Unit::class.java
+		)
 
 		assertTrue(response != null)
 
@@ -183,15 +192,29 @@ class SkjemaRestApiTest {
 
 	}
 
-	private fun lagDokument(vedleggsnr: String, tittel: String, pakrevd: Boolean, mimetype: Mimetype? = null, erVedlegg: Boolean = false): SkjemaDokumentDto {
-		return SkjemaDokumentDto(vedleggsnr, tittel, tittel, pakrevd, "$tittel- Beskrivelse", mimetype, if (erVedlegg) null else hentFil(mimetype))
+	private fun lagDokument(
+		vedleggsnr: String,
+		tittel: String,
+		pakrevd: Boolean,
+		mimetype: Mimetype? = null,
+		erVedlegg: Boolean = false
+	): SkjemaDokumentDto {
+		return SkjemaDokumentDto(
+			vedleggsnr,
+			tittel,
+			tittel,
+			pakrevd,
+			"$tittel- Beskrivelse",
+			mimetype,
+			if (erVedlegg) null else hentFil(mimetype)
+		)
 	}
 
 	private fun hentFil(mimetype: Mimetype?): ByteArray? =
-		when(mimetype) {
-			null ->  null
-			Mimetype.applicationSlashPdf ->  getBytesFromFile("/litenPdf.pdf")
-			Mimetype.applicationSlashJson ->  getBytesFromFile("/sanity.json")
+		when (mimetype) {
+			null -> null
+			Mimetype.applicationSlashPdf -> getBytesFromFile("/litenPdf.pdf")
+			Mimetype.applicationSlashJson -> getBytesFromFile("/sanity.json")
 			else -> throw RuntimeException("Testing med mimetype = $mimetype er ikke støttet")
 		}
 

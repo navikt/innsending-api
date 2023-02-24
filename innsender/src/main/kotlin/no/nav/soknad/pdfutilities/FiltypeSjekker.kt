@@ -1,8 +1,8 @@
 package no.nav.soknad.pdfutilities
 
 import org.apache.commons.lang3.ArrayUtils
-import java.util.function.Predicate
 import org.apache.tika.Tika
+import java.util.function.Predicate
 
 
 class FiltypeSjekker {

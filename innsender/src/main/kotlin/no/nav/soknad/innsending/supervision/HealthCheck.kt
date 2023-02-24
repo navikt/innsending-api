@@ -3,27 +3,28 @@ package no.nav.soknad.innsending.supervision
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
+import no.nav.soknad.innsending.api.HealthApi
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.repository.AliveRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.client.HttpServerErrorException
-import no.nav.soknad.innsending.api.HealthApi
-import org.springframework.http.ResponseEntity
 
 @RestController
 @RequestMapping(value = ["/health"])
 class HealthCheck(
-	@Qualifier("pdl")private val pdlAPI: HealthRequestInterface,
-	@Qualifier("saf")private val safAPI: HealthRequestInterface,
-	@Qualifier("fillager")private val fillagerAPI: HealthRequestInterface,
-	@Qualifier("mottaker")private val mottakerAPI: HealthRequestInterface,
-	@Qualifier("notifikasjon")private val notifikasjonAPI: HealthRequestInterface,
-	private val aliveRepository: AliveRepository)	: HealthApi {
+	@Qualifier("pdl") private val pdlAPI: HealthRequestInterface,
+	@Qualifier("saf") private val safAPI: HealthRequestInterface,
+	@Qualifier("fillager") private val fillagerAPI: HealthRequestInterface,
+	@Qualifier("mottaker") private val mottakerAPI: HealthRequestInterface,
+	@Qualifier("notifikasjon") private val notifikasjonAPI: HealthRequestInterface,
+	private val aliveRepository: AliveRepository
+) : HealthApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -73,8 +74,10 @@ class HealthCheck(
 		throw HttpServerErrorException(status, message ?: status.name)
 	}
 
-	private data class Dependency(val dependencyEndpoint: () -> String,
-																val expectedResponse: String,
-																val dependencyName: String)
+	private data class Dependency(
+		val dependencyEndpoint: () -> String,
+		val expectedResponse: String,
+		val dependencyName: String
+	)
 
 }

@@ -10,16 +10,18 @@ import org.springframework.stereotype.Service
 @Service
 @Profile("default | test | spring | docker")
 @Qualifier("fillager")
-class FillagerAPITest: FillagerInterface, HealthRequestInterface {
+class FillagerAPITest : FillagerInterface, HealthRequestInterface {
 
 	val logger: Logger = Logger.getLogger(javaClass)
 
 	override fun ping(): String {
 		return "pong"
 	}
+
 	override fun isReady(): String {
 		return "ok"
 	}
+
 	override fun isAlive(): String {
 		return "ok"
 	}

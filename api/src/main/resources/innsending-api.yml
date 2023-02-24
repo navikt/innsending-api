@@ -24,7 +24,7 @@ paths:
       description: FyllUt tjenesten gir søker mulighet til å fylle ut en søknad. Når vedkommende er ferdig med dette kalles dette endepunktet for å mellomlagre søknaden og gi søker mulighet til å laste opp eventuelle vedlegg og sende inn søknaden og disse til NAV.
       operationId: fyllUt
 
-      security: []   # No security
+      security: [ ]   # No security
       requestBody:
         description: Søknadsmetadata og søknad som PDF og Json samt liste over eventuelle obligatoriske og valgfrie vedlegg som skal/kan legges til.
         content:
@@ -45,7 +45,7 @@ paths:
       description: For å hjelpe søker til å finne fram relevant søknad han/hun ønsker å få ettersendt dokumenter på, skal det være mulig å hente ut en liste av innsendte søknader.
       operationId: aktiveSaker
 
-      security: []   # No security
+      security: [ ]   # No security
 
       responses:
         '200':
@@ -588,7 +588,7 @@ paths:
       description: Pings the application to see if it responds
       operationId: ping
 
-      security: []   # No security
+      security: [ ]   # No security
       responses:
         '200':
           description: Successful operation; application is responding
@@ -606,7 +606,7 @@ paths:
       description: Checks if the application and its dependencies are up and running.
       operationId: isAlive
 
-      security: []   # No security
+      security: [ ]   # No security
       responses:
         '200':
           description: Successful operation; application is alive
@@ -625,7 +625,7 @@ paths:
       description: Checks if the application is ready to accept traffic.
       operationId: isReady
 
-      security: []   # No security
+      security: [ ]   # No security
       responses:
         '200':
           description: Successful operation; application is ready
@@ -900,13 +900,13 @@ components:
 
     Mimetype:
       type: string
-      enum: ["application/pdf", "application/json", "image/png", "image/jpeg"]
+      enum: [ "application/pdf", "application/json", "image/png", "image/jpeg" ]
       description: Angivelse av formatet på opplastet vedlegg.
       example: application/pdf or image/jpeg.
 
     OpplastingsStatusDto:
       type: string
-      enum: ["IkkeValgt", "LastetOpp", "Innsendt", "SendSenere", "SendesAvAndre", "SendesIkke"]
+      enum: [ "IkkeValgt", "LastetOpp", "Innsendt", "SendSenere", "SendesAvAndre", "SendesIkke" ]
       description: Status på om et vedlegg til søknad er enda ikke er lastet opp, lastet opp eller innsendt
 
     OpprettEttersendingGittInnsendingsId:
@@ -1061,7 +1061,7 @@ components:
 
     SoknadsStatusDto:
       type: string
-      enum: ["Opprettet", "Innsendt", "SlettetAvBruker", "AutomatiskSlettet"]
+      enum: [ "Opprettet", "Innsendt", "SlettetAvBruker", "AutomatiskSlettet" ]
       description: Spesifikasjon av status på søknaden.
       example:
 
@@ -1161,11 +1161,11 @@ components:
 
     VisningsType:
       type: string
-      enum: ["fyllUt", "dokumentinnsending", "ettersending"]
+      enum: [ "fyllUt", "dokumentinnsending", "ettersending" ]
       description: Angir visningsmodus gitt opphav til søknaden
 
 
-security: []
+security: [ ]
 
 externalDocs:
   description: Documentation of the whole archiving system

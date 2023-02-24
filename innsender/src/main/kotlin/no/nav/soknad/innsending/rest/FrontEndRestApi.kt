@@ -36,7 +36,7 @@ class FrontEndRestApi(
 	val tilgangskontroll: Tilgangskontroll,
 	private val restConfig: RestConfig,
 	private val safService: SafService
-): FrontendApi {
+) : FrontendApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -68,7 +68,10 @@ class FrontEndRestApi(
 		tilgangskontroll.harTilgang(origSoknad, brukerId)
 
 		val dokumentSoknadDto =
-			soknadService.opprettSoknadForettersendingAvVedlegg(brukerId, opprettEttersendingGittInnsendingsId.ettersendingTilinnsendingsId)
+			soknadService.opprettSoknadForettersendingAvVedlegg(
+				brukerId,
+				opprettEttersendingGittInnsendingsId.ettersendingTilinnsendingsId
+			)
 		logger.info("${dokumentSoknadDto.innsendingsId}: Opprettet ettersending for innsendingsid ${opprettEttersendingGittInnsendingsId.ettersendingTilinnsendingsId}")
 
 		return ResponseEntity
@@ -90,8 +93,8 @@ class FrontEndRestApi(
 		val innsendteSoknader =
 			try {
 				soknadService.hentInnsendteSoknader(tilgangskontroll.hentPersonIdents())
-					.filter{it.skjemanr == opprettEttersendingGittSkjemaNr.skjemanr}
-					.filter{it.innsendtDato!!.isAfter(OffsetDateTime.now().minusDays(MAX_AKTIVE_DAGER))}
+					.filter { it.skjemanr == opprettEttersendingGittSkjemaNr.skjemanr }
+					.filter { it.innsendtDato!!.isAfter(OffsetDateTime.now().minusDays(MAX_AKTIVE_DAGER)) }
 					.sortedByDescending { it.innsendtDato }
 			} catch (e: Exception) {
 				logger.info("Ingen søknader funnet i basen for bruker på skjemanr = ${opprettEttersendingGittSkjemaNr.skjemanr}")
@@ -100,8 +103,10 @@ class FrontEndRestApi(
 
 		logger.info("Gitt skjemaNr ${opprettEttersendingGittSkjemaNr.skjemanr}: Antall innsendteSoknader=${innsendteSoknader.size} og Antall arkiverteSoknader=${arkiverteSoknader.size}")
 		val dokumentSoknadDto =
-			opprettDokumentSoknadDto(innsendteSoknader = innsendteSoknader, arkiverteSoknader = arkiverteSoknader,
-				brukerId = brukerId, opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr)
+			opprettDokumentSoknadDto(
+				innsendteSoknader = innsendteSoknader, arkiverteSoknader = arkiverteSoknader,
+				brukerId = brukerId, opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr
+			)
 
 		logger.info("${dokumentSoknadDto.innsendingsId}: Opprettet ettersending på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}")
 
@@ -115,51 +120,51 @@ class FrontEndRestApi(
 		arkiverteSoknader: List<AktivSakDto>,
 		brukerId: String,
 		opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr
-	): DokumentSoknadDto  =
-			if (innsendteSoknader.isNotEmpty()) {
-				if (arkiverteSoknader.isNotEmpty()) {
-					if (innsendteSoknader[0].innsendingsId == arkiverteSoknader[0].innsendingsId ||
-						innsendteSoknader[0].innsendtDato!!.isAfter(arkiverteSoknader[0].innsendtDato)
-					) {
-						soknadService.opprettSoknadForettersendingAvVedleggGittSoknadOgVedlegg(
-							brukerId = brukerId, nyesteSoknad = innsendteSoknader[0],
-							sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
-							vedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
-						)
-					} else {
-						// Det er blitt sendt inn en søknad en annen vei til arkivet, knytt ettersendingen til denne ved å liste innsendte dokumenter
-						// Opprett en ettersendingssøknad med innsendte vedlegg fra arkiverteSoknader[0]+ eventuelle ekstra vedlegg fra input.
-						soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(
-							brukerId = brukerId, arkivertSoknad =  arkiverteSoknader[0],
-							opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr,
-							sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
-							forsteInnsendingsDato = innsendteSoknader[0].forsteInnsendingsDato
-						)
-					}
-				} else {
+	): DokumentSoknadDto =
+		if (innsendteSoknader.isNotEmpty()) {
+			if (arkiverteSoknader.isNotEmpty()) {
+				if (innsendteSoknader[0].innsendingsId == arkiverteSoknader[0].innsendingsId ||
+					innsendteSoknader[0].innsendtDato!!.isAfter(arkiverteSoknader[0].innsendtDato)
+				) {
 					soknadService.opprettSoknadForettersendingAvVedleggGittSoknadOgVedlegg(
 						brukerId = brukerId, nyesteSoknad = innsendteSoknader[0],
 						sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
 						vedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
 					)
+				} else {
+					// Det er blitt sendt inn en søknad en annen vei til arkivet, knytt ettersendingen til denne ved å liste innsendte dokumenter
+					// Opprett en ettersendingssøknad med innsendte vedlegg fra arkiverteSoknader[0]+ eventuelle ekstra vedlegg fra input.
+					soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(
+						brukerId = brukerId, arkivertSoknad = arkiverteSoknader[0],
+						opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr,
+						sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
+						forsteInnsendingsDato = innsendteSoknader[0].forsteInnsendingsDato
+					)
 				}
-			} else if (arkiverteSoknader.isNotEmpty()) {
-				// Det er blitt sendt inn en søknad en annen vei til arkivet, knytt ettersendingen til denne ved å liste innsendte dokumenter
-				// Opprett en ettersendingssøknad med innsendte vedlegg fra arkiverteSoknader[0]+ eventuelle ekstra vedlegg fra input.
-				soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(
-					brukerId = brukerId, arkivertSoknad =  arkiverteSoknader[0],
-					opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr,
-					sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
-					forsteInnsendingsDato = arkiverteSoknader[0].innsendtDato
-				)
 			} else {
-				soknadService.opprettSoknadForEttersendingGittSkjemanr(
-					brukerId = brukerId,
-					skjemanr = opprettEttersendingGittSkjemaNr.skjemanr,
-					spraak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
+				soknadService.opprettSoknadForettersendingAvVedleggGittSoknadOgVedlegg(
+					brukerId = brukerId, nyesteSoknad = innsendteSoknader[0],
+					sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
 					vedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
 				)
 			}
+		} else if (arkiverteSoknader.isNotEmpty()) {
+			// Det er blitt sendt inn en søknad en annen vei til arkivet, knytt ettersendingen til denne ved å liste innsendte dokumenter
+			// Opprett en ettersendingssøknad med innsendte vedlegg fra arkiverteSoknader[0]+ eventuelle ekstra vedlegg fra input.
+			soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(
+				brukerId = brukerId, arkivertSoknad = arkiverteSoknader[0],
+				opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr,
+				sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
+				forsteInnsendingsDato = arkiverteSoknader[0].innsendtDato
+			)
+		} else {
+			soknadService.opprettSoknadForEttersendingGittSkjemanr(
+				brukerId = brukerId,
+				skjemanr = opprettEttersendingGittSkjemaNr.skjemanr,
+				spraak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
+				vedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
+			)
+		}
 
 	@Timed(InnsenderOperation.HENT)
 	override fun hentAktiveOpprettedeSoknader(): ResponseEntity<List<DokumentSoknadDto>> {
@@ -211,7 +216,11 @@ class FrontEndRestApi(
 		logger.info("$innsendingsId: Kall for å hente vedlegg $vedleggsId til søknad")
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
-				?: throw ResourceNotFoundException("", "Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId", "errorCode.resourceNotFound.applicationNotFound")
+			?: throw ResourceNotFoundException(
+				"",
+				"Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId",
+				"errorCode.resourceNotFound.applicationNotFound"
+			)
 		logger.info("$innsendingsId: Hentet vedlegg $vedleggsId til søknad")
 
 		return ResponseEntity
@@ -220,21 +229,40 @@ class FrontEndRestApi(
 	}
 
 	@Timed(InnsenderOperation.ENDRE)
-	override fun endreVedlegg(innsendingsId: String, vedleggsId: Long, patchVedleggDto: PatchVedleggDto): ResponseEntity<VedleggDto> {
-		logger.info("$innsendingsId: Kall for å endre vedlegg $vedleggsId til søknad. " +
-			"Status=${patchVedleggDto.opplastingsStatus} og tittel = ${patchVedleggDto.tittel}")
+	override fun endreVedlegg(
+		innsendingsId: String,
+		vedleggsId: Long,
+		patchVedleggDto: PatchVedleggDto
+	): ResponseEntity<VedleggDto> {
+		logger.info(
+			"$innsendingsId: Kall for å endre vedlegg $vedleggsId til søknad. " +
+				"Status=${patchVedleggDto.opplastingsStatus} og tittel = ${patchVedleggDto.tittel}"
+		)
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		if ((patchVedleggDto.opplastingsStatus == OpplastingsStatusDto.ikkeValgt || patchVedleggDto.opplastingsStatus == OpplastingsStatusDto.lastetOpp)
-			&& soknadDto.vedleggsListe.first{it.id==vedleggsId}.opplastingsStatus != patchVedleggDto.opplastingsStatus) {
+			&& soknadDto.vedleggsListe.first { it.id == vedleggsId }.opplastingsStatus != patchVedleggDto.opplastingsStatus
+		) {
 
 			val opplastetPaVedlegg: Long = soknadService.finnFilStorrelseSum(soknadDto, vedleggsId)
 			val opplastetPaSoknad: Long = soknadService.finnFilStorrelseSum(soknadDto)
 
-			Validerer().validerStorrelse(innsendingsId, opplastetPaSoknad, opplastetPaVedlegg, restConfig.maxFileSizeSum.toLong(),  "errorCode.illegalAction.fileSizeSumTooLarge")
+			Validerer().validerStorrelse(
+				innsendingsId,
+				opplastetPaSoknad,
+				opplastetPaVedlegg,
+				restConfig.maxFileSizeSum.toLong(),
+				"errorCode.illegalAction.fileSizeSumTooLarge"
+			)
 		}
 		if (!patchVedleggDto.tittel.isNullOrEmpty()) {
-			Validerer().validerStorrelse(innsendingsId, 0L, patchVedleggDto.tittel!!.length.toLong(), 255L, "errorCode.illegalAction.titleStringTooLong")
+			Validerer().validerStorrelse(
+				innsendingsId,
+				0L,
+				patchVedleggDto.tittel!!.length.toLong(),
+				255L,
+				"errorCode.illegalAction.titleStringTooLong"
+			)
 		}
 		val vedleggDto = soknadService.endreVedlegg(patchVedleggDto, vedleggsId, soknadDto)
 		logger.info("$innsendingsId: Lagret vedlegg ${vedleggDto.id} til søknad")
@@ -265,27 +293,56 @@ class FrontEndRestApi(
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
-			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId", "errorCode.resourceNotFound.attachmentNotFound")
+			throw ResourceNotFoundException(
+				null,
+				"Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId",
+				"errorCode.resourceNotFound.attachmentNotFound"
+			)
 
 		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
 		val fileName = file.filename
 		if (!fileName.isNullOrEmpty()) {
 			logger.info("$innsendingsId: Skal validere $fileName")
 		}
-		if (!file.isReadable) throw IllegalActionException("Ingen fil opplastet", "Opplasting feilet", "errorCode.illegalAction.fileCannotBeRead")
+		if (!file.isReadable) throw IllegalActionException(
+			"Ingen fil opplastet",
+			"Opplasting feilet",
+			"errorCode.illegalAction.fileCannotBeRead"
+		)
 		val opplastet = (file as ByteArrayResource).byteArray
-		Validerer().validerStorrelse(innsendingsId, 0, opplastet.size.toLong(), restConfig.maxFileSize.toLong(), "errorCode.illegalAction.vedleggFileSizeSumTooLarge" )
+		Validerer().validerStorrelse(
+			innsendingsId,
+			0,
+			opplastet.size.toLong(),
+			restConfig.maxFileSize.toLong(),
+			"errorCode.illegalAction.vedleggFileSizeSumTooLarge"
+		)
 		Validerer().validereFilformat(innsendingsId, opplastet, fileName)
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
 		val fil = KonverterTilPdf().tilPdf(opplastet)
 
 		val opplastPaVedlegg: Long = soknadService.finnFilStorrelseSum(soknadDto, vedleggsId)
 		val opplastetPaSoknad: Long = soknadService.finnFilStorrelseSum(soknadDto)
-		Validerer().validerStorrelse(innsendingsId, opplastPaVedlegg, fil.size.toLong(), restConfig.maxFileSize.toLong(), "errorCode.illegalAction.vedleggFileSizeSumTooLarge" )
-		Validerer().validerStorrelse(innsendingsId, opplastetPaSoknad, fil.size.toLong(), restConfig.maxFileSizeSum.toLong(), "errorCode.illegalAction.fileSizeSumTooLarge" )
+		Validerer().validerStorrelse(
+			innsendingsId,
+			opplastPaVedlegg,
+			fil.size.toLong(),
+			restConfig.maxFileSize.toLong(),
+			"errorCode.illegalAction.vedleggFileSizeSumTooLarge"
+		)
+		Validerer().validerStorrelse(
+			innsendingsId,
+			opplastetPaSoknad,
+			fil.size.toLong(),
+			restConfig.maxFileSizeSum.toLong(),
+			"errorCode.illegalAction.fileSizeSumTooLarge"
+		)
 
 		// Lagre
-		val lagretFilDto = soknadService.lagreFil(soknadDto, FilDto(vedleggsId, null, fileName ?:"", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now()))
+		val lagretFilDto = soknadService.lagreFil(
+			soknadDto,
+			FilDto(vedleggsId, null, fileName ?: "", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now())
+		)
 		logger.info("$innsendingsId: Lagret fil ${lagretFilDto.id} på vedlegg $vedleggsId til søknad")
 
 		return ResponseEntity
@@ -302,10 +359,13 @@ class FrontEndRestApi(
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll.harTilgang(soknadDto)
 		if (!(soknadDto.status == SoknadsStatusDto.opprettet ||
-			(soknadDto.status == SoknadsStatusDto.innsendt && soknadDto.vedleggsListe.any { it.id == vedleggsId && it.erHoveddokument && !it.erVariant}))) {
-			throw IllegalActionException("Søknaden kan ikke vises",
-					"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
-					"errorCode.illegalAction.applicationSentInOrDeleted")
+				(soknadDto.status == SoknadsStatusDto.innsendt && soknadDto.vedleggsListe.any { it.id == vedleggsId && it.erHoveddokument && !it.erVariant }))
+		) {
+			throw IllegalActionException(
+				"Søknaden kan ikke vises",
+				"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
+				"errorCode.illegalAction.applicationSentInOrDeleted"
+			)
 		}
 
 		val filDto = soknadService.hentFil(soknadDto, vedleggsId, filId)
@@ -319,7 +379,11 @@ class FrontEndRestApi(
 	}
 
 	private fun mapTilResource(filDto: FilDto): Resource {
-		if (filDto.data == null) throw ResourceNotFoundException("Fant ikke fil", "Fant ikke angitt fil på ${filDto.id}", "errorCode.resourceNotFound.fileNotFound")
+		if (filDto.data == null) throw ResourceNotFoundException(
+			"Fant ikke fil",
+			"Fant ikke angitt fil på ${filDto.id}",
+			"errorCode.resourceNotFound.fileNotFound"
+		)
 		return ByteArrayResource(filDto.data!!)
 	}
 
@@ -383,9 +447,11 @@ class FrontEndRestApi(
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		val kvitteringsDto = soknadService.sendInnSoknad(soknadDto)
-		logger.info("$innsendingsId: Sendt inn soknad.\n" +
-			"InnsendteVedlegg=${kvitteringsDto.innsendteVedlegg?.size}, " +
-			"SkalEttersendes=${kvitteringsDto.skalEttersendes?.size}, ettersendelsesfrist=${kvitteringsDto.ettersendingsfrist}")
+		logger.info(
+			"$innsendingsId: Sendt inn soknad.\n" +
+				"InnsendteVedlegg=${kvitteringsDto.innsendteVedlegg?.size}, " +
+				"SkalEttersendes=${kvitteringsDto.skalEttersendes?.size}, ettersendelsesfrist=${kvitteringsDto.ettersendingsfrist}"
+		)
 
 		return ResponseEntity
 			.status(HttpStatus.OK)

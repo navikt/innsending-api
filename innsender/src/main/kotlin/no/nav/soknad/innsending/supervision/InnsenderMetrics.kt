@@ -65,14 +65,21 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 	fun operationsCounterInc(operation: String, tema: String) = operationsCounter.labels(operation, tema, appName).inc()
 	fun operationsCounterGet(operation: String, tema: String) = operationsCounter.labels(operation, tema, appName)?.get()
 
-	fun operationsErrorCounterInc(operation: String, tema: String) = operationsErrorCounter.labels(operation, tema, appName).inc()
-	fun operationsErrorCounterGet(operation: String, tema: String) = operationsErrorCounter.labels(operation, tema, appName)?.get()
+	fun operationsErrorCounterInc(operation: String, tema: String) =
+		operationsErrorCounter.labels(operation, tema, appName).inc()
 
-	fun operationHistogramLatencyStart(operation: String): Histogram.Timer = operationLatencyHistogram.labels(operation, appName).startTimer()
+	fun operationsErrorCounterGet(operation: String, tema: String) =
+		operationsErrorCounter.labels(operation, tema, appName)?.get()
+
+	fun operationHistogramLatencyStart(operation: String): Histogram.Timer =
+		operationLatencyHistogram.labels(operation, appName).startTimer()
+
 	fun operationHistogramLatencyEnd(timer: Histogram.Timer) {
 		timer.observeDuration()
 	}
-	fun operationHistogramGetLatency(operation: String): Histogram.Child.Value = operationLatencyHistogram.labels(operation, appName).get()
+
+	fun operationHistogramGetLatency(operation: String): Histogram.Child.Value =
+		operationLatencyHistogram.labels(operation, appName).get()
 
 	fun databaseSizeSet(number: Long) = databaseGauge.labels("dbsize", appName).set(number.toDouble())
 	fun databaseSizeGet() = databaseGauge.labels("dbsize", appName)?.get()
