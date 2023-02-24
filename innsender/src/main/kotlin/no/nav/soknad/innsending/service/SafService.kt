@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.consumerapis.saf.SafClientInterface
-import no.nav.soknad.innsending.consumerapis.saf.SafInterface
+import no.nav.soknad.innsending.consumerapis.saf.SafSelvbetjeningInterface
 import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.consumerapis.saf.dto.Dokument
 import no.nav.soknad.innsending.model.AktivSakDto
@@ -13,14 +13,14 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
-class SafService(val safApi: SafInterface, val safClient: SafClientInterface) {
+class SafService(val safSelvbetjeningApi: SafSelvbetjeningInterface, val safClient: SafClientInterface) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	fun hentInnsendteSoknader(brukerId: String): List<AktivSakDto> {
 		val innsendte: List<ArkiverteSaker> =
 			try {
-				safApi.hentBrukersSakerIArkivet(brukerId)
+				safSelvbetjeningApi.hentBrukersSakerIArkivet(brukerId)
 			} catch (ex: Exception) {
 				logger.info("Oppslag mot SAF gav ingen resultat pga feilen ${ex.message}")
 				emptyList()

@@ -2,7 +2,7 @@ package no.nav.soknad.innsending.service
 
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
-import no.nav.soknad.innsending.consumerapis.saf.SafAPITmp
+import no.nav.soknad.innsending.consumerapis.saf.SafSelvbetjeningApiTmp
 import no.nav.soknad.innsending.consumerapis.saf.SafClient
 import no.nav.soknad.innsending.util.testpersonid
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -27,7 +27,7 @@ class SafServiceTest {
 	@Test
 	fun hentInnsendteSoknaderForBrukerTest() {
 		val brukerId = testpersonid
-		val safService = SafService(SafAPITmp(), safClient)
+		val safService = SafService(SafSelvbetjeningApiTmp(), safClient)
 		val innsendteSoknader = safService.hentInnsendteSoknader(brukerId)
 
 		assertTrue(innsendteSoknader.isNotEmpty())
@@ -40,7 +40,7 @@ class SafServiceTest {
 	@Test
 	fun brukerHarIngenInnsendteSoknaderTest() {
 		val brukerId = "999999999999"
-		val safService = SafService(SafAPITmp(), safClient)
+		val safService = SafService(SafSelvbetjeningApiTmp(), safClient)
 		val innsendteSoknader = safService.hentInnsendteSoknader(brukerId)
 
 		assertTrue(innsendteSoknader.isEmpty())
