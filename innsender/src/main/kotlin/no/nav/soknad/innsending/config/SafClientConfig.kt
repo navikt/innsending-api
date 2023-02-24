@@ -55,8 +55,8 @@ class SafClientConfig(
 			}
 	)
 
-	private val propName = "saf-maskintilmaskin"
+	private val safMaskintilmaskin = "saf-maskintilmaskin"
 
-	private val clientProperties = oauth2Config.registration[propName]
-			?: throw RuntimeException("could not find oauth2 client config for $propName")
+	private val clientProperties = oauth2Config.registration[safMaskintilmaskin]
+			?: throw RuntimeException("could not find oauth2 client config for $safMaskintilmaskin")
 }
