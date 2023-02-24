@@ -2,12 +2,7 @@ query ($brukerId: BrukerIdInput!, $foerste: Int!) {
 	dokumentoversiktBruker(brukerId: $brukerId, foerste: $foerste) {
 		journalposter {
 			journalpostId
-			tittel
 			eksternReferanseId
-			journalstatus
-			journalposttype
-			kanal,
-			tema,
 			datoOpprettet
 		}
 	}

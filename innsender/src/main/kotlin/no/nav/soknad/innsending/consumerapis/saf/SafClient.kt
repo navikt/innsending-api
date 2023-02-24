@@ -20,13 +20,18 @@ class SafClient(
 ) : SafClientInterface {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
+	/**
+	 * Denne funksjonen er ment for bruk kun internt i innsending-api
+	 * pga. at tjenesten har ikke tilgangsstyring på brukernivå.
+	 * Dataene som hentes skal altså ikke sendes ut til bruker.
+	 */
 	override fun hentDokumentoversiktBruker(brukerId: String): List<ArkiverteSaker> {
 		return runBlocking {
 			try {
 				val dokumentoversikt = execute(brukerId)
 				dokumentoversikt.journalposter.filterNotNull().map {
 					ArkiverteSaker(
-						it.eksternReferanseId, it.tittel ?: "", it.tema.toString(),
+						it.eksternReferanseId, "", "",
 						it.datoOpprettet, emptyList()
 					)
 				}
