@@ -47,8 +47,8 @@ class ScheduledOperationsService(
 	}
 
 	private fun existsInJoark(brukerid: String, soknader: List<SoknadDbData>): Pair<List<SoknadDbData>, List<SoknadDbData>> {
-		val arkiverteSoknader = safService.hentInnsendteSoknader(brukerid)
-		return soknader.partition { soknad -> arkiverteSoknader.any { sak -> sak.innsendingsId == soknad.innsendingsid } }
+		val arkiverteSoknader = safService.hentArkiverteSaker(brukerid)
+		return soknader.partition { soknad -> arkiverteSoknader.any { sak -> sak.eksternReferanseId == soknad.innsendingsid } }
 	}
 
 }

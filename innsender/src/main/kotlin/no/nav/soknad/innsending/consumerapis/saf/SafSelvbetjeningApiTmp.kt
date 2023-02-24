@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter
 @Service
 @Profile("spring | docker | default")
 @Qualifier("saf")
-class SafAPITmp: SafInterface, HealthRequestInterface {
+class SafSelvbetjeningApiTmp: SafSelvbetjeningInterface, HealthRequestInterface {
 
 	override fun ping(): String {
 		return "pong"

@@ -4,7 +4,7 @@ import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
 import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
-import no.nav.soknad.innsending.utils.AktivSakDtoTestdataBuilder
+import no.nav.soknad.innsending.utils.ArkivertSakerTestdataBuilder
 import no.nav.soknad.innsending.utils.SoknadDbDataTestdataBuilder
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
@@ -53,7 +53,7 @@ class ScheduledOperationsServiceTest {
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 
-		every { safService.hentInnsendteSoknader(soknad.brukerid) } returns emptyList()
+		every { safService.hentArkiverteSaker(soknad.brukerid) } returns emptyList()
 
 		val service = lagScheduledOperationsService()
 		service.updateSoknadErArkivert(TIMESPAN_HOURS, OFFSET_HOURS)
@@ -71,8 +71,8 @@ class ScheduledOperationsServiceTest {
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 
-		val sak = AktivSakDtoTestdataBuilder().fromSoknad(soknad).build()
-		every { safService.hentInnsendteSoknader(soknad.brukerid) } returns listOf(sak)
+		val sak = ArkivertSakerTestdataBuilder().fromSoknad(soknad).build()
+		every { safService.hentArkiverteSaker(soknad.brukerid) } returns listOf(sak)
 
 		val service = lagScheduledOperationsService()
 		service.updateSoknadErArkivert(TIMESPAN_HOURS, OFFSET_HOURS)
@@ -90,8 +90,8 @@ class ScheduledOperationsServiceTest {
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 
-		val sak = AktivSakDtoTestdataBuilder().fromSoknad(soknad).build()
-		every { safService.hentInnsendteSoknader(soknad.brukerid) } returns listOf(sak)
+		val sak = ArkivertSakerTestdataBuilder().fromSoknad(soknad).build()
+		every { safService.hentArkiverteSaker(soknad.brukerid) } returns listOf(sak)
 
 		val service = lagScheduledOperationsService()
 		service.updateSoknadErArkivert(TIMESPAN_HOURS, OFFSET_HOURS)
@@ -115,8 +115,8 @@ class ScheduledOperationsServiceTest {
 		val soknadB = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdatoB, brukerId = soknadA.brukerid).build()
 		soknadRepository.save(soknadB)
 
-		val sakB = AktivSakDtoTestdataBuilder().fromSoknad(soknadB).build()
-		every { safService.hentInnsendteSoknader(soknadA.brukerid) } returns listOf(sakB)
+		val sakB = ArkivertSakerTestdataBuilder().fromSoknad(soknadB).build()
+		every { safService.hentArkiverteSaker(soknadA.brukerid) } returns listOf(sakB)
 
 		val service = lagScheduledOperationsService()
 		service.updateSoknadErArkivert(TIMESPAN_HOURS, OFFSET_HOURS)
@@ -130,7 +130,7 @@ class ScheduledOperationsServiceTest {
 		assertEquals(true, lagretSoknadB.get().erarkivert)
 
 		verify { innsenderMetrics.absentInArchive(1) }
-		verify(exactly = 1) { safService.hentInnsendteSoknader(soknadA.brukerid) }
+		verify(exactly = 1) { safService.hentArkiverteSaker(soknadA.brukerid) }
 	}
 
 	@Test
@@ -139,8 +139,8 @@ class ScheduledOperationsServiceTest {
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 
-		val sak = AktivSakDtoTestdataBuilder().fromSoknad(soknad).build()
-		every { safService.hentInnsendteSoknader(soknad.brukerid) } returns emptyList() andThen listOf(sak)
+		val sak = ArkivertSakerTestdataBuilder().fromSoknad(soknad).build()
+		every { safService.hentArkiverteSaker(soknad.brukerid) } returns emptyList() andThen listOf(sak)
 
 		val service = lagScheduledOperationsService()
 
@@ -166,7 +166,7 @@ class ScheduledOperationsServiceTest {
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 
-		every { safService.hentInnsendteSoknader(soknad.brukerid) } throws Exception("Test :: Saf is unavailable")
+		every { safService.hentArkiverteSaker(soknad.brukerid) } throws Exception("Test :: Saf is unavailable")
 
 		var exceptionThrown = false;
 		val service = lagScheduledOperationsService()
@@ -190,8 +190,8 @@ class ScheduledOperationsServiceTest {
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato, erarkivert = false).build()
 		soknadRepository.save(soknad)
 
-		val sak = AktivSakDtoTestdataBuilder().fromSoknad(soknad).build()
-		every { safService.hentInnsendteSoknader(soknad.brukerid) } returns listOf(sak)
+		val sak = ArkivertSakerTestdataBuilder().fromSoknad(soknad).build()
+		every { safService.hentArkiverteSaker(soknad.brukerid) } returns listOf(sak)
 
 		val service = lagScheduledOperationsService()
 		service.updateSoknadErArkivert(TIMESPAN_HOURS, OFFSET_HOURS)
@@ -211,8 +211,8 @@ class ScheduledOperationsServiceTest {
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato, erarkivert = true).build()
 		soknadRepository.save(soknad)
 
-		val sak = AktivSakDtoTestdataBuilder().fromSoknad(soknad).build()
-		every { safService.hentInnsendteSoknader(soknad.brukerid) } returns listOf(sak)
+		val sak = ArkivertSakerTestdataBuilder().fromSoknad(soknad).build()
+		every { safService.hentArkiverteSaker(soknad.brukerid) } returns listOf(sak)
 
 		val service = lagScheduledOperationsService()
 		service.updateSoknadErArkivert(TIMESPAN_HOURS, OFFSET_HOURS)
