@@ -58,8 +58,6 @@ dbconfig:
 brukernotifikasjonconfig:
   profiles: test
   tjenesteUrl: https://localhost
-  gjenopptaSoknadsArbeid: /dokumentinnsending/oversikt/
-  ettersendePaSoknad: /dokumentinnsending/ettersending/
   publisereEndringer: true
 
 ettersendingsfrist: 14

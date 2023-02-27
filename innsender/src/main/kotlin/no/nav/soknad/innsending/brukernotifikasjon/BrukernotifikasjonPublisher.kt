@@ -33,8 +33,6 @@ class BrukernotifikasjonPublisher(
 		"nn" to "",
 		"en" to ""
 	)
-	val linkDokumentinnsending = notifikasjonConfig.gjenopptaSoknadsArbeid
-	val linkDokumentinnsendingEttersending = notifikasjonConfig.ettersendePaSoknad
 
 	fun soknadStatusChange(dokumentSoknad: DokumentSoknadDto): Boolean {
 		logger.debug("${dokumentSoknad.innsendingsId}: Skal publisere Brukernotifikasjon")
@@ -75,7 +73,7 @@ class BrukernotifikasjonPublisher(
 		// i tilfelle han/hun ikke ferdigstiller og sender inn
 		val ettersending = erEttersending(dokumentSoknad)
 		val tittel = tittelPrefixGittSprak(ettersending, dokumentSoknad.spraak ?: "no") + dokumentSoknad.tittel
-		val lenke = createLink(dokumentSoknad.innsendingsId!!, false)
+		val lenke = createLink(dokumentSoknad.innsendingsId!!)
 
 		val notificationInfo = NotificationInfo(tittel, lenke , soknadLevetid , emptyList())
 		val soknadRef = SoknadRef(dokumentSoknad.innsendingsId!!, ettersending, groupId, dokumentSoknad.brukerId, dokumentSoknad.opprettetDato)
@@ -119,13 +117,10 @@ class BrukernotifikasjonPublisher(
 		publishDoneEvent(dokumentSoknad, groupId)
 	}
 
-	private fun createLink(innsendingsId: String, opprettEttersendingsLink: Boolean): String {
+	private fun createLink(innsendingsId: String): String {
 		// Eksempler:
-		// Fortsett senere: https://tjenester-q1.nav.no/dokumentinnsending/oversikt/10014Qi1G For å gjenoppta påbegynt søknad
-		// Ettersendingslink: https://tjenester-q1.nav.no/dokumentinnsending/ettersendelse/10010WQEF For å opprette søknad for å ettersende vedlegg på tidligere innsendt søknad (10010WQEF)
-		return if (opprettEttersendingsLink)
-			notifikasjonConfig.tjenesteUrl + linkDokumentinnsendingEttersending + innsendingsId  // Nytt endepunkt
-		else
-			notifikasjonConfig.tjenesteUrl + linkDokumentinnsending + innsendingsId
+		// Fortsett senere: https://www.dev.nav.no/sendinn/10014Qi1G For å gjenoppta påbegynt søknad
+
+		return notifikasjonConfig.tjenesteUrl + "/" + innsendingsId
 	}
 }

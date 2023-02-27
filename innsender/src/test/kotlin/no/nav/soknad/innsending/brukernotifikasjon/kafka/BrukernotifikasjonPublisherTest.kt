@@ -61,7 +61,7 @@ internal class BrukernotifikasjonPublisherTest {
 		assertEquals(innsendingsid, message.captured.soknadRef.innsendingId)
 		assertTrue(message.captured.brukernotifikasjonInfo.notifikasjonsTittel.contains(tittel))
 		assertEquals(brukernotifikasjonPublisher?.tittelPrefixNySoknad?.get(spraak)!! + tittel, message.captured.brukernotifikasjonInfo.notifikasjonsTittel)
-		assertEquals(notifikasjonConfig.tjenesteUrl + notifikasjonConfig.gjenopptaSoknadsArbeid + innsendingsid, message.captured.brukernotifikasjonInfo.lenke)
+		assertEquals(notifikasjonConfig.tjenesteUrl + "/" + innsendingsid, message.captured.brukernotifikasjonInfo.lenke)
 	}
 
 	@Test
@@ -128,7 +128,7 @@ internal class BrukernotifikasjonPublisherTest {
 		assertEquals(ettersending.ettersendingsId, oppgave.captured.soknadRef.groupId)
 		assertTrue(oppgave.captured.brukernotifikasjonInfo.notifikasjonsTittel.contains(tittel))
 		assertEquals(brukernotifikasjonPublisher?.tittelPrefixEttersendelse?.get(spraak)!! + tittel, oppgave.captured.brukernotifikasjonInfo.notifikasjonsTittel)
-		assertEquals(notifikasjonConfig.tjenesteUrl + notifikasjonConfig.gjenopptaSoknadsArbeid + ettersendingsSoknadsId, oppgave.captured.brukernotifikasjonInfo.lenke)
+		assertEquals(notifikasjonConfig.tjenesteUrl + "/" + ettersendingsSoknadsId, oppgave.captured.brukernotifikasjonInfo.lenke)
 	}
 
 	@Test
