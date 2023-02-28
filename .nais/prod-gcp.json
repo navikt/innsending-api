@@ -32,8 +32,6 @@
 		"SOKNADSMOTTAKER_ENDPOINT": "/save",
 		"PUBLISERE_BRUKERNOTIFIKASJONER": "true",
 		"TJENESTE_URL": "https://www.nav.no/sendinn",
-		"GJENOPPTA_SOKNADS_ARBEID": "/dokumentinnsending/",
-		"ETTERSENDE_PA_SOKNAD": "/dokumentinnsending/ettersending/",
 		"TOKENDINGS_BASE_URL": "https://tokendings.prod-gcp.nais.io",
 		"SAFSELVBETJENING_TOKEN_X_AUDIENCE": "prod-fss:teamdokumenthandtering:safselvbetjening",
 		"PDL_TOKEN_X_AUDIENCE": "prod-fss:pdl:pdl-api",
