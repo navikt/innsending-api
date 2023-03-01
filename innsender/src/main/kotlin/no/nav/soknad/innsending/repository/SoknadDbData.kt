@@ -24,5 +24,6 @@ data class SoknadDbData(
 	@Column(name = "visningstype", columnDefinition = "varchar") val visningstype: VisningsType? = if (ettersendingsid != null) VisningsType.ettersending else VisningsType.dokumentinnsending,
 	@Column(name = "kanlasteoppannet", columnDefinition = "boolean") val kanlasteoppannet: Boolean? = true,
 	@Column(name = "forsteinnsendingsdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val forsteinnsendingsdato: LocalDateTime?,
-	@Column(name = "ettersendingsfrist", columnDefinition = "int") val ettersendingsfrist: Long? = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
+	@Column(name = "ettersendingsfrist", columnDefinition = "int") val ettersendingsfrist: Long? = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
+	@Column(name = "erarkivert", columnDefinition = "boolean") val erarkivert: Boolean? = null,
 )

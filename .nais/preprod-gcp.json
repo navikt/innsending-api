@@ -21,7 +21,8 @@
 		"MAX_FILE_SIZE_SUM": "150",
 		"ETTERSENDINGSFRIST": 14,
 		"PDL_URL": "https://pdl-api.dev-fss-pub.nais.io",
-		"SAF_URL": "https://safselvbetjening-q1.dev-fss-pub.nais.io",
+		"SAFSELVBETJENING_URL": "https://safselvbetjening-q1.dev-fss-pub.nais.io",
+		"SAF_URL": "https://saf.dev-fss-pub.nais.io",
 		"STS_URL": "https://api-gw-q1.oera.no/security-token-service/",
 		"SANITY_HOST": "https://www.nav.no",
 		"SANITY_ENDPOINT": "/soknader/api/sanity/skjemautlisting",
@@ -38,6 +39,7 @@
 		"PDL_SCOPE": "api://dev-fss.pdl.pdl-api/.default",
 		"AZURE_TENANT": "trygdeetaten.no",
 		"SOKNADSFILLAGER_SCOPE": "api://dev-gcp.team-soknad.soknadsfillager/.default",
-		"SOKNADSMOTTAKER_SCOPE": "api://dev-gcp.team-soknad.soknadsmottaker/.default"
+		"SOKNADSMOTTAKER_SCOPE": "api://dev-gcp.team-soknad.soknadsmottaker/.default",
+		"SAF_SCOPE": "api://dev-fss.teamdokumenthandtering.saf-q1/.default"
 	}
 }
