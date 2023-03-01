@@ -114,12 +114,11 @@ spring:
   datasource:
     url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DATABASE}?user=${DATABASE_USERNAME}&password=${DATABASE_PASSWORD}
     hikari:
-      minimum-idle: 1
-      maximum-pool-size: 10
+      maximum-pool-size: 20
       connection-timeout: 10000
-      idle-timeout: 10001
-      max-lifetime: 60001
-      leak-detection-threshold: 60000
+      max-lifetime: 50001
+      validationTimeout: 5000
+      leak-detection-threshold: 50000
 
 restconfig:
   version: ${APP_VERSION}

@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
+import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.skjema.KodeverkSkjema
@@ -19,6 +20,7 @@ import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.PdfMerger
+import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -37,8 +39,9 @@ class SoknadService(
 	private val fillagerAPI: FillagerInterface,
 	private val soknadsmottakerAPI: MottakerInterface,
 	private val innsenderMetrics: InnsenderMetrics,
-	private val pdlInterface: PdlInterface
-) {
+	private val pdlInterface: PdlInterface,
+	private val restConfig: RestConfig
+	) {
 
 	@Value("\${ettersendingsfrist}")
 	private var ettersendingsfrist: Long = 14
@@ -645,6 +648,7 @@ class SoknadService(
 			throw ResourceNotFoundException(null, "Vedlegg $filDto.vedleggsid til søknad ${soknadDto.innsendingsId} eksisterer ikke", "errorCode.resourceNotFound.attachmentNotFound")
 
 		val savedFilDbData = try {
+			Validerer().validerStorrelse(soknadDto.innsendingsId!!, finnFilStorrelseSum(soknadDto, filDto.vedleggsid), (filDto.data?.size ?: 0).toLong(), restConfig.maxFileSize.toLong(), "errorCode.illegalAction.vedleggFileSizeSumTooLarge" )
 			repo.saveFilDbData(soknadDto.innsendingsId!!, mapTilFilDb(filDto))
 		} catch (e: Exception) {
 			reportException(e, operation, soknadDto.tema)
