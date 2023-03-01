@@ -1,4 +1,5 @@
 name: Manually triggered deployment
+run-name: Manual ${{ github.event.inputs.environment }} deploy of branch ${{ github.head_ref || github.ref_name }}
 
 on:
   workflow_dispatch:

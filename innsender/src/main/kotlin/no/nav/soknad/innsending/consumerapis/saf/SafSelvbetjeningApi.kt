@@ -21,9 +21,9 @@ import org.springframework.stereotype.Service
 @Service
 @Profile("test | dev | prod")
 @Qualifier("saf")
-class SafAPI(
+class SafSelvbetjeningApi(
 	private val safSelvbetjeningGraphQLClient: GraphQLWebClient
-): SafInterface, HealthRequestInterface {
+): SafSelvbetjeningInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 

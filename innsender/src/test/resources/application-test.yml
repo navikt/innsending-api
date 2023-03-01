@@ -46,6 +46,7 @@ restconfig:
   clientSecret: clientSecret
   pdlScope: api://dev-fss.pdl.pdl-api/.default
   pdlUrl: http://localhost:${wiremock.server.port}/pdl-api
+  safselvbetjeningUrl: http://localhost:${wiremock.server.port}/safselvbetjening-api
   safUrl: http://localhost:${wiremock.server.port}/saf-api
   azureUrl: http://localhost:${wiremock.server.port}/azure-api
 
@@ -58,8 +59,6 @@ dbconfig:
 brukernotifikasjonconfig:
   profiles: test
   tjenesteUrl: https://localhost
-  gjenopptaSoknadsArbeid: /dokumentinnsending/oversikt/
-  ettersendePaSoknad: /dokumentinnsending/ettersending/
   publisereEndringer: true
 
 ettersendingsfrist: 14
@@ -100,3 +99,12 @@ no.nav.security.jwt:
           client-jwk: src/test/resources/tokenx-jwk.json
         token-exchange:
           audience: dummyAudience
+
+      saf-maskintilmaskin:
+        token-endpoint-url: http://localhost:${mock-oauth2-server.port}/tokenx/token
+        grant-type: client_credentials
+        scope: ${SAF_SCOPE}
+        authentication:
+          client-id: "dev-gcp:team-soknad:innsending-api"
+          client-jwk: src/test/resources/tokenx-jwk.json
+          client-auth-method: private_key_jwt

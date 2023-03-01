@@ -1,6 +1,9 @@
 package no.nav.soknad.innsending.service
 
-import no.nav.soknad.innsending.consumerapis.saf.SafAPITmp
+import io.mockk.impl.annotations.InjectMockKs
+import io.mockk.mockk
+import no.nav.soknad.innsending.consumerapis.saf.SafSelvbetjeningApiTmp
+import no.nav.soknad.innsending.consumerapis.saf.SafClient
 import no.nav.soknad.innsending.util.testpersonid
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -18,10 +21,13 @@ import kotlin.test.assertEquals
 @EnableTransactionManagement
 class SafServiceTest {
 
+	@InjectMockKs
+	private val safClient = mockk<SafClient>()
+
 	@Test
 	fun hentInnsendteSoknaderForBrukerTest() {
 		val brukerId = testpersonid
-		val safService = SafService(SafAPITmp())
+		val safService = SafService(SafSelvbetjeningApiTmp(), safClient)
 		val innsendteSoknader = safService.hentInnsendteSoknader(brukerId)
 
 		assertTrue(innsendteSoknader.isNotEmpty())
@@ -34,7 +40,7 @@ class SafServiceTest {
 	@Test
 	fun brukerHarIngenInnsendteSoknaderTest() {
 		val brukerId = "999999999999"
-		val safService = SafService(SafAPITmp())
+		val safService = SafService(SafSelvbetjeningApiTmp(), safClient)
 		val innsendteSoknader = safService.hentInnsendteSoknader(brukerId)
 
 		assertTrue(innsendteSoknader.isEmpty())

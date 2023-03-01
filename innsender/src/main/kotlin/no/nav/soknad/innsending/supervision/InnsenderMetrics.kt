@@ -26,12 +26,22 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 	private val latencyHelp = "Innsending latency distribution"
 	private val databaseSizeName = "database_size"
 	private val databaseSizeHelp = "Database size"
+	private val absentInArchiveName = "applications_absent_in_archive_total"
+	private val absentInArchiveHelp = "Number of applications absent in archive"
 
 	private val operationsCounter = registerCounter(name, help, operationLabel)
 	private val operationsErrorCounter = registerCounter(errorName, helpError, operationLabel)
 	private val operationLatencyHistogram = registerLatencyHistogram(latency, latencyHelp, operationLabel)
-	private val databaseGauge = registerGauge(databaseSizeName, databaseSizeHelp, operationLabel)
+	private val databaseGauge = registerGauge(databaseSizeName, databaseSizeHelp)
+	private val absentInArchiveGauge = registerGauge(absentInArchiveName, absentInArchiveHelp)
 
+	private val jobLastSuccessGauge = Gauge
+		.build()
+		.namespace(soknadNamespace)
+		.name("job_last_success_timestamp")
+		.help("Last time a job succeeded (unixtime)")
+		.labelNames("job_name")
+		.register(registry)
 
 	private fun registerCounter(name: String, help: String, label: String): Counter =
 		Counter
@@ -52,13 +62,12 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 			.buckets(100.0, 200.0, 400.0, 1000.0, 2000.0, 4000.0, 15000.0, 30000.0)
 			.register(registry)
 
-	private fun registerGauge(name: String, help: String, label: String): Gauge =
+	private fun registerGauge(name: String, help: String): Gauge =
 		Gauge
 			.build()
 			.namespace(soknadNamespace)
 			.name(name)
 			.help(help)
-			.labelNames(label, appLabel)
 			.register(registry)
 
 
@@ -74,6 +83,10 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 	}
 	fun operationHistogramGetLatency(operation: String): Histogram.Child.Value = operationLatencyHistogram.labels(operation, appName).get()
 
-	fun databaseSizeSet(number: Long) = databaseGauge.labels("dbsize", appName).set(number.toDouble())
-	fun databaseSizeGet() = databaseGauge.labels("dbsize", appName)?.get()
+	fun databaseSizeSet(number: Long) = databaseGauge.set(number.toDouble())
+	fun databaseSizeGet() = databaseGauge.get()
+
+	fun absentInArchive(number: Long) = absentInArchiveGauge.set(number.toDouble())
+
+	fun updateJobLastSuccess(jobName: String) = jobLastSuccessGauge.labels(jobName).setToCurrentTime()
 }
