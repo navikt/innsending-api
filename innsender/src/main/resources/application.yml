@@ -91,12 +91,14 @@ spring:
   datasource:
     url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DATABASE}?user=${DATABASE_USERNAME}&password=${DATABASE_PASSWORD}
     hikari:
-      minimum-idle: 1
-      maximum-pool-size: 10
+      maximum-pool-size: 20
       connection-timeout: 10000
-      idle-timeout: 10001
-      max-lifetime: 30001
-      leak-detection-threshold: 30000
+      max-lifetime: 50001
+      validationTimeout: 5000
+      leak-detection-threshold: 50000
+    dbcp2:
+      test-on-borrow: true
+      validation-query: "SELECT 1"
 
 ---
 spring:
@@ -119,6 +121,9 @@ spring:
       max-lifetime: 50001
       validationTimeout: 5000
       leak-detection-threshold: 50000
+    dbcp2:
+      test-on-borrow: true
+      validation-query: "SELECT 1"
 
 restconfig:
   version: ${APP_VERSION}
