@@ -38,4 +38,15 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 
 	@Query(value = "SELECT * FROM soknad WHERE opprettetdato <= :opprettetFor ORDER BY opprettetdato", nativeQuery = true)
 	fun findAllByOpprettetdatoBefore(@Param("opprettetFor") opprettetFor: OffsetDateTime): List<SoknadDbData>
+
+	@Query(value = "SELECT * FROM soknad WHERE erarkivert IS NOT TRUE AND innsendtdato >= :start AND innsendtdato <= :end ORDER BY innsendtdato", nativeQuery = true)
+	fun findAllNotArchivedAndInnsendtdatoBetween(@Param("start") start: LocalDateTime, @Param("end") end: LocalDateTime): List<SoknadDbData>
+
+	@Transactional
+	@Modifying
+	@Query(value = "UPDATE SoknadDbData SET erarkivert = :erArkivert WHERE innsendingsid in (:innsendingsids)", nativeQuery = false)
+	fun updateErArkivert(erArkivert: Boolean, @Param("innsendingsids") innsendingsids: List<String>)
+
+	@Query(value = "SELECT COUNT(*) FROM soknad WHERE erarkivert = :erarkivert", nativeQuery = true)
+	fun countErarkivertIs(@Param("erarkivert") erarkivert: Boolean): Long
 }

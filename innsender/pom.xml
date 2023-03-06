@@ -392,7 +392,7 @@
 				<version>${graphql-kotlin.version}</version>
 				<executions>
 					<execution>
-						<id>generate-saf-client</id>
+						<id>generate-safselvbetjening-client</id>
 						<goals>
 							<goal>generate-client</goal>
 						</goals>
@@ -404,6 +404,21 @@
 <!--
 							<serializer>KOTLINX</serializer>
 -->
+						</configuration>
+					</execution>
+					<execution>
+						<id>generate-saf-client</id>
+						<goals>
+							<goal>generate-client</goal>
+						</goals>
+						<configuration>
+							<queryFileDirectory>${project.basedir}/src/main/resources/graphql/saf</queryFileDirectory>
+							<schemaFile>${project.basedir}/src/main/resources/graphql/saf/saf.graphqls</schemaFile>
+							<packageName>no.nav.soknad.innsending.saf.generated</packageName>
+							<!-- optional configuration below -->
+							<!--
+							<serializer>KOTLINX</serializer>
+							-->
 						</configuration>
 					</execution>
 					<execution>
