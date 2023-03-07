@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
+import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.skjema.SkjemaClient
@@ -62,9 +63,12 @@ class FjernGamleSoknaderTest {
 	@InjectMockKs
 	private val leaderSelectionUtility = mockk<LeaderSelectionUtility>()
 
+	@Autowired
+	private lateinit var restConfig: RestConfig
+
 
 	private fun lagSoknadService(): SoknadService = SoknadService(
-		skjemaService, repo, brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics, pdlInterface)
+		skjemaService, repo, brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics, pdlInterface, restConfig)
 
 	@BeforeEach
 	fun init() {
