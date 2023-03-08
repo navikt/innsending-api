@@ -648,12 +648,13 @@ class SoknadService(
 			throw ResourceNotFoundException(null, "Vedlegg $filDto.vedleggsid til søknad ${soknadDto.innsendingsId} eksisterer ikke", "errorCode.resourceNotFound.attachmentNotFound")
 
 		val savedFilDbData = try {
-			Validerer().validerStorrelse(soknadDto.innsendingsId!!, finnFilStorrelseSum(soknadDto, filDto.vedleggsid), (filDto.data?.size ?: 0).toLong(), restConfig.maxFileSize.toLong(), "errorCode.illegalAction.vedleggFileSizeSumTooLarge" )
 			repo.saveFilDbData(soknadDto.innsendingsId!!, mapTilFilDb(filDto))
 		} catch (e: Exception) {
 			reportException(e, operation, soknadDto.tema)
 			throw e
 		}
+		Validerer().validerStorrelse(soknadDto.innsendingsId!!, finnFilStorrelseSum(soknadDto, filDto.vedleggsid), 0, restConfig.maxFileSize.toLong(), "errorCode.illegalAction.vedleggFileSizeSumTooLarge" )
+		Validerer().validerStorrelse(soknadDto.innsendingsId!!, finnFilStorrelseSum(soknadDto), 0, restConfig.maxFileSizeSum.toLong(), "errorCode.illegalAction.fileSizeSumTooLarge" )
 		repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, filDto.vedleggsid, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
 		innsenderMetrics.operationsCounterInc(operation, soknadDto.tema)
 		return lagFilDto(savedFilDbData, false)

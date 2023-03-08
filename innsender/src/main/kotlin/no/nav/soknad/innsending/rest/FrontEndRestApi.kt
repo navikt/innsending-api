@@ -279,10 +279,12 @@ class FrontEndRestApi(
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
 		val fil = KonverterTilPdf().tilPdf(opplastet)
 
+/*
 		val opplastPaVedlegg: Long = soknadService.finnFilStorrelseSum(soknadDto, vedleggsId)
 		val opplastetPaSoknad: Long = soknadService.finnFilStorrelseSum(soknadDto)
 		Validerer().validerStorrelse(innsendingsId, opplastPaVedlegg, fil.size.toLong(), restConfig.maxFileSize.toLong(), "errorCode.illegalAction.vedleggFileSizeSumTooLarge" )
 		Validerer().validerStorrelse(innsendingsId, opplastetPaSoknad, fil.size.toLong(), restConfig.maxFileSizeSum.toLong(), "errorCode.illegalAction.fileSizeSumTooLarge" )
+*/
 
 		// Lagre
 		val lagretFilDto = soknadService.lagreFil(soknadDto, FilDto(vedleggsId, null, fileName ?:"", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now()))
