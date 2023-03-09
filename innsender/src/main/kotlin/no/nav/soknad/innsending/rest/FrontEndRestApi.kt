@@ -270,7 +270,7 @@ class FrontEndRestApi(
 		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
 		val fileName = file.filename
 		if (!fileName.isNullOrEmpty()) {
-			logger.info("$innsendingsId: Skal validere $fileName")
+			logger.info("$innsendingsId: Skal validere ${fileName.split('.')[1]}")
 		}
 		if (!file.isReadable) throw IllegalActionException("Ingen fil opplastet", "Opplasting feilet", "errorCode.illegalAction.fileCannotBeRead")
 		val opplastet = (file as ByteArrayResource).byteArray

@@ -647,12 +647,14 @@ class SoknadService(
 		if (soknadDto.vedleggsListe.none { it.id == filDto.vedleggsid })
 			throw ResourceNotFoundException(null, "Vedlegg $filDto.vedleggsid til søknad ${soknadDto.innsendingsId} eksisterer ikke", "errorCode.resourceNotFound.attachmentNotFound")
 
+		logger.debug("${soknadDto.innsendingsId!!}: Skal lagre fil med størrelse ${filDto.data!!.size} på vedlegg ${filDto.vedleggsid}")
 		val savedFilDbData = try {
 			repo.saveFilDbData(soknadDto.innsendingsId!!, mapTilFilDb(filDto))
 		} catch (e: Exception) {
 			reportException(e, operation, soknadDto.tema)
 			throw e
 		}
+		logger.debug("${soknadDto.innsendingsId!!}: Valider størrelse av opplastinger på vedlegg ${filDto.vedleggsid} og søknad ${soknadDto.innsendingsId!!}")
 		Validerer().validerStorrelse(soknadDto.innsendingsId!!, finnFilStorrelseSum(soknadDto, filDto.vedleggsid), 0, restConfig.maxFileSize.toLong(), "errorCode.illegalAction.vedleggFileSizeSumTooLarge" )
 		Validerer().validerStorrelse(soknadDto.innsendingsId!!, finnFilStorrelseSum(soknadDto), 0, restConfig.maxFileSizeSum.toLong(), "errorCode.illegalAction.fileSizeSumTooLarge" )
 		repo.oppdaterVedleggStatus(soknadDto.innsendingsId!!, filDto.vedleggsid, OpplastingsStatus.LASTET_OPP, LocalDateTime.now())
@@ -932,6 +934,8 @@ class SoknadService(
 		val alleVedlegg: List<VedleggDto> = ferdigstillVedlegg(soknadDto)
 		val opplastedeVedlegg = alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
 		val manglendePakrevdeVedlegg = alleVedlegg.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") && (it.opplastingsStatus == OpplastingsStatusDto.sendSenere || it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt) }
+
+		Validerer().validerStorrelse(soknadDto.innsendingsId!!, finnFilStorrelseSum(soknadDto), 0, restConfig.maxFileSizeSum.toLong(), "errorCode.illegalAction.fileSizeSumTooLarge" )
 
 		logger.info("${soknadDtoInput.innsendingsId}: Opplastede vedlegg = ${opplastedeVedlegg.map { it.vedleggsnr+':'+it.uuid+':'+it.opprettetdato+':'+it.document?.size }}")
 		logger.info("${soknadDtoInput.innsendingsId}: Ikke opplastede påkrevde vedlegg = ${manglendePakrevdeVedlegg.map { it.vedleggsnr+':'+it.opprettetdato }}")
