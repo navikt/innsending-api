@@ -136,10 +136,10 @@ spring:
     hikari:
       minimum-idle: 1
       maximum-pool-size: 20
-      connection-timeout: 30000
+      connection-timeout: 50000
       max-lifetime: 50001
-      validationTimeout: 5000
-      leak-detection-threshold: 50000
+      validationTimeout: 20000
+      leak-detection-threshold: 40000
     dbcp2:
       test-on-borrow: true
       validation-query: "SELECT 1"
