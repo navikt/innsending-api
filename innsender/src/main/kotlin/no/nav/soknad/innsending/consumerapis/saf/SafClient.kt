@@ -7,11 +7,17 @@ import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.saf.generated.HentDokumentoversiktBruker
 import no.nav.soknad.innsending.saf.generated.enums.BrukerIdType
+import no.nav.soknad.innsending.saf.generated.enums.Journalposttype
 import no.nav.soknad.innsending.saf.generated.hentdokumentoversiktbruker.Dokumentoversikt
 import no.nav.soknad.innsending.saf.generated.inputs.BrukerIdInput
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.*
+
 
 @Component
 @Profile("test | dev | prod")
@@ -47,7 +53,7 @@ class SafClient(
 			HentDokumentoversiktBruker(
 				HentDokumentoversiktBruker.Variables(
 					BrukerIdInput(id = brukerId, type = BrukerIdType.FNR),
-					10
+					10, listOf(Journalposttype.I), listOf(), format(LocalDateTime.now().minusDays(2))
 				)
 			)
 		)
@@ -58,6 +64,11 @@ class SafClient(
 			return response.data!!.dokumentoversiktBruker
 		}
 		throw RuntimeException("Oppslag mot saf feilet, ingen data returnert.")
+	}
+
+	fun format(date: LocalDateTime): String {
+		val formatter = DateTimeFormatter.ofPattern("YYYY-MM-DD'T'hh:mm:ss")
+		return date.format(formatter)
 	}
 
 }

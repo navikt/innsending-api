@@ -1,5 +1,5 @@
-query ($brukerId: BrukerIdInput!, $foerste: Int!) {
-	dokumentoversiktBruker(brukerId: $brukerId, foerste: $foerste) {
+query ($brukerId: BrukerIdInput!, $foerste: Int!, $journalposttyper: [Journalposttype]!, $journalstatuser: [Journalstatus]!, $fraDato: Date!) {
+	dokumentoversiktBruker(brukerId: $brukerId, foerste: $foerste, journalposttyper: $journalposttyper, journalstatuser: $journalstatuser, fraDato: $fraDato) {
 		journalposter {
 			journalpostId
 			eksternReferanseId
