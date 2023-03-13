@@ -67,7 +67,7 @@ class SafClient(
 	}
 
 	fun formatDate(date: LocalDateTime): String {
-		val formatter = DateTimeFormatter.ofPattern("YYYY-MM-DD")
+		val formatter = DateTimeFormatter.ofPattern("YYYY-MM-dd")
 		return date.format(formatter)
 	}
 
