@@ -30,6 +30,7 @@ class ScheduledOperationsService(
 			.fold(emptyPair) { acc, pair -> Pair(acc.first + pair.first, acc.second + pair.second) }
 
 		if (existsInJoark.isNotEmpty()) {
+			logger.debug("Antall arkivert ${existsInJoark.size}")
 			soknadRepository.updateErArkivert(true, existsInJoark.map { soknad -> soknad.innsendingsid })
 		}
 
