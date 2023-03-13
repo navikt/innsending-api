@@ -53,7 +53,7 @@ class SafClient(
 			HentDokumentoversiktBruker(
 				HentDokumentoversiktBruker.Variables(
 					BrukerIdInput(id = brukerId, type = BrukerIdType.FNR),
-					10, listOf(Journalposttype.I), listOf(), format(LocalDateTime.now().minusDays(2))
+					10, listOf(Journalposttype.I), listOf(), formatDate(LocalDateTime.now().minusDays(2))
 				)
 			)
 		)
@@ -65,6 +65,12 @@ class SafClient(
 		}
 		throw RuntimeException("Oppslag mot saf feilet, ingen data returnert.")
 	}
+
+	fun formatDate(date: LocalDateTime): String {
+		val formatter = DateTimeFormatter.ofPattern("YYYY-MM-DD")
+		return date.format(formatter)
+	}
+
 
 	fun format(date: LocalDateTime): String {
 		val formatter = DateTimeFormatter.ofPattern("YYYY-MM-DD'T'hh:mm:ss")
