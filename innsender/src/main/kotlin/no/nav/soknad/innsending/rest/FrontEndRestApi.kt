@@ -269,8 +269,9 @@ class FrontEndRestApi(
 
 		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
 		val fileName = file.filename
-		if (!fileName.isNullOrEmpty()) {
-			logger.info("$innsendingsId: Skal validere ${fileName.split('.')[1]}")
+		if (!fileName.isNullOrEmpty() && fileName.contains(".")) {
+			val split = fileName.split(".")
+			logger.info("$innsendingsId: Skal validere ${split[split.size-1]}")
 		}
 		if (!file.isReadable) throw IllegalActionException("Ingen fil opplastet", "Opplasting feilet", "errorCode.illegalAction.fileCannotBeRead")
 		val opplastet = (file as ByteArrayResource).byteArray
@@ -278,13 +279,6 @@ class FrontEndRestApi(
 		Validerer().validereFilformat(innsendingsId, opplastet, fileName)
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
 		val fil = KonverterTilPdf().tilPdf(opplastet)
-
-/*
-		val opplastPaVedlegg: Long = soknadService.finnFilStorrelseSum(soknadDto, vedleggsId)
-		val opplastetPaSoknad: Long = soknadService.finnFilStorrelseSum(soknadDto)
-		Validerer().validerStorrelse(innsendingsId, opplastPaVedlegg, fil.size.toLong(), restConfig.maxFileSize.toLong(), "errorCode.illegalAction.vedleggFileSizeSumTooLarge" )
-		Validerer().validerStorrelse(innsendingsId, opplastetPaSoknad, fil.size.toLong(), restConfig.maxFileSizeSum.toLong(), "errorCode.illegalAction.fileSizeSumTooLarge" )
-*/
 
 		// Lagre
 		val lagretFilDto = soknadService.lagreFil(soknadDto, FilDto(vedleggsId, null, fileName ?:"", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now()))
