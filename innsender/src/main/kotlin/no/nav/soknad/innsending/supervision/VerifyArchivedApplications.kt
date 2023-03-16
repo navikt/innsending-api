@@ -28,7 +28,7 @@ class VerifyArchivedApplications(
 	fun run() {
 		try {
 			if (leaderSelectionUtility.isLeader()) {
-				scheduledOperationsService.updateSoknadErArkivert(timespanHours, offsetHours)
+				scheduledOperationsService.checkIfApplicationsAreArchived(timespanHours, offsetHours)
 				metrics.updateJobLastSuccess(JOB_NAME)
 			}
 		} catch (e: Exception) {

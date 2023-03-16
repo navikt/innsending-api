@@ -56,7 +56,7 @@ class ScheduledOperationsServiceTest {
 		every { safService.hentArkiverteSaker(soknad.brukerid) } returns emptyList()
 
 		val service = lagScheduledOperationsService()
-		service.updateSoknadErArkivert(TIMESPAN_HOURS, OFFSET_HOURS)
+		service.checkIfApplicationsAreArchived(TIMESPAN_HOURS, OFFSET_HOURS)
 
 		val lagretSoknad = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad.isPresent)
@@ -75,7 +75,7 @@ class ScheduledOperationsServiceTest {
 		every { safService.hentArkiverteSaker(soknad.brukerid) } returns listOf(sak)
 
 		val service = lagScheduledOperationsService()
-		service.updateSoknadErArkivert(TIMESPAN_HOURS, OFFSET_HOURS)
+		service.checkIfApplicationsAreArchived(TIMESPAN_HOURS, OFFSET_HOURS)
 
 		val lagretSoknad = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad.isPresent)
@@ -94,7 +94,7 @@ class ScheduledOperationsServiceTest {
 		every { safService.hentArkiverteSaker(soknad.brukerid) } returns listOf(sak)
 
 		val service = lagScheduledOperationsService()
-		service.updateSoknadErArkivert(TIMESPAN_HOURS, OFFSET_HOURS)
+		service.checkIfApplicationsAreArchived(TIMESPAN_HOURS, OFFSET_HOURS)
 
 		verify { safService wasNot called }
 
@@ -119,7 +119,7 @@ class ScheduledOperationsServiceTest {
 		every { safService.hentArkiverteSaker(soknadA.brukerid) } returns listOf(sakB)
 
 		val service = lagScheduledOperationsService()
-		service.updateSoknadErArkivert(TIMESPAN_HOURS, OFFSET_HOURS)
+		service.checkIfApplicationsAreArchived(TIMESPAN_HOURS, OFFSET_HOURS)
 
 		val lagretSoknadA = soknadRepository.findById(soknadA.id!!)
 		assertTrue(lagretSoknadA.isPresent)
@@ -144,12 +144,12 @@ class ScheduledOperationsServiceTest {
 
 		val service = lagScheduledOperationsService()
 
-		service.updateSoknadErArkivert(TIMESPAN_HOURS, OFFSET_HOURS)
+		service.checkIfApplicationsAreArchived(TIMESPAN_HOURS, OFFSET_HOURS)
 		val lagretSoknad1 = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad1.isPresent)
 		assertEquals(false, lagretSoknad1.get().erarkivert)
 
-		service.updateSoknadErArkivert(TIMESPAN_HOURS, OFFSET_HOURS)
+		service.checkIfApplicationsAreArchived(TIMESPAN_HOURS, OFFSET_HOURS)
 		val lagretSoknad2 = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad2.isPresent)
 		assertEquals(true, lagretSoknad2.get().erarkivert)
@@ -171,7 +171,7 @@ class ScheduledOperationsServiceTest {
 		var exceptionThrown = false;
 		val service = lagScheduledOperationsService()
 		try {
-			service.updateSoknadErArkivert(TIMESPAN_HOURS, OFFSET_HOURS)
+			service.checkIfApplicationsAreArchived(TIMESPAN_HOURS, OFFSET_HOURS)
 		} catch (e: Exception) {
 			exceptionThrown = true
 		}
@@ -194,7 +194,7 @@ class ScheduledOperationsServiceTest {
 		every { safService.hentArkiverteSaker(soknad.brukerid) } returns listOf(sak)
 
 		val service = lagScheduledOperationsService()
-		service.updateSoknadErArkivert(TIMESPAN_HOURS, OFFSET_HOURS)
+		service.checkIfApplicationsAreArchived(TIMESPAN_HOURS, OFFSET_HOURS)
 
 		verify { safService wasNot called }
 
@@ -215,7 +215,7 @@ class ScheduledOperationsServiceTest {
 		every { safService.hentArkiverteSaker(soknad.brukerid) } returns listOf(sak)
 
 		val service = lagScheduledOperationsService()
-		service.updateSoknadErArkivert(TIMESPAN_HOURS, OFFSET_HOURS)
+		service.checkIfApplicationsAreArchived(TIMESPAN_HOURS, OFFSET_HOURS)
 
 		verify { safService wasNot called }
 
