@@ -12,6 +12,7 @@
 		"soknadsmottaker",
 		"soknadsfillager"
 	],
+	"kafka-pool": "nav-prod",
 	"env": {
 		"DATABASE_NAME": "dokumentinnsending",
 		"SPRING_PROFILES_ACTIVE": "prod",
@@ -40,6 +41,8 @@
 		"AZURE_TENANT": "nav.no",
 		"SOKNADSFILLAGER_SCOPE": "api://prod-gcp.team-soknad.soknadsfillager/.default",
 		"SOKNADSMOTTAKER_SCOPE": "api://prod-gcp.team-soknad.soknadsmottaker/.default",
-		"SAF_SCOPE": "api://prod-fss.teamdokumenthandtering.saf/.default"
+		"SAF_SCOPE": "api://prod-fss.teamdokumenthandtering.saf/.default",
+		"KAFKA_SECURITY": "true",
+		"KAFKA_MESSAGE_TOPIC": "team-soknad.privat-soknadinnsending-messages-v2"
 	}
 }

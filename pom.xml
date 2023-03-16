@@ -27,6 +27,7 @@
 		<io-netty.version>4.1.86.Final</io-netty.version>
 		<okio.version>3.2.0</okio.version>
 		<jackson.version>2.13.4</jackson.version>
+		<kafka.version>3.4.0</kafka.version>
 	</properties>
 
 	<modules>
