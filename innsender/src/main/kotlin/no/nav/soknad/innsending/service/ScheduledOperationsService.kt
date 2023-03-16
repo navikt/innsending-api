@@ -28,7 +28,7 @@ class ScheduledOperationsService(
 			logger.error("Detected ${absentInJoark.size} submitted application(s) [$start -> $end] which do not exist in Joark: $innsendingsIdList")
 		}
 
-		val soknaderAbsentInArchive = soknadRepository.countErarkivertIs(false)
+		val soknaderAbsentInArchive = soknadRepository.countIkkeArkivert()
 		logger.info("Total number of applications absent in archive: $soknaderAbsentInArchive")
 		innsenderMetrics.absentInArchive(soknaderAbsentInArchive)
 	}
