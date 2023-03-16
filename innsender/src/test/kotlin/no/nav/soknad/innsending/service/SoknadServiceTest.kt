@@ -118,7 +118,7 @@ class SoknadServiceTest {
 
 		val brukerid = testpersonid
 		val skjemanr = defaultSkjemanr
-		val skjemaTittel_en = "Agreement regarding child support"
+		val skjemaTittel_en = skjemaService.hentSkjemaEllerVedlegg(defaultSkjemanr, "en").tittel
 		val spraak = "fr"
 		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
 
@@ -176,6 +176,46 @@ class SoknadServiceTest {
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.none { it.opplastingsStatus == OpplastingsStatusDto.innsendt })
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+	}
+
+	@Test
+	fun testAtFilerIkkeSlettesVedInnsending() {
+		val soknadService = lagSoknadService()
+		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+
+		// Laster opp skjema (hoveddokumentet) til soknaden
+		soknadService.lagreFil(dokumentSoknadDto, lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument }))
+
+		// laster opp fil til vedlegget
+		val lagretFilForVedlegg = soknadService.lagreFil(dokumentSoknadDto
+			, lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first {
+				!it.erHoveddokument && it.vedleggsnr.equals(
+					"W1",
+					true
+				)
+			}))
+
+		assertTrue( lagretFilForVedlegg.id != null)
+		assertTrue(lagretFilForVedlegg.vedleggsid == dokumentSoknadDto.vedleggsListe.first {
+			!it.erHoveddokument && it.vedleggsnr.equals(
+				"W1",
+				true
+			)
+		}.id)
+
+		// Sender inn søknaden
+		val kvitteringsDto = testOgSjekkInnsendingAvSoknad(soknadService, dokumentSoknadDto)
+		assertTrue(kvitteringsDto.hoveddokumentRef != null )
+		assertTrue(kvitteringsDto.innsendteVedlegg!!.isNotEmpty() )
+		assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty() )
+
+		// Test at filen til hoveddokumentet ikke er slettet
+		val filerForHovedDokument = soknadService.hentFiler(dokumentSoknadDto, dokumentSoknadDto.innsendingsId!!, (dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument}).id!!, true)
+		assertTrue(filerForHovedDokument.isNotEmpty())
+
+		// Test at filen til vedlegget ikke er slettet
+		val filerForVedlegg = soknadService.hentFiler(dokumentSoknadDto, dokumentSoknadDto.innsendingsId!!, lagretFilForVedlegg.vedleggsid, true)
+		assertTrue(filerForVedlegg.isNotEmpty())
 	}
 
 	@Test
@@ -247,7 +287,7 @@ class SoknadServiceTest {
 		assertTrue(ettersendingsKvitteringsDto2.skalEttersendes!!.isEmpty() )
 
 		val vedleggDto = soknadService.hentFiler(ettersendingsSoknadDto2, ettersendingsSoknadDto2.innsendingsId!!, ettersendingsSoknadDto2.vedleggsListe.last().id!!, true)
-		assertTrue(vedleggDto.isEmpty())
+		assertTrue(vedleggDto.isNotEmpty())
 	}
 
 
