@@ -5,6 +5,7 @@ import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
 import io.mockk.slot
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
+import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
@@ -69,6 +70,10 @@ class SoknadServiceTest {
 	@InjectMockKs
 	private val pdlInterface = mockk<PdlInterface>()
 
+	@Autowired
+	private lateinit var restConfig: RestConfig
+
+
 	private val defaultSkjemanr = "NAV 55-00.60"
 	private val defaultTema = "BID"
 	private val defaultTittel = "Avtale om barnebidrag"
@@ -90,7 +95,7 @@ class SoknadServiceTest {
 	}
 
 	private fun lagSoknadService(): SoknadService = SoknadService(
-		skjemaService, repo, brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics, pdlInterface)
+		skjemaService, repo, brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics, pdlInterface, restConfig)
 
 	@Test
 	fun opprettSoknadGittSkjemanr() {

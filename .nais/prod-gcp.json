@@ -21,7 +21,8 @@
 		"MAX_FILE_SIZE_SUM": "150",
 		"ETTERSENDINGSFRIST": 14,
 		"PDL_URL": "https://pdl-api.prod-fss-pub.nais.io",
-		"SAF_URL": "https://safselvbetjening.prod-fss-pub.nais.io",
+		"SAFSELVBETJENING_URL": "https://safselvbetjening.prod-fss-pub.nais.io",
+		"SAF_URL": "https://saf.prod-fss-pub.nais.io",
 		"STS_URL": "https://api-gw.oera.no/security-token-service/",
 		"SANITY_HOST": "https://www.nav.no",
 		"SANITY_ENDPOINT": "/soknader/api/sanity/skjemautlisting",
@@ -32,14 +33,13 @@
 		"SOKNADSMOTTAKER_ENDPOINT": "/save",
 		"PUBLISERE_BRUKERNOTIFIKASJONER": "true",
 		"TJENESTE_URL": "https://www.nav.no/sendinn",
-		"GJENOPPTA_SOKNADS_ARBEID": "/dokumentinnsending/",
-		"ETTERSENDE_PA_SOKNAD": "/dokumentinnsending/ettersending/",
 		"TOKENDINGS_BASE_URL": "https://tokendings.prod-gcp.nais.io",
 		"SAFSELVBETJENING_TOKEN_X_AUDIENCE": "prod-fss:teamdokumenthandtering:safselvbetjening",
 		"PDL_TOKEN_X_AUDIENCE": "prod-fss:pdl:pdl-api",
 		"PDL_SCOPE": "api://prod-fss.pdl.pdl-api/.default",
 		"AZURE_TENANT": "nav.no",
 		"SOKNADSFILLAGER_SCOPE": "api://prod-gcp.team-soknad.soknadsfillager/.default",
-		"SOKNADSMOTTAKER_SCOPE": "api://prod-gcp.team-soknad.soknadsmottaker/.default"
+		"SOKNADSMOTTAKER_SCOPE": "api://prod-gcp.team-soknad.soknadsmottaker/.default",
+		"SAF_SCOPE": "api://prod-fss.teamdokumenthandtering.saf/.default"
 	}
 }

@@ -25,7 +25,7 @@ spec:
     enabled: true
     path: /internal/prometheus
   replicas:
-    min: 4
+    min: 2
     max: 6
   resources:
     limits:
@@ -83,6 +83,8 @@ spec:
         databases:
           - name: {{ database-name }}
             envVarPrefix: DATABASE
+            diskAutoresize: false
+            diskSize: 30
 
   envFrom:
     - secret: shared-innsending-secret
