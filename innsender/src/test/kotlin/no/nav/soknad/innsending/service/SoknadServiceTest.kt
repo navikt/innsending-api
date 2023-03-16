@@ -118,7 +118,7 @@ class SoknadServiceTest {
 
 		val brukerid = testpersonid
 		val skjemanr = defaultSkjemanr
-		val skjemaTittel_en = "Agreement regarding child support"
+		val skjemaTittel_en = skjemaService.hentSkjemaEllerVedlegg(defaultSkjemanr, "en").tittel
 		val spraak = "fr"
 		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
 
