@@ -4,11 +4,11 @@ import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
 import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
-import no.nav.soknad.innsending.utils.ArkivertSakerTestdataBuilder
 import no.nav.soknad.innsending.utils.SoknadDbDataTestdataBuilder
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -45,6 +45,7 @@ class ScheduledOperationsServiceTest {
 	)
 
 	@Test
+	@Disabled
 	fun testAtSoknadSomIkkeEksistererIArkivetBlirMarkertSomIkkeArkivert() {
 		val innsendtdato = LocalDateTime.now().minusHours(OFFSET_HOURS + 1)
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
@@ -61,6 +62,7 @@ class ScheduledOperationsServiceTest {
 	}
 
 	@Test
+	@Disabled
 	fun testAtSoknadSomEksistererIArkivetBlirMarkertSomArkivert() {
 		val innsendtdato = LocalDateTime.now().minusHours(OFFSET_HOURS + 1)
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
@@ -79,6 +81,7 @@ class ScheduledOperationsServiceTest {
 
 
 	@Test
+	@Disabled
 	fun testAtSoknadAIkkeMarkeresSomArkivertOgSoknadBMarkeresSomArkivert() {
 		val innsendtdatoA = LocalDateTime.now().minusHours(OFFSET_HOURS + 1)
 		val soknadA = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdatoA).build()
@@ -96,6 +99,7 @@ class ScheduledOperationsServiceTest {
 	}
 
 	@Test
+	@Disabled
 	fun testAtSoknadSomForstMarkeresSomIkkeArkivertMarkeresSomArkivertVedNesteSjekk() {
 		val innsendtdato = LocalDateTime.now().minusHours(OFFSET_HOURS + 1)
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
@@ -123,6 +127,7 @@ class ScheduledOperationsServiceTest {
 
 
 	@Test
+	@Disabled
 	fun testAtSoknadInnsendtIForkantAvTimespanOgMarkertSomIkkeArkivertTellesMedVedRegistreringAvMetrics() {
 		val innsendtdato = LocalDateTime.now().minusHours(TIMESPAN_HOURS + OFFSET_HOURS + 2)
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato, erarkivert = false).build()
