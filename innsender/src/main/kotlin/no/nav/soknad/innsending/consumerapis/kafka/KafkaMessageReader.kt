@@ -46,16 +46,18 @@ class KafkaMessageReader(
 			it.subscribe(listOf(kafkaConfig.topics.messageTopic))
 			while (true) {
 				val messages = it.poll(Duration.ofMillis(5000))
+				logger.debug("**Fant ${messages.count()} meldinger fra ${it.assignment()}")
 				for (message in messages) {
 					val key = message.key()
 					if (message.value().startsWith("**Archiving: OK")) {
-						logger.info("key: er arkivert")
+						logger.info("$key: er arkivert")
 						soknadRepository.updateErArkivert(true, listOf(key))
 					} else if (message.value().startsWith("**Archiving: FAILED")) {
-						logger.warn("key: er ikke arkivert")
+						logger.warn("$key: er ikke arkivert")
 						soknadRepository.updateErArkivert(false, listOf(key))
 					}
 				}
+				logger.debug("**Ferdig behandlet mottatte meldinger")
 				it.commitSync()
 			}
 		}
@@ -70,6 +72,7 @@ class KafkaMessageReader(
 			it[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
 			it[ConsumerConfig.GROUP_ID_CONFIG] = kafkaConfig.applicationId
 			it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
+			it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = 5000
 			if (kafkaConfig.security.enabled == "TRUE") {
 				it[CommonClientConfigs.SECURITY_PROTOCOL_CONFIG] = kafkaConfig.security.protocol
 				it[SslConfigs.SSL_KEYSTORE_TYPE_CONFIG] = "PKCS12"
