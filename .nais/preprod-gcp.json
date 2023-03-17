@@ -42,7 +42,7 @@
 		"SOKNADSFILLAGER_SCOPE": "api://dev-gcp.team-soknad.soknadsfillager/.default",
 		"SOKNADSMOTTAKER_SCOPE": "api://dev-gcp.team-soknad.soknadsmottaker/.default",
 		"SAF_SCOPE": "api://dev-fss.teamdokumenthandtering.saf-q1/.default",
-		"KAFKA_SECURITY": "true",
+		"KAFKA_SECURITY": "TRUE",
 		"KAFKA_MESSAGE_TOPIC": "team-soknad.privat-soknadinnsending-messages-v2-dev"
 	}
 
