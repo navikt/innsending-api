@@ -6,9 +6,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.config.KafkaConfig
 import no.nav.soknad.innsending.repository.SoknadRepository
+import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.kafka.clients.producer.ProducerConfig
+import org.apache.kafka.common.config.SslConfigs
 import org.apache.kafka.common.serialization.StringDeserializer
+import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
@@ -32,29 +36,23 @@ class KafkaMessageReader(
 		val job = GlobalScope.launch {
 			readMessages()
 		}
-		logger.info("Startet polling av ${kafkaConfig.topics} med job ${job.key}")
+		logger.info("Kafka: Startet polling av ${kafkaConfig.topics} med job ${job.key}")
 	}
 
 	private fun readMessages() {
-		val topic = kafkaConfig.topics.messageTopic
-		val groupId = kafkaConfig.applicationId
+		logger.info("Kafka: Start konsumering av topic ${kafkaConfig.topics.messageTopic} med gruppeId ${kafkaConfig.applicationId}")
 
-		val props = Properties().apply {
-			put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaConfig.brokers)
-			put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer::class.java)
-			put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer::class.java)
-			put(ConsumerConfig.GROUP_ID_CONFIG, groupId)
-			put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
-		}
-		KafkaConsumer<String, String>(props).use { it ->
-			it.subscribe(listOf(topic))
+		KafkaConsumer<String, String>(kafkaConfigMap()).use { it ->
+			it.subscribe(listOf(kafkaConfig.topics.messageTopic))
 			while (true) {
 				val messages = it.poll(Duration.ofMillis(5000))
 				for (message in messages) {
 					val key = message.key()
 					if (message.value().startsWith("**Archiving: OK")) {
+						logger.info("key: er arkivert")
 						soknadRepository.updateErArkivert(true, listOf(key))
 					} else if (message.value().startsWith("**Archiving: FAILED")) {
+						logger.warn("key: er ikke arkivert")
 						soknadRepository.updateErArkivert(false, listOf(key))
 					}
 				}
@@ -62,5 +60,27 @@ class KafkaMessageReader(
 			}
 		}
 	}
+
+
+
+	private fun kafkaConfigMap(): MutableMap<String, Any> {
+		return HashMap<String, Any>().also {
+			it[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = kafkaConfig.brokers
+			it[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
+			it[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
+			it[ConsumerConfig.GROUP_ID_CONFIG] = kafkaConfig.applicationId
+			it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
+			if (kafkaConfig.security.enabled == "TRUE") {
+				it[CommonClientConfigs.SECURITY_PROTOCOL_CONFIG] = kafkaConfig.security.protocol
+				it[SslConfigs.SSL_KEYSTORE_TYPE_CONFIG] = "PKCS12"
+				it[SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG] = kafkaConfig.security.trustStorePath
+				it[SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG] = kafkaConfig.security.trustStorePassword
+				it[SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG] = kafkaConfig.security.keyStorePath
+				it[SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG] = kafkaConfig.security.keyStorePassword
+				it[SslConfigs.SSL_KEY_PASSWORD_CONFIG] = kafkaConfig.security.keyStorePassword
+			}
+		}
+	}
+
 
 }

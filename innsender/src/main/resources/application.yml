@@ -32,7 +32,7 @@ verifyArchivedApplications:
 
 
 kafka:
-  applicationId: ${APPLICATION_ID}
+  applicationId: ${AZURE_APP_CLIENT_ID}
   brokers: ${KAFKA_BROKERS}
   security:
     enabled: ${KAFKA_SECURITY}
