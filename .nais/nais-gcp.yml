@@ -83,7 +83,7 @@ spec:
         databases:
           - name: {{ database-name }}
             envVarPrefix: DATABASE
-            diskAutoresize: false
+            diskAutoresize: true
             diskSize: 30
 
   envFrom:
