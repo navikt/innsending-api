@@ -20,6 +20,8 @@ class VerifyArchivedApplications(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
+	private val runSupervision = false
+
 	init {
 		logger.info("Initializing scheduled job ${javaClass.kotlin.simpleName} (offsetHours=$offsetHours, timespanHours=${timespanHours})")
 	}
@@ -27,7 +29,7 @@ class VerifyArchivedApplications(
 	@Scheduled(cron = "\${cron.runVerifyArchivedApplications}")
 	fun run() {
 		try {
-			if (leaderSelectionUtility.isLeader()) {
+			if (leaderSelectionUtility.isLeader() && runSupervision) {
 				scheduledOperationsService.updateSoknadErArkivert(timespanHours, offsetHours)
 				metrics.updateJobLastSuccess(JOB_NAME)
 			}
