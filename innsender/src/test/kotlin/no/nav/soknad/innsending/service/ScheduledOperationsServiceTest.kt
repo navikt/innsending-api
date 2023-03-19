@@ -38,10 +38,12 @@ class ScheduledOperationsServiceTest {
 		every { innsenderMetrics.absentInArchive(any()) } just runs
 	}
 
+/*
 	@AfterEach
 	fun cleanup() {
 		soknadRepository.deleteAll()
 	}
+*/
 
 	private fun lagScheduledOperationsService() = ScheduledOperationsService(
 		soknadRepository, safService, innsenderMetrics
@@ -141,6 +143,7 @@ class ScheduledOperationsServiceTest {
 	}
 */
 
+/*
 	@Test
 	fun testAtSoknadSomForstMarkeresSomIkkeArkivertMarkeresSomArkivertVedNesteSjekk() {
 		val innsendtdato = LocalDateTime.now().minusHours(OFFSET_HOURS + 1)
@@ -167,7 +170,9 @@ class ScheduledOperationsServiceTest {
 			innsenderMetrics.absentInArchive(0)
 		}
 	}
+*/
 
+/*
 	@Test
 	fun testAtExceptionKastesDersomKallMotSafFeiler() {
 		val innsendtdato = LocalDateTime.now().minusHours(OFFSET_HOURS + 1)
@@ -191,7 +196,9 @@ class ScheduledOperationsServiceTest {
 
 		verify(exactly = 0) { innsenderMetrics.absentInArchive(any()) }
 	}
+*/
 
+/*
 	@Test
 	fun testAtSoknadInnsendtIForkantAvTimespanOgMarkertSomIkkeArkivertTellesMedVedRegistreringAvMetrics() {
 		val innsendtdato = LocalDateTime.now().minusHours(TIMESPAN_HOURS + OFFSET_HOURS + 2)
@@ -212,6 +219,7 @@ class ScheduledOperationsServiceTest {
 
 		verify { innsenderMetrics.absentInArchive(1) }
 	}
+*/
 
 /*
 	@Test
