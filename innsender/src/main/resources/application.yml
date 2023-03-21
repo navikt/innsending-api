@@ -22,7 +22,7 @@ cron:
   slettInnsendtFilEldreEnn: 21
   startSlettPermanentIkkeInnsendteSoknader: 0 0 3 * * *
   slettPermanentEldreEnn: 365
-  runVerifyArchivedApplications: 0 0 * * * *
+  runVerifyArchivedApplications: 0 0,11 0 ? * *
 
 ettersendingsfrist: 14
 
