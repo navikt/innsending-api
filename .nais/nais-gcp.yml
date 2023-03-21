@@ -82,12 +82,12 @@ spec:
 
   gcp:
     sqlInstances:
-      - type: POSTGRES_14
+      - diskAutoresize: true
+        diskSize: {{ default_database_size }}
+        type: POSTGRES_14
         databases:
           - name: {{ database-name }}
             envVarPrefix: DATABASE
-            diskAutoresize: false
-            diskSize: 30
 
   envFrom:
     - secret: shared-innsending-secret

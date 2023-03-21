@@ -62,7 +62,8 @@ class SoknadService(
 					null, Utilities.laginnsendingsId(), kodeverkSkjema.tittel ?: "", kodeverkSkjema.skjemanummer ?: "",
 					kodeverkSkjema.tema ?: "", spraak, SoknadsStatus.Opprettet, brukerId, null, LocalDateTime.now(),
 					LocalDateTime.now(), null, 0, VisningsType.dokumentinnsending, true,
-						forsteinnsendingsdato = null, ettersendingsfrist = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
+					forsteinnsendingsdato = null, ettersendingsfrist = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
+					arkiveringsstatus = ArkiveringsStatus.IkkeSatt
 				)
 			)
 
@@ -319,7 +320,8 @@ class SoknadService(
 				visningssteg = 0,
 				visningstype = VisningsType.ettersending,
 				forsteinnsendingsdato = mapTilLocalDateTime(forsteInnsendingsDato),
-				ettersendingsfrist = fristForEttersendelse
+				ettersendingsfrist = fristForEttersendelse,
+				arkiveringsstatus = ArkiveringsStatus.IkkeSatt
 			)
 		)
 	}
@@ -411,7 +413,8 @@ class SoknadService(
 					VisningsType.ettersending,
 					true,
 					mapTilLocalDateTime(arkivertSoknad.innsendtDato),
-					Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
+					Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
+					arkiveringsstatus = ArkiveringsStatus.IkkeSatt
 				)
 			)
 

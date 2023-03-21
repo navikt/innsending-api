@@ -5,7 +5,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.config.KafkaConfig
+import no.nav.soknad.innsending.repository.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.SoknadRepository
+import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -27,7 +29,9 @@ import kotlin.time.toJavaDuration
 @Profile("prod | dev")
 class KafkaMessageReader(
 	private val kafkaConfig: KafkaConfig,
-	private val soknadRepository: SoknadRepository) {
+	private val soknadRepository: SoknadRepository,
+	private val innsenderMetrics: InnsenderMetrics
+) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -46,19 +50,19 @@ class KafkaMessageReader(
 			it.subscribe(listOf(kafkaConfig.topics.messageTopic))
 			while (true) {
 				val messages = it.poll(Duration.ofMillis(5000))
-				logger.debug("**Fant ${messages.count()} meldinger fra ${it.assignment()}")
 				for (message in messages) {
 					val key = message.key()
 					if (message.value().startsWith("**Archiving: OK")) {
-						logger.info("$key: er arkivert")
-						soknadRepository.updateErArkivert(true, listOf(key))
+						logger.debug("$key: er arkivert")
+						soknadRepository.updateArkiveringsStatus(ArkiveringsStatus.Arkivert, listOf(key))
 					} else if (message.value().startsWith("**Archiving: FAILED")) {
-						logger.warn("$key: er ikke arkivert")
-						soknadRepository.updateErArkivert(false, listOf(key))
+						logger.error("$key: arkivering feilet")
+						soknadRepository.updateArkiveringsStatus(ArkiveringsStatus.ArkiveringFeilet, listOf(key))
 					}
 				}
-				logger.debug("**Ferdig behandlet mottatte meldinger")
 				it.commitSync()
+				innsenderMetrics.archivingFailedSet(soknadRepository.countArkiveringFeilet())
+				logger.debug("**Ferdig behandlet mottatte meldinger")
 			}
 		}
 	}

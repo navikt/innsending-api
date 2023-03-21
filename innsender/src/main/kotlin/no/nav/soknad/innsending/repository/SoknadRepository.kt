@@ -39,18 +39,24 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 	@Query(value = "SELECT * FROM soknad WHERE opprettetdato <= :opprettetFor ORDER BY opprettetdato", nativeQuery = true)
 	fun findAllByOpprettetdatoBefore(@Param("opprettetFor") opprettetFor: OffsetDateTime): List<SoknadDbData>
 
-	@Query(value = "SELECT * FROM soknad WHERE erarkivert IS NOT TRUE AND innsendtdato >= :start AND innsendtdato <= :end ORDER BY innsendtdato", nativeQuery = true)
+	@Query(value = "SELECT * FROM soknad WHERE arkiveringsstatus <> 'Arkivert' AND innsendtdato >= :start AND innsendtdato <= :end ORDER BY innsendtdato", nativeQuery = true)
 	fun findAllNotArchivedAndInnsendtdatoBetween(@Param("start") start: LocalDateTime, @Param("end") end: LocalDateTime): List<SoknadDbData>
 
 	@Transactional
 	@Modifying
-	@Query(value = "UPDATE SoknadDbData SET erarkivert = :erArkivert WHERE innsendingsid in (:innsendingsids)", nativeQuery = false)
-	fun updateErArkivert(erArkivert: Boolean, @Param("innsendingsids") innsendingsids: List<String>)
+	@Query(value = "UPDATE SoknadDbData SET arkiveringsstatus = :arkiveringsStatus WHERE innsendingsid in (:innsendingsids)", nativeQuery = false)
+	fun updateArkiveringsStatus(arkiveringsStatus: ArkiveringsStatus, @Param("innsendingsids") innsendingsids: List<String>)
 
-	@Query(value = "SELECT COUNT(*) FROM soknad WHERE erarkivert = true", nativeQuery = true)
+	@Query(value = "SELECT COUNT(*) FROM soknad WHERE arkiveringsstatus = 'Arkivert' AND status = 'Innsendt'", nativeQuery = true)
 	fun countErArkivert(): Long
 
-	@Query(value = "SELECT COUNT(*) FROM soknad WHERE erarkivert is null or erarkivert = false", nativeQuery = true)
-	fun countIkkeArkivert(): Long
+	@Query(value = "SELECT COUNT(*) FROM soknad WHERE arkiveringsstatus = 'ArkiveringFeilet' AND status  = 'Innsendt'", nativeQuery = true)
+	fun countArkiveringFeilet(): Long
+
+	@Query(value = "SELECT COUNT(*) FROM soknad WHERE arkiveringsstatus = 'IkkeSatt' AND status  = 'Innsendt' AND innsendtdato < before", nativeQuery = true)
+	fun countInnsendtIkkeBehandlet(@Param("before") before: LocalDateTime): Long
+
+	@Query(value = "SELECT innsendingid FROM soknad WHERE arkiveringsstatus = 'IkkeSatt' AND status  = 'Innsendt' AND innsendtdato < before", nativeQuery = true)
+	fun findInnsendtAndArkiveringsStatusIkkeSatt(@Param("before") before: LocalDateTime): List<String>
 
 }

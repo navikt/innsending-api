@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.service
 
 import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
+import no.nav.soknad.innsending.repository.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.SoknadDbDataTestdataBuilder
@@ -57,7 +58,7 @@ class ScheduledOperationsServiceTest {
 
 		val lagretSoknad = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad.isPresent)
-		assertTrue(lagretSoknad.get().erarkivert == null || lagretSoknad.get().erarkivert == false)
+		assertTrue(lagretSoknad.get().arkiveringsstatus == ArkiveringsStatus.IkkeSatt)
 
 		verify { innsenderMetrics.absentInArchive(1) }
 	}
@@ -75,7 +76,7 @@ class ScheduledOperationsServiceTest {
 
 		val lagretSoknad = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad.isPresent)
-		assertEquals(true, lagretSoknad.get().erarkivert)
+		assertEquals(ArkiveringsStatus.Arkivert, lagretSoknad.get().arkiveringsstatus)
 
 		verify { innsenderMetrics.absentInArchive(0) }
 	}
@@ -111,14 +112,14 @@ class ScheduledOperationsServiceTest {
 		service.checkIfApplicationsAreArchived(TIMESPAN_HOURS, OFFSET_HOURS)
 		val lagretSoknad1 = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad1.isPresent)
-		assertTrue(lagretSoknad1.get().erarkivert == null || lagretSoknad1.get().erarkivert == false)
+		assertTrue(lagretSoknad1.get().arkiveringsstatus == ArkiveringsStatus.IkkeSatt)
 
 		simulateKafkaPolling(true, soknad.innsendingsid)
 
 		service.checkIfApplicationsAreArchived(TIMESPAN_HOURS, OFFSET_HOURS)
 		val lagretSoknad2 = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad2.isPresent)
-		assertEquals(true, lagretSoknad2.get().erarkivert)
+		assertEquals(ArkiveringsStatus.Arkivert, lagretSoknad2.get().arkiveringsstatus)
 
 		verifySequence {
 			innsenderMetrics.absentInArchive(1)
@@ -131,7 +132,7 @@ class ScheduledOperationsServiceTest {
 	@Disabled
 	fun testAtSoknadInnsendtIForkantAvTimespanOgMarkertSomIkkeArkivertTellesMedVedRegistreringAvMetrics() {
 		val innsendtdato = LocalDateTime.now().minusHours(TIMESPAN_HOURS + OFFSET_HOURS + 2)
-		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato, erarkivert = false).build()
+		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato, arkiveringsStatus = ArkiveringsStatus.IkkeSatt).build()
 		soknadRepository.save(soknad)
 
 		val service = lagScheduledOperationsService()
@@ -139,13 +140,13 @@ class ScheduledOperationsServiceTest {
 
 		val lagretSoknad = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad.isPresent)
-		assertEquals(false, lagretSoknad.get().erarkivert)
+		assertEquals(ArkiveringsStatus.IkkeSatt, lagretSoknad.get().arkiveringsstatus)
 
 		verify { innsenderMetrics.absentInArchive(1) }
 	}
 
 	private fun simulateKafkaPolling(ok: Boolean, innsendingId: String) {
-		soknadRepository.updateErArkivert(ok, listOf(innsendingId))
+		soknadRepository.updateArkiveringsStatus((if (ok) ArkiveringsStatus.Arkivert else ArkiveringsStatus.ArkiveringFeilet), listOf(innsendingId))
 	}
 
 

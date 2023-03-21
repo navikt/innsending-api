@@ -15,21 +15,15 @@ class ScheduledOperationsService(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	fun checkIfApplicationsAreArchived(timespanHours: Long, offsetHours: Long) {
-		val now = LocalDateTime.now()
-		val start = now.minusHours(timespanHours + offsetHours)
-		val end = now.minusHours(offsetHours)
-		logger.info("Verifying that applications submitted between [$start -> $end] exist in Joark...")
-
-		val absentInJoark = soknadRepository
-			.findAllNotArchivedAndInnsendtdatoBetween(start, end)
-
-		if (absentInJoark.isNotEmpty()) {
-			val innsendingsIdList = absentInJoark.map { soknad -> soknad.innsendingsid }
-			logger.error("Detected ${absentInJoark.size} submitted application(s) [$start -> $end] which do not exist in Joark: $innsendingsIdList")
+		val soknaderAbsentInArchive = soknadRepository.countInnsendtIkkeBehandlet(LocalDateTime.now().minusHours(offsetHours))
+		if (soknaderAbsentInArchive > 0) {
+			logger.error("Total number of applications not yet processed for archiving by soknadsarkiverer: $soknaderAbsentInArchive")
+			val notProcessedForArchiving = soknadRepository.findInnsendtAndArkiveringsStatusIkkeSatt(LocalDateTime.now().minusHours(offsetHours))
+			logger.info("Applications not yet picked up and processed by soknadsarkiverer: $notProcessedForArchiving")
+		} else {
+			logger.info("Total number of applications absent in archive: $soknaderAbsentInArchive")
 		}
 
-		val soknaderAbsentInArchive = soknadRepository.countIkkeArkivert()
-		logger.info("Total number of applications absent in archive: $soknaderAbsentInArchive")
 		innsenderMetrics.absentInArchive(soknaderAbsentInArchive)
 	}
 

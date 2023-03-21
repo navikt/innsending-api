@@ -671,6 +671,12 @@ components:
           items:
             $ref: "#/components/schemas/InnsendtVedleggDto"
 
+    ArkiveringsStatusDto:
+      type: string
+      enum: ["IkkeSatt", "Arkivert", "ArkiveringFeilet"]
+      description: Status for om innsendt søknad er blitt arkivert. Ikke innsendte søknader skal ha arkiveringsStatus IkkeSatt.
+      example:
+
     Beskrivelse:
       type: string
       description: Utdypende forklaring til et vedlegg.
@@ -774,6 +780,8 @@ components:
           example: 2021-12-03T15:10:00Z
         fristForEttersendelse:
           $ref: "#/components/schemas/FristForEttersendelse"
+        arkiveringsStatus:
+          $ref: "#/components/schemas/ArkiveringsStatusDto"
 
 
     FilDto:

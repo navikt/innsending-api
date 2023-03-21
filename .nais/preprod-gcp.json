@@ -3,6 +3,7 @@
 	"namespace": "team-soknad",
 	"team": "team-soknad",
 	"database-name": "dokumentinnsending-dev",
+	"default_database_size": 10,
 	"ingresses": [
 		"https://www.dev.nav.no/innsending-api-gcp",
 		"https://innsending-api-gcp.dev.nav.no"
