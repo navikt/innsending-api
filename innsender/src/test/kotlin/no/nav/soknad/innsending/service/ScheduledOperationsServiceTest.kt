@@ -3,7 +3,9 @@ package no.nav.soknad.innsending.service
 import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
 import no.nav.soknad.innsending.repository.ArkiveringsStatus
+import no.nav.soknad.innsending.repository.FilRepository
 import no.nav.soknad.innsending.repository.SoknadRepository
+import no.nav.soknad.innsending.repository.VedleggRepository
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.SoknadDbDataTestdataBuilder
 import org.junit.jupiter.api.AfterEach
@@ -28,6 +30,12 @@ class ScheduledOperationsServiceTest {
 	@Autowired
 	private lateinit var soknadRepository: SoknadRepository
 
+	@Autowired
+	private lateinit var vedleggRepository: VedleggRepository
+
+	@Autowired
+	private lateinit var filRepository: FilRepository
+
 	@InjectMockKs
 	private val innsenderMetrics = mockk<InnsenderMetrics>()
 
@@ -38,6 +46,8 @@ class ScheduledOperationsServiceTest {
 
 	@AfterEach
 	fun cleanup() {
+		filRepository.deleteAll()
+		vedleggRepository.deleteAll()
 		soknadRepository.deleteAll()
 	}
 
