@@ -56,7 +56,7 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 	@Query(value = "SELECT COUNT(*) FROM soknad WHERE arkiveringsstatus = 'IkkeSatt' AND status  = 'Innsendt' AND innsendtdato < :before", nativeQuery = true)
 	fun countInnsendtIkkeBehandlet(@Param("before") before: LocalDateTime): Long
 
-	@Query(value = "SELECT innsendingid FROM soknad WHERE arkiveringsstatus = 'IkkeSatt' AND status  = 'Innsendt' AND innsendtdato < :before", nativeQuery = true)
+	@Query(value = "SELECT innsendingsid FROM soknad WHERE arkiveringsstatus = 'IkkeSatt' AND status  = 'Innsendt' AND innsendtdato < :before", nativeQuery = true)
 	fun findInnsendtAndArkiveringsStatusIkkeSatt(@Param("before") before: LocalDateTime): List<String>
 
 }

@@ -30,6 +30,8 @@ class SafClient(
 	 * Denne funksjonen er ment for bruk kun internt i innsending-api
 	 * pga. at tjenesten har ikke tilgangsstyring på brukernivå.
 	 * Dataene som hentes skal altså ikke sendes ut til bruker.
+	 * MERK at denne fuksjonen pt. ikke er i bruk da vi ikke kunne basere oss på oppslag mot arkivet med innsendt søknad sin brukerId,
+	 * da det er tilfeller der saksbehandler endrer i arkivet id til innsender. Vi beholder koden i tilfelle vi i framtiden trenger den.
 	 */
 	override fun hentDokumentoversiktBruker(brukerId: String): List<ArkiverteSaker> {
 		return runBlocking {

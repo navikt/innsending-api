@@ -675,7 +675,7 @@ components:
       type: string
       enum: ["IkkeSatt", "Arkivert", "ArkiveringFeilet"]
       description: Status for om innsendt søknad er blitt arkivert. Ikke innsendte søknader skal ha arkiveringsStatus IkkeSatt.
-      example:
+      example: Arkivert
 
     Beskrivelse:
       type: string

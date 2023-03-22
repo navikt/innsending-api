@@ -22,14 +22,13 @@ cron:
   slettInnsendtFilEldreEnn: 21
   startSlettPermanentIkkeInnsendteSoknader: 0 0 3 * * *
   slettPermanentEldreEnn: 365
+  # Kjører hvert 11. minutt
   runVerifyArchivedApplications: 0 0,11 0 ? * *
 
 ettersendingsfrist: 14
 
 verifyArchivedApplications:
   offsetHours: 2
-  timespanHours: 24
-
 
 kafka:
   applicationId: ${KAFKA_STREAMS_APPLICATION_ID}
@@ -129,6 +128,7 @@ spring:
       on-profile: dev
 
 cron:
+  # Kjører hvert 11. minutt
   runVerifyArchivedApplications: 0 */11 * ? * *
 
 verifyArchivedApplications:

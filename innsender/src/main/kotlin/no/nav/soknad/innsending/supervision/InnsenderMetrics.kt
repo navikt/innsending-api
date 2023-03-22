@@ -29,7 +29,7 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 	private val absentInArchiveName = "applications_absent_in_archive_total"
 	private val absentInArchiveHelp = "Number of sent in applications that not yet have been archived"
 	private val archivingFailedName = "archiving_of_applications_failed_total"
-	private val archivingFailedHelp = "Number of applications for which where archiving failed"
+	private val archivingFailedHelp = "Number of applications for which archiving failed"
 
 	private val operationsCounter = registerCounter(name, help, operationLabel)
 	private val operationsErrorCounter = registerCounter(errorName, helpError, operationLabel)
