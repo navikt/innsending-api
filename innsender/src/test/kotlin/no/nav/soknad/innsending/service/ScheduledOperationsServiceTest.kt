@@ -23,7 +23,6 @@ private const val OFFSET_HOURS = 2L
 @SpringBootTest
 @ActiveProfiles("spring")
 @EnableTransactionManagement
-@Disabled
 class ScheduledOperationsServiceTest {
 
 	@Autowired
