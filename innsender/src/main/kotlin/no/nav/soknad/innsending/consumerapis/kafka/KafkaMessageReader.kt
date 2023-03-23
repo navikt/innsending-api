@@ -61,8 +61,7 @@ class KafkaMessageReader(
 					}
 				}
 				it.commitSync()
-				innsenderMetrics.archivingFailedSet(soknadRepository.countArkiveringFeilet())
-				logger.debug("**Ferdig behandlet mottatte meldinger")
+				logger.debug("**Ferdig behandlet mottatte meldinger.")
 			}
 		}
 	}

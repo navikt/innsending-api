@@ -25,6 +25,8 @@ class ScheduledOperationsService(
 		}
 
 		innsenderMetrics.absentInArchive(soknaderAbsentInArchive)
+		innsenderMetrics.archivingFailedSet(soknadRepository.countArkiveringFeilet())
+
 	}
 
 }

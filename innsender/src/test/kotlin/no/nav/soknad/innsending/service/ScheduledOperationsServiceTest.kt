@@ -42,6 +42,7 @@ class ScheduledOperationsServiceTest {
 	@BeforeEach
 	fun setup() {
 		every { innsenderMetrics.absentInArchive(any()) } just runs
+		every { innsenderMetrics.archivingFailedSet(any()) } just runs
 	}
 
 	@AfterEach
@@ -88,6 +89,25 @@ class ScheduledOperationsServiceTest {
 		verify { innsenderMetrics.absentInArchive(0) }
 	}
 
+	@Test
+	fun testAtInnsendtSoknadDerArkiveringHarFeiletBlirRapportert() {
+		val innsendtdato = LocalDateTime.now().minusHours(OFFSET_HOURS + 1)
+		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
+		soknadRepository.save(soknad)
+		simulateKafkaPolling(false, soknad.innsendingsid)
+
+		val service = lagScheduledOperationsService()
+		service.checkIfApplicationsAreArchived(OFFSET_HOURS)
+
+		val lagretSoknad = soknadRepository.findById(soknad.id!!)
+		assertTrue(lagretSoknad.isPresent)
+		assertEquals(ArkiveringsStatus.ArkiveringFeilet, lagretSoknad.get().arkiveringsstatus)
+
+		verify {
+			innsenderMetrics.absentInArchive(0)
+			innsenderMetrics.archivingFailedSet(1)
+		}
+	}
 
 	@Test
 	fun testAtSoknadAIkkeMarkeresSomArkivertOgSoknadBMarkeresSomArkivert() {
@@ -128,7 +148,9 @@ class ScheduledOperationsServiceTest {
 
 		verifySequence {
 			innsenderMetrics.absentInArchive(1)
+			innsenderMetrics.archivingFailedSet(0)
 			innsenderMetrics.absentInArchive(0)
+			innsenderMetrics.archivingFailedSet(0)
 		}
 	}
 
