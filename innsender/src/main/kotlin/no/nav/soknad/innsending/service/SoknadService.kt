@@ -947,12 +947,20 @@ class SoknadService(
 			fillagerAPI.lagreFiler(soknadDto.innsendingsId!!, opplastedeVedlegg + kvitteringForArkivering)
 		} catch (e: Exception) {
 			reportException(e, operation, soknadDto.tema)
-			logger.error("Feil ved sending av filer for søknad ${soknadDto.innsendingsId} til NAV, ${e.message}")
+			logger.error("Feil ved sending av filer for søknad ${soknadDto.innsendingsId} ti       l NAV, ${e.message}")
 			throw BackendErrorException(e.message, "Feil ved sending av filer for søknad ${soknadDto.innsendingsId} til NAV", "errorCode.backendError.sendToNAVError")
 		}
 
 		// send soknadmetada til soknadsmottaker
 		try {
+			val soknadDb = repo.hentSoknadDb(soknadDto.id!!)
+			if (soknadDb.get().status == SoknadsStatus.Innsendt) {
+				logger.warn("${soknadDto.innsendingsId}: Søknad allerede innsendt, avbryter")
+				throw IllegalActionException(
+					"Søknaden er allerede sendt inn",
+					"Søknaden er innsendt og kan ikke sendes på nytt.",
+					"errorCode.illegalAction.applicationSentInOrDeleted")
+			}
 			soknadsmottakerAPI.sendInnSoknad(soknadDto, opplastedeVedlegg + kvitteringForArkivering)
 		} catch (e: Exception) {
 			reportException(e, operation, soknadDto.tema)
@@ -1050,9 +1058,17 @@ class SoknadService(
 					mapTilSoknadsStatus(soknadDto.status, null)),
 					KodeverkSkjema(tittel = soknadDto.tittel, skjemanummer = soknadDto.skjemanr, beskrivelse = soknadDto.tittel, tema = soknadDto.tema ) ), null)
 
-		val oppdatertSoknadDto = hentSoknad(soknadDto.id!!)
-		lagreFil(oppdatertSoknadDto, FilDto(hovedDokumentDto.id!!, null, hovedDokumentDto.vedleggsnr!!, Mimetype.applicationSlashPdf,
-			dummySkjema.size, dummySkjema, OffsetDateTime.now() ))
+		val hovedDokFil = repo.hentFilerTilVedlegg(soknadDto.innsendingsId!!, hovedDokumentDto.id!!)
+		if (hovedDokFil.isNotEmpty() && hovedDokFil.first().data != null) {
+			return hentSoknad(soknadDto.id!!)
+		}
+		val oppdatertSoknad = hentSoknad(soknadDto.id!!)
+		lagreFil(
+			oppdatertSoknad, FilDto(
+					hovedDokumentDto.id!!, null, hovedDokumentDto.vedleggsnr!!, Mimetype.applicationSlashPdf,
+					dummySkjema.size, dummySkjema, OffsetDateTime.now()
+				)
+			)
 
 		return hentSoknad(soknadDto.innsendingsId!!)
 	}
