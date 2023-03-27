@@ -22,13 +22,28 @@ cron:
   slettInnsendtFilEldreEnn: 21
   startSlettPermanentIkkeInnsendteSoknader: 0 0 3 * * *
   slettPermanentEldreEnn: 365
-  runVerifyArchivedApplications: 0 0 * * * *
+  # Kjører hvert 11. minutt
+  runVerifyArchivedApplications: 0 0,11 0 ? * *
 
 ettersendingsfrist: 14
 
 verifyArchivedApplications:
   offsetHours: 2
-  timespanHours: 24
+
+kafka:
+  applicationId: ${KAFKA_STREAMS_APPLICATION_ID}
+  brokers: ${KAFKA_BROKERS}
+  security:
+    enabled: ${KAFKA_SECURITY}
+    protocol: SSL
+    keyStoreType: PKCS12
+    keyStorePath: ${KAFKA_KEYSTORE_PATH}
+    keyStorePassword: ${KAFKA_CREDSTORE_PASSWORD}
+    trustStorePath: ${KAFKA_TRUSTSTORE_PATH}
+    trustStorePassword: ${KAFKA_CREDSTORE_PASSWORD}
+  topics:
+    messageTopic: ${KAFKA_MESSAGE_TOPIC}
+
 ---
 spring:
   config:
@@ -113,7 +128,8 @@ spring:
       on-profile: dev
 
 cron:
-  runVerifyArchivedApplications: 0 */15 * ? * *
+  # Kjører hvert 11. minutt
+  runVerifyArchivedApplications: 0 */11 * ? * *
 
 verifyArchivedApplications:
   offsetHours: 1
@@ -168,6 +184,7 @@ restconfig:
   safselvbetjeningUrl: ${SAFSELVBETJENING_URL}
   safUrl: ${SAF_URL}
   azureUrl: ${AZURE_OPENID_CONFIG_TOKEN_ENDPOINT}
+
 
 
 brukernotifikasjonconfig:

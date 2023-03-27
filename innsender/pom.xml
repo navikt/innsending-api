@@ -77,6 +77,11 @@
 			<artifactId>okhttp</artifactId>
 			<version>${okhttp3.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.kafka</groupId>
+			<artifactId>kafka-clients</artifactId>
+			<version>${kafka.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>io.github.resilience4j</groupId>

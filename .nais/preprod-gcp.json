@@ -3,6 +3,7 @@
 	"namespace": "team-soknad",
 	"team": "team-soknad",
 	"database-name": "dokumentinnsending-dev",
+	"default_database_size": 10,
 	"ingresses": [
 		"https://www.dev.nav.no/innsending-api-gcp",
 		"https://innsending-api-gcp.dev.nav.no"
@@ -12,6 +13,7 @@
 		"soknadsmottaker",
 		"soknadsfillager"
 	],
+	"kafka-pool": "nav-dev",
 	"env": {
 		"DATABASE_NAME": "dokumentinnsending-dev",
 		"SPRING_PROFILES_ACTIVE": "dev",
@@ -40,6 +42,9 @@
 		"AZURE_TENANT": "trygdeetaten.no",
 		"SOKNADSFILLAGER_SCOPE": "api://dev-gcp.team-soknad.soknadsfillager/.default",
 		"SOKNADSMOTTAKER_SCOPE": "api://dev-gcp.team-soknad.soknadsmottaker/.default",
-		"SAF_SCOPE": "api://dev-fss.teamdokumenthandtering.saf-q1/.default"
+		"SAF_SCOPE": "api://dev-fss.teamdokumenthandtering.saf-q1/.default",
+		"KAFKA_SECURITY": "TRUE",
+		"KAFKA_MESSAGE_TOPIC": "team-soknad.privat-soknadinnsending-messages-v2-dev"
 	}
+
 }

@@ -25,5 +25,5 @@ data class SoknadDbData(
 	@Column(name = "kanlasteoppannet", columnDefinition = "boolean") val kanlasteoppannet: Boolean? = true,
 	@Column(name = "forsteinnsendingsdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val forsteinnsendingsdato: LocalDateTime?,
 	@Column(name = "ettersendingsfrist", columnDefinition = "int") val ettersendingsfrist: Long? = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
-	@Column(name = "erarkivert", columnDefinition = "boolean") val erarkivert: Boolean? = null,
+	@Column(name = "arkiveringsstatus", columnDefinition = "varchar") val arkiveringsstatus: ArkiveringsStatus
 )

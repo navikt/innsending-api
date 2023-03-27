@@ -27,13 +27,16 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 	private val databaseSizeName = "database_size"
 	private val databaseSizeHelp = "Database size"
 	private val absentInArchiveName = "applications_absent_in_archive_total"
-	private val absentInArchiveHelp = "Number of applications absent in archive"
+	private val absentInArchiveHelp = "Number of sent in applications that not yet have been archived"
+	private val archivingFailedName = "archiving_of_applications_failed_total"
+	private val archivingFailedHelp = "Number of applications for which archiving failed"
 
 	private val operationsCounter = registerCounter(name, help, operationLabel)
 	private val operationsErrorCounter = registerCounter(errorName, helpError, operationLabel)
 	private val operationLatencyHistogram = registerLatencyHistogram(latency, latencyHelp, operationLabel)
 	private val databaseGauge = registerGauge(databaseSizeName, databaseSizeHelp)
 	private val absentInArchiveGauge = registerGauge(absentInArchiveName, absentInArchiveHelp)
+	private val archivingFailedGauge = registerGauge(archivingFailedName, archivingFailedHelp)
 
 	private val jobLastSuccessGauge = Gauge
 		.build()
@@ -87,6 +90,8 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 	fun databaseSizeGet() = databaseGauge.get()
 
 	fun absentInArchive(number: Long) = absentInArchiveGauge.set(number.toDouble())
+
+	fun archivingFailedSet(number: Long) = archivingFailedGauge.set(number.toDouble())
 
 	fun updateJobLastSuccess(jobName: String) = jobLastSuccessGauge.labels(jobName).setToCurrentTime()
 }

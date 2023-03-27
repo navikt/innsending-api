@@ -64,7 +64,8 @@ fun lagDokumentSoknadDto(soknadDbData: SoknadDbData, vedleggDbDataListe: List<Ve
 		kanLasteOppAnnet = soknadDbData.kanlasteoppannet ?: true,
 		innsendingsFristDato = beregnInnsendingsFrist(soknadDbData),
 		forsteInnsendingsDato = mapTilOffsetDateTime(soknadDbData.forsteinnsendingsdato),
-		fristForEttersendelse = soknadDbData.ettersendingsfrist?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
+		fristForEttersendelse = soknadDbData.ettersendingsfrist?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
+		arkiveringsStatus = mapTilArkiveringsStatusDto(soknadDbData.arkiveringsstatus )
 	)
 
 private fun beregnInnsendingsFrist(soknadDbData: SoknadDbData): OffsetDateTime {
@@ -124,8 +125,23 @@ fun mapTilSoknadDb(dokumentSoknadDto: DokumentSoknadDto, innsendingsId: String, 
 		opprettetdato = mapTilLocalDateTime(dokumentSoknadDto.opprettetDato)!!, endretdato = LocalDateTime.now(),
 		innsendtdato = if (status == SoknadsStatus.Innsendt) LocalDateTime.now()	else mapTilLocalDateTime(dokumentSoknadDto.innsendtDato),
 		visningssteg = dokumentSoknadDto.visningsSteg, visningstype = dokumentSoknadDto.visningsType, kanlasteoppannet = dokumentSoknadDto.kanLasteOppAnnet ?: true,
-		forsteinnsendingsdato = mapTilLocalDateTime(dokumentSoknadDto.forsteInnsendingsDato), ettersendingsfrist = dokumentSoknadDto.fristForEttersendelse
+		forsteinnsendingsdato = mapTilLocalDateTime(dokumentSoknadDto.forsteInnsendingsDato), ettersendingsfrist = dokumentSoknadDto.fristForEttersendelse,
+		arkiveringsstatus = mapTilDbArkiveringsStatus(dokumentSoknadDto.arkiveringsStatus ?: ArkiveringsStatusDto.ikkeSatt)
 	)
+
+private fun mapTilArkiveringsStatusDto(arkiveringsStatus: ArkiveringsStatus): ArkiveringsStatusDto =
+	when (arkiveringsStatus) {
+		ArkiveringsStatus.IkkeSatt -> ArkiveringsStatusDto.ikkeSatt
+		ArkiveringsStatus.Arkivert ->  ArkiveringsStatusDto.arkivert
+		ArkiveringsStatus.ArkiveringFeilet  -> ArkiveringsStatusDto.arkiveringFeilet
+	}
+
+private fun mapTilDbArkiveringsStatus(arkiveringsStatusDto: ArkiveringsStatusDto): ArkiveringsStatus =
+	when (arkiveringsStatusDto) {
+		ArkiveringsStatusDto.ikkeSatt -> ArkiveringsStatus.IkkeSatt
+		ArkiveringsStatusDto.arkivert ->  ArkiveringsStatus.Arkivert
+		ArkiveringsStatusDto.arkiveringFeilet  -> ArkiveringsStatus.ArkiveringFeilet
+	}
 
 fun mapTilSoknadsStatus(soknadsStatus: SoknadsStatusDto?, newStatus: SoknadsStatus? ): SoknadsStatus {
 	return newStatus ?:

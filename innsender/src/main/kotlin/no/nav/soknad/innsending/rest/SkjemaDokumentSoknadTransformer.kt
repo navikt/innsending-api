@@ -18,7 +18,8 @@ class SkjemaDokumentSoknadTransformer {
 		vedleggsListe = lagVedleggsListe(input), id = null, innsendingsId = null, ettersendingsId = null, spraak = finnSpraakFraInput(input.spraak),
 		innsendtDato = null, visningsSteg = 0, visningsType = VisningsType.fyllUt,
 		kanLasteOppAnnet = input.kanLasteOppAnnet ?: input.vedleggsListe?.any { it.propertyNavn != null && it.propertyNavn == "annenDokumentasjon"},
-			forsteInnsendingsDato = null, fristForEttersendelse = input.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE )
+		forsteInnsendingsDato = null, fristForEttersendelse = input.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
+		arkiveringsStatus = ArkiveringsStatusDto.ikkeSatt)
 
 //	kanLasteOppAnnet = input.vedleggsListe?.any { it.property == "annenDokumentasjon" : it.vedleggsnr == "N6" && it.label == "Annen dokumentasjon" })
 

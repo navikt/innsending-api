@@ -35,6 +35,9 @@ spec:
       cpu: 200m
       memory: 1Gi
   leaderElection: true
+  kafka:
+    pool: {{kafka-pool}}
+    streams: true
 
   tokenx:
     enabled: true
@@ -80,7 +83,7 @@ spec:
   gcp:
     sqlInstances:
       - diskAutoresize: true
-        diskSize: 20
+        diskSize: {{ default_database_size }}
         type: POSTGRES_14
         databases:
           - name: {{ database-name }}

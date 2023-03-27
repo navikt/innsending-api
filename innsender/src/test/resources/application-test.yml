@@ -25,6 +25,20 @@ management:
   prometheus:
   enabled: true
 
+kafka:
+  applicationId: testApplicationId
+  brokers: localhost:29092
+  security:
+    enabled: FALSE
+    protocol: SSL
+    keyStoreType: PKCS12
+    keyStorePath: dummy
+    keyStorePassword: dummy
+    trustStorePath: dummy
+    trustStorePassword: dummy
+  topics:
+    messageTopic: privat-soknadinnsending-messages-v2-dev
+
 restconfig:
   version: 1.0
   username: srvuser

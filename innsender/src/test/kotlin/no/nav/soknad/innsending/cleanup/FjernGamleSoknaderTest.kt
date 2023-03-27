@@ -12,9 +12,6 @@ import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
-import no.nav.soknad.innsending.repository.FilRepository
-import no.nav.soknad.innsending.repository.SoknadRepository
-import no.nav.soknad.innsending.repository.VedleggRepository
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
