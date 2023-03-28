@@ -6,9 +6,16 @@
 	"default_database_size": 10,
 	"ingresses": [
 		"https://www.dev.nav.no/innsending-api-gcp",
-		"https://innsending-api-gcp.dev.nav.no"
+		"https://innsending-api-gcp.ekstern.dev.nav.no"
 	],
-	"outboundExternalHosts": [],
+	"outboundExternalHosts": [
+		"pdl-api.dev-fss-pub.nais.io",
+		"safselvbetjening-q1.dev-fss-pub.nais.io",
+		"saf.dev-fss-pub.nais.io",
+
+		"soknadsfillager-gcp.dev.intern.nav.no",
+		"soknadsmottaker-gcp.dev.intern.nav.no"
+	],
 	"outboundRulesGcpApplications": [
 		"soknadsmottaker",
 		"soknadsfillager"
@@ -25,7 +32,6 @@
 		"PDL_URL": "https://pdl-api.dev-fss-pub.nais.io",
 		"SAFSELVBETJENING_URL": "https://safselvbetjening-q1.dev-fss-pub.nais.io",
 		"SAF_URL": "https://saf.dev-fss-pub.nais.io",
-		"STS_URL": "https://api-gw-q1.oera.no/security-token-service/",
 		"SANITY_HOST": "https://www.nav.no",
 		"SANITY_ENDPOINT": "/soknader/api/sanity/skjemautlisting",
 		"FILESTORAGE_HOST": "https://soknadsfillager-gcp.dev.intern.nav.no",
