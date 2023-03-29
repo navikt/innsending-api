@@ -341,7 +341,6 @@ components:
       type: object
       required:
         - kanal
-        - tekst
       properties:
         kanal:
           type: string
@@ -352,13 +351,21 @@ components:
             - epost
         tekst:
           type: string
-          description: Spesifiserer en overordnet beskrivelse av et varsel til søker.
+          description: Spesifiserer en overordnet beskrivelse av et varsel til søker. Hvis denne ikke er spesifisert vil det brukes standard tekster. Se [dokumentasjon](https://navikt.github.io/brukernotifikasjon-docs/eksternvarsling/) for mer informasjon
           example: Ny soknad opprettet. Logg inn på NAV for å finne lenke for å åpne denne.
         tittel:
           type: string
           nullable: true
           description: Spesifiserer en tittel på epost dersom det sendes varsel via epost.
           example: Notifikasjon fra NAV
+
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+
+security:
+  - basicAuth: []
 
 externalDocs:
   description: Documentation of the whole archiving system

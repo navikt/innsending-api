@@ -204,8 +204,6 @@ internal class BrukernotifikasjonPublisherTest {
 		// Så
 		assertTrue(message.isCaptured)
 		assertEquals(Varsel.Kanal.sms, message.captured.brukernotifikasjonInfo.eksternVarsling[0].kanal)
-		assertEquals("Tekst", message.captured.brukernotifikasjonInfo.eksternVarsling[0].tekst)
-
 	}
 
 

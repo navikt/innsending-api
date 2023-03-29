@@ -78,7 +78,7 @@ class BrukernotifikasjonPublisher(
 
 		val eksternVarslingList = mutableListOf<Varsel>()
 		if (ettersending) {
-			eksternVarslingList.add(Varsel(Varsel.Kanal.sms, "Tekst"))
+			eksternVarslingList.add(Varsel(Varsel.Kanal.sms))
 		}
 
 		val notificationInfo = NotificationInfo(tittel, lenke , soknadLevetid , eksternVarslingList)
