@@ -12,6 +12,7 @@
 		"pdl-api.prod-fss-pub.nais.io",
 		"safselvbetjening.prod-fss-pub.nais.io",
 		"saf.prod-fss-pub.nais.io",
+		"tokendings.prod-gcp.nais.io",
 
 		"soknadsfillager-gcp.intern.nav.no",
 		"soknadsmottaker-gcp.intern.nav.no"
