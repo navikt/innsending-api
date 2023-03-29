@@ -6,7 +6,7 @@
 	"default_database_size": 10,
 	"ingresses": [
 		"https://www.dev.nav.no/innsending-api-gcp",
-		"https://innsending-api-gcp.ekstern.dev.nav.no"
+		"https://innsending-api-gcp.intern.dev.nav.no"
 	],
 	"outboundExternalHosts": [
 		"pdl-api.dev-fss-pub.nais.io",
