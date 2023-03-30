@@ -1,0 +1,53 @@
+apiVersion: "monitoring.coreos.com/v1"
+kind: PrometheusRule
+metadata:
+  labels:
+    team: team-soknad
+  name: innsending-api-alerts-dev
+  namespace: team-soknad
+spec:
+  groups:
+    - name: {{ env-name }}
+      rules:
+        - alert: archiving failed
+          expr: sum(innsendingapi_archiving_of_applications_failed_total{namespace="team-soknad"}) > 0
+          for: 1m
+          annotations:
+            consequence: "_*Innsending-api*_ has reported archiving of {{ $value }} application(s) have failed."
+            action: "@here: Check logs https://logs.adeo.no/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-4h,to:now))&_a=(columns:!(message,envclass,level,application,host),filters:!(),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'application:soknadsarkiverer%20AND%20cluster:dev-gcp%20AND%20level:Error'),sort:!(!('@timestamp',desc)))"
+            documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
+            summary: "Container _*{{ $labels.container }}*_ has reported archiving of {{ $value }} application(s) have failed."
+            sla: "Action should be taken as soon as possible"
+          labels:
+            severity: critical
+            namespace: fyllut-sendinn
+            special_type_to_use_in_alertmanager_config: fyllut-sendinn-backend
+            alert_type: custom
+        - alert: not yet archived
+          expr: sum(innsendingapi_applications_absent_in_archive_total{namespace="team-soknad"}) > 0
+          for: 1m
+          annotations:
+            consequence: "Innsending-api has reported archiving status message for {{ $value }} application(s) is missing."
+            action: "@here: Check logs https://logs.adeo.no/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-4h,to:now))&_a=(columns:!(message,envclass,level,application,host),filters:!(),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'application:soknadsarkiverer%20AND%20cluster:dev-gcp%20AND%20level:Error'),sort:!(!('@timestamp',desc)))"
+            documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
+            summary: "Container _*{{ $labels.container }}*_ has reported archiving of {{ $value }} application(s) have failed."
+            sla: "Action should be taken as soon as possible"
+          labels:
+            severity: warning
+            namespace: fyllut-sendinn
+            special_type_to_use_in_alertmanager_config: fyllut-sendinn-backend
+            alert_type: custom
+        - alert: High number of created applications
+          expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT"}[1d])) by (operation)) > {{ max_created_expected }}
+          for: 1m
+          annotations:
+            consequence: "Innsending-api has reported {{ $value }} created applications application(s) during last 24 hours. This is 25% more than normal for a day."
+            action: "@here: Check logs https://logs.adeo.no/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-1d,to:now))&_a=(columns:!(message,envclass,level,application,pod),filters:!(),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'application:innsending-api%20AND%20cluster:prod-gcp%20AND%20(message:%22Opprettet%20s%C3%B8knad%22%20OR%20message:%22Opprettet%20ettersending%22%20OR%20message:%22Soknad%20fra%20fyllut%20persistert%22%20OR%20message:%22Skal%20opprette%20ettersendingssoknad%22)'),sort:!(!('@timestamp',desc)))"
+            documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
+            summary: "Innsending-api has reported that the number of created applications last 24 hours is {{ $value }} application(s) which is 25% more than expected."
+            sla: "Check logs within 3h"
+          labels:
+            severity: info
+            special_type_to_use_in_alertmanager_config: fyllut-sendinn-backend
+            namespace: fyllut-sendinn
+            alert_type: custom
