@@ -7,6 +7,7 @@ import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
+import no.nav.soknad.arkivering.soknadsmottaker.model.Varsel
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.config.BrukerNotifikasjonConfig
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
@@ -62,6 +63,7 @@ internal class BrukernotifikasjonPublisherTest {
 		assertTrue(message.captured.brukernotifikasjonInfo.notifikasjonsTittel.contains(tittel))
 		assertEquals(brukernotifikasjonPublisher?.tittelPrefixNySoknad?.get(spraak)!! + tittel, message.captured.brukernotifikasjonInfo.notifikasjonsTittel)
 		assertEquals(notifikasjonConfig.tjenesteUrl + "/" + innsendingsid, message.captured.brukernotifikasjonInfo.lenke)
+		assertEquals(0, message.captured.brukernotifikasjonInfo.eksternVarsling.size)
 	}
 
 	@Test
@@ -179,6 +181,29 @@ internal class BrukernotifikasjonPublisherTest {
 		assertEquals(personId, done.captured.personId)
 		assertEquals(innsendingsid, done.captured.innsendingId)
 
+	}
+
+	@Test
+	fun `Skal sende sms varsling ved ettersending`() {
+		// Gitt
+		val innsendingsid = "123456"
+		val skjemanr = defaultSkjemanr
+		val tema = defaultTema
+		val spraak = "no"
+		val personId = "12125912345"
+		val tittel = "Dokumentasjon av utdanning"
+		val id = 1L
+		val ettersendingsId = "2345678"
+
+		val message = slot<AddNotification>()
+		every { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) } returns Unit
+
+		// Når
+		brukernotifikasjonPublisher?.soknadStatusChange(lagDokumentSoknad(personId, skjemanr, spraak, tittel, tema, id, innsendingsid, ettersendingsId=ettersendingsId ))
+
+		// Så
+		assertTrue(message.isCaptured)
+		assertEquals(Varsel.Kanal.sms, message.captured.brukernotifikasjonInfo.eksternVarsling[0].kanal)
 	}
 
 
