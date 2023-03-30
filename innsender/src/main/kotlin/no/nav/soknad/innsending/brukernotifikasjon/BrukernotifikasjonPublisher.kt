@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.brukernotifikasjon
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.NotificationInfo
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
+import no.nav.soknad.arkivering.soknadsmottaker.model.Varsel
 import no.nav.soknad.innsending.config.BrukerNotifikasjonConfig
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.DokumentSoknadDto
@@ -75,7 +76,12 @@ class BrukernotifikasjonPublisher(
 		val tittel = tittelPrefixGittSprak(ettersending, dokumentSoknad.spraak ?: "no") + dokumentSoknad.tittel
 		val lenke = createLink(dokumentSoknad.innsendingsId!!)
 
-		val notificationInfo = NotificationInfo(tittel, lenke , soknadLevetid , emptyList())
+		val eksternVarslingList = mutableListOf<Varsel>()
+		if (ettersending) {
+			eksternVarslingList.add(Varsel(Varsel.Kanal.sms))
+		}
+
+		val notificationInfo = NotificationInfo(tittel, lenke , soknadLevetid , eksternVarslingList)
 		val soknadRef = SoknadRef(dokumentSoknad.innsendingsId!!, ettersending, groupId, dokumentSoknad.brukerId, dokumentSoknad.opprettetDato)
 
 		try {
