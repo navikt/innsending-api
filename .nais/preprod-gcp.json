@@ -8,7 +8,14 @@
 		"https://www.dev.nav.no/innsending-api-gcp",
 		"https://innsending-api-gcp.dev.nav.no"
 	],
-	"outboundExternalHosts": [],
+	"outboundExternalHosts": [
+		"pdl-api.dev-fss-pub.nais.io",
+		"safselvbetjening-q1.dev-fss-pub.nais.io",
+		"saf.dev-fss-pub.nais.io",
+		"tokendings.dev-gcp.nais.io",
+		"soknadsmottaker-gcp.dev.intern.nav.no",
+		"soknadsfillager-gcp.dev.intern.nav.no"
+	],
 	"outboundRulesGcpApplications": [
 		"soknadsmottaker",
 		"soknadsfillager"
