@@ -73,6 +73,7 @@ jobs:
 
   deploy-alerts-preprod:
     if: github.event.inputs.environment == 'preprod'
+    dependson: deploy-preprod
     name: Deploy alerts to dev
     runs-on: ubuntu-latest
     steps:
