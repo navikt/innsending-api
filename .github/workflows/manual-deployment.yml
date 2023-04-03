@@ -58,7 +58,6 @@ jobs:
           VARS: .nais/preprod-gcp.json
           DRY_RUN: false
       - name: Deploy alerts to dev
-        uses: nais/deploy/actions/deploy@v1
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: dev-gcp
