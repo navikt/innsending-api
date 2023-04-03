@@ -70,3 +70,18 @@ jobs:
           RESOURCE: .nais/nais-gcp.yml
           VARS: .nais/prod-gcp.json
           DRY_RUN: true
+
+  deploy-alerts-preprod:
+    if: github.event.inputs.environment == 'preprod'
+    name: Deploy alerts to dev
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Deploy to dev
+        uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: dev-gcp
+          RESOURCE: .nais/alerts.yml
+          VARS: .nais/preprod-alert.json
