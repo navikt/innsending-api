@@ -13,7 +13,7 @@ spec:
           expr: sum(innsendingapi_archiving_of_applications_failed_total{namespace="team-soknad"}) > 0
           for: 1m
           annotations:
-            consequence: "_*Innsending-api*_ has reported archiving of {{ $value }} application(s) have failed."
+            consequence: "Innsending-api has reported archiving of {{ $value }} application(s) have failed."
             action: "@here: Check logs https://logs.adeo.no/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-4h,to:now))&_a=(columns:!(message,envclass,level,application,host),filters:!(),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'application:soknadsarkiverer%20AND%20cluster:dev-gcp%20AND%20level:Error'),sort:!(!('@timestamp',desc)))"
             documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
             summary: "Container _*{{ $labels.container }}*_ has reported archiving of {{ $value }} application(s) have failed."
