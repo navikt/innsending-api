@@ -14,7 +14,7 @@ spec:
           for: 1m
           annotations:
             consequence: "Innsending-api has reported archiving of {{ $value }} application(s) have failed."
-            action: "@here: Check logs https://logs.adeo.no/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-4h,to:now))&_a=(columns:!(message,envclass,level,application,host),filters:!(),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'application:soknadsarkiverer%20AND%20cluster:dev-gcp%20AND%20level:Error'),sort:!(!('@timestamp',desc)))"
+            action: "Check logs https://logs.adeo.no/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-4h,to:now))&_a=(columns:!(message,envclass,level,application,host),filters:!(),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'application:soknadsarkiverer%20AND%20cluster:dev-gcp%20AND%20level:Error'),sort:!(!('@timestamp',desc)))"
             documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
             summary: "Container _*{{ $labels.container }}*_ has reported archiving of {{ $value }} application(s) have failed."
             sla: "Action should be taken as soon as possible"
@@ -28,7 +28,7 @@ spec:
           for: 1m
           annotations:
             consequence: "Innsending-api has reported archiving status message for {{ $value }} application(s) is missing."
-            action: "@here: Check logs https://logs.adeo.no/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-4h,to:now))&_a=(columns:!(message,envclass,level,application,host),filters:!(),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'application:soknadsarkiverer%20AND%20cluster:dev-gcp%20AND%20level:Error'),sort:!(!('@timestamp',desc)))"
+            action: "Check logs https://logs.adeo.no/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-4h,to:now))&_a=(columns:!(message,envclass,level,application,host),filters:!(),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'application:soknadsarkiverer%20AND%20cluster:dev-gcp%20AND%20level:Error'),sort:!(!('@timestamp',desc)))"
             documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
             summary: "Container _*{{ $labels.container }}*_ has reported archiving of {{ $value }} application(s) have failed."
             sla: "Action should be taken as soon as possible"
@@ -41,8 +41,22 @@ spec:
           expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT"}[1d])) by (operation)) > {{ max_created_expected }}
           for: 1m
           annotations:
-            consequence: "Innsending-api has reported {{ $value }} created applications application(s) during last 24 hours. This is 25% more than normal for a day."
-            action: "@here: Check logs https://logs.adeo.no/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-1d,to:now))&_a=(columns:!(message,envclass,level,application,pod),filters:!(),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'application:innsending-api%20AND%20cluster:prod-gcp%20AND%20(message:%22Opprettet%20s%C3%B8knad%22%20OR%20message:%22Opprettet%20ettersending%22%20OR%20message:%22Soknad%20fra%20fyllut%20persistert%22%20OR%20message:%22Skal%20opprette%20ettersendingssoknad%22)'),sort:!(!('@timestamp',desc)))"
+            consequence: "Innsending-api has reported {{ $value }} created applications during last 24 hours. This is more than normal for a day."
+            action: "Check logs https://logs.adeo.no/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-1d,to:now))&_a=(columns:!(message,envclass,level,application,pod),filters:!(),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'application:innsending-api%20AND%20cluster:prod-gcp%20AND%20(message:%22Opprettet%20s%C3%B8knad%22%20OR%20message:%22Opprettet%20ettersending%22%20OR%20message:%22Soknad%20fra%20fyllut%20persistert%22%20OR%20message:%22Skal%20opprette%20ettersendingssoknad%22)'),sort:!(!('@timestamp',desc)))"
+            documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
+            summary: "Innsending-api has reported that the number of created applications last 24 hours is {{ $value }} application(s) which is 25% more than expected."
+            sla: "Check logs within 3h"
+          labels:
+            severity: info
+            special_type_to_use_in_alertmanager_config: fyllut-sendinn-backend
+            namespace: fyllut-sendinn
+            alert_type: custom
+        - alert: High number of sent in applications
+          expr: ceil(sum by (operation) (increase(innsendingapi_number_of_operations_total{operation="SEND_INN"}[1d]))) > 1 > {{ max_innsendt_expected }}
+          for: 1m
+          annotations:
+            consequence: "Innsending-api has reported {{ $value }} sent in applications during last 24 hours. This is more than normal for a day."
+            action: "Check logs https://logs.adeo.no/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-1d,to:now))&_a=(columns:!(message,envclass,level,application,pod),filters:!(),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'application:innsending-api%20AND%20cluster:prod-gcp%20AND%20(message:%22Opprettet%20s%C3%B8knad%22%20OR%20message:%22Opprettet%20ettersending%22%20OR%20message:%22Soknad%20fra%20fyllut%20persistert%22%20OR%20message:%22Skal%20opprette%20ettersendingssoknad%22)'),sort:!(!('@timestamp',desc)))"
             documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
             summary: "Innsending-api has reported that the number of created applications last 24 hours is {{ $value }} application(s) which is 25% more than expected."
             sla: "Check logs within 3h"

@@ -1,4 +1,5 @@
 {
   "env-name": "fyllut-sendinn-gcp-prod-alerts",
-  "max_created_expected": 1875
+  "max_created_expected": 2000,
+	"max_innsendt_expected": 1800
 }
