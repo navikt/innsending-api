@@ -6,15 +6,16 @@
 	"default_database_size": 10,
 	"ingresses": [
 		"https://www.dev.nav.no/innsending-api-gcp",
-		"https://innsending-api-gcp.dev.nav.no"
+		"https://innsending-api-gcp.intern.dev.nav.no"
 	],
 	"outboundExternalHosts": [
 		"pdl-api.dev-fss-pub.nais.io",
 		"safselvbetjening-q1.dev-fss-pub.nais.io",
 		"saf.dev-fss-pub.nais.io",
 		"tokendings.dev-gcp.nais.io",
-		"soknadsmottaker-gcp.dev.intern.nav.no",
-		"soknadsfillager-gcp.dev.intern.nav.no"
+
+		"soknadsfillager-gcp.intern.dev.nav.no",
+		"soknadsmottaker-gcp.intern.dev.nav.no"
 	],
 	"outboundRulesGcpApplications": [
 		"soknadsmottaker",
@@ -32,16 +33,15 @@
 		"PDL_URL": "https://pdl-api.dev-fss-pub.nais.io",
 		"SAFSELVBETJENING_URL": "https://safselvbetjening-q1.dev-fss-pub.nais.io",
 		"SAF_URL": "https://saf.dev-fss-pub.nais.io",
-		"STS_URL": "https://api-gw-q1.oera.no/security-token-service/",
 		"SANITY_HOST": "https://www.nav.no",
 		"SANITY_ENDPOINT": "/soknader/api/sanity/skjemautlisting",
-		"FILESTORAGE_HOST": "https://soknadsfillager-gcp.dev.intern.nav.no",
+		"FILESTORAGE_HOST": "https://soknadsfillager-gcp.intern.dev.nav.no",
 		"FILESTORAGE_ENDPOINT": "/filer",
 		"FILESTORAGE_PARAMETERS": "?ids=",
-		"SOKNADSMOTTAKER_HOST": "https://soknadsmottaker-gcp.dev.intern.nav.no",
+		"SOKNADSMOTTAKER_HOST": "https://soknadsmottaker-gcp.intern.dev.nav.no",
 		"SOKNADSMOTTAKER_ENDPOINT": "/save",
 		"PUBLISERE_BRUKERNOTIFIKASJONER": "true",
-		"TJENESTE_URL": "https://www.dev.nav.no/sendinn",
+		"TJENESTE_URL": "https://www.intern.dev.nav.no/sendinn",
 		"TOKENDINGS_BASE_URL": "https://tokendings.dev-gcp.nais.io",
 		"SAFSELVBETJENING_TOKEN_X_AUDIENCE": "dev-fss:teamdokumenthandtering:safselvbetjening-q1",
 		"PDL_TOKEN_X_AUDIENCE": "dev-fss:pdl:pdl-api",
