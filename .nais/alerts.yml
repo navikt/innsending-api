@@ -23,7 +23,7 @@ spec:
             application: "innsending-api"
             severity: critical
             namespace: fyllut-sendinn
-            special_type_to_use_in_alertmanager_config: fyllut-sendinn-backend
+            special_type_to_use_in_alertmanager_config: fyllut-sendinn-alerts
             alert_type: custom
         - alert: Not yet archived
           expr: sum(innsendingapi_applications_absent_in_archive_total{namespace="team-soknad"}) > 0
@@ -39,7 +39,7 @@ spec:
             application: "innsending-api"
             severity: warning
             namespace: fyllut-sendinn
-            special_type_to_use_in_alertmanager_config: fyllut-sendinn-backend
+            special_type_to_use_in_alertmanager_config: fyllut-sendinn-alerts
             alert_type: custom
         - alert: High number of created applications
           expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT"}[1d])) by (operation)) > {{ max_created_expected }}
@@ -54,7 +54,7 @@ spec:
           labels:
             application: "innsending-api"
             severity: info
-            special_type_to_use_in_alertmanager_config: fyllut-sendinn-backend
+            special_type_to_use_in_alertmanager_config: fyllut-sendinn-alerts
             namespace: fyllut-sendinn
             alert_type: custom
         - alert: High number of sent in applications
@@ -70,6 +70,6 @@ spec:
           labels:
             application: "innsending-api"
             severity: info
-            special_type_to_use_in_alertmanager_config: fyllut-sendinn-backend
+            special_type_to_use_in_alertmanager_config: fyllut-sendinn-alerts
             namespace: fyllut-sendinn
             alert_type: custom
