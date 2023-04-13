@@ -1,5 +1,6 @@
 {
 	"env-name": "fyllut-sendinn-gcp-dev-alerts",
 	"max_created_expected": 10,
-	"max_innsendt_expected": 10
+	"max_innsendt_expected": 10,
+	"expected_period": "1h"
 }

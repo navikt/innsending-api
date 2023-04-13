@@ -42,7 +42,7 @@ spec:
             special_type_to_use_in_alertmanager_config: fyllut-sendinn-alerts
             alert_type: custom
         - alert: High number of created applications
-          expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT"}[1d])) by (operation)) > {{ max_created_expected }}
+          expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT"}[ {{expected_period}} ])) by (operation)) > {{ max_created_expected }}
           for: 1m
           annotations:
             title: "Unusual number of applications have been created"
@@ -58,7 +58,7 @@ spec:
             namespace: fyllut-sendinn
             alert_type: custom
         - alert: High number of sent in applications
-          expr: ceil(sum by (operation) (increase(innsendingapi_number_of_operations_total{operation="SEND_INN"}[1d]))) > {{ max_innsendt_expected }}
+          expr: ceil(sum by (operation) (increase(innsendingapi_number_of_operations_total{operation="SEND_INN"}[ {{expected_period}} ]))) > {{ max_innsendt_expected }}
           for: 1m
           annotations:
             title: "Unusual number of applications have been sent in"
