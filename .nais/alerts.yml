@@ -37,7 +37,7 @@ spec:
             sla: "Action should be taken as soon as possible"
           labels:
             application: "innsending-api"
-            severity: warning
+            severity: critical
             namespace: fyllut-sendinn
             special_type_to_use_in_alertmanager_config: fyllut-sendinn-alerts
             alert_type: custom
