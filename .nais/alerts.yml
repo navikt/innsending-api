@@ -41,6 +41,22 @@ spec:
             namespace: fyllut-sendinn
             special_type_to_use_in_alertmanager_config: fyllut-sendinn-alerts
             alert_type: custom
+        - alert: Consistent high number of created applications
+          expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT"}[ {{continued_expected_period}} ])) by (operation)) > 3*{{ max_created_expected }}
+          for: 1m
+          annotations:
+            title: "Unusual number of applications have been created"
+            consequence: "If this continues it might have consequences for resources used."
+            action: "https://logs.adeo.no/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-1d,to:now))&_a=(columns:!(message,envclass,level,application,pod),filters:!(),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'application:innsending-api%20AND%20cluster:prod-gcp%20AND%20(message:%22Opprettet%20s%C3%B8knad%22%20OR%20message:%22Opprettet%20ettersending%22%20OR%20message:%22Soknad%20fra%20fyllut%20persistert%22%20OR%20message:%22Skal%20opprette%20ettersendingssoknad%22)'),sort:!(!('@timestamp',desc)))"
+            documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
+            summary: "Innsending-api has reported that the number of created applications last 24 hours is {{ $value }} application(s) which is 25% more than expected."
+            sla: "Check logs within 3h"
+          labels:
+            application: "innsending-api"
+            severity: warning
+            special_type_to_use_in_alertmanager_config: fyllut-sendinn-alerts
+            namespace: fyllut-sendinn
+            alert_type: custom
         - alert: High number of created applications
           expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT"}[ {{expected_period}} ])) by (operation)) > {{ max_created_expected }}
           for: 1m
