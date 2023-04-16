@@ -20,7 +20,7 @@ spec:
             summary: "Container _*{{ $labels.container }}*_ has reported archiving of {{ $value }} application(s) have failed."
             sla: "Action should be taken as soon as possible"
           labels:
-            application: "innsending-api"
+            service: "innsending-api"
             severity: critical
             namespace: fyllut-sendinn
             special_type_to_use_in_alertmanager_config: fyllut-sendinn-alerts
@@ -36,7 +36,7 @@ spec:
             summary: "Container _*{{ $labels.container }}*_ has reported archiving of {{ $value }} application(s) have failed."
             sla: "Action should be taken as soon as possible"
           labels:
-            application: "innsending-api"
+            service: "innsending-api"
             severity: critical
             namespace: fyllut-sendinn
             special_type_to_use_in_alertmanager_config: fyllut-sendinn-alerts
@@ -52,7 +52,7 @@ spec:
             summary: "Innsending-api has reported that the number of created applications last 24 hours is {{ $value }} application(s) which is 25% more than expected."
             sla: "Check logs within 3h"
           labels:
-            application: "innsending-api"
+            service: "innsending-api"
             severity: warning
             special_type_to_use_in_alertmanager_config: fyllut-sendinn-alerts
             namespace: fyllut-sendinn
@@ -68,7 +68,7 @@ spec:
             summary: "Innsending-api has reported that the number of created applications last 24 hours is {{ $value }} application(s) which is 25% more than expected."
             sla: "Check logs within 3h"
           labels:
-            application: "innsending-api"
+            service: "innsending-api"
             severity: info
             special_type_to_use_in_alertmanager_config: fyllut-sendinn-alerts
             namespace: fyllut-sendinn
@@ -84,7 +84,7 @@ spec:
             summary: "Innsending-api has reported that the number of created applications last 24 hours is {{ $value }} application(s) which is 25% more than expected."
             sla: "Check logs within 3h"
           labels:
-            application: "innsending-api"
+            service: "innsending-api"
             severity: info
             special_type_to_use_in_alertmanager_config: fyllut-sendinn-alerts
             namespace: fyllut-sendinn
