@@ -3,7 +3,7 @@ kind: PrometheusRule
 metadata:
   labels:
     team: team-soknad
-  name: innsending-api-alerts-dev
+  name: innsending-api-alerts
   namespace: team-soknad
 spec:
   groups:
