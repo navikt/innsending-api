@@ -2,6 +2,12 @@
   "env-name": "fyllut-sendinn-gcp-prod-alerts",
   "max_created_expected": 1000,
 	"max_innsendt_expected": 1000,
+	"number_of_errors": 10,
+	"error_log_url": "https://logs.adeo.no/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-2h,to:now))&_a=(columns:!(message,envclass,level,application,host),filters:!(),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'(application:innsending-api%20)%20AND%20cluster:prod-gcp%20AND%20level:Error'),sort:!(!('@timestamp',desc)))",
+	"archiving_failed_log_url": "https://logs.adeo.no/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-4h,to:now))&_a=(columns:!(message,envclass,level,application,host),filters:!(),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'application:soknadsarkiverer%20AND%20cluster:prod-gcp%20AND%20level:Error'),sort:!(!('@timestamp',desc)))",
+	"missing_archiving_log_url": "https://logs.adeo.no/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-4h,to:now))&_a=(columns:!(message,envclass,level,application,host),filters:!(),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'application:soknadsarkiverer%20AND%20cluster:prod-gcp%20AND%20level:Error'),sort:!(!('@timestamp',desc)))",
+	"application_created_log_url": "https://logs.adeo.no/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-1d,to:now))&_a=(columns:!(message,envclass,level,application,pod),filters:!(),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'application:innsending-api%20AND%20cluster:prod-gcp%20AND%20(message:%22Opprettet%20s%C3%B8knad%22%20OR%20message:%22Opprettet%20ettersending%22%20OR%20message:%22Soknad%20fra%20fyllut%20persistert%22%20OR%20message:%22Skal%20opprette%20ettersendingssoknad%22)'),sort:!(!('@timestamp',desc)))",
+	"application_sent_in_log_url": "https://logs.adeo.no/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-2h,to:now))&_a=(columns:!(message,envclass,level,application,host),filters:!(),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'(application:innsending-api%20)%20AND%20cluster:prod-gcp%20AND%20message:%22Sendt%20inn%20soknad%22'),sort:!(!('@timestamp',desc)))",
 	"expected_period": "1h",
 	"continued_expected_period": "3h"
 }
