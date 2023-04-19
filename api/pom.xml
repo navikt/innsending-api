@@ -19,7 +19,7 @@
 
 		<springdoc-openapi.version>1.6.12</springdoc-openapi.version>
 		<swagger-annotations.version>2.2.4</swagger-annotations.version>
-		<spring-web.version>5.3.23</spring-web.version>
+		<spring-web.version>6.0.0</spring-web.version>
 		<javax-servlet-api.version>4.0.1</javax-servlet-api.version>
 		<javax-validation-api.version>2.0.1.Final</javax-validation-api.version>
 		<jakarta-annotation.version>2.1.1</jakarta-annotation.version>
