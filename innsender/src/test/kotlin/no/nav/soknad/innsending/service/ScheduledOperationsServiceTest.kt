@@ -132,15 +132,17 @@ class ScheduledOperationsServiceTest {
 
 		val service = lagScheduledOperationsService()
 
+		val soknadsId = soknad.id!!
+
 		service.checkIfApplicationsAreArchived(OFFSET_HOURS)
-		val lagretSoknad1 = soknadRepository.findById(soknad.id!!)
+		val lagretSoknad1 = soknadRepository.findById(soknadsId)
 		assertTrue(lagretSoknad1.isPresent)
 		assertTrue(lagretSoknad1.get().arkiveringsstatus == ArkiveringsStatus.IkkeSatt)
 
 		simulateKafkaPolling(true, soknad.innsendingsid)
 
 		service.checkIfApplicationsAreArchived(OFFSET_HOURS)
-		val lagretSoknad2 = soknadRepository.findById(soknad.id)
+		val lagretSoknad2 = soknadRepository.findById(soknadsId)
 		assertTrue(lagretSoknad2.isPresent)
 		assertEquals(ArkiveringsStatus.Arkivert, lagretSoknad2.get().arkiveringsstatus)
 

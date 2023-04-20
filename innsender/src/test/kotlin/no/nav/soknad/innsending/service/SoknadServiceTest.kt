@@ -19,10 +19,7 @@ import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.testpersonid
-import no.nav.soknad.innsending.utils.getBytesFromFile
-import no.nav.soknad.innsending.utils.lagFilDtoMedFil
-import no.nav.soknad.innsending.utils.testOgSjekkInnsendingAvSoknad
-import no.nav.soknad.innsending.utils.testOgSjekkOpprettingAvSoknad
+import no.nav.soknad.innsending.utils.*
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,9 +41,6 @@ class SoknadServiceTest {
 
 	@Autowired
 	private lateinit var innsenderMetrics: InnsenderMetrics
-
-	@Autowired
-	private lateinit var skjemaService: SkjemaService
 
 	@Autowired
 	private lateinit var soknadService: SoknadService
@@ -172,7 +166,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun opprettSoknadGittSoknadDokument() {
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf())
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf())
 
 		assertTrue(dokumentSoknadDto != null)
 	}
@@ -182,16 +176,21 @@ class SoknadServiceTest {
 	fun opprettSoknadForettersendingAvVedlegg() {
 		val innsendingService = lagInnsendingService(soknadService)
 		// Opprett original soknad
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1", "W2"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1", "W2"))
 
 		filService.lagreFil(
 			dokumentSoknadDto,
-			lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
 		)
 
 		// Sender inn original soknad
 		val kvitteringsDto =
-			testOgSjekkInnsendingAvSoknad(fillagerAPI, soknadsmottakerAPI, dokumentSoknadDto, innsendingService)
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				fillagerAPI,
+				soknadsmottakerAPI,
+				dokumentSoknadDto,
+				innsendingService
+			)
 		assertTrue(kvitteringsDto.hoveddokumentRef != null)
 		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
 		assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
@@ -208,17 +207,17 @@ class SoknadServiceTest {
 	@Test
 	fun testAtFilerIkkeSlettesVedInnsending() {
 		val innsendingService = lagInnsendingService(soknadService)
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
 		// Laster opp skjema (hoveddokumentet) til soknaden
 		filService.lagreFil(
 			dokumentSoknadDto,
-			lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
 		)
 
 		// laster opp fil til vedlegget
 		val lagretFilForVedlegg =
-			filService.lagreFil(dokumentSoknadDto, lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first {
+			filService.lagreFil(dokumentSoknadDto, Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first {
 				!it.erHoveddokument && it.vedleggsnr.equals(
 					"W1",
 					true
@@ -235,7 +234,12 @@ class SoknadServiceTest {
 
 		// Sender inn søknaden
 		val kvitteringsDto =
-			testOgSjekkInnsendingAvSoknad(fillagerAPI, soknadsmottakerAPI, dokumentSoknadDto, innsendingService)
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				fillagerAPI,
+				soknadsmottakerAPI,
+				dokumentSoknadDto,
+				innsendingService
+			)
 		assertTrue(kvitteringsDto.hoveddokumentRef != null)
 		assertTrue(kvitteringsDto.innsendteVedlegg!!.isNotEmpty())
 		assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
@@ -264,17 +268,22 @@ class SoknadServiceTest {
 		val innsendingService = lagInnsendingService(soknadService)
 
 		// Opprett original soknad
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1", "W2"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1", "W2"))
 
 		// Laster opp skjema (hoveddokumentet) til soknaden
 		filService.lagreFil(
 			dokumentSoknadDto,
-			lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
 		)
 
 		// Sender inn original soknad
 		val kvitteringsDto =
-			testOgSjekkInnsendingAvSoknad(fillagerAPI, soknadsmottakerAPI, dokumentSoknadDto, innsendingService)
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				fillagerAPI,
+				soknadsmottakerAPI,
+				dokumentSoknadDto,
+				innsendingService
+			)
 		assertTrue(kvitteringsDto.hoveddokumentRef != null)
 		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
 		assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
@@ -291,12 +300,15 @@ class SoknadServiceTest {
 
 		// Laster opp fil til vedlegg W1 til ettersendingssøknaden
 		val lagretFil =
-			filService.lagreFil(ettersendingsSoknadDto, lagFilDtoMedFil(ettersendingsSoknadDto.vedleggsListe.first {
-				!it.erHoveddokument && it.vedleggsnr.equals(
-					"W1",
-					true
-				)
-			}))
+			filService.lagreFil(
+				ettersendingsSoknadDto,
+				Hjelpemetoder.lagFilDtoMedFil(ettersendingsSoknadDto.vedleggsListe.first {
+					!it.erHoveddokument && it.vedleggsnr.equals(
+						"W1",
+						true
+					)
+				})
+			)
 
 		assertTrue(lagretFil.id != null)
 		assertTrue(lagretFil.vedleggsid == ettersendingsSoknadDto.vedleggsListe.first {
@@ -307,7 +319,12 @@ class SoknadServiceTest {
 		}.id)
 
 		val ettersendingsKvitteringsDto =
-			testOgSjekkInnsendingAvSoknad(fillagerAPI, soknadsmottakerAPI, ettersendingsSoknadDto, innsendingService)
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				fillagerAPI,
+				soknadsmottakerAPI,
+				ettersendingsSoknadDto,
+				innsendingService
+			)
 		assertTrue(ettersendingsKvitteringsDto.hoveddokumentRef == null)
 		assertTrue(ettersendingsKvitteringsDto.innsendteVedlegg!!.isNotEmpty())
 		assertTrue(ettersendingsKvitteringsDto.skalEttersendes!!.isNotEmpty())
@@ -324,15 +341,23 @@ class SoknadServiceTest {
 		assertTrue(ettersendingsSoknadDto2.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }
 			.all { it.innsendtdato != null })
 		// Laster opp fil til vedlegg W1 til ettersendingssøknaden
-		filService.lagreFil(ettersendingsSoknadDto2, lagFilDtoMedFil(ettersendingsSoknadDto2.vedleggsListe.first {
-			!it.erHoveddokument && it.vedleggsnr.equals(
-				"W2",
-				true
-			)
-		}))
+		filService.lagreFil(
+			ettersendingsSoknadDto2,
+			Hjelpemetoder.lagFilDtoMedFil(ettersendingsSoknadDto2.vedleggsListe.first {
+				!it.erHoveddokument && it.vedleggsnr.equals(
+					"W2",
+					true
+				)
+			})
+		)
 
 		val ettersendingsKvitteringsDto2 =
-			testOgSjekkInnsendingAvSoknad(fillagerAPI, soknadsmottakerAPI, ettersendingsSoknadDto2, innsendingService)
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				fillagerAPI,
+				soknadsmottakerAPI,
+				ettersendingsSoknadDto2,
+				innsendingService
+			)
 		assertTrue(ettersendingsKvitteringsDto2.hoveddokumentRef == null)
 		assertTrue(ettersendingsKvitteringsDto2.innsendteVedlegg!!.isNotEmpty())
 		assertTrue(ettersendingsKvitteringsDto2.skalEttersendes!!.isEmpty())
@@ -380,7 +405,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun hentOpprettetSoknadDokument() {
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
 		val dokumentSoknadDtoHentet = soknadService.hentSoknad(dokumentSoknadDto.id!!)
 
@@ -400,10 +425,10 @@ class SoknadServiceTest {
 
 	@Test
 	fun hentOpprettedeAktiveSoknadsDokument() {
-		testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"), testpersonid)
-		testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"), testpersonid)
-		testOgSjekkOpprettingAvSoknad(soknadService, listOf("W2"), "12345678902")
-		testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"), "12345678903")
+		SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"), testpersonid)
+		SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"), testpersonid)
+		SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W2"), "12345678902")
+		SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"), "12345678903")
 
 		val dokumentSoknadDtos = soknadService.hentAktiveSoknader(listOf(testpersonid, "12345678902"))
 
@@ -467,19 +492,24 @@ class SoknadServiceTest {
 	@Test
 	fun opprettSoknadForEttersendingGittSoknadOgVedleggTest() {
 		val innsendingService = lagInnsendingService(soknadService)
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1", "C1", "L8"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1", "C1", "L8"))
 
 		filService.lagreFil(
 			dokumentSoknadDto,
-			lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
 		)
 		filService.lagreFil(
 			dokumentSoknadDto,
-			lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.vedleggsnr == "W1" })
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.vedleggsnr == "W1" })
 		)
 
 		val kvitteringsDto =
-			testOgSjekkInnsendingAvSoknad(fillagerAPI, soknadsmottakerAPI, dokumentSoknadDto, innsendingService)
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				fillagerAPI,
+				soknadsmottakerAPI,
+				dokumentSoknadDto,
+				innsendingService
+			)
 		assertTrue(kvitteringsDto.hoveddokumentRef != null)
 		assertTrue(kvitteringsDto.innsendteVedlegg!!.isNotEmpty())
 		assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
@@ -542,7 +572,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun slettOpprettetSoknadDokument() {
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf())
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf())
 
 		val slett = slot<List<VedleggDto>>()
 		every { fillagerAPI.slettFiler(any(), capture(slett)) } returns Unit
@@ -620,13 +650,13 @@ class SoknadServiceTest {
 		dokumentSoknadDtoList.forEach { it ->
 			filService.lagreFil(
 				it,
-				lagFilDtoMedFil(it.vedleggsListe.first { it.erHoveddokument })
+				Hjelpemetoder.lagFilDtoMedFil(it.vedleggsListe.first { it.erHoveddokument })
 			)
 		}
 		dokumentSoknadDtoList.forEach { it ->
 			filService.lagreFil(
 				it,
-				lagFilDtoMedFil(it.vedleggsListe.first { !it.erHoveddokument })
+				Hjelpemetoder.lagFilDtoMedFil(it.vedleggsListe.first { !it.erHoveddokument })
 			)
 		}
 
@@ -694,9 +724,11 @@ class SoknadServiceTest {
 		tittel: String,
 		tema: String
 	): DokumentSoknadDto {
-		val vedleggDtoPdf = lagVedleggDto(skjemanr, tittel, "application/pdf", getBytesFromFile("/litenPdf.pdf"))
+		val vedleggDtoPdf =
+			lagVedleggDto(skjemanr, tittel, "application/pdf", Hjelpemetoder.getBytesFromFile("/litenPdf.pdf"))
 
-		val vedleggDtoJson = lagVedleggDto(skjemanr, tittel, "application/json", getBytesFromFile("/sanity.json"))
+		val vedleggDtoJson =
+			lagVedleggDto(skjemanr, tittel, "application/json", Hjelpemetoder.getBytesFromFile("/sanity.json"))
 
 		val vedleggDtoList = listOf(vedleggDtoPdf, vedleggDtoJson)
 		return DokumentSoknadDto(

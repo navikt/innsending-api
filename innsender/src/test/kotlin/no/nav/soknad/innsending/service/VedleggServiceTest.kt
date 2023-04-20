@@ -10,7 +10,7 @@ import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.PatchVedleggDto
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
-import no.nav.soknad.innsending.utils.testOgSjekkOpprettingAvSoknad
+import no.nav.soknad.innsending.utils.SoknadAssertions
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -72,7 +72,7 @@ class VedleggServiceTest {
 	fun hentOpprettetVedlegg() {
 		val soknadService = lagSoknadService()
 
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
 		val vedleggDtos = slot<List<VedleggDto>>()
 		every {
@@ -95,7 +95,7 @@ class VedleggServiceTest {
 	fun leggTilVedlegg() {
 		val soknadService = lagSoknadService()
 
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
 		val vedleggDtos = slot<List<VedleggDto>>()
 		every {
@@ -115,7 +115,7 @@ class VedleggServiceTest {
 		// Når søker har endret label på et vedlegg av type annet (N6), skal tittel settes lik label og vedlegget i databasen oppdateres med disse endringene.
 		val soknadService = lagSoknadService()
 
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
 		val vedleggDtos = slot<List<VedleggDto>>()
 		every {
@@ -142,7 +142,7 @@ class VedleggServiceTest {
 		val soknadService = lagSoknadService()
 
 		val vedleggsnr = "N6"
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf(vedleggsnr))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf(vedleggsnr))
 
 		val lagretVedlegg = dokumentSoknadDto.vedleggsListe.first { e -> vedleggsnr == e.vedleggsnr }
 

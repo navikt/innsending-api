@@ -10,8 +10,7 @@ import no.nav.soknad.innsending.config.BrukerNotifikasjonConfig
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
-import no.nav.soknad.innsending.utils.lagDokumentSoknad
-import no.nav.soknad.innsending.utils.lagVedlegg
+import no.nav.soknad.innsending.utils.Hjelpemetoder
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -55,7 +54,7 @@ internal class BrukernotifikasjonPublisherTest {
 		every { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) } returns Unit
 
 		brukernotifikasjonPublisher?.soknadStatusChange(
-			lagDokumentSoknad(
+			Hjelpemetoder.lagDokumentSoknad(
 				personId,
 				skjemanr,
 				spraak,
@@ -93,7 +92,7 @@ internal class BrukernotifikasjonPublisherTest {
 		every { sendTilPublisher.avsluttBrukernotifikasjon(capture(done)) } returns Unit
 
 		brukernotifikasjonPublisher?.soknadStatusChange(
-			lagDokumentSoknad(
+			Hjelpemetoder.lagDokumentSoknad(
 				personId,
 				skjemanr,
 				spraak,
@@ -127,11 +126,11 @@ internal class BrukernotifikasjonPublisherTest {
 		every { sendTilPublisher.avsluttBrukernotifikasjon(capture(done)) } returns Unit
 		every { sendTilPublisher.opprettBrukernotifikasjon(capture(oppgave)) } returns Unit
 
-		val soknad = lagDokumentSoknad(
+		val soknad = Hjelpemetoder.lagDokumentSoknad(
 			personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatusDto.innsendt,
 			listOf(
-				lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.innsendt, false, "/litenPdf.pdf"),
-				lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.sendSenere, false)
+				Hjelpemetoder.lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.innsendt, false, "/litenPdf.pdf"),
+				Hjelpemetoder.lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.sendSenere, false)
 			),
 		)
 
@@ -141,11 +140,11 @@ internal class BrukernotifikasjonPublisherTest {
 		assertEquals(personId, done.captured.personId)
 		assertEquals(innsendingsid, done.captured.innsendingId)
 
-		val ettersending = lagDokumentSoknad(
+		val ettersending = Hjelpemetoder.lagDokumentSoknad(
 			personId, skjemanr, spraak, tittel, tema, id, ettersendingsSoknadsId, SoknadsStatusDto.opprettet,
 			listOf(
-				lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.innsendt, false, "/litenPdf.pdf"),
-				lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.ikkeValgt, false)
+				Hjelpemetoder.lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.innsendt, false, "/litenPdf.pdf"),
+				Hjelpemetoder.lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.ikkeValgt, false)
 			), soknad.innsendingsId
 		)
 
@@ -182,11 +181,11 @@ internal class BrukernotifikasjonPublisherTest {
 		every { sendTilPublisher.avsluttBrukernotifikasjon(capture(avslutninger)) } returns Unit   // Nokkel(appConfiguration.kafkaConfig.username, innsendingsid )
 
 		brukernotifikasjonPublisher?.soknadStatusChange(
-			lagDokumentSoknad(
+			Hjelpemetoder.lagDokumentSoknad(
 				personId, skjemanr, spraak, tittel, tema, id, ettersendingsSoknadsId, SoknadsStatusDto.innsendt,
 				listOf(
-					lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.lastetOpp, false, "/litenPdf.pdf"),
-					lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.lastetOpp, false, "/litenPdf.pdf")
+					Hjelpemetoder.lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.lastetOpp, false, "/litenPdf.pdf"),
+					Hjelpemetoder.lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.lastetOpp, false, "/litenPdf.pdf")
 				),
 				innsendingsid
 			)
@@ -213,7 +212,7 @@ internal class BrukernotifikasjonPublisherTest {
 		every { sendTilPublisher.avsluttBrukernotifikasjon(capture(done)) } returns Unit
 
 		brukernotifikasjonPublisher?.soknadStatusChange(
-			lagDokumentSoknad(
+			Hjelpemetoder.lagDokumentSoknad(
 				personId,
 				skjemanr,
 				spraak,
@@ -248,7 +247,7 @@ internal class BrukernotifikasjonPublisherTest {
 
 		// Når
 		brukernotifikasjonPublisher?.soknadStatusChange(
-			lagDokumentSoknad(
+			Hjelpemetoder.lagDokumentSoknad(
 				personId,
 				skjemanr,
 				spraak,

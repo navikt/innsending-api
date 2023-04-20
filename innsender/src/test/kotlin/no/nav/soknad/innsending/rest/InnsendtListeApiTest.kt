@@ -14,7 +14,7 @@ import no.nav.soknad.innsending.safselvbetjening.generated.enums.Journalposttype
 import no.nav.soknad.innsending.safselvbetjening.generated.enums.Journalstatus
 import no.nav.soknad.innsending.safselvbetjening.generated.enums.Kanal
 import no.nav.soknad.innsending.safselvbetjening.generated.hentdokumentoversikt.*
-import no.nav.soknad.innsending.utils.createHeaders
+import no.nav.soknad.innsending.utils.Hjelpemetoder
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -76,7 +76,7 @@ internal class InnsendtListeApiTest {
 			)
 		).serialize()
 
-		val requestEntity = HttpEntity<Unit>(createHeaders(token))
+		val requestEntity = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
 
 		val response = restTemplate.exchange("http://localhost:${serverPort}/innsendte/v1/hentAktiveSaker", HttpMethod.GET,
 			requestEntity, object : ParameterizedTypeReference<List<AktivSakDto>>() {})

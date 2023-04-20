@@ -13,7 +13,7 @@ import no.nav.soknad.innsending.service.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
-import no.nav.soknad.innsending.utils.lagDokumentSoknad
+import no.nav.soknad.innsending.utils.Hjelpemetoder
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -93,7 +93,7 @@ class FjernGamleSoknaderTest {
 		val tema = "BID"
 
 		val gammelSoknadId = soknadService.opprettNySoknad(
-			lagDokumentSoknad(
+			Hjelpemetoder.lagDokumentSoknad(
 				brukerId = "12345678901", skjemanr = defaultSkjemanr, spraak = spraak, tittel = "En test",
 				tema = tema, id = null, innsendingsid = null, soknadsStatus = SoknadsStatusDto.opprettet, vedleggsListe = null,
 				ettersendingsId = null, OffsetDateTime.now().minusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD + 1)
@@ -101,7 +101,7 @@ class FjernGamleSoknaderTest {
 		)
 
 		val nyereSoknadId = soknadService.opprettNySoknad(
-			lagDokumentSoknad(
+			Hjelpemetoder.lagDokumentSoknad(
 				brukerId = "12345678901", skjemanr = defaultSkjemanr, spraak = spraak, tittel = "En test",
 				tema = tema, id = null, innsendingsid = null, soknadsStatus = SoknadsStatusDto.opprettet, vedleggsListe = null,
 				ettersendingsId = null, OffsetDateTime.now().minusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD - 1)

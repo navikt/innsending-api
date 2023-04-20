@@ -2,8 +2,8 @@ package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
-import no.nav.soknad.innsending.utils.lagFilDtoMedFil
-import no.nav.soknad.innsending.utils.testOgSjekkOpprettingAvSoknad
+import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.SoknadAssertions
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -25,12 +25,12 @@ class FilServiceTest {
 
 	@Test
 	fun lastOppFilTilVedlegg() {
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
 		val vedleggDto = dokumentSoknadDto.vedleggsListe.first { "W1" == it.vedleggsnr }
 		Assertions.assertTrue(vedleggDto != null)
 
-		val filDtoSaved = filService.lagreFil(dokumentSoknadDto, lagFilDtoMedFil(vedleggDto))
+		val filDtoSaved = filService.lagreFil(dokumentSoknadDto, Hjelpemetoder.lagFilDtoMedFil(vedleggDto))
 
 		Assertions.assertTrue(filDtoSaved != null)
 		Assertions.assertTrue(filDtoSaved.id != null)
@@ -41,12 +41,12 @@ class FilServiceTest {
 
 	@Test
 	fun slettFilTilVedlegg() {
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
 		val vedleggDto = dokumentSoknadDto.vedleggsListe.first { "W1" == it.vedleggsnr }
 		Assertions.assertTrue(vedleggDto != null)
 
-		val filDtoSaved = filService.lagreFil(dokumentSoknadDto, lagFilDtoMedFil(vedleggDto))
+		val filDtoSaved = filService.lagreFil(dokumentSoknadDto, Hjelpemetoder.lagFilDtoMedFil(vedleggDto))
 
 		Assertions.assertTrue(filDtoSaved != null)
 		Assertions.assertTrue(filDtoSaved.id != null)
@@ -65,7 +65,7 @@ class FilServiceTest {
 	@Test
 	fun hentingAvDokumentFeilerNarIngenDokumentOpplastet() {
 		// Opprett original soknad
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
 		// Sender inn original soknad
 		assertThrows<ResourceNotFoundException> {

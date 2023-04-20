@@ -13,9 +13,8 @@ import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
-import no.nav.soknad.innsending.utils.lagFilDtoMedFil
-import no.nav.soknad.innsending.utils.testOgSjekkInnsendingAvSoknad
-import no.nav.soknad.innsending.utils.testOgSjekkOpprettingAvSoknad
+import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.SoknadAssertions
 import no.nav.soknad.pdfutilities.PdfGenerator
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -92,15 +91,20 @@ class InnsendingServiceTest {
 	@Test
 	fun sendInnSoknad() {
 		val innsendingService = lagInnsendingService(soknadService)
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
 		filService.lagreFil(
 			dokumentSoknadDto,
-			lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
 		)
 
 		val kvitteringsDto =
-			testOgSjekkInnsendingAvSoknad(fillagerAPI, soknadsmottakerAPI, dokumentSoknadDto, innsendingService)
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				fillagerAPI,
+				soknadsmottakerAPI,
+				dokumentSoknadDto,
+				innsendingService
+			)
 		Assertions.assertTrue(kvitteringsDto.hoveddokumentRef != null)
 		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
 		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
@@ -117,7 +121,7 @@ class InnsendingServiceTest {
 		val innsendingService = lagInnsendingService(soknadService)
 
 
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
 		assertThrows<IllegalActionException> {
 			innsendingService.sendInnSoknad(dokumentSoknadDto)
@@ -130,15 +134,20 @@ class InnsendingServiceTest {
 		val innsendingService = lagInnsendingService(soknadService)
 
 
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
 		filService.lagreFil(
 			dokumentSoknadDto,
-			lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
 		)
 
 		val kvitteringsDto =
-			testOgSjekkInnsendingAvSoknad(fillagerAPI, soknadsmottakerAPI, dokumentSoknadDto, innsendingService)
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				fillagerAPI,
+				soknadsmottakerAPI,
+				dokumentSoknadDto,
+				innsendingService
+			)
 		Assertions.assertTrue(kvitteringsDto.hoveddokumentRef != null)
 		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
 		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
@@ -159,16 +168,21 @@ class InnsendingServiceTest {
 		val innsendingService = lagInnsendingService(soknadService)
 
 		// Opprett original soknad
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
 		filService.lagreFil(
 			dokumentSoknadDto,
-			lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
 		)
 
 		// Sender inn original soknad
 		val kvitteringsDto =
-			testOgSjekkInnsendingAvSoknad(fillagerAPI, soknadsmottakerAPI, dokumentSoknadDto, innsendingService)
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				fillagerAPI,
+				soknadsmottakerAPI,
+				dokumentSoknadDto,
+				innsendingService
+			)
 		Assertions.assertTrue(kvitteringsDto.hoveddokumentRef != null)
 		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
 		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
@@ -192,16 +206,21 @@ class InnsendingServiceTest {
 		val innsendingService = lagInnsendingService(soknadService)
 
 		// Opprett original soknad
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
 		filService.lagreFil(
 			dokumentSoknadDto,
-			lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
 		)
 
 		// Sender inn original soknad
 		val kvitteringsDto =
-			testOgSjekkInnsendingAvSoknad(fillagerAPI, soknadsmottakerAPI, dokumentSoknadDto, innsendingService)
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				fillagerAPI,
+				soknadsmottakerAPI,
+				dokumentSoknadDto,
+				innsendingService
+			)
 		Assertions.assertTrue(kvitteringsDto.hoveddokumentRef != null)
 		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
 		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
@@ -226,11 +245,16 @@ class InnsendingServiceTest {
 		val innsendingService = lagInnsendingService(soknadService)
 
 		// Opprett original soknad
-		val dokumentSoknadDto = testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
 		// Sender inn original soknad
 		assertThrows<IllegalActionException> {
-			testOgSjekkInnsendingAvSoknad(fillagerAPI, soknadsmottakerAPI, dokumentSoknadDto, innsendingService)
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				fillagerAPI,
+				soknadsmottakerAPI,
+				dokumentSoknadDto,
+				innsendingService
+			)
 		}
 	}
 

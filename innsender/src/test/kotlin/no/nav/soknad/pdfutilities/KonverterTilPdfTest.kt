@@ -1,7 +1,7 @@
 package no.nav.soknad.pdfutilities
 
 import junit.framework.TestCase.assertTrue
-import no.nav.soknad.innsending.utils.getBytesFromFile
+import no.nav.soknad.innsending.utils.Hjelpemetoder
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -9,7 +9,7 @@ class KonverterTilPdfTest {
 
 	@Test
 	fun verifiserFlatingAvPdf() {
-		val skrivbarPdf = getBytesFromFile("/NAV 54-editert.pdf")
+		val skrivbarPdf = Hjelpemetoder.getBytesFromFile("/NAV 54-editert.pdf")
 		assertTrue(KonverterTilPdf().harSkrivbareFelt(skrivbarPdf))
 
 		val start = System.currentTimeMillis()
@@ -29,7 +29,7 @@ class KonverterTilPdfTest {
 
 	@Test
 	fun verifiserKonverteringAvJpg() {
-		val jpg = getBytesFromFile("/2MbJpg.jpg")
+		val jpg = Hjelpemetoder.getBytesFromFile("/2MbJpg.jpg")
 
 		val pdf = KonverterTilPdf().tilPdf(jpg)
 		val antallSider = AntallSider().finnAntallSider(pdf)
@@ -41,7 +41,7 @@ class KonverterTilPdfTest {
 
 	@Test
 	fun verifiserKonverteringAvMellomstorJpg() {
-		val jpg = getBytesFromFile("/mellomstorJpg.jpg")
+		val jpg = Hjelpemetoder.getBytesFromFile("/mellomstorJpg.jpg")
 
 		val start = System.currentTimeMillis()
 		val pdf = KonverterTilPdf().tilPdf(jpg)
