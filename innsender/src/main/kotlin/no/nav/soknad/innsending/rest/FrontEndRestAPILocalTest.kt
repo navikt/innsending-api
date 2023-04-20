@@ -7,8 +7,10 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.Tilgangskontroll
+import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.SafService
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.service.VedleggService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
@@ -38,7 +40,9 @@ class FrontEndRestAPILocalTest(
 	val soknadService: SoknadService,
 	val tilgangskontroll: Tilgangskontroll,
 	private val restConfig: RestConfig,
-	private val safService: SafService
+	private val safService: SafService,
+	private val vedleggService: VedleggService,
+	private val filService: FilService
 ): FrontendApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -236,7 +240,7 @@ class FrontEndRestAPILocalTest(
 
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll.harTilgang(soknadDto)
-		val vedleggDto = soknadService.endreVedlegg(patchVedleggDto, vedleggsId, soknadDto)
+		val vedleggDto = vedleggService.endreVedlegg(patchVedleggDto, vedleggsId, soknadDto)
 		logger.info("$innsendingsId: Lagret vedlegg ${vedleggDto.id} til søknad")
 
 		return ResponseEntity
@@ -251,7 +255,7 @@ class FrontEndRestAPILocalTest(
 
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll.harTilgang(soknadDto)
-		val vedleggDto = soknadService.leggTilVedlegg(soknadDto, postVedleggDto?.tittel)
+		val vedleggDto = vedleggService.leggTilVedlegg(soknadDto, postVedleggDto?.tittel)
 		logger.info("$innsendingsId: Lagret vedlegg ${vedleggDto.id} til søknad")
 
 		return ResponseEntity
@@ -280,13 +284,13 @@ class FrontEndRestAPILocalTest(
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
 		val fil = KonverterTilPdf().tilPdf(opplastet)
 
-		val opplastetPaVedlegg: Long = soknadService.finnFilStorrelseSum(soknadDto, vedleggsId)
-		val opplastetPaSoknad: Long = soknadService.finnFilStorrelseSum(soknadDto)
+		val opplastetPaVedlegg: Long = filService.finnFilStorrelseSum(soknadDto, vedleggsId)
+		val opplastetPaSoknad: Long = filService.finnFilStorrelseSum(soknadDto)
 		Validerer().validerStorrelse(innsendingsId, opplastetPaVedlegg, fil.size.toLong(), restConfig.maxFileSize.toLong(),"errorCode.illegalAction.vedleggFileSizeSumTooLarge" )
 		Validerer().validerStorrelse(innsendingsId, opplastetPaSoknad, fil.size.toLong(), restConfig.maxFileSizeSum.toLong(),"errorCode.illegalAction.fileSizeSumTooLarge" )
 
 		// Lagre
-		val lagretFilDto = soknadService.lagreFil(soknadDto, FilDto(vedleggsId, null, fileName ?:"", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now()))
+		val lagretFilDto = filService.lagreFil(soknadDto, FilDto(vedleggsId, null, fileName ?:"", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now()))
 		logger.info("$innsendingsId: Lagret fil ${lagretFilDto.id} på vedlegg $vedleggsId til søknad")
 
 		return ResponseEntity
@@ -303,7 +307,7 @@ class FrontEndRestAPILocalTest(
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll.harTilgang(soknadDto)
 
-		val filDto = soknadService.hentFil(soknadDto, vedleggsId, filId)
+		val filDto = filService.hentFil(soknadDto, vedleggsId, filId)
 		logger.info("$innsendingsId: Hentet fil ${filDto.id} på vedlegg $vedleggsId til søknad")
 
 		return ResponseEntity
@@ -324,7 +328,7 @@ class FrontEndRestAPILocalTest(
 
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll.harTilgang(soknadDto)
-		val filDtoListe = soknadService.hentFiler(soknadDto, innsendingsId, vedleggsId)
+		val filDtoListe = filService.hentFiler(soknadDto, innsendingsId, vedleggsId)
 		logger.info("$innsendingsId: Hentet informasjon om opplastede filer på vedlegg $vedleggsId til søknad")
 
 		return ResponseEntity
@@ -340,7 +344,7 @@ class FrontEndRestAPILocalTest(
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll.harTilgang(soknadDto)
 
-		val vedleggDto = soknadService.slettFil(soknadDto, vedleggsId, filId)
+		val vedleggDto = filService.slettFil(soknadDto, vedleggsId, filId)
 		logger.info("$innsendingsId: Slettet fil $filId på vedlegg $vedleggsId til søknad")
 
 		return ResponseEntity
@@ -356,7 +360,7 @@ class FrontEndRestAPILocalTest(
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll.harTilgang(soknadDto)
 
-		soknadService.slettVedlegg(soknadDto, vedleggsId)
+		vedleggService.slettVedlegg(soknadDto, vedleggsId)
 		logger.info("$innsendingsId: Slettet vedlegg $vedleggsId for søknad")
 
 		return ResponseEntity
