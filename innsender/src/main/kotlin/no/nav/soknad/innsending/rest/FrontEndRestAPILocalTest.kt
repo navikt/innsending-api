@@ -7,10 +7,7 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.Tilgangskontroll
-import no.nav.soknad.innsending.service.FilService
-import no.nav.soknad.innsending.service.SafService
-import no.nav.soknad.innsending.service.SoknadService
-import no.nav.soknad.innsending.service.VedleggService
+import no.nav.soknad.innsending.service.*
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
@@ -42,8 +39,9 @@ class FrontEndRestAPILocalTest(
 	private val restConfig: RestConfig,
 	private val safService: SafService,
 	private val vedleggService: VedleggService,
-	private val filService: FilService
-): FrontendApi {
+	private val filService: FilService,
+	private val innsendingService: InnsendingService
+) : FrontendApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -74,7 +72,10 @@ class FrontEndRestAPILocalTest(
 		tilgangskontroll.harTilgang(origSoknad, brukerId)
 
 		val dokumentSoknadDto =
-			soknadService.opprettSoknadForettersendingAvVedlegg(brukerId, opprettEttersendingGittInnsendingsId.ettersendingTilinnsendingsId)
+			soknadService.opprettSoknadForettersendingAvVedlegg(
+				brukerId,
+				opprettEttersendingGittInnsendingsId.ettersendingTilinnsendingsId
+			)
 		logger.info("${dokumentSoknadDto.innsendingsId}: Opprettet ettersending for innsendingsid ${opprettEttersendingGittInnsendingsId.ettersendingTilinnsendingsId}")
 
 		return ResponseEntity
@@ -117,7 +118,7 @@ class FrontEndRestAPILocalTest(
 		arkiverteSoknader: List<AktivSakDto>,
 		brukerId: String,
 		opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr
-	): DokumentSoknadDto  =
+	): DokumentSoknadDto =
 		if (innsendteSoknader.isNotEmpty()) {
 			if (arkiverteSoknader.isNotEmpty()) {
 				if (innsendteSoknader[0].innsendingsId == arkiverteSoknader[0].innsendingsId ||
@@ -226,7 +227,11 @@ class FrontEndRestAPILocalTest(
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll.harTilgang(soknadDto)
 		val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
-			?: throw ResourceNotFoundException("", "Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId", "errorCode.resourceNotFound.attachmentNotFound")
+			?: throw ResourceNotFoundException(
+				"",
+				"Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId",
+				"errorCode.resourceNotFound.attachmentNotFound"
+			)
 		logger.info("$innsendingsId: Hentet vedlegg $vedleggsId til søknad")
 
 		return ResponseEntity
@@ -235,7 +240,11 @@ class FrontEndRestAPILocalTest(
 	}
 
 	@Timed(InnsenderOperation.ENDRE)
-	override fun endreVedlegg(innsendingsId: String, vedleggsId: Long, patchVedleggDto: PatchVedleggDto): ResponseEntity<VedleggDto> {
+	override fun endreVedlegg(
+		innsendingsId: String,
+		vedleggsId: Long,
+		patchVedleggDto: PatchVedleggDto
+	): ResponseEntity<VedleggDto> {
 		logger.info("$innsendingsId: Kall for å endre vedlegg til søknad")
 
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
@@ -271,14 +280,22 @@ class FrontEndRestAPILocalTest(
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll.harTilgang(soknadDto)
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
-			throw ResourceNotFoundException(null, "Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId", "errorCode.resourceNotFound.attachmentNotFound")
+			throw ResourceNotFoundException(
+				null,
+				"Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId",
+				"errorCode.resourceNotFound.attachmentNotFound"
+			)
 
 		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
 		val fileName = file.filename
 		if (!fileName.isNullOrEmpty()) {
 			logger.info("$innsendingsId: Skal validere $fileName")
 		}
-		if (!file.isReadable) throw IllegalActionException("Ingen fil opplastet", "Opplasting feilet", "errorCode.illegalAction.fileCannotBeRead")
+		if (!file.isReadable) throw IllegalActionException(
+			"Ingen fil opplastet",
+			"Opplasting feilet",
+			"errorCode.illegalAction.fileCannotBeRead"
+		)
 		val opplastet = (file as ByteArrayResource).byteArray
 		Validerer().validereFilformat(innsendingsId, opplastet, fileName)
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
@@ -286,11 +303,26 @@ class FrontEndRestAPILocalTest(
 
 		val opplastetPaVedlegg: Long = filService.finnFilStorrelseSum(soknadDto, vedleggsId)
 		val opplastetPaSoknad: Long = filService.finnFilStorrelseSum(soknadDto)
-		Validerer().validerStorrelse(innsendingsId, opplastetPaVedlegg, fil.size.toLong(), restConfig.maxFileSize.toLong(),"errorCode.illegalAction.vedleggFileSizeSumTooLarge" )
-		Validerer().validerStorrelse(innsendingsId, opplastetPaSoknad, fil.size.toLong(), restConfig.maxFileSizeSum.toLong(),"errorCode.illegalAction.fileSizeSumTooLarge" )
+		Validerer().validerStorrelse(
+			innsendingsId,
+			opplastetPaVedlegg,
+			fil.size.toLong(),
+			restConfig.maxFileSize.toLong(),
+			"errorCode.illegalAction.vedleggFileSizeSumTooLarge"
+		)
+		Validerer().validerStorrelse(
+			innsendingsId,
+			opplastetPaSoknad,
+			fil.size.toLong(),
+			restConfig.maxFileSizeSum.toLong(),
+			"errorCode.illegalAction.fileSizeSumTooLarge"
+		)
 
 		// Lagre
-		val lagretFilDto = filService.lagreFil(soknadDto, FilDto(vedleggsId, null, fileName ?:"", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now()))
+		val lagretFilDto = filService.lagreFil(
+			soknadDto,
+			FilDto(vedleggsId, null, fileName ?: "", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now())
+		)
 		logger.info("$innsendingsId: Lagret fil ${lagretFilDto.id} på vedlegg $vedleggsId til søknad")
 
 		return ResponseEntity
@@ -318,7 +350,11 @@ class FrontEndRestAPILocalTest(
 	}
 
 	private fun mapTilResource(filDto: FilDto): Resource {
-		if (filDto.data == null) throw ResourceNotFoundException("Fant ikke fil", "Fant ikke angitt fil på ${filDto.id}", "errorCode.resourceNotFound.fileNotFound")
+		if (filDto.data == null) throw ResourceNotFoundException(
+			"Fant ikke fil",
+			"Fant ikke angitt fil på ${filDto.id}",
+			"errorCode.resourceNotFound.fileNotFound"
+		)
 		return ByteArrayResource(filDto.data!!)
 	}
 
@@ -389,9 +425,11 @@ class FrontEndRestAPILocalTest(
 
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll.harTilgang(soknadDto)
-		val kvitteringsDto = soknadService.sendInnSoknad(soknadDto)
-		logger.info("$innsendingsId: Sendt inn soknad.\n" +
-			"InnsendteVedlegg=${kvitteringsDto.innsendteVedlegg?.size}, SkalEttersendes=${kvitteringsDto.skalEttersendes?.size}")
+		val kvitteringsDto = innsendingService.sendInnSoknad(soknadDto)
+		logger.info(
+			"$innsendingsId: Sendt inn soknad.\n" +
+				"InnsendteVedlegg=${kvitteringsDto.innsendteVedlegg?.size}, SkalEttersendes=${kvitteringsDto.skalEttersendes?.size}"
+		)
 
 		return ResponseEntity
 			.status(HttpStatus.OK)

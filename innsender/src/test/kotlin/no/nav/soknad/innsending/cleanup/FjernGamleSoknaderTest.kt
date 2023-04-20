@@ -6,14 +6,13 @@ import io.mockk.mockk
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
-import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.skjema.SkjemaClient
 import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
+import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
-import no.nav.soknad.innsending.service.RepositoryUtils
-import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.service.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
@@ -37,10 +36,22 @@ class FjernGamleSoknaderTest {
 	private lateinit var repo: RepositoryUtils
 
 	@Autowired
-	private lateinit var skjemaService: HentSkjemaDataConsumer
+	private lateinit var skjemaService: SkjemaService
 
 	@Autowired
 	private lateinit var innsenderMetrics: InnsenderMetrics
+
+	@Autowired
+	private lateinit var vedleggService: VedleggService
+
+	@Autowired
+	private lateinit var ettersendingService: EttersendingService
+
+	@Autowired
+	private lateinit var filService: FilService
+
+	@Autowired
+	private lateinit var exceptionHelper: ExceptionHelper
 
 	@InjectMockKs
 	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
@@ -65,7 +76,19 @@ class FjernGamleSoknaderTest {
 
 
 	private fun lagSoknadService(): SoknadService = SoknadService(
-		skjemaService, repo, brukernotifikasjonPublisher, fillagerAPI,	soknadsmottakerAPI,	innsenderMetrics, pdlInterface, restConfig)
+		skjemaService,
+		repo,
+		vedleggService,
+		ettersendingService,
+		filService,
+		brukernotifikasjonPublisher,
+		fillagerAPI,
+		soknadsmottakerAPI,
+		innsenderMetrics,
+		pdlInterface,
+		restConfig,
+		exceptionHelper
+	)
 
 	@BeforeEach
 	fun init() {
@@ -85,14 +108,20 @@ class FjernGamleSoknaderTest {
 		val tema = "BID"
 
 		val gammelSoknadId = soknadService.opprettNySoknad(
-			lagDokumentSoknad(brukerId = "12345678901", skjemanr = defaultSkjemanr, spraak = spraak, tittel = "En test",
+			lagDokumentSoknad(
+				brukerId = "12345678901", skjemanr = defaultSkjemanr, spraak = spraak, tittel = "En test",
 				tema = tema, id = null, innsendingsid = null, soknadsStatus = SoknadsStatusDto.opprettet, vedleggsListe = null,
-				ettersendingsId = null, OffsetDateTime.now().minusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD+1) ))
+				ettersendingsId = null, OffsetDateTime.now().minusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD + 1)
+			)
+		)
 
 		val nyereSoknadId = soknadService.opprettNySoknad(
-			lagDokumentSoknad(brukerId = "12345678901", skjemanr = defaultSkjemanr, spraak = spraak, tittel = "En test",
+			lagDokumentSoknad(
+				brukerId = "12345678901", skjemanr = defaultSkjemanr, spraak = spraak, tittel = "En test",
 				tema = tema, id = null, innsendingsid = null, soknadsStatus = SoknadsStatusDto.opprettet, vedleggsListe = null,
-				ettersendingsId = null, OffsetDateTime.now().minusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD-1) ))
+				ettersendingsId = null, OffsetDateTime.now().minusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD - 1)
+			)
+		)
 
 
 		val initAntall = innsenderMetrics.operationsCounterGet(InnsenderOperation.SLETT.name, tema)
@@ -102,8 +131,8 @@ class FjernGamleSoknaderTest {
 
 		val slettetSoknad = soknadService.hentSoknad(gammelSoknadId)
 		assertTrue(slettetSoknad != null && slettetSoknad.status == SoknadsStatusDto.automatiskSlettet)
-		assertTrue(soknader.any{ it.innsendingsId == gammelSoknadId && it.status == SoknadsStatusDto.automatiskSlettet })
-		assertEquals(1.0 + (initAntall ?: 0.0) , innsenderMetrics.operationsCounterGet(InnsenderOperation.SLETT.name, tema))
+		assertTrue(soknader.any { it.innsendingsId == gammelSoknadId && it.status == SoknadsStatusDto.automatiskSlettet })
+		assertEquals(1.0 + (initAntall ?: 0.0), innsenderMetrics.operationsCounterGet(InnsenderOperation.SLETT.name, tema))
 
 		val beholdtSoknad = soknadService.hentSoknad(nyereSoknadId)
 		assertTrue(beholdtSoknad != null && beholdtSoknad.status == SoknadsStatusDto.opprettet)

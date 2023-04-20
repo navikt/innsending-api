@@ -7,10 +7,7 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.Tilgangskontroll
-import no.nav.soknad.innsending.service.FilService
-import no.nav.soknad.innsending.service.SafService
-import no.nav.soknad.innsending.service.SoknadService
-import no.nav.soknad.innsending.service.VedleggService
+import no.nav.soknad.innsending.service.*
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
@@ -39,7 +36,8 @@ class FrontEndRestApi(
 	private val restConfig: RestConfig,
 	private val safService: SafService,
 	private val filService: FilService,
-	private val vedleggService: VedleggService
+	private val vedleggService: VedleggService,
+	private val innsendingService: InnsendingService
 ) : FrontendApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -434,7 +432,7 @@ class FrontEndRestApi(
 		logger.info("$innsendingsId: Kall for å sende inn soknad ")
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
-		val kvitteringsDto = soknadService.sendInnSoknad(soknadDto)
+		val kvitteringsDto = innsendingService.sendInnSoknad(soknadDto)
 		logger.info(
 			"$innsendingsId: Sendt inn soknad.\n" +
 				"InnsendteVedlegg=${kvitteringsDto.innsendteVedlegg?.size}, " +
