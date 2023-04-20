@@ -1,5 +1,5 @@
 {
-  "env-name": "prod-gcp-alerts",
+  "env-name": "prod-gcp",
   "max_created_expected": 1000,
 	"max_innsendt_expected": 1000,
 	"number_of_errors": 10,
