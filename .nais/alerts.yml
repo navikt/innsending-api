@@ -17,7 +17,7 @@ spec:
             consequence: "Actions must be taken to fix the problem(s) and trigger retry in order to archive these application(s)"
             action: {{ archiving_failed_log_url }}
             documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
-            summary: "Container _*{{ $labels.container }}*_ has reported archiving of {{ $value }} application(s) have failed."
+            summary: "Service has reported archiving of one or more application(s) has failed."
             sla: "Action should be taken as soon as possible"
           labels:
             service: "innsending-api"
@@ -33,7 +33,7 @@ spec:
             consequence: "There can be different causes for errors, check logs for cause and evaluation of consequences."
             action: {{ error_log_url }}
             documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
-            summary: "Container _*{{ $labels.container }}*_ has reported {{ $value }} errors."
+            summary: "Service has reported more than {{number_of_error}} errors within 5 minutes."
             sla: "Action should be taken as soon as possible"
           labels:
             service: "innsending-api"
@@ -46,10 +46,10 @@ spec:
           for: 1m
           annotations:
             title: "Missing response from archiving service for one or more sent in applications"
-            consequence: "Actions might be neccessary in order for the re-sending the failed application(s)"
+            consequence: "Actions might be neccessary in order for re-sending the failed application(s)"
             action: {{ missing_archiving_log_url }}
             documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
-            summary: "Container _*{{ $labels.container }}*_ has reported archiving of {{ $value }} application(s) have failed."
+            summary: "Service has reported missing archiving response for application(s)."
             sla: "Action should be taken as soon as possible"
           labels:
             service: "innsending-api"
@@ -65,7 +65,7 @@ spec:
             consequence: "If this continues it might have consequences for resources used."
             action: {{ application_created_log_url }}
             documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
-            summary: "Innsending-api has reported that the number of created applications {{ $value }} for a longer time."
+            summary: "Service has reported that a number of created applications has been at a high level for {{continued_expected_period}}."
             sla: "Check logs within 3h"
           labels:
             service: "innsending-api"
@@ -81,7 +81,7 @@ spec:
             consequence: "If this continues it might have consequences for resources used."
             action: {{ application_created_log_url }}
             documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
-            summary: "Innsending-api has reported that the number of created applications is {{ $value }} which is much more than expected."
+            summary: "Service has reported that the number of created applications last {{expected_period}} is higher than usual."
             sla: "Check logs within 3h"
           labels:
             service: "innsending-api"
@@ -97,7 +97,7 @@ spec:
             consequence: "If this continues it might have consequences for resources used."
             action: {{ application_sent_in_log_url }}
             documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
-            summary: "Innsending-api has reported that the number of created applications last 24 hours is {{ $value }} application(s) which is 25% more than expected."
+            summary: "Service has reported that the number of sent in applications last {{max_expected_period}} is unusally high."
             sla: "Check logs within 3h"
           labels:
             service: "innsending-api"
