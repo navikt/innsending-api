@@ -15,10 +15,12 @@ class ScheduledOperationsService(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	fun checkIfApplicationsAreArchived(offsetHours: Long) {
-		val soknaderAbsentInArchive = soknadRepository.countInnsendtIkkeBehandlet(LocalDateTime.now().minusHours(offsetHours))
+		val soknaderAbsentInArchive =
+			soknadRepository.countInnsendtIkkeBehandlet(LocalDateTime.now().minusHours(offsetHours))
 		if (soknaderAbsentInArchive > 0) {
 			logger.error("Total number of applications not yet processed for archiving by soknadsarkiverer: $soknaderAbsentInArchive")
-			val notProcessedForArchiving = soknadRepository.findInnsendtAndArkiveringsStatusIkkeSatt(LocalDateTime.now().minusHours(offsetHours))
+			val notProcessedForArchiving =
+				soknadRepository.findInnsendtAndArkiveringsStatusIkkeSatt(LocalDateTime.now().minusHours(offsetHours))
 			logger.info("Applications not yet picked up and processed by soknadsarkiverer: $notProcessedForArchiving")
 		} else {
 			logger.info("Total number of applications absent in archive: $soknaderAbsentInArchive")

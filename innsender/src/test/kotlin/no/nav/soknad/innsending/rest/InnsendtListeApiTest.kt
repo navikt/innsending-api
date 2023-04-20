@@ -15,6 +15,8 @@ import no.nav.soknad.innsending.safselvbetjening.generated.enums.Journalstatus
 import no.nav.soknad.innsending.safselvbetjening.generated.enums.Kanal
 import no.nav.soknad.innsending.safselvbetjening.generated.hentdokumentoversikt.*
 import no.nav.soknad.innsending.utils.createHeaders
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -27,8 +29,6 @@ import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Disabled
 
 
 @Suppress("DEPRECATION")
@@ -36,7 +36,8 @@ import org.junit.jupiter.api.Disabled
 @SpringBootTest(
 	webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
 	properties = ["spring.main.allow-bean-definition-overriding=true"],
-	classes = [InnsendingApiApplication::class])
+	classes = [InnsendingApiApplication::class]
+)
 @ExtendWith(SpringExtension::class)
 @AutoConfigureWireMock
 @EnableMockOAuth2Server(port = 9898)
@@ -55,7 +56,7 @@ internal class InnsendtListeApiTest {
 	private val tokenx = "tokenx"
 	private val subject = "12345678901"
 	private val audience = "aud-localhost"
-	private val expiry = 2*3600
+	private val expiry = 2 * 3600
 
 
 	// Disabled test da den feiler på GitHub (men fungerer lokalt)
@@ -75,9 +76,9 @@ internal class InnsendtListeApiTest {
 			)
 		).serialize()
 
-		val requestEntity =	HttpEntity<Unit>(createHeaders(token))
+		val requestEntity = HttpEntity<Unit>(createHeaders(token))
 
-	  val response = restTemplate.exchange("http://localhost:${serverPort}/innsendte/v1/hentAktiveSaker", HttpMethod.GET,
+		val response = restTemplate.exchange("http://localhost:${serverPort}/innsendte/v1/hentAktiveSaker", HttpMethod.GET,
 			requestEntity, object : ParameterizedTypeReference<List<AktivSakDto>>() {})
 
 		assertTrue(response.body != null && response.body!!.isNotEmpty())
@@ -99,10 +100,12 @@ internal class InnsendtListeApiTest {
 	}
 
 	private fun lagJournalpost(): Journalpost {
-		return Journalpost("123", "Tittel", "12345678", Journalstatus.JOURNALFOERT,
+		return Journalpost(
+			"123", "Tittel", "12345678", Journalstatus.JOURNALFOERT,
 			Journalposttype.I, "AAP", Kanal.NAV_NO, listOf(RelevantDato("2022-05-24T11:02:30", Datotype.DATO_OPPRETTET)),
 			AvsenderMottaker("12345678901"),
-			listOf(DokumentInfo("NAV 08-09.06", "NAV 08-09.06"), DokumentInfo("N6", "Et vedleggEgenerklæring og sykmelding")))
+			listOf(DokumentInfo("NAV 08-09.06", "NAV 08-09.06"), DokumentInfo("N6", "Et vedleggEgenerklæring og sykmelding"))
+		)
 	}
 
 }

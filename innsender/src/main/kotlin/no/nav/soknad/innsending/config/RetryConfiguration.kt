@@ -24,7 +24,7 @@ class RetryConfiguration {
 		.retryExceptions(RuntimeException::class.java)
 		.build()
 
-	private val retryRegistry = RetryRegistry.of(mapOf( "pdl" to pdlRetryConfig))
+	private val retryRegistry = RetryRegistry.of(mapOf("pdl" to pdlRetryConfig))
 
 	@Bean
 	fun retryPdl(): Retry = retryRegistry.retry("PDL", pdlRetryConfig)

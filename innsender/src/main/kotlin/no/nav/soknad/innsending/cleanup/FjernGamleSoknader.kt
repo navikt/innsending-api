@@ -4,12 +4,14 @@ import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.util.Constants
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
 @Service
-class FjernGamleSoknader(private val soknadService: SoknadService, private val leaderSelectionUtility: LeaderSelectionUtility) {
+class FjernGamleSoknader(
+	private val soknadService: SoknadService,
+	private val leaderSelectionUtility: LeaderSelectionUtility
+) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 

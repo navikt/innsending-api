@@ -5,11 +5,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.handler.timeout.WriteTimeoutHandler
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Lazy
-import org.springframework.context.annotation.Profile
-import org.springframework.context.annotation.Scope
+import org.springframework.context.annotation.*
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.http.codec.ClientCodecConfigurer
 import org.springframework.web.reactive.function.client.ExchangeStrategies
@@ -32,14 +28,14 @@ class WebClientTemplates(private val restConfig: RestConfig) {
 	@Qualifier("authClient")
 	@Scope("prototype")
 	@Lazy
-	fun archiveTestWebClient() = WebClient.builder().defaultHeader("testHeader","test_value").build()
+	fun archiveTestWebClient() = WebClient.builder().defaultHeader("testHeader", "test_value").build()
 
 	@Bean
 	@Profile("test | prod | dev")
 	@Qualifier("authClient")
 	@Scope("prototype")
 	@Lazy
-	fun authWebClient() = WebClient.builder().defaultHeader("authHeader","test_value").build()
+	fun authWebClient() = WebClient.builder().defaultHeader("authHeader", "test_value").build()
 
 
 	@Bean
@@ -49,7 +45,8 @@ class WebClientTemplates(private val restConfig: RestConfig) {
 		val exchangeStrategies = ExchangeStrategies.builder()
 			.codecs { configurer: ClientCodecConfigurer ->
 				configurer
-					.defaultCodecs().maxInMemorySize(restConfig.maxFileSizeSum*1024*1024) }
+					.defaultCodecs().maxInMemorySize(restConfig.maxFileSizeSum * 1024 * 1024)
+			}
 			.build()
 
 		return WebClient.builder()

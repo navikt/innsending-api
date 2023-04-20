@@ -40,7 +40,7 @@ class OkHttpOAuth2ClientConfig {
 		return OkHttpClient().newBuilder()
 			.connectTimeout(20, TimeUnit.SECONDS)
 			.callTimeout(62, TimeUnit.SECONDS)
-			.readTimeout(1,TimeUnit.MINUTES)
+			.readTimeout(1, TimeUnit.MINUTES)
 			.writeTimeout(1, TimeUnit.MINUTES)
 			.addInterceptor {
 				val token = tokenService.getToken()

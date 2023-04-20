@@ -1,9 +1,7 @@
 package no.nav.soknad.innsending.consumerapis.kafka
 
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.config.KafkaConfig
 import no.nav.soknad.innsending.repository.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.SoknadRepository
@@ -11,19 +9,14 @@ import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
-import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.config.SslConfigs
 import org.apache.kafka.common.serialization.StringDeserializer
-import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.util.*
 import javax.annotation.PostConstruct
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.ExperimentalTime
-import kotlin.time.toJavaDuration
 
 @Service
 @Profile("prod | dev")
@@ -65,7 +58,6 @@ class KafkaMessageReader(
 			}
 		}
 	}
-
 
 
 	private fun kafkaConfigMap(): MutableMap<String, Any> {

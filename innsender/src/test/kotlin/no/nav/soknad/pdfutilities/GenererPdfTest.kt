@@ -4,7 +4,6 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
-import no.nav.soknad.innsending.utils.writeBytesToFile
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.OffsetDateTime
@@ -18,7 +17,7 @@ class GenererPdfTest {
 
 	@Test
 	fun verifiserlagForsideEttersending() {
-		val soknad = 	lagSoknadForTesting(tittel)
+		val soknad = lagSoknadForTesting(tittel)
 
 		val forside = PdfGenerator().lagForsideEttersending(soknad)
 
@@ -77,7 +76,7 @@ class GenererPdfTest {
 		val kvittering = PdfGenerator().lagKvitteringsSide(
 			soknad,
 			sammensattnavn,
-			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt && it.opprettetdato > OffsetDateTime.MIN},
+			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt && it.opprettetdato > OffsetDateTime.MIN },
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.sendSenere })
 
 		//writeBytesToFile(kvittering, "./ettersendingskvittering.pdf")
@@ -97,7 +96,7 @@ class GenererPdfTest {
 		val kvittering = PdfGenerator().lagKvitteringsSide(
 			soknad,
 			sammensattnavn,
-			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt && it.opprettetdato > OffsetDateTime.MIN},
+			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt && it.opprettetdato > OffsetDateTime.MIN },
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.sendSenere })
 
 		//writeBytesToFile(kvittering, "./ettersendingskvittering2.pdf")
@@ -107,6 +106,7 @@ class GenererPdfTest {
 		assertTrue(erPdfa)
 
 	}
+
 	private fun lagSoknadForTesting(tittel: String): DokumentSoknadDto {
 		val brukerid = "20128012345"
 		val opprettetDato = OffsetDateTime.now()
@@ -117,14 +117,26 @@ class GenererPdfTest {
 				opplastingsStatus = OpplastingsStatusDto.innsendt, opprettetdato = OffsetDateTime.MIN
 			),
 			VedleggDto(
-				tittel = tittel, label = tittel + ", " + skjemanr,
-				erHoveddokument = true, erVariant = true, erPdfa = true, erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.innsendt, opprettetdato = OffsetDateTime.MIN, innsendtdato = OffsetDateTime.now()
+				tittel = tittel,
+				label = tittel + ", " + skjemanr,
+				erHoveddokument = true,
+				erVariant = true,
+				erPdfa = true,
+				erPakrevd = true,
+				opplastingsStatus = OpplastingsStatusDto.innsendt,
+				opprettetdato = OffsetDateTime.MIN,
+				innsendtdato = OffsetDateTime.now()
 			),
 			VedleggDto(
-				tittel = "Vedlegg1", label = "Vedlegg1, NAV 08-36.02",
-				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.innsendt, opprettetdato = OffsetDateTime.MIN, innsendtdato = OffsetDateTime.now()
+				tittel = "Vedlegg1",
+				label = "Vedlegg1, NAV 08-36.02",
+				erHoveddokument = false,
+				erVariant = false,
+				erPdfa = true,
+				erPakrevd = true,
+				opplastingsStatus = OpplastingsStatusDto.innsendt,
+				opprettetdato = OffsetDateTime.MIN,
+				innsendtdato = OffsetDateTime.now()
 			),
 			VedleggDto(
 				tittel = "Vedlegg2", label = "Vedlegg2, NAV 08-36.03",
@@ -165,19 +177,37 @@ class GenererPdfTest {
 		val opprettetDato = OffsetDateTime.now()
 		val vedleggDtos = listOf(
 			VedleggDto(
-				tittel = tittel, label = tittel + ", " + skjemanr,
-				erHoveddokument = true, erVariant = false, erPdfa = true, erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.innsendt, opprettetdato = OffsetDateTime.now(), innsendtdato = OffsetDateTime.now()
+				tittel = tittel,
+				label = tittel + ", " + skjemanr,
+				erHoveddokument = true,
+				erVariant = false,
+				erPdfa = true,
+				erPakrevd = true,
+				opplastingsStatus = OpplastingsStatusDto.innsendt,
+				opprettetdato = OffsetDateTime.now(),
+				innsendtdato = OffsetDateTime.now()
 			),
 			VedleggDto(
-				tittel = "Vedlegg1", label = "Vedlegg1, NAV 08-36.02",
-				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.innsendt, opprettetdato = OffsetDateTime.MIN, innsendtdato = OffsetDateTime.MIN
+				tittel = "Vedlegg1",
+				label = "Vedlegg1, NAV 08-36.02",
+				erHoveddokument = false,
+				erVariant = false,
+				erPdfa = true,
+				erPakrevd = true,
+				opplastingsStatus = OpplastingsStatusDto.innsendt,
+				opprettetdato = OffsetDateTime.MIN,
+				innsendtdato = OffsetDateTime.MIN
 			),
 			VedleggDto(
-				tittel = "Vedlegg2", label = "Vedlegg2, NAV 08-36.03",
-				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.innsendt, opprettetdato = OffsetDateTime.now(), innsendtdato = OffsetDateTime.now()
+				tittel = "Vedlegg2",
+				label = "Vedlegg2, NAV 08-36.03",
+				erHoveddokument = false,
+				erVariant = false,
+				erPdfa = true,
+				erPakrevd = true,
+				opplastingsStatus = OpplastingsStatusDto.innsendt,
+				opprettetdato = OffsetDateTime.now(),
+				innsendtdato = OffsetDateTime.now()
 			),
 			VedleggDto(
 				tittel = "Vedlegg3", label = "Vedlegg3, NAV 08-36.04",
@@ -199,29 +229,54 @@ class GenererPdfTest {
 		)
 
 	}
+
 	private fun lagEttersendingsSoknadAltInnsendt(tittel: String): DokumentSoknadDto {
 		val brukerid = "20128012345"
 		val opprettetDato = OffsetDateTime.now()
 		val vedleggDtos = listOf(
 			VedleggDto(
-				tittel = tittel, label = tittel + ", " + skjemanr,
-				erHoveddokument = true, erVariant = false, erPdfa = true, erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.innsendt, opprettetdato = OffsetDateTime.now(), innsendtdato = OffsetDateTime.now()
+				tittel = tittel,
+				label = tittel + ", " + skjemanr,
+				erHoveddokument = true,
+				erVariant = false,
+				erPdfa = true,
+				erPakrevd = true,
+				opplastingsStatus = OpplastingsStatusDto.innsendt,
+				opprettetdato = OffsetDateTime.now(),
+				innsendtdato = OffsetDateTime.now()
 			),
 			VedleggDto(
-				tittel = "Vedlegg1", label = "Vedlegg1, NAV 08-36.02",
-				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.innsendt, opprettetdato = OffsetDateTime.MIN, innsendtdato = OffsetDateTime.MIN
+				tittel = "Vedlegg1",
+				label = "Vedlegg1, NAV 08-36.02",
+				erHoveddokument = false,
+				erVariant = false,
+				erPdfa = true,
+				erPakrevd = true,
+				opplastingsStatus = OpplastingsStatusDto.innsendt,
+				opprettetdato = OffsetDateTime.MIN,
+				innsendtdato = OffsetDateTime.MIN
 			),
 			VedleggDto(
-				tittel = "Vedlegg2", label = "Vedlegg2, NAV 08-36.03",
-				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.innsendt, opprettetdato = OffsetDateTime.now(), innsendtdato = OffsetDateTime.now()
+				tittel = "Vedlegg2",
+				label = "Vedlegg2, NAV 08-36.03",
+				erHoveddokument = false,
+				erVariant = false,
+				erPdfa = true,
+				erPakrevd = true,
+				opplastingsStatus = OpplastingsStatusDto.innsendt,
+				opprettetdato = OffsetDateTime.now(),
+				innsendtdato = OffsetDateTime.now()
 			),
 			VedleggDto(
-				tittel = "Vedlegg3", label = "Vedlegg3, NAV 08-36.04",
-				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.innsendt, opprettetdato = OffsetDateTime.MIN, innsendtdato = OffsetDateTime.now()
+				tittel = "Vedlegg3",
+				label = "Vedlegg3, NAV 08-36.04",
+				erHoveddokument = false,
+				erVariant = false,
+				erPdfa = true,
+				erPakrevd = true,
+				opplastingsStatus = OpplastingsStatusDto.innsendt,
+				opprettetdato = OffsetDateTime.MIN,
+				innsendtdato = OffsetDateTime.now()
 			),
 			VedleggDto(
 				tittel = "Vedlegg4", label = "Vedlegg4",

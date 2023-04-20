@@ -29,12 +29,17 @@ class SafService(val safSelvbetjeningApi: SafSelvbetjeningInterface, val safClie
 		logger.info("Hentet ${innsendte.size} journalposter for bruker, skal mappe til AktivSakDto")
 		val innsendteMedHovedDokMedBrevkode = innsendte.filter { harHoveddokumentMedBrevkodeSatt(it.dokumenter) }
 		logger.debug("innsendteMedHovedDokMedBrevkode ${innsendteMedHovedDokMedBrevkode.size}")
-		val innsendtStreng = innsendte.map{it.eksternReferanseId +  ": " + it.datoMottatt + " tema="+it.tema + " tittel=" + it.tittel}.joinToString("\n")
+		val innsendtStreng =
+			innsendte.map { it.eksternReferanseId + ": " + it.datoMottatt + " tema=" + it.tema + " tittel=" + it.tittel }
+				.joinToString("\n")
 		logger.debug("Innsendte søknader:\n$innsendtStreng")
 		return innsendteMedHovedDokMedBrevkode.map {
-			AktivSakDto(finnBrevKodeForHoveddokument(it.dokumenter), it.tittel, it.tema,
+			AktivSakDto(
+				finnBrevKodeForHoveddokument(it.dokumenter), it.tittel, it.tema,
 				konverterTilDateTime(it.datoMottatt ?: ""), erEttersending(it.dokumenter),
-				konverterTilVedleggsliste(it.dokumenter), it.eksternReferanseId) }
+				konverterTilVedleggsliste(it.dokumenter), it.eksternReferanseId
+			)
+		}
 	}
 
 	private fun harHoveddokumentMedBrevkodeSatt(innsendteDokumenter: List<Dokument>): Boolean {

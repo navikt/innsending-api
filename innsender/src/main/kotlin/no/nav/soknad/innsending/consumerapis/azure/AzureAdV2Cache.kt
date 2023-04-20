@@ -31,6 +31,7 @@ class AzureAdV2Cache {
 					log.info("Token in cache has expired")
 					null
 				}
+
 				else -> it
 			}
 		}

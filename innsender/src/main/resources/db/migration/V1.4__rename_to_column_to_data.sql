@@ -1,1 +1,2 @@
-ALTER TABLE fil RENAME COLUMN dokument TO data;
+ALTER TABLE fil
+	RENAME COLUMN dokument TO data;

@@ -1,1 +1,2 @@
-ALTER TABLE vedlegg ALTER COLUMN status TYPE varchar(255);
+ALTER TABLE vedlegg
+	ALTER COLUMN status TYPE varchar(255);

@@ -40,7 +40,13 @@ class SafClientConfig(
 							logger.info("{} {} {}", request.version(), request.method(), request.resourceUrl())
 						}
 						.doOnResponse { response: HttpClientResponse, _ ->
-							logger.info("{} - {} {} {}", response.status().toString(), response.version(), response.method(), response.resourceUrl())
+							logger.info(
+								"{} - {} {} {}",
+								response.status().toString(),
+								response.version(),
+								response.method(),
+								response.resourceUrl()
+							)
 						}
 				)
 			)
@@ -58,5 +64,5 @@ class SafClientConfig(
 	private val safMaskintilmaskin = "saf-maskintilmaskin"
 
 	private val clientProperties = oauth2Config.registration[safMaskintilmaskin]
-			?: throw RuntimeException("could not find oauth2 client config for $safMaskintilmaskin")
+		?: throw RuntimeException("could not find oauth2 client config for $safMaskintilmaskin")
 }

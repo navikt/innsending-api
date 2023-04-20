@@ -18,36 +18,78 @@ class RestExceptionHandler {
 	@ExceptionHandler
 	fun resourceNotFoundException(exception: ResourceNotFoundException): ResponseEntity<RestErrorResponseDto> {
 		logger.warn(exception.message, exception)
-		return ResponseEntity(RestErrorResponseDto(exception.arsak ?: "", exception.message ?: "", LocalDateTime.now(), exception.errorCode), HttpStatus.NOT_FOUND)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				exception.arsak ?: "",
+				exception.message ?: "",
+				LocalDateTime.now(),
+				exception.errorCode
+			), HttpStatus.NOT_FOUND
+		)
 	}
 
 	@ExceptionHandler
 	fun backendErrorException(exception: BackendErrorException): ResponseEntity<RestErrorResponseDto> {
 		logger.error(exception.message, exception)
-		return ResponseEntity(RestErrorResponseDto(exception.message ?: "", exception.message ?: "", LocalDateTime.now(), exception.errorCode), HttpStatus.INTERNAL_SERVER_ERROR)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				exception.message ?: "",
+				exception.message ?: "",
+				LocalDateTime.now(),
+				exception.errorCode
+			), HttpStatus.INTERNAL_SERVER_ERROR
+		)
 	}
 
 	@ExceptionHandler
 	fun safApiErrorException(exception: SafApiException): ResponseEntity<RestErrorResponseDto> {
 		logger.error(exception.message, exception)
-		return ResponseEntity(RestErrorResponseDto(exception.message ?: "", exception.message ?: "", LocalDateTime.now(), exception.errorCode), HttpStatus.INTERNAL_SERVER_ERROR)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				exception.message ?: "",
+				exception.message ?: "",
+				LocalDateTime.now(),
+				exception.errorCode
+			), HttpStatus.INTERNAL_SERVER_ERROR
+		)
 	}
 
 	@ExceptionHandler
 	fun sanityException(exception: SanityException): ResponseEntity<RestErrorResponseDto> {
 		logger.error(exception.message, exception)
-		return ResponseEntity(RestErrorResponseDto(exception.message ?: "", exception.message ?: "", LocalDateTime.now(), exception.errorCode), HttpStatus.INTERNAL_SERVER_ERROR)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				exception.message ?: "",
+				exception.message ?: "",
+				LocalDateTime.now(),
+				exception.errorCode
+			), HttpStatus.INTERNAL_SERVER_ERROR
+		)
 	}
 
 	@ExceptionHandler
 	fun illegalActionException(exception: IllegalActionException): ResponseEntity<RestErrorResponseDto> {
 		logger.warn(exception.message, exception)
-		return ResponseEntity(RestErrorResponseDto(exception.arsak ?: "", exception.message ?: "", LocalDateTime.now(), exception.errorCode), HttpStatus.METHOD_NOT_ALLOWED)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				exception.arsak ?: "",
+				exception.message ?: "",
+				LocalDateTime.now(),
+				exception.errorCode
+			), HttpStatus.METHOD_NOT_ALLOWED
+		)
 	}
 
 	@ExceptionHandler
 	fun generalException(exception: Exception): ResponseEntity<RestErrorResponseDto> {
 		logger.error(exception.message, exception)
-		return ResponseEntity(RestErrorResponseDto(exception.message ?: "", "Noe gikk galt, prøv igjen senere", LocalDateTime.now(), "errorCode.somethingFailedTryLater"), HttpStatus.INTERNAL_SERVER_ERROR)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				exception.message ?: "",
+				"Noe gikk galt, prøv igjen senere",
+				LocalDateTime.now(),
+				"errorCode.somethingFailedTryLater"
+			), HttpStatus.INTERNAL_SERVER_ERROR
+		)
 	}
 }

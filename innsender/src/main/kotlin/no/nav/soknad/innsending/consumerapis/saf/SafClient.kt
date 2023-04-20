@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -45,7 +44,11 @@ class SafClient(
 				}
 			} catch (ex: Exception) {
 				logger.warn("hentDokumentoversiktBruker feilet med ${ex.message}.")
-				throw BackendErrorException(ex.message, "Henting av brukers dokumentoversikt feilet", "errorCode.backendError.safError")
+				throw BackendErrorException(
+					ex.message,
+					"Henting av brukers dokumentoversikt feilet",
+					"errorCode.backendError.safError"
+				)
 			}
 		}
 	}

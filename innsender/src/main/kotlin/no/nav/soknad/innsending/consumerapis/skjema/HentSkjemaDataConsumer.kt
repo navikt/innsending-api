@@ -43,7 +43,13 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 	}
 
 	private fun createKodeverkSkjema(sanity: SkjemaOgVedleggsdata, spraak: String, id: String): KodeverkSkjema =
-		 KodeverkSkjema(url = getUrl(sanity, spraak), skjemanummer = id, vedleggsid = sanity.vedleggsid, tittel = getTitle(sanity, spraak), tema = sanity.tema )
+		KodeverkSkjema(
+			url = getUrl(sanity, spraak),
+			skjemanummer = id,
+			vedleggsid = sanity.vedleggsid,
+			tittel = getTitle(sanity, spraak),
+			tema = sanity.tema
+		)
 
 	private fun getTitle(sanity: SkjemaOgVedleggsdata, spraak: String): String? {
 		return if ("no".equals(spraak, true))
@@ -59,7 +65,7 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 	private fun getUrl(sanity: SkjemaOgVedleggsdata, spraak: String): String? {
 		return if ("no".equals(spraak, true)) {
 			sanity.url_no
-		}	else if ("nn".equals(spraak, true) && !sanity.url_nn.isNullOrBlank()) {
+		} else if ("nn".equals(spraak, true) && !sanity.url_nn.isNullOrBlank()) {
 			sanity.url_nn
 		} else if ("en".equals(spraak, true) && !sanity.url_en.isNullOrBlank()) {
 			sanity.url_en
@@ -74,7 +80,7 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 		} else if ("pl".equals(spraak, true) && !sanity.url_pl.isNullOrBlank()) {
 			sanity.url_pl
 		} else
-			 return getUrl(sanity, finnBackupLanguage(spraak))
+			return getUrl(sanity, finnBackupLanguage(spraak))
 	}
 
 	private fun hentSkjemaData() = hentSkjemaData.hent() ?: emptyList()

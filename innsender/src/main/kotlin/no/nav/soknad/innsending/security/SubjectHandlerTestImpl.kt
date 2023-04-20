@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component
 
 @Component
 @Profile("spring | default | docker")
-class SubjectHandlerTestImpl: SubjectHandlerInterface {
+class SubjectHandlerTestImpl : SubjectHandlerInterface {
 	private var token = "token"
 
 	override fun getUserIdFromToken(): String {

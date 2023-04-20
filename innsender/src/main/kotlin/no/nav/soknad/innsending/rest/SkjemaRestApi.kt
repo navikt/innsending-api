@@ -33,8 +33,14 @@ class SkjemaRestApi(
 
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		soknadService.sjekkHarAlleredeSoknadUnderArbeid(brukerId, skjemaDto.skjemanr, false)
-		val opprettetSoknadId = soknadService.opprettNySoknad(SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(skjemaDto, brukerId))
+		val opprettetSoknadId = soknadService.opprettNySoknad(
+			SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
+				skjemaDto,
+				brukerId
+			)
+		)
 		logger.debug("$opprettetSoknadId: Soknad fra fyllut persistert. Antall vedlegg fra FyllUt=${skjemaDto.vedleggsListe?.size}")
-		return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(restConfig.frontEndFortsettEndpoint + "/" + opprettetSoknadId)).build()
+		return ResponseEntity.status(HttpStatus.FOUND)
+			.location(URI.create(restConfig.frontEndFortsettEndpoint + "/" + opprettetSoknadId)).build()
 	}
 }

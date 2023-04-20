@@ -9,7 +9,7 @@ val logger: Logger = LoggerFactory.getLogger("no.nav.soknad.innsending.consumera
 
 fun handleErrors(errors: List<GraphQLClientError>, system: String) {
 	val errorMessage = errors
-		.map { "${it.message} (feilkode: ${it.path} ${it.path?.forEach {e-> e.toString() }}" }
+		.map { "${it.message} (feilkode: ${it.path} ${it.path?.forEach { e -> e.toString() }}" }
 		.joinToString(prefix = "Error i respons fra $system: ", separator = ", ") { it }
 	logger.error("Oppslag mot $system feilet med $errorMessage")
 	throw PdlApiException("Oppslag mot $system feilet", "Fikk feil i responsen fra $system")

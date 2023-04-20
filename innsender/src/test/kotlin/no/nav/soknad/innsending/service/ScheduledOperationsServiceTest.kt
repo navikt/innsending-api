@@ -11,9 +11,7 @@ import no.nav.soknad.innsending.utils.SoknadDbDataTestdataBuilder
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -142,7 +140,7 @@ class ScheduledOperationsServiceTest {
 		simulateKafkaPolling(true, soknad.innsendingsid)
 
 		service.checkIfApplicationsAreArchived(OFFSET_HOURS)
-		val lagretSoknad2 = soknadRepository.findById(soknad.id!!)
+		val lagretSoknad2 = soknadRepository.findById(soknad.id)
 		assertTrue(lagretSoknad2.isPresent)
 		assertEquals(ArkiveringsStatus.Arkivert, lagretSoknad2.get().arkiveringsstatus)
 
@@ -158,7 +156,8 @@ class ScheduledOperationsServiceTest {
 	@Test
 	fun testAtSoknadInnsendtIForkantAvTimespanOgMarkertSomIkkeArkivertTellesMedVedRegistreringAvMetrics() {
 		val innsendtdato = LocalDateTime.now().minusHours(OFFSET_HOURS + 2)
-		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato, arkiveringsStatus = ArkiveringsStatus.IkkeSatt).build()
+		val soknad =
+			SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato, arkiveringsStatus = ArkiveringsStatus.IkkeSatt).build()
 		soknadRepository.save(soknad)
 
 		val service = lagScheduledOperationsService()
@@ -172,7 +171,10 @@ class ScheduledOperationsServiceTest {
 	}
 
 	private fun simulateKafkaPolling(ok: Boolean, innsendingId: String) {
-		soknadRepository.updateArkiveringsStatus((if (ok) ArkiveringsStatus.Arkivert else ArkiveringsStatus.ArkiveringFeilet), listOf(innsendingId))
+		soknadRepository.updateArkiveringsStatus(
+			(if (ok) ArkiveringsStatus.Arkivert else ArkiveringsStatus.ArkiveringFeilet),
+			listOf(innsendingId)
+		)
 	}
 
 }
