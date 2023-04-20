@@ -1,10 +1,11 @@
 package no.nav.soknad.innsending.service
 
+import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.skjema.KodeverkSkjema
-import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerAPI
-import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPI
+import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
+import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
@@ -29,12 +30,12 @@ class InnsendingService(
 	private val soknadService: SoknadService,
 	private val filService: FilService,
 	private val vedleggService: VedleggService,
-	private val soknadsmottakerAPI: MottakerAPI,
+	private val soknadsmottakerAPI: MottakerInterface,
 	private val restConfig: RestConfig,
-	private val fillagerAPI: FillagerAPI,
+	private val fillagerAPI: FillagerInterface,
 	private val exceptionHelper: ExceptionHelper,
 	private val ettersendingService: EttersendingService,
-	private val brukernotifikasjonService: BrukernotifikasjonService,
+	private val brukernotifikasjonPublisher: BrukernotifikasjonPublisher,
 	private val innsenderMetrics: InnsenderMetrics,
 	private val pdlInterface: PdlInterface,
 ) {
@@ -58,7 +59,7 @@ class InnsendingService(
 		filService.validerAtMinstEnFilErLastetOpp(soknadDto)
 
 		// Vedleggsliste med opplastede dokument og status= LASTET_OPP for de som skal sendes soknadsfillager
-		val alleVedlegg: List<VedleggDto> = vedleggService.ferdigstillVedlegg(soknadDto)
+		val alleVedlegg: List<VedleggDto> = filService.ferdigstillVedleggsFiler(soknadDto)
 		val opplastedeVedlegg = alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
 		val manglendePakrevdeVedlegg =
 			alleVedlegg.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") && (it.opplastingsStatus == OpplastingsStatusDto.sendSenere || it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt) }
@@ -145,7 +146,7 @@ class InnsendingService(
 		try {
 			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput)
 
-			val innsendtSoknadDto = brukernotifikasjonService.kansellerBrukernotifikasjon(soknadDtoInput)
+			val innsendtSoknadDto = kansellerBrukernotifikasjon(soknadDtoInput)
 
 			ettersendingService.sjekkOgOpprettEttersendingsSoknad(innsendtSoknadDto, manglende, soknadDtoInput)
 
@@ -269,4 +270,24 @@ class InnsendingService(
 	private fun lenkeTilDokument(innsendingsId: String, vedleggsId: Long?, filId: Long?) =
 		if (filId == null) null else "frontend/v1/soknad/$innsendingsId/vedlegg/$vedleggsId/fil/$filId"
 
+	private fun kansellerBrukernotifikasjon(soknadDtoInput: DokumentSoknadDto): DokumentSoknadDto {
+		// send brukernotifikasjon ved endring av søknadsstatus til innsendt
+		val innsendtSoknadDto = soknadService.hentSoknad(soknadDtoInput.innsendingsId!!)
+		logger.info("${innsendtSoknadDto.innsendingsId}: Sendinn: innsendtdato på vedlegg med status innsendt= " +
+			innsendtSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }
+				.map { it.vedleggsnr + ":" + mapTilLocalDateTime(it.innsendtdato) }
+		)
+		publiserBrukernotifikasjon(innsendtSoknadDto)
+		return innsendtSoknadDto
+	}
+
+	private fun publiserBrukernotifikasjon(dokumentSoknadDto: DokumentSoknadDto): Boolean = try {
+		brukernotifikasjonPublisher.soknadStatusChange(dokumentSoknadDto)
+	} catch (e: Exception) {
+		throw BackendErrorException(
+			e.message,
+			"Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}",
+			"errorCode.backendError.sendToNAVError"
+		)
+	}
 }

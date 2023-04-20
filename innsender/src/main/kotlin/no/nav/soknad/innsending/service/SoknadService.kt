@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.service
 
+import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
@@ -26,7 +27,7 @@ class SoknadService(
 	private val vedleggService: VedleggService,
 	private val ettersendingService: EttersendingService,
 	private val filService: FilService,
-	private val brukernotifikasjonService: BrukernotifikasjonService,
+	private val brukernotifikasjonPublisher: BrukernotifikasjonPublisher,
 	private val innsenderMetrics: InnsenderMetrics,
 	private val exceptionHelper: ExceptionHelper,
 ) {
@@ -66,7 +67,7 @@ class SoknadService(
 
 			val dokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbDataListe)
 
-			brukernotifikasjonService.publiserBrukernotifikasjon(dokumentSoknadDto)
+			publiserBrukernotifikasjon(dokumentSoknadDto)
 
 			return dokumentSoknadDto
 		} catch (e: Exception) {
@@ -108,7 +109,7 @@ class SoknadService(
 
 			val dokumentSoknadDto = lagDokumentSoknadDto(ettersendingsSoknadDb, vedleggDbDataListe)
 
-			brukernotifikasjonService.publiserBrukernotifikasjon(dokumentSoknadDto)
+			publiserBrukernotifikasjon(dokumentSoknadDto)
 
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
 			return dokumentSoknadDto
@@ -181,7 +182,7 @@ class SoknadService(
 
 			val dokumentSoknadDto = lagDokumentSoknadDto(ettersendingsSoknadDb, vedleggDbDataListe + innsendtDbDataListe)
 
-			brukernotifikasjonService.publiserBrukernotifikasjon(dokumentSoknadDto)
+			publiserBrukernotifikasjon(dokumentSoknadDto)
 
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
 			return dokumentSoknadDto
@@ -224,7 +225,7 @@ class SoknadService(
 
 			val dokumentSoknadDto = lagDokumentSoknadDto(ettersendingsSoknadDb, vedleggDbDataListe + innsendtDbDataListe)
 
-			brukernotifikasjonService.publiserBrukernotifikasjon(dokumentSoknadDto)
+			publiserBrukernotifikasjon(dokumentSoknadDto)
 
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
 			return dokumentSoknadDto
@@ -286,7 +287,7 @@ class SoknadService(
 			val savedVedleggDbDataListe = vedleggDbDataListe + innsendtVedleggDbDataListe
 
 			val dokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbDataListe)
-			brukernotifikasjonService.publiserBrukernotifikasjon(dokumentSoknadDto)
+			publiserBrukernotifikasjon(dokumentSoknadDto)
 
 			return dokumentSoknadDto
 		} catch (e: Exception) {
@@ -313,7 +314,7 @@ class SoknadService(
 			savedDokumentSoknadDto.vedleggsListe
 				.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
 				.forEach { filService.lagreFil(savedDokumentSoknadDto, it, dokumentSoknadDto.vedleggsListe) }
-			brukernotifikasjonService.publiserBrukernotifikasjon(savedDokumentSoknadDto)
+			publiserBrukernotifikasjon(savedDokumentSoknadDto)
 
 			innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
 			return innsendingsId
@@ -377,7 +378,7 @@ class SoknadService(
 		val slettetSoknad = lagDokumentSoknadDto(
 			soknadDbData,
 			dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id!!) })
-		brukernotifikasjonService.publiserBrukernotifikasjon(slettetSoknad)
+		publiserBrukernotifikasjon(slettetSoknad)
 		innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
 	}
 
@@ -402,7 +403,7 @@ class SoknadService(
 
 		val slettetSoknadDto = lagDokumentSoknadDto(slettetSoknadDb,
 			dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id!!) })
-		brukernotifikasjonService.publiserBrukernotifikasjon(slettetSoknadDto)
+		publiserBrukernotifikasjon(slettetSoknadDto)
 		logger.info("slettSoknadAutomatisk: Status for søknad $innsendingsId er satt til ${SoknadsStatus.AutomatiskSlettet}")
 
 		innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
@@ -444,6 +445,16 @@ class SoknadService(
 		if (aktiveSoknaderGittSkjemanr.isNotEmpty()) {
 			logger.warn("Dupliserer søknad på skjemanr=$skjemanr, søker har allerede ${aktiveSoknaderGittSkjemanr.size} under arbeid")
 		}
+	}
+
+	private fun publiserBrukernotifikasjon(dokumentSoknadDto: DokumentSoknadDto): Boolean = try {
+		brukernotifikasjonPublisher.soknadStatusChange(dokumentSoknadDto)
+	} catch (e: Exception) {
+		throw BackendErrorException(
+			e.message,
+			"Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}",
+			"errorCode.backendError.sendToNAVError"
+		)
 	}
 
 }

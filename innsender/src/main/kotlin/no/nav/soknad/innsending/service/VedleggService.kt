@@ -22,9 +22,8 @@ class VedleggService(
 	private val repo: RepositoryUtils,
 	private val skjemaService: SkjemaService,
 	private val innsenderMetrics: InnsenderMetrics,
-	private val filService: FilService
 ) {
-	
+
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	fun opprettHovedddokumentVedlegg(
@@ -319,23 +318,6 @@ class VedleggService(
 		return lagVedleggDto(oppdatertVedlegg.get(), null)
 	}
 
-	// For alle vedlegg til søknaden:
-	// Hoveddokument kan ha ulike varianter. Hver enkelt av disse sendes som ulike filer til soknadsfillager.
-	// Bruker kan ha lastet opp flere filer for øvrige vedlegg. Disse må merges og sendes som en fil.
-	fun ferdigstillVedlegg(soknadDto: DokumentSoknadDto): List<VedleggDto> {
-		return soknadDto.vedleggsListe.map {
-			lagVedleggDtoMedOpplastetFil(
-				filService.hentOgMergeVedleggsFiler(
-					soknadDto,
-					soknadDto.innsendingsId!!,
-					it
-				), it
-			)
-		}.sortedByDescending { it.erHoveddokument } // Hoveddokument first
-			.onEach {
-				if (!it.erHoveddokument) logger.info("${soknadDto.innsendingsId}: Vedlegg ${it.vedleggsnr} har opplastet fil=${it.document != null} og erPakrevd=${it.erPakrevd}")
-			}
-	}
 
 	fun vedleggHarFiler(innsendingsId: String, vedleggsId: Long): Boolean {
 		return repo.findAllByVedleggsid(innsendingsId, vedleggsId).any { it.data != null }

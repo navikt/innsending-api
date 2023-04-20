@@ -331,7 +331,25 @@ class FilService(
 			}
 		}
 	}
-	
+
+	// For alle vedlegg til søknaden:
+	// Hoveddokument kan ha ulike varianter. Hver enkelt av disse sendes som ulike filer til soknadsfillager.
+	// Bruker kan ha lastet opp flere filer for øvrige vedlegg. Disse må merges og sendes som en fil.
+	fun ferdigstillVedleggsFiler(soknadDto: DokumentSoknadDto): List<VedleggDto> {
+		return soknadDto.vedleggsListe.map {
+			lagVedleggDtoMedOpplastetFil(
+				hentOgMergeVedleggsFiler(
+					soknadDto,
+					soknadDto.innsendingsId!!,
+					it
+				), it
+			)
+		}.sortedByDescending { it.erHoveddokument } // Hoveddokument first
+			.onEach {
+				if (!it.erHoveddokument) logger.info("${soknadDto.innsendingsId}: Vedlegg ${it.vedleggsnr} har opplastet fil=${it.document != null} og erPakrevd=${it.erPakrevd}")
+			}
+	}
+
 	fun hentOgMergeVedleggsFiler(soknadDto: DokumentSoknadDto, innsendingsId: String, vedleggDto: VedleggDto): FilDto? {
 		val filer = hentFiler(
 			soknadDto,

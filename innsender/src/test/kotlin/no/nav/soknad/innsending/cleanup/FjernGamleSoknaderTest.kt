@@ -4,9 +4,6 @@ import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
-import no.nav.soknad.innsending.config.RestConfig
-import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
-import no.nav.soknad.innsending.consumerapis.skjema.SkjemaClient
 import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
@@ -57,37 +54,24 @@ class FjernGamleSoknaderTest {
 	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
 
 	@InjectMockKs
-	private val hentSkjemaData = mockk<SkjemaClient>()
-
-	@InjectMockKs
-	private val fillagerAPI = mockk<FillagerInterface>()
+	private val leaderSelectionUtility = mockk<LeaderSelectionUtility>()
 
 	@InjectMockKs
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
 
 	@InjectMockKs
-	private val pdlInterface = mockk<PdlInterface>()
-
-	@InjectMockKs
-	private val leaderSelectionUtility = mockk<LeaderSelectionUtility>()
-
-	@Autowired
-	private lateinit var restConfig: RestConfig
+	private val fillagerAPI = mockk<FillagerInterface>()
 
 
 	private fun lagSoknadService(): SoknadService = SoknadService(
-		skjemaService,
-		repo,
-		vedleggService,
-		ettersendingService,
-		filService,
-		brukernotifikasjonPublisher,
-		fillagerAPI,
-		soknadsmottakerAPI,
-		innsenderMetrics,
-		pdlInterface,
-		restConfig,
-		exceptionHelper
+		skjemaService = skjemaService,
+		repo = repo,
+		vedleggService = vedleggService,
+		ettersendingService = ettersendingService,
+		filService = filService,
+		brukernotifikasjonPublisher = brukernotifikasjonPublisher,
+		innsenderMetrics = innsenderMetrics,
+		exceptionHelper = exceptionHelper
 	)
 
 	@BeforeEach
@@ -103,6 +87,7 @@ class FjernGamleSoknaderTest {
 		val soknader = mutableListOf<DokumentSoknadDto>()
 		every { brukernotifikasjonPublisher.soknadStatusChange(capture(soknader)) } returns true
 		every { leaderSelectionUtility.isLeader() } returns true
+		every { soknadsmottakerAPI.sendInnSoknad(any(), any()) } returns Unit
 
 		val spraak = "no"
 		val tema = "BID"
