@@ -97,7 +97,7 @@ spec:
             consequence: "If this continues it might have consequences for resources used."
             action: {{ application_sent_in_log_url }}
             documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
-            summary: "Service has reported that the number of sent in applications last {{max_expected_period}} is unusally high."
+            summary: "Service has reported that the number of sent in applications last {{expected_period}} is unusally high."
             sla: "Check logs within 3h"
           labels:
             service: "innsending-api"
