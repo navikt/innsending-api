@@ -1,0 +1,22 @@
+name: Install and test
+on: push
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}/innsending-api:${{ github.sha }}
+
+jobs:
+  tests:
+    name: Run tests
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '17.x'
+          cache: 'maven'
+      - name: Maven clean install
+        run: mvn clean install
+
+
