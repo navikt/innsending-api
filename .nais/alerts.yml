@@ -111,6 +111,6 @@ spec:
           labels:
           {{#each common_labels}}
             - name: {{@key}}
-          value: "{{this}}"
+              value: "{{this}}"
           {{/each}}
-            - severity: warning
+            - severity: info

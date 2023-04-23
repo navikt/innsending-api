@@ -10,7 +10,6 @@ on:
         default: 'preprod'
         type: choice
         options:
-          - none
           - preprod
           - prod
 
