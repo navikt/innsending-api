@@ -99,18 +99,4 @@ spec:
               value: "{{this}}"
           {{/each}}
             - severity: info
-        - alert: High number of functional errors
-          expr: ceil(sum by (operation) (increase(innsendingapi_number_of_errors[ {{expected_period}} ]))) > {{ number_of_errors }}
-          for: 1m
-          annotations:
-            title: "High number of functional errors detected"
-            consequence: "If this continues it might have consequences for users beeing able to send in applications."
-            action: {{ error_log_url }}
-            summary: "Service has reported that the number of errors for an operation for last {{expected_period}} is unusally high."
-            sla: "Check logs within 3h"
-          labels:
-          {{#each common_labels}}
-            - name: {{@key}}
-              value: "{{this}}"
-          {{/each}}
-            - severity: info
+
