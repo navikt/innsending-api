@@ -109,7 +109,7 @@ spec:
             summary: "Service has reported that the number of errors for an operation for last {{expected_period}} is unusally high."
             sla: "Check logs within 3h"
           labels:
-            service: "innsending-api",
+            service: "innsending-api"
             namespace: fyllut-sendinn
             special_type_to_use_in_alertmanager_config: fyllut-sendinn-alerts
             alert_type: custom
