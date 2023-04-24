@@ -626,11 +626,11 @@ class SoknadServiceTest {
 		soknadService.slettGamleSoknader(1L)
 		dokumentSoknadDtoList.forEach { assertEquals(soknadService.hentSoknad(it.id!!).status, SoknadsStatusDto.opprettet) }
 
-		soknadService.slettGamleSoknader(0L)
+		soknadService.slettGamleSoknader(-1L)
 		dokumentSoknadDtoList.forEach {
 			assertEquals(
+				SoknadsStatusDto.automatiskSlettet,
 				soknadService.hentSoknad(it.id!!).status,
-				SoknadsStatusDto.automatiskSlettet
 			)
 		}
 	}
