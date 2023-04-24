@@ -10,7 +10,7 @@
 	"application_sent_in_log_url": "https://logs.adeo.no/app/discover#/view/88684d90-df53-11ed-8b42-0b0644af4500",
 	"expected_period": "1h",
 	"continued_expected_period": "3h",
-	"common_labels": {
+	"common-labels": {
 		"service": "innsending-api",
 		"namespace": "fyllut-sendinn",
 		"special_type_to_use_in_alertmanager_config": "fyllut-sendinn-alerts-dev",

@@ -19,9 +19,9 @@ spec:
             summary: "Service has reported archiving of one or more application(s) has failed."
             sla: "Action should be taken as soon as possible"
           labels:
-          {{#each common_labels}}
+          {{#each common-labels}}
             - name: {{@key}}
-          value: "{{this}}"
+              value: "{{this}}"
           {{/each}}
             - severity: critical
         - alert: High number of errors
@@ -34,9 +34,9 @@ spec:
             summary: "Service has reported more than {{number_of_error}} errors within 5 minutes."
             sla: "Action should be taken as soon as possible"
           labels:
-          {{#each common_labels}}
+          {{#each common-labels}}
             - name: {{@key}}
-          value: "{{this}}"
+              value: "{{this}}"
           {{/each}}
             - severity: critical
         - alert: Not yet archived
@@ -49,9 +49,9 @@ spec:
             summary: "Service has reported missing archiving response for application(s)."
             sla: "Action should be taken as soon as possible"
           labels:
-          {{#each common_labels}}
+          {{#each common-labels}}
             - name: {{@key}}
-          value: "{{this}}"
+              value: "{{this}}"
           {{/each}}
             - severity: warning
         - alert: Consistent high number of created applications
@@ -64,9 +64,9 @@ spec:
             summary: "Service has reported that a number of created applications has been at a high level for {{continued_expected_period}}."
             sla: "Check logs within 3h"
           labels:
-          {{#each common_labels}}
+          {{#each common-labels}}
             - name: {{@key}}
-          value: "{{this}}"
+              value: "{{this}}"
           {{/each}}
             - severity: warning
         - alert: High number of created applications
@@ -79,9 +79,9 @@ spec:
             summary: "Service has reported that the number of created applications last {{expected_period}} is higher than usual."
             sla: "Check logs within 3h"
           labels:
-          {{#each common_labels}}
+          {{#each common-labels}}
             - name: {{@key}}
-          value: "{{this}}"
+              value: "{{this}}"
           {{/each}}
             - severity: info
         - alert: High number of sent in applications
@@ -94,9 +94,9 @@ spec:
             summary: "Service has reported that the number of sent in applications last {{expected_period}} is unusally high."
             sla: "Check logs within 3h"
           labels:
-          {{#each common_labels}}
+          {{#each common-labels}}
             - name: {{@key}}
-          value: "{{this}}"
+              value: "{{this}}"
           {{/each}}
             - severity: info
         - alert: High number of functional errors
@@ -109,8 +109,8 @@ spec:
             summary: "Service has reported that the number of errors for an operation for last {{expected_period}} is unusally high."
             sla: "Check logs within 3h"
           labels:
-          {{#each common_labels}}
+          {{#each common-labels}}
             - name: {{@key}}
-          value: "{{this}}"
+              value: "{{this}}"
           {{/each}}
             - severity: info
