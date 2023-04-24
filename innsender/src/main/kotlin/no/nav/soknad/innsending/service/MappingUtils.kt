@@ -77,7 +77,11 @@ fun lagVedleggDto(vedleggDbData: VedleggDbData, document: ByteArray? = null) =
 		mapTilOffsetDateTime(vedleggDbData.innsendtdato)
 	)
 
-fun lagDokumentSoknadDto(soknadDbData: SoknadDbData, vedleggDbDataListe: List<VedleggDbData>) =
+fun lagDokumentSoknadDto(
+	soknadDbData: SoknadDbData,
+	vedleggDbDataListe: List<VedleggDbData>,
+	erSystemGenerert: Boolean = false
+) =
 	DokumentSoknadDto(
 		brukerId = soknadDbData.brukerid,
 		skjemanr = soknadDbData.skjemanr,
@@ -99,7 +103,8 @@ fun lagDokumentSoknadDto(soknadDbData: SoknadDbData, vedleggDbDataListe: List<Ve
 		innsendingsFristDato = beregnInnsendingsFrist(soknadDbData),
 		forsteInnsendingsDato = mapTilOffsetDateTime(soknadDbData.forsteinnsendingsdato),
 		fristForEttersendelse = soknadDbData.ettersendingsfrist ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
-		arkiveringsStatus = mapTilArkiveringsStatusDto(soknadDbData.arkiveringsstatus)
+		arkiveringsStatus = mapTilArkiveringsStatusDto(soknadDbData.arkiveringsstatus),
+		erSystemGenerert = erSystemGenerert
 	)
 
 private fun beregnInnsendingsFrist(soknadDbData: SoknadDbData): OffsetDateTime {

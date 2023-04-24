@@ -89,7 +89,8 @@ class BrukernotifikasjonPublisher(
 			ettersending,
 			groupId,
 			dokumentSoknad.brukerId,
-			dokumentSoknad.opprettetDato
+			dokumentSoknad.opprettetDato,
+			erSystemGenerert = dokumentSoknad.erSystemGenerert ?: false
 		)
 
 		try {
