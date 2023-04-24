@@ -13,7 +13,7 @@
 	"common_labels": {
 		"service": "innsending-api",
 		"namespace": "fyllut-sendinn",
-		"special_type_to_use_in_alertmanager_config": "fyllut-sendinn-alerts",
+		"special_type_to_use_in_alertmanager_config": "fyllut-sendinn-alerts-dev",
 		"alert_type": "custom"
 	}
 }
