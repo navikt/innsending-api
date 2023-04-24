@@ -21,7 +21,7 @@ spec:
           labels:
           {{#each common_labels}}
             - name: {{@key}}
-          value: "{{this}}"
+              value: "{{this}}"
           {{/each}}
             - severity: critical
         - alert: High number of errors
@@ -36,7 +36,7 @@ spec:
           labels:
           {{#each common_labels}}
             - name: {{@key}}
-          value: "{{this}}"
+              value: "{{this}}"
           {{/each}}
             - severity: critical
         - alert: Not yet archived
@@ -51,7 +51,7 @@ spec:
           labels:
           {{#each common_labels}}
             - name: {{@key}}
-          value: "{{this}}"
+              value: "{{this}}"
           {{/each}}
             - severity: warning
         - alert: Consistent high number of created applications
@@ -66,7 +66,7 @@ spec:
           labels:
           {{#each common_labels}}
             - name: {{@key}}
-          value: "{{this}}"
+              value: "{{this}}"
           {{/each}}
             - severity: warning
         - alert: High number of created applications
@@ -81,7 +81,7 @@ spec:
           labels:
           {{#each common_labels}}
             - name: {{@key}}
-          value: "{{this}}"
+              value: "{{this}}"
           {{/each}}
             - severity: info
         - alert: High number of sent in applications
@@ -96,7 +96,7 @@ spec:
           labels:
           {{#each common_labels}}
             - name: {{@key}}
-          value: "{{this}}"
+              value: "{{this}}"
           {{/each}}
             - severity: info
         - alert: High number of functional errors
@@ -111,6 +111,6 @@ spec:
           labels:
           {{#each common_labels}}
             - name: {{@key}}
-          value: "{{this}}"
+              value: "{{this}}"
           {{/each}}
             - severity: info
