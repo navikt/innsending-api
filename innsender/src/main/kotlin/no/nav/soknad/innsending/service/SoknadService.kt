@@ -947,7 +947,7 @@ class SoknadService(
 			fillagerAPI.lagreFiler(soknadDto.innsendingsId!!, opplastedeVedlegg + kvitteringForArkivering)
 		} catch (e: Exception) {
 			reportException(e, operation, soknadDto.tema)
-			logger.error("Feil ved sending av filer for søknad ${soknadDto.innsendingsId} ti       l NAV, ${e.message}")
+			logger.error("Feil ved sending av filer for søknad ${soknadDto.innsendingsId} til NAV, ${e.message}")
 			throw BackendErrorException(e.message, "Feil ved sending av filer for søknad ${soknadDto.innsendingsId} til NAV", "errorCode.backendError.sendToNAVError")
 		}
 

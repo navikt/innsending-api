@@ -52,4 +52,11 @@ class HealthTest {
 		}
 
 	}
+
+	@Test
+	fun sjekkStatus() {
+		assertDoesNotThrow {
+			healthCheck.getStatus()
+		}
+	}
 }

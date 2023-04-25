@@ -11,7 +11,6 @@ import no.nav.soknad.innsending.utils.SoknadDbDataTestdataBuilder
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,7 +19,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import java.time.LocalDateTime
 
-private const val OFFSET_HOURS = 2L
+private const val OFFSET_MINUTES = 95L
 
 @SpringBootTest
 @ActiveProfiles("spring")
@@ -58,12 +57,12 @@ class ScheduledOperationsServiceTest {
 
 	@Test
 	fun testAtSoknadSomIkkeEksistererIArkivetBlirMarkertSomIkkeArkivert() {
-		val innsendtdato = LocalDateTime.now().minusHours(OFFSET_HOURS + 1)
+		val innsendtdato = LocalDateTime.now().minusMinutes(OFFSET_MINUTES + 1)
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 
 		val service = lagScheduledOperationsService()
-		service.checkIfApplicationsAreArchived(OFFSET_HOURS)
+		service.checkIfApplicationsAreArchived(OFFSET_MINUTES)
 
 		val lagretSoknad = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad.isPresent)
@@ -74,13 +73,13 @@ class ScheduledOperationsServiceTest {
 
 	@Test
 	fun testAtSoknadSomEksistererIArkivetBlirMarkertSomArkivert() {
-		val innsendtdato = LocalDateTime.now().minusHours(OFFSET_HOURS + 1)
+		val innsendtdato = LocalDateTime.now().minusMinutes(OFFSET_MINUTES + 1)
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 		simulateKafkaPolling(true, soknad.innsendingsid)
 
 		val service = lagScheduledOperationsService()
-		service.checkIfApplicationsAreArchived(OFFSET_HOURS)
+		service.checkIfApplicationsAreArchived(OFFSET_MINUTES)
 
 		val lagretSoknad = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad.isPresent)
@@ -91,13 +90,13 @@ class ScheduledOperationsServiceTest {
 
 	@Test
 	fun testAtInnsendtSoknadDerArkiveringHarFeiletBlirRapportert() {
-		val innsendtdato = LocalDateTime.now().minusHours(OFFSET_HOURS + 1)
+		val innsendtdato = LocalDateTime.now().minusMinutes(OFFSET_MINUTES + 1)
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 		simulateKafkaPolling(false, soknad.innsendingsid)
 
 		val service = lagScheduledOperationsService()
-		service.checkIfApplicationsAreArchived(OFFSET_HOURS)
+		service.checkIfApplicationsAreArchived(OFFSET_MINUTES)
 
 		val lagretSoknad = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad.isPresent)
@@ -111,37 +110,37 @@ class ScheduledOperationsServiceTest {
 
 	@Test
 	fun testAtSoknadAIkkeMarkeresSomArkivertOgSoknadBMarkeresSomArkivert() {
-		val innsendtdatoA = LocalDateTime.now().minusHours(OFFSET_HOURS + 1)
+		val innsendtdatoA = LocalDateTime.now().minusMinutes(OFFSET_MINUTES + 1)
 		val soknadA = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdatoA).build()
 		soknadRepository.save(soknadA)
 		simulateKafkaPolling(true, soknadA.innsendingsid)
 
-		val innsendtdatoB = LocalDateTime.now().minusHours(OFFSET_HOURS + 2)
+		val innsendtdatoB = LocalDateTime.now().minusMinutes(OFFSET_MINUTES + 2)
 		val soknadB = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdatoB, brukerId = soknadA.brukerid).build()
 		soknadRepository.save(soknadB)
 
 		val service = lagScheduledOperationsService()
-		service.checkIfApplicationsAreArchived(OFFSET_HOURS)
+		service.checkIfApplicationsAreArchived(OFFSET_MINUTES)
 
 		verify { innsenderMetrics.absentInArchive(1) }
 	}
 
 	@Test
 	fun testAtSoknadSomForstMarkeresSomIkkeArkivertMarkeresSomArkivertVedNesteSjekk() {
-		val innsendtdato = LocalDateTime.now().minusHours(OFFSET_HOURS + 1)
+		val innsendtdato = LocalDateTime.now().minusMinutes(OFFSET_MINUTES + 1)
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 
 		val service = lagScheduledOperationsService()
 
-		service.checkIfApplicationsAreArchived(OFFSET_HOURS)
+		service.checkIfApplicationsAreArchived(OFFSET_MINUTES)
 		val lagretSoknad1 = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad1.isPresent)
 		assertTrue(lagretSoknad1.get().arkiveringsstatus == ArkiveringsStatus.IkkeSatt)
 
 		simulateKafkaPolling(true, soknad.innsendingsid)
 
-		service.checkIfApplicationsAreArchived(OFFSET_HOURS)
+		service.checkIfApplicationsAreArchived(OFFSET_MINUTES)
 		val lagretSoknad2 = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad2.isPresent)
 		assertEquals(ArkiveringsStatus.Arkivert, lagretSoknad2.get().arkiveringsstatus)
@@ -157,12 +156,12 @@ class ScheduledOperationsServiceTest {
 
 	@Test
 	fun testAtSoknadInnsendtIForkantAvTimespanOgMarkertSomIkkeArkivertTellesMedVedRegistreringAvMetrics() {
-		val innsendtdato = LocalDateTime.now().minusHours(OFFSET_HOURS + 2)
+		val innsendtdato = LocalDateTime.now().minusMinutes(OFFSET_MINUTES + 2)
 		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato, arkiveringsStatus = ArkiveringsStatus.IkkeSatt).build()
 		soknadRepository.save(soknad)
 
 		val service = lagScheduledOperationsService()
-		service.checkIfApplicationsAreArchived(OFFSET_HOURS)
+		service.checkIfApplicationsAreArchived(OFFSET_MINUTES)
 
 		val lagretSoknad = soknadRepository.findById(soknad.id!!)
 		assertTrue(lagretSoknad.isPresent)
