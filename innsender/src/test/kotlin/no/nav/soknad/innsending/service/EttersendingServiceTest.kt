@@ -1,10 +1,7 @@
 package no.nav.soknad.innsending.service
 
-import io.mockk.every
+import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
-import io.mockk.mockk
-import io.mockk.slot
-import io.mockk.spyk
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.config.BrukerNotifikasjonConfig
@@ -62,7 +59,7 @@ class EttersendingServiceTest {
 	)
 
 	@Test
-	fun `Skal sende brukernotifikasjon med informasjon om den er system generert`() {
+	fun `Skal sende brukernotifikasjon med erSystemGenerert=true hvis det mangler paakrevde vedlegg`() {
 		// Gitt
 		val brukerid = testpersonid
 		val skjemanr = "NAV 55-00.60"
@@ -84,6 +81,29 @@ class EttersendingServiceTest {
 		// Så
 		Assertions.assertNotNull(message.captured)
 		Assertions.assertTrue(message.captured.soknadRef.erSystemGenerert == true)
+	}
 
+	@Test
+	fun `Skal ikke opprette ettersendingssoknad hvis det ikke mangler paakrevde vedlegg`() {
+		// Gitt
+		val brukerid = testpersonid
+		val skjemanr = "NAV 55-00.60"
+		val spraak = "nb_NO"
+		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
+
+		val ettersendingService = lagEttersendingService()
+		val ettersendingServiceMock = spyk(ettersendingService)
+
+		every { ettersendingServiceMock.opprettEttersendingsSoknad(any(), any()) } answers { callOriginal() }
+
+		// Når
+		ettersendingServiceMock.sjekkOgOpprettEttersendingsSoknad(
+			innsendtSoknadDto = dokumentSoknadDto,
+			manglende = emptyList(),
+			soknadDtoInput = dokumentSoknadDto
+		)
+
+		// Så
+		verify { ettersendingServiceMock.opprettEttersendingsSoknad(any(), any()) wasNot Called }
 	}
 }
