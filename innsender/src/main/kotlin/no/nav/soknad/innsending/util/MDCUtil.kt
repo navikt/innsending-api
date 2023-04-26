@@ -6,6 +6,7 @@ import java.util.*
 
 object MDCUtil {
 	private val GEN = CallIdGenerator()
+
 	@JvmStatic
 	fun callId(): String {
 		return MDC.get(CORRELATION_ID)
@@ -21,8 +22,10 @@ object MDCUtil {
 
 	@JvmOverloads
 	fun toMDC(key: String?, value: String?, defaultValue: String? = "null") {
-		MDC.put(key, Optional.ofNullable(value)
-			.orElse(defaultValue))
+		MDC.put(
+			key, Optional.ofNullable(value)
+				.orElse(defaultValue)
+		)
 	}
 
 

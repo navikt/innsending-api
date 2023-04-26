@@ -12,7 +12,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -157,7 +156,8 @@ class ScheduledOperationsServiceTest {
 	@Test
 	fun testAtSoknadInnsendtIForkantAvTimespanOgMarkertSomIkkeArkivertTellesMedVedRegistreringAvMetrics() {
 		val innsendtdato = LocalDateTime.now().minusMinutes(OFFSET_MINUTES + 2)
-		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato, arkiveringsStatus = ArkiveringsStatus.IkkeSatt).build()
+		val soknad =
+			SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato, arkiveringsStatus = ArkiveringsStatus.IkkeSatt).build()
 		soknadRepository.save(soknad)
 
 		val service = lagScheduledOperationsService()
@@ -171,7 +171,10 @@ class ScheduledOperationsServiceTest {
 	}
 
 	private fun simulateKafkaPolling(ok: Boolean, innsendingId: String) {
-		soknadRepository.updateArkiveringsStatus((if (ok) ArkiveringsStatus.Arkivert else ArkiveringsStatus.ArkiveringFeilet), listOf(innsendingId))
+		soknadRepository.updateArkiveringsStatus(
+			(if (ok) ArkiveringsStatus.Arkivert else ArkiveringsStatus.ArkiveringFeilet),
+			listOf(innsendingId)
+		)
 	}
 
 }

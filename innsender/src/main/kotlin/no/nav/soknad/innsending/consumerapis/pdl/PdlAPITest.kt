@@ -11,14 +11,16 @@ import org.springframework.stereotype.Service
 @Service
 @Profile("spring | docker | default")
 @Qualifier("pdl")
-class PdlAPITest: PdlInterface, HealthRequestInterface {
+class PdlAPITest : PdlInterface, HealthRequestInterface {
 
 	override fun ping(): String {
 		return "pong"
 	}
+
 	override fun isReady(): String {
 		return "ok"
 	}
+
 	override fun isAlive(): String {
 		return "ok"
 	}
@@ -26,8 +28,10 @@ class PdlAPITest: PdlInterface, HealthRequestInterface {
 	override fun hentPersonData(brukerId: String): PersonDto? {
 		val personDto = dummyPersonDtos[brukerId]
 		if (personDto != null) return personDto
-		throw BackendErrorException("Pålogget bruker $brukerId ikke funnet i PDL", "Problem med å hente opp brukerdata",
-			"errorCode.backendError.pdlError")
+		throw BackendErrorException(
+			"Pålogget bruker $brukerId ikke funnet i PDL", "Problem med å hente opp brukerdata",
+			"errorCode.backendError.pdlError"
+		)
 	}
 
 	override fun hentPersonIdents(brukerId: String): List<IdentDto> {
@@ -43,7 +47,7 @@ class PdlAPITest: PdlInterface, HealthRequestInterface {
 	}
 
 	private val dummyIdents = listOf(
-		listOf(IdentDto(testpersonid, "FOLKEREGISTERIDENT", false), IdentDto("12345678902","FOLKEREGISTERIDENT", true)),
+		listOf(IdentDto(testpersonid, "FOLKEREGISTERIDENT", false), IdentDto("12345678902", "FOLKEREGISTERIDENT", true)),
 		listOf(IdentDto("12345678903", "FOLKEREGISTERIDENT", false)),
 		listOf(IdentDto("12345678904", "NPID", false)),
 		listOf(
@@ -63,7 +67,7 @@ class PdlAPITest: PdlInterface, HealthRequestInterface {
 		),
 		"12345678903" to PersonDto(
 			"12345678903",
-				"F3", null, "E3"
+			"F3", null, "E3"
 		),
 		"12345678904" to PersonDto(
 			"12345678904",

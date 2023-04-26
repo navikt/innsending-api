@@ -16,7 +16,7 @@ class AzureClientConfig(
 	fun azureWebClient(): WebClient {
 		return webClientBuilder
 			.baseUrl(restConfig.azureUrl)
-			.defaultRequest{
+			.defaultRequest {
 				it.header(Constants.HEADER_CALL_ID, MDCUtil.callIdOrNew())
 			}
 			.build()

@@ -10,11 +10,6 @@ import org.apache.pdfbox.preflight.parser.PreflightParser
 import org.apache.pdfbox.preflight.utils.ByteArrayDataSource
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.InputStream
-import java.io.OutputStreamWriter
-import javax.print.attribute.standard.OutputDeviceAssigned
 
 
 class Validerer() {
@@ -34,16 +29,23 @@ class Validerer() {
 			// Kontroller at PDF er lovlig, dvs. ikke encrypted og passordbeskyttet
 			erGyldigPdf(innsendingId, file)
 		} else if (!isImage(file)) {
-			logger.warn("$innsendingId: $fileName har ugylding filtype for opplasting. Filstart = ${if (file.size>=4) (file[0] + file[1] + file[3] + file[4]) else file[0]}")
-			throw IllegalActionException("$innsendingId: Ugyldig filtype for opplasting", "Kan kun laste opp filer av type PDF, JPEG, PNG og IMG", "errorCode.illegalAction.notSupportedFileFormat"
+			logger.warn("$innsendingId: $fileName har ugylding filtype for opplasting. Filstart = ${if (file.size >= 4) (file[0] + file[1] + file[3] + file[4]) else file[0]}")
+			throw IllegalActionException(
+				"$innsendingId: Ugyldig filtype for opplasting",
+				"Kan kun laste opp filer av type PDF, JPEG, PNG og IMG",
+				"errorCode.illegalAction.notSupportedFileFormat"
 			)
 		}
 	}
 
 	fun validerStorrelse(innsendingId: String, alleredeOpplastet: Long, opplastet: Long, max: Long, errorCode: String) {
-		if (alleredeOpplastet + opplastet > max*1024*1024) {
+		if (alleredeOpplastet + opplastet > max * 1024 * 1024) {
 			logger.warn("$innsendingId: Ulovlig filstørrelse, Opplastede fil(er) $alleredeOpplastet + $opplastet er større enn maksimalt tillatt ${max * 1024 * 1024}. ErrorCode=$errorCode")
-			throw IllegalActionException("$innsendingId: Ulovlig filstørrelse", "Opplastede fil(er) $alleredeOpplastet + $opplastet er større enn maksimalt tillatt ${max*1024*1024}", errorCode)
+			throw IllegalActionException(
+				"$innsendingId: Ulovlig filstørrelse",
+				"Opplastede fil(er) $alleredeOpplastet + $opplastet er større enn maksimalt tillatt ${max * 1024 * 1024}",
+				errorCode
+			)
 		}
 	}
 
@@ -54,14 +56,22 @@ class Validerer() {
 			}
 		} catch (ex: InvalidPasswordException) {
 			logger.warn("$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert, ${ex.message}")
-			throw IllegalActionException("Opplastet fil er ikke lesbar", "Kan ikke laste opp kryptert fil", "errorCode.illegalAction.fileCannotBeRead")
+			throw IllegalActionException(
+				"Opplastet fil er ikke lesbar",
+				"Kan ikke laste opp kryptert fil",
+				"errorCode.illegalAction.fileCannotBeRead"
+			)
 		} catch (ex2: Exception) {
 			if ("Kan ikke laste opp kryptert fil".equals(ex2.message)) {
 				logger.warn("$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert, ${ex2.message}")
 			} else {
 				logger.error("$innsendingId: Opplasting av vedlegg feilet av ukjent årsak, ${ex2.message}")
 			}
-			throw IllegalActionException("Opplastet fil er ikke lesbar", "Lesing av filen feilet", "errorCode.illegalAction.fileCannotBeRead")
+			throw IllegalActionException(
+				"Opplastet fil er ikke lesbar",
+				"Lesing av filen feilet",
+				"errorCode.illegalAction.fileCannotBeRead"
+			)
 		}
 	}
 
@@ -103,11 +113,11 @@ class Validerer() {
 					for (error in result.errorsList) {
 						sb.append(error.errorCode + " : " + error.details + "\n")
 					}
-					logger.error("Feil liste:\n"+sb.toString())
+					logger.error("Feil liste:\n" + sb.toString())
 				}
 			} catch (ex: Error) {
 				logger.warn("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
-			}	finally {
+			} finally {
 				if (document != null) {
 					document.close()
 				}

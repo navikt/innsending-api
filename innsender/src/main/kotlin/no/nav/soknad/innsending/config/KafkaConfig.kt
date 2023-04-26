@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConstructorBinding
 
 @ConstructorBinding
 @ConfigurationProperties(prefix = "kafka")
-data class KafkaConfig (
+data class KafkaConfig(
 	val applicationId: String,
 	val brokers: String,
 	val security: SecurityConfig,
@@ -13,15 +13,15 @@ data class KafkaConfig (
 )
 
 data class SecurityConfig(
-	val enabled  : String,
-	val protocol : String,
-	val keyStoreType : String,
-	val keyStorePath : String,
-	val keyStorePassword : String,
-	val trustStorePath : String,
-	val trustStorePassword : String
+	val enabled: String,
+	val protocol: String,
+	val keyStoreType: String,
+	val keyStorePath: String,
+	val keyStorePassword: String,
+	val trustStorePath: String,
+	val trustStorePassword: String
 )
 
 data class Topics(
-	val messageTopic : String,
+	val messageTopic: String,
 )

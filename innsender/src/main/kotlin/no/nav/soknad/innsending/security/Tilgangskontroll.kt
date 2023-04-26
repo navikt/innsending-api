@@ -10,7 +10,8 @@ import org.springframework.stereotype.Component
 @Component
 class Tilgangskontroll(
 	val subjectHandler: SubjectHandlerInterface,
-	val pdlService: PdlInterface) {
+	val pdlService: PdlInterface
+) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -40,14 +41,22 @@ class Tilgangskontroll(
 	fun harTilgang(soknadDto: DokumentSoknadDto?, brukerId: String?): Boolean {
 		if (soknadDto == null) {
 			logger.info("Bruker forsøker å hente soknad som ikke finnes i databasen")
-			throw ResourceNotFoundException(null, "Søknad finnes ikke eller er ikke tilgjengelig for innlogget bruker", "errorCode.noAccess.application")
+			throw ResourceNotFoundException(
+				null,
+				"Søknad finnes ikke eller er ikke tilgjengelig for innlogget bruker",
+				"errorCode.noAccess.application"
+			)
 		}
 
 		val idents = hentPersonIdents(hentBrukerFraToken())
 		if (idents.contains(soknadDto.brukerId)) return true
 
 		logger.info("Bruker har ikke tilgang til soknad ${soknadDto.innsendingsId}")
-		throw ResourceNotFoundException(null, "Søknad finnes ikke eller er ikke tilgjengelig for innlogget bruker", "errorCode.noAccess.application")
+		throw ResourceNotFoundException(
+			null,
+			"Søknad finnes ikke eller er ikke tilgjengelig for innlogget bruker",
+			"errorCode.noAccess.application"
+		)
 	}
 
 }

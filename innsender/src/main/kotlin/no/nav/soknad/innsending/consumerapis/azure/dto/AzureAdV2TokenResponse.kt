@@ -4,9 +4,9 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 data class AzureAdV2TokenResponse(
-  val access_token: String,
-  val expires_in: Long,
-  val token_type: String
+	val access_token: String,
+	val expires_in: Long,
+	val token_type: String
 )
 
 fun AzureAdV2TokenResponse.toAzureAdV2Token(): AzureAdV2Token {

@@ -15,48 +15,94 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 
 	fun findByInnsendingsid(innsendingsid: String): Optional<SoknadDbData>
 
-	@Query(value = "SELECT * FROM soknad WHERE innsendtdato is not null AND (innsendingsid = :ettersendingsid OR (ettersendingsid is not null AND ettersendingsid = :ettersendingsid)) ORDER BY innsendtdato DESC", nativeQuery = true)
+	@Query(
+		value = "SELECT * FROM soknad WHERE innsendtdato is not null AND (innsendingsid = :ettersendingsid OR (ettersendingsid is not null AND ettersendingsid = :ettersendingsid)) ORDER BY innsendtdato DESC",
+		nativeQuery = true
+	)
 	fun findNewestByEttersendingsId(@Param("ettersendingsid") ettersendingsid: String): List<SoknadDbData>
 
-	@Query(value = "SELECT * FROM soknad WHERE brukerid in (:brukerids) AND status in (:status) ORDER BY endretdato DESC", nativeQuery = true)
-	fun findSoknadDbByAllBrukerIdAndStatus(@Param("brukerids") brukerids: String, @Param("status") status: String): List<SoknadDbData>
+	@Query(
+		value = "SELECT * FROM soknad WHERE brukerid in (:brukerids) AND status in (:status) ORDER BY endretdato DESC",
+		nativeQuery = true
+	)
+	fun findSoknadDbByAllBrukerIdAndStatus(
+		@Param("brukerids") brukerids: String,
+		@Param("status") status: String
+	): List<SoknadDbData>
 
 	fun findByBrukeridAndStatus(brukerid: String, status: SoknadsStatus): List<SoknadDbData>
 
 	@Transactional
 	@Modifying
-	@Query(value="UPDATE SoknadDbData SET endretdato = :endretdato WHERE id = :id", nativeQuery = false)
+	@Query(value = "UPDATE SoknadDbData SET endretdato = :endretdato WHERE id = :id", nativeQuery = false)
 	fun updateEndretDato(@Param("id") id: Long, @Param("endretdato") endretdato: LocalDateTime)
 
 	@Transactional
 	@Modifying
-	@Query(value="UPDATE SoknadDbData SET endretdato = :endretdato, visningssteg = :visningssteg WHERE id = :id", nativeQuery = false)
-	fun updateVisningsStegAndEndretDato(@Param("id") id: Long, @Param("visningssteg") visningsSteg: Long, @Param("endretdato") endretdato: LocalDateTime)
+	@Query(
+		value = "UPDATE SoknadDbData SET endretdato = :endretdato, visningssteg = :visningssteg WHERE id = :id",
+		nativeQuery = false
+	)
+	fun updateVisningsStegAndEndretDato(
+		@Param("id") id: Long,
+		@Param("visningssteg") visningsSteg: Long,
+		@Param("endretdato") endretdato: LocalDateTime
+	)
 
-	@Query(value = "SELECT * FROM soknad WHERE status = :status AND opprettetdato <= :opprettetFor ORDER BY opprettetdato", nativeQuery = true)
-	fun findAllByStatusAndWithOpprettetdatoBefore(@Param("status") status: String, @Param("opprettetFor") opprettetFor: OffsetDateTime): List<SoknadDbData>
+	@Query(
+		value = "SELECT * FROM soknad WHERE status = :status AND opprettetdato <= :opprettetFor ORDER BY opprettetdato",
+		nativeQuery = true
+	)
+	fun findAllByStatusAndWithOpprettetdatoBefore(
+		@Param("status") status: String,
+		@Param("opprettetFor") opprettetFor: OffsetDateTime
+	): List<SoknadDbData>
 
 	@Query(value = "SELECT * FROM soknad WHERE opprettetdato <= :opprettetFor ORDER BY opprettetdato", nativeQuery = true)
 	fun findAllByOpprettetdatoBefore(@Param("opprettetFor") opprettetFor: OffsetDateTime): List<SoknadDbData>
 
-	@Query(value = "SELECT * FROM soknad WHERE arkiveringsstatus <> 'Arkivert' AND innsendtdato >= :start AND innsendtdato <= :end ORDER BY innsendtdato", nativeQuery = true)
-	fun findAllNotArchivedAndInnsendtdatoBetween(@Param("start") start: LocalDateTime, @Param("end") end: LocalDateTime): List<SoknadDbData>
+	@Query(
+		value = "SELECT * FROM soknad WHERE arkiveringsstatus <> 'Arkivert' AND innsendtdato >= :start AND innsendtdato <= :end ORDER BY innsendtdato",
+		nativeQuery = true
+	)
+	fun findAllNotArchivedAndInnsendtdatoBetween(
+		@Param("start") start: LocalDateTime,
+		@Param("end") end: LocalDateTime
+	): List<SoknadDbData>
 
 	@Transactional
 	@Modifying
-	@Query(value = "UPDATE SoknadDbData SET arkiveringsstatus = :arkiveringsStatus WHERE innsendingsid in (:innsendingsids)", nativeQuery = false)
-	fun updateArkiveringsStatus(arkiveringsStatus: ArkiveringsStatus, @Param("innsendingsids") innsendingsids: List<String>)
+	@Query(
+		value = "UPDATE SoknadDbData SET arkiveringsstatus = :arkiveringsStatus WHERE innsendingsid in (:innsendingsids)",
+		nativeQuery = false
+	)
+	fun updateArkiveringsStatus(
+		arkiveringsStatus: ArkiveringsStatus,
+		@Param("innsendingsids") innsendingsids: List<String>
+	)
 
-	@Query(value = "SELECT COUNT(*) FROM soknad WHERE arkiveringsstatus = 'Arkivert' AND status = 'Innsendt'", nativeQuery = true)
+	@Query(
+		value = "SELECT COUNT(*) FROM soknad WHERE arkiveringsstatus = 'Arkivert' AND status = 'Innsendt'",
+		nativeQuery = true
+	)
 	fun countErArkivert(): Long
 
-	@Query(value = "SELECT COUNT(*) FROM soknad WHERE arkiveringsstatus = 'ArkiveringFeilet' AND status  = 'Innsendt'", nativeQuery = true)
+	@Query(
+		value = "SELECT COUNT(*) FROM soknad WHERE arkiveringsstatus = 'ArkiveringFeilet' AND status  = 'Innsendt'",
+		nativeQuery = true
+	)
 	fun countArkiveringFeilet(): Long
 
-	@Query(value = "SELECT COUNT(*) FROM soknad WHERE arkiveringsstatus = 'IkkeSatt' AND status  = 'Innsendt' AND innsendtdato < :before", nativeQuery = true)
+	@Query(
+		value = "SELECT COUNT(*) FROM soknad WHERE arkiveringsstatus = 'IkkeSatt' AND status  = 'Innsendt' AND innsendtdato < :before",
+		nativeQuery = true
+	)
 	fun countInnsendtIkkeBehandlet(@Param("before") before: LocalDateTime): Long
 
-	@Query(value = "SELECT innsendingsid FROM soknad WHERE arkiveringsstatus = 'IkkeSatt' AND status  = 'Innsendt' AND innsendtdato < :before", nativeQuery = true)
+	@Query(
+		value = "SELECT innsendingsid FROM soknad WHERE arkiveringsstatus = 'IkkeSatt' AND status  = 'Innsendt' AND innsendtdato < :before",
+		nativeQuery = true
+	)
 	fun findInnsendtAndArkiveringsStatusIkkeSatt(@Param("before") before: LocalDateTime): List<String>
 
 }

@@ -2,8 +2,8 @@ package no.nav.soknad.innsending.service
 
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
-import no.nav.soknad.innsending.consumerapis.saf.SafSelvbetjeningApiTmp
 import no.nav.soknad.innsending.consumerapis.saf.SafClient
+import no.nav.soknad.innsending.consumerapis.saf.SafSelvbetjeningApiTmp
 import no.nav.soknad.innsending.util.testpersonid
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -32,9 +32,9 @@ class SafServiceTest {
 
 		assertTrue(innsendteSoknader.isNotEmpty())
 		assertEquals(5, innsendteSoknader.size)
-		assertTrue(innsendteSoknader.all{ it.innsendtVedleggDtos.isNotEmpty()} )
-		assertTrue(innsendteSoknader.all{ it.innsendtVedleggDtos.filter { "L7".equals(it.vedleggsnr, true) }.isEmpty()} )
-		assertTrue(innsendteSoknader.all{ it.innsendtVedleggDtos.filter { it.vedleggsnr.startsWith("NAVe") }.isEmpty()} )
+		assertTrue(innsendteSoknader.all { it.innsendtVedleggDtos.isNotEmpty() })
+		assertTrue(innsendteSoknader.all { it.innsendtVedleggDtos.filter { "L7".equals(it.vedleggsnr, true) }.isEmpty() })
+		assertTrue(innsendteSoknader.all { it.innsendtVedleggDtos.filter { it.vedleggsnr.startsWith("NAVe") }.isEmpty() })
 	}
 
 	@Test

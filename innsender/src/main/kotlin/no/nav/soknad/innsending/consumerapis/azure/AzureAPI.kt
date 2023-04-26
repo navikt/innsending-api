@@ -1,6 +1,8 @@
 package no.nav.soknad.innsending.consumerapis.azure
 
 import no.nav.soknad.innsending.config.RestConfig
+import no.nav.soknad.innsending.consumerapis.azure.dto.AzureAdV2TokenResponse
+import no.nav.soknad.innsending.consumerapis.azure.dto.toAzureAdV2Token
 import no.nav.soknad.innsending.util.Constants
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
@@ -11,8 +13,6 @@ import org.springframework.util.MultiValueMap
 import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToMono
-import no.nav.soknad.innsending.consumerapis.azure.dto.AzureAdV2TokenResponse
-import no.nav.soknad.innsending.consumerapis.azure.dto.toAzureAdV2Token
 
 @Service
 @Profile("test | dev | prod")
@@ -35,10 +35,10 @@ class AzureAPI(
 
 	private fun getServiceUserAccessToken(): AzureAdV2TokenResponse? {
 		val map: MultiValueMap<String, String> = LinkedMultiValueMap()
-		map.add("client_id",restConfig.clientId)
-		map.add("client_secret",restConfig.clientSecret)
-		map.add("scope",restConfig.pdlScope)
-		map.add("grant_type","client_credentials")
+		map.add("client_id", restConfig.clientId)
+		map.add("client_secret", restConfig.clientSecret)
+		map.add("scope", restConfig.pdlScope)
+		map.add("grant_type", "client_credentials")
 
 		try {
 			return azureWebClient.post()

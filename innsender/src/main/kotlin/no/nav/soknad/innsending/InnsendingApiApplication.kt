@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.runApplication
 import org.springframework.transaction.annotation.EnableTransactionManagement
 
-@SpringBootApplication (exclude = [SecurityAutoConfiguration::class])
+@SpringBootApplication(exclude = [SecurityAutoConfiguration::class])
 @EnableTransactionManagement
 @ConfigurationPropertiesScan
 class InnsendingApiApplication

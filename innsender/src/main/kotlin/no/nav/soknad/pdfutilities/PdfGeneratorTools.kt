@@ -42,17 +42,28 @@ const val INNRYKK = 50f
 
 class PdfGenerator {
 
-	private val tekster: Properties = PdfGenerator::class.java.getResourceAsStream("/tekster/innholdstekster_nb.properties").use {
-		Properties().apply { load(it) }
-	}
+	private val tekster: Properties =
+		PdfGenerator::class.java.getResourceAsStream("/tekster/innholdstekster_nb.properties").use {
+			Properties().apply { load(it) }
+		}
 
-	fun lagKvitteringsSide(soknad: DokumentSoknadDto, sammensattNavn: String?, opplastedeVedlegg: List<VedleggDto>, manglendeObligatoriskeVedlegg: List<VedleggDto>): ByteArray {
+	fun lagKvitteringsSide(
+		soknad: DokumentSoknadDto,
+		sammensattNavn: String?,
+		opplastedeVedlegg: List<VedleggDto>,
+		manglendeObligatoriskeVedlegg: List<VedleggDto>
+	): ByteArray {
 		val vedleggOpplastet = opplastedeVedlegg.filter { !it.erHoveddokument }
 		val sendSenere = manglendeObligatoriskeVedlegg
-		val sendesIkke = soknad.vedleggsListe.filter{ !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesIkke }
-		val sendesAvAndre = soknad.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre }
-		val alleredeInnsendt = soknad.vedleggsListe.filter { !it.erHoveddokument &&
-			it.opplastingsStatus == OpplastingsStatusDto.innsendt && (it.innsendtdato ?: it.opprettetdato) < soknad.opprettetDato }
+		val sendesIkke =
+			soknad.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesIkke }
+		val sendesAvAndre =
+			soknad.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre }
+		val alleredeInnsendt = soknad.vedleggsListe.filter {
+			!it.erHoveddokument &&
+				it.opplastingsStatus == OpplastingsStatusDto.innsendt && (it.innsendtdato
+				?: it.opprettetdato) < soknad.opprettetDato
+		}
 
 		val fnr = soknad.brukerId
 		val personInfo = if (sammensattNavn == null) fnr else "$sammensattNavn, $fnr"
@@ -92,7 +103,7 @@ class PdfGenerator {
 				.leggTilTekst(antallInnsendt, FONT_VANLIG, LINJEAVSTAND)
 				.flyttNedMed(20f)
 				.leggTilDokumenter(vedleggOpplastet, vedleggSendtHeader)
-				.flyttNedMed(if(vedleggOpplastet.isEmpty()) 0f else 20f)
+				.flyttNedMed(if (vedleggOpplastet.isEmpty()) 0f else 20f)
 				.leggTilDokumenter(sendSenere, vedleggIkkeSendtHeader)
 				.flyttNedMed(if (sendSenere.isEmpty()) 0f else 20f)
 				.leggTilDokumenter(sendesAvAndre, vedleggSendesAvAndreHeader)
@@ -205,7 +216,10 @@ class PageBuilder(private val pdfBuilder: PdfBuilder) {
 	init {
 		pdfBuilder.getPdDocument().addPage(page)
 		try {
-			logo = JPEGFactory.createFromStream(pdfBuilder.getPdDocument(), PageBuilder::class.java.getResourceAsStream("/icons/navlogo.jpg"))
+			logo = JPEGFactory.createFromStream(
+				pdfBuilder.getPdDocument(),
+				PageBuilder::class.java.getResourceAsStream("/icons/navlogo.jpg")
+			)
 			contentStream = PDPageContentStream(pdfBuilder.getPdDocument(), page, AppendMode.APPEND, true)
 		} catch (e: IOException) {
 			throw Exception("navlogo.jpg er fjernet fra prosjektet, eller feilet under åpning av contentStream.", e)
@@ -213,7 +227,7 @@ class PageBuilder(private val pdfBuilder: PdfBuilder) {
 	}
 
 	fun getFont(path: String): PDFont {
-		try	{
+		try {
 			val inputStream = ClassPathResource(path).getInputStream()
 			return PDType0Font.load(getPdDocument(), inputStream)
 		} catch (ex: IOException) {
@@ -270,6 +284,7 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 			return arialFont as PDFont
 		}
 	}
+
 	private fun hentArialBold(): PDFont {
 		if (arialBoldFont == null) {
 			arialBoldFont = pageBuilder.getFont(ARIALBOLD_FONT_PATH)
@@ -319,7 +334,7 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 		linjeavstand: Float,
 		midstilt: Boolean
 	) {
-		val konvertertTekst = regex.replace(tekst," ")
+		val konvertertTekst = regex.replace(tekst, " ")
 		var startIndex = 0
 		val height = font.fontDescriptor.fontBoundingBox.height / 1000 * fontSize
 		while (startIndex < konvertertTekst.length - 1) {
@@ -390,7 +405,7 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 				.leggTilHeader(overskrift, FONT_LITEN_HEADER)
 				.flyttNedMed(5f)
 			for (dokument in dokumenter) {
-				textBuilder = textBuilder.leggTilTekst("* "+ dokument.label, FONT_VANLIG, LINJEAVSTAND)
+				textBuilder = textBuilder.leggTilTekst("* " + dokument.label, FONT_VANLIG, LINJEAVSTAND)
 			}
 		} else {
 			textBuilder = textBuilder.leggTilTekst("", FONT_VANLIG, 0f)

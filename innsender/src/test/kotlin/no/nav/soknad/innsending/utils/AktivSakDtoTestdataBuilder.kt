@@ -22,5 +22,6 @@ data class AktivSakDtoTestdataBuilder(
 		this.innsendtdato = soknad.innsendtdato!!.atOffset(ZoneOffset.UTC)
 		this.innsendingsid = soknad.innsendingsid
 	}
+
 	fun build() = AktivSakDto(skjemanr, tittel, tema, innsendtdato, false, emptyList(), innsendingsid)
 }

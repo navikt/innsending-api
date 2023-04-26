@@ -13,7 +13,6 @@
 		"safselvbetjening-q1.dev-fss-pub.nais.io",
 		"saf.dev-fss-pub.nais.io",
 		"tokendings.dev-gcp.nais.io",
-
 		"soknadsfillager-gcp.intern.dev.nav.no",
 		"soknadsmottaker-gcp.intern.dev.nav.no"
 	],
@@ -53,5 +52,4 @@
 		"KAFKA_SECURITY": "TRUE",
 		"KAFKA_MESSAGE_TOPIC": "team-soknad.privat-soknadinnsending-messages-v2-dev"
 	}
-
 }

@@ -10,19 +10,21 @@ import org.springframework.stereotype.Service
 @Service
 @Profile("spring | test | docker | default")
 @Qualifier("mottaker")
-class MottakerAPITest: MottakerInterface, HealthRequestInterface {
+class MottakerAPITest : MottakerInterface, HealthRequestInterface {
 
 	override fun ping(): String {
 		return "pong"
 	}
+
 	override fun isReady(): String {
 		return "ok"
 	}
+
 	override fun isAlive(): String {
 		return "ok"
 	}
 
-	override fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggsListe: List<VedleggDto>){
+	override fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggsListe: List<VedleggDto>) {
 
 	}
 
