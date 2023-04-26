@@ -1,2 +1,1 @@
-ALTER TABLE vedlegg
-	DROP COLUMN dokument;
+ALTER TABLE vedlegg DROP COLUMN dokument;

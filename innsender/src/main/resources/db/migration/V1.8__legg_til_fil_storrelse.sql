@@ -1,2 +1,1 @@
-ALTER TABLE fil
-	ADD COLUMN storrelse int;
+ALTER TABLE fil ADD COLUMN storrelse int;

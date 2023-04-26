@@ -1,2 +1,1 @@
-ALTER TABLE vedlegg
-	ADD COLUMN erpakrevd boolean;
+ALTER TABLE vedlegg ADD COLUMN erpakrevd boolean;

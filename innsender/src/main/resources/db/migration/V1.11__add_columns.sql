@@ -1,5 +1,3 @@
-ALTER TABLE vedlegg
-	ADD COLUMN label VARCHAR(250);
-ALTER TABLE vedlegg
-	ADD COLUMN beskrivelse VARCHAR(4000);
+ALTER TABLE vedlegg ADD COLUMN label VARCHAR(250);
+ALTER TABLE vedlegg ADD COLUMN beskrivelse VARCHAR(4000);
 
