@@ -5,6 +5,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.api.HealthApi
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
+import no.nav.soknad.innsending.model.ApplicationStatus
+import no.nav.soknad.innsending.model.DependencyStatus
 import no.nav.soknad.innsending.repository.AliveRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.client.HttpServerErrorException
+import java.time.OffsetDateTime
 
 @RestController
 @RequestMapping(value = ["/health"])
@@ -42,18 +45,61 @@ class HealthCheck(
 	override fun ping() = ResponseEntity.status(HttpStatus.OK).body("pong")
 
 
+	@GetMapping("/status")
+	override fun getStatus(): ResponseEntity<ApplicationStatus> {
+		val dependencyStatusList = mutableListOf<DependencyStatus>()
+		val backends = getBackends()
+		runBlocking {
+			backends
+				.forEach {
+					if (GlobalScope.async { it.dependencyEndpoint.invoke() }.await() != it.expectedResponse)
+						dependencyStatusList.add(DependencyStatus(it.dependencyName, "Error", it.severity))
+					else
+						dependencyStatusList.add(DependencyStatus(it.dependencyName, "Ok", it.severity))
+				}
+		}
+		val status = ApplicationStatus("Innsending-api", dependencyStatusList, OffsetDateTime.now())
+
+		return ResponseEntity.status(HttpStatus.OK).body(status)
+	}
+
+
 	private fun applicationIsReady(): Boolean {
-		val dependencies = listOf(
-			Dependency({ fillagerAPI.isReady() }, "ok", "FileStorage"),
-			Dependency({ mottakerAPI.isReady() }, "ok", "SoknadsMottaker"),
-			Dependency({ notifikasjonAPI.isReady() }, "ok", "Notifikasjon"),
-			Dependency({ pdlAPI.isReady() }, "ok", "PDL"),
-			Dependency({ safAPI.isReady() }, "ok", "SAF"),
-			Dependency({ aliveRepository.findTestById(1L) }, "ok", "Database")
-		)
+		val dependencies = getBackends()
 		throwExceptionIfDependenciesAreDown(dependencies)
 
 		return true
+	}
+
+	private fun getBackends(): List<Dependency> {
+		return listOf(
+			Dependency({ fillagerAPI.isReady() }, "ok", "Soknadsfillager", "Critical - Send in of applications will fail"),
+			Dependency({ mottakerAPI.isReady() }, "ok", "SoknadsMottaker", "Critical  - Send in of applications will fail"),
+			Dependency(
+				{ notifikasjonAPI.isReady() },
+				"ok",
+				"Soknadsmottaker",
+				"Critical - User notifictaions will not be published or cancelled"
+			),
+			Dependency(
+				{ pdlAPI.isReady() },
+				"ok",
+				"PDL",
+				"Non-Critical - Might affect users that recently have changed user identity"
+			),
+			Dependency(
+				{ safAPI.isReady() },
+				"ok",
+				"SAF",
+				"Non-Critical - Might affect information supplied in new application for sending supplenmentary documentation"
+			),
+			Dependency(
+				{ aliveRepository.findTestById(1L) },
+				"ok",
+				"Database",
+				"Critical - The application will not be able to create, read, update or delete the users applications"
+			)
+		)
 	}
 
 	/**
@@ -77,7 +123,8 @@ class HealthCheck(
 	private data class Dependency(
 		val dependencyEndpoint: () -> String,
 		val expectedResponse: String,
-		val dependencyName: String
+		val dependencyName: String,
+		val severity: String
 	)
 
 }

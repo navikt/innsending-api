@@ -1,0 +1,19 @@
+{
+	"env-name": "prod-gcp",
+	"max_created_expected": 1000,
+	"max_innsendt_expected": 1000,
+	"number_of_errors": 10,
+	"error_log_url": "https://logs.adeo.no/app/discover#/view/170a6860-df4c-11ed-8b42-0b0644af4500",
+	"archiving_failed_log_url": "https://logs.adeo.no/app/discover#/view/6421f1b0-df4f-11ed-8b42-0b0644af4500",
+	"missing_archiving_log_url": "https://logs.adeo.no/app/discover#/view/90fa2110-df51-11ed-8b42-0b0644af4500",
+	"application_created_log_url": "https://logs.adeo.no/app/discover#/view/8d16d6f0-df52-11ed-8b42-0b0644af4500",
+	"application_sent_in_log_url": "https://logs.adeo.no/app/discover#/view/24717b90-df53-11ed-8b42-0b0644af4500",
+	"expected_period": "1h",
+	"continued_expected_period": "3h",
+	"common-labels": {
+		"service": "innsending-api",
+		"namespace": "fyllut-sendinn",
+		"special_type_to_use_in_alertmanager_config": "fyllut-sendinn-alerts",
+		"alert_type": "custom"
+	}
+}

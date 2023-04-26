@@ -639,6 +639,24 @@ paths:
       tags:
         - health
 
+  /health/status:
+    get:
+      summary: Returns detailed status of the application's backend dependencies
+      description: Checks the application's backend dependencies and returns a summary of connection status
+      operationId: getStatus
+
+      security: [ ]   # No security
+      responses:
+        '200':
+          description: Successful operation; application is responding
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationStatus"
+
+      tags:
+        - health
+
 
 components:
   schemas:
@@ -671,6 +689,30 @@ components:
           items:
             $ref: "#/components/schemas/InnsendtVedleggDto"
 
+    ApplicationStatus:
+      type: object
+      description: Applikasjonsnavn og liste med konnektivitets status mot applikasjonens backend avhengigheter.
+      required:
+        - applicationName
+        - checked
+        - dependencyStatusList
+
+      properties:
+        applicationName:
+          type: string
+          description: Navn på applikasjonen
+          example: Innsending-api
+        checkedDate:
+          type: string
+          format: date-time
+          description: Dato og tid som UTC status sjekket
+          example: 2023-03-30T14:10:00Z
+        dependencyStatusList:
+          type: array
+          description: Liste med status av hver av avhengighetene til denne applikasjonen
+          items:
+            $ref: "#/components/schemas/DependencyStatus"
+
     ArkiveringsStatusDto:
       type: string
       enum: [ "IkkeSatt", "Arkivert", "ArkiveringFeilet" ]
@@ -700,6 +742,27 @@ components:
       type: string
       description: Ident til søker som har opprettet søknad i fyllUt tjenesten.
       example: 12128012345
+
+    DependencyStatus:
+      type: object
+      description: Informasjon om connection status og konsekvens ved feil til baksystem som applikasjonen bruker
+      required:
+        - name
+        - status
+        - severity
+      properties:
+        name:
+          type: string
+          description: Navn til avhengigheten
+          example: Soknadsmottaker eller Database
+        status:
+          type: string
+          description: Status på forbindelsen til avhengigheten
+          example: Ok eller Error
+        severity:
+          type: string
+          description: Beskrivelse av konsekvensen dersom statusen er Error
+          example: Critical - Send in of applications will fail
 
     Document:
       type: string

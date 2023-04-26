@@ -29,7 +29,7 @@ class Validerer() {
 			// Kontroller at PDF er lovlig, dvs. ikke encrypted og passordbeskyttet
 			erGyldigPdf(innsendingId, file)
 		} else if (!isImage(file)) {
-			logger.error("$innsendingId: $fileName har ugylding filtype for opplasting. Filstart = ${if (file.size >= 4) (file[0] + file[1] + file[3] + file[4]) else file[0]}")
+			logger.warn("$innsendingId: $fileName har ugylding filtype for opplasting. Filstart = ${if (file.size >= 4) (file[0] + file[1] + file[3] + file[4]) else file[0]}")
 			throw IllegalActionException(
 				"$innsendingId: Ugyldig filtype for opplasting",
 				"Kan kun laste opp filer av type PDF, JPEG, PNG og IMG",
@@ -55,14 +55,18 @@ class Validerer() {
 				PDDocument.load(bais).use { document -> erGyldigPdDocument(innsendingId, document) }
 			}
 		} catch (ex: InvalidPasswordException) {
-			logger.error("$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert, ${ex.message}")
+			logger.warn("$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert, ${ex.message}")
 			throw IllegalActionException(
 				"Opplastet fil er ikke lesbar",
 				"Kan ikke laste opp kryptert fil",
 				"errorCode.illegalAction.fileCannotBeRead"
 			)
 		} catch (ex2: Exception) {
-			logger.error("$innsendingId: Opplasting av vedlegg feilet av ukjent årsak, ${ex2.message}")
+			if ("Kan ikke laste opp kryptert fil".equals(ex2.message)) {
+				logger.warn("$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert, ${ex2.message}")
+			} else {
+				logger.error("$innsendingId: Opplasting av vedlegg feilet av ukjent årsak, ${ex2.message}")
+			}
 			throw IllegalActionException(
 				"Opplastet fil er ikke lesbar",
 				"Lesing av filen feilet",
@@ -73,12 +77,8 @@ class Validerer() {
 
 	private fun erGyldigPdDocument(innsendingId: String, document: PDDocument) {
 		if (document.isEncrypted()) {
-			logger.error("$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert")
-			throw IllegalActionException(
-				"Opplastet fil er ikke lesbar",
-				"Kan ikke laste opp kryptert fil",
-				"errorCode.illegalAction.fileCannotBeRead"
-			)
+			logger.warn("$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert")
+			throw RuntimeException("Kan ikke laste opp kryptert fil")
 		}
 	}
 
@@ -107,7 +107,7 @@ class Validerer() {
 				result = document.result
 				return result.isValid
 			} catch (ex: SyntaxValidationException) {
-				logger.error("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
+				logger.warn("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
 				if (result != null) {
 					val sb = StringBuilder()
 					for (error in result.errorsList) {
@@ -116,7 +116,7 @@ class Validerer() {
 					logger.error("Feil liste:\n" + sb.toString())
 				}
 			} catch (ex: Error) {
-				logger.error("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
+				logger.warn("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
 			} finally {
 				if (document != null) {
 					document.close()

@@ -1,8 +1,9 @@
 # innsending-api
 
 Backend for innsending av dokumenter. Brukes av [FyllUt](https://github.com/navikt/skjemabygging-formio)
-og [SendInn](https://github.com/navikt/send-inn-frontend) og lagrer
-søknadsfilene i [Søknads fillager](https://github.com/navikt/soknadsfillager) mens metadataen for søknaden blir sendt
+og [SendInn](https://github.com/navikt/send-inn-frontend). Før søknaden blir sendt inn mellomlagres den sammen med
+metadataen i `innsending-api`,og når søknaden sendes inn blir søknadsfilene sendt videre
+til [Søknads fillager](https://github.com/navikt/soknadsfillager) mens metadataen for søknaden blir sendt
 til [Søknads mottaker](https://github.com/navikt/soknadsmottaker).
 Se [Arktitektur Wiki](https://github.com/navikt/archiving-infrastructure/wiki) for mer informasjon om hvordan oppsettet
 fungerer.

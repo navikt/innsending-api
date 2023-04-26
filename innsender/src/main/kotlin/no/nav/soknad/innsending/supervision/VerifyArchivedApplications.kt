@@ -14,20 +14,20 @@ class VerifyArchivedApplications(
 	private val leaderSelectionUtility: LeaderSelectionUtility,
 	private val scheduledOperationsService: ScheduledOperationsService,
 	private val metrics: InnsenderMetrics,
-	@Value("\${verifyArchivedApplications.offsetHours}") private val offsetHours: Long
+	@Value("\${verifyArchivedApplications.offsetMinutes}") private val offsetMinutes: Long
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	init {
-		logger.info("Initializing scheduled job ${javaClass.kotlin.simpleName} (offsetHours=$offsetHours)")
+		logger.info("Initializing scheduled job ${javaClass.kotlin.simpleName} (offsetHours=$offsetMinutes)")
 	}
 
 	@Scheduled(cron = "\${cron.runVerifyArchivedApplications}")
 	fun run() {
 		try {
 			if (leaderSelectionUtility.isLeader()) {
-				scheduledOperationsService.checkIfApplicationsAreArchived(offsetHours)
+				scheduledOperationsService.checkIfApplicationsAreArchived(offsetMinutes)
 				metrics.updateJobLastSuccess(JOB_NAME)
 			}
 		} catch (e: Exception) {
