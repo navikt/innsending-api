@@ -156,6 +156,7 @@ class EttersendingService(
 		)
 
 		// Det mangler vedlegg så det opprettes en ettersendingssøknad av systemet
+		// Dagpenger (DAG) har sin egen løsning for å opprette ettersendingssøknader
 		if (manglende.isNotEmpty() && !"DAG".equals(innsendtSoknadDto.tema, true)) {
 			logger.info("${soknadDtoInput.innsendingsId}: Skal opprette ettersendingssoknad")
 			opprettEttersendingsSoknad(
