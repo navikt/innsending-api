@@ -814,6 +814,10 @@ class SoknadServiceTest {
 	}
 
 
+	/**
+	 *  A sent in application might have state archived (=Arkivert), archived failed (ArkiveringFeilet) or not yet handled (IkkeSatt).
+	 *  All attachment files to an applications shall be deleted after a given time when sent in and archived
+	 */
 	@Test
 	fun testAutomatiskSlettingAvFilerTilInnsendteSoknader() {
 		val soknadService = lagSoknadService()
@@ -823,6 +827,7 @@ class SoknadServiceTest {
 		val spraak = "nb_NO"
 
 		val dokumentSoknadDtoList = mutableListOf<DokumentSoknadDto>()
+		dokumentSoknadDtoList.add(soknadService.opprettSoknad(brukerid, skjemanr, spraak, listOf("W1")))
 		dokumentSoknadDtoList.add(soknadService.opprettSoknad(brukerid, skjemanr, spraak, listOf("W1")))
 		dokumentSoknadDtoList.add(soknadService.opprettSoknad(brukerid, skjemanr, spraak, listOf("W1")))
 
@@ -837,29 +842,23 @@ class SoknadServiceTest {
 		val vedleggDtos2 = slot<List<VedleggDto>>()
 		every { soknadsmottakerAPI.sendInnSoknad(capture(soknad), capture(vedleggDtos2)) } returns Unit
 
-		val kvitteringsDto = soknadService.sendInnSoknad(dokumentSoknadDtoList[0])
-		assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		// Check that reciept is returned for each sent in application
+		val kvitteringsDtoList = mutableListOf<KvitteringsDto>()
+		dokumentSoknadDtoList.forEach {kvitteringsDtoList.add(soknadService.sendInnSoknad(it))}
+		assertTrue(kvitteringsDtoList.size == dokumentSoknadDtoList.size)
 
-		val filDtos = soknadService.hentFiler(dokumentSoknadDtoList[0], dokumentSoknadDtoList[0].innsendingsId!!,
-			dokumentSoknadDtoList[0].vedleggsListe.first { it.erHoveddokument && !it.erVariant }.id!!)
-		assertTrue(filDtos.isNotEmpty())
+		// Check that the applications attachments are kept after the applications are sent in
+		dokumentSoknadDtoList.all { soknadService.hentFiler(it, it.innsendingsId!!, it.vedleggsListe.first { it.erHoveddokument && !it.erVariant }.id!!).isNotEmpty() }
 
+		// First archived, second archiving failed, third not handled
+		simulateKafkaPolling(true, dokumentSoknadDtoList[0].innsendingsId!!)
+		simulateKafkaPolling(false, dokumentSoknadDtoList[1].innsendingsId!!)
+
+		// Delete attachment files for all sent in and archived applications
 		soknadService.slettfilerTilInnsendteSoknader(-1)
-		val innsendtFilDtos = soknadService.hentFiler(dokumentSoknadDtoList[0], dokumentSoknadDtoList[0].innsendingsId!!,
-			dokumentSoknadDtoList[0].vedleggsListe.first { it.erHoveddokument && !it.erVariant }.id!!)
-		assertTrue(innsendtFilDtos.isEmpty())
 
-		val ikkeInnsendtfilDtos = soknadService.hentFiler(dokumentSoknadDtoList[1], dokumentSoknadDtoList[1].innsendingsId!!,
-			dokumentSoknadDtoList[1].vedleggsListe.first { it.erHoveddokument && !it.erVariant }.id!!)
-		assertTrue(ikkeInnsendtfilDtos.isNotEmpty())
-
-		val kvitteringsDto1 = soknadService.sendInnSoknad(dokumentSoknadDtoList[1])
-		assertTrue(kvitteringsDto1.hoveddokumentRef != null)
-
-		soknadService.slettfilerTilInnsendteSoknader(1)
-		val filDtos1 = soknadService.hentFiler(dokumentSoknadDtoList[1], dokumentSoknadDtoList[1].innsendingsId!!,
-			dokumentSoknadDtoList[1].vedleggsListe.first { it.erHoveddokument && !it.erVariant }.id!!)
-		assertTrue(filDtos1.isNotEmpty())
+		dokumentSoknadDtoList.subList(0,0).all { soknadService.hentFiler(it, it.innsendingsId!!, it.vedleggsListe.first { it.erHoveddokument && !it.erVariant }.id!!).isEmpty() }
+		dokumentSoknadDtoList.subList(1,2).all { soknadService.hentFiler(it, it.innsendingsId!!, it.vedleggsListe.first { it.erHoveddokument && !it.erVariant }.id!!).isNotEmpty() }
 
 	}
 
@@ -913,4 +912,9 @@ class SoknadServiceTest {
 	private fun lagDokumentSoknad(tema: String, skjemanr: String): DokumentSoknadDto {
 		return lagDokumentSoknad(testpersonid, skjemanr, "nb_NO", "Fullmaktsskjema", tema )
 	}
+
+	private fun simulateKafkaPolling(ok: Boolean, innsendingId: String) {
+		soknadRepository.updateArkiveringsStatus((if (ok) ArkiveringsStatus.Arkivert else ArkiveringsStatus.ArkiveringFeilet), listOf(innsendingId))
+	}
+
 }

@@ -42,12 +42,14 @@ interface FilRepository : JpaRepository<FilDbData, Long> {
 	@Modifying
 	@Query(value = "DELETE FROM fil WHERE vedleggsId in " +
 		"(select v.id from vedlegg v, soknad s where " +
-		"  s.status = 'Innsendt' and" +
+		"  s.status = ':status' and s.arkiveringsstatus = ':arkiveringsstatus' and" +
 		"  s.innsendtdato between current_date - (100 + :eldreEnn) and" +
 		"  current_date - :eldreEnn and" +
 		"  s.id = v.soknadsid" +
 		")", nativeQuery = true)
-	fun deleteAllBySoknadStatusAndInnsendtdato(@Param("eldreEnn") eldreEnn: Int)
+	fun deleteAllBySoknadStatusAndInnsendtdato(@Param("eldreEnn") eldreEnn: Int,
+																						 @Param("status") status: String = SoknadsStatus.Innsendt.name,
+																						 @Param("arkiveringsstatus") arkiveringsstatus: String = ArkiveringsStatus.Arkivert.name)
 
 	@Query(value = "SELECT sum(pg_database_size(pg_database.datname)) FROM pg_database", nativeQuery = true)
 	fun totalDbSize(): Long
