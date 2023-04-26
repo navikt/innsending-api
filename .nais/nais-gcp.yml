@@ -65,7 +65,7 @@ spec:
     outbound:
       external:
       {{#each outboundExternalHosts}}
-       - host: "{{this}}"
+        - host: "{{this}}"
       {{/each}}
       rules:
       {{#each outboundRulesGcpApplications}}

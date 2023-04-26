@@ -28,7 +28,7 @@ cron:
 ettersendingsfrist: 14
 
 verifyArchivedApplications:
-  offsetHours: 2
+  offsetMinutes: 95
 
 kafka:
   applicationId: ${KAFKA_STREAMS_APPLICATION_ID}
@@ -132,7 +132,7 @@ cron:
   runVerifyArchivedApplications: 0 */11 * ? * *
 
 verifyArchivedApplications:
-  offsetHours: 1
+  offsetMinutes: 10
   timespanHours: 24
 ---
 spring:

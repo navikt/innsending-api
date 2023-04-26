@@ -1,0 +1,116 @@
+apiVersion: "monitoring.coreos.com/v1"
+kind: PrometheusRule
+metadata:
+  labels:
+    team: team-soknad
+  name: innsending-api-alerts
+  namespace: team-soknad
+spec:
+  groups:
+    - name: {{ env-name }}
+      rules:
+        - alert: Archiving failed
+          expr: sum(innsendingapi_archiving_of_applications_failed_total{namespace="team-soknad"}) > 0
+          for: 1m
+          annotations:
+            title: "Archiving service has reported failure when archiving one or more applications"
+            consequence: "Actions must be taken to fix the problem(s) and trigger retry in order to archive these application(s)"
+            action: {{ archiving_failed_log_url }}
+            summary: "Service has reported archiving of one or more application(s) has failed."
+            sla: "Action should be taken as soon as possible"
+          labels:
+            service: "innsending-api"
+            namespace: fyllut-sendinn
+            special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
+            alert_type: custom
+            severity: critical
+        - alert: High number of errors
+          expr: sum (increase(logd_messages_total{log_app="innsending-api",log_level=~"Error"}[5m])) > {{ number_of_errors }}
+          for: 5m
+          annotations:
+            title: "High number of errors logged"
+            consequence: "There can be different causes for errors, check logs for cause and evaluation of consequences."
+            action: {{ error_log_url }}
+            summary: "Service has reported more than {{number_of_error}} errors within 5 minutes."
+            sla: "Action should be taken as soon as possible"
+          labels:
+            service: "innsending-api"
+            namespace: fyllut-sendinn
+            special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
+            alert_type: custom
+            severity: critical
+        - alert: Not yet archived
+          expr: sum(innsendingapi_applications_absent_in_archive_total{namespace="team-soknad"}) > 0
+          for: 1m
+          annotations:
+            title: "Missing response from archiving service for one or more sent in applications"
+            consequence: "Actions might be neccessary in order for re-sending the failed application(s)"
+            action: {{ missing_archiving_log_url }}
+            summary: "Service has reported missing archiving response for application(s)."
+            sla: "Action should be taken as soon as possible"
+          labels:
+            service: "innsending-api"
+            namespace: fyllut-sendinn
+            special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
+            alert_type: custom
+            severity: warning
+        - alert: Consistent high number of created applications
+          expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT"}[ {{continued_expected_period}} ])) by (operation)) > 3*{{ max_created_expected }}
+          for: 1m
+          annotations:
+            title: "Consistent high number of applications have been created"
+            consequence: "If this continues it might have consequences for resources used."
+            action: {{ application_created_log_url }}
+            summary: "Service has reported that a number of created applications has been at a high level for {{continued_expected_period}}."
+            sla: "Check logs within 3h"
+          labels:
+            service: "innsending-api"
+            namespace: fyllut-sendinn
+            special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
+            alert_type: custom
+            severity: warning
+        - alert: High number of created applications
+          expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT"}[ {{expected_period}} ])) by (operation)) > {{ max_created_expected }}
+          for: 1m
+          annotations:
+            title: "Unusual number of applications have been created"
+            consequence: "If this continues it might have consequences for resources used."
+            action: {{ application_created_log_url }}
+            summary: "Service has reported that the number of created applications last {{expected_period}} is higher than usual."
+            sla: "Check logs within 3h"
+          labels:
+            service: "innsending-api"
+            namespace: fyllut-sendinn
+            special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
+            alert_type: custom
+            severity: info
+        - alert: High number of sent in applications
+          expr: ceil(sum by (operation) (increase(innsendingapi_number_of_operations_total{operation="SEND_INN"}[ {{expected_period}} ]))) > {{ max_innsendt_expected }}
+          for: 1m
+          annotations:
+            title: "Unusual number of applications have been sent in"
+            consequence: "If this continues it might have consequences for resources used."
+            action: {{ application_sent_in_log_url }}
+            summary: "Service has reported that the number of sent in applications last {{expected_period}} is unusally high."
+            sla: "Check logs within 3h"
+          labels:
+            service: "innsending-api"
+            namespace: fyllut-sendinn
+            special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
+            alert_type: custom
+            severity: info
+        - alert: High number of functional errors
+          expr: ceil(sum by (operation) (increase(innsendingapi_number_of_errors[ {{expected_period}} ]))) > {{ number_of_errors }}
+          for: 1m
+          annotations:
+            title: "High number of functional errors detected"
+            consequence: "If this continues it might have consequences for users beeing able to send in applications."
+            action: {{ error_log_url }}
+            summary: "Service has reported that the number of errors for an operation for last {{expected_period}} is unusally high."
+            sla: "Check logs within 3h"
+          labels:
+            service: "innsending-api"
+            namespace: fyllut-sendinn
+            special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
+            alert_type: custom
+            severity: info
