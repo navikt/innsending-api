@@ -29,6 +29,8 @@ class EttersendingService(
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
+
+	// Lagre ettersendingssøknad i DB
 	fun opprettEttersendingsSoknad(
 		brukerId: String, ettersendingsId: String?, tittel: String, skjemanr: String, tema: String, sprak: String,
 		forsteInnsendingsDato: OffsetDateTime, fristForEttersendelse: Long? = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
@@ -61,7 +63,8 @@ class EttersendingService(
 
 	fun opprettEttersendingsSoknad(
 		nyesteSoknad: DokumentSoknadDto,
-		ettersendingsId: String
+		ettersendingsId: String,
+		erSystemGenerert: Boolean = false
 	): DokumentSoknadDto {
 		val operation = InnsenderOperation.OPPRETT.name
 		try {
@@ -75,7 +78,7 @@ class EttersendingService(
 					}
 				}"
 			)
-
+			// Lagre ettersendingssøknad i DB
 			val savedEttersendingsSoknad = opprettEttersendingsSoknad(
 				brukerId = nyesteSoknad.brukerId,
 				ettersendingsId = ettersendingsId,
@@ -88,6 +91,7 @@ class EttersendingService(
 				nyesteSoknad.fristForEttersendelse
 			)
 
+			// Lagre vedlegg i DB
 			val vedleggDbDataListe = nyesteSoknad.vedleggsListe
 				.filter { !it.erHoveddokument }
 				.map { v ->
@@ -117,10 +121,13 @@ class EttersendingService(
 					)
 				}
 
-			val dokumentSoknadDto = lagDokumentSoknadDto(savedEttersendingsSoknad, vedleggDbDataListe)
+			// Publiser brukernotifikasjon
+			var dokumentSoknadDto = lagDokumentSoknadDto(savedEttersendingsSoknad, vedleggDbDataListe, erSystemGenerert)
 			publiserBrukernotifikasjon(dokumentSoknadDto)
 
+			// Logg og metrics
 			innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
+			innsenderMetrics.operationsCounterInc(operation, nyesteSoknad.tema)
 			logger.debug("opprettEttersendingsSoknad: opprettet ${dokumentSoknadDto.innsendingsId} basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
 				"Med vedleggsstatus ${
 					dokumentSoknadDto.vedleggsListe.map {
@@ -131,7 +138,6 @@ class EttersendingService(
 				}"
 			)
 
-			innsenderMetrics.operationsCounterInc(operation, nyesteSoknad.tema)
 			return dokumentSoknadDto
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, nyesteSoknad.tema)
@@ -148,11 +154,15 @@ class EttersendingService(
 			"${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes " +
 				"${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size}"
 		)
+
+		// Det mangler vedlegg så det opprettes en ettersendingssøknad av systemet
+		// Dagpenger (DAG) har sin egen løsning for å opprette ettersendingssøknader
 		if (manglende.isNotEmpty() && !"DAG".equals(innsendtSoknadDto.tema, true)) {
 			logger.info("${soknadDtoInput.innsendingsId}: Skal opprette ettersendingssoknad")
 			opprettEttersendingsSoknad(
-				innsendtSoknadDto,
-				innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!
+				nyesteSoknad = innsendtSoknadDto,
+				ettersendingsId = innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!,
+				erSystemGenerert = true
 			)
 		}
 	}

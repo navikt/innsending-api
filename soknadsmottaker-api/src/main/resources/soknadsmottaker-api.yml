@@ -290,6 +290,14 @@ components:
           type: boolean
           description: Markerer hvis dette er en ettersendelse til en tidligere insendt Soknad.
           example: true
+        erSystemGenerert:
+          type: boolean
+          description: >
+            Markerer hvis det er systemet, ikke brukeren selv, som har tatt initiativ til å lage søknaden.
+            Når en bruker tar initiativ til å opprette en søknad/ettersending lages det et utkast.
+            Når systemet ser at det mangler påkrevde vedlegg som skal ettersendes, lages det en oppgave på min side.
+          example: true
+          default: false
         groupId:
           type: string
           description: Id for gruppering av notifikasjoner som "hører" sammen, f.eks. søknad med etterfølgende ettersendelser.

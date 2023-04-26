@@ -845,6 +845,14 @@ components:
           $ref: "#/components/schemas/FristForEttersendelse"
         arkiveringsStatus:
           $ref: "#/components/schemas/ArkiveringsStatusDto"
+        erSystemGenerert:
+          type: boolean
+          description: >
+            Markerer hvis det er systemet (ikke brukeren selv) som har tatt initiativ til å lage søknaden.
+            Når en bruker tar initiativ til å opprette en søknad/ettersending lages det et *utkast*.
+            Når systemet ser at det mangler påkrevde vedlegg som skal ettersendes, lages det en *oppgave* i stedet.
+          example: true
+          default: false
 
 
     FilDto:
