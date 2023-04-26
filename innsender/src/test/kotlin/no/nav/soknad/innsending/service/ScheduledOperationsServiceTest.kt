@@ -156,7 +156,8 @@ class ScheduledOperationsServiceTest {
 	@Test
 	fun testAtSoknadInnsendtIForkantAvTimespanOgMarkertSomIkkeArkivertTellesMedVedRegistreringAvMetrics() {
 		val innsendtdato = LocalDateTime.now().minusMinutes(OFFSET_MINUTES + 2)
-		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato, arkiveringsStatus = ArkiveringsStatus.IkkeSatt).build()
+		val soknad =
+			SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato, arkiveringsStatus = ArkiveringsStatus.IkkeSatt).build()
 		soknadRepository.save(soknad)
 
 		val service = lagScheduledOperationsService()

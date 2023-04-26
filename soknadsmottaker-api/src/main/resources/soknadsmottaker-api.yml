@@ -125,7 +125,7 @@ paths:
       description: Pings the application to see if it responds
       operationId: ping
 
-      security: []   # No security
+      security: [ ]   # No security
       responses:
         '200':
           description: Successful operation; application is responding
@@ -138,7 +138,7 @@ paths:
       description: Checks if the application and its dependencies are up and running.
       operationId: isAlive
 
-      security: []   # No security
+      security: [ ]   # No security
       responses:
         '200':
           description: Successful operation; application is alive
@@ -153,7 +153,7 @@ paths:
       description: Checks if the application is ready to accept traffic.
       operationId: isReady
 
-      security: []   # No security
+      security: [ ]   # No security
       responses:
         '200':
           description: Successful operation; application is ready
@@ -365,7 +365,7 @@ components:
       scheme: basic
 
 security:
-  - basicAuth: []
+  - basicAuth: [ ]
 
 externalDocs:
   description: Documentation of the whole archiving system
