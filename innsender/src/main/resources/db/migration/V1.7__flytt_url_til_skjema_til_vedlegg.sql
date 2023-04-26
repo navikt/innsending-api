@@ -1,4 +1,2 @@
-ALTER TABLE soknad
-	DROP COLUMN skjemaUrl;
-ALTER TABLE vedlegg
-	ADD COLUMN vedleggsurl VARCHAR(255);
+ALTER TABLE soknad DROP COLUMN skjemaUrl;
+ALTER TABLE vedlegg ADD COLUMN vedleggsurl VARCHAR(255);

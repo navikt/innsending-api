@@ -1,2 +1,1 @@
-ALTER TABLE soknad
-	RENAME COLUMN behandlingsid TO innsendingsid;
+ALTER TABLE soknad RENAME COLUMN behandlingsid TO innsendingsid;
