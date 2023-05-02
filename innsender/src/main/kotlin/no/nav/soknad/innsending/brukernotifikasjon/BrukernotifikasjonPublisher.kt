@@ -12,7 +12,6 @@ import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.service.ukjentEttersendingsId
 import no.nav.soknad.innsending.util.Constants
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service
 
@@ -26,11 +25,13 @@ class BrukernotifikasjonPublisher(
 
 	private val soknadLevetid = Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD.toInt() // Dager
 
-	val tittelPrefixEttersendelse = mapOf("no" to "Ettersend manglende vedlegg til: ",
+	val tittelPrefixEttersendelse = mapOf(
+		"no" to "Ettersend manglende vedlegg til: ",
 		"nn" to "Ettersend manglande vedlegg til: ",
 		"en" to "Submit missing documentation to: "
 	)
-	val tittelPrefixNySoknad = mapOf("no" to "",
+	val tittelPrefixNySoknad = mapOf(
+		"no" to "",
 		"nn" to "",
 		"en" to ""
 	)
@@ -39,7 +40,8 @@ class BrukernotifikasjonPublisher(
 		logger.debug("${dokumentSoknad.innsendingsId}: Skal publisere Brukernotifikasjon")
 
 		if (notifikasjonConfig.publisereEndringer) {
-			val groupId = if (dokumentSoknad.ettersendingsId != null && dokumentSoknad.ettersendingsId != ukjentEttersendingsId)
+			val groupId =
+				if (dokumentSoknad.ettersendingsId != null && dokumentSoknad.ettersendingsId != ukjentEttersendingsId)
 					dokumentSoknad.ettersendingsId
 				else
 					dokumentSoknad.innsendingsId
@@ -81,8 +83,15 @@ class BrukernotifikasjonPublisher(
 			eksternVarslingList.add(Varsel(Varsel.Kanal.sms))
 		}
 
-		val notificationInfo = NotificationInfo(tittel, lenke , soknadLevetid , eksternVarslingList)
-		val soknadRef = SoknadRef(dokumentSoknad.innsendingsId!!, ettersending, groupId, dokumentSoknad.brukerId, dokumentSoknad.opprettetDato)
+		val notificationInfo = NotificationInfo(tittel, lenke, soknadLevetid, eksternVarslingList)
+		val soknadRef = SoknadRef(
+			dokumentSoknad.innsendingsId!!,
+			ettersending,
+			groupId,
+			dokumentSoknad.brukerId,
+			dokumentSoknad.opprettetDato,
+			erSystemGenerert = dokumentSoknad.erSystemGenerert ?: false
+		)
 
 		try {
 			sendTilKafkaPublisher.opprettBrukernotifikasjon(AddNotification(soknadRef, notificationInfo))
@@ -107,15 +116,21 @@ class BrukernotifikasjonPublisher(
 	}
 
 	private fun publishDoneEvent(dokumentSoknad: DokumentSoknadDto, groupId: String) {
-			val ettersending = erEttersending(dokumentSoknad)
-			val soknadRef = SoknadRef(dokumentSoknad.innsendingsId!!, ettersending, groupId, dokumentSoknad.brukerId, dokumentSoknad.opprettetDato)
+		val ettersending = erEttersending(dokumentSoknad)
+		val soknadRef = SoknadRef(
+			dokumentSoknad.innsendingsId!!,
+			ettersending,
+			groupId,
+			dokumentSoknad.brukerId,
+			dokumentSoknad.opprettetDato
+		)
 
-			try {
-				sendTilKafkaPublisher.avsluttBrukernotifikasjon(soknadRef)
-				logger.info("${dokumentSoknad.innsendingsId}: Har sendt melding om avslutning av brukernotifikasjon")
-			} catch (e: Exception) {
-				logger.error("${dokumentSoknad.innsendingsId}: Sending av melding om avslutning av brukernotifikasjon feilet", e)
-			}
+		try {
+			sendTilKafkaPublisher.avsluttBrukernotifikasjon(soknadRef)
+			logger.info("${dokumentSoknad.innsendingsId}: Har sendt melding om avslutning av brukernotifikasjon")
+		} catch (e: Exception) {
+			logger.error("${dokumentSoknad.innsendingsId}: Sending av melding om avslutning av brukernotifikasjon feilet", e)
+		}
 	}
 
 	private fun handleDeletedApplication(dokumentSoknad: DokumentSoknadDto, groupId: String) {

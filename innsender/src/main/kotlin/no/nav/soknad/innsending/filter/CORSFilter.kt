@@ -21,7 +21,10 @@ class CORSFilter : Filter {
 
 		httpServletResponse.setHeader("Access-Control-Allow-Origin", "*")
 		httpServletResponse.setHeader("Access-Control-Allow-Methods", "POST, GET, DELETE, PATCH, OPTIONS")
-		httpServletResponse.setHeader("Access-Control-Allow-Headers", "accept, authorization, X-requested-with, content-type")
+		httpServletResponse.setHeader(
+			"Access-Control-Allow-Headers",
+			"accept, authorization, X-requested-with, content-type"
+		)
 
 		if (httpServletRequest.method == "OPTIONS")
 			try {

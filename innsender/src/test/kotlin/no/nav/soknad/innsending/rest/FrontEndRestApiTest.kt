@@ -13,7 +13,7 @@ import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.IdentInformasjon
 import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.Identliste
 import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.Navn
 import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.Person
-import no.nav.soknad.innsending.utils.createHeaders
+import no.nav.soknad.innsending.utils.Hjelpemetoder
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -39,7 +39,8 @@ import java.util.*
 @SpringBootTest(
 	webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
 	properties = ["spring.main.allow-bean-definition-overriding=true"],
-	classes = [InnsendingApiApplication::class])
+	classes = [InnsendingApiApplication::class]
+)
 @ExtendWith(SpringExtension::class)
 @AutoConfigureWireMock
 @EnableMockOAuth2Server(port = 9898)
@@ -58,11 +59,9 @@ class FrontEndRestApiTest {
 	private val tokenx = "tokenx"
 	private val subject = "12345678901"
 	private val audience = "aud-localhost"
-	private val expiry = 2*3600
+	private val expiry = 2 * 3600
 	private val defaultUser = "12345678901"
 	private val defaultSkjemanr = "NAV 55-00.60"
-	private val defaultTema = "BID"
-	private val defaultTittel = "Avtale om barnebidrag"
 
 
 	@Test
@@ -84,9 +83,10 @@ class FrontEndRestApiTest {
 		).serialize()
 
 		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak)
-		val requestEntity =	HttpEntity(opprettSoknadBody, createHeaders(token))
+		val requestEntity = HttpEntity(opprettSoknadBody, Hjelpemetoder.createHeaders(token))
 
-		val response = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.POST,
+		val response = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.POST,
 			requestEntity, DokumentSoknadDto::class.java
 		)
 
@@ -113,17 +113,19 @@ class FrontEndRestApiTest {
 		).serialize()
 
 		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak)
-		val postRequestEntity =	HttpEntity(opprettSoknadBody, createHeaders(token))
+		val postRequestEntity = HttpEntity(opprettSoknadBody, Hjelpemetoder.createHeaders(token))
 
-		val postResponse = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.POST,
+		val postResponse = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.POST,
 			postRequestEntity, DokumentSoknadDto::class.java
 		)
 
 		assertTrue(postResponse.body != null)
 
 		val opprettetSoknadDto = postResponse.body
-		val getRequestEntity = HttpEntity<Unit>(createHeaders(token))
-		val getResponse = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad/${opprettetSoknadDto!!.innsendingsId}", HttpMethod.GET,
+		val getRequestEntity = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
+		val getResponse = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad/${opprettetSoknadDto!!.innsendingsId}", HttpMethod.GET,
 			getRequestEntity, DokumentSoknadDto::class.java
 		)
 
@@ -152,9 +154,10 @@ class FrontEndRestApiTest {
 		).serialize()
 
 		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak, vedlegg)
-		val postRequestEntity =	HttpEntity(opprettSoknadBody, createHeaders(token))
+		val postRequestEntity = HttpEntity(opprettSoknadBody, Hjelpemetoder.createHeaders(token))
 
-		val postResponse = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.POST,
+		val postResponse = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.POST,
 			postRequestEntity, DokumentSoknadDto::class.java
 		)
 
@@ -164,9 +167,12 @@ class FrontEndRestApiTest {
 
 		val vedleggDto = opprettetSoknadDto.vedleggsListe.first { !it.erHoveddokument }
 		val patchVedleggDto = PatchVedleggDto("Endret tittel", OpplastingsStatusDto.sendesAvAndre)
-		val patchRequestEntity = HttpEntity(patchVedleggDto, createHeaders(token))
-		val patchResponse = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad/${opprettetSoknadDto.innsendingsId}/vedlegg/${vedleggDto.id}", HttpMethod.PATCH,
-			patchRequestEntity, VedleggDto::class.java
+		val patchRequestEntity = HttpEntity(patchVedleggDto, Hjelpemetoder.createHeaders(token))
+		val patchResponse = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad/${opprettetSoknadDto.innsendingsId}/vedlegg/${vedleggDto.id}",
+			HttpMethod.PATCH,
+			patchRequestEntity,
+			VedleggDto::class.java
 		)
 
 		assertTrue(patchResponse.body != null)
@@ -185,16 +191,18 @@ class FrontEndRestApiTest {
 
 		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
 
-		val vedleggN6 = soknadDto.vedleggsListe.first{it.vedleggsnr == "N6"}
+		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.ikkeValgt, vedleggN6.opplastingsStatus)
 
 		val multipart = LinkedMultiValueMap<Any, Any>()
 		multipart.add("file", ClassPathResource("/litenPdf.pdf"))
 
-		val postFilRequestN6 = HttpEntity(multipart, createHeaders(token, MediaType.MULTIPART_FORM_DATA))
+		val postFilRequestN6 = HttpEntity(multipart, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
 		val postFilResponseN6 = restTemplate.exchange(
-			"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil", HttpMethod.POST,
-			postFilRequestN6, FilDto::class.java
+			"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil",
+			HttpMethod.POST,
+			postFilRequestN6,
+			FilDto::class.java
 		)
 
 		assertEquals(HttpStatus.CREATED, postFilResponseN6.statusCode)
@@ -202,18 +210,24 @@ class FrontEndRestApiTest {
 		assertEquals(Mimetype.applicationSlashPdf, postFilResponseN6.body!!.mimetype)
 		val opplastetFilDto = postFilResponseN6.body
 
-		val vedleggN6Request = HttpEntity<Unit>(createHeaders(token))
-		val oppdatertVedleggN6Response = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}", HttpMethod.GET,
-			vedleggN6Request, VedleggDto::class.java
+		val vedleggN6Request = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
+		val oppdatertVedleggN6Response = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}",
+			HttpMethod.GET,
+			vedleggN6Request,
+			VedleggDto::class.java
 		)
 
 		assertTrue(oppdatertVedleggN6Response.body != null)
 		val oppdatertVedleggN6 = oppdatertVedleggN6Response.body
 		assertEquals(OpplastingsStatusDto.lastetOpp, oppdatertVedleggN6!!.opplastingsStatus)
 
-		val slettFilRequest = HttpEntity<Unit>(createHeaders(token))
-		val slettetFilVedleggN6Response = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil/${opplastetFilDto!!.id}", HttpMethod.DELETE,
-			slettFilRequest, VedleggDto::class.java
+		val slettFilRequest = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
+		val slettetFilVedleggN6Response = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil/${opplastetFilDto!!.id}",
+			HttpMethod.DELETE,
+			slettFilRequest,
+			VedleggDto::class.java
 		)
 
 		assertEquals(HttpStatus.OK, slettetFilVedleggN6Response.statusCode)
@@ -232,13 +246,13 @@ class FrontEndRestApiTest {
 
 		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
 
-		val vedleggN6 = soknadDto.vedleggsListe.first{it.vedleggsnr == "N6"}
+		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.ikkeValgt, vedleggN6.opplastingsStatus)
 
 		val multipart = LinkedMultiValueMap<Any, Any>()
 		multipart.add("file", ClassPathResource("/NAV 54-editert.pdf"))
 
-		val postFilRequestN6 = HttpEntity(multipart, createHeaders(token, MediaType.MULTIPART_FORM_DATA))
+		val postFilRequestN6 = HttpEntity(multipart, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
 
 		assertThrows(Exception::class.java) {
 			for (i in 1..100) {
@@ -266,13 +280,13 @@ class FrontEndRestApiTest {
 
 		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
 
-		val vedleggN6 = soknadDto.vedleggsListe.first{it.vedleggsnr == "N6"}
+		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.ikkeValgt, vedleggN6.opplastingsStatus)
 
 		val multipart = LinkedMultiValueMap<Any, Any>()
 		multipart.add("file", ClassPathResource("/skjema-passordbeskyttet.pdf"))
 
-		val postFilRequestN6 = HttpEntity(multipart, createHeaders(token, MediaType.MULTIPART_FORM_DATA))
+		val postFilRequestN6 = HttpEntity(multipart, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
 
 		assertThrows(Exception::class.java) {
 			for (i in 1..100) {
@@ -300,13 +314,13 @@ class FrontEndRestApiTest {
 
 		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
 
-		val vedleggN6 = soknadDto.vedleggsListe.first{it.vedleggsnr == "N6"}
+		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.ikkeValgt, vedleggN6.opplastingsStatus)
 
 		val multipart = LinkedMultiValueMap<Any, Any>()
 		multipart.add("file", ClassPathResource("/ikke.jpg"))
 
-		val postFilRequestN6 = HttpEntity(multipart, createHeaders(token, MediaType.MULTIPART_FORM_DATA))
+		val postFilRequestN6 = HttpEntity(multipart, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
 
 		var ok = true
 		assertThrows(Exception::class.java) {
@@ -321,12 +335,18 @@ class FrontEndRestApiTest {
 		assertTrue(ok)
 	}
 
-	private fun opprettEnSoknad(token: String, skjemanr: String, spraak: String, vedlegg: List<String>): DokumentSoknadDto {
+	private fun opprettEnSoknad(
+		token: String,
+		skjemanr: String,
+		spraak: String,
+		vedlegg: List<String>
+	): DokumentSoknadDto {
 
 		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak, vedlegg)
-		val postRequestEntity =	HttpEntity(opprettSoknadBody, createHeaders(token))
+		val postRequestEntity = HttpEntity(opprettSoknadBody, Hjelpemetoder.createHeaders(token))
 
-		val postResponse = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.POST,
+		val postResponse = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.POST,
 			postRequestEntity, DokumentSoknadDto::class.java
 		)
 
@@ -359,8 +379,10 @@ class FrontEndRestApiTest {
 
 		// Initiell liste
 		val soknaderInitRespons = restTemplate.exchange(
-			"http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.GET,
-			HttpEntity<Unit>(createHeaders(token)), object : ParameterizedTypeReference<List<DokumentSoknadDto>>() {}
+			"http://localhost:${serverPort}/frontend/v1/soknad",
+			HttpMethod.GET,
+			HttpEntity<Unit>(Hjelpemetoder.createHeaders(token)),
+			object : ParameterizedTypeReference<List<DokumentSoknadDto>>() {}
 		)
 		kotlin.test.assertTrue(soknaderInitRespons.statusCode == HttpStatus.OK && soknaderInitRespons.body != null)
 		val hentetInitListe = soknaderInitRespons.body
@@ -376,8 +398,10 @@ class FrontEndRestApiTest {
 
 		// Test endepunkt for å hente opprettede aktive søknader
 		val soknaderRespons = restTemplate.exchange(
-			"http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.GET,
-			HttpEntity<Unit>(createHeaders(token)), object : ParameterizedTypeReference<List<DokumentSoknadDto>>() {}
+			"http://localhost:${serverPort}/frontend/v1/soknad",
+			HttpMethod.GET,
+			HttpEntity<Unit>(Hjelpemetoder.createHeaders(token)),
+			object : ParameterizedTypeReference<List<DokumentSoknadDto>>() {}
 		)
 		kotlin.test.assertTrue(soknaderRespons.statusCode == HttpStatus.OK && soknaderRespons.body != null)
 		val hentetListe = soknaderRespons.body
@@ -407,9 +431,10 @@ class FrontEndRestApiTest {
 		).serialize()
 
 		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak, vedlegg)
-		val postRequestEntity =	HttpEntity(opprettSoknadBody, createHeaders(token))
+		val postRequestEntity = HttpEntity(opprettSoknadBody, Hjelpemetoder.createHeaders(token))
 
-		val postResponse = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.POST,
+		val postResponse = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.POST,
 			postRequestEntity, DokumentSoknadDto::class.java
 		)
 
@@ -418,8 +443,9 @@ class FrontEndRestApiTest {
 		assertTrue(opprettetSoknadDto!!.vedleggsListe.isNotEmpty())
 
 		val postVedleggDto = PostVedleggDto("Nytt vedlegg")
-		val postVedleggRequestEntity = HttpEntity(postVedleggDto, createHeaders(token))
-		val postVedleggResponse = restTemplate.exchange("http://localhost:${serverPort}/frontend/v1/soknad/${opprettetSoknadDto.innsendingsId}/vedlegg", HttpMethod.POST,
+		val postVedleggRequestEntity = HttpEntity(postVedleggDto, Hjelpemetoder.createHeaders(token))
+		val postVedleggResponse = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad/${opprettetSoknadDto.innsendingsId}/vedlegg", HttpMethod.POST,
 			postVedleggRequestEntity, VedleggDto::class.java
 		)
 
@@ -432,8 +458,13 @@ class FrontEndRestApiTest {
 
 	@Test
 	internal fun testResult() {
-		val hentPerson = Person(listOf(Navn("Fornavn", "Mellomnavn","Etternavn")))
-		val hentIdenter = Identliste(listOf(IdentInformasjon(defaultUser, IdentGruppe.FOLKEREGISTERIDENT, false ), IdentInformasjon("12345678902", IdentGruppe.FOLKEREGISTERIDENT, true )))
+		val hentPerson = Person(listOf(Navn("Fornavn", "Mellomnavn", "Etternavn")))
+		val hentIdenter = Identliste(
+			listOf(
+				IdentInformasjon(defaultUser, IdentGruppe.FOLKEREGISTERIDENT, false),
+				IdentInformasjon("12345678902", IdentGruppe.FOLKEREGISTERIDENT, true)
+			)
+		)
 		val gson = Gson()
 		val personJson: String = gson.toJson(hentPerson)
 		println(personJson)

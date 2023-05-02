@@ -13,8 +13,8 @@
 		"headers": {
 			"Content-Type": "application/json"
 		},
-	"jsonBody": {
-		"data": {
+		"jsonBody": {
+			"data": {
 				"hentIdenter": {
 					"identer": [
 						{

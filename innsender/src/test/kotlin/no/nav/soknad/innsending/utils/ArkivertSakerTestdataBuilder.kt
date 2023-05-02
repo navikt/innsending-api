@@ -2,7 +2,7 @@ package no.nav.soknad.innsending.utils
 
 import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.repository.SoknadDbData
-import java.util.UUID
+import java.util.*
 
 class ArkivertSakerTestdataBuilder(
 	var eksternReferanseId: String = UUID.randomUUID().toString(),
@@ -14,5 +14,6 @@ class ArkivertSakerTestdataBuilder(
 		this.tema = soknad.tema
 		this.eksternReferanseId = soknad.innsendingsid
 	}
+
 	fun build() = ArkiverteSaker(eksternReferanseId, tittel, tema, null, emptyList())
 }

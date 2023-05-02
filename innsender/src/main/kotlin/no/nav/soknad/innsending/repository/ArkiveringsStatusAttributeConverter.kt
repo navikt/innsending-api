@@ -4,7 +4,7 @@ import javax.persistence.AttributeConverter
 import javax.persistence.Converter
 
 @Converter(autoApply = true)
-class ArkiveringsStatusAttributeConverter: AttributeConverter<ArkiveringsStatus, String?> {
+class ArkiveringsStatusAttributeConverter : AttributeConverter<ArkiveringsStatus, String?> {
 	override fun convertToDatabaseColumn(arkiveringsstatus: ArkiveringsStatus): String {
 		return if (arkiveringsstatus == null) ArkiveringsStatus.IkkeSatt.name else arkiveringsstatus.name
 	}

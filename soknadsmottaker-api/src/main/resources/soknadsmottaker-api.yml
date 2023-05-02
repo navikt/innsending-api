@@ -125,7 +125,7 @@ paths:
       description: Pings the application to see if it responds
       operationId: ping
 
-      security: []   # No security
+      security: [ ]   # No security
       responses:
         '200':
           description: Successful operation; application is responding
@@ -138,7 +138,7 @@ paths:
       description: Checks if the application and its dependencies are up and running.
       operationId: isAlive
 
-      security: []   # No security
+      security: [ ]   # No security
       responses:
         '200':
           description: Successful operation; application is alive
@@ -153,7 +153,7 @@ paths:
       description: Checks if the application is ready to accept traffic.
       operationId: isReady
 
-      security: []   # No security
+      security: [ ]   # No security
       responses:
         '200':
           description: Successful operation; application is ready
@@ -290,6 +290,14 @@ components:
           type: boolean
           description: Markerer hvis dette er en ettersendelse til en tidligere insendt Soknad.
           example: true
+        erSystemGenerert:
+          type: boolean
+          description: >
+            Markerer hvis det er systemet, ikke brukeren selv, som har tatt initiativ til å lage søknaden.
+            Når en bruker tar initiativ til å opprette en søknad/ettersending lages det et utkast.
+            Når systemet ser at det mangler påkrevde vedlegg som skal ettersendes, lages det en oppgave på min side.
+          example: true
+          default: false
         groupId:
           type: string
           description: Id for gruppering av notifikasjoner som "hører" sammen, f.eks. søknad med etterfølgende ettersendelser.
@@ -365,7 +373,7 @@ components:
       scheme: basic
 
 security:
-  - basicAuth: []
+  - basicAuth: [ ]
 
 externalDocs:
   description: Documentation of the whole archiving system

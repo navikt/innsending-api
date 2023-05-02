@@ -22,7 +22,9 @@ data class SoknadDbDataTestdataBuilder(
 	fun tema(tema: String) = apply { this.tema = tema }
 	fun innsendtdato(innsendtdato: LocalDateTime?) = apply { this.innsendtdato = innsendtdato }
 	fun erarkivert(arkiveringsStatus: ArkiveringsStatus) = apply { this.arkiveringsStatus = arkiveringsStatus }
-	fun build() = SoknadDbData(null, innsendingsId, tittel, skjemanr, tema, "nb", SoknadsStatus.Innsendt, brukerId,
+	fun build() = SoknadDbData(
+		null, innsendingsId, tittel, skjemanr, tema, "nb", SoknadsStatus.Innsendt, brukerId,
 		null, LocalDateTime.now(), LocalDateTime.now(), innsendtdato, 0, VisningsType.fyllUt, true,
-		null, 14, this.arkiveringsStatus ?: ArkiveringsStatus.IkkeSatt)
+		null, 14, this.arkiveringsStatus ?: ArkiveringsStatus.IkkeSatt
+	)
 }

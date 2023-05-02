@@ -10,6 +10,6 @@ class OpplastingsStatusAttributeConverter : AttributeConverter<OpplastingsStatus
 	}
 
 	override fun convertToEntityAttribute(status: String?): OpplastingsStatus? {
-		return if (status == null) 	null else OpplastingsStatus.valueOf(status)
+		return if (status == null) null else OpplastingsStatus.valueOf(status)
 	}
 }

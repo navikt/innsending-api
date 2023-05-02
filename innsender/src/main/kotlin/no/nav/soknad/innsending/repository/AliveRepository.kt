@@ -6,7 +6,7 @@ import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 
 @Repository
-interface AliveRepository: JpaRepository<AliveDbData, Long> {
+interface AliveRepository : JpaRepository<AliveDbData, Long> {
 
 	@Query(value = "SELECT test FROM alive WHERE id in (:id)", nativeQuery = true)
 	fun findTestById(@Param("id") id: Long): String

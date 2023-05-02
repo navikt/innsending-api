@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service
 @Service
 @Profile("spring | test | docker | default")
 @Qualifier("notifikasjon")
-class SendTilPublisherTest: PublisherInterface, HealthRequestInterface {
+class SendTilPublisherTest : PublisherInterface, HealthRequestInterface {
 
 	override fun ping(): String {
 		return "pong"

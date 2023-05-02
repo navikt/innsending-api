@@ -8,7 +8,7 @@ data class ArkiverteSaker(
 	val dokumenter: List<Dokument>
 )
 
-data class Dokument (
+data class Dokument(
 	val brevkode: String?,
 	val tittel: String,
 	val k_tilkn_jp_som: String // HOVEDDOKUMENT, VEDLEGG

@@ -31,11 +31,11 @@ class LeaderSelectionTest {
 		System.setProperty("ELECTOR_PATH", "localhost")
 
 		val leaderSelector = mockk<LeaderSelectionUtility>()
-		every {leaderSelector.fetchLeaderSelection()} returns jsonString
-		every {leaderSelector.logger.warn(any())} returns Unit
-		every {leaderSelector.logger.info(any())} returns Unit
-		every {leaderSelector.format.decodeFromString<LeaderElection>(any())} returns leaderElection
-		every {leaderSelector.isLeader()} answers { callOriginal() }
+		every { leaderSelector.fetchLeaderSelection() } returns jsonString
+		every { leaderSelector.logger.warn(any()) } returns Unit
+		every { leaderSelector.logger.info(any()) } returns Unit
+		every { leaderSelector.format.decodeFromString<LeaderElection>(any()) } returns leaderElection
+		every { leaderSelector.isLeader() } answers { callOriginal() }
 
 		leaderSelector.isLeader()
 

@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.consumerapis.pdl
 
-import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
+import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 
 interface PdlInterface {
 
