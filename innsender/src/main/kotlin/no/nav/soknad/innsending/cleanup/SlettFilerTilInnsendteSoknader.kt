@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.cleanup
 
 import no.nav.soknad.innsending.service.FilService
-import no.nav.soknad.innsending.service.SoknadService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -10,7 +9,6 @@ import org.springframework.stereotype.Service
 
 @Service
 class SlettFilerTilInnsendteSoknader(
-	private val soknadService: SoknadService,
 	private val leaderSelectionUtility: LeaderSelectionUtility,
 	private val filService: FilService
 ) {
