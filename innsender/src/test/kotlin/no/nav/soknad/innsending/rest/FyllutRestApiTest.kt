@@ -37,7 +37,7 @@ import kotlin.test.assertTrue
 @ExtendWith(SpringExtension::class)
 @AutoConfigureWireMock
 @EnableMockOAuth2Server(port = 9898)
-class SkjemaRestApiTest {
+class FyllutRestApiTest {
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server

@@ -20,11 +20,10 @@ tags:
 paths:
   /fyllUt/v1/leggTilVedlegg:
     post:
-      summary: Motta ferdig utfylt søknad og metadata til denne.
+      summary: (DEPRECATED) Motta ferdig utfylt søknad og metadata til denne.
       description: FyllUt tjenesten gir søker mulighet til å fylle ut en søknad. Når vedkommende er ferdig med dette kalles dette endepunktet for å mellomlagre søknaden og gi søker mulighet til å laste opp eventuelle vedlegg og sende inn søknaden og disse til NAV.
       operationId: fyllUt
 
-      security: [ ]   # No security
       requestBody:
         description: Søknadsmetadata og søknad som PDF og Json samt liste over eventuelle obligatoriske og valgfrie vedlegg som skal/kan legges til.
         content:
@@ -38,6 +37,106 @@ paths:
           description: Found
       tags:
         - soknadFraFyllUt
+
+  /fyllUt/v1/soknad/{innsendingsId}:
+    get:
+      summary: Hent en eksisterende søknadsutfylling
+      description: Dette endepunktet kalles når vedkommende henter søknaden på oppsummeringssiden. Brukernotifikasjoner som blir opprettet når vedkommende starter søknadsutfyllingen linker til oppsummeringssiden.
+      operationId: fyllUtHentSoknad
+
+      parameters:
+        - name: innsendingsId
+          in: path
+          description: Identifisering av søknad som skal hentes
+          required: true
+          schema:
+            type: string
+          style: simple
+
+      responses:
+        '200':
+          description: Pågående søknad returneres.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SkjemaDto"
+        404:
+          description: Ingen søknad funnet.
+      tags:
+        - soknadFraFyllUt
+    put:
+      summary: Oppdater en eksisterende søknadsutfylling
+      description: Dette endepunktet kalles for hvert steg i FyllUt-flyten og oppdaterer søknaden. Alle felter blir overskrevet unntatt brukerId, skjemanr, hoveddokument.vedleggsnr, hoveddokument.paakrevd
+      operationId: fyllUtOppdaterSoknad
+
+      parameters:
+        - name: innsendingsId
+          in: path
+          description: identifisering av søknad
+          required: true
+          schema:
+            type: string
+          style: simple
+
+      requestBody:
+        description: Søknadsmetadata for å oppdatere søknaden. PDF og JSON av søknaden vil bli lagt til når søknaden sendes inn (siste steg i FyllUt-flyten)
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SkjemaDto"
+        required: true
+
+      responses:
+        200:
+          description: Oppdatert søknad
+      tags:
+        - soknadFraFyllUt
+    delete:
+      summary: Kall for å slette opprettet søknad gitt innsendingsId.
+      description: Dersom funnet, slettes søknaden.
+      operationId: fyllUtSlettSoknad
+
+      parameters:
+        - name: innsendingsId
+          in: path
+          description: identifisering av søknad
+          required: true
+          schema:
+            type: string
+          style: simple
+
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BodyStatusResponseDto"
+      tags:
+        - slettSoknad
+
+  /fyllUt/v1/soknad:
+    post:
+      summary: Start en ny søknadsutfylling
+      description: FyllUt tjenesten gir søker mulighet til å fylle ut en søknad. Dette endepunktet kalles når vedkommende starter søknaden og det opprettes en tom søknad i databasen. For hvert steg i FyllUt kalles PUT endepunktet for å oppdatere søknaden underveis.
+      operationId: fyllUtOpprettSoknad
+
+      requestBody:
+        description: Søknadsmetadata for å opprette søknaden. PDF og JSON av søknaden (samt liste over eventuelle obligatoriske og valgfrie vedlegg som skal/kan legges til) vil bli lagt til i søknaden etterhvert som bruker fyller ut søknaden.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SkjemaDto"
+        required: true
+
+      responses:
+        201:
+          description: Opprettet søknad
+      tags:
+        - soknadFraFyllUt
+
 
   /innsendte/v1/hentAktiveSaker:
     get:

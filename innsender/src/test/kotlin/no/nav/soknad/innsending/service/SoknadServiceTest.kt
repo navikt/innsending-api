@@ -673,7 +673,7 @@ class SoknadServiceTest {
 		// Check that reciept is returned for each sent in application
 		val kvitteringsDtoList = mutableListOf<KvitteringsDto>()
 		dokumentSoknadDtoList.forEach { kvitteringsDtoList.add(innsendingService.sendInnSoknad(it)) }
-		Assertions.assertTrue(kvitteringsDtoList.size == dokumentSoknadDtoList.size)
+		assertTrue(kvitteringsDtoList.size == dokumentSoknadDtoList.size)
 
 		// Check that the applications attachments are kept after the applications are sent in
 		dokumentSoknadDtoList.all {
