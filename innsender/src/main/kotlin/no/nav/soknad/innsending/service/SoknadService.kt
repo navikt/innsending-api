@@ -14,6 +14,8 @@ import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
+import no.nav.soknad.innsending.util.validators.validerSoknadVedOppdatering
+import no.nav.soknad.innsending.util.validators.validerVedleggsListeVedOppdatering
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -446,6 +448,20 @@ class SoknadService(
 			logger.warn("Dupliserer søknad på skjemanr=$skjemanr, søker har allerede ${aktiveSoknaderGittSkjemanr.size} under arbeid")
 		}
 	}
+
+
+	fun oppdaterSoknad(innsendingsId: String, skjemaDto: DokumentSoknadDto) {
+		val eksisterendeSoknad = hentSoknad(innsendingsId)
+		validerInnsendtSoknadMotEksisterende(skjemaDto, eksisterendeSoknad)
+
+	}
+
+
+	fun validerInnsendtSoknadMotEksisterende(innsendtSoknad: DokumentSoknadDto, eksisterendeSoknad: DokumentSoknadDto) {
+		innsendtSoknad.validerSoknadVedOppdatering(eksisterendeSoknad)
+		innsendtSoknad.validerVedleggsListeVedOppdatering(eksisterendeSoknad)
+	}
+
 
 	private fun publiserBrukernotifikasjon(dokumentSoknadDto: DokumentSoknadDto): Boolean = try {
 		brukernotifikasjonPublisher.soknadStatusChange(dokumentSoknadDto)

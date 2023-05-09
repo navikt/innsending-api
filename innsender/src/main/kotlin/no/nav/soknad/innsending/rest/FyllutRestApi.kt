@@ -68,8 +68,15 @@ class FyllutRestApi(
 	override fun fyllUtOppdaterSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<Unit> {
 		logger.info("Kall fra FyllUt for å endre søknad for skjema ${skjemaDto.skjemanr}")
 		logger.debug("Skal endre søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
+		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-		return super.fyllUtOppdaterSoknad(innsendingsId, skjemaDto)
+		val konvertert = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
+			skjemaDto,
+			brukerId
+		)
+
+		soknadService.oppdaterSoknad(innsendingsId, konvertert)
+		return ResponseEntity.status(HttpStatus.OK).body(null)
 	}
 
 	@Timed(InnsenderOperation.HENT)
