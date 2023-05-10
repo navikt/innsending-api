@@ -1,6 +1,7 @@
-package no.nav.soknad.innsending.util.validators
+package no.nav.soknad.innsending.utils.validators
 
 import no.nav.soknad.innsending.exceptions.IllegalActionException
+import no.nav.soknad.innsending.util.validators.validerLikeFelter
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows

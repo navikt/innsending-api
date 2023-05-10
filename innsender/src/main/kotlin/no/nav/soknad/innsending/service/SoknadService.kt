@@ -450,9 +450,27 @@ class SoknadService(
 	}
 
 
-	fun oppdaterSoknad(innsendingsId: String, skjemaDto: DokumentSoknadDto) {
+	fun oppdaterSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
 		val eksisterendeSoknad = hentSoknad(innsendingsId)
-		validerInnsendtSoknadMotEksisterende(skjemaDto, eksisterendeSoknad)
+		validerInnsendtSoknadMotEksisterende(dokumentSoknadDto, eksisterendeSoknad)
+
+		// Oppdater søknaden
+		val soknadDb = mapTilSoknadDb(
+			dokumentSoknadDto = dokumentSoknadDto,
+			innsendingsId = innsendingsId,
+			id = eksisterendeSoknad.id,
+		)
+		val oppdatertSoknad = repo.lagreSoknad(soknadDb)
+
+		// Slett alle vedlegg for søknaden
+		eksisterendeSoknad.vedleggsListe.forEach {
+			vedleggService.slettVedleggOgDensFiler(it)
+		}
+
+		// Legg til alle vedlegg for søknaden
+		dokumentSoknadDto.vedleggsListe.forEach {
+			repo.lagreVedlegg(mapTilVedleggDb(it, oppdatertSoknad.id!!))
+		}
 
 	}
 

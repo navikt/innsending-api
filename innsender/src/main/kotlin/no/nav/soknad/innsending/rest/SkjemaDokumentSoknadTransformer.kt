@@ -53,7 +53,7 @@ class SkjemaDokumentSoknadTransformer {
 				.map { konverterTilVedleggDto(it, erHoveddokument = false, erVariant = false) }
 
 		logger.debug(
-			"Skal opprette søknad på skjemanr ${hoveddok.vedleggsnr} med vedleggene ${
+			"Søknad med skjemanr ${hoveddok.vedleggsnr} har vedleggene ${
 				vedleggListe.map { it.vedleggsnr }.joinToString(", ")
 			}"
 		)

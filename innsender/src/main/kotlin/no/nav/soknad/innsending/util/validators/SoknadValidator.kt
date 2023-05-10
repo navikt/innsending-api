@@ -23,7 +23,8 @@ fun DokumentSoknadDto.validerVedleggsListeVedOppdatering(eksisterendeSoknad: Dok
 
 // Ved oppdatering må noen felter fra det eksisterende vedlegget være like det som blir sendt inn
 private fun validerVedleggVedOppdatering(vedlegg: VedleggDto, eksisterendeVedleggsListe: List<VedleggDto>) {
-	val eksisterendeVedlegg = eksisterendeVedleggsListe.find { it.vedleggsnr == vedlegg.vedleggsnr } ?: return
+	val eksisterendeVedlegg =
+		eksisterendeVedleggsListe.find { it.vedleggsnr == vedlegg.vedleggsnr && it.mimetype == vedlegg.mimetype } ?: return
 
 	val likeFelterVedOppdatering =
 		listOf(VedleggDto::erHoveddokument, VedleggDto::erPakrevd, VedleggDto::erVariant, VedleggDto::vedleggsnr)

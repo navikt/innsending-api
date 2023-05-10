@@ -1,10 +1,12 @@
-package no.nav.soknad.innsending.util.validators
+package no.nav.soknad.innsending.utils.validators
 
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
+import no.nav.soknad.innsending.util.validators.validerSoknadVedOppdatering
+import no.nav.soknad.innsending.util.validators.validerVedleggsListeVedOppdatering
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows

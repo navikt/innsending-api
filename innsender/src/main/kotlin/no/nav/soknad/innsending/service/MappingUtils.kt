@@ -190,10 +190,11 @@ fun oppdaterVedleggDb(vedleggDbData: VedleggDbData, patchVedleggDto: PatchVedleg
 fun mapTilSoknadDb(
 	dokumentSoknadDto: DokumentSoknadDto,
 	innsendingsId: String,
-	status: SoknadsStatus = SoknadsStatus.Opprettet
+	status: SoknadsStatus = SoknadsStatus.Opprettet,
+	id: Long? = null
 ) =
 	SoknadDbData(
-		id = dokumentSoknadDto.id,
+		id = id ?: dokumentSoknadDto.id,
 		innsendingsid = innsendingsId,
 		tittel = dokumentSoknadDto.tittel,
 		skjemanr = dokumentSoknadDto.skjemanr,

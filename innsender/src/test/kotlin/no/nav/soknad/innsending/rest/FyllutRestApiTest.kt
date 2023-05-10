@@ -1,13 +1,11 @@
 package no.nav.soknad.innsending.rest
 
-import com.nimbusds.jose.JOSEObjectType
-import no.nav.security.mock.oauth2.MockOAuth2Server
-import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
-import no.nav.security.token.support.spring.test.MockLoginController
 import no.nav.soknad.innsending.InnsendingApiApplication
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.TokenGenerator
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -27,7 +25,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 
-@Suppress("DEPRECATION")
 @ActiveProfiles("test")
 @SpringBootTest(
 	webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
@@ -40,40 +37,28 @@ import kotlin.test.assertTrue
 class FyllutRestApiTest {
 
 	@Autowired
-	lateinit var mockOAuth2Server: MockOAuth2Server
+	lateinit var restTemplate: TestRestTemplate
 
 	@Autowired
-	lateinit var restTemplate: TestRestTemplate
+	lateinit var soknadService: SoknadService
+
+	@Autowired
+	lateinit var tokenGenerator: TokenGenerator
 
 
 	@Value("\${server.port}")
 	var serverPort: Int? = 9064
 
-	private val tokenx = "tokenx"
 	private val subject = "12345678901"
-	private val audience = "aud-localhost"
-	private val expiry = 2 * 3600
 
 	@Test
 	internal fun testOpprettSoknadPaFyllUtApi() {
-		val token: String = mockOAuth2Server.issueToken(
-			tokenx,
-			MockLoginController::class.java.simpleName,
-			DefaultOAuth2TokenCallback(
-				tokenx,
-				subject,
-				JOSEObjectType.JWT.type,
-				listOf(audience),
-				mapOf("acr" to "Level4"),
-				expiry.toLong()
-			)
-		).serialize()
+		val token: String = tokenGenerator.lagTokenXToken()
 
 		val skjemanr = "NAV 14-05.07"
 		val tittel = "Søknad om engangsstønad ved fødsel"
 		val tema = "FOR"
 		val sprak = "no_nb"
-
 		val fraFyllUt = SkjemaDto(
 			subject, skjemanr, tittel, tema, sprak,
 			lagDokument(skjemanr, tittel, true, Mimetype.applicationSlashPdf),
@@ -92,13 +77,13 @@ class FyllutRestApiTest {
 		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
 
 		val response = restTemplate.exchange(
-			"http://localhost:${serverPort}/fyllUt/v1/leggTilVedlegg", HttpMethod.POST,
+			"http://localhost:${serverPort}/fyllUt/v1/soknad", HttpMethod.POST,
 			requestEntity, Unit::class.java
 		)
 
 		assertTrue(response != null)
 
-		assertEquals(302, response.statusCodeValue)
+		assertEquals(201, response.statusCodeValue)
 		assertTrue(response.headers["Location"] != null)
 
 		testHentSoknadOgSendInn(response, token)
@@ -175,7 +160,7 @@ class FyllutRestApiTest {
 		assertTrue(kvitteringsDto.hoveddokumentRef != null)
 
 		assertThrows<Exception> {
-			val hentSoknadRespons = restTemplate.exchange(
+			restTemplate.exchange(
 				"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}", HttpMethod.GET,
 				HttpEntity<Unit>(Hjelpemetoder.createHeaders(token)), DokumentSoknadDto::class.java
 			)
@@ -188,6 +173,78 @@ class FyllutRestApiTest {
 		)
 		assertEquals(HttpStatus.OK, filRespons.statusCode)
 		assertTrue(filRespons.body != null)
+
+	}
+
+	@Test
+	fun `Skal oppdatere søknad med nytt språk og tittel`() {
+		// Gitt
+		val token: String = tokenGenerator.lagTokenXToken()
+
+		val skjemanr = "NAV 14-05.07"
+		val tittel = "Søknad om engangsstønad ved fødsel"
+		val tema = "FOR"
+		val spraak = "no_nb"
+
+		val nyttSpraak = "en_gb"
+		val nyTittel = "Application for one-time grant at birth"
+
+		val vedleggDto1 =
+			Hjelpemetoder.lagVedleggDto(vedleggsnr = "vedleggsnr1", tittel = "vedleggTittel1", mimeType = null, fil = null)
+		val vedleggDto2 =
+			Hjelpemetoder.lagVedleggDto(vedleggsnr = "vedleggsnr2", tittel = "vedleggTittel2", mimeType = null, fil = null)
+
+		val innsendingsId = soknadService.opprettNySoknad(
+			Hjelpemetoder.lagDokumentSoknad(
+				brukerId = "12345678901", // Må være samme som i token (pid)
+				skjemanr = skjemanr,
+				spraak = spraak,
+				tittel = tittel,
+				tema = tema,
+				vedleggsListe = listOf(vedleggDto1, vedleggDto2)
+			)
+		)
+
+		val fraFyllUt = SkjemaDto(
+			subject, skjemanr, nyTittel, tema, nyttSpraak,
+			lagDokument(skjemanr, nyTittel, true),
+			lagDokument(skjemanr, nyTittel, true),
+			listOf(
+				lagDokument(
+					"T7",
+					"tittel1",
+					true,
+					null,
+					true
+				),
+				lagDokument("N6", "tittel2", true, null, true)
+			)
+		)
+		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
+
+		// Når
+		val response = restTemplate.exchange(
+			"http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}", HttpMethod.PUT,
+			requestEntity, Unit::class.java
+		)
+		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
+
+
+		// Så
+		assertTrue(response != null)
+		assertEquals(200, response.statusCodeValue)
+		assertEquals(nyTittel, oppdatertSoknad.tittel)
+		assertEquals("en", oppdatertSoknad.spraak, "Språk er oppdatert (blir konvertert til de første 2 bokstavene)")
+		assertEquals(4, oppdatertSoknad.vedleggsListe.size, "Hoveddokument, hoveddokumentVariant og to vedlegg")
+		assertTrue(
+			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == "T7" && it.tittel == "tittel1" },
+			"Skal ha vedlegg T7"
+		)
+		assertTrue(
+			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == "N6" && it.tittel == "tittel2" },
+			"Skal ha vedlegg T6"
+		)
+		assertEquals(null, response.body)
 
 	}
 

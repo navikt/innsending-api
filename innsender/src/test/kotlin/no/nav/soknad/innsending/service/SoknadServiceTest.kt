@@ -612,6 +612,86 @@ class SoknadServiceTest {
 		assertTrue(soknad.vedleggsListe.any { it.erHoveddokument && !it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp })
 	}
 
+	@Test
+	fun `Skal oppdatere søknad med ny data (språk og tittel)`() {
+		// Gitt
+		val tema = "HJE"
+		val skjemanr = "NAV 10-07.04"
+		val innsendingsId = soknadService.opprettNySoknad(lagDokumentSoknad(tema, skjemanr))
+
+		val oppdatertSpraak = "Nytt språk"
+		val oppdatertTittel = "Ny tittel"
+
+		val dokumentSoknad = Hjelpemetoder.lagDokumentSoknad(
+			brukerId = testpersonid,
+			skjemanr = skjemanr,
+			spraak = oppdatertSpraak,
+			tittel = oppdatertTittel,
+			tema = tema,
+		)
+
+		// Når
+		soknadService.oppdaterSoknad(innsendingsId, dokumentSoknad)
+		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
+
+		// Så
+		assertEquals(oppdatertSpraak, oppdatertSoknad.spraak)
+		assertEquals(oppdatertTittel, oppdatertSoknad.tittel)
+	}
+
+	@Test
+	fun `Skal oppdatere søknad med nye vedlegg`() {
+		// Gitt
+		val tema = "HJE"
+		val skjemanr = "NAV 10-07.04"
+		val tittel = "Tittel"
+		val spraak = "nb_no"
+		val innsendingsId = soknadService.opprettNySoknad(lagDokumentSoknad(tema, skjemanr))
+		val eksisterendeSoknad = soknadService.hentSoknad(innsendingsId)
+
+		val vedleggDto1 =
+			Hjelpemetoder.lagVedleggDto(vedleggsnr = "vedleggsnr1", tittel = "vedleggTittel1", mimeType = null, fil = null)
+		val vedleggDto2 =
+			Hjelpemetoder.lagVedleggDto(vedleggsnr = "vedleggsnr2", tittel = "vedleggTittel2", mimeType = null, fil = null)
+
+		val vedleggDtoList = listOf(vedleggDto1, vedleggDto2)
+		val dokumentSoknad = DokumentSoknadDto(
+			brukerId = testpersonid,
+			skjemanr = skjemanr,
+			tittel = tittel,
+			tema = tema,
+			status = SoknadsStatusDto.opprettet,
+			opprettetDato = OffsetDateTime.now(),
+			vedleggsListe = vedleggDtoList,
+			innsendingsId = innsendingsId,
+			spraak = spraak,
+		)
+
+		// Når
+		soknadService.oppdaterSoknad(innsendingsId, dokumentSoknad)
+		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
+
+		// Så
+		eksisterendeSoknad.vedleggsListe.forEach { eksisterendeVedlegg ->
+			assertNull(
+				oppdatertSoknad.vedleggsListe.find { eksisterendeVedlegg.vedleggsnr == it.vedleggsnr },
+				"Ingen av vedleggene fra den eksisterende søknaden skal være med i den oppdaterte søknaden"
+			)
+		}
+
+		assertEquals(2, oppdatertSoknad.vedleggsListe.size, "Skal ha to vedlegg i den oppdaterte søknaden")
+
+		assertTrue(
+			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == vedleggDto1.vedleggsnr },
+			"Skal ha vedlegg 1 i den oppdaterte søknaden"
+		)
+		assertTrue(
+			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == vedleggDto2.vedleggsnr },
+			"Skal ha vedlegg 2 i den oppdaterte søknaden"
+		)
+
+	}
+
 
 	@Test
 	fun testAutomatiskSlettingAvGamleSoknader() {
@@ -715,44 +795,9 @@ class SoknadServiceTest {
 		)
 	}
 
-
-	private fun lagVedleggDto(
-		skjemanr: String, tittel: String, mimeType: String?, fil: ByteArray?, id: Long? = null,
-		erHoveddokument: Boolean? = true, erVariant: Boolean? = false, erPakrevd: Boolean? = true
-	): VedleggDto {
-		return VedleggDto(
-			tittel, tittel, erHoveddokument!!, erVariant!!,
-			"application/pdf".equals(mimeType, true), erPakrevd!!,
-			if (fil != null) OpplastingsStatusDto.lastetOpp else OpplastingsStatusDto.ikkeValgt, OffsetDateTime.now(), id,
-			skjemanr, "Beskrivelse", UUID.randomUUID().toString(),
-			if ("application/json" == mimeType) Mimetype.applicationSlashJson else if (mimeType != null) Mimetype.applicationSlashPdf else null,
-			fil, null
-		)
-	}
-
-	private fun lagDokumentSoknad(
-		brukerId: String,
-		skjemanr: String,
-		spraak: String,
-		tittel: String,
-		tema: String
-	): DokumentSoknadDto {
-		val vedleggDtoPdf =
-			lagVedleggDto(skjemanr, tittel, "application/pdf", Hjelpemetoder.getBytesFromFile("/litenPdf.pdf"))
-
-		val vedleggDtoJson =
-			lagVedleggDto(skjemanr, tittel, "application/json", Hjelpemetoder.getBytesFromFile("/sanity.json"))
-
-		val vedleggDtoList = listOf(vedleggDtoPdf, vedleggDtoJson)
-		return DokumentSoknadDto(
-			brukerId, skjemanr, tittel, tema, SoknadsStatusDto.opprettet, OffsetDateTime.now(),
-			vedleggDtoList, 1L, UUID.randomUUID().toString(), null, spraak,
-			OffsetDateTime.now(), null, 0, VisningsType.fyllUt
-		)
+	fun lagDokumentSoknad(tema: String, skjemanr: String): DokumentSoknadDto {
+		return Hjelpemetoder.lagDokumentSoknad(testpersonid, skjemanr, "nb_NO", "Fullmaktsskjema", tema)
 	}
 
 
-	private fun lagDokumentSoknad(tema: String, skjemanr: String): DokumentSoknadDto {
-		return lagDokumentSoknad(testpersonid, skjemanr, "nb_NO", "Fullmaktsskjema", tema)
-	}
 }

@@ -70,12 +70,12 @@ class FyllutRestApi(
 		logger.debug("Skal endre søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-		val konvertert = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
+		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
 			skjemaDto,
 			brukerId
 		)
 
-		soknadService.oppdaterSoknad(innsendingsId, konvertert)
+		soknadService.oppdaterSoknad(innsendingsId, dokumentSoknadDto)
 		return ResponseEntity.status(HttpStatus.OK).body(null)
 	}
 
