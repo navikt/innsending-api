@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.service
 
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.util.Constants
@@ -285,3 +286,28 @@ fun mapTilDbMimetype(mimetype: Mimetype?): String? =
 		Mimetype.imageSlashPng -> "application/png"
 		else -> null
 	}
+
+fun mapTilFyllUtSoknadDto(dokumentSoknadDto: DokumentSoknadDto): FyllUtSoknadDto {
+	val hovedDokumentPdf = dokumentSoknadDto.vedleggsListe.find { it.erHoveddokument && !it.erVariant }
+	val hovedDokumentVariant = dokumentSoknadDto.vedleggsListe.find { it.erHoveddokument && it.erVariant }
+	val vedleggsListe = dokumentSoknadDto.vedleggsListe.filter { !it.erHoveddokument }
+
+	if (hovedDokumentPdf == null || hovedDokumentVariant == null) {
+		throw BackendErrorException("Hoveddokument eller variant mangler", "Finner ikke hoveddokument i vedleggsliste")
+	}
+
+	return FyllUtSoknadDto(
+		innsendingsId = dokumentSoknadDto.innsendingsId,
+		brukerId = dokumentSoknadDto.brukerId,
+		skjemanr = dokumentSoknadDto.skjemanr,
+		tittel = dokumentSoknadDto.tittel,
+		tema = dokumentSoknadDto.tema,
+		spraak = dokumentSoknadDto.spraak,
+		status = dokumentSoknadDto.status,
+		opprettetDato = dokumentSoknadDto.opprettetDato,
+		hoveddokument = hovedDokumentPdf,
+		hoveddokumentVariant = hovedDokumentVariant,
+		vedleggsListe = vedleggsListe,
+		kanLasteOppAnnet = dokumentSoknadDto.kanLasteOppAnnet,
+	)
+}

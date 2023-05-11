@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.rest
 
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.soknad.innsending.InnsendingApiApplication
+import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.utils.Hjelpemetoder
@@ -21,6 +22,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.util.LinkedMultiValueMap
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -50,6 +52,11 @@ class FyllutRestApiTest {
 	var serverPort: Int? = 9064
 
 	private val subject = "12345678901"
+
+	private val skjemanr = "NAV 14-05.07"
+	private val tittel = "Søknad om engangsstønad ved fødsel"
+	private val tema = "FOR"
+	private val spraak = "no_nb"
 
 	@Test
 	internal fun testOpprettSoknadPaFyllUtApi() {
@@ -181,29 +188,13 @@ class FyllutRestApiTest {
 		// Gitt
 		val token: String = tokenGenerator.lagTokenXToken()
 
-		val skjemanr = "NAV 14-05.07"
-		val tittel = "Søknad om engangsstønad ved fødsel"
-		val tema = "FOR"
-		val spraak = "no_nb"
-
 		val nyttSpraak = "en_gb"
 		val nyTittel = "Application for one-time grant at birth"
 
-		val vedleggDto1 =
-			Hjelpemetoder.lagVedleggDto(vedleggsnr = "vedleggsnr1", tittel = "vedleggTittel1", mimeType = null, fil = null)
-		val vedleggDto2 =
-			Hjelpemetoder.lagVedleggDto(vedleggsnr = "vedleggsnr2", tittel = "vedleggTittel2", mimeType = null, fil = null)
-
-		val innsendingsId = soknadService.opprettNySoknad(
-			Hjelpemetoder.lagDokumentSoknad(
-				brukerId = "12345678901", // Må være samme som i token (pid)
-				skjemanr = skjemanr,
-				spraak = spraak,
-				tittel = tittel,
-				tema = tema,
-				vedleggsListe = listOf(vedleggDto1, vedleggDto2)
-			)
-		)
+		val dokumentSoknadDto = opprettSoknad()
+		val skjemanr = dokumentSoknadDto.skjemanr
+		val tema = dokumentSoknadDto.tema
+		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		val fraFyllUt = SkjemaDto(
 			subject, skjemanr, nyTittel, tema, nyttSpraak,
@@ -236,6 +227,14 @@ class FyllutRestApiTest {
 		assertEquals(nyTittel, oppdatertSoknad.tittel)
 		assertEquals("en", oppdatertSoknad.spraak, "Språk er oppdatert (blir konvertert til de første 2 bokstavene)")
 		assertEquals(4, oppdatertSoknad.vedleggsListe.size, "Hoveddokument, hoveddokumentVariant og to vedlegg")
+		assertFalse(
+			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == "vedleggsnr1" && it.tittel == "vedleggTittel1" },
+			"Skal ikke ha gammelt vedlegg"
+		)
+		assertFalse(
+			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == "vedleggsnr2" && it.tittel == "vedleggTittel2" },
+			"Skal ikke ha gammelt vedlegg"
+		)
 		assertTrue(
 			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == "T7" && it.tittel == "tittel1" },
 			"Skal ha vedlegg T7"
@@ -245,6 +244,67 @@ class FyllutRestApiTest {
 			"Skal ha vedlegg T6"
 		)
 		assertEquals(null, response.body)
+
+	}
+
+	@Test
+	fun `Skal hente opprettet søknad`() {
+		// Gitt
+		val token: String = tokenGenerator.lagTokenXToken()
+
+		val dokumentSoknadDto = opprettSoknad()
+		val innsendingsId = dokumentSoknadDto.innsendingsId!!
+
+		val requestEntity = HttpEntity(null, Hjelpemetoder.createHeaders(token))
+
+		// Når
+		val response = restTemplate.exchange(
+			"http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}", HttpMethod.GET,
+			requestEntity, FyllUtSoknadDto::class.java
+		)
+
+		// Så
+		assertTrue(response != null)
+		assertEquals(200, response.statusCodeValue)
+		assertEquals(skjemanr, response.body!!.skjemanr)
+		assertEquals(tittel, response.body!!.tittel)
+		assertEquals(2, response.body!!.vedleggsListe.size)
+
+		val hovedDokument = dokumentSoknadDto.vedleggsListe.find { it.erHoveddokument && !it.erVariant }
+		val hovedDokumentVariant = dokumentSoknadDto.vedleggsListe.find { it.erHoveddokument && it.erVariant }
+
+		assertEquals(hovedDokument!!.vedleggsnr, response.body!!.hoveddokument.vedleggsnr, "Hoveddokument er riktig")
+		assertEquals(
+			hovedDokumentVariant!!.vedleggsnr,
+			response.body!!.hoveddokumentVariant.vedleggsnr,
+			"HoveddokumentVariant er riktig"
+		)
+
+	}
+
+	@Test
+	fun `Skal slette opprettet søknad`() {
+		// Gitt
+		val token: String = tokenGenerator.lagTokenXToken()
+
+		val dokumentSoknadDto = opprettSoknad()
+		val innsendingsId = dokumentSoknadDto.innsendingsId!!
+
+		val requestEntity = HttpEntity(null, Hjelpemetoder.createHeaders(token))
+
+		// Når
+		val response = restTemplate.exchange(
+			"http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}", HttpMethod.DELETE,
+			requestEntity, BodyStatusResponseDto::class.java
+		)
+
+		// Så
+		assertTrue(response != null)
+		assertEquals(200, response.statusCodeValue)
+		assertEquals("OK", response.body!!.status)
+		assertEquals("Slettet soknad med id $innsendingsId", response.body!!.info)
+
+		assertThrows<ResourceNotFoundException>("Søknaden skal ikke finnes") { soknadService.hentSoknad(innsendingsId) }
 
 	}
 
@@ -264,6 +324,59 @@ class FyllutRestApiTest {
 			mimetype,
 			if (erVedlegg) null else hentFil(mimetype)
 		)
+	}
+
+	// Opprett søknad med et hoveddokument, en hoveddokumentvariant og to vedlegg
+	private fun opprettSoknad(): DokumentSoknadDto {
+		val vedleggDtoPdf =
+			Hjelpemetoder.lagVedleggDto(
+				vedleggsnr = skjemanr,
+				tittel = tittel,
+				mimeType = "application/pdf",
+				fil = null,
+				erVariant = false,
+				erHoveddokument = true
+			)
+		val vedleggDtoJson =
+			Hjelpemetoder.lagVedleggDto(
+				vedleggsnr = skjemanr,
+				tittel = tittel,
+				mimeType = "application/json",
+				fil = Hjelpemetoder.getBytesFromFile("/sanity.json"),
+				erVariant = true,
+				erHoveddokument = true
+			)
+
+		val vedleggDto1 =
+			Hjelpemetoder.lagVedleggDto(
+				vedleggsnr = "vedleggsnr1",
+				tittel = "vedleggTittel1",
+				mimeType = null,
+				fil = null,
+				erVariant = false,
+				erHoveddokument = false
+			)
+		val vedleggDto2 =
+			Hjelpemetoder.lagVedleggDto(
+				vedleggsnr = "vedleggsnr2",
+				tittel = "vedleggTittel2",
+				mimeType = null,
+				fil = null,
+				erVariant = false,
+				erHoveddokument = false
+			)
+
+		val innsendingsId = soknadService.opprettNySoknad(
+			Hjelpemetoder.lagDokumentSoknad(
+				brukerId = "12345678901", // Må være samme som i token (pid)
+				skjemanr = skjemanr,
+				spraak = spraak,
+				tittel = tittel,
+				tema = tema,
+				vedleggsListe = listOf(vedleggDtoPdf, vedleggDtoJson, vedleggDto1, vedleggDto2)
+			)
+		)
+		return soknadService.hentSoknad(innsendingsId)
 	}
 
 	private fun hentFil(mimetype: Mimetype?): ByteArray? =

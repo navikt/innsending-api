@@ -3,10 +3,11 @@ package no.nav.soknad.innsending.rest
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.FyllUtApi
 import no.nav.soknad.innsending.config.RestConfig
-import no.nav.soknad.innsending.model.BodyStatusResponseDto
-import no.nav.soknad.innsending.model.SkjemaDto
+import no.nav.soknad.innsending.exceptions.IllegalActionException
+import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.service.mapTilFyllUtSoknadDto
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_LEVEL_4
@@ -79,18 +80,43 @@ class FyllutRestApi(
 		return ResponseEntity.status(HttpStatus.OK).body(null)
 	}
 
-	@Timed(InnsenderOperation.HENT)
-	override fun fyllUtHentSoknad(innsendingsId: String): ResponseEntity<List<SkjemaDto>> {
+	override fun fyllUtHentSoknad(innsendingsId: String): ResponseEntity<FyllUtSoknadDto> {
 		logger.info("Kall fra FyllUt for å hente søknad med innsendingsId $innsendingsId")
 
-		return super.fyllUtHentSoknad(innsendingsId)
+		val dokumentSoknadDto = hentSoknad(innsendingsId)
+
+		logger.info("$innsendingsId: Hentet søknad")
+
+		return ResponseEntity
+			.status(HttpStatus.OK)
+			.body(mapTilFyllUtSoknadDto(dokumentSoknadDto))
 	}
 
 	@Timed(InnsenderOperation.SLETT)
 	override fun fyllUtSlettSoknad(innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
 		logger.info("Kall fra FyllUt for å slette søknad med innsendingsId $innsendingsId")
 
-		return super.fyllUtSlettSoknad(innsendingsId)
+		val dokumentSoknadDto = hentSoknad(innsendingsId)
+		soknadService.slettSoknadAvBruker(dokumentSoknadDto)
+		logger.info("Slettet søknad med id $innsendingsId")
+
+		return ResponseEntity
+			.status(HttpStatus.OK)
+			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet soknad med id $innsendingsId"))
+
+	}
+
+	private fun hentSoknad(innsendingsId: String): DokumentSoknadDto {
+		val soknadDto = soknadService.hentSoknad(innsendingsId)
+		tilgangskontroll.harTilgang(soknadDto)
+		if (soknadDto.status != SoknadsStatusDto.opprettet) {
+			throw IllegalActionException(
+				"Søknaden kan ikke vises",
+				"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
+				"errorCode.illegalAction.applicationSentInOrDeleted"
+			)
+		}
+		return soknadDto
 	}
 
 
