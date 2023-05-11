@@ -4,9 +4,7 @@ import com.nimbusds.jose.JOSEObjectType
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import no.nav.security.token.support.spring.test.MockLoginController
-import org.springframework.stereotype.Component
 
-@Component
 class TokenGenerator(
 	private val mockOAuth2Server: MockOAuth2Server
 ) {

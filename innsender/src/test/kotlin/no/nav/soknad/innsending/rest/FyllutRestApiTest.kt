@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.rest
 
+import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.soknad.innsending.InnsendingApiApplication
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
@@ -45,7 +46,7 @@ class FyllutRestApiTest {
 	lateinit var soknadService: SoknadService
 
 	@Autowired
-	lateinit var tokenGenerator: TokenGenerator
+	lateinit var mockOAuth2Server: MockOAuth2Server
 
 
 	@Value("\${server.port}")
@@ -60,7 +61,7 @@ class FyllutRestApiTest {
 
 	@Test
 	internal fun testOpprettSoknadPaFyllUtApi() {
-		val token: String = tokenGenerator.lagTokenXToken()
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
 		val skjemanr = "NAV 14-05.07"
 		val tittel = "Søknad om engangsstønad ved fødsel"
@@ -186,7 +187,7 @@ class FyllutRestApiTest {
 	@Test
 	fun `Skal oppdatere søknad med nytt språk og tittel`() {
 		// Gitt
-		val token: String = tokenGenerator.lagTokenXToken()
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
 		val nyttSpraak = "en_gb"
 		val nyTittel = "Application for one-time grant at birth"
@@ -250,7 +251,7 @@ class FyllutRestApiTest {
 	@Test
 	fun `Skal hente opprettet søknad`() {
 		// Gitt
-		val token: String = tokenGenerator.lagTokenXToken()
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
 		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
@@ -285,7 +286,7 @@ class FyllutRestApiTest {
 	@Test
 	fun `Skal slette opprettet søknad`() {
 		// Gitt
-		val token: String = tokenGenerator.lagTokenXToken()
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
 		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
