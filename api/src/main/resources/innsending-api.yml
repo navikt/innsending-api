@@ -59,7 +59,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FyllUtSoknadDto"
+                $ref: "#/components/schemas/SkjemaDto"
         404:
           description: Ingen søknad funnet.
       tags:
@@ -94,7 +94,7 @@ paths:
 
     delete:
       summary: Kall for å slette opprettet søknad gitt innsendingsId.
-      description: Dersom funnet, slettes søknaden.
+      description: Dersom funnet, slettes søknaden og dens vedlegg, eventuelle opplastede filer og brukernotifikasjon
       operationId: fyllUtSlettSoknad
 
       parameters:
@@ -119,7 +119,8 @@ paths:
   /fyllUt/v1/soknad:
     post:
       summary: Start en ny søknadsutfylling
-      description: FyllUt tjenesten gir søker mulighet til å fylle ut en søknad. Dette endepunktet kalles når vedkommende starter søknaden og det opprettes en tom søknad i databasen. For hvert steg i FyllUt kalles PUT endepunktet for å oppdatere søknaden underveis.
+      description: FyllUt tjenesten gir søker mulighet til å fylle ut en søknad. Dette endepunktet kalles når vedkommende starter søknaden og det opprettes en tom søknad i databasen.
+        En brukernotifikasjon som linker til oppsummeringssiden i FyllUt blir opprettet. For hvert steg i FyllUt kalles PUT endepunktet for å oppdatere søknaden underveis.
       operationId: fyllUtOpprettSoknad
 
       requestBody:
@@ -953,52 +954,6 @@ components:
           example: true
           default: false
 
-    FyllUtSoknadDto:
-      type: object
-      description: Data om en opprettet søknad fra FyllUt. Nesten lik som DokumentSoknadDto, men hoveddokument og hoveddokumentvariant er utenfor vedleggslisten og kun den nødvendige informasjonen er med.
-      required:
-        - brukerId
-        - skjemanr
-        - tittel
-        - tema
-        - status
-        - opprettetDato
-        - hoveddokument
-        - hoveddokumentVariant
-        - vedleggsListe
-
-      properties:
-        innsendingsId:
-          $ref: "#/components/schemas/InnsendingsId"
-        brukerId:
-          $ref: "#/components/schemas/BrukerId"
-        skjemanr:
-          $ref: "#/components/schemas/Skjemanr"
-        tittel:
-          $ref: "#/components/schemas/Tittel"
-        tema:
-          $ref: "#/components/schemas/Tema"
-        spraak:
-          $ref: "#/components/schemas/Spraak"
-        status:
-          $ref: "#/components/schemas/SoknadsStatusDto"
-        opprettetDato:
-          type: string
-          format: date-time
-          description: Opprettet dato og tid som UTC
-          example: 2021-12-03T14:10:00Z
-        hoveddokument:
-          $ref: "#/components/schemas/VedleggDto"
-        hoveddokumentVariant:
-          $ref: "#/components/schemas/VedleggDto"
-        vedleggsListe:
-          type: array
-          description: Liste av dokumenter vedlegg til søknad
-          items:
-            $ref: "#/components/schemas/VedleggDto"
-        kanLasteOppAnnet:
-          $ref: "#/components/schemas/KanLasteOppAnnet"
-
     FilDto:
       type: object
       description: Data om en opplastet fil
@@ -1253,6 +1208,8 @@ components:
         - hoveddokumentVariant
 
       properties:
+        innsendingsId:
+          $ref: "#/components/schemas/InnsendingsId"
         brukerId:
           $ref: "#/components/schemas/BrukerId"
         skjemanr:
@@ -1263,6 +1220,8 @@ components:
           $ref: "#/components/schemas/Tema"
         spraak:
           $ref: "#/components/schemas/Spraak"
+        status:
+          $ref: "#/components/schemas/SoknadsStatusDto"
         hoveddokument:
           $ref: "#/components/schemas/SkjemaDokumentDto"
         hoveddokumentVariant:

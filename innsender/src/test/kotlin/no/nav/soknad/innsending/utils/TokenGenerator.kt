@@ -8,8 +8,11 @@ import no.nav.security.token.support.spring.test.MockLoginController
 class TokenGenerator(
 	private val mockOAuth2Server: MockOAuth2Server
 ) {
+	companion object {
+		val subject = "12345678901"
+	}
+
 	private val tokenx = "tokenx"
-	private val subject = "12345678901"
 	private val audience = "aud-localhost"
 	private val expiry = 2 * 3600
 

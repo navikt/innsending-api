@@ -4,10 +4,13 @@ import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.FyllUtApi
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.IllegalActionException
-import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.model.BodyStatusResponseDto
+import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.SkjemaDto
+import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.SoknadService
-import no.nav.soknad.innsending.service.mapTilFyllUtSoknadDto
+import no.nav.soknad.innsending.service.mapTilSkjemaDto
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_LEVEL_4
@@ -81,7 +84,7 @@ class FyllutRestApi(
 	}
 
 	@Timed(InnsenderOperation.HENT)
-	override fun fyllUtHentSoknad(innsendingsId: String): ResponseEntity<FyllUtSoknadDto> {
+	override fun fyllUtHentSoknad(innsendingsId: String): ResponseEntity<SkjemaDto> {
 		logger.info("Kall fra FyllUt for å hente søknad med innsendingsId $innsendingsId")
 
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
@@ -90,7 +93,7 @@ class FyllutRestApi(
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(mapTilFyllUtSoknadDto(dokumentSoknadDto))
+			.body(mapTilSkjemaDto(dokumentSoknadDto))
 	}
 
 	@Timed(InnsenderOperation.SLETT)

@@ -287,27 +287,41 @@ fun mapTilDbMimetype(mimetype: Mimetype?): String? =
 		else -> null
 	}
 
-fun mapTilFyllUtSoknadDto(dokumentSoknadDto: DokumentSoknadDto): FyllUtSoknadDto {
+fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 	val hovedDokumentPdf = dokumentSoknadDto.vedleggsListe.find { it.erHoveddokument && !it.erVariant }
 	val hovedDokumentVariant = dokumentSoknadDto.vedleggsListe.find { it.erHoveddokument && it.erVariant }
-	val vedleggsListe = dokumentSoknadDto.vedleggsListe.filter { !it.erHoveddokument }
+	val vedleggsListe = dokumentSoknadDto.vedleggsListe.filter { !it.erHoveddokument }.map { mapTilSkjemaDokumentDto(it) }
 
 	if (hovedDokumentPdf == null || hovedDokumentVariant == null) {
 		throw BackendErrorException("Hoveddokument eller variant mangler", "Finner ikke hoveddokument i vedleggsliste")
 	}
 
-	return FyllUtSoknadDto(
+	return SkjemaDto(
 		innsendingsId = dokumentSoknadDto.innsendingsId,
 		brukerId = dokumentSoknadDto.brukerId,
 		skjemanr = dokumentSoknadDto.skjemanr,
 		tittel = dokumentSoknadDto.tittel,
 		tema = dokumentSoknadDto.tema,
-		spraak = dokumentSoknadDto.spraak,
+		spraak = dokumentSoknadDto.spraak ?: "no",
 		status = dokumentSoknadDto.status,
-		opprettetDato = dokumentSoknadDto.opprettetDato,
-		hoveddokument = hovedDokumentPdf,
-		hoveddokumentVariant = hovedDokumentVariant,
+		hoveddokument = mapTilSkjemaDokumentDto(hovedDokumentPdf),
+		hoveddokumentVariant = mapTilSkjemaDokumentDto(hovedDokumentVariant),
 		vedleggsListe = vedleggsListe,
 		kanLasteOppAnnet = dokumentSoknadDto.kanLasteOppAnnet,
+	)
+}
+
+fun mapTilSkjemaDokumentDto(vedleggDto: VedleggDto): SkjemaDokumentDto {
+	val vedleggsnr =
+		vedleggDto.vedleggsnr ?: throw BackendErrorException("Vedleggsnr mangler", "Finner ikke vedleggsnr i vedlegg")
+
+	return SkjemaDokumentDto(
+		vedleggsnr = vedleggsnr,
+		tittel = vedleggDto.tittel,
+		label = vedleggDto.label,
+		beskrivelse = vedleggDto.beskrivelse,
+		mimetype = vedleggDto.mimetype,
+		pakrevd = vedleggDto.erPakrevd,
+		document = vedleggDto.document,
 	)
 }

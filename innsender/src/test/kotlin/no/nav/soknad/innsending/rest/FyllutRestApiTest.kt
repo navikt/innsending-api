@@ -68,10 +68,14 @@ class FyllutRestApiTest {
 		val tema = "FOR"
 		val sprak = "no_nb"
 		val fraFyllUt = SkjemaDto(
-			subject, skjemanr, tittel, tema, sprak,
-			lagDokument(skjemanr, tittel, true, Mimetype.applicationSlashPdf),
-			lagDokument(skjemanr, tittel, true, Mimetype.applicationSlashJson),
-			listOf(
+			brukerId = subject,
+			skjemanr = skjemanr,
+			tittel = tittel,
+			tema = tema,
+			spraak = sprak,
+			hoveddokument = lagDokument(skjemanr, tittel, true, Mimetype.applicationSlashPdf),
+			hoveddokumentVariant = lagDokument(skjemanr, tittel, true, Mimetype.applicationSlashJson),
+			vedleggsListe = listOf(
 				lagDokument(
 					"T7",
 					"Inntektsopplysninger for selvstendig næringsdrivende og frilansere som skal ha foreldrepenger eller svangerskapspenger",
@@ -198,10 +202,14 @@ class FyllutRestApiTest {
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		val fraFyllUt = SkjemaDto(
-			subject, skjemanr, nyTittel, tema, nyttSpraak,
-			lagDokument(skjemanr, nyTittel, true),
-			lagDokument(skjemanr, nyTittel, true),
-			listOf(
+			brukerId = subject,
+			skjemanr = skjemanr,
+			tittel = nyTittel,
+			tema = tema,
+			spraak = nyttSpraak,
+			hoveddokument = lagDokument(skjemanr, nyTittel, true, Mimetype.applicationSlashPdf),
+			hoveddokumentVariant = lagDokument(skjemanr, nyTittel, true, Mimetype.applicationSlashJson),
+			vedleggsListe = listOf(
 				lagDokument(
 					"T7",
 					"tittel1",
@@ -212,6 +220,7 @@ class FyllutRestApiTest {
 				lagDokument("N6", "tittel2", true, null, true)
 			)
 		)
+
 		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
 
 		// Når
@@ -261,7 +270,7 @@ class FyllutRestApiTest {
 		// Når
 		val response = restTemplate.exchange(
 			"http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}", HttpMethod.GET,
-			requestEntity, FyllUtSoknadDto::class.java
+			requestEntity, SkjemaDto::class.java
 		)
 
 		// Så
@@ -269,7 +278,7 @@ class FyllutRestApiTest {
 		assertEquals(200, response.statusCodeValue)
 		assertEquals(skjemanr, response.body!!.skjemanr)
 		assertEquals(tittel, response.body!!.tittel)
-		assertEquals(2, response.body!!.vedleggsListe.size)
+		assertEquals(2, response.body!!.vedleggsListe?.size)
 
 		val hovedDokument = dokumentSoknadDto.vedleggsListe.find { it.erHoveddokument && !it.erVariant }
 		val hovedDokumentVariant = dokumentSoknadDto.vedleggsListe.find { it.erHoveddokument && it.erVariant }
@@ -369,7 +378,7 @@ class FyllutRestApiTest {
 
 		val innsendingsId = soknadService.opprettNySoknad(
 			Hjelpemetoder.lagDokumentSoknad(
-				brukerId = "12345678901", // Må være samme som i token (pid)
+				brukerId = TokenGenerator.subject, // Må være samme som i token (pid)
 				skjemanr = skjemanr,
 				spraak = spraak,
 				tittel = tittel,
