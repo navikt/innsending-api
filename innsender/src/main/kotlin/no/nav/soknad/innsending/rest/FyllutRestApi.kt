@@ -80,6 +80,7 @@ class FyllutRestApi(
 		return ResponseEntity.status(HttpStatus.OK).body(null)
 	}
 
+	@Timed(InnsenderOperation.HENT)
 	override fun fyllUtHentSoknad(innsendingsId: String): ResponseEntity<FyllUtSoknadDto> {
 		logger.info("Kall fra FyllUt for å hente søknad med innsendingsId $innsendingsId")
 

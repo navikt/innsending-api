@@ -66,7 +66,7 @@ paths:
         - fyllUtHentSoknad
     put:
       summary: Oppdater en eksisterende søknadsutfylling
-      description: Dette endepunktet kalles for hvert steg i FyllUt-flyten og oppdaterer søknaden. Alle felter blir overskrevet unntatt brukerId, skjemanr, hoveddokument.vedleggsnr, hoveddokument.paakrevd
+      description: Dette endepunktet kalles for hvert steg i FyllUt-flyten og oppdaterer søknaden. Alle felter blir overskrevet unntatt brukerId og skjemanr. Vedlegg blir også overskrevet.
       operationId: fyllUtOppdaterSoknad
 
       parameters:
@@ -79,7 +79,7 @@ paths:
           style: simple
 
       requestBody:
-        description: Søknadsmetadata for å oppdatere søknaden. PDF og JSON av søknaden vil bli lagt til når søknaden sendes inn (siste steg i FyllUt-flyten)
+        description: Søknadsmetadata for å oppdatere søknaden. HovedokumentVariant (JSON) oppdateres underveis, mens hoveddokument (PDF) av søknaden vil bli lagt til når søknaden sendes inn (siste steg i FyllUt-flyten)
         content:
           application/json:
             schema:
@@ -123,7 +123,8 @@ paths:
       operationId: fyllUtOpprettSoknad
 
       requestBody:
-        description: Søknadsmetadata for å opprette søknaden. PDF og JSON av søknaden (samt liste over eventuelle obligatoriske og valgfrie vedlegg som skal/kan legges til) vil bli lagt til i søknaden etterhvert som bruker fyller ut søknaden.
+        description: Søknadsmetadata for å opprette søknaden.  HovedokumentVariant (JSON) oppdateres underveis, mens hoveddokument (PDF) av søknaden vil bli lagt til når søknaden sendes inn (siste steg i FyllUt-flyten).
+          Liste over eventuelle obligatoriske og valgfrie vedlegg som skal/kan legges til vil bli lagt til i søknaden etterhvert som bruker fyller ut søknaden.
         content:
           application/json:
             schema:
@@ -954,7 +955,7 @@ components:
 
     FyllUtSoknadDto:
       type: object
-      description: Data om en opprettet søknad fra FyllUt. Nesten lik som DokumentSoknadDto, men hoveddokument og hoveddokumentvariant er utenfor vedleggslisten
+      description: Data om en opprettet søknad fra FyllUt. Nesten lik som DokumentSoknadDto, men hoveddokument og hoveddokumentvariant er utenfor vedleggslisten og kun den nødvendige informasjonen er med.
       required:
         - brukerId
         - skjemanr
