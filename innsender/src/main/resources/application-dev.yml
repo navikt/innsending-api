@@ -1,0 +1,12 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+cron:
+  # Kjører hvert 11. minutt
+  runVerifyArchivedApplications: 0 */11 * ? * *
+
+verifyArchivedApplications:
+  offsetMinutes: 10
+  timespanHours: 24

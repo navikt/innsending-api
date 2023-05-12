@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:14.1-alpine
+    container_name: innsending-api-db
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - '5450:5432'
+    volumes:
+      - db:/var/lib/postgresql/data
+
+volumes:
+  db:
+    driver: local

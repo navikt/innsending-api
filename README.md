@@ -10,10 +10,21 @@ fungerer.
 
 ## Utvikling
 
+### Embedded Postgres
+
 Ved kjøring av `InnsendingApiApplication` vil en embedded Postgres
 database ([opentable](https://github.com/opentable/otj-pg-embedded)) spinne opp som en docker
 container og kjøre Flyway
 migrasjonene.
+
+### Docker-compose postgres
+
+Embedded Postgres databasen spinner opp en ny database hver gang, med en ny port. For å ha en stabil database under
+utvikling:
+
+- Kjør `docker-compose up` i rotmappen til prosjektet
+- Bytt til Spring profile: `docker`
+- Kjør `InnsendingApiApplication`
 
 ### Testing
 
