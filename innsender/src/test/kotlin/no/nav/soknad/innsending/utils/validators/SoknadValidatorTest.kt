@@ -34,6 +34,7 @@ class SoknadValidatorTest {
 	private val erPakrevd = false
 	private val opprettetdato = OffsetDateTime.now()
 	private val opplastingsStatus = OpplastingsStatusDto.ikkeValgt
+	private val formioId = "formioId"
 
 	private fun lagEksisterendeSoknad(): DokumentSoknadDto {
 		val vedleggDto = VedleggDto(
@@ -45,6 +46,7 @@ class SoknadValidatorTest {
 			erPakrevd = erPakrevd,
 			opplastingsStatus = opplastingsStatus,
 			opprettetdato = opprettetdato,
+			formioId = formioId
 		)
 
 		return DokumentSoknadDto(
@@ -119,6 +121,7 @@ class SoknadValidatorTest {
 			erPakrevd = erPakrevd,
 			opplastingsStatus = opplastingsStatus,
 			opprettetdato = opprettetdato,
+			formioId = "ulik formioId"
 		)
 		val soknad = DokumentSoknadDto(
 			brukerId = brukerId,
@@ -136,7 +139,7 @@ class SoknadValidatorTest {
 		val exception = assertThrows<IllegalActionException> {
 			soknad.validerVedleggsListeVedOppdatering(eksisterendeSoknad)
 		}
-		assertEquals("Felter er ikke like for VedleggDto: erHoveddokument", exception.message)
+		assertEquals("Felter er ikke like for VedleggDto: erHoveddokument, formioId", exception.message)
 
 	}
 
@@ -152,6 +155,7 @@ class SoknadValidatorTest {
 			erPakrevd = erPakrevd,
 			opplastingsStatus = opplastingsStatus,
 			opprettetdato = opprettetdato,
+			formioId = formioId
 		)
 		val soknad = DokumentSoknadDto(
 			brukerId = brukerId,

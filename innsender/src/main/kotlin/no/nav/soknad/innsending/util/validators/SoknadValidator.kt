@@ -27,7 +27,13 @@ private fun validerVedleggVedOppdatering(vedlegg: VedleggDto, eksisterendeVedleg
 		eksisterendeVedleggsListe.find { it.vedleggsnr == vedlegg.vedleggsnr && it.mimetype == vedlegg.mimetype } ?: return
 
 	val likeFelterVedOppdatering =
-		listOf(VedleggDto::erHoveddokument, VedleggDto::erPakrevd, VedleggDto::erVariant, VedleggDto::vedleggsnr)
+		listOf(
+			VedleggDto::erHoveddokument,
+			VedleggDto::erPakrevd,
+			VedleggDto::erVariant,
+			VedleggDto::vedleggsnr,
+			VedleggDto::formioId
+		)
 
 	validerLikeFelter<VedleggDto>(
 		vedlegg,

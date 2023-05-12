@@ -22,7 +22,8 @@ data class VedleggDbData(
 	@Column(name = "opprettetdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val opprettetdato: LocalDateTime,
 	@Column(name = "endretdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val endretdato: LocalDateTime,
 	@Column(name = "innsendtdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val innsendtdato: LocalDateTime?,
-	@Column(name = "vedleggsurl", columnDefinition = "varchar") val vedleggsurl: String?
+	@Column(name = "vedleggsurl", columnDefinition = "varchar") val vedleggsurl: String?,
+	@Column(name = "formioId", columnDefinition = "varchar") val formioId: String?
 ) {
 
 	override fun equals(other: Any?): Boolean {
@@ -31,9 +32,7 @@ data class VedleggDbData(
 
 		other as VedleggDbData
 
-		if (id != other.id) return false
-
-		return true
+		return id == other.id
 	}
 
 	override fun hashCode() = id.hashCode()

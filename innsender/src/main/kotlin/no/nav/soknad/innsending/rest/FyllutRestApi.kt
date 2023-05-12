@@ -87,7 +87,8 @@ class FyllutRestApi(
 	override fun fyllUtHentSoknad(innsendingsId: String): ResponseEntity<SkjemaDto> {
 		logger.info("Kall fra FyllUt for å hente søknad med innsendingsId $innsendingsId")
 
-		val dokumentSoknadDto = hentSoknad(innsendingsId)
+		val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
+		validerSoknadsTilgang(dokumentSoknadDto)
 
 		logger.info("$innsendingsId: Hentet søknad")
 
@@ -100,7 +101,9 @@ class FyllutRestApi(
 	override fun fyllUtSlettSoknad(innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
 		logger.info("Kall fra FyllUt for å slette søknad med innsendingsId $innsendingsId")
 
-		val dokumentSoknadDto = hentSoknad(innsendingsId)
+		val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
+		validerSoknadsTilgang(dokumentSoknadDto)
+
 		soknadService.slettSoknadAvBruker(dokumentSoknadDto)
 		logger.info("Slettet søknad med id $innsendingsId")
 
@@ -110,17 +113,15 @@ class FyllutRestApi(
 
 	}
 
-	private fun hentSoknad(innsendingsId: String): DokumentSoknadDto {
-		val soknadDto = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll.harTilgang(soknadDto)
-		if (soknadDto.status != SoknadsStatusDto.opprettet) {
+	private fun validerSoknadsTilgang(dokumentSoknadDto: DokumentSoknadDto) {
+		tilgangskontroll.harTilgang(dokumentSoknadDto)
+		if (dokumentSoknadDto.status != SoknadsStatusDto.opprettet) {
 			throw IllegalActionException(
 				"Søknaden kan ikke vises",
 				"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
 				"errorCode.illegalAction.applicationSentInOrDeleted"
 			)
 		}
-		return soknadDto
 	}
 
 

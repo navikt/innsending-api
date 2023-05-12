@@ -144,10 +144,24 @@ fun mapTilFilDb(filDto: FilDto) = FilDbData(
 fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long) =
 	mapTilVedleggDb(vedleggDto, soknadsId, vedleggDto.skjemaurl, mapTilDbOpplastingsStatus(vedleggDto.opplastingsStatus))
 
+fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, vedleggsId: Long) =
+	mapTilVedleggDb(
+		vedleggDto,
+		soknadsId,
+		vedleggDto.skjemaurl,
+		mapTilDbOpplastingsStatus(vedleggDto.opplastingsStatus),
+		vedleggsId
+	)
 
-fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, url: String?, opplastingsStatus: OpplastingsStatus) =
+fun mapTilVedleggDb(
+	vedleggDto: VedleggDto,
+	soknadsId: Long,
+	url: String?,
+	opplastingsStatus: OpplastingsStatus,
+	vedleggsId: Long? = null
+) =
 	VedleggDbData(
-		id = vedleggDto.id,
+		id = vedleggsId ?: vedleggDto.id,
 		soknadsid = soknadsId,
 		status = opplastingsStatus,
 		erhoveddokument = vedleggDto.erHoveddokument,
@@ -163,7 +177,8 @@ fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, url: String?, oppla
 		opprettetdato = mapTilLocalDateTime(vedleggDto.opprettetdato)!!,
 		endretdato = LocalDateTime.now(),
 		innsendtdato = mapTilLocalDateTime(vedleggDto.innsendtdato),
-		vedleggsurl = url ?: vedleggDto.skjemaurl
+		vedleggsurl = url ?: vedleggDto.skjemaurl,
+		formioId = vedleggDto.formioId
 	)
 
 fun oppdaterVedleggDb(vedleggDbData: VedleggDbData, patchVedleggDto: PatchVedleggDto): VedleggDbData =
@@ -184,7 +199,8 @@ fun oppdaterVedleggDb(vedleggDbData: VedleggDbData, patchVedleggDto: PatchVedleg
 		vedleggDbData.opprettetdato,
 		LocalDateTime.now(),
 		vedleggDbData.innsendtdato,
-		vedleggDbData.vedleggsurl
+		vedleggDbData.vedleggsurl,
+		vedleggDbData.formioId
 	)
 
 

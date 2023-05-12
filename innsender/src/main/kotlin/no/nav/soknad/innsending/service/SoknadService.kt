@@ -451,6 +451,7 @@ class SoknadService(
 
 
 	fun oppdaterSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
+		// Valider søknaden mot eksisterende søknad ved å sjekke felter som ikke er lov til å oppdatere
 		val eksisterendeSoknad = hentSoknad(innsendingsId)
 		validerInnsendtSoknadMotEksisterende(dokumentSoknadDto, eksisterendeSoknad)
 
@@ -461,17 +462,48 @@ class SoknadService(
 			id = eksisterendeSoknad.id,
 		)
 		val oppdatertSoknad = repo.lagreSoknad(soknadDb)
+		val soknadsId = oppdatertSoknad.id!!
 
-		// Slett alle vedlegg for søknaden
-		eksisterendeSoknad.vedleggsListe.forEach {
+		dokumentSoknadDto.vedleggsListe.forEach { nyttVedlegg ->
+			// Finn eksisterende vedlegg. Kan være flere vedlegg med samme formioId (feks: formio-komponenten til vedleggsnr N6 (Annen dokumentasjon) kan ha flere vedlegg tilknyttet seg).
+			// Det kan også være flere filer lastet opp fra sendInn på samme vedlegg
+			val eksisterendeVedleggsListe =
+				eksisterendeSoknad.vedleggsListe.filter { eksisterendeVedlegg -> eksisterendeVedlegg.formioId == nyttVedlegg.formioId }
+
+			// Oppdater eksisterende vedlegg
+			if (eksisterendeVedleggsListe.isNotEmpty()) {
+				oppdaterEksisterendeVedlegg(eksisterendeVedleggsListe, nyttVedlegg, soknadsId)
+			} else {
+				// Lagre nytt vedlegg
+				repo.lagreVedlegg(mapTilVedleggDb(nyttVedlegg, soknadsId))
+			}
+		}
+
+		// Slett alle eksisterende vedlegg (og eventuelt tilhørende filer) som ikke med i den nye søknaden
+		slettEksisterendeVedlegg(eksisterendeSoknad.vedleggsListe, dokumentSoknadDto)
+
+	}
+
+	private fun slettEksisterendeVedlegg(
+		eksisterendeVedleggsListe: List<VedleggDto>,
+		dokumentSoknadDto: DokumentSoknadDto
+	) {
+		eksisterendeVedleggsListe.filter { eksisterendeVedlegg ->
+			dokumentSoknadDto.vedleggsListe.none { nyttVedlegg -> eksisterendeVedlegg.id == nyttVedlegg.id }
+		}.forEach {
 			vedleggService.slettVedleggOgDensFiler(it)
 		}
+	}
 
-		// Legg til alle vedlegg for søknaden
-		dokumentSoknadDto.vedleggsListe.forEach {
-			repo.lagreVedlegg(mapTilVedleggDb(it, oppdatertSoknad.id!!))
+	private fun oppdaterEksisterendeVedlegg(
+		eksisterendeVedleggsListe: List<VedleggDto>,
+		nyttVedlegg: VedleggDto,
+		soknadsId: Long
+	) {
+		eksisterendeVedleggsListe.forEach {
+			val vedleggDbData = mapTilVedleggDb(vedleggDto = nyttVedlegg, soknadsId = soknadsId, vedleggsId = it.id!!)
+			repo.lagreVedlegg(vedleggDbData)
 		}
-
 	}
 
 

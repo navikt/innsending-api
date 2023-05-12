@@ -995,6 +995,11 @@ components:
       description: Satt til 'true' dersom dette er en ettersendingssøknad.
       example: true
 
+    FormioId:
+      type: string
+      description: Unik vedleggsId som tilsvarer en gitt komponent i formIo.
+      example: ec9k3bt
+
     FristForEttersendelse:
       type: integer
       format: int64
@@ -1194,6 +1199,8 @@ components:
           $ref: "#/components/schemas/Document"
         propertyNavn:
           $ref: "#/components/schemas/PropertyNavn"
+        formioId:
+          $ref: "#/components/schemas/FormioId"
 
     SkjemaDto:
       type: object
@@ -1329,6 +1336,8 @@ components:
           format: date-time
           description: Endret dato og tid som UTC
           example: 2021-12-03T14:10:00Z
+        formioId:
+          $ref: "#/components/schemas/FormioId"
 
     Vedleggsnr:
       type: string
