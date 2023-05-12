@@ -14,6 +14,7 @@ import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
+import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import no.nav.soknad.innsending.util.validators.validerSoknadVedOppdatering
 import no.nav.soknad.innsending.util.validators.validerVedleggsListeVedOppdatering
 import org.slf4j.LoggerFactory
@@ -302,6 +303,10 @@ class SoknadService(
 
 	@Transactional
 	fun opprettNySoknad(dokumentSoknadDto: DokumentSoknadDto): String {
+		if (dokumentSoknadDto.vedleggsListe.size != 2) {
+			throw BackendErrorException("Feil antall vedlegg", "Vedleggslisten skal være tom")
+		}
+
 		val operation = InnsenderOperation.OPPRETT.name
 
 		val innsendingsId = Utilities.laginnsendingsId()
@@ -450,15 +455,14 @@ class SoknadService(
 	}
 
 
-	fun oppdaterSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
+	fun oppdaterSoknad(eksisterendeSoknad: DokumentSoknadDto, dokumentSoknadDto: DokumentSoknadDto) {
 		// Valider søknaden mot eksisterende søknad ved å sjekke felter som ikke er lov til å oppdatere
-		val eksisterendeSoknad = hentSoknad(innsendingsId)
 		validerInnsendtSoknadMotEksisterende(dokumentSoknadDto, eksisterendeSoknad)
 
 		// Oppdater søknaden
 		val soknadDb = mapTilSoknadDb(
 			dokumentSoknadDto = dokumentSoknadDto,
-			innsendingsId = innsendingsId,
+			innsendingsId = eksisterendeSoknad.innsendingsId!!,
 			id = eksisterendeSoknad.id,
 		)
 		val oppdatertSoknad = repo.lagreSoknad(soknadDb)
@@ -466,9 +470,11 @@ class SoknadService(
 
 		dokumentSoknadDto.vedleggsListe.forEach { nyttVedlegg ->
 			// Finn eksisterende vedlegg. Kan være flere vedlegg med samme formioId (feks: formio-komponenten til vedleggsnr N6 (Annen dokumentasjon) kan ha flere vedlegg tilknyttet seg).
-			// Det kan også være flere filer lastet opp fra sendInn på samme vedlegg
+			// Hoveddokument og hoveddokumentVariant-vedleggene har ikke formioId. De har samme vedleggsnr=skjemanr og erVariant skiller dem
 			val eksisterendeVedleggsListe =
-				eksisterendeSoknad.vedleggsListe.filter { eksisterendeVedlegg -> eksisterendeVedlegg.formioId == nyttVedlegg.formioId }
+				eksisterendeSoknad.vedleggsListe.filter { eksisterendeVedlegg ->
+					eksisterendeVedlegg.formioId == nyttVedlegg.formioId && eksisterendeVedlegg.vedleggsnr == nyttVedlegg.vedleggsnr && eksisterendeVedlegg.erVariant == nyttVedlegg.erVariant
+				}
 
 			// Oppdater eksisterende vedlegg
 			if (eksisterendeVedleggsListe.isNotEmpty()) {
@@ -478,18 +484,34 @@ class SoknadService(
 				repo.lagreVedlegg(mapTilVedleggDb(nyttVedlegg, soknadsId))
 			}
 		}
+	}
 
-		// Slett alle eksisterende vedlegg (og eventuelt tilhørende filer) som ikke med i den nye søknaden
+	fun oppdaterSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
+		if (dokumentSoknadDto.vedleggsListe.size != 2) {
+			throw BackendErrorException("Feil antall vedlegg", "Vedleggslisten skal være tom")
+		}
+
+		val eksisterendeSoknad = hentSoknad(innsendingsId)
+		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto)
+	}
+
+	fun oppdaterUtfyltSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
+		val eksisterendeSoknad = hentSoknad(innsendingsId)
+		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto)
+
 		slettEksisterendeVedlegg(eksisterendeSoknad.vedleggsListe, dokumentSoknadDto)
 
 	}
 
+	// Slett alle eksisterende vedlegg (og eventuelt tilhørende filer) som ikke med i den nye søknaden
+	// Hovedokumentene skal ikke slettes
 	private fun slettEksisterendeVedlegg(
 		eksisterendeVedleggsListe: List<VedleggDto>,
 		dokumentSoknadDto: DokumentSoknadDto
 	) {
 		eksisterendeVedleggsListe.filter { eksisterendeVedlegg ->
-			dokumentSoknadDto.vedleggsListe.none { nyttVedlegg -> eksisterendeVedlegg.id == nyttVedlegg.id }
+			!eksisterendeVedlegg.erHoveddokument &&
+				dokumentSoknadDto.vedleggsListeUtenHoveddokument.none { nyttVedlegg -> eksisterendeVedlegg.formioId == nyttVedlegg.formioId }
 		}.forEach {
 			vedleggService.slettVedleggOgDensFiler(it)
 		}

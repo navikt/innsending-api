@@ -49,7 +49,7 @@ class VedleggService(
 				endretdato = LocalDateTime.now(),
 				innsendtdato = null,
 				vedleggsurl = kodeverkSkjema.url,
-				formioId = null
+				formioid = null
 			)
 		)
 	}
@@ -77,7 +77,7 @@ class VedleggService(
 					LocalDateTime.now(),
 					null,
 					v.url,
-					formioId = null
+					formioid = null
 				)
 			)
 		}
@@ -108,7 +108,7 @@ class VedleggService(
 						endretdato = mapTilLocalDateTime(arkivertSoknad.innsendtDato) ?: LocalDateTime.now(),
 						innsendtdato = mapTilLocalDateTime(arkivertSoknad.innsendtDato) ?: LocalDateTime.now(),
 						vedleggsurl = null,
-						formioId = null
+						formioid = null
 					)
 				)
 			}
@@ -143,7 +143,7 @@ class VedleggService(
 						soknadDbData.spraak ?: "nb",
 						false
 					).url else null,
-					formioId = v.formioId
+					formioid = v.formioId
 				)
 			)
 		}
@@ -171,7 +171,7 @@ class VedleggService(
 					endretdato = LocalDateTime.now(),
 					innsendtdato = arkivertSoknad.innsendtDato.toLocalDateTime(),
 					vedleggsurl = skjemaService.hentSkjema(v.vedleggsnr, soknadDbData.spraak ?: "nb", false).url,
-					formioId = null
+					formioid = null
 				)
 			)
 		}

@@ -1,7 +1,10 @@
 package no.nav.soknad.innsending.util.validators
 
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.VedleggDto
+import no.nav.soknad.innsending.util.models.hoveddokument
+import no.nav.soknad.innsending.util.models.hoveddokumentVariant
 
 // Ved oppdatering må noen felter fra den eksisterende søknaden være like den som blir sendt inn
 fun DokumentSoknadDto.validerSoknadVedOppdatering(eksisterendeSoknad: DokumentSoknadDto) {
@@ -17,23 +20,32 @@ fun DokumentSoknadDto.validerSoknadVedOppdatering(eksisterendeSoknad: DokumentSo
 
 fun DokumentSoknadDto.validerVedleggsListeVedOppdatering(eksisterendeSoknad: DokumentSoknadDto) {
 	this.vedleggsListe.forEach {
-		validerVedleggVedOppdatering(it, eksisterendeSoknad.vedleggsListe)
+		validerVedleggVedOppdatering(it, eksisterendeSoknad)
 	}
 }
 
 // Ved oppdatering må noen felter fra det eksisterende vedlegget være like det som blir sendt inn
-private fun validerVedleggVedOppdatering(vedlegg: VedleggDto, eksisterendeVedleggsListe: List<VedleggDto>) {
-	val eksisterendeVedlegg =
-		eksisterendeVedleggsListe.find { it.vedleggsnr == vedlegg.vedleggsnr && it.mimetype == vedlegg.mimetype } ?: return
+private fun validerVedleggVedOppdatering(vedlegg: VedleggDto, eksisterendeSoknad: DokumentSoknadDto) {
 
-	val likeFelterVedOppdatering =
-		listOf(
-			VedleggDto::erHoveddokument,
-			VedleggDto::erPakrevd,
-			VedleggDto::erVariant,
-			VedleggDto::vedleggsnr,
-			VedleggDto::formioId
-		)
+	val eksisterendeVedlegg = when {
+		vedlegg.erHoveddokument && !vedlegg.erVariant -> eksisterendeSoknad.hoveddokument
+		vedlegg.erHoveddokument && vedlegg.erVariant -> eksisterendeSoknad.hoveddokumentVariant
+		else -> eksisterendeSoknad.vedleggsListe.find { it.formioId == vedlegg.formioId }
+	}
+
+	if (eksisterendeVedlegg == null && vedlegg.erHoveddokument) {
+		throw BackendErrorException("Finner ikke hoveddokumentet", "Finner ikke hoveddokumentet som skal oppdateres")
+	} else if (eksisterendeVedlegg == null) {
+		return
+	}
+
+	val likeFelterVedOppdatering = listOf(
+		VedleggDto::erHoveddokument,
+		VedleggDto::erPakrevd,
+		VedleggDto::erVariant,
+		VedleggDto::vedleggsnr,
+		VedleggDto::formioId
+	)
 
 	validerLikeFelter<VedleggDto>(
 		vedlegg,

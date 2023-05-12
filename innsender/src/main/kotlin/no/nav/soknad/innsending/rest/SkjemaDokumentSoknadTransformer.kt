@@ -66,10 +66,22 @@ class SkjemaDokumentSoknadTransformer {
 		erVariant: Boolean
 	): VedleggDto =
 		VedleggDto(
-			skjemaDokumentDto.tittel, skjemaDokumentDto.label, erHoveddokument, erVariant,
-			skjemaDokumentDto.mimetype?.equals(Mimetype.applicationSlashPdf) ?: false, skjemaDokumentDto.pakrevd,
-			if (skjemaDokumentDto.document != null) OpplastingsStatusDto.lastetOpp else OpplastingsStatusDto.ikkeValgt,
-			mapTilOffsetDateTime(LocalDateTime.now())!!, null, skjemaDokumentDto.vedleggsnr, skjemaDokumentDto.beskrivelse,
-			null, skjemaDokumentDto.mimetype, skjemaDokumentDto.document, null
+			tittel = skjemaDokumentDto.tittel,
+			label = skjemaDokumentDto.label,
+			erHoveddokument = erHoveddokument,
+			erVariant = erVariant,
+			erPdfa = skjemaDokumentDto.mimetype?.equals(Mimetype.applicationSlashPdf) ?: false,
+			erPakrevd = skjemaDokumentDto.pakrevd,
+			opplastingsStatus = if (skjemaDokumentDto.document != null) OpplastingsStatusDto.lastetOpp else OpplastingsStatusDto.ikkeValgt,
+			opprettetdato = mapTilOffsetDateTime(LocalDateTime.now())!!,
+			id = null,
+			vedleggsnr = skjemaDokumentDto.vedleggsnr,
+			beskrivelse = skjemaDokumentDto.beskrivelse,
+			uuid = null,
+			mimetype = skjemaDokumentDto.mimetype,
+			document = skjemaDokumentDto.document,
+			skjemaurl = null,
+			innsendtdato = null,
+			formioId = skjemaDokumentDto.formioId,
 		)
 }

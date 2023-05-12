@@ -4,6 +4,9 @@ import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.models.hoveddokument
+import no.nav.soknad.innsending.util.models.hoveddokumentVariant
+import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -60,22 +63,23 @@ fun lagFilDto(filDbData: FilDbData, medFil: Boolean = true) = FilDto(
 
 fun lagVedleggDto(vedleggDbData: VedleggDbData, document: ByteArray? = null) =
 	VedleggDto(
-		vedleggDbData.tittel,
-		vedleggDbData.label ?: "",
-		vedleggDbData.erhoveddokument,
-		vedleggDbData.ervariant,
-		vedleggDbData.erpdfa,
-		vedleggDbData.erpakrevd,
-		mapTilOpplastingsStatusDto(vedleggDbData.status),
-		mapTilOffsetDateTime(vedleggDbData.opprettetdato)!!,
-		vedleggDbData.id!!,
-		vedleggDbData.vedleggsnr,
-		vedleggDbData.beskrivelse,
-		vedleggDbData.uuid,
-		mapTilMimetype(vedleggDbData.mimetype),
-		document,
-		vedleggDbData.vedleggsurl,
-		mapTilOffsetDateTime(vedleggDbData.innsendtdato)
+		tittel = vedleggDbData.tittel,
+		label = vedleggDbData.label ?: "",
+		erHoveddokument = vedleggDbData.erhoveddokument,
+		erVariant = vedleggDbData.ervariant,
+		erPdfa = vedleggDbData.erpdfa,
+		erPakrevd = vedleggDbData.erpakrevd,
+		opplastingsStatus = mapTilOpplastingsStatusDto(vedleggDbData.status),
+		opprettetdato = mapTilOffsetDateTime(vedleggDbData.opprettetdato)!!,
+		id = vedleggDbData.id!!,
+		vedleggsnr = vedleggDbData.vedleggsnr,
+		beskrivelse = vedleggDbData.beskrivelse,
+		uuid = vedleggDbData.uuid,
+		mimetype = mapTilMimetype(vedleggDbData.mimetype),
+		document = document,
+		skjemaurl = vedleggDbData.vedleggsurl,
+		innsendtdato = mapTilOffsetDateTime(vedleggDbData.innsendtdato),
+		formioId = vedleggDbData.formioid
 	)
 
 fun lagDokumentSoknadDto(
@@ -178,29 +182,31 @@ fun mapTilVedleggDb(
 		endretdato = LocalDateTime.now(),
 		innsendtdato = mapTilLocalDateTime(vedleggDto.innsendtdato),
 		vedleggsurl = url ?: vedleggDto.skjemaurl,
-		formioId = vedleggDto.formioId
+		formioid = vedleggDto.formioId
 	)
 
 fun oppdaterVedleggDb(vedleggDbData: VedleggDbData, patchVedleggDto: PatchVedleggDto): VedleggDbData =
 	VedleggDbData(
-		vedleggDbData.id,
-		vedleggDbData.soknadsid,
-		if (patchVedleggDto.opplastingsStatus == null) vedleggDbData.status else mapTilDbOpplastingsStatus(patchVedleggDto.opplastingsStatus!!),
-		vedleggDbData.erhoveddokument,
-		vedleggDbData.ervariant,
-		vedleggDbData.erpdfa,
-		vedleggDbData.erpakrevd,
-		vedleggDbData.vedleggsnr,
-		patchVedleggDto.tittel ?: vedleggDbData.tittel,
-		patchVedleggDto.tittel ?: vedleggDbData.label,
-		vedleggDbData.beskrivelse,
-		vedleggDbData.mimetype,
-		vedleggDbData.uuid ?: UUID.randomUUID().toString(),
-		vedleggDbData.opprettetdato,
-		LocalDateTime.now(),
-		vedleggDbData.innsendtdato,
-		vedleggDbData.vedleggsurl,
-		vedleggDbData.formioId
+		id = vedleggDbData.id,
+		soknadsid = vedleggDbData.soknadsid,
+		status = if (patchVedleggDto.opplastingsStatus == null) vedleggDbData.status else mapTilDbOpplastingsStatus(
+			patchVedleggDto.opplastingsStatus!!
+		),
+		erhoveddokument = vedleggDbData.erhoveddokument,
+		ervariant = vedleggDbData.ervariant,
+		erpdfa = vedleggDbData.erpdfa,
+		erpakrevd = vedleggDbData.erpakrevd,
+		vedleggsnr = vedleggDbData.vedleggsnr,
+		tittel = patchVedleggDto.tittel ?: vedleggDbData.tittel,
+		label = patchVedleggDto.tittel ?: vedleggDbData.label,
+		beskrivelse = vedleggDbData.beskrivelse,
+		mimetype = vedleggDbData.mimetype,
+		uuid = vedleggDbData.uuid ?: UUID.randomUUID().toString(),
+		opprettetdato = vedleggDbData.opprettetdato,
+		endretdato = LocalDateTime.now(),
+		innsendtdato = vedleggDbData.innsendtdato,
+		vedleggsurl = vedleggDbData.vedleggsurl,
+		formioid = vedleggDbData.formioid
 	)
 
 
@@ -304,11 +310,11 @@ fun mapTilDbMimetype(mimetype: Mimetype?): String? =
 	}
 
 fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
-	val hovedDokumentPdf = dokumentSoknadDto.vedleggsListe.find { it.erHoveddokument && !it.erVariant }
-	val hovedDokumentVariant = dokumentSoknadDto.vedleggsListe.find { it.erHoveddokument && it.erVariant }
-	val vedleggsListe = dokumentSoknadDto.vedleggsListe.filter { !it.erHoveddokument }.map { mapTilSkjemaDokumentDto(it) }
+	val hovedDokument = dokumentSoknadDto.hoveddokument
+	val hovedDokumentVariant = dokumentSoknadDto.hoveddokumentVariant
+	val vedleggsListe = dokumentSoknadDto.vedleggsListeUtenHoveddokument.map { mapTilSkjemaDokumentDto(it) }
 
-	if (hovedDokumentPdf == null || hovedDokumentVariant == null) {
+	if (hovedDokument == null || hovedDokumentVariant == null) {
 		throw BackendErrorException("Hoveddokument eller variant mangler", "Finner ikke hoveddokument i vedleggsliste")
 	}
 
@@ -320,7 +326,7 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		tema = dokumentSoknadDto.tema,
 		spraak = dokumentSoknadDto.spraak ?: "no",
 		status = dokumentSoknadDto.status,
-		hoveddokument = mapTilSkjemaDokumentDto(hovedDokumentPdf),
+		hoveddokument = mapTilSkjemaDokumentDto(hovedDokument),
 		hoveddokumentVariant = mapTilSkjemaDokumentDto(hovedDokumentVariant),
 		vedleggsListe = vedleggsListe,
 		kanLasteOppAnnet = dokumentSoknadDto.kanLasteOppAnnet,

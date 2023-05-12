@@ -66,7 +66,7 @@ paths:
         - fyllUtHentSoknad
     put:
       summary: Oppdater en eksisterende søknadsutfylling
-      description: Dette endepunktet kalles for hvert steg i FyllUt-flyten og oppdaterer søknaden. Alle felter blir overskrevet unntatt brukerId og skjemanr. Vedlegg blir også overskrevet.
+      description: Dette endepunktet kalles for hvert steg i FyllUt-flyten og oppdaterer søknaden. Alle felter blir overskrevet unntatt brukerId og skjemanr. Vedleggslisten skal være tom. (Vedleggslisten og hoveddokument (PDF) vil bli lagt til i "PUT /fyllUt/v1/utfyltSoknad/{innsendingsId}")
       operationId: fyllUtOppdaterSoknad
 
       parameters:
@@ -115,6 +115,34 @@ paths:
                 $ref: "#/components/schemas/BodyStatusResponseDto"
       tags:
         - fyllUtSlettSoknad
+  /fyllUt/v1/utfyltSoknad/{innsendingsId}:
+    put:
+      summary: Lagre en ferdig utfylt søknad
+      description: Dette endepunktet kalles i steg i FyllUt-flyten fra oppsummeringssiden før brukeren blir videresendt til SendInn-applikasjonen. Til motsetning fra "PUT /fyllUt/v1/soknad/{innsendingsId}" så blir vedlegg og den genererte PDF'en for hoveddokumentet også sendt med fra frontend.
+      operationId: fyllUtUtfyltSoknad
+
+      parameters:
+        - name: innsendingsId
+          in: path
+          description: identifisering av søknad
+          required: true
+          schema:
+            type: string
+          style: simple
+
+      requestBody:
+        description: Søknaddata for å oppdatere søknaden
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SkjemaDto"
+        required: true
+
+      responses:
+        200:
+          description: Oppdatert søknad
+      tags:
+        - fyllUtUtfyltSoknad
 
   /fyllUt/v1/soknad:
     post:

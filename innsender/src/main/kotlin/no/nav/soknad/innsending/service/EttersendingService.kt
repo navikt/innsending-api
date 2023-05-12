@@ -117,7 +117,7 @@ class EttersendingService(
 								nyesteSoknad.innsendtDato?.toLocalDateTime() else v.innsendtdato?.toLocalDateTime(),
 							vedleggsurl = if (v.vedleggsnr != null)
 								skjemaService.hentSkjema(v.vedleggsnr!!, nyesteSoknad.spraak ?: "nb", false).url else null,
-							formioId = v.formioId
+							formioid = v.formioId
 						)
 					)
 				}
