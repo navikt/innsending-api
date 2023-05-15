@@ -66,7 +66,8 @@ paths:
         - fyllUtHentSoknad
     put:
       summary: Oppdater en eksisterende søknadsutfylling
-      description: Dette endepunktet kalles for hvert steg i FyllUt-flyten og oppdaterer søknaden. Alle felter blir overskrevet unntatt brukerId og skjemanr. Vedleggslisten skal være tom. (Vedleggslisten og hoveddokument (PDF) vil bli lagt til i "PUT /fyllUt/v1/utfyltSoknad/{innsendingsId}")
+      description: Dette endepunktet kalles for hvert steg i FyllUt-flyten og oppdaterer søknaden. Alle felter blir overskrevet unntatt brukerId og skjemanr. Vedleggslisten skal være tom. (Vedleggslisten og hoveddokument (PDF) vil bli lagt til i "PUT /fyllUt/v1/utfyltSoknad/{innsendingsId}").
+        Status blir satt til "opprettet". Når søknaden er ferdig utfylt så blir status satt til "utfylt" i "PUT /fyllUt/v1/utfyltSoknad/{innsendingsId}".
       operationId: fyllUtOppdaterSoknad
 
       parameters:
@@ -118,7 +119,7 @@ paths:
   /fyllUt/v1/utfyltSoknad/{innsendingsId}:
     put:
       summary: Lagre en ferdig utfylt søknad
-      description: Dette endepunktet kalles i steg i FyllUt-flyten fra oppsummeringssiden før brukeren blir videresendt til SendInn-applikasjonen. Til motsetning fra "PUT /fyllUt/v1/soknad/{innsendingsId}" så blir vedlegg og den genererte PDF'en for hoveddokumentet også sendt med fra frontend.
+      description: Dette endepunktet kalles i steg i FyllUt-flyten fra oppsummeringssiden før brukeren blir videresendt til SendInn-applikasjonen. Til motsetning fra "PUT /fyllUt/v1/soknad/{innsendingsId}" så blir vedlegg og den genererte PDF'en for hoveddokumentet også sendt med fra frontend. Status blir satt til "utfylt"
       operationId: fyllUtUtfyltSoknad
 
       parameters:
@@ -1278,7 +1279,7 @@ components:
 
     SoknadsStatusDto:
       type: string
-      enum: [ "Opprettet", "Innsendt", "SlettetAvBruker", "AutomatiskSlettet" ]
+      enum: [ "Opprettet", "Utfylt", "Innsendt", "SlettetAvBruker", "AutomatiskSlettet" ]
       description: Spesifikasjon av status på søknaden.
       example:
 

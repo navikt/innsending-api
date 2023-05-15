@@ -254,6 +254,7 @@ private fun mapTilDbArkiveringsStatus(arkiveringsStatusDto: ArkiveringsStatusDto
 fun mapTilSoknadsStatus(soknadsStatus: SoknadsStatusDto?, newStatus: SoknadsStatus?): SoknadsStatus {
 	return newStatus ?: when (soknadsStatus) {
 		SoknadsStatusDto.opprettet -> SoknadsStatus.Opprettet
+		SoknadsStatusDto.utfylt -> SoknadsStatus.Utfylt
 		SoknadsStatusDto.innsendt -> SoknadsStatus.Innsendt
 		SoknadsStatusDto.slettetAvBruker -> SoknadsStatus.SlettetAvBruker
 		SoknadsStatusDto.automatiskSlettet -> SoknadsStatus.AutomatiskSlettet
@@ -264,6 +265,7 @@ fun mapTilSoknadsStatus(soknadsStatus: SoknadsStatusDto?, newStatus: SoknadsStat
 fun mapTilSoknadsStatusDto(soknadsStatus: SoknadsStatus?): SoknadsStatusDto? =
 	when (soknadsStatus) {
 		SoknadsStatus.Opprettet -> SoknadsStatusDto.opprettet
+		SoknadsStatus.Utfylt -> SoknadsStatusDto.utfylt
 		SoknadsStatus.Innsendt -> SoknadsStatusDto.innsendt
 		SoknadsStatus.SlettetAvBruker -> SoknadsStatusDto.slettetAvBruker
 		SoknadsStatus.AutomatiskSlettet -> SoknadsStatusDto.automatiskSlettet

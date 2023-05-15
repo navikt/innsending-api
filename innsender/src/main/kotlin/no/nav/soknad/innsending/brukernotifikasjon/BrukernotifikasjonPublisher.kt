@@ -55,7 +55,7 @@ class BrukernotifikasjonPublisher(
 
 			try {
 				when (dokumentSoknad.status) {
-					SoknadsStatusDto.opprettet -> handleNewApplication(dokumentSoknad, groupId!!)
+					SoknadsStatusDto.opprettet, SoknadsStatusDto.utfylt -> handleNewApplication(dokumentSoknad, groupId!!)
 					SoknadsStatusDto.innsendt -> handleSentInApplication(dokumentSoknad, groupId!!)
 					SoknadsStatusDto.slettetAvBruker, SoknadsStatusDto.automatiskSlettet -> handleDeletedApplication(
 						dokumentSoknad,
@@ -69,7 +69,6 @@ class BrukernotifikasjonPublisher(
 		}
 		return true
 	}
-
 
 	private fun handleNewApplication(dokumentSoknad: DokumentSoknadDto, groupId: String) {
 		// Ny søknad opprettet publiser data slik at søker kan plukke den opp fra Ditt Nav på et senere tidspunkt

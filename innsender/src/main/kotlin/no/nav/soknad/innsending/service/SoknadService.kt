@@ -456,17 +456,21 @@ class SoknadService(
 		}
 
 		val eksisterendeSoknad = hentSoknad(innsendingsId)
-		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto)
+		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto, SoknadsStatus.Opprettet)
 	}
 
 	fun oppdaterUtfyltSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
 		val eksisterendeSoknad = hentSoknad(innsendingsId)
-		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto)
+		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto, SoknadsStatus.Utfylt)
 
 		slettEksisterendeVedlegg(eksisterendeSoknad.vedleggsListe, dokumentSoknadDto)
 	}
 
-	fun oppdaterSoknad(eksisterendeSoknad: DokumentSoknadDto, dokumentSoknadDto: DokumentSoknadDto) {
+	fun oppdaterSoknad(
+		eksisterendeSoknad: DokumentSoknadDto,
+		dokumentSoknadDto: DokumentSoknadDto,
+		status: SoknadsStatus
+	) {
 		// Valider søknaden mot eksisterende søknad ved å sjekke felter som ikke er lov til å oppdatere
 		validerInnsendtSoknadMotEksisterende(dokumentSoknadDto, eksisterendeSoknad)
 
@@ -475,6 +479,7 @@ class SoknadService(
 			dokumentSoknadDto = dokumentSoknadDto,
 			innsendingsId = eksisterendeSoknad.innsendingsId!!,
 			id = eksisterendeSoknad.id,
+			status = status
 		)
 		val oppdatertSoknad = repo.lagreSoknad(soknadDb)
 		val soknadsId = oppdatertSoknad.id!!

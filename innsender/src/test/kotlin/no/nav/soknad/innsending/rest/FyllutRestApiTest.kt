@@ -251,6 +251,7 @@ class FyllutRestApiTest {
 
 		// Så
 		assertTrue(response != null)
+		assertEquals(SoknadsStatusDto.utfylt, oppdatertSoknad.status, "Status er satt til utfylt")
 		assertEquals(200, response.statusCodeValue)
 		assertEquals(nyTittel, oppdatertSoknad.tittel)
 		assertEquals("en", oppdatertSoknad.spraak, "Språk er oppdatert (blir konvertert til de første 2 bokstavene)")
@@ -308,8 +309,11 @@ class FyllutRestApiTest {
 			"http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}", HttpMethod.PUT,
 			requestEntity, RestErrorResponseDto::class.java
 		)
+		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
+
 		// Så
 		assertTrue(response != null)
+		assertEquals(SoknadsStatusDto.opprettet, oppdatertSoknad.status, "Status er satt til opprettet")
 		assertEquals(500, response.statusCodeValue)
 		assertEquals("Feil antall vedlegg", response.body!!.arsak)
 		assertEquals("Vedleggslisten skal være tom", response.body!!.message)
@@ -348,6 +352,7 @@ class FyllutRestApiTest {
 			response.body!!.hoveddokumentVariant.vedleggsnr,
 			"HoveddokumentVariant er riktig"
 		)
+		assertEquals(SoknadsStatusDto.opprettet, response.body!!.status, "Status er satt til opprettet")
 
 	}
 
