@@ -18,6 +18,9 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.Utilities
+import no.nav.soknad.innsending.util.models.hoveddokument
+import no.nav.soknad.innsending.util.models.hoveddokumentVariant
+import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.*
 import org.junit.jupiter.api.*
@@ -650,11 +653,26 @@ class SoknadServiceTest {
 		val eksisterendeSoknad = soknadService.hentSoknad(innsendingsId)
 
 		val vedleggDto1 =
-			Hjelpemetoder.lagVedleggDto(vedleggsnr = "vedleggsnr1", tittel = "vedleggTittel1", mimeType = null, fil = null)
+			Hjelpemetoder.lagVedleggDto(
+				erHoveddokument = false,
+				vedleggsnr = "vedleggsnr1",
+				tittel = "vedleggTittel1",
+				mimeType = null,
+				fil = null,
+				formioId = UUID.randomUUID().toString()
+			)
 		val vedleggDto2 =
-			Hjelpemetoder.lagVedleggDto(vedleggsnr = "vedleggsnr2", tittel = "vedleggTittel2", mimeType = null, fil = null)
+			Hjelpemetoder.lagVedleggDto(
+				erHoveddokument = false,
+				vedleggsnr = "vedleggsnr2",
+				tittel = "vedleggTittel2",
+				mimeType = null,
+				fil = null,
+				formioId = UUID.randomUUID().toString()
+			)
 
-		val vedleggDtoList = listOf(vedleggDto1, vedleggDto2)
+		val vedleggDtoList =
+			listOf(eksisterendeSoknad.hoveddokument!!, eksisterendeSoknad.hoveddokumentVariant!!, vedleggDto1, vedleggDto2)
 		val dokumentSoknad = DokumentSoknadDto(
 			brukerId = testpersonid,
 			skjemanr = skjemanr,
@@ -668,18 +686,22 @@ class SoknadServiceTest {
 		)
 
 		// Når
-		soknadService.oppdaterSoknad(innsendingsId, dokumentSoknad)
+		soknadService.oppdaterUtfyltSoknad(innsendingsId, dokumentSoknad)
 		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
 
 		// Så
 		eksisterendeSoknad.vedleggsListe.forEach { eksisterendeVedlegg ->
 			assertNull(
-				oppdatertSoknad.vedleggsListe.find { eksisterendeVedlegg.vedleggsnr == it.vedleggsnr },
+				oppdatertSoknad.vedleggsListeUtenHoveddokument.find { eksisterendeVedlegg.vedleggsnr == it.vedleggsnr },
 				"Ingen av vedleggene fra den eksisterende søknaden skal være med i den oppdaterte søknaden"
 			)
 		}
 
-		assertEquals(2, oppdatertSoknad.vedleggsListe.size, "Skal ha to vedlegg i den oppdaterte søknaden")
+		assertEquals(
+			4,
+			oppdatertSoknad.vedleggsListe.size,
+			"Skal ha to vedlegg i den oppdaterte søknaden + hoveddokument og variant"
+		)
 
 		assertTrue(
 			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == vedleggDto1.vedleggsnr },

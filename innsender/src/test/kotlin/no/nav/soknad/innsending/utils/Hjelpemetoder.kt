@@ -25,8 +25,22 @@ class Hjelpemetoder {
 			ettersendingsId: String? = null,
 			opprettetDato: OffsetDateTime? = OffsetDateTime.now()
 		): DokumentSoknadDto {
-			val vedleggDtoPdf = lagVedleggDto(skjemanr, tittel, "application/pdf", getBytesFromFile("/litenPdf.pdf"))
-			val vedleggDtoJson = lagVedleggDto(skjemanr, tittel, "application/json", getBytesFromFile("/sanity.json"))
+			val vedleggDtoPdf = lagVedleggDto(
+				vedleggsnr = skjemanr,
+				tittel = tittel,
+				mimeType = "application/pdf",
+				fil = getBytesFromFile("/litenPdf.pdf"),
+				erHoveddokument = true,
+				erVariant = false
+			)
+			val vedleggDtoJson = lagVedleggDto(
+				vedleggsnr = skjemanr,
+				tittel = tittel,
+				mimeType = "application/json",
+				fil = getBytesFromFile("/sanity.json"),
+				erHoveddokument = true,
+				erVariant = true
+			)
 
 			val vedleggDtoList = vedleggsListe ?: listOf(vedleggDtoPdf, vedleggDtoJson)
 			return DokumentSoknadDto(
