@@ -303,10 +303,6 @@ class SoknadService(
 
 	@Transactional
 	fun opprettNySoknad(dokumentSoknadDto: DokumentSoknadDto): String {
-		if (dokumentSoknadDto.vedleggsListe.size != 2) {
-			throw BackendErrorException("Feil antall vedlegg", "Vedleggslisten skal være tom")
-		}
-
 		val operation = InnsenderOperation.OPPRETT.name
 
 		val innsendingsId = Utilities.laginnsendingsId()
@@ -454,6 +450,21 @@ class SoknadService(
 		}
 	}
 
+	fun oppdaterSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
+		if (dokumentSoknadDto.vedleggsListe.size != 2) {
+			throw BackendErrorException("Feil antall vedlegg", "Vedleggslisten skal være tom")
+		}
+
+		val eksisterendeSoknad = hentSoknad(innsendingsId)
+		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto)
+	}
+
+	fun oppdaterUtfyltSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
+		val eksisterendeSoknad = hentSoknad(innsendingsId)
+		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto)
+
+		slettEksisterendeVedlegg(eksisterendeSoknad.vedleggsListe, dokumentSoknadDto)
+	}
 
 	fun oppdaterSoknad(eksisterendeSoknad: DokumentSoknadDto, dokumentSoknadDto: DokumentSoknadDto) {
 		// Valider søknaden mot eksisterende søknad ved å sjekke felter som ikke er lov til å oppdatere
@@ -484,23 +495,6 @@ class SoknadService(
 				repo.lagreVedlegg(mapTilVedleggDb(nyttVedlegg, soknadsId))
 			}
 		}
-	}
-
-	fun oppdaterSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
-		if (dokumentSoknadDto.vedleggsListe.size != 2) {
-			throw BackendErrorException("Feil antall vedlegg", "Vedleggslisten skal være tom")
-		}
-
-		val eksisterendeSoknad = hentSoknad(innsendingsId)
-		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto)
-	}
-
-	fun oppdaterUtfyltSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
-		val eksisterendeSoknad = hentSoknad(innsendingsId)
-		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto)
-
-		slettEksisterendeVedlegg(eksisterendeSoknad.vedleggsListe, dokumentSoknadDto)
-
 	}
 
 	// Slett alle eksisterende vedlegg (og eventuelt tilhørende filer) som ikke med i den nye søknaden

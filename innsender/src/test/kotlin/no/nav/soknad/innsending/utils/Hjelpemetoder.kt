@@ -56,15 +56,34 @@ class Hjelpemetoder {
 
 
 		fun lagVedleggDto(
-			vedleggsnr: String, tittel: String, mimeType: String?, fil: ByteArray?, id: Long? = null,
-			erHoveddokument: Boolean? = true, erVariant: Boolean? = false, erPakrevd: Boolean? = true, label: String? = null
+			vedleggsnr: String,
+			tittel: String,
+			mimeType: String?,
+			fil: ByteArray?,
+			id: Long? = null,
+			erHoveddokument: Boolean? = true,
+			erVariant: Boolean? = false,
+			erPakrevd: Boolean? = true,
+			label: String? = null,
+			formioId: String? = null
 		): VedleggDto {
 			return VedleggDto(
-				tittel, label ?: tittel, erHoveddokument!!, erVariant!!,
-				"application/pdf".equals(mimeType, true), erPakrevd!!,
-				if (fil != null) OpplastingsStatusDto.lastetOpp else OpplastingsStatusDto.ikkeValgt, OffsetDateTime.now(), id,
-				vedleggsnr, "Beskrivelse", UUID.randomUUID().toString(), Mimetype.applicationSlashPdf, fil,
-				if (erHoveddokument) "https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/1b736c8e28abcb80f654166318f130e5ed2a0aad.pdf" else null
+				tittel,
+				label ?: tittel,
+				erHoveddokument!!,
+				erVariant!!,
+				"application/pdf".equals(mimeType, true),
+				erPakrevd!!,
+				if (fil != null) OpplastingsStatusDto.lastetOpp else OpplastingsStatusDto.ikkeValgt,
+				OffsetDateTime.now(),
+				id,
+				vedleggsnr,
+				"Beskrivelse",
+				UUID.randomUUID().toString(),
+				Mimetype.applicationSlashPdf,
+				fil,
+				if (erHoveddokument) "https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/1b736c8e28abcb80f654166318f130e5ed2a0aad.pdf" else null,
+				formioId = formioId
 			)
 
 		}

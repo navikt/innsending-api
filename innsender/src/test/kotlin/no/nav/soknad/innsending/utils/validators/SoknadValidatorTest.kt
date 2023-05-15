@@ -115,13 +115,13 @@ class SoknadValidatorTest {
 		val vedleggDto = VedleggDto(
 			tittel = tittel,
 			label = labelVedlegg,
-			erHoveddokument = false,
+			erHoveddokument = false, // Ulikt
 			erVariant = erVariant,
 			erPdfa = erPdfa,
 			erPakrevd = erPakrevd,
 			opplastingsStatus = opplastingsStatus,
 			opprettetdato = opprettetdato,
-			formioId = "ulik formioId"
+			formioId = formioId
 		)
 		val soknad = DokumentSoknadDto(
 			brukerId = brukerId,
@@ -139,7 +139,7 @@ class SoknadValidatorTest {
 		val exception = assertThrows<IllegalActionException> {
 			soknad.validerVedleggsListeVedOppdatering(eksisterendeSoknad)
 		}
-		assertEquals("Felter er ikke like for VedleggDto: erHoveddokument, formioId", exception.message)
+		assertEquals("Felter er ikke like for VedleggDto: erHoveddokument", exception.message)
 
 	}
 
