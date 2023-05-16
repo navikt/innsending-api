@@ -55,29 +55,29 @@ class VedleggService(
 	}
 
 	fun opprettVedleggTilSoknad(
-		soknadsId: Long, vedleggsnrListe: List<String>, spraak: String, tittel: String? = null
+		soknadsId: Long, vedleggsnrListe: List<String>, spraak: String, tittel: String? = null, formioid: String? = null
 	): List<VedleggDbData> {
 		val vedleggDbDataListe = vedleggsnrListe.map { nr -> skjemaService.hentSkjema(nr, spraak) }.map { v ->
 			repo.lagreVedlegg(
 				VedleggDbData(
-					null,
-					soknadsId,
-					OpplastingsStatus.IKKE_VALGT,
-					false,
+					id = null,
+					soknadsid = soknadsId,
+					status = OpplastingsStatus.IKKE_VALGT,
+					erhoveddokument = false,
 					ervariant = false,
-					false,
-					v.skjemanummer != "N6",
-					v.skjemanummer,
-					tittel ?: v.tittel ?: "",
-					tittel ?: v.tittel ?: "",
-					"",
-					null,
-					UUID.randomUUID().toString(),
-					LocalDateTime.now(),
-					LocalDateTime.now(),
-					null,
-					v.url,
-					formioid = null
+					erpdfa = false,
+					erpakrevd = v.skjemanummer != "N6",
+					vedleggsnr = v.skjemanummer,
+					tittel = tittel ?: v.tittel ?: "",
+					label = tittel ?: v.tittel ?: "",
+					beskrivelse = "",
+					mimetype = null,
+					uuid = UUID.randomUUID().toString(),
+					opprettetdato = LocalDateTime.now(),
+					endretdato = LocalDateTime.now(),
+					innsendtdato = null,
+					vedleggsurl = v.url,
+					formioid = formioid
 				)
 			)
 		}
@@ -178,7 +178,7 @@ class VedleggService(
 	}
 
 	@Transactional
-	fun leggTilVedlegg(soknadDto: DokumentSoknadDto, tittel: String?): VedleggDto {
+	fun leggTilVedlegg(soknadDto: DokumentSoknadDto, vedleggDto: PostVedleggDto?): VedleggDto {
 
 		val soknadDbOpt = repo.hentSoknadDb(soknadDto.innsendingsId!!)
 		if (soknadDbOpt.isEmpty || soknadDbOpt.get().status != SoknadsStatus.Opprettet) throw IllegalActionException(
@@ -187,7 +187,13 @@ class VedleggService(
 		)
 
 		// Lagre vedlegget i databasen
-		val vedleggDbDataList = opprettVedleggTilSoknad(soknadDbOpt.get().id!!, listOf("N6"), soknadDto.spraak!!, tittel)
+		val vedleggDbDataList = opprettVedleggTilSoknad(
+			soknadDbOpt.get().id!!,
+			listOf("N6"),
+			soknadDto.spraak!!,
+			vedleggDto?.tittel,
+			vedleggDto?.formioId
+		)
 
 		// Oppdater soknadens sist endret dato
 		repo.oppdaterEndretDato(soknadDto.id!!)

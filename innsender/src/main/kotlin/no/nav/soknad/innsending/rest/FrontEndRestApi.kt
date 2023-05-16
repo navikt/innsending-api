@@ -280,7 +280,7 @@ class FrontEndRestApi(
 		logger.info("$innsendingsId: Kall for å lagre vedlegg til søknad")
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
-		val vedleggDto = vedleggService.leggTilVedlegg(soknadDto, postVedleggDto?.tittel)
+		val vedleggDto = vedleggService.leggTilVedlegg(soknadDto, postVedleggDto)
 		logger.info("$innsendingsId: Lagret vedlegg ${vedleggDto.id} til søknad")
 
 		return ResponseEntity

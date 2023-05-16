@@ -1198,6 +1198,8 @@ components:
       properties:
         tittel:
           $ref: "#/components/schemas/Tittel"
+        formioId:
+          $ref: "#/components/schemas/FormioId"
 
     PropertyNavn:
       type: string

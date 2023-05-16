@@ -8,10 +8,11 @@ import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.PatchVedleggDto
+import no.nav.soknad.innsending.model.PostVedleggDto
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.SoknadAssertions
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.EnableTransactionManagement
+import java.util.*
 
 @SpringBootTest
 @ActiveProfiles("spring")
@@ -84,11 +86,11 @@ class VedleggServiceTest {
 
 		val vedleggDto = vedleggService.hentVedleggDto(dokumentSoknadDto.vedleggsListe[0].id!!)
 
-		Assertions.assertEquals(vedleggDto.id, dokumentSoknadDto.vedleggsListe[0].id!!)
+		assertEquals(vedleggDto.id, dokumentSoknadDto.vedleggsListe[0].id!!)
 
 		val filDtoListe =
 			filService.hentFiler(dokumentSoknadDto, dokumentSoknadDto.innsendingsId!!, vedleggDto.id!!, false)
-		Assertions.assertTrue(filDtoListe.isEmpty())
+		assertTrue(filDtoListe.isEmpty())
 	}
 
 	@Test
@@ -105,9 +107,15 @@ class VedleggServiceTest {
 			)
 		} returns dokumentSoknadDto.vedleggsListe
 
-		val lagretVedleggDto = vedleggService.leggTilVedlegg(dokumentSoknadDto, "Litt mer info")
+		val formioId = UUID.randomUUID().toString()
+		val postVedleggDto = PostVedleggDto("Litt mer info", formioId)
 
-		Assertions.assertTrue(lagretVedleggDto.id != null && lagretVedleggDto.vedleggsnr == "N6" && lagretVedleggDto.tittel == "Litt mer info")
+		val lagretVedleggDto = vedleggService.leggTilVedlegg(dokumentSoknadDto, postVedleggDto)
+
+		assertNotNull(lagretVedleggDto.id)
+		assertEquals("N6", lagretVedleggDto.vedleggsnr)
+		assertEquals("Litt mer info", lagretVedleggDto.tittel)
+		assertEquals(formioId, lagretVedleggDto.formioId)
 	}
 
 	@Test
@@ -126,12 +134,12 @@ class VedleggServiceTest {
 		} returns dokumentSoknadDto.vedleggsListe
 
 		val lagretVedleggDto = vedleggService.leggTilVedlegg(dokumentSoknadDto, null)
-		Assertions.assertTrue(lagretVedleggDto.id != null && lagretVedleggDto.tittel == "Annet")
+		assertTrue(lagretVedleggDto.id != null && lagretVedleggDto.tittel == "Annet")
 
 		val patchVedleggDto = PatchVedleggDto("Ny tittel", lagretVedleggDto.opplastingsStatus)
 		val oppdatertVedleggDto = vedleggService.endreVedlegg(patchVedleggDto, lagretVedleggDto.id!!, dokumentSoknadDto)
 
-		Assertions.assertTrue(
+		assertTrue(
 			oppdatertVedleggDto.id == lagretVedleggDto.id && oppdatertVedleggDto.tittel == "Ny tittel" && oppdatertVedleggDto.vedleggsnr == "N6"
 				&& oppdatertVedleggDto.label == oppdatertVedleggDto.tittel
 		)
