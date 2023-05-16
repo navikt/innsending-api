@@ -90,6 +90,19 @@ class RepositoryUtils(
 		)
 	}
 
+	fun findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(eldreEnn: Long): List<SoknadDbData> =
+		try {
+			soknadRepository.finnAlleSoknaderBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(
+				LocalDateTime.now().minusDays(eldreEnn + 100), LocalDateTime.now().minusDays(eldreEnn)
+			)
+		} catch (ex: Exception) {
+			throw BackendErrorException(
+				ex.message,
+				"Feil ved henting av alle arkiverte søknader arkivert mellom ${(100 + eldreEnn)} og $eldreEnn dager siden",
+				"errorCode.backendError.applicationFetchError"
+			)
+		}
+
 	fun lagreSoknad(soknadDbData: SoknadDbData): SoknadDbData = try {
 		soknadRepository.save(soknadDbData)
 	} catch (ex: Exception) {
@@ -126,6 +139,16 @@ class RepositoryUtils(
 		throw BackendErrorException(
 			ex.message,
 			"Feil ved oppdatering av søknad med id $soknadsId",
+			"errorCode.backendError.applicationUpdateError"
+		)
+	}
+
+	fun setArkiveringsstatus(innsendingsId: String, arkiveringsStatus: ArkiveringsStatus) = try {
+		soknadRepository.updateArkiveringsStatus(arkiveringsStatus, listOf(innsendingsId))
+	} catch (ex: Exception) {
+		throw BackendErrorException(
+			ex.message,
+			"Feil ved oppdatering av søknad med innsendingsId $innsendingsId",
 			"errorCode.backendError.applicationUpdateError"
 		)
 	}

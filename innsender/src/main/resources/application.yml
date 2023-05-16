@@ -18,12 +18,12 @@ management:
 cron:
   startSlettGamleIkkeInnsendteSoknader: 0 0 2 * * *
   slettEldreEnn: 56
-  startSlettInnsendteFiler: 0 0 5 * * *
-  slettInnsendtFilEldreEnn: 1
+  startSlettInnsendteSoknader: 0 0 5 * * *
+  slettInnsendtEldreEnn: 1
   startSlettPermanentIkkeInnsendteSoknader: 0 0 3 * * *
-  slettPermanentEldreEnn: 365
+  slettPermanentEldreEnn: 183
   # Kjører hvert 11. minutt
-  runVerifyArchivedApplications: 0 0,11 0 ? * *
+  runVerifyArchivedApplications: 0 0/11 * ? * *
 
 ettersendingsfrist: 14
 
