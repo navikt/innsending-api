@@ -107,15 +107,13 @@ class VedleggServiceTest {
 			)
 		} returns dokumentSoknadDto.vedleggsListe
 
-		val formioId = UUID.randomUUID().toString()
-		val postVedleggDto = PostVedleggDto("Litt mer info", formioId)
+		val postVedleggDto = PostVedleggDto("Litt mer info")
 
 		val lagretVedleggDto = vedleggService.leggTilVedlegg(dokumentSoknadDto, postVedleggDto)
 
 		assertNotNull(lagretVedleggDto.id)
 		assertEquals("N6", lagretVedleggDto.vedleggsnr)
 		assertEquals("Litt mer info", lagretVedleggDto.tittel)
-		assertEquals(formioId, lagretVedleggDto.formioId)
 	}
 
 	@Test

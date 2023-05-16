@@ -7,7 +7,6 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.BodyStatusResponseDto
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.SkjemaDto
-import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.service.mapTilSkjemaDto
@@ -15,6 +14,7 @@ import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_LEVEL_4
 import no.nav.soknad.innsending.util.Constants.TOKENX
+import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -130,7 +130,7 @@ class FyllutRestApi(
 
 	private fun validerSoknadsTilgang(dokumentSoknadDto: DokumentSoknadDto) {
 		tilgangskontroll.harTilgang(dokumentSoknadDto)
-		if (dokumentSoknadDto.status != SoknadsStatusDto.opprettet) {
+		if (!dokumentSoknadDto.kanGjoreEndringer) {
 			throw IllegalActionException(
 				"Søknaden kan ikke vises",
 				"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",

@@ -50,12 +50,12 @@ class RepositoryUtils(
 		)
 	}
 
-	fun findAllByStatusAndWithOpprettetdatoBefore(status: String, opprettetFor: OffsetDateTime) = try {
-		soknadRepository.findAllByStatusAndWithOpprettetdatoBefore(status, opprettetFor)
+	fun findAllByStatusesAndWithOpprettetdatoBefore(statuses: List<String>, opprettetFor: OffsetDateTime) = try {
+		soknadRepository.findAllByStatusesAndWithOpprettetdatoBefore(statuses, opprettetFor)
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
-			"Feil ved henting av alle soknader med status $status opprettet før $opprettetFor",
+			"Feil ved henting av alle soknader med status $statuses opprettet før $opprettetFor",
 			"errorCode.backendError.applicationFetchError"
 		)
 	}

@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.util.models
 
 import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
 
 val DokumentSoknadDto.hoveddokument: VedleggDto?
@@ -17,3 +18,6 @@ val DokumentSoknadDto.vedleggsListeUtenHoveddokument: List<VedleggDto>
 	get() = vedleggsListe.filter {
 		!it.erHoveddokument
 	}
+
+val DokumentSoknadDto.kanGjoreEndringer: Boolean
+	get() = status == SoknadsStatusDto.opprettet || status == SoknadsStatusDto.utfylt

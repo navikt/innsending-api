@@ -26,10 +26,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.util.LinkedMultiValueMap
 import java.util.*
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 
 @ActiveProfiles("test")
@@ -85,9 +82,10 @@ class FyllutRestApiTest {
 					"Inntektsopplysninger for selvstendig næringsdrivende og frilansere som skal ha foreldrepenger eller svangerskapspenger",
 					true,
 					null,
-					true
+					true,
+					UUID.randomUUID().toString()
 				),
-				lagDokument("N6", "Dokumentasjon av veiforhold", true, null, true)
+				lagDokument("N6", "Dokumentasjon av veiforhold", true, null, true, UUID.randomUUID().toString())
 			)
 		)
 		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
@@ -218,14 +216,14 @@ class FyllutRestApiTest {
 				tittel = nyTittel,
 				pakrevd = true,
 				mimetype = Mimetype.applicationSlashPdf,
-				formioId = dokumentSoknadDto.hoveddokument!!.formioId
+				formioId = null
 			),
 			hoveddokumentVariant = lagDokument(
 				vedleggsnr = skjemanr,
 				tittel = nyTittel,
 				pakrevd = true,
 				mimetype = Mimetype.applicationSlashJson,
-				formioId = dokumentSoknadDto.hoveddokumentVariant!!.formioId
+				formioId = null
 			),
 			vedleggsListe = listOf(
 				lagDokument(
@@ -233,9 +231,10 @@ class FyllutRestApiTest {
 					nyVedleggstittel1,
 					true,
 					null,
-					true
+					true,
+					UUID.randomUUID().toString()
 				),
-				lagDokument("N6", nyVedleggstittel2, true, null, true)
+				lagDokument("N6", nyVedleggstittel2, true, null, true, UUID.randomUUID().toString())
 			)
 		)
 
@@ -277,6 +276,90 @@ class FyllutRestApiTest {
 
 		assertEquals(null, response.body)
 
+	}
+
+	@Test
+	fun `Skal bevare vedlegg fra send-inn, selv etter oppdatering fra fyllUt`() {
+		// Gitt
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		val dokumentSoknadDto = opprettSoknad()
+		val skjemanr = dokumentSoknadDto.skjemanr
+		val tema = dokumentSoknadDto.tema
+		val innsendingsId = dokumentSoknadDto.innsendingsId!!
+
+		val fyllUtVedleggstittel = "N6-ny-vedleggstittel"
+
+		val fraFyllUt = lagSkjemaDto()
+		val formioId = fraFyllUt.vedleggsListe?.find { it.vedleggsnr == "N6" }!!.formioId!!
+		val oppdatertFyllUt = lagSkjemaDto(
+			vedleggsListe = listOf(
+				lagDokument(
+					vedleggsnr = "N6",
+					tittel = fyllUtVedleggstittel,
+					pakrevd = false,
+					mimetype = null,
+					erVedlegg = true,
+					formioId = formioId
+				)
+			)
+		)
+
+		val sendInnVedleggsTittel = "N6-fra-send-inn"
+		val fraSendInn = PostVedleggDto(tittel = sendInnVedleggsTittel)
+
+		val utfyltRequest = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
+		val leggTilVedleggRequest = HttpEntity(fraSendInn, Hjelpemetoder.createHeaders(token))
+		val oppdatertUtfyltRequest = HttpEntity(oppdatertFyllUt, Hjelpemetoder.createHeaders(token))
+
+		// Når
+		// Fullfører søknad i fyllUt med N6 og T1 vedlegg (de to eksisterende vedleggene vedleggsnr1 og vedleggsnr2 fjernes)
+		val utfyltResponse = restTemplate.exchange(
+			"http://localhost:${serverPort}/fyllUt/v1/utfyltSoknad/${innsendingsId}", HttpMethod.PUT,
+			utfyltRequest, Unit::class.java
+		)
+
+		// Legger til N6 vedlegg i send-inn
+		val leggTilVedleggResponse = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg", HttpMethod.POST,
+			leggTilVedleggRequest, VedleggDto::class.java
+		)
+
+		// Går tilbake til fyllUt og fjerner T1 vedlegg. Beholder N6, men endrer tittel
+		val oppdatertUtfyltResponse = restTemplate.exchange(
+			"http://localhost:${serverPort}/fyllUt/v1/utfyltSoknad/${innsendingsId}", HttpMethod.PUT,
+			oppdatertUtfyltRequest, Unit::class.java
+		)
+		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
+		println(oppdatertSoknad)
+
+		// Så
+		assertTrue(utfyltResponse != null)
+		assertTrue(leggTilVedleggResponse != null)
+		assertTrue(oppdatertUtfyltResponse != null)
+
+		assertEquals(200, utfyltResponse.statusCodeValue)
+		assertEquals(201, leggTilVedleggResponse.statusCodeValue)
+		assertEquals(200, oppdatertUtfyltResponse.statusCodeValue)
+
+		assertEquals(4, oppdatertSoknad.vedleggsListe.size)
+
+		val n6FyllUtVedlegg =
+			oppdatertSoknad.vedleggsListe.find { it.vedleggsnr == "N6" && it.tittel == fyllUtVedleggstittel }
+		val n6SendInnVedlegg =
+			oppdatertSoknad.vedleggsListe.find { it.vedleggsnr == "N6" && it.tittel == sendInnVedleggsTittel }
+
+		assertNotNull(n6FyllUtVedlegg!!.formioId, "Vedlegg fra fyllUt har formioId")
+		assertNull(n6SendInnVedlegg!!.formioId, "Vedlegg fra sendInn har ikke formioId")
+
+		assertFalse(
+			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == "vedleggsnr1" || it.vedleggsnr == "vedleggsnr2" },
+			"Skal ikke ha gammelt vedlegg"
+		)
+		assertFalse(
+			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == "T1" },
+			"Skal ikke ha gammelt vedlegg"
+		)
 	}
 
 	@Test
@@ -382,6 +465,48 @@ class FyllutRestApiTest {
 
 	}
 
+	private fun lagSkjemaDto(vedleggsListe: List<SkjemaDokumentDto>? = null): SkjemaDto {
+		return SkjemaDto(
+			brukerId = subject,
+			skjemanr = skjemanr,
+			tittel = tittel,
+			tema = tema,
+			spraak = spraak,
+			hoveddokument = lagDokument(
+				vedleggsnr = skjemanr,
+				tittel = tittel,
+				pakrevd = true,
+				mimetype = Mimetype.applicationSlashPdf,
+				formioId = null
+			),
+			hoveddokumentVariant = lagDokument(
+				vedleggsnr = skjemanr,
+				tittel = tittel,
+				pakrevd = true,
+				mimetype = Mimetype.applicationSlashJson,
+				formioId = null
+			),
+			vedleggsListe = vedleggsListe ?: listOf(
+				lagDokument(
+					"N6",
+					"N6-vedlegg",
+					false,
+					null,
+					true,
+					UUID.randomUUID().toString()
+				),
+				lagDokument(
+					"T1",
+					"T1-vedlegg",
+					false,
+					null,
+					true,
+					UUID.randomUUID().toString()
+				),
+			)
+		)
+	}
+
 	private fun lagDokument(
 		vedleggsnr: String,
 		tittel: String,
@@ -398,7 +523,7 @@ class FyllutRestApiTest {
 			beskrivelse = "$tittel - Beskrivelse",
 			mimetype = mimetype,
 			document = if (erVedlegg) null else hentFil(mimetype),
-			formioId = formioId ?: UUID.randomUUID().toString()
+			formioId = formioId
 		)
 	}
 
@@ -412,17 +537,17 @@ class FyllutRestApiTest {
 				fil = null,
 				erVariant = false,
 				erHoveddokument = true,
-				formioId = UUID.randomUUID().toString()
+				formioId = null
 			)
 		val vedleggDtoJson =
 			Hjelpemetoder.lagVedleggDto(
 				vedleggsnr = skjemanr,
 				tittel = tittel,
 				mimeType = Mimetype.applicationSlashJson.value,
-				fil = Hjelpemetoder.getBytesFromFile("/sanity.json"),
+				fil = null,
 				erVariant = true,
 				erHoveddokument = true,
-				formioId = UUID.randomUUID().toString()
+				formioId = null
 			)
 
 		val vedleggDto1 =

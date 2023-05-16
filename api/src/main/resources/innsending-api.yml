@@ -1026,7 +1026,7 @@ components:
 
     FormioId:
       type: string
-      description: Unik vedleggsId som tilsvarer en gitt komponent i formIo.
+      description: Unik vedleggsId som tilsvarer en gitt komponent i formio. Den legges på vedlegget når det opprettes fra FyllUt. Den legges ikke på når det lages N6 vedlegg fra sendInn. Hoveddokument har heller ikke formioId siden det ikke tilsvarer en gitt komponent i formio.
       example: ec9k3bt
 
     FristForEttersendelse:
@@ -1198,8 +1198,6 @@ components:
       properties:
         tittel:
           $ref: "#/components/schemas/Tittel"
-        formioId:
-          $ref: "#/components/schemas/FormioId"
 
     PropertyNavn:
       type: string

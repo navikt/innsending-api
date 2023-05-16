@@ -14,6 +14,7 @@ import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
+import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import no.nav.soknad.innsending.util.validators.validerSoknadVedOppdatering
 import no.nav.soknad.innsending.util.validators.validerVedleggsListeVedOppdatering
@@ -366,7 +367,7 @@ class SoknadService(
 		val operation = InnsenderOperation.SLETT.name
 
 		// slett vedlegg og soknad
-		if (dokumentSoknadDto.status != SoknadsStatusDto.opprettet)
+		if (!dokumentSoknadDto.kanGjoreEndringer)
 			throw IllegalActionException(
 				"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
 				"Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den er innsendt eller slettet"
@@ -393,7 +394,7 @@ class SoknadService(
 		// Ved automatisk sletting beholdes innslag i basen, men eventuelt opplastede filer slettes
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
 
-		if (dokumentSoknadDto.status != SoknadsStatusDto.opprettet)
+		if (!dokumentSoknadDto.kanGjoreEndringer)
 			throw IllegalActionException(
 				"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
 				"Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den allerede er innsendt"
@@ -435,7 +436,13 @@ class SoknadService(
 			logger.info("SlettPermanentSoknader: Funnet ${soknadDbDataListe.size} søknader som skal permanent slettes")
 			soknadDbDataListe.forEach { slettSoknadPermanent(it.innsendingsid) }
 		} else {
-			val soknadDbDataListe = repo.findAllByStatusAndWithOpprettetdatoBefore(SoknadsStatus.Opprettet.name, slettFor)
+			val soknadDbDataListe = repo.findAllByStatusesAndWithOpprettetdatoBefore(
+				listOf(
+					SoknadsStatus.Opprettet.name,
+					SoknadsStatus.Utfylt.name
+				), slettFor
+			)
+
 			logger.info("SlettGamleIkkeInnsendteSoknader: Funnet ${soknadDbDataListe.size} søknader som skal slettes")
 			soknadDbDataListe.forEach { slettSoknadAutomatisk(it.innsendingsid) }
 		}
@@ -485,11 +492,16 @@ class SoknadService(
 		val soknadsId = oppdatertSoknad.id!!
 
 		dokumentSoknadDto.vedleggsListe.forEach { nyttVedlegg ->
-			// Finn eksisterende vedlegg. Kan være flere vedlegg med samme formioId (feks: formio-komponenten til vedleggsnr N6 (Annen dokumentasjon) kan ha flere vedlegg tilknyttet seg).
-			// Hoveddokument og hoveddokumentVariant-vedleggene har ikke formioId. De har samme vedleggsnr=skjemanr og erVariant skiller dem
+			// Finn eksisterende vedlegg. Ignorer N6 vedlegg som er opprettet fra SendInn
 			val eksisterendeVedleggsListe =
-				eksisterendeSoknad.vedleggsListe.filter { eksisterendeVedlegg ->
-					eksisterendeVedlegg.formioId == nyttVedlegg.formioId && eksisterendeVedlegg.vedleggsnr == nyttVedlegg.vedleggsnr && eksisterendeVedlegg.erVariant == nyttVedlegg.erVariant
+				if (nyttVedlegg.vedleggsnr == "N6") {
+					// Oppdater eksisterende N6 vedlegg fra fyllUt. N6 vedlegg som er opprettet fra SendInn vil ikke ha formioId
+					eksisterendeSoknad.vedleggsListe.filter { eksisterendeVedlegg -> eksisterendeVedlegg.formioId != null && eksisterendeVedlegg.formioId == nyttVedlegg.formioId }
+				} else {
+					// Oppdater hoveddokument og andre vedlegg. Hoveddokument har samme vedleggsnr=skjemanr og erVariant skiller dem
+					eksisterendeSoknad.vedleggsListe.filter { eksisterendeVedlegg ->
+						eksisterendeVedlegg.formioId == nyttVedlegg.formioId && eksisterendeVedlegg.vedleggsnr == nyttVedlegg.vedleggsnr && eksisterendeVedlegg.erVariant == nyttVedlegg.erVariant
+					}
 				}
 
 			// Oppdater eksisterende vedlegg
@@ -503,13 +515,13 @@ class SoknadService(
 	}
 
 	// Slett alle eksisterende vedlegg (og eventuelt tilhørende filer) som ikke med i den nye søknaden
-	// Hovedokumentene skal ikke slettes
+	// Kun vedlegg fra fyllUt skal slettes (vedlegg med formioId). Vedlegg uten formioId (feks: hoveddokument og N6 vedlegg fra sendInn) skal ikke slettes
 	private fun slettEksisterendeVedlegg(
 		eksisterendeVedleggsListe: List<VedleggDto>,
 		dokumentSoknadDto: DokumentSoknadDto
 	) {
 		eksisterendeVedleggsListe.filter { eksisterendeVedlegg ->
-			!eksisterendeVedlegg.erHoveddokument &&
+			eksisterendeVedlegg.formioId != null &&
 				dokumentSoknadDto.vedleggsListeUtenHoveddokument.none { nyttVedlegg -> eksisterendeVedlegg.formioId == nyttVedlegg.formioId }
 		}.forEach {
 			vedleggService.slettVedleggOgDensFiler(it)

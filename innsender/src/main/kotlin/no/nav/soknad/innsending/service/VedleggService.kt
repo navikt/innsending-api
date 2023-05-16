@@ -11,6 +11,7 @@ import no.nav.soknad.innsending.repository.SoknadsStatus
 import no.nav.soknad.innsending.repository.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
+import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -181,7 +182,7 @@ class VedleggService(
 	fun leggTilVedlegg(soknadDto: DokumentSoknadDto, vedleggDto: PostVedleggDto?): VedleggDto {
 
 		val soknadDbOpt = repo.hentSoknadDb(soknadDto.innsendingsId!!)
-		if (soknadDbOpt.isEmpty || soknadDbOpt.get().status != SoknadsStatus.Opprettet) throw IllegalActionException(
+		if (soknadDbOpt.isEmpty || (soknadDbOpt.get().status != SoknadsStatus.Opprettet && soknadDbOpt.get().status != SoknadsStatus.Utfylt)) throw IllegalActionException(
 			"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
 			"Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet"
 		)
@@ -191,8 +192,7 @@ class VedleggService(
 			soknadDbOpt.get().id!!,
 			listOf("N6"),
 			soknadDto.spraak!!,
-			vedleggDto?.tittel,
-			vedleggDto?.formioId
+			vedleggDto?.tittel
 		)
 
 		// Oppdater soknadens sist endret dato
@@ -252,7 +252,7 @@ class VedleggService(
 
 	@Transactional
 	fun slettVedlegg(soknadDto: DokumentSoknadDto, vedleggsId: Long) {
-		if (soknadDto.status != SoknadsStatusDto.opprettet) throw IllegalActionException(
+		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException(
 			"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
 			"Søknad ${soknadDto.innsendingsId} kan ikke endres da den allerede er innsendt"
 		)
@@ -285,7 +285,7 @@ class VedleggService(
 	@Transactional
 	fun endreVedlegg(patchVedleggDto: PatchVedleggDto, vedleggsId: Long, soknadDto: DokumentSoknadDto): VedleggDto {
 
-		if (soknadDto.status != SoknadsStatusDto.opprettet) throw IllegalActionException(
+		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException(
 			"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
 			"Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet"
 		)
