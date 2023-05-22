@@ -43,8 +43,8 @@ interface FilRepository : JpaRepository<FilDbData, Long> {
 	@Query(
 		value = "DELETE FROM fil WHERE vedleggsId in " +
 			"(select v.id from vedlegg v, soknad s where " +
-			"  s.status = ':status' and s.arkiveringsstatus = ':arkiveringsstatus' and" +
-			"  s.innsendtdato between current_date - (100 + :eldreEnn) and" +
+			"  s.status = :status and s.arkiveringsstatus = :arkiveringsstatus and" +
+			"  s.innsendtdato between current_date -(100 + :eldreEnn) and" +
 			"  current_date - :eldreEnn and" +
 			"  s.id = v.soknadsid" +
 			")", nativeQuery = true

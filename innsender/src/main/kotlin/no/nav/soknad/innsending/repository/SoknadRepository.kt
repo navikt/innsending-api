@@ -105,4 +105,19 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 	)
 	fun findInnsendtAndArkiveringsStatusIkkeSatt(@Param("before") before: LocalDateTime): List<String>
 
+	@Transactional
+	@Modifying
+	@Query(
+		value = "SELECT * FROM soknad WHERE " +
+			"  status = :status and arkiveringsstatus = :arkiveringsstatus and" +
+			"  innsendtdato between :fra and :til",
+		nativeQuery = true
+	)
+	fun finnAlleSoknaderBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(
+		@Param("fra") fra: LocalDateTime,
+		@Param("til") til: LocalDateTime,
+		@Param("status") status: String = SoknadsStatus.Innsendt.name,
+		@Param("arkiveringsstatus") arkiveringsstatus: String = ArkiveringsStatus.Arkivert.name
+	): List<SoknadDbData>
+
 }

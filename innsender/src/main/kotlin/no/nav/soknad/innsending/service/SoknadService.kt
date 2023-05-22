@@ -414,14 +414,21 @@ class SoknadService(
 		val operation = InnsenderOperation.SLETT.name
 
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
-
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettFilerForVedlegg(it.id!!) }
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettVedlegg(it.id!!) }
 		repo.slettSoknad(dokumentSoknadDto)
 
-		logger.info("slettSoknadPermanent: Søknad $innsendingsId er permanent slettet")
+		logger.info("$innsendingsId: opprettet:${dokumentSoknadDto.opprettetDato}, status: ${dokumentSoknadDto.status} er permanent slettet")
 
 		innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
+	}
+
+	fun finnOgSlettArkiverteSoknader(dagerGamle: Long, vindu: Long) {
+		val arkiverteSoknader =
+			repo.findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(dagerGamle, vindu)
+
+		arkiverteSoknader.forEach { slettSoknadPermanent(it.innsendingsid) }
+
 	}
 
 	fun slettGamleSoknader(dagerGamle: Long, permanent: Boolean = false) {

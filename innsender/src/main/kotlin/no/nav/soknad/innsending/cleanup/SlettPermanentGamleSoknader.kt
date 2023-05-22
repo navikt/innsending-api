@@ -25,7 +25,7 @@ class SlettPermanentGamleSoknader(
 				soknadService.slettGamleSoknader(dagerGamleString.toLong(), true)
 			}
 		} catch (ex: Exception) {
-			logger.warn("Fjerning av gamle ikke innsendte søknader feilet med ${ex.message}")
+			logger.warn("Permanent sletting av gamle søknader feilet", ex)
 		}
 	}
 
