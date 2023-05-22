@@ -19,11 +19,14 @@ class SlettArkiverteSoknader(
 	@Value("\${cron.slettInnsendtEldreEnn}")
 	private lateinit var slettArkiverteSoknaderEldreEnn: String
 
+	@Value("\${cron.sletteVindu}")
+	private lateinit var vindu: String
+
 	@Scheduled(cron = "\${cron.startSlettInnsendteSoknader}")
 	fun fjernArkiverteSoknader() {
 		try {
 			if (leaderSelectionUtility.isLeader()) {
-				soknadService.finnOgSlettArkiverteSoknader(slettArkiverteSoknaderEldreEnn.toLong())
+				soknadService.finnOgSlettArkiverteSoknader(slettArkiverteSoknaderEldreEnn.toLong(), vindu.toLong())
 			}
 		} catch (ex: Exception) {
 			logger.warn("Fjerning av arkiverte søknader feilet med ${ex}")

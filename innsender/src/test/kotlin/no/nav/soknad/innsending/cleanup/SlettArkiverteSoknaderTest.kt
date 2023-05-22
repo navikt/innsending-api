@@ -20,7 +20,6 @@ import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
@@ -102,10 +101,6 @@ class SlettArkiverteSoknaderTest {
 	)
 
 
-	@BeforeEach
-	fun init() {
-	}
-
 	private val defaultSkjemanr = "NAV 55-00.60"
 
 	@Test
@@ -150,7 +145,7 @@ class SlettArkiverteSoknaderTest {
 		simulerArkiveringsRespons(skalSendeInnIkkeArkivereId, ArkiveringsStatus.ArkiveringFeilet)
 
 		// Hvis kall for å slette innsendte og arkivertesøknader kalles
-		soknadService.finnOgSlettArkiverteSoknader(-1)
+		soknadService.finnOgSlettArkiverteSoknader(-1, 100)
 
 		// Så skal innsendt og arkivert søknad være slettet
 		assertThrows<ResourceNotFoundException> {

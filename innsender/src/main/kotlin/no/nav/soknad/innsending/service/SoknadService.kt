@@ -423,8 +423,9 @@ class SoknadService(
 		innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
 	}
 
-	fun finnOgSlettArkiverteSoknader(dagerGamle: Long) {
-		val arkiverteSoknader = repo.findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(dagerGamle)
+	fun finnOgSlettArkiverteSoknader(dagerGamle: Long, vindu: Long) {
+		val arkiverteSoknader =
+			repo.findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(dagerGamle, vindu)
 
 		arkiverteSoknader.forEach { slettSoknadPermanent(it.innsendingsid) }
 

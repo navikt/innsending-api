@@ -90,15 +90,18 @@ class RepositoryUtils(
 		)
 	}
 
-	fun findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(eldreEnn: Long): List<SoknadDbData> =
+	fun findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(
+		eldreEnn: Long,
+		vindu: Long
+	): List<SoknadDbData> =
 		try {
 			soknadRepository.finnAlleSoknaderBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(
-				LocalDateTime.now().minusDays(eldreEnn + 100), LocalDateTime.now().minusDays(eldreEnn)
+				LocalDateTime.now().minusDays(eldreEnn + vindu), LocalDateTime.now().minusDays(eldreEnn)
 			)
 		} catch (ex: Exception) {
 			throw BackendErrorException(
 				ex.message,
-				"Feil ved henting av alle arkiverte søknader arkivert mellom ${(100 + eldreEnn)} og $eldreEnn dager siden",
+				"Feil ved henting av alle arkiverte søknader arkivert mellom ${(vindu + eldreEnn)} og $eldreEnn dager siden",
 				"errorCode.backendError.applicationFetchError"
 			)
 		}
@@ -148,7 +151,7 @@ class RepositoryUtils(
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
-			"Feil ved oppdatering av søknad med innsendingsId $innsendingsId",
+			"Feil ved oppdatering av arkiveringsstatus på søknad med innsendingsId $innsendingsId",
 			"errorCode.backendError.applicationUpdateError"
 		)
 	}
