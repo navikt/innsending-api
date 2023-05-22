@@ -55,12 +55,14 @@ class BrukernotifikasjonPublisher(
 
 			try {
 				when (dokumentSoknad.status) {
-					SoknadsStatusDto.opprettet, SoknadsStatusDto.utfylt -> handleNewApplication(dokumentSoknad, groupId!!)
+					SoknadsStatusDto.opprettet -> handleNewApplication(dokumentSoknad, groupId!!)
 					SoknadsStatusDto.innsendt -> handleSentInApplication(dokumentSoknad, groupId!!)
 					SoknadsStatusDto.slettetAvBruker, SoknadsStatusDto.automatiskSlettet -> handleDeletedApplication(
 						dokumentSoknad,
 						groupId!!
 					)
+					// Ingen brukernotifikasjon for utfylt søknad
+					SoknadsStatusDto.utfylt -> {}
 				}
 			} catch (e: Exception) {
 				logger.info("${dokumentSoknad.innsendingsId}: Publisering av brukernotifikasjon feilet", e)
