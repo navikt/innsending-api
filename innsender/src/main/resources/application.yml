@@ -23,7 +23,7 @@ cron:
   startSlettPermanentIkkeInnsendteSoknader: 0 0 3 * * *
   slettPermanentEldreEnn: 183
   # Kjører hvert 11. minutt
-  runVerifyArchivedApplications: * /11 * * * *
+  runVerifyArchivedApplications: 0,10,20,30,40,50 * * * * *
 
 ettersendingsfrist: 14
 
