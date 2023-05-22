@@ -15,7 +15,6 @@ import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
-import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import no.nav.soknad.innsending.util.validators.validerSoknadVedOppdatering
 import no.nav.soknad.innsending.util.validators.validerVedleggsListeVedOppdatering
 import org.slf4j.LoggerFactory
@@ -459,7 +458,10 @@ class SoknadService(
 
 	fun oppdaterSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
 		if (dokumentSoknadDto.vedleggsListe.size != 2) {
-			throw BackendErrorException("Feil antall vedlegg", "Vedleggslisten skal være tom")
+			throw BackendErrorException(
+				"Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant",
+				"Innsendt vedleggsliste skal være tom"
+			)
 		}
 
 		val eksisterendeSoknad = hentSoknad(innsendingsId)
@@ -470,7 +472,7 @@ class SoknadService(
 		val eksisterendeSoknad = hentSoknad(innsendingsId)
 		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto, SoknadsStatus.Utfylt)
 
-		slettEksisterendeVedlegg(eksisterendeSoknad.vedleggsListe, dokumentSoknadDto)
+		vedleggService.slettEksisterendeVedleggVedOppdatering(eksisterendeSoknad.vedleggsListe, dokumentSoknadDto)
 	}
 
 	fun oppdaterSoknad(
@@ -491,52 +493,13 @@ class SoknadService(
 		val oppdatertSoknad = repo.lagreSoknad(soknadDb)
 		val soknadsId = oppdatertSoknad.id!!
 
-		dokumentSoknadDto.vedleggsListe.forEach { nyttVedlegg ->
-			// Finn eksisterende vedlegg. Ignorer N6 vedlegg som er opprettet fra SendInn
-			val eksisterendeVedleggsListe =
-				if (nyttVedlegg.vedleggsnr == "N6") {
-					// Oppdater eksisterende N6 vedlegg fra fyllUt. N6 vedlegg som er opprettet fra SendInn vil ikke ha formioId
-					eksisterendeSoknad.vedleggsListe.filter { eksisterendeVedlegg -> eksisterendeVedlegg.formioId != null && eksisterendeVedlegg.formioId == nyttVedlegg.formioId }
-				} else {
-					// Oppdater hoveddokument og andre vedlegg. Hoveddokument har samme vedleggsnr=skjemanr og erVariant skiller dem
-					eksisterendeSoknad.vedleggsListe.filter { eksisterendeVedlegg ->
-						eksisterendeVedlegg.formioId == nyttVedlegg.formioId && eksisterendeVedlegg.vedleggsnr == nyttVedlegg.vedleggsnr && eksisterendeVedlegg.erVariant == nyttVedlegg.erVariant
-					}
-				}
-
-			// Oppdater eksisterende vedlegg
-			if (eksisterendeVedleggsListe.isNotEmpty()) {
-				oppdaterEksisterendeVedlegg(eksisterendeVedleggsListe, nyttVedlegg, soknadsId)
-			} else {
-				// Lagre nytt vedlegg
-				repo.lagreVedlegg(mapTilVedleggDb(nyttVedlegg, soknadsId))
+		// Oppdater vedlegg
+		if (status == SoknadsStatus.Utfylt) {
+			dokumentSoknadDto.vedleggsListe.forEach { nyttVedlegg ->
+				vedleggService.lagreVedleggVedOppdatering(eksisterendeSoknad, nyttVedlegg, soknadsId)
 			}
 		}
-	}
 
-	// Slett alle eksisterende vedlegg (og eventuelt tilhørende filer) som ikke med i den nye søknaden
-	// Kun vedlegg fra fyllUt skal slettes (vedlegg med formioId). Vedlegg uten formioId (feks: hoveddokument og N6 vedlegg fra sendInn) skal ikke slettes
-	private fun slettEksisterendeVedlegg(
-		eksisterendeVedleggsListe: List<VedleggDto>,
-		dokumentSoknadDto: DokumentSoknadDto
-	) {
-		eksisterendeVedleggsListe.filter { eksisterendeVedlegg ->
-			eksisterendeVedlegg.formioId != null &&
-				dokumentSoknadDto.vedleggsListeUtenHoveddokument.none { nyttVedlegg -> eksisterendeVedlegg.formioId == nyttVedlegg.formioId }
-		}.forEach {
-			vedleggService.slettVedleggOgDensFiler(it)
-		}
-	}
-
-	private fun oppdaterEksisterendeVedlegg(
-		eksisterendeVedleggsListe: List<VedleggDto>,
-		nyttVedlegg: VedleggDto,
-		soknadsId: Long
-	) {
-		eksisterendeVedleggsListe.forEach {
-			val vedleggDbData = mapTilVedleggDb(vedleggDto = nyttVedlegg, soknadsId = soknadsId, vedleggsId = it.id!!)
-			repo.lagreVedlegg(vedleggDbData)
-		}
 	}
 
 

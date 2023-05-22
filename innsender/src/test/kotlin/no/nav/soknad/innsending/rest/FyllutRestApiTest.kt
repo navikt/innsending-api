@@ -331,7 +331,6 @@ class FyllutRestApiTest {
 			oppdatertUtfyltRequest, Unit::class.java
 		)
 		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
-		println(oppdatertSoknad)
 
 		// Så
 		assertTrue(utfyltResponse != null)
@@ -398,8 +397,8 @@ class FyllutRestApiTest {
 		assertTrue(response != null)
 		assertEquals(SoknadsStatusDto.opprettet, oppdatertSoknad.status, "Status er satt til opprettet")
 		assertEquals(500, response.statusCodeValue)
-		assertEquals("Feil antall vedlegg", response.body!!.arsak)
-		assertEquals("Vedleggslisten skal være tom", response.body!!.message)
+		assertEquals("Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant", response.body!!.arsak)
+		assertEquals("Innsendt vedleggsliste skal være tom", response.body!!.message)
 
 	}
 

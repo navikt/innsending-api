@@ -12,6 +12,7 @@ import no.nav.soknad.innsending.repository.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
+import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -327,6 +328,66 @@ class VedleggService(
 		repo.oppdaterEndretDato(soknadDto.id!!)
 
 		return lagVedleggDto(oppdatertVedlegg.get(), null)
+	}
+
+
+	// Oppdater eller legg til nytt vedlegg
+	fun lagreVedleggVedOppdatering(
+		eksisterendeSoknad: DokumentSoknadDto,
+		nyttVedlegg: VedleggDto,
+		soknadsId: Long
+	) {
+		val eksisterendeVedleggsListe = finnEksisterendeVedleggsListe(eksisterendeSoknad, nyttVedlegg)
+
+		if (eksisterendeVedleggsListe.isNotEmpty()) {
+			oppdaterEksisterendeVedlegg(eksisterendeVedleggsListe, nyttVedlegg, soknadsId)
+		} else {
+			// Lag nytt vedlegg
+			repo.lagreVedlegg(mapTilVedleggDb(nyttVedlegg, soknadsId))
+		}
+
+	}
+
+	private fun finnEksisterendeVedleggsListe(
+		eksisterendeSoknad: DokumentSoknadDto,
+		nyttVedlegg: VedleggDto
+	): List<VedleggDto> {
+		val eksisterendeVedleggsListe =
+			if (nyttVedlegg.vedleggsnr == "N6") {
+				// Eksisterende N6 vedlegg fra fyllUt. Ignorer N6 vedlegg som er opprettet fra SendInn (vil ikke ha formioId)
+				eksisterendeSoknad.vedleggsListe.filter { eksisterendeVedlegg -> eksisterendeVedlegg.formioId != null && eksisterendeVedlegg.formioId == nyttVedlegg.formioId }
+			} else {
+				// Oppdater hoveddokument og andre vedlegg. Hoveddokument har samme vedleggsnr=skjemanr og erVariant skiller dem
+				eksisterendeSoknad.vedleggsListe.filter { eksisterendeVedlegg ->
+					eksisterendeVedlegg.formioId == nyttVedlegg.formioId && eksisterendeVedlegg.vedleggsnr == nyttVedlegg.vedleggsnr && eksisterendeVedlegg.erVariant == nyttVedlegg.erVariant
+				}
+			}
+		return eksisterendeVedleggsListe
+	}
+
+	private fun oppdaterEksisterendeVedlegg(
+		eksisterendeVedleggsListe: List<VedleggDto>,
+		nyttVedlegg: VedleggDto,
+		soknadsId: Long
+	) {
+		eksisterendeVedleggsListe.forEach {
+			val vedleggDbData = mapTilVedleggDb(vedleggDto = nyttVedlegg, soknadsId = soknadsId, vedleggsId = it.id!!)
+			repo.lagreVedlegg(vedleggDbData)
+		}
+	}
+
+	// Slett alle eksisterende vedlegg (og eventuelt tilhørende filer) som ikke er med i den nye søknaden
+	// Kun vedlegg fra fyllUt skal slettes (vedlegg med formioId). Vedlegg uten formioId (feks: hoveddokument og N6 vedlegg fra sendInn) skal ikke slettes
+	fun slettEksisterendeVedleggVedOppdatering(
+		eksisterendeVedleggsListe: List<VedleggDto>,
+		dokumentSoknadDto: DokumentSoknadDto
+	) {
+		eksisterendeVedleggsListe.filter { eksisterendeVedlegg ->
+			eksisterendeVedlegg.formioId != null &&
+				dokumentSoknadDto.vedleggsListeUtenHoveddokument.none { nyttVedlegg -> eksisterendeVedlegg.formioId == nyttVedlegg.formioId }
+		}.forEach {
+			slettVedleggOgDensFiler(it)
+		}
 	}
 
 
