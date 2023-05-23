@@ -18,12 +18,14 @@ management:
 cron:
   startSlettGamleIkkeInnsendteSoknader: 0 0 2 * * *
   slettEldreEnn: 56
-  startSlettInnsendteFiler: 0 0 5 * * *
-  slettInnsendtFilEldreEnn: 1
+  startSlettInnsendteSoknader: 0 0 5 * * *
+  slettInnsendtEldreEnn: 1
+  sletteVindu: 100
   startSlettPermanentIkkeInnsendteSoknader: 0 0 3 * * *
-  slettPermanentEldreEnn: 365
-  # Kjører hvert 11. minutt
-  runVerifyArchivedApplications: 0 0,11 0 ? * *
+  # Slett permanent alle søknader opprettet for mer enn 6 måneder siden ( som er ca 366/2=183 dager )
+  slettPermanentEldreEnn: 183
+  # Kjører hvert 10. minutt
+  runVerifyArchivedApplications: 0,10,20,30,40,50 * * * * *
 
 ettersendingsfrist: 14
 
