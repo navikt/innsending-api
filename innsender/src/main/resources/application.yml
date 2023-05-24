@@ -99,9 +99,6 @@ brukernotifikasjonconfig:
   tjenesteUrl: https://localhost
   publisereEndringer: true
 
-no.nav.security.jwt:
-  mock:
-    enable: true
 
 ---
 spring:

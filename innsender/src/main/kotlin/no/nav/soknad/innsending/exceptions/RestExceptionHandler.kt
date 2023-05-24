@@ -33,7 +33,7 @@ class RestExceptionHandler {
 		logger.error(exception.message, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
-				exception.message ?: "",
+				exception.arsak ?: "",
 				exception.message ?: "",
 				LocalDateTime.now(),
 				exception.errorCode

@@ -20,11 +20,10 @@ tags:
 paths:
   /fyllUt/v1/leggTilVedlegg:
     post:
-      summary: Motta ferdig utfylt søknad og metadata til denne.
+      summary: (DEPRECATED) Motta ferdig utfylt søknad og metadata til denne.
       description: FyllUt tjenesten gir søker mulighet til å fylle ut en søknad. Når vedkommende er ferdig med dette kalles dette endepunktet for å mellomlagre søknaden og gi søker mulighet til å laste opp eventuelle vedlegg og sende inn søknaden og disse til NAV.
       operationId: fyllUt
 
-      security: [ ]   # No security
       requestBody:
         description: Søknadsmetadata og søknad som PDF og Json samt liste over eventuelle obligatoriske og valgfrie vedlegg som skal/kan legges til.
         content:
@@ -38,6 +37,136 @@ paths:
           description: Found
       tags:
         - soknadFraFyllUt
+
+  /fyllUt/v1/soknad/{innsendingsId}:
+    get:
+      summary: Hent en eksisterende søknadsutfylling
+      description: Dette endepunktet kalles når vedkommende henter søknaden på oppsummeringssiden. Brukernotifikasjoner som blir opprettet når vedkommende starter søknadsutfyllingen linker til oppsummeringssiden.
+      operationId: fyllUtHentSoknad
+
+      parameters:
+        - name: innsendingsId
+          in: path
+          description: Identifisering av søknad som skal hentes
+          required: true
+          schema:
+            type: string
+          style: simple
+
+      responses:
+        '200':
+          description: Pågående søknad returneres.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkjemaDto"
+        404:
+          description: Ingen søknad funnet.
+      tags:
+        - fyllUtHentSoknad
+    put:
+      summary: Oppdater en eksisterende søknadsutfylling
+      description: Dette endepunktet kalles for hvert steg i FyllUt-flyten og oppdaterer søknaden. Alle felter blir overskrevet unntatt brukerId og skjemanr. Vedleggslisten skal være tom. (Vedleggslisten og hoveddokument (PDF) vil bli lagt til i "PUT /fyllUt/v1/utfyltSoknad/{innsendingsId}").
+        Status blir satt til "opprettet". Når søknaden er ferdig utfylt så blir status satt til "utfylt" i "PUT /fyllUt/v1/utfyltSoknad/{innsendingsId}".
+      operationId: fyllUtOppdaterSoknad
+
+      parameters:
+        - name: innsendingsId
+          in: path
+          description: identifisering av søknad
+          required: true
+          schema:
+            type: string
+          style: simple
+
+      requestBody:
+        description: Søknadsmetadata for å oppdatere søknaden. HovedokumentVariant (JSON) oppdateres underveis, mens hoveddokument (PDF) av søknaden vil bli lagt til når søknaden sendes inn (siste steg i FyllUt-flyten)
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SkjemaDto"
+        required: true
+
+      responses:
+        200:
+          description: Oppdatert søknad
+      tags:
+        - fyllUtOppdaterSoknad
+
+    delete:
+      summary: Kall for å slette opprettet søknad gitt innsendingsId.
+      description: Dersom funnet, slettes søknaden og dens vedlegg, eventuelle opplastede filer og brukernotifikasjon
+      operationId: fyllUtSlettSoknad
+
+      parameters:
+        - name: innsendingsId
+          in: path
+          description: identifisering av søknad
+          required: true
+          schema:
+            type: string
+          style: simple
+
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BodyStatusResponseDto"
+      tags:
+        - fyllUtSlettSoknad
+  /fyllUt/v1/utfyltSoknad/{innsendingsId}:
+    put:
+      summary: Lagre en ferdig utfylt søknad
+      description: Dette endepunktet kalles i steg i FyllUt-flyten fra oppsummeringssiden før brukeren blir videresendt til SendInn-applikasjonen. Til motsetning fra "PUT /fyllUt/v1/soknad/{innsendingsId}" så blir vedlegg og den genererte PDF'en for hoveddokumentet også sendt med fra frontend. Status blir satt til "utfylt"
+      operationId: fyllUtUtfyltSoknad
+
+      parameters:
+        - name: innsendingsId
+          in: path
+          description: identifisering av søknad
+          required: true
+          schema:
+            type: string
+          style: simple
+
+      requestBody:
+        description: Søknaddata for å oppdatere søknaden
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SkjemaDto"
+        required: true
+
+      responses:
+        200:
+          description: Oppdatert søknad
+      tags:
+        - fyllUtUtfyltSoknad
+
+  /fyllUt/v1/soknad:
+    post:
+      summary: Start en ny søknadsutfylling
+      description: FyllUt tjenesten gir søker mulighet til å fylle ut en søknad. Dette endepunktet kalles når vedkommende starter søknaden og det opprettes en tom søknad i databasen.
+        En brukernotifikasjon som linker til oppsummeringssiden i FyllUt blir opprettet. For hvert steg i FyllUt kalles PUT endepunktet for å oppdatere søknaden underveis.
+      operationId: fyllUtOpprettSoknad
+
+      requestBody:
+        description: Søknadsmetadata for å opprette søknaden.  HovedokumentVariant (JSON) oppdateres underveis, mens hoveddokument (PDF) av søknaden vil bli lagt til når søknaden sendes inn (siste steg i FyllUt-flyten).
+          Liste over eventuelle obligatoriske og valgfrie vedlegg som skal/kan legges til vil bli lagt til i søknaden etterhvert som bruker fyller ut søknaden.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SkjemaDto"
+        required: true
+
+      responses:
+        201:
+          description: Opprettet søknad
+      tags:
+        - fyllUtOpprettSoknad
+
 
   /innsendte/v1/hentAktiveSaker:
     get:
@@ -854,7 +983,6 @@ components:
           example: true
           default: false
 
-
     FilDto:
       type: object
       description: Data om en opplastet fil
@@ -895,6 +1023,11 @@ components:
       type: boolean
       description: Satt til 'true' dersom dette er en ettersendingssøknad.
       example: true
+
+    FormioId:
+      type: string
+      description: Unik vedleggsId som tilsvarer en gitt komponent i formio. Den legges på vedlegget når det opprettes fra FyllUt. Den legges ikke på når det lages N6 vedlegg fra sendInn. Hoveddokument har heller ikke formioId siden det ikke tilsvarer en gitt komponent i formio.
+      example: ec9k3bt
 
     FristForEttersendelse:
       type: integer
@@ -1095,6 +1228,8 @@ components:
           $ref: "#/components/schemas/Document"
         propertyNavn:
           $ref: "#/components/schemas/PropertyNavn"
+        formioId:
+          $ref: "#/components/schemas/FormioId"
 
     SkjemaDto:
       type: object
@@ -1109,6 +1244,8 @@ components:
         - hoveddokumentVariant
 
       properties:
+        innsendingsId:
+          $ref: "#/components/schemas/InnsendingsId"
         brukerId:
           $ref: "#/components/schemas/BrukerId"
         skjemanr:
@@ -1119,6 +1256,8 @@ components:
           $ref: "#/components/schemas/Tema"
         spraak:
           $ref: "#/components/schemas/Spraak"
+        status:
+          $ref: "#/components/schemas/SoknadsStatusDto"
         hoveddokument:
           $ref: "#/components/schemas/SkjemaDokumentDto"
         hoveddokumentVariant:
@@ -1140,7 +1279,7 @@ components:
 
     SoknadsStatusDto:
       type: string
-      enum: [ "Opprettet", "Innsendt", "SlettetAvBruker", "AutomatiskSlettet" ]
+      enum: [ "Opprettet", "Utfylt", "Innsendt", "SlettetAvBruker", "AutomatiskSlettet" ]
       description: Spesifikasjon av status på søknaden.
       example:
 
@@ -1226,6 +1365,8 @@ components:
           format: date-time
           description: Endret dato og tid som UTC
           example: 2021-12-03T14:10:00Z
+        formioId:
+          $ref: "#/components/schemas/FormioId"
 
     Vedleggsnr:
       type: string

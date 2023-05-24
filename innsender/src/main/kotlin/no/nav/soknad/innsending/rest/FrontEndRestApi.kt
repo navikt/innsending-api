@@ -13,6 +13,7 @@ import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.MAX_AKTIVE_DAGER
 import no.nav.soknad.innsending.util.finnSpraakFraInput
+import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.pdfutilities.KonverterTilPdf
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
@@ -280,7 +281,7 @@ class FrontEndRestApi(
 		logger.info("$innsendingsId: Kall for å lagre vedlegg til søknad")
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
-		val vedleggDto = vedleggService.leggTilVedlegg(soknadDto, postVedleggDto?.tittel)
+		val vedleggDto = vedleggService.leggTilVedlegg(soknadDto, postVedleggDto)
 		logger.info("$innsendingsId: Lagret vedlegg ${vedleggDto.id} til søknad")
 
 		return ResponseEntity
@@ -344,7 +345,7 @@ class FrontEndRestApi(
 
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll.harTilgang(soknadDto)
-		if (!(soknadDto.status == SoknadsStatusDto.opprettet ||
+		if (!(soknadDto.kanGjoreEndringer ||
 				(soknadDto.status == SoknadsStatusDto.innsendt && soknadDto.vedleggsListe.any { it.id == vedleggsId && it.erHoveddokument && !it.erVariant }))
 		) {
 			throw IllegalActionException(
@@ -447,7 +448,7 @@ class FrontEndRestApi(
 	private fun hentOgValiderSoknad(innsendingsId: String): DokumentSoknadDto {
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll.harTilgang(soknadDto)
-		if (soknadDto.status != SoknadsStatusDto.opprettet) {
+		if (!soknadDto.kanGjoreEndringer) {
 			throw IllegalActionException(
 				"Søknaden kan ikke vises",
 				"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",

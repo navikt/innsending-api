@@ -264,7 +264,7 @@ class FrontEndRestAPILocalTest(
 
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll.harTilgang(soknadDto)
-		val vedleggDto = vedleggService.leggTilVedlegg(soknadDto, postVedleggDto?.tittel)
+		val vedleggDto = vedleggService.leggTilVedlegg(soknadDto, postVedleggDto)
 		logger.info("$innsendingsId: Lagret vedlegg ${vedleggDto.id} til søknad")
 
 		return ResponseEntity

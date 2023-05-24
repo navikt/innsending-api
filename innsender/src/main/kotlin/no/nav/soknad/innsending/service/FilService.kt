@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.OpplastingsStatus
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
+import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.pdfutilities.PdfMerger
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
@@ -58,7 +59,7 @@ class FilService(
 	fun lagreFil(soknadDto: DokumentSoknadDto, filDto: FilDto): FilDto {
 		val operation = InnsenderOperation.LAST_OPP.name
 
-		if (soknadDto.status != SoknadsStatusDto.opprettet) {
+		if (!soknadDto.kanGjoreEndringer) {
 			when (soknadDto.status.name) {
 				SoknadsStatusDto.innsendt.name -> throw IllegalActionException(
 					"Innsendte søknader kan ikke endres. Ønsker søker å gjøre oppdateringer, så må vedkommende ettersende dette",
