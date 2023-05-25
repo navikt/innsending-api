@@ -55,6 +55,9 @@ class SoknadServiceTest {
 	private lateinit var soknadRepository: SoknadRepository
 
 	@Autowired
+	private lateinit var hendelseRepository: HendelseRepository
+
+	@Autowired
 	private lateinit var vedleggRepository: VedleggRepository
 
 	@Autowired
@@ -106,6 +109,7 @@ class SoknadServiceTest {
 		filRepository.deleteAll()
 		vedleggRepository.deleteAll()
 		soknadRepository.deleteAll()
+		hendelseRepository.deleteAll()
 	}
 
 
@@ -135,6 +139,10 @@ class SoknadServiceTest {
 		assertEquals(skjemanr, dokumentSoknadDto.skjemanr)
 		assertEquals(spraak, dokumentSoknadDto.spraak)
 		assertNotNull(dokumentSoknadDto.innsendingsId)
+
+		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
+		assertTrue(hendelseDbDatas.size > 0)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatas.get(0).hendelsetype)
 	}
 
 	@Test
@@ -150,6 +158,10 @@ class SoknadServiceTest {
 		assertEquals(spraak, dokumentSoknadDto.spraak) // Beholder ønsket språk
 		assertEquals(skjemaTittel_en, dokumentSoknadDto.tittel) // engelsk backup for fransk
 		assertNotNull(dokumentSoknadDto.innsendingsId)
+
+		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
+		assertTrue(hendelseDbDatas.size > 0)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatas.get(0).hendelsetype)
 	}
 
 
@@ -198,6 +210,12 @@ class SoknadServiceTest {
 		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
 		assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
 
+		val hendelseDbDatasInnsendt =
+			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
+		assertTrue(hendelseDbDatasInnsendt.size > 1)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatasInnsendt.get(0).hendelsetype)
+		assertEquals(HendelseType.Innsendt, hendelseDbDatasInnsendt.get(1).hendelsetype)
+
 		// Opprett ettersendingssoknad
 		val ettersendingsSoknadDto =
 			soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
@@ -205,6 +223,12 @@ class SoknadServiceTest {
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.none { it.opplastingsStatus == OpplastingsStatusDto.innsendt })
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+
+		val hendelseDbDatasEttersending =
+			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(ettersendingsSoknadDto.innsendingsId!!)
+		assertTrue(hendelseDbDatasEttersending.size > 0)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending.get(0).hendelsetype)
+
 	}
 
 	@Test
@@ -365,6 +389,12 @@ class SoknadServiceTest {
 		assertTrue(ettersendingsKvitteringsDto2.innsendteVedlegg!!.isNotEmpty())
 		assertTrue(ettersendingsKvitteringsDto2.skalEttersendes!!.isEmpty())
 
+		val hendelseDbDatasEttersending2 =
+			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(ettersendingsSoknadDto2.innsendingsId!!)
+		assertTrue(hendelseDbDatasEttersending2.size > 1)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending2.get(0).hendelsetype)
+		assertEquals(HendelseType.Innsendt, hendelseDbDatasEttersending2.get(1).hendelsetype)
+
 		val vedleggDto = filService.hentFiler(
 			ettersendingsSoknadDto2,
 			ettersendingsSoknadDto2.innsendingsId!!,
@@ -490,6 +520,11 @@ class SoknadServiceTest {
 		assertTrue(!dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+
+		val hendelseDbDatasEttersending2 =
+			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
+		assertTrue(hendelseDbDatasEttersending2.size > 0)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending2.get(0).hendelsetype)
 	}
 
 	@Test
@@ -536,6 +571,11 @@ class SoknadServiceTest {
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "W1" && it.opplastingsStatus == OpplastingsStatusDto.innsendt && it.innsendtdato != null })
 
+		val hendelseDbDatasEttersending2 =
+			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(ettersendingsSoknadDto.innsendingsId!!)
+		assertTrue(hendelseDbDatasEttersending2.size > 0)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending2.get(0).hendelsetype)
+
 	}
 
 
@@ -570,6 +610,11 @@ class SoknadServiceTest {
 		assertTrue(!dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+
+		val hendelseDbDatasEttersending2 =
+			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
+		assertTrue(hendelseDbDatasEttersending2.size > 0)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending2.get(0).hendelsetype)
 	}
 
 
@@ -589,6 +634,10 @@ class SoknadServiceTest {
 		assertThrows<Exception> {
 			soknadService.hentSoknad(dokumentSoknadDto.id!!)
 		}
+
+		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
+		assertTrue(hendelseDbDatas.size == 2)
+		assertEquals(HendelseType.SlettetPermanentAvBruker, hendelseDbDatas.get(1).hendelsetype)
 	}
 
 	@Test
@@ -613,6 +662,10 @@ class SoknadServiceTest {
 		assertTrue(soknad.tema == tema && soknad.skjemanr == skjemanr)
 		assertTrue(soknad.vedleggsListe.size == 2)
 		assertTrue(soknad.vedleggsListe.any { it.erHoveddokument && !it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp })
+
+		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(soknad.innsendingsId!!)
+		assertTrue(hendelseDbDatas.size == 1)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatas.get(0).hendelsetype)
 	}
 
 	@Test
@@ -640,6 +693,11 @@ class SoknadServiceTest {
 		// Så
 		assertEquals(oppdatertSpraak, oppdatertSoknad.spraak)
 		assertEquals(oppdatertTittel, oppdatertSoknad.tittel)
+
+		// og ingen ny hendelse registrert på søknad
+		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(innsendingsId)
+		assertTrue(hendelseDbDatas.size == 1)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatas.get(0).hendelsetype)
 	}
 
 	@Test
@@ -712,6 +770,11 @@ class SoknadServiceTest {
 			"Skal ha vedlegg 2 i den oppdaterte søknaden"
 		)
 
+		// og ingen ny hendelse registrert på søknad
+		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(innsendingsId)
+		assertTrue(hendelseDbDatas.size == 1)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatas.get(0).hendelsetype)
+
 	}
 
 
@@ -735,6 +798,13 @@ class SoknadServiceTest {
 				soknadService.hentSoknad(it.id!!).status,
 			)
 		}
+
+		// og ingen ny hendelse registrert på søknad
+		val hendelseDbDatas =
+			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDtoList.get(0).innsendingsId!!)
+		assertTrue(hendelseDbDatas.size > 1)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatas.get(0).hendelsetype)
+		assertEquals(HendelseType.SlettetAvSystem, hendelseDbDatas.get(1).hendelsetype)
 	}
 
 
@@ -791,29 +861,34 @@ class SoknadServiceTest {
 		simulateKafkaPolling(false, dokumentSoknadDtoList[1].innsendingsId!!)
 
 		// Delete attachment files for all sent in and archived applications
-		filService.slettfilerTilInnsendteSoknader(-1)
+		soknadService.finnOgSlettArkiverteSoknader(-1, 100)
 
-		dokumentSoknadDtoList.subList(0, 0).all {
-			filService.hentFiler(
-				it,
-				it.innsendingsId!!,
-				it.vedleggsListe.first { it.erHoveddokument && !it.erVariant }.id!!
-			).isEmpty()
+		assertThrows<Exception> {
+			soknadService.hentSoknad(dokumentSoknadDtoList[0].innsendingsId!!)
 		}
-		dokumentSoknadDtoList.subList(1, 2).all {
-			filService.hentFiler(
-				it,
-				it.innsendingsId!!,
-				it.vedleggsListe.first { it.erHoveddokument && !it.erVariant }.id!!
-			).isNotEmpty()
-		}
+		assertNotNull(soknadService.hentSoknad(dokumentSoknadDtoList[1].innsendingsId!!))
+
+		val hendelseDbDatasArkivert =
+			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDtoList.get(0).innsendingsId!!)
+		assertTrue(hendelseDbDatasArkivert.size == 4)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatasArkivert.get(0).hendelsetype)
+		assertEquals(HendelseType.Innsendt, hendelseDbDatasArkivert.get(1).hendelsetype)
+		assertEquals(HendelseType.Arkivert, hendelseDbDatasArkivert.get(2).hendelsetype)
+		assertEquals(HendelseType.SlettetPermanentAvSystem, hendelseDbDatasArkivert.get(3).hendelsetype)
+
+		val hendelseDbDatasArkiveringFeilet =
+			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDtoList.get(1).innsendingsId!!)
+		assertTrue(hendelseDbDatasArkiveringFeilet.size == 3)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatasArkiveringFeilet.get(0).hendelsetype)
+		assertEquals(HendelseType.Innsendt, hendelseDbDatasArkiveringFeilet.get(1).hendelsetype)
+		assertEquals(HendelseType.ArkiveringFeilet, hendelseDbDatasArkiveringFeilet.get(2).hendelsetype)
 
 	}
 
 	private fun simulateKafkaPolling(ok: Boolean, innsendingId: String) {
-		soknadRepository.updateArkiveringsStatus(
-			(if (ok) ArkiveringsStatus.Arkivert else ArkiveringsStatus.ArkiveringFeilet),
-			listOf(innsendingId)
+		repo.setArkiveringsstatus(
+			innsendingId,
+			(if (ok) ArkiveringsStatus.Arkivert else ArkiveringsStatus.ArkiveringFeilet)
 		)
 	}
 

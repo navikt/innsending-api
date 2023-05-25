@@ -15,7 +15,8 @@ class RepositoryUtils(
 	private val soknadRepository: SoknadRepository,
 	private val vedleggRepository: VedleggRepository,
 	private val filRepository: FilRepository,
-	private val filWithoutDataRepository: FilWithoutDataRepository
+	private val filWithoutDataRepository: FilWithoutDataRepository,
+	private val hendelseRepository: HendelseRepository
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -107,6 +108,34 @@ class RepositoryUtils(
 		}
 
 	fun lagreSoknad(soknadDbData: SoknadDbData): SoknadDbData = try {
+		if (soknadDbData.id == null) {
+			hendelseRepository.save(
+				HendelseDbData(
+					null,
+					soknadDbData.innsendingsid,
+					HendelseType.Opprettet,
+					soknadDbData.opprettetdato
+				)
+			)
+		} else if (soknadDbData.status == SoknadsStatus.AutomatiskSlettet) {
+			hendelseRepository.save(
+				HendelseDbData(
+					null,
+					soknadDbData.innsendingsid,
+					HendelseType.SlettetAvSystem,
+					soknadDbData.endretdato!!
+				)
+			)
+		} else if (soknadDbData.status == SoknadsStatus.Innsendt) {
+			hendelseRepository.save(
+				HendelseDbData(
+					null,
+					soknadDbData.innsendingsid,
+					HendelseType.Innsendt,
+					soknadDbData.endretdato!!
+				)
+			)
+		}
 		soknadRepository.save(soknadDbData)
 	} catch (ex: Exception) {
 		throw BackendErrorException(
@@ -126,8 +155,16 @@ class RepositoryUtils(
 		)
 	}
 
-	fun slettSoknad(dokumentSoknadDto: DokumentSoknadDto) = try {
+	fun slettSoknad(dokumentSoknadDto: DokumentSoknadDto, hendelseType: HendelseType) = try {
 		soknadRepository.deleteById(dokumentSoknadDto.id!!)
+		hendelseRepository.save(
+			HendelseDbData(
+				null,
+				dokumentSoknadDto.innsendingsId!!,
+				hendelseType,
+				LocalDateTime.now()
+			)
+		)
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
@@ -148,6 +185,13 @@ class RepositoryUtils(
 
 	fun setArkiveringsstatus(innsendingsId: String, arkiveringsStatus: ArkiveringsStatus) = try {
 		soknadRepository.updateArkiveringsStatus(arkiveringsStatus, listOf(innsendingsId))
+		hendelseRepository.save(
+			HendelseDbData(
+				null, innsendingsId,
+				if (arkiveringsStatus == ArkiveringsStatus.Arkivert) HendelseType.Arkivert else HendelseType.ArkiveringFeilet,
+				LocalDateTime.now()
+			)
+		)
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
@@ -349,4 +393,15 @@ class RepositoryUtils(
 			"errorCode.backendError.deleteFilesForOldApplicationsError"
 		)
 	}
+
+	fun lagreHendelse(hendelseDbData: HendelseDbData) = try {
+		hendelseRepository.save(hendelseDbData)
+	} catch (ex: Exception) {
+		throw BackendErrorException(
+			ex.message,
+			"Feil i lagring av hendelse til søknad ${hendelseDbData.innsendingsid}",
+			"errorCode.backendError.applicationSaveError"
+		)
+	}
+
 }
