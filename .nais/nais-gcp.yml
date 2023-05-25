@@ -62,6 +62,9 @@ spec:
           namespace: skjemadigitalisering
         - application: skjemautfylling-preprod-alt
           namespace: skjemadigitalisering
+        - application: debug-dings
+          namespace: plattformsikkerhet
+          cluster: dev-gcp
     outbound:
       external:
       {{#each outboundExternalHosts}}
