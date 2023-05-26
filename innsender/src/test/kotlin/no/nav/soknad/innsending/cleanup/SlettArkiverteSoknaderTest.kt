@@ -182,7 +182,8 @@ class SlettArkiverteSoknaderTest {
 	}
 
 	private fun simulerArkiveringsRespons(innsendingsId: String, arkiveringsStatus: ArkiveringsStatus) {
-		repo.setArkiveringsstatus(innsendingsId, arkiveringsStatus)
+		val soknad = repo.hentSoknadDb(innsendingsId)
+		repo.oppdaterArkiveringsstatus(soknad.get(), arkiveringsStatus)
 	}
 
 }

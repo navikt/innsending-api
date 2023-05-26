@@ -4,6 +4,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import no.nav.soknad.innsending.config.KafkaConfig
 import no.nav.soknad.innsending.repository.*
+import no.nav.soknad.innsending.service.RepositoryUtils
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -13,7 +14,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import java.time.Duration
-import java.time.LocalDateTime
 import java.util.*
 import javax.annotation.PostConstruct
 
@@ -21,8 +21,7 @@ import javax.annotation.PostConstruct
 @Profile("prod | dev")
 class KafkaMessageReader(
 	private val kafkaConfig: KafkaConfig,
-	private val soknadRepository: SoknadRepository,
-	private val hendelseRepository: HendelseRepository
+	private val repo: RepositoryUtils
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -44,34 +43,14 @@ class KafkaMessageReader(
 				val messages = it.poll(Duration.ofMillis(5000))
 				for (message in messages) {
 					val key = message.key()
-					val soknadOpt = soknadRepository.findByInnsendingsid(key)
+					val soknadOpt = repo.hentSoknadDb(key)
 					if (soknadOpt.isPresent) {
 						if (message.value().startsWith("**Archiving: OK")) {
 							logger.debug("$key: er arkivert")
-							soknadRepository.updateArkiveringsStatus(ArkiveringsStatus.Arkivert, listOf(key))
-							hendelseRepository.save(
-								HendelseDbData(
-									null,
-									key,
-									HendelseType.Arkivert,
-									LocalDateTime.now(),
-									soknadOpt.get().skjemanr,
-									soknadOpt.get().ettersendingsid != null
-								)
-							)
+							repo.oppdaterArkiveringsstatus(soknadOpt.get(), ArkiveringsStatus.Arkivert)
 						} else if (message.value().startsWith("**Archiving: FAILED")) {
 							logger.error("$key: arkivering feilet")
-							soknadRepository.updateArkiveringsStatus(ArkiveringsStatus.ArkiveringFeilet, listOf(key))
-							hendelseRepository.save(
-								HendelseDbData(
-									null,
-									key,
-									HendelseType.ArkiveringFeilet,
-									LocalDateTime.now(),
-									soknadOpt.get().skjemanr,
-									soknadOpt.get().ettersendingsid != null
-								)
-							)
+							repo.oppdaterArkiveringsstatus(soknadOpt.get(), ArkiveringsStatus.ArkiveringFeilet)
 						}
 					}
 				}

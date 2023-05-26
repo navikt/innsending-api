@@ -86,10 +86,10 @@ spec:
   gcp:
     sqlInstances:
       - diskAutoresize: true
-        diskSize: { { default_database_size } }
+        diskSize: {{ default_database_size }}
         type: POSTGRES_14
         databases:
-          - name: { { database-name } }
+          - name: {{ database-name }}
             envVarPrefix: DATABASE
 
   envFrom:

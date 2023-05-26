@@ -108,40 +108,7 @@ class RepositoryUtils(
 		}
 
 	fun lagreSoknad(soknadDbData: SoknadDbData): SoknadDbData = try {
-		if (soknadDbData.id == null) {
-			hendelseRepository.save(
-				HendelseDbData(
-					null,
-					soknadDbData.innsendingsid,
-					HendelseType.Opprettet,
-					soknadDbData.opprettetdato,
-					soknadDbData.skjemanr,
-					soknadDbData.ettersendingsid != null
-				)
-			)
-		} else if (soknadDbData.status == SoknadsStatus.AutomatiskSlettet) {
-			hendelseRepository.save(
-				HendelseDbData(
-					null,
-					soknadDbData.innsendingsid,
-					HendelseType.SlettetAvSystem,
-					soknadDbData.endretdato!!,
-					soknadDbData.skjemanr,
-					soknadDbData.ettersendingsid != null
-				)
-			)
-		} else if (soknadDbData.status == SoknadsStatus.Innsendt) {
-			hendelseRepository.save(
-				HendelseDbData(
-					null,
-					soknadDbData.innsendingsid,
-					HendelseType.Innsendt,
-					soknadDbData.endretdato!!,
-					soknadDbData.skjemanr,
-					soknadDbData.ettersendingsid != null
-				)
-			)
-		}
+		lagreHendelse(soknadDbData)
 		soknadRepository.save(soknadDbData)
 	} catch (ex: Exception) {
 		throw BackendErrorException(
@@ -163,7 +130,7 @@ class RepositoryUtils(
 
 	fun slettSoknad(dokumentSoknadDto: DokumentSoknadDto, hendelseType: HendelseType) = try {
 		soknadRepository.deleteById(dokumentSoknadDto.id!!)
-		hendelseRepository.save(
+		lagreHendelse(
 			HendelseDbData(
 				null,
 				dokumentSoknadDto.innsendingsId!!,
@@ -191,19 +158,19 @@ class RepositoryUtils(
 		)
 	}
 
-	fun setArkiveringsstatus(innsendingsId: String, arkiveringsStatus: ArkiveringsStatus) = try {
-		soknadRepository.updateArkiveringsStatus(arkiveringsStatus, listOf(innsendingsId))
+	fun oppdaterArkiveringsstatus(soknadDbData: SoknadDbData, arkiveringsStatus: ArkiveringsStatus) = try {
+		soknadRepository.updateArkiveringsStatus(arkiveringsStatus, listOf(soknadDbData.innsendingsid))
 		hendelseRepository.save(
 			HendelseDbData(
-				null, innsendingsId,
+				null, soknadDbData.innsendingsid,
 				if (arkiveringsStatus == ArkiveringsStatus.Arkivert) HendelseType.Arkivert else HendelseType.ArkiveringFeilet,
-				LocalDateTime.now(), null, null
+				LocalDateTime.now(), soknadDbData.skjemanr, soknadDbData.ettersendingsid != null
 			)
 		)
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
-			"Feil ved oppdatering av arkiveringsstatus på søknad med innsendingsId $innsendingsId",
+			"Feil ved oppdatering av arkiveringsstatus på søknad med innsendingsId ${soknadDbData.innsendingsid}",
 			"errorCode.backendError.applicationUpdateError"
 		)
 	}
@@ -400,6 +367,36 @@ class RepositoryUtils(
 			"Feil ved sletting av filer til vedlegg på søknader eldre enn $eldreEnn dager",
 			"errorCode.backendError.deleteFilesForOldApplicationsError"
 		)
+	}
+
+	fun lagreHendelse(soknadDbData: SoknadDbData) {
+		val hendelseType =
+			if (soknadDbData.id == null) {
+				HendelseType.Opprettet
+			} else if (soknadDbData.status == SoknadsStatus.AutomatiskSlettet) {
+				HendelseType.SlettetAvSystem
+			} else if (soknadDbData.status == SoknadsStatus.Innsendt && soknadDbData.arkiveringsstatus == ArkiveringsStatus.IkkeSatt) {
+				HendelseType.Innsendt
+			} else if (soknadDbData.status == SoknadsStatus.Innsendt && soknadDbData.arkiveringsstatus == ArkiveringsStatus.Arkivert) {
+				HendelseType.Arkivert
+			} else if (soknadDbData.status == SoknadsStatus.Innsendt && soknadDbData.arkiveringsstatus == ArkiveringsStatus.ArkiveringFeilet) {
+				HendelseType.ArkiveringFeilet
+			} else {
+				HendelseType.Ukjent
+			}
+		if (hendelseType == HendelseType.Ukjent) return
+
+		lagreHendelse(
+			HendelseDbData(
+				null,
+				soknadDbData.innsendingsid,
+				hendelseType,
+				tidspunkt = LocalDateTime.now(),
+				soknadDbData.skjemanr,
+				soknadDbData.ettersendingsid != null
+			)
+		)
+
 	}
 
 	fun lagreHendelse(hendelseDbData: HendelseDbData) = try {

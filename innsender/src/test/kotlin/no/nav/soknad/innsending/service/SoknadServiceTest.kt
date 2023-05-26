@@ -886,8 +886,9 @@ class SoknadServiceTest {
 	}
 
 	private fun simulateKafkaPolling(ok: Boolean, innsendingId: String) {
-		repo.setArkiveringsstatus(
-			innsendingId,
+		val soknad = repo.hentSoknadDb(innsendingId)
+		repo.oppdaterArkiveringsstatus(
+			soknad.get(),
 			(if (ok) ArkiveringsStatus.Arkivert else ArkiveringsStatus.ArkiveringFeilet)
 		)
 	}
