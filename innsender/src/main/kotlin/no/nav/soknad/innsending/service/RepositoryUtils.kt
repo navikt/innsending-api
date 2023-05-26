@@ -114,7 +114,9 @@ class RepositoryUtils(
 					null,
 					soknadDbData.innsendingsid,
 					HendelseType.Opprettet,
-					soknadDbData.opprettetdato
+					soknadDbData.opprettetdato,
+					soknadDbData.skjemanr,
+					soknadDbData.ettersendingsid != null
 				)
 			)
 		} else if (soknadDbData.status == SoknadsStatus.AutomatiskSlettet) {
@@ -123,7 +125,9 @@ class RepositoryUtils(
 					null,
 					soknadDbData.innsendingsid,
 					HendelseType.SlettetAvSystem,
-					soknadDbData.endretdato!!
+					soknadDbData.endretdato!!,
+					soknadDbData.skjemanr,
+					soknadDbData.ettersendingsid != null
 				)
 			)
 		} else if (soknadDbData.status == SoknadsStatus.Innsendt) {
@@ -132,7 +136,9 @@ class RepositoryUtils(
 					null,
 					soknadDbData.innsendingsid,
 					HendelseType.Innsendt,
-					soknadDbData.endretdato!!
+					soknadDbData.endretdato!!,
+					soknadDbData.skjemanr,
+					soknadDbData.ettersendingsid != null
 				)
 			)
 		}
@@ -162,7 +168,9 @@ class RepositoryUtils(
 				null,
 				dokumentSoknadDto.innsendingsId!!,
 				hendelseType,
-				LocalDateTime.now()
+				LocalDateTime.now(),
+				dokumentSoknadDto.skjemanr,
+				dokumentSoknadDto.ettersendingsId != null
 			)
 		)
 	} catch (ex: Exception) {
@@ -189,7 +197,7 @@ class RepositoryUtils(
 			HendelseDbData(
 				null, innsendingsId,
 				if (arkiveringsStatus == ArkiveringsStatus.Arkivert) HendelseType.Arkivert else HendelseType.ArkiveringFeilet,
-				LocalDateTime.now()
+				LocalDateTime.now(), null, null
 			)
 		)
 	} catch (ex: Exception) {

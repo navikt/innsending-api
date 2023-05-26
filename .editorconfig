@@ -12,3 +12,6 @@ charset = utf-8
 
 [*.yml]
 indent_style = space
+
+[{*.yaml,*.yml}]
+ij_formatter_enabled = false

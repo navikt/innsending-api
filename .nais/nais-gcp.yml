@@ -62,13 +62,16 @@ spec:
           namespace: skjemadigitalisering
         - application: skjemautfylling-preprod-alt
           namespace: skjemadigitalisering
+        - application: debug-dings
+          namespace: plattformsikkerhet
+          cluster: dev-gcp
     outbound:
       external:
-      {{#each outboundExternalHosts}}
+      {{ #each outboundExternalHosts}}
         - host: "{{this}}"
-      {{/each}}
+      {{/each } }
       rules:
-      {{#each outboundRulesGcpApplications}}
+      {{ #each outboundRulesGcpApplications}}
         - application: "{{this}}"
       {{/each}}
         - application: soknadsveiviser
@@ -76,17 +79,17 @@ spec:
           namespace: skjemadigitalisering
 
   ingresses:
-  {{#each ingresses}}
+  {{ #each ingresses}}
     - "{{this}}"
-  {{/each}}
+  {{/each } }
 
   gcp:
     sqlInstances:
       - diskAutoresize: true
-        diskSize: {{ default_database_size }}
+        diskSize: { { default_database_size } }
         type: POSTGRES_14
         databases:
-          - name: {{ database-name }}
+          - name: { { database-name } }
             envVarPrefix: DATABASE
 
   envFrom:
@@ -96,7 +99,7 @@ spec:
           reloader.stakater.com/match: "true"
 
   env:
-  {{#each env}}
-    - name: {{@key}}
+  {{ #each env}}
+    - name: {{@key } }
       value: "{{this}}"
   {{/each}}

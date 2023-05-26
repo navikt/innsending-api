@@ -9,5 +9,7 @@ data class HendelseDbData(
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY) @Column(name = "id") val id: Long?,
 	@Column(name = "innsendingsid", columnDefinition = "varchar") val innsendingsid: String,
 	@Column(name = "hendelsetype", columnDefinition = "varchar") val hendelsetype: HendelseType,
-	@Column(name = "tidspunkt", columnDefinition = "TIMESTAMP WITH TIME ZONE") val tidspunkt: LocalDateTime
+	@Column(name = "tidspunkt", columnDefinition = "TIMESTAMP WITH TIME ZONE") val tidspunkt: LocalDateTime,
+	@Column(name = "skjemanr", columnDefinition = "varchar") val skjemanr: String?,
+	@Column(name = "erettersending", columnDefinition = "varchar") val erettersending: Boolean?
 )
