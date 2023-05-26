@@ -137,6 +137,7 @@ class RepositoryUtils(
 				hendelseType,
 				LocalDateTime.now(),
 				dokumentSoknadDto.skjemanr,
+				dokumentSoknadDto.tema,
 				dokumentSoknadDto.ettersendingsId != null
 			)
 		)
@@ -164,7 +165,7 @@ class RepositoryUtils(
 			HendelseDbData(
 				null, soknadDbData.innsendingsid,
 				if (arkiveringsStatus == ArkiveringsStatus.Arkivert) HendelseType.Arkivert else HendelseType.ArkiveringFeilet,
-				LocalDateTime.now(), soknadDbData.skjemanr, soknadDbData.ettersendingsid != null
+				LocalDateTime.now(), soknadDbData.skjemanr, soknadDbData.tema, soknadDbData.ettersendingsid != null
 			)
 		)
 	} catch (ex: Exception) {
@@ -393,6 +394,7 @@ class RepositoryUtils(
 				hendelseType,
 				tidspunkt = LocalDateTime.now(),
 				soknadDbData.skjemanr,
+				soknadDbData.tema,
 				soknadDbData.ettersendingsid != null
 			)
 		)

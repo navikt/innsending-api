@@ -11,5 +11,6 @@ data class HendelseDbData(
 	@Column(name = "hendelsetype", columnDefinition = "varchar") val hendelsetype: HendelseType,
 	@Column(name = "tidspunkt", columnDefinition = "TIMESTAMP WITH TIME ZONE") val tidspunkt: LocalDateTime,
 	@Column(name = "skjemanr", columnDefinition = "varchar") val skjemanr: String?,
+	@Column(name = "tema", columnDefinition = "varchar") val tema: String?,
 	@Column(name = "erettersending", columnDefinition = "varchar") val erettersending: Boolean?
 )
