@@ -67,11 +67,11 @@ spec:
           cluster: dev-gcp
     outbound:
       external:
-      {{ #each outboundExternalHosts}}
+      {{#each outboundExternalHosts}}
         - host: "{{this}}"
-      {{/each } }
+      {{/each}}
       rules:
-      {{ #each outboundRulesGcpApplications}}
+      {{#each outboundRulesGcpApplications}}
         - application: "{{this}}"
       {{/each}}
         - application: soknadsveiviser
@@ -79,9 +79,9 @@ spec:
           namespace: skjemadigitalisering
 
   ingresses:
-  {{ #each ingresses}}
+  {{#each ingresses}}
     - "{{this}}"
-  {{/each } }
+  {{/each}}
 
   gcp:
     sqlInstances:
@@ -99,7 +99,7 @@ spec:
           reloader.stakater.com/match: "true"
 
   env:
-  {{ #each env}}
-    - name: {{@key } }
+  {{#each env}}
+    - name: {{@key}}
       value: "{{this}}"
   {{/each}}
