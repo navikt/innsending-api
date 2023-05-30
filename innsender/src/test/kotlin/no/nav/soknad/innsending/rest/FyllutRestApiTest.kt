@@ -1,8 +1,7 @@
 package no.nav.soknad.innsending.rest
 
 import no.nav.security.mock.oauth2.MockOAuth2Server
-import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
-import no.nav.soknad.innsending.InnsendingApiApplication
+import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.dto.RestErrorResponseDto
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
@@ -14,31 +13,17 @@ import no.nav.soknad.innsending.utils.TokenGenerator
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.util.LinkedMultiValueMap
 import java.util.*
 import kotlin.test.*
 
 
-@ActiveProfiles("test")
-@SpringBootTest(
-	webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
-	properties = ["spring.main.allow-bean-definition-overriding=true"],
-	classes = [InnsendingApiApplication::class]
-)
-@ExtendWith(SpringExtension::class)
-@AutoConfigureWireMock
-@EnableMockOAuth2Server(port = 9898)
-class FyllutRestApiTest {
+class FyllutRestApiTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var restTemplate: TestRestTemplate

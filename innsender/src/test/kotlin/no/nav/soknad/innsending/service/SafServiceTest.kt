@@ -2,24 +2,20 @@ package no.nav.soknad.innsending.service
 
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
+import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.saf.SafClient
 import no.nav.soknad.innsending.consumerapis.saf.SafSelvbetjeningApiTmp
 import no.nav.soknad.innsending.util.testpersonid
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.transaction.annotation.EnableTransactionManagement
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.test.assertEquals
 
-@SpringBootTest
-@ActiveProfiles("spring")
-@EnableTransactionManagement
-class SafServiceTest {
+
+class SafServiceTest : ApplicationTest() {
 
 	@InjectMockKs
 	private val safClient = mockk<SafClient>()

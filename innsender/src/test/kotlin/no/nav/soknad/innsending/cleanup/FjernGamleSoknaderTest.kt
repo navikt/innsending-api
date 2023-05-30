@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.cleanup
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
+import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
@@ -18,16 +19,10 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.transaction.annotation.EnableTransactionManagement
 import java.time.OffsetDateTime
 import kotlin.test.assertEquals
 
-@SpringBootTest
-@ActiveProfiles("spring")
-@EnableTransactionManagement
-class FjernGamleSoknaderTest {
+class FjernGamleSoknaderTest : ApplicationTest() {
 
 	@Autowired
 	private lateinit var repo: RepositoryUtils

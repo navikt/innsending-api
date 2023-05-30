@@ -5,8 +5,8 @@ import com.google.gson.GsonBuilder
 import com.nimbusds.jose.JOSEObjectType
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
-import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.security.token.support.spring.test.MockLoginController
+import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.InnsendingApiApplication
 import no.nav.soknad.innsending.model.AktivSakDto
 import no.nav.soknad.innsending.safselvbetjening.generated.enums.Datotype
@@ -23,25 +23,20 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 
 
 @Suppress("DEPRECATION")
-@ActiveProfiles("test")
 @SpringBootTest(
 	webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
 	properties = ["spring.main.allow-bean-definition-overriding=true"],
 	classes = [InnsendingApiApplication::class]
 )
 @ExtendWith(SpringExtension::class)
-@AutoConfigureWireMock
-@EnableMockOAuth2Server(port = 9898)
-internal class InnsendtListeApiTest {
+internal class InnsendtListeApiTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server

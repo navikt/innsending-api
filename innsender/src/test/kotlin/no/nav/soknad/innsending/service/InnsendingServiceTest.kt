@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.service
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
+import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
@@ -21,14 +22,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.transaction.annotation.EnableTransactionManagement
 
-@SpringBootTest
-@ActiveProfiles("spring")
-@EnableTransactionManagement
-class InnsendingServiceTest {
+class InnsendingServiceTest : ApplicationTest() {
 
 	@Autowired
 	private lateinit var repo: RepositoryUtils
