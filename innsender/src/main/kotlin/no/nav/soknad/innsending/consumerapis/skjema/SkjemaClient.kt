@@ -37,7 +37,8 @@ class SkjemaClient(
 			.collectList()
 			.block()
 
-		logger.info("Skjema hentet fra Sanity $skjemaer")
+		val skjemaer2 = skjemaer?.get(0)?.skjemaer
+		skjemaer2?.forEach { logger.info("skjema hentet fra sanity {}", it.toString()) }
 
 		if (skjemaer?.get(0) != null && skjemaer.get(0)?.skjemaer!!.isNotEmpty()) {
 			return skjemaer[0]?.skjemaer ?: emptyList()
