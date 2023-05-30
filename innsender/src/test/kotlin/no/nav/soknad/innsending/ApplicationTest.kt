@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @ActiveProfiles("test")
 @EnableTransactionManagement
-@AutoConfigureWireMock(port = 9073)
+@AutoConfigureWireMock(port = 0)
 @EnableMockOAuth2Server(port = 9898)
 @ExtendWith(SpringExtension::class)
 class ApplicationTest
