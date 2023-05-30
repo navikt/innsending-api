@@ -1,3 +1,4 @@
+# https://www.baeldung.com/ops/docker-cache-maven-dependencies
 FROM maven:3.8.5-openjdk-17 as builder
 
 # Sett opp home directory
@@ -29,11 +30,13 @@ RUN mvn -pl soknadsmottaker-api install
 RUN mvn -pl innsender-api verify --fail-never -DskipTests
 COPY innsender $HOME/innsender
 
+# Kompiler og pakk inn i en jar
 RUN --mount=type=cache,target=/root/.m2,rw mvn -q -pl api,soknadsfillager-api,soknadsmottaker-api,innsender package -DskipTests
 
 
 FROM openjdk:17-alpine
 EXPOSE 9064
 
+# Kjør jar-filen
 COPY --from=builder /usr/app/innsender/target/innsender.jar /app/innsender.jar
 ENTRYPOINT java -jar /app/innsender.jar

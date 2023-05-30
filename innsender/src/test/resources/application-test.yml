@@ -9,7 +9,7 @@ server:
 spring:
   config:
     activate:
-      on-profile: test | default | spring
+      on-profile: test
 
   flyway:
     enabled: true
@@ -69,11 +69,6 @@ restconfig:
   safUrl: http://localhost:${wiremock.server.port}/saf-api
   azureUrl: http://localhost:${wiremock.server.port}/azure-api
 
-dbconfig:
-  profiles: test
-  databaseName: postgres
-  databaseUrl: jdbc:postgresql://localhost:5432/postgres
-  embedded: true
 
 brukernotifikasjonconfig:
   profiles: test
