@@ -43,14 +43,18 @@ class KafkaMessageReader(
 				val messages = it.poll(Duration.ofMillis(5000))
 				for (message in messages) {
 					val key = message.key()
+					// Soknadsarkiverer legger på melding om arkiveringsstatus for båd søknader sendt inn av sendsoknad og innsending-api
+					// Henter fra databasen for å oppdatere arkiveringsstatus for søknader sendt inn av innsending-api
 					val soknadOpt = repo.hentSoknadDb(key)
 					if (soknadOpt.isPresent) {
 						if (message.value().startsWith("**Archiving: OK")) {
 							logger.debug("$key: er arkivert")
 							repo.oppdaterArkiveringsstatus(soknadOpt.get(), ArkiveringsStatus.Arkivert)
+							loggAntallAvHendelsetype(HendelseType.Arkivert)
 						} else if (message.value().startsWith("**Archiving: FAILED")) {
 							logger.error("$key: arkivering feilet")
 							repo.oppdaterArkiveringsstatus(soknadOpt.get(), ArkiveringsStatus.ArkiveringFeilet)
+							loggAntallAvHendelsetype(HendelseType.ArkiveringFeilet)
 						}
 					}
 				}
@@ -81,5 +85,8 @@ class KafkaMessageReader(
 		}
 	}
 
+	private fun loggAntallAvHendelsetype(hendelseType: HendelseType) {
+		logger.debug("Antall søknader med hendelsetype $hendelseType = ${repo.findNumberOfEventsByType(HendelseType.Arkivert)}")
+	}
 
 }

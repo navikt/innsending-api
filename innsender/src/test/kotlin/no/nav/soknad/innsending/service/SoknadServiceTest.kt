@@ -799,7 +799,7 @@ class SoknadServiceTest {
 			)
 		}
 
-		// og ingen ny hendelse registrert på søknad
+		// og hendelse for oppretting og seltting registrert på søknad
 		val hendelseDbDatas =
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDtoList.get(0).innsendingsId!!)
 		assertTrue(hendelseDbDatas.size > 1)

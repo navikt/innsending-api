@@ -132,13 +132,13 @@ class RepositoryUtils(
 		soknadRepository.deleteById(dokumentSoknadDto.id!!)
 		lagreHendelse(
 			HendelseDbData(
-				null,
-				dokumentSoknadDto.innsendingsId!!,
-				hendelseType,
-				LocalDateTime.now(),
-				dokumentSoknadDto.skjemanr,
-				dokumentSoknadDto.tema,
-				dokumentSoknadDto.ettersendingsId != null
+				id = null,
+				innsendingsid = dokumentSoknadDto.innsendingsId!!,
+				hendelsetype = hendelseType,
+				tidspunkt = LocalDateTime.now(),
+				skjemanr = dokumentSoknadDto.skjemanr,
+				tema = dokumentSoknadDto.tema,
+				erettersending = dokumentSoknadDto.ettersendingsId != null
 			)
 		)
 	} catch (ex: Exception) {
@@ -163,9 +163,13 @@ class RepositoryUtils(
 		soknadRepository.updateArkiveringsStatus(arkiveringsStatus, listOf(soknadDbData.innsendingsid))
 		hendelseRepository.save(
 			HendelseDbData(
-				null, soknadDbData.innsendingsid,
-				if (arkiveringsStatus == ArkiveringsStatus.Arkivert) HendelseType.Arkivert else HendelseType.ArkiveringFeilet,
-				LocalDateTime.now(), soknadDbData.skjemanr, soknadDbData.tema, soknadDbData.ettersendingsid != null
+				id = null,
+				innsendingsid = soknadDbData.innsendingsid,
+				hendelsetype = if (arkiveringsStatus == ArkiveringsStatus.Arkivert) HendelseType.Arkivert else HendelseType.ArkiveringFeilet,
+				tidspunkt = LocalDateTime.now(),
+				soknadDbData.skjemanr,
+				soknadDbData.tema,
+				erettersending = soknadDbData.ettersendingsid != null
 			)
 		)
 	} catch (ex: Exception) {
@@ -175,6 +179,17 @@ class RepositoryUtils(
 			"errorCode.backendError.applicationUpdateError"
 		)
 	}
+
+	fun findNumberOfEventsByType(hendelseType: HendelseType): Long? = try {
+		hendelseRepository.countByHendelsetype(hendelseType)
+	} catch (ex: Exception) {
+		throw BackendErrorException(
+			ex.message,
+			"Feil ved henting av antall hendelser gitt hendelsetype $hendelseType",
+			"errorCode.backendError.applicationFetchError"
+		)
+	}
+
 
 	fun hentVedlegg(vedleggsId: Long): Optional<VedleggDbData> = try {
 		vedleggRepository.findByVedleggsid(vedleggsId)
@@ -385,17 +400,20 @@ class RepositoryUtils(
 			} else {
 				HendelseType.Ukjent
 			}
-		if (hendelseType == HendelseType.Ukjent) return
+		if (hendelseType == HendelseType.Ukjent) {
+			logger.info("${soknadDbData.innsendingsid}: Ukjent hendelsetype, kun endring av f.eks. sistendretdato? Returnerer uten å registrere hendelsen")
+			return
+		}
 
 		lagreHendelse(
 			HendelseDbData(
-				null,
-				soknadDbData.innsendingsid,
-				hendelseType,
+				id = null,
+				innsendingsid = soknadDbData.innsendingsid,
+				hendelsetype = hendelseType,
 				tidspunkt = LocalDateTime.now(),
-				soknadDbData.skjemanr,
-				soknadDbData.tema,
-				soknadDbData.ettersendingsid != null
+				skjemanr = soknadDbData.skjemanr,
+				tema = soknadDbData.tema,
+				erettersending = soknadDbData.ettersendingsid != null
 			)
 		)
 

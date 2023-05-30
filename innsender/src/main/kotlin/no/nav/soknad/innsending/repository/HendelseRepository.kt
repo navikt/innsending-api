@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository
 interface HendelseRepository : JpaRepository<HendelseDbData, Long> {
 
 	fun findAllByInnsendingsidOrderByTidspunkt(innsendingsId: String): List<HendelseDbData>
+
+	fun countByHendelsetype(hendelseType: HendelseType): Long?
 }
