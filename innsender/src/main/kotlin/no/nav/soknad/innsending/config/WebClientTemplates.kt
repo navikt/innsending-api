@@ -24,7 +24,7 @@ class WebClientTemplates(private val restConfig: RestConfig) {
 
 
 	@Bean
-	@Profile("spring | docker | default")
+	@Profile("local | docker")
 	@Qualifier("authClient")
 	@Scope("prototype")
 	@Lazy

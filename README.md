@@ -10,10 +10,23 @@ fungerer.
 
 ## Utvikling
 
-Ved kjøring av `InnsendingApiApplication` vil en embedded Postgres
-database ([opentable](https://github.com/opentable/otj-pg-embedded)) spinne opp som en docker
-container og kjøre Flyway
-migrasjonene.
+### Kjøre lokalt
+
+Sett Spring profilen til `local` og kjør `InnsendingApiApplication`. En embedded Postgres
+database ([opentable](https://github.com/opentable/otj-pg-embedded)) spinnes opp som en docker
+container og kjører Flyway migrasjonene.
+
+### Docker Compose
+
+Applikasjonen (sammen med en Postgres database) kan også kjøres lokalt med docker-compose:
+
+```
+docker-compose up --build
+```
+
+Vær oppmerksom på at dette er ganske tidkrevende ved første kjøring siden den laster ned alle dependencies.
+Ved kodeoppdatering eller bytting av branch vil det være nødvendig å kjøre den på nytt, men dependencies vil være
+cachet.
 
 ### Testing
 

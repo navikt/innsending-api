@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 
 @Component
-@Profile("spring | default | docker")
+@Profile("local | test | docker")
 class SubjectHandlerTestImpl : SubjectHandlerInterface {
 	private var token = "token"
 

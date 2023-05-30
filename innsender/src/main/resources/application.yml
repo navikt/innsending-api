@@ -25,7 +25,7 @@ cron:
   # Slett permanent alle søknader opprettet for mer enn 6 måneder siden ( som er ca 366/2=183 dager )
   slettPermanentEldreEnn: 183
   # Kjører hvert 10. minutt
-  runVerifyArchivedApplications: 0,10,20,30,40,50 * * * * *
+  runVerifyArchivedApplications: 0 0,10,20,30,40,50 * * * *
 
 ettersendingsfrist: 14
 
@@ -50,7 +50,7 @@ kafka:
 spring:
   config:
     activate:
-      on-profile: default | spring
+      on-profile: local | docker
 
   application:
     name:
@@ -67,7 +67,7 @@ spring:
     enabled: true
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres?user=postgres&password=postgres
+    url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:postgres}?user=${DATABASE_USERNAME:postgres}&password=${DATABASE_PASSWORD:postgres}
 
 restconfig:
   version: 1.0
@@ -100,39 +100,6 @@ brukernotifikasjonconfig:
   publisereEndringer: true
 
 
----
-spring:
-  config:
-    activate:
-      on-profile: docker
-
-  flyway:
-    enabled: true
-  datasource:
-    url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DATABASE}?user=${DATABASE_USERNAME}&password=${DATABASE_PASSWORD}
-    hikari:
-      maximum-pool-size: 20
-      connection-timeout: 10000
-      max-lifetime: 50001
-      validationTimeout: 5000
-      leak-detection-threshold: 50000
-    dbcp2:
-      test-on-borrow: true
-      validation-query: "SELECT 1"
-
----
-spring:
-  config:
-    activate:
-      on-profile: dev
-
-cron:
-  # Kjører hvert 11. minutt
-  runVerifyArchivedApplications: 0 */11 * ? * *
-
-verifyArchivedApplications:
-  offsetMinutes: 10
-  timespanHours: 24
 ---
 spring:
   config:

@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 
 @Service
-@Profile("default | test | spring | docker")
+@Profile("local | test | docker")
 @Qualifier("fillager")
 class FillagerAPITest : FillagerInterface, HealthRequestInterface {
 
