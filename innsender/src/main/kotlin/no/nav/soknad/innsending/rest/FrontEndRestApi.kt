@@ -17,7 +17,6 @@ import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.pdfutilities.KonverterTilPdf
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Profile
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.Resource
 import org.springframework.http.HttpStatus
@@ -29,7 +28,6 @@ import java.time.OffsetDateTime
 
 @RestController
 @CrossOrigin(maxAge = 3600)
-@Profile("test | dev | prod")
 @ProtectedWithClaims(issuer = Constants.TOKENX, claimMap = [Constants.CLAIM_ACR_LEVEL_4])
 class FrontEndRestApi(
 	val soknadService: SoknadService,
