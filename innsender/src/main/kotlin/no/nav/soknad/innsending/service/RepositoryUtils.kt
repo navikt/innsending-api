@@ -15,7 +15,8 @@ class RepositoryUtils(
 	private val soknadRepository: SoknadRepository,
 	private val vedleggRepository: VedleggRepository,
 	private val filRepository: FilRepository,
-	private val filWithoutDataRepository: FilWithoutDataRepository
+	private val filWithoutDataRepository: FilWithoutDataRepository,
+	private val hendelseRepository: HendelseRepository
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -107,6 +108,7 @@ class RepositoryUtils(
 		}
 
 	fun lagreSoknad(soknadDbData: SoknadDbData): SoknadDbData = try {
+		lagreHendelse(soknadDbData)
 		soknadRepository.save(soknadDbData)
 	} catch (ex: Exception) {
 		throw BackendErrorException(
@@ -126,8 +128,19 @@ class RepositoryUtils(
 		)
 	}
 
-	fun slettSoknad(dokumentSoknadDto: DokumentSoknadDto) = try {
+	fun slettSoknad(dokumentSoknadDto: DokumentSoknadDto, hendelseType: HendelseType) = try {
 		soknadRepository.deleteById(dokumentSoknadDto.id!!)
+		lagreHendelse(
+			HendelseDbData(
+				id = null,
+				innsendingsid = dokumentSoknadDto.innsendingsId!!,
+				hendelsetype = hendelseType,
+				tidspunkt = LocalDateTime.now(),
+				skjemanr = dokumentSoknadDto.skjemanr,
+				tema = dokumentSoknadDto.tema,
+				erettersending = dokumentSoknadDto.ettersendingsId != null
+			)
+		)
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
@@ -146,15 +159,37 @@ class RepositoryUtils(
 		)
 	}
 
-	fun setArkiveringsstatus(innsendingsId: String, arkiveringsStatus: ArkiveringsStatus) = try {
-		soknadRepository.updateArkiveringsStatus(arkiveringsStatus, listOf(innsendingsId))
+	fun oppdaterArkiveringsstatus(soknadDbData: SoknadDbData, arkiveringsStatus: ArkiveringsStatus) = try {
+		soknadRepository.updateArkiveringsStatus(arkiveringsStatus, listOf(soknadDbData.innsendingsid))
+		hendelseRepository.save(
+			HendelseDbData(
+				id = null,
+				innsendingsid = soknadDbData.innsendingsid,
+				hendelsetype = if (arkiveringsStatus == ArkiveringsStatus.Arkivert) HendelseType.Arkivert else HendelseType.ArkiveringFeilet,
+				tidspunkt = LocalDateTime.now(),
+				soknadDbData.skjemanr,
+				soknadDbData.tema,
+				erettersending = soknadDbData.ettersendingsid != null
+			)
+		)
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
-			"Feil ved oppdatering av arkiveringsstatus på søknad med innsendingsId $innsendingsId",
+			"Feil ved oppdatering av arkiveringsstatus på søknad med innsendingsId ${soknadDbData.innsendingsid}",
 			"errorCode.backendError.applicationUpdateError"
 		)
 	}
+
+	fun findNumberOfEventsByType(hendelseType: HendelseType): Long? = try {
+		hendelseRepository.countByHendelsetype(hendelseType)
+	} catch (ex: Exception) {
+		throw BackendErrorException(
+			ex.message,
+			"Feil ved henting av antall hendelser gitt hendelsetype $hendelseType",
+			"errorCode.backendError.applicationFetchError"
+		)
+	}
+
 
 	fun hentVedlegg(vedleggsId: Long): Optional<VedleggDbData> = try {
 		vedleggRepository.findByVedleggsid(vedleggsId)
@@ -349,4 +384,49 @@ class RepositoryUtils(
 			"errorCode.backendError.deleteFilesForOldApplicationsError"
 		)
 	}
+
+	fun lagreHendelse(soknadDbData: SoknadDbData) {
+		val hendelseType =
+			if (soknadDbData.id == null) {
+				HendelseType.Opprettet
+			} else if (soknadDbData.status == SoknadsStatus.AutomatiskSlettet) {
+				HendelseType.SlettetAvSystem
+			} else if (soknadDbData.status == SoknadsStatus.Innsendt && soknadDbData.arkiveringsstatus == ArkiveringsStatus.IkkeSatt) {
+				HendelseType.Innsendt
+			} else if (soknadDbData.status == SoknadsStatus.Innsendt && soknadDbData.arkiveringsstatus == ArkiveringsStatus.Arkivert) {
+				HendelseType.Arkivert
+			} else if (soknadDbData.status == SoknadsStatus.Innsendt && soknadDbData.arkiveringsstatus == ArkiveringsStatus.ArkiveringFeilet) {
+				HendelseType.ArkiveringFeilet
+			} else {
+				HendelseType.Ukjent
+			}
+		if (hendelseType == HendelseType.Ukjent) {
+			logger.info("${soknadDbData.innsendingsid}: Ukjent hendelsetype, kun endring av f.eks. sistendretdato? Returnerer uten å registrere hendelsen")
+			return
+		}
+
+		lagreHendelse(
+			HendelseDbData(
+				id = null,
+				innsendingsid = soknadDbData.innsendingsid,
+				hendelsetype = hendelseType,
+				tidspunkt = LocalDateTime.now(),
+				skjemanr = soknadDbData.skjemanr,
+				tema = soknadDbData.tema,
+				erettersending = soknadDbData.ettersendingsid != null
+			)
+		)
+
+	}
+
+	fun lagreHendelse(hendelseDbData: HendelseDbData) = try {
+		hendelseRepository.save(hendelseDbData)
+	} catch (ex: Exception) {
+		throw BackendErrorException(
+			ex.message,
+			"Feil i lagring av hendelse til søknad ${hendelseDbData.innsendingsid}",
+			"errorCode.backendError.applicationSaveError"
+		)
+	}
+
 }

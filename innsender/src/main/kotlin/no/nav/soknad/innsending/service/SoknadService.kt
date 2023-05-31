@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.ArkiveringsStatus
+import no.nav.soknad.innsending.repository.HendelseType
 import no.nav.soknad.innsending.repository.SoknadDbData
 import no.nav.soknad.innsending.repository.SoknadsStatus
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
@@ -374,7 +375,7 @@ class SoknadService(
 
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { vedleggService.slettVedleggOgDensFiler(it) }
 		//fillagerAPI.slettFiler(innsendingsId, dokumentSoknadDto.vedleggsListe)
-		repo.slettSoknad(dokumentSoknadDto)
+		repo.slettSoknad(dokumentSoknadDto, HendelseType.SlettetPermanentAvBruker)
 
 		val soknadDbData =
 			mapTilSoknadDb(dokumentSoknadDto, dokumentSoknadDto.innsendingsId!!, SoknadsStatus.SlettetAvBruker)
@@ -419,7 +420,7 @@ class SoknadService(
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettFilerForVedlegg(it.id!!) }
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettVedlegg(it.id!!) }
-		repo.slettSoknad(dokumentSoknadDto)
+		repo.slettSoknad(dokumentSoknadDto, HendelseType.SlettetPermanentAvSystem)
 
 		logger.info("$innsendingsId: opprettet:${dokumentSoknadDto.opprettetDato}, status: ${dokumentSoknadDto.status} er permanent slettet")
 
