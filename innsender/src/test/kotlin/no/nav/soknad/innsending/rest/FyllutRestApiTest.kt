@@ -572,7 +572,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		when (mimetype) {
 			null -> null
 			Mimetype.applicationSlashPdf -> Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
-			Mimetype.applicationSlashJson -> Hjelpemetoder.getBytesFromFile("/sanity.json")
+			Mimetype.applicationSlashJson -> Hjelpemetoder.getBytesFromFile("__files/sanity.json")
 			else -> throw RuntimeException("Testing med mimetype = $mimetype er ikke støttet")
 		}
 

@@ -1,6 +1,8 @@
 package no.nav.soknad.innsending.consumerapis.skjema
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.LoadingCache
 import no.nav.soknad.innsending.exceptions.SanityException
 import no.nav.soknad.innsending.util.finnBackupLanguage
 import org.slf4j.LoggerFactory
@@ -8,35 +10,35 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Service
 import java.io.IOException
+import java.time.Duration
 import java.util.*
-import kotlin.concurrent.timerTask
 
 @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 @Service
 class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
-	private var sanityList: List<SkjemaOgVedleggsdata> = emptyList()
 
-	init {
-		Timer().scheduleAtFixedRate(timerTask {
-			sanityList = try {
-				hentSkjemaData()
-			} catch (e: Exception) {
-				logger.error("Feil ved henting av skjemadata fra Sanity, ${e.message}")
-				initSkjemaDataFromDisk()
-			}
-			if (sanityList.isEmpty()) sanityList = initSkjemaDataFromDisk()
-		}, 0, 3600 * 1000)
-	}
+	val cache: LoadingCache<String, List<SkjemaOgVedleggsdata>> = Caffeine
+		.newBuilder().refreshAfterWrite(Duration.ofHours(1))
+		.build { hentSkjemaData.hent() }
 
 	// TODO implementere språk avhengig oppslag?
 	fun hentSkjemaEllerVedlegg(id: String, spraak: String = "no"): KodeverkSkjema {
+
+		val sanityList = try {
+			cache.get("sanityList") { hentSkjemaData.hent() } ?: emptyList()
+		} catch (e: Exception) {
+			logger.warn("Sanity cache er tom, forsøker å lese fra disk")
+			initSkjemaDataFromDisk()
+		}
+
 		for (data in sanityList) {
 			if (id == data.skjemanummer || id == data.vedleggsid) {
 				return createKodeverkSkjema(data, spraak, id)
 			}
 		}
+
 		val message = "Skjema med id = $id ikke funnet"
 		logger.info(message + " Antall skjema/vedleggstyper lest opp = ${sanityList.size}")
 		throw SanityException(if (sanityList.isEmpty()) "Skjema cache er tom" else "Ikke funnet i skjema listen", message)
@@ -82,8 +84,6 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 		} else
 			return getUrl(sanity, finnBackupLanguage(spraak))
 	}
-
-	private fun hentSkjemaData() = hentSkjemaData.hent() ?: emptyList()
 
 	@Throws(IOException::class)
 	fun initSkjemaDataFromDisk(): List<SkjemaOgVedleggsdata> {

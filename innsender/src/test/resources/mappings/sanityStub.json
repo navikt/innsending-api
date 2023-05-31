@@ -1,0 +1,14 @@
+{
+	"request": {
+		"urlPattern": "/soknader/api/sanity/skjemautlisting",
+		"method": "GET"
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"bodyFileName": "sanity.json"
+	}
+}
+

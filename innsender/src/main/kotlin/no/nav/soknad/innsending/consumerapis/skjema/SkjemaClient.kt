@@ -37,10 +37,7 @@ class SkjemaClient(
 			.collectList()
 			.block()
 
-		val skjemaer2 = skjemaer?.get(0)?.skjemaer
-		skjemaer2?.forEach { logger.info("skjema hentet fra sanity {}", it.toString()) }
-
-		if (skjemaer?.get(0) != null && skjemaer.get(0)?.skjemaer!!.isNotEmpty()) {
+		if (skjemaer?.get(0) != null && skjemaer[0]?.skjemaer?.isNotEmpty() == true) {
 			return skjemaer[0]?.skjemaer ?: emptyList()
 		}
 		throw RuntimeException("Feil ved forsøk på henting av skjema fra sanity")

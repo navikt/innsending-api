@@ -37,7 +37,7 @@ class Hjelpemetoder {
 				vedleggsnr = skjemanr,
 				tittel = tittel,
 				mimeType = "application/json",
-				fil = getBytesFromFile("/sanity.json"),
+				fil = getBytesFromFile("__files/sanity.json"),
 				erHoveddokument = true,
 				erVariant = true
 			)
