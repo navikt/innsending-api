@@ -27,6 +27,7 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 	fun hentSkjemaEllerVedlegg(id: String, spraak: String = "no"): KodeverkSkjema {
 
 		val sanityList = try {
+			// Hent fra cache, Cache Loader funksjonen (hentSkjemaData.hent()) blir kalt hvis cache er tom for "sanityList"
 			cache.get("sanityList") { hentSkjemaData.hent() } ?: emptyList()
 		} catch (e: Exception) {
 			logger.warn("Sanity cache er tom, forsøker å lese fra disk")

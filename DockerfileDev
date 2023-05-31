@@ -16,19 +16,19 @@ COPY innsender/pom.xml $HOME/innsender/pom.xml
 
 # Rekkefølgen her burde være fra minst til mest endring siden hvert layer blir cachet
 RUN mvn -pl api verify --fail-never -DskipTests
-COPY api $HOME/api
+COPY api/src $HOME/api/src
 RUN mvn -pl api install
 
 RUN mvn -pl soknadsfillager-api verify --fail-never -DskipTests
-COPY soknadsfillager-api $HOME/soknadsfillager-api
+COPY soknadsfillager-api/src $HOME/soknadsfillager-api/src
 RUN mvn -pl soknadsfillager-api install
 
 RUN mvn -pl soknadsmottaker-api verify --fail-never -DskipTests
-COPY soknadsmottaker-api $HOME/soknadsmottaker-api
+COPY soknadsmottaker-api/src $HOME/soknadsmottaker-api/src
 RUN mvn -pl soknadsmottaker-api install
 
 RUN mvn -pl innsender-api verify --fail-never -DskipTests
-COPY innsender $HOME/innsender
+COPY innsender/src $HOME/innsender/src
 
 # Kompiler og pakk inn i en jar
 RUN --mount=type=cache,target=/root/.m2,rw mvn -q -pl api,soknadsfillager-api,soknadsmottaker-api,innsender package -DskipTests
