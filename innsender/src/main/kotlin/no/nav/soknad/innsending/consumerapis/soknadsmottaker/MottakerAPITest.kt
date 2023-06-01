@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 
 @Service
-@Profile("spring | test | docker | default")
+@Profile("local | test | docker")
 @Qualifier("mottaker")
 class MottakerAPITest : MottakerInterface, HealthRequestInterface {
 

@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 
 @Service
-@Profile("spring | docker | default")
+@Profile("local | docker")
 @Qualifier("pdl")
 class PdlAPITest : PdlInterface, HealthRequestInterface {
 

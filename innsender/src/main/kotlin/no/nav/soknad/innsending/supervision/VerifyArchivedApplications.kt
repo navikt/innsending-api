@@ -4,12 +4,14 @@ import no.nav.soknad.innsending.cleanup.LeaderSelectionUtility
 import no.nav.soknad.innsending.service.ScheduledOperationsService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @EnableScheduling
 @Component
+@Profile("dev | prod")
 class VerifyArchivedApplications(
 	private val leaderSelectionUtility: LeaderSelectionUtility,
 	private val scheduledOperationsService: ScheduledOperationsService,

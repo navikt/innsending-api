@@ -1,28 +1,27 @@
 package no.nav.soknad.innsending.brukernotifikasjon.kafka
 
-import io.mockk.*
+import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
+import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.spyk
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
 import no.nav.soknad.arkivering.soknadsmottaker.model.Varsel
+import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.config.BrukerNotifikasjonConfig
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.utils.Hjelpemetoder
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.transaction.annotation.EnableTransactionManagement
 
-@SpringBootTest
-@ActiveProfiles("spring")
-@EnableTransactionManagement
-internal class BrukernotifikasjonPublisherTest {
+internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 
 	@Autowired
 	private val notifikasjonConfig: BrukerNotifikasjonConfig = BrukerNotifikasjonConfig()

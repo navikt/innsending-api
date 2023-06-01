@@ -1,5 +1,7 @@
 package no.nav.soknad.innsending.exceptions
 
+import no.nav.security.token.support.core.exceptions.JwtTokenMissingException
+import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
 import no.nav.soknad.innsending.dto.RestErrorResponseDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -8,6 +10,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import java.time.LocalDateTime
+import javax.servlet.http.HttpServletRequest
 
 
 @ControllerAdvice
@@ -77,6 +80,23 @@ class RestExceptionHandler {
 				LocalDateTime.now(),
 				exception.errorCode
 			), HttpStatus.METHOD_NOT_ALLOWED
+		)
+	}
+
+	@ExceptionHandler(value = [JwtTokenMissingException::class, JwtTokenUnauthorizedException::class])
+	fun unauthorizedExceptionHandler(
+		request: HttpServletRequest,
+		exception: Exception
+	): ResponseEntity<RestErrorResponseDto?>? {
+		logger.warn("Autentisering feilet ved kall til " + request.requestURI + ": " + exception.message, exception)
+
+		return ResponseEntity(
+			RestErrorResponseDto(
+				arsak = exception.message ?: "",
+				message = "Autentisering feilet",
+				timeStamp = LocalDateTime.now(),
+				errorCode = "errorCode.unauthorized"
+			), HttpStatus.UNAUTHORIZED
 		)
 	}
 
