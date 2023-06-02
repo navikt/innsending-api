@@ -56,10 +56,15 @@ class InnsendingService(
 		else
 			soknadDtoInput
 
+		val start = System.currentTimeMillis()
 		filService.validerAtMinstEnFilErLastetOpp(soknadDto)
+		logger.debug("${soknadDtoInput.innsendingsId}: Tid: validerAtMinstEnFilErLastetOpp = ${System.currentTimeMillis()-start} ")
 
 		// Vedleggsliste med opplastede dokument og status= LASTET_OPP for de som skal sendes soknadsfillager
+		val startMergeAvFiler = System.currentTimeMillis()
 		val alleVedlegg: List<VedleggDto> = filService.ferdigstillVedleggsFiler(soknadDto)
+		logger.debug("${soknadDtoInput.innsendingsId}: Tid: validerAtMinstEnFilErLastetOpp = ${System.currentTimeMillis()-startMergeAvFiler} ")
+
 		val opplastedeVedlegg = alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
 		val manglendePakrevdeVedlegg =
 			alleVedlegg.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") && (it.opplastingsStatus == OpplastingsStatusDto.sendSenere || it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt) }
@@ -76,7 +81,9 @@ class InnsendingService(
 		logger.info("${soknadDtoInput.innsendingsId}: Ikke opplastede påkrevde vedlegg = ${manglendePakrevdeVedlegg.map { it.vedleggsnr + ':' + it.opprettetdato }}")
 		val kvitteringForArkivering = lagInnsendingsKvittering(soknadDto, opplastedeVedlegg, manglendePakrevdeVedlegg)
 		try {
+			val startSendFiler = System.currentTimeMillis()
 			fillagerAPI.lagreFiler(soknadDto.innsendingsId!!, opplastedeVedlegg + kvitteringForArkivering)
+			logger.debug("${soknadDtoInput.innsendingsId}: Tid: lagreFiler i soknadsfillager = ${System.currentTimeMillis()-startSendFiler}")
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			logger.error("Feil ved sending av filer for søknad ${soknadDto.innsendingsId} ti       l NAV, ${e.message}")
@@ -142,6 +149,7 @@ class InnsendingService(
 
 	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): KvitteringsDto {
 		val operation = InnsenderOperation.SEND_INN.name
+		val startSendInn = System.currentTimeMillis()
 
 		try {
 			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput)
@@ -154,6 +162,7 @@ class InnsendingService(
 
 		} finally {
 			innsenderMetrics.operationsCounterInc(operation, soknadDtoInput.tema)
+			logger.debug("${soknadDtoInput.innsendingsId}: Tid: sendInnSoknad = ${System.currentTimeMillis()-startSendInn}")
 		}
 	}
 
