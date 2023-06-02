@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-	<springProfile name="dev,prod,docker">
+	<springProfile name="dev,prod">
 		<appender name="STDOUT_JSON" class="ch.qos.logback.core.ConsoleAppender">
 			<encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
 		</appender>
@@ -27,7 +27,7 @@
 		</root>
 	</springProfile>
 
-	<springProfile name="default,spring,test">
+	<springProfile name="docker,local">
 		<appender name="STDOUT_JSON" class="ch.qos.logback.core.ConsoleAppender">
 			<encoder>
 				<pattern>%d{HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{15}) - %msg %n</pattern>

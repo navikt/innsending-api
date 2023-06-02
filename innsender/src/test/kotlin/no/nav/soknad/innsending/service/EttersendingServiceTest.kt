@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.service
 import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
+import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.config.BrukerNotifikasjonConfig
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
@@ -13,14 +14,8 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.transaction.annotation.EnableTransactionManagement
 
-@SpringBootTest
-@ActiveProfiles("spring")
-@EnableTransactionManagement
-class EttersendingServiceTest {
+class EttersendingServiceTest : ApplicationTest() {
 
 	@Autowired
 	private val notifikasjonConfig: BrukerNotifikasjonConfig = BrukerNotifikasjonConfig()

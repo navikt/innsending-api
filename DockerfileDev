@@ -1,27 +1,42 @@
-# syntax=docker/dockerfile:1
+# https://www.baeldung.com/ops/docker-cache-maven-dependencies
+FROM maven:3.8.5-openjdk-17 as builder
 
-FROM maven:3.8.4-jdk-17
+# Sett opp home directory
+ENV HOME=/usr/app
+RUN mkdir -p $HOME
+WORKDIR $HOME
 
-RUN useradd -ms /bin/bash newuser
-USER newuser
-WORKDIR /home/newuser/
+# Kopier alle pom.xml
+COPY pom.xml $HOME
 
-COPY pom.xml ./
-COPY soknadsfillager-api/pom.xml ./soknadsfillager-api/pom.xml
-COPY soknadsmottaker-api/pom.xml ./soknadsmottaker-api/pom.xml
-COPY innsender/pom.xml ./innsender/pom.xml
+COPY api/pom.xml $HOME/api/pom.xml
+COPY soknadsfillager-api/pom.xml $HOME/soknadsfillager-api/pom.xml
+COPY soknadsmottaker-api/pom.xml $HOME/soknadsmottaker-api/pom.xml
+COPY innsender/pom.xml $HOME/innsender/pom.xml
 
-# DENNE DELEN ER VELDIG TIDKREVENDE, FORSIKTIG MED Å REDIGERE OVER ELLER I DEN
-RUN mvn dependency:go-offline
-# TIDKREVENDE DEL FERDIG
+# Rekkefølgen her burde være fra minst til mest endring siden hvert layer blir cachet
+RUN mvn -pl api verify --fail-never -DskipTests
+COPY api/src $HOME/api/src
+RUN mvn -pl api install
 
-COPY soknadsfillager-api/src/ ./soknadsfillager-api/src
-COPY soknadsmottaker-api/src/ ./soknadsmottaker-api/src
-COPY innsender/src/ ./innsender/src
+RUN mvn -pl soknadsfillager-api verify --fail-never -DskipTests
+COPY soknadsfillager-api/src $HOME/soknadsfillager-api/src
+RUN mvn -pl soknadsfillager-api install
 
-USER root
-RUN chown -R newuser: /home/newuser/
-USER newuser
-RUN mvn clean install
+RUN mvn -pl soknadsmottaker-api verify --fail-never -DskipTests
+COPY soknadsmottaker-api/src $HOME/soknadsmottaker-api/src
+RUN mvn -pl soknadsmottaker-api install
+
+RUN mvn -pl innsender-api verify --fail-never -DskipTests
+COPY innsender/src $HOME/innsender/src
+
+# Kompiler og pakk inn i en jar
+RUN --mount=type=cache,target=/root/.m2,rw mvn -q -pl api,soknadsfillager-api,soknadsmottaker-api,innsender package -DskipTests
+
+
+FROM openjdk:17-alpine
 EXPOSE 9064
-ENTRYPOINT ["java","-jar","/home/newuser/innsender/target/innsender.jar"]
+
+# Kjør jar-filen
+COPY --from=builder /usr/app/innsender/target/innsender.jar /app/innsender.jar
+ENTRYPOINT java -jar /app/innsender.jar

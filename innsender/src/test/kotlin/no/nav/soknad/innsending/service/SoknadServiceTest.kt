@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
 import io.mockk.slot
+import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
@@ -22,22 +23,20 @@ import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
 import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import no.nav.soknad.innsending.util.testpersonid
-import no.nav.soknad.innsending.utils.*
-import org.junit.jupiter.api.*
+import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.SoknadAssertions
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.transaction.annotation.EnableTransactionManagement
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.*
 
 
-@SpringBootTest
-@ActiveProfiles("spring")
-@EnableTransactionManagement
-class SoknadServiceTest {
+class SoknadServiceTest : ApplicationTest() {
 
 	@Autowired
 	private lateinit var repo: RepositoryUtils

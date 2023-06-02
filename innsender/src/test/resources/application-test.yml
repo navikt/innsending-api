@@ -6,6 +6,11 @@ server:
       max-file-size: 100MB
       max-request-size: 100MB
 
+spring:
+  config:
+    activate:
+      on-profile: test
+
   flyway:
     enabled: true
 
@@ -47,7 +52,7 @@ restconfig:
   sharedPassword: password
   maxFileSize: 50
   maxFileSizeSum: 150
-  sanityHost: https://www.nav.no
+  sanityHost: localhost:5490
   sanityEndpoint: /soknader/api/sanity/skjemautlisting
   filestorageHost: http://localhost:${wiremock.server.port}/filestorage-api
   filestorageEndpoint: /filer
@@ -64,11 +69,6 @@ restconfig:
   safUrl: http://localhost:${wiremock.server.port}/saf-api
   azureUrl: http://localhost:${wiremock.server.port}/azure-api
 
-dbconfig:
-  profiles: test
-  databaseName: postgres
-  databaseUrl: jdbc:postgresql://localhost:5432/postgres
-  embedded: true
 
 brukernotifikasjonconfig:
   profiles: test

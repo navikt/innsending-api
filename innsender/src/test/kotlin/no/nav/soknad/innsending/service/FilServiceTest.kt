@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.service
 
+import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.utils.Hjelpemetoder
@@ -8,14 +9,8 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.transaction.annotation.EnableTransactionManagement
 
-@SpringBootTest
-@ActiveProfiles("spring")
-@EnableTransactionManagement
-class FilServiceTest {
+class FilServiceTest : ApplicationTest() {
 
 	@Autowired
 	private lateinit var soknadService: SoknadService
