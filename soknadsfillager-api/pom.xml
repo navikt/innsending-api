@@ -11,11 +11,7 @@
 	<artifactId>soknadsfillager-api</artifactId>
 	<name>soknadsfillager-api</name>
 	<description>Soknadsfillager api consumed by innsending-api</description>
-
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
-
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
