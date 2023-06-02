@@ -61,6 +61,8 @@ class BrukernotifikasjonPublisher(
 						dokumentSoknad,
 						groupId!!
 					)
+					// Ingen brukernotifikasjon for utfylt søknad
+					SoknadsStatusDto.utfylt -> {}
 				}
 			} catch (e: Exception) {
 				logger.info("${dokumentSoknad.innsendingsId}: Publisering av brukernotifikasjon feilet", e)
@@ -69,7 +71,6 @@ class BrukernotifikasjonPublisher(
 		}
 		return true
 	}
-
 
 	private fun handleNewApplication(dokumentSoknad: DokumentSoknadDto, groupId: String) {
 		// Ny søknad opprettet publiser data slik at søker kan plukke den opp fra Ditt Nav på et senere tidspunkt

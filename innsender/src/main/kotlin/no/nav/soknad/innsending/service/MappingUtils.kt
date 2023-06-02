@@ -1,8 +1,12 @@
 package no.nav.soknad.innsending.service
 
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.models.hoveddokument
+import no.nav.soknad.innsending.util.models.hoveddokumentVariant
+import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -59,22 +63,23 @@ fun lagFilDto(filDbData: FilDbData, medFil: Boolean = true) = FilDto(
 
 fun lagVedleggDto(vedleggDbData: VedleggDbData, document: ByteArray? = null) =
 	VedleggDto(
-		vedleggDbData.tittel,
-		vedleggDbData.label ?: "",
-		vedleggDbData.erhoveddokument,
-		vedleggDbData.ervariant,
-		vedleggDbData.erpdfa,
-		vedleggDbData.erpakrevd,
-		mapTilOpplastingsStatusDto(vedleggDbData.status),
-		mapTilOffsetDateTime(vedleggDbData.opprettetdato)!!,
-		vedleggDbData.id!!,
-		vedleggDbData.vedleggsnr,
-		vedleggDbData.beskrivelse,
-		vedleggDbData.uuid,
-		mapTilMimetype(vedleggDbData.mimetype),
-		document,
-		vedleggDbData.vedleggsurl,
-		mapTilOffsetDateTime(vedleggDbData.innsendtdato)
+		tittel = vedleggDbData.tittel,
+		label = vedleggDbData.label ?: "",
+		erHoveddokument = vedleggDbData.erhoveddokument,
+		erVariant = vedleggDbData.ervariant,
+		erPdfa = vedleggDbData.erpdfa,
+		erPakrevd = vedleggDbData.erpakrevd,
+		opplastingsStatus = mapTilOpplastingsStatusDto(vedleggDbData.status),
+		opprettetdato = mapTilOffsetDateTime(vedleggDbData.opprettetdato)!!,
+		id = vedleggDbData.id!!,
+		vedleggsnr = vedleggDbData.vedleggsnr,
+		beskrivelse = vedleggDbData.beskrivelse,
+		uuid = vedleggDbData.uuid,
+		mimetype = mapTilMimetype(vedleggDbData.mimetype),
+		document = document,
+		skjemaurl = vedleggDbData.vedleggsurl,
+		innsendtdato = mapTilOffsetDateTime(vedleggDbData.innsendtdato),
+		formioId = vedleggDbData.formioid
 	)
 
 fun lagDokumentSoknadDto(
@@ -143,10 +148,24 @@ fun mapTilFilDb(filDto: FilDto) = FilDbData(
 fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long) =
 	mapTilVedleggDb(vedleggDto, soknadsId, vedleggDto.skjemaurl, mapTilDbOpplastingsStatus(vedleggDto.opplastingsStatus))
 
+fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, vedleggsId: Long) =
+	mapTilVedleggDb(
+		vedleggDto,
+		soknadsId,
+		vedleggDto.skjemaurl,
+		mapTilDbOpplastingsStatus(vedleggDto.opplastingsStatus),
+		vedleggsId
+	)
 
-fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, url: String?, opplastingsStatus: OpplastingsStatus) =
+fun mapTilVedleggDb(
+	vedleggDto: VedleggDto,
+	soknadsId: Long,
+	url: String?,
+	opplastingsStatus: OpplastingsStatus,
+	vedleggsId: Long? = null
+) =
 	VedleggDbData(
-		id = vedleggDto.id,
+		id = vedleggsId ?: vedleggDto.id,
 		soknadsid = soknadsId,
 		status = opplastingsStatus,
 		erhoveddokument = vedleggDto.erHoveddokument,
@@ -162,38 +181,43 @@ fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, url: String?, oppla
 		opprettetdato = mapTilLocalDateTime(vedleggDto.opprettetdato)!!,
 		endretdato = LocalDateTime.now(),
 		innsendtdato = mapTilLocalDateTime(vedleggDto.innsendtdato),
-		vedleggsurl = url ?: vedleggDto.skjemaurl
+		vedleggsurl = url ?: vedleggDto.skjemaurl,
+		formioid = vedleggDto.formioId
 	)
 
 fun oppdaterVedleggDb(vedleggDbData: VedleggDbData, patchVedleggDto: PatchVedleggDto): VedleggDbData =
 	VedleggDbData(
-		vedleggDbData.id,
-		vedleggDbData.soknadsid,
-		if (patchVedleggDto.opplastingsStatus == null) vedleggDbData.status else mapTilDbOpplastingsStatus(patchVedleggDto.opplastingsStatus!!),
-		vedleggDbData.erhoveddokument,
-		vedleggDbData.ervariant,
-		vedleggDbData.erpdfa,
-		vedleggDbData.erpakrevd,
-		vedleggDbData.vedleggsnr,
-		patchVedleggDto.tittel ?: vedleggDbData.tittel,
-		patchVedleggDto.tittel ?: vedleggDbData.label,
-		vedleggDbData.beskrivelse,
-		vedleggDbData.mimetype,
-		vedleggDbData.uuid ?: UUID.randomUUID().toString(),
-		vedleggDbData.opprettetdato,
-		LocalDateTime.now(),
-		vedleggDbData.innsendtdato,
-		vedleggDbData.vedleggsurl
+		id = vedleggDbData.id,
+		soknadsid = vedleggDbData.soknadsid,
+		status = if (patchVedleggDto.opplastingsStatus == null) vedleggDbData.status else mapTilDbOpplastingsStatus(
+			patchVedleggDto.opplastingsStatus!!
+		),
+		erhoveddokument = vedleggDbData.erhoveddokument,
+		ervariant = vedleggDbData.ervariant,
+		erpdfa = vedleggDbData.erpdfa,
+		erpakrevd = vedleggDbData.erpakrevd,
+		vedleggsnr = vedleggDbData.vedleggsnr,
+		tittel = patchVedleggDto.tittel ?: vedleggDbData.tittel,
+		label = patchVedleggDto.tittel ?: vedleggDbData.label,
+		beskrivelse = vedleggDbData.beskrivelse,
+		mimetype = vedleggDbData.mimetype,
+		uuid = vedleggDbData.uuid ?: UUID.randomUUID().toString(),
+		opprettetdato = vedleggDbData.opprettetdato,
+		endretdato = LocalDateTime.now(),
+		innsendtdato = vedleggDbData.innsendtdato,
+		vedleggsurl = vedleggDbData.vedleggsurl,
+		formioid = vedleggDbData.formioid
 	)
 
 
 fun mapTilSoknadDb(
 	dokumentSoknadDto: DokumentSoknadDto,
 	innsendingsId: String,
-	status: SoknadsStatus = SoknadsStatus.Opprettet
+	status: SoknadsStatus = SoknadsStatus.Opprettet,
+	id: Long? = null
 ) =
 	SoknadDbData(
-		id = dokumentSoknadDto.id,
+		id = id ?: dokumentSoknadDto.id,
 		innsendingsid = innsendingsId,
 		tittel = dokumentSoknadDto.tittel,
 		skjemanr = dokumentSoknadDto.skjemanr,
@@ -230,6 +254,7 @@ private fun mapTilDbArkiveringsStatus(arkiveringsStatusDto: ArkiveringsStatusDto
 fun mapTilSoknadsStatus(soknadsStatus: SoknadsStatusDto?, newStatus: SoknadsStatus?): SoknadsStatus {
 	return newStatus ?: when (soknadsStatus) {
 		SoknadsStatusDto.opprettet -> SoknadsStatus.Opprettet
+		SoknadsStatusDto.utfylt -> SoknadsStatus.Utfylt
 		SoknadsStatusDto.innsendt -> SoknadsStatus.Innsendt
 		SoknadsStatusDto.slettetAvBruker -> SoknadsStatus.SlettetAvBruker
 		SoknadsStatusDto.automatiskSlettet -> SoknadsStatus.AutomatiskSlettet
@@ -240,6 +265,7 @@ fun mapTilSoknadsStatus(soknadsStatus: SoknadsStatusDto?, newStatus: SoknadsStat
 fun mapTilSoknadsStatusDto(soknadsStatus: SoknadsStatus?): SoknadsStatusDto? =
 	when (soknadsStatus) {
 		SoknadsStatus.Opprettet -> SoknadsStatusDto.opprettet
+		SoknadsStatus.Utfylt -> SoknadsStatusDto.utfylt
 		SoknadsStatus.Innsendt -> SoknadsStatusDto.innsendt
 		SoknadsStatus.SlettetAvBruker -> SoknadsStatusDto.slettetAvBruker
 		SoknadsStatus.AutomatiskSlettet -> SoknadsStatusDto.automatiskSlettet
@@ -284,3 +310,42 @@ fun mapTilDbMimetype(mimetype: Mimetype?): String? =
 		Mimetype.imageSlashPng -> "application/png"
 		else -> null
 	}
+
+fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
+	val hovedDokument = dokumentSoknadDto.hoveddokument
+	val hovedDokumentVariant = dokumentSoknadDto.hoveddokumentVariant
+	val vedleggsListe = dokumentSoknadDto.vedleggsListeUtenHoveddokument.map { mapTilSkjemaDokumentDto(it) }
+
+	if (hovedDokument == null || hovedDokumentVariant == null) {
+		throw BackendErrorException("Hoveddokument eller variant mangler", "Finner ikke hoveddokument i vedleggsliste")
+	}
+
+	return SkjemaDto(
+		innsendingsId = dokumentSoknadDto.innsendingsId,
+		brukerId = dokumentSoknadDto.brukerId,
+		skjemanr = dokumentSoknadDto.skjemanr,
+		tittel = dokumentSoknadDto.tittel,
+		tema = dokumentSoknadDto.tema,
+		spraak = dokumentSoknadDto.spraak ?: "no",
+		status = dokumentSoknadDto.status,
+		hoveddokument = mapTilSkjemaDokumentDto(hovedDokument),
+		hoveddokumentVariant = mapTilSkjemaDokumentDto(hovedDokumentVariant),
+		vedleggsListe = vedleggsListe,
+		kanLasteOppAnnet = dokumentSoknadDto.kanLasteOppAnnet,
+	)
+}
+
+fun mapTilSkjemaDokumentDto(vedleggDto: VedleggDto): SkjemaDokumentDto {
+	val vedleggsnr =
+		vedleggDto.vedleggsnr ?: throw BackendErrorException("Vedleggsnr mangler", "Finner ikke vedleggsnr i vedlegg")
+
+	return SkjemaDokumentDto(
+		vedleggsnr = vedleggsnr,
+		tittel = vedleggDto.tittel,
+		label = vedleggDto.label,
+		beskrivelse = vedleggDto.beskrivelse,
+		mimetype = vedleggDto.mimetype,
+		pakrevd = vedleggDto.erPakrevd,
+		document = vedleggDto.document,
+	)
+}

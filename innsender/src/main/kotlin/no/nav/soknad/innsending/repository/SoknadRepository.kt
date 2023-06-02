@@ -50,11 +50,11 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 	)
 
 	@Query(
-		value = "SELECT * FROM soknad WHERE status = :status AND opprettetdato <= :opprettetFor ORDER BY opprettetdato",
+		value = "SELECT * FROM soknad WHERE status IN (:statuses) AND opprettetdato <= :opprettetFor ORDER BY opprettetdato",
 		nativeQuery = true
 	)
-	fun findAllByStatusAndWithOpprettetdatoBefore(
-		@Param("status") status: String,
+	fun findAllByStatusesAndWithOpprettetdatoBefore(
+		@Param("statuses") statuses: List<String>,
 		@Param("opprettetFor") opprettetFor: OffsetDateTime
 	): List<SoknadDbData>
 
@@ -104,5 +104,20 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 		nativeQuery = true
 	)
 	fun findInnsendtAndArkiveringsStatusIkkeSatt(@Param("before") before: LocalDateTime): List<String>
+
+	@Transactional
+	@Modifying
+	@Query(
+		value = "SELECT * FROM soknad WHERE " +
+			"  status = :status and arkiveringsstatus = :arkiveringsstatus and" +
+			"  innsendtdato between :fra and :til",
+		nativeQuery = true
+	)
+	fun finnAlleSoknaderBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(
+		@Param("fra") fra: LocalDateTime,
+		@Param("til") til: LocalDateTime,
+		@Param("status") status: String = SoknadsStatus.Innsendt.name,
+		@Param("arkiveringsstatus") arkiveringsstatus: String = ArkiveringsStatus.Arkivert.name
+	): List<SoknadDbData>
 
 }

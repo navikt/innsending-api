@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.ArkiveringsStatus
+import no.nav.soknad.innsending.repository.HendelseType
 import no.nav.soknad.innsending.repository.SoknadDbData
 import no.nav.soknad.innsending.repository.SoknadsStatus
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
@@ -14,6 +15,9 @@ import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
+import no.nav.soknad.innsending.util.models.kanGjoreEndringer
+import no.nav.soknad.innsending.util.validators.validerSoknadVedOppdatering
+import no.nav.soknad.innsending.util.validators.validerVedleggsListeVedOppdatering
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -363,7 +367,7 @@ class SoknadService(
 		val operation = InnsenderOperation.SLETT.name
 
 		// slett vedlegg og soknad
-		if (dokumentSoknadDto.status != SoknadsStatusDto.opprettet)
+		if (!dokumentSoknadDto.kanGjoreEndringer)
 			throw IllegalActionException(
 				"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
 				"Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den er innsendt eller slettet"
@@ -371,7 +375,7 @@ class SoknadService(
 
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { vedleggService.slettVedleggOgDensFiler(it) }
 		//fillagerAPI.slettFiler(innsendingsId, dokumentSoknadDto.vedleggsListe)
-		repo.slettSoknad(dokumentSoknadDto)
+		repo.slettSoknad(dokumentSoknadDto, HendelseType.SlettetPermanentAvBruker)
 
 		val soknadDbData =
 			mapTilSoknadDb(dokumentSoknadDto, dokumentSoknadDto.innsendingsId!!, SoknadsStatus.SlettetAvBruker)
@@ -390,7 +394,7 @@ class SoknadService(
 		// Ved automatisk sletting beholdes innslag i basen, men eventuelt opplastede filer slettes
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
 
-		if (dokumentSoknadDto.status != SoknadsStatusDto.opprettet)
+		if (!dokumentSoknadDto.kanGjoreEndringer)
 			throw IllegalActionException(
 				"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
 				"Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den allerede er innsendt"
@@ -414,14 +418,21 @@ class SoknadService(
 		val operation = InnsenderOperation.SLETT.name
 
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
-
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettFilerForVedlegg(it.id!!) }
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettVedlegg(it.id!!) }
-		repo.slettSoknad(dokumentSoknadDto)
+		repo.slettSoknad(dokumentSoknadDto, HendelseType.SlettetPermanentAvSystem)
 
-		logger.info("slettSoknadPermanent: Søknad $innsendingsId er permanent slettet")
+		logger.info("$innsendingsId: opprettet:${dokumentSoknadDto.opprettetDato}, status: ${dokumentSoknadDto.status} er permanent slettet")
 
 		innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
+	}
+
+	fun finnOgSlettArkiverteSoknader(dagerGamle: Long, vindu: Long) {
+		val arkiverteSoknader =
+			repo.findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(dagerGamle, vindu)
+
+		arkiverteSoknader.forEach { slettSoknadPermanent(it.innsendingsid) }
+
 	}
 
 	fun slettGamleSoknader(dagerGamle: Long, permanent: Boolean = false) {
@@ -432,7 +443,13 @@ class SoknadService(
 			logger.info("SlettPermanentSoknader: Funnet ${soknadDbDataListe.size} søknader som skal permanent slettes")
 			soknadDbDataListe.forEach { slettSoknadPermanent(it.innsendingsid) }
 		} else {
-			val soknadDbDataListe = repo.findAllByStatusAndWithOpprettetdatoBefore(SoknadsStatus.Opprettet.name, slettFor)
+			val soknadDbDataListe = repo.findAllByStatusesAndWithOpprettetdatoBefore(
+				listOf(
+					SoknadsStatus.Opprettet.name,
+					SoknadsStatus.Utfylt.name
+				), slettFor
+			)
+
 			logger.info("SlettGamleIkkeInnsendteSoknader: Funnet ${soknadDbDataListe.size} søknader som skal slettes")
 			soknadDbDataListe.forEach { slettSoknadAutomatisk(it.innsendingsid) }
 		}
@@ -446,6 +463,59 @@ class SoknadService(
 			logger.warn("Dupliserer søknad på skjemanr=$skjemanr, søker har allerede ${aktiveSoknaderGittSkjemanr.size} under arbeid")
 		}
 	}
+
+	fun oppdaterSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
+		if (dokumentSoknadDto.vedleggsListe.size != 2) {
+			throw BackendErrorException(
+				"Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant",
+				"Innsendt vedleggsliste skal være tom"
+			)
+		}
+
+		val eksisterendeSoknad = hentSoknad(innsendingsId)
+		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto, SoknadsStatus.Opprettet)
+	}
+
+	fun oppdaterUtfyltSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
+		val eksisterendeSoknad = hentSoknad(innsendingsId)
+		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto, SoknadsStatus.Utfylt)
+
+		vedleggService.slettEksisterendeVedleggVedOppdatering(eksisterendeSoknad.vedleggsListe, dokumentSoknadDto)
+	}
+
+	fun oppdaterSoknad(
+		eksisterendeSoknad: DokumentSoknadDto,
+		dokumentSoknadDto: DokumentSoknadDto,
+		status: SoknadsStatus
+	) {
+		// Valider søknaden mot eksisterende søknad ved å sjekke felter som ikke er lov til å oppdatere
+		validerInnsendtSoknadMotEksisterende(dokumentSoknadDto, eksisterendeSoknad)
+
+		// Oppdater søknaden
+		val soknadDb = mapTilSoknadDb(
+			dokumentSoknadDto = dokumentSoknadDto,
+			innsendingsId = eksisterendeSoknad.innsendingsId!!,
+			id = eksisterendeSoknad.id,
+			status = status
+		)
+		val oppdatertSoknad = repo.lagreSoknad(soknadDb)
+		val soknadsId = oppdatertSoknad.id!!
+
+		// Oppdater vedlegg
+		if (status == SoknadsStatus.Utfylt) {
+			dokumentSoknadDto.vedleggsListe.forEach { nyttVedlegg ->
+				vedleggService.lagreVedleggVedOppdatering(eksisterendeSoknad, nyttVedlegg, soknadsId)
+			}
+		}
+
+	}
+
+
+	fun validerInnsendtSoknadMotEksisterende(innsendtSoknad: DokumentSoknadDto, eksisterendeSoknad: DokumentSoknadDto) {
+		innsendtSoknad.validerSoknadVedOppdatering(eksisterendeSoknad)
+		innsendtSoknad.validerVedleggsListeVedOppdatering(eksisterendeSoknad)
+	}
+
 
 	private fun publiserBrukernotifikasjon(dokumentSoknadDto: DokumentSoknadDto): Boolean = try {
 		brukernotifikasjonPublisher.soknadStatusChange(dokumentSoknadDto)
