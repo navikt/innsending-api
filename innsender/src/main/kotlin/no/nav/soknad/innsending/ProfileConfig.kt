@@ -1,9 +1,9 @@
 package no.nav.soknad.innsending
 
+import jakarta.annotation.Priority
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.ConfigurableEnvironment
-import javax.annotation.Priority
 
 data class ProfileConfig(val profil: String)
 

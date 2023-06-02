@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.repository
 
+import jakarta.persistence.*
 import java.time.LocalDateTime
-import javax.persistence.*
 
 @Entity
 @Table(name = "vedlegg")

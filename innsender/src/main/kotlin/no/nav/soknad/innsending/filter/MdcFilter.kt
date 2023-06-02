@@ -1,13 +1,13 @@
 package no.nav.soknad.innsending.filter
 
+import jakarta.ws.rs.container.ContainerRequestContext
+import jakarta.ws.rs.container.ContainerRequestFilter
+import jakarta.ws.rs.ext.Provider
 import no.nav.soknad.innsending.util.Constants.CORRELATION_ID
 import no.nav.soknad.innsending.util.Constants.HEADER_CALL_ID
 import no.nav.soknad.innsending.util.Constants.NAV_CONSUMER_ID
 import no.nav.soknad.innsending.util.MDCUtil
 import org.springframework.beans.factory.annotation.Value
-import javax.ws.rs.container.ContainerRequestContext
-import javax.ws.rs.container.ContainerRequestFilter
-import javax.ws.rs.ext.Provider
 
 @Provider
 class MdcFilter(@Value("\$spring.application.name}") private val applicationName: String) : ContainerRequestFilter {

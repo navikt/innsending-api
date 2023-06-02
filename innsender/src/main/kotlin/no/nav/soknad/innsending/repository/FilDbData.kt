@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.repository
 
+import jakarta.persistence.*
 import java.time.LocalDateTime
-import javax.persistence.*
 
 @Entity
 @Table(name = "fil")
@@ -21,9 +21,7 @@ data class FilDbData(
 
 		other as FilDbData
 
-		if (id != other.id) return false
-
-		return true
+		return id == other.id
 	}
 
 	override fun hashCode() = id.hashCode()

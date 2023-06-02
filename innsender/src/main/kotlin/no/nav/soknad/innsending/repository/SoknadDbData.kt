@@ -1,9 +1,9 @@
 package no.nav.soknad.innsending.repository
 
+import jakarta.persistence.*
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.util.Constants
 import java.time.LocalDateTime
-import javax.persistence.*
 
 @Entity
 @Table(name = "soknad")
