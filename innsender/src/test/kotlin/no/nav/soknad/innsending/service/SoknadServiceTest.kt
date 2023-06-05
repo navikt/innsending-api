@@ -654,7 +654,7 @@ class SoknadServiceTest : ApplicationTest() {
 	fun opprettingAvSoknadVedKallFraFyllUt() {
 		val tema = "HJE"
 		val skjemanr = "NAV 10-07.04"
-		val innsendingsId = soknadService.opprettNySoknad(lagDokumentSoknad(tema, skjemanr))
+		val innsendingsId = soknadService.opprettNySoknad(lagDokumentSoknad(tema, skjemanr)).innsendingsId!!
 
 		val soknad = soknadService.hentSoknad(innsendingsId)
 
@@ -672,7 +672,7 @@ class SoknadServiceTest : ApplicationTest() {
 		// Gitt
 		val tema = "HJE"
 		val skjemanr = "NAV 10-07.04"
-		val innsendingsId = soknadService.opprettNySoknad(lagDokumentSoknad(tema, skjemanr))
+		val innsendingsId = soknadService.opprettNySoknad(lagDokumentSoknad(tema, skjemanr)).innsendingsId!!
 
 		val oppdatertSpraak = "Nytt språk"
 		val oppdatertTittel = "Ny tittel"
@@ -706,7 +706,7 @@ class SoknadServiceTest : ApplicationTest() {
 		val skjemanr = "NAV 10-07.04"
 		val tittel = "Tittel"
 		val spraak = "nb_no"
-		val innsendingsId = soknadService.opprettNySoknad(lagDokumentSoknad(tema, skjemanr))
+		val innsendingsId = soknadService.opprettNySoknad(lagDokumentSoknad(tema, skjemanr)).innsendingsId!!
 		val eksisterendeSoknad = soknadService.hentSoknad(innsendingsId)
 
 		val vedleggDto1 =

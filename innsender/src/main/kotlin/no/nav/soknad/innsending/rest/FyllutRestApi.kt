@@ -39,33 +39,33 @@ class FyllutRestApi(
 
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		soknadService.sjekkHarAlleredeSoknadUnderArbeid(brukerId, skjemaDto.skjemanr, false)
-		val opprettetSoknadId = soknadService.opprettNySoknad(
+		val opprettetSoknad = soknadService.opprettNySoknad(
 			SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
 				skjemaDto,
 				brukerId
 			)
 		)
-		logger.debug("$opprettetSoknadId: Soknad fra fyllut persistert. Antall vedlegg fra FyllUt=${skjemaDto.vedleggsListe?.size}")
+		logger.debug("${opprettetSoknad.innsendingsId}: Soknad fra fyllut persistert. Antall vedlegg fra FyllUt=${skjemaDto.vedleggsListe?.size}")
 		return ResponseEntity.status(HttpStatus.FOUND)
-			.location(URI.create(restConfig.frontEndFortsettEndpoint + "/" + opprettetSoknadId)).build()
+			.location(URI.create(restConfig.frontEndFortsettEndpoint + "/" + opprettetSoknad.innsendingsId)).build()
 	}
 
 	@Timed(InnsenderOperation.OPPRETT)
-	override fun fyllUtOpprettSoknad(skjemaDto: SkjemaDto): ResponseEntity<Unit> {
+	override fun fyllUtOpprettSoknad(skjemaDto: SkjemaDto): ResponseEntity<SkjemaDto> {
 		logger.info("Kall fra FyllUt for å opprette søknad for skjema ${skjemaDto.skjemanr}")
 		logger.debug("Skal opprette søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
 
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		soknadService.sjekkHarAlleredeSoknadUnderArbeid(brukerId, skjemaDto.skjemanr, false)
-		val opprettetSoknadId = soknadService.opprettNySoknad(
+		val opprettetSoknad = soknadService.opprettNySoknad(
 			SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
 				skjemaDto,
 				brukerId
 			)
 		)
-		logger.debug("$opprettetSoknadId: Soknad fra fyllut persistert. Antall vedlegg fra FyllUt=${skjemaDto.vedleggsListe?.size}")
-		return ResponseEntity.status(HttpStatus.CREATED)
-			.location(URI.create(restConfig.frontEndFortsettEndpoint + "/" + opprettetSoknadId)).build()
+
+		logger.debug("${opprettetSoknad.innsendingsId}: Soknad fra fyllut persistert. Antall vedlegg fra FyllUt=${skjemaDto.vedleggsListe?.size}")
+		return ResponseEntity.status(HttpStatus.CREATED).body(opprettetSoknad)
 	}
 
 	@Timed(InnsenderOperation.ENDRE)

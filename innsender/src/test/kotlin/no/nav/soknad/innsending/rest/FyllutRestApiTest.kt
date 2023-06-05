@@ -564,7 +564,8 @@ class FyllutRestApiTest : ApplicationTest() {
 				tema = tema,
 				vedleggsListe = listOf(vedleggDtoPdf, vedleggDtoJson, vedleggDto1, vedleggDto2),
 			)
-		)
+		).innsendingsId!!
+		
 		return soknadService.hentSoknad(innsendingsId)
 	}
 

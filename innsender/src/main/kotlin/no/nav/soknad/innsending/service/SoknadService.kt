@@ -303,7 +303,7 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun opprettNySoknad(dokumentSoknadDto: DokumentSoknadDto): String {
+	fun opprettNySoknad(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		val operation = InnsenderOperation.OPPRETT.name
 
 		val innsendingsId = Utilities.laginnsendingsId()
@@ -321,7 +321,7 @@ class SoknadService(
 			publiserBrukernotifikasjon(savedDokumentSoknadDto)
 
 			innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
-			return innsendingsId
+			return mapTilSkjemaDto(savedDokumentSoknadDto)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, dokumentSoknadDto.tema)
 			throw e

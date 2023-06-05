@@ -163,7 +163,11 @@ paths:
 
       responses:
         201:
-          description: Opprettet søknad
+          description: Søknad opprettet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkjemaDto"
       tags:
         - fyllUtOpprettSoknad
 
