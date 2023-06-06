@@ -89,7 +89,11 @@ paths:
 
       responses:
         200:
-          description: Oppdatert søknad
+          description: Oppdatering av søknad
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkjemaDto"
       tags:
         - fyllUtOppdaterSoknad
 
@@ -141,7 +145,11 @@ paths:
 
       responses:
         200:
-          description: Oppdatert søknad
+          description: Oppdatering av ferdig utfylt søknad
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkjemaDto"
       tags:
         - fyllUtUtfyltSoknad
 

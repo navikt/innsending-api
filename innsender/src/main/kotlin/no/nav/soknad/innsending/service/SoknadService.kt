@@ -464,7 +464,7 @@ class SoknadService(
 		}
 	}
 
-	fun oppdaterSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
+	fun oppdaterSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		if (dokumentSoknadDto.vedleggsListe.size != 2) {
 			throw BackendErrorException(
 				"Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant",
@@ -474,13 +474,19 @@ class SoknadService(
 
 		val eksisterendeSoknad = hentSoknad(innsendingsId)
 		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto, SoknadsStatus.Opprettet)
+
+		val oppdatertDokumentSoknadDto = hentSoknad(innsendingsId)
+		return mapTilSkjemaDto(oppdatertDokumentSoknadDto)
 	}
 
-	fun oppdaterUtfyltSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
+	fun oppdaterUtfyltSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		val eksisterendeSoknad = hentSoknad(innsendingsId)
 		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto, SoknadsStatus.Utfylt)
 
 		vedleggService.slettEksisterendeVedleggVedOppdatering(eksisterendeSoknad.vedleggsListe, dokumentSoknadDto)
+
+		val oppdatertDokumentSoknadDto = hentSoknad(innsendingsId)
+		return mapTilSkjemaDto(oppdatertDokumentSoknadDto)
 	}
 
 	fun oppdaterSoknad(

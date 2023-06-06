@@ -69,7 +69,7 @@ class FyllutRestApi(
 	}
 
 	@Timed(InnsenderOperation.ENDRE)
-	override fun fyllUtOppdaterSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<Unit> {
+	override fun fyllUtOppdaterSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<SkjemaDto> {
 		logger.info("Kall fra FyllUt for å endre søknad for skjema ${skjemaDto.skjemanr}")
 		logger.debug("Skal endre søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
@@ -79,12 +79,12 @@ class FyllutRestApi(
 			brukerId
 		)
 
-		soknadService.oppdaterSoknad(innsendingsId, dokumentSoknadDto)
-		return ResponseEntity.status(HttpStatus.OK).body(null)
+		val oppdatertSoknad = soknadService.oppdaterSoknad(innsendingsId, dokumentSoknadDto)
+		return ResponseEntity.status(HttpStatus.OK).body(oppdatertSoknad)
 	}
 
 	@Timed(InnsenderOperation.ENDRE)
-	override fun fyllUtUtfyltSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<Unit> {
+	override fun fyllUtUtfyltSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<SkjemaDto> {
 		logger.info("Kall fra FyllUt for å fullføre søknad for skjema ${skjemaDto.skjemanr}")
 		logger.debug("Skal fullføre søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
@@ -94,8 +94,8 @@ class FyllutRestApi(
 			brukerId
 		)
 
-		soknadService.oppdaterUtfyltSoknad(innsendingsId, dokumentSoknadDto)
-		return ResponseEntity.status(HttpStatus.OK).body(null)
+		val oppdatertSoknad = soknadService.oppdaterUtfyltSoknad(innsendingsId, dokumentSoknadDto)
+		return ResponseEntity.status(HttpStatus.OK).body(oppdatertSoknad)
 	}
 
 	@Timed(InnsenderOperation.HENT)
