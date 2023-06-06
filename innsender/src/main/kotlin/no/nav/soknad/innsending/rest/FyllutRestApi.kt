@@ -95,7 +95,10 @@ class FyllutRestApi(
 		)
 
 		val oppdatertSoknad = soknadService.oppdaterUtfyltSoknad(innsendingsId, dokumentSoknadDto)
-		return ResponseEntity.status(HttpStatus.OK).body(oppdatertSoknad)
+		return ResponseEntity
+			.status(HttpStatus.FOUND)
+			.location(URI.create(restConfig.frontEndFortsettEndpoint + "/" + oppdatertSoknad.innsendingsId))
+			.build()
 	}
 
 	@Timed(InnsenderOperation.HENT)

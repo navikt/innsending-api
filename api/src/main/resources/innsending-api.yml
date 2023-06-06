@@ -144,12 +144,8 @@ paths:
         required: true
 
       responses:
-        200:
-          description: Oppdatering av ferdig utfylt søknad
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SkjemaDto"
+        302:
+          description: Oppdatering av ferdig utfylt søknad, med redirect til SendInn
       tags:
         - fyllUtUtfyltSoknad
 

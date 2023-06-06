@@ -514,6 +514,7 @@ class SoknadService(
 			}
 		}
 
+		logger.info("Oppdatert søknad for innsendingsId: {}", eksisterendeSoknad.innsendingsId)
 	}
 
 
