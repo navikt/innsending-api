@@ -695,12 +695,14 @@ class SoknadServiceTest : ApplicationTest() {
 
 		// og ingen ny hendelse registrert på søknad
 		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(innsendingsId)
-		assertTrue(hendelseDbDatas.size == 1)
-		assertEquals(HendelseType.Opprettet, hendelseDbDatas.get(0).hendelsetype)
+		assertEquals(2, hendelseDbDatas.size)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatas[0].hendelsetype)
+		assertEquals(HendelseType.Endret, hendelseDbDatas[1].hendelsetype)
+
 	}
 
 	@Test
-	fun `Skal oppdatere søknad med nye vedlegg`() {
+	fun `Skal oppdatere utfylt søknad med nye vedlegg`() {
 		// Gitt
 		val tema = "HJE"
 		val skjemanr = "NAV 10-07.04"
@@ -771,8 +773,9 @@ class SoknadServiceTest : ApplicationTest() {
 
 		// og ingen ny hendelse registrert på søknad
 		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(innsendingsId)
-		assertTrue(hendelseDbDatas.size == 1)
-		assertEquals(HendelseType.Opprettet, hendelseDbDatas.get(0).hendelsetype)
+		assertEquals(2, hendelseDbDatas.size)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatas[0].hendelsetype)
+		assertEquals(HendelseType.Utfylt, hendelseDbDatas[1].hendelsetype)
 
 	}
 

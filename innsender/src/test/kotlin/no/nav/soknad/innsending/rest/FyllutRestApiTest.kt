@@ -301,7 +301,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Fullfører søknad i fyllUt med N6 og T1 vedlegg (de to eksisterende vedleggene vedleggsnr1 og vedleggsnr2 fjernes)
 		val utfyltResponse = restTemplate.exchange(
 			"http://localhost:${serverPort}/fyllUt/v1/utfyltSoknad/${innsendingsId}", HttpMethod.PUT,
-			utfyltRequest, Unit::class.java
+			utfyltRequest, SkjemaDto::class.java
 		)
 
 		// Legger til N6 vedlegg i send-inn
@@ -313,7 +313,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Går tilbake til fyllUt og fjerner T1 vedlegg. Beholder N6, men endrer tittel
 		val oppdatertUtfyltResponse = restTemplate.exchange(
 			"http://localhost:${serverPort}/fyllUt/v1/utfyltSoknad/${innsendingsId}", HttpMethod.PUT,
-			oppdatertUtfyltRequest, Unit::class.java
+			oppdatertUtfyltRequest, SkjemaDto::class.java
 		)
 		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
 
@@ -344,6 +344,12 @@ class FyllutRestApiTest : ApplicationTest() {
 			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == "T1" },
 			"Skal ikke ha gammelt vedlegg"
 		)
+		assertEquals(tittel, utfyltResponse.body!!.tittel)
+		assertEquals(
+			fyllUtVedleggstittel,
+			oppdatertUtfyltResponse.body!!.vedleggsListe!!.find { it.tittel == fyllUtVedleggstittel }!!.tittel
+		)
+
 	}
 
 	@Test
@@ -565,7 +571,7 @@ class FyllutRestApiTest : ApplicationTest() {
 				vedleggsListe = listOf(vedleggDtoPdf, vedleggDtoJson, vedleggDto1, vedleggDto2),
 			)
 		).innsendingsId!!
-		
+
 		return soknadService.hentSoknad(innsendingsId)
 	}
 
