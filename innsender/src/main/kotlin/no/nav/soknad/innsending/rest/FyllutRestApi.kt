@@ -84,7 +84,7 @@ class FyllutRestApi(
 	}
 
 	@Timed(InnsenderOperation.ENDRE)
-	override fun fyllUtUtfyltSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<SkjemaDto> {
+	override fun fyllUtUtfyltSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<Unit> {
 		logger.info("Kall fra FyllUt for å fullføre søknad for skjema ${skjemaDto.skjemanr}")
 		logger.debug("Skal fullføre søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
