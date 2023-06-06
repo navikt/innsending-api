@@ -10,5 +10,6 @@ enum class HendelseType {
 	SlettetPermanentAvSystem,
 	Innsendt,
 	Arkivert,
-	ArkiveringFeilet
+	ArkiveringFeilet,
+	Utfylt // Ferdig utfylt søknad som ikke er innsendt
 }

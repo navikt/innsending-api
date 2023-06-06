@@ -303,7 +303,7 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun opprettNySoknad(dokumentSoknadDto: DokumentSoknadDto): String {
+	fun opprettNySoknad(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		val operation = InnsenderOperation.OPPRETT.name
 
 		val innsendingsId = Utilities.laginnsendingsId()
@@ -321,7 +321,7 @@ class SoknadService(
 			publiserBrukernotifikasjon(savedDokumentSoknadDto)
 
 			innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
-			return innsendingsId
+			return mapTilSkjemaDto(savedDokumentSoknadDto)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, dokumentSoknadDto.tema)
 			throw e
@@ -464,7 +464,7 @@ class SoknadService(
 		}
 	}
 
-	fun oppdaterSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
+	fun oppdaterSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		if (dokumentSoknadDto.vedleggsListe.size != 2) {
 			throw BackendErrorException(
 				"Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant",
@@ -474,13 +474,19 @@ class SoknadService(
 
 		val eksisterendeSoknad = hentSoknad(innsendingsId)
 		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto, SoknadsStatus.Opprettet)
+
+		val oppdatertDokumentSoknadDto = hentSoknad(innsendingsId)
+		return mapTilSkjemaDto(oppdatertDokumentSoknadDto)
 	}
 
-	fun oppdaterUtfyltSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
+	fun oppdaterUtfyltSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		val eksisterendeSoknad = hentSoknad(innsendingsId)
 		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto, SoknadsStatus.Utfylt)
 
 		vedleggService.slettEksisterendeVedleggVedOppdatering(eksisterendeSoknad.vedleggsListe, dokumentSoknadDto)
+
+		val oppdatertDokumentSoknadDto = hentSoknad(innsendingsId)
+		return mapTilSkjemaDto(oppdatertDokumentSoknadDto)
 	}
 
 	fun oppdaterSoknad(
@@ -508,6 +514,7 @@ class SoknadService(
 			}
 		}
 
+		logger.info("Oppdatert søknad for innsendingsId: {}", eksisterendeSoknad.innsendingsId)
 	}
 
 

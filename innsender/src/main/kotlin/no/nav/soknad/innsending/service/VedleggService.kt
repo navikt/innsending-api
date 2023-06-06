@@ -386,6 +386,7 @@ class VedleggService(
 			eksisterendeVedlegg.formioId != null &&
 				dokumentSoknadDto.vedleggsListeUtenHoveddokument.none { nyttVedlegg -> eksisterendeVedlegg.formioId == nyttVedlegg.formioId }
 		}.forEach {
+			logger.info("Slettet vedlegg id:${it.id} ved oppdatering")
 			slettVedleggOgDensFiler(it)
 		}
 	}

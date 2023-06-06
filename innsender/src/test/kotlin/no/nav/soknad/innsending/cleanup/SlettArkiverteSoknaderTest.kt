@@ -121,7 +121,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 				tema = tema, id = null, innsendingsid = null, soknadsStatus = SoknadsStatusDto.opprettet, vedleggsListe = null,
 				ettersendingsId = null, OffsetDateTime.now().minusDays(1)
 			)
-		)
+		).innsendingsId!!
 
 		val skalSendeInnIkkeArkivereId = soknadService.opprettNySoknad(
 			Hjelpemetoder.lagDokumentSoknad(
@@ -129,7 +129,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 				tema = tema, id = null, innsendingsid = null, soknadsStatus = SoknadsStatusDto.opprettet, vedleggsListe = null,
 				ettersendingsId = null, OffsetDateTime.now().minusDays(1)
 			)
-		)
+		).innsendingsId!!
 
 		val initAntall = innsenderMetrics.operationsCounterGet(InnsenderOperation.SLETT.name, tema) ?: 0.0
 		sendInnSoknad(soknadService, skalSendeInnOgArkivereId, innsendingService)
@@ -149,7 +149,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 
 		// Og innsendt og ikke arkivert Soknad skal ikke være slettet.
 		val beholdtSoknad = soknadService.hentSoknad(skalSendeInnIkkeArkivereId)
-		Assertions.assertTrue(beholdtSoknad != null && beholdtSoknad.status == SoknadsStatusDto.innsendt)
+		Assertions.assertTrue(beholdtSoknad.status == SoknadsStatusDto.innsendt)
 
 		// Og metrics for antall slettede søknader er økt med 1
 		Assertions.assertEquals(

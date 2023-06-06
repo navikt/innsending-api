@@ -93,7 +93,7 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 				tema = tema, id = null, innsendingsid = null, soknadsStatus = SoknadsStatusDto.opprettet, vedleggsListe = null,
 				ettersendingsId = null, OffsetDateTime.now().minusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD + 1)
 			)
-		)
+		).innsendingsId!!
 
 		val nyereSoknadId = soknadService.opprettNySoknad(
 			Hjelpemetoder.lagDokumentSoknad(
@@ -101,7 +101,7 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 				tema = tema, id = null, innsendingsid = null, soknadsStatus = SoknadsStatusDto.opprettet, vedleggsListe = null,
 				ettersendingsId = null, OffsetDateTime.now().minusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD - 1)
 			)
-		)
+		).innsendingsId!!
 
 
 		val initAntall = innsenderMetrics.operationsCounterGet(InnsenderOperation.SLETT.name, tema)
@@ -110,12 +110,12 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 		fjernGamleSoknader.fjernGamleIkkeInnsendteSoknader()
 
 		val slettetSoknad = soknadService.hentSoknad(gammelSoknadId)
-		assertTrue(slettetSoknad != null && slettetSoknad.status == SoknadsStatusDto.automatiskSlettet)
+		assertTrue(slettetSoknad.status == SoknadsStatusDto.automatiskSlettet)
 		assertTrue(soknader.any { it.innsendingsId == gammelSoknadId && it.status == SoknadsStatusDto.automatiskSlettet })
 		assertEquals(1.0 + (initAntall ?: 0.0), innsenderMetrics.operationsCounterGet(InnsenderOperation.SLETT.name, tema))
 
 		val beholdtSoknad = soknadService.hentSoknad(nyereSoknadId)
-		assertTrue(beholdtSoknad != null && beholdtSoknad.status == SoknadsStatusDto.opprettet)
+		assertTrue(beholdtSoknad.status == SoknadsStatusDto.opprettet)
 		assertTrue(soknader.none { it.innsendingsId == nyereSoknadId && it.status == SoknadsStatusDto.automatiskSlettet })
 
 	}
