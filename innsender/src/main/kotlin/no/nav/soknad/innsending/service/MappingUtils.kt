@@ -332,6 +332,7 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		hoveddokumentVariant = mapTilSkjemaDokumentDto(hovedDokumentVariant),
 		vedleggsListe = vedleggsListe,
 		kanLasteOppAnnet = dokumentSoknadDto.kanLasteOppAnnet,
+		fristForEttersendelse = dokumentSoknadDto.fristForEttersendelse,
 	)
 }
 
@@ -347,5 +348,6 @@ fun mapTilSkjemaDokumentDto(vedleggDto: VedleggDto): SkjemaDokumentDto {
 		mimetype = vedleggDto.mimetype,
 		pakrevd = vedleggDto.erPakrevd,
 		document = vedleggDto.document,
+		formioId = vedleggDto.formioId,
 	)
 }

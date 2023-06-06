@@ -77,25 +77,24 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		val response = restTemplate.exchange(
 			"http://localhost:${serverPort}/fyllUt/v1/soknad", HttpMethod.POST,
-			requestEntity, Unit::class.java
+			requestEntity, SkjemaDto::class.java
 		)
 
 		assertTrue(response != null)
 
 		assertEquals(201, response.statusCodeValue)
-		assertTrue(response.headers["Location"] != null)
 
 		testHentSoknadOgSendInn(response, token)
 
 	}
 
 	private fun testHentSoknadOgSendInn(
-		response: ResponseEntity<Unit>,
+		response: ResponseEntity<SkjemaDto>,
 		token: String
 	) {
 
 		// Hent søknaden opprettet fra FyllUt og kjør gjennom løp for opplasting av vedlegg og innsending av søknad
-		val innsendingsId = response.headers["Location"]?.first()?.substringAfterLast("/")
+		val innsendingsId = response.body!!.innsendingsId
 		assertNotNull(innsendingsId)
 
 		val getRequestEntity = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
@@ -236,7 +235,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Så
 		assertTrue(response != null)
 		assertEquals(SoknadsStatusDto.utfylt, oppdatertSoknad.status, "Status er satt til utfylt")
-		assertEquals(200, response.statusCodeValue)
+		assertEquals(302, response.statusCodeValue)
+		assertTrue(response.headers["Location"] != null)
 		assertEquals(nyTittel, oppdatertSoknad.tittel)
 		assertEquals("en", oppdatertSoknad.spraak, "Språk er oppdatert (blir konvertert til de første 2 bokstavene)")
 		assertEquals(4, oppdatertSoknad.vedleggsListe.size, "Hoveddokument, hoveddokumentVariant og to vedlegg")
@@ -258,8 +258,6 @@ class FyllutRestApiTest : ApplicationTest() {
 		)
 		assertEquals(oppdatertSoknad.hoveddokument!!.tittel, nyTittel, "Skal ha ny tittel på hoveddokument")
 		assertEquals(oppdatertSoknad.hoveddokumentVariant!!.tittel, nyTittel, "Skal ha ny tittel på hoveddokumentVariant")
-
-		assertEquals(null, response.body)
 
 	}
 
@@ -322,11 +320,14 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertTrue(leggTilVedleggResponse != null)
 		assertTrue(oppdatertUtfyltResponse != null)
 
-		assertEquals(200, utfyltResponse.statusCodeValue)
+		assertEquals(302, utfyltResponse.statusCodeValue)
 		assertEquals(201, leggTilVedleggResponse.statusCodeValue)
-		assertEquals(200, oppdatertUtfyltResponse.statusCodeValue)
+		assertEquals(302, oppdatertUtfyltResponse.statusCodeValue)
 
 		assertEquals(4, oppdatertSoknad.vedleggsListe.size)
+
+		assertNotNull(utfyltResponse.headers["Location"])
+		assertNotNull(oppdatertUtfyltResponse.headers["Location"])
 
 		val n6FyllUtVedlegg =
 			oppdatertSoknad.vedleggsListe.find { it.vedleggsnr == "N6" && it.tittel == fyllUtVedleggstittel }
@@ -344,6 +345,7 @@ class FyllutRestApiTest : ApplicationTest() {
 			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == "T1" },
 			"Skal ikke ha gammelt vedlegg"
 		)
+
 	}
 
 	@Test
@@ -564,7 +566,8 @@ class FyllutRestApiTest : ApplicationTest() {
 				tema = tema,
 				vedleggsListe = listOf(vedleggDtoPdf, vedleggDtoJson, vedleggDto1, vedleggDto2),
 			)
-		)
+		).innsendingsId!!
+
 		return soknadService.hentSoknad(innsendingsId)
 	}
 
