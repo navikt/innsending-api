@@ -398,7 +398,7 @@ class RepositoryUtils(
 			} else if (soknadDbData.status == SoknadsStatus.Innsendt && soknadDbData.arkiveringsstatus == ArkiveringsStatus.ArkiveringFeilet) {
 				HendelseType.ArkiveringFeilet
 			} else if (soknadDbData.status == SoknadsStatus.Opprettet) {
-				HendelseType.Endret
+				HendelseType.Endret // Opprettet og har en id
 			} else if (soknadDbData.status == SoknadsStatus.Utfylt) {
 				HendelseType.Utfylt
 			} else {
