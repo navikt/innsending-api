@@ -15,4 +15,6 @@ object Constants {
 
 	const val DEFAULT_LEVETID_OPPRETTET_SOKNAD = 56L // 8 uker inntil ikke innsendt søknad/ettersendingssøknad slettes
 	const val DEFAULT_FRIST_FOR_ETTERSENDELSE = 14L // 2 uker på å ettersende manglende vedlegg (NB myk frist)
+
+	const val KVITTERINGS_NR = "L7"
 }

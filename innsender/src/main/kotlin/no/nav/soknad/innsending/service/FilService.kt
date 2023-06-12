@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.OpplastingsStatus
+import no.nav.soknad.innsending.repository.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
@@ -383,5 +384,23 @@ class FilService(
 			vedleggsFil,
 			filer[0].opprettetdato
 		)
+	}
+
+	fun hentOgMergeVedleggsFiler(innsendingsId: String, vedleggDbList: List<VedleggDbData>): List<VedleggDto> {
+
+		val vedleggDtos = mutableListOf<VedleggDto>()
+		vedleggDbList.forEach {
+			val filer = repo.hentFilerTilVedlegg(innsendingsId, it.id!!).filterNot { it.data == null }
+			val vedleggsFil =
+				if (filer.isEmpty()) {
+					null
+				} else if (filer[0].mimetype == Mimetype.applicationSlashPdf.name) {
+					PdfMerger().mergePdfer(filer.map { it.data!! })
+				} else {
+					filer[0].data
+				}
+			vedleggDtos.add(lagVedleggDto(it, vedleggsFil))
+		}
+		return vedleggDtos
 	}
 }

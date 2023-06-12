@@ -47,8 +47,8 @@ class SoknadAssertions {
 			dokumentSoknadDto: DokumentSoknadDto,
 			innsendingService: InnsendingService
 		): KvitteringsDto {
-			val vedleggDtos = slot<List<VedleggDto>>()
-			every { fillagerAPI.lagreFiler(dokumentSoknadDto.innsendingsId!!, capture(vedleggDtos)) } returns Unit
+			//val vedleggDtos = slot<List<VedleggDto>>()
+			//every { fillagerAPI.lagreFiler(dokumentSoknadDto.innsendingsId!!, capture(vedleggDtos)) } returns Unit
 
 			val soknad = slot<DokumentSoknadDto>()
 			val vedleggDtos2 = slot<List<VedleggDto>>()
@@ -56,8 +56,8 @@ class SoknadAssertions {
 
 			val kvitteringsDto = innsendingService.sendInnSoknad(dokumentSoknadDto)
 
-			Assertions.assertTrue(vedleggDtos.isCaptured)
-			Assertions.assertTrue(vedleggDtos.captured.isNotEmpty())
+			//Assertions.assertTrue(vedleggDtos.isCaptured)
+			//Assertions.assertTrue(vedleggDtos.captured.isNotEmpty())
 
 			Assertions.assertTrue(soknad.isCaptured)
 			Assertions.assertTrue(soknad.captured.innsendingsId == dokumentSoknadDto.innsendingsId)

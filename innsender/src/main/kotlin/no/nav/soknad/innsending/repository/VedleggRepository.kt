@@ -18,6 +18,9 @@ interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
 	@Query(value = "FROM VedleggDbData WHERE id = :vedleggsid")
 	fun findByVedleggsid(@Param("vedleggsid") vedleggsid: Long): Optional<VedleggDbData>
 
+	@Query(value = "FROM VedleggDbData WHERE vedleggsurl = :vedleggsUrl")
+	fun findByVedleggsurl(@Param("vedleggsUrl") vedleggsUrl: String): Optional<VedleggDbData>
+
 	@Transactional
 	@Modifying
 	@Query(value = "UPDATE VedleggDbData v SET v.status = :status, v.endretdato = :endretdato WHERE v.id = :id")

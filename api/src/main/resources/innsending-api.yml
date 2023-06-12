@@ -198,6 +198,44 @@ paths:
       tags:
         - aktiveSaker
 
+  /innsendte/v1/files/{uuids}:
+    get:
+      summary: Finds files with given uuids.
+      description: Given a list of uuids, this endpoint returns all files associated with those uuids. The files would be application, application variant and attachments
+      operationId: hentInnsendteFiler
+
+      parameters:
+        - name: uuids
+          in: path
+          description: A list of uuids of files to be retrieved.
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+          style: simple
+
+        - name: x-innsendingId
+          in: header
+          description: Tracing id that will be used in logging statements.
+          example: 92ee15dd-dc49-4c95-b9b6-6224bae088a0
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SoknadFile"
+      tags:
+        - hentInnsendteFiler
+
+
   /frontend/v1/soknad:
     post:
       summary: Kall for å opprette en søknad basert på skjemanummer og med en eventuell liste av vedlegg.
@@ -1290,6 +1328,32 @@ components:
       enum: [ "Opprettet", "Utfylt", "Innsendt", "SlettetAvBruker", "AutomatiskSlettet" ]
       description: Spesifikasjon av status på søknaden.
       example:
+
+    SoknadFile:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: Unique id of the file
+          example: 2f9b8d25-1056-4827-8ddd-cedab7fafaaf
+        content:
+          type: string
+          format: byte
+          nullable: true
+          description: Byte array of the file content
+          example: Byte array with file content
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Creation date and time in UTC
+          example: 2021-12-03T14:10:00Z
+        status:
+          type: string
+          description: current state of the file. Can be `deleted`, `not-found`, `ok`
+          example: not-found
 
     Spraak:
       type: string
