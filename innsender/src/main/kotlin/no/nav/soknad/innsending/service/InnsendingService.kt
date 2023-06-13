@@ -96,7 +96,7 @@ class InnsendingService(
 					"errorCode.illegalAction.applicationSentInOrDeleted"
 				)
 			}
-			soknadsmottakerAPI.sendInnSoknad(soknadDto, opplastedeVedlegg + kvitteringForArkivering)
+			soknadsmottakerAPI.sendInnSoknad(soknadDto, (opplastedeVedlegg + kvitteringForArkivering))
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			logger.error("${soknadDto.innsendingsId}: Feil ved sending av søknad til soknadsmottaker ${e.message}")
@@ -319,14 +319,31 @@ class InnsendingService(
 				return vedleggUrls.map { SoknadFile(id = it, content = null, createdAt = null, status = statusNotFound) }
 					.toList()
 			}
-
-			val (mergedVedlegg, missingVedlegg) = mergeOgReturnerVedlegg(innsendingId, vedleggUrls)
-
-			if (mergedVedlegg.any { it.document == null } || missingVedlegg.isNotEmpty()) {
-				logger.warn("$innsendingId: Følgende vedlegg ikke funnet: $missingVedlegg")
+			val erArkivert = hendelseDbData.any { it.hendelsetype == HendelseType.Arkivert }
+			val soknadDbData = repo.hentSoknadDb(innsendingId)
+			if (!soknadDbData.isPresent || erArkivert) {
+				logger.info("$innsendingId: søknaden er slettet eller allerede arkivert")
+				return vedleggUrls.map { SoknadFile(id = it, content = null, createdAt = null, status = statusDeleted) }
+					.toList()
 			}
 
-			val erArkivert = hendelseDbData.any { it.hendelsetype == HendelseType.Arkivert }
+			val vedleggDbDatas = repo.hentAlleVedleggGittSoknadsid(soknadDbData.get().id!!)
+			val soknadVedleggUrls = vedleggDbDatas.map { it.uuid }.toList()
+			if (vedleggUrls.any { !soknadVedleggUrls.contains(it) }) {
+				logger.warn("$innsendingId: Forsøk på henting av vedlegg som ikke eksisterer for angitt søknad")
+				return vedleggUrls.map { SoknadFile(id = it, content = null, createdAt = null, status = statusNotFound) }
+					.toList()
+			}
+
+			val mergedVedlegg = mergeOgReturnerVedlegg(innsendingId, vedleggUrls, vedleggDbDatas)
+
+			if (mergedVedlegg.any { it.document == null }) {
+				logger.warn(
+					"$innsendingId: Følgende vedlegg mangler opplastet fil: ${
+						mergedVedlegg.filter { it.document == null }.map { it.uuid }
+					}"
+				)
+			}
 
 			// Har vedleggurls og matchende vedleggsliste med filene som skal returneres til soknadsarkiverer
 			val idResult = mapToSoknadFiles(vedleggUrls, mergedVedlegg, erArkivert, innsendingId)
@@ -383,20 +400,13 @@ class InnsendingService(
 
 	private fun mergeOgReturnerVedlegg(
 		innsendingId: String,
-		vedleggsUrls: List<String>
-	): Pair<List<VedleggDto>, List<String>> {
-		val vedleggDbDatas = mutableListOf<VedleggDbData>()
-		val missingVedlegg = mutableListOf<String>()
-		vedleggsUrls.forEach {
-			val vedleggDbData = repo.hentVedleggGittVedleggsUrl(it)
-			if (vedleggDbData.isPresent) {
-				vedleggDbDatas.add(vedleggDbData.get())
-			} else {
-				missingVedlegg.add(it)
-			}
-		}
-		val vedleggDtos = filService.hentOgMergeVedleggsFiler(innsendingId, vedleggDbDatas)
-		return Pair(vedleggDtos, missingVedlegg)
+		vedleggsUrls: List<String>,
+		soknadVedleggs: List<VedleggDbData>
+	): List<VedleggDto> {
+		return filService.hentOgMergeVedleggsFiler(
+			innsendingId,
+			soknadVedleggs.filter { vedleggsUrls.contains(it.uuid) }.toList()
+		)
 
 	}
 

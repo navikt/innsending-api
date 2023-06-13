@@ -42,7 +42,11 @@ class InnsendtListeApi(
 		logger.info("$xInnsendingId: Kall for å hente liste av filer til en innsendt søknad")
 
 		val innsendteFiler = innsendingService.getFiles(xInnsendingId, uuids)
-		logger.info("$xInnsendingId: Hentet ${innsendteFiler.size} innsendteFiler.")
+		logger.info(
+			"$xInnsendingId: Status for henting av følgende innsendte filer ${
+				innsendteFiler.map { it.id + ":" + it.status }.toList()
+			}"
+		)
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(innsendteFiler)

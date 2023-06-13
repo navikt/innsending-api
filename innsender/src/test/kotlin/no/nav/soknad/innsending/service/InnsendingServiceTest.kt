@@ -109,12 +109,21 @@ class InnsendingServiceTest : ApplicationTest() {
 		}
 		soknadService.hentSoknad(dokumentSoknadDto.innsendingsId!!)
 
+		// Hvis hent innsendt hoveddokument
+		val hoveddok = innsendingService.getFiles(
+			dokumentSoknadDto.innsendingsId!!,
+			dokumentSoknadDto.vedleggsListe.filter { it.erHoveddokument }.map { it.uuid!! }.toList()
+		)
+
+		// Så skal
+		Assertions.assertEquals(1, hoveddok.size)
+		Assertions.assertTrue(hoveddok.all { it.status == "ok" })
+
 	}
 
 	@Test
 	fun sendInnSoknadFeilerUtenOpplastetHoveddokument() {
 		val innsendingService = lagInnsendingService(soknadService)
-
 
 		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
