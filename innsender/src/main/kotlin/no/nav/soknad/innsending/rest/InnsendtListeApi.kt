@@ -16,7 +16,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@ProtectedWithClaims(issuer = Constants.TOKENX, claimMap = [Constants.CLAIM_ACR_LEVEL_4])
 class InnsendtListeApi(
 	val safService: SafService,
 	val innsendingService: InnsendingService,
@@ -26,6 +25,7 @@ class InnsendtListeApi(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Timed(InnsenderOperation.HENT)
+	@ProtectedWithClaims(issuer = Constants.TOKENX, claimMap = [Constants.CLAIM_ACR_LEVEL_4])
 	override fun aktiveSaker(): ResponseEntity<List<AktivSakDto>> {
 		logger.info("Kall for å hente innsendte søknader for en bruker")
 
@@ -37,6 +37,7 @@ class InnsendtListeApi(
 	}
 
 	@Timed(InnsenderOperation.HENT)
+	@ProtectedWithClaims(issuer = Constants.AZURE)
 	override fun hentInnsendteFiler(uuids: List<String>, xInnsendingId: String): ResponseEntity<List<SoknadFile>> {
 		logger.info("$xInnsendingId: Kall for å hente liste av filer til en innsendt søknad")
 

@@ -4,6 +4,7 @@ object Constants {
 	const val SELVBETJENING = "selvbetjening"
 	const val CLAIM_ACR_LEVEL_4 = "acr=Level4"
 	const val TOKENX = "tokenx"
+	const val AZURE = "azure"
 
 	const val NAV_CONSUMER_ID = "Nav-Consumer-Id"
 	const val HEADER_CALL_ID = "Nav-Call-Id"
