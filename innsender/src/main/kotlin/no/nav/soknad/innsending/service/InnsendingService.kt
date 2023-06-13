@@ -84,6 +84,7 @@ class InnsendingService(
 		val kvitteringForArkivering =
 			lagInnsendingsKvitteringOgLagre(soknadDto, opplastedeVedlegg, manglendePakrevdeVedlegg)
 		logger.debug("${soknadDtoInput.innsendingsId}: Tid: lagInnsendingsKvittering = ${System.currentTimeMillis() - startLagKvittering} ")
+		logger.debug("${soknadDtoInput.innsendingsId}: skjemanr = ${kvitteringForArkivering.vedleggsnr} (kvittering) med uuid = ${kvitteringForArkivering.uuid}")
 
 		// send soknadmetada til soknadsmottaker
 		try {
@@ -194,7 +195,7 @@ class InnsendingService(
 			soknadDto.innsendingsId!!,
 			FilDbData(
 				id = null, vedleggsid = kvitteringsVedlegg.id!!,
-				filnavn = "kvittering.pdf", mimetype = Mimetype.applicationSlashPdf.name,
+				filnavn = "kvittering.pdf", mimetype = Mimetype.applicationSlashPdf.value,
 				storrelse = kvittering.size,
 				data = kvittering, opprettetdato = kvitteringsVedlegg.opprettetdato
 			)

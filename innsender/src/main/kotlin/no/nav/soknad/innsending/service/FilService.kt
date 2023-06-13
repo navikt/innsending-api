@@ -395,9 +395,9 @@ class FilService(
 				if (filer.isEmpty()) {
 					logger.info("$innsendingsId: fant ikke opplastede filer til vedlegg ${it.uuid}")
 					null
-				} else if (filer[0].mimetype == Mimetype.applicationSlashPdf.name) {
+				} else if (filer[0].mimetype == Mimetype.applicationSlashPdf.value) {
 					logger.info("$innsendingsId: skal merge ${filer.size} PDFer til vedlegg ${it.uuid}")
-					PdfMerger().mergePdfer(filer.map { it.data!! })
+					PdfMerger().mergePdfer(filer.map { it.data!! }.toList())
 				} else {
 					logger.info("$innsendingsId: ikke PDF på vedlegg ${it.uuid}")
 					filer[0].data

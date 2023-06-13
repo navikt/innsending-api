@@ -16,6 +16,7 @@ import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
+import no.nav.soknad.pdfutilities.AntallSider
 import no.nav.soknad.pdfutilities.PdfGenerator
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -261,5 +262,57 @@ class InnsendingServiceTest : ApplicationTest() {
 			)
 		}
 	}
+
+	@Test
+	fun sendInnSoknadMedVedlegg() {
+		val innsendingService = lagInnsendingService(soknadService)
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+
+		// Last opp fil til hoveddokument vedlegg
+		filService.lagreFil(
+			dokumentSoknadDto,
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
+		)
+
+		// Last opp fil1 til W1 vedlegg
+		filService.lagreFil(
+			dokumentSoknadDto,
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { !it.erHoveddokument })
+		)
+		// Last opp fil2 til W1 vedlegg
+		filService.lagreFil(
+			dokumentSoknadDto,
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { !it.erHoveddokument })
+		)
+
+		val kvitteringsDto =
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				fillagerAPI,
+				soknadsmottakerAPI,
+				dokumentSoknadDto,
+				innsendingService
+			)
+		Assertions.assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isNotEmpty())
+		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+
+		assertThrows<IllegalActionException> {
+			vedleggService.leggTilVedlegg(dokumentSoknadDto, null)
+		}
+		//soknadService.hentSoknad(dokumentSoknadDto.innsendingsId!!)
+
+		// Hvis hent innsendt hoveddokument
+		val vedleggsFiler = innsendingService.getFiles(
+			dokumentSoknadDto.innsendingsId!!,
+			dokumentSoknadDto.vedleggsListe.map { it.uuid!! }.toList()
+		)
+
+		// Så skal
+		Assertions.assertEquals(2, vedleggsFiler.size)
+		Assertions.assertTrue(vedleggsFiler.all { it.status == "ok" })
+		Assertions.assertEquals(2, AntallSider().finnAntallSider(vedleggsFiler.last().content))
+
+	}
+
 
 }

@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.model.KvitteringsDto
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.service.InnsendingService
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.testpersonid
 import org.junit.jupiter.api.Assertions
 
@@ -61,6 +62,8 @@ class SoknadAssertions {
 
 			Assertions.assertTrue(soknad.isCaptured)
 			Assertions.assertTrue(soknad.captured.innsendingsId == dokumentSoknadDto.innsendingsId)
+			Assertions.assertTrue(vedleggDtos2.isCaptured)
+			Assertions.assertTrue(vedleggDtos2.captured.filter { it.vedleggsnr == Constants.KVITTERINGS_NR }.isNotEmpty())
 
 			Assertions.assertTrue(kvitteringsDto.innsendingsId == dokumentSoknadDto.innsendingsId)
 
