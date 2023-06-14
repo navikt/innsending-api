@@ -97,7 +97,7 @@ class InnsendingService(
 					"errorCode.illegalAction.applicationSentInOrDeleted"
 				)
 			}
-			soknadsmottakerAPI.sendInnSoknad(soknadDto, (opplastedeVedlegg + kvitteringForArkivering))
+			soknadsmottakerAPI.sendInnSoknad(soknadDto, (listOf(kvitteringForArkivering) + opplastedeVedlegg))
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			logger.error("${soknadDto.innsendingsId}: Feil ved sending av søknad til soknadsmottaker ${e.message}")
