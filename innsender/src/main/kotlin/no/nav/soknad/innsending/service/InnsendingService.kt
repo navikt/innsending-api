@@ -98,7 +98,9 @@ class InnsendingService(
 				)
 			}
 
+			val sendMeldingTilSoknadsmottaker = System.currentTimeMillis()
 			soknadsmottakerAPI.sendInnSoknad(soknadDto, (listOf(kvitteringForArkivering) + opplastedeVedlegg))
+			logger.debug("${soknadDtoInput.innsendingsId}: Tid: sendMeldingTilSoknadsmottaker = ${System.currentTimeMillis() - sendMeldingTilSoknadsmottaker} ")
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			logger.error("${soknadDto.innsendingsId}: Feil ved sending av søknad til soknadsmottaker ${e.message}")
@@ -108,6 +110,7 @@ class InnsendingService(
 			)
 		}
 
+		val startOppdaterStatusVedleggOgSoknad = System.currentTimeMillis()
 		// oppdater vedleggstabellen med status og innsendingsdato for opplastede vedlegg.
 		opplastedeVedlegg.forEach {
 			repo.lagreVedlegg(
@@ -146,6 +149,7 @@ class InnsendingService(
 				"errorCode.backendError.sendToNAVError"
 			)
 		}
+		logger.debug("${soknadDtoInput.innsendingsId}: Tid: oppdatering av status på vedlegg og søknad = ${System.currentTimeMillis() - startOppdaterStatusVedleggOgSoknad} ")
 		return Pair(opplastedeVedlegg, manglendePakrevdeVedlegg)
 	}
 
@@ -156,9 +160,13 @@ class InnsendingService(
 		try {
 			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput)
 
+			val startKansellerBrukernotifikasjon = System.currentTimeMillis()
 			val innsendtSoknadDto = kansellerBrukernotifikasjon(soknadDtoInput)
+			logger.debug("${soknadDtoInput.innsendingsId}: Tid: publiser done av brukernotifikasjon = ${System.currentTimeMillis() - startKansellerBrukernotifikasjon} ")
 
+			val startSjekkOgOpprettEttersendingsSoknad = System.currentTimeMillis()
 			ettersendingService.sjekkOgOpprettEttersendingsSoknad(innsendtSoknadDto, manglende, soknadDtoInput)
+			logger.debug("${soknadDtoInput.innsendingsId}: Tid: sjekkOgOpprettEttersendingssøknad = ${System.currentTimeMillis() - startSjekkOgOpprettEttersendingsSoknad} ")
 
 			return lagKvittering(innsendtSoknadDto, opplastet, manglende)
 
