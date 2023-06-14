@@ -97,6 +97,7 @@ class InnsendingService(
 					"errorCode.illegalAction.applicationSentInOrDeleted"
 				)
 			}
+
 			soknadsmottakerAPI.sendInnSoknad(soknadDto, (listOf(kvitteringForArkivering) + opplastedeVedlegg))
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
@@ -118,6 +119,15 @@ class InnsendingService(
 				)
 			)
 		}
+		repo.lagreVedlegg(
+			mapTilVedleggDb(
+				vedleggDto = kvitteringForArkivering,
+				soknadsId = soknadDto.id!!,
+				url = kvitteringForArkivering.skjemaurl,
+				opplastingsStatus = OpplastingsStatus.INNSENDT
+			)
+		)
+
 		manglendePakrevdeVedlegg.forEach {
 			repo.oppdaterVedleggStatus(
 				innsendingsId = soknadDto.innsendingsId!!,
@@ -180,9 +190,9 @@ class InnsendingService(
 			erVariant = false,
 			erPdfa = true,
 			erPakrevd = false,
-			opplastingsStatus = OpplastingsStatusDto.innsendt,
+			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
 			opprettetdato = OffsetDateTime.now(),
-			innsendtdato = OffsetDateTime.now(),
+			innsendtdato = null,
 			mimetype = Mimetype.applicationSlashPdf,
 			document = null,
 			skjemaurl = null
