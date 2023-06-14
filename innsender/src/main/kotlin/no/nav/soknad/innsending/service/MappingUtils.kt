@@ -36,15 +36,16 @@ fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
 		beskrivelse = vedleggDto.beskrivelse,
 		uuid = vedleggDto.uuid,
 		mimetype = filDto?.mimetype ?: vedleggDto.mimetype,
-		document = filDto?.data,
+		document = null,
 		skjemaurl = vedleggDto.skjemaurl,
 		innsendtdato = OffsetDateTime.now()
 	)
 
 
 private fun avledOpplastingsstatusVedInnsending(filDto: FilDto?, vedleggDto: VedleggDto): OpplastingsStatusDto {
-	if (filDto?.data != null
-		&& (vedleggDto.opplastingsStatus == OpplastingsStatusDto.ikkeValgt || vedleggDto.opplastingsStatus == OpplastingsStatusDto.lastetOpp)
+	// Dersom det er lastet opp en eller flere filer på vedlegget så skal filDto != null og størrelsen være satt
+	if ((filDto != null) && (filDto.storrelse!! > 0)
+		&& ((vedleggDto.opplastingsStatus == OpplastingsStatusDto.ikkeValgt) || (vedleggDto.opplastingsStatus == OpplastingsStatusDto.lastetOpp))
 	) {
 		return OpplastingsStatusDto.lastetOpp
 	}

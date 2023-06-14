@@ -48,9 +48,12 @@ class InnsendingService(
 
 		// Det er ikke nødvendig å opprette og lagre kvittering(L7) i følge diskusjon 3/11.
 
-		// anta at filene til et vedlegg allerede er konvertert til PDF ved lagring, men må merges og sendes til soknadsfillager
-		// dersom det ikke er lastet opp filer på et obligatorisk vedlegg, skal status settes SENDES_SENERE
-		// etter at vedleggsfilen er overført soknadsfillager, skal lokalt lagrede filer på vedlegget slettes.
+		// Anta at filene til et vedlegg allerede er konvertert til PDF ved lagring.
+		// Eventuell varianter av hoveddokument skal være på annet format enn PDF.
+		// Dummy hoveddokument skal genereres for ettersendingssøknader
+		// Kvittering skal genereres og sendes sammen med søknad/vedlegg
+		// Etter vellykket innsending skal status for søknad og innsendte søknader settes til INNSENDT.
+		// Dersom det ikke er lastet opp filer på et obligatorisk vedlegg, skal status settes SENDES_SENERE.
 		val soknadDto = if (erEttersending(soknadDtoInput))
 			opprettOgLagreDummyHovedDokument(soknadDtoInput)
 		else
@@ -69,13 +72,15 @@ class InnsendingService(
 		val manglendePakrevdeVedlegg =
 			alleVedlegg.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") && (it.opplastingsStatus == OpplastingsStatusDto.sendSenere || it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt) }
 
+		val startValiderFilstorrelse = System.currentTimeMillis()
 		Validerer().validerStorrelse(
 			soknadDto.innsendingsId!!,
-			filService.finnFilStorrelseSum(soknadDto),
+			filService.finnFilStorrelseSum(soknadDto, opplastedeVedlegg),
 			0,
 			restConfig.maxFileSizeSum.toLong(),
 			"errorCode.illegalAction.fileSizeSumTooLarge"
 		)
+		logger.debug("${soknadDtoInput.innsendingsId}: Tid: validerFilstørrelse = ${System.currentTimeMillis() - startValiderFilstorrelse} ")
 
 		logger.info("${soknadDtoInput.innsendingsId}: Opplastede vedlegg = ${opplastedeVedlegg.map { it.vedleggsnr + ':' + it.uuid + ':' + it.opprettetdato + ':' + it.document?.size }}")
 		logger.info("${soknadDtoInput.innsendingsId}: Ikke opplastede påkrevde vedlegg = ${manglendePakrevdeVedlegg.map { it.vedleggsnr + ':' + it.opprettetdato }}")

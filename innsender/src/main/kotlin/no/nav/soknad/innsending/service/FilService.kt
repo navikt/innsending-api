@@ -232,9 +232,10 @@ class FilService(
 		return repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, vedleggsId)
 	}
 
-	fun finnFilStorrelseSum(soknadDto: DokumentSoknadDto) = soknadDto.vedleggsListe
-		.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
-		.sumOf { repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, it.id!!) }
+	fun finnFilStorrelseSum(soknadDto: DokumentSoknadDto, vedleggListe: List<VedleggDto> = soknadDto.vedleggsListe) =
+		vedleggListe
+			.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
+			.sumOf { repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, it.id!!) }
 
 	@Transactional
 	fun slettFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long): VedleggDto {
@@ -312,12 +313,12 @@ class FilService(
 				.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
 				.map { it.id }
 				.any { vedleggService.vedleggHarFiler(soknadDto.innsendingsId!!, it!!) }
-			val allePakrevdeBehandlet = soknadDto.vedleggsListe
-				.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") }
-				.none { !(it.opplastingsStatus == OpplastingsStatusDto.innsendt || it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp) }
 
 			if (!harFil) {
 				// Hvis status for alle vedlegg som foventes sendt inn er lastetOpp, Innsendt eller SendesAvAndre, ikke kast feil. Merk at kun dummy forside vil bli sendt til arkivet.
+				val allePakrevdeBehandlet = soknadDto.vedleggsListe
+					.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") }
+					.none { !(it.opplastingsStatus == OpplastingsStatusDto.innsendt || it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp) }
 				if (allePakrevdeBehandlet) {
 					val separator = "\n"
 					logger.warn("Søker har ikke lastet opp filer på ettersendingssøknad ${soknadDto.innsendingsId}, " +
@@ -335,7 +336,7 @@ class FilService(
 	}
 
 	// For alle vedlegg til søknaden:
-	// Hoveddokument kan ha ulike varianter. Hver enkelt av disse sendes som ulike filer til soknadsfillager.
+	// Hoveddokument kan ha ulike varianter. Hver enkelt av disse sendes inn som ulike vedlegg.
 	// Bruker kan ha lastet opp flere filer for øvrige vedlegg. Disse må merges og sendes som en fil.
 	fun ferdigstillVedleggsFiler(soknadDto: DokumentSoknadDto): List<VedleggDto> {
 		return soknadDto.vedleggsListe.map {
@@ -362,27 +363,29 @@ class FilService(
 		).filter { it.data != null }
 		if (filer.isEmpty()) return null
 
-		val vedleggsFil: ByteArray? =
-			if (vedleggDto.erHoveddokument && vedleggDto.erVariant) {
-				if (filer.size > 1) {
-					logger.warn(
-						"${soknadDto.innsendingsId}: soknadDtoVedlegg ${vedleggDto.id} er hoveddokument og er variant - " +
-							"${vedleggDto.tittel} har flere opplastede filer, velger første"
-					)
-				}
-				filer[0].data
-			} else {
-				PdfMerger().mergePdfer(filer.map { it.data!! })
-			}
+		/*
+				val vedleggsFil: ByteArray? =
+					if (vedleggDto.erHoveddokument && vedleggDto.erVariant) {
+						if (filer.size > 1) {
+							logger.warn(
+								"${soknadDto.innsendingsId}: soknadDtoVedlegg ${vedleggDto.id} er hoveddokument og er variant - " +
+									"${vedleggDto.tittel} har flere opplastede filer, velger første"
+							)
+						}
+						filer[0].data
+					} else {
+						PdfMerger().mergePdfer(filer.map { it.data!! })
+					}
+		*/
 
 		return FilDto(
-			vedleggDto.id!!,
-			null,
-			vedleggDto.vedleggsnr!!,
-			filer[0].mimetype,
-			vedleggsFil?.size,
-			vedleggsFil,
-			filer[0].opprettetdato
+			vedleggsid = vedleggDto.id!!,
+			id = null,
+			filnavn = vedleggDto.vedleggsnr!!,
+			mimetype = filer[0].mimetype,
+			storrelse = filer.sumOf { it.storrelse ?: 0 },
+			data = null,
+			opprettetdato = filer[0].opprettetdato
 		)
 	}
 
