@@ -358,25 +358,10 @@ class FilService(
 			soknadDto,
 			innsendingsId,
 			vedleggDto.id!!,
-			medFil = true,
+			medFil = false,
 			kastFeilNarNull = false
-		).filter { it.data != null }
+		).filter { it.storrelse != null && it.storrelse!! > 0 }
 		if (filer.isEmpty()) return null
-
-		/*
-				val vedleggsFil: ByteArray? =
-					if (vedleggDto.erHoveddokument && vedleggDto.erVariant) {
-						if (filer.size > 1) {
-							logger.warn(
-								"${soknadDto.innsendingsId}: soknadDtoVedlegg ${vedleggDto.id} er hoveddokument og er variant - " +
-									"${vedleggDto.tittel} har flere opplastede filer, velger første"
-							)
-						}
-						filer[0].data
-					} else {
-						PdfMerger().mergePdfer(filer.map { it.data!! })
-					}
-		*/
 
 		return FilDto(
 			vedleggsid = vedleggDto.id!!,

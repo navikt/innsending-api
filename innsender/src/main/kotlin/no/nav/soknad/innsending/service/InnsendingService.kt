@@ -59,19 +59,18 @@ class InnsendingService(
 		else
 			soknadDtoInput
 
-		val start = System.currentTimeMillis()
-		filService.validerAtMinstEnFilErLastetOpp(soknadDto)
-		logger.debug("${soknadDtoInput.innsendingsId}: Tid: validerAtMinstEnFilErLastetOpp = ${System.currentTimeMillis() - start} ")
-
-		// Vedleggsliste med opplastede dokument og status= LASTET_OPP for de som skal sendes soknadsfillager
-		val startMergeAvFiler = System.currentTimeMillis()
+		// Finn alleVedlegg med korrekt status i forhold til hvem som skal sendes inn
+		val startFerdigstillingAvFiler = System.currentTimeMillis()
 		val alleVedlegg: List<VedleggDto> = filService.ferdigstillVedleggsFiler(soknadDto)
-		logger.debug("${soknadDtoInput.innsendingsId}: Tid: ferdigstillVedleggsFiler = ${System.currentTimeMillis() - startMergeAvFiler} ")
+		logger.debug("${soknadDtoInput.innsendingsId}: Tid: ferdigstillVedleggsFiler = ${System.currentTimeMillis() - startFerdigstillingAvFiler} ")
 
 		val opplastedeVedlegg = alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
 		val manglendePakrevdeVedlegg =
 			alleVedlegg.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") && (it.opplastingsStatus == OpplastingsStatusDto.sendSenere || it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt) }
 
+		validerAtSoknadHarEndringSomKanSendesInn(soknadDto, opplastedeVedlegg, alleVedlegg)
+
+		// Verifiser at total størrelse på vedlegg som skal sendes inn ikke overskrider maxFileSizeSum
 		val startValiderFilstorrelse = System.currentTimeMillis()
 		Validerer().validerStorrelse(
 			soknadDto.innsendingsId!!,
@@ -89,20 +88,20 @@ class InnsendingService(
 		val kvitteringForArkivering =
 			lagInnsendingsKvitteringOgLagre(soknadDto, opplastedeVedlegg, manglendePakrevdeVedlegg)
 		logger.debug("${soknadDtoInput.innsendingsId}: Tid: lagInnsendingsKvittering = ${System.currentTimeMillis() - startLagKvittering} ")
-		logger.debug("${soknadDtoInput.innsendingsId}: skjemanr = ${kvitteringForArkivering.vedleggsnr} (kvittering) med uuid = ${kvitteringForArkivering.uuid}")
+
+		// Ekstra sjekk på at søker ikke allerede har sendt inn søknaden. Dette fordi det har vært tilfeller der søker har klart å trigge innsending request av søknaden flere ganger på rappen
+		val soknadDb = repo.hentSoknadDb(soknadDto.id!!)
+		if (soknadDb.get().status == SoknadsStatus.Innsendt) {
+			logger.warn("${soknadDto.innsendingsId}: Søknad allerede innsendt, avbryter")
+			throw IllegalActionException(
+				"Søknaden er allerede sendt inn",
+				"Søknaden er innsendt og kan ikke sendes på nytt.",
+				"errorCode.illegalAction.applicationSentInOrDeleted"
+			)
+		}
 
 		// send soknadmetada til soknadsmottaker
 		try {
-			val soknadDb = repo.hentSoknadDb(soknadDto.id!!)
-			if (soknadDb.get().status == SoknadsStatus.Innsendt) {
-				logger.warn("${soknadDto.innsendingsId}: Søknad allerede innsendt, avbryter")
-				throw IllegalActionException(
-					"Søknaden er allerede sendt inn",
-					"Søknaden er innsendt og kan ikke sendes på nytt.",
-					"errorCode.illegalAction.applicationSentInOrDeleted"
-				)
-			}
-
 			val sendMeldingTilSoknadsmottaker = System.currentTimeMillis()
 			soknadsmottakerAPI.sendInnSoknad(soknadDto, (listOf(kvitteringForArkivering) + opplastedeVedlegg))
 			logger.debug("${soknadDtoInput.innsendingsId}: Tid: sendMeldingTilSoknadsmottaker = ${System.currentTimeMillis() - sendMeldingTilSoknadsmottaker} ")
@@ -155,7 +154,44 @@ class InnsendingService(
 			)
 		}
 		logger.debug("${soknadDtoInput.innsendingsId}: Tid: oppdatering av status på vedlegg og søknad = ${System.currentTimeMillis() - startOppdaterStatusVedleggOgSoknad} ")
+
 		return Pair(opplastedeVedlegg, manglendePakrevdeVedlegg)
+	}
+
+	private fun validerAtSoknadHarEndringSomKanSendesInn(
+		soknadDto: DokumentSoknadDto,
+		opplastedeVedlegg: List<VedleggDto>,
+		alleVedlegg: List<VedleggDto>
+	) {
+		val start = System.currentTimeMillis()
+		if (!erEttersending(soknadDto)) {
+			if ((opplastedeVedlegg.isEmpty() || opplastedeVedlegg.filter { it.erHoveddokument && !it.erVariant }.isEmpty())) {
+				throw IllegalActionException(
+					"Søker må ha lastet opp dokumenter til søknaden for at den skal kunne sendes inn",
+					"Innsending avbrutt da hoveddokument ikke finnes",
+					"errorCode.illegalAction.sendInErrorNoApplication"
+				)
+			}
+		} else {
+			if ((opplastedeVedlegg.isEmpty() || opplastedeVedlegg.filter { !it.erHoveddokument }.isEmpty())) {
+				val allePakrevdeBehandlet = alleVedlegg
+					.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") }
+					.none { !(it.opplastingsStatus == OpplastingsStatusDto.innsendt || it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp) }
+				if (allePakrevdeBehandlet) {
+					val separator = "\n"
+					logger.warn("Søker har ikke lastet opp filer på ettersendingssøknad ${soknadDto.innsendingsId}, " +
+						"men det er ikke gjenstående arbeid på noen av de påkrevde vedleggene. Vedleggsstatus:\n" +
+						soknadDto.vedleggsListe.joinToString(separator) { it.tittel + ", med status = " + it.opplastingsStatus + "\n" })
+				} else {
+					throw IllegalActionException(
+						"Søker må ha ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
+						"Innsending avbrutt da ingen vedlegg er lastet opp",
+						"errorCode.illegalAction.sendInErrorNoChange"
+					)
+				}
+			}
+		}
+		logger.debug("${soknadDto.innsendingsId}: Tid: validerAtMinstEnFilErLastetOpp = ${System.currentTimeMillis() - start} ")
 	}
 
 	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): KvitteringsDto {
