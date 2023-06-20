@@ -29,9 +29,11 @@
 
 	<springProfile name="docker,local">
 		<appender name="STDOUT_JSON" class="ch.qos.logback.core.ConsoleAppender">
-			<encoder>
-				<pattern>%d{HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{15}) - %msg %n</pattern>
-			</encoder>
+			<layout class="ch.qos.logback.classic.PatternLayout">
+				<pattern>
+					%green(%d{HH:mm:ss}) %cyan([%-5.5t]) %boldCyan(%0.-5p) %yellow(%logger{36}) %cyan(:) %m%n
+				</pattern>
+			</layout>
 		</appender>
 
 		<root level="INFO">

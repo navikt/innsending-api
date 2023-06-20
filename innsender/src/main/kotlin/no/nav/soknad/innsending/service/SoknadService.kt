@@ -508,10 +508,8 @@ class SoknadService(
 		val soknadsId = oppdatertSoknad.id!!
 
 		// Oppdater vedlegg
-		if (status == SoknadsStatus.Utfylt) {
-			dokumentSoknadDto.vedleggsListe.forEach { nyttVedlegg ->
-				vedleggService.lagreVedleggVedOppdatering(eksisterendeSoknad, nyttVedlegg, soknadsId)
-			}
+		dokumentSoknadDto.vedleggsListe.forEach { nyttVedlegg ->
+			vedleggService.lagreVedleggVedOppdatering(eksisterendeSoknad, nyttVedlegg, soknadsId)
 		}
 
 		logger.info("Oppdatert søknad for innsendingsId: {}", eksisterendeSoknad.innsendingsId)
