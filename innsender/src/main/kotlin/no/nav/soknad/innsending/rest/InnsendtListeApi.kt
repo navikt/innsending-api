@@ -14,7 +14,11 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@ProtectedWithClaims(issuer = Constants.TOKENX, claimMap = [Constants.CLAIM_ACR_LEVEL_4])
+@ProtectedWithClaims(
+	issuer = Constants.TOKENX,
+	claimMap = [Constants.CLAIM_ACR_LEVEL_4, Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH],
+	combineWithOr = true
+)
 class InnsendtListeApi(
 	val safService: SafService,
 	val tilgangskontroll: Tilgangskontroll,
