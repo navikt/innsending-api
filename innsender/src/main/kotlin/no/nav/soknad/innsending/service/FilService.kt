@@ -291,49 +291,6 @@ class FilService(
 		}
 	}
 
-	fun validerAtMinstEnFilErLastetOpp(soknadDto: DokumentSoknadDto) {
-		if (!erEttersending(soknadDto)) {
-			// For å sende inn en søknad må det være lastet opp en fil på hoveddokumentet
-			val harFil = soknadDto.vedleggsListe
-				.filter { it.erHoveddokument && !it.erVariant && it.id != null }
-				.map { it.id }
-				.any { vedleggService.vedleggHarFiler(soknadDto.innsendingsId!!, it!!) }
-
-			if (!harFil) {
-				throw IllegalActionException(
-					"Søker må ha lastet opp dokumenter til søknaden for at den skal kunne sendes inn",
-					"Innsending avbrutt da hoveddokument ikke finnes",
-					"errorCode.illegalAction.sendInErrorNoApplication"
-				)
-			}
-
-		} else {
-			// For å sende inn en ettersendingssøknad må det være lastet opp minst ett vedlegg
-			val harFil = soknadDto.vedleggsListe
-				.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
-				.map { it.id }
-				.any { vedleggService.vedleggHarFiler(soknadDto.innsendingsId!!, it!!) }
-
-			if (!harFil) {
-				// Hvis status for alle vedlegg som foventes sendt inn er lastetOpp, Innsendt eller SendesAvAndre, ikke kast feil. Merk at kun dummy forside vil bli sendt til arkivet.
-				val allePakrevdeBehandlet = soknadDto.vedleggsListe
-					.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") }
-					.none { !(it.opplastingsStatus == OpplastingsStatusDto.innsendt || it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp) }
-				if (allePakrevdeBehandlet) {
-					val separator = "\n"
-					logger.warn("Søker har ikke lastet opp filer på ettersendingssøknad ${soknadDto.innsendingsId}, " +
-						"men det er ikke gjenstående arbeid på noen av de påkrevde vedleggene. Vedleggsstatus:\n" +
-						soknadDto.vedleggsListe.joinToString(separator) { it.tittel + ", med status = " + it.opplastingsStatus + "\n" })
-				} else {
-					throw IllegalActionException(
-						"Søker må ha ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
-						"Innsending avbrutt da ingen vedlegg er lastet opp",
-						"errorCode.illegalAction.sendInErrorNoChange"
-					)
-				}
-			}
-		}
-	}
 
 	// For alle vedlegg til søknaden:
 	// Hoveddokument kan ha ulike varianter. Hver enkelt av disse sendes inn som ulike vedlegg.

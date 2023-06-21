@@ -201,13 +201,13 @@ class RepositoryUtils(
 		)
 	}
 
-	fun hentVedleggGittVedleggsUrl(vedleggsUrl: String): Optional<VedleggDbData> = try {
-		vedleggRepository.findByVedleggsurl(vedleggsUrl)
+	fun hentVedleggGittUuid(uuid: String): Optional<VedleggDbData> = try {
+		vedleggRepository.findByUuid(uuid)
 	} catch
 		(ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
-			"Feil ved forsøk på henting av vedlegg med vedleggsurl $vedleggsUrl",
+			"Feil ved forsøk på henting av vedlegg med uuid $uuid",
 			"errorCode.backendError.attachmentFetchError"
 		)
 	}
@@ -444,7 +444,7 @@ class RepositoryUtils(
 		)
 	}
 
-	fun hentHendelse(innsendingsId: String, hendelseType: HendelseType?): List<HendelseDbData> = try {
+	fun hentHendelse(innsendingsId: String, hendelseType: HendelseType? = null): List<HendelseDbData> = try {
 		if (hendelseType == null) {
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(innsendingsId)
 		} else {

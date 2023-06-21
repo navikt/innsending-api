@@ -44,7 +44,7 @@ class InnsendtListeApi(
 		val innsendteFiler = innsendingService.getFiles(xInnsendingId, uuids)
 		logger.info(
 			"$xInnsendingId: Status for henting av følgende innsendte filer ${
-				innsendteFiler.map { it.id + ":" + it.status }.toList()
+				innsendteFiler.map { it.id + ":" + it.fileStatus }.toList()
 			}"
 		)
 		return ResponseEntity

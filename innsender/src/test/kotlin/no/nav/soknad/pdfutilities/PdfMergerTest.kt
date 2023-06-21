@@ -37,23 +37,10 @@ class PdfMergerTest {
 
 	@Test
 	fun `sjekk merging av mange pdf filer`() {
-
 		val pdfFiler = mutableListOf<ByteArray>()
-		val antallFiler = 2
+		val antallFiler = 10
+
 		for (i in 0..antallFiler - 1) {
-			pdfFiler.add(konverterTilPdfOgReturner("/2MbJpg.jpg"))
-		}
-
-		val start = System.currentTimeMillis()
-		val mergedPdf = pdfMerger.mergePdfer(pdfFiler)
-		val ferdig = System.currentTimeMillis()
-		println("Tid brukt for å merge ${pdfFiler.size} PDFer = ${ferdig - start}")
-
-		assertEquals(pdfFiler.size, AntallSider().finnAntallSider(mergedPdf))
-		val erPdfa = validerer.isPDFa(mergedPdf)
-		TestCase.assertTrue(erPdfa)
-
-		for (i in 0..antallFiler + 6 - 1) {
 			pdfFiler.add(konverterTilPdfOgReturner("/2MbJpg.jpg"))
 		}
 
@@ -70,7 +57,7 @@ class PdfMergerTest {
 
 
 	@Test
-	fun `sjekk merging av fleree pdfer der en inneholder mange sider`() {
+	fun `sjekk merging av flere pdfer der en inneholder mange sider`() {
 
 		val pdfFiler = mutableListOf<ByteArray>()
 		val antallFiler = 2

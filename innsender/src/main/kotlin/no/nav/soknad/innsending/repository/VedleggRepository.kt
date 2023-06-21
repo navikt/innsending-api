@@ -18,8 +18,8 @@ interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
 	@Query(value = "FROM VedleggDbData WHERE id = :vedleggsid")
 	fun findByVedleggsid(@Param("vedleggsid") vedleggsid: Long): Optional<VedleggDbData>
 
-	@Query(value = "FROM VedleggDbData WHERE vedleggsurl = :vedleggsUrl")
-	fun findByVedleggsurl(@Param("vedleggsUrl") vedleggsUrl: String): Optional<VedleggDbData>
+	@Query(value = "FROM VedleggDbData WHERE uuid = :uuid")
+	fun findByUuid(@Param("uuid") uuid: String): Optional<VedleggDbData>
 
 	@Transactional
 	@Modifying

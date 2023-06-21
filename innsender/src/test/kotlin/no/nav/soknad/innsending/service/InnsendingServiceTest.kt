@@ -13,6 +13,7 @@ import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
+import no.nav.soknad.innsending.model.SoknadFile
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
@@ -73,7 +74,6 @@ class InnsendingServiceTest : ApplicationTest() {
 		exceptionHelper = exceptionHelper,
 		soknadsmottakerAPI = soknadsmottakerAPI,
 		restConfig = restConfig,
-		fillagerAPI = fillagerAPI,
 		pdlInterface = pdlInterface,
 	)
 
@@ -118,7 +118,7 @@ class InnsendingServiceTest : ApplicationTest() {
 
 		// Så skal
 		Assertions.assertEquals(1, hoveddok.size)
-		Assertions.assertTrue(hoveddok.all { it.status == "ok" })
+		Assertions.assertTrue(hoveddok.all { it.fileStatus == SoknadFile.FileStatus.ok })
 
 	}
 
@@ -299,7 +299,6 @@ class InnsendingServiceTest : ApplicationTest() {
 		assertThrows<IllegalActionException> {
 			vedleggService.leggTilVedlegg(dokumentSoknadDto, null)
 		}
-		//soknadService.hentSoknad(dokumentSoknadDto.innsendingsId!!)
 
 		// Hvis hent innsendt hoveddokument
 		val vedleggsFiler = innsendingService.getFiles(
@@ -309,7 +308,7 @@ class InnsendingServiceTest : ApplicationTest() {
 
 		// Så skal
 		Assertions.assertEquals(2, vedleggsFiler.size)
-		Assertions.assertTrue(vedleggsFiler.all { it.status == "ok" })
+		Assertions.assertTrue(vedleggsFiler.all { it.fileStatus == SoknadFile.FileStatus.ok })
 		Assertions.assertEquals(2, AntallSider().finnAntallSider(vedleggsFiler.last().content))
 
 	}

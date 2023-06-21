@@ -123,7 +123,6 @@ class SoknadServiceTest : ApplicationTest() {
 		exceptionHelper = exceptionHelper,
 		soknadsmottakerAPI = soknadsmottakerAPI,
 		restConfig = restConfig,
-		fillagerAPI = fillagerAPI,
 		pdlInterface = pdlInterface,
 	)
 

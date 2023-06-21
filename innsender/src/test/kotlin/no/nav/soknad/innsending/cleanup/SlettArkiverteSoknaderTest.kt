@@ -87,7 +87,6 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 		vedleggService = vedleggService,
 		soknadsmottakerAPI = soknadsmottakerAPI,
 		restConfig = restConfig,
-		fillagerAPI = fillagerAPI,
 		exceptionHelper = exceptionHelper,
 		ettersendingService = ettersendingService,
 		brukernotifikasjonPublisher = brukernotifikasjonPublisher,
