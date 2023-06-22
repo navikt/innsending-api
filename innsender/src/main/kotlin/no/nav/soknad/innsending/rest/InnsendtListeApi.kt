@@ -39,7 +39,7 @@ class InnsendtListeApi(
 	@Timed(InnsenderOperation.HENT)
 	@ProtectedWithClaims(issuer = Constants.AZURE)
 	override fun hentInnsendteFiler(uuids: List<String>, xInnsendingId: String): ResponseEntity<List<SoknadFile>> {
-		logger.info("$xInnsendingId: Kall for å hente liste av filer til en innsendt søknad")
+		logger.info("$xInnsendingId: Kall for å hente filene ${uuids} til en innsendt søknad")
 
 		val innsendteFiler = innsendingService.getFiles(xInnsendingId, uuids)
 		logger.info(

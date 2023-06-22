@@ -427,7 +427,7 @@ class InnsendingService(
 			// Har uuids og matchende vedleggsliste med filene som skal returneres til soknadsarkiverer
 			val idResult = mapToSoknadFiles(uuids, mergedVedlegg, erArkivert, innsendingId)
 
-			val hentet = idResult.map { it.id + "-" + it.fileStatus }.joinToString(",")
+			val hentet = idResult.map { it.id + "-" + it.fileStatus + ": size=" + it.content?.size }.joinToString(",")
 			logger.info("$innsendingId: Hentet $hentet")
 			return idResult
 
@@ -460,14 +460,14 @@ class InnsendingService(
 			.map {
 				SoknadFile(
 					id = it.uuid!!,
-					fileStatus = if (it.document != null) SoknadFile.FileStatus.ok else if (erArkivert) SoknadFile.FileStatus.deleted else SoknadFile.FileStatus.notMinusFound,
+					fileStatus = if (it.document != null && it.document!!.isNotEmpty()) SoknadFile.FileStatus.ok else if (erArkivert) SoknadFile.FileStatus.deleted else SoknadFile.FileStatus.notMinusFound,
 					content = it.document,
 					createdAt = it.innsendtdato
 				)
 			}
 			.onEach {
 				if (it.fileStatus != SoknadFile.FileStatus.ok) {
-					logger.info("$innsendingId: Failed to find vedlegg with id '${it.id}' in database")
+					logger.info("$innsendingId: Failed to find vedlegg with uuid '${it.id}' in database")
 				}
 			}
 		return idResult
