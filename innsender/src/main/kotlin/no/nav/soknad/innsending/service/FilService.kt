@@ -54,9 +54,7 @@ class FilService(
 		// Lag ny fil eller oppdater eksisterende fil
 		val filDto = lagFilDto(eksisterendeFil, matchInnsendtVedleggDto, lagretVedleggDto)
 		lagreFil(savedDokumentSoknadDto, filDto)
-
-		return
-
+		
 	}
 
 	private fun lagFilDto(
