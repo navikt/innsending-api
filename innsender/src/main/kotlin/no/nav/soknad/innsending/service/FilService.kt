@@ -338,13 +338,20 @@ class FilService(
 			val filer = repo.hentFilerTilVedlegg(innsendingsId, it.id!!).filterNot { it.data == null }
 			val vedleggsFil =
 				if (filer.isEmpty()) {
-					logger.info("$innsendingsId: fant ikke opplastede filer til vedlegg ${it.uuid}")
+					logger.info("$innsendingsId: vedlegg ${it.uuid} har ikke opplastede filer")
 					null
 				} else if (filer[0].mimetype == Mimetype.applicationSlashPdf.value) {
 					logger.info("$innsendingsId: skal merge ${filer.size} PDFer til vedlegg ${it.uuid}")
-					PdfMerger().mergePdfer(filer.map { it.data!! }.toList())
+					if (filer.all { it.data == null }) {
+						logger.warn("$innsendingsId: vedlegg ${it.uuid} mangler opplastet filer på alle filobjekter, returnerer null")
+						null
+					} else {
+						PdfMerger().mergePdfer(filer.map { it.data!! }.toList())
+					}
 				} else {
-					logger.info("$innsendingsId: ikke PDF på vedlegg ${it.uuid}")
+					if (filer.size > 1) {
+						logger.warn("$innsendingsId: vedlegg ${it.uuid} er ikke PDF og det er lastet opp ${filer.size}  filer på vedlegget, kan ikke merge returnerer kun første filen")
+					}
 					filer[0].data
 				}
 			logger.info("$innsendingsId: størrelse ${vedleggsFil?.size} til vedlegg ${it.uuid}")
