@@ -379,7 +379,7 @@ class InnsendingService(
 						id = it,
 						content = null,
 						createdAt = null,
-						fileStatus = SoknadFile.FileStatus.notMinusFound
+						fileStatus = SoknadFile.FileStatus.notfound
 					)
 				}
 					.toList()
@@ -408,7 +408,7 @@ class InnsendingService(
 						id = it,
 						content = null,
 						createdAt = null,
-						fileStatus = SoknadFile.FileStatus.notMinusFound
+						fileStatus = SoknadFile.FileStatus.notfound
 					)
 				}
 					.toList()
@@ -460,7 +460,7 @@ class InnsendingService(
 			.map {
 				SoknadFile(
 					id = it.uuid!!,
-					fileStatus = if (it.document != null && it.document!!.isNotEmpty()) SoknadFile.FileStatus.ok else if (erArkivert) SoknadFile.FileStatus.deleted else SoknadFile.FileStatus.notMinusFound,
+					fileStatus = if (it.document != null && it.document!!.isNotEmpty()) SoknadFile.FileStatus.ok else if (erArkivert) SoknadFile.FileStatus.deleted else SoknadFile.FileStatus.notfound,
 					content = it.document,
 					createdAt = it.innsendtdato
 				)
