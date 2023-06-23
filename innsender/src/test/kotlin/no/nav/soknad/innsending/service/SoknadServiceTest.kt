@@ -11,7 +11,6 @@ import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.skjema.SkjemaClient
-import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
@@ -82,9 +81,6 @@ class SoknadServiceTest : ApplicationTest() {
 
 	@InjectMockKs
 	private val hentSkjemaData = mockk<SkjemaClient>()
-
-	@InjectMockKs
-	private val fillagerAPI = mockk<FillagerInterface>()
 
 	@InjectMockKs
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
@@ -199,7 +195,6 @@ class SoknadServiceTest : ApplicationTest() {
 		// Sender inn original soknad
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService
@@ -260,7 +255,6 @@ class SoknadServiceTest : ApplicationTest() {
 		// Sender inn søknaden
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService
@@ -304,7 +298,6 @@ class SoknadServiceTest : ApplicationTest() {
 		// Sender inn original soknad
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService
@@ -345,7 +338,6 @@ class SoknadServiceTest : ApplicationTest() {
 
 		val ettersendingsKvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				ettersendingsSoknadDto,
 				innsendingService
@@ -378,7 +370,6 @@ class SoknadServiceTest : ApplicationTest() {
 
 		val ettersendingsKvitteringsDto2 =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				ettersendingsSoknadDto2,
 				innsendingService
@@ -541,7 +532,6 @@ class SoknadServiceTest : ApplicationTest() {
 
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService
@@ -621,7 +611,6 @@ class SoknadServiceTest : ApplicationTest() {
 		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf())
 
 		val slett = slot<List<VedleggDto>>()
-		every { fillagerAPI.slettFiler(any(), capture(slett)) } returns Unit
 
 		soknadService.slettSoknadAvBruker(dokumentSoknadDto)
 
@@ -835,8 +824,6 @@ class SoknadServiceTest : ApplicationTest() {
 		}
 
 		val vedleggDtos = slot<List<VedleggDto>>()
-
-		every { fillagerAPI.lagreFiler(any(), capture(vedleggDtos)) } returns Unit
 
 		val soknad = slot<DokumentSoknadDto>()
 		val vedleggDtos2 = slot<List<VedleggDto>>()

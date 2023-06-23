@@ -31,9 +31,6 @@ restconfig:
   maxFileSizeSum: 150
   sanityHost: https://www.nav.no
   sanityEndpoint: /soknader/api/sanity/skjemautlisting
-  filestorageHost: http://localhost:9043/filestorage-api
-  filestorageEndpoint: /filer
-  filestorageParameters: /
   filesInOneRequestToFilestorage: 10
   soknadsMottakerHost: http://localhost:9043/soknadsmottaker-api
   soknadsMottakerEndpoint: /save

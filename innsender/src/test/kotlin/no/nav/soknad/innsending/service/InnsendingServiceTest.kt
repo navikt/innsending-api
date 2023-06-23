@@ -8,7 +8,6 @@ import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
-import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
@@ -52,9 +51,6 @@ class InnsendingServiceTest : ApplicationTest() {
 	private lateinit var exceptionHelper: ExceptionHelper
 
 	@InjectMockKs
-	private val fillagerAPI = mockk<FillagerInterface>()
-
-	@InjectMockKs
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
 
 	@InjectMockKs
@@ -96,7 +92,6 @@ class InnsendingServiceTest : ApplicationTest() {
 
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService
@@ -148,7 +143,6 @@ class InnsendingServiceTest : ApplicationTest() {
 
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService
@@ -183,7 +177,6 @@ class InnsendingServiceTest : ApplicationTest() {
 		// Sender inn original soknad
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService
@@ -221,7 +214,6 @@ class InnsendingServiceTest : ApplicationTest() {
 		// Sender inn original soknad
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService
@@ -255,7 +247,6 @@ class InnsendingServiceTest : ApplicationTest() {
 		// Sender inn original soknad
 		assertThrows<IllegalActionException> {
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService
@@ -287,7 +278,6 @@ class InnsendingServiceTest : ApplicationTest() {
 
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService

@@ -85,15 +85,6 @@ no.nav.security.jwt:
         token-exchange:
           audience: ${PDL_TOKEN_X_AUDIENCE}
 
-      soknadsfillager:
-        token-endpoint-url: ${AZURE_OPENID_CONFIG_TOKEN_ENDPOINT}
-        grant-type: client_credentials
-        scope: ${SOKNADSFILLAGER_SCOPE}
-        authentication:
-          client-id: ${AZURE_APP_CLIENT_ID}
-          client-secret: ${AZURE_APP_CLIENT_SECRET}
-          client-auth-method: client_secret_basic
-
       soknadsmottaker:
         token-endpoint-url: ${AZURE_OPENID_CONFIG_TOKEN_ENDPOINT}
         grant-type: client_credentials

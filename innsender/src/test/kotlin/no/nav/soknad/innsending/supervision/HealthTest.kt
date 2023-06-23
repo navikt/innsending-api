@@ -23,10 +23,6 @@ class HealthTest : ApplicationTest() {
 	private lateinit var saf: HealthRequestInterface
 
 	@Autowired
-	@Qualifier("fillager")
-	private lateinit var fillager: HealthRequestInterface
-
-	@Autowired
 	@Qualifier("mottaker")
 	private lateinit var mottaker: HealthRequestInterface
 

@@ -15,7 +15,6 @@ class RestConfig {
 	var maxFileSizeSum by Delegates.notNull<Int>()
 	lateinit var sanityHost: String
 	lateinit var sanityEndpoint: String
-	lateinit var filestorageHost: String
 	var filesInOneRequestToFilestorage by Delegates.notNull<Int>()
 	lateinit var soknadsMottakerHost: String
 	lateinit var frontEndFortsettEndpoint: String

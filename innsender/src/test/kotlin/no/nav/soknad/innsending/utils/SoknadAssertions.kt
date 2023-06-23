@@ -2,7 +2,6 @@ package no.nav.soknad.innsending.utils
 
 import io.mockk.every
 import io.mockk.slot
-import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.KvitteringsDto
@@ -43,7 +42,6 @@ class SoknadAssertions {
 		}
 
 		fun testOgSjekkInnsendingAvSoknad(
-			fillagerAPI: FillagerInterface,
 			soknadsmottakerAPI: MottakerInterface,
 			dokumentSoknadDto: DokumentSoknadDto,
 			innsendingService: InnsendingService
