@@ -16,14 +16,6 @@ class OkHttpOAuth2ClientConfig {
 
 	@Bean
 	@Profile("prod | dev")
-	@Qualifier("soknadsfillagerClient")
-	fun soknadsfillagerClient(
-		clientConfigProperties: ClientConfigurationProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService
-	) = okHttpOAuth2Client(clientConfigProperties.registration["soknadsfillager"]!!, oAuth2AccessTokenService)
-
-	@Bean
-	@Profile("prod | dev")
 	@Qualifier("soknadsmottakerClient")
 	fun soknadsmottakerClient(
 		clientConfigProperties: ClientConfigurationProperties,
