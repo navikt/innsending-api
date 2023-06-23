@@ -22,7 +22,7 @@ services:
         - "9064:9064"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DATABASE_PORT: 5432
+      DATABASE_PORT: 5432 # porten i docker, bruk den eksponerte 5450 porten for å koble til utenfra
       DATABASE_HOST: db
 
 volumes:
