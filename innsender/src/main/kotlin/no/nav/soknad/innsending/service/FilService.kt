@@ -37,24 +37,40 @@ class FilService(
 	) {
 		val matchInnsendtVedleggDto = innsendtVedleggDtos.firstOrNull {
 			it.vedleggsnr == lagretVedleggDto.vedleggsnr && it.mimetype == lagretVedleggDto.mimetype && it.document?.isNotEmpty() ?: false
-				&& it.erHoveddokument == lagretVedleggDto.erHoveddokument && it.erVariant == lagretVedleggDto.erVariant
+				&& it.erHoveddokument == lagretVedleggDto.erHoveddokument && it.erVariant == lagretVedleggDto.erVariant && it.formioId == lagretVedleggDto.formioId
+		} ?: run {
+			logger.error("Fant ikke matchende lagret vedlegg med innsendt vedlegg")
+			throw BackendErrorException(
+				"Fant ikke matchende lagret vedlegg ${lagretVedleggDto.tittel} med innsendt vedlegg, er variant = ${lagretVedleggDto.erVariant}",
+				"Feil ved lagring av dokument ${lagretVedleggDto.tittel}, prøv igjen",
+				"errorCode.backendError.fileInconsistencyError"
+			)
 		}
 
-		if (matchInnsendtVedleggDto != null) {
-			val filDto = FilDto(
-				lagretVedleggDto.id!!, null, lagFilNavn(matchInnsendtVedleggDto), lagretVedleggDto.mimetype!!,
-				matchInnsendtVedleggDto.document?.size, matchInnsendtVedleggDto.document, OffsetDateTime.now()
-			)
-			lagreFil(savedDokumentSoknadDto, filDto)
-			return
-		}
-		logger.error("Fant ikke matchende lagret vedlegg med innsendt vedlegg")
-		throw BackendErrorException(
-			"Fant ikke matchende lagret vedlegg ${lagretVedleggDto.tittel} med innsendt vedlegg, er variant = ${lagretVedleggDto.erVariant}",
-			"Feil ved lagring av dokument ${lagretVedleggDto.tittel}, prøv igjen",
-			"errorCode.backendError.fileInconsistencyError"
-		)
+		// Finn eksisterende filer
+		val eksisterendeVedleggsFiler =
+			hentFiler(savedDokumentSoknadDto, savedDokumentSoknadDto.innsendingsId!!, lagretVedleggDto.id!!)
+		val eksisterendeFil = eksisterendeVedleggsFiler.find { it.vedleggsid == lagretVedleggDto.id }
+
+		// Lag ny fil eller oppdater eksisterende fil
+		val filDto = lagFilDto(eksisterendeFil, matchInnsendtVedleggDto, lagretVedleggDto)
+		lagreFil(savedDokumentSoknadDto, filDto)
+		
 	}
+
+	private fun lagFilDto(
+		eksisterendeFil: FilDto?,
+		matchInnsendtVedleggDto: VedleggDto,
+		lagretVedleggDto: VedleggDto
+	) = FilDto(
+		vedleggsid = lagretVedleggDto.id!!,
+		id = eksisterendeFil?.id,
+		filnavn = lagFilNavn(matchInnsendtVedleggDto),
+		mimetype = lagretVedleggDto.mimetype,
+		storrelse = matchInnsendtVedleggDto.document?.size,
+		data = matchInnsendtVedleggDto.document,
+		opprettetdato = OffsetDateTime.now()
+	)
 
 	@Transactional
 	fun lagreFil(soknadDto: DokumentSoknadDto, filDto: FilDto): FilDto {

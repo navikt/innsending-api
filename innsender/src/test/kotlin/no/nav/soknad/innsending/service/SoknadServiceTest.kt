@@ -20,9 +20,9 @@ import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
-import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.getBytesFromFile
 import no.nav.soknad.innsending.utils.SoknadAssertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
@@ -696,16 +696,17 @@ class SoknadServiceTest : ApplicationTest() {
 		val skjemanr = "NAV 10-07.04"
 		val tittel = "Tittel"
 		val spraak = "nb_no"
-		val innsendingsId = soknadService.opprettNySoknad(lagDokumentSoknad(tema, skjemanr)).innsendingsId!!
-		val eksisterendeSoknad = soknadService.hentSoknad(innsendingsId)
+
+		val eksisterendeSoknad = lagDokumentSoknad(tema, skjemanr)
+		val innsendingsId = soknadService.opprettNySoknad(eksisterendeSoknad).innsendingsId!!
 
 		val vedleggDto1 =
 			Hjelpemetoder.lagVedleggDto(
 				erHoveddokument = false,
 				vedleggsnr = "vedleggsnr1",
 				tittel = "vedleggTittel1",
-				mimeType = null,
-				fil = null,
+				mimeType = Mimetype.applicationSlashPdf.toString(),
+				fil = getBytesFromFile("/litenPdf.pdf"),
 				formioId = UUID.randomUUID().toString()
 			)
 		val vedleggDto2 =
@@ -713,8 +714,8 @@ class SoknadServiceTest : ApplicationTest() {
 				erHoveddokument = false,
 				vedleggsnr = "vedleggsnr2",
 				tittel = "vedleggTittel2",
-				mimeType = null,
-				fil = null,
+				mimeType = Mimetype.applicationSlashPdf.toString(),
+				fil = getBytesFromFile("/litenPdf.pdf"),
 				formioId = UUID.randomUUID().toString()
 			)
 
@@ -736,19 +737,21 @@ class SoknadServiceTest : ApplicationTest() {
 		soknadService.oppdaterUtfyltSoknad(innsendingsId, dokumentSoknad)
 		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
 
-		// Så
-		eksisterendeSoknad.vedleggsListe.forEach { eksisterendeVedlegg ->
-			assertNull(
-				oppdatertSoknad.vedleggsListeUtenHoveddokument.find { eksisterendeVedlegg.vedleggsnr == it.vedleggsnr },
-				"Ingen av vedleggene fra den eksisterende søknaden skal være med i den oppdaterte søknaden"
+		val filer = oppdatertSoknad.vedleggsListe.flatMap {
+			filService.hentFiler(
+				oppdatertSoknad, innsendingsId,
+				it.id!!, true
 			)
 		}
 
+		// Så
 		assertEquals(
 			4,
 			oppdatertSoknad.vedleggsListe.size,
 			"Skal ha to vedlegg i den oppdaterte søknaden + hoveddokument og variant"
 		)
+
+		assertEquals(4, filer.size, "Skal ha 4 filer lagret i databasen")
 
 		assertTrue(
 			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == vedleggDto1.vedleggsnr },
@@ -758,6 +761,7 @@ class SoknadServiceTest : ApplicationTest() {
 			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == vedleggDto2.vedleggsnr },
 			"Skal ha vedlegg 2 i den oppdaterte søknaden"
 		)
+
 
 		// og ingen ny hendelse registrert på søknad
 		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(innsendingsId)
