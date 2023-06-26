@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.OpplastingsStatus
+import no.nav.soknad.innsending.repository.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
@@ -247,9 +248,10 @@ class FilService(
 		return repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, vedleggsId)
 	}
 
-	fun finnFilStorrelseSum(soknadDto: DokumentSoknadDto) = soknadDto.vedleggsListe
-		.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
-		.sumOf { repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, it.id!!) }
+	fun finnFilStorrelseSum(soknadDto: DokumentSoknadDto, vedleggListe: List<VedleggDto> = soknadDto.vedleggsListe) =
+		vedleggListe
+			.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
+			.sumOf { repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, it.id!!) }
 
 	@Transactional
 	fun slettFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long): VedleggDto {
@@ -305,52 +307,9 @@ class FilService(
 		}
 	}
 
-	fun validerAtMinstEnFilErLastetOpp(soknadDto: DokumentSoknadDto) {
-		if (!erEttersending(soknadDto)) {
-			// For å sende inn en søknad må det være lastet opp en fil på hoveddokumentet
-			val harFil = soknadDto.vedleggsListe
-				.filter { it.erHoveddokument && !it.erVariant && it.id != null }
-				.map { it.id }
-				.any { vedleggService.vedleggHarFiler(soknadDto.innsendingsId!!, it!!) }
-
-			if (!harFil) {
-				throw IllegalActionException(
-					"Søker må ha lastet opp dokumenter til søknaden for at den skal kunne sendes inn",
-					"Innsending avbrutt da hoveddokument ikke finnes",
-					"errorCode.illegalAction.sendInErrorNoApplication"
-				)
-			}
-
-		} else {
-			// For å sende inn en ettersendingssøknad må det være lastet opp minst ett vedlegg
-			val harFil = soknadDto.vedleggsListe
-				.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
-				.map { it.id }
-				.any { vedleggService.vedleggHarFiler(soknadDto.innsendingsId!!, it!!) }
-			val allePakrevdeBehandlet = soknadDto.vedleggsListe
-				.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") }
-				.none { !(it.opplastingsStatus == OpplastingsStatusDto.innsendt || it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp) }
-
-			if (!harFil) {
-				// Hvis status for alle vedlegg som foventes sendt inn er lastetOpp, Innsendt eller SendesAvAndre, ikke kast feil. Merk at kun dummy forside vil bli sendt til arkivet.
-				if (allePakrevdeBehandlet) {
-					val separator = "\n"
-					logger.warn("Søker har ikke lastet opp filer på ettersendingssøknad ${soknadDto.innsendingsId}, " +
-						"men det er ikke gjenstående arbeid på noen av de påkrevde vedleggene. Vedleggsstatus:\n" +
-						soknadDto.vedleggsListe.joinToString(separator) { it.tittel + ", med status = " + it.opplastingsStatus + "\n" })
-				} else {
-					throw IllegalActionException(
-						"Søker må ha ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
-						"Innsending avbrutt da ingen vedlegg er lastet opp",
-						"errorCode.illegalAction.sendInErrorNoChange"
-					)
-				}
-			}
-		}
-	}
 
 	// For alle vedlegg til søknaden:
-	// Hoveddokument kan ha ulike varianter. Hver enkelt av disse sendes som ulike filer til soknadsfillager.
+	// Hoveddokument kan ha ulike varianter. Hver enkelt av disse sendes inn som ulike vedlegg.
 	// Bruker kan ha lastet opp flere filer for øvrige vedlegg. Disse må merges og sendes som en fil.
 	fun ferdigstillVedleggsFiler(soknadDto: DokumentSoknadDto): List<VedleggDto> {
 		return soknadDto.vedleggsListe.map {
@@ -372,32 +331,48 @@ class FilService(
 			soknadDto,
 			innsendingsId,
 			vedleggDto.id!!,
-			medFil = true,
+			medFil = false,
 			kastFeilNarNull = false
-		).filter { it.data != null }
+		).filter { it.storrelse != null && it.storrelse!! > 0 }
 		if (filer.isEmpty()) return null
 
-		val vedleggsFil: ByteArray? =
-			if (vedleggDto.erHoveddokument && vedleggDto.erVariant) {
-				if (filer.size > 1) {
-					logger.warn(
-						"${soknadDto.innsendingsId}: soknadDtoVedlegg ${vedleggDto.id} er hoveddokument og er variant - " +
-							"${vedleggDto.tittel} har flere opplastede filer, velger første"
-					)
-				}
-				filer[0].data
-			} else {
-				PdfMerger().mergePdfer(filer.map { it.data!! })
-			}
-
 		return FilDto(
-			vedleggDto.id!!,
-			null,
-			vedleggDto.vedleggsnr!!,
-			filer[0].mimetype,
-			vedleggsFil?.size,
-			vedleggsFil,
-			filer[0].opprettetdato
+			vedleggsid = vedleggDto.id!!,
+			id = null,
+			filnavn = vedleggDto.vedleggsnr!!,
+			mimetype = filer[0].mimetype,
+			storrelse = filer.sumOf { it.storrelse ?: 0 },
+			data = null,
+			opprettetdato = filer[0].opprettetdato
 		)
+	}
+
+	fun hentOgMergeVedleggsFiler(innsendingsId: String, vedleggDbList: List<VedleggDbData>): List<VedleggDto> {
+
+		val vedleggDtos = mutableListOf<VedleggDto>()
+		vedleggDbList.forEach {
+			val filer = repo.hentFilerTilVedlegg(innsendingsId, it.id!!).filterNot { it.data == null }
+			val vedleggsFil =
+				if (filer.isEmpty()) {
+					logger.info("$innsendingsId: vedlegg ${it.uuid} har ikke opplastede filer")
+					null
+				} else if (filer[0].mimetype == Mimetype.applicationSlashPdf.value) {
+					logger.info("$innsendingsId: skal merge ${filer.size} PDFer til vedlegg ${it.uuid}")
+					if (filer.all { it.data == null }) {
+						logger.warn("$innsendingsId: vedlegg ${it.uuid} mangler opplastet filer på alle filobjekter, returnerer null")
+						null
+					} else {
+						PdfMerger().mergePdfer(filer.map { it.data!! }.toList())
+					}
+				} else {
+					if (filer.size > 1) {
+						logger.warn("$innsendingsId: vedlegg ${it.uuid} er ikke PDF og det er lastet opp ${filer.size}  filer på vedlegget, kan ikke merge returnerer kun første filen")
+					}
+					filer[0].data
+				}
+			logger.info("$innsendingsId: størrelse ${vedleggsFil?.size} til vedlegg ${it.uuid}")
+			vedleggDtos.add(lagVedleggDto(it, vedleggsFil))
+		}
+		return vedleggDtos
 	}
 }

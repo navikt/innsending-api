@@ -13,6 +13,7 @@ import no.nav.soknad.innsending.repository.SoknadsStatus
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
@@ -175,7 +176,9 @@ class SoknadService(
 				nyesteSoknad.fristForEttersendelse
 			)
 
-			val nyesteSoknadVedleggsNrListe = nyesteSoknad.vedleggsListe.filter { !it.erHoveddokument }.map { it.vedleggsnr }
+			val nyesteSoknadVedleggsNrListe =
+				nyesteSoknad.vedleggsListe.filter { !(it.erHoveddokument || it.vedleggsnr == KVITTERINGS_NR) }
+					.map { it.vedleggsnr }
 			val filtrertVedleggsnrListe = vedleggsnrListe.filter { !nyesteSoknadVedleggsNrListe.contains(it) }
 
 			val vedleggDbDataListe =
@@ -218,7 +221,8 @@ class SoknadService(
 			)
 
 			val nyesteSoknadVedleggsNrListe =
-				arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map { it.vedleggsnr }
+				arkivertSoknad.innsendtVedleggDtos.filter { !(it.vedleggsnr == arkivertSoknad.skjemanr || it.vedleggsnr == KVITTERINGS_NR) }
+					.map { it.vedleggsnr }
 			val filtrertVedleggsnrListe =
 				opprettEttersendingGittSkjemaNr.vedleggsListe?.filter { !nyesteSoknadVedleggsNrListe.contains(it) }.orEmpty()
 
@@ -278,7 +282,8 @@ class SoknadService(
 			)
 
 			val innsendtVedleggsnrListe: List<String> =
-				arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map { it.vedleggsnr }
+				arkivertSoknad.innsendtVedleggDtos.filter { !(it.vedleggsnr == arkivertSoknad.skjemanr || it.vedleggsnr == KVITTERINGS_NR) }
+					.map { it.vedleggsnr }
 			// Opprett vedlegg til ettersendingssøknaden gitt spesifiserte skjemanr som ikke er funnet i nyeste relaterte arkiverte søknad.
 			val vedleggDbDataListe = vedleggService.opprettVedleggTilSoknad(
 				savedSoknadDbData.id!!,

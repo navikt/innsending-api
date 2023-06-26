@@ -19,10 +19,6 @@ RUN mvn -pl api verify --fail-never -DskipTests
 COPY api/src $HOME/api/src
 RUN mvn -pl api install
 
-RUN mvn -pl soknadsfillager-api verify --fail-never -DskipTests
-COPY soknadsfillager-api/src $HOME/soknadsfillager-api/src
-RUN mvn -pl soknadsfillager-api install
-
 RUN mvn -pl soknadsmottaker-api verify --fail-never -DskipTests
 COPY soknadsmottaker-api/src $HOME/soknadsmottaker-api/src
 RUN mvn -pl soknadsmottaker-api install

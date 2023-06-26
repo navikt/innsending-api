@@ -3,14 +3,11 @@ package no.nav.soknad.innsending.service
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
-import io.mockk.slot
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
-import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.PatchVedleggDto
 import no.nav.soknad.innsending.model.PostVedleggDto
-import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.SoknadAssertions
 import org.junit.jupiter.api.Assertions.*
@@ -45,9 +42,6 @@ class VedleggServiceTest : ApplicationTest() {
 	@InjectMockKs
 	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
 
-	@InjectMockKs
-	private val fillagerAPI = mockk<FillagerInterface>()
-
 	private fun lagSoknadService(): SoknadService = SoknadService(
 		skjemaService = skjemaService,
 		repo = repo,
@@ -70,14 +64,6 @@ class VedleggServiceTest : ApplicationTest() {
 
 		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
-		val vedleggDtos = slot<List<VedleggDto>>()
-		every {
-			fillagerAPI.hentFiler(
-				dokumentSoknadDto.innsendingsId!!,
-				capture(vedleggDtos)
-			)
-		} returns dokumentSoknadDto.vedleggsListe
-
 		val vedleggDto = vedleggService.hentVedleggDto(dokumentSoknadDto.vedleggsListe[0].id!!)
 
 		assertEquals(vedleggDto.id, dokumentSoknadDto.vedleggsListe[0].id!!)
@@ -92,14 +78,6 @@ class VedleggServiceTest : ApplicationTest() {
 		val soknadService = lagSoknadService()
 
 		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
-
-		val vedleggDtos = slot<List<VedleggDto>>()
-		every {
-			fillagerAPI.hentFiler(
-				dokumentSoknadDto.innsendingsId!!,
-				capture(vedleggDtos)
-			)
-		} returns dokumentSoknadDto.vedleggsListe
 
 		val postVedleggDto = PostVedleggDto("Litt mer info")
 
@@ -116,14 +94,6 @@ class VedleggServiceTest : ApplicationTest() {
 		val soknadService = lagSoknadService()
 
 		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
-
-		val vedleggDtos = slot<List<VedleggDto>>()
-		every {
-			fillagerAPI.hentFiler(
-				dokumentSoknadDto.innsendingsId!!,
-				capture(vedleggDtos)
-			)
-		} returns dokumentSoknadDto.vedleggsListe
 
 		val lagretVedleggDto = vedleggService.leggTilVedlegg(dokumentSoknadDto, null)
 		assertTrue(lagretVedleggDto.id != null && lagretVedleggDto.tittel == "Annet")
@@ -146,15 +116,7 @@ class VedleggServiceTest : ApplicationTest() {
 
 		val lagretVedlegg = dokumentSoknadDto.vedleggsListe.first { e -> vedleggsnr == e.vedleggsnr }
 
-		val vedleggDtos = slot<List<VedleggDto>>()
-		every { fillagerAPI.slettFiler(dokumentSoknadDto.innsendingsId!!, capture(vedleggDtos)) } returns Unit
-
 		vedleggService.slettVedlegg(dokumentSoknadDto, lagretVedlegg.id!!)
-
-		/* Sender ikke opplastede filer fortløpende til soknadsfillager
-				assertTrue(vedleggDtos.isCaptured)
-				assertTrue(vedleggDtos.captured.get(0).id == dokumentSoknadDto.vedleggsListe[1].id)
-		*/
 
 		assertThrows<Exception> {
 			vedleggService.hentVedleggDto(lagretVedlegg.id!!)

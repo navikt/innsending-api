@@ -51,6 +51,7 @@ spec:
       rules:
         - application: send-inn-frontend
         - application: send-inn-frontend-alt
+        - application: soknadsarkiverer
         - application: dokumentinnsending-send-inn
         - application: skjemautfylling
           namespace: skjemadigitalisering

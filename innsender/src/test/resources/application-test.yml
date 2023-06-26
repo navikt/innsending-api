@@ -54,9 +54,6 @@ restconfig:
   maxFileSizeSum: 150
   sanityHost: localhost:5490
   sanityEndpoint: /soknader/api/sanity/skjemautlisting
-  filestorageHost: http://localhost:${wiremock.server.port}/filestorage-api
-  filestorageEndpoint: /filer
-  filestorageParameters: /
   filesInOneRequestToFilestorage: 10
   soknadsMottakerHost: http://localhost:${wiremock.server.port}/soknadsmottaker-api
   soknadsMottakerEndpoint: /save

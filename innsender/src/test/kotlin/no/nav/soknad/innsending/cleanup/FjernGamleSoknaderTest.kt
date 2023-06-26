@@ -5,7 +5,6 @@ import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
-import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.DokumentSoknadDto
@@ -53,9 +52,6 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 
 	@InjectMockKs
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
-
-	@InjectMockKs
-	private val fillagerAPI = mockk<FillagerInterface>()
 
 
 	private fun lagSoknadService(): SoknadService = SoknadService(
