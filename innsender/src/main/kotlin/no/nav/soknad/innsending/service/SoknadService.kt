@@ -13,6 +13,7 @@ import no.nav.soknad.innsending.repository.SoknadsStatus
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
@@ -175,7 +176,9 @@ class SoknadService(
 				nyesteSoknad.fristForEttersendelse
 			)
 
-			val nyesteSoknadVedleggsNrListe = nyesteSoknad.vedleggsListe.filter { !it.erHoveddokument }.map { it.vedleggsnr }
+			val nyesteSoknadVedleggsNrListe =
+				nyesteSoknad.vedleggsListe.filter { !(it.erHoveddokument || it.vedleggsnr == KVITTERINGS_NR) }
+					.map { it.vedleggsnr }
 			val filtrertVedleggsnrListe = vedleggsnrListe.filter { !nyesteSoknadVedleggsNrListe.contains(it) }
 
 			val vedleggDbDataListe =
@@ -218,7 +221,8 @@ class SoknadService(
 			)
 
 			val nyesteSoknadVedleggsNrListe =
-				arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map { it.vedleggsnr }
+				arkivertSoknad.innsendtVedleggDtos.filter { !(it.vedleggsnr == arkivertSoknad.skjemanr || it.vedleggsnr == KVITTERINGS_NR) }
+					.map { it.vedleggsnr }
 			val filtrertVedleggsnrListe =
 				opprettEttersendingGittSkjemaNr.vedleggsListe?.filter { !nyesteSoknadVedleggsNrListe.contains(it) }.orEmpty()
 
@@ -278,7 +282,8 @@ class SoknadService(
 			)
 
 			val innsendtVedleggsnrListe: List<String> =
-				arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map { it.vedleggsnr }
+				arkivertSoknad.innsendtVedleggDtos.filter { !(it.vedleggsnr == arkivertSoknad.skjemanr || it.vedleggsnr == KVITTERINGS_NR) }
+					.map { it.vedleggsnr }
 			// Opprett vedlegg til ettersendingssøknaden gitt spesifiserte skjemanr som ikke er funnet i nyeste relaterte arkiverte søknad.
 			val vedleggDbDataListe = vedleggService.opprettVedleggTilSoknad(
 				savedSoknadDbData.id!!,
@@ -303,7 +308,7 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun opprettNySoknad(dokumentSoknadDto: DokumentSoknadDto): String {
+	fun opprettNySoknad(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		val operation = InnsenderOperation.OPPRETT.name
 
 		val innsendingsId = Utilities.laginnsendingsId()
@@ -315,13 +320,11 @@ class SoknadService(
 
 			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
 			// lagre mottatte filer i fil tabellen.
-			savedDokumentSoknadDto.vedleggsListe
-				.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
-				.forEach { filService.lagreFil(savedDokumentSoknadDto, it, dokumentSoknadDto.vedleggsListe) }
+			lagreFiler(savedDokumentSoknadDto, innsendingsId, dokumentSoknadDto)
 			publiserBrukernotifikasjon(savedDokumentSoknadDto)
 
 			innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
-			return innsendingsId
+			return mapTilSkjemaDto(savedDokumentSoknadDto)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, dokumentSoknadDto.tema)
 			throw e
@@ -464,7 +467,7 @@ class SoknadService(
 		}
 	}
 
-	fun oppdaterSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
+	fun oppdaterSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		if (dokumentSoknadDto.vedleggsListe.size != 2) {
 			throw BackendErrorException(
 				"Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant",
@@ -473,28 +476,43 @@ class SoknadService(
 		}
 
 		val eksisterendeSoknad = hentSoknad(innsendingsId)
-		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto, SoknadsStatus.Opprettet)
+		val oppdatertDokumentSoknadDto = oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto, SoknadsStatus.Opprettet)
+
+		return mapTilSkjemaDto(oppdatertDokumentSoknadDto)
 	}
 
-	fun oppdaterUtfyltSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto) {
+	fun lagreFiler(
+		oppdatertDokumentSoknadDto: DokumentSoknadDto,
+		innsendingsId: String,
+		dokumentSoknadDto: DokumentSoknadDto
+	) {
+		oppdatertDokumentSoknadDto.vedleggsListe
+			.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
+			.forEach { filService.lagreFil(oppdatertDokumentSoknadDto, it, dokumentSoknadDto.vedleggsListe) }
+	}
+
+	fun oppdaterUtfyltSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		val eksisterendeSoknad = hentSoknad(innsendingsId)
-		oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto, SoknadsStatus.Utfylt)
 
 		vedleggService.slettEksisterendeVedleggVedOppdatering(eksisterendeSoknad.vedleggsListe, dokumentSoknadDto)
+
+		val oppdatertDokumentSoknadDto = oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto, SoknadsStatus.Utfylt)
+		return mapTilSkjemaDto(oppdatertDokumentSoknadDto)
 	}
 
 	fun oppdaterSoknad(
 		eksisterendeSoknad: DokumentSoknadDto,
 		dokumentSoknadDto: DokumentSoknadDto,
 		status: SoknadsStatus
-	) {
+	): DokumentSoknadDto {
 		// Valider søknaden mot eksisterende søknad ved å sjekke felter som ikke er lov til å oppdatere
 		validerInnsendtSoknadMotEksisterende(dokumentSoknadDto, eksisterendeSoknad)
+		val innsendingsId = eksisterendeSoknad.innsendingsId!!
 
 		// Oppdater søknaden
 		val soknadDb = mapTilSoknadDb(
 			dokumentSoknadDto = dokumentSoknadDto,
-			innsendingsId = eksisterendeSoknad.innsendingsId!!,
+			innsendingsId = innsendingsId,
 			id = eksisterendeSoknad.id,
 			status = status
 		)
@@ -502,12 +520,17 @@ class SoknadService(
 		val soknadsId = oppdatertSoknad.id!!
 
 		// Oppdater vedlegg
-		if (status == SoknadsStatus.Utfylt) {
-			dokumentSoknadDto.vedleggsListe.forEach { nyttVedlegg ->
-				vedleggService.lagreVedleggVedOppdatering(eksisterendeSoknad, nyttVedlegg, soknadsId)
-			}
+		dokumentSoknadDto.vedleggsListe.forEach { nyttVedlegg ->
+			vedleggService.lagreVedleggVedOppdatering(eksisterendeSoknad, nyttVedlegg, soknadsId)
 		}
 
+		// Lagre filer
+		val oppdatertDokumentSoknadDto = hentSoknad(innsendingsId)
+		lagreFiler(oppdatertDokumentSoknadDto, innsendingsId, dokumentSoknadDto)
+
+		logger.info("Oppdatert søknad for innsendingsId: {}", eksisterendeSoknad.innsendingsId)
+
+		return oppdatertDokumentSoknadDto
 	}
 
 

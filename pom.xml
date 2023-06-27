@@ -81,7 +81,6 @@
 
 	<modules>
 		<module>api</module>
-		<module>soknadsfillager-api</module>
 		<module>soknadsmottaker-api</module>
 		<module>innsender</module>
 	</modules>

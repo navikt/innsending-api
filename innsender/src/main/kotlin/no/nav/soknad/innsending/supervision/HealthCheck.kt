@@ -23,7 +23,6 @@ import java.time.OffsetDateTime
 class HealthCheck(
 	@Qualifier("pdl") private val pdlAPI: HealthRequestInterface,
 	@Qualifier("saf") private val safAPI: HealthRequestInterface,
-	@Qualifier("fillager") private val fillagerAPI: HealthRequestInterface,
 	@Qualifier("mottaker") private val mottakerAPI: HealthRequestInterface,
 	@Qualifier("notifikasjon") private val notifikasjonAPI: HealthRequestInterface,
 	private val aliveRepository: AliveRepository
@@ -73,7 +72,6 @@ class HealthCheck(
 
 	private fun getBackends(): List<Dependency> {
 		return listOf(
-			Dependency({ fillagerAPI.isReady() }, "ok", "Soknadsfillager", "Critical - Send in of applications will fail"),
 			Dependency({ mottakerAPI.isReady() }, "ok", "SoknadsMottaker", "Critical  - Send in of applications will fail"),
 			Dependency(
 				{ notifikasjonAPI.isReady() },

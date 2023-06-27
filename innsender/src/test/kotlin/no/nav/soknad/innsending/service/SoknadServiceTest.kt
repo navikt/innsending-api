@@ -11,7 +11,6 @@ import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.skjema.SkjemaClient
-import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
@@ -21,9 +20,9 @@ import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
-import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.getBytesFromFile
 import no.nav.soknad.innsending.utils.SoknadAssertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
@@ -84,9 +83,6 @@ class SoknadServiceTest : ApplicationTest() {
 	private val hentSkjemaData = mockk<SkjemaClient>()
 
 	@InjectMockKs
-	private val fillagerAPI = mockk<FillagerInterface>()
-
-	@InjectMockKs
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
 
 	@InjectMockKs
@@ -123,7 +119,6 @@ class SoknadServiceTest : ApplicationTest() {
 		exceptionHelper = exceptionHelper,
 		soknadsmottakerAPI = soknadsmottakerAPI,
 		restConfig = restConfig,
-		fillagerAPI = fillagerAPI,
 		pdlInterface = pdlInterface,
 	)
 
@@ -200,7 +195,6 @@ class SoknadServiceTest : ApplicationTest() {
 		// Sender inn original soknad
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService
@@ -261,7 +255,6 @@ class SoknadServiceTest : ApplicationTest() {
 		// Sender inn søknaden
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService
@@ -305,7 +298,6 @@ class SoknadServiceTest : ApplicationTest() {
 		// Sender inn original soknad
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService
@@ -346,7 +338,6 @@ class SoknadServiceTest : ApplicationTest() {
 
 		val ettersendingsKvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				ettersendingsSoknadDto,
 				innsendingService
@@ -379,7 +370,6 @@ class SoknadServiceTest : ApplicationTest() {
 
 		val ettersendingsKvitteringsDto2 =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				ettersendingsSoknadDto2,
 				innsendingService
@@ -542,7 +532,6 @@ class SoknadServiceTest : ApplicationTest() {
 
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService
@@ -622,7 +611,6 @@ class SoknadServiceTest : ApplicationTest() {
 		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf())
 
 		val slett = slot<List<VedleggDto>>()
-		every { fillagerAPI.slettFiler(any(), capture(slett)) } returns Unit
 
 		soknadService.slettSoknadAvBruker(dokumentSoknadDto)
 
@@ -654,7 +642,7 @@ class SoknadServiceTest : ApplicationTest() {
 	fun opprettingAvSoknadVedKallFraFyllUt() {
 		val tema = "HJE"
 		val skjemanr = "NAV 10-07.04"
-		val innsendingsId = soknadService.opprettNySoknad(lagDokumentSoknad(tema, skjemanr))
+		val innsendingsId = soknadService.opprettNySoknad(lagDokumentSoknad(tema, skjemanr)).innsendingsId!!
 
 		val soknad = soknadService.hentSoknad(innsendingsId)
 
@@ -672,7 +660,7 @@ class SoknadServiceTest : ApplicationTest() {
 		// Gitt
 		val tema = "HJE"
 		val skjemanr = "NAV 10-07.04"
-		val innsendingsId = soknadService.opprettNySoknad(lagDokumentSoknad(tema, skjemanr))
+		val innsendingsId = soknadService.opprettNySoknad(lagDokumentSoknad(tema, skjemanr)).innsendingsId!!
 
 		val oppdatertSpraak = "Nytt språk"
 		val oppdatertTittel = "Ny tittel"
@@ -695,27 +683,30 @@ class SoknadServiceTest : ApplicationTest() {
 
 		// og ingen ny hendelse registrert på søknad
 		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(innsendingsId)
-		assertTrue(hendelseDbDatas.size == 1)
-		assertEquals(HendelseType.Opprettet, hendelseDbDatas.get(0).hendelsetype)
+		assertEquals(2, hendelseDbDatas.size)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatas[0].hendelsetype)
+		assertEquals(HendelseType.Endret, hendelseDbDatas[1].hendelsetype)
+
 	}
 
 	@Test
-	fun `Skal oppdatere søknad med nye vedlegg`() {
+	fun `Skal oppdatere utfylt søknad med nye vedlegg`() {
 		// Gitt
 		val tema = "HJE"
 		val skjemanr = "NAV 10-07.04"
 		val tittel = "Tittel"
 		val spraak = "nb_no"
-		val innsendingsId = soknadService.opprettNySoknad(lagDokumentSoknad(tema, skjemanr))
-		val eksisterendeSoknad = soknadService.hentSoknad(innsendingsId)
+
+		val eksisterendeSoknad = lagDokumentSoknad(tema, skjemanr)
+		val innsendingsId = soknadService.opprettNySoknad(eksisterendeSoknad).innsendingsId!!
 
 		val vedleggDto1 =
 			Hjelpemetoder.lagVedleggDto(
 				erHoveddokument = false,
 				vedleggsnr = "vedleggsnr1",
 				tittel = "vedleggTittel1",
-				mimeType = null,
-				fil = null,
+				mimeType = Mimetype.applicationSlashPdf.toString(),
+				fil = getBytesFromFile("/litenPdf.pdf"),
 				formioId = UUID.randomUUID().toString()
 			)
 		val vedleggDto2 =
@@ -723,8 +714,8 @@ class SoknadServiceTest : ApplicationTest() {
 				erHoveddokument = false,
 				vedleggsnr = "vedleggsnr2",
 				tittel = "vedleggTittel2",
-				mimeType = null,
-				fil = null,
+				mimeType = Mimetype.applicationSlashPdf.toString(),
+				fil = getBytesFromFile("/litenPdf.pdf"),
 				formioId = UUID.randomUUID().toString()
 			)
 
@@ -746,19 +737,21 @@ class SoknadServiceTest : ApplicationTest() {
 		soknadService.oppdaterUtfyltSoknad(innsendingsId, dokumentSoknad)
 		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
 
-		// Så
-		eksisterendeSoknad.vedleggsListe.forEach { eksisterendeVedlegg ->
-			assertNull(
-				oppdatertSoknad.vedleggsListeUtenHoveddokument.find { eksisterendeVedlegg.vedleggsnr == it.vedleggsnr },
-				"Ingen av vedleggene fra den eksisterende søknaden skal være med i den oppdaterte søknaden"
+		val filer = oppdatertSoknad.vedleggsListe.flatMap {
+			filService.hentFiler(
+				oppdatertSoknad, innsendingsId,
+				it.id!!, true
 			)
 		}
 
+		// Så
 		assertEquals(
 			4,
 			oppdatertSoknad.vedleggsListe.size,
 			"Skal ha to vedlegg i den oppdaterte søknaden + hoveddokument og variant"
 		)
+
+		assertEquals(4, filer.size, "Skal ha 4 filer lagret i databasen")
 
 		assertTrue(
 			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == vedleggDto1.vedleggsnr },
@@ -769,10 +762,12 @@ class SoknadServiceTest : ApplicationTest() {
 			"Skal ha vedlegg 2 i den oppdaterte søknaden"
 		)
 
+
 		// og ingen ny hendelse registrert på søknad
 		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(innsendingsId)
-		assertTrue(hendelseDbDatas.size == 1)
-		assertEquals(HendelseType.Opprettet, hendelseDbDatas.get(0).hendelsetype)
+		assertEquals(2, hendelseDbDatas.size)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatas[0].hendelsetype)
+		assertEquals(HendelseType.Utfylt, hendelseDbDatas[1].hendelsetype)
 
 	}
 
@@ -833,8 +828,6 @@ class SoknadServiceTest : ApplicationTest() {
 		}
 
 		val vedleggDtos = slot<List<VedleggDto>>()
-
-		every { fillagerAPI.lagreFiler(any(), capture(vedleggDtos)) } returns Unit
 
 		val soknad = slot<DokumentSoknadDto>()
 		val vedleggDtos2 = slot<List<VedleggDto>>()

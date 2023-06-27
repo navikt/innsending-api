@@ -6,6 +6,7 @@ import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.consumerapis.saf.dto.Dokument
 import no.nav.soknad.innsending.model.AktivSakDto
 import no.nav.soknad.innsending.model.InnsendtVedleggDto
+import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -69,7 +70,7 @@ class SafService(val safSelvbetjeningApi: SafSelvbetjeningInterface, val safClie
 
 	private fun konverterTilVedleggsliste(dokumenter: List<Dokument>): List<InnsendtVedleggDto> {
 		return dokumenter
-			.filter { !it.brevkode.isNullOrBlank() && !"L7".equals(it.brevkode, true) }
+			.filter { !it.brevkode.isNullOrBlank() && !KVITTERINGS_NR.equals(it.brevkode, true) }
 			.map { InnsendtVedleggDto(vedleggsnr = fjernEttersendingsMerkeFraSkjemanr(it.brevkode!!), it.tittel) }
 	}
 

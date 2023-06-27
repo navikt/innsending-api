@@ -9,7 +9,6 @@ import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
-import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
@@ -63,9 +62,6 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
 
 	@InjectMockKs
-	private val fillagerAPI = mockk<FillagerInterface>()
-
-	@InjectMockKs
 	private val pdlInterface = mockk<PdlInterface>()
 
 
@@ -87,7 +83,6 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 		vedleggService = vedleggService,
 		soknadsmottakerAPI = soknadsmottakerAPI,
 		restConfig = restConfig,
-		fillagerAPI = fillagerAPI,
 		exceptionHelper = exceptionHelper,
 		ettersendingService = ettersendingService,
 		brukernotifikasjonPublisher = brukernotifikasjonPublisher,
@@ -108,7 +103,6 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 		every { brukernotifikasjonPublisher.soknadStatusChange(capture(soknader)) } returns true
 		every { leaderSelectionUtility.isLeader() } returns true
 		every { soknadsmottakerAPI.sendInnSoknad(any(), any()) } returns Unit
-		every { fillagerAPI.lagreFiler(any(), any()) } returns Unit
 		every { pdlInterface.hentPersonIdents(any()) } returns listOf(IdentDto("123456789", "FOLKEREGISTERIDENT", false))
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("123456789", "Fornavn", null, "Etternavn")
 
@@ -121,7 +115,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 				tema = tema, id = null, innsendingsid = null, soknadsStatus = SoknadsStatusDto.opprettet, vedleggsListe = null,
 				ettersendingsId = null, OffsetDateTime.now().minusDays(1)
 			)
-		)
+		).innsendingsId!!
 
 		val skalSendeInnIkkeArkivereId = soknadService.opprettNySoknad(
 			Hjelpemetoder.lagDokumentSoknad(
@@ -129,7 +123,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 				tema = tema, id = null, innsendingsid = null, soknadsStatus = SoknadsStatusDto.opprettet, vedleggsListe = null,
 				ettersendingsId = null, OffsetDateTime.now().minusDays(1)
 			)
-		)
+		).innsendingsId!!
 
 		val initAntall = innsenderMetrics.operationsCounterGet(InnsenderOperation.SLETT.name, tema) ?: 0.0
 		sendInnSoknad(soknadService, skalSendeInnOgArkivereId, innsendingService)
@@ -149,7 +143,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 
 		// Og innsendt og ikke arkivert Soknad skal ikke være slettet.
 		val beholdtSoknad = soknadService.hentSoknad(skalSendeInnIkkeArkivereId)
-		Assertions.assertTrue(beholdtSoknad != null && beholdtSoknad.status == SoknadsStatusDto.innsendt)
+		Assertions.assertTrue(beholdtSoknad.status == SoknadsStatusDto.innsendt)
 
 		// Og metrics for antall slettede søknader er økt med 1
 		Assertions.assertEquals(

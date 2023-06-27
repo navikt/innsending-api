@@ -89,7 +89,11 @@ paths:
 
       responses:
         200:
-          description: Oppdatert søknad
+          description: Oppdatering av søknad
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkjemaDto"
       tags:
         - fyllUtOppdaterSoknad
 
@@ -116,6 +120,7 @@ paths:
                 $ref: "#/components/schemas/BodyStatusResponseDto"
       tags:
         - fyllUtSlettSoknad
+
   /fyllUt/v1/utfyltSoknad/{innsendingsId}:
     put:
       summary: Lagre en ferdig utfylt søknad
@@ -140,8 +145,8 @@ paths:
         required: true
 
       responses:
-        200:
-          description: Oppdatert søknad
+        302:
+          description: Oppdatering av ferdig utfylt søknad, med redirect til SendInn
       tags:
         - fyllUtUtfyltSoknad
 
@@ -163,7 +168,11 @@ paths:
 
       responses:
         201:
-          description: Opprettet søknad
+          description: Søknad opprettet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkjemaDto"
       tags:
         - fyllUtOpprettSoknad
 
@@ -189,6 +198,45 @@ paths:
           description: Ingen innsendte søknader funnet.
       tags:
         - aktiveSaker
+
+  /innsendte/v1/files/{uuids}:
+    get:
+      summary: Finds files with given uuids.
+      description: Given a list of uuids, this endpoint returns all files associated with those uuids. The files would be application, application variant and attachments.
+                   If there are several files attached to a given uuid, the files are merged and returned as one file.
+      operationId: hentInnsendteFiler
+
+      parameters:
+        - name: uuids
+          in: path
+          description: A list of uuids of files to be retrieved.
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+          style: simple
+
+        - name: x-innsendingId
+          in: header
+          description: Tracing id that will be used in logging statements.
+          example: 92ee15dd-dc49-4c95-b9b6-6224bae088a0
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SoknadFile"
+      tags:
+        - hentInnsendteFiler
+
 
   /frontend/v1/soknad:
     post:
@@ -1282,6 +1330,34 @@ components:
       enum: [ "Opprettet", "Utfylt", "Innsendt", "SlettetAvBruker", "AutomatiskSlettet" ]
       description: Spesifikasjon av status på søknaden.
       example:
+
+    SoknadFile:
+      type: object
+      required:
+        - id
+        - fileStatus
+      properties:
+        id:
+          type: string
+          description: Unique id of the file
+          example: 2f9b8d25-1056-4827-8ddd-cedab7fafaaf
+        content:
+          type: string
+          format: byte
+          nullable: true
+          description: Byte array of the file content
+          example: Byte array with file content
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Creation date and time in UTC
+          example: 2021-12-03T14:10:00Z
+        fileStatus:
+          type: string
+          enum: ["ok", "notfound", "deleted"]
+          description: current state of the file. Can be `deleted`, `notfound`, `ok`
+          example: not-found
 
     Spraak:
       type: string
