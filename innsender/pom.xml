@@ -214,11 +214,6 @@
 		</dependency>
 		<dependency>
 			<groupId>no.nav.soknad.innsending</groupId>
-			<artifactId>soknadsfillager-api</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>no.nav.soknad.innsending</groupId>
 			<artifactId>soknadsmottaker-api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
