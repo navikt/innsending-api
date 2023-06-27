@@ -13,35 +13,41 @@ on:
           - none
           - preprod
           - prod
-env:
-  IMAGE: ghcr.io/${{ github.repository }}/innsending-api:${{ github.sha }}
 
 jobs:
   build-and-push:
+    permissions:
+      contents: "read"
+      id-token: "write"
     name: Build and push Docker container preprod
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-java@v2
+      - uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17.x'
           cache: 'maven'
+
       - name: set timezone
-        uses: szenius/set-timezone@v1.0
+        uses: szenius/set-timezone@v1.2
         with:
           timezoneLinux: "Europe/Oslo"
-      - name: Build
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: mvn -B package --file pom.xml
-      - name: Build and publish Docker image
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          docker build --tag ${IMAGE} .
-          docker login ghcr.io -u ${GITHUB_REPOSITORY} -p ${GITHUB_TOKEN}
-          docker push ${IMAGE}
+
+      - name: Build with maven
+        run: mvn install --file pom.xml
+
+      - name: Build and push Docker image
+        uses: nais/docker-build-push@v0
+        id: docker-build-push
+        with:
+          team: team-soknad
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+          image_suffix: ${{ github.event.inputs.environment }}
+          byosbom: target/bom.json
+    outputs:
+        image: ${{ steps.docker-build-push.outputs.image }}
 
   deploy-preprod:
     needs: build-and-push
@@ -55,6 +61,7 @@ jobs:
           CLUSTER: dev-gcp
           RESOURCE: .nais/nais-gcp.yml
           VARS: .nais/preprod-gcp.json
+          VAR: image=${{needs.build-and-push.outputs.image}}
           DRY_RUN: false
 
   deploy-prod:
@@ -69,6 +76,7 @@ jobs:
           CLUSTER: prod-gcp
           RESOURCE: .nais/nais-gcp.yml
           VARS: .nais/prod-gcp.json
+          VAR: image=${{needs.build-and-push.outputs.image}}
           DRY_RUN: true
 
   deploy-alerts-preprod:
