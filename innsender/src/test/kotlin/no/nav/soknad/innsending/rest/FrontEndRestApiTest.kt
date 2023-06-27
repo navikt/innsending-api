@@ -450,6 +450,40 @@ class FrontEndRestApiTest : ApplicationTest() {
 		assertEquals("Nytt vedlegg", nyttVedleggDto!!.tittel)
 	}
 
+	@Test
+	fun `Skal fungere med nye idporten acr claim (idporten-loa-high)`() {
+		// Gitt
+		val skjemanr = defaultSkjemanr
+		val spraak = "nb_NO"
+
+		val token: String = mockOAuth2Server.issueToken(
+			tokenx,
+			MockLoginController::class.java.simpleName,
+			DefaultOAuth2TokenCallback(
+				tokenx,
+				subject,
+				JOSEObjectType.JWT.type,
+				listOf(audience),
+				mapOf("acr" to "idporten-loa-high"),
+				expiry.toLong()
+			)
+		).serialize()
+
+		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak)
+		val requestEntity = HttpEntity(opprettSoknadBody, Hjelpemetoder.createHeaders(token))
+
+		// Når
+		val response = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.POST,
+			requestEntity, DokumentSoknadDto::class.java
+		)
+
+		// Så
+		assertEquals(HttpStatus.CREATED, response.statusCode)
+		assertTrue(response.body != null)
+
+	}
+
 
 	@Test
 	internal fun testResult() {
