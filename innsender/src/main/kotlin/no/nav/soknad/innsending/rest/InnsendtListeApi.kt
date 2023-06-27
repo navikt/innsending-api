@@ -25,7 +25,11 @@ class InnsendtListeApi(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Timed(InnsenderOperation.HENT)
-	@ProtectedWithClaims(issuer = Constants.TOKENX, claimMap = [Constants.CLAIM_ACR_LEVEL_4])
+	@ProtectedWithClaims(
+		issuer = Constants.TOKENX,
+		claimMap = [Constants.CLAIM_ACR_LEVEL_4, Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH],
+		combineWithOr = true
+	)
 	override fun aktiveSaker(): ResponseEntity<List<AktivSakDto>> {
 		logger.info("Kall for å hente innsendte søknader for en bruker")
 
