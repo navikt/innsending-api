@@ -1,0 +1,50 @@
+# For lokal utvikling (med docker-compose)
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  application:
+    name:
+
+  codec:
+    max-in-memory-size: 104857600
+
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+  flyway:
+    enabled: true
+
+  datasource:
+    url: jdbc:postgresql://localhost:5450/postgres?user=postgres&password=postgres
+
+restconfig:
+  version: 1.0
+  username: srvuser
+  password: password
+  sharedUsername: innsending
+  sharedPassword: password
+  maxFileSize: 50
+  maxFileSizeSum: 150
+  sanityHost: https://www.nav.no
+  sanityEndpoint: /soknader/api/sanity/skjemautlisting
+  filesInOneRequestToFilestorage: 10
+  soknadsMottakerHost: http://localhost:9043/soknadsmottaker-api
+  soknadsMottakerEndpoint: /save
+  frontEndFortsettEndpoint: http://localhost:3000/dokumentinnsending/oversikt/
+  clientId: clientId
+  clientSecret: clientSecret
+  pdlScope: api://dev-fss.pdl.pdl-api/.default
+  pdlUrl: http://localhost:9043/pdl-api
+  safselvbetjeningUrl: http://localhost:9043/safselvbetjening-api
+  safUrl: http://localhost:9043/saf-api
+  azureUrl: http://localhost:9043/azure-api
+
+brukernotifikasjonconfig:
+  profiles: test
+  tjenesteUrl: https://localhost
+  publisereEndringer: true
+

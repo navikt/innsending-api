@@ -5,6 +5,7 @@ import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.dto.RestErrorResponseDto
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
@@ -30,6 +31,9 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var soknadService: SoknadService
+
+	@Autowired
+	lateinit var filService: FilService
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
@@ -345,6 +349,59 @@ class FyllutRestApiTest : ApplicationTest() {
 			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == "T1" },
 			"Skal ikke ha gammelt vedlegg"
 		)
+
+	}
+
+	@Test
+	fun `Skal lagre filene i databasen`() {
+		// Gitt
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		val dokumentSoknadDto = opprettSoknad()
+		val skjemanr = dokumentSoknadDto.skjemanr
+		val tema = dokumentSoknadDto.tema
+		val innsendingsId = dokumentSoknadDto.innsendingsId!!
+
+		val fraFyllUt = SkjemaDto(
+			brukerId = subject,
+			skjemanr = skjemanr,
+			tittel = tittel,
+			tema = tema,
+			spraak = spraak,
+			hoveddokument = lagDokument(skjemanr, tittel, true, Mimetype.applicationSlashPdf),
+			hoveddokumentVariant = lagDokument(skjemanr, tittel, true, Mimetype.applicationSlashJson),
+			vedleggsListe = emptyList()
+		)
+
+		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
+
+		// Når
+		restTemplate.exchange(
+			"http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}", HttpMethod.PUT,
+			requestEntity, SkjemaDto::class.java
+		)
+		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
+
+		val filer = oppdatertSoknad.vedleggsListe.flatMap {
+			filService.hentFiler(
+				oppdatertSoknad, innsendingsId,
+				it.id!!, true
+			)
+		}
+
+		// Så
+		assertEquals(2, filer.size)
+		filer.forEach {
+			assertTrue(it.data!!.isNotEmpty())
+		}
+		filer.find { it.mimetype == Mimetype.applicationSlashPdf }?.let {
+			assertTrue(it.filnavn!!.endsWith(".pdf"), "Skal være pdf-fil")
+		}
+
+		filer.find { it.mimetype == Mimetype.applicationSlashJson }?.let {
+			assertTrue(it.filnavn!!.endsWith(".json"), "Skal være json-fil")
+		}
+
 
 	}
 

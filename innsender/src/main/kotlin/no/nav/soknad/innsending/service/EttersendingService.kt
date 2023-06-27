@@ -11,6 +11,7 @@ import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import org.slf4j.LoggerFactory
@@ -93,7 +94,7 @@ class EttersendingService(
 
 			// Lagre vedlegg i DB
 			val vedleggDbDataListe = nyesteSoknad.vedleggsListe
-				.filter { !it.erHoveddokument }
+				.filter { !(it.erHoveddokument || it.vedleggsnr == KVITTERINGS_NR) }
 				.map { v ->
 					repo.lagreVedlegg(
 						VedleggDbData(

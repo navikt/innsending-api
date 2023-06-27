@@ -8,14 +8,15 @@ import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
-import no.nav.soknad.innsending.consumerapis.soknadsfillager.FillagerInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
+import no.nav.soknad.innsending.model.SoknadFile
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
+import no.nav.soknad.pdfutilities.AntallSider
 import no.nav.soknad.pdfutilities.PdfGenerator
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -50,9 +51,6 @@ class InnsendingServiceTest : ApplicationTest() {
 	private lateinit var exceptionHelper: ExceptionHelper
 
 	@InjectMockKs
-	private val fillagerAPI = mockk<FillagerInterface>()
-
-	@InjectMockKs
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
 
 	@InjectMockKs
@@ -72,7 +70,6 @@ class InnsendingServiceTest : ApplicationTest() {
 		exceptionHelper = exceptionHelper,
 		soknadsmottakerAPI = soknadsmottakerAPI,
 		restConfig = restConfig,
-		fillagerAPI = fillagerAPI,
 		pdlInterface = pdlInterface,
 	)
 
@@ -95,7 +92,6 @@ class InnsendingServiceTest : ApplicationTest() {
 
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService
@@ -109,12 +105,21 @@ class InnsendingServiceTest : ApplicationTest() {
 		}
 		soknadService.hentSoknad(dokumentSoknadDto.innsendingsId!!)
 
+		// Hvis hent innsendt hoveddokument
+		val hoveddok = innsendingService.getFiles(
+			dokumentSoknadDto.innsendingsId!!,
+			dokumentSoknadDto.vedleggsListe.filter { it.erHoveddokument }.map { it.uuid!! }.toList()
+		)
+
+		// Så skal
+		Assertions.assertEquals(1, hoveddok.size)
+		Assertions.assertTrue(hoveddok.all { it.fileStatus == SoknadFile.FileStatus.ok })
+
 	}
 
 	@Test
 	fun sendInnSoknadFeilerUtenOpplastetHoveddokument() {
 		val innsendingService = lagInnsendingService(soknadService)
-
 
 		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
@@ -138,7 +143,6 @@ class InnsendingServiceTest : ApplicationTest() {
 
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService
@@ -173,7 +177,6 @@ class InnsendingServiceTest : ApplicationTest() {
 		// Sender inn original soknad
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService
@@ -211,7 +214,6 @@ class InnsendingServiceTest : ApplicationTest() {
 		// Sender inn original soknad
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService
@@ -245,12 +247,61 @@ class InnsendingServiceTest : ApplicationTest() {
 		// Sender inn original soknad
 		assertThrows<IllegalActionException> {
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				fillagerAPI,
 				soknadsmottakerAPI,
 				dokumentSoknadDto,
 				innsendingService
 			)
 		}
 	}
+
+	@Test
+	fun sendInnSoknadMedVedlegg() {
+		val innsendingService = lagInnsendingService(soknadService)
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+
+		// Last opp fil til hoveddokument vedlegg
+		filService.lagreFil(
+			dokumentSoknadDto,
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
+		)
+
+		// Last opp fil1 til W1 vedlegg
+		filService.lagreFil(
+			dokumentSoknadDto,
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { !it.erHoveddokument })
+		)
+		// Last opp fil2 til W1 vedlegg
+		filService.lagreFil(
+			dokumentSoknadDto,
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { !it.erHoveddokument })
+		)
+
+		val kvitteringsDto =
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				soknadsmottakerAPI,
+				dokumentSoknadDto,
+				innsendingService
+			)
+		Assertions.assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isNotEmpty())
+		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+
+		assertThrows<IllegalActionException> {
+			vedleggService.leggTilVedlegg(dokumentSoknadDto, null)
+		}
+
+		// Hvis hent innsendt hoveddokument
+		val vedleggsFiler = innsendingService.getFiles(
+			dokumentSoknadDto.innsendingsId!!,
+			dokumentSoknadDto.vedleggsListe.map { it.uuid!! }.toList()
+		)
+
+		// Så skal
+		Assertions.assertEquals(2, vedleggsFiler.size)
+		Assertions.assertTrue(vedleggsFiler.all { it.fileStatus == SoknadFile.FileStatus.ok })
+		Assertions.assertEquals(2, AntallSider().finnAntallSider(vedleggsFiler.last().content))
+
+	}
+
 
 }

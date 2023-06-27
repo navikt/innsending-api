@@ -1,5 +1,8 @@
 package no.nav.soknad.innsending.service
 
+import no.nav.soknad.arkivering.soknadsmottaker.model.DocumentData
+import no.nav.soknad.arkivering.soknadsmottaker.model.Soknad
+import no.nav.soknad.arkivering.soknadsmottaker.model.Varianter
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.*
@@ -33,15 +36,16 @@ fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
 		beskrivelse = vedleggDto.beskrivelse,
 		uuid = vedleggDto.uuid,
 		mimetype = filDto?.mimetype ?: vedleggDto.mimetype,
-		document = filDto?.data,
+		document = null,
 		skjemaurl = vedleggDto.skjemaurl,
 		innsendtdato = OffsetDateTime.now()
 	)
 
 
 private fun avledOpplastingsstatusVedInnsending(filDto: FilDto?, vedleggDto: VedleggDto): OpplastingsStatusDto {
-	if (filDto?.data != null
-		&& (vedleggDto.opplastingsStatus == OpplastingsStatusDto.ikkeValgt || vedleggDto.opplastingsStatus == OpplastingsStatusDto.lastetOpp)
+	// Dersom det er lastet opp en eller flere filer på vedlegget så skal filDto != null og størrelsen være satt
+	if ((filDto != null) && (filDto.storrelse!! > 0)
+		&& ((vedleggDto.opplastingsStatus == OpplastingsStatusDto.ikkeValgt) || (vedleggDto.opplastingsStatus == OpplastingsStatusDto.lastetOpp))
 	) {
 		return OpplastingsStatusDto.lastetOpp
 	}
@@ -350,4 +354,59 @@ fun mapTilSkjemaDokumentDto(vedleggDto: VedleggDto): SkjemaDokumentDto {
 		document = vedleggDto.document,
 		formioId = vedleggDto.formioId,
 	)
+}
+
+fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>): Soknad {
+	return Soknad(
+		soknadDto.innsendingsId!!,
+		soknadDto.ettersendingsId != null,
+		soknadDto.brukerId,
+		soknadDto.tema,
+		translate(vedleggDtos)
+	)
+}
+
+fun translate(vedleggDtos: List<VedleggDto>): List<DocumentData> {
+	/*
+	Mappe fra liste av vedleggdto til en liste av dokument inneholdene liste av varianter.
+	Det er antatt at det kun er hoveddokumentet som vil ha varianter.
+	Vedleggdto inneholder både dokument- og vedlegginfo
+	 */
+	// Lag documentdata for hoveddokumentet (finn alle vedleggdto markert som hoveddokument)
+	val hoveddokumentVedlegg: List<Varianter> = vedleggDtos
+		.filter { it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
+		.map { translate(it) }
+
+	val hovedDokument: DocumentData = vedleggDtos
+		.filter { it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp && !it.erVariant }
+		.map { DocumentData(it.vedleggsnr!!, it.erHoveddokument, it.tittel, hoveddokumentVedlegg) }
+		.first()
+
+	// Merk: at det  er antatt at vedlegg ikke har varianter. Hvis vi skal støtte dette må varianter av samme vedlegg linkes sammen
+	val vedlegg: List<DocumentData> = vedleggDtos
+		.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
+		.map { DocumentData(it.vedleggsnr!!, it.erHoveddokument, it.tittel, listOf(translate(it))) }
+
+	return listOf(hovedDokument) + vedlegg
+}
+
+fun translate(dokumentDto: VedleggDto): Varianter {
+	return Varianter(
+		dokumentDto.uuid!!, dokumentDto.mimetype?.value ?: "application/pdf",
+		(dokumentDto.vedleggsnr ?: "N6") + "." + filExtention(dokumentDto),
+		filExtention(dokumentDto)
+	)
+}
+
+fun filExtention(dokumentDto: VedleggDto): String =
+	when (dokumentDto.mimetype) {
+		Mimetype.imageSlashPng -> "png"
+		Mimetype.imageSlashJpeg -> "jpeg"
+		Mimetype.applicationSlashJson -> "json"
+		Mimetype.applicationSlashPdf -> if (dokumentDto.erPdfa) "pdfa" else "pdf"
+		else -> ""
+	}
+
+fun maskerFnr(soknad: Soknad): Soknad {
+	return Soknad(soknad.innsendingId, soknad.erEttersendelse, personId = "*****", soknad.tema, soknad.dokumenter)
 }

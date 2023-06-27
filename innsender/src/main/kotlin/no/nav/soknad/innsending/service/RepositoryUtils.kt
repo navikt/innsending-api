@@ -201,6 +201,17 @@ class RepositoryUtils(
 		)
 	}
 
+	fun hentVedleggGittUuid(uuid: String): Optional<VedleggDbData> = try {
+		vedleggRepository.findByUuid(uuid)
+	} catch
+		(ex: Exception) {
+		throw BackendErrorException(
+			ex.message,
+			"Feil ved forsøk på henting av vedlegg med uuid $uuid",
+			"errorCode.backendError.attachmentFetchError"
+		)
+	}
+
 	fun hentAlleVedleggGittSoknadsid(soknadsId: Long): List<VedleggDbData> = try {
 		vedleggRepository.findAllBySoknadsid(soknadsId)
 	} catch (ex: Exception) {
@@ -430,6 +441,20 @@ class RepositoryUtils(
 			ex.message,
 			"Feil i lagring av hendelse til søknad ${hendelseDbData.innsendingsid}",
 			"errorCode.backendError.applicationSaveError"
+		)
+	}
+
+	fun hentHendelse(innsendingsId: String, hendelseType: HendelseType? = null): List<HendelseDbData> = try {
+		if (hendelseType == null) {
+			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(innsendingsId)
+		} else {
+			hendelseRepository.findAllByInnsendingsidAndHendelsetypeAndOrderByTidspunktDesc(innsendingsId, hendelseType)
+		}
+	} catch (ex: Exception) {
+		throw BackendErrorException(
+			ex.message,
+			"Feil i henting av hendelse til søknad $innsendingsId",
+			"errorCode.backendError.applicationFetchError"
 		)
 	}
 

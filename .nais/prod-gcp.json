@@ -6,20 +6,19 @@
 	"default_database_size": 20,
 	"ingresses": [
 		"https://www.nav.no/innsending-api-gcp",
-		"https://innsending-api-gcp.nav.no"
+		"https://innsending-api-gcp.nav.no",
+		"https://innsending-api-gcp.intern.nav.no"
 	],
 	"outboundExternalHosts": [
 		"pdl-api.prod-fss-pub.nais.io",
 		"safselvbetjening.prod-fss-pub.nais.io",
 		"saf.prod-fss-pub.nais.io",
 		"tokendings.prod-gcp.nais.io",
-		"soknadsfillager-gcp.intern.nav.no",
 		"soknadsmottaker-gcp.intern.nav.no",
 		"www.nav.no"
 	],
 	"outboundRulesGcpApplications": [
-		"soknadsmottaker",
-		"soknadsfillager"
+		"soknadsmottaker"
 	],
 	"kafka-pool": "nav-prod",
 	"env": {
@@ -35,9 +34,6 @@
 		"SAF_URL": "https://saf.prod-fss-pub.nais.io",
 		"SANITY_HOST": "https://www.nav.no",
 		"SANITY_ENDPOINT": "/soknader/api/sanity/skjemautlisting",
-		"FILESTORAGE_HOST": "https://soknadsfillager-gcp.intern.nav.no",
-		"FILESTORAGE_ENDPOINT": "/filer",
-		"FILESTORAGE_PARAMETERS": "?ids=",
 		"SOKNADSMOTTAKER_HOST": "https://soknadsmottaker-gcp.intern.nav.no",
 		"SOKNADSMOTTAKER_ENDPOINT": "/save",
 		"PUBLISERE_BRUKERNOTIFIKASJONER": "true",
@@ -47,7 +43,6 @@
 		"PDL_TOKEN_X_AUDIENCE": "prod-fss:pdl:pdl-api",
 		"PDL_SCOPE": "api://prod-fss.pdl.pdl-api/.default",
 		"AZURE_TENANT": "nav.no",
-		"SOKNADSFILLAGER_SCOPE": "api://prod-gcp.team-soknad.soknadsfillager/.default",
 		"SOKNADSMOTTAKER_SCOPE": "api://prod-gcp.team-soknad.soknadsmottaker/.default",
 		"SAF_SCOPE": "api://prod-fss.teamdokumenthandtering.saf/.default",
 		"KAFKA_SECURITY": "TRUE",
