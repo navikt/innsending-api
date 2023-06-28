@@ -85,6 +85,9 @@
 		<cyclonedx-maven-plugin.version>2.7.9</cyclonedx-maven-plugin.version>
 		<maven-enforcer.version>3.3.0</maven-enforcer.version>
 
+		<!--Can be overwritten with -DskipBomPlugin-->
+		<skipBomPlugin>false</skipBomPlugin>
+
 	</properties>
 
 	<modules>
@@ -150,19 +153,22 @@
 			</plugin>
 
 			<!-- https://docs.nais.io/security/salsa/salsa/#known-limitations-->
-			<!--			<plugin>-->
-			<!--				<groupId>org.cyclonedx</groupId>-->
-			<!--				<artifactId>cyclonedx-maven-plugin</artifactId>-->
-			<!--				<version>${cyclonedx-maven-plugin.version}</version>-->
-			<!--				<executions>-->
-			<!--					<execution>-->
-			<!--						<phase>package</phase>-->
-			<!--						<goals>-->
-			<!--							<goal>makeAggregateBom</goal>-->
-			<!--						</goals>-->
-			<!--					</execution>-->
-			<!--				</executions>-->
-			<!--			</plugin>-->
+			<plugin>
+				<groupId>org.cyclonedx</groupId>
+				<artifactId>cyclonedx-maven-plugin</artifactId>
+				<version>${cyclonedx-maven-plugin.version}</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>makeAggregateBom</goal>
+						</goals>
+						<configuration>
+							<skip>${skipBomPlugin}</skip>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 

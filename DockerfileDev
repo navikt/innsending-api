@@ -26,7 +26,7 @@ RUN mvn -pl innsender-api verify --fail-never -DskipTests
 COPY innsender/src $HOME/innsender/src
 
 # Kompiler og pakk inn i en jar
-RUN --mount=type=cache,target=/root/.m2,rw mvn -q -pl api,soknadsmottaker-api,innsender package -DskipTests
+RUN --mount=type=cache,target=/root/.m2,rw mvn -q -pl api,soknadsmottaker-api,innsender package -DskipTests -DskipBomPlugin --debug
 
 
 FROM openjdk:17-alpine
