@@ -28,6 +28,9 @@
 		<okio.version>3.2.0</okio.version>
 		<jackson.version>2.13.4</jackson.version>
 		<kafka.version>3.4.0</kafka.version>
+		<jai-imageio.version>1.4.0</jai-imageio.version>
+		<jbig2-imageio.version>3.0.4</jbig2-imageio.version>
+		<logcaptor.version>2.9.0</logcaptor.version>
 	</properties>
 
 	<modules>
