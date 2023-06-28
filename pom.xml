@@ -38,14 +38,13 @@
 		<!--Token-->
 		<token-validation.version>3.1.0</token-validation.version>
 		<mock-oauth2-server.version>0.5.8</mock-oauth2-server.version>
-
-		<kotlin-serialization.version>1.5.1</kotlin-serialization.version>
-
+		
 		<!--Database-->
 		<otj-pg-embedded.version>1.0.1</otj-pg-embedded.version>
 		<flyway.version>9.19.1</flyway.version>
 
 		<!--Other-->
+		<kotlin-serialization.version>1.5.1</kotlin-serialization.version>
 		<okhttp3.version>4.11.0</okhttp3.version>
 		<io-netty.version>4.1.93.Final</io-netty.version>
 		<okio.version>3.2.0</okio.version>
@@ -57,20 +56,24 @@
 		<jackson-databind-nullable.version>0.2.6</jackson-databind-nullable.version>
 		<jackson.version>2.15.2</jackson.version>
 		<coroutines.version>1.7.1</coroutines.version>
-
 		<prometheus-client.version>0.16.0</prometheus-client.version>
 		<logstash.version>7.3</logstash.version>
-		<tika-core.version>2.8.0</tika-core.version>
-		<pdfbox.version>2.0.28</pdfbox.version>
 		<imgscalr-lib.version>4.2</imgscalr-lib.version>
-		<mockk.version>1.13.5</mockk.version>
 		<resilience4j.version>2.0.2</resilience4j.version>
 		<graphql-kotlin.version>6.5.0</graphql-kotlin.version>
 		<gson.version>2.10.1</gson.version>
 
-		<!--For PDFBox-->
+		<!--Testing-->
+		<logcaptor.version>2.9.0</logcaptor.version>
+		<mockk.version>1.13.5</mockk.version>
+
+		<!--PDF-->
+		<pdfbox.version>2.0.28</pdfbox.version>
 		<javax.activation.version>1.2.0</javax.activation.version>
 		<javax.xml-bind.version>2.3.1</javax.xml-bind.version>
+		<jai-imageio.version>1.4.0</jai-imageio.version>
+		<jbig2-imageio.version>3.0.4</jbig2-imageio.version>
+		<tika-core.version>2.8.0</tika-core.version>
 
 		<!--Plugins-->
 		<versions-maven-plugin>2.15.0</versions-maven-plugin>
