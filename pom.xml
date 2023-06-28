@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.1.0</version>
+		<version>3.1.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -27,7 +27,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<!--Spring-->
-		<spring-boot.version>3.1.0</spring-boot.version>
+		<spring-boot.version>3.1.1</spring-boot.version>
 		<spring-web.version>6.0.9</spring-web.version>
 		<spring-cloud.version>4.0.3</spring-cloud.version>
 
@@ -38,7 +38,7 @@
 		<!--Token-->
 		<token-validation.version>3.1.0</token-validation.version>
 		<mock-oauth2-server.version>0.5.8</mock-oauth2-server.version>
-		
+
 		<!--Database-->
 		<otj-pg-embedded.version>1.0.1</otj-pg-embedded.version>
 		<flyway.version>9.19.1</flyway.version>
@@ -62,6 +62,8 @@
 		<resilience4j.version>2.0.2</resilience4j.version>
 		<graphql-kotlin.version>6.5.0</graphql-kotlin.version>
 		<gson.version>2.10.1</gson.version>
+		<snappy-java.version>1.1.10.1</snappy-java.version>
+		<snakeyaml.version>2.0</snakeyaml.version>
 
 		<!--Testing-->
 		<logcaptor.version>2.9.0</logcaptor.version>
@@ -95,6 +97,22 @@
 			<url>https://repo1.maven.org/maven2</url>
 		</repository>
 	</repositories>
+
+	<!-- Dependencies that might be used as transitive dependencies and have security issues-->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.yaml</groupId>
+				<artifactId>snakeyaml</artifactId>
+				<version>${snakeyaml.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.xerial.snappy</groupId>
+				<artifactId>snappy-java</artifactId>
+				<version>${snappy-java.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<build>
 		<plugins>
