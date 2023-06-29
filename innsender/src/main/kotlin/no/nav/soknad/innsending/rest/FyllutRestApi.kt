@@ -106,8 +106,7 @@ class FyllutRestApi(
 	override fun fyllUtHentSoknad(innsendingsId: String): ResponseEntity<SkjemaDto> {
 		logger.info("Kall fra FyllUt for å hente søknad med innsendingsId $innsendingsId")
 
-		val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
-		validerSoknadsTilgang(dokumentSoknadDto)
+		val dokumentSoknadDto = soknadService.hentSoknadMedHoveddokumentVariant(innsendingsId)
 
 		logger.info("$innsendingsId: Hentet søknad")
 
