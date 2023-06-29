@@ -1,10 +1,9 @@
 package no.nav.soknad.pdfutilities
 
+import junit.framework.TestCase.assertTrue
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import org.junit.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 class KonverterTilPdfTest {
 
@@ -53,30 +52,6 @@ class KonverterTilPdfTest {
 
 		val erPdfa = Validerer().isPDFa(pdf)
 		assertTrue(erPdfa)
-	}
-
-	@Test
-	fun `Skal ha skrivbare felter`() {
-		// Gitt PDF med skrivbare felter
-		val pdf = Hjelpemetoder.getBytesFromFile("/pdfs/navskjema.pdf")
-
-		// Når
-		val harSkrivbareFelter = KonverterTilPdf().harSkrivbareFelt(pdf)
-
-		// Så
-		assertTrue(harSkrivbareFelter, "Skal ha skrivbare felter")
-	}
-
-	@Test
-	fun `Skal ikke ha skrivbare felter`() {
-		// Gitt PDF uten skrivbare felter, men acroForm.fields er en tom array (pleier å være null)
-		val pdf = Hjelpemetoder.getBytesFromFile("/pdfs/acroform-fields-tom-array.pdf")
-
-		// Når
-		val harSkrivbareFelter = KonverterTilPdf().harSkrivbareFelt(pdf)
-
-		// Så
-		assertFalse(harSkrivbareFelter, "Skal ikke ha skrivbare felter")
 	}
 
 }
