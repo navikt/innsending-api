@@ -1,9 +1,11 @@
 package no.nav.soknad.innsending
 
 import com.github.tomakehurst.wiremock.client.WireMock.*
+import io.prometheus.client.CollectorRegistry
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
@@ -20,4 +22,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @EnableTransactionManagement
 @EnableMockOAuth2Server(port = 1888)
 @AutoConfigureWireMock(port = 5490)
-class ApplicationTest
+class ApplicationTest {
+	@MockBean
+	lateinit var collectorRegistry: CollectorRegistry
+
+}

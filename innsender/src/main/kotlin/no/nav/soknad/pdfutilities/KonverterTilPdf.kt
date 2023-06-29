@@ -1,5 +1,6 @@
 package no.nav.soknad.pdfutilities
 
+import jakarta.persistence.spi.TransformerException
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import org.apache.pdfbox.pdmodel.PDDocument
@@ -23,7 +24,6 @@ import java.awt.Dimension
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
-import javax.xml.transform.TransformerException
 
 class KonverterTilPdf {
 
@@ -132,10 +132,10 @@ class KonverterTilPdf {
 		try {
 			ByteArrayOutputStream().use { baos ->
 				val dc: DublinCoreSchema = xmp.createAndAddDublinCoreSchema()
-				dc.setTitle("image")
+				dc.title = "image"
 				val id: PDFAIdentificationSchema = xmp.createAndAddPFAIdentificationSchema()
-				id.setPart(1)
-				id.setConformance("B")
+				id.part = 1
+				id.conformance = "B"
 				val serializer = XmpSerializer()
 				serializer.serialize(xmp, baos, true)
 				val metadata = PDMetadata(doc)

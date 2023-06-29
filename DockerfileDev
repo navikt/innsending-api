@@ -10,7 +10,6 @@ WORKDIR $HOME
 COPY pom.xml $HOME
 
 COPY api/pom.xml $HOME/api/pom.xml
-COPY soknadsfillager-api/pom.xml $HOME/soknadsfillager-api/pom.xml
 COPY soknadsmottaker-api/pom.xml $HOME/soknadsmottaker-api/pom.xml
 COPY innsender/pom.xml $HOME/innsender/pom.xml
 
@@ -27,7 +26,7 @@ RUN mvn -pl innsender-api verify --fail-never -DskipTests
 COPY innsender/src $HOME/innsender/src
 
 # Kompiler og pakk inn i en jar
-RUN --mount=type=cache,target=/root/.m2,rw mvn -q -pl api,soknadsfillager-api,soknadsmottaker-api,innsender package -DskipTests
+RUN --mount=type=cache,target=/root/.m2,rw mvn -q -pl api,soknadsmottaker-api,innsender package -DskipTests -DskipBomPlugin
 
 
 FROM openjdk:17-alpine

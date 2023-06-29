@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.exceptions
 
+import jakarta.servlet.http.HttpServletRequest
 import no.nav.security.token.support.core.exceptions.JwtTokenMissingException
 import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
 import no.nav.soknad.innsending.dto.RestErrorResponseDto
@@ -10,7 +11,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import java.time.LocalDateTime
-import javax.servlet.http.HttpServletRequest
 
 
 @ControllerAdvice

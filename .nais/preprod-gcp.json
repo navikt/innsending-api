@@ -17,8 +17,7 @@
 		"www.nav.no"
 	],
 	"outboundRulesGcpApplications": [
-		"soknadsmottaker",
-		"soknadsfillager"
+		"soknadsmottaker"
 	],
 	"kafka-pool": "nav-dev",
 	"env": {

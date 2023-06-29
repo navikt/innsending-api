@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.consumerapis.kafka
 
+import jakarta.annotation.PostConstruct
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import no.nav.soknad.innsending.config.KafkaConfig
@@ -15,7 +16,6 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.util.*
-import javax.annotation.PostConstruct
 
 @Service
 @Profile("prod | dev")

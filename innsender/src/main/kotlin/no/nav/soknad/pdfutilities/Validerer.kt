@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 
 
-class Validerer() {
+class Validerer {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -76,7 +76,7 @@ class Validerer() {
 	}
 
 	private fun erGyldigPdDocument(innsendingId: String, document: PDDocument) {
-		if (document.isEncrypted()) {
+		if (document.isEncrypted) {
 			logger.warn("$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert")
 			throw RuntimeException("Kan ikke laste opp kryptert fil")
 		}

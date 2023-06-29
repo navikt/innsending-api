@@ -1,9 +1,7 @@
 package no.nav.soknad.innsending.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
 
-@ConstructorBinding
 @ConfigurationProperties(prefix = "kafka")
 data class KafkaConfig(
 	val applicationId: String,

@@ -46,11 +46,6 @@ class OkHttpOAuth2ClientConfig {
 
 	@Bean
 	@Profile("!(prod | dev)")
-	@Qualifier("soknadsfillagerClient")
-	fun soknadsfillagerClientWithoutOAuth() = OkHttpClient.Builder().build()
-
-	@Bean
-	@Profile("!(prod | dev)")
 	@Qualifier("soknadsmottakerClient")
 	fun soknadsmottakerClientWithoutOAuth() = OkHttpClient.Builder().build()
 }

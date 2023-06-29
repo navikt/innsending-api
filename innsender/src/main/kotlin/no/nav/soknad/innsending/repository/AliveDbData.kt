@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.repository
 
-import javax.persistence.*
+import jakarta.persistence.*
 
 @Entity
 @Table(name = "alive")
@@ -15,9 +15,7 @@ data class AliveDbData(
 
 		other as AliveDbData
 
-		if (id != other.id) return false
-
-		return true
+		return id == other.id
 	}
 
 	override fun hashCode() = id.hashCode()

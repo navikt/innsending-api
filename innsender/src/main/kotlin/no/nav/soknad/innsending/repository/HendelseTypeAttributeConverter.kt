@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.repository
 
-import javax.persistence.AttributeConverter
-import javax.persistence.Converter
+import jakarta.persistence.AttributeConverter
+import jakarta.persistence.Converter
 
 @Converter(autoApply = true)
 class HendelseTypeAttributeConverter : AttributeConverter<HendelseType, String?> {

@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.repository
 
+import jakarta.persistence.*
 import java.time.LocalDateTime
-import javax.persistence.*
 
 @Entity
 @Table(name = "fil")
@@ -20,8 +20,6 @@ data class FilDbWithoutFileData(
 
 		other as FilDbWithoutFileData
 
-		if (id != other.id) return false
-
-		return true
+		return id == other.id
 	}
 }
