@@ -3,7 +3,6 @@ package no.nav.soknad.innsending.cleanup
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.soknad.innsending.ApplicationTest
