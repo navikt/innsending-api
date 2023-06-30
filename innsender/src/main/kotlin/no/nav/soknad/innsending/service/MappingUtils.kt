@@ -116,6 +116,46 @@ fun lagDokumentSoknadDto(
 		erSystemGenerert = erSystemGenerert
 	)
 
+fun mapTilDokumentSoknadDto(
+	soknadDbData: SoknadDbData,
+	vedleggDbDataListe: List<VedleggDbData>,
+	filerDbDataListe: List<FilDbData>,
+): DokumentSoknadDto {
+	val vedleggsListeMedFiler = vedleggDbDataListe.map { vedleggDbData ->
+		val filer = filerDbDataListe.filter { filDbData ->
+			filDbData.vedleggsid == vedleggDbData.id
+		}
+		// Merk: Lager vedlegg med første filen som matcher
+		lagVedleggDto(vedleggDbData, filer.firstOrNull()?.data)
+	}
+
+	return DokumentSoknadDto(
+		brukerId = soknadDbData.brukerid,
+		skjemanr = soknadDbData.skjemanr,
+		tittel = soknadDbData.tittel,
+		tema = soknadDbData.tema,
+		status = mapTilSoknadsStatusDto(soknadDbData.status) ?: SoknadsStatusDto.opprettet,
+		vedleggsListe = vedleggsListeMedFiler,
+		id = soknadDbData.id!!,
+		innsendingsId = soknadDbData.innsendingsid,
+		ettersendingsId = soknadDbData.ettersendingsid,
+		spraak = soknadDbData.spraak,
+		opprettetDato = mapTilOffsetDateTime(soknadDbData.opprettetdato)!!,
+		endretDato = mapTilOffsetDateTime(soknadDbData.endretdato),
+		innsendtDato = mapTilOffsetDateTime(soknadDbData.innsendtdato),
+		visningsSteg = soknadDbData.visningssteg ?: 0,
+		visningsType = soknadDbData.visningstype
+			?: if (soknadDbData.ettersendingsid != null) VisningsType.ettersending else VisningsType.dokumentinnsending,
+		kanLasteOppAnnet = soknadDbData.kanlasteoppannet ?: true,
+		innsendingsFristDato = beregnInnsendingsFrist(soknadDbData),
+		forsteInnsendingsDato = mapTilOffsetDateTime(soknadDbData.forsteinnsendingsdato),
+		fristForEttersendelse = soknadDbData.ettersendingsfrist ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
+		arkiveringsStatus = mapTilArkiveringsStatusDto(soknadDbData.arkiveringsstatus),
+		erSystemGenerert = false
+	)
+}
+
+
 private fun beregnInnsendingsFrist(soknadDbData: SoknadDbData): OffsetDateTime {
 	if (soknadDbData.ettersendingsid == null) {
 		return mapTilOffsetDateTime(soknadDbData.opprettetdato, Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD)
