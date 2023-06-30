@@ -1,9 +1,9 @@
 package no.nav.soknad.innsending.rest
 
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.service.mapTilOffsetDateTime
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.finnSpraakFraInput
+import no.nav.soknad.innsending.util.mapping.mapTilOffsetDateTime
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 

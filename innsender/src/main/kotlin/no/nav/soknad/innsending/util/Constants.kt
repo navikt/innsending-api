@@ -19,4 +19,7 @@ object Constants {
 	const val DEFAULT_FRIST_FOR_ETTERSENDELSE = 14L // 2 uker på å ettersende manglende vedlegg (NB myk frist)
 
 	const val KVITTERINGS_NR = "L7"
+
+	const val ukjentEttersendingsId = "-1" // sette lik innsendingsid istedenfor?
+
 }

@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.util.models
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
+import no.nav.soknad.innsending.model.VisningsType
 
 val DokumentSoknadDto.hoveddokument: VedleggDto?
 	get() = vedleggsListe.find {
@@ -21,3 +22,7 @@ val DokumentSoknadDto.vedleggsListeUtenHoveddokument: List<VedleggDto>
 
 val DokumentSoknadDto.kanGjoreEndringer: Boolean
 	get() = status == SoknadsStatusDto.opprettet || status == SoknadsStatusDto.utfylt
+
+val DokumentSoknadDto.erEtterSending: Boolean
+	get() = ettersendingsId != null || visningsType == VisningsType.ettersending
+

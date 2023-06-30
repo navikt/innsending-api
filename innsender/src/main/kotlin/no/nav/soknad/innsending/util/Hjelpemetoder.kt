@@ -1,5 +1,7 @@
 package no.nav.soknad.innsending.util
 
+import no.nav.soknad.arkivering.soknadsmottaker.model.Soknad
+
 const val testpersonid = "19876898104"
 
 val supportedLanguages = listOf("no", "nb", "nn", "se", "en", "de", "fr", "es", "pl")
@@ -25,4 +27,8 @@ fun finnBackupLanguage(wanted: String): String {
 	val spraak = finnSpraakFraInput(wanted)
 
 	return backupLanguage[spraak]!!
+}
+
+fun maskerFnr(soknad: Soknad): Soknad {
+	return Soknad(soknad.innsendingId, soknad.erEttersendelse, personId = "*****", soknad.tema, soknad.dokumenter)
 }

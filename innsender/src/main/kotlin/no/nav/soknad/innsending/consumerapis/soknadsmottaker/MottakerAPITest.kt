@@ -3,8 +3,8 @@ package no.nav.soknad.innsending.consumerapis.soknadsmottaker
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.VedleggDto
-import no.nav.soknad.innsending.service.maskerFnr
-import no.nav.soknad.innsending.service.translate
+import no.nav.soknad.innsending.util.mapping.translate
+import no.nav.soknad.innsending.util.maskerFnr
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile

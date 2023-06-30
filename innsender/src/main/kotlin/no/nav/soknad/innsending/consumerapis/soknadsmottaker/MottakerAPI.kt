@@ -9,8 +9,8 @@ import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.VedleggDto
-import no.nav.soknad.innsending.service.maskerFnr
-import no.nav.soknad.innsending.service.translate
+import no.nav.soknad.innsending.util.mapping.translate
+import no.nav.soknad.innsending.util.maskerFnr
 import okhttp3.OkHttpClient
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier

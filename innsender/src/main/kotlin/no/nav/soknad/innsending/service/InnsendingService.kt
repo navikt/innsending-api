@@ -14,6 +14,8 @@ import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
+import no.nav.soknad.innsending.util.mapping.*
+import no.nav.soknad.innsending.util.models.erEtterSending
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
@@ -54,7 +56,7 @@ class InnsendingService(
 		// Etter vellykket innsending skal innsendingsdato settes og status for søknad/ettersendinngssøknad settes til INNSENDT.
 		// Dato og opplastingsstatus settes på alle vedlegg som er endret
 		// Merk at dersom det ikke er lastet opp filer på et obligatorisk vedlegg, skal status settes SENDES_SENERE. Dette vil trigge oppretting av ettersendingssøknad
-		val soknadDto = if (erEttersending(soknadDtoInput))
+		val soknadDto = if (soknadDtoInput.erEtterSending)
 			opprettOgLagreDummyHovedDokument(soknadDtoInput)
 		else
 			soknadDtoInput
@@ -153,7 +155,7 @@ class InnsendingService(
 		opplastedeVedlegg: List<VedleggDto>,
 		alleVedlegg: List<VedleggDto>
 	) {
-		if (erEttersending(soknadDto)) {
+		if (soknadDto.erEtterSending) {
 			validerAtDetErEndringSomKanSendesInnPaEttersending(soknadDto, opplastedeVedlegg, alleVedlegg)
 		} else {
 			validerAtSoknadKanSendesInn(opplastedeVedlegg)
@@ -312,7 +314,7 @@ class InnsendingService(
 	): KvitteringsDto {
 		val hoveddokumentVedleggsId =
 			innsendtSoknadDto.vedleggsListe.firstOrNull { it.erHoveddokument && !it.erVariant }?.id
-		val hoveddokumentFilId = if (hoveddokumentVedleggsId != null && !erEttersending(innsendtSoknadDto)) {
+		val hoveddokumentFilId = if (hoveddokumentVedleggsId != null && !innsendtSoknadDto.erEtterSending) {
 			repo.findAllByVedleggsid(innsendtSoknadDto.innsendingsId!!, hoveddokumentVedleggsId).firstOrNull()?.id
 		} else {
 			null
@@ -329,7 +331,7 @@ class InnsendingService(
 	}
 
 	private fun beregnInnsendingsfrist(innsendtSoknadDto: DokumentSoknadDto): OffsetDateTime {
-		if (erEttersending(innsendtSoknadDto)) {
+		if (innsendtSoknadDto.erEtterSending) {
 			return innsendtSoknadDto.forsteInnsendingsDato!!.plusDays(
 				innsendtSoknadDto.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
 			)

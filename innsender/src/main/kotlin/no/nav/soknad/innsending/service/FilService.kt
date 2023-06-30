@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.repository.OpplastingsStatus
 import no.nav.soknad.innsending.repository.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
+import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.pdfutilities.PdfMerger
 import no.nav.soknad.pdfutilities.Validerer
@@ -55,7 +56,7 @@ class FilService(
 		// Lag ny fil eller oppdater eksisterende fil
 		val filDto = lagFilDto(eksisterendeFil, matchInnsendtVedleggDto, lagretVedleggDto)
 		lagreFil(savedDokumentSoknadDto, filDto)
-		
+
 	}
 
 	private fun lagFilDto(
