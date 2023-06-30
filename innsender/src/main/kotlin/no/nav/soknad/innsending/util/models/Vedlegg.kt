@@ -18,6 +18,7 @@ val List<VedleggDto>.hovedDokument: VedleggDto?
 	get() {
 		return this.find { it.erHoveddokument && !it.erVariant }
 	}
+
 val List<VedleggDto>.hovedDokumentVariant: VedleggDto?
 	get() {
 		return this.find { it.erHoveddokument && it.erVariant }

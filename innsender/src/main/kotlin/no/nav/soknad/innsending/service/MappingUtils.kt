@@ -125,6 +125,7 @@ fun mapTilDokumentSoknadDto(
 		val filer = filerDbDataListe.filter { filDbData ->
 			filDbData.vedleggsid == vedleggDbData.id
 		}
+		// Merk: Lager vedlegg med første filen som matcher
 		lagVedleggDto(vedleggDbData, filer.firstOrNull()?.data)
 	}
 

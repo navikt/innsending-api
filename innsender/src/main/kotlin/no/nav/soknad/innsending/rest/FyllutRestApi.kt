@@ -107,6 +107,7 @@ class FyllutRestApi(
 		logger.info("Kall fra FyllUt for å hente søknad med innsendingsId $innsendingsId")
 
 		val dokumentSoknadDto = soknadService.hentSoknadMedHoveddokumentVariant(innsendingsId)
+		validerSoknadsTilgang(dokumentSoknadDto)
 
 		logger.info("$innsendingsId: Hentet søknad")
 
