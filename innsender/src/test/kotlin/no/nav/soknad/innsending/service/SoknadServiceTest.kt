@@ -19,6 +19,8 @@ import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.mapping.mapTilOffsetDateTime
+import no.nav.soknad.innsending.util.models.hovedDokument
+import no.nav.soknad.innsending.util.models.hovedDokumentVariant
 import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
 import no.nav.soknad.innsending.util.testpersonid
@@ -769,6 +771,29 @@ class SoknadServiceTest : ApplicationTest() {
 		assertEquals(2, hendelseDbDatas.size)
 		assertEquals(HendelseType.Opprettet, hendelseDbDatas[0].hendelsetype)
 		assertEquals(HendelseType.Utfylt, hendelseDbDatas[1].hendelsetype)
+
+	}
+
+	@Test
+	fun `Skal hente søknad for fyllut oppsummeringssiden med hovedokumentVariant fil`() {
+		// Gitt
+		val tema = "HJE"
+		val skjemanr = "NAV 10-07.04"
+		val dokumentSoknadDto = lagDokumentSoknad(tema, skjemanr)
+		val innsendingsId = soknadService.opprettNySoknad(dokumentSoknadDto).innsendingsId!!
+
+		// Når
+		val soknad = soknadService.hentSoknadMedHoveddokumentVariant(innsendingsId)
+
+		// Så
+		val hoveddokumentVariant = soknad.vedleggsListe.hovedDokumentVariant
+		val hoveddokument = soknad.vedleggsListe.hovedDokument
+
+		assertNotNull(hoveddokumentVariant?.document, "Skal ha json filen")
+		assertNull(hoveddokument?.document, "Skal ikke ha pdf filen")
+
+		assertEquals(tema, soknad.tema, "Skal ha riktig tema")
+		assertEquals(skjemanr, soknad.skjemanr, "Skal ha riktig skjemanr")
 
 	}
 

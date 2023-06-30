@@ -18,6 +18,7 @@ import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.erEtterSending
+import no.nav.soknad.innsending.util.models.hovedDokumentVariant
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.innsending.util.validators.validerSoknadVedOppdatering
 import no.nav.soknad.innsending.util.validators.validerVedleggsListeVedOppdatering
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import kotlin.jvm.optionals.getOrNull
 
 @Service
 class SoknadService(
@@ -360,6 +362,18 @@ class SoknadService(
 	fun hentSoknad(innsendingsId: String): DokumentSoknadDto {
 		val soknadDbDataOpt = repo.hentSoknadDb(innsendingsId)
 		return vedleggService.hentAlleVedlegg(soknadDbDataOpt, innsendingsId)
+	}
+
+	fun hentSoknadMedHoveddokumentVariant(innsendingsId: String): DokumentSoknadDto {
+		val soknadDbData = repo.hentSoknadDb(innsendingsId).getOrNull()
+			?: throw ResourceNotFoundException(message = "Finner ikke søknad med innsendingsid $innsendingsId")
+
+		val vedleggDbData = repo.hentAlleVedleggGittSoknadsid(soknadDbData.id!!)
+
+		val hovedDokumentVariantFilerDbData =
+			repo.hentFilerTilVedlegg(innsendingsId, vedleggDbData.hovedDokumentVariant?.id!!)
+
+		return mapTilDokumentSoknadDto(soknadDbData, vedleggDbData, hovedDokumentVariantFilerDbData)
 	}
 
 	fun endreSoknad(id: Long, visningsSteg: Long) {
