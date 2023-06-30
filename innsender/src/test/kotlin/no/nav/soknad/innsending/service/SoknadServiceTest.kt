@@ -18,6 +18,7 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.Utilities
+import no.nav.soknad.innsending.util.mapping.mapTilOffsetDateTime
 import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
 import no.nav.soknad.innsending.util.testpersonid
