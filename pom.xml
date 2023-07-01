@@ -71,7 +71,7 @@
 		<mockk.version>1.13.5</mockk.version>
 
 		<!--PDF-->
-		<pdfbox.version>2.0.28</pdfbox.version>
+		<pdfbox.version>2.0.29</pdfbox.version>
 		<javax.activation.version>1.2.0</javax.activation.version>
 		<javax.xml-bind.version>2.3.1</javax.xml-bind.version>
 		<jai-imageio.version>1.4.0</jai-imageio.version>
