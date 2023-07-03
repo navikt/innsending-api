@@ -2,7 +2,6 @@ package no.nav.soknad.pdfutilities
 
 import nl.altindag.log.LogCaptor
 import no.nav.soknad.innsending.utils.Hjelpemetoder
-import org.junit.Assert
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -26,7 +25,7 @@ class KonverterTilPngTest {
 	private fun konverterTilPng(filnavn: String) {
 		val pdf = Hjelpemetoder.getBytesFromFile("/pdfs/$filnavn.pdf")
 		val bilde = KonverterTilPng().konverterTilPng(pdf)
-		
+
 		assertNotNull(bilde)
 	}
 }

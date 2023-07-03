@@ -14,6 +14,10 @@ import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
+import no.nav.soknad.innsending.util.mapping.lagDokumentSoknadDto
+import no.nav.soknad.innsending.util.mapping.mapTilDbMimetype
+import no.nav.soknad.innsending.util.mapping.mapTilDbOpplastingsStatus
+import no.nav.soknad.innsending.util.mapping.mapTilLocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime

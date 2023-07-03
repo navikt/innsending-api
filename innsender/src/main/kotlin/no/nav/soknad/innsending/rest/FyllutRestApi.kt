@@ -9,12 +9,12 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.SkjemaDto
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.SoknadService
-import no.nav.soknad.innsending.service.mapTilSkjemaDto
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH
 import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_LEVEL_4
 import no.nav.soknad.innsending.util.Constants.TOKENX
+import no.nav.soknad.innsending.util.mapping.mapTilSkjemaDto
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
