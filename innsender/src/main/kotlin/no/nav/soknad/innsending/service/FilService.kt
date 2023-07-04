@@ -12,6 +12,7 @@ import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
+import no.nav.soknad.pdfutilities.KonverterTilPdf
 import no.nav.soknad.pdfutilities.PdfMerger
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
@@ -363,7 +364,9 @@ class FilService(
 						logger.warn("$innsendingsId: vedlegg ${it.uuid} mangler opplastet filer på alle filobjekter, returnerer null")
 						null
 					} else {
-						PdfMerger().mergePdfer(filer.map { it.data!! }.toList())
+						val flater = KonverterTilPdf()
+						val flatetPdfs = filer.mapNotNull { fil -> fil.data?.let { data -> flater.flatUtPdf(data) } }
+						PdfMerger().mergePdfer(flatetPdfs)
 					}
 				} else {
 					if (filer.size > 1) {
