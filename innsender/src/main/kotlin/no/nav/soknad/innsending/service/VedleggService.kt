@@ -185,14 +185,14 @@ class VedleggService(
 	fun leggTilVedlegg(soknadDto: DokumentSoknadDto, vedleggDto: PostVedleggDto?): VedleggDto {
 
 		val soknadDbOpt = repo.hentSoknadDb(soknadDto.innsendingsId!!)
-		if (soknadDbOpt.isEmpty || (soknadDbOpt.get().status != SoknadsStatus.Opprettet && soknadDbOpt.get().status != SoknadsStatus.Utfylt)) throw IllegalActionException(
+		if (soknadDbOpt.status != SoknadsStatus.Opprettet && soknadDbOpt.status != SoknadsStatus.Utfylt) throw IllegalActionException(
 			"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
 			"Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet"
 		)
 
 		// Lagre vedlegget i databasen
 		val vedleggDbDataList = opprettVedleggTilSoknad(
-			soknadDbOpt.get().id!!,
+			soknadDbOpt.id!!,
 			listOf("N6"),
 			soknadDto.spraak!!,
 			vedleggDto?.tittel
@@ -204,18 +204,14 @@ class VedleggService(
 		return lagVedleggDto(vedleggDbDataList.first())
 	}
 
-	fun hentAlleVedlegg(soknadDbDataOpt: Optional<SoknadDbData>, ident: String): DokumentSoknadDto {
+	fun hentAlleVedlegg(soknadDbDataOpt: SoknadDbData, ident: String): DokumentSoknadDto {
 		val operation = InnsenderOperation.HENT.name
 
-		if (soknadDbDataOpt.isPresent) {
-			innsenderMetrics.operationsCounterInc(operation, soknadDbDataOpt.get().tema)
-			return hentAlleVedlegg(soknadDbDataOpt.get())
-
-		} else {
-			val e = ResourceNotFoundException(
-				null, "Ingen soknad med id = $ident funnet", "errorCode.resourceNotFound.applicationNotFound"
-			)
-			reportException(e, operation, "Ukjent")
+		try {
+			innsenderMetrics.operationsCounterInc(operation, soknadDbDataOpt.tema)
+			return hentAlleVedlegg(soknadDbDataOpt)
+		} catch (e: Exception) {
+			reportException(e, operation, soknadDbDataOpt.tema)
 			throw e
 		}
 	}

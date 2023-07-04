@@ -5,6 +5,7 @@ import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.repository.*
 import org.slf4j.LoggerFactory
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -21,8 +22,13 @@ class RepositoryUtils(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	fun hentSoknadDb(id: Long): Optional<SoknadDbData> = try {
-		soknadRepository.findById(id)
+	fun hentSoknadDb(id: Long): SoknadDbData = try {
+		soknadRepository.findByIdOrNull(id) ?: throw ResourceNotFoundException(
+			"Fant ikke søknad med soknadsId $id",
+			"errorCode.resourceNotFound.applicationNotFound"
+		)
+	} catch (e: ResourceNotFoundException) {
+		throw e
 	} catch (re: Exception) {
 		throw BackendErrorException(
 			re.message,
@@ -31,8 +37,13 @@ class RepositoryUtils(
 		)
 	}
 
-	fun hentSoknadDb(innsendingsId: String): Optional<SoknadDbData> = try {
-		soknadRepository.findByInnsendingsid(innsendingsId)
+	fun hentSoknadDb(innsendingsId: String): SoknadDbData = try {
+		soknadRepository.findByInnsendingsid(innsendingsId) ?: throw ResourceNotFoundException(
+			"Fant ikke søknad med innsendingsid $innsendingsId",
+			"errorCode.resourceNotFound.applicationNotFound"
+		)
+	} catch (e: ResourceNotFoundException) {
+		throw e
 	} catch (re: Exception) {
 		throw BackendErrorException(
 			re.message,

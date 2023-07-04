@@ -27,7 +27,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import kotlin.jvm.optionals.getOrNull
 
 @Service
 class SoknadService(
@@ -365,8 +364,7 @@ class SoknadService(
 	}
 
 	fun hentSoknadMedHoveddokumentVariant(innsendingsId: String): DokumentSoknadDto {
-		val soknadDbData = repo.hentSoknadDb(innsendingsId).getOrNull()
-			?: throw ResourceNotFoundException(message = "Finner ikke søknad med innsendingsid $innsendingsId")
+		val soknadDbData = repo.hentSoknadDb(innsendingsId)
 
 		val vedleggDbData = repo.hentAlleVedleggGittSoknadsid(soknadDbData.id!!)
 

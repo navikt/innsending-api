@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
+import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
@@ -87,7 +88,7 @@ class InnsendingService(
 
 		// Ekstra sjekk på at søker ikke allerede har sendt inn søknaden. Dette fordi det har vært tilfeller der søker har klart å trigge innsending request av søknaden flere ganger på rappen
 		val soknadDb = repo.hentSoknadDb(soknadDto.id!!)
-		if (soknadDb.get().status == SoknadsStatus.Innsendt) {
+		if (soknadDb.status == SoknadsStatus.Innsendt) {
 			logger.warn("${soknadDto.innsendingsId}: Søknad allerede innsendt, avbryter")
 			throw IllegalActionException(
 				"Søknaden er allerede sendt inn",
@@ -331,12 +332,12 @@ class InnsendingService(
 	}
 
 	private fun beregnInnsendingsfrist(innsendtSoknadDto: DokumentSoknadDto): OffsetDateTime {
-		if (innsendtSoknadDto.erEtterSending) {
-			return innsendtSoknadDto.forsteInnsendingsDato!!.plusDays(
+		return if (innsendtSoknadDto.erEtterSending) {
+			innsendtSoknadDto.forsteInnsendingsDato!!.plusDays(
 				innsendtSoknadDto.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
 			)
 		} else {
-			return innsendtSoknadDto.innsendtDato!!.plusDays(
+			innsendtSoknadDto.innsendtDato!!.plusDays(
 				innsendtSoknadDto.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
 			)
 		}
@@ -369,55 +370,43 @@ class InnsendingService(
 
 	fun getFiles(innsendingId: String, uuids: List<String>): List<SoknadFile> {
 		val timer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.HENT.name)
-
 		logger.info("$innsendingId: Skal hente ${uuids.joinToString(",")}")
-		try {
-			val hendelseDbData = repo.hentHendelse(innsendingId)
 
+		try {
+			// Sjekk om det er noen hendelser for søknaden
+			val hendelseDbData = repo.hentHendelse(innsendingId)
 			if (hendelseDbData.isEmpty()) {
 				logger.info("$innsendingId: ikke funnet innslag for søknad i hendelsesloggen")
-				return uuids.map {
-					SoknadFile(
-						id = it,
-						content = null,
-						createdAt = null,
-						fileStatus = SoknadFile.FileStatus.notfound
-					)
-				}
-					.toList()
-			}
-			val erArkivert = hendelseDbData.any { it.hendelsetype == HendelseType.Arkivert }
-			val soknadDbData = repo.hentSoknadDb(innsendingId)
-			if (!soknadDbData.isPresent || erArkivert) {
-				logger.info("$innsendingId: søknaden er slettet eller allerede arkivert")
-				return uuids.map {
-					SoknadFile(
-						id = it,
-						content = null,
-						createdAt = null,
-						fileStatus = SoknadFile.FileStatus.deleted
-					)
-				}
-					.toList()
+				return emptySoknadFilesWithStatus(uuids, SoknadFile.FileStatus.notfound)
 			}
 
-			val vedleggDbDatas = repo.hentAlleVedleggGittSoknadsid(soknadDbData.get().id!!)
+			// Sjekk om søknaden er arkivert
+			val erArkivert = hendelseDbData.any { it.hendelsetype == HendelseType.Arkivert }
+			if (erArkivert) {
+				logger.info("$innsendingId: søknaden er allerede arkivert")
+				emptySoknadFilesWithStatus(uuids, SoknadFile.FileStatus.deleted)
+			}
+
+			return fetchSoknadFiles(innsendingId, uuids, erArkivert)
+		} finally {
+			innsenderMetrics.operationHistogramLatencyEnd(timer)
+		}
+	}
+
+	private fun fetchSoknadFiles(innsendingId: String, uuids: List<String>, erArkivert: Boolean): List<SoknadFile> {
+		try {
+			val soknadDbData = repo.hentSoknadDb(innsendingId)
+			val vedleggDbDatas = repo.hentAlleVedleggGittSoknadsid(soknadDbData.id!!)
 			val soknadUuids = vedleggDbDatas.map { it.uuid }.toList()
+
+			// Sjekk om alle vedlegg finnes for søknaden
 			if (uuids.any { !soknadUuids.contains(it) }) {
 				logger.warn("$innsendingId: Forsøk på henting av vedlegg som ikke eksisterer for angitt søknad")
-				return uuids.map {
-					SoknadFile(
-						id = it,
-						content = null,
-						createdAt = null,
-						fileStatus = SoknadFile.FileStatus.notfound
-					)
-				}
-					.toList()
+				return emptySoknadFilesWithStatus(uuids, SoknadFile.FileStatus.notfound)
 			}
 
+			// Sjekk om alle vedlegg er lastet opp
 			val mergedVedlegg = mergeOgReturnerVedlegg(innsendingId, uuids, vedleggDbDatas)
-
 			if (mergedVedlegg.any { it.document == null }) {
 				logger.warn(
 					"$innsendingId: Følgende vedlegg mangler opplastet fil: ${
@@ -429,13 +418,29 @@ class InnsendingService(
 			// Har uuids og matchende vedleggsliste med filene som skal returneres til soknadsarkiverer
 			val idResult = mapToSoknadFiles(uuids, mergedVedlegg, erArkivert, innsendingId)
 
-			val hentet = idResult.map { it.id + "-" + it.fileStatus + ": size=" + it.content?.size }.joinToString(",")
+			val hentet = idResult.joinToString(",") { it.id + "-" + it.fileStatus + ": size=" + it.content?.size }
 			logger.info("$innsendingId: Hentet $hentet")
 			return idResult
 
-		} finally {
-			innsenderMetrics.operationHistogramLatencyEnd(timer)
+		} catch (e: ResourceNotFoundException) {
+			logger.info("$innsendingId: søknaden er slettet")
+			return emptySoknadFilesWithStatus(uuids, SoknadFile.FileStatus.deleted)
 		}
+	}
+
+	private fun emptySoknadFilesWithStatus(
+		uuids: List<String>,
+		fileStatus: SoknadFile.FileStatus
+	): List<SoknadFile> {
+		return uuids.map {
+			SoknadFile(
+				id = it,
+				content = null,
+				createdAt = null,
+				fileStatus = fileStatus
+			)
+		}
+			.toList()
 	}
 
 	private fun mapToSoknadFiles(
@@ -477,12 +482,12 @@ class InnsendingService(
 
 	private fun mergeOgReturnerVedlegg(
 		innsendingId: String,
-		vedleggsUrls: List<String>,
-		soknadVedleggs: List<VedleggDbData>
+		vedleggsUuids: List<String>,
+		soknadVedlegg: List<VedleggDbData>
 	): List<VedleggDto> {
 		return filService.hentOgMergeVedleggsFiler(
 			innsendingId,
-			soknadVedleggs.filter { vedleggsUrls.contains(it.uuid) }.toList()
+			soknadVedlegg.filter { vedleggsUuids.contains(it.uuid) }.toList()
 		)
 
 	}

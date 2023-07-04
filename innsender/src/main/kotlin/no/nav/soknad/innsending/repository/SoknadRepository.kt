@@ -13,7 +13,7 @@ import java.util.*
 @Repository
 interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 
-	fun findByInnsendingsid(innsendingsid: String): Optional<SoknadDbData>
+	fun findByInnsendingsid(innsendingsid: String): SoknadDbData?
 
 	@Query(
 		value = "SELECT * FROM soknad WHERE innsendtdato is not null AND (innsendingsid = :ettersendingsid OR (ettersendingsid is not null AND ettersendingsid = :ettersendingsid)) ORDER BY innsendtdato DESC",
