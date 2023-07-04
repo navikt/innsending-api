@@ -365,7 +365,7 @@ class FilService(
 						null
 					} else {
 						val flater = KonverterTilPdf()
-						val flatetPdfs = filer.map { flater.flatUtPdf(it.data!!) }.toList()
+						val flatetPdfs = filer.mapNotNull { it.data?.let { flater.flatUtPdf(it) } }
 						PdfMerger().mergePdfer(flatetPdfs)
 					}
 				} else {
