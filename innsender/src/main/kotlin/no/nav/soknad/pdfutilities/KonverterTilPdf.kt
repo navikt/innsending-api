@@ -47,7 +47,7 @@ class KonverterTilPdf {
 			ByteArrayInputStream(input).use { inputStream ->
 				PDDocument.load(inputStream).use { pdfDocument ->
 					val acroForm = getAcroForm(pdfDocument)
-					return acroForm != null && acroForm.fields.size > 0
+					return acroForm != null
 				}
 			}
 		} catch (e: Exception) {
