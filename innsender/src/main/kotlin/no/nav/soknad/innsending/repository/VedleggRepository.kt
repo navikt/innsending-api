@@ -16,10 +16,10 @@ interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
 	fun findAllBySoknadsid(@Param("soknadsid") soknadsid: Long): List<VedleggDbData>
 
 	@Query(value = "FROM VedleggDbData WHERE id = :vedleggsid")
-	fun findByVedleggsid(@Param("vedleggsid") vedleggsid: Long): Optional<VedleggDbData>
+	fun findByVedleggsid(@Param("vedleggsid") vedleggsid: Long): VedleggDbData?
 
 	@Query(value = "FROM VedleggDbData WHERE uuid = :uuid")
-	fun findByUuid(@Param("uuid") uuid: String): Optional<VedleggDbData>
+	fun findByUuid(@Param("uuid") uuid: String): VedleggDbData?
 
 	@Transactional
 	@Modifying

@@ -9,7 +9,6 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import java.util.*
 
 @Service
 class RepositoryUtils(
@@ -202,8 +201,11 @@ class RepositoryUtils(
 	}
 
 
-	fun hentVedlegg(vedleggsId: Long): Optional<VedleggDbData> = try {
-		vedleggRepository.findByVedleggsid(vedleggsId)
+	fun hentVedlegg(vedleggsId: Long): VedleggDbData = try {
+		vedleggRepository.findByVedleggsid(vedleggsId) ?: throw ResourceNotFoundException(
+			"Fant ikke vedlegg med id $vedleggsId",
+			"errorCode.backendError.attachmentNotFound"
+		)
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
@@ -212,10 +214,14 @@ class RepositoryUtils(
 		)
 	}
 
-	fun hentVedleggGittUuid(uuid: String): Optional<VedleggDbData> = try {
-		vedleggRepository.findByUuid(uuid)
-	} catch
-		(ex: Exception) {
+	fun hentVedleggGittUuid(uuid: String): VedleggDbData? = try {
+		vedleggRepository.findByUuid(uuid) ?: throw ResourceNotFoundException(
+			"Fant ikke vedlegg med uuid $uuid",
+			"errorCode.backendError.attachmentNotFound"
+		)
+	} catch (ex: ResourceNotFoundException) {
+		throw ex
+	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
 			"Feil ved forsøk på henting av vedlegg med uuid $uuid",
@@ -250,9 +256,14 @@ class RepositoryUtils(
 		throw BackendErrorException(ex.message, "Feil ved flush av vedlegg", "errorCode.backendError.attachmentSaveError")
 	}
 
-	fun oppdaterVedlegg(innsendingsId: String, vedleggDbData: VedleggDbData): Optional<VedleggDbData> = try {
+	fun oppdaterVedlegg(innsendingsId: String, vedleggDbData: VedleggDbData): VedleggDbData = try {
 		vedleggRepository.save(vedleggDbData)
-		vedleggRepository.findByVedleggsid(vedleggDbData.id!!)
+		vedleggRepository.findByVedleggsid(vedleggDbData.id!!) ?: throw ResourceNotFoundException(
+			"Fant ikke vedlegg med id ${vedleggDbData.id}",
+			"errorCode.backendError.attachmentNotFound"
+		)
+	} catch (ex: ResourceNotFoundException) {
+		throw ex
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
@@ -260,6 +271,7 @@ class RepositoryUtils(
 			"errorCode.backendError.attachmentSaveError"
 		)
 	}
+
 
 	fun oppdaterVedleggStatus(
 		innsendingsId: String,

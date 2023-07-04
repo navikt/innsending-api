@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.consumerapis.skjema.KodeverkSkjema
-import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
@@ -235,13 +234,7 @@ class VedleggService(
 	// Hent vedlegg, merk filene knyttet til vedlegget ikke lastes opp
 	fun hentVedleggDto(vedleggsId: Long): VedleggDto {
 		val vedleggDbDataOpt = repo.hentVedlegg(vedleggsId)
-		if (!vedleggDbDataOpt.isPresent) throw ResourceNotFoundException(
-			null,
-			"Vedlegg med id $vedleggsId ikke funnet",
-			"errorCode.resourceNotFound.attachmentNotFound"
-		)
-
-		return lagVedleggDto(vedleggDbDataOpt.get())
+		return lagVedleggDto(vedleggDbDataOpt)
 	}
 
 	fun slettVedleggOgDensFiler(vedleggDto: VedleggDto) {
@@ -289,12 +282,8 @@ class VedleggService(
 			"Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet"
 		)
 
-		val vedleggDbDataOpt = repo.hentVedlegg(vedleggsId)
-		if (vedleggDbDataOpt.isEmpty) throw IllegalActionException(
-			"Kan ikke endre vedlegg da det ikke ble funnet", "Fant ikke vedlegg $vedleggsId på ${soknadDto.innsendingsId}"
-		)
+		val vedleggDbData = repo.hentVedlegg(vedleggsId)
 
-		val vedleggDbData = vedleggDbDataOpt.get()
 		if (vedleggDbData.soknadsid != soknadDto.id) {
 			throw IllegalActionException(
 				"Kan ikke endre vedlegg da søknaden ikke har et slikt vedlegg",
@@ -314,18 +303,10 @@ class VedleggService(
 		val oppdatertVedlegg =
 			repo.oppdaterVedlegg(soknadDto.innsendingsId!!, oppdaterVedleggDb(vedleggDbData, patchVedleggDto))
 
-		if (oppdatertVedlegg.isEmpty) {
-			throw BackendErrorException(
-				null,
-				"Vedlegg er ikke blitt oppdatert",
-				"errorCode.backendError.attachmentUpdateError"
-			)
-		}
-
 		// Oppdater soknadens sist endret dato
 		repo.oppdaterEndretDato(soknadDto.id!!)
 
-		return lagVedleggDto(oppdatertVedlegg.get(), null)
+		return lagVedleggDto(oppdatertVedlegg, null)
 	}
 
 
