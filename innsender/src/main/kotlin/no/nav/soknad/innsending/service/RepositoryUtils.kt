@@ -307,8 +307,13 @@ class RepositoryUtils(
 		)
 	}
 
-	fun hentFilDb(innsendingsId: String, vedleggsId: Long, filId: Long): Optional<FilDbData> = try {
-		filRepository.findByVedleggsidAndId(vedleggsId, filId)
+	fun hentFilDb(innsendingsId: String, vedleggsId: Long, filId: Long): FilDbData = try {
+		filRepository.findByVedleggsidAndId(vedleggsId, filId) ?: throw ResourceNotFoundException(
+			"Feil ved henting av fil med id=$filId for søknad $innsendingsId",
+			"errorCode.resourceNotFound.noFile"
+		)
+	} catch (ex: ResourceNotFoundException) {
+		throw ex
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message, "Feil ved henting av fil med id=$filId for søknad $innsendingsId",

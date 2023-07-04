@@ -161,36 +161,29 @@ class FilService(
 		// Sjekk om vedlegget eksisterer
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
 			throw ResourceNotFoundException(
-				null,
 				"Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke",
 				"errorCode.resourceNotFound.attachmentNotFound"
 			)
 
-		val filDbDataOpt = repo.hentFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
-
-		if (!filDbDataOpt.isPresent)
-			when (soknadDto.status.name) {
-				SoknadsStatusDto.innsendt.name -> throw IllegalActionException(
+		try {
+			val filDbDataOpt = repo.hentFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
+			innsenderMetrics.operationsCounterInc(operation, soknadDto.tema)
+			return lagFilDto(filDbDataOpt)
+		} catch (e: ResourceNotFoundException) {
+			when (soknadDto.status) {
+				SoknadsStatusDto.innsendt -> throw IllegalActionException(
 					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
 					"Søknad ${soknadDto.innsendingsId} er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til Ditt Nav og søk opp dine saker der"
 				)
 
-				SoknadsStatusDto.slettetAvBruker.name, SoknadsStatusDto.automatiskSlettet.name -> throw IllegalActionException(
+				SoknadsStatusDto.slettetAvBruker, SoknadsStatusDto.automatiskSlettet -> throw IllegalActionException(
 					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
 					"Søknaden er slettet og ingen filer er tilgjengelig"
 				)
 
-				else -> {
-					throw ResourceNotFoundException(
-						null,
-						"Det finnes ikke fil med id=$filId for søknad ${soknadDto.innsendingsId}",
-						"errorCode.resourceNotFound.fileNotFound"
-					)
-				}
+				else -> throw e
 			}
-
-		innsenderMetrics.operationsCounterInc(operation, soknadDto.tema)
-		return lagFilDto(filDbDataOpt.get())
+		}
 	}
 
 	fun hentFiler(
@@ -265,13 +258,9 @@ class FilService(
 				null, "Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke",
 				"errorCode.resourceNotFound.attachmentNotFound"
 			)
-		if (repo.hentFilDb(soknadDto.innsendingsId!!, vedleggsId, filId).isEmpty)
-			throw ResourceNotFoundException(
-				null, "Fil $filId på vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke",
-				"errorCode.resourceNotFound.fileNotFound"
-			)
 
 		repo.slettFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
+
 		if (repo.hentFilerTilVedlegg(soknadDto.innsendingsId!!, vedleggsId).isEmpty()) {
 			val vedleggDto = soknadDto.vedleggsListe.first { it.id == vedleggsId }
 			val nyOpplastingsStatus =
