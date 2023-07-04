@@ -366,7 +366,7 @@ class FilService(
 					} else {
 						val flater = KonverterTilPdf()
 						val flatetPdfs = filer.map { flater.flatUtPdf(it.data!!) }.toList()
-						PdfMerger().mergePdfer(flatetPdfs.map { it }.toList())
+						PdfMerger().mergePdfer(flatetPdfs)
 					}
 				} else {
 					if (filer.size > 1) {
