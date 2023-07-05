@@ -38,8 +38,8 @@ class RepositoryUtils(
 
 	fun hentSoknadDb(innsendingsId: String): SoknadDbData = try {
 		soknadRepository.findByInnsendingsid(innsendingsId) ?: throw ResourceNotFoundException(
-			"Fant ikke søknad med innsendingsid $innsendingsId",
-			"errorCode.resourceNotFound.applicationNotFound"
+			message = "Fant ikke søknad med innsendingsid $innsendingsId",
+			errorCode = "errorCode.resourceNotFound.applicationNotFound"
 		)
 	} catch (e: ResourceNotFoundException) {
 		throw e

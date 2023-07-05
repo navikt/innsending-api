@@ -120,7 +120,7 @@ class KafkaMessageReader(
 	}
 
 	private fun loggAntallAvHendelsetype(hendelseType: HendelseType) {
-		logger.debug("Antall søknader med hendelsetype $hendelseType = ${repo.findNumberOfEventsByType(hendelseType)}")
+		logger.debug("Antall søknader med hendelsetype {} = {}", hendelseType, repo.findNumberOfEventsByType(hendelseType))
 	}
 
 }

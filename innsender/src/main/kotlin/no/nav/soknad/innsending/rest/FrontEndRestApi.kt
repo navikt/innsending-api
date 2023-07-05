@@ -222,9 +222,8 @@ class FrontEndRestApi(
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
 			?: throw ResourceNotFoundException(
-				"",
-				"Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId",
-				"errorCode.resourceNotFound.applicationNotFound"
+				message = "Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId",
+				errorCode = "errorCode.resourceNotFound.attachmentNotFound"
 			)
 		logger.info("$innsendingsId: Hentet vedlegg $vedleggsId til søknad")
 
@@ -299,9 +298,8 @@ class FrontEndRestApi(
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
 			throw ResourceNotFoundException(
-				null,
-				"Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId",
-				"errorCode.resourceNotFound.attachmentNotFound"
+				message = "Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId",
+				errorCode = "errorCode.resourceNotFound.attachmentNotFound"
 			)
 
 		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).

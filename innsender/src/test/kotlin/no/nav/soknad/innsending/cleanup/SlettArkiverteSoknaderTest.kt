@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.OffsetDateTime
-import kotlin.test.assertTrue
+import kotlin.test.assertNotNull
 
 class SlettArkiverteSoknaderTest : ApplicationTest() {
 
@@ -167,12 +167,12 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 		)
 		//Send inn søknad
 		val kvittering = innsendingService.sendInnSoknad(skalSendeInnSoknad)
-		assertTrue(kvittering != null)
+		assertNotNull(kvittering)
 	}
 
 	private fun simulerArkiveringsRespons(innsendingsId: String, arkiveringsStatus: ArkiveringsStatus) {
 		val soknad = repo.hentSoknadDb(innsendingsId)
-		repo.oppdaterArkiveringsstatus(soknad.get(), arkiveringsStatus)
+		repo.oppdaterArkiveringsstatus(soknad, arkiveringsStatus)
 	}
 
 }
