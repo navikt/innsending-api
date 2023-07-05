@@ -1,5 +1,8 @@
 package no.nav.soknad.innsending.repository
 
+import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query

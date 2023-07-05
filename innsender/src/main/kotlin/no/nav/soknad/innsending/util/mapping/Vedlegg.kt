@@ -4,8 +4,8 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.DocumentData
 import no.nav.soknad.arkivering.soknadsmottaker.model.Varianter
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.repository.OpplastingsStatus
-import no.nav.soknad.innsending.repository.VedleggDbData
+import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
+import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.*

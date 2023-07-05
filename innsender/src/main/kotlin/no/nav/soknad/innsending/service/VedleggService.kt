@@ -4,10 +4,10 @@ import no.nav.soknad.innsending.consumerapis.skjema.KodeverkSkjema
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.repository.OpplastingsStatus
-import no.nav.soknad.innsending.repository.SoknadDbData
-import no.nav.soknad.innsending.repository.SoknadsStatus
-import no.nav.soknad.innsending.repository.VedleggDbData
+import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
+import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR

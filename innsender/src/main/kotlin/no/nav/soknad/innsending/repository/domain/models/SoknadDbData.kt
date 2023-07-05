@@ -1,7 +1,9 @@
-package no.nav.soknad.innsending.repository
+package no.nav.soknad.innsending.repository.domain.models
 
 import jakarta.persistence.*
 import no.nav.soknad.innsending.model.VisningsType
+import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.util.Constants
 import java.time.LocalDateTime
 

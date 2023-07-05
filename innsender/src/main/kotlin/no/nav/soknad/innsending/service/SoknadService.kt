@@ -6,10 +6,10 @@ import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.repository.ArkiveringsStatus
-import no.nav.soknad.innsending.repository.HendelseType
-import no.nav.soknad.innsending.repository.SoknadDbData
-import no.nav.soknad.innsending.repository.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
+import no.nav.soknad.innsending.repository.domain.enums.HendelseType
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants

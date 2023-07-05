@@ -4,6 +4,11 @@ import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.repository.*
+import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
+import no.nav.soknad.innsending.repository.domain.enums.HendelseType
+import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.*
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service

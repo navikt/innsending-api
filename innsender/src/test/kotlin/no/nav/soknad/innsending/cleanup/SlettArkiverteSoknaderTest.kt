@@ -14,7 +14,7 @@ import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
-import no.nav.soknad.innsending.repository.ArkiveringsStatus
+import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.service.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation

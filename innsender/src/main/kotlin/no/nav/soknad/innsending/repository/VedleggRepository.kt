@@ -1,5 +1,7 @@
 package no.nav.soknad.innsending.repository
 
+import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
+import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query

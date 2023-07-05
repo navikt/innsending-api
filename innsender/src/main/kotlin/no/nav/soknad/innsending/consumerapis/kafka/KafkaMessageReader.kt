@@ -5,6 +5,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import no.nav.soknad.innsending.config.KafkaConfig
 import no.nav.soknad.innsending.repository.*
+import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
+import no.nav.soknad.innsending.repository.domain.enums.HendelseType
+import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.service.RepositoryUtils
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig

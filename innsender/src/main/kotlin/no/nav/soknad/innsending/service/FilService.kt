@@ -3,8 +3,8 @@ package no.nav.soknad.innsending.service
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.*
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.repository.OpplastingsStatus
-import no.nav.soknad.innsending.repository.VedleggDbData
+import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
+import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.mapping.*

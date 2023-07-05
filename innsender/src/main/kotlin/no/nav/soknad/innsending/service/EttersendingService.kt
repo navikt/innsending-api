@@ -7,7 +7,11 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.model.VisningsType
-import no.nav.soknad.innsending.repository.*
+import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
+import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
+import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants

@@ -3,10 +3,10 @@ package no.nav.soknad.innsending.service
 import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.repository.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.FilRepository
 import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.repository.VedleggRepository
+import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.SoknadDbDataTestdataBuilder
 import org.junit.jupiter.api.AfterEach
