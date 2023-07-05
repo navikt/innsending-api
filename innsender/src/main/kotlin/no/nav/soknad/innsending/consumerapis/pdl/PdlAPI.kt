@@ -6,7 +6,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.consumerapis.handleErrors
 import no.nav.soknad.innsending.consumerapis.pdl.dto.*
-import no.nav.soknad.innsending.exceptions.PdlApiException
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.pdl.generated.HentIdenter
 import no.nav.soknad.innsending.pdl.generated.HentPerson
 import org.slf4j.LoggerFactory
@@ -71,7 +71,7 @@ class PdlAPI(
 			return response.data
 		} else {
 			logger.error("Oppslag mot personregisteret feilet. Fikk feil i kallet til personregisteret")
-			throw PdlApiException(
+			throw BackendErrorException(
 				"Oppslag mot personregisteret feilet",
 				"Fikk feil i kallet for å hente person fra personregisteret"
 			)
@@ -92,7 +92,7 @@ class PdlAPI(
 			return response.data
 		} else {
 			logger.error("Oppslag mot personregisteret feilet. Fikk feil i kall for å hente identer fra personregisteret")
-			throw PdlApiException(
+			throw BackendErrorException(
 				"Oppslag mot personregisteret feilet",
 				"Fikk feil i kallet for å hente identer fra personregisteret"
 			)

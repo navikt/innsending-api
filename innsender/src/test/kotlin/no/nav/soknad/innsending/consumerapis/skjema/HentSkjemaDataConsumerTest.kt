@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.consumerapis.skjema
 
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.exceptions.SanityException
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -43,7 +43,7 @@ class HentSkjemaDataConsumerTest : ApplicationTest() {
 		hentSkjemaDataConsumer.cache.put("sanityList", listOf(cachetSkjema))
 
 		// Så
-		val exception = assertThrows<SanityException> {
+		val exception = assertThrows<BackendErrorException> {
 			hentSkjemaDataConsumer.hentSkjemaEllerVedlegg("NAV 14-05.07")
 		}
 	}

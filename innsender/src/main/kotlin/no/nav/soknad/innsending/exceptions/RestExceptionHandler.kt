@@ -45,32 +45,6 @@ class RestExceptionHandler {
 	}
 
 	@ExceptionHandler
-	fun safApiErrorException(exception: SafApiException): ResponseEntity<RestErrorResponseDto> {
-		logger.error(exception.message, exception)
-		return ResponseEntity(
-			RestErrorResponseDto(
-				exception.message ?: "",
-				exception.message ?: "",
-				LocalDateTime.now(),
-				exception.errorCode
-			), HttpStatus.INTERNAL_SERVER_ERROR
-		)
-	}
-
-	@ExceptionHandler
-	fun sanityException(exception: SanityException): ResponseEntity<RestErrorResponseDto> {
-		logger.error(exception.message, exception)
-		return ResponseEntity(
-			RestErrorResponseDto(
-				exception.message ?: "",
-				exception.message ?: "",
-				LocalDateTime.now(),
-				exception.errorCode
-			), HttpStatus.INTERNAL_SERVER_ERROR
-		)
-	}
-
-	@ExceptionHandler
 	fun illegalActionException(exception: IllegalActionException): ResponseEntity<RestErrorResponseDto> {
 		logger.warn(exception.message, exception)
 		return ResponseEntity(
