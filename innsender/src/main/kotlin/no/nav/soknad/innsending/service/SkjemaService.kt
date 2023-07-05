@@ -16,9 +16,9 @@ class SkjemaService(
 
 	fun hentSkjema(nr: String, spraak: String, kastException: Boolean = true) = try {
 		hentSkjemaDataConsumer.hentSkjemaEllerVedlegg(nr, spraak)
-	} catch (re: BackendErrorException) {
+	} catch (ex: BackendErrorException) {
 		if (kastException) {
-			throw ResourceNotFoundException(re.arsak, re.message ?: "", "errorCode.resourceNotFound.schemaNotFound")
+			throw ResourceNotFoundException(ex.message, ex)
 		} else {
 			logger.warn("Skjemanr=$nr ikke funnet i Sanity. Fortsetter behandling")
 			KodeverkSkjema()

@@ -221,10 +221,7 @@ class FrontEndRestApi(
 		logger.info("$innsendingsId: Kall for å hente vedlegg $vedleggsId til søknad")
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
-			?: throw ResourceNotFoundException(
-				message = "Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId",
-				errorCode = "errorCode.resourceNotFound.attachmentNotFound"
-			)
+			?: throw ResourceNotFoundException("Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId")
 		logger.info("$innsendingsId: Hentet vedlegg $vedleggsId til søknad")
 
 		return ResponseEntity
@@ -297,10 +294,7 @@ class FrontEndRestApi(
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
-			throw ResourceNotFoundException(
-				message = "Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId",
-				errorCode = "errorCode.resourceNotFound.attachmentNotFound"
-			)
+			throw ResourceNotFoundException("Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId")
 
 		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
 		val fileName = file.filename
@@ -366,11 +360,7 @@ class FrontEndRestApi(
 	}
 
 	private fun mapTilResource(filDto: FilDto): Resource {
-		if (filDto.data == null) throw ResourceNotFoundException(
-			"Fant ikke fil",
-			"Fant ikke angitt fil på ${filDto.id}",
-			"errorCode.resourceNotFound.fileNotFound"
-		)
+		if (filDto.data == null) throw ResourceNotFoundException("Fant ikke angitt fil på ${filDto.id}")
 		return ByteArrayResource(filDto.data!!)
 	}
 

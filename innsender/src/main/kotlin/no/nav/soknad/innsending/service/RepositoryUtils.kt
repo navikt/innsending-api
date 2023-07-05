@@ -22,10 +22,7 @@ class RepositoryUtils(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	fun hentSoknadDb(id: Long): SoknadDbData = try {
-		soknadRepository.findByIdOrNull(id) ?: throw ResourceNotFoundException(
-			"Fant ikke søknad med soknadsId $id",
-			"errorCode.resourceNotFound.applicationNotFound"
-		)
+		soknadRepository.findByIdOrNull(id) ?: throw ResourceNotFoundException("Fant ikke søknad med soknadsId $id")
 	} catch (e: ResourceNotFoundException) {
 		throw e
 	} catch (re: Exception) {
@@ -37,10 +34,8 @@ class RepositoryUtils(
 	}
 
 	fun hentSoknadDb(innsendingsId: String): SoknadDbData = try {
-		soknadRepository.findByInnsendingsid(innsendingsId) ?: throw ResourceNotFoundException(
-			message = "Fant ikke søknad med innsendingsid $innsendingsId",
-			errorCode = "errorCode.resourceNotFound.applicationNotFound"
-		)
+		soknadRepository.findByInnsendingsid(innsendingsId)
+			?: throw ResourceNotFoundException("Fant ikke søknad med innsendingsid $innsendingsId")
 	} catch (e: ResourceNotFoundException) {
 		throw e
 	} catch (re: Exception) {
@@ -202,10 +197,8 @@ class RepositoryUtils(
 
 
 	fun hentVedlegg(vedleggsId: Long): VedleggDbData = try {
-		vedleggRepository.findByVedleggsid(vedleggsId) ?: throw ResourceNotFoundException(
-			"Fant ikke vedlegg med id $vedleggsId",
-			"errorCode.backendError.attachmentNotFound"
-		)
+		vedleggRepository.findByVedleggsid(vedleggsId)
+			?: throw ResourceNotFoundException("Fant ikke vedlegg med id $vedleggsId")
 	} catch (ex: Exception) {
 		throw BackendErrorException(
 			ex.message,
@@ -215,10 +208,7 @@ class RepositoryUtils(
 	}
 
 	fun hentVedleggGittUuid(uuid: String): VedleggDbData? = try {
-		vedleggRepository.findByUuid(uuid) ?: throw ResourceNotFoundException(
-			"Fant ikke vedlegg med uuid $uuid",
-			"errorCode.backendError.attachmentNotFound"
-		)
+		vedleggRepository.findByUuid(uuid) ?: throw ResourceNotFoundException("Fant ikke vedlegg med uuid $uuid")
 	} catch (ex: ResourceNotFoundException) {
 		throw ex
 	} catch (ex: Exception) {
@@ -258,10 +248,8 @@ class RepositoryUtils(
 
 	fun oppdaterVedlegg(innsendingsId: String, vedleggDbData: VedleggDbData): VedleggDbData = try {
 		vedleggRepository.save(vedleggDbData)
-		vedleggRepository.findByVedleggsid(vedleggDbData.id!!) ?: throw ResourceNotFoundException(
-			"Fant ikke vedlegg med id ${vedleggDbData.id}",
-			"errorCode.backendError.attachmentNotFound"
-		)
+		vedleggRepository.findByVedleggsid(vedleggDbData.id!!)
+			?: throw ResourceNotFoundException("Fant ikke vedlegg med id ${vedleggDbData.id}")
 	} catch (ex: ResourceNotFoundException) {
 		throw ex
 	} catch (ex: Exception) {
@@ -331,10 +319,8 @@ class RepositoryUtils(
 	}
 
 	fun hentFilDb(innsendingsId: String, vedleggsId: Long, filId: Long): FilDbData = try {
-		filRepository.findByVedleggsidAndId(vedleggsId, filId) ?: throw ResourceNotFoundException(
-			"Feil ved henting av fil med id=$filId for søknad $innsendingsId",
-			"errorCode.resourceNotFound.noFile"
-		)
+		filRepository.findByVedleggsidAndId(vedleggsId, filId)
+			?: throw ResourceNotFoundException("Feil ved henting av fil med id=$filId for søknad $innsendingsId")
 	} catch (ex: ResourceNotFoundException) {
 		throw ex
 	} catch (ex: Exception) {
@@ -347,21 +333,13 @@ class RepositoryUtils(
 	fun hentFilerTilVedlegg(innsendingsId: String, vedleggsId: Long): List<FilDbData> = try {
 		filRepository.findAllByVedleggsid(vedleggsId)
 	} catch (ex: Exception) {
-		throw ResourceNotFoundException(
-			ex.message,
-			"Feil ved henting av filer for  vedlegg $vedleggsId til søknad $innsendingsId",
-			"errorCode.resourceNotFound.noFiles"
-		)
+		throw ResourceNotFoundException("Feil ved henting av filer for  vedlegg $vedleggsId til søknad $innsendingsId", ex)
 	}
 
 	fun hentFilerTilVedleggUtenFilData(innsendingsId: String, vedleggsId: Long): List<FilDbData> = try {
 		mapTilFilDbData(filWithoutDataRepository.findFilDbWIthoutFileDataByVedleggsid(vedleggsId))
 	} catch (ex: Exception) {
-		throw ResourceNotFoundException(
-			ex.message,
-			"Feil ved henting av filer for  vedlegg $vedleggsId til søknad $innsendingsId",
-			"errorCode.resourceNotFound.noFiles"
-		)
+		throw ResourceNotFoundException("Feil ved henting av filer for  vedlegg $vedleggsId til søknad $innsendingsId", ex)
 	}
 
 	private fun mapTilFilDbData(filerUtenFilData: List<FilDbWithoutFileData>): List<FilDbData> {

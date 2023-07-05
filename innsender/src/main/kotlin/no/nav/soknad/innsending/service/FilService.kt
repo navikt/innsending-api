@@ -103,11 +103,7 @@ class FilService(
 		}
 
 		if (soknadDto.vedleggsListe.none { it.id == filDto.vedleggsid })
-			throw ResourceNotFoundException(
-				null,
-				"Vedlegg $filDto.vedleggsid til søknad ${soknadDto.innsendingsId} eksisterer ikke",
-				"errorCode.resourceNotFound.attachmentNotFound"
-			)
+			throw ResourceNotFoundException("Vedlegg $filDto.vedleggsid til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
 		logger.debug("${soknadDto.innsendingsId!!}: Skal lagre fil med størrelse ${filDto.data!!.size} på vedlegg ${filDto.vedleggsid}")
 		val savedFilDbData = try {
@@ -160,10 +156,7 @@ class FilService(
 
 		// Sjekk om vedlegget eksisterer
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
-			throw ResourceNotFoundException(
-				"Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke",
-				"errorCode.resourceNotFound.attachmentNotFound"
-			)
+			throw ResourceNotFoundException("Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
 		try {
 			val filDbDataOpt = repo.hentFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
@@ -204,11 +197,7 @@ class FilService(
 	): List<FilDto> {
 		// Sjekk om vedlegget eksisterer for soknad
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
-			throw ResourceNotFoundException(
-				null,
-				"Vedlegg $vedleggsId til søknad $innsendingsId eksisterer ikke",
-				"errorCode.resourceNotFound.attachmentNotFound"
-			)
+			throw ResourceNotFoundException("Vedlegg $vedleggsId til søknad $innsendingsId eksisterer ikke")
 
 		val filDbDataList = if (medFil)
 			repo.hentFilerTilVedlegg(innsendingsId, vedleggsId)
@@ -228,11 +217,7 @@ class FilService(
 				)
 
 				else -> {
-					throw ResourceNotFoundException(
-						null,
-						"Ingen filer funnet for oppgitt vedlegg $vedleggsId til søknad $innsendingsId",
-						"errorCode.resourceNotFound.fileNotFound"
-					)
+					throw ResourceNotFoundException("Ingen filer funnet for oppgitt vedlegg $vedleggsId til søknad $innsendingsId")
 				}
 			}
 
@@ -254,10 +239,7 @@ class FilService(
 
 		// Sjekk om vedlegget eksisterer
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
-			throw ResourceNotFoundException(
-				null, "Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke",
-				"errorCode.resourceNotFound.attachmentNotFound"
-			)
+			throw ResourceNotFoundException("Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
 		repo.slettFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
 

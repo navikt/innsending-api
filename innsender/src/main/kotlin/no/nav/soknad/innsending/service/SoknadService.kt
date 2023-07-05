@@ -149,11 +149,7 @@ class SoknadService(
 
 		if (soknadDbDataList.isEmpty()) {
 			exceptionHelper.reportException(Exception("No SoknadDbData found"), operation, "Ukjent")
-			throw ResourceNotFoundException(
-				"Kan ikke opprette søknad for ettersending",
-				"Soknad med id $ettersendingsId som det skal ettersendes data for ble ikke funnet",
-				"errorCode.resourceNotFound.applicationUnknown"
-			)
+			throw ResourceNotFoundException("Kan ikke opprette søknad for ettersending. Soknad med id $ettersendingsId som det skal ettersendes data for ble ikke funnet")
 		}
 
 		sjekkHarAlleredeSoknadUnderArbeid(brukerId, soknadDbDataList.first().skjemanr, true)

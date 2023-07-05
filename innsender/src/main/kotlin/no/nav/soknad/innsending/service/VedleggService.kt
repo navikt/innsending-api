@@ -219,11 +219,7 @@ class VedleggService(
 		val vedleggDbDataListe = try {
 			repo.hentAlleVedleggGittSoknadsid(soknadDbData.id!!)
 		} catch (e: Exception) {
-			throw ResourceNotFoundException(
-				"Ved oppretting av søknad skal det minimum være opprettet et vedlegg for selve søknaden",
-				"Fant ingen vedlegg til soknad ${soknadDbData.innsendingsid}",
-				"errorCode.resourceNotFound.noAttachmentsFound"
-			)
+			throw ResourceNotFoundException("Fant ingen vedlegg til soknad ${soknadDbData.innsendingsid}. Ved oppretting av søknad skal det minimum være opprettet et vedlegg for selve søknaden")
 		}
 		val dokumentSoknadDto = lagDokumentSoknadDto(soknadDbData, vedleggDbDataListe)
 		logger.debug("hentAlleVedlegg: Hentet ${dokumentSoknadDto.innsendingsId}. " + "Med vedleggsstatus ${dokumentSoknadDto.vedleggsListe.map { it.vedleggsnr + ':' + it.opplastingsStatus + ':' + it.innsendtdato }}")
@@ -249,11 +245,8 @@ class VedleggService(
 			"Søknad ${soknadDto.innsendingsId} kan ikke endres da den allerede er innsendt"
 		)
 
-		val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId } ?: throw ResourceNotFoundException(
-			null,
-			"Angitt vedlegg $vedleggsId eksisterer ikke for søknad ${soknadDto.innsendingsId}",
-			"errorCode.resourceNotFound.attachmentNotFound"
-		)
+		val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
+			?: throw ResourceNotFoundException("Angitt vedlegg $vedleggsId eksisterer ikke for søknad ${soknadDto.innsendingsId}")
 
 		if (vedleggDto.erHoveddokument) throw IllegalActionException(
 			"Søknaden må alltid ha sitt hovedskjema",
