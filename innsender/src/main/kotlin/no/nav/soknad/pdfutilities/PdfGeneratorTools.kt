@@ -171,7 +171,7 @@ class PdfBuilder(private val tittel: String) {
 		intent.outputCondition = "sRGB IEC61966-2.1"
 		intent.outputConditionIdentifier = "sRGB IEC61966-2.1"
 		intent.registryName = "http://www.color.org"
-		pdDocument.getDocumentCatalog().addOutputIntent(intent)
+		pdDocument.documentCatalog.addOutputIntent(intent)
 		return this
 	}
 
@@ -188,7 +188,7 @@ class PdfBuilder(private val tittel: String) {
 				serializer.serialize(xmp, it, true)
 				val metadata = PDMetadata(pdDocument)
 				metadata.importXMPMetadata(it.toByteArray())
-				pdDocument.getDocumentCatalog().setMetadata(metadata)
+				pdDocument.documentCatalog.metadata = metadata
 			}
 		} catch (e: BadFieldValueException) {
 			// won't happen here, as the provided value is valid
@@ -228,11 +228,11 @@ class PageBuilder(private val pdfBuilder: PdfBuilder) {
 
 	fun getFont(path: String): PDFont {
 		try {
-			val inputStream = ClassPathResource(path).getInputStream()
+			val inputStream = ClassPathResource(path).inputStream
 			return PDType0Font.load(getPdDocument(), inputStream)
 		} catch (ex: IOException) {
 			logger.warn("Fant ikke ressursfil $path", ex.message)
-			throw BackendErrorException("Fant ikke ressursfil $path", "Feil ved generering av PDF")
+			throw BackendErrorException("Feil ved generering av PDF. Fant ikke ressursfil $path")
 		}
 	}
 
@@ -277,20 +277,20 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 	}
 
 	private fun hentArial(): PDFont {
-		if (arialFont == null) {
+		return if (arialFont == null) {
 			arialFont = pageBuilder.getFont(ARIAL_FONT_PATH)
-			return arialFont as PDFont
+			arialFont as PDFont
 		} else {
-			return arialFont as PDFont
+			arialFont as PDFont
 		}
 	}
 
 	private fun hentArialBold(): PDFont {
-		if (arialBoldFont == null) {
+		return if (arialBoldFont == null) {
 			arialBoldFont = pageBuilder.getFont(ARIALBOLD_FONT_PATH)
-			return arialBoldFont as PDFont
+			arialBoldFont as PDFont
 		} else {
-			return arialBoldFont as PDFont
+			arialBoldFont as PDFont
 		}
 	}
 
@@ -372,7 +372,7 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 		} catch (e: IOException) {
 			false
 		} catch (e2: IllegalArgumentException) {
-			logger.warn("Feil i forbindelse med av generering av PDF med ${sb.toString()} + $nestOrd")
+			logger.warn("Feil i forbindelse med av generering av PDF med $sb + $nestOrd")
 			false
 		}
 	}

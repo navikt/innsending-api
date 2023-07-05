@@ -40,10 +40,15 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 			}
 		}
 
-		val message = "Skjema med id = $id ikke funnet"
+		var message = "Skjema med id = $id ikke funnet. "
+		message += if (sanityList.isEmpty()) {
+			"Skjema cache er tom"
+		} else {
+			"Ikke funnet i skjema listen"
+		}
+
 		logger.info(message + " Antall skjema/vedleggstyper lest opp = ${sanityList.size}")
 		throw BackendErrorException(
-			if (sanityList.isEmpty()) "Skjema cache er tom" else "Ikke funnet i skjema listen",
 			message
 		)
 	}

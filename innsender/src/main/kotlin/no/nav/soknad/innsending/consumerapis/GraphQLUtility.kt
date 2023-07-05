@@ -12,5 +12,5 @@ fun handleErrors(errors: List<GraphQLClientError>, system: String) {
 		.map { "${it.message} (feilkode: ${it.path} ${it.path?.forEach { e -> e.toString() }}" }
 		.joinToString(prefix = "Error i respons fra $system: ", separator = ", ") { it }
 	logger.error("Oppslag mot $system feilet med $errorMessage")
-	throw BackendErrorException("Oppslag mot $system feilet", "Fikk feil i responsen fra $system")
+	throw BackendErrorException("Oppslag mot $system feilet. Fikk feil i responsen fra $system")
 }

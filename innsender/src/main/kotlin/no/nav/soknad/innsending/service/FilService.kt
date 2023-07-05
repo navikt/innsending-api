@@ -39,11 +39,7 @@ class FilService(
 				&& it.erHoveddokument == lagretVedleggDto.erHoveddokument && it.erVariant == lagretVedleggDto.erVariant && it.formioId == lagretVedleggDto.formioId
 		} ?: run {
 			logger.error("Fant ikke matchende lagret vedlegg med innsendt vedlegg")
-			throw BackendErrorException(
-				"Fant ikke matchende lagret vedlegg ${lagretVedleggDto.tittel} med innsendt vedlegg, er variant = ${lagretVedleggDto.erVariant}",
-				"Feil ved lagring av dokument ${lagretVedleggDto.tittel}, prøv igjen",
-				"errorCode.backendError.fileInconsistencyError"
-			)
+			throw BackendErrorException("Feil ved lagring av dokument ${lagretVedleggDto.tittel}. Fant ikke matchende lagret vedlegg ${lagretVedleggDto.tittel} med innsendt vedlegg, er variant = ${lagretVedleggDto.erVariant}")
 		}
 
 		// Finn eksisterende filer
@@ -88,11 +84,7 @@ class FilService(
 				)
 
 				else -> {
-					throw BackendErrorException(
-						"Ukjent status ${soknadDto.status.name}",
-						"Lagring av filer på søknad med status ${soknadDto.status.name} er ikke håndtert",
-						"errorCode.backendError.fileSaveError"
-					)
+					throw BackendErrorException("Ukjent status ${soknadDto.status.name}. Lagring av filer på søknad med status ${soknadDto.status.name} er ikke håndtert")
 				}
 			}
 		}

@@ -64,7 +64,7 @@ fun oppdaterVedleggDb(vedleggDbData: VedleggDbData, patchVedleggDto: PatchVedleg
 
 fun mapTilSkjemaDokumentDto(vedleggDto: VedleggDto): SkjemaDokumentDto {
 	val vedleggsnr =
-		vedleggDto.vedleggsnr ?: throw BackendErrorException("Vedleggsnr mangler", "Finner ikke vedleggsnr i vedlegg")
+		vedleggDto.vedleggsnr ?: throw BackendErrorException("Vedleggsnr mangler. Finner ikke vedleggsnr i vedlegg")
 
 	return SkjemaDokumentDto(
 		vedleggsnr = vedleggsnr,

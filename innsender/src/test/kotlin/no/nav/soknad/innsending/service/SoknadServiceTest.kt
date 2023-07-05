@@ -173,7 +173,7 @@ class SoknadServiceTest : ApplicationTest() {
 			"ResourceNotFoundException was expected"
 		)
 
-		assertEquals("Skjema med id = $skjemanr ikke funnet", exception.message)
+		assertEquals("Skjema med id = $skjemanr ikke funnet. Ikke funnet i skjema listen", exception.message)
 	}
 
 	@Test

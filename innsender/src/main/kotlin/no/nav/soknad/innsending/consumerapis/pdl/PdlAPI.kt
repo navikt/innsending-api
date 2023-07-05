@@ -71,10 +71,7 @@ class PdlAPI(
 			return response.data
 		} else {
 			logger.error("Oppslag mot personregisteret feilet. Fikk feil i kallet til personregisteret")
-			throw BackendErrorException(
-				"Oppslag mot personregisteret feilet",
-				"Fikk feil i kallet for å hente person fra personregisteret"
-			)
+			throw BackendErrorException("Oppslag mot personregisteret feilet. Fikk feil i kallet for å hente person fra personregisteret")
 		}
 	}
 
@@ -92,10 +89,7 @@ class PdlAPI(
 			return response.data
 		} else {
 			logger.error("Oppslag mot personregisteret feilet. Fikk feil i kall for å hente identer fra personregisteret")
-			throw BackendErrorException(
-				"Oppslag mot personregisteret feilet",
-				"Fikk feil i kallet for å hente identer fra personregisteret"
-			)
+			throw BackendErrorException("Oppslag mot personregisteret feilet. Fikk feil i kallet for å hente identer fra personregisteret")
 		}
 	}
 

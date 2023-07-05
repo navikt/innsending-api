@@ -99,10 +99,7 @@ class InnsendingService(
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			logger.error("${soknadDto.innsendingsId}: Feil ved sending av søknad til soknadsmottaker ${e.message}")
-			throw BackendErrorException(
-				e.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV",
-				"errorCode.backendError.sendToNAVError"
-			)
+			throw BackendErrorException("Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV", e)
 		}
 
 		// oppdater vedleggstabellen med status og innsendingsdato for opplastede vedlegg.
@@ -138,10 +135,7 @@ class InnsendingService(
 			repo.lagreSoknad(mapTilSoknadDb(soknadDto, soknadDto.innsendingsId!!, SoknadsStatus.Innsendt))
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
-			throw BackendErrorException(
-				e.message, "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV",
-				"errorCode.backendError.sendToNAVError"
-			)
+			throw BackendErrorException(message = "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV")
 		}
 
 		return Pair(opplastedeVedlegg, manglendePakrevdeVedlegg)
@@ -267,9 +261,8 @@ class InnsendingService(
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			throw BackendErrorException(
-				e.message,
-				"Feil ved generering av forside for ettersendingssøknad ${soknadDto.innsendingsId}",
-				"errorCode.backendError.sendToNAVError"
+				message = "Feil ved generering av forside for ettersendingssøknad ${soknadDto.innsendingsId}",
+				cause = e
 			)
 		}
 		val hovedDokumentDto = soknadDto.vedleggsListe.firstOrNull { it.erHoveddokument && !it.erVariant }
@@ -354,11 +347,7 @@ class InnsendingService(
 	private fun publiserBrukernotifikasjon(dokumentSoknadDto: DokumentSoknadDto): Boolean = try {
 		brukernotifikasjonPublisher.soknadStatusChange(dokumentSoknadDto)
 	} catch (e: Exception) {
-		throw BackendErrorException(
-			e.message,
-			"Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}",
-			"errorCode.backendError.sendToNAVError"
-		)
+		throw BackendErrorException("Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}", e)
 	}
 
 

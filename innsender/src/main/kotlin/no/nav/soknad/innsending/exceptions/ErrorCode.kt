@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.exceptions
 
+// En samling av alle error codes som frontend klienter kan bruke for å vise brukervennlige feilmeldinger
 enum class ErrorCode(val code: String) {
 	// General Errors
 	GENERAL_ERROR("somethingFailedTryLater"),
@@ -13,7 +14,6 @@ enum class ErrorCode(val code: String) {
 	NOT_SUPPORTED_FILE_FORMAT("illegalAction.notSupportedFileFormat"),
 	FILE_SIZE_SUM_TOO_LARGE("illegalAction.fileSizeSumTooLarge"),
 	VEDLEGG_FILE_SIZE_SUM_TOO_LARGE("illegalAction.vedleggFileSizeSumTooLarge"),
-
 	TITLE_STRING_TOO_LONG("illegalAction.titleStringTooLong"), // (ikke i bruk)
 
 }

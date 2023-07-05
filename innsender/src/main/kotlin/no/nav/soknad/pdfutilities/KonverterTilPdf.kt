@@ -51,11 +51,7 @@ class KonverterTilPdf {
 				}
 			}
 		} catch (e: Exception) {
-			throw BackendErrorException(
-				e.message,
-				"Feil ved mottak av opplastet fil",
-				"errorCode.backendError.FileUploadError"
-			)
+			throw BackendErrorException("Feil ved mottak av opplastet fil", e)
 		}
 	}
 
@@ -99,18 +95,10 @@ class KonverterTilPdf {
 			}
 		} catch (ioe: IOException) {
 			logger.error("Klarte ikke å sjekke filtype til PDF. Feil: '{}'", ioe.message)
-			throw BackendErrorException(
-				ioe.message,
-				"Feil ved mottak av opplastet fil",
-				"errorCode.backendError.FileUploadError"
-			)
+			throw BackendErrorException("Feil ved mottak av opplastet fil", ioe)
 		} catch (t: Throwable) {
 			logger.error("Klarte ikke å sjekke filtype til PDF. Feil: '{}'", t)
-			throw BackendErrorException(
-				t.message,
-				"Feil ved mottak av opplastet fil",
-				"errorCode.backendError.FileUploadError"
-			)
+			throw BackendErrorException("Feil ved mottak av opplastet fil", t)
 		}
 	}
 

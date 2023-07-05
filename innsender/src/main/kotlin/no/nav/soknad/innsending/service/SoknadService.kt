@@ -140,11 +140,7 @@ class SoknadService(
 			repo.finnNyesteSoknadGittEttersendingsId(ettersendingsId)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, "Ukjent")
-			throw BackendErrorException(
-				e.message,
-				"Feil ved henting av søknad $ettersendingsId",
-				"errorCode.backendError.applicationFetchError"
-			)
+			throw BackendErrorException("Feil ved henting av søknad $ettersendingsId", e)
 		}
 
 		if (soknadDbDataList.isEmpty()) {
@@ -473,10 +469,7 @@ class SoknadService(
 
 	fun oppdaterSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		if (dokumentSoknadDto.vedleggsListe.size != 2) {
-			throw BackendErrorException(
-				"Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant",
-				"Innsendt vedleggsliste skal være tom"
-			)
+			throw BackendErrorException("Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant. Innsendt vedleggsliste skal være tom")
 		}
 
 		val eksisterendeSoknad = hentSoknad(innsendingsId)
@@ -547,11 +540,7 @@ class SoknadService(
 	private fun publiserBrukernotifikasjon(dokumentSoknadDto: DokumentSoknadDto): Boolean = try {
 		brukernotifikasjonPublisher.soknadStatusChange(dokumentSoknadDto)
 	} catch (e: Exception) {
-		throw BackendErrorException(
-			e.message,
-			"Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}",
-			"errorCode.backendError.sendToNAVError"
-		)
+		throw BackendErrorException("Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}", e)
 	}
 
 }

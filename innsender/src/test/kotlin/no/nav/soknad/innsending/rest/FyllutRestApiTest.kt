@@ -441,8 +441,10 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertTrue(response != null)
 		assertEquals(SoknadsStatusDto.opprettet, oppdatertSoknad.status, "Status er satt til opprettet")
 		assertEquals(500, response.statusCodeValue)
-		assertEquals("Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant", response.body!!.arsak)
-		assertEquals("Innsendt vedleggsliste skal være tom", response.body!!.message)
+		assertEquals(
+			"Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant. Innsendt vedleggsliste skal være tom",
+			response.body!!.message
+		)
 
 	}
 

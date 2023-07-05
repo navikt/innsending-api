@@ -38,7 +38,7 @@ class RestExceptionHandler {
 			RestErrorResponseDto(
 				exception.message,
 				LocalDateTime.now(),
-				exception.errorCode
+				exception.errorCode.code
 			), HttpStatus.INTERNAL_SERVER_ERROR
 		)
 	}
@@ -79,7 +79,7 @@ class RestExceptionHandler {
 			RestErrorResponseDto(
 				exception.message ?: "Noe gikk galt, prøv igjen senere",
 				LocalDateTime.now(),
-				"errorCode.somethingFailedTryLater"
+				ErrorCode.GENERAL_ERROR.code,
 			), HttpStatus.INTERNAL_SERVER_ERROR
 		)
 	}

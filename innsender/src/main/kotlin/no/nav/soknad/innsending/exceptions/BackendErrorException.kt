@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.exceptions
 
 class BackendErrorException(
-	val arsak: String? = null,
 	override val message: String,
-	val errorCode: String = "errorCode.somethingFailedTryLater"
+	override val cause: Throwable? = null,
+	val errorCode: ErrorCode = ErrorCode.GENERAL_ERROR
 ) : RuntimeException(message)

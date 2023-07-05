@@ -176,10 +176,6 @@ class EttersendingService(
 	private fun publiserBrukernotifikasjon(dokumentSoknadDto: DokumentSoknadDto): Boolean = try {
 		brukerNotifikasjon.soknadStatusChange(dokumentSoknadDto)
 	} catch (e: Exception) {
-		throw BackendErrorException(
-			e.message,
-			"Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}",
-			"errorCode.backendError.sendToNAVError"
-		)
+		throw BackendErrorException("Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}", e)
 	}
 }
