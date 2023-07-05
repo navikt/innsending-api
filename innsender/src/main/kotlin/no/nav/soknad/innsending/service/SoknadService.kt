@@ -345,14 +345,14 @@ class SoknadService(
 
 	// Hent soknad gitt id med alle vedlegg. Merk at eventuelt dokument til vedlegget hentes ikke
 	fun hentSoknad(id: Long): DokumentSoknadDto {
-		val soknadDbDataOpt = repo.hentSoknadDb(id)
-		return vedleggService.hentAlleVedlegg(soknadDbDataOpt, id.toString())
+		val soknadDbData = repo.hentSoknadDb(id)
+		return vedleggService.hentAlleVedlegg(soknadDbData, id.toString())
 	}
 
 	// Hent soknad gitt innsendingsid med alle vedlegg. Merk at eventuelt dokument til vedlegget hentes ikke
 	fun hentSoknad(innsendingsId: String): DokumentSoknadDto {
-		val soknadDbDataOpt = repo.hentSoknadDb(innsendingsId)
-		return vedleggService.hentAlleVedlegg(soknadDbDataOpt, innsendingsId)
+		val soknadDbData = repo.hentSoknadDb(innsendingsId)
+		return vedleggService.hentAlleVedlegg(soknadDbData, innsendingsId)
 	}
 
 	fun hentSoknadMedHoveddokumentVariant(innsendingsId: String): DokumentSoknadDto {

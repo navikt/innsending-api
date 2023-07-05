@@ -183,14 +183,14 @@ class VedleggService(
 	@Transactional
 	fun leggTilVedlegg(soknadDto: DokumentSoknadDto, vedleggDto: PostVedleggDto?): VedleggDto {
 
-		val soknadDbOpt = repo.hentSoknadDb(soknadDto.innsendingsId!!)
-		if (soknadDbOpt.status != SoknadsStatus.Opprettet && soknadDbOpt.status != SoknadsStatus.Utfylt) throw IllegalActionException(
+		val soknadDb = repo.hentSoknadDb(soknadDto.innsendingsId!!)
+		if (soknadDb.status != SoknadsStatus.Opprettet && soknadDb.status != SoknadsStatus.Utfylt) throw IllegalActionException(
 			"Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet. Det kan ikke gjøres endring på en slettet eller innsendt søknad"
 		)
 
 		// Lagre vedlegget i databasen
 		val vedleggDbDataList = opprettVedleggTilSoknad(
-			soknadDbOpt.id!!,
+			soknadDb.id!!,
 			listOf("N6"),
 			soknadDto.spraak!!,
 			vedleggDto?.tittel
@@ -228,8 +228,8 @@ class VedleggService(
 
 	// Hent vedlegg, merk filene knyttet til vedlegget ikke lastes opp
 	fun hentVedleggDto(vedleggsId: Long): VedleggDto {
-		val vedleggDbDataOpt = repo.hentVedlegg(vedleggsId)
-		return lagVedleggDto(vedleggDbDataOpt)
+		val vedleggDbData = repo.hentVedlegg(vedleggsId)
+		return lagVedleggDto(vedleggDbData)
 	}
 
 	fun slettVedleggOgDensFiler(vedleggDto: VedleggDto) {

@@ -146,9 +146,9 @@ class FilService(
 			throw ResourceNotFoundException("Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
 		try {
-			val filDbDataOpt = repo.hentFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
+			val filDbData = repo.hentFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
 			innsenderMetrics.operationsCounterInc(operation, soknadDto.tema)
-			return lagFilDto(filDbDataOpt)
+			return lagFilDto(filDbData)
 		} catch (e: ResourceNotFoundException) {
 			when (soknadDto.status) {
 				SoknadsStatusDto.innsendt -> throw IllegalActionException(
