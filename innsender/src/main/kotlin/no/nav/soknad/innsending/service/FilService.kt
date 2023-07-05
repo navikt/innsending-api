@@ -29,6 +29,7 @@ class FilService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
+	@Transactional
 	fun lagreFil(
 		savedDokumentSoknadDto: DokumentSoknadDto,
 		lagretVedleggDto: VedleggDto,

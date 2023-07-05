@@ -64,13 +64,13 @@ class KonverterTilPdf {
 		if (harSkrivbareFelt(fil)) {
 			val images = KonverterTilPng().konverterTilPng(fil)
 			val pdfList = mutableListOf<ByteArray>()
-			for (i in 0..images.size - 1) pdfList.add(createPDFFromImage(images[i]))
+			for (element in images) pdfList.add(createPDFFromImage(element))
 			return PdfMerger().mergePdfer(pdfList)
 		}
 		return fil
 	}
 
-	fun createPDFFromImage(image: ByteArray): ByteArray {
+	private fun createPDFFromImage(image: ByteArray): ByteArray {
 		try {
 			PDDocument().use { doc ->
 				val pdImage = PDImageXObject.createFromByteArray(doc, image, null)
@@ -94,10 +94,10 @@ class KonverterTilPdf {
 				}
 			}
 		} catch (ioe: IOException) {
-			logger.error("Klarte ikke å sjekke filtype til PDF. Feil: '{}'", ioe.message)
+			logger.error("Klarte ikke å sjekke filtype til PDF. Feil: '{}'", ioe.message, ioe)
 			throw BackendErrorException("Feil ved mottak av opplastet fil", ioe)
 		} catch (t: Throwable) {
-			logger.error("Klarte ikke å sjekke filtype til PDF. Feil: '{}'", t)
+			logger.error("Klarte ikke å sjekke filtype til PDF. Feil: '{}'", t.message, t)
 			throw BackendErrorException("Feil ved mottak av opplastet fil", t)
 		}
 	}
@@ -111,7 +111,7 @@ class KonverterTilPdf {
 				}
 			}
 		} catch (e: IOException) {
-			logger.error("Lasting av fonter ved konvertering til PDF/A feilet {}", e.message)
+			logger.error("Lasting av fonter ved konvertering til PDF/A feilet {}", e.message, e)
 		}
 	}
 
@@ -155,7 +155,7 @@ class KonverterTilPdf {
 				doc.documentCatalog.addOutputIntent(intent)
 			}
 		} catch (e: IOException) {
-			logger.error("Feil ved lasting av XMPMetadata ved konvertering av Image til PDF/A, {}", e.message)
+			logger.error("Feil ved lasting av XMPMetadata ved konvertering av Image til PDF/A, {}", e.message, e)
 		}
 	}
 

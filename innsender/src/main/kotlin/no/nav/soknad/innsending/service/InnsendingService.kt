@@ -187,6 +187,7 @@ class InnsendingService(
 		}
 	}
 
+	@Transactional
 	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): KvitteringsDto {
 		val operation = InnsenderOperation.SEND_INN.name
 		val startSendInn = System.currentTimeMillis()

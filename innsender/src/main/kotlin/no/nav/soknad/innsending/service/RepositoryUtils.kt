@@ -99,7 +99,7 @@ class RepositoryUtils(
 		throw BackendErrorException("Feil ved lagring og flush av søknad ${soknadDbData.innsendingsid}", ex)
 	}
 
-	fun slettSoknad(dokumentSoknadDto: DokumentSoknadDto, hendelseType: HendelseType) = try {
+	fun slettSoknad(dokumentSoknadDto: DokumentSoknadDto, hendelseType: HendelseType): HendelseDbData = try {
 		soknadRepository.deleteById(dokumentSoknadDto.id!!)
 		lagreHendelse(
 			HendelseDbData(
@@ -122,25 +122,26 @@ class RepositoryUtils(
 		throw BackendErrorException("Feil ved oppdatering av søknad med id $soknadsId", ex)
 	}
 
-	fun oppdaterArkiveringsstatus(soknadDbData: SoknadDbData, arkiveringsStatus: ArkiveringsStatus) = try {
-		soknadRepository.updateArkiveringsStatus(arkiveringsStatus, listOf(soknadDbData.innsendingsid))
-		hendelseRepository.save(
-			HendelseDbData(
-				id = null,
-				innsendingsid = soknadDbData.innsendingsid,
-				hendelsetype = if (arkiveringsStatus == ArkiveringsStatus.Arkivert) HendelseType.Arkivert else HendelseType.ArkiveringFeilet,
-				tidspunkt = LocalDateTime.now(),
-				soknadDbData.skjemanr,
-				soknadDbData.tema,
-				erettersending = soknadDbData.ettersendingsid != null
+	fun oppdaterArkiveringsstatus(soknadDbData: SoknadDbData, arkiveringsStatus: ArkiveringsStatus): HendelseDbData =
+		try {
+			soknadRepository.updateArkiveringsStatus(arkiveringsStatus, listOf(soknadDbData.innsendingsid))
+			hendelseRepository.save(
+				HendelseDbData(
+					id = null,
+					innsendingsid = soknadDbData.innsendingsid,
+					hendelsetype = if (arkiveringsStatus == ArkiveringsStatus.Arkivert) HendelseType.Arkivert else HendelseType.ArkiveringFeilet,
+					tidspunkt = LocalDateTime.now(),
+					soknadDbData.skjemanr,
+					soknadDbData.tema,
+					erettersending = soknadDbData.ettersendingsid != null
+				)
 			)
-		)
-	} catch (ex: Exception) {
-		throw BackendErrorException(
-			message = "Feil ved oppdatering av arkiveringsstatus på søknad med innsendingsId ${soknadDbData.innsendingsid}",
-			cause = ex,
-		)
-	}
+		} catch (ex: Exception) {
+			throw BackendErrorException(
+				message = "Feil ved oppdatering av arkiveringsstatus på søknad med innsendingsId ${soknadDbData.innsendingsid}",
+				cause = ex,
+			)
+		}
 
 	fun findNumberOfEventsByType(hendelseType: HendelseType): Long? = try {
 		hendelseRepository.countByHendelsetype(hendelseType)
@@ -336,7 +337,7 @@ class RepositoryUtils(
 
 	}
 
-	fun lagreHendelse(hendelseDbData: HendelseDbData) = try {
+	fun lagreHendelse(hendelseDbData: HendelseDbData): HendelseDbData = try {
 		hendelseRepository.save(hendelseDbData)
 	} catch (ex: Exception) {
 		throw BackendErrorException("Feil i lagring av hendelse til søknad ${hendelseDbData.innsendingsid}", ex)

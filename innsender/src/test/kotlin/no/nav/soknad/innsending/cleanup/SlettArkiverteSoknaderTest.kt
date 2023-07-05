@@ -97,7 +97,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 	fun testSlettingAvInnsendteSoknader() {
 		val soknadService = lagSoknadService()
 		val innsendingService = lagInnsendingService(soknadService)
-		val startFinnOgSlettArkiverteSoknader = SlettArkiverteSoknader(leaderSelectionUtility, soknadService)
+		SlettArkiverteSoknader(leaderSelectionUtility, soknadService)
 
 		val soknader = mutableListOf<DokumentSoknadDto>()
 		every { brukernotifikasjonPublisher.soknadStatusChange(capture(soknader)) } returns true

@@ -319,7 +319,7 @@ class FrontEndRestApiTest : ApplicationTest() {
 
 		var ok = true
 		assertThrows(Exception::class.java) {
-			val postFilResponseN6 = restTemplate.exchange(
+			restTemplate.exchange(
 				"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil",
 				HttpMethod.POST,
 				postFilRequestN6,
@@ -353,7 +353,7 @@ class FrontEndRestApiTest : ApplicationTest() {
 	}
 
 	private fun getToken(): String {
-		val token: String = mockOAuth2Server.issueToken(
+		return mockOAuth2Server.issueToken(
 			tokenx,
 			MockLoginController::class.java.simpleName,
 			DefaultOAuth2TokenCallback(
@@ -365,7 +365,6 @@ class FrontEndRestApiTest : ApplicationTest() {
 				expiry.toLong()
 			)
 		).serialize()
-		return token
 	}
 
 	@Test

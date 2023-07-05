@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.cleanup
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.net.InetAddress
@@ -9,7 +10,7 @@ import java.net.URL
 
 @Component
 class LeaderSelectionUtility {
-	val logger = LoggerFactory.getLogger(javaClass)
+	val logger: Logger = LoggerFactory.getLogger(javaClass)
 
 	@OptIn(ExperimentalSerializationApi::class)
 	val format = Json { explicitNulls = false; ignoreUnknownKeys = true }

@@ -86,7 +86,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		assertTrue(response != null)
 
-		assertEquals(201, response.statusCodeValue)
+		assertEquals(201, response.statusCode.value())
 
 		testHentSoknadOgSendInn(response, token)
 
@@ -239,7 +239,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Så
 		assertTrue(response != null)
 		assertEquals(SoknadsStatusDto.utfylt, oppdatertSoknad.status, "Status er satt til utfylt")
-		assertEquals(302, response.statusCodeValue)
+		assertEquals(302, response.statusCode.value())
 		assertTrue(response.headers["Location"] != null)
 		assertEquals(nyTittel, oppdatertSoknad.tittel)
 		assertEquals("en", oppdatertSoknad.spraak, "Språk er oppdatert (blir konvertert til de første 2 bokstavene)")
@@ -271,8 +271,6 @@ class FyllutRestApiTest : ApplicationTest() {
 		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
 		val dokumentSoknadDto = opprettSoknad()
-		val skjemanr = dokumentSoknadDto.skjemanr
-		val tema = dokumentSoknadDto.tema
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		val fyllUtVedleggstittel = "N6-ny-vedleggstittel"
@@ -324,9 +322,9 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertTrue(leggTilVedleggResponse != null)
 		assertTrue(oppdatertUtfyltResponse != null)
 
-		assertEquals(302, utfyltResponse.statusCodeValue)
-		assertEquals(201, leggTilVedleggResponse.statusCodeValue)
-		assertEquals(302, oppdatertUtfyltResponse.statusCodeValue)
+		assertEquals(302, utfyltResponse.statusCode.value())
+		assertEquals(201, leggTilVedleggResponse.statusCode.value())
+		assertEquals(302, oppdatertUtfyltResponse.statusCode.value())
 
 		assertEquals(4, oppdatertSoknad.vedleggsListe.size)
 
@@ -440,7 +438,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Så
 		assertTrue(response != null)
 		assertEquals(SoknadsStatusDto.opprettet, oppdatertSoknad.status, "Status er satt til opprettet")
-		assertEquals(500, response.statusCodeValue)
+		assertEquals(500, response.statusCode.value())
 		assertEquals(
 			"Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant. Innsendt vedleggsliste skal være tom",
 			response.body!!.message
@@ -466,7 +464,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Så
 		assertTrue(response != null)
-		assertEquals(200, response.statusCodeValue)
+		assertEquals(200, response.statusCode.value())
 		assertEquals(skjemanr, response.body!!.skjemanr)
 		assertEquals(tittel, response.body!!.tittel)
 		assertEquals(2, response.body!!.vedleggsListe?.size)
@@ -502,7 +500,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Så
 		assertTrue(response != null)
-		assertEquals(200, response.statusCodeValue)
+		assertEquals(200, response.statusCode.value())
 		assertEquals("OK", response.body!!.status)
 		assertEquals("Slettet soknad med id $innsendingsId", response.body!!.info)
 

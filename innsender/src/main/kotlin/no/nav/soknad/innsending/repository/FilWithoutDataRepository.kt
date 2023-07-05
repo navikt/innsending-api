@@ -9,6 +9,6 @@ import org.springframework.stereotype.Repository
 interface FilWithoutDataRepository : JpaRepository<FilDbWithoutFileData, Long> {
 
 	@Query(value = "FROM FilDbWithoutFileData WHERE vedleggsid = :vedleggsid order by id")
-	fun findFilDbWIthoutFileDataByVedleggsid(@Param("vedleggsid") vedleggsid: kotlin.Long): List<FilDbWithoutFileData>
+	fun findFilDbWIthoutFileDataByVedleggsid(@Param("vedleggsid") vedleggsid: Long): List<FilDbWithoutFileData>
 
 }

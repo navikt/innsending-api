@@ -43,7 +43,7 @@ class HentSkjemaDataConsumerTest : ApplicationTest() {
 		hentSkjemaDataConsumer.cache.put("sanityList", listOf(cachetSkjema))
 
 		// Så
-		val exception = assertThrows<BackendErrorException> {
+		assertThrows<BackendErrorException> {
 			hentSkjemaDataConsumer.hentSkjemaEllerVedlegg("NAV 14-05.07")
 		}
 	}

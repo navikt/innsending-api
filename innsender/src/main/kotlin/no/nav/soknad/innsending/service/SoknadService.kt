@@ -430,6 +430,7 @@ class SoknadService(
 		innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
 	}
 
+	@Transactional
 	fun finnOgSlettArkiverteSoknader(dagerGamle: Long, vindu: Long) {
 		val arkiverteSoknader =
 			repo.findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(dagerGamle, vindu)
@@ -438,6 +439,7 @@ class SoknadService(
 
 	}
 
+	@Transactional
 	fun slettGamleSoknader(dagerGamle: Long, permanent: Boolean = false) {
 		val slettFor = mapTilOffsetDateTime(LocalDateTime.now(), -dagerGamle)
 		logger.info("Finn opprettede søknader opprettet før $slettFor permanent=$permanent")

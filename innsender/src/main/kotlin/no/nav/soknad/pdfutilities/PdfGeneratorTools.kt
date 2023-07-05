@@ -78,8 +78,7 @@ class PdfGenerator {
 		val vedleggSendesIkkeHeader = tekster.getProperty("kvittering.vedlegg.sendesIkke")
 		val tiligereInnsendtHeader = tekster.getProperty("kvittering.vedlegg.tidligereInnsendt")
 
-		val lastetOpp = vedleggOpplastet
-		val antallLastetOpp = lastetOpp.size
+		val antallLastetOpp = vedleggOpplastet.size
 		val now = LocalDateTime.now()
 		val antallInnsendt = java.lang.String.format(
 			tekster.getProperty("kvittering.erSendt"),
