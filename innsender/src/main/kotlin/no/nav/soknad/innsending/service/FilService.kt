@@ -1,10 +1,7 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.config.RestConfig
-import no.nav.soknad.innsending.exceptions.BackendErrorException
-import no.nav.soknad.innsending.exceptions.ExceptionHelper
-import no.nav.soknad.innsending.exceptions.IllegalActionException
-import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
+import no.nav.soknad.innsending.exceptions.*
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.OpplastingsStatus
 import no.nav.soknad.innsending.repository.VedleggDbData
@@ -81,15 +78,13 @@ class FilService(
 		if (!soknadDto.kanGjoreEndringer) {
 			when (soknadDto.status.name) {
 				SoknadsStatusDto.innsendt.name -> throw IllegalActionException(
-					"Innsendte søknader kan ikke endres. Ønsker søker å gjøre oppdateringer, så må vedkommende ettersende dette",
-					"Søknad ${soknadDto.innsendingsId} er sendt inn og nye filer kan ikke lastes opp på denne. Opprett ny søknad for ettersendelse av informasjon",
-					"errorCode.illegalAction.applicationSentInOrDeleted"
+					message = "Søknad ${soknadDto.innsendingsId} er sendt inn og nye filer kan ikke lastes opp på denne. Opprett ny søknad for ettersendelse av informasjon. Innsendte søknader kan ikke endres. Ønsker søker å gjøre oppdateringer, så må vedkommende ettersende dette",
+					errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 				)
 
 				SoknadsStatusDto.slettetAvBruker.name, SoknadsStatusDto.automatiskSlettet.name -> throw IllegalActionException(
-					"Søknader markert som slettet kan ikke endres. Søker må eventuelt opprette ny søknad",
-					"Søknaden er slettet og ingen filer kan legges til",
-					"errorCode.illegalAction.applicationSentInOrDeleted"
+					message = "Søknaden er slettet og ingen filer kan legges til. Søknader markert som slettet kan ikke endres. Søker må eventuelt opprette ny søknad",
+					errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 				)
 
 				else -> {
@@ -118,14 +113,14 @@ class FilService(
 			finnFilStorrelseSum(soknadDto, filDto.vedleggsid),
 			0,
 			restConfig.maxFileSize.toLong(),
-			"errorCode.illegalAction.vedleggFileSizeSumTooLarge"
+			ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE,
 		)
 		Validerer().validerStorrelse(
 			soknadDto.innsendingsId!!,
 			finnFilStorrelseSum(soknadDto),
 			0,
 			restConfig.maxFileSizeSum.toLong(),
-			"errorCode.illegalAction.fileSizeSumTooLarge"
+			ErrorCode.FILE_SIZE_SUM_TOO_LARGE
 		)
 		repo.oppdaterVedleggStatus(
 			soknadDto.innsendingsId!!,
@@ -165,13 +160,15 @@ class FilService(
 		} catch (e: ResourceNotFoundException) {
 			when (soknadDto.status) {
 				SoknadsStatusDto.innsendt -> throw IllegalActionException(
-					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
-					"Søknad ${soknadDto.innsendingsId} er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til Ditt Nav og søk opp dine saker der"
+					message = "Søknad ${soknadDto.innsendingsId} er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til Ditt Nav og søk opp dine saker der. Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
+					cause = e,
+					errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 				)
 
 				SoknadsStatusDto.slettetAvBruker, SoknadsStatusDto.automatiskSlettet -> throw IllegalActionException(
-					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
-					"Søknaden er slettet og ingen filer er tilgjengelig"
+					message = "Søknaden er slettet og ingen filer er tilgjengelig. Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
+					cause = e,
+					errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 				)
 
 				else -> throw e
@@ -205,15 +202,15 @@ class FilService(
 			repo.hentFilerTilVedleggUtenFilData(innsendingsId, vedleggsId)
 
 		if (filDbDataList.isEmpty() && kastFeilNarNull)
-			when (soknadDto.status.name) {
-				SoknadsStatusDto.innsendt.name -> throw IllegalActionException(
-					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
-					"Søknad $innsendingsId er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til https://www.nav.no/minside og søk opp dine saker der"
+			when (soknadDto.status) {
+				SoknadsStatusDto.innsendt -> throw IllegalActionException(
+					message = "Søknad $innsendingsId er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til https://www.nav.no/minside og søk opp dine saker der. Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
+					errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 				)
 
-				SoknadsStatusDto.slettetAvBruker.name, SoknadsStatusDto.automatiskSlettet.name -> throw IllegalActionException(
-					"Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
-					"Søknaden er slettet og ingen filer er tilgjengelig"
+				SoknadsStatusDto.slettetAvBruker, SoknadsStatusDto.automatiskSlettet -> throw IllegalActionException(
+					message = "Søknaden er slettet og ingen filer er tilgjengelig. Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
+					errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 				)
 
 				else -> {

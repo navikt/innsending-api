@@ -381,10 +381,7 @@ class SoknadService(
 
 		// slett vedlegg og soknad
 		if (!dokumentSoknadDto.kanGjoreEndringer)
-			throw IllegalActionException(
-				"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
-				"Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den er innsendt eller slettet"
-			)
+			throw IllegalActionException("Det kan ikke gjøres endring på en slettet eller innsendt søknad. Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den er innsendt eller slettet")
 
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { vedleggService.slettVedleggOgDensFiler(it) }
 		//fillagerAPI.slettFiler(innsendingsId, dokumentSoknadDto.vedleggsListe)
@@ -408,10 +405,7 @@ class SoknadService(
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
 
 		if (!dokumentSoknadDto.kanGjoreEndringer)
-			throw IllegalActionException(
-				"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
-				"Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den allerede er innsendt"
-			)
+			throw IllegalActionException("Det kan ikke gjøres endring på en slettet eller innsendt søknad. Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den allerede er innsendt")
 
 		//fillagerAPI.slettFiler(innsendingsId, dokumentSoknadDto.vedleggsListe)
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettFilerForVedlegg(it.id!!) }

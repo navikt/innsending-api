@@ -49,9 +49,9 @@ class RestExceptionHandler {
 		logger.warn(exception.message, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
-				exception.message ?: "",
+				exception.message,
 				LocalDateTime.now(),
-				exception.errorCode
+				exception.errorCode.code
 			), HttpStatus.BAD_REQUEST
 		)
 	}

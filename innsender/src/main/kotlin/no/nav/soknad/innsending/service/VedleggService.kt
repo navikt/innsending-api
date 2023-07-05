@@ -185,8 +185,7 @@ class VedleggService(
 
 		val soknadDbOpt = repo.hentSoknadDb(soknadDto.innsendingsId!!)
 		if (soknadDbOpt.status != SoknadsStatus.Opprettet && soknadDbOpt.status != SoknadsStatus.Utfylt) throw IllegalActionException(
-			"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
-			"Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet"
+			"Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet. Det kan ikke gjøres endring på en slettet eller innsendt søknad"
 		)
 
 		// Lagre vedlegget i databasen
@@ -240,21 +239,14 @@ class VedleggService(
 
 	@Transactional
 	fun slettVedlegg(soknadDto: DokumentSoknadDto, vedleggsId: Long) {
-		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException(
-			"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
-			"Søknad ${soknadDto.innsendingsId} kan ikke endres da den allerede er innsendt"
-		)
+		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException("Søknad ${soknadDto.innsendingsId} kan ikke endres da den allerede er innsendt. Det kan ikke gjøres endring på en slettet eller innsendt søknad.")
 
 		val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
 			?: throw ResourceNotFoundException("Angitt vedlegg $vedleggsId eksisterer ikke for søknad ${soknadDto.innsendingsId}")
 
-		if (vedleggDto.erHoveddokument) throw IllegalActionException(
-			"Søknaden må alltid ha sitt hovedskjema",
-			"Kan ikke slette hovedskjema på en søknad"
-		)
+		if (vedleggDto.erHoveddokument) throw IllegalActionException("Kan ikke slette hovedskjema på en søknad. Søknaden må alltid ha sitt hovedskjema")
 		if (!vedleggDto.vedleggsnr.equals("N6") || (vedleggDto.vedleggsnr.equals("N6") && vedleggDto.erPakrevd)) throw IllegalActionException(
-			"Vedlegg som er obligatorisk for søknaden kan ikke slettes av søker",
-			"Kan ikke slette påkrevd vedlegg"
+			"Kan ikke slette påkrevd vedlegg. Vedlegg som er obligatorisk for søknaden kan ikke slettes av søker"
 		)
 
 		slettVedleggOgDensFiler(vedleggDto, soknadDto.id!!)
@@ -270,25 +262,17 @@ class VedleggService(
 	@Transactional
 	fun endreVedlegg(patchVedleggDto: PatchVedleggDto, vedleggsId: Long, soknadDto: DokumentSoknadDto): VedleggDto {
 
-		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException(
-			"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
-			"Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet"
-		)
+		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException("Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet. Det kan ikke gjøres endring på en slettet eller innsendt søknad")
 
 		val vedleggDbData = repo.hentVedlegg(vedleggsId)
-
 		if (vedleggDbData.soknadsid != soknadDto.id) {
-			throw IllegalActionException(
-				"Kan ikke endre vedlegg da søknaden ikke har et slikt vedlegg",
-				"Søknad ${soknadDto.innsendingsId} har ikke vedlegg med id $vedleggsId"
-			)
+			throw IllegalActionException("Søknad ${soknadDto.innsendingsId} har ikke vedlegg med id $vedleggsId. Kan ikke endre vedlegg da søknaden ikke har et slikt vedlegg")
 		}
 		if (vedleggDbData.vedleggsnr != "N6" && patchVedleggDto.tittel != null) {
-			throw IllegalActionException(
-				"Ulovlig endring av tittel på vedlegg",
-				"Vedlegg med id $vedleggsId er av type ${vedleggDbData.vedleggsnr}.Tittel kan kun endres på vedlegg av type N6 ('Annet')."
-			)
-		}    /* Sletter ikke eventuelle filer som søker har lastet opp på vedlegget før vedkommende endrer status til sendSenere eller sendesAvAndre.
+			throw IllegalActionException("Ulovlig endring av tittel på vedlegg. Vedlegg med id $vedleggsId er av type ${vedleggDbData.vedleggsnr}.Tittel kan kun endres på vedlegg av type N6 ('Annet').")
+		}
+
+		/* Sletter ikke eventuelle filer som søker har lastet opp på vedlegget før vedkommende endrer status til sendSenere eller sendesAvAndre.
 				Disse blir eventuelt slettet i forbindelse med innsending av søknader.
 				slettFilerDersomStatusUlikLastetOpp(patchVedleggDto, soknadDto, vedleggsId)
 		*/

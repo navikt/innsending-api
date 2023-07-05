@@ -5,10 +5,7 @@ import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.skjema.KodeverkSkjema
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
-import no.nav.soknad.innsending.exceptions.BackendErrorException
-import no.nav.soknad.innsending.exceptions.ExceptionHelper
-import no.nav.soknad.innsending.exceptions.IllegalActionException
-import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
+import no.nav.soknad.innsending.exceptions.*
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
@@ -77,7 +74,7 @@ class InnsendingService(
 			filService.finnFilStorrelseSum(soknadDto, opplastedeVedlegg),
 			0,
 			restConfig.maxFileSizeSum.toLong(),
-			"errorCode.illegalAction.fileSizeSumTooLarge"
+			ErrorCode.FILE_SIZE_SUM_TOO_LARGE,
 		)
 
 		logger.info("${soknadDtoInput.innsendingsId}: Opplastede vedlegg = ${opplastedeVedlegg.map { it.vedleggsnr + ':' + it.uuid + ':' + it.opprettetdato + ':' + it.document?.size }}")
@@ -91,9 +88,8 @@ class InnsendingService(
 		if (soknadDb.status == SoknadsStatus.Innsendt) {
 			logger.warn("${soknadDto.innsendingsId}: Søknad allerede innsendt, avbryter")
 			throw IllegalActionException(
-				"Søknaden er allerede sendt inn",
-				"Søknaden er innsendt og kan ikke sendes på nytt.",
-				"errorCode.illegalAction.applicationSentInOrDeleted"
+				message = "Søknaden er allerede sendt inn. Søknaden er innsendt og kan ikke sendes på nytt.",
+				errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 			)
 		}
 
@@ -169,7 +165,7 @@ class InnsendingService(
 		alleVedlegg: List<VedleggDto>
 	) {
 		// For å sende inn en ettersendingssøknad må det være lastet opp minst ett vedlegg, eller vært gjort endring på opplastingsstatus på vedlegg
-		if ((opplastedeVedlegg.isEmpty() || opplastedeVedlegg.filter { !it.erHoveddokument }.isEmpty())) {
+		if ((opplastedeVedlegg.isEmpty() || opplastedeVedlegg.none { !it.erHoveddokument })) {
 			val allePakrevdeBehandlet = alleVedlegg
 				.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") }
 				.none { !(it.opplastingsStatus == OpplastingsStatusDto.innsendt || it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp) }
@@ -180,9 +176,8 @@ class InnsendingService(
 					soknadDto.vedleggsListe.joinToString(separator) { it.tittel + ", med status = " + it.opplastingsStatus + "\n" })
 			} else {
 				throw IllegalActionException(
-					"Søker må ha ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
-					"Innsending avbrutt da ingen vedlegg er lastet opp",
-					"errorCode.illegalAction.sendInErrorNoChange"
+					message = "Innsending avbrutt da ingen vedlegg er lastet opp. Søker må ha ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
+					errorCode = ErrorCode.SEND_IN_ERROR_NO_CHANGE
 				)
 			}
 		}
@@ -190,11 +185,10 @@ class InnsendingService(
 
 	private fun validerAtSoknadKanSendesInn(opplastedeVedlegg: List<VedleggDto>) {
 		// For å sende inn en søknad må det være lastet opp en fil på hoveddokumentet
-		if ((opplastedeVedlegg.isEmpty() || opplastedeVedlegg.filter { it.erHoveddokument && !it.erVariant }.isEmpty())) {
+		if ((opplastedeVedlegg.isEmpty() || opplastedeVedlegg.none { it.erHoveddokument && !it.erVariant })) {
 			throw IllegalActionException(
-				"Søker må ha lastet opp dokumenter til søknaden for at den skal kunne sendes inn",
-				"Innsending avbrutt da hoveddokument ikke finnes",
-				"errorCode.illegalAction.sendInErrorNoApplication"
+				message = "Innsending avbrutt da hoveddokument ikke finnes. Søker må ha lastet opp dokumenter til søknaden for at den skal kunne sendes inn",
+				errorCode = ErrorCode.SEND_IN_ERROR_NO_APPLICATION
 			)
 		}
 	}

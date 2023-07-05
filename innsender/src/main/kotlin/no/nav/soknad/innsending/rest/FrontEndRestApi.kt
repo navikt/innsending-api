@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.rest
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.FrontendApi
 import no.nav.soknad.innsending.config.RestConfig
+import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
@@ -253,7 +254,7 @@ class FrontEndRestApi(
 				opplastetPaSoknad,
 				opplastetPaVedlegg,
 				restConfig.maxFileSizeSum.toLong(),
-				"errorCode.illegalAction.fileSizeSumTooLarge"
+				ErrorCode.FILE_SIZE_SUM_TOO_LARGE
 			)
 		}
 		if (!patchVedleggDto.tittel.isNullOrEmpty()) {
@@ -262,7 +263,7 @@ class FrontEndRestApi(
 				0L,
 				patchVedleggDto.tittel!!.length.toLong(),
 				255L,
-				"errorCode.illegalAction.titleStringTooLong"
+				ErrorCode.TITLE_STRING_TOO_LONG
 			)
 		}
 		val vedleggDto = vedleggService.endreVedlegg(patchVedleggDto, vedleggsId, soknadDto)
@@ -303,9 +304,8 @@ class FrontEndRestApi(
 			logger.info("$innsendingsId: Skal validere ${split[split.size - 1]}")
 		}
 		if (!file.isReadable) throw IllegalActionException(
-			"Ingen fil opplastet",
-			"Opplasting feilet",
-			"errorCode.illegalAction.fileCannotBeRead"
+			message = "Opplasting feilet. Ingen fil opplastet",
+			errorCode = ErrorCode.FILE_CANNOT_BE_READ
 		)
 		val opplastet = (file as ByteArrayResource).byteArray
 		Validerer().validerStorrelse(
@@ -313,7 +313,7 @@ class FrontEndRestApi(
 			0,
 			opplastet.size.toLong(),
 			restConfig.maxFileSize.toLong(),
-			"errorCode.illegalAction.vedleggFileSizeSumTooLarge"
+			ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE
 		)
 		Validerer().validereFilformat(innsendingsId, opplastet, fileName)
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
@@ -343,9 +343,8 @@ class FrontEndRestApi(
 				(soknadDto.status == SoknadsStatusDto.innsendt && soknadDto.vedleggsListe.any { it.id == vedleggsId && it.erHoveddokument && !it.erVariant }))
 		) {
 			throw IllegalActionException(
-				"Søknaden kan ikke vises",
-				"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
-				"errorCode.illegalAction.applicationSentInOrDeleted"
+				message = "Søknaden kan ikke vises. Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
+				errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 			)
 		}
 
@@ -440,9 +439,8 @@ class FrontEndRestApi(
 		tilgangskontroll.harTilgang(soknadDto)
 		if (!soknadDto.kanGjoreEndringer) {
 			throw IllegalActionException(
-				"Søknaden kan ikke vises",
-				"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
-				"errorCode.illegalAction.applicationSentInOrDeleted"
+				message = "Søknaden kan ikke vises. Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
+				errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 			)
 		}
 		return soknadDto

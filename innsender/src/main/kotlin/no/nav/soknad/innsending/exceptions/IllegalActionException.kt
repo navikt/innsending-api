@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.exceptions
 
 class IllegalActionException(
-	val arsak: String?,
-	message: String,
-	val errorCode: String = "errorCode.somethingFailedTryLater"
+	override val message: String,
+	override val cause: Throwable? = null,
+	val errorCode: ErrorCode = ErrorCode.GENERAL_ERROR
 ) : RuntimeException(message)

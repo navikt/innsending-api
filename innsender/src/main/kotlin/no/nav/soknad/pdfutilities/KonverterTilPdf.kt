@@ -2,6 +2,7 @@ package no.nav.soknad.pdfutilities
 
 import jakarta.persistence.spi.TransformerException
 import no.nav.soknad.innsending.exceptions.BackendErrorException
+import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
@@ -36,9 +37,8 @@ class KonverterTilPdf {
 			return createPDFFromImage(fil)
 		}
 		throw IllegalActionException(
-			"",
-			"Ulovlig filformat. Kan ikke konvertere til PDF",
-			"errorCode.illegalAction.notSupportedFileFormat"
+			message = "Ulovlig filformat. Kan ikke konvertere til PDF",
+			errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
 		)
 	}
 
