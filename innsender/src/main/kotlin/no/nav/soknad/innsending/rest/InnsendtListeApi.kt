@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.InnsendingService
 import no.nav.soknad.innsending.service.SafService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
+import no.nav.soknad.innsending.supervision.requestlogger.LogRequest
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
 import org.slf4j.LoggerFactory
@@ -30,9 +31,8 @@ class InnsendtListeApi(
 		claimMap = [Constants.CLAIM_ACR_LEVEL_4, Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH],
 		combineWithOr = true
 	)
+	@LogRequest
 	override fun aktiveSaker(): ResponseEntity<List<AktivSakDto>> {
-		logger.info("Kall for å hente innsendte søknader for en bruker")
-
 		val innsendteSoknader = safService.hentInnsendteSoknader(tilgangskontroll.hentBrukerFraToken())
 		logger.info("Hentet ${innsendteSoknader.size} innsendteSoknader. Innsendtdato=${innsendteSoknader[0].innsendtDato}")
 		return ResponseEntity
@@ -42,9 +42,8 @@ class InnsendtListeApi(
 
 	@Timed(InnsenderOperation.HENT)
 	@ProtectedWithClaims(issuer = Constants.AZURE)
+	@LogRequest
 	override fun hentInnsendteFiler(uuids: List<String>, xInnsendingId: String): ResponseEntity<List<SoknadFile>> {
-		logger.info("$xInnsendingId: Kall for å hente filene $uuids til en innsendt søknad")
-
 		val innsendteFiler = innsendingService.getFiles(xInnsendingId, uuids)
 		logger.info(
 			"$xInnsendingId: Status for henting av følgende innsendte filer ${

@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.*
 import no.nav.soknad.innsending.supervision.InnsenderOperation
+import no.nav.soknad.innsending.supervision.requestlogger.LogRequest
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.MAX_AKTIVE_DAGER
@@ -47,8 +48,8 @@ class FrontEndRestApi(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Timed(InnsenderOperation.OPPRETT)
+	@LogRequest("skjemanr")
 	override fun opprettSoknad(opprettSoknadBody: OpprettSoknadBody): ResponseEntity<DokumentSoknadDto> {
-		logger.info("Kall for å opprette søknad på skjema ${opprettSoknadBody.skjemanr}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
 		soknadService.sjekkHarAlleredeSoknadUnderArbeid(brukerId, opprettSoknadBody.skjemanr, false)
@@ -59,7 +60,6 @@ class FrontEndRestApi(
 			finnSpraakFraInput(opprettSoknadBody.sprak),
 			opprettSoknadBody.vedleggsListe ?: emptyList()
 		)
-		logger.info("${dokumentSoknadDto.innsendingsId}: Opprettet søknad på skjema ${opprettSoknadBody.skjemanr}")
 
 		return ResponseEntity
 			.status(HttpStatus.CREATED)
@@ -67,8 +67,8 @@ class FrontEndRestApi(
 	}
 
 	@Timed(InnsenderOperation.OPPRETT)
+	@LogRequest("ettersendingTilinnsendingsId")
 	override fun ettersendingPaInnsendingsId(opprettEttersendingGittInnsendingsId: OpprettEttersendingGittInnsendingsId): ResponseEntity<DokumentSoknadDto> {
-		logger.info("Kall for å opprette ettersending på søknad ${opprettEttersendingGittInnsendingsId.ettersendingTilinnsendingsId}")
 		val origSoknad = soknadService.hentSoknad(opprettEttersendingGittInnsendingsId.ettersendingTilinnsendingsId)
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		tilgangskontroll.harTilgang(origSoknad, brukerId)
@@ -78,6 +78,7 @@ class FrontEndRestApi(
 				brukerId,
 				opprettEttersendingGittInnsendingsId.ettersendingTilinnsendingsId
 			)
+
 		logger.info("${dokumentSoknadDto.innsendingsId}: Opprettet ettersending for innsendingsid ${opprettEttersendingGittInnsendingsId.ettersendingTilinnsendingsId}")
 
 		return ResponseEntity
@@ -86,6 +87,7 @@ class FrontEndRestApi(
 	}
 
 	@Timed(InnsenderOperation.OPPRETT)
+	@LogRequest("skjemanr")
 	override fun opprettEttersendingGittSkjemanr(opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr): ResponseEntity<DokumentSoknadDto> {
 		logger.info("Kall for å opprette ettersending på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
@@ -173,10 +175,11 @@ class FrontEndRestApi(
 		}
 
 	@Timed(InnsenderOperation.HENT)
+	@LogRequest
 	override fun hentAktiveOpprettedeSoknader(): ResponseEntity<List<DokumentSoknadDto>> {
-		logger.info("Kall for å hente alle opprette ikke innsendte søknader")
 		val brukerIds = tilgangskontroll.hentPersonIdents()
 		val dokumentSoknadDtos = soknadService.hentAktiveSoknader(brukerIds)
+
 		logger.info("Hentet ${dokumentSoknadDtos.size} søknader opprettet av bruker")
 
 		return ResponseEntity
@@ -185,10 +188,9 @@ class FrontEndRestApi(
 	}
 
 	@Timed(InnsenderOperation.HENT)
+	@LogRequest
 	override fun hentSoknad(innsendingsId: String): ResponseEntity<DokumentSoknadDto> {
-		logger.info("$innsendingsId: Kall for å hente søknad")
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
-		logger.info("$innsendingsId: Hentet søknad")
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -196,21 +198,19 @@ class FrontEndRestApi(
 	}
 
 	@Timed(InnsenderOperation.ENDRE)
+	@LogRequest("visningsSteg")
 	override fun endreSoknad(innsendingsId: String, patchSoknadDto: PatchSoknadDto): ResponseEntity<Unit> {
-		logger.info("$innsendingsId: Kall for å endre søknad")
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		soknadService.endreSoknad(soknadDto.id!!, patchSoknadDto.visningsSteg)
-		logger.info("$innsendingsId: Oppdatert søknad")
 
 		return ResponseEntity(HttpStatus.NO_CONTENT)
 	}
 
 	@Timed(InnsenderOperation.HENT)
+	@LogRequest
 	override fun hentVedleggsListe(innsendingsId: String): ResponseEntity<List<VedleggDto>> {
-		logger.info("$innsendingsId: Kall for å vedleggene til søknad")
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		val vedleggsListeDto = soknadDto.vedleggsListe
-		logger.info("$innsendingsId: Hentet vedleggene til søknad")
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -218,12 +218,11 @@ class FrontEndRestApi(
 	}
 
 	@Timed(InnsenderOperation.HENT)
+	@LogRequest
 	override fun hentVedlegg(innsendingsId: String, vedleggsId: Long): ResponseEntity<VedleggDto> {
-		logger.info("$innsendingsId: Kall for å hente vedlegg $vedleggsId til søknad")
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
 			?: throw ResourceNotFoundException("Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId")
-		logger.info("$innsendingsId: Hentet vedlegg $vedleggsId til søknad")
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -231,16 +230,12 @@ class FrontEndRestApi(
 	}
 
 	@Timed(InnsenderOperation.ENDRE)
+	@LogRequest("opplastingsStatus", "tittel")
 	override fun endreVedlegg(
 		innsendingsId: String,
 		vedleggsId: Long,
 		patchVedleggDto: PatchVedleggDto
 	): ResponseEntity<VedleggDto> {
-		logger.info(
-			"$innsendingsId: Kall for å endre vedlegg $vedleggsId til søknad. " +
-				"Status=${patchVedleggDto.opplastingsStatus} og tittel = ${patchVedleggDto.tittel}"
-		)
-
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		if ((patchVedleggDto.opplastingsStatus == OpplastingsStatusDto.ikkeValgt || patchVedleggDto.opplastingsStatus == OpplastingsStatusDto.lastetOpp)
 			&& soknadDto.vedleggsListe.first { it.id == vedleggsId }.opplastingsStatus != patchVedleggDto.opplastingsStatus
@@ -276,9 +271,8 @@ class FrontEndRestApi(
 
 
 	@Timed(InnsenderOperation.LAST_OPP)
+	@LogRequest("tittel")
 	override fun lagreVedlegg(innsendingsId: String, postVedleggDto: PostVedleggDto?): ResponseEntity<VedleggDto> {
-		logger.info("$innsendingsId: Kall for å lagre vedlegg til søknad")
-
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		val vedleggDto = vedleggService.leggTilVedlegg(soknadDto, postVedleggDto)
 		logger.info("$innsendingsId: Lagret vedlegg ${vedleggDto.id} til søknad")
@@ -290,9 +284,8 @@ class FrontEndRestApi(
 
 	// Søker skal kunne laste opp ett eller flere filer på ett vedlegg. Dette endepunktet tillater opplasting av en fil.
 	@Timed(InnsenderOperation.LAST_OPP)
+	@LogRequest
 	override fun lagreFil(innsendingsId: String, vedleggsId: Long, file: Resource): ResponseEntity<FilDto> {
-		logger.info("$innsendingsId: Kall for å lagre fil på vedlegg $vedleggsId til søknad")
-
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
 			throw ResourceNotFoundException("Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId")
@@ -334,9 +327,8 @@ class FrontEndRestApi(
 	// Søker skal kunne laste opp ett eller flere filer på ett vedlegg. Dette endepunktet tillater henting av en allerede opplastet fil.
 	@Timed(InnsenderOperation.LAST_NED)
 	@CrossOrigin
+	@LogRequest
 	override fun hentFil(innsendingsId: String, vedleggsId: Long, filId: Long): ResponseEntity<Resource> {
-		logger.info("$innsendingsId: Kall for å hente fil $filId på vedlegg $vedleggsId til søknad")
-
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll.harTilgang(soknadDto)
 		if (!(soknadDto.kanGjoreEndringer ||
@@ -364,11 +356,10 @@ class FrontEndRestApi(
 	}
 
 	@Timed(InnsenderOperation.HENT)
+	@LogRequest
 	override fun hentFilInfoForVedlegg(innsendingsId: String, vedleggsId: Long): ResponseEntity<List<FilDto>> {
-		logger.info("$innsendingsId: Kall for å hente filinfo til vedlegg $vedleggsId til søknad")
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		val filDtoListe = filService.hentFiler(soknadDto, innsendingsId, vedleggsId)
-		logger.info("$innsendingsId: Hentet informasjon om opplastede filer på vedlegg $vedleggsId til søknad")
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -377,12 +368,10 @@ class FrontEndRestApi(
 
 	@Timed(InnsenderOperation.SLETT_FIL)
 	@CrossOrigin
+	@LogRequest
 	override fun slettFil(innsendingsId: String, vedleggsId: Long, filId: Long): ResponseEntity<VedleggDto> {
-		logger.info("Kall for å slette fil $filId på vedlegg $vedleggsId til søknad $innsendingsId")
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
-
 		val vedleggDto = filService.slettFil(soknadDto, vedleggsId, filId)
-		logger.info("$innsendingsId: Slettet fil $filId på vedlegg $vedleggsId til søknad")
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -391,12 +380,11 @@ class FrontEndRestApi(
 
 	@Timed(InnsenderOperation.SLETT_FIL)
 	@CrossOrigin
+	@LogRequest
 	override fun slettVedlegg(innsendingsId: String, vedleggsId: Long): ResponseEntity<BodyStatusResponseDto> {
-		logger.info("$innsendingsId: Kall for å slette vedlegg $vedleggsId for søknad")
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 
 		vedleggService.slettVedlegg(soknadDto, vedleggsId)
-		logger.info("$innsendingsId: Slettet vedlegg $vedleggsId for søknad")
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -405,12 +393,10 @@ class FrontEndRestApi(
 
 	@Timed(InnsenderOperation.SLETT)
 	@CrossOrigin
+	@LogRequest
 	override fun slettSoknad(innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
-		logger.info("$innsendingsId: Kall for å slette søknad")
-
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		soknadService.slettSoknadAvBruker(soknadDto)
-		logger.info("Slettet søknad med id $innsendingsId")
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -418,9 +404,8 @@ class FrontEndRestApi(
 	}
 
 	@Timed(InnsenderOperation.SEND_INN)
+	@LogRequest
 	override fun sendInnSoknad(innsendingsId: String): ResponseEntity<KvitteringsDto> {
-		logger.info("$innsendingsId: Kall for å sende inn soknad ")
-
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		val kvitteringsDto = innsendingService.sendInnSoknad(soknadDto)
 		logger.info(
