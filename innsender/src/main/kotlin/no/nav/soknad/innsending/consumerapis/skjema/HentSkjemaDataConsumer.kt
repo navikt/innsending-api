@@ -48,9 +48,7 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 		}
 
 		logger.info(message + " Antall skjema/vedleggstyper lest opp = ${sanityList.size}")
-		throw BackendErrorException(
-			message
-		)
+		throw BackendErrorException(message)
 	}
 
 	private fun createKodeverkSkjema(sanity: SkjemaOgVedleggsdata, spraak: String, id: String): KodeverkSkjema =

@@ -7,7 +7,6 @@ import no.nav.soknad.innsending.config.KafkaConfig
 import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.HendelseType
-import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.service.RepositoryUtils
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -64,41 +63,19 @@ class KafkaMessageReader(
 			val soknadDb = repo.hentSoknadDb(key)
 
 			when {
-				message.value().startsWith(ARCHIVING_OK) -> updateStatus(
-					key,
-					soknadDb,
-					ArkiveringsStatus.Arkivert,
-					HendelseType.Arkivert
-				)
+				message.value().startsWith(ARCHIVING_OK) -> {
+					logger.debug("$key: er arkivert")
+					repo.oppdaterArkiveringsstatus(soknadDb, ArkiveringsStatus.Arkivert)
+					loggAntallAvHendelsetype(HendelseType.Arkivert)
+				}
 
-				message.value().startsWith(ARCHIVING_FAILED) -> updateStatus(
-					key,
-					soknadDb,
-					ArkiveringsStatus.ArkiveringFeilet,
-					HendelseType.ArkiveringFeilet
-				)
+				message.value().startsWith(ARCHIVING_FAILED) -> {
+					logger.error("$key: arkivering feilet")
+					repo.oppdaterArkiveringsstatus(soknadDb, ArkiveringsStatus.ArkiveringFeilet)
+					loggAntallAvHendelsetype(HendelseType.ArkiveringFeilet)
+				}
 			}
 		}
-	}
-
-
-	private fun updateStatus(
-		key: String,
-		soknadDb: SoknadDbData,
-		status: ArkiveringsStatus,
-		hendelseType: HendelseType
-	) {
-		repo.oppdaterArkiveringsstatus(soknadDb, status)
-
-		when (status) {
-			ArkiveringsStatus.Arkivert -> logger.debug("$key: er arkivert")
-			ArkiveringsStatus.ArkiveringFeilet -> logger.error("$key: arkivering feilet")
-			else -> {
-				logger.error("$key: ukjent status")
-			}
-		}
-
-		loggAntallAvHendelsetype(hendelseType)
 	}
 
 
