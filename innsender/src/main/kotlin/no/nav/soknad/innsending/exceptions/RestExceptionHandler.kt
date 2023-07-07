@@ -18,6 +18,7 @@ class RestExceptionHandler {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 
+	// 404
 	@ExceptionHandler
 	fun resourceNotFoundException(exception: ResourceNotFoundException): ResponseEntity<RestErrorResponseDto> {
 		logger.warn(exception.message, exception)
@@ -56,6 +57,7 @@ class RestExceptionHandler {
 		)
 	}
 
+	// 401
 	@ExceptionHandler(value = [JwtTokenMissingException::class, JwtTokenUnauthorizedException::class])
 	fun unauthorizedExceptionHandler(
 		request: HttpServletRequest,
@@ -72,6 +74,7 @@ class RestExceptionHandler {
 		)
 	}
 
+	// 500
 	@ExceptionHandler
 	fun generalException(exception: Exception): ResponseEntity<RestErrorResponseDto> {
 		logger.error(exception.message, exception)
