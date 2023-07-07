@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import kotlin.reflect.KClass
 import kotlin.reflect.full.memberProperties
 
 // Log the request and response of a method annotated with @LogRequest. Example: @LogRequest
@@ -16,9 +17,13 @@ import kotlin.reflect.full.memberProperties
 class RequestLogger {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
+	fun isFromPackage(kClass: KClass<*>, packageName: String): Boolean {
+		return kClass.qualifiedName?.startsWith(packageName) ?: false
+	}
+
 	@Around("@annotation(logRequest)")
 	@Throws(Throwable::class)
-	fun logRequest(joinPoint: ProceedingJoinPoint, logRequest: LogRequest) {
+	fun logRequest(joinPoint: ProceedingJoinPoint, logRequest: LogRequest): Any? {
 		val requestAttributes = RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes
 		val request = requestAttributes.request
 
@@ -27,25 +32,25 @@ class RequestLogger {
 			val params = mutableMapOf<String, String>()
 			joinPoint.args.forEach { arg ->
 				val kClass = arg::class
+				if (!isFromPackage(kClass, "no.nav.soknad.innsending")) return@forEach
+
 				for (prop in kClass.memberProperties) {
 					if (prop.name in logParameters) {
-						params[prop.name] = prop.getter.call(arg).toString()
+						params[prop.name] = prop.call(arg).toString()
 					}
 				}
 			}
 
 			if (params.isEmpty()) {
-				logger.info("Request: [${joinPoint.signature.name}] ${request.method} ${request.requestURI}")
+				logger.info("Request: ${request.method} ${request.requestURI} | [${joinPoint.signature.name}] ")
 			} else {
-				logger.info("Request: [${joinPoint.signature.name}] ${request.method} ${request.requestURI}. Parameters: $params")
+				logger.info("Request: ${request.method} ${request.requestURI} | [${joinPoint.signature.name}] | Parameters: $params")
 			}
 
-			joinPoint.proceed()
-		} catch (ex: Exception) {
-			logger.warn("Kunne ikke logge request fra annotation", ex)
+			return joinPoint.proceed()
 		} finally {
 			val response = requestAttributes.response
-			logger.info("Response: [${joinPoint.signature.name}] ${request.method} ${request.requestURI}. Status: (${response?.status})")
+			logger.info("Response: ${request.method} ${request.requestURI} | [${joinPoint.signature.name}] | Status: (${response?.status})")
 		}
 	}
 }
