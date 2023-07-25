@@ -82,7 +82,7 @@ restconfig:
   filesInOneRequestToFilestorage: 10
   soknadsMottakerHost: http://localhost:9043/soknadsmottaker-api
   soknadsMottakerEndpoint: /save
-  frontEndFortsettEndpoint: http://localhost:3000/dokumentinnsending/oversikt/
+  frontEndFortsettEndpoint: http://localhost:3100/sendinn/
   clientId: clientId
   clientSecret: clientSecret
   pdlScope: api://dev-fss.pdl.pdl-api/.default
