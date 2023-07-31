@@ -166,6 +166,15 @@ paths:
               $ref: "#/components/schemas/SkjemaDto"
         required: true
 
+      parameters:
+            - name: tvingOppretting
+              in: query
+              description: Tving oppretting av søknad selv om bruker allerede har en aktiv søknad. Hvis bruker allerede har en aktiv søknad på samme skjemanr vil hen få valg om å fortsette på den eller starte en ny.
+                           Denne parameteren brukes for å indikere om en bruker ønsker å starte en ny søknad uavhengig av om det allerede er en aktiv søknad på gang.
+              required: true
+              schema:
+                type: boolean
+
       responses:
         201:
           description: Søknad opprettet

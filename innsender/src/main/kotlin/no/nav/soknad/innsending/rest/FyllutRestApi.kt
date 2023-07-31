@@ -39,7 +39,8 @@ class FyllutRestApi(
 	@LogRequest("skjemanr", "tittel", "tema", "spraak")
 	override fun fyllUt(skjemaDto: SkjemaDto): ResponseEntity<Unit> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
-		soknadService.sjekkHarAlleredeSoknadUnderArbeid(brukerId, skjemaDto.skjemanr, false)
+
+		soknadService.loggWarningVedEksisterendeSoknad(brukerId, skjemaDto.skjemanr, false)
 
 		val opprettetSoknad = soknadService.opprettNySoknad(
 			SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
@@ -55,18 +56,40 @@ class FyllutRestApi(
 
 	@Timed(InnsenderOperation.OPPRETT)
 	@LogRequest("skjemanr", "tittel", "tema", "spraak")
-	override fun fyllUtOpprettSoknad(skjemaDto: SkjemaDto): ResponseEntity<SkjemaDto> {
+	override fun fyllUtOpprettSoknad(tvingOppretting: Boolean, skjemaDto: SkjemaDto): ResponseEntity<SkjemaDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
-		soknadService.sjekkHarAlleredeSoknadUnderArbeid(brukerId, skjemaDto.skjemanr, false)
-		val opprettetSoknad = soknadService.opprettNySoknad(
-			SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
-				skjemaDto,
-				brukerId
-			)
-		)
 
-		logger.info("${opprettetSoknad.innsendingsId}: Soknad fra fyllut persistert. Antall vedlegg fra FyllUt=${skjemaDto.vedleggsListe?.size}")
+		logger.info("Kall fra FyllUt for å opprette søknad for skjema ${skjemaDto.skjemanr}")
+		logger.debug("Skal opprette søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
+
+		val redirectVedEksisterendeSoknad = redirectVedEksisterendeSoknad(brukerId, skjemaDto.skjemanr, tvingOppretting)
+		if (redirectVedEksisterendeSoknad != null) return redirectVedEksisterendeSoknad
+
+		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(skjemaDto, brukerId)
+		val opprettetSoknad = soknadService.opprettNySoknad(dokumentSoknadDto)
+
+		logger.debug("${opprettetSoknad.innsendingsId}: Soknad fra fyllut persistert. Antall vedlegg fra FyllUt=${skjemaDto.vedleggsListe?.size}")
+
 		return ResponseEntity.status(HttpStatus.CREATED).body(opprettetSoknad)
+	}
+
+	// Redirect til eksisterende søknad hvis bruker har en søknad under arbeid
+	private fun redirectVedEksisterendeSoknad(
+		brukerId: String,
+		skjemanr: String,
+		tvingOppretting: Boolean
+	): ResponseEntity<SkjemaDto>? {
+		val aktiveSoknader = soknadService.hentAktiveSoknader(brukerId, skjemanr, false)
+		val harSoknadUnderArbeid = aktiveSoknader.isNotEmpty()
+
+		if (!tvingOppretting && harSoknadUnderArbeid) {
+			logger.info("Bruker har allerede søknad under arbeid for skjemanr=$skjemanr. Redirecter til denne")
+
+			// FIXME: Er det greit at vi redirecter til den første av potensielt flere aktive søknader? Er det riktig link?
+			val redirectUrl = URI.create("${restConfig.frontEndFortsettEndpoint}/${aktiveSoknader.first().innsendingsId}")
+			return ResponseEntity.status(HttpStatus.FOUND).location(redirectUrl).build()
+		}
+		return null
 	}
 
 	@Timed(InnsenderOperation.ENDRE)

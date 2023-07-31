@@ -148,7 +148,7 @@ class SoknadService(
 			throw ResourceNotFoundException("Kan ikke opprette søknad for ettersending. Soknad med id $ettersendingsId som det skal ettersendes data for ble ikke funnet")
 		}
 
-		sjekkHarAlleredeSoknadUnderArbeid(brukerId, soknadDbDataList.first().skjemanr, true)
+		loggWarningVedEksisterendeSoknad(brukerId, soknadDbDataList.first().skjemanr, true)
 		return ettersendingService.opprettEttersendingsSoknad(
 			vedleggService.hentAlleVedlegg(soknadDbDataList.first()),
 			ettersendingsId
@@ -330,6 +330,17 @@ class SoknadService(
 		return brukerIds.flatMap { hentSoknadGittBrukerId(it) }
 	}
 
+	fun hentAktiveSoknader(brukerId: String, skjemanr: String, ettersending: Boolean): List<DokumentSoknadDto> {
+		return hentAktiveSoknader(listOf(brukerId)).filter { it.skjemanr == skjemanr && it.erEtterSending == ettersending }
+	}
+
+	fun loggWarningVedEksisterendeSoknad(brukerId: String, skjemanr: String, ettersending: Boolean) {
+		val aktiveSoknaderGittSkjemanr = hentAktiveSoknader(brukerId, skjemanr, ettersending)
+		if (aktiveSoknaderGittSkjemanr.isNotEmpty()) {
+			logger.warn("Dupliserer søknad på skjemanr=$skjemanr, søker har allerede ${aktiveSoknaderGittSkjemanr.size} under arbeid")
+		}
+	}
+
 	fun hentInnsendteSoknader(brukerIds: List<String>): List<DokumentSoknadDto> {
 		return brukerIds.flatMap { hentSoknadGittBrukerId(it, SoknadsStatus.Innsendt) }
 	}
@@ -457,15 +468,6 @@ class SoknadService(
 
 			logger.info("SlettGamleIkkeInnsendteSoknader: Funnet ${soknadDbDataListe.size} søknader som skal slettes")
 			soknadDbDataListe.forEach { slettSoknadAutomatisk(it.innsendingsid) }
-		}
-	}
-
-	fun sjekkHarAlleredeSoknadUnderArbeid(brukerId: String, skjemanr: String, ettersending: Boolean) {
-		val aktiveSoknaderGittSkjemanr =
-			hentAktiveSoknader(listOf(brukerId)).filter { it.skjemanr == skjemanr && it.erEtterSending == ettersending }
-
-		if (aktiveSoknaderGittSkjemanr.isNotEmpty()) {
-			logger.warn("Dupliserer søknad på skjemanr=$skjemanr, søker har allerede ${aktiveSoknaderGittSkjemanr.size} under arbeid")
 		}
 	}
 
