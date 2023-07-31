@@ -56,13 +56,14 @@ class FyllutRestApi(
 
 	@Timed(InnsenderOperation.OPPRETT)
 	@LogRequest("skjemanr", "tittel", "tema", "spraak")
-	override fun fyllUtOpprettSoknad(tvingOppretting: Boolean, skjemaDto: SkjemaDto): ResponseEntity<SkjemaDto> {
+	override fun fyllUtOpprettSoknad(skjemaDto: SkjemaDto, tvingOppretting: Boolean?): ResponseEntity<SkjemaDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
 		logger.info("Kall fra FyllUt for å opprette søknad for skjema ${skjemaDto.skjemanr}")
 		logger.debug("Skal opprette søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
 
-		val redirectVedEksisterendeSoknad = redirectVedEksisterendeSoknad(brukerId, skjemaDto.skjemanr, tvingOppretting)
+		val redirectVedEksisterendeSoknad =
+			redirectVedEksisterendeSoknad(brukerId, skjemaDto.skjemanr, tvingOppretting ?: false)
 		if (redirectVedEksisterendeSoknad != null) return redirectVedEksisterendeSoknad
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(skjemaDto, brukerId)

@@ -26,6 +26,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
+import org.springframework.web.util.UriComponentsBuilder
 import java.util.*
 import kotlin.test.*
 
@@ -443,6 +444,57 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertThrows<ResourceNotFoundException>("Søknaden skal ikke finnes") { soknadService.hentSoknad(innsendingsId) }
 
 	}
+
+	@Test
+	fun `Skal redirecte ved eksisterende søknad gitt at tvingOppretting er false`() {
+		// Gitt
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		val dokumentSoknadDto = opprettSoknad()
+		val innsendingsId = dokumentSoknadDto.innsendingsId!!
+
+		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
+		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
+
+		// Når
+		val uri = UriComponentsBuilder.fromHttpUrl("http://localhost:${serverPort}/fyllUt/v1/soknad")
+			.queryParam("tvingOppretting", false)
+			.build()
+			.toUri()
+
+		val response = restTemplate.exchange(uri, HttpMethod.POST, requestEntity, SkjemaDto::class.java)
+
+		// Så
+		assertTrue(response != null)
+		assertEquals(302, response.statusCode.value())
+		assertEquals(response.headers.location!!.path, "/sendinn/$innsendingsId")
+	}
+
+	@Test
+	fun `Skal opprette søknad når tvingOppretting er true, selv om brukeren har en søknad med samme skjemanr`() {
+		// Gitt
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		val dokumentSoknadDto = opprettSoknad()
+		val innsendingsId = dokumentSoknadDto.innsendingsId!!
+
+		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
+		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
+
+		// Når
+		val uri = UriComponentsBuilder.fromHttpUrl("http://localhost:${serverPort}/fyllUt/v1/soknad")
+			.queryParam("tvingOppretting", true)
+			.build()
+			.toUri()
+
+		val response = restTemplate.exchange(uri, HttpMethod.POST, requestEntity, SkjemaDto::class.java)
+
+		// Så
+		assertTrue(response != null)
+		assertEquals(201, response.statusCode.value())
+		assertNotEquals(response.body?.innsendingsId, innsendingsId, "Forventer ny innsendingsId")
+	}
+
 
 	// Opprett søknad med et hoveddokument, en hoveddokumentvariant og to vedlegg
 	private fun opprettSoknad(skjemanr: String = "NAV 08-21.05"): DokumentSoknadDto {
