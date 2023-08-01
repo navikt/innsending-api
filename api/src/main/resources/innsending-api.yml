@@ -153,13 +153,13 @@ paths:
   /fyllUt/v1/soknad:
     post:
       summary: Start en ny søknadsutfylling
-      description: FyllUt tjenesten gir søker mulighet til å fylle ut en søknad. Dette endepunktet kalles når vedkommende starter søknaden og det opprettes en tom søknad i databasen.
-        En brukernotifikasjon som linker til oppsummeringssiden i FyllUt blir opprettet. For hvert steg i FyllUt kalles PUT endepunktet for å oppdatere søknaden underveis.
+      description: FyllUt tjenesten gir søker mulighet til å fylle ut en søknad. Dette endepunktet kalles når vedkommende starter søknaden og det opprettes en tom søknad i databasen. Hvis bruker allerede har en aktiv søknad på samme skjemanr vil hen få valg om å fortsette på den eller starte en ny.
+                   En brukernotifikasjon som linker til oppsummeringssiden i FyllUt blir opprettet. For hvert steg i FyllUt kalles PUT endepunktet for å oppdatere søknaden underveis.
       operationId: fyllUtOpprettSoknad
 
       requestBody:
         description: Søknadsmetadata for å opprette søknaden.  HovedokumentVariant (JSON) oppdateres underveis, mens hoveddokument (PDF) av søknaden vil bli lagt til når søknaden sendes inn (siste steg i FyllUt-flyten).
-          Liste over eventuelle obligatoriske og valgfrie vedlegg som skal/kan legges til vil bli lagt til i søknaden etterhvert som bruker fyller ut søknaden.
+                     Liste over eventuelle obligatoriske og valgfrie vedlegg som skal/kan legges til vil bli lagt til i søknaden etterhvert som bruker fyller ut søknaden.
         content:
           application/json:
             schema:
@@ -167,9 +167,9 @@ paths:
         required: true
 
       parameters:
-            - name: tvingOppretting
+            - name: opprettNySoknad
               in: query
-              description: Tving oppretting av søknad selv om bruker allerede har en aktiv søknad. Hvis bruker allerede har en aktiv søknad på samme skjemanr vil hen få valg om å fortsette på den eller starte en ny.
+              description: Hvis bruker allerede har en aktiv søknad på samme skjemanr vil hen få valg om å fortsette på den eller starte en ny.
                            Denne parameteren brukes for å indikere om en bruker ønsker å starte en ny søknad uavhengig av om det allerede er en aktiv søknad på gang.
               required: false
               schema:

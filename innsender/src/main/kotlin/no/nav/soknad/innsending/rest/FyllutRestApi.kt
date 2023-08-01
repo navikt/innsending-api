@@ -57,15 +57,15 @@ class FyllutRestApi(
 
 	@Timed(InnsenderOperation.OPPRETT)
 	@LogRequest("skjemanr", "tittel", "tema", "spraak")
-	override fun fyllUtOpprettSoknad(skjemaDto: SkjemaDto, tvingOppretting: Boolean?): ResponseEntity<SkjemaDto> {
+	override fun fyllUtOpprettSoknad(skjemaDto: SkjemaDto, opprettNySoknad: Boolean?): ResponseEntity<SkjemaDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
 		logger.info("Kall fra FyllUt for å opprette søknad for skjema ${skjemaDto.skjemanr}")
 		logger.debug("Skal opprette søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
 
-		val redirectVedEksisterendeSoknad =
-			redirectVedEksisterendeSoknad(brukerId, skjemaDto.skjemanr, tvingOppretting ?: false)
-		if (redirectVedEksisterendeSoknad != null) return redirectVedEksisterendeSoknad
+		val redirectVedPaabegyntSoknad =
+			redirectVedPaabegyntSoknad(brukerId, skjemaDto.skjemanr, opprettNySoknad ?: false)
+		if (redirectVedPaabegyntSoknad != null) return redirectVedPaabegyntSoknad
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(skjemaDto, brukerId)
 		val opprettetSoknad = soknadService.opprettNySoknad(dokumentSoknadDto)
@@ -75,16 +75,17 @@ class FyllutRestApi(
 		return ResponseEntity.status(HttpStatus.CREATED).body(opprettetSoknad)
 	}
 
-	// Redirect til eksisterende søknad hvis bruker har en søknad under arbeid
-	private fun redirectVedEksisterendeSoknad(
+	// Redirect til påbegynt søknad hvis bruker har en søknad under arbeid
+	// Defaulter til å redirecte med mindre det er sendt inn eksplisitt paremeter for å opprette ny søknad likevel
+	private fun redirectVedPaabegyntSoknad(
 		brukerId: String,
 		skjemanr: String,
-		tvingOppretting: Boolean
+		opprettNySoknad: Boolean = false
 	): ResponseEntity<SkjemaDto>? {
 		val aktiveSoknader = soknadService.hentAktiveSoknader(brukerId, skjemanr, false)
 		val harSoknadUnderArbeid = aktiveSoknader.isNotEmpty()
 
-		if (!tvingOppretting && harSoknadUnderArbeid) {
+		if (harSoknadUnderArbeid && !opprettNySoknad) {
 
 			// FIXME: Er det greit at vi redirecter til den nyeste av potensielt flere aktive søknader?
 			val nyesteSoknad = aktiveSoknader.maxByOrNull { it.opprettetDato }

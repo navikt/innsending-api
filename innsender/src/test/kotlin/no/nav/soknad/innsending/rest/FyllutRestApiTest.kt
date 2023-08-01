@@ -449,7 +449,7 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Skal redirecte ved eksisterende søknad gitt at tvingOppretting er false`() {
+	fun `Skal redirecte ved eksisterende søknad gitt at opprettNySoknad er false`() {
 		// Gitt
 		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
@@ -461,7 +461,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Når
 		val uri = UriComponentsBuilder.fromHttpUrl("http://localhost:${serverPort}/fyllUt/v1/soknad")
-			.queryParam("tvingOppretting", false)
+			.queryParam("opprettNySoknad", false)
 			.build()
 			.toUri()
 
@@ -477,7 +477,7 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Skal opprette søknad når tvingOppretting er true, selv om brukeren har en søknad med samme skjemanr`() {
+	fun `Skal opprette søknad når opprettNySoknad er true, selv om brukeren har en søknad med samme skjemanr`() {
 		// Gitt
 		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
@@ -489,7 +489,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Når
 		val uri = UriComponentsBuilder.fromHttpUrl("http://localhost:${serverPort}/fyllUt/v1/soknad")
-			.queryParam("tvingOppretting", true)
+			.queryParam("opprettNySoknad", true)
 			.build()
 			.toUri()
 
