@@ -30,7 +30,7 @@
 		<!--Spring-->
 		<spring-boot.version>3.1.1</spring-boot.version>
 		<spring-web.version>6.0.10</spring-web.version>
-		<spring-cloud.version>4.0.3</spring-cloud.version>
+		<spring-cloud.version>4.0.4</spring-cloud.version>
 
 		<!--OpenAPI-->
 		<springdoc-openapi.version>1.7.0</springdoc-openapi.version>
