@@ -151,7 +151,7 @@ restconfig:
 
 brukernotifikasjonconfig:
   profiles: ${SPRING_PROFILES_ACTIVE}
-  tjenesteUrl: ${TJENESTE_URL}
+  tjenesteUrl: ${SEND_INN_URL}
   publisereEndringer: ${PUBLISERE_BRUKERNOTIFIKASJONER}
 
 ettersendingsfrist: ${ETTERSENDINGSFRIST}
