@@ -50,7 +50,7 @@
 		<io-netty.version>4.1.94.Final</io-netty.version>
 		<okio.version>3.2.0</okio.version>
 		<kafka.version>3.5.0</kafka.version>
-		<micrometer.version>1.11.1</micrometer.version>
+		<micrometer.version>1.11.2</micrometer.version>
 		<jakarta-servlet-api.version>6.0.0</jakarta-servlet-api.version>
 		<jakarta-validation-api.version>3.0.2</jakarta-validation-api.version>
 		<jakarta-annotation.version>2.1.1</jakarta-annotation.version>
