@@ -180,6 +180,7 @@ class FyllutRestApiTest : ApplicationTest() {
 			SkjemaDokumentDtoTestBuilder(tittel = nyTittel).asHovedDokumentVariant(skjemanr).build()
 
 		val fraFyllUt = SkjemaDtoTestBuilder(
+			skjemanr = dokumentSoknadDto.skjemanr,
 			spraak = nyttSpraak,
 			tittel = nyTittel,
 			vedleggsListe = listOf(oppdatertT7, oppdatertN6),
@@ -237,7 +238,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		val fyllUtVedleggstittel = "N6-ny-vedleggstittel"
 
 		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
-		val fraFyllUt = SkjemaDtoTestBuilder(vedleggsListe = listOf(n6Vedlegg)).build()
+		val fraFyllUt =
+			SkjemaDtoTestBuilder(vedleggsListe = listOf(n6Vedlegg), skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		val formioId = fraFyllUt.vedleggsListe?.find { it.vedleggsnr == "N6" }!!.formioId!!
 
@@ -246,7 +248,8 @@ class FyllutRestApiTest : ApplicationTest() {
 			tittel = fyllUtVedleggstittel,
 			formioId = formioId
 		).build()
-		val oppdatertFyllUt = SkjemaDtoTestBuilder(vedleggsListe = listOf(oppdatertN6Vedlegg)).build()
+		val oppdatertFyllUt =
+			SkjemaDtoTestBuilder(vedleggsListe = listOf(oppdatertN6Vedlegg), skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		val sendInnVedleggsTittel = "N6-fra-send-inn"
 		val fraSendInn = PostVedleggDto(tittel = sendInnVedleggsTittel)
@@ -316,7 +319,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
-		val fraFyllUt = SkjemaDtoTestBuilder().build()
+		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
 
@@ -450,7 +453,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Gitt
 		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val dokumentSoknadDto = opprettSoknad()
+		val dokumentSoknadDto = opprettSoknad(skjemanr = "NAV-redirect")
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
@@ -467,7 +470,10 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Så
 		assertTrue(response != null)
 		assertEquals(302, response.statusCode.value())
-		assertEquals(response.headers.location!!.path, "/sendinn/$innsendingsId")
+		assertEquals(
+			"http://localhost:3000/fyllut/${dokumentSoknadDto.skjemanr}/paabegynt?innsendingsId=$innsendingsId",
+			response.headers.location!!.toString()
+		)
 	}
 
 	@Test

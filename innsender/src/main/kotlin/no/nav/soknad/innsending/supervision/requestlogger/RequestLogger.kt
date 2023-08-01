@@ -31,6 +31,7 @@ class RequestLogger {
 			val logParameters = logRequest.logParameters.toList()
 			val params = mutableMapOf<String, String>()
 			joinPoint.args.forEach { arg ->
+				if (arg == null) return@forEach
 				val kClass = arg::class
 				if (!isFromPackage(kClass, "no.nav.soknad.innsending")) return@forEach
 

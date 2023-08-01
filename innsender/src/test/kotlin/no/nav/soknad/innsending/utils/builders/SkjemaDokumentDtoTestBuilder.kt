@@ -6,7 +6,7 @@ import no.nav.soknad.innsending.utils.Hjelpemetoder
 import java.util.*
 
 data class SkjemaDokumentDtoTestBuilder(
-	var vedleggsnr: String = "NAV 14-35.01",
+	var vedleggsnr: String = "NAV ${UUID.randomUUID().toString().take(4)}",
 	var tittel: String = "Forsikring mot ansvar for sykepenger i arbeidsgiverperioden for små bedrifter.",
 	var label: String = "Inntektsopplysninger for selvstendig næringsdrivende og frilansere som skal ha foreldrepenger eller svangerskapspenger.",
 	var pakrevd: Boolean = true,

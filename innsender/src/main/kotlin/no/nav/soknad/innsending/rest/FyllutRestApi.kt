@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.util.UriComponentsBuilder
 import java.net.URI
 
 @RestController
@@ -51,7 +52,7 @@ class FyllutRestApi(
 
 		logger.info("${opprettetSoknad.innsendingsId}: Soknad fra fyllut persistert. Antall vedlegg fra FyllUt=${skjemaDto.vedleggsListe?.size}")
 		return ResponseEntity.status(HttpStatus.FOUND)
-			.location(URI.create(restConfig.frontEndFortsettEndpoint + "/" + opprettetSoknad.innsendingsId)).build()
+			.location(URI.create(restConfig.sendInnUrl + "/" + opprettetSoknad.innsendingsId)).build()
 	}
 
 	@Timed(InnsenderOperation.OPPRETT)
@@ -84,10 +85,19 @@ class FyllutRestApi(
 		val harSoknadUnderArbeid = aktiveSoknader.isNotEmpty()
 
 		if (!tvingOppretting && harSoknadUnderArbeid) {
-			logger.info("Bruker har allerede søknad under arbeid for skjemanr=$skjemanr. Redirecter til denne")
 
-			// FIXME: Er det greit at vi redirecter til den første av potensielt flere aktive søknader? Er det riktig link?
-			val redirectUrl = URI.create("${restConfig.frontEndFortsettEndpoint}/${aktiveSoknader.first().innsendingsId}")
+			// FIXME: Er det greit at vi redirecter til den nyeste av potensielt flere aktive søknader?
+			val nyesteSoknad = aktiveSoknader.maxByOrNull { it.opprettetDato }
+
+			val redirectUrl = UriComponentsBuilder
+				.fromHttpUrl(restConfig.fyllUtUrl)
+				.path("/$skjemanr/paabegynt")
+				.queryParam("innsendingsId", nyesteSoknad?.innsendingsId)
+				.build()
+				.toUri()
+
+			logger.info("Bruker har allerede søknad under arbeid for skjemanr=$skjemanr. Redirecter til denne: $redirectUrl")
+
 			return ResponseEntity.status(HttpStatus.FOUND).location(redirectUrl).build()
 		}
 		return null
@@ -120,7 +130,7 @@ class FyllutRestApi(
 		val oppdatertSoknad = soknadService.oppdaterUtfyltSoknad(innsendingsId, dokumentSoknadDto)
 		return ResponseEntity
 			.status(HttpStatus.FOUND)
-			.location(URI.create(restConfig.frontEndFortsettEndpoint + "/" + oppdatertSoknad.innsendingsId))
+			.location(URI.create(restConfig.sendInnUrl + "/" + oppdatertSoknad.innsendingsId))
 			.build()
 	}
 
