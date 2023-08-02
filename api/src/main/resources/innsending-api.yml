@@ -982,12 +982,9 @@ components:
           $ref: "#/components/schemas/Spraak"
         status:
           $ref: "#/components/schemas/SoknadsStatusDto"
-        opprettetDato:
-          type: string
-          format: date-time
-          description: Opprettet dato og tid som UTC
-          example: 2021-12-03T14:10:00Z
         endretDato:
+          $ref: "#/components/schemas/EndretDato"
+        opprettetDato:
           type: string
           format: date-time
           description: Opprettet dato og tid som UTC
@@ -1066,6 +1063,12 @@ components:
           format: date-time
           description: Opprettet tidspunkt i UTC format
           example: 2022-04-01T15:10:00Z
+
+    EndretDato:
+      type: string
+      format: date-time
+      description: Endret dato og tid som UTC
+      example: 2021-12-03T14:10:00Z
 
     Ettersending:
       type: boolean
@@ -1319,6 +1322,8 @@ components:
           $ref: "#/components/schemas/KanLasteOppAnnet"
         fristForEttersendelse:
           $ref: "#/components/schemas/FristForEttersendelse"
+        endretDato:
+          $ref: "#/components/schemas/EndretDato"
 
     Skjemanr:
       type: string
