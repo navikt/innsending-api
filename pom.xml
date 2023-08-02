@@ -47,7 +47,7 @@
 		<!--Other-->
 		<kotlin-serialization.version>1.5.1</kotlin-serialization.version>
 		<okhttp3.version>4.11.0</okhttp3.version>
-		<io-netty.version>4.1.94.Final</io-netty.version>
+		<io-netty.version>4.1.96.Final</io-netty.version>
 		<okio.version>3.2.0</okio.version>
 		<kafka.version>7.4.1-ce</kafka.version>
 		<micrometer.version>1.11.1</micrometer.version>
