@@ -34,7 +34,7 @@
 
 		<!--OpenAPI-->
 		<springdoc-openapi.version>1.7.0</springdoc-openapi.version>
-		<swagger-annotations.version>2.2.14</swagger-annotations.version>
+		<swagger-annotations.version>2.2.15</swagger-annotations.version>
 
 		<!--Token-->
 		<token-validation.version>3.1.0</token-validation.version>
