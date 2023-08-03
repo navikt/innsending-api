@@ -377,9 +377,6 @@ class FyllutRestApiTest : ApplicationTest() {
 		val tidligereEndretDatoEpoch = dokumentSoknadDto.endretDato!!.toEpochSecond()
 		val oppdatertEndretDatoEpoch = oppdatertSoknad.endretDato!!.toEpochSecond()
 
-		println("Tidligere endret dato: $tidligereEndretDatoEpoch")
-		println("Oppdatert endret dato: $oppdatertEndretDatoEpoch")
-
 		assertTrue(dokumentSoknadDto.endretDato!!.isBefore(oppdatertSoknad.endretDato), "Skal returnere nyere endretDato")
 		assertTrue(
 			tidligereEndretDatoEpoch <= oppdatertEndretDatoEpoch && tidligereEndretDatoEpoch + 10 >= oppdatertEndretDatoEpoch,
