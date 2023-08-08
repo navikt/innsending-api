@@ -26,6 +26,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
+import org.springframework.web.util.UriComponentsBuilder
 import java.util.*
 import kotlin.test.*
 
@@ -179,6 +180,7 @@ class FyllutRestApiTest : ApplicationTest() {
 			SkjemaDokumentDtoTestBuilder(tittel = nyTittel).asHovedDokumentVariant(skjemanr).build()
 
 		val fraFyllUt = SkjemaDtoTestBuilder(
+			skjemanr = dokumentSoknadDto.skjemanr,
 			spraak = nyttSpraak,
 			tittel = nyTittel,
 			vedleggsListe = listOf(oppdatertT7, oppdatertN6),
@@ -222,7 +224,6 @@ class FyllutRestApiTest : ApplicationTest() {
 		)
 		assertEquals(nyTittel, oppdatertSoknad.hoveddokument!!.tittel, "Skal ha ny tittel på hoveddokument")
 		assertEquals(nyTittel, oppdatertSoknad.hoveddokumentVariant!!.tittel, "Skal ha ny tittel på hoveddokumentVariant")
-
 	}
 
 	@Test
@@ -236,7 +237,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		val fyllUtVedleggstittel = "N6-ny-vedleggstittel"
 
 		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
-		val fraFyllUt = SkjemaDtoTestBuilder(vedleggsListe = listOf(n6Vedlegg)).build()
+		val fraFyllUt =
+			SkjemaDtoTestBuilder(vedleggsListe = listOf(n6Vedlegg), skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		val formioId = fraFyllUt.vedleggsListe?.find { it.vedleggsnr == "N6" }!!.formioId!!
 
@@ -245,7 +247,8 @@ class FyllutRestApiTest : ApplicationTest() {
 			tittel = fyllUtVedleggstittel,
 			formioId = formioId
 		).build()
-		val oppdatertFyllUt = SkjemaDtoTestBuilder(vedleggsListe = listOf(oppdatertN6Vedlegg)).build()
+		val oppdatertFyllUt =
+			SkjemaDtoTestBuilder(vedleggsListe = listOf(oppdatertN6Vedlegg), skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		val sendInnVedleggsTittel = "N6-fra-send-inn"
 		val fraSendInn = PostVedleggDto(tittel = sendInnVedleggsTittel)
@@ -315,7 +318,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
-		val fraFyllUt = SkjemaDtoTestBuilder().build()
+		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
 
@@ -480,6 +483,60 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		assertThrows<ResourceNotFoundException>("Søknaden skal ikke finnes") { soknadService.hentSoknad(innsendingsId) }
 	}
+
+	@Test
+	fun `Skal redirecte ved eksisterende søknad gitt at opprettNySoknad er false`() {
+		// Gitt
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		val dokumentSoknadDto = opprettSoknad(skjemanr = "NAV-redirect")
+		val innsendingsId = dokumentSoknadDto.innsendingsId!!
+
+		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
+		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
+
+		// Når
+		val uri = UriComponentsBuilder.fromHttpUrl("http://localhost:${serverPort}/fyllUt/v1/soknad")
+			.queryParam("opprettNySoknad", false)
+			.build()
+			.toUri()
+
+		val response = restTemplate.exchange(uri, HttpMethod.POST, requestEntity, SkjemaDto::class.java)
+
+		// Så
+		assertTrue(response != null)
+		assertEquals(302, response.statusCode.value())
+		assertEquals(
+			"http://localhost:3000/fyllut/${dokumentSoknadDto.skjemanr}/paabegynt?innsendingsId=$innsendingsId",
+			response.headers.location!!.toString()
+		)
+	}
+
+	@Test
+	fun `Skal opprette søknad når opprettNySoknad er true, selv om brukeren har en søknad med samme skjemanr`() {
+		// Gitt
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		val dokumentSoknadDto = opprettSoknad()
+		val innsendingsId = dokumentSoknadDto.innsendingsId!!
+
+		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
+		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
+
+		// Når
+		val uri = UriComponentsBuilder.fromHttpUrl("http://localhost:${serverPort}/fyllUt/v1/soknad")
+			.queryParam("opprettNySoknad", true)
+			.build()
+			.toUri()
+
+		val response = restTemplate.exchange(uri, HttpMethod.POST, requestEntity, SkjemaDto::class.java)
+
+		// Så
+		assertTrue(response != null)
+		assertEquals(201, response.statusCode.value())
+		assertNotEquals(response.body?.innsendingsId, innsendingsId, "Forventer ny innsendingsId")
+	}
+
 
 	// Opprett søknad med et hoveddokument, en hoveddokumentvariant og to vedlegg
 	private fun opprettSoknad(skjemanr: String = "NAV 08-21.05"): DokumentSoknadDto {

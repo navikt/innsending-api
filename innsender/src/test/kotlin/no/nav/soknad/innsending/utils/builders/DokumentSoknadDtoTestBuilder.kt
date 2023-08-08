@@ -6,7 +6,7 @@ import java.util.*
 
 class DokumentSoknadDtoTestBuilder(
 	var brukerId: String = "12128012345",
-	var skjemanr: String = "NAV 08-21.05",
+	var skjemanr: String = "NAV ${UUID.randomUUID().toString().take(4)}",
 	var tittel: String = "Forsikring mot ansvar for sykepenger i arbeidsgiverperioden for små bedrifter.",
 	var tema: String = "FOS",
 	var status: SoknadsStatusDto = SoknadsStatusDto.opprettet,
