@@ -348,7 +348,43 @@ class FyllutRestApiTest : ApplicationTest() {
 		filer.find { it.mimetype == Mimetype.applicationSlashJson }?.let {
 			assertTrue(it.filnavn!!.endsWith(".json"), "Skal være json-fil")
 		}
+	}
 
+	@Test
+	fun `Skal returnere riktig felter ved oppdatering av søknad`() {
+		// Gitt
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		val dokumentSoknadDto = opprettSoknad()
+		val innsendingsId = dokumentSoknadDto.innsendingsId!!
+		val nyttSpraak = "en_gb"
+
+		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr, spraak = nyttSpraak).build()
+		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
+
+		// Når
+		val response = restTemplate.exchange(
+			"http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}", HttpMethod.PUT,
+			requestEntity, SkjemaDto::class.java
+		)
+		val oppdatertSoknad = response.body!!
+
+		// Så
+		assertEquals(dokumentSoknadDto.skjemanr, oppdatertSoknad.skjemanr)
+		assertEquals(dokumentSoknadDto.innsendingsId, oppdatertSoknad.innsendingsId)
+		assertEquals(dokumentSoknadDto.brukerId, oppdatertSoknad.brukerId)
+
+		assertEquals("en", oppdatertSoknad.spraak, "Språk er oppdatert")
+		assertNotEquals(dokumentSoknadDto.spraak, oppdatertSoknad.spraak, "Språk er oppdatert")
+
+		val tidligereEndretDatoEpoch = dokumentSoknadDto.endretDato!!.toEpochSecond()
+		val oppdatertEndretDatoEpoch = oppdatertSoknad.endretDato!!.toEpochSecond()
+
+		assertTrue(dokumentSoknadDto.endretDato!!.isBefore(oppdatertSoknad.endretDato), "Skal returnere nyere endretDato")
+		assertTrue(
+			tidligereEndretDatoEpoch <= oppdatertEndretDatoEpoch && tidligereEndretDatoEpoch + 10 >= oppdatertEndretDatoEpoch,
+			"Endret dato skal være innenfor 10 sekunder fra opprettelse i denne testen"
+		)
 
 	}
 
@@ -400,25 +436,27 @@ class FyllutRestApiTest : ApplicationTest() {
 			requestEntity, SkjemaDto::class.java
 		)
 
+		val opprettetSoknad = response.body!!
+
 		// Så
 		assertTrue(response != null)
 		assertEquals(200, response.statusCode.value())
-		assertEquals(skjemanr, response.body!!.skjemanr)
-		assertEquals(2, response.body!!.vedleggsListe?.size)
-		assertNotNull(response.body!!.hoveddokumentVariant.document, "HoveddokumentVariant skal ha fil")
-		assertNull(response.body!!.hoveddokument.document, "Hoveddokument skal ikke ha fil")
+		assertEquals(skjemanr, opprettetSoknad.skjemanr)
+		assertEquals(2, opprettetSoknad.vedleggsListe?.size)
+		assertNotNull(opprettetSoknad.hoveddokumentVariant.document, "HoveddokumentVariant skal ha fil")
+		assertNull(opprettetSoknad.hoveddokument.document, "Hoveddokument skal ikke ha fil")
 
 		val hovedDokument = dokumentSoknadDto.vedleggsListe.hovedDokument
 		val hovedDokumentVariant = dokumentSoknadDto.vedleggsListe.hovedDokumentVariant
 
-		assertEquals(hovedDokument!!.vedleggsnr, response.body!!.hoveddokument.vedleggsnr, "Hoveddokument er riktig")
+		assertEquals(hovedDokument!!.vedleggsnr, opprettetSoknad.hoveddokument.vedleggsnr, "Hoveddokument er riktig")
 		assertEquals(
 			hovedDokumentVariant!!.vedleggsnr,
-			response.body!!.hoveddokumentVariant.vedleggsnr,
+			opprettetSoknad.hoveddokumentVariant.vedleggsnr,
 			"HoveddokumentVariant er riktig"
 		)
-		assertEquals(SoknadsStatusDto.opprettet, response.body!!.status, "Status er satt til opprettet")
-
+		assertNotNull(opprettetSoknad.endretDato)
+		assertEquals(SoknadsStatusDto.opprettet, opprettetSoknad.status, "Status er satt til opprettet")
 	}
 
 	@Test
@@ -444,7 +482,6 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals("Slettet soknad med id $innsendingsId", response.body!!.info)
 
 		assertThrows<ResourceNotFoundException>("Søknaden skal ikke finnes") { soknadService.hentSoknad(innsendingsId) }
-
 	}
 
 	@Test

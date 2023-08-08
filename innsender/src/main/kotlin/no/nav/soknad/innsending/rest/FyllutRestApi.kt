@@ -41,7 +41,6 @@ class FyllutRestApi(
 		logger.debug("Skal opprette søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
 
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
-
 		soknadService.loggWarningVedEksisterendeSoknad(brukerId, skjemaDto.skjemanr, false)
 
 		val opprettetSoknad = soknadService.opprettNySoknad(
@@ -50,6 +49,7 @@ class FyllutRestApi(
 				brukerId
 			)
 		)
+
 		logger.info("${opprettetSoknad.innsendingsId}: Soknad fra fyllut persistert. Antall vedlegg fra FyllUt=${skjemaDto.vedleggsListe?.size}")
 		return ResponseEntity.status(HttpStatus.FOUND)
 			.location(URI.create(restConfig.sendInnUrl + "/" + opprettetSoknad.innsendingsId)).build()
@@ -86,7 +86,7 @@ class FyllutRestApi(
 
 		if (harSoknadUnderArbeid && !opprettNySoknad) {
 
-			// FIXME: Er det greit at vi redirecter til den nyeste av potensielt flere aktive søknader?
+			// Redirecter til den nyeste av potensielt flere aktive søknader
 			val nyesteSoknad = aktiveSoknader.maxByOrNull { it.opprettetDato }
 
 			val redirectUrl = UriComponentsBuilder

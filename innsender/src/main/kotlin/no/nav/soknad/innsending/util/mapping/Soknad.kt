@@ -131,6 +131,7 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		vedleggsListe = vedleggsListe,
 		kanLasteOppAnnet = dokumentSoknadDto.kanLasteOppAnnet,
 		fristForEttersendelse = dokumentSoknadDto.fristForEttersendelse,
+		endretDato = dokumentSoknadDto.endretDato
 	)
 }
 
