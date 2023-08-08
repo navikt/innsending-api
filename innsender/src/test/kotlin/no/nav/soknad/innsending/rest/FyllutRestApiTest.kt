@@ -224,7 +224,6 @@ class FyllutRestApiTest : ApplicationTest() {
 		)
 		assertEquals(nyTittel, oppdatertSoknad.hoveddokument!!.tittel, "Skal ha ny tittel på hoveddokument")
 		assertEquals(nyTittel, oppdatertSoknad.hoveddokumentVariant!!.tittel, "Skal ha ny tittel på hoveddokumentVariant")
-
 	}
 
 	@Test
