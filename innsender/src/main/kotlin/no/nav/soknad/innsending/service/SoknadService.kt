@@ -6,10 +6,10 @@ import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.repository.ArkiveringsStatus
-import no.nav.soknad.innsending.repository.HendelseType
-import no.nav.soknad.innsending.repository.SoknadDbData
-import no.nav.soknad.innsending.repository.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
+import no.nav.soknad.innsending.repository.domain.enums.HendelseType
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
@@ -27,7 +27,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import kotlin.jvm.optionals.getOrNull
 
 @Service
 class SoknadService(
@@ -141,20 +140,12 @@ class SoknadService(
 			repo.finnNyesteSoknadGittEttersendingsId(ettersendingsId)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, "Ukjent")
-			throw BackendErrorException(
-				e.message,
-				"Feil ved henting av søknad $ettersendingsId",
-				"errorCode.backendError.applicationFetchError"
-			)
+			throw BackendErrorException("Feil ved henting av søknad $ettersendingsId", e)
 		}
 
 		if (soknadDbDataList.isEmpty()) {
 			exceptionHelper.reportException(Exception("No SoknadDbData found"), operation, "Ukjent")
-			throw ResourceNotFoundException(
-				"Kan ikke opprette søknad for ettersending",
-				"Soknad med id $ettersendingsId som det skal ettersendes data for ble ikke funnet",
-				"errorCode.resourceNotFound.applicationUnknown"
-			)
+			throw ResourceNotFoundException("Kan ikke opprette søknad for ettersending. Soknad med id $ettersendingsId som det skal ettersendes data for ble ikke funnet")
 		}
 
 		sjekkHarAlleredeSoknadUnderArbeid(brukerId, soknadDbDataList.first().skjemanr, true)
@@ -354,19 +345,18 @@ class SoknadService(
 
 	// Hent soknad gitt id med alle vedlegg. Merk at eventuelt dokument til vedlegget hentes ikke
 	fun hentSoknad(id: Long): DokumentSoknadDto {
-		val soknadDbDataOpt = repo.hentSoknadDb(id)
-		return vedleggService.hentAlleVedlegg(soknadDbDataOpt, id.toString())
+		val soknadDbData = repo.hentSoknadDb(id)
+		return vedleggService.hentAlleVedlegg(soknadDbData, id.toString())
 	}
 
 	// Hent soknad gitt innsendingsid med alle vedlegg. Merk at eventuelt dokument til vedlegget hentes ikke
 	fun hentSoknad(innsendingsId: String): DokumentSoknadDto {
-		val soknadDbDataOpt = repo.hentSoknadDb(innsendingsId)
-		return vedleggService.hentAlleVedlegg(soknadDbDataOpt, innsendingsId)
+		val soknadDbData = repo.hentSoknadDb(innsendingsId)
+		return vedleggService.hentAlleVedlegg(soknadDbData, innsendingsId)
 	}
 
 	fun hentSoknadMedHoveddokumentVariant(innsendingsId: String): DokumentSoknadDto {
-		val soknadDbData = repo.hentSoknadDb(innsendingsId).getOrNull()
-			?: throw ResourceNotFoundException(message = "Finner ikke søknad med innsendingsid $innsendingsId")
+		val soknadDbData = repo.hentSoknadDb(innsendingsId)
 
 		val vedleggDbData = repo.hentAlleVedleggGittSoknadsid(soknadDbData.id!!)
 
@@ -387,10 +377,7 @@ class SoknadService(
 
 		// slett vedlegg og soknad
 		if (!dokumentSoknadDto.kanGjoreEndringer)
-			throw IllegalActionException(
-				"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
-				"Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den er innsendt eller slettet"
-			)
+			throw IllegalActionException("Det kan ikke gjøres endring på en slettet eller innsendt søknad. Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den er innsendt eller slettet")
 
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { vedleggService.slettVedleggOgDensFiler(it) }
 		//fillagerAPI.slettFiler(innsendingsId, dokumentSoknadDto.vedleggsListe)
@@ -414,10 +401,7 @@ class SoknadService(
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
 
 		if (!dokumentSoknadDto.kanGjoreEndringer)
-			throw IllegalActionException(
-				"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
-				"Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den allerede er innsendt"
-			)
+			throw IllegalActionException("Det kan ikke gjøres endring på en slettet eller innsendt søknad. Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den allerede er innsendt")
 
 		//fillagerAPI.slettFiler(innsendingsId, dokumentSoknadDto.vedleggsListe)
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettFilerForVedlegg(it.id!!) }
@@ -446,6 +430,7 @@ class SoknadService(
 		innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
 	}
 
+	@Transactional
 	fun finnOgSlettArkiverteSoknader(dagerGamle: Long, vindu: Long) {
 		val arkiverteSoknader =
 			repo.findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(dagerGamle, vindu)
@@ -454,6 +439,7 @@ class SoknadService(
 
 	}
 
+	@Transactional
 	fun slettGamleSoknader(dagerGamle: Long, permanent: Boolean = false) {
 		val slettFor = mapTilOffsetDateTime(LocalDateTime.now(), -dagerGamle)
 		logger.info("Finn opprettede søknader opprettet før $slettFor permanent=$permanent")
@@ -485,10 +471,7 @@ class SoknadService(
 
 	fun oppdaterSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		if (dokumentSoknadDto.vedleggsListe.size != 2) {
-			throw BackendErrorException(
-				"Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant",
-				"Innsendt vedleggsliste skal være tom"
-			)
+			throw BackendErrorException("Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant. Innsendt vedleggsliste skal være tom")
 		}
 
 		val eksisterendeSoknad = hentSoknad(innsendingsId)
@@ -559,11 +542,7 @@ class SoknadService(
 	private fun publiserBrukernotifikasjon(dokumentSoknadDto: DokumentSoknadDto): Boolean = try {
 		brukernotifikasjonPublisher.soknadStatusChange(dokumentSoknadDto)
 	} catch (e: Exception) {
-		throw BackendErrorException(
-			e.message,
-			"Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}",
-			"errorCode.backendError.sendToNAVError"
-		)
+		throw BackendErrorException("Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}", e)
 	}
 
 }

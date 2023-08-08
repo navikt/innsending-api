@@ -2,7 +2,7 @@ package no.nav.soknad.innsending.consumerapis.saf
 
 class KonverteringsUtility {
 
-	public fun brevKodeKontroll(brevkode: String?): String {
+	fun brevKodeKontroll(brevkode: String?): String {
 		// Trimme oppgitt brevkode. Sjekke syntaks og erstatte med N6 hvis ikke korrekt
 		val defaultValue = "N6"
 		if (brevkode.isNullOrEmpty()) return defaultValue

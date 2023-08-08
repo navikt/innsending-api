@@ -18,71 +18,46 @@ class RestExceptionHandler {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 
+	// 404
 	@ExceptionHandler
 	fun resourceNotFoundException(exception: ResourceNotFoundException): ResponseEntity<RestErrorResponseDto> {
 		logger.warn(exception.message, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
-				exception.arsak ?: "",
-				exception.message ?: "",
+				exception.message,
 				LocalDateTime.now(),
-				exception.errorCode
+				exception.errorCode.code
 			), HttpStatus.NOT_FOUND
 		)
 	}
 
+	// 500
 	@ExceptionHandler
 	fun backendErrorException(exception: BackendErrorException): ResponseEntity<RestErrorResponseDto> {
 		logger.error(exception.message, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
-				exception.arsak ?: "",
-				exception.message ?: "",
+				exception.message,
 				LocalDateTime.now(),
-				exception.errorCode
+				exception.errorCode.code
 			), HttpStatus.INTERNAL_SERVER_ERROR
 		)
 	}
 
-	@ExceptionHandler
-	fun safApiErrorException(exception: SafApiException): ResponseEntity<RestErrorResponseDto> {
-		logger.error(exception.message, exception)
-		return ResponseEntity(
-			RestErrorResponseDto(
-				exception.message ?: "",
-				exception.message ?: "",
-				LocalDateTime.now(),
-				exception.errorCode
-			), HttpStatus.INTERNAL_SERVER_ERROR
-		)
-	}
-
-	@ExceptionHandler
-	fun sanityException(exception: SanityException): ResponseEntity<RestErrorResponseDto> {
-		logger.error(exception.message, exception)
-		return ResponseEntity(
-			RestErrorResponseDto(
-				exception.message ?: "",
-				exception.message ?: "",
-				LocalDateTime.now(),
-				exception.errorCode
-			), HttpStatus.INTERNAL_SERVER_ERROR
-		)
-	}
-
+	// 400
 	@ExceptionHandler
 	fun illegalActionException(exception: IllegalActionException): ResponseEntity<RestErrorResponseDto> {
 		logger.warn(exception.message, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
-				exception.arsak ?: "",
-				exception.message ?: "",
+				exception.message,
 				LocalDateTime.now(),
-				exception.errorCode
-			), HttpStatus.METHOD_NOT_ALLOWED
+				exception.errorCode.code
+			), HttpStatus.BAD_REQUEST
 		)
 	}
 
+	// 401
 	@ExceptionHandler(value = [JwtTokenMissingException::class, JwtTokenUnauthorizedException::class])
 	fun unauthorizedExceptionHandler(
 		request: HttpServletRequest,
@@ -92,7 +67,6 @@ class RestExceptionHandler {
 
 		return ResponseEntity(
 			RestErrorResponseDto(
-				arsak = exception.message ?: "",
 				message = "Autentisering feilet",
 				timeStamp = LocalDateTime.now(),
 				errorCode = "errorCode.unauthorized"
@@ -100,15 +74,15 @@ class RestExceptionHandler {
 		)
 	}
 
+	// 500
 	@ExceptionHandler
 	fun generalException(exception: Exception): ResponseEntity<RestErrorResponseDto> {
 		logger.error(exception.message, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
-				exception.message ?: "",
-				"Noe gikk galt, prøv igjen senere",
+				exception.message ?: "Noe gikk galt, prøv igjen senere",
 				LocalDateTime.now(),
-				"errorCode.somethingFailedTryLater"
+				ErrorCode.GENERAL_ERROR.code,
 			), HttpStatus.INTERNAL_SERVER_ERROR
 		)
 	}

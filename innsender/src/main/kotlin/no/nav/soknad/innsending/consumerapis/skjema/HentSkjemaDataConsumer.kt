@@ -3,7 +3,7 @@ package no.nav.soknad.innsending.consumerapis.skjema
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.LoadingCache
-import no.nav.soknad.innsending.exceptions.SanityException
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.util.finnBackupLanguage
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -40,9 +40,15 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 			}
 		}
 
-		val message = "Skjema med id = $id ikke funnet"
+		var message = "Skjema med id = $id ikke funnet. "
+		message += if (sanityList.isEmpty()) {
+			"Skjema cache er tom"
+		} else {
+			"Ikke funnet i skjema listen"
+		}
+
 		logger.info(message + " Antall skjema/vedleggstyper lest opp = ${sanityList.size}")
-		throw SanityException(if (sanityList.isEmpty()) "Skjema cache er tom" else "Ikke funnet i skjema listen", message)
+		throw BackendErrorException(message)
 	}
 
 	private fun createKodeverkSkjema(sanity: SkjemaOgVedleggsdata, spraak: String, id: String): KodeverkSkjema =

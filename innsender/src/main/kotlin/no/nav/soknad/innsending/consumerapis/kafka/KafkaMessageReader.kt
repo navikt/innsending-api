@@ -5,9 +5,12 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import no.nav.soknad.innsending.config.KafkaConfig
 import no.nav.soknad.innsending.repository.*
+import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
+import no.nav.soknad.innsending.repository.domain.enums.HendelseType
 import no.nav.soknad.innsending.service.RepositoryUtils
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.config.SslConfigs
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -34,32 +37,43 @@ class KafkaMessageReader(
 		logger.info("Kafka: Startet polling av ${kafkaConfig.topics} med job ${job.key}")
 	}
 
+	private companion object {
+		val POLLING_INTERVAL: Duration = Duration.ofMillis(5000)
+		const val ARCHIVING_OK = "**Archiving: OK"
+		const val ARCHIVING_FAILED = "**Archiving: FAILED"
+	}
+
 	private fun readMessages() {
 		logger.info("Kafka: Start konsumering av topic ${kafkaConfig.topics.messageTopic} med gruppeId ${kafkaConfig.applicationId}")
 
-		KafkaConsumer<String, String>(kafkaConfigMap()).use { it ->
-			it.subscribe(listOf(kafkaConfig.topics.messageTopic))
+		KafkaConsumer<String, String>(kafkaConfigMap()).use { consumer ->
+			consumer.subscribe(listOf(kafkaConfig.topics.messageTopic))
 			while (true) {
-				val messages = it.poll(Duration.ofMillis(5000))
-				for (message in messages) {
-					val key = message.key()
-					// Soknadsarkiverer legger på melding om arkiveringsstatus for båd søknader sendt inn av sendsoknad og innsending-api
-					// Henter fra databasen for å oppdatere arkiveringsstatus for søknader sendt inn av innsending-api
-					val soknadOpt = repo.hentSoknadDb(key)
-					if (soknadOpt.isPresent) {
-						if (message.value().startsWith("**Archiving: OK")) {
-							logger.debug("$key: er arkivert")
-							repo.oppdaterArkiveringsstatus(soknadOpt.get(), ArkiveringsStatus.Arkivert)
-							loggAntallAvHendelsetype(HendelseType.Arkivert)
-						} else if (message.value().startsWith("**Archiving: FAILED")) {
-							logger.error("$key: arkivering feilet")
-							repo.oppdaterArkiveringsstatus(soknadOpt.get(), ArkiveringsStatus.ArkiveringFeilet)
-							loggAntallAvHendelsetype(HendelseType.ArkiveringFeilet)
-						}
-					}
-				}
-				it.commitSync()
+				val messages = consumer.poll(POLLING_INTERVAL)
+				processMessages(messages)
+				consumer.commitSync()
 				logger.debug("**Ferdig behandlet mottatte meldinger.")
+			}
+		}
+	}
+
+	private fun processMessages(messages: ConsumerRecords<String, String>) {
+		for (message in messages) {
+			val key = message.key()
+			val soknadDb = repo.hentSoknadDb(key)
+
+			when {
+				message.value().startsWith(ARCHIVING_OK) -> {
+					logger.debug("$key: er arkivert")
+					repo.oppdaterArkiveringsstatus(soknadDb, ArkiveringsStatus.Arkivert)
+					loggAntallAvHendelsetype(HendelseType.Arkivert)
+				}
+
+				message.value().startsWith(ARCHIVING_FAILED) -> {
+					logger.error("$key: arkivering feilet")
+					repo.oppdaterArkiveringsstatus(soknadDb, ArkiveringsStatus.ArkiveringFeilet)
+					loggAntallAvHendelsetype(HendelseType.ArkiveringFeilet)
+				}
 			}
 		}
 	}
@@ -86,7 +100,7 @@ class KafkaMessageReader(
 	}
 
 	private fun loggAntallAvHendelsetype(hendelseType: HendelseType) {
-		logger.debug("Antall søknader med hendelsetype $hendelseType = ${repo.findNumberOfEventsByType(HendelseType.Arkivert)}")
+		logger.debug("Antall søknader med hendelsetype {} = {}", hendelseType, repo.findNumberOfEventsByType(hendelseType))
 	}
 
 }

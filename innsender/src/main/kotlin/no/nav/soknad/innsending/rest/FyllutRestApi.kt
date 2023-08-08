@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.rest
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.FyllUtApi
 import no.nav.soknad.innsending.config.RestConfig
+import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.BodyStatusResponseDto
 import no.nav.soknad.innsending.model.DokumentSoknadDto
@@ -136,9 +137,8 @@ class FyllutRestApi(
 		tilgangskontroll.harTilgang(dokumentSoknadDto)
 		if (!dokumentSoknadDto.kanGjoreEndringer) {
 			throw IllegalActionException(
-				"Søknaden kan ikke vises",
-				"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
-				"errorCode.illegalAction.applicationSentInOrDeleted"
+				message = "Søknaden kan ikke vises. Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
+				errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 			)
 		}
 	}

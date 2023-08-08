@@ -3,10 +3,10 @@ package no.nav.soknad.innsending.util.mapping
 import no.nav.soknad.arkivering.soknadsmottaker.model.Soknad
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.repository.FilDbData
-import no.nav.soknad.innsending.repository.SoknadDbData
-import no.nav.soknad.innsending.repository.SoknadsStatus
-import no.nav.soknad.innsending.repository.VedleggDbData
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.FilDbData
+import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
+import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
@@ -115,7 +115,7 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 	val vedleggsListe = dokumentSoknadDto.vedleggsListeUtenHoveddokument.map { mapTilSkjemaDokumentDto(it) }
 
 	if (hovedDokument == null || hovedDokumentVariant == null) {
-		throw BackendErrorException("Hoveddokument eller variant mangler", "Finner ikke hoveddokument i vedleggsliste")
+		throw BackendErrorException("Hoveddokument eller variant mangler. Finner ikke hoveddokument i vedleggsliste")
 	}
 
 	return SkjemaDto(

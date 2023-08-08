@@ -1,9 +1,9 @@
 package no.nav.soknad.innsending.util.mapping
 
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.repository.ArkiveringsStatus
-import no.nav.soknad.innsending.repository.OpplastingsStatus
-import no.nav.soknad.innsending.repository.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
+import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 
 fun mapTilArkiveringsStatusDto(arkiveringsStatus: ArkiveringsStatus): ArkiveringsStatusDto =
 	when (arkiveringsStatus) {

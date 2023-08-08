@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
+import kotlin.test.assertNotNull
 
 class FilServiceTest : ApplicationTest() {
 
@@ -23,11 +24,11 @@ class FilServiceTest : ApplicationTest() {
 		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
 		val vedleggDto = dokumentSoknadDto.vedleggsListe.first { "W1" == it.vedleggsnr }
-		Assertions.assertTrue(vedleggDto != null)
+		assertNotNull(vedleggDto)
 
 		val filDtoSaved = filService.lagreFil(dokumentSoknadDto, Hjelpemetoder.lagFilDtoMedFil(vedleggDto))
 
-		Assertions.assertTrue(filDtoSaved != null)
+		assertNotNull(filDtoSaved)
 		Assertions.assertTrue(filDtoSaved.id != null)
 
 		val hentetFilDto = filService.hentFil(dokumentSoknadDto, vedleggDto.id!!, filDtoSaved.id!!)
@@ -39,11 +40,11 @@ class FilServiceTest : ApplicationTest() {
 		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
 		val vedleggDto = dokumentSoknadDto.vedleggsListe.first { "W1" == it.vedleggsnr }
-		Assertions.assertTrue(vedleggDto != null)
+		assertNotNull(vedleggDto)
 
 		val filDtoSaved = filService.lagreFil(dokumentSoknadDto, Hjelpemetoder.lagFilDtoMedFil(vedleggDto))
 
-		Assertions.assertTrue(filDtoSaved != null)
+		assertNotNull(filDtoSaved)
 		Assertions.assertTrue(filDtoSaved.id != null)
 
 		val oppdatertSoknadDto = soknadService.hentSoknad(dokumentSoknadDto.id!!)

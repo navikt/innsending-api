@@ -28,10 +28,7 @@ class PdlAPITest : PdlInterface, HealthRequestInterface {
 	override fun hentPersonData(brukerId: String): PersonDto? {
 		val personDto = dummyPersonDtos[brukerId]
 		if (personDto != null) return personDto
-		throw BackendErrorException(
-			"Pålogget bruker $brukerId ikke funnet i PDL", "Problem med å hente opp brukerdata",
-			"errorCode.backendError.pdlError"
-		)
+		throw BackendErrorException("Pålogget bruker $brukerId ikke funnet i PDL. Problem med å hente opp brukerdata")
 	}
 
 	override fun hentPersonIdents(brukerId: String): List<IdentDto> {
