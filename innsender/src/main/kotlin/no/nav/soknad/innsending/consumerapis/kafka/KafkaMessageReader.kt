@@ -52,6 +52,8 @@ class KafkaMessageReader(
 					// Henter fra databasen for å oppdatere arkiveringsstatus for søknader sendt inn av innsending-api
 					val soknad = repo.hentSoknadDb(key)
 
+					logger.info("Kafka: hentet søknad ${soknad.innsendingsid} fra database")
+
 					if (message.value().startsWith("**Archiving: OK")) {
 						logger.info("$key: er arkivert")
 						repo.oppdaterArkiveringsstatus(soknad, ArkiveringsStatus.Arkivert)
