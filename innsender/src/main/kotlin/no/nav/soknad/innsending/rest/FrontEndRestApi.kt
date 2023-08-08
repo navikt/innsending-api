@@ -51,7 +51,7 @@ class FrontEndRestApi(
 		logger.info("Kall for å opprette søknad på skjema ${opprettSoknadBody.skjemanr}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-		soknadService.sjekkHarAlleredeSoknadUnderArbeid(brukerId, opprettSoknadBody.skjemanr, false)
+		soknadService.loggWarningVedEksisterendeSoknad(brukerId, opprettSoknadBody.skjemanr, false)
 
 		val dokumentSoknadDto = soknadService.opprettSoknad(
 			brukerId,
@@ -90,7 +90,7 @@ class FrontEndRestApi(
 		logger.info("Kall for å opprette ettersending på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-		soknadService.sjekkHarAlleredeSoknadUnderArbeid(brukerId, opprettEttersendingGittSkjemaNr.skjemanr, true)
+		soknadService.loggWarningVedEksisterendeSoknad(brukerId, opprettEttersendingGittSkjemaNr.skjemanr, true)
 
 		val arkiverteSoknader = safService.hentInnsendteSoknader(brukerId)
 			.filter { opprettEttersendingGittSkjemaNr.skjemanr == it.skjemanr && it.innsendingsId != null }
