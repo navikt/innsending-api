@@ -23,7 +23,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
-import kotlin.test.assertNotNull
 
 class InnsendingServiceTest : ApplicationTest() {
 
@@ -193,7 +192,7 @@ class InnsendingServiceTest : ApplicationTest() {
 		val kvitteringsDokument = PdfGenerator().lagKvitteringsSide(innsendtSoknad, "Per Person",
 			innsendtSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt },
 			innsendtSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.sendSenere })
-		assertNotNull(kvitteringsDokument)
+		Assertions.assertTrue(kvitteringsDokument != null)
 
 		// Skriver til tmp fil for manuell sjekk av innholdet av generert PDF
 //		writeBytesToFile("dummy", ".pdf", kvitteringsDokument)
@@ -232,7 +231,7 @@ class InnsendingServiceTest : ApplicationTest() {
 		Assertions.assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 
 		val dummyHovedDokument = PdfGenerator().lagForsideEttersending(ettersendingsSoknadDto)
-		assertNotNull(dummyHovedDokument)
+		Assertions.assertTrue(dummyHovedDokument != null)
 
 		// Skriver til tmp fil for manuell sjekk av innholdet av generert PDF
 		//writeBytesToFile("dummy", ".pdf", dummyHovedDokument)

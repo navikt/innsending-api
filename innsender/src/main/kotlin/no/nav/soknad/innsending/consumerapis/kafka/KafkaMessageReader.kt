@@ -5,8 +5,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import no.nav.soknad.innsending.config.KafkaConfig
 import no.nav.soknad.innsending.repository.*
-import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
-import no.nav.soknad.innsending.repository.domain.enums.HendelseType
 import no.nav.soknad.innsending.service.RepositoryUtils
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -45,28 +43,23 @@ class KafkaMessageReader(
 				val messages = it.poll(Duration.ofMillis(5000))
 				for (message in messages) {
 					val key = message.key()
-
-					logger.info("Kafka: henter søknad $key fra database")
-
 					// Soknadsarkiverer legger på melding om arkiveringsstatus for båd søknader sendt inn av sendsoknad og innsending-api
 					// Henter fra databasen for å oppdatere arkiveringsstatus for søknader sendt inn av innsending-api
-					val soknad = repo.hentSoknadDb(key)
-
-					logger.info("Kafka: hentet søknad ${soknad.innsendingsid} fra database")
-
-					if (message.value().startsWith("**Archiving: OK")) {
-						logger.info("$key: er arkivert")
-						repo.oppdaterArkiveringsstatus(soknad, ArkiveringsStatus.Arkivert)
-						loggAntallAvHendelsetype(HendelseType.Arkivert)
-					} else if (message.value().startsWith("**Archiving: FAILED")) {
-						logger.error("$key: arkivering feilet")
-						repo.oppdaterArkiveringsstatus(soknad, ArkiveringsStatus.ArkiveringFeilet)
-						loggAntallAvHendelsetype(HendelseType.ArkiveringFeilet)
+					val soknadOpt = repo.hentSoknadDb(key)
+					if (soknadOpt.isPresent) {
+						if (message.value().startsWith("**Archiving: OK")) {
+							logger.debug("$key: er arkivert")
+							repo.oppdaterArkiveringsstatus(soknadOpt.get(), ArkiveringsStatus.Arkivert)
+							loggAntallAvHendelsetype(HendelseType.Arkivert)
+						} else if (message.value().startsWith("**Archiving: FAILED")) {
+							logger.error("$key: arkivering feilet")
+							repo.oppdaterArkiveringsstatus(soknadOpt.get(), ArkiveringsStatus.ArkiveringFeilet)
+							loggAntallAvHendelsetype(HendelseType.ArkiveringFeilet)
+						}
 					}
-
 				}
 				it.commitSync()
-				logger.info("**Ferdig behandlet mottatte meldinger.")
+				logger.debug("**Ferdig behandlet mottatte meldinger.")
 			}
 		}
 	}
@@ -93,7 +86,7 @@ class KafkaMessageReader(
 	}
 
 	private fun loggAntallAvHendelsetype(hendelseType: HendelseType) {
-		logger.info("Antall søknader med hendelsetype $hendelseType = ${repo.findNumberOfEventsByType(hendelseType)}")
+		logger.debug("Antall søknader med hendelsetype $hendelseType = ${repo.findNumberOfEventsByType(HendelseType.Arkivert)}")
 	}
 
 }

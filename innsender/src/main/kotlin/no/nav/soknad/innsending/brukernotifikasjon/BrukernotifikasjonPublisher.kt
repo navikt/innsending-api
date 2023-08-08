@@ -37,15 +37,15 @@ class BrukernotifikasjonPublisher(
 		"en" to ""
 	)
 
-	private fun computeGroupId(dokumentSoknad: DokumentSoknadDto) =
-		dokumentSoknad.ettersendingsId.takeIf { it != null && it != ukjentEttersendingsId }
-			?: dokumentSoknad.innsendingsId
-
 	fun soknadStatusChange(dokumentSoknad: DokumentSoknadDto): Boolean {
 		logger.debug("${dokumentSoknad.innsendingsId}: Skal publisere Brukernotifikasjon")
 
 		if (notifikasjonConfig.publisereEndringer) {
-			val groupId = computeGroupId(dokumentSoknad)
+			val groupId =
+				if (dokumentSoknad.ettersendingsId != null && dokumentSoknad.ettersendingsId != ukjentEttersendingsId)
+					dokumentSoknad.ettersendingsId
+				else
+					dokumentSoknad.innsendingsId
 
 			logger.info(
 				"${dokumentSoknad.innsendingsId}: Publiser statusendring på søknad" +
@@ -77,9 +77,15 @@ class BrukernotifikasjonPublisher(
 		// Ny søknad opprettet publiser data slik at søker kan plukke den opp fra Ditt Nav på et senere tidspunkt
 		// i tilfelle han/hun ikke ferdigstiller og sender inn
 		val ettersending = dokumentSoknad.erEtterSending
+		val tittel = tittelPrefixGittSprak(ettersending, dokumentSoknad.spraak ?: "no") + dokumentSoknad.tittel
 		val lenke = createLink(dokumentSoknad.innsendingsId!!)
-		val notificationInfo = createNotificationInfo(dokumentSoknad, ettersending, lenke)
 
+		val eksternVarslingList = mutableListOf<Varsel>()
+		if (ettersending) {
+			eksternVarslingList.add(Varsel(Varsel.Kanal.sms))
+		}
+
+		val notificationInfo = NotificationInfo(tittel, lenke, soknadLevetid, eksternVarslingList)
 		val soknadRef = SoknadRef(
 			dokumentSoknad.innsendingsId!!,
 			ettersending,
@@ -95,17 +101,6 @@ class BrukernotifikasjonPublisher(
 		} catch (e: Exception) {
 			logger.error("${dokumentSoknad.innsendingsId}: Sending av melding om ny brukernotifikasjon feilet", e)
 		}
-	}
-
-	private fun createNotificationInfo(
-		dokumentSoknad: DokumentSoknadDto,
-		ettersending: Boolean,
-		lenke: String
-	): NotificationInfo {
-		val tittel = tittelPrefixGittSprak(ettersending, dokumentSoknad.spraak ?: "no") + dokumentSoknad.tittel
-		val eksternVarslingList = if (ettersending) mutableListOf(Varsel(Varsel.Kanal.sms)) else mutableListOf()
-
-		return NotificationInfo(tittel, lenke, soknadLevetid, eksternVarslingList)
 	}
 
 	private fun tittelPrefixGittSprak(ettersendelse: Boolean, sprak: String): String {

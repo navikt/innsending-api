@@ -44,7 +44,11 @@ class SafClient(
 				}
 			} catch (ex: Exception) {
 				logger.warn("hentDokumentoversiktBruker feilet med ${ex.message}.")
-				throw BackendErrorException("Henting av brukers dokumentoversikt feilet", ex)
+				throw BackendErrorException(
+					ex.message,
+					"Henting av brukers dokumentoversikt feilet",
+					"errorCode.backendError.safError"
+				)
 			}
 		}
 	}

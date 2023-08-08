@@ -78,7 +78,8 @@ class PdfGenerator {
 		val vedleggSendesIkkeHeader = tekster.getProperty("kvittering.vedlegg.sendesIkke")
 		val tiligereInnsendtHeader = tekster.getProperty("kvittering.vedlegg.tidligereInnsendt")
 
-		val antallLastetOpp = vedleggOpplastet.size
+		val lastetOpp = vedleggOpplastet
+		val antallLastetOpp = lastetOpp.size
 		val now = LocalDateTime.now()
 		val antallInnsendt = java.lang.String.format(
 			tekster.getProperty("kvittering.erSendt"),
@@ -170,7 +171,7 @@ class PdfBuilder(private val tittel: String) {
 		intent.outputCondition = "sRGB IEC61966-2.1"
 		intent.outputConditionIdentifier = "sRGB IEC61966-2.1"
 		intent.registryName = "http://www.color.org"
-		pdDocument.documentCatalog.addOutputIntent(intent)
+		pdDocument.getDocumentCatalog().addOutputIntent(intent)
 		return this
 	}
 
@@ -187,7 +188,7 @@ class PdfBuilder(private val tittel: String) {
 				serializer.serialize(xmp, it, true)
 				val metadata = PDMetadata(pdDocument)
 				metadata.importXMPMetadata(it.toByteArray())
-				pdDocument.documentCatalog.metadata = metadata
+				pdDocument.getDocumentCatalog().setMetadata(metadata)
 			}
 		} catch (e: BadFieldValueException) {
 			// won't happen here, as the provided value is valid
@@ -227,11 +228,11 @@ class PageBuilder(private val pdfBuilder: PdfBuilder) {
 
 	fun getFont(path: String): PDFont {
 		try {
-			val inputStream = ClassPathResource(path).inputStream
+			val inputStream = ClassPathResource(path).getInputStream()
 			return PDType0Font.load(getPdDocument(), inputStream)
 		} catch (ex: IOException) {
 			logger.warn("Fant ikke ressursfil $path", ex.message)
-			throw BackendErrorException("Feil ved generering av PDF. Fant ikke ressursfil $path")
+			throw BackendErrorException("Fant ikke ressursfil $path", "Feil ved generering av PDF")
 		}
 	}
 
@@ -276,20 +277,20 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 	}
 
 	private fun hentArial(): PDFont {
-		return if (arialFont == null) {
+		if (arialFont == null) {
 			arialFont = pageBuilder.getFont(ARIAL_FONT_PATH)
-			arialFont as PDFont
+			return arialFont as PDFont
 		} else {
-			arialFont as PDFont
+			return arialFont as PDFont
 		}
 	}
 
 	private fun hentArialBold(): PDFont {
-		return if (arialBoldFont == null) {
+		if (arialBoldFont == null) {
 			arialBoldFont = pageBuilder.getFont(ARIALBOLD_FONT_PATH)
-			arialBoldFont as PDFont
+			return arialBoldFont as PDFont
 		} else {
-			arialBoldFont as PDFont
+			return arialBoldFont as PDFont
 		}
 	}
 
@@ -371,7 +372,7 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 		} catch (e: IOException) {
 			false
 		} catch (e2: IllegalArgumentException) {
-			logger.warn("Feil i forbindelse med av generering av PDF med $sb + $nestOrd")
+			logger.warn("Feil i forbindelse med av generering av PDF med ${sb.toString()} + $nestOrd")
 			false
 		}
 	}

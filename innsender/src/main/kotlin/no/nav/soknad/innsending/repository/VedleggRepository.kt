@@ -1,7 +1,5 @@
 package no.nav.soknad.innsending.repository
 
-import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
-import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
@@ -18,10 +16,10 @@ interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
 	fun findAllBySoknadsid(@Param("soknadsid") soknadsid: Long): List<VedleggDbData>
 
 	@Query(value = "FROM VedleggDbData WHERE id = :vedleggsid")
-	fun findByVedleggsid(@Param("vedleggsid") vedleggsid: Long): VedleggDbData?
+	fun findByVedleggsid(@Param("vedleggsid") vedleggsid: Long): Optional<VedleggDbData>
 
 	@Query(value = "FROM VedleggDbData WHERE uuid = :uuid")
-	fun findByUuid(@Param("uuid") uuid: String): VedleggDbData?
+	fun findByUuid(@Param("uuid") uuid: String): Optional<VedleggDbData>
 
 	@Transactional
 	@Modifying

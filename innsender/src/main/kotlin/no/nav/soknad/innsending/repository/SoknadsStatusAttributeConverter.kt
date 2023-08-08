@@ -1,8 +1,7 @@
-package no.nav.soknad.innsending.repository.domain.utils
+package no.nav.soknad.innsending.repository
 
 import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Converter
-import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 
 @Converter(autoApply = true)
 class SoknadsStatusAttributeConverter : AttributeConverter<SoknadsStatus, String?> {

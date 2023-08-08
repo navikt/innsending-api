@@ -3,13 +3,12 @@ package no.nav.soknad.innsending.service
 import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
 import no.nav.soknad.innsending.ApplicationTest
+import no.nav.soknad.innsending.repository.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.FilRepository
 import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.repository.VedleggRepository
-import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
-import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
-import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
+import no.nav.soknad.innsending.utils.SoknadDbDataTestdataBuilder
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -54,7 +53,7 @@ class ScheduledOperationsServiceTest : ApplicationTest() {
 	@Test
 	fun testAtSoknadSomIkkeEksistererIArkivetBlirMarkertSomIkkeArkivert() {
 		val innsendtdato = LocalDateTime.now().minusMinutes(OFFSET_MINUTES + 1)
-		val soknad = SoknadDbDataTestBuilder(innsendtdato = innsendtdato, status = SoknadsStatus.Innsendt).build()
+		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 
 		val service = lagScheduledOperationsService()
@@ -70,7 +69,7 @@ class ScheduledOperationsServiceTest : ApplicationTest() {
 	@Test
 	fun testAtSoknadSomEksistererIArkivetBlirMarkertSomArkivert() {
 		val innsendtdato = LocalDateTime.now().minusMinutes(OFFSET_MINUTES + 1)
-		val soknad = SoknadDbDataTestBuilder(innsendtdato = innsendtdato, status = SoknadsStatus.Innsendt).build()
+		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 		simulateKafkaPolling(true, soknad.innsendingsid)
 
@@ -87,7 +86,7 @@ class ScheduledOperationsServiceTest : ApplicationTest() {
 	@Test
 	fun testAtInnsendtSoknadDerArkiveringHarFeiletBlirRapportert() {
 		val innsendtdato = LocalDateTime.now().minusMinutes(OFFSET_MINUTES + 1)
-		val soknad = SoknadDbDataTestBuilder(innsendtdato = innsendtdato, status = SoknadsStatus.Innsendt).build()
+		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 		simulateKafkaPolling(false, soknad.innsendingsid)
 
@@ -107,16 +106,12 @@ class ScheduledOperationsServiceTest : ApplicationTest() {
 	@Test
 	fun testAtSoknadAIkkeMarkeresSomArkivertOgSoknadBMarkeresSomArkivert() {
 		val innsendtdatoA = LocalDateTime.now().minusMinutes(OFFSET_MINUTES + 1)
-		val soknadA = SoknadDbDataTestBuilder(innsendtdato = innsendtdatoA, status = SoknadsStatus.Innsendt).build()
+		val soknadA = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdatoA).build()
 		soknadRepository.save(soknadA)
 		simulateKafkaPolling(true, soknadA.innsendingsid)
 
 		val innsendtdatoB = LocalDateTime.now().minusMinutes(OFFSET_MINUTES + 2)
-		val soknadB = SoknadDbDataTestBuilder(
-			innsendtdato = innsendtdatoB,
-			brukerId = soknadA.brukerid,
-			status = SoknadsStatus.Innsendt
-		).build()
+		val soknadB = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdatoB, brukerId = soknadA.brukerid).build()
 		soknadRepository.save(soknadB)
 
 		val service = lagScheduledOperationsService()
@@ -128,7 +123,7 @@ class ScheduledOperationsServiceTest : ApplicationTest() {
 	@Test
 	fun testAtSoknadSomForstMarkeresSomIkkeArkivertMarkeresSomArkivertVedNesteSjekk() {
 		val innsendtdato = LocalDateTime.now().minusMinutes(OFFSET_MINUTES + 1)
-		val soknad = SoknadDbDataTestBuilder(innsendtdato = innsendtdato, status = SoknadsStatus.Innsendt).build()
+		val soknad = SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato).build()
 		soknadRepository.save(soknad)
 
 		val service = lagScheduledOperationsService()
@@ -159,11 +154,7 @@ class ScheduledOperationsServiceTest : ApplicationTest() {
 	fun testAtSoknadInnsendtIForkantAvTimespanOgMarkertSomIkkeArkivertTellesMedVedRegistreringAvMetrics() {
 		val innsendtdato = LocalDateTime.now().minusMinutes(OFFSET_MINUTES + 2)
 		val soknad =
-			SoknadDbDataTestBuilder(
-				innsendtdato = innsendtdato,
-				arkiveringsStatus = ArkiveringsStatus.IkkeSatt,
-				status = SoknadsStatus.Innsendt
-			).build()
+			SoknadDbDataTestdataBuilder(innsendtdato = innsendtdato, arkiveringsStatus = ArkiveringsStatus.IkkeSatt).build()
 		soknadRepository.save(soknad)
 
 		val service = lagScheduledOperationsService()

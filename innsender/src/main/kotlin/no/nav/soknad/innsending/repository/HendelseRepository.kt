@@ -1,7 +1,5 @@
 package no.nav.soknad.innsending.repository
 
-import no.nav.soknad.innsending.repository.domain.enums.HendelseType
-import no.nav.soknad.innsending.repository.domain.models.HendelseDbData
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository

@@ -17,6 +17,7 @@ class SafApiTest : ApplicationTest() {
 		// brevkoder som skal repareres
 		val ekstraMellomrom = "  X2"
 		val ekstraMellomrom2 = "X2 "
+		val ekstraMellomrom3 = "NAV 08-07.04 D"
 		val ulovligBrevKode = "1234567"
 
 		assertEquals(defaultVerdi, KonverteringsUtility().brevKodeKontroll(defaultVerdi))

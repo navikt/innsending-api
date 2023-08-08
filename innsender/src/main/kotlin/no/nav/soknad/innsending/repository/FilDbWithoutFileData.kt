@@ -1,4 +1,4 @@
-package no.nav.soknad.innsending.repository.domain.models
+package no.nav.soknad.innsending.repository
 
 import jakarta.persistence.*
 import java.time.LocalDateTime
@@ -21,15 +21,5 @@ data class FilDbWithoutFileData(
 		other as FilDbWithoutFileData
 
 		return id == other.id
-	}
-
-	override fun hashCode(): Int {
-		var result = id?.hashCode() ?: 0
-		result = 31 * result + vedleggsid.hashCode()
-		result = 31 * result + filnavn.hashCode()
-		result = 31 * result + mimetype.hashCode()
-		result = 31 * result + (storrelse ?: 0)
-		result = 31 * result + opprettetdato.hashCode()
-		return result
 	}
 }

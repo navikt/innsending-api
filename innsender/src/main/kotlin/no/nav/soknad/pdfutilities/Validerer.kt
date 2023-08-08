@@ -1,6 +1,5 @@
 package no.nav.soknad.pdfutilities
 
-import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException
@@ -32,24 +31,20 @@ class Validerer {
 		} else if (!isImage(file)) {
 			logger.warn("$innsendingId: $fileName har ugylding filtype for opplasting. Filstart = ${if (file.size >= 4) (file[0] + file[1] + file[3] + file[4]) else file[0]}")
 			throw IllegalActionException(
-				message = "$innsendingId: Ugyldig filtype for opplasting. Kan kun laste opp filer av type PDF, JPEG, PNG og IMG",
-				errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
+				"$innsendingId: Ugyldig filtype for opplasting",
+				"Kan kun laste opp filer av type PDF, JPEG, PNG og IMG",
+				"errorCode.illegalAction.notSupportedFileFormat"
 			)
 		}
 	}
 
-	fun validerStorrelse(
-		innsendingId: String,
-		alleredeOpplastet: Long,
-		opplastet: Long,
-		max: Long,
-		errorCode: ErrorCode
-	) {
+	fun validerStorrelse(innsendingId: String, alleredeOpplastet: Long, opplastet: Long, max: Long, errorCode: String) {
 		if (alleredeOpplastet + opplastet > max * 1024 * 1024) {
 			logger.warn("$innsendingId: Ulovlig filstørrelse, Opplastede fil(er) $alleredeOpplastet + $opplastet er større enn maksimalt tillatt ${max * 1024 * 1024}. ErrorCode=$errorCode")
 			throw IllegalActionException(
-				message = "$innsendingId: Ulovlig filstørrelse. Opplastede fil(er) $alleredeOpplastet + $opplastet er større enn maksimalt tillatt ${max * 1024 * 1024}",
-				errorCode = errorCode
+				"$innsendingId: Ulovlig filstørrelse",
+				"Opplastede fil(er) $alleredeOpplastet + $opplastet er større enn maksimalt tillatt ${max * 1024 * 1024}",
+				errorCode
 			)
 		}
 	}
@@ -59,21 +54,23 @@ class Validerer {
 			ByteArrayInputStream(input).use { bais ->
 				PDDocument.load(bais).use { document -> erGyldigPdDocument(innsendingId, document) }
 			}
-		} catch (invalidPasswordException: InvalidPasswordException) {
-			logger.warn("$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert, ${invalidPasswordException.message}")
+		} catch (ex: InvalidPasswordException) {
+			logger.warn("$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert, ${ex.message}")
 			throw IllegalActionException(
-				message = "Opplastet fil er ikke lesbar. Kan ikke laste opp kryptert fil",
-				errorCode = ErrorCode.FILE_CANNOT_BE_READ
+				"Opplastet fil er ikke lesbar",
+				"Kan ikke laste opp kryptert fil",
+				"errorCode.illegalAction.fileCannotBeRead"
 			)
-		} catch (ex: Exception) {
-			if ("Kan ikke laste opp kryptert fil" == ex.message) {
-				logger.warn("$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert, ${ex.message}")
+		} catch (ex2: Exception) {
+			if ("Kan ikke laste opp kryptert fil".equals(ex2.message)) {
+				logger.warn("$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert, ${ex2.message}")
 			} else {
-				logger.error("$innsendingId: Opplasting av vedlegg feilet av ukjent årsak, ${ex.message}")
+				logger.error("$innsendingId: Opplasting av vedlegg feilet av ukjent årsak, ${ex2.message}")
 			}
 			throw IllegalActionException(
-				message = "Lesing av filen feilet. Opplastet fil er ikke lesbar",
-				errorCode = ErrorCode.FILE_CANNOT_BE_READ
+				"Opplastet fil er ikke lesbar",
+				"Lesing av filen feilet",
+				"errorCode.illegalAction.fileCannotBeRead"
 			)
 		}
 	}
@@ -85,20 +82,20 @@ class Validerer {
 		}
 	}
 
-	private fun isPng(bytes: ByteArray): Boolean {
+	fun isPng(bytes: ByteArray): Boolean {
 		return FiltypeSjekker().isPng(bytes)
 	}
 
-	private fun isPDF(bytes: ByteArray): Boolean {
+	fun isPDF(bytes: ByteArray): Boolean {
 		return FiltypeSjekker().isPdf(bytes)
 	}
 
-	private fun isImage(bytes: ByteArray): Boolean {
+	fun isImage(bytes: ByteArray): Boolean {
 		return FiltypeSjekker().isImage(bytes)
 	}
 
 	fun isPDFa(bytes: ByteArray): Boolean {
-		ByteArrayInputStream(bytes).use {
+		ByteArrayInputStream(bytes).use { byteArrayInputStream ->
 			var result: ValidationResult? = null
 			var document: PreflightDocument? = null
 			try {
@@ -116,12 +113,14 @@ class Validerer {
 					for (error in result.errorsList) {
 						sb.append(error.errorCode + " : " + error.details + "\n")
 					}
-					logger.error("Feil liste:\n$sb")
+					logger.error("Feil liste:\n" + sb.toString())
 				}
 			} catch (ex: Error) {
 				logger.warn("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
 			} finally {
-				document?.close()
+				if (document != null) {
+					document.close()
+				}
 			}
 		}
 		return false

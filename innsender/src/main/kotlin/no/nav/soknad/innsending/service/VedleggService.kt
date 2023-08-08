@@ -1,13 +1,14 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.consumerapis.skjema.KodeverkSkjema
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
-import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
-import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
-import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
+import no.nav.soknad.innsending.repository.OpplastingsStatus
+import no.nav.soknad.innsending.repository.SoknadDbData
+import no.nav.soknad.innsending.repository.SoknadsStatus
+import no.nav.soknad.innsending.repository.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
@@ -183,14 +184,15 @@ class VedleggService(
 	@Transactional
 	fun leggTilVedlegg(soknadDto: DokumentSoknadDto, vedleggDto: PostVedleggDto?): VedleggDto {
 
-		val soknadDb = repo.hentSoknadDb(soknadDto.innsendingsId!!)
-		if (soknadDb.status != SoknadsStatus.Opprettet && soknadDb.status != SoknadsStatus.Utfylt) throw IllegalActionException(
-			"Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet. Det kan ikke gjøres endring på en slettet eller innsendt søknad"
+		val soknadDbOpt = repo.hentSoknadDb(soknadDto.innsendingsId!!)
+		if (soknadDbOpt.isEmpty || (soknadDbOpt.get().status != SoknadsStatus.Opprettet && soknadDbOpt.get().status != SoknadsStatus.Utfylt)) throw IllegalActionException(
+			"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
+			"Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet"
 		)
 
 		// Lagre vedlegget i databasen
 		val vedleggDbDataList = opprettVedleggTilSoknad(
-			soknadDb.id!!,
+			soknadDbOpt.get().id!!,
 			listOf("N6"),
 			soknadDto.spraak!!,
 			vedleggDto?.tittel
@@ -202,14 +204,18 @@ class VedleggService(
 		return lagVedleggDto(vedleggDbDataList.first())
 	}
 
-	fun hentAlleVedlegg(soknadDbDataOpt: SoknadDbData, ident: String): DokumentSoknadDto {
+	fun hentAlleVedlegg(soknadDbDataOpt: Optional<SoknadDbData>, ident: String): DokumentSoknadDto {
 		val operation = InnsenderOperation.HENT.name
 
-		try {
-			innsenderMetrics.operationsCounterInc(operation, soknadDbDataOpt.tema)
-			return hentAlleVedlegg(soknadDbDataOpt)
-		} catch (e: Exception) {
-			reportException(e, operation, soknadDbDataOpt.tema)
+		if (soknadDbDataOpt.isPresent) {
+			innsenderMetrics.operationsCounterInc(operation, soknadDbDataOpt.get().tema)
+			return hentAlleVedlegg(soknadDbDataOpt.get())
+
+		} else {
+			val e = ResourceNotFoundException(
+				null, "Ingen soknad med id = $ident funnet", "errorCode.resourceNotFound.applicationNotFound"
+			)
+			reportException(e, operation, "Ukjent")
 			throw e
 		}
 	}
@@ -218,7 +224,11 @@ class VedleggService(
 		val vedleggDbDataListe = try {
 			repo.hentAlleVedleggGittSoknadsid(soknadDbData.id!!)
 		} catch (e: Exception) {
-			throw ResourceNotFoundException("Fant ingen vedlegg til soknad ${soknadDbData.innsendingsid}. Ved oppretting av søknad skal det minimum være opprettet et vedlegg for selve søknaden")
+			throw ResourceNotFoundException(
+				"Ved oppretting av søknad skal det minimum være opprettet et vedlegg for selve søknaden",
+				"Fant ingen vedlegg til soknad ${soknadDbData.innsendingsid}",
+				"errorCode.resourceNotFound.noAttachmentsFound"
+			)
 		}
 		val dokumentSoknadDto = lagDokumentSoknadDto(soknadDbData, vedleggDbDataListe)
 		logger.debug("hentAlleVedlegg: Hentet ${dokumentSoknadDto.innsendingsId}. " + "Med vedleggsstatus ${dokumentSoknadDto.vedleggsListe.map { it.vedleggsnr + ':' + it.opplastingsStatus + ':' + it.innsendtdato }}")
@@ -228,8 +238,14 @@ class VedleggService(
 
 	// Hent vedlegg, merk filene knyttet til vedlegget ikke lastes opp
 	fun hentVedleggDto(vedleggsId: Long): VedleggDto {
-		val vedleggDbData = repo.hentVedlegg(vedleggsId)
-		return lagVedleggDto(vedleggDbData)
+		val vedleggDbDataOpt = repo.hentVedlegg(vedleggsId)
+		if (!vedleggDbDataOpt.isPresent) throw ResourceNotFoundException(
+			null,
+			"Vedlegg med id $vedleggsId ikke funnet",
+			"errorCode.resourceNotFound.attachmentNotFound"
+		)
+
+		return lagVedleggDto(vedleggDbDataOpt.get())
 	}
 
 	fun slettVedleggOgDensFiler(vedleggDto: VedleggDto) {
@@ -239,14 +255,24 @@ class VedleggService(
 
 	@Transactional
 	fun slettVedlegg(soknadDto: DokumentSoknadDto, vedleggsId: Long) {
-		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException("Søknad ${soknadDto.innsendingsId} kan ikke endres da den allerede er innsendt. Det kan ikke gjøres endring på en slettet eller innsendt søknad.")
+		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException(
+			"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
+			"Søknad ${soknadDto.innsendingsId} kan ikke endres da den allerede er innsendt"
+		)
 
-		val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
-			?: throw ResourceNotFoundException("Angitt vedlegg $vedleggsId eksisterer ikke for søknad ${soknadDto.innsendingsId}")
+		val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId } ?: throw ResourceNotFoundException(
+			null,
+			"Angitt vedlegg $vedleggsId eksisterer ikke for søknad ${soknadDto.innsendingsId}",
+			"errorCode.resourceNotFound.attachmentNotFound"
+		)
 
-		if (vedleggDto.erHoveddokument) throw IllegalActionException("Kan ikke slette hovedskjema på en søknad. Søknaden må alltid ha sitt hovedskjema")
+		if (vedleggDto.erHoveddokument) throw IllegalActionException(
+			"Søknaden må alltid ha sitt hovedskjema",
+			"Kan ikke slette hovedskjema på en søknad"
+		)
 		if (!vedleggDto.vedleggsnr.equals("N6") || (vedleggDto.vedleggsnr.equals("N6") && vedleggDto.erPakrevd)) throw IllegalActionException(
-			"Kan ikke slette påkrevd vedlegg. Vedlegg som er obligatorisk for søknaden kan ikke slettes av søker"
+			"Vedlegg som er obligatorisk for søknaden kan ikke slettes av søker",
+			"Kan ikke slette påkrevd vedlegg"
 		)
 
 		slettVedleggOgDensFiler(vedleggDto, soknadDto.id!!)
@@ -262,17 +288,29 @@ class VedleggService(
 	@Transactional
 	fun endreVedlegg(patchVedleggDto: PatchVedleggDto, vedleggsId: Long, soknadDto: DokumentSoknadDto): VedleggDto {
 
-		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException("Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet. Det kan ikke gjøres endring på en slettet eller innsendt søknad")
+		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException(
+			"Det kan ikke gjøres endring på en slettet eller innsendt søknad",
+			"Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet"
+		)
 
-		val vedleggDbData = repo.hentVedlegg(vedleggsId)
+		val vedleggDbDataOpt = repo.hentVedlegg(vedleggsId)
+		if (vedleggDbDataOpt.isEmpty) throw IllegalActionException(
+			"Kan ikke endre vedlegg da det ikke ble funnet", "Fant ikke vedlegg $vedleggsId på ${soknadDto.innsendingsId}"
+		)
+
+		val vedleggDbData = vedleggDbDataOpt.get()
 		if (vedleggDbData.soknadsid != soknadDto.id) {
-			throw IllegalActionException("Søknad ${soknadDto.innsendingsId} har ikke vedlegg med id $vedleggsId. Kan ikke endre vedlegg da søknaden ikke har et slikt vedlegg")
+			throw IllegalActionException(
+				"Kan ikke endre vedlegg da søknaden ikke har et slikt vedlegg",
+				"Søknad ${soknadDto.innsendingsId} har ikke vedlegg med id $vedleggsId"
+			)
 		}
 		if (vedleggDbData.vedleggsnr != "N6" && patchVedleggDto.tittel != null) {
-			throw IllegalActionException("Ulovlig endring av tittel på vedlegg. Vedlegg med id $vedleggsId er av type ${vedleggDbData.vedleggsnr}.Tittel kan kun endres på vedlegg av type N6 ('Annet').")
-		}
-
-		/* Sletter ikke eventuelle filer som søker har lastet opp på vedlegget før vedkommende endrer status til sendSenere eller sendesAvAndre.
+			throw IllegalActionException(
+				"Ulovlig endring av tittel på vedlegg",
+				"Vedlegg med id $vedleggsId er av type ${vedleggDbData.vedleggsnr}.Tittel kan kun endres på vedlegg av type N6 ('Annet')."
+			)
+		}    /* Sletter ikke eventuelle filer som søker har lastet opp på vedlegget før vedkommende endrer status til sendSenere eller sendesAvAndre.
 				Disse blir eventuelt slettet i forbindelse med innsending av søknader.
 				slettFilerDersomStatusUlikLastetOpp(patchVedleggDto, soknadDto, vedleggsId)
 		*/
@@ -280,10 +318,18 @@ class VedleggService(
 		val oppdatertVedlegg =
 			repo.oppdaterVedlegg(soknadDto.innsendingsId!!, oppdaterVedleggDb(vedleggDbData, patchVedleggDto))
 
+		if (oppdatertVedlegg.isEmpty) {
+			throw BackendErrorException(
+				null,
+				"Vedlegg er ikke blitt oppdatert",
+				"errorCode.backendError.attachmentUpdateError"
+			)
+		}
+
 		// Oppdater soknadens sist endret dato
 		repo.oppdaterEndretDato(soknadDto.id!!)
 
-		return lagVedleggDto(oppdatertVedlegg, null)
+		return lagVedleggDto(oppdatertVedlegg.get(), null)
 	}
 
 

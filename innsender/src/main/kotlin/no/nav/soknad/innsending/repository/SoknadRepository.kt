@@ -1,8 +1,5 @@
 package no.nav.soknad.innsending.repository
 
-import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
-import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
-import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
@@ -16,7 +13,7 @@ import java.util.*
 @Repository
 interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 
-	fun findByInnsendingsid(innsendingsid: String): SoknadDbData?
+	fun findByInnsendingsid(innsendingsid: String): Optional<SoknadDbData>
 
 	@Query(
 		value = "SELECT * FROM soknad WHERE innsendtdato is not null AND (innsendingsid = :ettersendingsid OR (ettersendingsid is not null AND ettersendingsid = :ettersendingsid)) ORDER BY innsendtdato DESC",

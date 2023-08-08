@@ -3,7 +3,6 @@ package no.nav.soknad.innsending.rest
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.FrontendApi
 import no.nav.soknad.innsending.config.RestConfig
-import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
@@ -51,7 +50,7 @@ class FrontEndRestApi(
 		logger.info("Kall for å opprette søknad på skjema ${opprettSoknadBody.skjemanr}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-		soknadService.loggWarningVedEksisterendeSoknad(brukerId, opprettSoknadBody.skjemanr, false)
+		soknadService.sjekkHarAlleredeSoknadUnderArbeid(brukerId, opprettSoknadBody.skjemanr, false)
 
 		val dokumentSoknadDto = soknadService.opprettSoknad(
 			brukerId,
@@ -90,7 +89,7 @@ class FrontEndRestApi(
 		logger.info("Kall for å opprette ettersending på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-		soknadService.loggWarningVedEksisterendeSoknad(brukerId, opprettEttersendingGittSkjemaNr.skjemanr, true)
+		soknadService.sjekkHarAlleredeSoknadUnderArbeid(brukerId, opprettEttersendingGittSkjemaNr.skjemanr, true)
 
 		val arkiverteSoknader = safService.hentInnsendteSoknader(brukerId)
 			.filter { opprettEttersendingGittSkjemaNr.skjemanr == it.skjemanr && it.innsendingsId != null }
@@ -222,7 +221,11 @@ class FrontEndRestApi(
 		logger.info("$innsendingsId: Kall for å hente vedlegg $vedleggsId til søknad")
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
-			?: throw ResourceNotFoundException("Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId")
+			?: throw ResourceNotFoundException(
+				"",
+				"Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId",
+				"errorCode.resourceNotFound.applicationNotFound"
+			)
 		logger.info("$innsendingsId: Hentet vedlegg $vedleggsId til søknad")
 
 		return ResponseEntity
@@ -254,7 +257,7 @@ class FrontEndRestApi(
 				opplastetPaSoknad,
 				opplastetPaVedlegg,
 				restConfig.maxFileSizeSum.toLong(),
-				ErrorCode.FILE_SIZE_SUM_TOO_LARGE
+				"errorCode.illegalAction.fileSizeSumTooLarge"
 			)
 		}
 		if (!patchVedleggDto.tittel.isNullOrEmpty()) {
@@ -263,7 +266,7 @@ class FrontEndRestApi(
 				0L,
 				patchVedleggDto.tittel!!.length.toLong(),
 				255L,
-				ErrorCode.TITLE_STRING_TOO_LONG
+				"errorCode.illegalAction.titleStringTooLong"
 			)
 		}
 		val vedleggDto = vedleggService.endreVedlegg(patchVedleggDto, vedleggsId, soknadDto)
@@ -295,7 +298,11 @@ class FrontEndRestApi(
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
-			throw ResourceNotFoundException("Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId")
+			throw ResourceNotFoundException(
+				null,
+				"Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId",
+				"errorCode.resourceNotFound.attachmentNotFound"
+			)
 
 		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
 		val fileName = file.filename
@@ -304,8 +311,9 @@ class FrontEndRestApi(
 			logger.info("$innsendingsId: Skal validere ${split[split.size - 1]}")
 		}
 		if (!file.isReadable) throw IllegalActionException(
-			message = "Opplasting feilet. Ingen fil opplastet",
-			errorCode = ErrorCode.FILE_CANNOT_BE_READ
+			"Ingen fil opplastet",
+			"Opplasting feilet",
+			"errorCode.illegalAction.fileCannotBeRead"
 		)
 		val opplastet = (file as ByteArrayResource).byteArray
 		Validerer().validerStorrelse(
@@ -313,7 +321,7 @@ class FrontEndRestApi(
 			0,
 			opplastet.size.toLong(),
 			restConfig.maxFileSize.toLong(),
-			ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE
+			"errorCode.illegalAction.vedleggFileSizeSumTooLarge"
 		)
 		Validerer().validereFilformat(innsendingsId, opplastet, fileName)
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
@@ -343,8 +351,9 @@ class FrontEndRestApi(
 				(soknadDto.status == SoknadsStatusDto.innsendt && soknadDto.vedleggsListe.any { it.id == vedleggsId && it.erHoveddokument && !it.erVariant }))
 		) {
 			throw IllegalActionException(
-				message = "Søknaden kan ikke vises. Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
-				errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
+				"Søknaden kan ikke vises",
+				"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
+				"errorCode.illegalAction.applicationSentInOrDeleted"
 			)
 		}
 
@@ -359,7 +368,11 @@ class FrontEndRestApi(
 	}
 
 	private fun mapTilResource(filDto: FilDto): Resource {
-		if (filDto.data == null) throw ResourceNotFoundException("Fant ikke angitt fil på ${filDto.id}")
+		if (filDto.data == null) throw ResourceNotFoundException(
+			"Fant ikke fil",
+			"Fant ikke angitt fil på ${filDto.id}",
+			"errorCode.resourceNotFound.fileNotFound"
+		)
 		return ByteArrayResource(filDto.data!!)
 	}
 
@@ -439,8 +452,9 @@ class FrontEndRestApi(
 		tilgangskontroll.harTilgang(soknadDto)
 		if (!soknadDto.kanGjoreEndringer) {
 			throw IllegalActionException(
-				message = "Søknaden kan ikke vises. Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
-				errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
+				"Søknaden kan ikke vises",
+				"Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
+				"errorCode.illegalAction.applicationSentInOrDeleted"
 			)
 		}
 		return soknadDto

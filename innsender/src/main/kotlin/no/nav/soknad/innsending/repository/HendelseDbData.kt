@@ -1,7 +1,6 @@
-package no.nav.soknad.innsending.repository.domain.models
+package no.nav.soknad.innsending.repository
 
 import jakarta.persistence.*
-import no.nav.soknad.innsending.repository.domain.enums.HendelseType
 import java.time.LocalDateTime
 
 @Entity

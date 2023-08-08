@@ -15,12 +15,7 @@ import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.repository.FilRepository
-import no.nav.soknad.innsending.repository.HendelseRepository
-import no.nav.soknad.innsending.repository.SoknadRepository
-import no.nav.soknad.innsending.repository.VedleggRepository
-import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
-import no.nav.soknad.innsending.repository.domain.enums.HendelseType
+import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.mapping.mapTilOffsetDateTime
@@ -143,8 +138,8 @@ class SoknadServiceTest : ApplicationTest() {
 		assertNotNull(dokumentSoknadDto.innsendingsId)
 
 		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
-		assertTrue(hendelseDbDatas.isNotEmpty())
-		assertEquals(HendelseType.Opprettet, hendelseDbDatas[0].hendelsetype)
+		assertTrue(hendelseDbDatas.size > 0)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatas.get(0).hendelsetype)
 	}
 
 	@Test
@@ -162,8 +157,8 @@ class SoknadServiceTest : ApplicationTest() {
 		assertNotNull(dokumentSoknadDto.innsendingsId)
 
 		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
-		assertTrue(hendelseDbDatas.isNotEmpty())
-		assertEquals(HendelseType.Opprettet, hendelseDbDatas[0].hendelsetype)
+		assertTrue(hendelseDbDatas.size > 0)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatas.get(0).hendelsetype)
 	}
 
 
@@ -178,14 +173,14 @@ class SoknadServiceTest : ApplicationTest() {
 			"ResourceNotFoundException was expected"
 		)
 
-		assertEquals("Skjema med id = $skjemanr ikke funnet. Ikke funnet i skjema listen", exception.message)
+		assertEquals("Skjema med id = $skjemanr ikke funnet", exception.message)
 	}
 
 	@Test
 	fun opprettSoknadGittSoknadDokument() {
 		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf())
 
-		assertNotNull(dokumentSoknadDto)
+		assertTrue(dokumentSoknadDto != null)
 	}
 
 
@@ -214,8 +209,8 @@ class SoknadServiceTest : ApplicationTest() {
 		val hendelseDbDatasInnsendt =
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
 		assertTrue(hendelseDbDatasInnsendt.size > 1)
-		assertEquals(HendelseType.Opprettet, hendelseDbDatasInnsendt[0].hendelsetype)
-		assertEquals(HendelseType.Innsendt, hendelseDbDatasInnsendt[1].hendelsetype)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatasInnsendt.get(0).hendelsetype)
+		assertEquals(HendelseType.Innsendt, hendelseDbDatasInnsendt.get(1).hendelsetype)
 
 		// Opprett ettersendingssoknad
 		val ettersendingsSoknadDto =
@@ -227,8 +222,8 @@ class SoknadServiceTest : ApplicationTest() {
 
 		val hendelseDbDatasEttersending =
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(ettersendingsSoknadDto.innsendingsId!!)
-		assertTrue(hendelseDbDatasEttersending.isNotEmpty())
-		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending[0].hendelsetype)
+		assertTrue(hendelseDbDatasEttersending.size > 0)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending.get(0).hendelsetype)
 
 	}
 
@@ -389,8 +384,8 @@ class SoknadServiceTest : ApplicationTest() {
 		val hendelseDbDatasEttersending2 =
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(ettersendingsSoknadDto2.innsendingsId!!)
 		assertTrue(hendelseDbDatasEttersending2.size > 1)
-		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending2[0].hendelsetype)
-		assertEquals(HendelseType.Innsendt, hendelseDbDatasEttersending2[1].hendelsetype)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending2.get(0).hendelsetype)
+		assertEquals(HendelseType.Innsendt, hendelseDbDatasEttersending2.get(1).hendelsetype)
 
 		val vedleggDto = filService.hentFiler(
 			ettersendingsSoknadDto2,
@@ -428,7 +423,7 @@ class SoknadServiceTest : ApplicationTest() {
 			listOf("W1")
 		)
 
-		assertNotNull(ettersending)
+		assertTrue(ettersending != null)
 		assertEquals(2, ettersending.vedleggsListe.size)
 
 	}
@@ -450,7 +445,7 @@ class SoknadServiceTest : ApplicationTest() {
 			"ResourceNotFoundException was expected"
 		)
 
-		assertEquals("Fant ikke søknad med innsendingsid 9999", exception.message)
+		assertEquals(exception.message, "Ingen soknad med id = 9999 funnet")
 	}
 
 	@Test
@@ -520,8 +515,8 @@ class SoknadServiceTest : ApplicationTest() {
 
 		val hendelseDbDatasEttersending2 =
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
-		assertTrue(hendelseDbDatasEttersending2.isNotEmpty())
-		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending2[0].hendelsetype)
+		assertTrue(hendelseDbDatasEttersending2.size > 0)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending2.get(0).hendelsetype)
 	}
 
 	@Test
@@ -569,8 +564,8 @@ class SoknadServiceTest : ApplicationTest() {
 
 		val hendelseDbDatasEttersending2 =
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(ettersendingsSoknadDto.innsendingsId!!)
-		assertTrue(hendelseDbDatasEttersending2.isNotEmpty())
-		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending2[0].hendelsetype)
+		assertTrue(hendelseDbDatasEttersending2.size > 0)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending2.get(0).hendelsetype)
 
 	}
 
@@ -609,8 +604,8 @@ class SoknadServiceTest : ApplicationTest() {
 
 		val hendelseDbDatasEttersending2 =
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
-		assertTrue(hendelseDbDatasEttersending2.isNotEmpty())
-		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending2[0].hendelsetype)
+		assertTrue(hendelseDbDatasEttersending2.size > 0)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending2.get(0).hendelsetype)
 	}
 
 
@@ -618,7 +613,7 @@ class SoknadServiceTest : ApplicationTest() {
 	fun slettOpprettetSoknadDokument() {
 		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf())
 
-		slot<List<VedleggDto>>()
+		val slett = slot<List<VedleggDto>>()
 
 		soknadService.slettSoknadAvBruker(dokumentSoknadDto)
 
@@ -632,7 +627,7 @@ class SoknadServiceTest : ApplicationTest() {
 
 		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
 		assertTrue(hendelseDbDatas.size == 2)
-		assertEquals(HendelseType.SlettetPermanentAvBruker, hendelseDbDatas[1].hendelsetype)
+		assertEquals(HendelseType.SlettetPermanentAvBruker, hendelseDbDatas.get(1).hendelsetype)
 	}
 
 	@Test
@@ -660,7 +655,7 @@ class SoknadServiceTest : ApplicationTest() {
 
 		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(soknad.innsendingsId!!)
 		assertTrue(hendelseDbDatas.size == 1)
-		assertEquals(HendelseType.Opprettet, hendelseDbDatas[0].hendelsetype)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatas.get(0).hendelsetype)
 	}
 
 	@Test
@@ -826,10 +821,10 @@ class SoknadServiceTest : ApplicationTest() {
 
 		// og hendelse for oppretting og seltting registrert på søknad
 		val hendelseDbDatas =
-			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDtoList[0].innsendingsId!!)
+			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDtoList.get(0).innsendingsId!!)
 		assertTrue(hendelseDbDatas.size > 1)
-		assertEquals(HendelseType.Opprettet, hendelseDbDatas[0].hendelsetype)
-		assertEquals(HendelseType.SlettetAvSystem, hendelseDbDatas[1].hendelsetype)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatas.get(0).hendelsetype)
+		assertEquals(HendelseType.SlettetAvSystem, hendelseDbDatas.get(1).hendelsetype)
 	}
 
 
@@ -858,7 +853,7 @@ class SoknadServiceTest : ApplicationTest() {
 			)
 		}
 
-		slot<List<VedleggDto>>()
+		val vedleggDtos = slot<List<VedleggDto>>()
 
 		val soknad = slot<DokumentSoknadDto>()
 		val vedleggDtos2 = slot<List<VedleggDto>>()
@@ -875,7 +870,7 @@ class SoknadServiceTest : ApplicationTest() {
 			filService.hentFiler(
 				it,
 				it.innsendingsId!!,
-				it.vedleggsListe.first { vedlegg -> vedlegg.erHoveddokument && !vedlegg.erVariant }.id!!
+				it.vedleggsListe.first { it.erHoveddokument && !it.erVariant }.id!!
 			).isNotEmpty()
 		}
 
@@ -892,25 +887,28 @@ class SoknadServiceTest : ApplicationTest() {
 		assertNotNull(soknadService.hentSoknad(dokumentSoknadDtoList[1].innsendingsId!!))
 
 		val hendelseDbDatasArkivert =
-			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDtoList[0].innsendingsId!!)
+			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDtoList.get(0).innsendingsId!!)
 		assertTrue(hendelseDbDatasArkivert.size == 4)
-		assertEquals(HendelseType.Opprettet, hendelseDbDatasArkivert[0].hendelsetype)
-		assertEquals(HendelseType.Innsendt, hendelseDbDatasArkivert[1].hendelsetype)
-		assertEquals(HendelseType.Arkivert, hendelseDbDatasArkivert[2].hendelsetype)
-		assertEquals(HendelseType.SlettetPermanentAvSystem, hendelseDbDatasArkivert[3].hendelsetype)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatasArkivert.get(0).hendelsetype)
+		assertEquals(HendelseType.Innsendt, hendelseDbDatasArkivert.get(1).hendelsetype)
+		assertEquals(HendelseType.Arkivert, hendelseDbDatasArkivert.get(2).hendelsetype)
+		assertEquals(HendelseType.SlettetPermanentAvSystem, hendelseDbDatasArkivert.get(3).hendelsetype)
 
 		val hendelseDbDatasArkiveringFeilet =
-			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDtoList[1].innsendingsId!!)
+			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDtoList.get(1).innsendingsId!!)
 		assertTrue(hendelseDbDatasArkiveringFeilet.size == 3)
-		assertEquals(HendelseType.Opprettet, hendelseDbDatasArkiveringFeilet[0].hendelsetype)
-		assertEquals(HendelseType.Innsendt, hendelseDbDatasArkiveringFeilet[1].hendelsetype)
-		assertEquals(HendelseType.ArkiveringFeilet, hendelseDbDatasArkiveringFeilet[2].hendelsetype)
+		assertEquals(HendelseType.Opprettet, hendelseDbDatasArkiveringFeilet.get(0).hendelsetype)
+		assertEquals(HendelseType.Innsendt, hendelseDbDatasArkiveringFeilet.get(1).hendelsetype)
+		assertEquals(HendelseType.ArkiveringFeilet, hendelseDbDatasArkiveringFeilet.get(2).hendelsetype)
 
 	}
 
 	private fun simulateKafkaPolling(ok: Boolean, innsendingId: String) {
 		val soknad = repo.hentSoknadDb(innsendingId)
-		repo.oppdaterArkiveringsstatus(soknad, (if (ok) ArkiveringsStatus.Arkivert else ArkiveringsStatus.ArkiveringFeilet))
+		repo.oppdaterArkiveringsstatus(
+			soknad.get(),
+			(if (ok) ArkiveringsStatus.Arkivert else ArkiveringsStatus.ArkiveringFeilet)
+		)
 	}
 
 	fun lagDokumentSoknad(tema: String, skjemanr: String): DokumentSoknadDto {

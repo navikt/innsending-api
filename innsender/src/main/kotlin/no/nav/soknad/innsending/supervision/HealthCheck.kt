@@ -41,7 +41,7 @@ class HealthCheck(
 	}
 
 	@GetMapping("/ping")
-	override fun ping(): ResponseEntity<String> = ResponseEntity.status(HttpStatus.OK).body("pong")
+	override fun ping() = ResponseEntity.status(HttpStatus.OK).body("pong")
 
 
 	@GetMapping("/status")

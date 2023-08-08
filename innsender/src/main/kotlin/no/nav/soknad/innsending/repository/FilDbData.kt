@@ -1,4 +1,4 @@
-package no.nav.soknad.innsending.repository.domain.models
+package no.nav.soknad.innsending.repository
 
 import jakarta.persistence.*
 import java.time.LocalDateTime

@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.consumerapis.handleErrors
 import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.consumerapis.saf.dto.Dokument
 import no.nav.soknad.innsending.exceptions.BackendErrorException
+import no.nav.soknad.innsending.exceptions.SafApiException
 import no.nav.soknad.innsending.safselvbetjening.generated.HentDokumentOversikt
 import no.nav.soknad.innsending.safselvbetjening.generated.enums.Journalposttype
 import no.nav.soknad.innsending.safselvbetjening.generated.hentdokumentoversikt.DokumentInfo
@@ -73,7 +74,7 @@ class SafSelvbetjeningApi(
 			try {
 				val hentetDokumentoversikt = getSoknadsDataForPerson(brukerId)
 				if (hentetDokumentoversikt == null || hentetDokumentoversikt.journalposter.isEmpty()) {
-					throw BackendErrorException("Ingen søknader funnet. Fant ingen relevante søknader i søknadsarkivet")
+					throw SafApiException("Ingen søknader funnet", "Fant ingen relevante søknader i søknadsarkivet")
 				} else {
 					val dokumentoversikt = filtrerPaJournalposttypeAndTema(
 						hentetDokumentoversikt,
@@ -89,7 +90,11 @@ class SafSelvbetjeningApi(
 				}
 			} catch (ex: Exception) {
 				logger.warn("hentBrukersSakerIArkivet feilet med ${ex.message}.")
-				throw BackendErrorException("Henting av brukers innsendte søknader feilet", ex)
+				throw BackendErrorException(
+					ex.message,
+					"Henting av brukers innsendte søknader feilet",
+					"errorCode.backendError.safError"
+				)
 			}
 		}
 	}
@@ -128,7 +133,7 @@ class SafSelvbetjeningApi(
 			return response.data?.dokumentoversiktSelvbetjening
 		} else {
 			logger.error("Oppslag mot søknadsarkivet feilet, ingen data returnert.")
-			throw BackendErrorException("Oppslag mot søknadsarkivet feilet. Fikk feil i kallet til søknadsarkivet")
+			throw SafApiException("Oppslag mot søknadsarkivet feilet", "Fikk feil i kallet til søknadsarkivet")
 		}
 	}
 

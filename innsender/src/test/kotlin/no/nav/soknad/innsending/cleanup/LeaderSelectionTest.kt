@@ -6,6 +6,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.soknad.innsending.ApplicationTest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
@@ -13,6 +14,10 @@ class LeaderSelectionTest : ApplicationTest() {
 
 	@OptIn(ExperimentalSerializationApi::class)
 	val format = Json { explicitNulls = false; ignoreUnknownKeys = true }
+
+	@AfterEach
+	fun ryddOpp() {
+	}
 
 	@Test
 	fun testLeaderSelection() {

@@ -14,7 +14,7 @@ import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
-import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
+import no.nav.soknad.innsending.repository.ArkiveringsStatus
 import no.nav.soknad.innsending.service.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.OffsetDateTime
-import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class SlettArkiverteSoknaderTest : ApplicationTest() {
 
@@ -97,7 +97,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 	fun testSlettingAvInnsendteSoknader() {
 		val soknadService = lagSoknadService()
 		val innsendingService = lagInnsendingService(soknadService)
-		SlettArkiverteSoknader(leaderSelectionUtility, soknadService)
+		val startFinnOgSlettArkiverteSoknader = SlettArkiverteSoknader(leaderSelectionUtility, soknadService)
 
 		val soknader = mutableListOf<DokumentSoknadDto>()
 		every { brukernotifikasjonPublisher.soknadStatusChange(capture(soknader)) } returns true
@@ -167,12 +167,12 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 		)
 		//Send inn søknad
 		val kvittering = innsendingService.sendInnSoknad(skalSendeInnSoknad)
-		assertNotNull(kvittering)
+		assertTrue(kvittering != null)
 	}
 
 	private fun simulerArkiveringsRespons(innsendingsId: String, arkiveringsStatus: ArkiveringsStatus) {
 		val soknad = repo.hentSoknadDb(innsendingsId)
-		repo.oppdaterArkiveringsstatus(soknad, arkiveringsStatus)
+		repo.oppdaterArkiveringsstatus(soknad.get(), arkiveringsStatus)
 	}
 
 }

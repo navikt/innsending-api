@@ -1,8 +1,5 @@
 package no.nav.soknad.innsending.repository
 
-import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
-import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
-import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
@@ -21,7 +18,7 @@ interface FilRepository : JpaRepository<FilDbData, Long> {
 	fun findNumberOfFilesByVedleggsid(@Param("vedleggsid") vedleggsid: Long): Int
 
 	@Query(value = "FROM FilDbData WHERE vedleggsid = :vedleggsid and id = :id")
-	fun findByVedleggsidAndId(@Param("vedleggsid") vedleggsid: Long, @Param("id") id: Long): FilDbData?
+	fun findByVedleggsidAndId(@Param("vedleggsid") vedleggsid: Long, @Param("id") id: Long): Optional<FilDbData>
 
 	@Query(value = "SELECT sum(storrelse) FROM FilDbData WHERE vedleggsid = :vedleggsid")
 	fun findSumByVedleggsid(@Param("vedleggsid") vedleggsid: Long): Long?

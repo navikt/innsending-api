@@ -17,8 +17,7 @@ class RestConfig {
 	lateinit var sanityEndpoint: String
 	var filesInOneRequestToFilestorage by Delegates.notNull<Int>()
 	lateinit var soknadsMottakerHost: String
-	lateinit var sendInnUrl: String
-	lateinit var fyllUtUrl: String
+	lateinit var frontEndFortsettEndpoint: String
 	lateinit var pdlScope: String
 	lateinit var pdlUrl: String
 	lateinit var safselvbetjeningUrl: String

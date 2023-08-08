@@ -2,7 +2,6 @@ package no.nav.soknad.pdfutilities
 
 import jakarta.persistence.spi.TransformerException
 import no.nav.soknad.innsending.exceptions.BackendErrorException
-import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
@@ -37,8 +36,9 @@ class KonverterTilPdf {
 			return createPDFFromImage(fil)
 		}
 		throw IllegalActionException(
-			message = "Ulovlig filformat. Kan ikke konvertere til PDF",
-			errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
+			"",
+			"Ulovlig filformat. Kan ikke konvertere til PDF",
+			"errorCode.illegalAction.notSupportedFileFormat"
 		)
 	}
 
@@ -51,7 +51,11 @@ class KonverterTilPdf {
 				}
 			}
 		} catch (e: Exception) {
-			throw BackendErrorException("Feil ved mottak av opplastet fil", e)
+			throw BackendErrorException(
+				e.message,
+				"Feil ved mottak av opplastet fil",
+				"errorCode.backendError.FileUploadError"
+			)
 		}
 	}
 
@@ -64,13 +68,13 @@ class KonverterTilPdf {
 		if (harSkrivbareFelt(fil)) {
 			val images = KonverterTilPng().konverterTilPng(fil)
 			val pdfList = mutableListOf<ByteArray>()
-			for (element in images) pdfList.add(createPDFFromImage(element))
+			for (i in 0..images.size - 1) pdfList.add(createPDFFromImage(images[i]))
 			return PdfMerger().mergePdfer(pdfList)
 		}
 		return fil
 	}
 
-	private fun createPDFFromImage(image: ByteArray): ByteArray {
+	fun createPDFFromImage(image: ByteArray): ByteArray {
 		try {
 			PDDocument().use { doc ->
 				val pdImage = PDImageXObject.createFromByteArray(doc, image, null)
@@ -94,11 +98,19 @@ class KonverterTilPdf {
 				}
 			}
 		} catch (ioe: IOException) {
-			logger.error("Klarte ikke å sjekke filtype til PDF. Feil: '{}'", ioe.message, ioe)
-			throw BackendErrorException("Feil ved mottak av opplastet fil", ioe)
+			logger.error("Klarte ikke å sjekke filtype til PDF. Feil: '{}'", ioe.message)
+			throw BackendErrorException(
+				ioe.message,
+				"Feil ved mottak av opplastet fil",
+				"errorCode.backendError.FileUploadError"
+			)
 		} catch (t: Throwable) {
-			logger.error("Klarte ikke å sjekke filtype til PDF. Feil: '{}'", t.message, t)
-			throw BackendErrorException("Feil ved mottak av opplastet fil", t)
+			logger.error("Klarte ikke å sjekke filtype til PDF. Feil: '{}'", t)
+			throw BackendErrorException(
+				t.message,
+				"Feil ved mottak av opplastet fil",
+				"errorCode.backendError.FileUploadError"
+			)
 		}
 	}
 
@@ -111,7 +123,7 @@ class KonverterTilPdf {
 				}
 			}
 		} catch (e: IOException) {
-			logger.error("Lasting av fonter ved konvertering til PDF/A feilet {}", e.message, e)
+			logger.error("Lasting av fonter ved konvertering til PDF/A feilet {}", e.message)
 		}
 	}
 
@@ -155,7 +167,7 @@ class KonverterTilPdf {
 				doc.documentCatalog.addOutputIntent(intent)
 			}
 		} catch (e: IOException) {
-			logger.error("Feil ved lasting av XMPMetadata ved konvertering av Image til PDF/A, {}", e.message, e)
+			logger.error("Feil ved lasting av XMPMetadata ved konvertering av Image til PDF/A, {}", e.message)
 		}
 	}
 

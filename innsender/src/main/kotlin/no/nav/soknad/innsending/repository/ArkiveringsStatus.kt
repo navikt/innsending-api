@@ -1,4 +1,4 @@
-package no.nav.soknad.innsending.repository.domain.enums
+package no.nav.soknad.innsending.repository
 
 enum class ArkiveringsStatus {
 	IkkeSatt,

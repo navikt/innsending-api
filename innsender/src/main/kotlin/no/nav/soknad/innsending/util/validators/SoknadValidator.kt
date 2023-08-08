@@ -34,7 +34,7 @@ private fun validerVedleggVedOppdatering(vedlegg: VedleggDto, eksisterendeSoknad
 	}
 
 	if (eksisterendeVedlegg == null && vedlegg.erHoveddokument) {
-		throw BackendErrorException("Finner ikke hoveddokumentet som skal oppdateres")
+		throw BackendErrorException("Finner ikke hoveddokumentet", "Finner ikke hoveddokumentet som skal oppdateres")
 	} else if (eksisterendeVedlegg == null) {
 		return
 	}

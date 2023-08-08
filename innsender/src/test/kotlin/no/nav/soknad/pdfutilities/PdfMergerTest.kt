@@ -8,6 +8,7 @@ import kotlin.test.assertEquals
 class PdfMergerTest {
 
 	private val pdfMerger = PdfMerger()
+	private val konverterTilPdf = KonverterTilPdf()
 	private val antallSider = AntallSider()
 	private val validerer = Validerer()
 
@@ -16,7 +17,7 @@ class PdfMergerTest {
 
 		val pdfFiler = mutableListOf<ByteArray>()
 		val antallFiler = 2
-		for (i in 0 until antallFiler) {
+		for (i in 0..antallFiler - 1) {
 			pdfFiler.add(konverterTilPdfOgReturner("/2MbJpg.jpg"))
 		}
 
@@ -39,7 +40,7 @@ class PdfMergerTest {
 		val pdfFiler = mutableListOf<ByteArray>()
 		val antallFiler = 10
 
-		for (i in 0 until antallFiler) {
+		for (i in 0..antallFiler - 1) {
 			pdfFiler.add(konverterTilPdfOgReturner("/2MbJpg.jpg"))
 		}
 
@@ -60,7 +61,7 @@ class PdfMergerTest {
 
 		val pdfFiler = mutableListOf<ByteArray>()
 		val antallFiler = 2
-		for (i in 0 until antallFiler) {
+		for (i in 0..antallFiler - 1) {
 			pdfFiler.add(konverterTilPdfOgReturner("/2MbJpg.jpg"))
 		}
 		val storPdf = Hjelpemetoder.getBytesFromFile("/storPdf.pdf")
@@ -77,7 +78,7 @@ class PdfMergerTest {
 
 
 	private fun konverterTilPdfOgReturner(filPath: String): ByteArray {
-		val jpg = Hjelpemetoder.getBytesFromFile(filPath)
+		val jpg = Hjelpemetoder.getBytesFromFile("/2MbJpg.jpg")
 
 		val pdf = KonverterTilPdf().tilPdf(jpg)
 		val antallSider = AntallSider().finnAntallSider(pdf)

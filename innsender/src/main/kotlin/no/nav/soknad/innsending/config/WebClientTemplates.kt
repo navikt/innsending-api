@@ -28,14 +28,14 @@ class WebClientTemplates(private val restConfig: RestConfig) {
 	@Qualifier("authClient")
 	@Scope("prototype")
 	@Lazy
-	fun archiveTestWebClient(): WebClient = WebClient.builder().defaultHeader("testHeader", "test_value").build()
+	fun archiveTestWebClient() = WebClient.builder().defaultHeader("testHeader", "test_value").build()
 
 	@Bean
 	@Profile("test | prod | dev")
 	@Qualifier("authClient")
 	@Scope("prototype")
 	@Lazy
-	fun authWebClient(): WebClient = WebClient.builder().defaultHeader("authHeader", "test_value").build()
+	fun authWebClient() = WebClient.builder().defaultHeader("authHeader", "test_value").build()
 
 
 	@Bean
@@ -55,9 +55,9 @@ class WebClientTemplates(private val restConfig: RestConfig) {
 			.build()
 	}
 
-	private fun buildHttpClient(connectionTimeout: Int, readTimeout: Int, writeTimeout: Int): HttpClient {
+	private fun buildHttpClient(connection_timeout: Int, readTimeout: Int, writeTimeout: Int): HttpClient {
 		return HttpClient.create()
-			.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectionTimeout)
+			.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connection_timeout)
 			.doOnConnected { conn: Connection ->
 				conn
 					.addHandlerLast(ReadTimeoutHandler(readTimeout.toLong(), TimeUnit.SECONDS))

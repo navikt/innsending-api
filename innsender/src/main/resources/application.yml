@@ -82,8 +82,7 @@ restconfig:
   filesInOneRequestToFilestorage: 10
   soknadsMottakerHost: http://localhost:9043/soknadsmottaker-api
   soknadsMottakerEndpoint: /save
-  sendInnUrl: http://localhost:3000/sendInn
-  fyllUtUrl: http://localhost:3000/fyllUt
+  frontEndFortsettEndpoint: http://localhost:3000/dokumentinnsending/oversikt/
   clientId: clientId
   clientSecret: clientSecret
   pdlScope: api://dev-fss.pdl.pdl-api/.default
@@ -137,8 +136,7 @@ restconfig:
   filesInOneRequestToFilestorage: 10
   soknadsMottakerHost: ${SOKNADSMOTTAKER_HOST}
   soknadsMottakerEndpoint: ${SOKNADSMOTTAKER_ENDPOINT}
-  sendInnUrl: ${SEND_INN_URL}
-  fyllUtUrl: ${FYLL_UT_URL}
+  frontEndFortsettEndpoint: ${TJENESTE_URL}
   clientId: ${AZURE_APP_CLIENT_ID}
   clientSecret: ${AZURE_APP_CLIENT_SECRET}
   pdlScope: ${PDL_SCOPE}
@@ -151,7 +149,7 @@ restconfig:
 
 brukernotifikasjonconfig:
   profiles: ${SPRING_PROFILES_ACTIVE}
-  tjenesteUrl: ${SEND_INN_URL}
+  tjenesteUrl: ${TJENESTE_URL}
   publisereEndringer: ${PUBLISERE_BRUKERNOTIFIKASJONER}
 
 ettersendingsfrist: ${ETTERSENDINGSFRIST}
