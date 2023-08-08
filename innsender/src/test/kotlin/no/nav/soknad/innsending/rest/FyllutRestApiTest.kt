@@ -454,7 +454,6 @@ class FyllutRestApiTest : ApplicationTest() {
 		)
 		assertNotNull(opprettetSoknad.endretDato)
 		assertEquals(SoknadsStatusDto.opprettet, opprettetSoknad.status, "Status er satt til opprettet")
-
 	}
 
 	@Test
@@ -480,7 +479,6 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals("Slettet soknad med id $innsendingsId", response.body!!.info)
 
 		assertThrows<ResourceNotFoundException>("Søknaden skal ikke finnes") { soknadService.hentSoknad(innsendingsId) }
-
 	}
 
 	// Opprett søknad med et hoveddokument, en hoveddokumentvariant og to vedlegg
