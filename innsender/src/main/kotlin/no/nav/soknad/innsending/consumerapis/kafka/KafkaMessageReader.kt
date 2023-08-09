@@ -50,19 +50,25 @@ class KafkaMessageReader(
 
 					// Soknadsarkiverer legger på melding om arkiveringsstatus for båd søknader sendt inn av sendsoknad og innsending-api
 					// Henter fra databasen for å oppdatere arkiveringsstatus for søknader sendt inn av innsending-api
-					val soknad = repo.hentSoknadDb(key)
 
-					logger.info("Kafka: hentet søknad ${soknad.innsendingsid} fra database")
+					try {
+						val soknad = repo.hentSoknadDb(key)
 
-					if (message.value().startsWith("**Archiving: OK")) {
-						logger.info("$key: er arkivert")
-						repo.oppdaterArkiveringsstatus(soknad, ArkiveringsStatus.Arkivert)
-						loggAntallAvHendelsetype(HendelseType.Arkivert)
-					} else if (message.value().startsWith("**Archiving: FAILED")) {
-						logger.error("$key: arkivering feilet")
-						repo.oppdaterArkiveringsstatus(soknad, ArkiveringsStatus.ArkiveringFeilet)
-						loggAntallAvHendelsetype(HendelseType.ArkiveringFeilet)
+						logger.info("Kafka: hentet søknad ${soknad.innsendingsid} fra database")
+
+						if (message.value().startsWith("**Archiving: OK")) {
+							logger.info("$key: er arkivert")
+							repo.oppdaterArkiveringsstatus(soknad, ArkiveringsStatus.Arkivert)
+							loggAntallAvHendelsetype(HendelseType.Arkivert)
+						} else if (message.value().startsWith("**Archiving: FAILED")) {
+							logger.error("$key: arkivering feilet")
+							repo.oppdaterArkiveringsstatus(soknad, ArkiveringsStatus.ArkiveringFeilet)
+							loggAntallAvHendelsetype(HendelseType.ArkiveringFeilet)
+						}
+					} catch (ex: Exception) {
+						logger.warn("Kafka exception: ${ex.message}", ex)
 					}
+
 
 				}
 				it.commitSync()
