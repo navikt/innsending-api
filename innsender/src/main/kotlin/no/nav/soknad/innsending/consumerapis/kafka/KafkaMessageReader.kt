@@ -46,12 +46,11 @@ class KafkaMessageReader(
 				for (message in messages) {
 					val key = message.key()
 
-					logger.info("Kafka: henter søknad $key fra database")
-
-					// Soknadsarkiverer legger på melding om arkiveringsstatus for båd søknader sendt inn av sendsoknad og innsending-api
+					// Soknadsarkiverer legger på melding om arkiveringsstatus for både søknader sendt inn av sendsoknad og innsending-api
 					// Henter fra databasen for å oppdatere arkiveringsstatus for søknader sendt inn av innsending-api
-
 					try {
+						logger.info("Kafka: henter søknad $key fra database")
+
 						val soknad = repo.hentSoknadDb(key)
 
 						logger.info("Kafka: hentet søknad ${soknad.innsendingsid} fra database")
@@ -69,10 +68,9 @@ class KafkaMessageReader(
 						logger.warn("Kafka exception: ${ex.message}", ex)
 					}
 
-
 				}
 				it.commitSync()
-				logger.info("**Ferdig behandlet mottatte meldinger.")
+				logger.info("Kafka: Ferdig behandlet mottatte meldinger.")
 			}
 		}
 	}
@@ -86,6 +84,7 @@ class KafkaMessageReader(
 			it[ConsumerConfig.GROUP_ID_CONFIG] = kafkaConfig.applicationId
 			it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
 			it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = 5000
+			it[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "false"
 			if (kafkaConfig.security.enabled == "TRUE") {
 				it[CommonClientConfigs.SECURITY_PROTOCOL_CONFIG] = kafkaConfig.security.protocol
 				it[SslConfigs.SSL_KEYSTORE_TYPE_CONFIG] = "PKCS12"
