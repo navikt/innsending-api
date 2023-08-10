@@ -4,6 +4,7 @@
 	"team": "team-soknad",
 	"database-name": "dokumentinnsending",
 	"default_database_size": 20,
+	"tier": "db-custom-1-3840",
 	"ingresses": [
 		"https://www.nav.no/innsending-api-gcp",
 		"https://innsending-api-gcp.nav.no",

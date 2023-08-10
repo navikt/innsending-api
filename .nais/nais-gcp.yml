@@ -86,9 +86,13 @@ spec:
 
   gcp:
     sqlInstances:
-      - diskAutoresize: true
+      - type: POSTGRES_14
+        tier: {{ tier }}
+        diskType: SSD
+        highAvailability: true
         diskSize: {{ default_database_size }}
-        type: POSTGRES_14
+        diskAutoresize: true
+        autoBackupTime: "06:00"
         databases:
           - name: {{ database-name }}
             envVarPrefix: DATABASE
