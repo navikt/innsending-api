@@ -313,16 +313,17 @@ class FilService(
 	fun hentOgMergeVedleggsFiler(innsendingsId: String, vedleggDbList: List<VedleggDbData>): List<VedleggDto> {
 
 		val vedleggDtos = mutableListOf<VedleggDto>()
+		logger.info("$innsendingsId: HentOgMerge for ${vedleggDbList.map { it.uuid }}")
 		vedleggDbList.forEach {
 			val filer = repo.hentFilerTilVedlegg(innsendingsId, it.id!!).filterNot { it.data == null }
 			val vedleggsFil =
 				if (filer.isEmpty()) {
-					logger.info("$innsendingsId: vedlegg ${it.uuid} har ikke opplastede filer")
+					logger.info("$innsendingsId: HentOgMerge vedlegg ${it.uuid} har ikke opplastede filer")
 					null
 				} else if (filer[0].mimetype == Mimetype.applicationSlashPdf.value) {
-					logger.info("$innsendingsId: skal merge ${filer.size} PDFer til vedlegg ${it.uuid}")
+					logger.info("$innsendingsId: HentOgMerge skal merge ${filer.size} PDFer til vedlegg ${it.uuid}")
 					if (filer.all { it.data == null }) {
-						logger.warn("$innsendingsId: vedlegg ${it.uuid} mangler opplastet filer på alle filobjekter, returnerer null")
+						logger.warn("$innsendingsId: HentOgMerge vedlegg ${it.uuid} mangler opplastet filer på alle filobjekter, returnerer null")
 						null
 					} else {
 						val flater = KonverterTilPdf()
@@ -331,11 +332,11 @@ class FilService(
 					}
 				} else {
 					if (filer.size > 1) {
-						logger.warn("$innsendingsId: vedlegg ${it.uuid} er ikke PDF og det er lastet opp ${filer.size}  filer på vedlegget, kan ikke merge returnerer kun første filen")
+						logger.warn("$innsendingsId: HentOgMerge vedlegg ${it.uuid} er ikke PDF og det er lastet opp ${filer.size}  filer på vedlegget, kan ikke merge returnerer kun første filen")
 					}
 					filer[0].data
 				}
-			logger.info("$innsendingsId: størrelse ${vedleggsFil?.size} til vedlegg ${it.uuid}")
+			logger.info("$innsendingsId: HentOgMerge størrelse ${vedleggsFil?.size} til vedlegg ${it.uuid}")
 			vedleggDtos.add(lagVedleggDto(it, vedleggsFil))
 		}
 		return vedleggDtos

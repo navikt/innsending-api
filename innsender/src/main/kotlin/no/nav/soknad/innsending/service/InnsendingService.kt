@@ -399,7 +399,8 @@ class InnsendingService(
 				logger.warn(
 					"$innsendingId: Følgende vedlegg mangler opplastet fil: ${
 						mergedVedlegg.filter { it.document == null }.map { it.uuid }
-					}"
+					}. " +
+						"Følgende vedlegg har opplastet fil: ${mergedVedlegg.filter { it.document != null }}"
 				)
 			}
 
