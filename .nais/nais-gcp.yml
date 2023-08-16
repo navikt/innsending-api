@@ -92,7 +92,7 @@ spec:
         highAvailability: true
         diskSize: {{ default_database_size }}
         diskAutoresize: true
-        autoBackupTime: "06:00"
+        autoBackupHour: 6
         databases:
           - name: {{ database-name }}
             envVarPrefix: DATABASE
