@@ -31,7 +31,8 @@ class SkjemaDokumentSoknadTransformer {
 			?: input.vedleggsListe?.any { it.propertyNavn != null && it.propertyNavn == "annenDokumentasjon" },
 		forsteInnsendingsDato = null,
 		fristForEttersendelse = input.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
-		arkiveringsStatus = ArkiveringsStatusDto.ikkeSatt
+		arkiveringsStatus = ArkiveringsStatusDto.ikkeSatt,
+		erEttersending = false
 	)
 
 //	kanLasteOppAnnet = input.vedleggsListe?.any { it.property == "annenDokumentasjon" : it.vedleggsnr == "N6" && it.label == "Annen dokumentasjon" })

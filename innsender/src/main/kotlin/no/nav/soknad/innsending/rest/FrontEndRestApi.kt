@@ -195,6 +195,34 @@ class FrontEndRestApi(
 			.body(soknadDto)
 	}
 
+	@Timed(InnsenderOperation.HENT)
+	override fun hentSoknaderForSkjemanr(
+		skjemanr: String,
+		soknadstyper: List<SoknadType>?
+	): ResponseEntity<List<DokumentSoknadDto>> {
+		logger.info("Kall for å hente søknader med $skjemanr for bruker. Soknadstyper=$soknadstyper")
+
+		val soknader = mutableListOf<DokumentSoknadDto>()
+		val brukerIds = tilgangskontroll.hentPersonIdents()
+
+		if (soknadstyper.isNullOrEmpty()) {
+			logger.info("Henter søknader med alle søknadstyper for $skjemanr")
+			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr) })
+		}
+
+		if (soknadstyper?.contains(SoknadType.utkast) == true) {
+			logger.info("Henter søknader med søknadstype utkast for $skjemanr")
+			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, false) })
+		}
+
+		if (soknadstyper?.contains(SoknadType.ettersendelse) == true) {
+			logger.info("Henter søknader med søknadstype ettersendelse for $skjemanr")
+			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, true) })
+		}
+
+		return ResponseEntity.status(HttpStatus.OK).body(soknader)
+	}
+
 	@Timed(InnsenderOperation.ENDRE)
 	override fun endreSoknad(innsendingsId: String, patchSoknadDto: PatchSoknadDto): ResponseEntity<Unit> {
 		logger.info("$innsendingsId: Kall for å endre søknad")

@@ -68,7 +68,8 @@ fun lagDokumentSoknadDto(
 		forsteInnsendingsDato = mapTilOffsetDateTime(soknadDbData.forsteinnsendingsdato),
 		fristForEttersendelse = soknadDbData.ettersendingsfrist ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 		arkiveringsStatus = mapTilArkiveringsStatusDto(soknadDbData.arkiveringsstatus),
-		erSystemGenerert = erSystemGenerert
+		erSystemGenerert = erSystemGenerert,
+		erEttersending = soknadDbData.ettersendingsid != null || soknadDbData.visningstype == VisningsType.ettersending
 	)
 
 fun mapTilDokumentSoknadDto(
@@ -105,7 +106,8 @@ fun mapTilDokumentSoknadDto(
 		forsteInnsendingsDato = mapTilOffsetDateTime(soknadDbData.forsteinnsendingsdato),
 		fristForEttersendelse = soknadDbData.ettersendingsfrist ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 		arkiveringsStatus = mapTilArkiveringsStatusDto(soknadDbData.arkiveringsstatus),
-		erSystemGenerert = false
+		erSystemGenerert = false,
+		erEttersending = soknadDbData.ettersendingsid != null || soknadDbData.visningstype == VisningsType.ettersending
 	)
 }
 

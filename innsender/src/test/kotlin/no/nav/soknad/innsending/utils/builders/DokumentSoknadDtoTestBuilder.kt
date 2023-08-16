@@ -25,7 +25,8 @@ class DokumentSoknadDtoTestBuilder(
 	var forsteInnsendingsDato: OffsetDateTime? = null,
 	var fristForEttersendelse: Long? = 14L,
 	var arkiveringsStatus: ArkiveringsStatusDto = ArkiveringsStatusDto.ikkeSatt,
-	var erSystemGenerert: Boolean? = true
+	var erSystemGenerert: Boolean? = true,
+	var erEttersending: Boolean? = null
 ) {
 
 	fun withVedlegg(vedlegg: VedleggDto) = apply { vedleggsListe += listOf(vedlegg) }
@@ -38,6 +39,7 @@ class DokumentSoknadDtoTestBuilder(
 		status,
 		opprettetDato,
 		vedleggsListe,
+		erEttersending ?: (ettersendingsId != null || visningsType == VisningsType.ettersending),
 		id,
 		innsendingsId,
 		ettersendingsId,
