@@ -51,7 +51,7 @@ class FrontEndRestApi(
 		logger.info("Kall for å opprette søknad på skjema ${opprettSoknadBody.skjemanr}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-		soknadService.loggWarningVedEksisterendeSoknad(brukerId, opprettSoknadBody.skjemanr, false)
+		soknadService.loggWarningVedEksisterendeSoknad(brukerId, opprettSoknadBody.skjemanr, SoknadType.utkast)
 
 		val dokumentSoknadDto = soknadService.opprettSoknad(
 			brukerId,
@@ -90,7 +90,11 @@ class FrontEndRestApi(
 		logger.info("Kall for å opprette ettersending på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-		soknadService.loggWarningVedEksisterendeSoknad(brukerId, opprettEttersendingGittSkjemaNr.skjemanr, true)
+		soknadService.loggWarningVedEksisterendeSoknad(
+			brukerId,
+			opprettEttersendingGittSkjemaNr.skjemanr,
+			SoknadType.ettersendelse
+		)
 
 		val arkiverteSoknader = safService.hentInnsendteSoknader(brukerId)
 			.filter { opprettEttersendingGittSkjemaNr.skjemanr == it.skjemanr && it.innsendingsId != null }
@@ -212,12 +216,12 @@ class FrontEndRestApi(
 
 		if (soknadstyper?.contains(SoknadType.utkast) == true) {
 			logger.info("Henter søknader med søknadstype utkast for $skjemanr")
-			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, false) })
+			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, SoknadType.utkast) })
 		}
 
 		if (soknadstyper?.contains(SoknadType.ettersendelse) == true) {
 			logger.info("Henter søknader med søknadstype ettersendelse for $skjemanr")
-			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, true) })
+			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, SoknadType.ettersendelse) })
 		}
 
 		return ResponseEntity.status(HttpStatus.OK).body(soknader)

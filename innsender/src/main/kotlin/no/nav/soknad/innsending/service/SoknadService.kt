@@ -147,7 +147,7 @@ class SoknadService(
 			throw ResourceNotFoundException("Kan ikke opprette søknad for ettersending. Soknad med id $ettersendingsId som det skal ettersendes data for ble ikke funnet")
 		}
 
-		loggWarningVedEksisterendeSoknad(brukerId, soknadDbDataList.first().skjemanr, true)
+		loggWarningVedEksisterendeSoknad(brukerId, soknadDbDataList.first().skjemanr, SoknadType.ettersendelse)
 		return ettersendingService.opprettEttersendingsSoknad(
 			vedleggService.hentAlleVedlegg(soknadDbDataList.first()),
 			ettersendingsId
@@ -326,19 +326,22 @@ class SoknadService(
 	}
 
 	fun hentAktiveSoknader(brukerIds: List<String>): List<DokumentSoknadDto> {
-		return brukerIds.flatMap { hentSoknadGittBrukerId(it) }
-	}
-
-	fun hentAktiveSoknader(brukerId: String, skjemanr: String, ettersending: Boolean): List<DokumentSoknadDto> {
-		return hentAktiveSoknader(listOf(brukerId)).filter { it.skjemanr == skjemanr && it.erEttersending == ettersending }
+		return brukerIds.flatMap {
+			hentSoknadGittBrukerId(it, SoknadsStatus.Opprettet) + hentSoknadGittBrukerId(it, SoknadsStatus.Utfylt)
+		}
 	}
 
 	fun hentAktiveSoknader(brukerId: String, skjemanr: String): List<DokumentSoknadDto> {
 		return hentAktiveSoknader(listOf(brukerId)).filter { it.skjemanr == skjemanr }
 	}
 
-	fun loggWarningVedEksisterendeSoknad(brukerId: String, skjemanr: String, ettersending: Boolean) {
-		val aktiveSoknaderGittSkjemanr = hentAktiveSoknader(brukerId, skjemanr, ettersending)
+	fun hentAktiveSoknader(brukerId: String, skjemanr: String, soknadType: SoknadType): List<DokumentSoknadDto> {
+		return hentAktiveSoknader(listOf(brukerId)).filter { it.skjemanr == skjemanr && it.soknadstype == soknadType }
+	}
+
+
+	fun loggWarningVedEksisterendeSoknad(brukerId: String, skjemanr: String, soknadType: SoknadType) {
+		val aktiveSoknaderGittSkjemanr = hentAktiveSoknader(brukerId, skjemanr, soknadType)
 		if (aktiveSoknaderGittSkjemanr.isNotEmpty()) {
 			logger.warn("Dupliserer søknad på skjemanr=$skjemanr, søker har allerede ${aktiveSoknaderGittSkjemanr.size} under arbeid")
 		}

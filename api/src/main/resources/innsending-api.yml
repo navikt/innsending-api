@@ -1070,12 +1070,8 @@ components:
             Når systemet ser at det mangler påkrevde vedlegg som skal ettersendes, lages det en *oppgave* i stedet.
           example: true
           default: false
-        erEttersending:
-          type: boolean
-          description: >
-            Søknaden er en ettersending hvis det eksisterer en `ettersendingsId` eller visningstype er ettersending
-          example: false
-          default: false
+        soknadstype:
+          $ref: "#/components/schemas/SoknadType"
 
     FilDto:
       type: object

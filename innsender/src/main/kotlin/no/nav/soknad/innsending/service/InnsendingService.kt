@@ -17,6 +17,7 @@ import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.mapping.*
+import no.nav.soknad.innsending.util.models.erEttersending
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
