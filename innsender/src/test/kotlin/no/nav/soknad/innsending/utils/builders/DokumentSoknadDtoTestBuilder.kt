@@ -11,7 +11,10 @@ class DokumentSoknadDtoTestBuilder(
 	var tema: String = "FOS",
 	var status: SoknadsStatusDto = SoknadsStatusDto.opprettet,
 	var opprettetDato: OffsetDateTime = OffsetDateTime.now(),
-	var vedleggsListe: List<VedleggDto> = listOf(),
+	var vedleggsListe: List<VedleggDto> = listOf(
+		VedleggDtoTestBuilder().asHovedDokument().build(),
+		VedleggDtoTestBuilder().asHovedDokumentVariant().build()
+	),
 	var id: Long? = null,
 	var innsendingsId: String? = UUID.randomUUID().toString(),
 	var ettersendingsId: String? = null,
@@ -32,6 +35,13 @@ class DokumentSoknadDtoTestBuilder(
 	val erEttersending = ettersendingsId != null || visningsType == VisningsType.ettersending
 
 	fun withVedlegg(vedlegg: VedleggDto) = apply { vedleggsListe += listOf(vedlegg) }
+
+	fun asEttersending(): DokumentSoknadDtoTestBuilder {
+		soknadType = SoknadType.ettersendelse
+		visningsType = VisningsType.ettersending
+		ettersendingsId = UUID.randomUUID().toString()
+		return this
+	}
 
 	fun build() = DokumentSoknadDto(
 		brukerId = brukerId,
