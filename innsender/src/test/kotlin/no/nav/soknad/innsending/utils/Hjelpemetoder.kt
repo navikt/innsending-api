@@ -57,7 +57,7 @@ class Hjelpemetoder {
 				spraak = spraak,
 				endretDato = OffsetDateTime.now(),
 				innsendtDato = null,
-				erEttersending = false
+				soknadstype = SoknadType.soknad
 			)
 		}
 

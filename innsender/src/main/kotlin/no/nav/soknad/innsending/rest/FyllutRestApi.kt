@@ -42,7 +42,7 @@ class FyllutRestApi(
 		logger.debug("Skal opprette søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
 
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
-		soknadService.loggWarningVedEksisterendeSoknad(brukerId, skjemaDto.skjemanr, SoknadType.utkast)
+		soknadService.loggWarningVedEksisterendeSoknad(brukerId, skjemaDto.skjemanr, SoknadType.soknad)
 
 		val opprettetSoknad = soknadService.opprettNySoknad(
 			SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
@@ -82,7 +82,7 @@ class FyllutRestApi(
 		skjemanr: String,
 		opprettNySoknad: Boolean = false
 	): ResponseEntity<SkjemaDto>? {
-		val aktiveSoknader = soknadService.hentAktiveSoknader(brukerId, skjemanr, SoknadType.utkast)
+		val aktiveSoknader = soknadService.hentAktiveSoknader(brukerId, skjemanr, SoknadType.soknad)
 		val harSoknadUnderArbeid = aktiveSoknader.isNotEmpty()
 
 		if (harSoknadUnderArbeid && !opprettNySoknad) {

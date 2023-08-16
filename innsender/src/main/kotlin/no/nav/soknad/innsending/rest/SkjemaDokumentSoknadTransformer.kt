@@ -32,7 +32,7 @@ class SkjemaDokumentSoknadTransformer {
 		forsteInnsendingsDato = null,
 		fristForEttersendelse = input.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 		arkiveringsStatus = ArkiveringsStatusDto.ikkeSatt,
-		soknadstype = SoknadType.utkast,
+		soknadstype = SoknadType.soknad,
 	)
 
 //	kanLasteOppAnnet = input.vedleggsListe?.any { it.property == "annenDokumentasjon" : it.vedleggsnr == "N6" && it.label == "Annen dokumentasjon" })

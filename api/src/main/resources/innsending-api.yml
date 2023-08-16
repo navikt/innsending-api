@@ -1001,7 +1001,6 @@ components:
         - status
         - opprettetDato
         - vedleggsListe
-        - erEttersending
 
       properties:
         id:
@@ -1411,8 +1410,8 @@ components:
 
     SoknadType:
         type: string
-        enum: [ "utkast", "ettersendelse" ]
-        description: Hvilke type søknader som er tilgjengelig
+        enum: [ "soknad", "ettersendelse" ]
+        description: Hvilke type søknader som er tilgjengelig for henting
         example: ettersendelse
 
     Spraak:

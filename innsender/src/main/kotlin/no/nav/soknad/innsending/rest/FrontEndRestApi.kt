@@ -51,7 +51,7 @@ class FrontEndRestApi(
 		logger.info("Kall for å opprette søknad på skjema ${opprettSoknadBody.skjemanr}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-		soknadService.loggWarningVedEksisterendeSoknad(brukerId, opprettSoknadBody.skjemanr, SoknadType.utkast)
+		soknadService.loggWarningVedEksisterendeSoknad(brukerId, opprettSoknadBody.skjemanr, SoknadType.soknad)
 
 		val dokumentSoknadDto = soknadService.opprettSoknad(
 			brukerId,
@@ -214,9 +214,9 @@ class FrontEndRestApi(
 			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr) })
 		}
 
-		if (soknadstyper?.contains(SoknadType.utkast) == true) {
+		if (soknadstyper?.contains(SoknadType.soknad) == true) {
 			logger.info("Henter søknader med søknadstype utkast for $skjemanr")
-			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, SoknadType.utkast) })
+			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, SoknadType.soknad) })
 		}
 
 		if (soknadstyper?.contains(SoknadType.ettersendelse) == true) {

@@ -70,7 +70,7 @@ fun lagDokumentSoknadDto(
 		fristForEttersendelse = soknadDbData.ettersendingsfrist ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 		arkiveringsStatus = mapTilArkiveringsStatusDto(soknadDbData.arkiveringsstatus),
 		erSystemGenerert = erSystemGenerert,
-		soknadstype = if (erEttersending) SoknadType.ettersendelse else SoknadType.utkast,
+		soknadstype = if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad,
 	)
 }
 
@@ -111,7 +111,7 @@ fun mapTilDokumentSoknadDto(
 		fristForEttersendelse = soknadDbData.ettersendingsfrist ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 		arkiveringsStatus = mapTilArkiveringsStatusDto(soknadDbData.arkiveringsstatus),
 		erSystemGenerert = false,
-		soknadstype = if (erEttersending) SoknadType.ettersendelse else SoknadType.utkast,
+		soknadstype = if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad,
 	)
 }
 

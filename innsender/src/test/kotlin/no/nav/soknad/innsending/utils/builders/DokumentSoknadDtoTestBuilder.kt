@@ -26,33 +26,35 @@ class DokumentSoknadDtoTestBuilder(
 	var fristForEttersendelse: Long? = 14L,
 	var arkiveringsStatus: ArkiveringsStatusDto = ArkiveringsStatusDto.ikkeSatt,
 	var erSystemGenerert: Boolean? = true,
-	var erEttersending: Boolean? = null
+	var soknadType: SoknadType? = null
 ) {
+
+	val erEttersending = ettersendingsId != null || visningsType == VisningsType.ettersending
 
 	fun withVedlegg(vedlegg: VedleggDto) = apply { vedleggsListe += listOf(vedlegg) }
 
 	fun build() = DokumentSoknadDto(
-		brukerId,
-		skjemanr,
-		tittel,
-		tema,
-		status,
-		opprettetDato,
-		vedleggsListe,
-		erEttersending ?: (ettersendingsId != null || visningsType == VisningsType.ettersending),
-		id,
-		innsendingsId,
-		ettersendingsId,
-		spraak,
-		endretDato,
-		innsendtDato,
-		visningsSteg,
-		visningsType,
-		kanLasteOppAnnet,
-		innsendingsFristDato,
-		forsteInnsendingsDato,
-		fristForEttersendelse,
-		arkiveringsStatus,
-		erSystemGenerert
+		brukerId = brukerId,
+		skjemanr = skjemanr,
+		tittel = tittel,
+		tema = tema,
+		status = status,
+		opprettetDato = opprettetDato,
+		vedleggsListe = vedleggsListe,
+		id = id,
+		innsendingsId = innsendingsId,
+		ettersendingsId = ettersendingsId,
+		spraak = spraak,
+		endretDato = endretDato,
+		innsendtDato = innsendtDato,
+		visningsSteg = visningsSteg,
+		visningsType = visningsType,
+		kanLasteOppAnnet = kanLasteOppAnnet,
+		innsendingsFristDato = innsendingsFristDato,
+		forsteInnsendingsDato = forsteInnsendingsDato,
+		fristForEttersendelse = fristForEttersendelse,
+		arkiveringsStatus = arkiveringsStatus,
+		erSystemGenerert = erSystemGenerert,
+		soknadstype = soknadType ?: (if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad),
 	)
 }
