@@ -14,9 +14,6 @@ inline fun <reified T : Any> validerLikeFelter(
 
 	if (ugyldigeFelter.isNotEmpty()) {
 		val message = "Felter er ikke like for ${T::class.simpleName}: ${ugyldigeFelter.joinToString(", ") { it.name }}"
-		throw IllegalActionException(
-			"Felter er ikke like for ${T::class.simpleName}",
-			message
-		)
+		throw IllegalActionException(message)
 	}
 }

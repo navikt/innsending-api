@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.exceptions
 
 class ResourceNotFoundException(
-	var arsak: String? = null,
-	message: String,
-	val errorCode: String = "errorCode.somethingFailedTryLater"
+	override val message: String,
+	override val cause: Throwable? = null,
+	val errorCode: ErrorCode = ErrorCode.NOT_FOUND
 ) : RuntimeException(message)

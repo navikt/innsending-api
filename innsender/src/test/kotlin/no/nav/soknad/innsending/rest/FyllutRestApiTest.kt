@@ -7,10 +7,16 @@ import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.util.models.hovedDokument
+import no.nav.soknad.innsending.util.models.hovedDokumentVariant
 import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.TokenGenerator
+import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -20,6 +26,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
+import org.springframework.web.util.UriComponentsBuilder
 import java.util.*
 import kotlin.test.*
 
@@ -42,52 +49,26 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Value("\${server.port}")
 	var serverPort: Int? = 9064
 
-	private val subject = "12345678901"
-
-	private val skjemanr = "NAV 14-05.07"
-	private val tittel = "Søknad om engangsstønad ved fødsel"
-	private val tema = "FOR"
-	private val spraak = "no_nb"
-
 	@Test
-	internal fun testOpprettSoknadPaFyllUtApi() {
+	fun testOpprettSoknadPaFyllUtApi() {
+		// Gitt
 		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val skjemanr = "NAV 14-05.07"
-		val tittel = "Søknad om engangsstønad ved fødsel"
-		val tema = "FOR"
-		val sprak = "no_nb"
-		val fraFyllUt = SkjemaDto(
-			brukerId = subject,
-			skjemanr = skjemanr,
-			tittel = tittel,
-			tema = tema,
-			spraak = sprak,
-			hoveddokument = lagDokument(skjemanr, tittel, true, Mimetype.applicationSlashPdf),
-			hoveddokumentVariant = lagDokument(skjemanr, tittel, true, Mimetype.applicationSlashJson),
-			vedleggsListe = listOf(
-				lagDokument(
-					"T7",
-					"Inntektsopplysninger for selvstendig næringsdrivende og frilansere som skal ha foreldrepenger eller svangerskapspenger",
-					true,
-					null,
-					true,
-					UUID.randomUUID().toString()
-				),
-				lagDokument("N6", "Dokumentasjon av veiforhold", true, null, true, UUID.randomUUID().toString())
-			)
-		)
+		val t7Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build()
+		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
+
+		val fraFyllUt = SkjemaDtoTestBuilder(vedleggsListe = listOf(t7Vedlegg, n6Vedlegg)).build()
 		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
 
+		// Når
 		val response = restTemplate.exchange(
 			"http://localhost:${serverPort}/fyllUt/v1/soknad", HttpMethod.POST,
 			requestEntity, SkjemaDto::class.java
 		)
 
+		// Så
 		assertTrue(response != null)
-
-		assertEquals(201, response.statusCodeValue)
-
+		assertEquals(201, response.statusCode.value())
 		testHentSoknadOgSendInn(response, token)
 
 	}
@@ -112,7 +93,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val getSoknadDto = getResponse.body
 		assertNotNull(getSoknadDto)
 		assertEquals(4, getSoknadDto.vedleggsListe.size)
-		assertTrue(!getSoknadDto.kanLasteOppAnnet!!)
+		assertFalse(getSoknadDto.kanLasteOppAnnet!!)
 
 		val vedleggT7 = getSoknadDto.vedleggsListe.first { it.vedleggsnr == "T7" }
 		val patchVedleggT7 = PatchVedleggDto(null, OpplastingsStatusDto.sendesAvAndre)
@@ -190,41 +171,22 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		val dokumentSoknadDto = opprettSoknad()
 		val skjemanr = dokumentSoknadDto.skjemanr
-		val tema = dokumentSoknadDto.tema
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
-		val fraFyllUt = SkjemaDto(
-			brukerId = subject,
-			skjemanr = skjemanr,
-			tittel = nyTittel,
-			tema = tema,
+		val oppdatertT7 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7", tittel = nyVedleggstittel1).build()
+		val oppdatertN6 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6", tittel = nyVedleggstittel2).build()
+		val oppdatertHovedDokument = SkjemaDokumentDtoTestBuilder(tittel = nyTittel).asHovedDokument(skjemanr).build()
+		val oppdatertHovedDokumentVariant =
+			SkjemaDokumentDtoTestBuilder(tittel = nyTittel).asHovedDokumentVariant(skjemanr).build()
+
+		val fraFyllUt = SkjemaDtoTestBuilder(
+			skjemanr = dokumentSoknadDto.skjemanr,
 			spraak = nyttSpraak,
-			hoveddokument = lagDokument(
-				vedleggsnr = skjemanr,
-				tittel = nyTittel,
-				pakrevd = true,
-				mimetype = Mimetype.applicationSlashPdf,
-				formioId = null
-			),
-			hoveddokumentVariant = lagDokument(
-				vedleggsnr = skjemanr,
-				tittel = nyTittel,
-				pakrevd = true,
-				mimetype = Mimetype.applicationSlashJson,
-				formioId = null
-			),
-			vedleggsListe = listOf(
-				lagDokument(
-					"T7",
-					nyVedleggstittel1,
-					true,
-					null,
-					true,
-					UUID.randomUUID().toString()
-				),
-				lagDokument("N6", nyVedleggstittel2, true, null, true, UUID.randomUUID().toString())
-			)
-		)
+			tittel = nyTittel,
+			vedleggsListe = listOf(oppdatertT7, oppdatertN6),
+			hoveddokument = oppdatertHovedDokument,
+			hoveddokumentVariant = oppdatertHovedDokumentVariant
+		).build()
 
 		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
 
@@ -239,7 +201,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Så
 		assertTrue(response != null)
 		assertEquals(SoknadsStatusDto.utfylt, oppdatertSoknad.status, "Status er satt til utfylt")
-		assertEquals(302, response.statusCodeValue)
+		assertEquals(302, response.statusCode.value())
 		assertTrue(response.headers["Location"] != null)
 		assertEquals(nyTittel, oppdatertSoknad.tittel)
 		assertEquals("en", oppdatertSoknad.spraak, "Språk er oppdatert (blir konvertert til de første 2 bokstavene)")
@@ -260,9 +222,8 @@ class FyllutRestApiTest : ApplicationTest() {
 			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == "N6" && it.tittel == nyVedleggstittel2 },
 			"Skal ha vedlegg N6"
 		)
-		assertEquals(oppdatertSoknad.hoveddokument!!.tittel, nyTittel, "Skal ha ny tittel på hoveddokument")
-		assertEquals(oppdatertSoknad.hoveddokumentVariant!!.tittel, nyTittel, "Skal ha ny tittel på hoveddokumentVariant")
-
+		assertEquals(nyTittel, oppdatertSoknad.hoveddokument!!.tittel, "Skal ha ny tittel på hoveddokument")
+		assertEquals(nyTittel, oppdatertSoknad.hoveddokumentVariant!!.tittel, "Skal ha ny tittel på hoveddokumentVariant")
 	}
 
 	@Test
@@ -270,27 +231,24 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Gitt
 		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val dokumentSoknadDto = opprettSoknad()
-		val skjemanr = dokumentSoknadDto.skjemanr
-		val tema = dokumentSoknadDto.tema
+		val dokumentSoknadDto = opprettSoknad() // med vedlegg vedleggsnr1 og vedleggsnr2
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		val fyllUtVedleggstittel = "N6-ny-vedleggstittel"
 
-		val fraFyllUt = lagSkjemaDto()
+		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
+		val fraFyllUt =
+			SkjemaDtoTestBuilder(vedleggsListe = listOf(n6Vedlegg), skjemanr = dokumentSoknadDto.skjemanr).build()
+
 		val formioId = fraFyllUt.vedleggsListe?.find { it.vedleggsnr == "N6" }!!.formioId!!
-		val oppdatertFyllUt = lagSkjemaDto(
-			vedleggsListe = listOf(
-				lagDokument(
-					vedleggsnr = "N6",
-					tittel = fyllUtVedleggstittel,
-					pakrevd = false,
-					mimetype = null,
-					erVedlegg = true,
-					formioId = formioId
-				)
-			)
-		)
+
+		val oppdatertN6Vedlegg = SkjemaDokumentDtoTestBuilder(
+			vedleggsnr = "N6",
+			tittel = fyllUtVedleggstittel,
+			formioId = formioId
+		).build()
+		val oppdatertFyllUt =
+			SkjemaDtoTestBuilder(vedleggsListe = listOf(oppdatertN6Vedlegg), skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		val sendInnVedleggsTittel = "N6-fra-send-inn"
 		val fraSendInn = PostVedleggDto(tittel = sendInnVedleggsTittel)
@@ -324,9 +282,9 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertTrue(leggTilVedleggResponse != null)
 		assertTrue(oppdatertUtfyltResponse != null)
 
-		assertEquals(302, utfyltResponse.statusCodeValue)
-		assertEquals(201, leggTilVedleggResponse.statusCodeValue)
-		assertEquals(302, oppdatertUtfyltResponse.statusCodeValue)
+		assertEquals(302, utfyltResponse.statusCode.value())
+		assertEquals(201, leggTilVedleggResponse.statusCode.value())
+		assertEquals(302, oppdatertUtfyltResponse.statusCode.value())
 
 		assertEquals(4, oppdatertSoknad.vedleggsListe.size)
 
@@ -358,20 +316,9 @@ class FyllutRestApiTest : ApplicationTest() {
 		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
 		val dokumentSoknadDto = opprettSoknad()
-		val skjemanr = dokumentSoknadDto.skjemanr
-		val tema = dokumentSoknadDto.tema
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
-		val fraFyllUt = SkjemaDto(
-			brukerId = subject,
-			skjemanr = skjemanr,
-			tittel = tittel,
-			tema = tema,
-			spraak = spraak,
-			hoveddokument = lagDokument(skjemanr, tittel, true, Mimetype.applicationSlashPdf),
-			hoveddokumentVariant = lagDokument(skjemanr, tittel, true, Mimetype.applicationSlashJson),
-			vedleggsListe = emptyList()
-		)
+		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
 
@@ -401,7 +348,43 @@ class FyllutRestApiTest : ApplicationTest() {
 		filer.find { it.mimetype == Mimetype.applicationSlashJson }?.let {
 			assertTrue(it.filnavn!!.endsWith(".json"), "Skal være json-fil")
 		}
+	}
 
+	@Test
+	fun `Skal returnere riktig felter ved oppdatering av søknad`() {
+		// Gitt
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		val dokumentSoknadDto = opprettSoknad()
+		val innsendingsId = dokumentSoknadDto.innsendingsId!!
+		val nyttSpraak = "en_gb"
+
+		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr, spraak = nyttSpraak).build()
+		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
+
+		// Når
+		val response = restTemplate.exchange(
+			"http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}", HttpMethod.PUT,
+			requestEntity, SkjemaDto::class.java
+		)
+		val oppdatertSoknad = response.body!!
+
+		// Så
+		assertEquals(dokumentSoknadDto.skjemanr, oppdatertSoknad.skjemanr)
+		assertEquals(dokumentSoknadDto.innsendingsId, oppdatertSoknad.innsendingsId)
+		assertEquals(dokumentSoknadDto.brukerId, oppdatertSoknad.brukerId)
+
+		assertEquals("en", oppdatertSoknad.spraak, "Språk er oppdatert")
+		assertNotEquals(dokumentSoknadDto.spraak, oppdatertSoknad.spraak, "Språk er oppdatert")
+
+		val tidligereEndretDatoEpoch = dokumentSoknadDto.endretDato!!.toEpochSecond()
+		val oppdatertEndretDatoEpoch = oppdatertSoknad.endretDato!!.toEpochSecond()
+
+		assertTrue(dokumentSoknadDto.endretDato!!.isBefore(oppdatertSoknad.endretDato), "Skal returnere nyere endretDato")
+		assertTrue(
+			tidligereEndretDatoEpoch <= oppdatertEndretDatoEpoch && tidligereEndretDatoEpoch + 10 >= oppdatertEndretDatoEpoch,
+			"Endret dato skal være innenfor 10 sekunder fra opprettelse i denne testen"
+		)
 
 	}
 
@@ -411,22 +394,10 @@ class FyllutRestApiTest : ApplicationTest() {
 		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
 		val dokumentSoknadDto = opprettSoknad()
-		val skjemanr = dokumentSoknadDto.skjemanr
-		val tema = dokumentSoknadDto.tema
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
-		val fraFyllUt = SkjemaDto(
-			brukerId = subject,
-			skjemanr = skjemanr,
-			tittel = tittel,
-			tema = tema,
-			spraak = spraak,
-			hoveddokument = lagDokument(skjemanr, tittel, true, Mimetype.applicationSlashPdf),
-			hoveddokumentVariant = lagDokument(skjemanr, tittel, true, Mimetype.applicationSlashJson),
-			vedleggsListe = listOf(
-				lagDokument("N6", "tittel2", true, null, true)
-			)
-		)
+		val vedlegg = SkjemaDokumentDtoTestBuilder().build()
+		val fraFyllUt = SkjemaDtoTestBuilder(vedleggsListe = listOf(vedlegg)).build()
 
 		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
 
@@ -440,9 +411,11 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Så
 		assertTrue(response != null)
 		assertEquals(SoknadsStatusDto.opprettet, oppdatertSoknad.status, "Status er satt til opprettet")
-		assertEquals(500, response.statusCodeValue)
-		assertEquals("Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant", response.body!!.arsak)
-		assertEquals("Innsendt vedleggsliste skal være tom", response.body!!.message)
+		assertEquals(500, response.statusCode.value())
+		assertEquals(
+			"Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant. Innsendt vedleggsliste skal være tom",
+			response.body!!.message
+		)
 
 	}
 
@@ -451,7 +424,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Gitt
 		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val dokumentSoknadDto = opprettSoknad()
+		val skjemanr = "NAV 11-12.12"
+		val dokumentSoknadDto = opprettSoknad(skjemanr)
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		val requestEntity = HttpEntity(null, Hjelpemetoder.createHeaders(token))
@@ -462,24 +436,27 @@ class FyllutRestApiTest : ApplicationTest() {
 			requestEntity, SkjemaDto::class.java
 		)
 
+		val opprettetSoknad = response.body!!
+
 		// Så
 		assertTrue(response != null)
-		assertEquals(200, response.statusCodeValue)
-		assertEquals(skjemanr, response.body!!.skjemanr)
-		assertEquals(tittel, response.body!!.tittel)
-		assertEquals(2, response.body!!.vedleggsListe?.size)
+		assertEquals(200, response.statusCode.value())
+		assertEquals(skjemanr, opprettetSoknad.skjemanr)
+		assertEquals(2, opprettetSoknad.vedleggsListe?.size)
+		assertNotNull(opprettetSoknad.hoveddokumentVariant.document, "HoveddokumentVariant skal ha fil")
+		assertNull(opprettetSoknad.hoveddokument.document, "Hoveddokument skal ikke ha fil")
 
-		val hovedDokument = dokumentSoknadDto.vedleggsListe.find { it.erHoveddokument && !it.erVariant }
-		val hovedDokumentVariant = dokumentSoknadDto.vedleggsListe.find { it.erHoveddokument && it.erVariant }
+		val hovedDokument = dokumentSoknadDto.vedleggsListe.hovedDokument
+		val hovedDokumentVariant = dokumentSoknadDto.vedleggsListe.hovedDokumentVariant
 
-		assertEquals(hovedDokument!!.vedleggsnr, response.body!!.hoveddokument.vedleggsnr, "Hoveddokument er riktig")
+		assertEquals(hovedDokument!!.vedleggsnr, opprettetSoknad.hoveddokument.vedleggsnr, "Hoveddokument er riktig")
 		assertEquals(
 			hovedDokumentVariant!!.vedleggsnr,
-			response.body!!.hoveddokumentVariant.vedleggsnr,
+			opprettetSoknad.hoveddokumentVariant.vedleggsnr,
 			"HoveddokumentVariant er riktig"
 		)
-		assertEquals(SoknadsStatusDto.opprettet, response.body!!.status, "Status er satt til opprettet")
-
+		assertNotNull(opprettetSoknad.endretDato)
+		assertEquals(SoknadsStatusDto.opprettet, opprettetSoknad.status, "Status er satt til opprettet")
 	}
 
 	@Test
@@ -500,140 +477,96 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Så
 		assertTrue(response != null)
-		assertEquals(200, response.statusCodeValue)
+		assertEquals(200, response.statusCode.value())
 		assertEquals("OK", response.body!!.status)
 		assertEquals("Slettet soknad med id $innsendingsId", response.body!!.info)
 
 		assertThrows<ResourceNotFoundException>("Søknaden skal ikke finnes") { soknadService.hentSoknad(innsendingsId) }
-
 	}
 
-	private fun lagSkjemaDto(vedleggsListe: List<SkjemaDokumentDto>? = null): SkjemaDto {
-		return SkjemaDto(
-			brukerId = subject,
-			skjemanr = skjemanr,
-			tittel = tittel,
-			tema = tema,
-			spraak = spraak,
-			hoveddokument = lagDokument(
-				vedleggsnr = skjemanr,
-				tittel = tittel,
-				pakrevd = true,
-				mimetype = Mimetype.applicationSlashPdf,
-				formioId = null
-			),
-			hoveddokumentVariant = lagDokument(
-				vedleggsnr = skjemanr,
-				tittel = tittel,
-				pakrevd = true,
-				mimetype = Mimetype.applicationSlashJson,
-				formioId = null
-			),
-			vedleggsListe = vedleggsListe ?: listOf(
-				lagDokument(
-					"N6",
-					"N6-vedlegg",
-					false,
-					null,
-					true,
-					UUID.randomUUID().toString()
-				),
-				lagDokument(
-					"T1",
-					"T1-vedlegg",
-					false,
-					null,
-					true,
-					UUID.randomUUID().toString()
-				),
-			)
+	@Test
+	fun `Skal redirecte ved eksisterende søknad gitt at opprettNySoknad er false`() {
+		// Gitt
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		val dokumentSoknadDto = opprettSoknad(skjemanr = "NAV-redirect")
+		val innsendingsId = dokumentSoknadDto.innsendingsId!!
+
+		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
+		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
+
+		// Når
+		val uri = UriComponentsBuilder.fromHttpUrl("http://localhost:${serverPort}/fyllUt/v1/soknad")
+			.queryParam("opprettNySoknad", false)
+			.build()
+			.toUri()
+
+		val response = restTemplate.exchange(uri, HttpMethod.POST, requestEntity, SkjemaDto::class.java)
+
+		// Så
+		assertTrue(response != null)
+		assertEquals(302, response.statusCode.value())
+		assertEquals(
+			"http://localhost:3000/fyllut/${dokumentSoknadDto.skjemanr}/paabegynt?innsendingsId=$innsendingsId",
+			response.headers.location!!.toString()
 		)
 	}
 
-	private fun lagDokument(
-		vedleggsnr: String,
-		tittel: String,
-		pakrevd: Boolean,
-		mimetype: Mimetype? = null,
-		erVedlegg: Boolean = false,
-		formioId: String? = null
-	): SkjemaDokumentDto {
-		return SkjemaDokumentDto(
-			vedleggsnr = vedleggsnr,
-			tittel = tittel,
-			label = tittel,
-			pakrevd = pakrevd,
-			beskrivelse = "$tittel - Beskrivelse",
-			mimetype = mimetype,
-			document = if (erVedlegg) null else hentFil(mimetype),
-			formioId = formioId
-		)
+	@Test
+	fun `Skal opprette søknad når opprettNySoknad er true, selv om brukeren har en søknad med samme skjemanr`() {
+		// Gitt
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		val dokumentSoknadDto = opprettSoknad()
+		val innsendingsId = dokumentSoknadDto.innsendingsId!!
+
+		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
+		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
+
+		// Når
+		val uri = UriComponentsBuilder.fromHttpUrl("http://localhost:${serverPort}/fyllUt/v1/soknad")
+			.queryParam("opprettNySoknad", true)
+			.build()
+			.toUri()
+
+		val response = restTemplate.exchange(uri, HttpMethod.POST, requestEntity, SkjemaDto::class.java)
+
+		// Så
+		assertTrue(response != null)
+		assertEquals(201, response.statusCode.value())
+		assertNotEquals(response.body?.innsendingsId, innsendingsId, "Forventer ny innsendingsId")
 	}
+
 
 	// Opprett søknad med et hoveddokument, en hoveddokumentvariant og to vedlegg
-	private fun opprettSoknad(): DokumentSoknadDto {
-		val vedleggDtoPdf =
-			Hjelpemetoder.lagVedleggDto(
-				vedleggsnr = skjemanr,
-				tittel = tittel,
-				mimeType = Mimetype.applicationSlashPdf.value,
-				fil = null,
-				erVariant = false,
-				erHoveddokument = true,
-				formioId = null
-			)
-		val vedleggDtoJson =
-			Hjelpemetoder.lagVedleggDto(
-				vedleggsnr = skjemanr,
-				tittel = tittel,
-				mimeType = Mimetype.applicationSlashJson.value,
-				fil = null,
-				erVariant = true,
-				erHoveddokument = true,
-				formioId = null
-			)
+	private fun opprettSoknad(skjemanr: String = "NAV 08-21.05"): DokumentSoknadDto {
+		val vedleggDtoPdf = VedleggDtoTestBuilder(vedleggsnr = skjemanr).asHovedDokument().build()
+		val vedleggDtoJson = VedleggDtoTestBuilder(vedleggsnr = skjemanr).asHovedDokumentVariant().build()
+		val vedleggDto1 = VedleggDtoTestBuilder(
+			erHoveddokument = false,
+			vedleggsnr = "vedleggsnr1",
+			tittel = "vedleggTittel1",
+			formioId = UUID.randomUUID().toString()
+		).build()
+		val vedleggDto2 = VedleggDtoTestBuilder(
+			erHoveddokument = false,
+			vedleggsnr = "vedleggsnr2",
+			tittel = "vedleggTittel2",
+			formioId = UUID.randomUUID().toString()
+		).build()
 
-		val vedleggDto1 =
-			Hjelpemetoder.lagVedleggDto(
-				vedleggsnr = "vedleggsnr1",
-				tittel = "vedleggTittel1",
-				mimeType = null,
-				fil = null,
-				erVariant = false,
-				erHoveddokument = false,
-				formioId = UUID.randomUUID().toString()
-			)
-		val vedleggDto2 =
-			Hjelpemetoder.lagVedleggDto(
-				vedleggsnr = "vedleggsnr2",
-				tittel = "vedleggTittel2",
-				mimeType = null,
-				fil = null,
-				erVariant = false,
-				erHoveddokument = false,
-				formioId = UUID.randomUUID().toString()
-			)
+		val vedleggsListe = listOf(vedleggDtoPdf, vedleggDtoJson, vedleggDto1, vedleggDto2)
 
-		val innsendingsId = soknadService.opprettNySoknad(
-			Hjelpemetoder.lagDokumentSoknad(
-				brukerId = TokenGenerator.subject, // Må være samme som i token (pid)
+		val dokumentSoknadDto =
+			DokumentSoknadDtoTestBuilder(
+				brukerId = TokenGenerator.subject,
 				skjemanr = skjemanr,
-				spraak = spraak,
-				tittel = tittel,
-				tema = tema,
-				vedleggsListe = listOf(vedleggDtoPdf, vedleggDtoJson, vedleggDto1, vedleggDto2),
-			)
-		).innsendingsId!!
+				vedleggsListe = vedleggsListe
+			).build()
+
+		val innsendingsId = soknadService.opprettNySoknad(dokumentSoknadDto).innsendingsId!!
 
 		return soknadService.hentSoknad(innsendingsId)
 	}
-
-	private fun hentFil(mimetype: Mimetype?): ByteArray? =
-		when (mimetype) {
-			null -> null
-			Mimetype.applicationSlashPdf -> Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
-			Mimetype.applicationSlashJson -> Hjelpemetoder.getBytesFromFile("/__files/sanity.json")
-			else -> throw RuntimeException("Testing med mimetype = $mimetype er ikke støttet")
-		}
 
 }

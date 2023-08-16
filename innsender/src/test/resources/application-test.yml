@@ -57,7 +57,8 @@ restconfig:
   filesInOneRequestToFilestorage: 10
   soknadsMottakerHost: http://localhost:${wiremock.server.port}/soknadsmottaker-api
   soknadsMottakerEndpoint: /save
-  frontEndFortsettEndpoint: http://localhost:3100/sendinn/
+  sendInnUrl: http://localhost:3100/sendinn
+  fyllUtUrl: http://localhost:3000/fyllut
   clientId: clientId
   clientSecret: clientSecret
   pdlScope: api://dev-fss.pdl.pdl-api/.default

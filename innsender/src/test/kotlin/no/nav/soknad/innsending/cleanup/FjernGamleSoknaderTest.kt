@@ -15,7 +15,6 @@ import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.OffsetDateTime
@@ -64,10 +63,6 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 		innsenderMetrics = innsenderMetrics,
 		exceptionHelper = exceptionHelper
 	)
-
-	@BeforeEach
-	fun init() {
-	}
 
 	private val defaultSkjemanr = "NAV 55-00.60"
 

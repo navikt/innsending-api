@@ -4,7 +4,7 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.Varianter
 import no.nav.soknad.innsending.model.FilDto
 import no.nav.soknad.innsending.model.Mimetype
 import no.nav.soknad.innsending.model.VedleggDto
-import no.nav.soknad.innsending.repository.FilDbData
+import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import java.time.LocalDateTime
 
 fun mapTilFilDb(filDto: FilDto) = FilDbData(

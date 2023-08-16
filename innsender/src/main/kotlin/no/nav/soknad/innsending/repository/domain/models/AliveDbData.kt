@@ -1,4 +1,4 @@
-package no.nav.soknad.innsending.repository
+package no.nav.soknad.innsending.repository.domain.models
 
 import jakarta.persistence.*
 
