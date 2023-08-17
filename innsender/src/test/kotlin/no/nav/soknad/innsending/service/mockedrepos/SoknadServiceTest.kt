@@ -7,6 +7,7 @@ import io.mockk.junit5.MockKExtension
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.SoknadType
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.service.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
@@ -50,12 +51,12 @@ class SoknadServiceTest {
 	@Test
 	fun `Skal returnere riktig aktive søknader`() {
 		// Gitt
-		val soknadDb = SoknadDbDataTestBuilder().build()
+		val soknadDb = SoknadDbDataTestBuilder(brukerId = defaultUser).build()
 		val skjemanr = soknadDb.skjemanr
-		val dokumentSoknadDto = DokumentSoknadDtoTestBuilder(skjemanr = skjemanr).build()
+		val dokumentSoknadDto = DokumentSoknadDtoTestBuilder(skjemanr = skjemanr, brukerId = defaultUser).build()
 
-		every { repo.finnAlleSoknaderGittBrukerIdOgStatus(any(), any()) } returns listOf(soknadDb)
-		every { vedleggService.hentAlleVedlegg(any()) } returns dokumentSoknadDto
+		every { repo.finnAlleSoknaderGittBrukerIdOgStatus(defaultUser, SoknadsStatus.Opprettet) } returns listOf(soknadDb)
+		every { vedleggService.hentAlleVedlegg(soknadDb) } returns dokumentSoknadDto
 
 		// Når
 		val result = soknadService.hentAktiveSoknader(defaultUser, skjemanr, SoknadType.soknad)
