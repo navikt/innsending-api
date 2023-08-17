@@ -204,7 +204,7 @@ class FrontEndRestApi(
 		skjemanr: String,
 		soknadstyper: List<SoknadType>?
 	): ResponseEntity<List<DokumentSoknadDto>> {
-		logger.info("Kall for å hente søknader med $skjemanr for bruker. Soknadstyper=$soknadstyper")
+		logger.info("Kall for å hente søknader med $skjemanr for bruker. Soknadstyper=${soknadstyper ?: "ikke spesifisert"}")
 
 		val soknader = mutableListOf<DokumentSoknadDto>()
 		val brukerIds = tilgangskontroll.hentPersonIdents()
@@ -215,12 +215,12 @@ class FrontEndRestApi(
 		}
 
 		if (soknadstyper?.contains(SoknadType.soknad) == true) {
-			logger.info("Henter søknader med søknadstype utkast for $skjemanr")
+			logger.info("Henter søknader med søknadstype 'soknad' for $skjemanr")
 			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, SoknadType.soknad) })
 		}
 
 		if (soknadstyper?.contains(SoknadType.ettersendelse) == true) {
-			logger.info("Henter søknader med søknadstype ettersendelse for $skjemanr")
+			logger.info("Henter søknader med søknadstype 'ettersendelse' for $skjemanr")
 			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, SoknadType.ettersendelse) })
 		}
 

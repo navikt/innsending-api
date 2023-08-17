@@ -17,7 +17,7 @@ data class VedleggDtoTestBuilder(
 	var opplastingsStatus: OpplastingsStatusDto = OpplastingsStatusDto.ikkeValgt,
 	var opprettetdato: OffsetDateTime = OffsetDateTime.now(),
 	var id: Long? = null,
-	var vedleggsnr: String? = "NAV ${UUID.randomUUID().toString().take(4)}",
+	var vedleggsnr: String? = "NAV-${UUID.randomUUID().toString().take(4)}",
 	var beskrivelse: String? = "Dette er opplysninger som er nødvendig for beregning av utbetaling av foreldrepenger eller svangerskapspenger.",
 	var uuid: String? = UUID.randomUUID().toString(),
 	var mimetype: Mimetype? = null,

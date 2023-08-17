@@ -6,7 +6,7 @@ import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import no.nav.security.token.support.spring.test.MockLoginController
 
 class TokenGenerator(
-	private val mockOAuth2Server: MockOAuth2Server
+	private val mockOAuth2Server: MockOAuth2Server,
 ) {
 	companion object {
 		val subject = "12345678901"
@@ -19,15 +19,15 @@ class TokenGenerator(
 	fun lagTokenXToken(fnr: String? = null): String {
 		val pid = fnr ?: subject
 		return mockOAuth2Server.issueToken(
-			tokenx,
-			MockLoginController::class.java.simpleName,
-			DefaultOAuth2TokenCallback(
-				tokenx,
-				subject,
-				JOSEObjectType.JWT.type,
-				listOf(audience),
-				mapOf("acr" to "Level4", "pid" to pid),
-				expiry.toLong()
+			issuerId = tokenx,
+			clientId = MockLoginController::class.java.simpleName,
+			tokenCallback = DefaultOAuth2TokenCallback(
+				issuerId = tokenx,
+				subject = pid,
+				typeHeader = JOSEObjectType.JWT.type,
+				audience = listOf(audience),
+				claims = mapOf("acr" to "Level4", "pid" to pid),
+				expiry = expiry.toLong()
 			)
 		).serialize()
 	}
