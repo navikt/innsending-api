@@ -1,0 +1,42 @@
+{
+	"mappings": [
+		{
+			"request": {
+				"urlPattern": "/antivirus/scan",
+				"method": "PUT"
+			},
+			"response": {
+				"status": 200,
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"jsonBody": [
+					{
+						"Filename": "testfile",
+						"Result": "OK"
+					}
+				]
+			}
+		},
+		{
+			"scenarioName": "antivirus",
+			"requiredScenarioState": "virus-found",
+			"request": {
+				"urlPattern": "/antivirus/scan",
+				"method": "PUT"
+			},
+			"response": {
+				"status": 200,
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"jsonBody": [
+					{
+						"Filename": "testfile",
+						"Result": "FOUND"
+					}
+				]
+			}
+		}
+	]
+}

@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.service
 
-import no.nav.soknad.antivirus.AntivirusService
 import no.nav.soknad.innsending.config.RestConfig
+import no.nav.soknad.innsending.consumerapis.antivirus.AntivirusService
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.pdfutilities.Validerer

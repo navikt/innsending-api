@@ -8,7 +8,7 @@ import org.springframework.web.reactive.function.client.WebClient
 @Configuration
 class AntivirusClientConfig(private val webClientBuilder: WebClient.Builder) {
 
-	@Value("\${ANTIVIRUS_URL}")
+	@Value("\${restconfig.antivirusUrl}")
 	private lateinit var url: String
 
 	@Bean

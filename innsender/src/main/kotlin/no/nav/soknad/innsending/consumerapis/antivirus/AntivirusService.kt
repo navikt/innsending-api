@@ -1,4 +1,4 @@
-package no.nav.soknad.antivirus
+package no.nav.soknad.innsending.consumerapis.antivirus
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -15,6 +15,7 @@ class AntivirusService(private val antivirusWebClient: WebClient) {
 
 		val response = try {
 			antivirusWebClient.put()
+				.uri("/scan")
 				.bodyValue(file)
 				.retrieve()
 				.bodyToMono<List<ScanResult>>()
