@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.verify
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.SoknadType
@@ -63,6 +64,10 @@ class SoknadServiceTest {
 		val ettersendinger = soknadService.hentAktiveSoknader(defaultUser, skjemanr, SoknadType.ettersendelse)
 
 		// Så
+		// hentAktiveSoknader kalt 2 ganger, en for hver type søknad
+		verify(exactly = 2) { repo.finnAlleSoknaderGittBrukerIdOgStatus(defaultUser, SoknadsStatus.Opprettet) }
+		verify(exactly = 2) { vedleggService.hentAlleVedlegg(soknadDb) }
+
 		assertEquals(1, soknader.size)
 		assertEquals(skjemanr, soknader[0].skjemanr)
 		assertEquals(SoknadType.soknad, soknader[0].soknadstype)
