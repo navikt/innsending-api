@@ -1,16 +1,18 @@
 package no.nav.soknad.innsending.consumerapis.antivirus
 
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToMono
 
 @Service
-class AntivirusService(private val antivirusWebClient: WebClient) {
+@Profile("test | dev | prod")
+class AntivirusService(private val antivirusWebClient: WebClient) : AntivirusInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	fun scan(file: ByteArray): Boolean {
+	override fun scan(file: ByteArray): Boolean {
 		logger.debug("Scanner dokument for virus")
 
 		val response = try {
