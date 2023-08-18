@@ -16,9 +16,6 @@
 		"soknadsmottaker-gcp.intern.dev.nav.no",
 		"www.nav.no"
 	],
-	"outboundRulesGcpApplications": [
-		"soknadsmottaker"
-	],
 	"kafka-pool": "nav-dev",
 	"env": {
 		"DATABASE_NAME": "dokumentinnsending-dev",
@@ -46,6 +43,7 @@
 		"SOKNADSMOTTAKER_SCOPE": "api://dev-gcp.team-soknad.soknadsmottaker/.default",
 		"SAF_SCOPE": "api://dev-fss.teamdokumenthandtering.saf-q1/.default",
 		"KAFKA_SECURITY": "TRUE",
-		"KAFKA_MESSAGE_TOPIC": "team-soknad.privat-soknadinnsending-messages-v2-dev"
+		"KAFKA_MESSAGE_TOPIC": "team-soknad.privat-soknadinnsending-messages-v2-dev",
+		"ANTIVIRUS_URL": "http://clamav.nais-system.svc.cluster.local"
 	}
 }
