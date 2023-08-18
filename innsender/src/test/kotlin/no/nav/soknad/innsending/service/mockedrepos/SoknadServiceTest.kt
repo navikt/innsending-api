@@ -50,7 +50,7 @@ class SoknadServiceTest {
 
 	@Test
 	fun `Skal returnere riktig aktive søknader`() {
-		// Gitt
+		// Gitt 1 søknad for defaultUser
 		val soknadDb = SoknadDbDataTestBuilder(brukerId = defaultUser).build()
 		val skjemanr = soknadDb.skjemanr
 		val dokumentSoknadDto = DokumentSoknadDtoTestBuilder(skjemanr = skjemanr, brukerId = defaultUser).build()
@@ -59,11 +59,14 @@ class SoknadServiceTest {
 		every { vedleggService.hentAlleVedlegg(soknadDb) } returns dokumentSoknadDto
 
 		// Når
-		val result = soknadService.hentAktiveSoknader(defaultUser, skjemanr, SoknadType.soknad)
+		val soknader = soknadService.hentAktiveSoknader(defaultUser, skjemanr, SoknadType.soknad)
+		val ettersendinger = soknadService.hentAktiveSoknader(defaultUser, skjemanr, SoknadType.ettersendelse)
 
 		// Så
-		assertEquals(1, result.size)
-		assertEquals(skjemanr, result[0].skjemanr)
-		assertEquals(SoknadType.soknad, result[0].soknadstype)
+		assertEquals(1, soknader.size)
+		assertEquals(skjemanr, soknader[0].skjemanr)
+		assertEquals(SoknadType.soknad, soknader[0].soknadstype)
+
+		assertEquals(0, ettersendinger.size)
 	}
 }

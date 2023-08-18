@@ -492,41 +492,6 @@ class FrontEndRestApiTest : ApplicationTest() {
 
 	}
 
-	@Test
-	fun `Skal returnere alle søknader ved tom soknadstype query parameter`() {
-		// Gitt
-		val fnr = "12345678901"
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken(fnr)
-		val soknad = DokumentSoknadDtoTestBuilder(brukerId = fnr).build()
-		val opprettetSoknad = soknadService.opprettNySoknad(soknad)
-
-		val ettersending =
-			DokumentSoknadDtoTestBuilder(skjemanr = opprettetSoknad.skjemanr, brukerId = fnr).asEttersending().build()
-		soknadService.opprettNySoknad(ettersending)
-
-
-		// Når
-		val responseType = object : ParameterizedTypeReference<List<DokumentSoknadDto>>() {}
-		val request = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
-		val response = restTemplate.exchange(
-			"http://localhost:${serverPort}/frontend/v1/skjema/${opprettetSoknad.skjemanr}/soknader",
-			HttpMethod.GET,
-			request,
-			responseType
-		)
-
-		// Så
-		val body = response.body!!
-		val responseEttersending = body.filter { it.soknadstype == SoknadType.ettersendelse }
-		val responseSoknad = body.filter { it.soknadstype == SoknadType.soknad }
-
-		assertEquals(HttpStatus.OK, response.statusCode)
-		assertTrue(response.body != null)
-		assertEquals(2, response.body!!.size)
-		assertEquals(1, responseEttersending.size)
-		assertEquals(1, responseSoknad.size)
-	}
-
 	companion object {
 		@JvmStatic
 		fun hentSoknaderForSkjemanr() = listOf(
@@ -545,7 +510,7 @@ class FrontEndRestApiTest : ApplicationTest() {
 		expectedEttersendingSize: Int,
 		expectedSoknadSize: Int
 	) {
-		// Gitt
+		// Gitt 1 søknad og 2 ettersendingssøknader
 		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken(defaultUser)
 
 		val soknad = DokumentSoknadDtoTestBuilder(brukerId = defaultUser).build()

@@ -783,7 +783,7 @@ paths:
           style: simple
         - name: soknadstyper
           in: query
-          description: "Komma-separert liste som filtrerer hvilke type søknader som skal returnes. Feks: 'utkast,ettersendelse'"
+          description: "Komma-separert liste som filtrerer hvilke type søknader som skal returnes. Feks: 'soknad,ettersendelse'"
           schema:
             type: array
             items:
