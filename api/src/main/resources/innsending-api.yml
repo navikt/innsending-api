@@ -769,7 +769,7 @@ paths:
 
   /frontend/v1/skjema/{skjemanr}/soknader:
     get:
-      summary: Kall for å hente opprettede søknader for et gitt skjemanummer
+      summary: Kall for å hente opprettede søknader for bruker gitt skjemanummer
       description: Kan filtrere på 'soknad' | 'ettersendelse'
       operationId: hentSoknaderForSkjemanr
 

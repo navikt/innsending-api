@@ -1,4 +1,4 @@
-package no.nav.soknad.innsending.service.mockedrepos
+package no.nav.soknad.innsending.service.unittest
 
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
@@ -18,7 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.assertEquals
 
 @ExtendWith(MockKExtension::class)
-class SoknadServiceTest {
+class SoknadServiceUnitTest {
 
 	private val defaultUser = "12345678901"
 
