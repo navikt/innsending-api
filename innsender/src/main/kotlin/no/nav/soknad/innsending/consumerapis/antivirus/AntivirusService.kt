@@ -32,8 +32,9 @@ class AntivirusService(private val antivirusWebClient: WebClient) : AntivirusInt
 			return false
 		}
 
+		logger.info("Antivirus respons: $response, ${response.first()}")
+
 		val (filename, result) = response.first()
-		logger.debug("$filename ${result.name}")
 
 		return when (result) {
 			ClamAvResult.OK -> true
