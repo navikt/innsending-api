@@ -13,7 +13,7 @@ class AntivirusService(private val antivirusWebClient: WebClient) : AntivirusInt
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	override fun scan(file: ByteArray): Boolean {
-		logger.debug("Scanner dokument for virus")
+		logger.info("Scanner dokument for virus")
 
 		val response = try {
 			antivirusWebClient.put()
@@ -28,7 +28,7 @@ class AntivirusService(private val antivirusWebClient: WebClient) : AntivirusInt
 		}
 
 		if (response?.size != 1) {
-			logger.warn("Feil størrelse på responsen fra virus scan")
+			logger.error("Feil størrelse på responsen fra virus scan")
 			return false
 		}
 
@@ -38,7 +38,7 @@ class AntivirusService(private val antivirusWebClient: WebClient) : AntivirusInt
 
 		return when (result) {
 			ClamAvResult.OK -> true
-			ClamAvResult.ERROR -> false
+			ClamAvResult.ERROR -> true
 
 			ClamAvResult.FOUND -> {
 				logger.warn("$filename har virus")

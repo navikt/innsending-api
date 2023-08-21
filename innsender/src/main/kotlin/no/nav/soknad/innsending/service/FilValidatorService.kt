@@ -43,7 +43,7 @@ class FilValidatorService(private val restConfig: RestConfig, private val antivi
 
 		// Sjekk om filen inneholder virus
 		if (!antivirus.scan(opplastet)) throw IllegalActionException(
-			message = "Opplasting feilet. Filen inneholder virus eller virussjekken feilet",
+			message = "Opplasting feilet. Filen inneholder virus",
 			errorCode = ErrorCode.VIRUS_SCAN_FAILED
 		)
 	}
