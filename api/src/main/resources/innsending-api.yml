@@ -767,6 +767,39 @@ paths:
       tags:
         - sendInnSoknad
 
+  /frontend/v1/skjema/{skjemanr}/soknader:
+    get:
+      summary: Kall for å hente opprettede søknader for bruker gitt skjemanummer
+      description: Kan filtrere på 'soknad' | 'ettersendelse'
+      operationId: hentSoknaderForSkjemanr
+
+      parameters:
+        - name: skjemanr
+          in: path
+          description: Skjemaet som søknaden er basert på
+          required: true
+          schema:
+            type: string
+          style: simple
+        - name: soknadstyper
+          in: query
+          description: "Komma-separert liste som filtrerer hvilke type søknader som skal returnes. Feks: 'soknad,ettersendelse'"
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/SoknadType"
+
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DokumentSoknadDto"
+      tags:
+        - hentSoknaderForSkjemanr
 
   /health/ping:
     get:
@@ -1036,6 +1069,8 @@ components:
             Når systemet ser at det mangler påkrevde vedlegg som skal ettersendes, lages det en *oppgave* i stedet.
           example: true
           default: false
+        soknadstype:
+          $ref: "#/components/schemas/SoknadType"
 
     FilDto:
       type: object
@@ -1372,6 +1407,12 @@ components:
           enum: ["ok", "notfound", "deleted"]
           description: current state of the file. Can be `deleted`, `notfound`, `ok`
           example: not-found
+
+    SoknadType:
+        type: string
+        enum: [ "soknad", "ettersendelse" ]
+        description: Hvilke type søknader som er tilgjengelig for henting
+        example: ettersendelse
 
     Spraak:
       type: string

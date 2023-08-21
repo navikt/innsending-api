@@ -11,7 +11,7 @@ data class SoknadDbDataTestBuilder(
 	var id: Long? = null,
 	var innsendingsId: String = UUID.randomUUID().toString(),
 	var tittel: String = "Avtale om barnebidrag",
-	var skjemanr: String = "NAV ${UUID.randomUUID().toString().take(4)}",
+	var skjemanr: String = "NAV-${UUID.randomUUID().toString().take(4)}",
 	var tema: String = "BID",
 	var spraak: String = "nb",
 	var status: SoknadsStatus = SoknadsStatus.Opprettet,

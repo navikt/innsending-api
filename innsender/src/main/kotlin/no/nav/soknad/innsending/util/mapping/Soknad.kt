@@ -45,8 +45,9 @@ fun lagDokumentSoknadDto(
 	soknadDbData: SoknadDbData,
 	vedleggDbDataListe: List<VedleggDbData>,
 	erSystemGenerert: Boolean = false
-) =
-	DokumentSoknadDto(
+): DokumentSoknadDto {
+	val erEttersending = soknadDbData.ettersendingsid != null || soknadDbData.visningstype == VisningsType.ettersending
+	return DokumentSoknadDto(
 		brukerId = soknadDbData.brukerid,
 		skjemanr = soknadDbData.skjemanr,
 		tittel = soknadDbData.tittel,
@@ -68,8 +69,11 @@ fun lagDokumentSoknadDto(
 		forsteInnsendingsDato = mapTilOffsetDateTime(soknadDbData.forsteinnsendingsdato),
 		fristForEttersendelse = soknadDbData.ettersendingsfrist ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 		arkiveringsStatus = mapTilArkiveringsStatusDto(soknadDbData.arkiveringsstatus),
-		erSystemGenerert = erSystemGenerert
+		erSystemGenerert = erSystemGenerert,
+		soknadstype = if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad,
 	)
+}
+
 
 fun mapTilDokumentSoknadDto(
 	soknadDbData: SoknadDbData,
@@ -82,6 +86,7 @@ fun mapTilDokumentSoknadDto(
 		}
 		lagVedleggDto(vedleggDbData, filer.firstOrNull()?.data)
 	}
+	val erEttersending = soknadDbData.ettersendingsid != null || soknadDbData.visningstype == VisningsType.ettersending
 
 	return DokumentSoknadDto(
 		brukerId = soknadDbData.brukerid,
@@ -105,7 +110,8 @@ fun mapTilDokumentSoknadDto(
 		forsteInnsendingsDato = mapTilOffsetDateTime(soknadDbData.forsteinnsendingsdato),
 		fristForEttersendelse = soknadDbData.ettersendingsfrist ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 		arkiveringsStatus = mapTilArkiveringsStatusDto(soknadDbData.arkiveringsstatus),
-		erSystemGenerert = false
+		erSystemGenerert = false,
+		soknadstype = if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad,
 	)
 }
 

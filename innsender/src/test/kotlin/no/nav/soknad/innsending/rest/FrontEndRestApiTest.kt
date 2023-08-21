@@ -13,10 +13,16 @@ import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.IdentInformasjon
 import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.Identliste
 import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.Navn
 import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.Person
+import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.TokenGenerator
+import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
@@ -46,6 +52,9 @@ class FrontEndRestApiTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var restTemplate: TestRestTemplate
+
+	@Autowired
+	lateinit var soknadService: SoknadService
 
 
 	@Value("\${server.port}")
@@ -481,6 +490,66 @@ class FrontEndRestApiTest : ApplicationTest() {
 		assertEquals(HttpStatus.CREATED, response.statusCode)
 		assertTrue(response.body != null)
 
+	}
+
+	companion object {
+		@JvmStatic
+		fun hentSoknaderForSkjemanr() = listOf(
+			Arguments.of(null, 3, 2, 1), // Ingen, skal returnere alle (2 ettersendelse og 1 søknad)
+			Arguments.of("ettersendelse", 2, 2, 0), // Ettersendelse, skal returnere 2 ettersendelser
+			Arguments.of("soknad", 1, 0, 1), // Søknad, skal returnere 1 søknad
+			Arguments.of("soknad,ettersendelse", 3, 2, 1) // Begge, skal returnere alle (2 ettersendelse og 1 søknad)
+		)
+	}
+
+	@ParameterizedTest
+	@MethodSource("hentSoknaderForSkjemanr")
+	fun `Skal returnere ulik respons basert på soknadstype query param`(
+		queryParam: String?,
+		expectedTotalSize: Int,
+		expectedEttersendingSize: Int,
+		expectedSoknadSize: Int
+	) {
+		// Gitt 1 søknad og 2 ettersendingssøknader
+		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken(defaultUser)
+
+		val soknad = DokumentSoknadDtoTestBuilder(brukerId = defaultUser).build()
+		val opprettetSoknad = soknadService.opprettNySoknad(soknad)
+
+		val ettersending =
+			DokumentSoknadDtoTestBuilder(skjemanr = opprettetSoknad.skjemanr, brukerId = defaultUser).asEttersending().build()
+		soknadService.opprettNySoknad(ettersending)
+
+		val ettersending2 =
+			DokumentSoknadDtoTestBuilder(skjemanr = opprettetSoknad.skjemanr, brukerId = defaultUser).asEttersending().build()
+		soknadService.opprettNySoknad(ettersending2)
+
+		val url = if (queryParam != null) {
+			"http://localhost:${serverPort}/frontend/v1/skjema/${opprettetSoknad.skjemanr}/soknader?soknadstyper=$queryParam"
+		} else {
+			"http://localhost:${serverPort}/frontend/v1/skjema/${opprettetSoknad.skjemanr}/soknader"
+		}
+
+		// Når
+		val responseType = object : ParameterizedTypeReference<List<DokumentSoknadDto>>() {}
+		val request = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
+		val response = restTemplate.exchange(
+			url,
+			HttpMethod.GET,
+			request,
+			responseType
+		)
+
+		// Så
+		val body = response.body!!
+		val responseEttersending = body.filter { it.soknadstype == SoknadType.ettersendelse }
+		val responseSoknad = body.filter { it.soknadstype == SoknadType.soknad }
+
+		assertEquals(HttpStatus.OK, response.statusCode)
+		assertTrue(response.body != null)
+		assertEquals(expectedTotalSize, response.body!!.size)
+		assertEquals(expectedEttersendingSize, responseEttersending.size)
+		assertEquals(expectedSoknadSize, responseSoknad.size)
 	}
 
 

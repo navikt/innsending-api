@@ -11,7 +11,7 @@ import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.ukjentEttersendingsId
-import no.nav.soknad.innsending.util.models.erEtterSending
+import no.nav.soknad.innsending.util.models.erEttersending
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service
@@ -50,7 +50,7 @@ class BrukernotifikasjonPublisher(
 			logger.info(
 				"${dokumentSoknad.innsendingsId}: Publiser statusendring på søknad" +
 					": innsendingsId=${dokumentSoknad.innsendingsId}, status=${dokumentSoknad.status}, groupId=$groupId" +
-					", isDokumentInnsending=true, isEttersendelse=${dokumentSoknad.erEtterSending}" +
+					", isDokumentInnsending=true, isEttersendelse=${dokumentSoknad.erEttersending}" +
 					", tema=${dokumentSoknad.tema}"
 			)
 
@@ -76,7 +76,7 @@ class BrukernotifikasjonPublisher(
 	private fun handleNewApplication(dokumentSoknad: DokumentSoknadDto, groupId: String) {
 		// Ny søknad opprettet publiser data slik at søker kan plukke den opp fra Ditt Nav på et senere tidspunkt
 		// i tilfelle han/hun ikke ferdigstiller og sender inn
-		val ettersending = dokumentSoknad.erEtterSending
+		val ettersending = dokumentSoknad.erEttersending
 		val lenke = createLink(dokumentSoknad.innsendingsId!!)
 		val notificationInfo = createNotificationInfo(dokumentSoknad, ettersending, lenke)
 

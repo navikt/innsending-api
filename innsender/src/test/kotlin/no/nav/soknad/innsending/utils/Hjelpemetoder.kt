@@ -44,9 +44,20 @@ class Hjelpemetoder {
 
 			val vedleggDtoList = vedleggsListe ?: listOf(vedleggDtoPdf, vedleggDtoJson)
 			return DokumentSoknadDto(
-				brukerId, skjemanr, tittel, tema, soknadsStatus!!, opprettetDato ?: OffsetDateTime.now(),
-				vedleggDtoList, id, innsendingsid ?: UUID.randomUUID().toString(), ettersendingsId, spraak,
-				OffsetDateTime.now(), null
+				brukerId = brukerId,
+				skjemanr = skjemanr,
+				tittel = tittel,
+				tema = tema,
+				status = soknadsStatus!!,
+				opprettetDato = opprettetDato ?: OffsetDateTime.now(),
+				vedleggsListe = vedleggDtoList,
+				id = id,
+				innsendingsId = innsendingsid ?: UUID.randomUUID().toString(),
+				ettersendingsId = ettersendingsId,
+				spraak = spraak,
+				endretDato = OffsetDateTime.now(),
+				innsendtDato = null,
+				soknadstype = SoknadType.soknad
 			)
 		}
 

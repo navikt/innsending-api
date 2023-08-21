@@ -51,7 +51,7 @@ class FrontEndRestApi(
 		logger.info("Kall for å opprette søknad på skjema ${opprettSoknadBody.skjemanr}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-		soknadService.loggWarningVedEksisterendeSoknad(brukerId, opprettSoknadBody.skjemanr, false)
+		soknadService.loggWarningVedEksisterendeSoknad(brukerId, opprettSoknadBody.skjemanr, SoknadType.soknad)
 
 		val dokumentSoknadDto = soknadService.opprettSoknad(
 			brukerId,
@@ -90,7 +90,11 @@ class FrontEndRestApi(
 		logger.info("Kall for å opprette ettersending på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-		soknadService.loggWarningVedEksisterendeSoknad(brukerId, opprettEttersendingGittSkjemaNr.skjemanr, true)
+		soknadService.loggWarningVedEksisterendeSoknad(
+			brukerId,
+			opprettEttersendingGittSkjemaNr.skjemanr,
+			SoknadType.ettersendelse
+		)
 
 		val arkiverteSoknader = safService.hentInnsendteSoknader(brukerId)
 			.filter { opprettEttersendingGittSkjemaNr.skjemanr == it.skjemanr && it.innsendingsId != null }
@@ -193,6 +197,34 @@ class FrontEndRestApi(
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(soknadDto)
+	}
+
+	@Timed(InnsenderOperation.HENT)
+	override fun hentSoknaderForSkjemanr(
+		skjemanr: String,
+		soknadstyper: List<SoknadType>?
+	): ResponseEntity<List<DokumentSoknadDto>> {
+		logger.info("Kall for å hente søknader med $skjemanr for bruker. Soknadstyper=${soknadstyper ?: "ikke spesifisert"}")
+
+		val soknader = mutableListOf<DokumentSoknadDto>()
+		val brukerIds = tilgangskontroll.hentPersonIdents()
+
+		if (soknadstyper.isNullOrEmpty()) {
+			logger.info("Henter søknader med alle søknadstyper for $skjemanr")
+			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr) })
+		}
+
+		if (soknadstyper?.contains(SoknadType.soknad) == true) {
+			logger.info("Henter søknader med søknadstype 'soknad' for $skjemanr")
+			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, SoknadType.soknad) })
+		}
+
+		if (soknadstyper?.contains(SoknadType.ettersendelse) == true) {
+			logger.info("Henter søknader med søknadstype 'ettersendelse' for $skjemanr")
+			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, SoknadType.ettersendelse) })
+		}
+
+		return ResponseEntity.status(HttpStatus.OK).body(soknader)
 	}
 
 	@Timed(InnsenderOperation.ENDRE)

@@ -15,7 +15,7 @@ class SoknadValidatorTest {
 
 	private fun lagEksisterendeSoknad(formioId: String? = null): DokumentSoknadDto {
 		val vedleggDto = VedleggDtoTestBuilder(formioId = formioId).build()
-		return DokumentSoknadDtoTestBuilder(vedleggsListe = listOf(vedleggDto)).build()
+		return DokumentSoknadDtoTestBuilder().withVedlegg(vedleggDto).build()
 	}
 
 	@Test
@@ -39,12 +39,12 @@ class SoknadValidatorTest {
 		val eksisterendeSoknad = lagEksisterendeSoknad()
 		val soknad = DokumentSoknadDtoTestBuilder(
 			brukerId = eksisterendeSoknad.brukerId,
-			skjemanr = eksisterendeSoknad.skjemanr
+			skjemanr = eksisterendeSoknad.skjemanr,
 		).build()
 
 		// Så
 		assertDoesNotThrow {
-			soknad.validerVedleggsListeVedOppdatering(eksisterendeSoknad)
+			soknad.validerSoknadVedOppdatering(eksisterendeSoknad)
 		}
 	}
 

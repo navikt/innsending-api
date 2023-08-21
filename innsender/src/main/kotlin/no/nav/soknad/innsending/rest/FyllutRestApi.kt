@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.BodyStatusResponseDto
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.SkjemaDto
+import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
@@ -41,7 +42,7 @@ class FyllutRestApi(
 		logger.debug("Skal opprette søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
 
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
-		soknadService.loggWarningVedEksisterendeSoknad(brukerId, skjemaDto.skjemanr, false)
+		soknadService.loggWarningVedEksisterendeSoknad(brukerId, skjemaDto.skjemanr, SoknadType.soknad)
 
 		val opprettetSoknad = soknadService.opprettNySoknad(
 			SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
@@ -81,7 +82,7 @@ class FyllutRestApi(
 		skjemanr: String,
 		opprettNySoknad: Boolean = false
 	): ResponseEntity<SkjemaDto>? {
-		val aktiveSoknader = soknadService.hentAktiveSoknader(brukerId, skjemanr, false)
+		val aktiveSoknader = soknadService.hentAktiveSoknader(brukerId, skjemanr, SoknadType.soknad)
 		val harSoknadUnderArbeid = aktiveSoknader.isNotEmpty()
 
 		if (harSoknadUnderArbeid && !opprettNySoknad) {

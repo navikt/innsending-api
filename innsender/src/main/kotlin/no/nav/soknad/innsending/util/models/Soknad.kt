@@ -23,6 +23,5 @@ val DokumentSoknadDto.vedleggsListeUtenHoveddokument: List<VedleggDto>
 val DokumentSoknadDto.kanGjoreEndringer: Boolean
 	get() = status == SoknadsStatusDto.opprettet || status == SoknadsStatusDto.utfylt
 
-val DokumentSoknadDto.erEtterSending: Boolean
+val DokumentSoknadDto.erEttersending: Boolean
 	get() = ettersendingsId != null || visningsType == VisningsType.ettersending
-
