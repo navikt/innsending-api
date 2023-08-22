@@ -34,6 +34,13 @@ For mocking brukes blant
 annet [mockK](https://mockk.io/), [mockwebserver](https://github.com/square/okhttp/tree/master/mockwebserver)
 og [mock-oauth2-server](https://github.com/navikt/mock-oauth2-server)
 
+### Antivirus
+
+Opplastede filer fra brukere blir sjekket for virus med [ClamAV](https://www.clamav.net/) via
+et [nais-endepunkt](https://docs.nais.io/security/antivirus/).
+For å teste virussjekken kan standard [EICAR test-filer](https://github.com/fire1ce/eicar-standard-antivirus-test-files)
+brukes.
+
 ### Kodeformattering
 
 Som Intellij settings velg:

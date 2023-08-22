@@ -9,5 +9,6 @@ enum class InnsenderOperation(name: String) {
 	SLETT_FIL("SlettFil"),
 	LAST_NED("LastNedFil"),
 	SEND_INN("SendInn"),
-	ENDRE("Endre")
+	ENDRE("Endre"),
+	VIRUS_SCAN("VirusScan"),
 }

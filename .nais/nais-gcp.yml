@@ -72,12 +72,12 @@ spec:
         - host: "{{this}}"
       {{/each}}
       rules:
-      {{#each outboundRulesGcpApplications}}
-        - application: "{{this}}"
-      {{/each}}
+        - application: soknadsmottaker
         - application: soknadsveiviser
           cluster: prod-gcp
           namespace: skjemadigitalisering
+        - application: clamav
+          namespace: nais-system
 
   ingresses:
   {{#each ingresses}}

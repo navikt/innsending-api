@@ -66,6 +66,7 @@ restconfig:
   safselvbetjeningUrl: http://localhost:${wiremock.server.port}/safselvbetjening-api
   safUrl: http://localhost:${wiremock.server.port}/saf-api
   azureUrl: http://localhost:${wiremock.server.port}/azure-api
+  antivirusUrl: http://localhost:${wiremock.server.port}/antivirus
 
 
 brukernotifikasjonconfig:

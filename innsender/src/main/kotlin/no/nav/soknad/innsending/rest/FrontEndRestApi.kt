@@ -41,7 +41,8 @@ class FrontEndRestApi(
 	private val safService: SafService,
 	private val filService: FilService,
 	private val vedleggService: VedleggService,
-	private val innsendingService: InnsendingService
+	private val innsendingService: InnsendingService,
+	private val filValidatorService: FilValidatorService
 ) : FrontendApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -330,31 +331,16 @@ class FrontEndRestApi(
 			throw ResourceNotFoundException("Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId")
 
 		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
-		val fileName = file.filename
-		if (!fileName.isNullOrEmpty() && fileName.contains(".")) {
-			val split = fileName.split(".")
-			logger.info("$innsendingsId: Skal validere ${split[split.size - 1]}")
-		}
-		if (!file.isReadable) throw IllegalActionException(
-			message = "Opplasting feilet. Ingen fil opplastet",
-			errorCode = ErrorCode.FILE_CANNOT_BE_READ
-		)
+		filValidatorService.validerFil(file, innsendingsId)
 		val opplastet = (file as ByteArrayResource).byteArray
-		Validerer().validerStorrelse(
-			innsendingsId,
-			0,
-			opplastet.size.toLong(),
-			restConfig.maxFileSize.toLong(),
-			ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE
-		)
-		Validerer().validereFilformat(innsendingsId, opplastet, fileName)
+
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
 		val fil = KonverterTilPdf().tilPdf(opplastet)
 
 		// Lagre
 		val lagretFilDto = filService.lagreFil(
 			soknadDto,
-			FilDto(vedleggsId, null, fileName ?: "", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now())
+			FilDto(vedleggsId, null, file.filename ?: "", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now())
 		)
 		logger.info("$innsendingsId: Lagret fil ${lagretFilDto.id} på vedlegg $vedleggsId til søknad")
 
