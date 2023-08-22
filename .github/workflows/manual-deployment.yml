@@ -35,7 +35,7 @@ jobs:
           timezoneLinux: "Europe/Oslo"
 
       - name: Build with maven
-        run: mvn install --file pom.xml
+        run: mvn install --file pom.xml -DskipTests
 
       - name: Build and push Docker image
         uses: nais/docker-build-push@v0

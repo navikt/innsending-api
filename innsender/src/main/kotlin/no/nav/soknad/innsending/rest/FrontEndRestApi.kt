@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.rest
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.FrontendApi
 import no.nav.soknad.innsending.config.RestConfig
+import no.nav.soknad.innsending.consumerapis.antivirus.AntivirusInterface
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
@@ -42,7 +43,8 @@ class FrontEndRestApi(
 	private val filService: FilService,
 	private val vedleggService: VedleggService,
 	private val innsendingService: InnsendingService,
-	private val filValidatorService: FilValidatorService
+	private val filValidatorService: FilValidatorService,
+	private val antivirus: AntivirusInterface
 ) : FrontendApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -336,6 +338,13 @@ class FrontEndRestApi(
 
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
 		val fil = KonverterTilPdf().tilPdf(opplastet)
+
+		// Sjekk om filen inneholder virus
+		// TODO: Fiks dette
+		if (!antivirus.scan(fil)) throw IllegalActionException(
+			message = "Opplasting feilet. Filen inneholder virus",
+			errorCode = ErrorCode.VIRUS_SCAN_FAILED
+		)
 
 		// Lagre
 		val lagretFilDto = filService.lagreFil(

@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.config.RestConfig
-import no.nav.soknad.innsending.consumerapis.antivirus.AntivirusInterface
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.pdfutilities.Validerer
@@ -11,7 +10,7 @@ import org.springframework.core.io.Resource
 import org.springframework.stereotype.Service
 
 @Service
-class FilValidatorService(private val restConfig: RestConfig, private val antivirus: AntivirusInterface) {
+class FilValidatorService(private val restConfig: RestConfig) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -41,11 +40,6 @@ class FilValidatorService(private val restConfig: RestConfig, private val antivi
 		)
 		Validerer().validereFilformat(innsendingsId, opplastet, fileName)
 
-		// Sjekk om filen inneholder virus
-		// TODO: Fiks dette
-		if (!antivirus.scan(opplastet)) throw IllegalActionException(
-			message = "Opplasting feilet. Filen inneholder virus",
-			errorCode = ErrorCode.VIRUS_SCAN_FAILED
-		)
+
 	}
 }
