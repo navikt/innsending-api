@@ -74,12 +74,12 @@ spec:
         - host: "{{this}}"
       {{/each}}
       rules:
-      {{#each outboundRulesGcpApplications}}
-        - application: "{{this}}"
-      {{/each}}
+        - application: soknadsmottaker
         - application: soknadsveiviser
           cluster: prod-gcp
           namespace: skjemadigitalisering
+        - application: clamav
+          namespace: nais-system
 
   ingresses:
   {{#each ingresses}}
@@ -88,9 +88,13 @@ spec:
 
   gcp:
     sqlInstances:
-      - diskAutoresize: true
+      - type: POSTGRES_14
+        tier: {{ tier }}
+        diskType: SSD
+        highAvailability: true
         diskSize: {{ default_database_size }}
-        type: POSTGRES_14
+        diskAutoresize: true
+        autoBackupHour: 6
         databases:
           - name: {{ database-name }}
             envVarPrefix: DATABASE

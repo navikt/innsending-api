@@ -15,5 +15,6 @@ enum class ErrorCode(val code: String) {
 	FILE_SIZE_SUM_TOO_LARGE("illegalAction.fileSizeSumTooLarge"),
 	VEDLEGG_FILE_SIZE_SUM_TOO_LARGE("illegalAction.vedleggFileSizeSumTooLarge"),
 	TITLE_STRING_TOO_LONG("illegalAction.titleStringTooLong"), // (ikke i bruk)
+	VIRUS_SCAN_FAILED("illegalAction.virusScanFailed"),
 
 }

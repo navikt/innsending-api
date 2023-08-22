@@ -4,6 +4,7 @@
 	"team": "team-soknad",
 	"database-name": "dokumentinnsending-dev",
 	"default_database_size": 10,
+	"tier": "db-f1-micro",
 	"ingresses": [
 		"https://www.dev.nav.no/innsending-api-gcp",
 		"https://innsending-api-gcp.intern.dev.nav.no"
@@ -15,9 +16,6 @@
 		"tokendings.dev-gcp.nais.io",
 		"soknadsmottaker-gcp.intern.dev.nav.no",
 		"www.nav.no"
-	],
-	"outboundRulesGcpApplications": [
-		"soknadsmottaker"
 	],
 	"kafka-pool": "nav-dev",
 	"env": {
@@ -46,6 +44,7 @@
 		"SOKNADSMOTTAKER_SCOPE": "api://dev-gcp.team-soknad.soknadsmottaker/.default",
 		"SAF_SCOPE": "api://dev-fss.teamdokumenthandtering.saf-q1/.default",
 		"KAFKA_SECURITY": "TRUE",
-		"KAFKA_MESSAGE_TOPIC": "team-soknad.privat-soknadinnsending-messages-v2-dev"
+		"KAFKA_MESSAGE_TOPIC": "team-soknad.privat-soknadinnsending-messages-v2-dev",
+		"ANTIVIRUS_URL": "http://clamav.nais-system.svc.cluster.local"
 	}
 }
