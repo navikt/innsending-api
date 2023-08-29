@@ -63,6 +63,8 @@ spec:
           namespace: skjemadigitalisering
         - application: skjemautfylling-preprod-alt
           namespace: skjemadigitalisering
+        - application: fyllut-ettersending
+          namespace: skjemadigitalisering
         - application: debug-dings
           namespace: plattformsikkerhet
           cluster: dev-gcp
