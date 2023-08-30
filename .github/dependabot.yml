@@ -5,7 +5,22 @@ updates:
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 20
+    groups:
+      all-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "org.apache.kafka:kafka-clients" # Oppdateres til CE versjon som ikke er ønsket
+      - dependency-name: "org.flywaydb:flyway-core" # Oppdatering fungerer ikke, må fikses
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "monthly"
+    groups:
+      all:
+        patterns:
+          - "*"
