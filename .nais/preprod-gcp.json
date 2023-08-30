@@ -13,7 +13,6 @@
 		"pdl-api.dev-fss-pub.nais.io",
 		"safselvbetjening-q1.dev-fss-pub.nais.io",
 		"saf.dev-fss-pub.nais.io",
-		"tokendings.dev-gcp.nais.io",
 		"soknadsmottaker-gcp.intern.dev.nav.no",
 		"www.nav.no"
 	],
@@ -36,7 +35,6 @@
 		"PUBLISERE_BRUKERNOTIFIKASJONER": "true",
 		"SEND_INN_URL": "https://www.intern.dev.nav.no/sendinn",
 		"FYLL_UT_URL": "https://www.intern.dev.nav.no/fyllut",
-		"TOKENDINGS_BASE_URL": "https://tokendings.dev-gcp.nais.io",
 		"SAFSELVBETJENING_TOKEN_X_AUDIENCE": "dev-fss:teamdokumenthandtering:safselvbetjening-q1",
 		"PDL_TOKEN_X_AUDIENCE": "dev-fss:pdl:pdl-api",
 		"PDL_SCOPE": "api://dev-fss.pdl.pdl-api/.default",
