@@ -73,7 +73,6 @@ spec:
       {{#each outboundExternalHosts}}
         - host: "{{this}}"
       {{/each}}
-        - host: {{TOKEN_X_ISSUER}}
       rules:
         - application: soknadsmottaker
         - application: soknadsveiviser
