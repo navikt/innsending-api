@@ -3,9 +3,23 @@ updates:
   - package-ecosystem: "maven"
     directory: "/"
     schedule:
-      interval: "monthly"
+      interval: "daily"
     open-pull-requests-limit: 20
+    groups:
+      all-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "org.flywaydb:flyway-core" # Oppdatering fungerer ikke, må fikses
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "monthly"
+    groups:
+      all:
+        patterns:
+          - "*"
