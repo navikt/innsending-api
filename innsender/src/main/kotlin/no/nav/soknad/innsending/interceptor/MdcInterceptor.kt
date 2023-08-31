@@ -7,19 +7,23 @@ import no.nav.soknad.innsending.util.MDCUtil
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerInterceptor
 import org.springframework.web.servlet.HandlerMapping
-import org.springframework.web.servlet.ModelAndView
 
 @Component
 class MdcInterceptor : HandlerInterceptor {
 	override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
 		val pathVariables = request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE) as Map<*, *>
-		val innsendingsId = pathVariables["innsendingsId"] as String?
 
-		MDCUtil.toMDC(MDC_INNSENDINGS_ID, innsendingsId)
+		request.getHeader("X-innsendingId")?.let {
+			MDCUtil.toMDC(MDC_INNSENDINGS_ID, it)
+		}
+
+		pathVariables["innsendingsId"]?.let {
+			MDCUtil.toMDC(MDC_INNSENDINGS_ID, it.toString())
+		}
 
 		return true
 	}
-	
+
 
 	override fun afterCompletion(
 		request: HttpServletRequest,
