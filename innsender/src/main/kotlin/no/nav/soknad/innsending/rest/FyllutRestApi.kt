@@ -145,6 +145,7 @@ class FyllutRestApi(
 		validerSoknadsTilgang(dokumentSoknadDto)
 
 		logger.info("$innsendingsId: Hentet søknad")
+		logger.info("Testing {}", innsendingsId)
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
