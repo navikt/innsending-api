@@ -28,5 +28,9 @@ object MDCUtil {
 		)
 	}
 
+	fun clear() {
+		MDC.clear()
+	}
+
 
 }
