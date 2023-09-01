@@ -194,7 +194,6 @@ class FrontEndRestApi(
 		logger.info("$innsendingsId: Kall for å hente søknad")
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 		logger.info("$innsendingsId: Hentet søknad")
-		logger.info("Testing {}", innsendingsId)
 
 		return ResponseEntity
 			.status(HttpStatus.OK)

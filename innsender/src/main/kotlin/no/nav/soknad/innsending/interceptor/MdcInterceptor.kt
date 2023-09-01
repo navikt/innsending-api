@@ -17,21 +17,23 @@ class MdcInterceptor : HandlerInterceptor {
 		val headerNames = Collections.list(request.headerNames)
 
 		val variations = arrayOf("x-innsendingid", "x-innsendingsid", "innsendingid", "innsendingsid")
-		val innsendingsIdHeader = variations
-			.map { variation -> headerNames.find { it.equals(variation, ignoreCase = true) } }
-			.firstNotNullOfOrNull { variationHeader -> variationHeader?.let { request.getHeader(it) } }
 
 		val innsendingsIdPathVariable = variations
 			.map { variation -> pathVariables[variation] }
 			.firstNotNullOfOrNull { variationValue -> variationValue?.toString() }
 
-		innsendingsIdHeader?.let {
-			MDCUtil.toMDC(MDC_INNSENDINGS_ID, it)
-		}
+		val innsendingsIdHeader = variations
+			.map { variation -> headerNames.find { it.equals(variation, ignoreCase = true) } }
+			.firstNotNullOfOrNull { variationHeader -> variationHeader?.let { request.getHeader(it) } }
 
 		innsendingsIdPathVariable?.let {
 			MDCUtil.toMDC(MDC_INNSENDINGS_ID, it)
 		}
+
+		innsendingsIdHeader?.let {
+			MDCUtil.toMDC(MDC_INNSENDINGS_ID, it)
+		}
+
 
 		return true
 	}
