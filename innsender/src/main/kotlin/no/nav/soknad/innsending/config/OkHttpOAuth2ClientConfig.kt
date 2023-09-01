@@ -4,7 +4,11 @@ import no.nav.security.token.support.client.core.ClientProperties
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.soknad.arkivering.soknadsarkiverer.service.tokensupport.TokenService
+import no.nav.soknad.innsending.util.Constants.MDC_INNSENDINGS_ID
 import okhttp3.OkHttpClient
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -13,6 +17,7 @@ import java.util.concurrent.TimeUnit
 
 @Configuration
 class OkHttpOAuth2ClientConfig {
+	val logger: Logger = LoggerFactory.getLogger(javaClass)
 
 	@Bean
 	@Profile("prod | dev")
@@ -36,8 +41,11 @@ class OkHttpOAuth2ClientConfig {
 			.writeTimeout(1, TimeUnit.MINUTES)
 			.addInterceptor {
 				val token = tokenService.getToken()
+				val innsendingsId = MDC.get(MDC_INNSENDINGS_ID)
+				logger.info("InnsendingsId som header: $innsendingsId")
 
 				val bearerRequest = it.request().newBuilder().headers(it.request().headers)
+					.header("x-innsendingsId", innsendingsId ?: "")
 					.header("Authorization", "Bearer $token").build()
 
 				it.proceed(bearerRequest)
