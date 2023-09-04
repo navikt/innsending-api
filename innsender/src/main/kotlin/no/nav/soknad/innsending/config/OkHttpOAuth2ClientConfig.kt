@@ -42,7 +42,6 @@ class OkHttpOAuth2ClientConfig {
 			.addInterceptor {
 				val token = tokenService.getToken()
 				val innsendingsId = MDC.get(MDC_INNSENDINGS_ID)
-				logger.info("InnsendingsId som header: $innsendingsId")
 
 				val bearerRequest = it.request().newBuilder().headers(it.request().headers)
 					.header("x-innsendingsId", innsendingsId ?: "")
