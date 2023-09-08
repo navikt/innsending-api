@@ -2,15 +2,17 @@ package no.nav.soknad.pdfutilities
 
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
+import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException
+import org.apache.pdfbox.preflight.Format
 import org.apache.pdfbox.preflight.PreflightDocument
 import org.apache.pdfbox.preflight.ValidationResult
 import org.apache.pdfbox.preflight.exception.SyntaxValidationException
 import org.apache.pdfbox.preflight.parser.PreflightParser
-import org.apache.pdfbox.preflight.utils.ByteArrayDataSource
 import org.slf4j.LoggerFactory
-import java.io.ByteArrayInputStream
+import java.io.File
+import java.util.*
 
 
 class Validerer {
@@ -56,9 +58,8 @@ class Validerer {
 
 	private fun erGyldigPdf(innsendingId: String, input: ByteArray?) {
 		try {
-			ByteArrayInputStream(input).use { bais ->
-				PDDocument.load(bais).use { document -> erGyldigPdDocument(innsendingId, document) }
-			}
+			val document = Loader.loadPDF(input)
+			erGyldigPdDocument(innsendingId, document)
 		} catch (invalidPasswordException: InvalidPasswordException) {
 			logger.warn("$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert, ${invalidPasswordException.message}")
 			throw IllegalActionException(
@@ -98,32 +99,37 @@ class Validerer {
 	}
 
 	fun isPDFa(bytes: ByteArray): Boolean {
-		ByteArrayInputStream(bytes).use {
-			var result: ValidationResult? = null
-			var document: PreflightDocument? = null
-			try {
-				val stream = ByteArrayDataSource(ByteArrayInputStream(bytes))
-				val parser = PreflightParser(stream)
-				parser.parse()
-				document = parser.preflightDocument
-				document.validate()
-				result = document.result
-				return result.isValid
-			} catch (ex: SyntaxValidationException) {
-				logger.warn("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
-				if (result != null) {
-					val sb = StringBuilder()
-					for (error in result.errorsList) {
-						sb.append(error.errorCode + " : " + error.details + "\n")
-					}
-					logger.error("Feil liste:\n$sb")
+		var result: ValidationResult? = null
+		var preflightDocument: PreflightDocument? = null
+		var document: PDDocument? = null
+		val file = File("./tmp_${UUID.randomUUID()}.pdf")
+
+		try {
+			document = Loader.loadPDF(bytes)
+			file.writeBytes(bytes)
+			val parser = PreflightParser(file)
+			val parsed = parser.parse() as PreflightDocument
+			preflightDocument = PreflightDocument(parsed.document, Format.PDF_A1B)
+			preflightDocument.context = parsed.context
+			result = preflightDocument.validate()
+			return result.isValid
+		} catch (ex: SyntaxValidationException) {
+			logger.warn("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
+			if (result != null) {
+				val sb = StringBuilder()
+				for (error in result.errorsList) {
+					sb.append(error.errorCode + " : " + error.details + "\n")
 				}
-			} catch (ex: Error) {
-				logger.warn("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
-			} finally {
-				document?.close()
+				logger.error("Feil liste:\n$sb")
 			}
+		} catch (ex: Error) {
+			logger.warn("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
+		} finally {
+			preflightDocument?.close()
+			file.delete()
+			document?.close()
 		}
+
 		return false
 	}
 

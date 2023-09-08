@@ -179,7 +179,7 @@ class PdfBuilder(private val tittel: String) {
 		try {
 			val dc = xmp.createAndAddDublinCoreSchema()
 			dc.title = tittel
-			val id: PDFAIdentificationSchema = xmp.createAndAddPFAIdentificationSchema()
+			val id: PDFAIdentificationSchema = xmp.createAndAddPDFAIdentificationSchema()
 			id.part = 1
 			id.conformance = "B"
 			val serializer = XmpSerializer()
