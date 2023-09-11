@@ -57,8 +57,9 @@ class Validerer {
 
 	private fun erGyldigPdf(innsendingId: String, input: ByteArray?) {
 		try {
-			val document = Loader.loadPDF(input)
-			erGyldigPdDocument(innsendingId, document)
+			Loader.loadPDF(input).use { document ->
+				erGyldigPdDocument(innsendingId, document)
+			}
 		} catch (invalidPasswordException: InvalidPasswordException) {
 			logger.warn("$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert, ${invalidPasswordException.message}")
 			throw IllegalActionException(

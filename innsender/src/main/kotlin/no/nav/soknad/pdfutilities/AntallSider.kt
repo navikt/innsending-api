@@ -9,8 +9,9 @@ class AntallSider {
 
 	fun finnAntallSider(bytes: ByteArray?): Int {
 		try {
-			val document = Loader.loadPDF(bytes)
-			return document.numberOfPages
+			Loader.loadPDF(bytes).use { document ->
+				return document.numberOfPages
+			}
 		} catch (e: IOException) {
 			logger.error("Klarer ikke å åpne PDF for å kunne skjekke antall sider")
 			throw RuntimeException("Klarer ikke å åpne PDF for å kunne skjekke antall sider")

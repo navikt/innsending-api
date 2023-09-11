@@ -48,20 +48,20 @@ class KonverterTilPng {
 	 */
 	private fun fraPDFTilPng(input: ByteArray, side: Int): ByteArray {
 		try {
-			val document = Loader.loadPDF(input, "", null, null, getMemorySetting(500 * 1024 * 1024))
-			ByteArrayOutputStream().use { baos ->
-				document.resourceCache = MyResourceCache()
-				val pdfRenderer = PDFRenderer(document)
-				val pageIndex =
-					if (document.numberOfPages - 1 < side) document.numberOfPages - 1 else Math.max(side, 0)
-				var bim =
-					pdfRenderer.renderImageWithDPI(pageIndex, 100f, ImageType.RGB)
-				bim = scaleImage(bim, Dimension(827, 1169), true)
-				ImageIOUtil.writeImage(bim, "PNG", baos, 100, 1.0F)
-				bim.flush()
-				return baos.toByteArray()
+			Loader.loadPDF(input, "", null, null, getMemorySetting(500 * 1024 * 1024)).use { document ->
+				ByteArrayOutputStream().use { baos ->
+					document.resourceCache = MyResourceCache()
+					val pdfRenderer = PDFRenderer(document)
+					val pageIndex =
+						if (document.numberOfPages - 1 < side) document.numberOfPages - 1 else Math.max(side, 0)
+					var bim =
+						pdfRenderer.renderImageWithDPI(pageIndex, 100f, ImageType.RGB)
+					bim = scaleImage(bim, Dimension(827, 1169), true)
+					ImageIOUtil.writeImage(bim, "PNG", baos, 100, 1.0F)
+					bim.flush()
+					return baos.toByteArray()
+				}
 			}
-
 		} catch (e: IOException) {
 			logger.error("Klarte ikke å konvertere pdf til png", e)
 			throw RuntimeException("Klarte ikke å konvertere pdf til png")

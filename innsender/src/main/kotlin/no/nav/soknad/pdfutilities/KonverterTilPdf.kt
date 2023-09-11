@@ -44,9 +44,10 @@ class KonverterTilPdf {
 
 	fun harSkrivbareFelt(input: ByteArray?): Boolean {
 		try {
-			val document = Loader.loadPDF(input)
-			val acroForm = getAcroForm(document)
-			return acroForm != null
+			Loader.loadPDF(input).use { document ->
+				val acroForm = getAcroForm(document)
+				return acroForm != null
+			}
 		} catch (e: Exception) {
 			throw BackendErrorException("Feil ved mottak av opplastet fil", e)
 		}
