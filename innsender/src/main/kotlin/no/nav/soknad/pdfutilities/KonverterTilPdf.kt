@@ -77,7 +77,7 @@ class KonverterTilPdf {
 				val scaledSize = getScaledDimension(pdImage.width, pdImage.height)
 				val page = PDPage(PDRectangle(scaledSize.width.toFloat(), scaledSize.height.toFloat()))
 				doc.addPage(page)
-				PDPageContentStream(doc, page, AppendMode.APPEND, true, true).use { contentStream ->
+				PDPageContentStream(doc, page, AppendMode.APPEND, false, true).use { contentStream ->
 					contentStream.drawImage(
 						pdImage,
 						0f,
@@ -162,6 +162,7 @@ class KonverterTilPdf {
 	private fun getScaledDimension(originalWidth: Int, originalHeight: Int): Dimension {
 		val newWidth: Float
 		val newHeight: Float
+		logger.info("Original width: $originalWidth, original height: $originalHeight")
 		if (originalWidth < originalHeight) {
 			newWidth = PDRectangle.A4.width
 			newHeight = newWidth * originalHeight / originalWidth
