@@ -6,6 +6,7 @@ import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.FileOutputStream
 import java.time.OffsetDateTime
 import java.util.*
 import kotlin.test.assertEquals
@@ -293,5 +294,12 @@ class GenererPdfTest {
 		)
 
 	}
+
+	fun writeBytesToFile(byteArray: ByteArray, filePath: String) {
+		val outputStream = FileOutputStream(filePath)
+		outputStream.write(byteArray)
+		outputStream.close()
+	}
+
 
 }
