@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.util.Constants.BEARER
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import java.io.ByteArrayOutputStream
+import java.io.FileOutputStream
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -75,7 +76,9 @@ class Hjelpemetoder {
 				vedleggsnr, tittel,
 				if (opplastingsStatus == OpplastingsStatusDto.lastetOpp)
 					(if (vedleggsNavn != null && vedleggsNavn.contains(".pdf")) "application/pdf" else "application/json") else null,
-				if (opplastingsStatus == OpplastingsStatusDto.lastetOpp && vedleggsNavn != null) getBytesFromFile(vedleggsNavn) else null,
+				if (opplastingsStatus == OpplastingsStatusDto.lastetOpp && vedleggsNavn != null) getBytesFromFile(
+					vedleggsNavn
+				) else null,
 				id, erHoveddokument, erVariant = false, erPakrevd = false, label = label
 			)
 
@@ -147,6 +150,13 @@ class Hjelpemetoder {
 				Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now()
 			)
 		}
+
+		fun writeBytesToFile(byteArray: ByteArray, filePath: String) {
+			val outputStream = FileOutputStream(filePath)
+			outputStream.write(byteArray)
+			outputStream.close()
+		}
+
 	}
 }
 

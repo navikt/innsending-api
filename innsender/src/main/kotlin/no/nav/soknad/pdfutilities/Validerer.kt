@@ -5,7 +5,6 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException
-import org.apache.pdfbox.preflight.PreflightConstants
 import org.apache.pdfbox.preflight.ValidationResult
 import org.apache.pdfbox.preflight.exception.SyntaxValidationException
 import org.apache.pdfbox.preflight.parser.PreflightParser
@@ -101,8 +100,8 @@ class Validerer {
 	fun isPDFa(bytes: ByteArray): Boolean {
 		var result: ValidationResult? = null
 		var document: PDDocument? = null
-		val file: File? = null
 		val fileName = "tmp_${UUID.randomUUID()}.pdf"
+		val file = File(fileName)
 
 		try {
 			document = Loader.loadPDF(bytes)
@@ -110,12 +109,12 @@ class Validerer {
 			result = PreflightParser.validate(file)
 
 			// FIXME: Finn ut om dette er OK. Alle PDFer failer med denne feilen
-			val errors = result.errorsList
-			if (errors.size == 1 && errors[0].errorCode == PreflightConstants.ERROR_SYNTAX_TRAILER) {
-				return true
-			}
+//			val errors = result.errorsList
+//			if (errors.size == 1 && errors[0].errorCode == PreflightConstants.ERROR_SYNTAX_TRAILER) {
+//				return true
+//			}
 
-			return result.isValid
+			return result?.isValid == true
 		} catch (ex: SyntaxValidationException) {
 			logger.warn("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
 			if (result != null) {
@@ -128,7 +127,7 @@ class Validerer {
 		} catch (ex: Error) {
 			logger.warn("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
 		} finally {
-			file?.delete()
+			file.delete()
 			document?.close()
 		}
 
