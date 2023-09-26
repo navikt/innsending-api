@@ -108,11 +108,7 @@ class Validerer {
 			document.save(fileName)
 			result = PreflightParser.validate(file)
 
-			// FIXME: Finn ut om dette er OK. Alle PDFer failer med denne feilen
-//			val errors = result.errorsList
-//			if (errors.size == 1 && errors[0].errorCode == PreflightConstants.ERROR_SYNTAX_TRAILER) {
-//				return true
-//			}
+			// FIXME: Fails with "/XRef cross reference streams are not allowed"
 
 			return result?.isValid == true
 		} catch (ex: SyntaxValidationException) {
