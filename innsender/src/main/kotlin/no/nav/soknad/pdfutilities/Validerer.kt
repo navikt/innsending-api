@@ -3,6 +3,7 @@ package no.nav.soknad.pdfutilities
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import org.apache.pdfbox.Loader
+import org.apache.pdfbox.pdfwriter.compress.CompressParameters
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException
 import org.apache.pdfbox.preflight.ValidationResult
@@ -105,11 +106,9 @@ class Validerer {
 
 		try {
 			document = Loader.loadPDF(bytes)
-			document.save(fileName)
+			document.save(fileName, CompressParameters.NO_COMPRESSION)
 			result = PreflightParser.validate(file)
-
-			// FIXME: Fails with "/XRef cross reference streams are not allowed"
-
+			
 			return result?.isValid == true
 		} catch (ex: SyntaxValidationException) {
 			logger.warn("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
