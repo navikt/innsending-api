@@ -1,9 +1,10 @@
 package no.nav.soknad.pdfutilities
 
+import org.apache.pdfbox.Loader
 import org.apache.pdfbox.cos.COSObject
 import org.apache.pdfbox.io.MemoryUsageSetting
+import org.apache.pdfbox.io.RandomAccessStreamCache.StreamCacheCreateFunction
 import org.apache.pdfbox.pdmodel.DefaultResourceCache
-import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.graphics.PDXObject
 import org.apache.pdfbox.rendering.ImageType
 import org.apache.pdfbox.rendering.PDFRenderer
@@ -35,6 +36,10 @@ class KonverterTilPng {
 		return png
 	}
 
+	private fun getMemorySetting(bytes: Long): StreamCacheCreateFunction {
+		return MemoryUsageSetting.setupMainMemoryOnly(bytes).streamCache
+	}
+
 	/**
 	 * Konverterer en PDF til en liste av PNG filer
 	 *
@@ -43,21 +48,20 @@ class KonverterTilPng {
 	 */
 	private fun fraPDFTilPng(input: ByteArray, side: Int): ByteArray {
 		try {
-			PDDocument.load(input, "", null, null, MemoryUsageSetting.setupMainMemoryOnly((500 * 1024 * 1024).toLong()))
-				.use { pd ->
-					ByteArrayOutputStream().use { baos ->
-						pd.resourceCache = MyResourceCache()
-						val pdfRenderer = PDFRenderer(pd)
-						val pageIndex =
-							if (pd.numberOfPages - 1 < side) pd.numberOfPages - 1 else Math.max(side, 0)
-						var bim =
-							pdfRenderer.renderImageWithDPI(pageIndex, 100f, ImageType.RGB)
-						bim = scaleImage(bim, Dimension(827, 1169), true)
-						ImageIOUtil.writeImage(bim, "PNG", baos, 100, 1.0F)
-						bim.flush()
-						return baos.toByteArray()
-					}
+			Loader.loadPDF(input, "", null, null, getMemorySetting(500 * 1024 * 1024)).use { document ->
+				ByteArrayOutputStream().use { baos ->
+					document.resourceCache = MyResourceCache()
+					val pdfRenderer = PDFRenderer(document)
+					val pageIndex =
+						if (document.numberOfPages - 1 < side) document.numberOfPages - 1 else Math.max(side, 0)
+					var bim =
+						pdfRenderer.renderImageWithDPI(pageIndex, 100f, ImageType.RGB)
+					bim = scaleImage(bim, Dimension(827, 1169), true)
+					ImageIOUtil.writeImage(bim, "PNG", baos, 100, 1.0F)
+					bim.flush()
+					return baos.toByteArray()
 				}
+			}
 		} catch (e: IOException) {
 			logger.error("Klarte ikke å konvertere pdf til png", e)
 			throw RuntimeException("Klarte ikke å konvertere pdf til png")

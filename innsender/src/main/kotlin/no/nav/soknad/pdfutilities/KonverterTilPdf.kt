@@ -4,6 +4,7 @@ import jakarta.persistence.spi.TransformerException
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
+import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -22,7 +23,6 @@ import org.apache.xmpbox.type.BadFieldValueException
 import org.apache.xmpbox.xml.XmpSerializer
 import org.slf4j.LoggerFactory
 import java.awt.Dimension
-import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 
@@ -44,11 +44,9 @@ class KonverterTilPdf {
 
 	fun harSkrivbareFelt(input: ByteArray?): Boolean {
 		try {
-			ByteArrayInputStream(input).use { inputStream ->
-				PDDocument.load(inputStream).use { pdfDocument ->
-					val acroForm = getAcroForm(pdfDocument)
-					return acroForm != null
-				}
+			Loader.loadPDF(input).use { document ->
+				val acroForm = getAcroForm(document)
+				return acroForm != null
 			}
 		} catch (e: Exception) {
 			throw BackendErrorException("Feil ved mottak av opplastet fil", e)
@@ -121,7 +119,7 @@ class KonverterTilPdf {
 			ByteArrayOutputStream().use { baos ->
 				val dc: DublinCoreSchema = xmp.createAndAddDublinCoreSchema()
 				dc.title = "image"
-				val id: PDFAIdentificationSchema = xmp.createAndAddPFAIdentificationSchema()
+				val id: PDFAIdentificationSchema = xmp.createAndAddPDFAIdentificationSchema()
 				id.part = 1
 				id.conformance = "B"
 				val serializer = XmpSerializer()

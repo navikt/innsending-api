@@ -147,7 +147,7 @@ class BrukernotifikasjonPublisher(
 
 	private fun createLink(innsendingsId: String): String {
 		// Eksempler:
-		// Fortsett senere: https://www.dev.nav.no/sendinn/10014Qi1G For å gjenoppta påbegynt søknad
+		// Fortsett senere: https://www.intern.dev.nav.no/sendinn/10014Qi1G For å gjenoppta påbegynt søknad
 
 		return notifikasjonConfig.tjenesteUrl + "/" + innsendingsId
 	}
