@@ -109,6 +109,7 @@ class Validerer {
 			document = Loader.loadPDF(bytes)
 			document.save(fileName, CompressParameters.NO_COMPRESSION)
 			result = PreflightParser.validate(file)
+			logger.info("PDF/A resultat: ${result.isValid}")
 
 			return result?.isValid == true
 		} catch (ex: SyntaxValidationException) {
