@@ -101,14 +101,15 @@ class Validerer {
 	fun isPDFa(bytes: ByteArray): Boolean {
 		var result: ValidationResult? = null
 		var document: PDDocument? = null
-		val fileName = "tmp_${UUID.randomUUID()}.pdf"
-		val file = File(fileName)
+		var file: File? = null
+		val fileName = "tmp_${UUID.randomUUID()}"
 
 		try {
+			file = File.createTempFile(fileName, ".pdf")
 			document = Loader.loadPDF(bytes)
 			document.save(fileName, CompressParameters.NO_COMPRESSION)
 			result = PreflightParser.validate(file)
-			
+
 			return result?.isValid == true
 		} catch (ex: SyntaxValidationException) {
 			logger.warn("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
@@ -122,7 +123,8 @@ class Validerer {
 		} catch (ex: Error) {
 			logger.warn("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
 		} finally {
-			file.delete()
+			file?.deleteOnExit()
+			file?.delete()
 			document?.close()
 		}
 
