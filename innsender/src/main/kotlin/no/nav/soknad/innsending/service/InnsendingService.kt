@@ -18,6 +18,7 @@ import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.erEttersending
+import no.nav.soknad.innsending.util.models.hovedDokument
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
@@ -254,7 +255,8 @@ class InnsendingService(
 			)
 		)
 
-		return kvitteringsVedleggDto
+		// Oppdaterer kvitteringsvedlegget med ny id fra database
+		return kvitteringsVedleggDto.copy(id = kvitteringsVedlegg.id)
 	}
 
 	private fun opprettOgLagreDummyHovedDokument(soknadDto: DokumentSoknadDto): DokumentSoknadDto {
@@ -305,21 +307,39 @@ class InnsendingService(
 		innsendtSoknadDto: DokumentSoknadDto,
 		opplastedeVedlegg: List<VedleggDto>, manglendePakrevdeVedlegg: List<VedleggDto>
 	): KvitteringsDto {
-		val hoveddokumentVedleggsId =
-			innsendtSoknadDto.vedleggsListe.firstOrNull { it.erHoveddokument && !it.erVariant }?.id
+		val hoveddokumentVedleggsId = innsendtSoknadDto.vedleggsListe.hovedDokument?.id
+		val innsendingsId = innsendtSoknadDto.innsendingsId!!
+
 		val hoveddokumentFilId = if (hoveddokumentVedleggsId != null && !innsendtSoknadDto.erEttersending) {
-			repo.findAllByVedleggsid(innsendtSoknadDto.innsendingsId!!, hoveddokumentVedleggsId).firstOrNull()?.id
+			repo.findAllByVedleggsid(innsendingsId, hoveddokumentVedleggsId).firstOrNull()?.id
 		} else {
 			null
 		}
-		return KvitteringsDto(innsendtSoknadDto.innsendingsId!!, innsendtSoknadDto.tittel, innsendtSoknadDto.innsendtDato!!,
-			lenkeTilDokument(innsendtSoknadDto.innsendingsId!!, hoveddokumentVedleggsId, hoveddokumentFilId),
-			opplastedeVedlegg.filter { !it.erHoveddokument }.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) },
-			manglendePakrevdeVedlegg.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) },
-			innsendtSoknadDto.vedleggsListe
-				.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre }
-				.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) },
-			beregnInnsendingsfrist(innsendtSoknadDto)
+
+		val hovedDokumentRef = lenkeTilDokument(
+			innsendingsId,
+			hoveddokumentVedleggsId,
+			hoveddokumentFilId
+		)
+
+		val innsendteVedlegg =
+			opplastedeVedlegg.filter { !it.erHoveddokument }.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }
+
+		val skalSendesAvAndre = innsendtSoknadDto.vedleggsListe
+			.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre }
+			.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }
+
+		val skalEtterSendes = manglendePakrevdeVedlegg.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }
+
+		return KvitteringsDto(
+			innsendingsId = innsendingsId,
+			label = innsendtSoknadDto.tittel,
+			mottattdato = innsendtSoknadDto.innsendtDato!!,
+			hoveddokumentRef = hovedDokumentRef,
+			innsendteVedlegg = innsendteVedlegg,
+			skalEttersendes = skalEtterSendes,
+			skalSendesAvAndre = skalSendesAvAndre,
+			ettersendingsfrist = beregnInnsendingsfrist(innsendtSoknadDto)
 		)
 	}
 
