@@ -6,11 +6,10 @@ import no.nav.soknad.innsending.dto.RestErrorResponseDto
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.service.FilService
+import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
-import no.nav.soknad.innsending.util.models.hovedDokument
-import no.nav.soknad.innsending.util.models.hovedDokumentVariant
-import no.nav.soknad.innsending.util.models.hoveddokument
-import no.nav.soknad.innsending.util.models.hoveddokumentVariant
+import no.nav.soknad.innsending.util.models.*
+import no.nav.soknad.innsending.utils.Api
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
@@ -18,6 +17,7 @@ import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
@@ -26,7 +26,6 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
-import org.springframework.web.util.UriComponentsBuilder
 import java.util.*
 import kotlin.test.*
 
@@ -40,14 +39,24 @@ class FyllutRestApiTest : ApplicationTest() {
 	lateinit var soknadService: SoknadService
 
 	@Autowired
+	lateinit var repo: RepositoryUtils
+
+	@Autowired
 	lateinit var filService: FilService
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
+	var api: Api? = null
+
+	@BeforeEach
+	fun setup() {
+		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
+	}
 
 	@Value("\${server.port}")
 	var serverPort: Int? = 9064
+
 
 	@Test
 	fun testOpprettSoknadPaFyllUtApi() {
@@ -57,20 +66,37 @@ class FyllutRestApiTest : ApplicationTest() {
 		val t7Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build()
 		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
 
-		val fraFyllUt = SkjemaDtoTestBuilder(vedleggsListe = listOf(t7Vedlegg, n6Vedlegg)).build()
-		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
+		val skjemaDto = SkjemaDtoTestBuilder(vedleggsListe = listOf(t7Vedlegg, n6Vedlegg)).build()
 
 		// Når
-		val response = restTemplate.exchange(
-			"http://localhost:${serverPort}/fyllUt/v1/soknad", HttpMethod.POST,
-			requestEntity, SkjemaDto::class.java
-		)
+		val opprettetSoknadResponse = api?.opprettSoknad(skjemaDto)
 
 		// Så
-		assertTrue(response != null)
-		assertEquals(201, response.statusCode.value())
-		testHentSoknadOgSendInn(response, token)
+		assertTrue(opprettetSoknadResponse != null)
+		assertEquals(201, opprettetSoknadResponse.statusCode.value())
+		testHentSoknadOgSendInn(opprettetSoknadResponse, token)
 
+	}
+
+	@Test
+	fun `Skal lage kvitteringsside`() {
+		// Gitt
+		val skjemaDto = SkjemaDtoTestBuilder().build()
+
+		// Når
+		val opprettetSoknadResponse = api?.opprettSoknad(skjemaDto)
+		val innsendingsId = opprettetSoknadResponse?.body?.innsendingsId!!
+
+		api?.utfyltSoknad(innsendingsId, skjemaDto)
+		api?.sendInnSoknad(innsendingsId)
+
+		val soknad = soknadService.hentSoknad(opprettetSoknadResponse.body!!.innsendingsId!!)
+		val vedlegg = soknad.id?.let { repo.hentAlleVedleggGittSoknadsid(it) }
+
+		// Så
+		val kvittering = vedlegg?.kvittering
+		assertEquals(3, vedlegg?.size) // Hoveddokument, hoveddokumentVariant og kvittering
+		assertNotNull(kvittering)
 	}
 
 	private fun testHentSoknadOgSendInn(
@@ -162,8 +188,6 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Skal oppdatere utfylt søknad og vedlegg med nytt språk og tittel, gamle vedlegg blir slettet`() {
 		// Gitt
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-
 		val nyttSpraak = "en_gb"
 		val nyTittel = "Application for one-time grant at birth"
 		val nyVedleggstittel1 = "Birth certificate"
@@ -188,15 +212,9 @@ class FyllutRestApiTest : ApplicationTest() {
 			hoveddokumentVariant = oppdatertHovedDokumentVariant
 		).build()
 
-		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
-
 		// Når
-		val response = restTemplate.exchange(
-			"http://localhost:${serverPort}/fyllUt/v1/utfyltSoknad/${innsendingsId}", HttpMethod.PUT,
-			requestEntity, Unit::class.java
-		)
+		val response = api?.utfyltSoknad(innsendingsId, fraFyllUt)
 		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
-
 
 		// Så
 		assertTrue(response != null)
@@ -229,8 +247,6 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Skal bevare vedlegg fra send-inn, selv etter oppdatering fra fyllUt`() {
 		// Gitt
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-
 		val dokumentSoknadDto = opprettSoknad() // med vedlegg vedleggsnr1 og vedleggsnr2
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
@@ -253,28 +269,15 @@ class FyllutRestApiTest : ApplicationTest() {
 		val sendInnVedleggsTittel = "N6-fra-send-inn"
 		val fraSendInn = PostVedleggDto(tittel = sendInnVedleggsTittel)
 
-		val utfyltRequest = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
-		val leggTilVedleggRequest = HttpEntity(fraSendInn, Hjelpemetoder.createHeaders(token))
-		val oppdatertUtfyltRequest = HttpEntity(oppdatertFyllUt, Hjelpemetoder.createHeaders(token))
-
 		// Når
 		// Fullfører søknad i fyllUt med N6 og T1 vedlegg (de to eksisterende vedleggene vedleggsnr1 og vedleggsnr2 fjernes)
-		val utfyltResponse = restTemplate.exchange(
-			"http://localhost:${serverPort}/fyllUt/v1/utfyltSoknad/${innsendingsId}", HttpMethod.PUT,
-			utfyltRequest, Unit::class.java
-		)
+		val utfyltResponse = api?.utfyltSoknad(innsendingsId, fraFyllUt)
 
 		// Legger til N6 vedlegg i send-inn
-		val leggTilVedleggResponse = restTemplate.exchange(
-			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg", HttpMethod.POST,
-			leggTilVedleggRequest, VedleggDto::class.java
-		)
+		val leggTilVedleggResponse = api?.leggTilVedlegg(innsendingsId, fraSendInn)
 
 		// Går tilbake til fyllUt og fjerner T1 vedlegg. Beholder N6, men endrer tittel
-		val oppdatertUtfyltResponse = restTemplate.exchange(
-			"http://localhost:${serverPort}/fyllUt/v1/utfyltSoknad/${innsendingsId}", HttpMethod.PUT,
-			oppdatertUtfyltRequest, Unit::class.java
-		)
+		val oppdatertUtfyltResponse = api?.utfyltSoknad(innsendingsId, oppdatertFyllUt)
 		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
 
 		// Så
@@ -313,20 +316,13 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Skal lagre filene i databasen`() {
 		// Gitt
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-
 		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
 
-		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
-
 		// Når
-		restTemplate.exchange(
-			"http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}", HttpMethod.PUT,
-			requestEntity, SkjemaDto::class.java
-		)
+		api?.oppdaterSoknad(innsendingsId, fraFyllUt)
 		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
 
 		val filer = oppdatertSoknad.vedleggsListe.flatMap {
@@ -353,21 +349,15 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Skal returnere riktig felter ved oppdatering av søknad`() {
 		// Gitt
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-
 		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 		val nyttSpraak = "en_gb"
 
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr, spraak = nyttSpraak).build()
-		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
 
 		// Når
-		val response = restTemplate.exchange(
-			"http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}", HttpMethod.PUT,
-			requestEntity, SkjemaDto::class.java
-		)
-		val oppdatertSoknad = response.body!!
+		val response = api?.oppdaterSoknad(innsendingsId, fraFyllUt)
+		val oppdatertSoknad = response?.body!!
 
 		// Så
 		assertEquals(dokumentSoknadDto.skjemanr, oppdatertSoknad.skjemanr)
@@ -422,21 +412,14 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Skal hente opprettet søknad`() {
 		// Gitt
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-
 		val skjemanr = "NAV 11-12.12"
 		val dokumentSoknadDto = opprettSoknad(skjemanr)
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
-		val requestEntity = HttpEntity(null, Hjelpemetoder.createHeaders(token))
-
 		// Når
-		val response = restTemplate.exchange(
-			"http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}", HttpMethod.GET,
-			requestEntity, SkjemaDto::class.java
-		)
+		val response = api?.hentSoknad(innsendingsId)
 
-		val opprettetSoknad = response.body!!
+		val opprettetSoknad = response?.body!!
 
 		// Så
 		assertTrue(response != null)
@@ -462,18 +445,11 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Skal slette opprettet søknad`() {
 		// Gitt
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-
 		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
-		val requestEntity = HttpEntity(null, Hjelpemetoder.createHeaders(token))
-
 		// Når
-		val response = restTemplate.exchange(
-			"http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}", HttpMethod.DELETE,
-			requestEntity, BodyStatusResponseDto::class.java
-		)
+		val response = api?.slettSoknad(innsendingsId)
 
 		// Så
 		assertTrue(response != null)
@@ -487,21 +463,13 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Skal redirecte ved eksisterende søknad gitt at opprettNySoknad er false`() {
 		// Gitt
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-
 		val dokumentSoknadDto = opprettSoknad(skjemanr = "NAV-redirect")
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
-		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
 
 		// Når
-		val uri = UriComponentsBuilder.fromHttpUrl("http://localhost:${serverPort}/fyllUt/v1/soknad")
-			.queryParam("opprettNySoknad", false)
-			.build()
-			.toUri()
-
-		val response = restTemplate.exchange(uri, HttpMethod.POST, requestEntity, SkjemaDto::class.java)
+		val response = api?.opprettSoknad(fraFyllUt, false)
 
 		// Så
 		assertTrue(response != null)
@@ -515,21 +483,13 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Skal opprette søknad når opprettNySoknad er true, selv om brukeren har en søknad med samme skjemanr`() {
 		// Gitt
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-
 		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
-		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
 
 		// Når
-		val uri = UriComponentsBuilder.fromHttpUrl("http://localhost:${serverPort}/fyllUt/v1/soknad")
-			.queryParam("opprettNySoknad", true)
-			.build()
-			.toUri()
-
-		val response = restTemplate.exchange(uri, HttpMethod.POST, requestEntity, SkjemaDto::class.java)
+		val response = api?.opprettSoknad(fraFyllUt, true)
 
 		// Så
 		assertTrue(response != null)
