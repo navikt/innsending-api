@@ -63,7 +63,7 @@ restconfig:
   clientSecret: clientSecret
   pdlScope: api://dev-fss.pdl.pdl-api/.default
   pdlUrl: http://localhost:${wiremock.server.port}/pdl-api
-  safselvbetjeningUrl: http://localhost:${wiremock.server.port}/safselvbetjening-api
+  safselvbetjeningUrl: http://localhost:${wiremock.server.port}/saf-api
   safUrl: http://localhost:${wiremock.server.port}/saf-api
   azureUrl: http://localhost:${wiremock.server.port}/azure-api
   antivirusUrl: http://localhost:${wiremock.server.port}/antivirus
@@ -94,7 +94,7 @@ no.nav.security.jwt:
   client:
     registration:
       tokenx-safselvbetjening:
-        token-endpoint-url: http://kms.adeo.no:${mock-oauth2-server.port}/tokenx/token
+        token-endpoint-url: http://localhost:${mock-oauth2-server.port}/tokenx/token
         grant-type: urn:ietf:params:oauth:grant-type:token-exchange
         authentication:
           client-auth-method: private_key_jwt
