@@ -63,8 +63,14 @@
 		<resilience4j.version>2.1.0</resilience4j.version>
 		<graphql-kotlin.version>7.0.1</graphql-kotlin.version>
 		<gson.version>2.10.1</gson.version>
+
+		<!--Security issues-->
 		<snappy-java.version>1.1.10.5</snappy-java.version>
 		<snakeyaml.version>2.2</snakeyaml.version>
+		<commons-compress.version>1.24.0</commons-compress.version>
+		<okio.version>3.5.0</okio.version>
+		<httpclient.version>4.5.14</httpclient.version>
+		<wiremock.version>3.2.0</wiremock.version>
 
 		<!--Testing-->
 		<logcaptor.version>2.9.0</logcaptor.version>
@@ -116,7 +122,30 @@
 				<artifactId>snappy-java</artifactId>
 				<version>${snappy-java.version}</version>
 			</dependency>
+
+			<!-- Used by pg-embedded (https://github.com/navikt/innsending-api/security/dependabot/11) -->
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-compress</artifactId>
+				<version>${commons-compress.version}</version>
+			</dependency>
+
+			<!-- Used by okhttp (https://github.com/navikt/innsending-api/security/dependabot/4) -->
+			<dependency>
+				<groupId>com.squareup.okio</groupId>
+				<artifactId>okio</artifactId>
+				<version>${okio.version}</version>
+			</dependency>
+
+			<!-- Used by spring-cloud-contract-wiremock (https://github.com/navikt/innsending-api/security/dependabot/3) -->
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpclient</artifactId>
+				<version>${httpclient.version}</version>
+			</dependency>
 		</dependencies>
+
+
 	</dependencyManagement>
 
 	<build>
