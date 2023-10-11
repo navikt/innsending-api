@@ -254,12 +254,12 @@ class FrontEndRestApiTest : ApplicationTest() {
 		assertEquals(OpplastingsStatusDto.ikkeValgt, vedleggN6.opplastingsStatus)
 
 		val multipart = LinkedMultiValueMap<Any, Any>()
-		multipart.add("file", ClassPathResource("/NAV 54-editert.pdf"))
+		multipart.add("file", ClassPathResource("/pdfs/acroform-fields-tom-array.pdf"))
 
 		val postFilRequestN6 = HttpEntity(multipart, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
 
 		assertThrows(Exception::class.java) {
-			for (i in 1..100) {
+			for (i in 1..50) {
 				val postFilResponseN6 = restTemplate.exchange(
 					"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil",
 					HttpMethod.POST,
