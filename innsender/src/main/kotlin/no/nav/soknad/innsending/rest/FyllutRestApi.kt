@@ -34,6 +34,7 @@ class FyllutRestApi(
 ) : FyllUtApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
+	private val secureLogger = LoggerFactory.getLogger("secureLogger")
 
 	// FIXME: Fjern dette endepunktet etter at det er byttet ut
 	@Timed(InnsenderOperation.OPPRETT)
@@ -59,6 +60,7 @@ class FyllutRestApi(
 	@Timed(InnsenderOperation.OPPRETT)
 	override fun fyllUtOpprettSoknad(skjemaDto: SkjemaDto, opprettNySoknad: Boolean?): ResponseEntity<SkjemaDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
+		secureLogger.info("Bruker $brukerId oppretter søknad fra FyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
 
 		logger.info("Kall fra FyllUt for å opprette søknad for skjema ${skjemaDto.skjemanr}")
 		logger.debug("Skal opprette søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
