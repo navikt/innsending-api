@@ -57,7 +57,7 @@ class KonverterTilPng {
 					var bim =
 						pdfRenderer.renderImageWithDPI(pageIndex, 100f, ImageType.RGB)
 					bim = scaleImage(bim, Dimension(827, 1169), true)
-					ImageIOUtil.writeImage(bim, "PNG", baos, 100, 1.0F)
+					ImageIOUtil.writeImage(bim, "PNG", baos, 100, 0.9F)
 					bim.flush()
 					return baos.toByteArray()
 				}

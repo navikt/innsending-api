@@ -28,6 +28,20 @@ class KonverterTilPdfTest {
 	}
 
 	@Test
+	fun `Skal ikke flate ut PDF'er på over 50 sider`() {
+		val skrivbarPdf = Hjelpemetoder.getBytesFromFile("/pdfs/acroform-fields-tom-array.pdf")
+		assertTrue(KonverterTilPdf().harSkrivbareFelt(skrivbarPdf))
+
+		val flatetPdf = KonverterTilPdf().flatUtPdf(skrivbarPdf)
+		assertTrue(KonverterTilPdf().harSkrivbareFelt(flatetPdf)) // Skal fortsatt ha skrivbare felt
+
+		val antallSider = AntallSider().finnAntallSider(skrivbarPdf)
+		assertEquals(antallSider, AntallSider().finnAntallSider(flatetPdf))
+
+		assertEquals(skrivbarPdf, flatetPdf)
+	}
+
+	@Test
 	fun verifiserKonverteringAvJpg() {
 		val jpg = Hjelpemetoder.getBytesFromFile("/2MbJpg.jpg")
 
