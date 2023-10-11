@@ -107,7 +107,7 @@ class Validerer {
 		try {
 			file = File.createTempFile(fileName, ".pdf")
 			document = Loader.loadPDF(bytes)
-			document.save(fileName, CompressParameters.NO_COMPRESSION)
+			document.save(file, CompressParameters.NO_COMPRESSION)
 			result = PreflightParser.validate(file)
 			logger.info("PDF/A resultat: ${result.isValid}")
 
