@@ -88,7 +88,7 @@ spec:
 
   gcp:
     sqlInstances:
-      - type: POSTGRES_14
+      - type: POSTGRES_15
         tier: {{ tier }}
         diskType: SSD
         highAvailability: true
