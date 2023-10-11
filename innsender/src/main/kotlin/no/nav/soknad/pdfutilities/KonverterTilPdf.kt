@@ -59,7 +59,8 @@ class KonverterTilPdf {
 
 	fun flatUtPdf(fil: ByteArray): ByteArray {
 		val antallSider = AntallSider().finnAntallSider(fil)
-
+		logger.info("Antall sider i PDF: {}", antallSider)
+		
 		// Konvertere fra PDF til bilde og tilbake til PDF
 		// Max størrelse på vedlegg er 50mb og for å ikke overskride dette så konverterer vi ikke PDF'er på over 50 sider
 		// (PDF'en blir veldig mye større med png av hver side)
