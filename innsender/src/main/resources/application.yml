@@ -17,9 +17,9 @@ management:
 
 cron:
   startSlettGamleIkkeInnsendteSoknader: 0 0 2 * * *
-  slettEldreEnn: 56
+  slettEldreEnn: 56 # 8 uker
   startSlettInnsendteSoknader: 0 0 5 * * *
-  slettInnsendtEldreEnn: 1
+  slettInnsendtEldreEnn: 21 # 3 uker
   sletteVindu: 100
   startSlettPermanentIkkeInnsendteSoknader: 0 0 3 * * *
   # Slett permanent alle søknader opprettet for mer enn 6 måneder siden ( som er ca 366/2=183 dager )
