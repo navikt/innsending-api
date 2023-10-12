@@ -35,6 +35,8 @@ spec:
       cpu: 200m
       memory: 1Gi
   leaderElection: true
+  secureLogs:
+    enabled: true
   kafka:
     pool: {{kafka-pool}}
     streams: true

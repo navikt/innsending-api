@@ -34,14 +34,23 @@ class FyllutRestApi(
 ) : FyllUtApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
+	private val secureLogger = LoggerFactory.getLogger("secureLogger")
+
+	// Logg både vanlig og sikker logg (med brukerId)
+	fun loggBegge(melding: String, brukerId: String) {
+		logger.info(melding)
+		secureLogger.info("[$brukerId] $melding")
+	}
 
 	// FIXME: Fjern dette endepunktet etter at det er byttet ut
 	@Timed(InnsenderOperation.OPPRETT)
 	override fun fyllUt(skjemaDto: SkjemaDto): ResponseEntity<Unit> {
-		logger.info("Kall fra FyllUt for å opprette søknad for skjema ${skjemaDto.skjemanr}")
-		logger.debug("Skal opprette søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
-
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
+
+		loggBegge(
+			"Skal opprette søknad fra FyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}",
+			brukerId
+		)
 		soknadService.loggWarningVedEksisterendeSoknad(brukerId, skjemaDto.skjemanr, SoknadType.soknad)
 
 		val opprettetSoknad = soknadService.opprettNySoknad(
@@ -51,7 +60,11 @@ class FyllutRestApi(
 			)
 		)
 
-		logger.info("${opprettetSoknad.innsendingsId}: Soknad fra fyllut persistert. Antall vedlegg fra FyllUt=${skjemaDto.vedleggsListe?.size}")
+		loggBegge(
+			"${opprettetSoknad.innsendingsId}: Soknad fra FyllUt opprettet. Antall vedlegg fra FyllUt=${skjemaDto.vedleggsListe?.size}",
+			brukerId
+		)
+
 		return ResponseEntity.status(HttpStatus.FOUND)
 			.location(URI.create(restConfig.sendInnUrl + "/" + opprettetSoknad.innsendingsId)).build()
 	}
@@ -60,8 +73,10 @@ class FyllutRestApi(
 	override fun fyllUtOpprettSoknad(skjemaDto: SkjemaDto, opprettNySoknad: Boolean?): ResponseEntity<SkjemaDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-		logger.info("Kall fra FyllUt for å opprette søknad for skjema ${skjemaDto.skjemanr}")
-		logger.debug("Skal opprette søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
+		loggBegge(
+			"Skal opprette søknad fra FyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}",
+			brukerId
+		)
 
 		val redirectVedPaabegyntSoknad =
 			redirectVedPaabegyntSoknad(brukerId, skjemaDto.skjemanr, opprettNySoknad ?: false)
@@ -70,7 +85,10 @@ class FyllutRestApi(
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(skjemaDto, brukerId)
 		val opprettetSoknad = soknadService.opprettNySoknad(dokumentSoknadDto)
 
-		logger.debug("${opprettetSoknad.innsendingsId}: Soknad fra fyllut persistert. Antall vedlegg fra FyllUt=${skjemaDto.vedleggsListe?.size}")
+		loggBegge(
+			"${opprettetSoknad.innsendingsId}: Soknad fra FyllUt opprettet",
+			brukerId
+		)
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(opprettetSoknad)
 	}
@@ -106,9 +124,9 @@ class FyllutRestApi(
 
 	@Timed(InnsenderOperation.ENDRE)
 	override fun fyllUtOppdaterSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<SkjemaDto> {
-		logger.info("Kall fra FyllUt for å endre søknad for skjema ${skjemaDto.skjemanr}")
-		logger.debug("Skal endre søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
+
+		loggBegge("$innsendingsId: Skal oppdatere søknad fra FyllUt", brukerId)
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
 			skjemaDto,
@@ -116,14 +134,17 @@ class FyllutRestApi(
 		)
 
 		val oppdatertSoknad = soknadService.oppdaterSoknad(innsendingsId, dokumentSoknadDto)
+
+		loggBegge("$innsendingsId: Soknad fra FyllUt oppdatert", brukerId)
+
 		return ResponseEntity.status(HttpStatus.OK).body(oppdatertSoknad)
 	}
 
 	@Timed(InnsenderOperation.ENDRE)
 	override fun fyllUtUtfyltSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<Unit> {
-		logger.info("Kall fra FyllUt for å fullføre søknad for skjema ${skjemaDto.skjemanr}")
-		logger.debug("Skal fullføre søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}")
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
+
+		loggBegge("$innsendingsId: Skal fullføre søknad fra FyllUt", brukerId)
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
 			skjemaDto,
@@ -131,6 +152,9 @@ class FyllutRestApi(
 		)
 
 		val oppdatertSoknad = soknadService.oppdaterUtfyltSoknad(innsendingsId, dokumentSoknadDto)
+
+		loggBegge("$innsendingsId: Utfylt søknad fra Fyllut", brukerId)
+
 		return ResponseEntity
 			.status(HttpStatus.FOUND)
 			.location(URI.create(restConfig.sendInnUrl + "/" + oppdatertSoknad.innsendingsId))
@@ -139,12 +163,13 @@ class FyllutRestApi(
 
 	@Timed(InnsenderOperation.HENT)
 	override fun fyllUtHentSoknad(innsendingsId: String): ResponseEntity<SkjemaDto> {
-		logger.info("Kall fra FyllUt for å hente søknad med innsendingsId $innsendingsId")
+		val brukerId = tilgangskontroll.hentBrukerFraToken()
+		loggBegge("$innsendingsId: Kall fra FyllUt for å hente søknad", brukerId)
 
 		val dokumentSoknadDto = soknadService.hentSoknadMedHoveddokumentVariant(innsendingsId)
 		validerSoknadsTilgang(dokumentSoknadDto)
 
-		logger.info("$innsendingsId: Hentet søknad")
+		loggBegge("$innsendingsId: Hentet søknad fra FyllUt", brukerId)
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -153,13 +178,14 @@ class FyllutRestApi(
 
 	@Timed(InnsenderOperation.SLETT)
 	override fun fyllUtSlettSoknad(innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
-		logger.info("Kall fra FyllUt for å slette søknad med innsendingsId $innsendingsId")
+		val brukerId = tilgangskontroll.hentBrukerFraToken()
+		loggBegge("$innsendingsId: Kall fra FyllUt for å slette søknad", brukerId)
 
 		val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
 		validerSoknadsTilgang(dokumentSoknadDto)
 
 		soknadService.slettSoknadAvBruker(dokumentSoknadDto)
-		logger.info("Slettet søknad med id $innsendingsId")
+		loggBegge("$innsendingsId: Slettet søknad", brukerId)
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
