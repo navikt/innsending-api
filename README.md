@@ -52,6 +52,11 @@ Som Intellij settings velg:
 	- Rearrange code
 	- Run code cleanup
 
+### Aksessloggene
+
+Aksesslogger finnes i [Kibana](https://logs.adeo.no) under `Applikasjonslogger`.
+Det er også satt opp secure logs under `Securelogs` for å kunne sikkert logge fødselsnummer og andre sensitiv data.
+
 ## Henvendelser
 
 Spørsmål knyttet til koden eller prosjektet kan stilles som issues her på GitHub.
