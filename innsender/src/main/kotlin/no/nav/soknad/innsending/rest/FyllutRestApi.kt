@@ -48,7 +48,7 @@ class FyllutRestApi(
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
 		loggBegge(
-			"Skal opprette søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}",
+			"Skal opprette søknad fra FyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}",
 			brukerId
 		)
 		soknadService.loggWarningVedEksisterendeSoknad(brukerId, skjemaDto.skjemanr, SoknadType.soknad)
@@ -61,7 +61,7 @@ class FyllutRestApi(
 		)
 
 		loggBegge(
-			"${opprettetSoknad.innsendingsId}: Soknad fra fyllut opprettet. Antall vedlegg fra FyllUt=${skjemaDto.vedleggsListe?.size}",
+			"${opprettetSoknad.innsendingsId}: Soknad fra FyllUt opprettet. Antall vedlegg fra FyllUt=${skjemaDto.vedleggsListe?.size}",
 			brukerId
 		)
 
@@ -74,7 +74,7 @@ class FyllutRestApi(
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
 		loggBegge(
-			"Skal opprette søknad fra fyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}",
+			"Skal opprette søknad fra FyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}",
 			brukerId
 		)
 
@@ -86,7 +86,7 @@ class FyllutRestApi(
 		val opprettetSoknad = soknadService.opprettNySoknad(dokumentSoknadDto)
 
 		loggBegge(
-			"${opprettetSoknad.innsendingsId}: Soknad fra fyllut opprettet. Antall vedlegg fra FyllUt=${skjemaDto.vedleggsListe?.size}",
+			"${opprettetSoknad.innsendingsId}: Soknad fra FyllUt opprettet",
 			brukerId
 		)
 
@@ -126,7 +126,7 @@ class FyllutRestApi(
 	override fun fyllUtOppdaterSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<SkjemaDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-		loggBegge("$innsendingsId: Skal oppdatere søknad fra fyllUt", brukerId)
+		loggBegge("$innsendingsId: Skal oppdatere søknad fra FyllUt", brukerId)
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
 			skjemaDto,
@@ -135,7 +135,7 @@ class FyllutRestApi(
 
 		val oppdatertSoknad = soknadService.oppdaterSoknad(innsendingsId, dokumentSoknadDto)
 
-		loggBegge("$innsendingsId: Soknad fra fyllut oppdatert", brukerId)
+		loggBegge("$innsendingsId: Soknad fra FyllUt oppdatert", brukerId)
 
 		return ResponseEntity.status(HttpStatus.OK).body(oppdatertSoknad)
 	}
