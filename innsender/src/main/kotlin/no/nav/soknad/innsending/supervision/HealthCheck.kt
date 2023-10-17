@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.model.ApplicationStatusType
 import no.nav.soknad.innsending.repository.AliveRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -24,7 +25,8 @@ class HealthCheck(
 	@Qualifier("saf") private val safAPI: HealthRequestInterface,
 	@Qualifier("mottaker") private val mottakerAPI: HealthRequestInterface,
 	@Qualifier("notifikasjon") private val notifikasjonAPI: HealthRequestInterface,
-	private val aliveRepository: AliveRepository
+	private val aliveRepository: AliveRepository,
+	@Value("\${status_log_url}") private val statusLogUrl: String
 ) : HealthApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -51,9 +53,21 @@ class HealthCheck(
 			backends
 				.forEach {
 					if (GlobalScope.async { it.dependencyEndpoint.invoke() }.await() != it.expectedResponse)
-						dependencyStatusList.add(ApplicationStatus(status = it.status, description = it.description))
+						dependencyStatusList.add(
+							ApplicationStatus(
+								status = it.status,
+								description = it.description,
+								logLink = it.logUrl
+							)
+						)
 					else
-						dependencyStatusList.add(ApplicationStatus(status = ApplicationStatusType.OK, description = "OK"))
+						dependencyStatusList.add(
+							ApplicationStatus(
+								status = ApplicationStatusType.OK,
+								description = "OK",
+								logLink = it.logUrl
+							)
+						)
 				}
 		}
 
@@ -78,15 +92,14 @@ class HealthCheck(
 	}
 
 	private fun getBackends(): List<Dependency> {
-		val logUrl = "https://logs.adeo.no/app/discover#/view/170a6860-df4c-11ed-8b42-0b0644af4500"
 		return listOf(
 			Dependency(
 				{ mottakerAPI.isReady() },
 				expectedResponse = "ok",
 				dependencyName = "SoknadsMottaker",
-				description = "Critical  - Send in of applications will fail",
+				description = "Can't access soknadsmottaker. Sending in applications will fail",
 				status = ApplicationStatusType.DOWN,
-				logUrl = logUrl
+				logUrl = statusLogUrl
 			),
 			Dependency(
 				{ notifikasjonAPI.isReady() },
@@ -94,7 +107,7 @@ class HealthCheck(
 				dependencyName = "Soknadsmottaker",
 				description = "Can't send notifications. User notifictaions will not be published or cancelled",
 				status = ApplicationStatusType.DOWN,
-				logUrl = logUrl
+				logUrl = statusLogUrl
 			),
 			Dependency(
 				{ pdlAPI.isReady() },
@@ -102,7 +115,7 @@ class HealthCheck(
 				dependencyName = "PDL",
 				description = "Can't connect to PDL. Might affect users that recently have changed user identity",
 				status = ApplicationStatusType.ISSUE,
-				logUrl = logUrl
+				logUrl = statusLogUrl
 			),
 			Dependency(
 				{ safAPI.isReady() },
@@ -110,7 +123,7 @@ class HealthCheck(
 				dependencyName = "SAF",
 				"Can't connect to SAF. Might affect information supplied in new application for sending supplenmentary documentation",
 				status = ApplicationStatusType.ISSUE,
-				logUrl = logUrl
+				logUrl = statusLogUrl
 			),
 			Dependency(
 				{ aliveRepository.findTestById(1L) },
@@ -118,7 +131,7 @@ class HealthCheck(
 				"Database",
 				"Can't connect to database. The application will not be able to create, read, update or delete the users applications",
 				status = ApplicationStatusType.DOWN,
-				logUrl = logUrl
+				logUrl = statusLogUrl
 			)
 		)
 	}

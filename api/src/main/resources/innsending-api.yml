@@ -860,8 +860,8 @@ paths:
 
   /health/status:
     get:
-      summary: Returns detailed status of the application's backend dependencies
-      description: Checks the application's backend dependencies and returns a summary of connection status
+      summary: Returns status of the application
+      description: Checks the application's backend dependencies and returns the most critical status
       operationId: getStatus
 
       security: [ ]   # No security
@@ -872,7 +872,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApplicationStatus"
-
       tags:
         - health
 
@@ -931,7 +930,7 @@ components:
           enum: [ "OK", "ISSUE", "DOWN" ]
           x-enum-varnames: [ "OK", "ISSUE", "DOWN" ]
           description: Operativ status på applikasjonen. (OK=Tjeneste er tilgjengelig og fungerer normalt, ISSUE=Tjeneste er tilgjengelig, men med begrenset funksjonalitet/kapasitet, DOWN=Tjeneste er utilgjengelig)
-          example: Arkivert
+          example: OK
 
     ArkiveringsStatusDto:
       type: string
