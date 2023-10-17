@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: gr2m/merge-schedule-action@v2
         with:
-          time_zone: 'Europe/Oslo'
+          time_zone: 'UTC'
           require_statuses_success: 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
