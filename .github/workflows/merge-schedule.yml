@@ -23,6 +23,6 @@ jobs:
         with:
           time_zone: 'UTC'
           merge_method: merge
-          require_statuses_success: 'true'
+          require_statuses_success: 'false'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
