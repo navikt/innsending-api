@@ -15,7 +15,7 @@ jobs:
     permissions:
         contents: write
         pull-requests: write
-        id-token: read
+        id-token: write
         statuses: write
     runs-on: ubuntu-latest
     steps:
