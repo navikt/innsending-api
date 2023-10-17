@@ -16,6 +16,7 @@ jobs:
     steps:
       - uses: gr2m/merge-schedule-action@v2
         with:
+          merge_method: merge
           time_zone: 'Europe/Oslo'
           require_statuses_success: 'true'
         env:
