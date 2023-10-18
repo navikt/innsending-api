@@ -25,6 +25,4 @@ jobs:
           merge_method: merge
           require_statuses_success: 'false'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Deploy to prod
-        uses: ./.github/workflows/main.yaml
+          GITHUB_TOKEN: ${{ secrets.SCHEDULE_MERGE_PAT }}
