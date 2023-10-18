@@ -41,6 +41,14 @@ et [nais-endepunkt](https://docs.nais.io/security/antivirus/).
 For å teste virussjekken kan standard [EICAR test-filer](https://github.com/fire1ce/eicar-standard-antivirus-test-files)
 brukes.
 
+### Skedulert merge og deploy
+
+Applikasjonen kan deployes på et gitt tidspunkt ved å legge til `/schedule {TIDSPUNKT_SOM_ISO_8601_UTC}` i PR-teksten.
+En action kjøres hver time for å lete etter slike tekster og deployer applikasjonen hvis tidspunktet er forbi.
+(eksempel: `/schedule 2023-10-18T01:57` vil bli deployet 18. oktober 2023 kl 04:00 norsk tid). Merk at tidspunktet er
+spesifisert i UTC.
+Dette kan være nyttig for å deploye applikasjonen utenfor arbeidstid.
+
 ### Kodeformattering
 
 Som Intellij settings velg:

@@ -1,0 +1,28 @@
+name: Merge Schedule
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+  schedule:
+    # https://crontab.guru/every-hour
+    - cron: '0 * * * *'
+
+jobs:
+  merge_schedule:
+    permissions:
+        contents: write
+        pull-requests: write
+        id-token: write
+        statuses: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: gr2m/merge-schedule-action@v2
+        with:
+          time_zone: 'UTC'
+          merge_method: merge
+          require_statuses_success: 'false'
+        env:
+          GITHUB_TOKEN: ${{ secrets.SCHEDULE_MERGE_PAT }}

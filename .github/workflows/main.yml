@@ -1,5 +1,6 @@
 name: Build-Deploy-Main-Pipelines
 on:
+  workflow_call:
   push:
     branches:
       - 'main'
