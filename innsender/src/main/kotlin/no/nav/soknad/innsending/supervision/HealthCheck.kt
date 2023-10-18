@@ -6,17 +6,17 @@ import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.api.HealthApi
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.model.ApplicationStatus
-import no.nav.soknad.innsending.model.DependencyStatus
+import no.nav.soknad.innsending.model.ApplicationStatusType
 import no.nav.soknad.innsending.repository.AliveRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.client.HttpServerErrorException
-import java.time.OffsetDateTime
 
 @RestController
 @RequestMapping(value = ["/health"])
@@ -25,7 +25,8 @@ class HealthCheck(
 	@Qualifier("saf") private val safAPI: HealthRequestInterface,
 	@Qualifier("mottaker") private val mottakerAPI: HealthRequestInterface,
 	@Qualifier("notifikasjon") private val notifikasjonAPI: HealthRequestInterface,
-	private val aliveRepository: AliveRepository
+	private val aliveRepository: AliveRepository,
+	@Value("\${status_log_url}") private val statusLogUrl: String
 ) : HealthApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -46,20 +47,40 @@ class HealthCheck(
 
 	@GetMapping("/status")
 	override fun getStatus(): ResponseEntity<ApplicationStatus> {
-		val dependencyStatusList = mutableListOf<DependencyStatus>()
+		val dependencyStatusList = mutableListOf<ApplicationStatus>()
 		val backends = getBackends()
 		runBlocking {
 			backends
 				.forEach {
 					if (GlobalScope.async { it.dependencyEndpoint.invoke() }.await() != it.expectedResponse)
-						dependencyStatusList.add(DependencyStatus(it.dependencyName, "Error", it.severity))
+						dependencyStatusList.add(
+							ApplicationStatus(
+								status = it.status,
+								description = it.description,
+								logLink = it.logUrl
+							)
+						)
 					else
-						dependencyStatusList.add(DependencyStatus(it.dependencyName, "Ok", it.severity))
+						dependencyStatusList.add(
+							ApplicationStatus(
+								status = ApplicationStatusType.OK,
+								description = "OK",
+								logLink = it.logUrl
+							)
+						)
 				}
 		}
-		val status = ApplicationStatus("Innsending-api", dependencyStatusList, OffsetDateTime.now())
+
+		val status = resolveMostCriticalStatus(dependencyStatusList)
 
 		return ResponseEntity.status(HttpStatus.OK).body(status)
+	}
+
+	private fun resolveMostCriticalStatus(dependencyStatusList: List<ApplicationStatus>): ApplicationStatus {
+		val errorStatus = dependencyStatusList.find { it.status == ApplicationStatusType.DOWN }
+		val issueStatus = dependencyStatusList.find { it.status == ApplicationStatusType.ISSUE }
+
+		return errorStatus ?: issueStatus ?: ApplicationStatus(ApplicationStatusType.OK, "OK")
 	}
 
 
@@ -72,30 +93,45 @@ class HealthCheck(
 
 	private fun getBackends(): List<Dependency> {
 		return listOf(
-			Dependency({ mottakerAPI.isReady() }, "ok", "SoknadsMottaker", "Critical  - Send in of applications will fail"),
+			Dependency(
+				{ mottakerAPI.isReady() },
+				expectedResponse = "ok",
+				dependencyName = "SoknadsMottaker",
+				description = "Can't access soknadsmottaker. Sending in applications will fail",
+				status = ApplicationStatusType.DOWN,
+				logUrl = statusLogUrl
+			),
 			Dependency(
 				{ notifikasjonAPI.isReady() },
-				"ok",
-				"Soknadsmottaker",
-				"Critical - User notifictaions will not be published or cancelled"
+				expectedResponse = "ok",
+				dependencyName = "Soknadsmottaker",
+				description = "Can't send notifications. User notifictaions will not be published or cancelled",
+				status = ApplicationStatusType.DOWN,
+				logUrl = statusLogUrl
 			),
 			Dependency(
 				{ pdlAPI.isReady() },
-				"ok",
-				"PDL",
-				"Non-Critical - Might affect users that recently have changed user identity"
+				expectedResponse = "ok",
+				dependencyName = "PDL",
+				description = "Can't connect to PDL. Might affect users that recently have changed user identity",
+				status = ApplicationStatusType.ISSUE,
+				logUrl = statusLogUrl
 			),
 			Dependency(
 				{ safAPI.isReady() },
-				"ok",
-				"SAF",
-				"Non-Critical - Might affect information supplied in new application for sending supplenmentary documentation"
+				expectedResponse = "ok",
+				dependencyName = "SAF",
+				"Can't connect to SAF. Might affect information supplied in new application for sending supplenmentary documentation",
+				status = ApplicationStatusType.ISSUE,
+				logUrl = statusLogUrl
 			),
 			Dependency(
 				{ aliveRepository.findTestById(1L) },
 				"ok",
 				"Database",
-				"Critical - The application will not be able to create, read, update or delete the users applications"
+				"Can't connect to database. The application will not be able to create, read, update or delete the users applications",
+				status = ApplicationStatusType.DOWN,
+				logUrl = statusLogUrl
 			)
 		)
 	}
@@ -122,7 +158,9 @@ class HealthCheck(
 		val dependencyEndpoint: () -> String,
 		val expectedResponse: String,
 		val dependencyName: String,
-		val severity: String
+		val description: String,
+		val status: ApplicationStatusType,
+		val logUrl: String
 	)
 
 }

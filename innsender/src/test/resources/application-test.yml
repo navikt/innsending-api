@@ -76,6 +76,8 @@ brukernotifikasjonconfig:
 
 ettersendingsfrist: 14
 
+status_log_url: "https://logs.adeo.no"
+
 wiremock:
   reset-mappings-after-each-test: true
   server:
