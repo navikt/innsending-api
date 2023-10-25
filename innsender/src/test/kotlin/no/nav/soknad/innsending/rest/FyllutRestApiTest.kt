@@ -475,7 +475,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertTrue(response != null)
 		assertEquals(302, response.statusCode.value())
 		assertEquals(
-			"http://localhost:3000/fyllut/${dokumentSoknadDto.skjemanr}/paabegynt?innsendingsId=$innsendingsId",
+			"http://localhost:3001/fyllut/${dokumentSoknadDto.skjemanr}/paabegynt?innsendingsId=$innsendingsId",
 			response.headers.location!!.toString()
 		)
 	}

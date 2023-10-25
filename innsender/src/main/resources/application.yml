@@ -85,7 +85,7 @@ restconfig:
   soknadsMottakerHost: http://localhost:9043/soknadsmottaker-api
   soknadsMottakerEndpoint: /save
   sendInnUrl: http://localhost:3100/sendInn
-  fyllUtUrl: http://localhost:3000/fyllUt
+  fyllUtUrl: http://localhost:3001/fyllUt
   clientId: clientId
   clientSecret: clientSecret
   pdlScope: api://dev-fss.pdl.pdl-api/.default
