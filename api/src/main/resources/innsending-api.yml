@@ -185,6 +185,33 @@ paths:
       tags:
         - fyllUtOpprettSoknad
 
+  /fyllUt/v1/prefill-data:
+      get:
+        summary: Hent data som skal preutfylles i fyllut
+        description: Data hentes fra eksterne kilder som kan brukes til å preutfylle verdier i fyllut
+        operationId: fyllUtPrefillData
+
+        parameters:
+          - name: properties
+            in: query
+            description: Liste av hvilke data som skal hentes
+            required: true
+            schema:
+              type: array
+              items:
+                type: string
+            style: form
+
+        responses:
+          '200':
+            description:
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/PrefilledData"
+        tags:
+          - fyllUtPrefillData
+
 
   /innsendte/v1/hentAktiveSaker:
     get:
@@ -1272,6 +1299,20 @@ components:
       properties:
         tittel:
           $ref: "#/components/schemas/Tittel"
+
+    PrefilledData:
+      type: object
+      properties:
+        sokerFornavn:
+          type: string
+          nullable: true
+          description: Søkerens fornavn
+          example: Ola
+        sokerEtternavn:
+          type: string
+          nullable: true
+          description: Søkerens etternavn
+          example: Nordmann
 
     PropertyNavn:
       type: string

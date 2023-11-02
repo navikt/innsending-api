@@ -1,0 +1,34 @@
+query($ident: ID!) {
+	hentPerson(ident: $ident) {
+		bostedsadresse(historikk: false) {
+			angittFlyttedato
+			coAdressenavn
+			gyldigFraOgMed
+			gyldigTilOgMed
+			vegadresse {
+				matrikkelId
+				husbokstav
+				husnummer
+				adressenavn
+				bruksenhetsnummer
+				tilleggsnavn
+				postnummer
+				kommunenummer
+				bydelsnummer
+			}
+		}
+		kjoenn(historikk: false) {
+			kjoenn
+		}
+		navn(historikk: false) {
+			fornavn
+			mellomnavn
+			etternavn
+		}
+		telefonnummer {
+			landskode
+			nummer
+		}
+	}
+}
+

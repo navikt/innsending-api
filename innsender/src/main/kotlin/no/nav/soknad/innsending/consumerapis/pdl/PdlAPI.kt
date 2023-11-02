@@ -5,8 +5,10 @@ import com.expediagroup.graphql.client.types.GraphQLClientError
 import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.consumerapis.handleErrors
-import no.nav.soknad.innsending.consumerapis.pdl.dto.*
+import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
+import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.exceptions.BackendErrorException
+import no.nav.soknad.innsending.pdl.generated.GetPrefilledPersonInfo
 import no.nav.soknad.innsending.pdl.generated.HentIdenter
 import no.nav.soknad.innsending.pdl.generated.HentPerson
 import org.slf4j.LoggerFactory
@@ -66,6 +68,21 @@ class PdlAPI(
 				HentPerson.Variables(ident)
 			)
 		)
+		if (response.data != null) {
+			checkForErrors(response.errors)
+			return response.data
+		} else {
+			logger.error("Oppslag mot personregisteret feilet. Fikk feil i kallet til personregisteret")
+			throw BackendErrorException("Oppslag mot personregisteret feilet. Fikk feil i kallet for å hente person fra personregisteret")
+		}
+	}
+
+	@Cacheable("getPrefillPersonInfo")
+	override suspend fun getPrefillPersonInfo(ident: String): GetPrefilledPersonInfo.Result? {
+		val response = pdlGraphQLClient.execute(
+			GetPrefilledPersonInfo(GetPrefilledPersonInfo.Variables(ident))
+		)
+
 		if (response.data != null) {
 			checkForErrors(response.errors)
 			return response.data
