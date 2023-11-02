@@ -79,7 +79,7 @@ class FyllutRestApi(
 		)
 
 		val redirectVedPaabegyntSoknad =
-			redirectVedPaabegyntSoknad(brukerId, skjemaDto.skjemanr, opprettNySoknad ?: false)
+			redirectVedPaabegyntSoknad(brukerId, skjemaDto.skjemanr, skjemaDto.skjemapath, opprettNySoknad ?: false)
 		if (redirectVedPaabegyntSoknad != null) return redirectVedPaabegyntSoknad
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(skjemaDto, brukerId)
@@ -98,6 +98,7 @@ class FyllutRestApi(
 	private fun redirectVedPaabegyntSoknad(
 		brukerId: String,
 		skjemanr: String,
+		skjemapath: String?,
 		opprettNySoknad: Boolean = false
 	): ResponseEntity<SkjemaDto>? {
 		val aktiveSoknader = soknadService.hentAktiveSoknader(brukerId, skjemanr, SoknadType.soknad)
@@ -105,13 +106,10 @@ class FyllutRestApi(
 
 		if (harSoknadUnderArbeid && !opprettNySoknad) {
 
-			// Redirecter til den nyeste av potensielt flere aktive søknader
-			val nyesteSoknad = aktiveSoknader.maxByOrNull { it.opprettetDato }
-
 			val redirectUrl = UriComponentsBuilder
 				.fromHttpUrl(restConfig.fyllUtUrl)
-				.path("/$skjemanr/paabegynt")
-				.queryParam("innsendingsId", nyesteSoknad?.innsendingsId)
+				.path("/$skjemapath/paabegynt")
+				.queryParam("sub", "digital")
 				.build()
 				.toUri()
 
