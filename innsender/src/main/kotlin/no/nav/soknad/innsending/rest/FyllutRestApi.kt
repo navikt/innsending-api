@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.rest
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.FyllUtApi
 import no.nav.soknad.innsending.config.RestConfig
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.BodyStatusResponseDto
@@ -79,7 +80,7 @@ class FyllutRestApi(
 		)
 
 		val redirectVedPaabegyntSoknad =
-			redirectVedPaabegyntSoknad(brukerId, skjemaDto.skjemanr, skjemaDto.skjemapath, opprettNySoknad ?: false)
+			redirectVedPaabegyntSoknad(brukerId, skjemaDto, opprettNySoknad ?: false)
 		if (redirectVedPaabegyntSoknad != null) return redirectVedPaabegyntSoknad
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(skjemaDto, brukerId)
@@ -97,23 +98,22 @@ class FyllutRestApi(
 	// Defaulter til å redirecte med mindre det er sendt inn eksplisitt paremeter for å opprette ny søknad likevel
 	private fun redirectVedPaabegyntSoknad(
 		brukerId: String,
-		skjemanr: String,
-		skjemapath: String?,
+		skjemaDto: SkjemaDto,
 		opprettNySoknad: Boolean = false
 	): ResponseEntity<SkjemaDto>? {
-		val aktiveSoknader = soknadService.hentAktiveSoknader(brukerId, skjemanr, SoknadType.soknad)
+		val aktiveSoknader = soknadService.hentAktiveSoknader(brukerId, skjemaDto.skjemanr, SoknadType.soknad)
 		val harSoknadUnderArbeid = aktiveSoknader.isNotEmpty()
 
 		if (harSoknadUnderArbeid && !opprettNySoknad) {
 
 			val redirectUrl = UriComponentsBuilder
 				.fromHttpUrl(restConfig.fyllUtUrl)
-				.path("/$skjemapath/paabegynt")
+				.path("/${skjemaDto.skjemapath}/paabegynt")
 				.queryParam("sub", "digital")
 				.build()
 				.toUri()
 
-			logger.info("Bruker har allerede søknad under arbeid for skjemanr=$skjemanr. Redirecter til denne: $redirectUrl")
+			logger.info("Bruker har allerede søknad under arbeid for skjemanr=${skjemaDto.skjemanr}. Redirecter til denne: $redirectUrl")
 
 			return ResponseEntity.status(HttpStatus.FOUND).location(redirectUrl).build()
 		}
