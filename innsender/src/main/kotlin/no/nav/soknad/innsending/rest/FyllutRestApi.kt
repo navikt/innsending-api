@@ -101,7 +101,7 @@ class FyllutRestApi(
 		skjemaDto: SkjemaDto,
 		opprettNySoknad: Boolean = false
 	): ResponseEntity<SkjemaDto>? {
-		val aktiveSoknader = soknadService.hentAktiveSoknader(brukerId, skjemaDto.skjemanr, SoknadType.soknad)
+		val aktiveSoknader = soknadService.hentAktiveSoknader(brukerId, skjemaDto.skjemanr)
 		val harSoknadUnderArbeid = aktiveSoknader.isNotEmpty()
 
 		if (harSoknadUnderArbeid && !opprettNySoknad) {
