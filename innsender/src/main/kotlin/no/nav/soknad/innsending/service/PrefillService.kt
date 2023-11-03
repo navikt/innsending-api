@@ -60,7 +60,7 @@ class PrefillService(private val pdlApi: PdlInterface) {
 				}
 			}
 
-			// Execute requests in paralell
+			// Execute requests in parallell
 			val results = awaitAll(*requestList.toTypedArray())
 
 			// Combine results from external services into one object

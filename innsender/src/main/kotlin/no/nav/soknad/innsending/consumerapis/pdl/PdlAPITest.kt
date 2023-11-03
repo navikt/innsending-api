@@ -4,9 +4,9 @@ import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.exceptions.BackendErrorException
-import no.nav.soknad.innsending.pdl.generated.GetPrefilledPersonInfo
-import no.nav.soknad.innsending.pdl.generated.getprefilledpersoninfo.Navn
-import no.nav.soknad.innsending.pdl.generated.getprefilledpersoninfo.Person
+import no.nav.soknad.innsending.pdl.generated.PrefillData
+import no.nav.soknad.innsending.pdl.generated.prefilldata.Navn
+import no.nav.soknad.innsending.pdl.generated.prefilldata.Person
 import no.nav.soknad.innsending.util.testpersonid
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
@@ -39,8 +39,8 @@ class PdlAPITest : PdlInterface, HealthRequestInterface {
 		return dummyHentBrukerIdenter(brukerId)
 	}
 
-	override suspend fun getPrefillPersonInfo(ident: String): GetPrefilledPersonInfo.Result? {
-		return GetPrefilledPersonInfo.Result(
+	override suspend fun getPrefillPersonInfo(ident: String): PrefillData.Result? {
+		return PrefillData.Result(
 			Person(
 				navn = listOf(Navn("Ola", null, "Nordmann")),
 				bostedsadresse = emptyList(),

@@ -1,4 +1,4 @@
-query($ident: ID!) {
+query PrefillData($ident: ID!) {
 	hentPerson(ident: $ident) {
 		bostedsadresse(historikk: false) {
 			angittFlyttedato
