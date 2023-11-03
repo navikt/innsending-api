@@ -67,8 +67,8 @@ spec:
           namespace: skjemadigitalisering
         - application: fyllut-ettersending
           namespace: skjemadigitalisering
-        - application: debug-dings
-          namespace: plattformsikkerhet
+        - application: tokenx-token-generator
+          namespace: aura
           cluster: dev-gcp
         - application: statuspoll
           namespace: navdig
