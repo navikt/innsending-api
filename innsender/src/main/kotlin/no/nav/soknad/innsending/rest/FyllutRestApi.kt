@@ -106,6 +106,8 @@ class FyllutRestApi(
 
 		if (harSoknadUnderArbeid && !opprettNySoknad) {
 
+			if (skjemaDto.skjemapath == null) throw BackendErrorException("Feil ved generering av redirect-url for skjema med skjemanummer ${skjemaDto.skjemanr}. Kan ikke generere url uten skjemapath.")
+
 			val redirectUrl = UriComponentsBuilder
 				.fromHttpUrl(restConfig.fyllUtUrl)
 				.path("/${skjemaDto.skjemapath}/paabegynt")
