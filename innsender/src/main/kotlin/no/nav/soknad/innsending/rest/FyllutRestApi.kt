@@ -192,15 +192,15 @@ class FyllutRestApi(
 
 	}
 
-	override fun fyllUtPrefillData(properties: List<String>): ResponseEntity<PrefilledData> {
+	override fun fyllUtPrefillData(properties: List<String>): ResponseEntity<PrefillData> {
 		val userId = tilgangskontroll.hentBrukerFraToken()
 		loggBegge("Kall fra FyllUt for å hente prefill-data", userId)
 
-		val prefilledData = prefillService.getPrefillData(properties, userId)
+		val prefillData = prefillService.getPrefillData(properties, userId)
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
-			.body(prefilledData)
+			.body(prefillData)
 	}
 
 	private fun validerSoknadsTilgang(dokumentSoknadDto: DokumentSoknadDto) {

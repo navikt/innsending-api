@@ -497,6 +497,35 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertNotEquals(response.body?.innsendingsId, innsendingsId, "Forventer ny innsendingsId")
 	}
 
+	@Test
+	fun `Should return correct prefill-data from PDL`() {
+		// Given
+		val properties = "sokerFornavn,sokerEtternavn"
+
+		// When
+		val response = api?.getPrefillData(properties)
+
+		// Then
+		assertTrue(response != null)
+		assertEquals(200, response.statusCode.value())
+		assertEquals("Ola", response.body?.sokerFornavn)
+		assertEquals("Nordmann", response.body?.sokerEtternavn)
+	}
+
+	@Test
+	fun `Should return 400 from prefill-data if invalid prop is sent`() {
+		// Given
+		val properties = "sokerFornavn,sokerEtternavn,sokerInvalid"
+
+		// When
+		val response = api?.getPrefillDataFail(properties)
+
+		// Then
+		assertTrue(response != null)
+		assertEquals(400, response.statusCode.value())
+		assertEquals("'sokerInvalid' not a valid property", response.body?.message)
+	}
+
 
 	// Opprett søknad med et hoveddokument, en hoveddokumentvariant og to vedlegg
 	private fun opprettSoknad(skjemanr: String = "NAV 08-21.05"): DokumentSoknadDto {

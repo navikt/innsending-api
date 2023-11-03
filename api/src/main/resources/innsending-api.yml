@@ -208,7 +208,7 @@ paths:
             content:
               application/json:
                 schema:
-                  $ref: "#/components/schemas/PrefilledData"
+                  $ref: "#/components/schemas/PrefillData"
         tags:
           - fyllUtPrefillData
 
@@ -1300,7 +1300,7 @@ components:
         tittel:
           $ref: "#/components/schemas/Tittel"
 
-    PrefilledData:
+    PrefillData:
       type: object
       properties:
         sokerFornavn:
