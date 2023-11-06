@@ -42,7 +42,7 @@ class ArenaConsumer(
 
 		val maalgruppeResponse = webClient
 			.method(HttpMethod.GET)
-			.uri("${restConfig.arenaUrl}/api/v1/maalgrupper?fom=<2023-01-01") // FIXME: Add correct date
+			.uri("${restConfig.arenaUrl}/api/v1/maalgrupper?fom=2023-01-01") // FIXME: Add correct date
 			.contentType(MediaType.APPLICATION_JSON)
 			.accept(MediaType.APPLICATION_JSON)
 			.header(HEADER_CALL_ID, MDC.get(MDC_INNSENDINGS_ID))
