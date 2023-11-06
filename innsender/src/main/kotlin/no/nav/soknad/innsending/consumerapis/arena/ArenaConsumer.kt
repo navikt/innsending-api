@@ -58,6 +58,7 @@ class ArenaConsumer(
 
 		logger.info("Hentet maalgruppe fra {}", "2023-01-01")
 		logger.info("Maalgruppe antall: {}", maalgruppeResponse.size)
+		logger.info(maalgruppeResponse.first().toString())
 
 		return maalgruppeResponse
 	}
