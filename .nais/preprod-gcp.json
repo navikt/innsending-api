@@ -13,7 +13,8 @@
 		"safselvbetjening-q1.dev-fss-pub.nais.io",
 		"saf.dev-fss-pub.nais.io",
 		"soknadsmottaker-gcp.intern.dev.nav.no",
-		"www.nav.no"
+		"www.nav.no",
+		"arena-api-q1.dev.intern.nav.no"
 	],
 	"kafka-pool": "nav-dev",
 	"env": {
