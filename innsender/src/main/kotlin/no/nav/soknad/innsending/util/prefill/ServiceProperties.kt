@@ -1,13 +1,14 @@
 package no.nav.soknad.innsending.util.prefill
 
 import no.nav.soknad.innsending.exceptions.IllegalActionException
-import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.Constants.ARENA
+import no.nav.soknad.innsending.util.Constants.PDL
 
 object ServiceProperties {
 	// Available external services and their corresponding properties that the frontend can request
 	val availableServicePropertiesMap = hashMapOf(
-		Constants.PDL to listOf("sokerFornavn", "sokerEtternavn"),
-		Constants.ARENA to listOf("maalgruppe"),
+		PDL to listOf("sokerFornavn", "sokerEtternavn"),
+		ARENA to listOf("sokerMaalgruppetype"),
 	)
 
 	// Creates a hashmap with each external service to call with the corresponding properties to fetch from that service

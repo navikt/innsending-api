@@ -11,6 +11,7 @@ object Constants {
 	const val HEADER_CALL_ID = "Nav-Call-Id"
 	const val CORRELATION_ID = "correlation_id"
 	const val MDC_INNSENDINGS_ID = "innsendingsId"
+	const val NAV_PERSON_IDENT = "NAV-Personident"
 
 	const val BEARER = "Bearer "
 

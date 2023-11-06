@@ -4,6 +4,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
+import no.nav.soknad.innsending.consumerapis.arena.ArenaConsumerInterface
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.model.PrefillData
 import no.nav.soknad.innsending.util.Constants.ARENA
@@ -14,7 +15,10 @@ import no.nav.soknad.innsending.util.prefill.ServiceProperties.createServiceProp
 import org.springframework.stereotype.Service
 
 @Service
-class PrefillService(private val pdlApi: PdlInterface) {
+class PrefillService(
+	private val arenaConsumer: ArenaConsumerInterface,
+	private val pdlApi: PdlInterface
+) {
 
 	fun getPrefillData(properties: List<String>, userId: String): PrefillData {
 		// Create a new hashmap of which services to call based on the input properties
@@ -39,6 +43,7 @@ class PrefillService(private val pdlApi: PdlInterface) {
 				PrefillData(
 					sokerFornavn = obj.sokerFornavn ?: acc.sokerFornavn,
 					sokerEtternavn = obj.sokerEtternavn ?: acc.sokerEtternavn,
+					sokerMaalgruppetype = obj.sokerMaalgruppetype ?: acc.sokerMaalgruppetype
 				)
 			}
 
@@ -56,7 +61,12 @@ class PrefillService(private val pdlApi: PdlInterface) {
 	}
 
 	suspend fun getArenaData(userId: String, properties: List<String>): PrefillData {
-		return PrefillData()
+		val maalgruppe = arenaConsumer.getMaalgruppe() //FIXME: Check date here
+		if (maalgruppe.isEmpty()) return PrefillData()
+
+		return PrefillData(
+			sokerMaalgruppetype = properties.ifContains("sokerMaalgruppetype", maalgruppe.first().maalgruppetype.name),
+		)
 	}
 
 

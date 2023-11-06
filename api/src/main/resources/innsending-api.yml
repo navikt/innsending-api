@@ -1313,6 +1313,11 @@ components:
           nullable: true
           description: Søkerens etternavn
           example: Nordmann
+        sokerMaalgruppetype:
+          type: string
+          nullable: true
+          description: Søkerens målgruppe
+          example: ARBSOKERE
 
     PropertyNavn:
       type: string
