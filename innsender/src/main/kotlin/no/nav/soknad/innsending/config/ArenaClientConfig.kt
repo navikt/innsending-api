@@ -7,6 +7,8 @@ import no.nav.security.token.support.client.core.ClientProperties
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.soknad.innsending.exceptions.BackendErrorException
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -28,6 +30,9 @@ class ArenaClientConfig(
 	private val clientConfigurationProperties: ClientConfigurationProperties,
 	private val oAuth2AccessTokenService: OAuth2AccessTokenService
 ) {
+
+	private val logger: Logger = LoggerFactory.getLogger(javaClass)
+
 	@Bean
 	@Qualifier("arenaClient")
 	@Scope("prototype")
@@ -66,6 +71,8 @@ class ArenaClientConfig(
 	private fun bearerTokenExchange(clientProperties: ClientProperties): ExchangeFilterFunction {
 		return ExchangeFilterFunction { clientRequest: ClientRequest?, exchangeFunction: ExchangeFunction ->
 			val response = oAuth2AccessTokenService.getAccessToken(clientProperties)
+			logger.info("Bearer token: ${response.accessToken}")
+			
 			val filtered = ClientRequest.from(clientRequest!!)
 				.headers { headers: HttpHeaders -> headers.setBearerAuth(response.accessToken) }
 				.build()

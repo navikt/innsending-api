@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.core.ParameterizedTypeReference
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -37,9 +36,6 @@ class ArenaConsumer(
 	override fun getMaalgruppe(): List<Maalgruppe> {
 		logger.info("Henter målgruppe")
 
-		val token = subjectHandler.getToken()
-		logger.info("TokenX token: {}", token)
-
 		val maalgruppeResponse = webClient
 			.method(HttpMethod.GET)
 			.uri("${restConfig.arenaUrl}/api/v1/maalgrupper?fom=2023-01-01") // FIXME: Add correct date
@@ -48,7 +44,6 @@ class ArenaConsumer(
 			.header(HEADER_CALL_ID, MDC.get(MDC_INNSENDINGS_ID))
 			.header(NAV_CONSUMER_ID, applicationName)
 			.header(NAV_PERSON_IDENT, subjectHandler.getUserIdFromToken())
-			.header(HttpHeaders.AUTHORIZATION, "Bearer $token")
 			.retrieve()
 			.bodyToMono(object : ParameterizedTypeReference<List<Maalgruppe>>() {})
 			.doOnError { t -> handleError(t, "Arena") }
