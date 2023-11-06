@@ -9,6 +9,7 @@ import java.util.*
 data class SkjemaDtoTestBuilder(
 	var brukerId: String = "12128012345",
 	var skjemanr: String = "NAV-${UUID.randomUUID().toString().take(4)}",
+	var skjemapath: String? = null,
 	var tittel: String = "Forsikring mot ansvar for sykepenger i arbeidsgiverperioden for små bedrifter.",
 	var tema: String = "FOS",
 	var spraak: String = "nb_NO",
@@ -23,6 +24,7 @@ data class SkjemaDtoTestBuilder(
 	fun build() = SkjemaDto(
 		brukerId = brukerId,
 		skjemanr = skjemanr,
+		skjemapath = skjemanr.replace(Regex("\\W"), "").lowercase(Locale.getDefault()),
 		tittel = tittel,
 		tema = tema,
 		spraak = spraak,
