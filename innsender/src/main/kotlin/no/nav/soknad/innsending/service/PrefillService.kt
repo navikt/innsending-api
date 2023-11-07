@@ -1,9 +1,6 @@
 package no.nav.soknad.innsending.service
 
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import no.nav.soknad.innsending.consumerapis.arena.ArenaConsumerInterface
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.model.PrefillData
@@ -24,7 +21,7 @@ class PrefillService(
 		// Create a new hashmap of which services to call based on the input properties
 		val servicePropertiesMap = createServicePropertiesMap(properties, availableServicePropertiesMap)
 
-		return runBlocking {
+		return runBlocking(Dispatchers.IO) {
 			val requestList = mutableListOf<Deferred<PrefillData>>()
 
 			// Create a list of requests to external services based on the servicePropertiesMap
