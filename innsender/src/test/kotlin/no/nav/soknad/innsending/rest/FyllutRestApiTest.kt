@@ -513,6 +513,20 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	@Test
+	fun `Should return correct prefill-data from arena`() {
+		// Given
+		val properties = "sokerMaalgrupper"
+
+		// When
+		val response = api?.getPrefillData(properties)
+
+		// Then
+		assertTrue(response != null)
+		assertEquals(200, response.statusCode.value())
+		assertEquals("NEDSARBEVN", response.body?.sokerMaalgrupper?.get(0)?.name)
+	}
+
+	@Test
 	fun `Should return 400 from prefill-data if invalid prop is sent`() {
 		// Given
 		val properties = "sokerFornavn,sokerEtternavn,sokerInvalid"

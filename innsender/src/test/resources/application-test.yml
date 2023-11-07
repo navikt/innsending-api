@@ -67,6 +67,7 @@ restconfig:
   safUrl: http://localhost:${wiremock.server.port}/saf-api
   azureUrl: http://localhost:${wiremock.server.port}/azure-api
   antivirusUrl: http://localhost:${wiremock.server.port}/antivirus
+  arenaUrl: http://localhost:${wiremock.server.port}/arena-api
 
 
 brukernotifikasjonconfig:
