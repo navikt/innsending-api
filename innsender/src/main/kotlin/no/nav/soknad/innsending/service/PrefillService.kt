@@ -43,7 +43,7 @@ class PrefillService(
 				PrefillData(
 					sokerFornavn = obj.sokerFornavn ?: acc.sokerFornavn,
 					sokerEtternavn = obj.sokerEtternavn ?: acc.sokerEtternavn,
-					sokerMaalgruppetype = obj.sokerMaalgruppetype ?: acc.sokerMaalgruppetype
+					sokerMaalgrupper = obj.sokerMaalgrupper ?: acc.sokerMaalgrupper
 				)
 			}
 
@@ -61,13 +61,14 @@ class PrefillService(
 	}
 
 	suspend fun getArenaData(userId: String, properties: List<String>): PrefillData {
-		val maalgruppe = arenaConsumer.getMaalgruppe() //FIXME: Check date here
+		val maalgruppe = arenaConsumer.getMaalgrupper()
 		if (maalgruppe.isEmpty()) return PrefillData()
 
+		val malgrupper = maalgruppe.map { it.maalgruppetype }
+
 		return PrefillData(
-			sokerMaalgruppetype = properties.ifContains("sokerMaalgruppetype", maalgruppe.first().maalgruppetype.name),
+			sokerMaalgrupper = if (properties.contains("sokerMaalgrupper")) malgrupper else null,
 		)
 	}
-
 
 }

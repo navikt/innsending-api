@@ -1217,6 +1217,16 @@ components:
       description: Angivelse av formatet på opplastet vedlegg.
       example: application/pdf or image/jpeg.
 
+    Maalgrupper:
+      type: array
+      items:
+        $ref: "#/components/schemas/MaalgruppeType"
+
+    MaalgruppeType:
+      type: string
+      enum: [ "ARBSOKERE", "ENSFORARBS", "ENSFORUTD", "GJENEKARBS", "GJENEKUTD", "MOTDAGPEN", "MOTTILTPEN", "NEDSARBEVN", "TIDLFAMPL" ]
+      x-enum-varnames: [ "ARBSOKERE", "ENSFORARBS", "ENSFORUTD", "GJENEKARBS", "GJENEKUTD", "MOTDAGPEN", "MOTTILTPEN", "NEDSARBEVN", "TIDLFAMPL" ]
+
     OpplastingsStatusDto:
       type: string
       enum: [ "IkkeValgt", "LastetOpp", "Innsendt", "SendSenere", "SendesAvAndre", "SendesIkke" ]
@@ -1313,11 +1323,9 @@ components:
           nullable: true
           description: Søkerens etternavn
           example: Nordmann
-        sokerMaalgruppetype:
-          type: string
-          nullable: true
-          description: Søkerens målgruppe
-          example: ARBSOKERE
+        sokerMaalgrupper:
+          description: Søkerens målgrupper
+          $ref: "#/components/schemas/Maalgrupper"
 
     PropertyNavn:
       type: string

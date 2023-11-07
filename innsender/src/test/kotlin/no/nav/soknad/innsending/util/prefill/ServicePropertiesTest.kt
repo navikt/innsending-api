@@ -10,9 +10,9 @@ class ServicePropertiesTest {
 	@Test
 	fun `Should create correct service properties map based on input properties`() {
 		// Given
-		val inputList = listOf("sokerFornavn", "sokerMaalgruppetype")
+		val inputList = listOf("sokerFornavn", "sokerMaalgrupper")
 		val serviceKeyMap =
-			mapOf("PDL" to listOf("sokerFornavn", "sokerEtternavn"), "ARENA" to listOf("sokerMaalgruppetype"))
+			mapOf("PDL" to listOf("sokerFornavn", "sokerEtternavn"), "ARENA" to listOf("sokerMaalgrupper"))
 
 		// When
 		val result = createServicePropertiesMap(inputList, serviceKeyMap)
@@ -24,14 +24,14 @@ class ServicePropertiesTest {
 		assertEquals(1, result["PDL"]?.size)
 		assertEquals(1, result["ARENA"]?.size)
 		assertEquals("sokerFornavn", result["PDL"]?.get(0))
-		assertEquals("sokerMaalgruppetype", result["ARENA"]?.get(0))
+		assertEquals("sokerMaalgrupper", result["ARENA"]?.get(0))
 	}
 
 	@Test
 	fun `Should find key in map for input string`() {
 		// Given
 		val inputString = "sokerFornavn"
-		val inputMap = mapOf("PDL" to listOf("sokerFornavn", "sokerEtternavn"), "ARENA" to listOf("sokerMaalgruppetype"))
+		val inputMap = mapOf("PDL" to listOf("sokerFornavn", "sokerEtternavn"), "ARENA" to listOf("sokerMaalgrupper"))
 
 		// When
 		val result = findKeyForString(inputString, inputMap)

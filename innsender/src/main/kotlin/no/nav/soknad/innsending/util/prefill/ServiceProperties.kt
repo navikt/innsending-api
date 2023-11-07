@@ -8,7 +8,7 @@ object ServiceProperties {
 	// Available external services and their corresponding properties that the frontend can request
 	val availableServicePropertiesMap = hashMapOf(
 		PDL to listOf("sokerFornavn", "sokerEtternavn"),
-		ARENA to listOf("sokerMaalgruppetype"),
+		ARENA to listOf("sokerMaalgrupper"),
 	)
 
 	// Creates a hashmap with each external service to call with the corresponding properties to fetch from that service
