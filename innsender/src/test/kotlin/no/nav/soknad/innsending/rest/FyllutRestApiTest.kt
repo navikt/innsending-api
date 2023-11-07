@@ -512,7 +512,7 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Should return correct prefill-data from arena`() {
+	fun `Should return correct prefill-data from Arena`() {
 		// Given
 		val properties = "sokerMaalgrupper"
 
@@ -522,7 +522,10 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Then
 		assertTrue(response != null)
 		assertEquals(200, response.statusCode.value())
-		assertEquals("NEDSARBEVN", response.body?.sokerMaalgrupper?.get(0)?.name)
+		assertEquals(1, response.body?.sokerMaalgrupper?.size)
+		assertEquals("NEDSARBEVN", response.body?.sokerMaalgrupper?.get(0)?.maalgruppetype?.name)
+		assertEquals("2023-01-01", response.body?.sokerMaalgrupper?.get(0)?.gyldighetsperiode?.fom.toString())
+		assertEquals("Person med nedsatt arbeidsevne pga. sykdom", response.body?.sokerMaalgrupper?.get(0)?.maalgruppenavn)
 	}
 
 	@Test

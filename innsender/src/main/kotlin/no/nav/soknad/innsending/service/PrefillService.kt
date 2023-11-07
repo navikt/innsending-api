@@ -1,13 +1,15 @@
 package no.nav.soknad.innsending.service
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.consumerapis.arena.ArenaConsumerInterface
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.model.PrefillData
 import no.nav.soknad.innsending.util.Constants.ARENA
 import no.nav.soknad.innsending.util.Constants.PDL
 import no.nav.soknad.innsending.util.extensions.ifContains
-import no.nav.soknad.innsending.util.prefill.ServiceProperties.availableServicePropertiesMap
 import no.nav.soknad.innsending.util.prefill.ServiceProperties.createServicePropertiesMap
 import org.springframework.stereotype.Service
 
@@ -19,9 +21,9 @@ class PrefillService(
 
 	fun getPrefillData(properties: List<String>, userId: String): PrefillData {
 		// Create a new hashmap of which services to call based on the input properties
-		val servicePropertiesMap = createServicePropertiesMap(properties, availableServicePropertiesMap)
+		val servicePropertiesMap = createServicePropertiesMap(properties)
 
-		return runBlocking(Dispatchers.IO) {
+		return runBlocking {
 			val requestList = mutableListOf<Deferred<PrefillData>>()
 
 			// Create a list of requests to external services based on the servicePropertiesMap
@@ -58,13 +60,11 @@ class PrefillService(
 	}
 
 	suspend fun getArenaData(userId: String, properties: List<String>): PrefillData {
-		val maalgruppe = arenaConsumer.getMaalgrupper()
-		if (maalgruppe.isEmpty()) return PrefillData()
-
-		val malgrupper = maalgruppe.map { it.maalgruppetype }
+		val maalgrupper = arenaConsumer.getMaalgrupper()
+		if (maalgrupper.isEmpty()) return PrefillData()
 
 		return PrefillData(
-			sokerMaalgrupper = if (properties.contains("sokerMaalgrupper")) malgrupper else null,
+			sokerMaalgrupper = if (properties.contains("sokerMaalgrupper")) maalgrupper else null,
 		)
 	}
 

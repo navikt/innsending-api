@@ -1,8 +1,8 @@
 package no.nav.soknad.innsending.consumerapis.arena
 
 import no.nav.soknad.innsending.config.RestConfig
-import no.nav.soknad.innsending.consumerapis.arena.dto.Maalgruppe
 import no.nav.soknad.innsending.exceptions.BackendErrorException
+import no.nav.soknad.innsending.model.Maalgruppe
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.util.Constants.NAV_PERSON_IDENT
 import org.slf4j.Logger

@@ -15,7 +15,7 @@ class ServicePropertiesTest {
 			mapOf("PDL" to listOf("sokerFornavn", "sokerEtternavn"), "ARENA" to listOf("sokerMaalgrupper"))
 
 		// When
-		val result = createServicePropertiesMap(inputList, serviceKeyMap)
+		val result = createServicePropertiesMap(inputList)
 
 		// Then
 		assertEquals(2, result.size)

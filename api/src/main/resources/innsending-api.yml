@@ -1136,6 +1136,21 @@ components:
       description: Frist i antall dager etter innsending av søknad for ettersending av vedlegg
       example: 14
 
+    Gyldighetsperiode:
+      type: object
+      description: Tidsperioden som målgruppen gjelder for
+      properties:
+        fom:
+          type: string
+          format: date
+          description: Fra dato (yyyy-MM-dd)
+          example: 2020-01-01
+        tom:
+          type: string
+          format: date
+          description: Til dato (yyyy-MM-dd)
+          example: 2030-01-01
+
     InnsendingsId:
       type: string
       description: Unik søknadsid.
@@ -1217,10 +1232,17 @@ components:
       description: Angivelse av formatet på opplastet vedlegg.
       example: application/pdf or image/jpeg.
 
-    Maalgrupper:
-      type: array
-      items:
-        $ref: "#/components/schemas/MaalgruppeType"
+    Maalgruppe:
+      type: object
+      properties:
+        gyldighetsperiode:
+          $ref: "#/components/schemas/Gyldighetsperiode"
+        maalgruppetype:
+          $ref: "#/components/schemas/MaalgruppeType"
+        maalgruppenavn:
+          type: string
+          description: Kort beskrivelse av målgruppen
+          example: "Arbeidssøkere"
 
     MaalgruppeType:
       type: string
@@ -1324,8 +1346,10 @@ components:
           description: Søkerens etternavn
           example: Nordmann
         sokerMaalgrupper:
-          description: Søkerens målgrupper
-          $ref: "#/components/schemas/Maalgrupper"
+          type: array
+          description: Liste av målgrupper for søker på angitt tidsperiode. Dersom ingen målgrupper ble funnet i tidsperioden, returneres en tom liste
+          items:
+            $ref: "#/components/schemas/Maalgruppe"
 
     PropertyNavn:
       type: string
