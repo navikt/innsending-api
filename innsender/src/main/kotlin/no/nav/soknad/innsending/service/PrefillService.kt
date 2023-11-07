@@ -19,34 +19,34 @@ class PrefillService(
 	private val pdlApi: PdlInterface
 ) {
 
-	fun getPrefillData(properties: List<String>, userId: String): PrefillData {
+	fun getPrefillData(properties: List<String>, userId: String): PrefillData = runBlocking {
 		// Create a new hashmap of which services to call based on the input properties
 		val servicePropertiesMap = createServicePropertiesMap(properties)
 
-		return runBlocking {
-			val requestList = mutableListOf<Deferred<PrefillData>>()
+		// Create a list of requests to external services based on the servicePropertiesMap
+		val requestList = mutableListOf<Deferred<PrefillData>>()
 
-			// Create a list of requests to external services based on the servicePropertiesMap
-			servicePropertiesMap.forEach { (service, properties) ->
-				when (service) {
-					PDL -> requestList.add(async { getPDLData(userId, properties) })
-					ARENA -> requestList.add(async { getArenaData(userId, properties) })
-				}
+		servicePropertiesMap.forEach { (service, properties) ->
+			when (service) {
+				PDL -> requestList.add(async { getPDLData(userId, properties) })
+				ARENA -> requestList.add(async { getArenaData(userId, properties) })
 			}
+		}
 
-			// Execute requests in parallell
-			val results = awaitAll(*requestList.toTypedArray())
+		// Execute requests in parallell
+		val results = requestList.awaitAll()
 
-			// Combine results from external services into one object
-			val combinedObject = results.fold(PrefillData()) { acc, obj ->
-				PrefillData(
-					sokerFornavn = obj.sokerFornavn ?: acc.sokerFornavn,
-					sokerEtternavn = obj.sokerEtternavn ?: acc.sokerEtternavn,
-					sokerMaalgrupper = obj.sokerMaalgrupper ?: acc.sokerMaalgrupper
-				)
-			}
+		// Combine results from external services into one object
+		combineResults(results)
+	}
 
-			combinedObject
+	fun combineResults(results: List<PrefillData>): PrefillData {
+		return results.fold(PrefillData()) { acc, obj ->
+			PrefillData(
+				sokerFornavn = obj.sokerFornavn ?: acc.sokerFornavn,
+				sokerEtternavn = obj.sokerEtternavn ?: acc.sokerEtternavn,
+				sokerMaalgrupper = obj.sokerMaalgrupper ?: acc.sokerMaalgrupper
+			)
 		}
 	}
 
