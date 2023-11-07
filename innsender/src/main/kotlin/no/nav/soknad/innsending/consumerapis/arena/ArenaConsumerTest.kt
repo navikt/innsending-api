@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 @Component
 @Profile("local | docker")
 class ArenaConsumerTest : ArenaConsumerInterface {
-	override fun getMaalgruppe(): List<Maalgruppe> {
+	override suspend fun getMaalgruppe(): List<Maalgruppe> {
 		val maalgruppe =
 			Maalgruppe(
 				gyldighetsperiode = Gyldighetsperiode("2020-01-01", tom = "2024-01-01"),
