@@ -1020,7 +1020,7 @@ components:
           description: Unik id til betalingsplanlinje i Arena
         beloep:
           type: integer
-          format: int32
+          format: int64
           description: Foreløpig beregnet beløp for perioden
         utgiftsperiode:
           $ref: '#/components/schemas/Periode'
@@ -1655,11 +1655,11 @@ components:
           description: Unik id for vedtaket
         forventetDagligParkeringsutgift:
           type: integer
-          format: int32
+          format: int64
           description: Forventet daglig parkeringsutgift
         dagsats:
           type: integer
-          format: int32
+          format: int64
           description: Dagsats uten parkering
         periode:
           $ref: '#/components/schemas/Periode'
