@@ -14,6 +14,7 @@ import no.nav.soknad.innsending.util.extensions.ifContains
 import no.nav.soknad.innsending.util.prefill.ServiceProperties.createServicePropertiesMap
 import org.springframework.stereotype.Service
 
+// Gets data from external services which will be used in the Fyllut application to prefill values in the form-fields and to validate that the application is correct for the user
 @Service
 class PrefillService(
 	private val arenaConsumer: ArenaConsumerInterface,
