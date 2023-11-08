@@ -7,7 +7,8 @@ import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.consumerapis.arena.ArenaConsumerInterface
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.model.PrefillData
-import no.nav.soknad.innsending.util.Constants.ARENA
+import no.nav.soknad.innsending.util.Constants.ARENA_AKTIVITETER
+import no.nav.soknad.innsending.util.Constants.ARENA_MAALGRUPPER
 import no.nav.soknad.innsending.util.Constants.PDL
 import no.nav.soknad.innsending.util.extensions.ifContains
 import no.nav.soknad.innsending.util.prefill.ServiceProperties.createServicePropertiesMap
@@ -29,7 +30,8 @@ class PrefillService(
 		servicePropertiesMap.forEach { (service, properties) ->
 			when (service) {
 				PDL -> requestList.add(async { getPDLData(userId, properties) })
-				ARENA -> requestList.add(async { getArenaData(userId, properties) })
+				ARENA_MAALGRUPPER -> requestList.add(async { getArenaMaalgrupper(userId, properties) })
+				ARENA_AKTIVITETER -> requestList.add(async { getArenaAktiviteter(userId, properties) })
 			}
 		}
 
@@ -45,7 +47,8 @@ class PrefillService(
 			PrefillData(
 				sokerFornavn = obj.sokerFornavn ?: acc.sokerFornavn,
 				sokerEtternavn = obj.sokerEtternavn ?: acc.sokerEtternavn,
-				sokerMaalgrupper = obj.sokerMaalgrupper ?: acc.sokerMaalgrupper
+				sokerMaalgrupper = obj.sokerMaalgrupper ?: acc.sokerMaalgrupper,
+				sokerAktiviteter = obj.sokerAktiviteter ?: acc.sokerAktiviteter
 			)
 		}
 	}
@@ -59,12 +62,21 @@ class PrefillService(
 		)
 	}
 
-	suspend fun getArenaData(userId: String, properties: List<String>): PrefillData {
+	suspend fun getArenaMaalgrupper(userId: String, properties: List<String>): PrefillData {
 		val maalgrupper = arenaConsumer.getMaalgrupper()
 		if (maalgrupper.isEmpty()) return PrefillData()
 
 		return PrefillData(
 			sokerMaalgrupper = if (properties.contains("sokerMaalgrupper")) maalgrupper else null,
+		)
+	}
+
+	suspend fun getArenaAktiviteter(userId: String, properties: List<String>): PrefillData {
+		val aktiviteter = arenaConsumer.getAktiviteter()
+		if (aktiviteter.isEmpty()) return PrefillData()
+
+		return PrefillData(
+			sokerAktiviteter = if (properties.contains("sokerAktiviteter")) aktiviteter else null,
 		)
 	}
 

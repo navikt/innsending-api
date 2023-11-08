@@ -26,6 +26,7 @@ object Constants {
 
 	// External services for prefill data
 	const val PDL = "pdl"
-	const val ARENA = "arena"
+	const val ARENA_MAALGRUPPER = "arena_maalgrupper"
+	const val ARENA_AKTIVITETER = "arena_aktiviteter"
 
 }

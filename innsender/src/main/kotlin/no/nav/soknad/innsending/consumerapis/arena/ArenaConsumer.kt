@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.consumerapis.arena
 
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.BackendErrorException
+import no.nav.soknad.innsending.model.Aktivitet
 import no.nav.soknad.innsending.model.Maalgruppe
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.util.Constants.NAV_PERSON_IDENT
@@ -50,4 +51,25 @@ class ArenaConsumer(
 			)
 	}
 
+	override suspend fun getAktiviteter(): List<Aktivitet> {
+		logger.info("Henter målgruppe")
+
+		val uri = UriComponentsBuilder
+			.fromUriString("${restConfig.arenaUrl}/api/v1/tilleggsstoenad/dagligreise")
+			.queryParam("fom", fromDate)
+			.queryParam("tom", toDate)
+			.build()
+			.toUri()
+
+		return webClient
+			.get()
+			.uri(uri)
+			.accept(MediaType.APPLICATION_JSON)
+			.header(NAV_PERSON_IDENT, subjectHandler.getUserIdFromToken())
+			.retrieve()
+			.awaitBodyOrNull()
+			?: throw BackendErrorException(
+				message = "Kunne ikke hente aktiviteter"
+			)
+	}
 }
