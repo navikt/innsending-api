@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import kotlin.test.assertNull
 
 class PrefillServiceTest : ApplicationTest() {
 
@@ -43,9 +44,12 @@ class PrefillServiceTest : ApplicationTest() {
 		val result = runBlocking { prefillService.getPrefillData(properties, userId) }
 
 		// Then
-		assertEquals("NEDSARBEVN", result.sokerMaalgrupper?.get(0))
+		assertEquals("NEDSARBEVN", result.sokerMaalgrupper?.get(0)?.maalgruppetype?.name)
+		assertEquals("Person med nedsatt arbeidsevne pga. sykdom", result.sokerMaalgrupper?.get(0)?.maalgruppenavn)
+		assertEquals("2023-01-01", result.sokerMaalgrupper?.get(0)?.gyldighetsperiode?.fom.toString())
+		assertNull(result.sokerMaalgrupper?.get(0)?.gyldighetsperiode?.tom)
 	}
-	
+
 	@Test
 	fun `Should get prefill data for Arena (aktiviteter)`() {
 		// Given
