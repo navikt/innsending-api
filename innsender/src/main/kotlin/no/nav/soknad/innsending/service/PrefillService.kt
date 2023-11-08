@@ -10,7 +10,6 @@ import no.nav.soknad.innsending.model.PrefillData
 import no.nav.soknad.innsending.util.Constants.ARENA_AKTIVITETER
 import no.nav.soknad.innsending.util.Constants.ARENA_MAALGRUPPER
 import no.nav.soknad.innsending.util.Constants.PDL
-import no.nav.soknad.innsending.util.extensions.ifContains
 import no.nav.soknad.innsending.util.prefill.ServiceProperties.createServicePropertiesMap
 import org.springframework.stereotype.Service
 
@@ -58,8 +57,8 @@ class PrefillService(
 		val personInfo = pdlApi.getPrefillPersonInfo(userId)
 		val navn = personInfo?.hentPerson?.navn?.first()
 		return PrefillData(
-			sokerFornavn = properties.ifContains("sokerFornavn", navn?.fornavn),
-			sokerEtternavn = properties.ifContains("sokerEtternavn", navn?.etternavn)
+			sokerFornavn = if (properties.contains("sokerFornavn")) navn?.fornavn else null,
+			sokerEtternavn = if (properties.contains("sokerEtternavn")) navn?.etternavn else null
 		)
 	}
 
