@@ -2,6 +2,10 @@ server:
   port: 9064
   max-http-header-size: 16384
 
+spring:
+  jackson:
+    default-property-inclusion: non_null
+
 management:
   endpoint:
     health:
