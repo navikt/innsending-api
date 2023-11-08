@@ -464,7 +464,6 @@ class FyllutRestApiTest : ApplicationTest() {
 	fun `Skal redirecte ved eksisterende søknad gitt at opprettNySoknad er false`() {
 		// Gitt
 		val dokumentSoknadDto = opprettSoknad(skjemanr = "NAV-redirect")
-		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
 
@@ -475,7 +474,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertTrue(response != null)
 		assertEquals(302, response.statusCode.value())
 		assertEquals(
-			"http://localhost:3000/fyllut/${dokumentSoknadDto.skjemanr}/paabegynt?innsendingsId=$innsendingsId",
+			"http://localhost:3001/fyllut/${fraFyllUt.skjemapath}/paabegynt?sub=digital",
 			response.headers.location!!.toString()
 		)
 	}

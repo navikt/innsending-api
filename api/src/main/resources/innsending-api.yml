@@ -1365,6 +1365,8 @@ components:
           $ref: "#/components/schemas/BrukerId"
         skjemanr:
           $ref: "#/components/schemas/Skjemanr"
+        skjemapath:
+          $ref: "#/components/schemas/SkjemaPath"
         tittel:
           $ref: "#/components/schemas/Tittel"
         tema:
@@ -1393,6 +1395,11 @@ components:
       type: string
       description: NAV skjemanummeret for identifisering av søknaden som er opprettet.
       example: NAV 08-21.05
+
+    SkjemaPath:
+      type: string
+      description: Navn på skjemadefinisjonen. Brukes som url-parameter i Fyllut.
+      example: nav082108
 
     SoknadsStatusDto:
       type: string
