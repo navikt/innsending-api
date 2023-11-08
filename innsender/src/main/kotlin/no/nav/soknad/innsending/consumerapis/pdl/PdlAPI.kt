@@ -5,10 +5,12 @@ import com.expediagroup.graphql.client.types.GraphQLClientError
 import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.consumerapis.handleErrors
-import no.nav.soknad.innsending.consumerapis.pdl.dto.*
+import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
+import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.pdl.generated.HentIdenter
 import no.nav.soknad.innsending.pdl.generated.HentPerson
+import no.nav.soknad.innsending.pdl.generated.PrefillData
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cache.annotation.Cacheable
@@ -72,6 +74,21 @@ class PdlAPI(
 		} else {
 			logger.error("Oppslag mot personregisteret feilet. Fikk feil i kallet til personregisteret")
 			throw BackendErrorException("Oppslag mot personregisteret feilet. Fikk feil i kallet for å hente person fra personregisteret")
+		}
+	}
+
+	@Cacheable("getPrefillPersonInfo")
+	override suspend fun getPrefillPersonInfo(ident: String): PrefillData.Result? {
+		logger.info("Skal hente en preutfyllingsinfo fra PDL")
+
+		val response = pdlGraphQLClient.execute(PrefillData(PrefillData.Variables(ident)))
+
+		if (response.data != null) {
+			checkForErrors(response.errors)
+			return response.data
+		} else {
+			logger.error("Oppslag mot personregisteret for preutfylling feilet")
+			throw BackendErrorException("Oppslag mot personregisteret for preutfylling feilet")
 		}
 	}
 

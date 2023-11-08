@@ -1,0 +1,36 @@
+{
+	"request": {
+		"urlPattern": "/arena-api/api/v1/maalgrupper.*",
+		"method": "GET",
+		"headers": {
+			"Authorization": {
+				"matches": ".*"
+			}
+		},
+		"queryParameters": {
+			"fom": {
+				"matches": ".*"
+			},
+			"tom": {
+				"matches": ".*"
+			}
+		}
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": [
+			{
+				"gyldighetsperiode": {
+					"fom": "2023-01-01"
+				},
+				"maalgruppetype": "NEDSARBEVN",
+				"maalgruppenavn": "Person med nedsatt arbeidsevne pga. sykdom"
+			}
+		]
+	}
+}
+
+

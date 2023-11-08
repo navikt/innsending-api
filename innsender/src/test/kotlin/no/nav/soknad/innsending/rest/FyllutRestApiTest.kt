@@ -496,6 +496,68 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertNotEquals(response.body?.innsendingsId, innsendingsId, "Forventer ny innsendingsId")
 	}
 
+	@Test
+	fun `Should return correct prefill-data from PDL`() {
+		// Given
+		val properties = "sokerFornavn,sokerEtternavn"
+
+		// When
+		val response = api?.getPrefillData(properties)
+
+		// Then
+		assertTrue(response != null)
+		assertEquals(200, response.statusCode.value())
+		assertEquals("Ola", response.body?.sokerFornavn)
+		assertEquals("Nordmann", response.body?.sokerEtternavn)
+	}
+
+	@Test
+	fun `Should return correct prefill-data from Arena (maalgrupper)`() {
+		// Given
+		val properties = "sokerMaalgrupper"
+
+		// When
+		val response = api?.getPrefillData(properties)
+
+		// Then
+		assertTrue(response != null)
+		assertEquals(200, response.statusCode.value())
+		assertEquals(1, response.body?.sokerMaalgrupper?.size)
+		assertEquals("NEDSARBEVN", response.body?.sokerMaalgrupper?.get(0)?.maalgruppetype?.name)
+		assertEquals("2023-01-01", response.body?.sokerMaalgrupper?.get(0)?.gyldighetsperiode?.fom.toString())
+		assertEquals("Person med nedsatt arbeidsevne pga. sykdom", response.body?.sokerMaalgrupper?.get(0)?.maalgruppenavn)
+	}
+
+	@Test
+	fun `Should return correct prefill-data from Arena (aktiviteter)`() {
+		// Given
+		val properties = "sokerAktiviteter"
+
+		// When
+		val response = api?.getPrefillData(properties)
+
+		// Then
+		assertTrue(response != null)
+		assertEquals(200, response.statusCode.value())
+		assertEquals(1, response.body?.sokerAktiviteter?.size)
+		assertEquals("ARBTREN", response.body?.sokerAktiviteter?.get(0)?.aktivitetstype)
+		assertEquals("Arbeidstrening", response.body?.sokerAktiviteter?.get(0)?.aktivitetsnavn)
+	}
+
+	@Test
+	fun `Should return 400 from prefill-data if invalid prop is sent`() {
+		// Given
+		val properties = "sokerFornavn,sokerEtternavn,sokerInvalid"
+
+		// When
+		val response = api?.getPrefillDataFail(properties)
+
+		// Then
+		assertTrue(response != null)
+		assertEquals(400, response.statusCode.value())
+		assertEquals("'sokerInvalid' not a valid property", response.body?.message)
+	}
+
 
 	// Opprett søknad med et hoveddokument, en hoveddokumentvariant og to vedlegg
 	private fun opprettSoknad(skjemanr: String = "NAV 08-21.05"): DokumentSoknadDto {

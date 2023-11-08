@@ -15,7 +15,8 @@
 		"safselvbetjening.prod-fss-pub.nais.io",
 		"saf.prod-fss-pub.nais.io",
 		"soknadsmottaker-gcp.intern.nav.no",
-		"www.nav.no"
+		"www.nav.no",
+		"arena-api.prod-fss-pub.nais.io"
 	],
 	"kafka-pool": "nav-prod",
 	"env": {
@@ -45,6 +46,9 @@
 		"KAFKA_SECURITY": "TRUE",
 		"KAFKA_MESSAGE_TOPIC": "team-soknad.privat-soknadinnsending-messages-v2",
 		"ANTIVIRUS_URL": "http://clamav.nais-system.svc.cluster.local",
-		"STATUS_LOG_URL": "https://logs.adeo.no/app/discover#/view/170a6860-df4c-11ed-8b42-0b0644af4500"
+		"STATUS_LOG_URL": "https://logs.adeo.no/app/discover#/view/170a6860-df4c-11ed-8b42-0b0644af4500",
+		"ARENA_URL": "https://arena-api.prod-fss-pub.nais.io",
+		"ARENA_TOKEN_X_AUDIENCE": "prod-fss:teamarenanais:arena-api",
+		"ARENA_SCOPE": "api://prod-fss.teamarenanais.arena-api/.default"
 	}
 }

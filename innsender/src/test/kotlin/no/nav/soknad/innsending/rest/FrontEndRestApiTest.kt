@@ -9,10 +9,10 @@ import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.InnsendingApiApplication
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.pdl.generated.enums.IdentGruppe
-import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.IdentInformasjon
-import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.Identliste
-import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.Navn
-import no.nav.soknad.innsending.pdl.generated.hentpersoninfo.Person
+import no.nav.soknad.innsending.pdl.generated.hentidenter.IdentInformasjon
+import no.nav.soknad.innsending.pdl.generated.hentidenter.Identliste
+import no.nav.soknad.innsending.pdl.generated.hentperson.Navn
+import no.nav.soknad.innsending.pdl.generated.hentperson.Person
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.TokenGenerator

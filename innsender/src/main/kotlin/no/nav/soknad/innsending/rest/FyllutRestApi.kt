@@ -6,11 +6,9 @@ import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
-import no.nav.soknad.innsending.model.BodyStatusResponseDto
-import no.nav.soknad.innsending.model.DokumentSoknadDto
-import no.nav.soknad.innsending.model.SkjemaDto
-import no.nav.soknad.innsending.model.SoknadType
+import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.Tilgangskontroll
+import no.nav.soknad.innsending.service.PrefillService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
@@ -32,6 +30,7 @@ class FyllutRestApi(
 	val restConfig: RestConfig,
 	val soknadService: SoknadService,
 	val tilgangskontroll: Tilgangskontroll,
+	val prefillService: PrefillService
 ) : FyllUtApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -191,6 +190,17 @@ class FyllutRestApi(
 			.status(HttpStatus.OK)
 			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet soknad med id $innsendingsId"))
 
+	}
+
+	override fun fyllUtPrefillData(properties: List<String>): ResponseEntity<PrefillData> {
+		val userId = tilgangskontroll.hentBrukerFraToken()
+		loggBegge("Kall fra FyllUt for å hente prefill-data", userId)
+
+		val prefillData = prefillService.getPrefillData(properties, userId)
+
+		return ResponseEntity
+			.status(HttpStatus.OK)
+			.body(prefillData)
 	}
 
 	private fun validerSoknadsTilgang(dokumentSoknadDto: DokumentSoknadDto) {

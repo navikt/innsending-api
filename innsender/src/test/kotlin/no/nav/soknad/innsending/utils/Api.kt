@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.utils
 
 import no.nav.security.mock.oauth2.MockOAuth2Server
+import no.nav.soknad.innsending.dto.RestErrorResponseDto
 import no.nav.soknad.innsending.model.*
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.ParameterizedTypeReference
@@ -87,5 +88,23 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 			HttpMethod.GET,
 			createHttpEntity(null),
 			object : ParameterizedTypeReference<List<AktivSakDto>>() {})
+	}
+
+	fun getPrefillData(properties: String): ResponseEntity<PrefillData>? {
+		return restTemplate.exchange(
+			"${baseUrl}/fyllUt/v1/prefill-data?properties=$properties",
+			HttpMethod.GET,
+			createHttpEntity(null),
+			PrefillData::class.java
+		)
+	}
+
+	fun getPrefillDataFail(properties: String): ResponseEntity<RestErrorResponseDto>? {
+		return restTemplate.exchange(
+			"${baseUrl}/fyllUt/v1/prefill-data?properties=$properties",
+			HttpMethod.GET,
+			createHttpEntity(null),
+			RestErrorResponseDto::class.java
+		)
 	}
 }

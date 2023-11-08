@@ -335,6 +335,12 @@
 			<version>${logcaptor.version}</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.ninja-squad</groupId>
+			<artifactId>springmockk</artifactId>
+			<version>${springmockk.version}</version>
+			<scope>test</scope>
+		</dependency>
 
 	</dependencies>
 

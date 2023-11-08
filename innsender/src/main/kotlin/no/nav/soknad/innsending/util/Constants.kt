@@ -11,6 +11,7 @@ object Constants {
 	const val HEADER_CALL_ID = "Nav-Call-Id"
 	const val CORRELATION_ID = "correlation_id"
 	const val MDC_INNSENDINGS_ID = "innsendingsId"
+	const val NAV_PERSON_IDENT = "NAV-Personident"
 
 	const val BEARER = "Bearer "
 
@@ -22,5 +23,10 @@ object Constants {
 	const val KVITTERINGS_NR = "L7"
 
 	const val ukjentEttersendingsId = "-1" // sette lik innsendingsid istedenfor?
+
+	// External services for prefill data
+	const val PDL = "pdl"
+	const val ARENA_MAALGRUPPER = "arena_maalgrupper"
+	const val ARENA_AKTIVITETER = "arena_aktiviteter"
 
 }

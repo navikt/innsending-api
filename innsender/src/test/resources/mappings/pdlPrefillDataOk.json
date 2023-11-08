@@ -9,7 +9,7 @@
 		},
 		"bodyPatterns": [
 			{
-				"matchesJsonPath": "$[?(@.operationName == 'HentIdenter')]"
+				"matchesJsonPath": "$[?(@.operationName == 'PrefillData')]"
 			}
 		]
 	},
@@ -20,21 +20,25 @@
 		},
 		"jsonBody": {
 			"data": {
-				"hentIdenter": {
-					"identer": [
+				"hentPerson": {
+					"bostedsadresse": [],
+					"kjoenn": [
 						{
-							"ident": "12345678901",
-							"gruppe": "FOLKEREGISTERIDENT",
-							"historisk": "false"
-						},
-						{
-							"ident": "12345678902",
-							"gruppe": "FOLKEREGISTERIDENT",
-							"historisk": "true"
+							"kjoenn": "MANN"
 						}
-					]
+					],
+					"navn": [
+						{
+							"fornavn": "Ola",
+							"mellomnavn": null,
+							"etternavn": "Nordmann"
+						}
+					],
+					"telefonnummer": []
 				}
 			}
 		}
 	}
 }
+
+
