@@ -1,24 +1,26 @@
 package no.nav.soknad.innsending.util.prefill
 
 import no.nav.soknad.innsending.exceptions.IllegalActionException
-import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.Constants.ARENA_AKTIVITETER
+import no.nav.soknad.innsending.util.Constants.ARENA_MAALGRUPPER
+import no.nav.soknad.innsending.util.Constants.PDL
 
 object ServiceProperties {
 	// Available external services and their corresponding properties that the frontend can request
-	val availableServicePropertiesMap = hashMapOf(
-		Constants.PDL to listOf("sokerFornavn", "sokerEtternavn"),
-		Constants.ARENA to listOf("maalgruppe"),
+	private val availableServicePropertiesMap = hashMapOf(
+		PDL to listOf("sokerFornavn", "sokerEtternavn"),
+		ARENA_MAALGRUPPER to listOf("sokerMaalgrupper"),
+		ARENA_AKTIVITETER to listOf("sokerAktiviteter")
 	)
 
 	// Creates a hashmap with each external service to call with the corresponding properties to fetch from that service
 	fun createServicePropertiesMap(
 		inputList: List<String>,
-		serviceKeyMap: Map<String, List<String>>
 	): Map<String, List<String>> {
 		val resultMap = mutableMapOf<String, MutableList<String>>()
 
 		inputList.forEach { inputString ->
-			val key = findKeyForString(inputString, serviceKeyMap)
+			val key = findKeyForString(inputString, availableServicePropertiesMap)
 			if (resultMap.containsKey(key)) {
 				resultMap[key]?.add(inputString)
 			} else {

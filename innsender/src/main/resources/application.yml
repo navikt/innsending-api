@@ -2,6 +2,10 @@ server:
   port: 9064
   max-http-header-size: 16384
 
+spring:
+  jackson:
+    default-property-inclusion: non_null
+
 management:
   endpoint:
     health:
@@ -85,7 +89,7 @@ restconfig:
   soknadsMottakerHost: http://localhost:9043/soknadsmottaker-api
   soknadsMottakerEndpoint: /save
   sendInnUrl: http://localhost:3100/sendInn
-  fyllUtUrl: http://localhost:3000/fyllUt
+  fyllUtUrl: http://localhost:3001/fyllut
   clientId: clientId
   clientSecret: clientSecret
   pdlScope: api://dev-fss.pdl.pdl-api/.default
@@ -94,6 +98,7 @@ restconfig:
   safUrl: http://localhost:9043/saf-api
   azureUrl: http://localhost:9043/azure-api
   antivirusUrl: http://localhost:9043/antivirus
+  arenaUrl: http://localhost:9043/arena-api
 
 brukernotifikasjonconfig:
   profiles: test
@@ -152,7 +157,7 @@ restconfig:
   safUrl: ${SAF_URL}
   azureUrl: ${AZURE_OPENID_CONFIG_TOKEN_ENDPOINT}
   antivirusUrl: ${ANTIVIRUS_URL}
-
+  arenaUrl: ${ARENA_URL}
 
 
 brukernotifikasjonconfig:
@@ -210,3 +215,14 @@ no.nav.security.jwt:
           client-id: ${AZURE_APP_CLIENT_ID}
           client-jwk: ${AZURE_APP_JWK}
           client-auth-method: private_key_jwt
+
+      arena:
+        token-endpoint-url: ${TOKEN_X_TOKEN_ENDPOINT}
+        grant-type: urn:ietf:params:oauth:grant-type:token-exchange
+        scope: ${ARENA_SCOPE}
+        authentication:
+          client-auth-method: private_key_jwt
+          client-id: ${TOKEN_X_CLIENT_ID}
+          client-jwk: ${TOKEN_X_PRIVATE_JWK}
+        token-exchange:
+          audience: ${ARENA_TOKEN_X_AUDIENCE}

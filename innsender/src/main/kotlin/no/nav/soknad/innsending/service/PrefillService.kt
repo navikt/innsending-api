@@ -4,45 +4,52 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
+import no.nav.soknad.innsending.consumerapis.arena.ArenaConsumerInterface
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.model.PrefillData
-import no.nav.soknad.innsending.util.Constants.ARENA
+import no.nav.soknad.innsending.util.Constants.ARENA_AKTIVITETER
+import no.nav.soknad.innsending.util.Constants.ARENA_MAALGRUPPER
 import no.nav.soknad.innsending.util.Constants.PDL
-import no.nav.soknad.innsending.util.extensions.ifContains
-import no.nav.soknad.innsending.util.prefill.ServiceProperties.availableServicePropertiesMap
 import no.nav.soknad.innsending.util.prefill.ServiceProperties.createServicePropertiesMap
 import org.springframework.stereotype.Service
 
+// Gets data from external services which will be used in the Fyllut application to prefill values in the form-fields and to validate that the application is correct for the user
 @Service
-class PrefillService(private val pdlApi: PdlInterface) {
+class PrefillService(
+	private val arenaConsumer: ArenaConsumerInterface,
+	private val pdlApi: PdlInterface
+) {
 
-	fun getPrefillData(properties: List<String>, userId: String): PrefillData {
+	fun getPrefillData(properties: List<String>, userId: String): PrefillData = runBlocking {
 		// Create a new hashmap of which services to call based on the input properties
-		val servicePropertiesMap = createServicePropertiesMap(properties, availableServicePropertiesMap)
+		val servicePropertiesMap = createServicePropertiesMap(properties)
 
-		return runBlocking {
-			val requestList = mutableListOf<Deferred<PrefillData>>()
+		// Create a list of requests to external services based on the servicePropertiesMap
+		val requestList = mutableListOf<Deferred<PrefillData>>()
 
-			// Create a list of requests to external services based on the servicePropertiesMap
-			servicePropertiesMap.forEach { (service, properties) ->
-				when (service) {
-					PDL -> requestList.add(async { getPDLData(userId, properties) })
-					ARENA -> requestList.add(async { getArenaData(userId, properties) })
-				}
+		servicePropertiesMap.forEach { (service, properties) ->
+			when (service) {
+				PDL -> requestList.add(async { getPDLData(userId, properties) })
+				ARENA_MAALGRUPPER -> requestList.add(async { getArenaMaalgrupper(userId, properties) })
+				ARENA_AKTIVITETER -> requestList.add(async { getArenaAktiviteter(userId, properties) })
 			}
+		}
 
-			// Execute requests in parallell
-			val results = awaitAll(*requestList.toTypedArray())
+		// Execute requests in parallell
+		val results = requestList.awaitAll()
 
-			// Combine results from external services into one object
-			val combinedObject = results.fold(PrefillData()) { acc, obj ->
-				PrefillData(
-					sokerFornavn = obj.sokerFornavn ?: acc.sokerFornavn,
-					sokerEtternavn = obj.sokerEtternavn ?: acc.sokerEtternavn,
-				)
-			}
+		// Combine results from external services into one object
+		combineResults(results)
+	}
 
-			combinedObject
+	fun combineResults(results: List<PrefillData>): PrefillData {
+		return results.fold(PrefillData()) { acc, obj ->
+			PrefillData(
+				sokerFornavn = obj.sokerFornavn ?: acc.sokerFornavn,
+				sokerEtternavn = obj.sokerEtternavn ?: acc.sokerEtternavn,
+				sokerMaalgrupper = obj.sokerMaalgrupper ?: acc.sokerMaalgrupper,
+				sokerAktiviteter = obj.sokerAktiviteter ?: acc.sokerAktiviteter
+			)
 		}
 	}
 
@@ -50,14 +57,27 @@ class PrefillService(private val pdlApi: PdlInterface) {
 		val personInfo = pdlApi.getPrefillPersonInfo(userId)
 		val navn = personInfo?.hentPerson?.navn?.first()
 		return PrefillData(
-			sokerFornavn = properties.ifContains("sokerFornavn", navn?.fornavn),
-			sokerEtternavn = properties.ifContains("sokerEtternavn", navn?.etternavn)
+			sokerFornavn = if (properties.contains("sokerFornavn")) navn?.fornavn else null,
+			sokerEtternavn = if (properties.contains("sokerEtternavn")) navn?.etternavn else null
 		)
 	}
 
-	suspend fun getArenaData(userId: String, properties: List<String>): PrefillData {
-		return PrefillData()
+	suspend fun getArenaMaalgrupper(userId: String, properties: List<String>): PrefillData {
+		val maalgrupper = arenaConsumer.getMaalgrupper()
+		if (maalgrupper.isEmpty()) return PrefillData()
+
+		return PrefillData(
+			sokerMaalgrupper = if (properties.contains("sokerMaalgrupper")) maalgrupper else null,
+		)
 	}
 
+	suspend fun getArenaAktiviteter(userId: String, properties: List<String>): PrefillData {
+		val aktiviteter = arenaConsumer.getAktiviteter()
+		if (aktiviteter.isEmpty()) return PrefillData()
+
+		return PrefillData(
+			sokerAktiviteter = if (properties.contains("sokerAktiviteter")) aktiviteter else null,
+		)
+	}
 
 }

@@ -75,6 +75,7 @@
 		<!--Testing-->
 		<logcaptor.version>2.9.0</logcaptor.version>
 		<mockk.version>1.13.8</mockk.version>
+		<springmockk.version>4.0.2</springmockk.version>
 
 		<!--PDF-->
 		<pdfbox.version>3.0.0</pdfbox.version>

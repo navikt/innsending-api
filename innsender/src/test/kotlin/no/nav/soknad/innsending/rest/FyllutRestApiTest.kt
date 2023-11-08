@@ -464,7 +464,6 @@ class FyllutRestApiTest : ApplicationTest() {
 	fun `Skal redirecte ved eksisterende søknad gitt at opprettNySoknad er false`() {
 		// Gitt
 		val dokumentSoknadDto = opprettSoknad(skjemanr = "NAV-redirect")
-		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
 
@@ -475,7 +474,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertTrue(response != null)
 		assertEquals(302, response.statusCode.value())
 		assertEquals(
-			"http://localhost:3000/fyllut/${dokumentSoknadDto.skjemanr}/paabegynt?innsendingsId=$innsendingsId",
+			"http://localhost:3001/fyllut/${fraFyllUt.skjemapath}/paabegynt?sub=digital",
 			response.headers.location!!.toString()
 		)
 	}
@@ -510,6 +509,39 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals(200, response.statusCode.value())
 		assertEquals("Ola", response.body?.sokerFornavn)
 		assertEquals("Nordmann", response.body?.sokerEtternavn)
+	}
+
+	@Test
+	fun `Should return correct prefill-data from Arena (maalgrupper)`() {
+		// Given
+		val properties = "sokerMaalgrupper"
+
+		// When
+		val response = api?.getPrefillData(properties)
+
+		// Then
+		assertTrue(response != null)
+		assertEquals(200, response.statusCode.value())
+		assertEquals(1, response.body?.sokerMaalgrupper?.size)
+		assertEquals("NEDSARBEVN", response.body?.sokerMaalgrupper?.get(0)?.maalgruppetype?.name)
+		assertEquals("2023-01-01", response.body?.sokerMaalgrupper?.get(0)?.gyldighetsperiode?.fom.toString())
+		assertEquals("Person med nedsatt arbeidsevne pga. sykdom", response.body?.sokerMaalgrupper?.get(0)?.maalgruppenavn)
+	}
+
+	@Test
+	fun `Should return correct prefill-data from Arena (aktiviteter)`() {
+		// Given
+		val properties = "sokerAktiviteter"
+
+		// When
+		val response = api?.getPrefillData(properties)
+
+		// Then
+		assertTrue(response != null)
+		assertEquals(200, response.statusCode.value())
+		assertEquals(1, response.body?.sokerAktiviteter?.size)
+		assertEquals("ARBTREN", response.body?.sokerAktiviteter?.get(0)?.aktivitetstype)
+		assertEquals("Arbeidstrening", response.body?.sokerAktiviteter?.get(0)?.aktivitetsnavn)
 	}
 
 	@Test

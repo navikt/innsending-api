@@ -24,5 +24,5 @@ class RestConfig {
 	lateinit var safselvbetjeningUrl: String
 	lateinit var safUrl: String
 	lateinit var azureUrl: String
-
+	lateinit var arenaUrl: String
 }
