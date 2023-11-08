@@ -71,8 +71,6 @@ class ArenaClientConfig(
 	private fun bearerTokenExchange(clientProperties: ClientProperties): ExchangeFilterFunction {
 		return ExchangeFilterFunction { clientRequest: ClientRequest?, exchangeFunction: ExchangeFunction ->
 			val response = oAuth2AccessTokenService.getAccessToken(clientProperties)
-			logger.info("Bearer token: ${response.accessToken}")
-			
 			val filtered = ClientRequest.from(clientRequest!!)
 				.headers { headers: HttpHeaders -> headers.setBearerAuth(response.accessToken) }
 				.build()

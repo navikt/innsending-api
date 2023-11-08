@@ -84,9 +84,6 @@ spec:
           namespace: skjemadigitalisering
         - application: clamav
           namespace: nais-system
-        - application: arena-api-q1
-          namespace: teamarenanais
-          cluster: dev-fss
 
   ingresses:
   {{#each ingresses}}
