@@ -6,10 +6,6 @@ enum class ErrorCode(val code: String) {
 	GENERAL_ERROR("somethingFailedTryLater"),
 	NOT_FOUND("resourceNotFound"),
 
-	// Client Errors
-	ARENA_UNAUTHORIZED("arenaUnauthorized"),
-	ARENA_FORBIDDEN("arenaForbidden"),
-	
 	// Illegal Actions
 	APPLICATION_SENT_IN_OR_DELETED("illegalAction.applicationSentInOrDeleted"),
 	FILE_CANNOT_BE_READ("illegalAction.fileCannotBeRead"),
