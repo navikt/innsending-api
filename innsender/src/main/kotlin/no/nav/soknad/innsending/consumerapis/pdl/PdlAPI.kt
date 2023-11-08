@@ -79,6 +79,7 @@ class PdlAPI(
 
 	@Cacheable("getPrefillPersonInfo")
 	override suspend fun getPrefillPersonInfo(ident: String): PrefillData.Result? {
+		logger.info("Skal hente en preutfyllingsinfo fra PDL")
 
 		val response = pdlGraphQLClient.execute(PrefillData(PrefillData.Variables(ident)))
 
@@ -86,8 +87,8 @@ class PdlAPI(
 			checkForErrors(response.errors)
 			return response.data
 		} else {
-			logger.error("Oppslag mot personregisteret feilet. Fikk feil i kallet til personregisteret")
-			throw BackendErrorException("Oppslag mot personregisteret feilet. Fikk feil i kallet for å hente person fra personregisteret")
+			logger.error("Oppslag mot personregisteret for preutfylling feilet")
+			throw BackendErrorException("Oppslag mot personregisteret for preutfylling feilet")
 		}
 	}
 
