@@ -57,11 +57,25 @@ class SoknadService(
 			// lagre soknad
 			val savedSoknadDbData = repo.lagreSoknad(
 				SoknadDbData(
-					null, Utilities.laginnsendingsId(), kodeverkSkjema.tittel ?: "", kodeverkSkjema.skjemanummer ?: "",
-					kodeverkSkjema.tema ?: "", spraak, SoknadsStatus.Opprettet, brukerId, null, LocalDateTime.now(),
-					LocalDateTime.now(), null, 0, VisningsType.dokumentinnsending, true,
-					forsteinnsendingsdato = null, ettersendingsfrist = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
-					arkiveringsstatus = ArkiveringsStatus.IkkeSatt
+					id = null,
+					innsendingsid = Utilities.laginnsendingsId(),
+					tittel = kodeverkSkjema.tittel ?: "",
+					skjemanr = kodeverkSkjema.skjemanummer ?: "",
+					tema = kodeverkSkjema.tema ?: "",
+					spraak = spraak,
+					status = SoknadsStatus.Opprettet,
+					brukerid = brukerId,
+					ettersendingsid = null,
+					opprettetdato = LocalDateTime.now(),
+					endretdato = LocalDateTime.now(),
+					innsendtdato = null,
+					visningssteg = 0,
+					visningstype = VisningsType.dokumentinnsending,
+					kanlasteoppannet = true,
+					forsteinnsendingsdato = null,
+					ettersendingsfrist = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
+					arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
+					skjemapath = null // FIXME: Should skjemapath be set here?
 				)
 			)
 
@@ -271,7 +285,8 @@ class SoknadService(
 					true,
 					mapTilLocalDateTime(arkivertSoknad.innsendtDato),
 					Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
-					arkiveringsstatus = ArkiveringsStatus.IkkeSatt
+					arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
+					skjemapath = null // FIXME: Should skjemapath be set here?
 				)
 			)
 

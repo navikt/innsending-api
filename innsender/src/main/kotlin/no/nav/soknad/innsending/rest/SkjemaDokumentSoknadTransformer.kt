@@ -14,6 +14,7 @@ class SkjemaDokumentSoknadTransformer {
 	fun konverterTilDokumentSoknadDto(input: SkjemaDto, brukerId: String): DokumentSoknadDto = DokumentSoknadDto(
 		brukerId = brukerId,
 		skjemanr = input.skjemanr,
+		skjemapath = input.skjemapath,
 		tittel = input.tittel,
 		tema = input.tema,
 		status = SoknadsStatusDto.opprettet,

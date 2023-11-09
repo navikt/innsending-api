@@ -552,6 +552,19 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals("'sokerInvalid' not a valid property", response.body?.message)
 	}
 
+	@Test
+	fun `Should save skjemapath in db when creating a new soknad from fyllut`() {
+		// Given
+		val skjemaDto = SkjemaDtoTestBuilder(skjemapath = "nav12345").build()
+
+		// When
+		val opprettetSoknadResponse = api?.opprettSoknad(skjemaDto)
+
+		// Then
+		val soknad = repo.hentSoknadDb(opprettetSoknadResponse?.body?.innsendingsId!!)
+		assertEquals("nav12345", soknad.skjemapath)
+	}
+
 
 	// Opprett søknad med et hoveddokument, en hoveddokumentvariant og to vedlegg
 	private fun opprettSoknad(skjemanr: String = "NAV 08-21.05"): DokumentSoknadDto {

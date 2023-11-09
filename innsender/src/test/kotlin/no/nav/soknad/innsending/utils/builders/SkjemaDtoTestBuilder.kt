@@ -24,7 +24,7 @@ data class SkjemaDtoTestBuilder(
 	fun build() = SkjemaDto(
 		brukerId = brukerId,
 		skjemanr = skjemanr,
-		skjemapath = skjemanr.replace(Regex("\\W"), "").lowercase(Locale.getDefault()),
+		skjemapath = skjemapath ?: skjemanr.replace(Regex("\\W"), "").lowercase(),
 		tittel = tittel,
 		tema = tema,
 		spraak = spraak,

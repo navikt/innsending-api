@@ -25,6 +25,7 @@ fun mapTilSoknadDb(
 		innsendingsid = innsendingsId,
 		tittel = dokumentSoknadDto.tittel,
 		skjemanr = dokumentSoknadDto.skjemanr,
+		skjemapath = dokumentSoknadDto.skjemapath,
 		tema = dokumentSoknadDto.tema,
 		spraak = dokumentSoknadDto.spraak ?: "no",
 		status = mapTilSoknadsStatus(dokumentSoknadDto.status, status),
@@ -38,7 +39,7 @@ fun mapTilSoknadDb(
 		kanlasteoppannet = dokumentSoknadDto.kanLasteOppAnnet ?: true,
 		forsteinnsendingsdato = mapTilLocalDateTime(dokumentSoknadDto.forsteInnsendingsDato),
 		ettersendingsfrist = dokumentSoknadDto.fristForEttersendelse,
-		arkiveringsstatus = mapTilDbArkiveringsStatus(dokumentSoknadDto.arkiveringsStatus ?: ArkiveringsStatusDto.ikkeSatt)
+		arkiveringsstatus = mapTilDbArkiveringsStatus(dokumentSoknadDto.arkiveringsStatus ?: ArkiveringsStatusDto.ikkeSatt),
 	)
 
 fun lagDokumentSoknadDto(
@@ -50,6 +51,7 @@ fun lagDokumentSoknadDto(
 	return DokumentSoknadDto(
 		brukerId = soknadDbData.brukerid,
 		skjemanr = soknadDbData.skjemanr,
+		skjemapath = soknadDbData.skjemapath,
 		tittel = soknadDbData.tittel,
 		tema = soknadDbData.tema,
 		status = mapTilSoknadsStatusDto(soknadDbData.status) ?: SoknadsStatusDto.opprettet,
@@ -91,6 +93,7 @@ fun mapTilDokumentSoknadDto(
 	return DokumentSoknadDto(
 		brukerId = soknadDbData.brukerid,
 		skjemanr = soknadDbData.skjemanr,
+		skjemapath = soknadDbData.skjemapath,
 		tittel = soknadDbData.tittel,
 		tema = soknadDbData.tema,
 		status = mapTilSoknadsStatusDto(soknadDbData.status) ?: SoknadsStatusDto.opprettet,
@@ -128,6 +131,7 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		innsendingsId = dokumentSoknadDto.innsendingsId,
 		brukerId = dokumentSoknadDto.brukerId,
 		skjemanr = dokumentSoknadDto.skjemanr,
+		skjemapath = dokumentSoknadDto.skjemapath,
 		tittel = dokumentSoknadDto.tittel,
 		tema = dokumentSoknadDto.tema,
 		spraak = dokumentSoknadDto.spraak ?: "no",

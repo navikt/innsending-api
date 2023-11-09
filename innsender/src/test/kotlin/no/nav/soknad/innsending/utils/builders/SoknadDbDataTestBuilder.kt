@@ -12,6 +12,7 @@ data class SoknadDbDataTestBuilder(
 	var innsendingsId: String = UUID.randomUUID().toString(),
 	var tittel: String = "Avtale om barnebidrag",
 	var skjemanr: String = "NAV-${UUID.randomUUID().toString().take(4)}",
+	var skjemapath: String? = null,
 	var tema: String = "BID",
 	var spraak: String = "nb",
 	var status: SoknadsStatus = SoknadsStatus.Opprettet,
@@ -32,6 +33,7 @@ data class SoknadDbDataTestBuilder(
 		innsendingsid = innsendingsId,
 		tittel = tittel,
 		skjemanr = skjemanr,
+		skjemapath = skjemapath ?: skjemanr.replace(Regex("\\W"), "").lowercase(),
 		tema = tema,
 		spraak = spraak,
 		status = status,
@@ -45,6 +47,6 @@ data class SoknadDbDataTestBuilder(
 		kanlasteoppannet = kanLasteOppAnnet,
 		forsteinnsendingsdato = forsteinnsendingsdato,
 		ettersendingsfrist = ettersendingsFrist,
-		arkiveringsstatus = arkiveringsStatus
+		arkiveringsstatus = arkiveringsStatus,
 	)
 }

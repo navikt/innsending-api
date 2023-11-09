@@ -65,7 +65,8 @@ class EttersendingService(
 				visningstype = VisningsType.ettersending,
 				forsteinnsendingsdato = mapTilLocalDateTime(forsteInnsendingsDato),
 				ettersendingsfrist = fristForEttersendelse,
-				arkiveringsstatus = ArkiveringsStatus.IkkeSatt
+				arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
+				skjemapath = null // FIXME: Should skjemapath be set here?
 			)
 		)
 	}

@@ -7,6 +7,7 @@ import java.util.*
 class DokumentSoknadDtoTestBuilder(
 	var brukerId: String = "12128012345",
 	var skjemanr: String = "NAV-${UUID.randomUUID().toString().take(4)}",
+	var skjemapath: String? = null,
 	var tittel: String = "Forsikring mot ansvar for sykepenger i arbeidsgiverperioden for små bedrifter.",
 	var tema: String = "FOS",
 	var status: SoknadsStatusDto = SoknadsStatusDto.opprettet,
@@ -46,6 +47,7 @@ class DokumentSoknadDtoTestBuilder(
 	fun build() = DokumentSoknadDto(
 		brukerId = brukerId,
 		skjemanr = skjemanr,
+		skjemapath = skjemapath ?: skjemanr.replace(Regex("\\W"), "").lowercase(),
 		tittel = tittel,
 		tema = tema,
 		status = status,

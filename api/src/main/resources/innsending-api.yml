@@ -1086,6 +1086,8 @@ components:
           $ref: "#/components/schemas/BrukerId"
         skjemanr:
           $ref: "#/components/schemas/Skjemanr"
+        skjemapath:
+          $ref: "#/components/schemas/SkjemaPath"
         tittel:
           $ref: "#/components/schemas/Tittel"
         tema:
