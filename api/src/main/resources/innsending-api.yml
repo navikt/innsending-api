@@ -167,7 +167,7 @@ paths:
         required: true
 
       parameters:
-            - name: opprettNySoknad
+            - name: force
               in: query
               description: Hvis bruker allerede har en aktiv søknad på samme skjemanr vil hen få valg om å fortsette på den eller starte en ny.
                            Denne parameteren brukes for å indikere om en bruker ønsker å starte en ny søknad uavhengig av om det allerede er en aktiv søknad på gang.
