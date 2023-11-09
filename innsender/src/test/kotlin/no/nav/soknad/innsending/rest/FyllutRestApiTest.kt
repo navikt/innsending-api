@@ -458,7 +458,7 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Skal redirecte ved eksisterende søknad gitt at opprettNySoknad er false`() {
+	fun `Skal redirecte ved eksisterende søknad gitt at force er false`() {
 		// Gitt
 		val dokumentSoknadDto = opprettSoknad(skjemanr = "NAV-redirect")
 
@@ -474,7 +474,7 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Skal opprette søknad når opprettNySoknad er true, selv om brukeren har en søknad med samme skjemanr`() {
+	fun `Skal opprette søknad når force er true, selv om brukeren har en søknad med samme skjemanr`() {
 		// Gitt
 		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!

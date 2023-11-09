@@ -70,7 +70,7 @@ class FyllutRestApi(
 	@Timed(InnsenderOperation.OPPRETT)
 	override fun fyllUtOpprettSoknad(
 		skjemaDto: SkjemaDto,
-		opprettNySoknad: Boolean?
+		force: Boolean?
 	): ResponseEntity<Any> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
@@ -80,7 +80,7 @@ class FyllutRestApi(
 		)
 
 		val redirectVedPaabegyntSoknad =
-			redirectVedPaabegyntSoknad(brukerId, skjemaDto, opprettNySoknad ?: false)
+			redirectVedPaabegyntSoknad(brukerId, skjemaDto, force ?: false)
 		if (redirectVedPaabegyntSoknad != null) return redirectVedPaabegyntSoknad
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(skjemaDto, brukerId)
@@ -98,12 +98,12 @@ class FyllutRestApi(
 	private fun redirectVedPaabegyntSoknad(
 		brukerId: String,
 		skjemaDto: SkjemaDto,
-		opprettNySoknad: Boolean = false
+		forceCreate: Boolean = false
 	): ResponseEntity<Any>? {
 		val aktiveSoknader = soknadService.hentAktiveSoknader(brukerId, skjemaDto.skjemanr)
 		val harSoknadUnderArbeid = aktiveSoknader.isNotEmpty()
 
-		if (harSoknadUnderArbeid && !opprettNySoknad) {
+		if (harSoknadUnderArbeid && !forceCreate) {
 			val body = BodyStatusResponseDto(
 				status = ErrorCode.SOKNAD_ALREADY_EXISTS.code,
 				info = "Søknad for dette skjemanummeret er allerede påbegynt. Redirect til side for å velge mellom å fortsette påbegynt søknad eller opprette ny søknad.",
