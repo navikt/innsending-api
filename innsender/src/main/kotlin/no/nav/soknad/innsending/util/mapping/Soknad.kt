@@ -119,6 +119,7 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 	val hovedDokument = dokumentSoknadDto.hoveddokument
 	val hovedDokumentVariant = dokumentSoknadDto.hoveddokumentVariant
 	val vedleggsListe = dokumentSoknadDto.vedleggsListeUtenHoveddokument.map { mapTilSkjemaDokumentDto(it) }
+	val skalSlettesDato = dokumentSoknadDto.opprettetDato.plusDays(Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD)
 
 	if (hovedDokument == null || hovedDokumentVariant == null) {
 		throw BackendErrorException("Hoveddokument eller variant mangler. Finner ikke hoveddokument i vedleggsliste")
@@ -137,7 +138,8 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		vedleggsListe = vedleggsListe,
 		kanLasteOppAnnet = dokumentSoknadDto.kanLasteOppAnnet,
 		fristForEttersendelse = dokumentSoknadDto.fristForEttersendelse,
-		endretDato = dokumentSoknadDto.endretDato
+		endretDato = dokumentSoknadDto.endretDato,
+		skalSlettesDato = skalSlettesDato
 	)
 }
 

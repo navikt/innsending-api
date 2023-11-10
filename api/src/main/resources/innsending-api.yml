@@ -1506,6 +1506,8 @@ components:
           $ref: "#/components/schemas/FristForEttersendelse"
         endretDato:
           $ref: "#/components/schemas/EndretDato"
+        skalSlettesDato:
+          $ref: "#/components/schemas/SkalSlettesDato"
 
     Skjemanr:
       type: string
@@ -1516,6 +1518,12 @@ components:
       type: string
       description: Navn på skjemadefinisjonen. Brukes som url-parameter i Fyllut.
       example: nav082108
+
+    SkalSlettesDato:
+      type: string
+      format: date-time
+      description: Dato søknaden vil slettes
+      example: 2021-12-03T14:10:00Z
 
     SoknadsStatusDto:
       type: string
