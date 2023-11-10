@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
 import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
 import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
@@ -119,7 +120,7 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 	val hovedDokument = dokumentSoknadDto.hoveddokument
 	val hovedDokumentVariant = dokumentSoknadDto.hoveddokumentVariant
 	val vedleggsListe = dokumentSoknadDto.vedleggsListeUtenHoveddokument.map { mapTilSkjemaDokumentDto(it) }
-	val skalSlettesDato = dokumentSoknadDto.opprettetDato.plusDays(Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD)
+	val deletionDate = dokumentSoknadDto.opprettetDato.plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD)
 
 	if (hovedDokument == null || hovedDokumentVariant == null) {
 		throw BackendErrorException("Hoveddokument eller variant mangler. Finner ikke hoveddokument i vedleggsliste")
@@ -139,7 +140,7 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		kanLasteOppAnnet = dokumentSoknadDto.kanLasteOppAnnet,
 		fristForEttersendelse = dokumentSoknadDto.fristForEttersendelse,
 		endretDato = dokumentSoknadDto.endretDato,
-		skalSlettesDato = skalSlettesDato
+		skalSlettesDato = deletionDate
 	)
 }
 
@@ -157,7 +158,7 @@ fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>): Sokn
 
 private fun beregnInnsendingsFrist(soknadDbData: SoknadDbData): OffsetDateTime {
 	if (soknadDbData.ettersendingsid == null) {
-		return mapTilOffsetDateTime(soknadDbData.opprettetdato, Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD)
+		return mapTilOffsetDateTime(soknadDbData.opprettetdato, DEFAULT_LEVETID_OPPRETTET_SOKNAD)
 	}
 	return mapTilOffsetDateTime(
 		soknadDbData.forsteinnsendingsdato ?: soknadDbData.opprettetdato,
