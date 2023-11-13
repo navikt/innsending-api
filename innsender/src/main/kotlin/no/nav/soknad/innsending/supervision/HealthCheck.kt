@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.supervision
 
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.api.HealthApi
@@ -44,7 +43,6 @@ class HealthCheck(
 	@GetMapping("/ping")
 	override fun ping(): ResponseEntity<String> = ResponseEntity.status(HttpStatus.OK).body("pong")
 
-
 	@GetMapping("/status")
 	override fun getStatus(): ResponseEntity<ApplicationStatus> {
 		val dependencyStatusList = mutableListOf<ApplicationStatus>()
@@ -52,7 +50,7 @@ class HealthCheck(
 		runBlocking {
 			backends
 				.forEach {
-					if (GlobalScope.async { it.dependencyEndpoint.invoke() }.await() != it.expectedResponse)
+					if (async { it.dependencyEndpoint.invoke() }.await() != it.expectedResponse)
 						dependencyStatusList.add(
 							ApplicationStatus(
 								status = it.status,
@@ -137,13 +135,13 @@ class HealthCheck(
 	}
 
 	/**
-	 * Will throw exception if any of the dependencies are not returning the expected value.
+	 * Will throw an exception if any of the dependencies are not returning the expected value.
 	 * If all is well, the function will silently exit.
 	 */
 	private fun throwExceptionIfDependenciesAreDown(applications: List<Dependency>) {
 		runBlocking {
 			applications
-				.map { Triple(GlobalScope.async { it.dependencyEndpoint.invoke() }, it.expectedResponse, it.dependencyName) }
+				.map { Triple(async { it.dependencyEndpoint.invoke() }, it.expectedResponse, it.dependencyName) }
 				.forEach { if (it.first.await() != it.second) throwException("${it.third} does not seem to be up") }
 		}
 	}
@@ -155,12 +153,11 @@ class HealthCheck(
 	}
 
 	private data class Dependency(
-		val dependencyEndpoint: () -> String,
+		val dependencyEndpoint: suspend () -> String,
 		val expectedResponse: String,
 		val dependencyName: String,
 		val description: String,
 		val status: ApplicationStatusType,
 		val logUrl: String
 	)
-
 }
