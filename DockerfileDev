@@ -1,5 +1,5 @@
 # https://www.baeldung.com/ops/docker-cache-maven-dependencies
-FROM maven:3.8.5-openjdk-17 as builder
+FROM maven:3.9.5-eclipse-temurin-21-alpine as builder
 
 # Sett opp home directory
 ENV HOME=/usr/app
@@ -29,9 +29,11 @@ COPY innsender/src $HOME/innsender/src
 RUN --mount=type=cache,target=/root/.m2,rw mvn -q -pl api,soknadsmottaker-api,innsender package -DskipTests -DskipBomPlugin
 
 
-FROM openjdk:17-alpine
-EXPOSE 9064
+FROM gcr.io/distroless/java21-debian12:nonroot
 
 # Kjør jar-filen
 COPY --from=builder /usr/app/innsender/target/innsender.jar /app/innsender.jar
-ENTRYPOINT java -jar /app/innsender.jar
+
+WORKDIR /app
+
+CMD ["innsender.jar"]
