@@ -120,7 +120,7 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 	val hovedDokument = dokumentSoknadDto.hoveddokument
 	val hovedDokumentVariant = dokumentSoknadDto.hoveddokumentVariant
 	val vedleggsListe = dokumentSoknadDto.vedleggsListeUtenHoveddokument.map { mapTilSkjemaDokumentDto(it) }
-	val deletionDate = dokumentSoknadDto.opprettetDato.plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD)
+	val deletionDate = dokumentSoknadDto.opprettetDato.plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD).toLocalDate()
 
 	if (hovedDokument == null || hovedDokumentVariant == null) {
 		throw BackendErrorException("Hoveddokument eller variant mangler. Finner ikke hoveddokument i vedleggsliste")
