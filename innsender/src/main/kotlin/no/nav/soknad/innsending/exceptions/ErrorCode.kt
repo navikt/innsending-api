@@ -17,4 +17,6 @@ enum class ErrorCode(val code: String) {
 	TITLE_STRING_TOO_LONG("illegalAction.titleStringTooLong"), // (ikke i bruk)
 	VIRUS_SCAN_FAILED("illegalAction.virusScanFailed"),
 
+	SOKNAD_ALREADY_EXISTS("soknadAlreadyExists"),
+
 }

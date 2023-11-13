@@ -19,13 +19,25 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		return HttpEntity(body, Hjelpemetoder.createHeaders(token))
 	}
 
-	fun opprettSoknad(skjemaDto: SkjemaDto, opprettNySoknad: Boolean = true): ResponseEntity<SkjemaDto> {
+	fun opprettSoknad(skjemaDto: SkjemaDto, forceCreate: Boolean = true): ResponseEntity<SkjemaDto> {
 		val uri = UriComponentsBuilder.fromHttpUrl("${baseUrl}/fyllUt/v1/soknad")
-			.queryParam("opprettNySoknad", opprettNySoknad)
+			.queryParam("force", forceCreate)
 			.build()
 			.toUri()
 
 		return restTemplate.exchange(uri, HttpMethod.POST, createHttpEntity(skjemaDto), SkjemaDto::class.java)
+	}
+
+	fun opprettSoknadRedirect(
+		skjemaDto: SkjemaDto,
+		forceCreate: Boolean = true
+	): ResponseEntity<BodyStatusResponseDto> {
+		val uri = UriComponentsBuilder.fromHttpUrl("${baseUrl}/fyllUt/v1/soknad")
+			.queryParam("force", forceCreate)
+			.build()
+			.toUri()
+
+		return restTemplate.exchange(uri, HttpMethod.POST, createHttpEntity(skjemaDto), BodyStatusResponseDto::class.java)
 	}
 
 	fun oppdaterSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<SkjemaDto>? {

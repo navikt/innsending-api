@@ -167,7 +167,7 @@ paths:
         required: true
 
       parameters:
-            - name: opprettNySoknad
+            - name: force
               in: query
               description: Hvis bruker allerede har en aktiv søknad på samme skjemanr vil hen få valg om å fortsette på den eller starte en ny.
                            Denne parameteren brukes for å indikere om en bruker ønsker å starte en ny søknad uavhengig av om det allerede er en aktiv søknad på gang.
@@ -176,6 +176,11 @@ paths:
                 type: boolean
 
       responses:
+        200:
+          description: Returnerer en BodyStatusResponseDto med status og info. Status "soknadAlreadyExists" indikerer at en søknad for dette skjemanummeret allerede er påbegynt. Frontend vil redirecte til side for å velge mellom å fortsette påbegynt søknad eller opprette ny søknad.
+          content:
+            application/json:
+              schema: {} # For at openapi-generator skal generere en type for responsen som støtter både SkjemaDto og BodyStatusResponseDto
         201:
           description: Søknad opprettet
           content:
@@ -1481,8 +1486,6 @@ components:
           $ref: "#/components/schemas/BrukerId"
         skjemanr:
           $ref: "#/components/schemas/Skjemanr"
-        skjemapath:
-          $ref: "#/components/schemas/SkjemaPath"
         tittel:
           $ref: "#/components/schemas/Tittel"
         tema:
@@ -1511,11 +1514,6 @@ components:
       type: string
       description: NAV skjemanummeret for identifisering av søknaden som er opprettet.
       example: NAV 08-21.05
-
-    SkjemaPath:
-      type: string
-      description: Navn på skjemadefinisjonen. Brukes som url-parameter i Fyllut.
-      example: nav082108
 
     SoknadsStatusDto:
       type: string

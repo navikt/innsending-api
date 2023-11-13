@@ -3,7 +3,6 @@ package no.nav.soknad.innsending.rest
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.FyllUtApi
 import no.nav.soknad.innsending.config.RestConfig
-import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.*
@@ -21,7 +20,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.util.UriComponentsBuilder
 import java.net.URI
 
 @RestController
@@ -70,7 +68,10 @@ class FyllutRestApi(
 	}
 
 	@Timed(InnsenderOperation.OPPRETT)
-	override fun fyllUtOpprettSoknad(skjemaDto: SkjemaDto, opprettNySoknad: Boolean?): ResponseEntity<SkjemaDto> {
+	override fun fyllUtOpprettSoknad(
+		skjemaDto: SkjemaDto,
+		force: Boolean?
+	): ResponseEntity<Any> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
 		loggBegge(
@@ -79,7 +80,7 @@ class FyllutRestApi(
 		)
 
 		val redirectVedPaabegyntSoknad =
-			redirectVedPaabegyntSoknad(brukerId, skjemaDto, opprettNySoknad ?: false)
+			redirectVedPaabegyntSoknad(brukerId, skjemaDto, force ?: false)
 		if (redirectVedPaabegyntSoknad != null) return redirectVedPaabegyntSoknad
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(skjemaDto, brukerId)
@@ -93,30 +94,21 @@ class FyllutRestApi(
 		return ResponseEntity.status(HttpStatus.CREATED).body(opprettetSoknad)
 	}
 
-	// Redirect til påbegynt søknad hvis bruker har en søknad under arbeid
-	// Defaulter til å redirecte med mindre det er sendt inn eksplisitt paremeter for å opprette ny søknad likevel
+	// Skal redirecte til påbegynt søknad hvis bruker har en søknad under arbeid (med mindre det er sendt inn eksplisitt paremeter for å opprette ny søknad likevel)
 	private fun redirectVedPaabegyntSoknad(
 		brukerId: String,
 		skjemaDto: SkjemaDto,
-		opprettNySoknad: Boolean = false
-	): ResponseEntity<SkjemaDto>? {
+		forceCreate: Boolean = false
+	): ResponseEntity<Any>? {
 		val aktiveSoknader = soknadService.hentAktiveSoknader(brukerId, skjemaDto.skjemanr)
 		val harSoknadUnderArbeid = aktiveSoknader.isNotEmpty()
 
-		if (harSoknadUnderArbeid && !opprettNySoknad) {
-
-			if (skjemaDto.skjemapath == null) throw BackendErrorException("Feil ved generering av redirect-url for skjema med skjemanummer ${skjemaDto.skjemanr}. Kan ikke generere url uten skjemapath.")
-
-			val redirectUrl = UriComponentsBuilder
-				.fromHttpUrl(restConfig.fyllUtUrl)
-				.path("/${skjemaDto.skjemapath}/paabegynt")
-				.queryParam("sub", "digital")
-				.build()
-				.toUri()
-
-			logger.info("Bruker har allerede søknad under arbeid for skjemanr=${skjemaDto.skjemanr}. Redirecter til denne: $redirectUrl")
-
-			return ResponseEntity.status(HttpStatus.FOUND).location(redirectUrl).build()
+		if (harSoknadUnderArbeid && !forceCreate) {
+			val body = BodyStatusResponseDto(
+				status = ErrorCode.SOKNAD_ALREADY_EXISTS.code,
+				info = "Søknad for dette skjemanummeret er allerede påbegynt. Redirect til side for å velge mellom å fortsette påbegynt søknad eller opprette ny søknad.",
+			)
+			return ResponseEntity.status(HttpStatus.OK).body(body)
 		}
 		return null
 	}
@@ -150,13 +142,12 @@ class FyllutRestApi(
 			brukerId
 		)
 
-		val oppdatertSoknad = soknadService.oppdaterUtfyltSoknad(innsendingsId, dokumentSoknadDto)
+		soknadService.oppdaterUtfyltSoknad(innsendingsId, dokumentSoknadDto)
 
 		loggBegge("$innsendingsId: Utfylt søknad fra Fyllut", brukerId)
 
 		return ResponseEntity
-			.status(HttpStatus.FOUND)
-			.location(URI.create(restConfig.sendInnUrl + "/" + oppdatertSoknad.innsendingsId))
+			.status(HttpStatus.OK)
 			.build()
 	}
 
