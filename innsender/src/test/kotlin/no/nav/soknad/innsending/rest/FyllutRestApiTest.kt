@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.rest
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.dto.RestErrorResponseDto
+import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.service.FilService
@@ -220,8 +221,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Så
 		assertTrue(response != null)
 		assertEquals(SoknadsStatusDto.utfylt, oppdatertSoknad.status, "Status er satt til utfylt")
-		assertEquals(302, response.statusCode.value())
-		assertTrue(response.headers["Location"] != null)
+		assertEquals(200, response.statusCode.value())
 		assertEquals(nyTittel, oppdatertSoknad.tittel)
 		assertEquals("en", oppdatertSoknad.spraak, "Språk er oppdatert (blir konvertert til de første 2 bokstavene)")
 		assertEquals(4, oppdatertSoknad.vedleggsListe.size, "Hoveddokument, hoveddokumentVariant og to vedlegg")
@@ -286,14 +286,11 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertTrue(leggTilVedleggResponse != null)
 		assertTrue(oppdatertUtfyltResponse != null)
 
-		assertEquals(302, utfyltResponse.statusCode.value())
+		assertEquals(200, utfyltResponse.statusCode.value())
 		assertEquals(201, leggTilVedleggResponse.statusCode.value())
-		assertEquals(302, oppdatertUtfyltResponse.statusCode.value())
+		assertEquals(200, oppdatertUtfyltResponse.statusCode.value())
 
 		assertEquals(4, oppdatertSoknad.vedleggsListe.size)
-
-		assertNotNull(utfyltResponse.headers["Location"])
-		assertNotNull(oppdatertUtfyltResponse.headers["Location"])
 
 		val n6FyllUtVedlegg =
 			oppdatertSoknad.vedleggsListe.find { it.vedleggsnr == "N6" && it.tittel == fyllUtVedleggstittel }
@@ -467,26 +464,23 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Skal redirecte ved eksisterende søknad gitt at opprettNySoknad er false`() {
+	fun `Skal redirecte ved eksisterende søknad gitt at force er false`() {
 		// Gitt
 		val dokumentSoknadDto = opprettSoknad(skjemanr = "NAV-redirect")
 
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		// Når
-		val response = api?.opprettSoknad(fraFyllUt, false)
+		val response = api?.opprettSoknadRedirect(fraFyllUt, false)
 
 		// Så
 		assertTrue(response != null)
-		assertEquals(302, response.statusCode.value())
-		assertEquals(
-			"http://localhost:3001/fyllut/${fraFyllUt.skjemapath}/paabegynt?sub=digital",
-			response.headers.location!!.toString()
-		)
+		assertEquals(200, response.statusCode.value())
+		assertEquals(ErrorCode.SOKNAD_ALREADY_EXISTS.code, response.body?.status)
 	}
 
 	@Test
-	fun `Skal opprette søknad når opprettNySoknad er true, selv om brukeren har en søknad med samme skjemanr`() {
+	fun `Skal opprette søknad når force er true, selv om brukeren har en søknad med samme skjemanr`() {
 		// Gitt
 		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
