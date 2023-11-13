@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.models.*
 import no.nav.soknad.innsending.utils.Api
 import no.nav.soknad.innsending.utils.Hjelpemetoder
@@ -419,7 +420,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val opprettetSoknad = response?.body!!
 
 		// Så
-		assertTrue(response != null)
+		assertNotNull(response)
 		assertEquals(200, response.statusCode.value())
 		assertEquals(skjemanr, opprettetSoknad.skjemanr)
 		assertEquals(2, opprettetSoknad.vedleggsListe?.size)
@@ -437,6 +438,11 @@ class FyllutRestApiTest : ApplicationTest() {
 		)
 		assertNotNull(opprettetSoknad.endretDato)
 		assertEquals(SoknadsStatusDto.opprettet, opprettetSoknad.status, "Status er satt til opprettet")
+		assertEquals(
+			opprettetSoknad.skalSlettesDato?.toString(), dokumentSoknadDto.opprettetDato.plusDays(
+				Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
+			).toLocalDate().toString(), "SkalSlettesDato er satt til opprettetDato + 8 uker"
+		)
 	}
 
 	@Test
