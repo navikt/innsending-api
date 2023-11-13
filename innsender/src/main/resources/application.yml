@@ -127,7 +127,7 @@ spring:
       connection-timeout: 50000
       max-lifetime: 50001
       validationTimeout: 20000
-      leak-detection-threshold: 40000
+      leak-detection-threshold: 60000
     dbcp2:
       test-on-borrow: true
       validation-query: "SELECT 1"
