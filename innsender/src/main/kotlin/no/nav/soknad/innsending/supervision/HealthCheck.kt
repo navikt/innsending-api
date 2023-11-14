@@ -153,7 +153,7 @@ class HealthCheck(
 	}
 
 	private data class Dependency(
-		val dependencyEndpoint: suspend () -> String,
+		val dependencyEndpoint: () -> String,
 		val expectedResponse: String,
 		val dependencyName: String,
 		val description: String,

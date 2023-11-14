@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service
 
 @Service
 @Profile("prod | dev")
-class KafkaMessageListener(
+class KafkaMessageReader(
 	private val repo: RepositoryUtils
 ) {
 
@@ -36,11 +36,11 @@ class KafkaMessageListener(
 			logger.info("Kafka: hentet søknad ${soknad.innsendingsid} fra database")
 
 			if (message.startsWith("**Archiving: OK")) {
-				logger.info("$message: er arkivert")
+				logger.info("$messageKey: er arkivert")
 				repo.oppdaterArkiveringsstatus(soknad, ArkiveringsStatus.Arkivert)
 				loggAntallAvHendelsetype(HendelseType.Arkivert)
 			} else if (message.startsWith("**Archiving: FAILED")) {
-				logger.error("$message: arkivering feilet")
+				logger.error("$messageKey: arkivering feilet")
 				repo.oppdaterArkiveringsstatus(soknad, ArkiveringsStatus.ArkiveringFeilet)
 				loggAntallAvHendelsetype(HendelseType.ArkiveringFeilet)
 			}
