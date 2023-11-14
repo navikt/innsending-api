@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.consumerapis.kafka
 
 
+import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.HendelseType
 import no.nav.soknad.innsending.service.RepositoryUtils
@@ -44,6 +45,8 @@ class KafkaMessageReader(
 				repo.oppdaterArkiveringsstatus(soknad, ArkiveringsStatus.ArkiveringFeilet)
 				loggAntallAvHendelsetype(HendelseType.ArkiveringFeilet)
 			}
+		} catch (ex: ResourceNotFoundException) {
+			logger.info("Kafka: fant ikke søknad med key $messageKey i database. Mest sannsynlig en søknad sendt inn av sendsoknad")
 		} catch (ex: Exception) {
 			logger.warn("Kafka exception: ${ex.message}", ex)
 		}
