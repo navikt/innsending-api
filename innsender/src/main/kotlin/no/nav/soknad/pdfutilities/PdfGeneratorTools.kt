@@ -121,7 +121,8 @@ class PdfGenerator {
 	}
 
 	private fun formaterKlokke(now: LocalDateTime): String {
-		return now.format(DateTimeFormatter.ISO_LOCAL_TIME)
+		val formatter = DateTimeFormatter.ofPattern("HH:mm")
+		return now.format(formatter)
 	}
 
 	private fun formaterDato(now: LocalDateTime): String {
