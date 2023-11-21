@@ -1,34 +1,107 @@
-query PrefillData($ident: ID!) {
+query PrefillData($ident: ID!, $historikk: Boolean!) {
 	hentPerson(ident: $ident) {
-		bostedsadresse(historikk: false) {
+		bostedsadresse(historikk: $historikk) {
 			angittFlyttedato
 			coAdressenavn
 			gyldigFraOgMed
 			gyldigTilOgMed
 			vegadresse {
-				matrikkelId
-				husbokstav
-				husnummer
-				adressenavn
-				bruksenhetsnummer
-				tilleggsnavn
-				postnummer
-				kommunenummer
-				bydelsnummer
+				...vegadresseDetails
+			}
+			utenlandskAdresse {
+				...utenlandskAdresseDetails
+			}
+			metadata {
+				...metadataDetails
 			}
 		}
-		kjoenn(historikk: false) {
-			kjoenn
+		oppholdsadresse(historikk: $historikk) {
+			oppholdAnnetSted
+			coAdressenavn
+			gyldigFraOgMed
+			gyldigTilOgMed
+			utenlandskAdresse {
+				...utenlandskAdresseDetails
+			}
+			vegadresse {
+				...vegadresseDetails
+			}
+			metadata {
+				...metadataDetails
+			}
 		}
-		navn(historikk: false) {
+		kontaktadresse(historikk: $historikk) {
+			gyldigFraOgMed
+			gyldigTilOgMed
+			type
+			coAdressenavn
+			postboksadresse {
+				postbokseier
+				postboks
+				postnummer
+			}
+			vegadresse {
+				...vegadresseDetails
+			}
+			utenlandskAdresse {
+				...utenlandskAdresseDetails
+			}
+			metadata {
+				...metadataDetails
+			}
+		}
+		kjoenn(historikk: $historikk) {
+			kjoenn
+			metadata {
+				...metadataDetails
+			}
+		}
+		navn(historikk: $historikk) {
 			fornavn
 			mellomnavn
 			etternavn
+			gyldigFraOgMed
+			metadata {
+				...metadataDetails
+			}
 		}
 		telefonnummer {
 			landskode
 			nummer
+			metadata {
+				...metadataDetails
+			}
 		}
 	}
 }
 
+fragment metadataDetails on Metadata {
+	endringer {
+		kilde
+		registrert
+		registrertAv
+		systemkilde
+		type
+	}
+	master
+	historisk
+}
+
+fragment vegadresseDetails on Vegadresse {
+	husbokstav
+	husnummer
+	adressenavn
+	bruksenhetsnummer
+	tilleggsnavn
+	postnummer
+}
+
+fragment utenlandskAdresseDetails on UtenlandskAdresse {
+	adressenavnNummer
+	bygningEtasjeLeilighet
+	postboksNummerNavn
+	postkode
+	bySted
+	regionDistriktOmraade
+	landkode
+}

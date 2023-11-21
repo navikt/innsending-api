@@ -910,6 +910,72 @@ paths:
 
 components:
   schemas:
+    Adresser:
+      type: object
+      description: Søkerens adresse
+      properties:
+        bostedsadresse:
+          description: Bostedsadresse (kan kun være en adresse til en hver tid, enten i Norge eller utlandet)
+          $ref: "#/components/schemas/Adresse"
+
+        oppholdsadresser:
+          type: array
+          description: Liste av oppholdsadresser
+          items:
+              $ref: "#/components/schemas/Adresse"
+        kontaktadresser:
+          type: array
+          description: Liste av kontaktadresser
+          items:
+              $ref: "#/components/schemas/Adresse"
+
+    Adresse:
+      type: object
+      description: Adresse
+      properties:
+        gyldigFraOgMed:
+          type: string
+          format: date
+          description: Gyldig fra og med dato
+          example: "2020-01-01"
+        gyldigTilOgMed:
+          type: string
+          format: date
+          description: Gyldig fra og med dato
+          example: "2030-01-01"
+        co:
+          type: string
+          description: C/O-adresse
+          example: "c/o Ola Nordmann"
+        adresse:
+          type: string
+          description: Gatenavn og husnummer o.l.
+          example: "Klostergata 57A"
+        bygning:
+          type: string
+          description: Informasjon som navn på bygg, etasje i et bygg, leilighetsnummer o.l. (utenlandske adresser har dette i PDL)
+        postboks:
+          type: string
+          description: Postboksnummer og postboksanlegg
+          example: "P.O.Box 1234 Place"
+        postnummer:
+          type: string
+          description: Postnummer
+          example: "SE-12345"
+        bySted:
+          type: string
+          description: By/Bydel/Bysted (utenlandske adresser har dette i PDL)
+          example: "Roma"
+        region:
+          type: string
+          description: Navn på et område innenfor et land, kan være landsby, stat eller noe i mellom (utenlandske adresser har dette i PDL)
+          example: "Yorkshire"
+        landkode:
+          type: string
+          description: Alpha-3 landekode
+          example: "SWE"
+
+
     Aktivitet:
       type: object
       properties:
@@ -1409,6 +1475,8 @@ components:
           nullable: true
           description: Søkerens etternavn
           example: Nordmann
+        sokerAdresser:
+          $ref: "#/components/schemas/Adresser"
         sokerMaalgrupper:
           type: array
           description: Liste av målgrupper for søker på angitt tidsperiode. Dersom ingen målgrupper ble funnet i tidsperioden, returneres en tom liste

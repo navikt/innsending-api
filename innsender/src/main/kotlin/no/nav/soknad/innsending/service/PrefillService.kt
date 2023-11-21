@@ -6,6 +6,8 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.consumerapis.arena.ArenaConsumerInterface
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
+import no.nav.soknad.innsending.consumerapis.pdl.transformers.AddressTransformer.transformAddresses
+import no.nav.soknad.innsending.consumerapis.pdl.transformers.NameTransformer.transformName
 import no.nav.soknad.innsending.model.PrefillData
 import no.nav.soknad.innsending.util.Constants.ARENA_AKTIVITETER
 import no.nav.soknad.innsending.util.Constants.ARENA_MAALGRUPPER
@@ -48,17 +50,24 @@ class PrefillService(
 				sokerFornavn = obj.sokerFornavn ?: acc.sokerFornavn,
 				sokerEtternavn = obj.sokerEtternavn ?: acc.sokerEtternavn,
 				sokerMaalgrupper = obj.sokerMaalgrupper ?: acc.sokerMaalgrupper,
-				sokerAktiviteter = obj.sokerAktiviteter ?: acc.sokerAktiviteter
+				sokerAktiviteter = obj.sokerAktiviteter ?: acc.sokerAktiviteter,
+				sokerAdresser = obj.sokerAdresser ?: acc.sokerAdresser,
 			)
 		}
 	}
 
 	suspend fun getPDLData(userId: String, properties: List<String>): PrefillData {
 		val personInfo = pdlApi.getPrefillPersonInfo(userId)
-		val navn = personInfo?.hentPerson?.navn?.first()
+		val navn = transformName(personInfo?.hentPerson?.navn)
+		val addresses = transformAddresses(
+			bostedsAdresser = personInfo?.hentPerson?.bostedsadresse,
+			kontaktadresser = personInfo?.hentPerson?.kontaktadresse,
+			oppholdsadresser = personInfo?.hentPerson?.oppholdsadresse
+		)
 		return PrefillData(
 			sokerFornavn = if (properties.contains("sokerFornavn")) navn?.fornavn else null,
-			sokerEtternavn = if (properties.contains("sokerEtternavn")) navn?.etternavn else null
+			sokerEtternavn = if (properties.contains("sokerEtternavn")) navn?.etternavn else null,
+			sokerAdresser = if (properties.contains("sokerAdresser")) addresses else null,
 		)
 	}
 

@@ -5,12 +5,15 @@ import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.pdl.generated.PrefillData
+import no.nav.soknad.innsending.pdl.generated.prefilldata.Bostedsadresse
 import no.nav.soknad.innsending.pdl.generated.prefilldata.Navn
 import no.nav.soknad.innsending.pdl.generated.prefilldata.Person
+import no.nav.soknad.innsending.pdl.generated.prefilldata.Vegadresse
 import no.nav.soknad.innsending.util.testpersonid
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
+import java.time.LocalDate
 
 @Service
 @Profile("local | docker")
@@ -40,12 +43,38 @@ class PdlAPITest : PdlInterface, HealthRequestInterface {
 	}
 
 	override suspend fun getPrefillPersonInfo(ident: String): PrefillData.Result? {
+		val metadata = no.nav.soknad.innsending.pdl.generated.prefilldata.Metadata(
+			master = "PDL",
+			endringer = emptyList(),
+			historisk = false
+		)
+		val vegadresse = Vegadresse(
+			husbokstav = "C",
+			husnummer = "1",
+			adressenavn = "Testveien",
+			bruksenhetsnummer = "H0101",
+			tilleggsnavn = null,
+			postnummer = "1234"
+		)
+
+		val bostedsadresse = Bostedsadresse(
+			angittFlyttedato = LocalDate.now().minusYears(1).toString(),
+			coAdressenavn = "c/o Test",
+			gyldigFraOgMed = LocalDate.now().minusYears(1).toString(),
+			gyldigTilOgMed = null,
+			vegadresse = vegadresse,
+			utenlandskAdresse = null,
+			metadata = metadata
+		)
+
 		return PrefillData.Result(
 			Person(
-				navn = listOf(Navn("Ola", null, "Nordmann")),
-				bostedsadresse = emptyList(),
+				navn = listOf(Navn(fornavn = "Ola", mellomnavn = null, etternavn = "Nordmann", metadata = metadata)),
+				bostedsadresse = listOf(bostedsadresse),
 				kjoenn = emptyList(),
-				telefonnummer = emptyList()
+				telefonnummer = emptyList(),
+				oppholdsadresse = emptyList(),
+				kontaktadresse = emptyList(),
 			)
 		)
 	}
