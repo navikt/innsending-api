@@ -56,16 +56,14 @@ object AddressTransformer {
 
 		return bostedsAdresser
 			.filter {
-				if (it.gyldigTilOgMed != null) LocalDate.parse(
-					it.gyldigTilOgMed,
-					DateTimeFormatter.ISO_LOCAL_DATE_TIME
-				) >= today else true
+				if (it.gyldigTilOgMed != null)
+					LocalDate.parse(it.gyldigTilOgMed, DateTimeFormatter.ISO_LOCAL_DATE_TIME) >= today
+				else true
 			}
 			.filter {
-				if (it.gyldigFraOgMed != null) LocalDate.parse(
-					it.gyldigFraOgMed,
-					DateTimeFormatter.ISO_LOCAL_DATE_TIME
-				) <= today else true
+				if (it.gyldigFraOgMed != null)
+					LocalDate.parse(it.gyldigFraOgMed, DateTimeFormatter.ISO_LOCAL_DATE_TIME) <= today
+				else true
 			}
 			.maxByOrNull { address -> LocalDate.parse(address.gyldigFraOgMed, DateTimeFormatter.ISO_LOCAL_DATE_TIME) }
 			?: bostedsAdresser.firstOrNull { it.gyldigFraOgMed == null }
@@ -77,16 +75,14 @@ object AddressTransformer {
 
 		return oppholdsadresser
 			.filter {
-				if (it.gyldigTilOgMed != null) LocalDate.parse(
-					it.gyldigTilOgMed,
-					DateTimeFormatter.ISO_LOCAL_DATE_TIME
-				) >= today else true
+				if (it.gyldigTilOgMed != null)
+					LocalDate.parse(it.gyldigTilOgMed, DateTimeFormatter.ISO_LOCAL_DATE_TIME) >= today
+				else true
 			}
 			.filter {
-				if (it.gyldigFraOgMed != null) LocalDate.parse(
-					it.gyldigFraOgMed,
-					DateTimeFormatter.ISO_LOCAL_DATE_TIME
-				) <= today else true
+				if (it.gyldigFraOgMed != null)
+					LocalDate.parse(it.gyldigFraOgMed, DateTimeFormatter.ISO_LOCAL_DATE_TIME) <= today
+				else true
 			}
 			.maxByOrNull { address -> LocalDate.parse(address.gyldigFraOgMed, DateTimeFormatter.ISO_LOCAL_DATE_TIME) }
 			?: oppholdsadresser.firstOrNull { it.gyldigFraOgMed == null }
@@ -98,16 +94,14 @@ object AddressTransformer {
 
 		return kontaktadresser
 			.filter {
-				if (it.gyldigTilOgMed != null) LocalDate.parse(
-					it.gyldigTilOgMed,
-					DateTimeFormatter.ISO_LOCAL_DATE_TIME
-				) >= today else true
+				if (it.gyldigTilOgMed != null)
+					LocalDate.parse(it.gyldigTilOgMed, DateTimeFormatter.ISO_LOCAL_DATE_TIME) >= today
+				else true
 			}
 			.filter {
-				if (it.gyldigFraOgMed != null) LocalDate.parse(
-					it.gyldigFraOgMed,
-					DateTimeFormatter.ISO_LOCAL_DATE_TIME
-				) <= today else true
+				if (it.gyldigFraOgMed != null)
+					LocalDate.parse(it.gyldigFraOgMed, DateTimeFormatter.ISO_LOCAL_DATE_TIME) <= today
+				else true
 			}
 	}
 }

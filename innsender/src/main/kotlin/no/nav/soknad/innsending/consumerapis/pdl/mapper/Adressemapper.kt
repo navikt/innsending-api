@@ -13,8 +13,8 @@ class Adressemapper {
 		val isNorwegianAddress = bostedsadresse.vegadresse != null
 
 		val norwegianAddress =
-			"${bostedsadresse.vegadresse?.adressenavn} ${bostedsadresse.vegadresse?.husnummer}${bostedsadresse.vegadresse?.husbokstav}"
-		val foreignAddress = "${bostedsadresse.utenlandskAdresse?.adressenavnNummer}"
+			"${bostedsadresse.vegadresse?.adressenavn ?: ""} ${bostedsadresse.vegadresse?.husnummer ?: ""}${bostedsadresse.vegadresse?.husbokstav ?: ""}"
+		val foreignAddress = bostedsadresse.utenlandskAdresse?.adressenavnNummer
 
 		return Adresse(
 			gyldigFraOgMed = if (bostedsadresse.gyldigFraOgMed != null) LocalDate.parse(
@@ -40,8 +40,8 @@ class Adressemapper {
 		val isNorwegianAddress = oppholdsadresse.vegadresse != null
 
 		val norwegianAddress =
-			"${oppholdsadresse.vegadresse?.adressenavn} ${oppholdsadresse.vegadresse?.husnummer}${oppholdsadresse.vegadresse?.husbokstav}"
-		val foreignAddress = "${oppholdsadresse.utenlandskAdresse?.adressenavnNummer}"
+			"${oppholdsadresse.vegadresse?.adressenavn ?: ""} ${oppholdsadresse.vegadresse?.husnummer ?: ""}${oppholdsadresse.vegadresse?.husbokstav ?: ""}"
+		val foreignAddress = oppholdsadresse.utenlandskAdresse?.adressenavnNummer
 
 		return Adresse(
 			gyldigFraOgMed = if (oppholdsadresse.gyldigFraOgMed != null) LocalDate.parse(
@@ -67,10 +67,11 @@ class Adressemapper {
 		val isNorwegianAddress = kontaktadresse.type == KontaktadresseType.INNLAND
 
 		val norwegianAddress =
-			"${kontaktadresse.vegadresse?.adressenavn} ${kontaktadresse.vegadresse?.husnummer}${kontaktadresse.vegadresse?.husbokstav}"
-		val foreignAddress = "${kontaktadresse.utenlandskAdresse?.adressenavnNummer}"
+			"${kontaktadresse.vegadresse?.adressenavn ?: ""} ${kontaktadresse.vegadresse?.husnummer ?: ""}${kontaktadresse.vegadresse?.husbokstav ?: ""}"
+		val foreignAddress = kontaktadresse.utenlandskAdresse?.adressenavnNummer
 
-		val postboks = "${kontaktadresse.postboksadresse?.postbokseier} ${kontaktadresse.postboksadresse?.postboks}"
+		val postboks =
+			"${kontaktadresse.postboksadresse?.postbokseier ?: ""} ${kontaktadresse.postboksadresse?.postboks ?: ""}"
 
 		return Adresse(
 			gyldigFraOgMed = if (kontaktadresse.gyldigFraOgMed != null) LocalDate.parse(
