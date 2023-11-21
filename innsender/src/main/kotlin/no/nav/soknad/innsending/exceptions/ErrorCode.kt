@@ -6,6 +6,8 @@ enum class ErrorCode(val code: String) {
 	GENERAL_ERROR("somethingFailedTryLater"),
 	NOT_FOUND("resourceNotFound"),
 
+	ARENA_ERROR("arenaError"),
+
 	// Illegal Actions
 	APPLICATION_SENT_IN_OR_DELETED("illegalAction.applicationSentInOrDeleted"),
 	FILE_CANNOT_BE_READ("illegalAction.fileCannotBeRead"),

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodyOrNull
 import org.springframework.web.util.UriComponentsBuilder
@@ -49,6 +50,10 @@ class ArenaConsumer(
 			.header(HEADER_CALL_ID, callId)
 			.header(NAV_PERSON_IDENT, subjectHandler.getUserIdFromToken())
 			.retrieve()
+			.onStatus({ status -> status.is4xxClientError || status.is5xxServerError },
+				{ clientResponse ->
+					handleErrorResponse(clientResponse, "Feil ved henting av målgrupper")
+				})
 			.awaitBodyOrNull()
 			?: throw BackendErrorException(
 				message = "Kunne ikke hente målgruppe"
@@ -73,9 +78,25 @@ class ArenaConsumer(
 			.header(HEADER_CALL_ID, callId)
 			.header(NAV_PERSON_IDENT, subjectHandler.getUserIdFromToken())
 			.retrieve()
+			.onStatus({ status -> status.is4xxClientError || status.is5xxServerError },
+				{ clientResponse ->
+					handleErrorResponse(clientResponse, "Feil ved henting av aktiviteter")
+				})
 			.awaitBodyOrNull()
 			?: throw BackendErrorException(
 				message = "Kunne ikke hente aktiviteter"
 			)
+	}
+
+	private fun handleErrorResponse(clientResponse: ClientResponse, errorMessage: String): Nothing {
+		val status = clientResponse.statusCode()
+		val message = "${status.value()}: $errorMessage"
+
+		if (status.is4xxClientError) {
+			logger.warn(message)
+			throw ArenaException(message = message)
+		} else {
+			throw BackendErrorException(message = message)
+		}
 	}
 }

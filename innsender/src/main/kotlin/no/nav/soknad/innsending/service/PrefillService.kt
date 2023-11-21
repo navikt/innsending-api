@@ -5,9 +5,12 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.consumerapis.arena.ArenaConsumerInterface
+import no.nav.soknad.innsending.consumerapis.arena.ArenaException
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.transformers.AddressTransformer.transformAddresses
 import no.nav.soknad.innsending.consumerapis.pdl.transformers.NameTransformer.transformName
+import no.nav.soknad.innsending.model.Aktivitet
+import no.nav.soknad.innsending.model.Maalgruppe
 import no.nav.soknad.innsending.model.PrefillData
 import no.nav.soknad.innsending.util.Constants.ARENA_AKTIVITETER
 import no.nav.soknad.innsending.util.Constants.ARENA_MAALGRUPPER
@@ -72,8 +75,13 @@ class PrefillService(
 	}
 
 	suspend fun getArenaMaalgrupper(userId: String, properties: List<String>): PrefillData {
-		val maalgrupper = arenaConsumer.getMaalgrupper()
-		if (maalgrupper.isEmpty()) return PrefillData()
+		val maalgrupper: List<Maalgruppe>
+		try {
+			maalgrupper = arenaConsumer.getMaalgrupper()
+			if (maalgrupper.isEmpty()) return PrefillData()
+		} catch (arenaException: ArenaException) {
+			return PrefillData()
+		}
 
 		return PrefillData(
 			sokerMaalgrupper = if (properties.contains("sokerMaalgrupper")) maalgrupper else null,
@@ -81,8 +89,14 @@ class PrefillService(
 	}
 
 	suspend fun getArenaAktiviteter(userId: String, properties: List<String>): PrefillData {
-		val aktiviteter = arenaConsumer.getAktiviteter()
-		if (aktiviteter.isEmpty()) return PrefillData()
+		val aktiviteter: List<Aktivitet>
+
+		try {
+			aktiviteter = arenaConsumer.getAktiviteter()
+			if (aktiviteter.isEmpty()) return PrefillData()
+		} catch (arenaException: ArenaException) {
+			return PrefillData()
+		}
 
 		return PrefillData(
 			sokerAktiviteter = if (properties.contains("sokerAktiviteter")) aktiviteter else null,
