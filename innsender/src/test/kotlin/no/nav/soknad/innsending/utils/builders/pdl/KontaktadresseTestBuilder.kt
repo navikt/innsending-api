@@ -6,8 +6,8 @@ import no.nav.soknad.innsending.utils.Date
 import java.time.LocalDateTime
 
 class KontaktadresseTestBuilder {
-	private var gyldigFraOgMed: String? = Date.formatDate(LocalDateTime.now().minusDays(10))
-	private var gyldigTilOgMed: String? = Date.formatDate(LocalDateTime.now().plusYears(1))
+	private var gyldigFraOgMed: String? = Date.formatToLocalDateTime(LocalDateTime.now().minusDays(10))
+	private var gyldigTilOgMed: String? = Date.formatToLocalDateTime(LocalDateTime.now().plusYears(1))
 	private var type: KontaktadresseType = KontaktadresseType.INNLAND
 	private var coAdressenavn: String? = "c/o John Doe"
 	private var postboksadresse: Postboksadresse? = null

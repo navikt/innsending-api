@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.pdl.generated.prefilldata.Bostedsadresse
 import no.nav.soknad.innsending.pdl.generated.prefilldata.Kontaktadresse
 import no.nav.soknad.innsending.pdl.generated.prefilldata.Oppholdsadresse
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 // Would like to use an interface and more generic functions here, but since the classes are generated, it's not possible
 object AddressTransformer {
@@ -55,13 +56,19 @@ object AddressTransformer {
 
 		return bostedsAdresser
 			.filter {
-				if (it.gyldigTilOgMed != null) LocalDate.parse(it.gyldigTilOgMed) >= today else true
+				if (it.gyldigTilOgMed != null) LocalDate.parse(
+					it.gyldigTilOgMed,
+					DateTimeFormatter.ISO_LOCAL_DATE_TIME
+				) >= today else true
 			}
 			.filter {
-				if (it.gyldigFraOgMed != null) LocalDate.parse(it.gyldigFraOgMed) <= today else true
+				if (it.gyldigFraOgMed != null) LocalDate.parse(
+					it.gyldigFraOgMed,
+					DateTimeFormatter.ISO_LOCAL_DATE_TIME
+				) <= today else true
 			}
-			.maxByOrNull { address -> LocalDate.parse(address.gyldigFraOgMed) }
-			?: bostedsAdresser.first()
+			.maxByOrNull { address -> LocalDate.parse(address.gyldigFraOgMed, DateTimeFormatter.ISO_LOCAL_DATE_TIME) }
+			?: bostedsAdresser.firstOrNull { it.gyldigFraOgMed == null }
 	}
 
 	private fun findCurrentOppholdsadresse(oppholdsadresser: List<Oppholdsadresse>?): Oppholdsadresse? {
@@ -70,13 +77,19 @@ object AddressTransformer {
 
 		return oppholdsadresser
 			.filter {
-				if (it.gyldigTilOgMed != null) LocalDate.parse(it.gyldigTilOgMed) >= today else true
+				if (it.gyldigTilOgMed != null) LocalDate.parse(
+					it.gyldigTilOgMed,
+					DateTimeFormatter.ISO_LOCAL_DATE_TIME
+				) >= today else true
 			}
 			.filter {
-				if (it.gyldigFraOgMed != null) LocalDate.parse(it.gyldigFraOgMed) <= today else true
+				if (it.gyldigFraOgMed != null) LocalDate.parse(
+					it.gyldigFraOgMed,
+					DateTimeFormatter.ISO_LOCAL_DATE_TIME
+				) <= today else true
 			}
-			.maxByOrNull { address -> LocalDate.parse(address.gyldigFraOgMed) }
-			?: oppholdsadresser.first()
+			.maxByOrNull { address -> LocalDate.parse(address.gyldigFraOgMed, DateTimeFormatter.ISO_LOCAL_DATE_TIME) }
+			?: oppholdsadresser.firstOrNull { it.gyldigFraOgMed == null }
 	}
 
 	private fun findCurrentKontaktadresser(kontaktadresser: List<Kontaktadresse>?): List<Kontaktadresse> {
@@ -85,10 +98,16 @@ object AddressTransformer {
 
 		return kontaktadresser
 			.filter {
-				if (it.gyldigTilOgMed != null) LocalDate.parse(it.gyldigTilOgMed) >= today else true
+				if (it.gyldigTilOgMed != null) LocalDate.parse(
+					it.gyldigTilOgMed,
+					DateTimeFormatter.ISO_LOCAL_DATE_TIME
+				) >= today else true
 			}
 			.filter {
-				if (it.gyldigFraOgMed != null) LocalDate.parse(it.gyldigFraOgMed) <= today else true
+				if (it.gyldigFraOgMed != null) LocalDate.parse(
+					it.gyldigFraOgMed,
+					DateTimeFormatter.ISO_LOCAL_DATE_TIME
+				) <= today else true
 			}
 	}
 }

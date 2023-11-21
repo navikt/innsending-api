@@ -2,7 +2,7 @@ package no.nav.soknad.innsending.consumerapis.pdl.transformers
 
 import no.nav.soknad.innsending.consumerapis.pdl.transformers.NameTransformer.transformName
 import no.nav.soknad.innsending.pdl.generated.prefilldata.Navn
-import no.nav.soknad.innsending.utils.Date.formatDate
+import no.nav.soknad.innsending.utils.Date.formatToLocalDate
 import no.nav.soknad.innsending.utils.builders.pdl.NavnTestBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -34,8 +34,8 @@ class NameTransformerTest {
 	@Test
 	fun `Should get date before today`() {
 		// Given
-		val tenDaysAgo = formatDate(LocalDateTime.now().minusDays(10))
-		val tenDaysFromNow = formatDate(LocalDateTime.now().plusDays(10))
+		val tenDaysAgo = formatToLocalDate(LocalDateTime.now().minusDays(10))
+		val tenDaysFromNow = formatToLocalDate(LocalDateTime.now().plusDays(10))
 
 		val nameTenDaysAgo = NavnTestBuilder().gyldigFraOgMed(tenDaysAgo).build()
 		val nameTenDaysFromNow = NavnTestBuilder().gyldigFraOgMed(tenDaysFromNow).build()
@@ -52,7 +52,7 @@ class NameTransformerTest {
 	@Test
 	fun `Should get null date if all other are invalid`() {
 		// Given
-		val tenDaysFromNow = formatDate(LocalDateTime.now().plusDays(10))
+		val tenDaysFromNow = formatToLocalDate(LocalDateTime.now().plusDays(10))
 
 		val nameNull = NavnTestBuilder().gyldigFraOgMed(null).build()
 		val nameTenDaysFromNow = NavnTestBuilder().gyldigFraOgMed(tenDaysFromNow).build()
@@ -69,10 +69,10 @@ class NameTransformerTest {
 	@Test
 	fun `Should get closest date to now`() {
 		// Given
-		val oneDayAgo = formatDate(LocalDateTime.now().minusDays(10))
-		val tenDaysAgo = formatDate(LocalDateTime.now().minusDays(10))
-		val twentyDaysAgo = formatDate(LocalDateTime.now().minusDays(20))
-		val tenDaysFromNow = formatDate(LocalDateTime.now().plusDays(10))
+		val oneDayAgo = formatToLocalDate(LocalDateTime.now().minusDays(10))
+		val tenDaysAgo = formatToLocalDate(LocalDateTime.now().minusDays(10))
+		val twentyDaysAgo = formatToLocalDate(LocalDateTime.now().minusDays(20))
+		val tenDaysFromNow = formatToLocalDate(LocalDateTime.now().plusDays(10))
 
 		val nameOneDayAgo = NavnTestBuilder().gyldigFraOgMed(oneDayAgo).build()
 		val nameTenDaysAgo = NavnTestBuilder().gyldigFraOgMed(tenDaysAgo).build()

@@ -1,13 +1,14 @@
 package no.nav.soknad.innsending.consumerapis.pdl.transformers
 
 import no.nav.soknad.innsending.consumerapis.pdl.transformers.AddressTransformer.transformAddresses
-import no.nav.soknad.innsending.utils.Date.formatDate
+import no.nav.soknad.innsending.utils.Date.formatToLocalDateTime
 import no.nav.soknad.innsending.utils.builders.pdl.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class AddressTransformerTest {
 	@Test
@@ -24,8 +25,8 @@ class AddressTransformerTest {
 	@Test
 	fun `Should get bostedsAdresse with date before today`() {
 		// Given
-		val tenDaysAgo = formatDate(LocalDateTime.now().minusDays(10))
-		val tenDaysFromNow = formatDate(LocalDateTime.now().plusDays(10))
+		val tenDaysAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(10))
+		val tenDaysFromNow = formatToLocalDateTime(LocalDateTime.now().plusDays(10))
 
 		val bostedTenDaysAgo = BostedsadresseTestBuilder().gyldigFraOgMed(tenDaysAgo).build()
 		val bostedTenDaysFromNow = BostedsadresseTestBuilder().gyldigFraOgMed(tenDaysFromNow).build()
@@ -36,13 +37,16 @@ class AddressTransformerTest {
 		val result = transformAddresses(bostedsAdresser, null, null)
 
 		// Then
-		assertEquals(LocalDate.parse(bostedTenDaysAgo.gyldigFraOgMed), result.bostedsadresse?.gyldigFraOgMed)
+		assertEquals(
+			LocalDate.parse(bostedTenDaysAgo.gyldigFraOgMed, DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+			result.bostedsadresse?.gyldigFraOgMed
+		)
 	}
 
 	@Test
 	fun `Should get bostedsAdresse with null date if all other are invalid`() {
 		// Given
-		val tenDaysFromNow = formatDate(LocalDateTime.now().plusDays(10))
+		val tenDaysFromNow = formatToLocalDateTime(LocalDateTime.now().plusDays(10))
 
 		val bostedNull = BostedsadresseTestBuilder().gyldigFraOgMed(null).build()
 		val bostedTenDaysFromNow = BostedsadresseTestBuilder().gyldigFraOgMed(tenDaysFromNow).build()
@@ -59,10 +63,10 @@ class AddressTransformerTest {
 	@Test
 	fun `Should get closest bostedsAdresse to now`() {
 		// Given
-		val oneDayAgo = formatDate(LocalDateTime.now().minusDays(10))
-		val tenDaysAgo = formatDate(LocalDateTime.now().minusDays(10))
-		val twentyDaysAgo = formatDate(LocalDateTime.now().minusDays(20))
-		val tenDaysFromNow = formatDate(LocalDateTime.now().plusDays(10))
+		val oneDayAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(10))
+		val tenDaysAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(10))
+		val twentyDaysAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(20))
+		val tenDaysFromNow = formatToLocalDateTime(LocalDateTime.now().plusDays(10))
 
 		val bostedOneDayAgo = BostedsadresseTestBuilder().gyldigFraOgMed(oneDayAgo).build()
 		val bostedTenDaysAgo = BostedsadresseTestBuilder().gyldigFraOgMed(tenDaysAgo).build()
@@ -75,16 +79,19 @@ class AddressTransformerTest {
 		val result = transformAddresses(bostedsAdresser, null, null)
 
 		// Then
-		assertEquals(LocalDate.parse(bostedTenDaysAgo.gyldigFraOgMed), result.bostedsadresse?.gyldigFraOgMed)
+		assertEquals(
+			LocalDate.parse(bostedTenDaysAgo.gyldigFraOgMed, DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+			result.bostedsadresse?.gyldigFraOgMed
+		)
 	}
 
 	@Test
 	fun `Should get all relevant kontaktadresse`() {
 		// Given
-		val oneDayAgo = formatDate(LocalDateTime.now().minusDays(10))
-		val tenDaysAgo = formatDate(LocalDateTime.now().minusDays(10))
-		val twentyDaysAgo = formatDate(LocalDateTime.now().minusDays(20))
-		val tenDaysFromNow = formatDate(LocalDateTime.now().plusDays(10))
+		val oneDayAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(10))
+		val tenDaysAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(10))
+		val twentyDaysAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(20))
+		val tenDaysFromNow = formatToLocalDateTime(LocalDateTime.now().plusDays(10))
 
 		val kontaktOneDayAgo = KontaktadresseTestBuilder().gyldigFraOgMed(oneDayAgo).build()
 		val kontakTenDaysAgo = KontaktadresseTestBuilder().gyldigFraOgMed(tenDaysAgo).build()
@@ -114,10 +121,10 @@ class AddressTransformerTest {
 	@Test
 	fun `Should get one norwegian and one international oppholdsAdresse`() {
 		// Given
-		val oneDayAgo = formatDate(LocalDateTime.now().minusDays(10))
-		val tenDaysAgo = formatDate(LocalDateTime.now().minusDays(10))
-		val twentyDaysAgo = formatDate(LocalDateTime.now().minusDays(20))
-		val tenDaysFromNow = formatDate(LocalDateTime.now().plusDays(10))
+		val oneDayAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(10))
+		val tenDaysAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(10))
+		val twentyDaysAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(20))
+		val tenDaysFromNow = formatToLocalDateTime(LocalDateTime.now().plusDays(10))
 
 		val vegadresse = VegadresseTestBuilder().build()
 		val utenlandskAdresse = UtenlandsadresseTestBuilder().build()
@@ -166,8 +173,14 @@ class AddressTransformerTest {
 		assertEquals(2, result.oppholdsadresser?.size, "Should be max 2 oppholdsadresser")
 		val norwegianAddress = result.oppholdsadresser?.find { it.landkode == "NOR" }
 		val internationalAddress = result.oppholdsadresser?.find { it.landkode != "NOR" }
-		assertEquals(LocalDate.parse(norgeTenDaysAgo.gyldigFraOgMed), norwegianAddress?.gyldigFraOgMed)
-		assertEquals(LocalDate.parse(utlandOneDayAgo.gyldigFraOgMed), internationalAddress?.gyldigFraOgMed)
+		assertEquals(
+			LocalDate.parse(norgeTenDaysAgo.gyldigFraOgMed, DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+			norwegianAddress?.gyldigFraOgMed
+		)
+		assertEquals(
+			LocalDate.parse(utlandOneDayAgo.gyldigFraOgMed, DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+			internationalAddress?.gyldigFraOgMed
+		)
 
 	}
 

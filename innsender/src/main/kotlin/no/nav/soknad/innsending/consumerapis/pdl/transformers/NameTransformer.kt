@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.consumerapis.pdl.transformers
 
 import no.nav.soknad.innsending.pdl.generated.prefilldata.Navn
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 
 object NameTransformer {
@@ -15,8 +16,10 @@ object NameTransformer {
 		val today = LocalDate.now()
 
 		return names
-			.filter { it.gyldigFraOgMed != null && LocalDate.parse(it.gyldigFraOgMed) <= today }
-			.maxByOrNull { navn -> LocalDate.parse(navn.gyldigFraOgMed) }
-			?: names.first()
+			.filter {
+				it.gyldigFraOgMed != null && LocalDate.parse(it.gyldigFraOgMed, DateTimeFormatter.ISO_LOCAL_DATE) <= today
+			}
+			.maxByOrNull { navn -> LocalDate.parse(navn.gyldigFraOgMed, DateTimeFormatter.ISO_LOCAL_DATE) }
+			?: names.firstOrNull { it.gyldigFraOgMed == null }
 	}
 }

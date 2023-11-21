@@ -2,14 +2,14 @@ package no.nav.soknad.innsending.utils.builders.pdl
 
 import no.nav.soknad.innsending.pdl.generated.prefilldata.Metadata
 import no.nav.soknad.innsending.pdl.generated.prefilldata.Navn
-import no.nav.soknad.innsending.utils.Date.formatDate
+import no.nav.soknad.innsending.utils.Date
 import java.time.LocalDateTime
 
 class NavnTestBuilder {
 	private var fornavn: String = "John"
 	private var etternavn: String = "Doe"
 	private var mellomnavn: String? = null
-	private var gyldigFraOgMed: String? = formatDate(LocalDateTime.now().minusDays(10))
+	private var gyldigFraOgMed: String? = Date.formatToLocalDate(LocalDateTime.now().minusDays(10))
 	private var metadata: Metadata = MetadataTestBuilder().build()
 
 	fun fornavn(fornavn: String) = apply { this.fornavn = fornavn }

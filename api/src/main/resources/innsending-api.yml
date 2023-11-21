@@ -915,17 +915,16 @@ components:
       description: Søkerens adresse
       properties:
         bostedsadresse:
-          description: Bostedsadresse (kan kun være en adresse til en hver tid, enten i Norge eller utlandet)
+          description: Bostedsadresse - Adressen hvor en person er registrert som bosatt i henhold til landets lovverk. Kan kun være en adresse til enhver tid, enten i Norge eller utlandet.
           $ref: "#/components/schemas/Adresse"
-
         oppholdsadresser:
           type: array
-          description: Liste av oppholdsadresser
+          description: Liste av oppholdsadresser - Adresse hvor en person oppholder seg, men hvor det ikke er bekreftet at personen er bosatt. Kan være både norsk og utlandsk adresse.
           items:
               $ref: "#/components/schemas/Adresse"
         kontaktadresser:
           type: array
-          description: Liste av kontaktadresser
+          description: Liste av kontaktadresser - Adresse som kan benyttes for å kontakte personen per post. Det er ikke bekreftet om personen er bosatt eller oppholder seg der. Det er ikke krav til dokumentasjon for å registrere denne type adresse i PDL.
           items:
               $ref: "#/components/schemas/Adresse"
 
@@ -953,7 +952,7 @@ components:
           example: "Klostergata 57A"
         bygning:
           type: string
-          description: Informasjon som navn på bygg, etasje i et bygg, leilighetsnummer o.l. (utenlandske adresser har dette i PDL)
+          description: Informasjon som navn på bygg, etasje i et bygg, leilighetsnummer o.l. (utenlandske adresser har dette feltet i PDL)
         postboks:
           type: string
           description: Postboksnummer og postboksanlegg
@@ -964,11 +963,11 @@ components:
           example: "SE-12345"
         bySted:
           type: string
-          description: By/Bydel/Bysted (utenlandske adresser har dette i PDL)
+          description: By/Bydel/Bysted (utenlandske adresser har dette feltet i PDL)
           example: "Roma"
         region:
           type: string
-          description: Navn på et område innenfor et land, kan være landsby, stat eller noe i mellom (utenlandske adresser har dette i PDL)
+          description: Navn på et område innenfor et land, kan være landsby, stat eller noe i mellom (utenlandske adresser har dette feltet i PDL)
           example: "Yorkshire"
         landkode:
           type: string
