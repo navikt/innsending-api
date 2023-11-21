@@ -5,12 +5,11 @@ import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.Aktivitet
 import no.nav.soknad.innsending.model.Maalgruppe
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
-import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.HEADER_CALL_ID
 import no.nav.soknad.innsending.util.Constants.NAV_PERSON_IDENT
+import no.nav.soknad.innsending.util.MDCUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.http.MediaType
@@ -33,8 +32,8 @@ class ArenaConsumer(
 	private val toDate = LocalDate.now().plusMonths(2)
 
 	override suspend fun getMaalgrupper(): List<Maalgruppe> {
-		val innsendingsId = MDC.get(Constants.MDC_INNSENDINGS_ID)
-		logger.info("Henter målgruppe for innsendingsId: {}", innsendingsId)
+		val callId = MDCUtil.callIdOrNew()
+		logger.info("Henter målgruppe med callId {}", callId)
 
 		val uri = UriComponentsBuilder
 			.fromUriString("${restConfig.arenaUrl}/api/v1/maalgrupper")
@@ -47,7 +46,7 @@ class ArenaConsumer(
 			.get()
 			.uri(uri)
 			.accept(MediaType.APPLICATION_JSON)
-			.header(HEADER_CALL_ID, innsendingsId)
+			.header(HEADER_CALL_ID, callId)
 			.header(NAV_PERSON_IDENT, subjectHandler.getUserIdFromToken())
 			.retrieve()
 			.awaitBodyOrNull()
@@ -57,8 +56,8 @@ class ArenaConsumer(
 	}
 
 	override suspend fun getAktiviteter(): List<Aktivitet> {
-		val innsendingsId = MDC.get(Constants.MDC_INNSENDINGS_ID)
-		logger.info("Henter målgruppe for innsendingsId: {}", innsendingsId)
+		val callId = MDCUtil.callIdOrNew()
+		logger.info("Henter aktiviteter for callId: {}", callId)
 
 		val uri = UriComponentsBuilder
 			.fromUriString("${restConfig.arenaUrl}/api/v1/tilleggsstoenad/dagligreise")
@@ -71,7 +70,7 @@ class ArenaConsumer(
 			.get()
 			.uri(uri)
 			.accept(MediaType.APPLICATION_JSON)
-			.header(HEADER_CALL_ID, innsendingsId)
+			.header(HEADER_CALL_ID, callId)
 			.header(NAV_PERSON_IDENT, subjectHandler.getUserIdFromToken())
 			.retrieve()
 			.awaitBodyOrNull()
