@@ -3,6 +3,8 @@ package no.nav.soknad.innsending.consumerapis.pdl.transformers
 import no.nav.soknad.innsending.consumerapis.pdl.mapper.Adressemapper
 import no.nav.soknad.innsending.model.Adresse
 import no.nav.soknad.innsending.model.Adresser
+import no.nav.soknad.innsending.pdl.generated.enums.AdressebeskyttelseGradering
+import no.nav.soknad.innsending.pdl.generated.prefilldata.Adressebeskyttelse
 import no.nav.soknad.innsending.pdl.generated.prefilldata.Bostedsadresse
 import no.nav.soknad.innsending.pdl.generated.prefilldata.Kontaktadresse
 import no.nav.soknad.innsending.pdl.generated.prefilldata.Oppholdsadresse
@@ -12,15 +14,31 @@ import java.time.format.DateTimeFormatter
 // Would like to use an interface and more generic functions here, but since the classes are generated, it's not possible
 object AddressTransformer {
 	fun transformAddresses(
+		adressebeskyttelser: List<Adressebeskyttelse>?,
 		bostedsAdresser: List<Bostedsadresse>?,
 		oppholdsadresser: List<Oppholdsadresse>?,
 		kontaktadresser: List<Kontaktadresse>?,
 	): Adresser {
+		// Don't return any addresses if the person has adressebeskyttelse
+		if (isAdressebeskyttet(adressebeskyttelser)) return Adresser(null, emptyList(), emptyList())
+
 		return Adresser(
 			bostedsadresse = transformBostedsAdresser(bostedsAdresser),
 			oppholdsadresser = transformOppholdsadresser(oppholdsadresser),
 			kontaktadresser = transformKontakadresser(kontaktadresser),
 		)
+	}
+
+	private fun isAdressebeskyttet(adressebeskyttelser: List<Adressebeskyttelse>?): Boolean {
+		if (adressebeskyttelser.isNullOrEmpty()) return false
+
+		val graderinger = listOf(
+			AdressebeskyttelseGradering.STRENGT_FORTROLIG,
+			AdressebeskyttelseGradering.FORTROLIG,
+			AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
+		)
+		
+		return adressebeskyttelser.any { graderinger.contains(it.gradering) && !it.metadata.historisk }
 	}
 
 	// Gets the current bostedsAdresse. There is always only one (either in Norway or abroad)

@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.consumerapis.pdl.transformers
 
 import no.nav.soknad.innsending.consumerapis.pdl.transformers.AddressTransformer.transformAddresses
+import no.nav.soknad.innsending.pdl.generated.enums.AdressebeskyttelseGradering
 import no.nav.soknad.innsending.utils.Date.formatToLocalDateTime
 import no.nav.soknad.innsending.utils.builders.pdl.*
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -14,7 +15,12 @@ class AddressTransformerTest {
 	@Test
 	fun `Should return null and empty lists if addresses are null`() {
 		// When
-		val result = transformAddresses(null, null, null)
+		val result = transformAddresses(
+			adressebeskyttelser = null,
+			bostedsAdresser = null,
+			oppholdsadresser = null,
+			kontaktadresser = null
+		)
 
 		// Then
 		assertNull(result.bostedsadresse)
@@ -34,7 +40,12 @@ class AddressTransformerTest {
 		val bostedsAdresser = listOf(bostedTenDaysFromNow, bostedTenDaysAgo)
 
 		// When
-		val result = transformAddresses(bostedsAdresser, null, null)
+		val result = transformAddresses(
+			adressebeskyttelser = null,
+			bostedsAdresser = bostedsAdresser,
+			oppholdsadresser = null,
+			kontaktadresser = null
+		)
 
 		// Then
 		assertEquals(
@@ -54,7 +65,12 @@ class AddressTransformerTest {
 		val bostedsAdresser = listOf(bostedTenDaysFromNow, bostedNull)
 
 		// When
-		val result = transformAddresses(bostedsAdresser, null, null)
+		val result = transformAddresses(
+			adressebeskyttelser = null,
+			bostedsAdresser = bostedsAdresser,
+			oppholdsadresser = null,
+			kontaktadresser = null
+		)
 
 		// Then
 		assertNull(result.bostedsadresse?.gyldigFraOgMed)
@@ -76,7 +92,12 @@ class AddressTransformerTest {
 		val bostedsAdresser = listOf(bostedTwentyDaysAgo, bostedTenDaysFromNow, bostedTenDaysAgo, bostedOneDayAgo)
 
 		// When
-		val result = transformAddresses(bostedsAdresser, null, null)
+		val result = transformAddresses(
+			adressebeskyttelser = null,
+			bostedsAdresser = bostedsAdresser,
+			oppholdsadresser = null,
+			kontaktadresser = null
+		)
 
 		// Then
 		assertEquals(
@@ -112,7 +133,12 @@ class AddressTransformerTest {
 			)
 
 		// When
-		val result = transformAddresses(null, null, kontaktAdresser)
+		val result = transformAddresses(
+			adressebeskyttelser = emptyList(),
+			bostedsAdresser = emptyList(),
+			oppholdsadresser = emptyList(),
+			kontaktadresser = kontaktAdresser
+		)
 
 		// Then
 		assertEquals(4, result.kontaktadresser?.size, "4 valid kontaktadresser")
@@ -167,7 +193,12 @@ class AddressTransformerTest {
 			)
 
 		// When
-		val result = transformAddresses(null, oppholdsAdresser, null)
+		val result = transformAddresses(
+			adressebeskyttelser = emptyList(),
+			bostedsAdresser = null,
+			oppholdsadresser = oppholdsAdresser,
+			kontaktadresser = null
+		)
 
 		// Then
 		assertEquals(2, result.oppholdsadresser?.size, "Should be max 2 oppholdsadresser")
@@ -180,6 +211,69 @@ class AddressTransformerTest {
 		assertEquals(
 			LocalDate.parse(utlandOneDayAgo.gyldigFraOgMed, DateTimeFormatter.ISO_LOCAL_DATE_TIME),
 			internationalAddress?.gyldigFraOgMed
+		)
+
+	}
+
+	@Test
+	fun `Should not get any addresses with adressebeskyttelse`() {
+		// Given
+		val tenDaysAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(10))
+
+		val bostedTenDaysAgo = BostedsadresseTestBuilder().gyldigFraOgMed(tenDaysAgo).build()
+
+		val bostedsAdresser = listOf(bostedTenDaysAgo)
+
+		val adressebeskyttelse =
+			listOf(AdressebeskyttelseTestBuilder().gradering(AdressebeskyttelseGradering.STRENGT_FORTROLIG).build())
+
+		// When
+		val result = transformAddresses(
+			adressebeskyttelser = adressebeskyttelse,
+			bostedsAdresser = bostedsAdresser,
+			oppholdsadresser = null,
+			kontaktadresser = null
+		)
+
+		// Then
+		assertNull(result.bostedsadresse)
+		assertEquals(0, result.kontaktadresser?.size)
+		assertEquals(0, result.kontaktadresser?.size)
+
+	}
+
+	@Test
+	fun `Should get addresses with adressebeskyttelse ugradert or outdated adressebeskyttelse`() {
+		// Given
+		val tenDaysAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(10))
+
+		val bostedTenDaysAgo = BostedsadresseTestBuilder().gyldigFraOgMed(tenDaysAgo).build()
+
+		val bostedsAdresser = listOf(bostedTenDaysAgo)
+
+		val metadata = MetadataTestBuilder().historisk(true).build()
+
+		val adressebeskyttelseHistorisk =
+			AdressebeskyttelseTestBuilder()
+				.gradering(AdressebeskyttelseGradering.STRENGT_FORTROLIG).metadata(metadata)
+				.build()
+
+
+		val adressebeskyttelseUgradert =
+			AdressebeskyttelseTestBuilder().gradering(AdressebeskyttelseGradering.UGRADERT).build()
+		
+		// When
+		val result = transformAddresses(
+			adressebeskyttelser = listOf(adressebeskyttelseUgradert, adressebeskyttelseHistorisk),
+			bostedsAdresser = bostedsAdresser,
+			oppholdsadresser = null,
+			kontaktadresser = null
+		)
+
+		// Then
+		assertEquals(
+			LocalDate.parse(bostedTenDaysAgo.gyldigFraOgMed, DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+			result.bostedsadresse?.gyldigFraOgMed
 		)
 
 	}

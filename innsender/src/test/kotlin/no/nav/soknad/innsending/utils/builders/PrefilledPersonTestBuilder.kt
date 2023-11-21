@@ -29,6 +29,7 @@ class PrefilledPersonTestBuilder {
 			oppholdsadresse = emptyList(),
 			kjoenn = emptyList(),
 			telefonnummer = emptyList(),
+			adressebeskyttelse = emptyList(),
 		)
 	)
 

@@ -75,6 +75,7 @@ class PdlAPITest : PdlInterface, HealthRequestInterface {
 				telefonnummer = emptyList(),
 				oppholdsadresse = emptyList(),
 				kontaktadresse = emptyList(),
+				adressebeskyttelse = emptyList(),
 			)
 		)
 	}

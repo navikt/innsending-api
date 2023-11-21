@@ -63,6 +63,7 @@ class PrefillService(
 		val personInfo = pdlApi.getPrefillPersonInfo(userId)
 		val navn = transformName(personInfo?.hentPerson?.navn)
 		val addresses = transformAddresses(
+			adressebeskyttelser = personInfo?.hentPerson?.adressebeskyttelse,
 			bostedsAdresser = personInfo?.hentPerson?.bostedsadresse,
 			kontaktadresser = personInfo?.hentPerson?.kontaktadresse,
 			oppholdsadresser = personInfo?.hentPerson?.oppholdsadresse
