@@ -13,8 +13,8 @@ class Adressemapper {
 		val isNorwegianAddress = bostedsadresse.vegadresse != null
 
 		val norwegianAddress =
-			"${bostedsadresse.vegadresse?.adressenavn ?: ""} ${bostedsadresse.vegadresse?.husnummer ?: ""}${bostedsadresse.vegadresse?.husbokstav ?: ""}"
-		val foreignAddress = bostedsadresse.utenlandskAdresse?.adressenavnNummer
+			nullIfEmptyString("${bostedsadresse.vegadresse?.adressenavn ?: ""} ${bostedsadresse.vegadresse?.husnummer ?: ""}${bostedsadresse.vegadresse?.husbokstav ?: ""}")
+		val foreignAddress = nullIfEmptyString(bostedsadresse.utenlandskAdresse?.adressenavnNummer)
 
 		return Adresse(
 			gyldigFraOgMed = if (bostedsadresse.gyldigFraOgMed != null) LocalDate.parse(
@@ -25,14 +25,16 @@ class Adressemapper {
 				bostedsadresse.gyldigTilOgMed,
 				DateTimeFormatter.ISO_LOCAL_DATE_TIME
 			) else null,
-			co = bostedsadresse.coAdressenavn,
+			co = nullIfEmptyString(bostedsadresse.coAdressenavn),
 			adresse = if (isNorwegianAddress) norwegianAddress else foreignAddress,
-			postnummer = bostedsadresse.vegadresse?.postnummer ?: bostedsadresse.utenlandskAdresse?.postkode,
-			bygning = bostedsadresse.utenlandskAdresse?.bygningEtasjeLeilighet,
-			postboks = bostedsadresse.utenlandskAdresse?.postboksNummerNavn,
-			bySted = bostedsadresse.utenlandskAdresse?.bySted,
-			region = bostedsadresse.utenlandskAdresse?.regionDistriktOmraade,
-			landkode = if (isNorwegianAddress) "NOR" else bostedsadresse.utenlandskAdresse?.landkode,
+			postnummer = nullIfEmptyString(
+				bostedsadresse.vegadresse?.postnummer ?: bostedsadresse.utenlandskAdresse?.postkode
+			),
+			bygning = nullIfEmptyString(bostedsadresse.utenlandskAdresse?.bygningEtasjeLeilighet),
+			postboks = nullIfEmptyString(bostedsadresse.utenlandskAdresse?.postboksNummerNavn),
+			bySted = nullIfEmptyString(bostedsadresse.utenlandskAdresse?.bySted),
+			region = nullIfEmptyString(bostedsadresse.utenlandskAdresse?.regionDistriktOmraade),
+			landkode = if (isNorwegianAddress) "NOR" else nullIfEmptyString(bostedsadresse.utenlandskAdresse?.landkode),
 		)
 	}
 
@@ -40,8 +42,8 @@ class Adressemapper {
 		val isNorwegianAddress = oppholdsadresse.vegadresse != null
 
 		val norwegianAddress =
-			"${oppholdsadresse.vegadresse?.adressenavn ?: ""} ${oppholdsadresse.vegadresse?.husnummer ?: ""}${oppholdsadresse.vegadresse?.husbokstav ?: ""}"
-		val foreignAddress = oppholdsadresse.utenlandskAdresse?.adressenavnNummer
+			nullIfEmptyString("${oppholdsadresse.vegadresse?.adressenavn ?: ""} ${oppholdsadresse.vegadresse?.husnummer ?: ""}${oppholdsadresse.vegadresse?.husbokstav ?: ""}")
+		val foreignAddress = nullIfEmptyString(oppholdsadresse.utenlandskAdresse?.adressenavnNummer)
 
 		return Adresse(
 			gyldigFraOgMed = if (oppholdsadresse.gyldigFraOgMed != null) LocalDate.parse(
@@ -52,14 +54,16 @@ class Adressemapper {
 				oppholdsadresse.gyldigTilOgMed,
 				DateTimeFormatter.ISO_LOCAL_DATE_TIME
 			) else null,
-			co = oppholdsadresse.coAdressenavn,
+			co = nullIfEmptyString(oppholdsadresse.coAdressenavn),
 			adresse = if (isNorwegianAddress) norwegianAddress else foreignAddress,
-			postnummer = oppholdsadresse.vegadresse?.postnummer ?: oppholdsadresse.utenlandskAdresse?.postkode,
-			bygning = oppholdsadresse.utenlandskAdresse?.bygningEtasjeLeilighet,
-			postboks = oppholdsadresse.utenlandskAdresse?.postboksNummerNavn,
-			bySted = oppholdsadresse.utenlandskAdresse?.bySted,
-			region = oppholdsadresse.utenlandskAdresse?.regionDistriktOmraade,
-			landkode = if (isNorwegianAddress) "NOR" else oppholdsadresse.utenlandskAdresse?.landkode,
+			postnummer = nullIfEmptyString(
+				oppholdsadresse.vegadresse?.postnummer ?: oppholdsadresse.utenlandskAdresse?.postkode
+			),
+			bygning = nullIfEmptyString(oppholdsadresse.utenlandskAdresse?.bygningEtasjeLeilighet),
+			postboks = nullIfEmptyString(oppholdsadresse.utenlandskAdresse?.postboksNummerNavn),
+			bySted = nullIfEmptyString(oppholdsadresse.utenlandskAdresse?.bySted),
+			region = nullIfEmptyString(oppholdsadresse.utenlandskAdresse?.regionDistriktOmraade),
+			landkode = if (isNorwegianAddress) "NOR" else nullIfEmptyString(oppholdsadresse.utenlandskAdresse?.landkode),
 		)
 	}
 
@@ -67,11 +71,11 @@ class Adressemapper {
 		val isNorwegianAddress = kontaktadresse.type == KontaktadresseType.INNLAND
 
 		val norwegianAddress =
-			"${kontaktadresse.vegadresse?.adressenavn ?: ""} ${kontaktadresse.vegadresse?.husnummer ?: ""}${kontaktadresse.vegadresse?.husbokstav ?: ""}"
-		val foreignAddress = kontaktadresse.utenlandskAdresse?.adressenavnNummer
+			nullIfEmptyString("${kontaktadresse.vegadresse?.adressenavn ?: ""} ${kontaktadresse.vegadresse?.husnummer ?: ""}${kontaktadresse.vegadresse?.husbokstav ?: ""}")
+		val foreignAddress = nullIfEmptyString(kontaktadresse.utenlandskAdresse?.adressenavnNummer)
 
 		val postboks =
-			"${kontaktadresse.postboksadresse?.postbokseier ?: ""} ${kontaktadresse.postboksadresse?.postboks ?: ""}"
+			nullIfEmptyString("${kontaktadresse.postboksadresse?.postbokseier ?: ""} ${kontaktadresse.postboksadresse?.postboks ?: ""}")
 
 		return Adresse(
 			gyldigFraOgMed = if (kontaktadresse.gyldigFraOgMed != null) LocalDate.parse(
@@ -82,15 +86,22 @@ class Adressemapper {
 				kontaktadresse.gyldigTilOgMed,
 				DateTimeFormatter.ISO_LOCAL_DATE_TIME
 			) else null,
-			co = kontaktadresse.coAdressenavn,
+			co = nullIfEmptyString(kontaktadresse.coAdressenavn),
 			adresse = if (isNorwegianAddress) norwegianAddress else foreignAddress,
-			postnummer = kontaktadresse.vegadresse?.postnummer ?: kontaktadresse.utenlandskAdresse?.postkode,
-			bygning = kontaktadresse.utenlandskAdresse?.bygningEtasjeLeilighet,
+			postnummer = nullIfEmptyString(
+				kontaktadresse.vegadresse?.postnummer ?: kontaktadresse.utenlandskAdresse?.postkode
+			),
+			bygning = nullIfEmptyString(kontaktadresse.utenlandskAdresse?.bygningEtasjeLeilighet),
 			postboks = if (isNorwegianAddress) postboks else kontaktadresse.utenlandskAdresse?.postboksNummerNavn,
-			bySted = kontaktadresse.utenlandskAdresse?.bySted,
-			region = kontaktadresse.utenlandskAdresse?.regionDistriktOmraade,
-			landkode = if (isNorwegianAddress) "NOR" else kontaktadresse.utenlandskAdresse?.landkode,
+			bySted = nullIfEmptyString(kontaktadresse.utenlandskAdresse?.bySted),
+			region = nullIfEmptyString(kontaktadresse.utenlandskAdresse?.regionDistriktOmraade),
+			landkode = if (isNorwegianAddress) "NOR" else nullIfEmptyString(kontaktadresse.utenlandskAdresse?.landkode),
 		)
+	}
+
+	private fun nullIfEmptyString(value: String?): String? {
+		val trimmedValue = value?.trim()
+		return if (!trimmedValue.isNullOrBlank()) trimmedValue else null
 	}
 
 
