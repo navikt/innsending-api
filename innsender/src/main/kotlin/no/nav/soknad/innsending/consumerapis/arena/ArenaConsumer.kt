@@ -18,6 +18,7 @@ import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodyOrNull
 import org.springframework.web.util.UriComponentsBuilder
+import reactor.core.publisher.Mono
 import java.time.LocalDate
 
 @Component
@@ -88,14 +89,12 @@ class ArenaConsumer(
 			)
 	}
 
-	private fun handleErrorResponse(clientResponse: ClientResponse, errorMessage: String): Nothing {
+	private fun handleErrorResponse(clientResponse: ClientResponse, errorMessage: String): Mono<ArenaException> {
 		val status = clientResponse.statusCode()
 		val message = "${status.value()}: $errorMessage"
-		val responseBody = clientResponse.bodyToMono(String::class.java).block()
 
 		if (status.is4xxClientError) {
-			logger.warn("$message - Body: {}", responseBody)
-			throw ArenaException(message = message)
+			return clientResponse.bodyToMono(String::class.java).map { ArenaException(message = it) }
 		} else {
 			throw BackendErrorException(message = message)
 		}

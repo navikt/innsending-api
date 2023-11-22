@@ -21,6 +21,7 @@
 		"jsonBody": {
 			"data": {
 				"hentPerson": {
+					"adressebeskyttelse": [],
 					"kontaktadresse": [
 						{
 							"gyldigFraOgMed": "2023-01-01T00:00",
