@@ -1476,6 +1476,12 @@ components:
           example: Nordmann
         sokerAdresser:
           $ref: "#/components/schemas/Adresser"
+        sokerKjonn:
+          type: string
+          description: Søkerens kjønn
+          example: MANN
+        sokerTelefonnummer:
+            $ref: "#/components/schemas/Telefonnummer"
         sokerMaalgrupper:
           type: array
           description: Liste av målgrupper for søker på angitt tidsperiode. Dersom ingen målgrupper ble funnet i tidsperioden, returneres en tom liste
@@ -1634,6 +1640,11 @@ components:
       type: string
       description: Søkers foretrukne språk. Det er alltid støtte for nb_NO (norsk bokmål). Det er varierende støtte for andre språk på ulike skjema.
       example: nb_NO
+
+    Telefonnummer:
+      type: string
+      description: Telefonnummer
+      example: "+4712345678"
 
     Tema:
       type: string

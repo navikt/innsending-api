@@ -175,6 +175,7 @@
 						{
 							"landskode": "+47",
 							"nummer": "12345678",
+							"prioritet": 1,
 							"metadata": {
 								"endringer": [],
 								"master": "PDL",

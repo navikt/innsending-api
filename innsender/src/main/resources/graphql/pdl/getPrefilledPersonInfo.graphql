@@ -74,6 +74,7 @@ query PrefillData($ident: ID!, $historikk: Boolean!) {
 		telefonnummer {
 			landskode
 			nummer
+			prioritet
 			metadata {
 				...metadataDetails
 			}

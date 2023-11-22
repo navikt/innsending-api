@@ -5,15 +5,14 @@ import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.pdl.generated.PrefillData
-import no.nav.soknad.innsending.pdl.generated.prefilldata.Bostedsadresse
-import no.nav.soknad.innsending.pdl.generated.prefilldata.Navn
-import no.nav.soknad.innsending.pdl.generated.prefilldata.Person
-import no.nav.soknad.innsending.pdl.generated.prefilldata.Vegadresse
+import no.nav.soknad.innsending.pdl.generated.enums.KjoennType
+import no.nav.soknad.innsending.pdl.generated.prefilldata.*
 import no.nav.soknad.innsending.util.testpersonid
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
-import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Service
 @Profile("local | docker")
@@ -43,7 +42,7 @@ class PdlAPITest : PdlInterface, HealthRequestInterface {
 	}
 
 	override suspend fun getPrefillPersonInfo(ident: String): PrefillData.Result? {
-		val metadata = no.nav.soknad.innsending.pdl.generated.prefilldata.Metadata(
+		val metadata = Metadata(
 			master = "PDL",
 			endringer = emptyList(),
 			historisk = false
@@ -57,10 +56,11 @@ class PdlAPITest : PdlInterface, HealthRequestInterface {
 			postnummer = "1234"
 		)
 
+
 		val bostedsadresse = Bostedsadresse(
-			angittFlyttedato = LocalDate.now().minusYears(1).toString(),
+			angittFlyttedato = LocalDateTime.now().minusYears(1).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
 			coAdressenavn = "c/o Test",
-			gyldigFraOgMed = LocalDate.now().minusYears(1).toString(),
+			gyldigFraOgMed = LocalDateTime.now().minusYears(1).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
 			gyldigTilOgMed = null,
 			vegadresse = vegadresse,
 			utenlandskAdresse = null,
@@ -71,8 +71,15 @@ class PdlAPITest : PdlInterface, HealthRequestInterface {
 			Person(
 				navn = listOf(Navn(fornavn = "Ola", mellomnavn = null, etternavn = "Nordmann", metadata = metadata)),
 				bostedsadresse = listOf(bostedsadresse),
-				kjoenn = emptyList(),
-				telefonnummer = emptyList(),
+				kjoenn = listOf(Kjoenn(kjoenn = KjoennType.MANN, metadata = metadata)),
+				telefonnummer = listOf(
+					Telefonnummer(
+						landskode = "+47",
+						nummer = "12345678",
+						metadata = metadata,
+						prioritet = 1
+					)
+				),
 				oppholdsadresse = emptyList(),
 				kontaktadresse = emptyList(),
 				adressebeskyttelse = emptyList(),

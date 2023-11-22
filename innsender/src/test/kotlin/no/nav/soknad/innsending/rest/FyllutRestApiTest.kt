@@ -499,7 +499,7 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should return correct prefill-data from PDL`() {
 		// Given
-		val properties = "sokerFornavn,sokerEtternavn,sokerAdresser"
+		val properties = "sokerFornavn,sokerEtternavn,sokerAdresser,sokerKjonn,sokerTelefonnummer"
 
 		// When
 		val response = api?.getPrefillData(properties)
@@ -512,6 +512,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals("Abelværvegen 1410", response.body?.sokerAdresser?.bostedsadresse?.adresse)
 		assertEquals("Musdalsveien 25", response.body?.sokerAdresser?.oppholdsadresser?.get(0)?.adresse)
 		assertEquals("Visjålivegen 585", response.body?.sokerAdresser?.kontaktadresser?.get(0)?.adresse)
+		assertEquals("MANN", response.body?.sokerKjonn)
+		assertEquals("+4712345678", response.body?.sokerTelefonnummer)
 	}
 
 	@Test

@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.consumerapis.arena.ArenaException
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.transformers.AddressTransformer.transformAddresses
 import no.nav.soknad.innsending.consumerapis.pdl.transformers.NameTransformer.transformName
+import no.nav.soknad.innsending.consumerapis.pdl.transformers.PhoneNumberTransformer.transformPhoneNumbers
 import no.nav.soknad.innsending.model.Aktivitet
 import no.nav.soknad.innsending.model.Maalgruppe
 import no.nav.soknad.innsending.model.PrefillData
@@ -55,23 +56,30 @@ class PrefillService(
 				sokerMaalgrupper = obj.sokerMaalgrupper ?: acc.sokerMaalgrupper,
 				sokerAktiviteter = obj.sokerAktiviteter ?: acc.sokerAktiviteter,
 				sokerAdresser = obj.sokerAdresser ?: acc.sokerAdresser,
+				sokerKjonn = obj.sokerKjonn ?: acc.sokerKjonn,
+				sokerTelefonnummer = obj.sokerTelefonnummer ?: acc.sokerTelefonnummer
 			)
 		}
 	}
 
 	suspend fun getPDLData(userId: String, properties: List<String>): PrefillData {
 		val personInfo = pdlApi.getPrefillPersonInfo(userId)
-		val navn = transformName(personInfo?.hentPerson?.navn)
+		val name = transformName(personInfo?.hentPerson?.navn)
 		val addresses = transformAddresses(
 			adressebeskyttelser = personInfo?.hentPerson?.adressebeskyttelse,
 			bostedsAdresser = personInfo?.hentPerson?.bostedsadresse,
 			kontaktadresser = personInfo?.hentPerson?.kontaktadresse,
 			oppholdsadresser = personInfo?.hentPerson?.oppholdsadresse
 		)
+		val phoneNumber = transformPhoneNumbers(personInfo?.hentPerson?.telefonnummer)
+		val gender = personInfo?.hentPerson?.kjoenn?.firstOrNull()?.kjoenn?.name
+
 		return PrefillData(
-			sokerFornavn = if (properties.contains("sokerFornavn")) navn?.fornavn else null,
-			sokerEtternavn = if (properties.contains("sokerEtternavn")) navn?.etternavn else null,
+			sokerFornavn = if (properties.contains("sokerFornavn")) name?.fornavn else null,
+			sokerEtternavn = if (properties.contains("sokerEtternavn")) name?.etternavn else null,
 			sokerAdresser = if (properties.contains("sokerAdresser")) addresses else null,
+			sokerTelefonnummer = if (properties.contains("sokerTelefonnummer")) phoneNumber else null,
+			sokerKjonn = if (properties.contains("sokerKjonn")) gender else null
 		)
 	}
 
