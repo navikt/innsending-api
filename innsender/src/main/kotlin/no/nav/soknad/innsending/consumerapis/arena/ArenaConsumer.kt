@@ -94,7 +94,7 @@ class ArenaConsumer(
 		val message = "${status.value()}: $errorMessage"
 
 		if (status.is4xxClientError) {
-			return clientResponse.bodyToMono(String::class.java).map { ArenaException(message = it) }
+			throw ArenaException(message = message)
 		} else {
 			throw BackendErrorException(message = message)
 		}
