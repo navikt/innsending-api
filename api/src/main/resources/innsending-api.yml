@@ -1277,7 +1277,7 @@ components:
 
     Mimetype:
       type: string
-      enum: [ "application/pdf", "application/json", "image/png", "image/jpeg" ]
+      enum: [ "application/pdf", "application/json", "image/png", "image/jpeg", "application/xml" ]
       description: Angivelse av formatet på opplastet vedlegg.
       example: application/pdf or image/jpeg.
 

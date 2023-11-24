@@ -19,6 +19,7 @@ import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.erEttersending
 import no.nav.soknad.innsending.util.models.hovedDokument
+import no.nav.soknad.innsending.util.models.hoveddokumentVariant
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
@@ -45,6 +46,9 @@ class InnsendingService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
+	private val tilleggsstonadSkjema =
+		listOf("NAV 11-12.10", "NAV 11-12.11", "NAV 11-12.12", "NAV 11-12.13", "NAV 11-12.14")
+
 	@Transactional
 	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto): Pair<List<VedleggDto>, List<VedleggDto>> {
 		val operation = InnsenderOperation.SEND_INN.name
@@ -61,8 +65,14 @@ class InnsendingService(
 		// Merk at dersom det ikke er lastet opp filer på et obligatorisk vedlegg, skal status settes SENDES_SENERE. Dette vil trigge oppretting av ettersendingssøknad
 		val soknadDto = if (soknadDtoInput.erEttersending)
 			opprettOgLagreDummyHovedDokument(soknadDtoInput)
-		else
-			soknadDtoInput
+		else {
+
+			if (isTilleggsstonad(soknadDtoInput)) {
+				opprettXmlDokumentVariant(soknadDtoInput)
+			} else {
+				soknadDtoInput
+			}
+		}
 
 		// Finn alle vedlegg med korrekt status i forhold til hvem som skal sendes inn
 		val alleVedlegg: List<VedleggDto> = filService.ferdigstillVedleggsFiler(soknadDto)
@@ -145,6 +155,54 @@ class InnsendingService(
 
 		return Pair(opplastedeVedlegg, manglendePakrevdeVedlegg)
 	}
+
+	private fun isTilleggsstonad(soknadDto: DokumentSoknadDto): Boolean {
+		return tilleggsstonadSkjema.contains(soknadDto.skjemanr)
+	}
+
+	private fun opprettXmlDokumentVariant(soknadDto: DokumentSoknadDto): DokumentSoknadDto {
+
+		val jsonVariant = soknadDto.hoveddokumentVariant
+		if (jsonVariant == null) {
+			logger.warn("${soknadDto.innsendingsId!!}: Json variant av hoveddokument mangler")
+			return soknadDto
+		}
+
+		// Create dokumentDto for xml variant of main document
+		val xmlDocumentVariant = vedleggService.leggTilHoveddokumentVariant(soknadDto, Mimetype.applicationSlashXml)
+		//
+		val xmlFile = json2Xml(
+			soknadDto = soknadDto,
+			jsonFil = filService.hentFiler(
+				soknadDto = soknadDto,
+				innsendingsId = soknadDto.innsendingsId!!,
+				vedleggsId = jsonVariant.id!!,
+				medFil = true
+			).first().data
+		)
+		// Persist created xml file
+		filService.lagreFil(
+			soknadDto,
+			FilDto(
+				vedleggsid = xmlDocumentVariant.id!!,
+				filnavn = soknadDto.skjemanr + ".xml",
+				mimetype = Mimetype.applicationSlashXml,
+				storrelse = xmlFile.size,
+				data = xmlFile,
+				opprettetdato = OffsetDateTime.now()
+			)
+		)
+		// Update state of json variant
+		vedleggService.endreVedlegg(
+			PatchVedleggDto(jsonVariant.tittel, OpplastingsStatusDto.sendesIkke),
+			jsonVariant.id!!,
+			soknadDto
+		)
+
+		return soknadService.hentSoknad(soknadDto.innsendingsId!!)
+
+	}
+
 
 	private fun validerAtSoknadHarEndringSomKanSendesInn(
 		soknadDto: DokumentSoknadDto,
