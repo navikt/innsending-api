@@ -81,14 +81,15 @@ class PdlAPI(
 	override suspend fun getPrefillPersonInfo(ident: String): PrefillData.Result? {
 		logger.info("Skal hente en preutfyllingsinfo fra PDL")
 
-		val response = pdlGraphQLClient.execute(PrefillData(PrefillData.Variables(ident)))
+		// Does not include historic data
+		val response = pdlGraphQLClient.execute(PrefillData(PrefillData.Variables(ident, false)))
 
-		if (response.data != null) {
+		return if (response.data != null) {
 			checkForErrors(response.errors)
-			return response.data
+			response.data
 		} else {
 			logger.error("Oppslag mot personregisteret for preutfylling feilet")
-			throw BackendErrorException("Oppslag mot personregisteret for preutfylling feilet")
+			null
 		}
 	}
 

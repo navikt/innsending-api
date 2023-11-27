@@ -3,6 +3,8 @@ package no.nav.soknad.innsending.utils.builders
 import no.nav.soknad.innsending.pdl.generated.PrefillData
 import no.nav.soknad.innsending.pdl.generated.prefilldata.Navn
 import no.nav.soknad.innsending.pdl.generated.prefilldata.Person
+import no.nav.soknad.innsending.utils.builders.pdl.MetadataTestBuilder
+import java.time.LocalDate
 
 class PrefilledPersonTestBuilder {
 	private var fornavn: String? = "Test"
@@ -13,10 +15,21 @@ class PrefilledPersonTestBuilder {
 
 	fun build() = PrefillData.Result(
 		Person(
-			navn = listOf(Navn(fornavn ?: "", null, etternavn ?: "")),
+			navn = listOf(
+				Navn(
+					fornavn = fornavn ?: "",
+					mellomnavn = null,
+					etternavn = etternavn ?: "",
+					gyldigFraOgMed = LocalDate.now().toString(),
+					MetadataTestBuilder().build()
+				)
+			),
 			bostedsadresse = emptyList(),
+			kontaktadresse = emptyList(),
+			oppholdsadresse = emptyList(),
 			kjoenn = emptyList(),
-			telefonnummer = emptyList()
+			telefonnummer = emptyList(),
+			adressebeskyttelse = emptyList(),
 		)
 	)
 
