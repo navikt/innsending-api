@@ -5,8 +5,12 @@ import no.nav.soknad.innsending.pdl.generated.prefilldata.Telefonnummer
 
 object PhoneNumberTransformer {
 	fun transformPhoneNumbers(phoneNumbers: List<Telefonnummer>?): String {
-		val prioritizedNumber = phoneNumbers?.find { it.prioritet == 1 } ?: phoneNumbers?.firstOrNull()
-		return "${prioritizedNumber?.landskode}${prioritizedNumber?.nummer}"
+		val prioritizedNumber = phoneNumbers?.minByOrNull { it.prioritet } ?: phoneNumbers?.firstOrNull()
+
+		val trimmedNumber = prioritizedNumber?.nummer?.trim()?.replace(" ", "")
+		val trimmedLandskode = prioritizedNumber?.landskode?.trim()?.replace(" ", "")
+
+		return "${trimmedLandskode}${trimmedNumber}"
 	}
 
 }
