@@ -31,12 +31,17 @@ class ArenaConsumer(
 ) : ArenaConsumerInterface {
 
 	private val logger: Logger = LoggerFactory.getLogger(javaClass)
+	private val secureLogger = LoggerFactory.getLogger("secureLogger")
+
 	private val fromDate = LocalDate.now().minusMonths(6)
 	private val toDate = LocalDate.now().plusMonths(2)
 
 	override suspend fun getMaalgrupper(): List<Maalgruppe> {
 		val callId = MDCUtil.callIdOrNew()
-		logger.info("Henter målgruppe med callId {}", callId)
+		val userId = subjectHandler.getUserIdFromToken()
+
+		logger.info("Henter målgruppe med callId:{}", callId)
+		secureLogger.info("Henter målgrupper for callId:{}, brukerId:{}", callId, userId)
 
 		val uri = UriComponentsBuilder
 			.fromUriString("${restConfig.arenaUrl}/api/v1/maalgrupper")
@@ -45,26 +50,30 @@ class ArenaConsumer(
 			.build()
 			.toUri()
 
-		return webClient
+		val maalgrupper: List<Maalgruppe> = webClient
 			.get()
 			.uri(uri)
 			.accept(MediaType.APPLICATION_JSON)
 			.header(HEADER_CALL_ID, callId)
-			.header(NAV_PERSON_IDENT, subjectHandler.getUserIdFromToken())
+			.header(NAV_PERSON_IDENT, userId)
 			.retrieve()
 			.onStatus({ status -> status.is4xxClientError || status.is5xxServerError },
 				{ clientResponse ->
 					handleErrorResponse(clientResponse, "Feil ved henting av målgrupper")
 				})
-			.awaitBodyOrNull()
-			?: throw BackendErrorException(
-				message = "Kunne ikke hente målgruppe"
-			)
+			.awaitBodyOrNull() ?: throw NonCriticalException(message = "Kunne ikke hente målgrupper")
+
+		secureLogger.info("Målgrupper for brukerId:{} - {}", userId, maalgrupper.toString())
+
+		return maalgrupper
 	}
 
 	override suspend fun getAktiviteter(): List<Aktivitet> {
 		val callId = MDCUtil.callIdOrNew()
-		logger.info("Henter aktiviteter for callId: {}", callId)
+		val userId = subjectHandler.getUserIdFromToken()
+
+		logger.info("Henter aktiviteter for callId:{}", callId)
+		secureLogger.info("Henter aktiviteter for callId:{}, brukerId:{}", callId, userId)
 
 		val uri = UriComponentsBuilder
 			.fromUriString("${restConfig.arenaUrl}/api/v1/tilleggsstoenad/dagligreise")
@@ -73,21 +82,23 @@ class ArenaConsumer(
 			.build()
 			.toUri()
 
-		return webClient
+		val aktiviteter: List<Aktivitet> = webClient
 			.get()
 			.uri(uri)
 			.accept(MediaType.APPLICATION_JSON)
 			.header(HEADER_CALL_ID, callId)
-			.header(NAV_PERSON_IDENT, subjectHandler.getUserIdFromToken())
+			.header(NAV_PERSON_IDENT, userId)
 			.retrieve()
 			.onStatus({ status -> status.is4xxClientError || status.is5xxServerError },
 				{ clientResponse ->
 					handleErrorResponse(clientResponse, "Feil ved henting av aktiviteter")
 				})
 			.awaitBodyOrNull()
-			?: throw BackendErrorException(
-				message = "Kunne ikke hente aktiviteter"
-			)
+			?: throw NonCriticalException(message = "Kunne ikke hente aktiviteter")
+
+		secureLogger.info("Aktiviteter for brukerId:{} - {}", userId, aktiviteter.toString())
+
+		return aktiviteter
 	}
 
 	private fun handleErrorResponse(clientResponse: ClientResponse, errorMessage: String): Mono<Exception> {
