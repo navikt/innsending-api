@@ -33,6 +33,7 @@ class SkjemaDokumentSoknadTransformer {
 		fristForEttersendelse = input.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 		arkiveringsStatus = ArkiveringsStatusDto.ikkeSatt,
 		soknadstype = SoknadType.soknad,
+		skjemaPath = input.skjemaPath,
 	)
 
 //	kanLasteOppAnnet = input.vedleggsListe?.any { it.property == "annenDokumentasjon" : it.vedleggsnr == "N6" && it.label == "Annen dokumentasjon" })

@@ -102,7 +102,8 @@ restconfig:
 
 brukernotifikasjonconfig:
   profiles: test
-  tjenesteUrl: https://localhost
+  fyllutUrl: http://localhost:3001/fyllut
+  sendinnUrl: http://localhost:3100/sendinn
   publisereEndringer: true
 
 
@@ -162,7 +163,8 @@ restconfig:
 
 brukernotifikasjonconfig:
   profiles: ${SPRING_PROFILES_ACTIVE}
-  tjenesteUrl: ${SEND_INN_URL}
+  fyllutUrl: ${FYLL_UT_URL}
+  sendinnUrl: ${SEND_INN_URL}
   publisereEndringer: ${PUBLISERE_BRUKERNOTIFIKASJONER}
 
 ettersendingsfrist: ${ETTERSENDINGSFRIST}

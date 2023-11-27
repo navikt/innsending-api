@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.utils.builders
 
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.util.Skjema
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -29,7 +30,8 @@ class DokumentSoknadDtoTestBuilder(
 	var fristForEttersendelse: Long? = 14L,
 	var arkiveringsStatus: ArkiveringsStatusDto = ArkiveringsStatusDto.ikkeSatt,
 	var erSystemGenerert: Boolean? = true,
-	var soknadType: SoknadType? = null
+	var soknadType: SoknadType? = null,
+	var skjemaPath: String = Skjema.createSkjemaPathFromSkjemanr(skjemanr)
 ) {
 
 	val erEttersending = ettersendingsId != null || visningsType == VisningsType.ettersending
@@ -66,5 +68,6 @@ class DokumentSoknadDtoTestBuilder(
 		arkiveringsStatus = arkiveringsStatus,
 		erSystemGenerert = erSystemGenerert,
 		soknadstype = soknadType ?: (if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad),
+		skjemaPath = skjemaPath
 	)
 }

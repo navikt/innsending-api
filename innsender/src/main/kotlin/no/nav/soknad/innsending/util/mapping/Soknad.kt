@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
+import no.nav.soknad.innsending.util.Skjema.createSkjemaPathFromSkjemanr
 import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
 import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
@@ -72,6 +73,7 @@ fun lagDokumentSoknadDto(
 		arkiveringsStatus = mapTilArkiveringsStatusDto(soknadDbData.arkiveringsstatus),
 		erSystemGenerert = erSystemGenerert,
 		soknadstype = if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad,
+		skjemaPath = createSkjemaPathFromSkjemanr(soknadDbData.skjemanr)
 	)
 }
 
@@ -113,6 +115,7 @@ fun mapTilDokumentSoknadDto(
 		arkiveringsStatus = mapTilArkiveringsStatusDto(soknadDbData.arkiveringsstatus),
 		erSystemGenerert = false,
 		soknadstype = if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad,
+		skjemaPath = createSkjemaPathFromSkjemanr(soknadDbData.skjemanr)
 	)
 }
 
@@ -140,7 +143,8 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		kanLasteOppAnnet = dokumentSoknadDto.kanLasteOppAnnet,
 		fristForEttersendelse = dokumentSoknadDto.fristForEttersendelse,
 		endretDato = dokumentSoknadDto.endretDato,
-		skalSlettesDato = deletionDate
+		skalSlettesDato = deletionDate,
+		skjemaPath = dokumentSoknadDto.skjemaPath
 	)
 }
 

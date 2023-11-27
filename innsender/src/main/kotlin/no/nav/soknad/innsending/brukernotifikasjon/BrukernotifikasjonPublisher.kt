@@ -7,6 +7,7 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.Varsel
 import no.nav.soknad.innsending.config.BrukerNotifikasjonConfig
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.util.Constants
@@ -15,6 +16,7 @@ import no.nav.soknad.innsending.util.models.erEttersending
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service
+import org.springframework.web.util.UriComponentsBuilder
 
 @Service
 @EnableConfigurationProperties(BrukerNotifikasjonConfig::class)
@@ -77,7 +79,7 @@ class BrukernotifikasjonPublisher(
 		// Ny søknad opprettet publiser data slik at søker kan plukke den opp fra Ditt Nav på et senere tidspunkt
 		// i tilfelle han/hun ikke ferdigstiller og sender inn
 		val ettersending = dokumentSoknad.erEttersending
-		val lenke = createLink(dokumentSoknad.innsendingsId!!)
+		val lenke = createLink(dokumentSoknad)
 		val notificationInfo = createNotificationInfo(dokumentSoknad, ettersending, lenke)
 
 		val soknadRef = SoknadRef(
@@ -145,10 +147,17 @@ class BrukernotifikasjonPublisher(
 		publishDoneEvent(dokumentSoknad, groupId)
 	}
 
-	private fun createLink(innsendingsId: String): String {
-		// Eksempler:
-		// Fortsett senere: https://www.intern.dev.nav.no/sendinn/10014Qi1G For å gjenoppta påbegynt søknad
+	private fun createLink(dokumentSoknad: DokumentSoknadDto): String {
+		if (dokumentSoknad.soknadstype == SoknadType.soknad) {
+			val baseUrl = "${notifikasjonConfig.fyllutUrl}/${dokumentSoknad.skjemaPath}/oppsummering"
 
-		return notifikasjonConfig.tjenesteUrl + "/" + innsendingsId
+			val uriBuilder = UriComponentsBuilder.fromUriString(baseUrl)
+			uriBuilder.queryParam("innsendingsId", dokumentSoknad.innsendingsId)
+			uriBuilder.queryParam("sub", "digital")
+
+			return uriBuilder.toUriString()
+		}
+
+		return "${notifikasjonConfig.sendinnUrl}/${dokumentSoknad.innsendingsId}"
 	}
 }

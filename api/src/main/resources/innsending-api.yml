@@ -1206,6 +1206,8 @@ components:
           default: false
         soknadstype:
           $ref: "#/components/schemas/SoknadType"
+        skjemaPath:
+          $ref: "#/components/schemas/SkjemaPath"
 
     FilDto:
       type: object
@@ -1584,11 +1586,18 @@ components:
           $ref: "#/components/schemas/EndretDato"
         skalSlettesDato:
           $ref: "#/components/schemas/SkalSlettesDato"
+        skjemaPath:
+          $ref: "#/components/schemas/SkjemaPath"
 
     Skjemanr:
       type: string
       description: NAV skjemanummeret for identifisering av søknaden som er opprettet.
       example: NAV 08-21.05
+
+    SkjemaPath:
+      type: string
+      description: Skjemanr som brukes i url path (små bokstaver uten mellomrom eller spesialtegn)
+      example: nav100708
 
     SkalSlettesDato:
       type: string
