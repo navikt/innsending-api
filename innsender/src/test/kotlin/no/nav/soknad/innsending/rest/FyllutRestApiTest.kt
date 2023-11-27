@@ -221,7 +221,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Så
 		assertTrue(response != null)
 		assertEquals(SoknadsStatusDto.utfylt, oppdatertSoknad.status, "Status er satt til utfylt")
-		assertEquals(200, response.statusCode.value())
+		assertEquals(302, response.statusCode.value())
+		assertEquals("http://localhost:3100/sendinn/${innsendingsId}", response.headers.location!!.toString())
 		assertEquals(nyTittel, oppdatertSoknad.tittel)
 		assertEquals("en", oppdatertSoknad.spraak, "Språk er oppdatert (blir konvertert til de første 2 bokstavene)")
 		assertEquals(4, oppdatertSoknad.vedleggsListe.size, "Hoveddokument, hoveddokumentVariant og to vedlegg")
@@ -286,9 +287,13 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertTrue(leggTilVedleggResponse != null)
 		assertTrue(oppdatertUtfyltResponse != null)
 
-		assertEquals(200, utfyltResponse.statusCode.value())
+		assertEquals(302, utfyltResponse.statusCode.value())
 		assertEquals(201, leggTilVedleggResponse.statusCode.value())
-		assertEquals(200, oppdatertUtfyltResponse.statusCode.value())
+		assertEquals(302, oppdatertUtfyltResponse.statusCode.value())
+		assertEquals(
+			"http://localhost:3100/sendinn/${innsendingsId}",
+			oppdatertUtfyltResponse.headers.location!!.toString()
+		)
 
 		assertEquals(4, oppdatertSoknad.vedleggsListe.size)
 
