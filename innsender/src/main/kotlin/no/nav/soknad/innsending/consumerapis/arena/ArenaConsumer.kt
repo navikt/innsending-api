@@ -41,7 +41,7 @@ class ArenaConsumer(
 		val userId = subjectHandler.getUserIdFromToken()
 
 		logger.info("Henter målgruppe med callId:{}", callId)
-		secureLogger.info("Henter målgrupper for callId:{}, brukerId:{}", callId, userId)
+		secureLogger.info("[{}] Henter målgrupper for callId:{}", userId, callId)
 
 		val uri = UriComponentsBuilder
 			.fromUriString("${restConfig.arenaUrl}/api/v1/maalgrupper")
@@ -63,7 +63,7 @@ class ArenaConsumer(
 				})
 			.awaitBodyOrNull() ?: throw NonCriticalException(message = "Kunne ikke hente målgrupper")
 
-		secureLogger.info("Målgrupper for brukerId:{} - {}", userId, maalgrupper.toString())
+		secureLogger.info("[{}] Målgrupper: {}", userId, maalgrupper.toString())
 
 		return maalgrupper
 	}
@@ -73,7 +73,7 @@ class ArenaConsumer(
 		val userId = subjectHandler.getUserIdFromToken()
 
 		logger.info("Henter aktiviteter for callId:{}", callId)
-		secureLogger.info("Henter aktiviteter for callId:{}, brukerId:{}", callId, userId)
+		secureLogger.info("[{}] Henter aktiviteter for callId:{}", userId, callId)
 
 		val uri = UriComponentsBuilder
 			.fromUriString("${restConfig.arenaUrl}/api/v1/tilleggsstoenad/dagligreise")
@@ -96,7 +96,7 @@ class ArenaConsumer(
 			.awaitBodyOrNull()
 			?: throw NonCriticalException(message = "Kunne ikke hente aktiviteter")
 
-		secureLogger.info("Aktiviteter for brukerId:{} - {}", userId, aktiviteter.toString())
+		secureLogger.info("[{}] Aktiviteter: {}", userId, aktiviteter.toString())
 
 		return aktiviteter
 	}
