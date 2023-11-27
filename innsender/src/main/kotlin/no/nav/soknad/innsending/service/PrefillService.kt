@@ -5,11 +5,11 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.consumerapis.arena.ArenaConsumerInterface
-import no.nav.soknad.innsending.consumerapis.arena.ArenaException
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.transformers.AddressTransformer.transformAddresses
 import no.nav.soknad.innsending.consumerapis.pdl.transformers.NameTransformer.transformName
 import no.nav.soknad.innsending.consumerapis.pdl.transformers.PhoneNumberTransformer.transformPhoneNumbers
+import no.nav.soknad.innsending.exceptions.NonCriticalException
 import no.nav.soknad.innsending.model.Aktivitet
 import no.nav.soknad.innsending.model.Maalgruppe
 import no.nav.soknad.innsending.model.PrefillData
@@ -88,7 +88,7 @@ class PrefillService(
 		try {
 			maalgrupper = arenaConsumer.getMaalgrupper()
 			if (maalgrupper.isEmpty()) return PrefillData()
-		} catch (arenaException: ArenaException) {
+		} catch (exception: NonCriticalException) {
 			return PrefillData()
 		}
 
@@ -103,7 +103,7 @@ class PrefillService(
 		try {
 			aktiviteter = arenaConsumer.getAktiviteter()
 			if (aktiviteter.isEmpty()) return PrefillData()
-		} catch (arenaException: ArenaException) {
+		} catch (arenaException: NonCriticalException) {
 			return PrefillData()
 		}
 

@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.consumerapis.arena
 
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.BackendErrorException
+import no.nav.soknad.innsending.exceptions.NonCriticalException
 import no.nav.soknad.innsending.model.Aktivitet
 import no.nav.soknad.innsending.model.Maalgruppe
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
@@ -89,12 +90,12 @@ class ArenaConsumer(
 			)
 	}
 
-	private fun handleErrorResponse(clientResponse: ClientResponse, errorMessage: String): Mono<ArenaException> {
+	private fun handleErrorResponse(clientResponse: ClientResponse, errorMessage: String): Mono<Exception> {
 		val status = clientResponse.statusCode()
 		val message = "${status.value()}: $errorMessage"
 
 		if (status.is4xxClientError) {
-			throw ArenaException(message = message)
+			throw NonCriticalException(message = message)
 		} else {
 			throw BackendErrorException(message = message)
 		}

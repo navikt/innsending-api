@@ -84,12 +84,12 @@ class PdlAPI(
 		// Does not include historic data
 		val response = pdlGraphQLClient.execute(PrefillData(PrefillData.Variables(ident, false)))
 
-		if (response.data != null) {
+		return if (response.data != null) {
 			checkForErrors(response.errors)
-			return response.data
+			response.data
 		} else {
 			logger.error("Oppslag mot personregisteret for preutfylling feilet")
-			throw BackendErrorException("Oppslag mot personregisteret for preutfylling feilet")
+			null
 		}
 	}
 
