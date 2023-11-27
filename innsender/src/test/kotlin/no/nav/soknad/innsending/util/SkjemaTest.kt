@@ -13,8 +13,8 @@ class SkjemaTest {
 
 	@Test
 	fun `Should remove all non-alphanumeric characters from skjemanr`() {
-		val inputWithSpecialChars = "A!@#B*C123"
-		assertEquals("ABC123", Skjema.createSkjemaPathFromSkjemanr(inputWithSpecialChars))
+		val inputWithSpecialCharacters = "A!@#B*C123"
+		assertEquals("abc123", Skjema.createSkjemaPathFromSkjemanr(inputWithSpecialCharacters))
 
 	}
 
