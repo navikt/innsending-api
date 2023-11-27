@@ -79,7 +79,7 @@ class AddressTransformerTest {
 	@Test
 	fun `Should get closest bostedsAdresse to now`() {
 		// Given
-		val oneDayAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(10))
+		val oneDayAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(1))
 		val tenDaysAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(10))
 		val twentyDaysAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(20))
 		val tenDaysFromNow = formatToLocalDateTime(LocalDateTime.now().plusDays(10))
@@ -101,7 +101,7 @@ class AddressTransformerTest {
 
 		// Then
 		assertEquals(
-			LocalDate.parse(bostedTenDaysAgo.gyldigFraOgMed, DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+			LocalDate.parse(bostedOneDayAgo.gyldigFraOgMed, DateTimeFormatter.ISO_LOCAL_DATE_TIME),
 			result.bostedsadresse?.gyldigFraOgMed
 		)
 	}
@@ -109,7 +109,7 @@ class AddressTransformerTest {
 	@Test
 	fun `Should get all relevant kontaktadresse`() {
 		// Given
-		val oneDayAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(10))
+		val oneDayAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(1))
 		val tenDaysAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(10))
 		val twentyDaysAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(20))
 		val tenDaysFromNow = formatToLocalDateTime(LocalDateTime.now().plusDays(10))
@@ -147,7 +147,7 @@ class AddressTransformerTest {
 	@Test
 	fun `Should get one norwegian and one international oppholdsAdresse`() {
 		// Given
-		val oneDayAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(10))
+		val oneDayAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(1))
 		val tenDaysAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(10))
 		val twentyDaysAgo = formatToLocalDateTime(LocalDateTime.now().minusDays(20))
 		val tenDaysFromNow = formatToLocalDateTime(LocalDateTime.now().plusDays(10))
@@ -261,7 +261,7 @@ class AddressTransformerTest {
 
 		val adressebeskyttelseUgradert =
 			AdressebeskyttelseTestBuilder().gradering(AdressebeskyttelseGradering.UGRADERT).build()
-		
+
 		// When
 		val result = transformAddresses(
 			adressebeskyttelser = listOf(adressebeskyttelseUgradert, adressebeskyttelseHistorisk),

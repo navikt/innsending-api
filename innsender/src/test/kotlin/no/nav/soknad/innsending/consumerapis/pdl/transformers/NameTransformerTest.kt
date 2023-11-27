@@ -69,7 +69,7 @@ class NameTransformerTest {
 	@Test
 	fun `Should get closest date to now`() {
 		// Given
-		val oneDayAgo = formatToLocalDate(LocalDateTime.now().minusDays(10))
+		val oneDayAgo = formatToLocalDate(LocalDateTime.now().minusDays(1))
 		val tenDaysAgo = formatToLocalDate(LocalDateTime.now().minusDays(10))
 		val twentyDaysAgo = formatToLocalDate(LocalDateTime.now().minusDays(20))
 		val tenDaysFromNow = formatToLocalDate(LocalDateTime.now().plusDays(10))
@@ -85,7 +85,7 @@ class NameTransformerTest {
 		val result = transformName(names)
 
 		// Then
-		assertEquals(nameTenDaysAgo, result)
+		assertEquals(nameOneDayAgo, result)
 	}
 
 
