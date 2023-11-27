@@ -152,8 +152,8 @@ class BrukernotifikasjonPublisher(
 			val baseUrl = "${notifikasjonConfig.fyllutUrl}/${dokumentSoknad.skjemaPath}/oppsummering"
 
 			val uriBuilder = UriComponentsBuilder.fromUriString(baseUrl)
-			uriBuilder.queryParam("innsendingsId", dokumentSoknad.innsendingsId)
 			uriBuilder.queryParam("sub", "digital")
+			uriBuilder.queryParam("innsendingsId", dokumentSoknad.innsendingsId)
 
 			return uriBuilder.toUriString()
 		}

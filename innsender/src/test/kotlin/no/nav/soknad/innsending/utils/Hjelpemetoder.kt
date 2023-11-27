@@ -25,7 +25,8 @@ class Hjelpemetoder {
 			soknadsStatus: SoknadsStatusDto? = SoknadsStatusDto.opprettet,
 			vedleggsListe: List<VedleggDto>? = null,
 			ettersendingsId: String? = null,
-			opprettetDato: OffsetDateTime? = OffsetDateTime.now()
+			opprettetDato: OffsetDateTime? = OffsetDateTime.now(),
+			soknadstype: SoknadType = SoknadType.soknad
 		): DokumentSoknadDto {
 			val vedleggDtoPdf = lagVedleggDto(
 				vedleggsnr = skjemanr,
@@ -59,7 +60,7 @@ class Hjelpemetoder {
 				spraak = spraak,
 				endretDato = OffsetDateTime.now(),
 				innsendtDato = null,
-				soknadstype = SoknadType.soknad,
+				soknadstype = soknadstype,
 				skjemaPath = Skjema.createSkjemaPathFromSkjemanr(skjemanr)
 			)
 		}
