@@ -4,12 +4,13 @@ import no.nav.soknad.innsending.model.SkjemaDokumentDto
 import no.nav.soknad.innsending.model.SkjemaDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.util.Skjema
+import no.nav.soknad.innsending.utils.Skjema.generateSkjemanr
 import java.util.*
 
 
 data class SkjemaDtoTestBuilder(
 	var brukerId: String = "12128012345",
-	var skjemanr: String = "NAV-${UUID.randomUUID().toString().take(4)}",
+	var skjemanr: String = generateSkjemanr(),
 	var tittel: String = "Forsikring mot ansvar for sykepenger i arbeidsgiverperioden for små bedrifter.",
 	var tema: String = "FOS",
 	var spraak: String = "nb_NO",

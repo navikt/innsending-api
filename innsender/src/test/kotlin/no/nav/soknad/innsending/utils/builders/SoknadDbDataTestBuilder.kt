@@ -4,6 +4,7 @@ import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
+import no.nav.soknad.innsending.utils.Skjema.generateSkjemanr
 import java.time.LocalDateTime
 import java.util.*
 
@@ -11,7 +12,7 @@ data class SoknadDbDataTestBuilder(
 	var id: Long? = null,
 	var innsendingsId: String = UUID.randomUUID().toString(),
 	var tittel: String = "Avtale om barnebidrag",
-	var skjemanr: String = "NAV-${UUID.randomUUID().toString().take(4)}",
+	var skjemanr: String = generateSkjemanr(),
 	var tema: String = "BID",
 	var spraak: String = "nb",
 	var status: SoknadsStatus = SoknadsStatus.Opprettet,
