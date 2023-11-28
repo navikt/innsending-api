@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText
-import java.math.BigInteger
 import javax.xml.bind.annotation.*
 import javax.xml.datatype.XMLGregorianCalendar
 
@@ -37,7 +36,7 @@ data class AlternativeTransportutgifter(
 @XmlType(name = "Anbud", propOrder = ["firmanavn", "tilbudsbeloep"])
 data class Anbud(
 	val firmanavn: String,
-	val tilbudsbeloep: BigInteger
+	val tilbudsbeloep: Int
 )
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -52,7 +51,7 @@ data class Barn(
 	val navn: String,
 	val harFullfoertFjerdeSkoleaar: Boolean? = null,
 	val aarsakTilBarnepass: List<String>? = null,
-	val maanedligUtgiftTilsynBarn: BigInteger
+	val maanedligUtgiftTilsynBarn: Int
 )
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -65,12 +64,12 @@ data class Boutgifter(
 	val periode: Periode,
 	val harFasteBoutgifter: Boolean,
 	val harBoutgifterVedSamling: Boolean,
-	val boutgifterAktivitetsted: BigInteger? = null,
-	val boutgifterHjemstedAktuell: BigInteger? = null,
-	val boutgifterHjemstedOpphoert: BigInteger? = null,
+	val boutgifterAktivitetsted: Int? = null,
+	val boutgifterHjemstedAktuell: Int? = null,
+	val boutgifterHjemstedOpphoert: Int? = null,
 	val boutgifterPgaFunksjonshemminger: Boolean? = null,
 	val mottarBostoette: Boolean,
-	val bostoetteBeloep: BigInteger? = null,
+	val bostoetteBeloep: Int? = null,
 	val samlingsperiode: List<Periode>? = null
 )
 
@@ -86,7 +85,7 @@ data class DagligReise(
 	val harParkeringsutgift: Boolean? = null,
 	val aktivitetsadresse: String,
 	val avstand: Double,
-	val parkeringsutgiftBeloep: BigInteger? = null,
+	val parkeringsutgiftBeloep: Int? = null,
 	val innsendingsintervall: Innsendingsintervaller? = null,
 	val alternativeTransportutgifter: AlternativeTransportutgifter
 )
@@ -128,10 +127,10 @@ data class Flytteutgifter(
 
 	val flyttingPgaNyStilling: Boolean,
 
-	val flyttedato: XMLGregorianCalendar,
+	val flyttedato: String,
 	val tiltredelsesdato: XMLGregorianCalendar? = null,
 	val tilflyttingsadresse: String,
-	val avstand: BigInteger,
+	val avstand: Int,
 	val sumTilleggsutgifter: Double,
 	val anbud: List<Anbud>? = null
 )
@@ -158,8 +157,8 @@ data class Laeremiddelutgifter(
 	val hvorMyeDekkesAvAnnenAktoer: Double? = null,
 	val hvorMyeDekkesAvNAV: Double? = null,
 	val skolenivaa: Skolenivaaer,
-	val prosentandelForUtdanning: BigInteger,
-	val beloep: BigInteger,
+	val prosentandelForUtdanning: Int,
+	val beloep: Int,
 	val erUtgifterDekket: ErUtgifterDekket
 )
 
@@ -200,9 +199,9 @@ data class Maalgruppetyper(
 data class Periode(
 	@XmlElement(required = true)
 	@XmlSchemaType(name = "date")
-	val fom: XMLGregorianCalendar,
+	val fom: String,
 	@XmlSchemaType(name = "date")
-	val tom: XMLGregorianCalendar
+	val tom: String
 )
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -236,7 +235,7 @@ data class Rettighetstype(
 @XmlType(name = "DrosjeTransportutgifter", propOrder = ["beloep"])
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class DrosjeTransportutgifter(
-	val beloep: BigInteger
+	val beloep: Int
 )
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -278,7 +277,7 @@ data class Innsendingsintervaller(
 @XmlType(name = "KollektivTransportutgifter", propOrder = ["beloepPerMaaned"])
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class KollektivTransportutgifter(
-	val beloepPerMaaned: BigInteger
+	val beloepPerMaaned: Int
 )
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -291,7 +290,7 @@ data class ReiseObligatoriskSamling(
 	@XmlElement(required = true)
 	val periode: Periode,
 	val reiseadresser: String,
-	val avstand: BigInteger,
+	val avstand: Int,
 	val samlingsperiode: List<Periode>,
 	val alternativeTransportutgifter: AlternativeTransportutgifter
 )
@@ -306,8 +305,8 @@ data class ReiseVedOppstartOgAvsluttetAktivitet(
 	@XmlElement(required = true)
 	val periode: Periode,
 	val aktivitetsstedAdresse: String,
-	val avstand: BigInteger,
-	val antallReiser: BigInteger,
+	val avstand: Int,
+	val antallReiser: Int,
 	val harBarnUnderFemteklasse: Boolean,
 	val harBarnUnderAtten: Boolean?,
 	val alternativeTransportutgifter: AlternativeTransportutgifter
@@ -322,11 +321,11 @@ data class ReiseVedOppstartOgAvsluttetAktivitet(
 data class ReisestoenadForArbeidssoeker(
 	@XmlElement(required = true)
 	@XmlSchemaType(name = "date")
-	val reisedato: XMLGregorianCalendar,
+	val reisedato: String,
 	val harMottattDagpengerSisteSeksMaaneder: Boolean,
 	val formaal: Formaal,
 	val adresse: String,
-	val avstand: BigInteger,
+	val avstand: Int,
 
 	val erUtgifterDekketAvAndre: Boolean,
 
@@ -411,5 +410,5 @@ data class TilsynsutgifterFamilie(
 	val annenTilsynsperson: String? = null,
 	val tilsynForetasAv: String? = null,
 	val tilsynsmottaker: String,
-	val maanedligUtgiftTilsynFam: BigInteger
+	val maanedligUtgiftTilsynFam: Int
 )

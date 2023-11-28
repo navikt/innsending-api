@@ -64,11 +64,11 @@ class InnsendingService(
 		// Dato og opplastingsstatus settes på alle vedlegg som er endret
 		// Merk at dersom det ikke er lastet opp filer på et obligatorisk vedlegg, skal status settes SENDES_SENERE. Dette vil trigge oppretting av ettersendingssøknad
 		val soknadDto = if (soknadDtoInput.erEttersending)
-			opprettOgLagreDummyHovedDokument(soknadDtoInput)
+			addDummyHovedDokumentToSoknad(soknadDtoInput)
 		else {
 
 			if (isTilleggsstonad(soknadDtoInput)) {
-				opprettXmlDokumentVariant(soknadDtoInput)
+				addXmlDokumentvariantToSoknad(soknadDtoInput)
 			} else {
 				soknadDtoInput
 			}
@@ -160,7 +160,7 @@ class InnsendingService(
 		return tilleggsstonadSkjema.contains(soknadDto.skjemanr)
 	}
 
-	private fun opprettXmlDokumentVariant(soknadDto: DokumentSoknadDto): DokumentSoknadDto {
+	private fun addXmlDokumentvariantToSoknad(soknadDto: DokumentSoknadDto): DokumentSoknadDto {
 
 		val jsonVariant = soknadDto.hoveddokumentVariant
 		if (jsonVariant == null) {
@@ -317,7 +317,7 @@ class InnsendingService(
 		return kvitteringsVedleggDto.copy(id = kvitteringsVedlegg.id)
 	}
 
-	private fun opprettOgLagreDummyHovedDokument(soknadDto: DokumentSoknadDto): DokumentSoknadDto {
+	private fun addDummyHovedDokumentToSoknad(soknadDto: DokumentSoknadDto): DokumentSoknadDto {
 		val operation = InnsenderOperation.SEND_INN.name
 
 		// Hvis ettersending, så må det genereres et dummy hoveddokument
