@@ -139,8 +139,8 @@ data class KanReiseKollektivt(
 
 data class KanIkkeReiseKollektivtReiseTilSamling(
 	//TODO hva burde sjekkbokser mappes til?
-	val hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt: String,
-	val beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt: String,
+	val hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt: String?,
+	val beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt: String?,
 	val hentingEllerLeveringAvBarn: HentingEllerLeveringAvBarn? = null,
 	val annet: Map<String, Any>? = null, // TODO hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt
 	val kanDuBenytteEgenBil: String? = "nei", // ja|nei
@@ -155,7 +155,7 @@ data class BarnSomSkalFlytteMedDeg(
 )
 
 data class KanIkkeReiseKollektivtOppstartAvslutningHjemreise(
-	val hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt: String,
+	val hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt: String?,
 	val beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt: String?,
 	val hentingEllerLeveringAvBarn: HentingEllerLeveringAvBarn?,
 	val annet: Map<String, Any>?,  // TODO hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt
@@ -179,7 +179,7 @@ data class HarMottattDagpengerSiste6Maneder(
 )
 
 data class KanIkkeReiseKollektivtArbeidssoker(
-	val hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt: String,
+	val hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt: String?,
 	val beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt: String?,
 	val hentingEllerLeveringAvBarn: HentingEllerLeveringAvBarn?,
 	val annet: Map<String, Any>, // TODO hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt
