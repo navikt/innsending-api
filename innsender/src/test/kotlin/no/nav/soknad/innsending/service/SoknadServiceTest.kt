@@ -682,7 +682,7 @@ class SoknadServiceTest : ApplicationTest() {
 		)
 
 		// Når
-		soknadService.oppdaterSoknad(innsendingsId, dokumentSoknad)
+		soknadService.updateSoknad(innsendingsId, dokumentSoknad)
 		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
 
 		// Så

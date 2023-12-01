@@ -48,6 +48,7 @@ fun mapTilOpplastingsStatusDto(opplastingsStatus: OpplastingsStatus): Opplasting
 		OpplastingsStatus.INNSENDT -> OpplastingsStatusDto.innsendt
 		OpplastingsStatus.SENDES_AV_ANDRE -> OpplastingsStatusDto.sendesAvAndre
 		OpplastingsStatus.SENDES_IKKE -> OpplastingsStatusDto.sendesIkke
+		OpplastingsStatus.LASTET_OPP_IKKE_RELEVANT_LENGER -> OpplastingsStatusDto.lastetOppIkkeRelevantLenger
 		else -> OpplastingsStatusDto.ikkeValgt
 	}
 
@@ -59,6 +60,7 @@ fun mapTilDbOpplastingsStatus(opplastingsStatusDto: OpplastingsStatusDto): Oppla
 		OpplastingsStatusDto.innsendt -> OpplastingsStatus.INNSENDT
 		OpplastingsStatusDto.sendesAvAndre -> OpplastingsStatus.SENDES_AV_ANDRE
 		OpplastingsStatusDto.sendesIkke -> OpplastingsStatus.SENDES_IKKE
+		OpplastingsStatusDto.lastetOppIkkeRelevantLenger -> OpplastingsStatus.LASTET_OPP_IKKE_RELEVANT_LENGER
 	}
 
 fun avledOpplastingsstatusVedInnsending(filDto: FilDto?, vedleggDto: VedleggDto): OpplastingsStatusDto {

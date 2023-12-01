@@ -332,19 +332,37 @@ class VedleggService(
 		}
 	}
 
-	// Slett alle eksisterende vedlegg (og eventuelt tilhørende filer) som ikke er med i den nye søknaden
-	// Kun vedlegg fra fyllUt skal slettes (vedlegg med formioId). Vedlegg uten formioId (feks: hoveddokument og N6 vedlegg fra sendInn) skal ikke slettes
-	fun slettEksisterendeVedleggVedOppdatering(
-		eksisterendeVedleggsListe: List<VedleggDto>,
+	// Set status=LASTET_OPP_IKKE_RELEVANT_LENGER and erPakrevd=false for all vedlegg that are not part of the updated søknad
+	// Concerns vedlegg from fyllUt (vedlegg with formioId). Vedlegg without formioId (ex: hoveddokument and N6 vedlegg from sendInn) will still be part of the søknad
+	fun updateVedleggStatuses(
+		existingVedleggListe: List<VedleggDto>,
 		dokumentSoknadDto: DokumentSoknadDto
 	) {
-		eksisterendeVedleggsListe.filter { eksisterendeVedlegg ->
+		existingVedleggListe.filter { eksisterendeVedlegg ->
 			eksisterendeVedlegg.formioId != null &&
 				dokumentSoknadDto.vedleggsListeUtenHoveddokument.none { nyttVedlegg -> eksisterendeVedlegg.formioId == nyttVedlegg.formioId }
 		}.forEach {
-			logger.info("Slettet vedlegg id:${it.id} ved oppdatering")
-			slettVedleggOgDensFiler(it)
+			logger.info("Setter status=LASTET_OPP_IKKE_RELEVANT_LENGER og erPakrevd=false på vedlegg id:${it.id}")
+
+			it.id?.let { vedleggId ->
+				dokumentSoknadDto.innsendingsId?.let { innsendingsId ->
+					repo.updateVedleggErPakrevd(vedleggId, false)
+					repo.updateVedleggStatus(
+						innsendingsId = innsendingsId,
+						vedleggsId = vedleggId,
+						opplastingsStatus = OpplastingsStatus.LASTET_OPP_IKKE_RELEVANT_LENGER
+					)
+				}
+			}
 		}
+	}
+
+	fun deleteVedleggNotRelevantAnymore(existingVedlegg: List<VedleggDto>) {
+		existingVedlegg.filter { vedlegg -> vedlegg.opplastingsStatus == OpplastingsStatusDto.lastetOppIkkeRelevantLenger }
+			.forEach {
+				logger.info("Sletter vedlegg id:${it.id} vedleggsnr:${it.vedleggsnr} med status LASTET_OPP_IKKE_RELEVANT_LENGER")
+				slettVedleggOgDensFiler(it)
+			}
 	}
 
 

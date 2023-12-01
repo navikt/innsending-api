@@ -199,15 +199,23 @@ class RepositoryUtils(
 	}
 
 
-	fun oppdaterVedleggStatus(
+	fun updateVedleggStatus(
 		innsendingsId: String,
 		vedleggsId: Long,
-		opplastingsStatus: OpplastingsStatus,
-		localDateTime: LocalDateTime
+		opplastingsStatus: OpplastingsStatus
 	): Int = try {
-		vedleggRepository.updateStatus(id = vedleggsId, status = opplastingsStatus, endretdato = localDateTime)
+		vedleggRepository.updateStatus(id = vedleggsId, status = opplastingsStatus, endretdato = LocalDateTime.now())
 	} catch (ex: Exception) {
 		throw BackendErrorException("Feil ved oppdatering av status for vedlegg $vedleggsId for søknad $innsendingsId", ex)
+	}
+
+	fun updateVedleggErPakrevd(
+		vedleggsId: Long,
+		erPakrevd: Boolean
+	): Int = try {
+		vedleggRepository.updateErPakrevd(id = vedleggsId, erpakrevd = erPakrevd, endretdato = LocalDateTime.now())
+	} catch (ex: Exception) {
+		throw BackendErrorException("Feil ved oppdatering av status for vedlegg $vedleggsId", ex)
 	}
 
 	//NB! metoden vedleggRepository.updateStatusAndInnsendtdato fungerer ved lokal testing, men feiler når kjøring på nais.
