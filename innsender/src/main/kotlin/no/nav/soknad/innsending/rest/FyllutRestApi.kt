@@ -142,7 +142,7 @@ class FyllutRestApi(
 			brukerId
 		)
 
-		soknadService.oppdaterUtfyltSoknad(innsendingsId, dokumentSoknadDto)
+		soknadService.updateUtfyltSoknad(innsendingsId, dokumentSoknadDto)
 
 		loggBegge("$innsendingsId: Utfylt søknad fra Fyllut", brukerId)
 

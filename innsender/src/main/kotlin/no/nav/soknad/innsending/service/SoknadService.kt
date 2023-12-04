@@ -503,11 +503,17 @@ class SoknadService(
 	) {
 		oppdatertDokumentSoknadDto.vedleggsListe
 			.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp && it.erHoveddokument }
-			.forEach { filService.lagreFil(oppdatertDokumentSoknadDto, it, dokumentSoknadDto.vedleggsListe) }
+			.forEach {
+				filService.lagreFil(
+					savedDokumentSoknadDto = oppdatertDokumentSoknadDto,
+					lagretVedleggDto = it,
+					innsendtVedleggDtos = dokumentSoknadDto.vedleggsListe
+				)
+			}
 	}
 
 
-	fun oppdaterUtfyltSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
+	fun updateUtfyltSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		val existingSoknad = hentSoknad(innsendingsId)
 
 		vedleggService.updateVedleggStatuses(existingSoknad.vedleggsListe, dokumentSoknadDto)
