@@ -12,7 +12,7 @@ import javax.xml.datatype.XMLGregorianCalendar
 @XmlType(name = "Aktivitetsinformasjon", propOrder = ["aktivitetsId"])
 data class Aktivitetsinformasjon(
 	@XmlElement(required = true)
-	val aktivitetsId: String = ""
+	val aktivitetsId: String? = ""
 )
 
 @XmlAccessorType(XmlAccessType.FIELD)

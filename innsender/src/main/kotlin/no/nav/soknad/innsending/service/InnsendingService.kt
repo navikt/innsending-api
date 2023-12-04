@@ -47,7 +47,18 @@ class InnsendingService(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	private val tilleggsstonadSkjema =
-		listOf("NAV 11-12.10", "NAV 11-12.11", "NAV 11-12.12", "NAV 11-12.13", "NAV 11-12.14")
+		listOf(
+			"NAV 11-12.10",
+			"NAV 11-12.11",
+			"NAV 11-12.12",
+			"NAV 11-12.13",
+			"NAV 11-12.14",
+			"NAV 11-12.12R",
+			"NAV 11-12.12B",
+			"NAV 11-12.12O",
+			"NAV 11-12.12L",
+			"NAV 11-12.12F",
+		)
 
 	@Transactional
 	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto): Pair<List<VedleggDto>, List<VedleggDto>> {

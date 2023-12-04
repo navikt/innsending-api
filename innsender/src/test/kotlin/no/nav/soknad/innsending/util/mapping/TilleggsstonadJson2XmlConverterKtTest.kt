@@ -10,11 +10,12 @@ class TilleggsstonadJson2XmlConverterKtTest {
 	@Test
 	fun json2XmlTest() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.13", tema = "TSO").build()
-		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/tilleggsstonad-eks.json")
+		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/tilleggsstonad-dagligreise-m-bil.json")
 
 		val xmlFil = json2Xml(soknadDto, jsonFil)
 
 		assertNotNull(xmlFil)
 
 	}
+
 }

@@ -14,6 +14,7 @@ import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH
 import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_LEVEL_4
 import no.nav.soknad.innsending.util.Constants.TOKENX
+import no.nav.soknad.innsending.util.fiksSkjemanr
 import no.nav.soknad.innsending.util.mapping.mapTilSkjemaDto
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import org.slf4j.LoggerFactory
@@ -40,6 +41,7 @@ class FyllutRestApi(
 		secureLogger.info("[$brukerId] $melding")
 	}
 
+
 	// FIXME: Fjern dette endepunktet etter at det er byttet ut
 	@Timed(InnsenderOperation.OPPRETT)
 	override fun fyllUt(skjemaDto: SkjemaDto): ResponseEntity<Unit> {
@@ -49,7 +51,8 @@ class FyllutRestApi(
 			"Skal opprette søknad fra FyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}",
 			brukerId
 		)
-		soknadService.loggWarningVedEksisterendeSoknad(brukerId, skjemaDto.skjemanr, SoknadType.soknad)
+
+		soknadService.loggWarningVedEksisterendeSoknad(brukerId, fiksSkjemanr(skjemaDto.skjemanr), SoknadType.soknad)
 
 		val opprettetSoknad = soknadService.opprettNySoknad(
 			SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
@@ -100,7 +103,7 @@ class FyllutRestApi(
 		skjemaDto: SkjemaDto,
 		forceCreate: Boolean = false
 	): ResponseEntity<Any>? {
-		val aktiveSoknader = soknadService.hentAktiveSoknader(brukerId, skjemaDto.skjemanr)
+		val aktiveSoknader = soknadService.hentAktiveSoknader(brukerId, fiksSkjemanr(skjemaDto.skjemanr))
 		val harSoknadUnderArbeid = aktiveSoknader.isNotEmpty()
 
 		if (harSoknadUnderArbeid && !forceCreate) {

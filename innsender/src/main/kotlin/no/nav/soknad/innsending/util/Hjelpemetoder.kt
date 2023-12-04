@@ -32,3 +32,17 @@ fun finnBackupLanguage(wanted: String): String {
 fun maskerFnr(soknad: Soknad): Soknad {
 	return Soknad(soknad.innsendingId, soknad.erEttersendelse, personId = "*****", soknad.tema, soknad.dokumenter)
 }
+
+fun fiksSkjemanr(skjemanr: String): String {
+	val tsoSkjemanr = "NAV 11-12.12"
+	if (!skjemanr.startsWith(tsoSkjemanr)) return skjemanr
+	return when (skjemanr) {
+		tsoSkjemanr + " reise" -> tsoSkjemanr + "R"
+		tsoSkjemanr + " - pass av barn" -> tsoSkjemanr + "B"
+		tsoSkjemanr + " - bolig og overnatting" -> tsoSkjemanr + "O"
+		tsoSkjemanr + " - læremidler" -> tsoSkjemanr + "L"
+		tsoSkjemanr + " - flytting" -> tsoSkjemanr + "F"
+		else -> tsoSkjemanr
+	}
+}
+

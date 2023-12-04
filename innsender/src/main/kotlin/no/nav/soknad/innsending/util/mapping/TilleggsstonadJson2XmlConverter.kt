@@ -6,6 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.soknad.innsending.exceptions.BackendErrorException
+import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import java.text.SimpleDateFormat
 import java.util.*
@@ -22,12 +23,181 @@ fun json2Xml(soknadDto: DokumentSoknadDto, jsonFil: ByteArray?): ByteArray {
 	return convertToXml(tilleggsstonadXmlObj)
 }
 
-fun convertToJson(soknadDto: DokumentSoknadDto, json: ByteArray?): Root {
+fun convertToJson(soknadDto: DokumentSoknadDto, json: ByteArray?): JsonApplication {
 	if (json == null || json.isEmpty())
-		throw BackendErrorException("${soknadDto.innsendingsId}: Ingen json fil av søknaden mangler")
+		throw BackendErrorException("${soknadDto.innsendingsId}: json fil av søknaden mangler")
 
 	val mapper = jacksonObjectMapper()
-	return mapper.readValue(json, Root::class.java)
+	//mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+	val json = mapper.readValue(json, Root::class.java)
+
+	return JsonApplication(
+		timezone = json.data.metadata.timezone,
+		language = json.language,
+		personInfo = JsonPersonInfo(
+			fornavn = json.data.data.fornavnSoker,
+			etternavn = json.data.data.etternavnSoker,
+			ident = PersonIdent(ident = json.data.data.fodselsnummerDnummerSoker, identType = IdentType.PERSONNR)
+		),
+		tilleggsstonad = convertToJsonTilleggsstonad(json.data.data)
+	)
+}
+
+private fun convertToJsonTilleggsstonad(tilleggsstonad: Application): JsonTilleggsstonad {
+	return JsonTilleggsstonad(
+		aktivitetsinformasjon = JsonAktivitetsInformasjon("12345"),
+		maalgruppeinformasjon = JsonMaalgruppeinformasjon("TODO"),
+		rettighetstype = convertToJsonRettighetstyper(tilleggsstonad)
+
+	)
+}
+
+private fun convertToJsonRettighetstyper(tilleggsstonad: Application): JsonRettighetstyper {
+	return JsonRettighetstyper(
+		reise = convertToReisestottesoknad(tilleggsstonad)
+	)
+}
+
+private fun convertToReisestottesoknad(tilleggsstonad: Application): JsonReisestottesoknad {
+	return JsonReisestottesoknad(
+		hvorforReiserDu = tilleggsstonad.hvorforReiserDu,
+		dagligReise = if (tilleggsstonad.hvorforReiserDu?.dagligReise == true) convertToJsonDagligReise(tilleggsstonad) else null,
+		reiseSamling = if (tilleggsstonad.hvorforReiserDu?.reiseTilSamling == true) convertToJsonReiseSamling(tilleggsstonad) else null,
+		dagligReiseArbeidssoker = if (tilleggsstonad.hvorforReiserDu?.reiseNarDuErArbeidssoker == true) convertToJsonReise_Arbeidssoker(
+			tilleggsstonad
+		) else null,
+		oppstartOgAvsluttetAktivitet = if (tilleggsstonad.hvorforReiserDu?.reisePaGrunnAvOppstartAvslutningEllerHjemreise == true) convertToJsonOppstartOgAvsluttetAktivitet(
+			tilleggsstonad
+		) else null
+	)
+}
+
+private fun <T : Any> validateNoneNull(input: T?, field: String): T {
+	return input ?: throw IllegalActionException("Mangler input for $field")
+}
+
+private fun convertToJsonDagligReise(tilleggsstonad: Application): JsonDagligReise {
+	return JsonDagligReise(
+		startdatoDdMmAaaa = tilleggsstonad.startdatoDdMmAaaa,
+		sluttdatoDdMmAaaa = tilleggsstonad.sluttdatoDdMmAaaa,
+		hvorMangeReisedagerHarDuPerUke = tilleggsstonad.hvorMangeReisedagerHarDuPerUke,
+		harDuEnReiseveiPaSeksKilometerEllerMer = tilleggsstonad.harDuEnReiseveiPaSeksKilometerEllerMer, // JA|NEI
+		harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde = tilleggsstonad.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde, // JA | NEI,
+		hvorLangReiseveiHarDu = validateNoneNull(
+			tilleggsstonad.hvorLangReiseveiHarDu?.toString(),
+			"Daglig reise reisevei"
+		).toInt(),
+		velgLand1 = tilleggsstonad.velgLand1 ?: VelgLand1(label = "NOR", "Norge"),
+		adresse1 = validateNoneNull(tilleggsstonad.adresse1, "Daglig reise adresse"),
+		postnr1 = validateNoneNull(tilleggsstonad.postnr1, "Daglig reise postnummer"),
+		kanDuReiseKollektivtDagligReise = validateNoneNull(
+			tilleggsstonad.kanDuReiseKollektivtDagligReise,
+			"Daglig reise kan du reise kollektivt"
+		), // ja | nei
+		hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise = tilleggsstonad.hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise, // Hvis kanDuReiseKollektivtDagligReise == ja
+		hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt = tilleggsstonad.hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt,
+		kanIkkeReiseKollektivtDagligReise = tilleggsstonad.kanIkkeReiseKollektivtDagligReise
+	)
+}
+
+private fun convertToJsonReiseSamling(tilleggsstonad: Application): JsonReiseSamling {
+	return JsonReiseSamling(
+		startOgSluttdatoForSamlingene = validateNoneNull(
+			tilleggsstonad.startOgSluttdatoForSamlingene,
+			"Reise til samling start- og sluttdato mangler"
+		),
+		hvorLangReiseveiHarDu1 = tilleggsstonad.hvorLangReiseveiHarDu1,
+		velgLandReiseTilSamling = validateNoneNull(
+			tilleggsstonad.velgLandReiseTilSamling,
+			"Reise til samling - mangler land"
+		),
+		adresse2 = validateNoneNull(tilleggsstonad.adresse2, "Reise til samling - mangler adresse"),
+		postnr2 = validateNoneNull(tilleggsstonad.postnr2, "Reise til samling -mangler postnummer"),
+		kanDuReiseKollektivtReiseTilSamling = validateNoneNull(
+			tilleggsstonad.kanDuReiseKollektivtReiseTilSamling,
+			"Reise til samling - mangler svar kan du reise kollektivt"
+		),
+		kanReiseKollektivt = tilleggsstonad.kanReiseKollektivt,
+		kanIkkeReiseKollektivtReiseTilSamling = tilleggsstonad.kanIkkeReiseKollektivtReiseTilSamling,
+		bekreftelseForAlleSamlingeneDuSkalDeltaPa = tilleggsstonad.bekreftelseForAlleSamlingeneDuSkalDeltaPa
+	)
+}
+
+private fun convertToJsonReise_Arbeidssoker(tilleggsstonad: Application): JsonDagligReiseArbeidssoker {
+	return JsonDagligReiseArbeidssoker(
+		reisedatoDdMmAaaa = validateNoneNull(
+			tilleggsstonad.reisedatoDdMmAaaa,
+			"Reise arbeidssøker - reisetidspunkt mangler"
+		),
+		hvorforReiserDuArbeidssoker = validateNoneNull(
+			tilleggsstonad.hvorforReiserDuArbeidssoker,
+			"Reise arbeidssøker - hvorfor reiser du svar mangler"
+		),
+		dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis = validateNoneNull(
+			tilleggsstonad.dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis,
+			"Reise arbeissøker - dekker andre reisen svar mangler"
+		),// JA|NEI
+		mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene = validateNoneNull(
+			tilleggsstonad.mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene,
+			"Reise arbeidssøker -  mottatt dagpenger svar mangler"
+		), // JA|NEI
+		harMottattDagpengerSiste6Maneder = tilleggsstonad.harMottattDagpengerSiste6Maneder,
+		hvorLangReiseveiHarDu3 = validateNoneNull(
+			tilleggsstonad.hvorLangReiseveiHarDu3,
+			"Daglig reise reisevei"
+		).toInt(),
+		velgLandArbeidssoker = tilleggsstonad.velgLandArbeidssoker ?: VelgLandArbeidssoker(label = "NOR", "Norge"),
+		adresse = validateNoneNull(tilleggsstonad.adresse, "Reise arbeidssøker -  adresse mangler"),
+		postnr = validateNoneNull(tilleggsstonad.postnr, "Reise arbeidssøker -  postnummer mangler"),
+		kanDuReiseKollektivtArbeidssoker = validateNoneNull(
+			tilleggsstonad.kanDuReiseKollektivtArbeidssoker,
+			"Reise arbeidssøker - kan du reise kollektivt mangler"
+		), // ja | nei
+		hvilkeUtgifterHarDuIForbindelseMedReisen3 = tilleggsstonad.hvilkeUtgifterHarDuIForbindelseMedReisen3, // Hvis kanDuReiseKollektivtDagligReise == ja
+		kanIkkeReiseKollektivtArbeidssoker = tilleggsstonad.kanIkkeReiseKollektivtArbeidssoker
+	)
+}
+
+
+private fun convertToJsonOppstartOgAvsluttetAktivitet(tilleggsstonad: Application): JsonOppstartOgAvsluttetAktivitet {
+	return JsonOppstartOgAvsluttetAktivitet(
+		startdatoDdMmAaaa1 = validateNoneNull(
+			tilleggsstonad.startdatoDdMmAaaa1,
+			"Oppstart og avslutning av aktivitet - reisetidspunkt mangler"
+		),
+		sluttdatoDdMmAaaa1 = validateNoneNull(
+			tilleggsstonad.sluttdatoDdMmAaaa1,
+			"Oppstart og avslutning av aktivitet - reisetidspunkt mangler"
+		),
+		hvorLangReiseveiHarDu2 = validateNoneNull(
+			tilleggsstonad.hvorLangReiseveiHarDu2,
+			"Oppstart og avslutning av aktivitet - reiseveilengde svar mangler"
+		).toInt(),
+		hvorMangeGangerSkalDuReiseEnVei = validateNoneNull(
+			tilleggsstonad.hvorMangeGangerSkalDuReiseEnVei,
+			"Oppstart og avslutning av aktivitet - antall reiser svar mangler"
+		).toInt(),
+		velgLand3 = tilleggsstonad.velgLand3 ?: VelgLand3(label = "NOR", "Norge"),
+		adresse3 = validateNoneNull(tilleggsstonad.adresse3, "Oppstart og avslutning av aktivitet -  adresse mangler"),
+		postnr3 = validateNoneNull(tilleggsstonad.postnr3, "Oppstart og avslutning av aktivitet -  postnummer mangler"),
+		harDuBarnSomSkalFlytteMedDeg = validateNoneNull(
+			tilleggsstonad.harDuBarnSomSkalFlytteMedDeg,
+			"Oppstart og avslutning av aktivitet - har du barn som skal flytte med deg svar mangler"
+		),
+		barnSomSkalFlytteMedDeg = tilleggsstonad.barnSomSkalFlytteMedDeg,
+		harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear = tilleggsstonad.harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear,
+		harDuSaerligBehovForFlereHjemreiserEnnNevntOvenfor = validateNoneNull(
+			tilleggsstonad.harDuSaerligBehovForFlereHjemreiserEnnNevntOvenfor,
+			"Oppstart og avslutning av aktivitet - Særlige behov svar mangler"
+		),
+		bekreftelseForBehovForFlereHjemreiser1 = tilleggsstonad.bekreftelseForBehovForFlereHjemreiser1,
+		kanDuReiseKollektivtOppstartAvslutningHjemreise = validateNoneNull(
+			tilleggsstonad.kanDuReiseKollektivtOppstartAvslutningHjemreise,
+			"Oppstart og avslutning av aktivitet - kan du reise kollektivt svar mangler"
+		),
+		hvilkeUtgifterHarDuIForbindelseMedReisen4 = tilleggsstonad.hvilkeUtgifterHarDuIForbindelseMedReisen4,
+		kanIkkeReiseKollektivtOppstartAvslutningHjemreise = tilleggsstonad.kanIkkeReiseKollektivtOppstartAvslutningHjemreise
+	)
 }
 
 fun convertToXml(tilleggsstonad: Tilleggsstoenadsskjema): ByteArray {
@@ -45,7 +215,10 @@ fun convertToXml(tilleggsstonad: Tilleggsstoenadsskjema): ByteArray {
 	return xml.toByteArray()
 }
 
-fun convertToTilleggsstonadsskjema(soknadDto: DokumentSoknadDto, tilleggstonadJsonObj: Root): Tilleggsstoenadsskjema {
+fun convertToTilleggsstonadsskjema(
+	soknadDto: DokumentSoknadDto,
+	tilleggstonadJsonObj: JsonApplication
+): Tilleggsstoenadsskjema {
 	return Tilleggsstoenadsskjema(
 		aktivitetsinformasjon = convertToAktivitetsinformasjon(tilleggstonadJsonObj),
 		personidentifikator = soknadDto.brukerId,
@@ -55,11 +228,11 @@ fun convertToTilleggsstonadsskjema(soknadDto: DokumentSoknadDto, tilleggstonadJs
 
 }
 
-fun convertToAktivitetsinformasjon(tilleggstonadJsonObj: Root): Aktivitetsinformasjon {
-	return Aktivitetsinformasjon("123456") // TODO
+fun convertToAktivitetsinformasjon(tilleggstonadJsonObj: JsonApplication): Aktivitetsinformasjon {
+	return Aktivitetsinformasjon(tilleggstonadJsonObj.tilleggsstonad.aktivitetsinformasjon?.aktivitet) // TODO
 }
 
-fun convertToMaalgruppeinformasjon(tilleggstonadJsonObj: Root): Maalgruppeinformasjon {
+fun convertToMaalgruppeinformasjon(tilleggstonadJsonObj: JsonApplication): Maalgruppeinformasjon {
 	return Maalgruppeinformasjon(
 		periode = Periode(
 			fom = convertToDateStringWithTimeZone("2023-12-01"), tom = convertToDateStringWithTimeZone("2024-01-31")
@@ -76,7 +249,7 @@ private fun convertToDateStringWithTimeZone(date: String): String {
 	return outputFormat.format(inputDate)
 }
 
-fun convertToRettighetstype(soknadDto: DokumentSoknadDto, tilleggstonadJsonObj: Root): Rettighetstype {
+fun convertToRettighetstype(soknadDto: DokumentSoknadDto, tilleggstonadJsonObj: JsonApplication): Rettighetstype {
 	return Rettighetstype(
 		boutgifter = convertBostotte(tilleggstonadJsonObj),
 		laeremiddelutgifter = convertLaremiddler(tilleggstonadJsonObj),
@@ -86,7 +259,7 @@ fun convertToRettighetstype(soknadDto: DokumentSoknadDto, tilleggstonadJsonObj: 
 	)
 }
 
-fun convertBostotte(tilleggstonadJsonObj: Root): Boutgifter? {
+fun convertBostotte(tilleggstonadJsonObj: JsonApplication): Boutgifter? {
 	if (!hasBoUtgifter(tilleggstonadJsonObj)) return null
 
 	// TODO eksempel op oppretting av Boutgifter
@@ -105,14 +278,13 @@ fun convertBostotte(tilleggstonadJsonObj: Root): Boutgifter? {
 
 }
 
-private fun hasBoUtgifter(tilleggstonadJsonObj: Root): Boolean {
-	val details = tilleggstonadJsonObj.data.data
-	return details.harDuBoutgifter == true
+private fun hasBoUtgifter(tilleggstonadJsonObj: JsonApplication): Boolean {
+	//val details = tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.boutgifter
+	return false
 }
 
-fun convertLaremiddler(tilleggstonadJsonObj: Root): Laeremiddelutgifter? {
+fun convertLaremiddler(tilleggstonadJsonObj: JsonApplication): Laeremiddelutgifter? {
 	if (!hasLaeremiddelutgifter(tilleggstonadJsonObj)) return null
-	val details = tilleggstonadJsonObj.data.data
 
 	// TODO eksempel på oppretting av Laeremiddelutgifter
 	return Laeremiddelutgifter(
@@ -126,15 +298,12 @@ fun convertLaremiddler(tilleggstonadJsonObj: Root): Laeremiddelutgifter? {
 	)
 }
 
-private fun hasLaeremiddelutgifter(tilleggstonadJsonObj: Root): Boolean {
-	val details = tilleggstonadJsonObj.data.data
-	return details.harDuLaeremiddelutgifter == true
+private fun hasLaeremiddelutgifter(tilleggstonadJsonObj: JsonApplication): Boolean {
+	return false
 }
 
-fun convertFlytteutgifter(tilleggstonadJsonObj: Root): Flytteutgifter? {
-	if (tilleggstonadJsonObj.data.data.harDuFlytteutgifter != true) return null
-
-	val details = tilleggstonadJsonObj.data.data
+fun convertFlytteutgifter(tilleggstonadJsonObj: JsonApplication): Flytteutgifter? {
+	if (!hasFlytteutgifter(tilleggstonadJsonObj)) return null
 
 	// TODO, eksempel
 	return Flytteutgifter(
@@ -154,8 +323,12 @@ fun convertFlytteutgifter(tilleggstonadJsonObj: Root): Flytteutgifter? {
 
 }
 
-fun convertTilsynsutgifter(tilleggstonadJsonObj: Root): Tilsynsutgifter? {
-	if (tilleggstonadJsonObj.data.data.harDuTilsynsutgifter != true) return null
+private fun hasFlytteutgifter(tilleggstonadJsonObj: JsonApplication): Boolean {
+	return false
+}
+
+fun convertTilsynsutgifter(tilleggstonadJsonObj: JsonApplication): Tilsynsutgifter? {
+	if (!hasTilsynsutgifter(tilleggstonadJsonObj)) return null
 
 	val utgifterBarn = convertTilsynsutgifterBarn(tilleggstonadJsonObj)
 	val utgifterFamilie = convertFamilieutgifter(tilleggstonadJsonObj)
@@ -165,8 +338,12 @@ fun convertTilsynsutgifter(tilleggstonadJsonObj: Root): Tilsynsutgifter? {
 	return Tilsynsutgifter(tilsynsutgifterBarn = utgifterBarn, tilynsutgifterFamilie = utgifterFamilie)
 }
 
-private fun convertTilsynsutgifterBarn(tilleggstonadJsonObj: Root): TilsynsutgifterBarn? {
-	if (tilleggstonadJsonObj.data.data.harDuTilsynsutgifter != true) return null
+private fun hasTilsynsutgifter(tilleggstonadJsonObj: JsonApplication): Boolean {
+	return false
+}
+
+private fun convertTilsynsutgifterBarn(tilleggstonadJsonObj: JsonApplication): TilsynsutgifterBarn? {
+	if (!hasTilsynsutgifterBarn(tilleggstonadJsonObj)) return null
 
 	// TODO erstatt eksempel nedenfor
 	return TilsynsutgifterBarn(
@@ -186,10 +363,13 @@ private fun convertTilsynsutgifterBarn(tilleggstonadJsonObj: Root): Tilsynsutgif
 	)
 }
 
-private fun convertFamilieutgifter(tilleggstonadJsonObj: Root): TilsynsutgifterFamilie? {
-	if (tilleggstonadJsonObj.data.data.harDuTilsynsutgifter != true) return null
+private fun hasTilsynsutgifterBarn(tilleggstonadJsonObj: JsonApplication): Boolean {
+	return false
+}
 
-	val details = tilleggstonadJsonObj.data.data
+private fun convertFamilieutgifter(tilleggstonadJsonObj: JsonApplication): TilsynsutgifterFamilie? {
+	if (!hasTilsynsutgifterFamilie(tilleggstonadJsonObj)) return null
+
 
 	// TODO erstatt eksempel nedenfor
 	return TilsynsutgifterFamilie(
@@ -205,8 +385,12 @@ private fun convertFamilieutgifter(tilleggstonadJsonObj: Root): TilsynsutgifterF
 	)
 }
 
-fun convertReiseUtgifter(tilleggstonadJsonObj: Root): Reiseutgifter? {
-	if (!hasReiseutgifter(tilleggstonadJsonObj.data.data.hvorforReiserDu)) return null
+private fun hasTilsynsutgifterFamilie(tilleggstonadJsonObj: JsonApplication): Boolean {
+	return false
+}
+
+fun convertReiseUtgifter(tilleggstonadJsonObj: JsonApplication): Reiseutgifter? {
+	//if (!hasReiseutgifter(tilleggstonadJsonObj.data.data.hvorforReiserDu)) return null
 
 	val utgiftDagligReise = convertDagligReise(tilleggstonadJsonObj)
 	val reisestoenadForArbeidssoeker = convertReisestoenadForArbeidssoeker(tilleggstonadJsonObj)
@@ -232,89 +416,137 @@ private fun hasReiseutgifter(hasTravelExpenses: HvorforReiserDu?): Boolean {
 		|| hasTravelExpenses.reiseTilSamling || hasTravelExpenses.reisePaGrunnAvOppstartAvslutningEllerHjemreise
 }
 
-private fun convertDagligReise(tilleggstonadJsonObj: Root): DagligReise? {
-	val details = tilleggstonadJsonObj.data.data
-	val hasTravelExpenses = details.hvorforReiserDu
-	if (hasTravelExpenses == null || !hasTravelExpenses.dagligReise) return null
-	if (details.hvorLangReiseveiHarDu == null) return null
+private fun convertDagligReise(tilleggstonadJsonObj: JsonApplication): DagligReise? {
+	val details = tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.reise
+	if (details == null || details.dagligReise == null || details.hvorforReiserDu == null || details.hvorforReiserDu.dagligReise != true) return null
 
+	val jsonDagligReise = details.dagligReise
 	return DagligReise(
 		periode = convertPeriode("2023-10-01+02:00", "2024-01-31+01:00"), // TODO erstatt med hvilkenPeriodeVilDuSokeFor
 		aktivitetsadresse = SammensattAdresse(
-			land = details.velgLand1.label,
-			adresse = details.adresse1,
-			details.postnr
+			land = jsonDagligReise.velgLand1.label,
+			adresse = jsonDagligReise.adresse1,
+			postnr = jsonDagligReise.postnr1
 		).sammensattAdresse,
-		avstand = details.hvorLangReiseveiHarDu.toDouble(),
-		harMedisinskeAarsakerTilTransport = convertToBoolean(details.kanDuReiseKollektivtDagligReise) ?: false,
-		alternativeTransportutgifter = convertAlternativeTransportutgifter_DagligReise(details),
-		innsendingsintervall = convertInnsendingsintervaller(details.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.hvorOfteOnskerDuASendeInnKjoreliste),
-		harParkeringsutgift = convertToBoolean(details.kanIkkeReiseKollektivtDagligReise?.kanDuBenytteEgenBil) ?: false && details.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.oppgiForventetBelopTilParkeringPaAktivitetsstedet ?: 0 > 0,
-		parkeringsutgiftBeloep = details.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.oppgiForventetBelopTilParkeringPaAktivitetsstedet
+		avstand = jsonDagligReise.hvorLangReiseveiHarDu.toDouble(),
+		harMedisinskeAarsakerTilTransport = convertToBoolean(jsonDagligReise.kanDuReiseKollektivtDagligReise) ?: false,
+		alternativeTransportutgifter = convertAlternativeTransportutgifter_DagligReise(jsonDagligReise),
+		innsendingsintervall = convertInnsendingsintervaller(jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.hvorOfteOnskerDuASendeInnKjoreliste),
+		harParkeringsutgift = convertToBoolean(jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanDuBenytteEgenBil) ?: false && jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.oppgiForventetBelopTilParkeringPaAktivitetsstedet ?: 0 > 0,
+		parkeringsutgiftBeloep = jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.oppgiForventetBelopTilParkeringPaAktivitetsstedet
 	)
 }
 
-private fun convertReisestoenadForArbeidssoeker(tilleggstonadJsonObj: Root): ReisestoenadForArbeidssoeker? {
-	val details = tilleggstonadJsonObj.data.data
-	if (details.hvorforReiserDuArbeidssoker == null || details.hvorLangReiseveiHarDu3 == null) return null
+private fun convertReisestoenadForArbeidssoeker(tilleggstonadJsonObj: JsonApplication): ReisestoenadForArbeidssoeker? {
+	val details = tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.reise
+	if (details == null || details.dagligReiseArbeidssoker == null || details.hvorforReiserDu == null || details.hvorforReiserDu.reiseNarDuErArbeidssoker != true) return null
 
+	val dagligReise = details.dagligReiseArbeidssoker
 	return ReisestoenadForArbeidssoeker(
-		reisedato = convertToDateStringWithTimeZone(date = details.reisedatoDdMmAaaa),
-		harMottattDagpengerSisteSeksMaaneder = convertToBoolean(details.mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene)
+		reisedato = convertToDateStringWithTimeZone(date = dagligReise.reisedatoDdMmAaaa),
+		harMottattDagpengerSisteSeksMaaneder = convertToBoolean(dagligReise.mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene)
 			?: false,
-		formaal = Formaal(value = details.hvorforReiserDuArbeidssoker),
+		formaal = Formaal(value = dagligReise.hvorforReiserDuArbeidssoker),
 		adresse = SammensattAdresse(
-			land = details.velgLandArbeidssoker.label,
-			adresse = details.adresse,
-			postnr = details.postnr
+			land = dagligReise.velgLandArbeidssoker.label,
+			adresse = dagligReise.adresse,
+			postnr = dagligReise.postnr
 		).sammensattAdresse,
-		avstand = details.hvorLangReiseveiHarDu3,
-		erUtgifterDekketAvAndre = convertToBoolean(details.dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis) ?: false,
-		erVentetidForlenget = convertToBoolean(details.harMottattDagpengerSiste6Maneder?.harDuHattForlengetVentetidDeSisteAtteUkene)
+		avstand = dagligReise.hvorLangReiseveiHarDu3,
+		erUtgifterDekketAvAndre = convertToBoolean(dagligReise.dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis) ?: false,
+		erVentetidForlenget = convertToBoolean(dagligReise.harMottattDagpengerSiste6Maneder?.harDuHattForlengetVentetidDeSisteAtteUkene)
 			?: false,
-		finnesTidsbegrensetbortfall = convertToBoolean(details.harMottattDagpengerSiste6Maneder?.harDuHattTidsbegrensetBortfallDeSisteAtteUkene)
+		finnesTidsbegrensetbortfall = convertToBoolean(dagligReise.harMottattDagpengerSiste6Maneder?.harDuHattTidsbegrensetBortfallDeSisteAtteUkene)
 			?: false,
 		alternativeTransportutgifter = AlternativeTransportutgifter(
-			kanOffentligTransportBrukes = convertToBoolean(details.kanDuReiseKollektivtArbeidssoker),
-			kollektivTransportutgifter = convertKollektivTransportutgifter(details.hvilkeUtgifterHarDuIForbindelseMedReisen3),
-			aarsakTilIkkeOffentligTransport = convertAarsakTilIkkeOffentligTransport(details.kanIkkeReiseKollektivtArbeidssoker.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt),
-			kanEgenBilBrukes = convertToBoolean(details.kanIkkeReiseKollektivtArbeidssoker.kanDuBenytteEgenBil),
-			egenBilTransportutgifter = convertEgenBilTransportutgifter(details.kanIkkeReiseKollektivtArbeidssoker.kanBenytteEgenBil),
-			drosjeTransportutgifter = convertDrosjeTransportutgifter(details.kanIkkeReiseKollektivtArbeidssoker.kanIkkeBenytteEgenBil?.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor),
-			aarsakTilIkkeDrosje = convertAarsakTilIkkeDrosje(details.kanIkkeReiseKollektivtArbeidssoker.kanIkkeBenytteEgenBil?.hvorforKanDuIkkeBenytteDrosje)
+			kanOffentligTransportBrukes = convertToBoolean(dagligReise.kanDuReiseKollektivtArbeidssoker),
+			kollektivTransportutgifter = convertKollektivTransportutgifter(dagligReise.hvilkeUtgifterHarDuIForbindelseMedReisen3),
+			aarsakTilIkkeOffentligTransport = convertAarsakTilIkkeOffentligTransport(dagligReise.kanIkkeReiseKollektivtArbeidssoker?.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt),
+			kanEgenBilBrukes = convertToBoolean(dagligReise.kanIkkeReiseKollektivtArbeidssoker?.kanDuBenytteEgenBil),
+			egenBilTransportutgifter = convertEgenBilTransportutgifter(dagligReise.kanIkkeReiseKollektivtArbeidssoker?.kanBenytteEgenBil),
+			drosjeTransportutgifter = convertDrosjeTransportutgifter(dagligReise.kanIkkeReiseKollektivtArbeidssoker?.kanIkkeBenytteEgenBil?.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor),
+			aarsakTilIkkeDrosje = convertAarsakTilIkkeDrosje(dagligReise.kanIkkeReiseKollektivtArbeidssoker?.kanIkkeBenytteEgenBil?.hvorforKanDuIkkeBenytteDrosje)
 		)
 
 	)
 }
 
 
-private fun convertReiseVedOppstartOgAvsluttetAktivitet(tilleggstonadJsonObj: Root): ReiseVedOppstartOgAvsluttetAktivitet? {
-	val details = tilleggstonadJsonObj.data.data
-	if (details.hvorLangReiseveiHarDu2 == null) return null
+private fun convertReiseVedOppstartOgAvsluttetAktivitet(tilleggstonadJsonObj: JsonApplication): ReiseVedOppstartOgAvsluttetAktivitet? {
+	val details = tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.reise
+	if (details == null || details.oppstartOgAvsluttetAktivitet == null || details.hvorforReiserDu == null || details.hvorforReiserDu.reisePaGrunnAvOppstartAvslutningEllerHjemreise != true) return null
 
+	val reiseStartSlutt = details.oppstartOgAvsluttetAktivitet
 	return ReiseVedOppstartOgAvsluttetAktivitet(
 		periode = convertPeriode("2022-07-11", "2023-08-13") // TODO Bruke HvilkenPeriodeVilDuSokeFor1 når den er ok
 		,
 		aktivitetsstedAdresse = SammensattAdresse(
-			land = details.velgLand3.label,
-			adresse = details.adresse3,
-			postnr = ""
+			land = reiseStartSlutt.velgLand3.label,
+			adresse = reiseStartSlutt.adresse3,
+			postnr = reiseStartSlutt.postnr3
 		).sammensattAdresse,
-		avstand = details.hvorLangReiseveiHarDu2,
-		antallReiser = details.hvorMangeGangerSkalDuReiseEnVei,
-		harBarnUnderFemteklasse = convertToBoolean(details.harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear) ?: false,
+		avstand = reiseStartSlutt.hvorLangReiseveiHarDu2 ?: 0,
+		antallReiser = reiseStartSlutt.hvorMangeGangerSkalDuReiseEnVei,
+		harBarnUnderFemteklasse = convertToBoolean(reiseStartSlutt.harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear)
+			?: false,
 		harBarnUnderAtten = null // TODO mangler i eksempelet
 		,
 		alternativeTransportutgifter = AlternativeTransportutgifter(
-			kanOffentligTransportBrukes = convertToBoolean(details.kanDuReiseKollektivtOppstartAvslutningHjemreise),
-			kanEgenBilBrukes = convertToBoolean(details.kanIkkeReiseKollektivtOppstartAvslutningHjemreise?.kanDuBenytteEgenBil),
-			kollektivTransportutgifter = convertKollektivTransportutgifter(details.hvilkeUtgifterHarDuIForbindelseMedReisen4),
-			drosjeTransportutgifter = convertDrosjeTransportutgifter(details.kanIkkeReiseKollektivtOppstartAvslutningHjemreise?.kanIkkeBenytteEgenBil?.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor),
-			egenBilTransportutgifter = convertEgenBilTransportutgifter(details.kanIkkeReiseKollektivtOppstartAvslutningHjemreise?.kanBenytteEgenBil),
-			aarsakTilIkkeOffentligTransport = convertAarsakTilIkkeOffentligTransport(details.kanIkkeReiseKollektivtOppstartAvslutningHjemreise?.beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt),
-			aarsakTilIkkeEgenBil = convertAarsakTilIkkeEgenBil(details.kanIkkeReiseKollektivtOppstartAvslutningHjemreise?.kanIkkeBenytteEgenBil?.hvaErArsakenTilAtDuIkkeKanBenytteEgenBil),
-			aarsakTilIkkeDrosje = details.kanIkkeReiseKollektivtOppstartAvslutningHjemreise?.kanIkkeBenytteEgenBil?.hvorforKanDuIkkeBenytteDrosje
+			kanOffentligTransportBrukes = convertToBoolean(reiseStartSlutt.kanDuReiseKollektivtOppstartAvslutningHjemreise),
+			kanEgenBilBrukes = convertToBoolean(reiseStartSlutt.kanIkkeReiseKollektivtOppstartAvslutningHjemreise?.kanDuBenytteEgenBil),
+			kollektivTransportutgifter = convertKollektivTransportutgifter(reiseStartSlutt.hvilkeUtgifterHarDuIForbindelseMedReisen4),
+			drosjeTransportutgifter = convertDrosjeTransportutgifter(reiseStartSlutt.kanIkkeReiseKollektivtOppstartAvslutningHjemreise?.kanIkkeBenytteEgenBil?.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor),
+			egenBilTransportutgifter = convertEgenBilTransportutgifter(reiseStartSlutt.kanIkkeReiseKollektivtOppstartAvslutningHjemreise?.kanBenytteEgenBil),
+			aarsakTilIkkeOffentligTransport = convertAarsakTilIkkeOffentligTransport(reiseStartSlutt.kanIkkeReiseKollektivtOppstartAvslutningHjemreise?.beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt),
+			aarsakTilIkkeEgenBil = convertAarsakTilIkkeEgenBil(reiseStartSlutt.kanIkkeReiseKollektivtOppstartAvslutningHjemreise?.kanIkkeBenytteEgenBil?.hvaErArsakenTilAtDuIkkeKanBenytteEgenBil),
+			aarsakTilIkkeDrosje = reiseStartSlutt.kanIkkeReiseKollektivtOppstartAvslutningHjemreise?.kanIkkeBenytteEgenBil?.hvorforKanDuIkkeBenytteDrosje
 		)
+	)
+}
+
+
+private fun convertReiseObligatoriskSamling(tilleggstonadJsonObj: JsonApplication): ReiseObligatoriskSamling? {
+	val details = tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.reise
+	if (details == null || details.reiseSamling == null || details.hvorforReiserDu == null || details.hvorforReiserDu.reiseTilSamling != true) return null
+
+	val reiseTilSamling = details.reiseSamling
+
+	if (reiseTilSamling.startOgSluttdatoForSamlingene.isEmpty()) return null // TODO kaste feil?
+
+	val periodeList = createPeriodeList(reiseTilSamling.startOgSluttdatoForSamlingene)
+
+	val startOfPeriods = periodeList.map { convertDateToTimeInMillis(it.fom) }.min()
+	val endOfPeriods = periodeList.map { convertDateToTimeInMillis(it.tom) }.max()
+	val startDate = convertMillisToDateString(startOfPeriods)
+	val endDate = convertMillisToDateString(endOfPeriods)
+
+	return ReiseObligatoriskSamling(
+		periode = Periode(
+			fom = startDate,
+			tom = endDate
+		),
+		reiseadresser = SammensattAdresse(
+			land = reiseTilSamling.velgLandReiseTilSamling.label,
+			adresse = reiseTilSamling.adresse2,
+			postnr = reiseTilSamling.postnr2
+		).sammensattAdresse,
+		avstand = reiseTilSamling.hvorLangReiseveiHarDu1 ?: 0,
+		samlingsperiode = periodeList,
+		alternativeTransportutgifter = AlternativeTransportutgifter(
+			kanOffentligTransportBrukes = convertToBoolean(reiseTilSamling.kanDuReiseKollektivtReiseTilSamling),
+			// TODO Trenger ikke spesifisering av utgift pr reise
+			// TODO burde vært liste med utgift pr samling?
+			kollektivTransportutgifter = convertKollektivTransportutgifter(
+				reiseTilSamling.kanReiseKollektivt?.hvilkeUtgifterHarDuIForbindelseMedReisen1
+			),
+			kanEgenBilBrukes = convertToBoolean(reiseTilSamling.kanIkkeReiseKollektivtReiseTilSamling?.kanDuBenytteEgenBil),
+			egenBilTransportutgifter = convertEgenBilTransportutgifter(reiseTilSamling.kanIkkeReiseKollektivtReiseTilSamling?.kanBenytteEgenBil),
+			drosjeTransportutgifter = convertDrosjeTransportutgifter(reiseTilSamling.kanIkkeReiseKollektivtReiseTilSamling?.kanIkkeBenytteEgenBil?.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor),
+			aarsakTilIkkeOffentligTransport = convertAarsakTilIkkeOffentligTransport(reiseTilSamling.kanIkkeReiseKollektivtReiseTilSamling?.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt),
+			aarsakTilIkkeEgenBil = convertAarsakTilIkkeEgenBil(reiseTilSamling.kanIkkeReiseKollektivtReiseTilSamling?.kanIkkeBenytteEgenBil?.hvaErArsakenTilAtDuIkkeKanBenytteEgenBil),
+			aarsakTilIkkeDrosje = convertAarsakTilIkkeDrosje(reiseTilSamling.kanIkkeReiseKollektivtReiseTilSamling?.kanIkkeBenytteEgenBil?.hvorforKanDuIkkeBenytteDrosje)
+		)
+
 	)
 }
 
@@ -336,51 +568,6 @@ private fun convertToBoolean(string: String?): Boolean? {
 	return "JA".equals(string, true)
 }
 
-private fun convertReiseObligatoriskSamling(tilleggstonadJsonObj: Root): ReiseObligatoriskSamling? {
-	val details = tilleggstonadJsonObj.data.data
-	val deltaPaSamling = convertToBoolean(details.skalDuDeltaEllerHarDuDeltattPaFlereSamlinger)
-	if (deltaPaSamling == null ||
-		details.startOgSluttdatoForSamlingene == null || details.startOgSluttdatoForSamlingene.isEmpty() ||
-		details.hvorLangReiseveiHarDu1 == null
-	) return null
-
-	val periodeList = createPeriodeList(details.startOgSluttdatoForSamlingene)
-
-	val startOfPeriods = periodeList.map { convertDateToTimeInMillis(it.fom) }.min()
-	val endOfPeriods = periodeList.map { convertDateToTimeInMillis(it.tom) }.max()
-	val startDate = convertMillisToDateString(startOfPeriods)
-	val endDate = convertMillisToDateString(endOfPeriods)
-
-	return ReiseObligatoriskSamling(
-		periode = Periode(
-			fom = startDate,
-			tom = endDate
-		),
-		reiseadresser = SammensattAdresse(
-			land = details.velgLandReiseTilSamling.label,
-			adresse = details.adresse2,
-			postnr = details.postnr2
-		).sammensattAdresse,
-		avstand = details.hvorLangReiseveiHarDu1,
-		samlingsperiode = periodeList,
-		alternativeTransportutgifter = AlternativeTransportutgifter(
-			kanOffentligTransportBrukes = convertToBoolean(details.kanDuReiseKollektivtReiseTilSamling),
-			// TODO Trenger ikke spesifisering av utgift pr reise
-			// TODO burde vært liste med utgift pr samling?
-			kollektivTransportutgifter = convertKollektivTransportutgifter(
-				details.kanReiseKollektivt?.hvilkeUtgifterHarDuIforbindelseMedReisen1
-			),
-			kanEgenBilBrukes = convertToBoolean(details.kanIkkeReiseKollektivtReiseTilSamling?.kanDuBenytteEgenBil),
-			egenBilTransportutgifter = convertEgenBilTransportutgifter(details.kanIkkeReiseKollektivtReiseTilSamling?.kanBenytteEgenBil),
-			drosjeTransportutgifter = convertDrosjeTransportutgifter(details.kanIkkeReiseKollektivtReiseTilSamling?.kanIkkeBenytteEgenBil?.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor),
-			aarsakTilIkkeOffentligTransport = convertAarsakTilIkkeOffentligTransport(details.kanIkkeReiseKollektivtReiseTilSamling?.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt),
-			aarsakTilIkkeEgenBil = convertAarsakTilIkkeEgenBil(details.kanIkkeReiseKollektivtReiseTilSamling?.kanIkkeBenytteEgenBil?.hvaErArsakenTilAtDuIkkeKanBenytteEgenBil),
-			aarsakTilIkkeDrosje = convertAarsakTilIkkeDrosje(details.kanIkkeReiseKollektivtReiseTilSamling?.kanIkkeBenytteEgenBil?.hvorforKanDuIkkeBenytteDrosje)
-		)
-
-	)
-}
-
 private fun createPeriodeList(fromJsonPeriodes: List<StartOgSluttdatoForSamlingene>): List<Periode> {
 	return fromJsonPeriodes.map { convertPeriode(fom = it.startdatoDdMmAaaa, tom = it.sluttdatoDdMmAaaa) }.toList()
 }
@@ -395,7 +582,7 @@ private fun convertAdresse(adresse: String, postnummer: String, landKode: String
 	return adresse + ", " + postnummer + ", " + landKode // TODO uklar mapping av felter.
 }
 
-private fun convertAlternativeTransportutgifter_DagligReise(details: Application): AlternativeTransportutgifter {
+private fun convertAlternativeTransportutgifter_DagligReise(details: JsonDagligReise): AlternativeTransportutgifter {
 	val kanBenytteEgenBil = convertToBoolean(details.kanIkkeReiseKollektivtDagligReise?.kanDuBenytteEgenBil) ?: false
 	return AlternativeTransportutgifter(
 		kanOffentligTransportBrukes = convertToBoolean(details.kanDuReiseKollektivtDagligReise),
@@ -403,7 +590,7 @@ private fun convertAlternativeTransportutgifter_DagligReise(details: Application
 		kollektivTransportutgifter = convertKollektivTransportutgifter(details.hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise),
 		drosjeTransportutgifter = convertDrosjeTransportutgifter(details.kanIkkeReiseKollektivtDagligReise?.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIPeriodenDuSokerOmStonadFor),
 		egenBilTransportutgifter = convertEgenBilTransportutgifter(details.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil),
-		aarsakTilIkkeOffentligTransport = convertAarsakTilIkkeOffentligTransport(details.beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt),
+		aarsakTilIkkeOffentligTransport = convertAarsakTilIkkeOffentligTransport(details.kanIkkeReiseKollektivtDagligReise?.beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt),
 		aarsakTilIkkeEgenBil = convertAarsakTilIkkeEgenBil(details.kanIkkeReiseKollektivtDagligReise?.kanIkkeBenytteEgenBilDagligReise?.hvaErArsakenTilAtDuIkkeKanBenytteEgenBil),
 		aarsakTilIkkeDrosje = convertAarsakTilIkkeDrosje(details.kanIkkeReiseKollektivtDagligReise?.hvorforKanDuIkkeBenytteDrosje)
 	)
