@@ -176,7 +176,7 @@ class InnsendingService(
 		val jsonVariant = soknadDto.hoveddokumentVariant
 		if (jsonVariant == null) {
 			logger.warn("${soknadDto.innsendingsId!!}: Json variant av hoveddokument mangler")
-			return soknadDto
+			throw BackendErrorException("${soknadDto.innsendingsId}: json fil av søknaden mangler")
 		}
 
 		// Create dokumentDto for xml variant of main document
@@ -184,12 +184,15 @@ class InnsendingService(
 		//
 		val xmlFile = json2Xml(
 			soknadDto = soknadDto,
-			jsonFil = filService.hentFiler(
+			tilleggstonadJsonObj = convertToJson(
 				soknadDto = soknadDto,
-				innsendingsId = soknadDto.innsendingsId!!,
-				vedleggsId = jsonVariant.id!!,
-				medFil = true
-			).first().data
+				json = filService.hentFiler(
+					soknadDto = soknadDto,
+					innsendingsId = soknadDto.innsendingsId!!,
+					vedleggsId = jsonVariant.id!!,
+					medFil = true
+				).first().data
+			)
 		)
 		// Persist created xml file
 		filService.lagreFil(

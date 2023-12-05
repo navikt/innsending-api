@@ -9,10 +9,6 @@ data class JsonApplication(
 
 data class JsonAktivitetsInformasjon(val aktivitet: String? = null)
 
-data class JsonMaalgruppeinformasjon(
-	val maalgruppe: String? = null
-)
-
 
 // Mellom mapping
 data class JsonTilleggsstonad(
@@ -36,12 +32,66 @@ enum class IdentType { PERSONNR, DNR }
 
 data class JsonRettighetstyper(
 	val reise: JsonReisestottesoknad? = null,
-	/*
-		val bostotte: JsonBostottesoknad? = null,
-		val flytteutgifter: JsonFlytteutgifter? = null,
-		val laeremiddelutgifter: JsonLaeremiddelutgifter? = null,
-		val tilsynsutgifter: JsonTilsynsutgifter? = null
-	*/
+	val tilsynsutgifter: JsonTilsynsutgifter? = null,
+	val laeremiddelutgifter: JsonLaeremiddelutgifter? = null,
+	val bostotte: JsonBostottesoknad? = null,
+	val flytteutgifter: JsonFlytteutgifter? = null,
+)
+
+data class AktivitetsPeriode(
+	val startdatoDdMmAaaa: String,
+	val sluttdatoDdMmAaaa: String,
+)
+
+data class JsonFlytteutgifter(
+	val aktivitetsperiode: IkkeRegistrertAktivitetsperiode,
+	val hvorforFlytterDu: String, // "Jeg flytter fordi jeg har fått ny jobb" | "Jeg flytter i forbindelse med at jeg skal gjennomføre en aktivitet"
+	val narFlytterDuDdMmAaaa: String, // 01-01-2023
+	val oppgiForsteDagINyJobbDdMmAaaa: String?, // 02-01-2023 dersom flytting pga ny jobb
+	val farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav: String, // Ja | nei
+	val ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra: String, // 	"Jeg flytter selv" | "Jeg vil bruke flyttebyrå" |"Jeg har innhentet tilbud fra minst to flyttebyråer, men velger å flytte selv"
+	val jegFlytterSelv: JegFlytterSelv?, // Hvis "Jeg flytter selv"
+	val jegVilBrukeFlyttebyra: JegVilBrukeFlyttebyra?, // Hvis "Jeg vil bruke flyttebyrå"
+	val jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv: JegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv?,
+)
+
+data class JsonBostottesoknad(
+	val aktivitetsperiode: IkkeRegistrertAktivitetsperiode,
+	val hvilkeBoutgifterSokerDuOmAFaDekket: String, // "Jeg søker om å få dekket faste boutgifter" | "Jeg søker om å få dekket boutgifter i forbindelse med samling"
+	val bostotteIForbindelseMedSamling: List<PeriodeForSamling>?,
+
+	val mottarDuBostotteFraKommunen: String = "Nei", // "Ja" | "Nei"
+	val hvilkeAdresserHarDuBoutgifterPa: List<String>?, // "Jeg har boutgifter på aktivitetsadressen min" | "Jeg har fortsatt boutgifter på hjemstedet mitt" | "Jeg har hatt boutgifter på hjemstedet mitt, som har opphørt i forbindelse med aktiviteten"
+	val boutgifterPaAktivitetsadressen: Int?,
+	val boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten: Int?,
+	val erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet: String?, // "Ja" | "Nei"
+
+)
+
+data class JsonLaeremiddelutgifter(
+	val aktivitetsperiode: IkkeRegistrertAktivitetsperiode,
+	val hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore: String, // "Jeg skal ta videregående utdanning, eller forkurs på universitet" | "Jeg skal ta utdanning på fagskole, høyskole eller universitet" | "Jeg skal ta kurs eller annen form for utdanning"
+	val hvilketKursEllerAnnenFormForUtdanningSkalDuTa: String?,
+	val oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Int, // 0-100
+	val harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler: String, // Ja| Nei
+	val utgifterTilLaeremidler: Int,
+	val farDuDekketLaeremidlerEtterAndreOrdninger: String, // Ja | Nei | Delvis
+	val hvorMyeFarDuDekketAvEnAnnenAktor: Int?,
+	val hvorStortBelopSokerDuOmAFaDekketAvNav: Int
+)
+
+data class JsonTilsynsutgifter(
+	val aktivitetsPeriode: AktivitetsPeriode,
+	val barnePass: List<BarnePass>,
+	val fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa: String?,
+)
+
+data class BarnePass(
+	val fornavn: String,
+	val etternavn: String,
+	val fodselsdatoDdMmAaaa: String,
+	val jegSokerOmStonadTilPassAvDetteBarnet: String?, // "Jeg søker om stønad til pass av dette barnet."
+	val sokerStonadForDetteBarnet: SokerStonadForDetteBarnet?
 )
 
 data class JsonReisestottesoknad(
@@ -111,4 +161,14 @@ data class JsonOppstartOgAvsluttetAktivitet(
 	val kanDuReiseKollektivtOppstartAvslutningHjemreise: String, // ja/nei
 	val hvilkeUtgifterHarDuIForbindelseMedReisen4: Int?, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==ja
 	val kanIkkeReiseKollektivtOppstartAvslutningHjemreise: KanIkkeReiseKollektivtOppstartAvslutningHjemreise?, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==nei
+)
+
+data class JsonMaalgruppeinformasjon(
+	val periode: AktivitetsPeriode,
+	val kilde: String, // f.eks. BRUKERREGISTRERT
+	val maalgruppetype: JsonMaalgruppetyper
+)
+
+data class JsonMaalgruppetyper(
+	val value: String  // f.eks. ENSFORARBS
 )

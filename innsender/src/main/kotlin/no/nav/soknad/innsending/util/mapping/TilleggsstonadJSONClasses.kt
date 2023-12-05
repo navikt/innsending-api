@@ -112,35 +112,30 @@ data class Application(
 	val jegVilBrukeFlyttebyra: JegVilBrukeFlyttebyra?, // Hvis "Jeg vil bruke flyttebyrå"
 	val jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv: JegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv?,
 
-	// Laeremidler
-	// val periode: Periode?,
+	// Periode for Laeremidler og boutgifter og pass av barn
 	val ikkeRegistrertAktivitetsperiode: IkkeRegistrertAktivitetsperiode?,
 
+	// Laeremidler
 	val hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore: String?, // "Jeg skal ta videregående utdanning, eller forkurs på universitet" | "Jeg skal ta utdanning på fagskole, høyskole eller universitet" | "Jeg skal ta kurs eller annen form for utdanning"
 	val hvilketKursEllerAnnenFormForUtdanningSkalDuTa: String?,
 	val oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Int?, // 0-100
 	val harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler: String?, // Ja| Nei
-	val utgifterTilLaeremidler: String?,
+	val utgifterTilLaeremidler: Int?,
 	val farDuDekketLaeremidlerEtterAndreOrdninger: String?, // Ja | Nei | Delvis
 	val hvorMyeFarDuDekketAvEnAnnenAktor: Int?,
 	val hvorStortBelopSokerDuOmAFaDekketAvNav: Int?,
 
 	// Boutgifter
-	// val periode: Periode?,
-	val ikkeRegistrertAktivitetsperiode1: IkkeRegistrertAktivitetsperiode?, // TODO hvordan skille mellom periode for laeremidler vs. periode for boutgifter?
 	val hvilkeBoutgifterSokerDuOmAFaDekket: String?, // "Jeg søker om å få dekket faste boutgifter" | "Jeg søker om å få dekket boutgifter i forbindelse med samling"
 	val bostotteIForbindelseMedSamling: List<PeriodeForSamling>?,
 
 	val mottarDuBostotteFraKommunen: String?, // "Ja" | "Nei"
 	val hvilkeAdresserHarDuBoutgifterPa: List<String>?, // "Jeg har boutgifter på aktivitetsadressen min" | "Jeg har fortsatt boutgifter på hjemstedet mitt" | "Jeg har hatt boutgifter på hjemstedet mitt, som har opphørt i forbindelse med aktiviteten"
 	val boutgifterPaAktivitetsadressen: Int?,
-	val valboutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten: Int?,
-	val valerDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet: String?, // "Ja" | "Nei"
+	val boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten: Int?,
+	val erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet: String?, // "Ja" | "Nei"
 
 	// Pass av barn
-	// val periode: Periode?,
-	val ikkeRegistrertAktivitetsperiode2: IkkeRegistrertAktivitetsperiode?,
-
 	val datagrid: List<Datagrid>?,
 	val fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa: String?,
 

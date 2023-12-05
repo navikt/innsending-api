@@ -3,7 +3,6 @@ package no.nav.soknad.innsending.utils.builders
 import no.nav.soknad.innsending.util.mapping.*
 
 class JsonDagligReiseTestBuilder(
-	var hvilkenPeriodeVilDuSokeFor: HvilkenPeriodeVilDuSokeFor,
 	var startdatoDdMmAaaa: String?,
 	var sluttdatoDdMmAaaa: String?,
 	var hvorMangeReisedagerHarDuPerUke: Int = 5,

@@ -4,9 +4,6 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.nav.soknad.innsending.exceptions.BackendErrorException
-import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import java.text.SimpleDateFormat
 import java.util.*
@@ -23,181 +20,13 @@ fun json2Xml(soknadDto: DokumentSoknadDto, jsonFil: ByteArray?): ByteArray {
 	return convertToXml(tilleggsstonadXmlObj)
 }
 
-fun convertToJson(soknadDto: DokumentSoknadDto, json: ByteArray?): JsonApplication {
-	if (json == null || json.isEmpty())
-		throw BackendErrorException("${soknadDto.innsendingsId}: json fil av søknaden mangler")
+fun json2Xml(soknadDto: DokumentSoknadDto, tilleggstonadJsonObj: JsonApplication): ByteArray {
 
-	val mapper = jacksonObjectMapper()
-	//mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-	val json = mapper.readValue(json, Root::class.java)
+	// Map tilleggsstonadFraJson til tilleggsstonadXML
+	val tilleggsstonadXmlObj = convertToTilleggsstonadsskjema(soknadDto, tilleggstonadJsonObj)
 
-	return JsonApplication(
-		timezone = json.data.metadata.timezone,
-		language = json.language,
-		personInfo = JsonPersonInfo(
-			fornavn = json.data.data.fornavnSoker,
-			etternavn = json.data.data.etternavnSoker,
-			ident = PersonIdent(ident = json.data.data.fodselsnummerDnummerSoker, identType = IdentType.PERSONNR)
-		),
-		tilleggsstonad = convertToJsonTilleggsstonad(json.data.data)
-	)
-}
-
-private fun convertToJsonTilleggsstonad(tilleggsstonad: Application): JsonTilleggsstonad {
-	return JsonTilleggsstonad(
-		aktivitetsinformasjon = JsonAktivitetsInformasjon("12345"),
-		maalgruppeinformasjon = JsonMaalgruppeinformasjon("TODO"),
-		rettighetstype = convertToJsonRettighetstyper(tilleggsstonad)
-
-	)
-}
-
-private fun convertToJsonRettighetstyper(tilleggsstonad: Application): JsonRettighetstyper {
-	return JsonRettighetstyper(
-		reise = convertToReisestottesoknad(tilleggsstonad)
-	)
-}
-
-private fun convertToReisestottesoknad(tilleggsstonad: Application): JsonReisestottesoknad {
-	return JsonReisestottesoknad(
-		hvorforReiserDu = tilleggsstonad.hvorforReiserDu,
-		dagligReise = if (tilleggsstonad.hvorforReiserDu?.dagligReise == true) convertToJsonDagligReise(tilleggsstonad) else null,
-		reiseSamling = if (tilleggsstonad.hvorforReiserDu?.reiseTilSamling == true) convertToJsonReiseSamling(tilleggsstonad) else null,
-		dagligReiseArbeidssoker = if (tilleggsstonad.hvorforReiserDu?.reiseNarDuErArbeidssoker == true) convertToJsonReise_Arbeidssoker(
-			tilleggsstonad
-		) else null,
-		oppstartOgAvsluttetAktivitet = if (tilleggsstonad.hvorforReiserDu?.reisePaGrunnAvOppstartAvslutningEllerHjemreise == true) convertToJsonOppstartOgAvsluttetAktivitet(
-			tilleggsstonad
-		) else null
-	)
-}
-
-private fun <T : Any> validateNoneNull(input: T?, field: String): T {
-	return input ?: throw IllegalActionException("Mangler input for $field")
-}
-
-private fun convertToJsonDagligReise(tilleggsstonad: Application): JsonDagligReise {
-	return JsonDagligReise(
-		startdatoDdMmAaaa = tilleggsstonad.startdatoDdMmAaaa,
-		sluttdatoDdMmAaaa = tilleggsstonad.sluttdatoDdMmAaaa,
-		hvorMangeReisedagerHarDuPerUke = tilleggsstonad.hvorMangeReisedagerHarDuPerUke,
-		harDuEnReiseveiPaSeksKilometerEllerMer = tilleggsstonad.harDuEnReiseveiPaSeksKilometerEllerMer, // JA|NEI
-		harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde = tilleggsstonad.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde, // JA | NEI,
-		hvorLangReiseveiHarDu = validateNoneNull(
-			tilleggsstonad.hvorLangReiseveiHarDu?.toString(),
-			"Daglig reise reisevei"
-		).toInt(),
-		velgLand1 = tilleggsstonad.velgLand1 ?: VelgLand1(label = "NOR", "Norge"),
-		adresse1 = validateNoneNull(tilleggsstonad.adresse1, "Daglig reise adresse"),
-		postnr1 = validateNoneNull(tilleggsstonad.postnr1, "Daglig reise postnummer"),
-		kanDuReiseKollektivtDagligReise = validateNoneNull(
-			tilleggsstonad.kanDuReiseKollektivtDagligReise,
-			"Daglig reise kan du reise kollektivt"
-		), // ja | nei
-		hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise = tilleggsstonad.hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise, // Hvis kanDuReiseKollektivtDagligReise == ja
-		hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt = tilleggsstonad.hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt,
-		kanIkkeReiseKollektivtDagligReise = tilleggsstonad.kanIkkeReiseKollektivtDagligReise
-	)
-}
-
-private fun convertToJsonReiseSamling(tilleggsstonad: Application): JsonReiseSamling {
-	return JsonReiseSamling(
-		startOgSluttdatoForSamlingene = validateNoneNull(
-			tilleggsstonad.startOgSluttdatoForSamlingene,
-			"Reise til samling start- og sluttdato mangler"
-		),
-		hvorLangReiseveiHarDu1 = tilleggsstonad.hvorLangReiseveiHarDu1,
-		velgLandReiseTilSamling = validateNoneNull(
-			tilleggsstonad.velgLandReiseTilSamling,
-			"Reise til samling - mangler land"
-		),
-		adresse2 = validateNoneNull(tilleggsstonad.adresse2, "Reise til samling - mangler adresse"),
-		postnr2 = validateNoneNull(tilleggsstonad.postnr2, "Reise til samling -mangler postnummer"),
-		kanDuReiseKollektivtReiseTilSamling = validateNoneNull(
-			tilleggsstonad.kanDuReiseKollektivtReiseTilSamling,
-			"Reise til samling - mangler svar kan du reise kollektivt"
-		),
-		kanReiseKollektivt = tilleggsstonad.kanReiseKollektivt,
-		kanIkkeReiseKollektivtReiseTilSamling = tilleggsstonad.kanIkkeReiseKollektivtReiseTilSamling,
-		bekreftelseForAlleSamlingeneDuSkalDeltaPa = tilleggsstonad.bekreftelseForAlleSamlingeneDuSkalDeltaPa
-	)
-}
-
-private fun convertToJsonReise_Arbeidssoker(tilleggsstonad: Application): JsonDagligReiseArbeidssoker {
-	return JsonDagligReiseArbeidssoker(
-		reisedatoDdMmAaaa = validateNoneNull(
-			tilleggsstonad.reisedatoDdMmAaaa,
-			"Reise arbeidssøker - reisetidspunkt mangler"
-		),
-		hvorforReiserDuArbeidssoker = validateNoneNull(
-			tilleggsstonad.hvorforReiserDuArbeidssoker,
-			"Reise arbeidssøker - hvorfor reiser du svar mangler"
-		),
-		dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis = validateNoneNull(
-			tilleggsstonad.dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis,
-			"Reise arbeissøker - dekker andre reisen svar mangler"
-		),// JA|NEI
-		mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene = validateNoneNull(
-			tilleggsstonad.mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene,
-			"Reise arbeidssøker -  mottatt dagpenger svar mangler"
-		), // JA|NEI
-		harMottattDagpengerSiste6Maneder = tilleggsstonad.harMottattDagpengerSiste6Maneder,
-		hvorLangReiseveiHarDu3 = validateNoneNull(
-			tilleggsstonad.hvorLangReiseveiHarDu3,
-			"Daglig reise reisevei"
-		).toInt(),
-		velgLandArbeidssoker = tilleggsstonad.velgLandArbeidssoker ?: VelgLandArbeidssoker(label = "NOR", "Norge"),
-		adresse = validateNoneNull(tilleggsstonad.adresse, "Reise arbeidssøker -  adresse mangler"),
-		postnr = validateNoneNull(tilleggsstonad.postnr, "Reise arbeidssøker -  postnummer mangler"),
-		kanDuReiseKollektivtArbeidssoker = validateNoneNull(
-			tilleggsstonad.kanDuReiseKollektivtArbeidssoker,
-			"Reise arbeidssøker - kan du reise kollektivt mangler"
-		), // ja | nei
-		hvilkeUtgifterHarDuIForbindelseMedReisen3 = tilleggsstonad.hvilkeUtgifterHarDuIForbindelseMedReisen3, // Hvis kanDuReiseKollektivtDagligReise == ja
-		kanIkkeReiseKollektivtArbeidssoker = tilleggsstonad.kanIkkeReiseKollektivtArbeidssoker
-	)
-}
-
-
-private fun convertToJsonOppstartOgAvsluttetAktivitet(tilleggsstonad: Application): JsonOppstartOgAvsluttetAktivitet {
-	return JsonOppstartOgAvsluttetAktivitet(
-		startdatoDdMmAaaa1 = validateNoneNull(
-			tilleggsstonad.startdatoDdMmAaaa1,
-			"Oppstart og avslutning av aktivitet - reisetidspunkt mangler"
-		),
-		sluttdatoDdMmAaaa1 = validateNoneNull(
-			tilleggsstonad.sluttdatoDdMmAaaa1,
-			"Oppstart og avslutning av aktivitet - reisetidspunkt mangler"
-		),
-		hvorLangReiseveiHarDu2 = validateNoneNull(
-			tilleggsstonad.hvorLangReiseveiHarDu2,
-			"Oppstart og avslutning av aktivitet - reiseveilengde svar mangler"
-		).toInt(),
-		hvorMangeGangerSkalDuReiseEnVei = validateNoneNull(
-			tilleggsstonad.hvorMangeGangerSkalDuReiseEnVei,
-			"Oppstart og avslutning av aktivitet - antall reiser svar mangler"
-		).toInt(),
-		velgLand3 = tilleggsstonad.velgLand3 ?: VelgLand3(label = "NOR", "Norge"),
-		adresse3 = validateNoneNull(tilleggsstonad.adresse3, "Oppstart og avslutning av aktivitet -  adresse mangler"),
-		postnr3 = validateNoneNull(tilleggsstonad.postnr3, "Oppstart og avslutning av aktivitet -  postnummer mangler"),
-		harDuBarnSomSkalFlytteMedDeg = validateNoneNull(
-			tilleggsstonad.harDuBarnSomSkalFlytteMedDeg,
-			"Oppstart og avslutning av aktivitet - har du barn som skal flytte med deg svar mangler"
-		),
-		barnSomSkalFlytteMedDeg = tilleggsstonad.barnSomSkalFlytteMedDeg,
-		harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear = tilleggsstonad.harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear,
-		harDuSaerligBehovForFlereHjemreiserEnnNevntOvenfor = validateNoneNull(
-			tilleggsstonad.harDuSaerligBehovForFlereHjemreiserEnnNevntOvenfor,
-			"Oppstart og avslutning av aktivitet - Særlige behov svar mangler"
-		),
-		bekreftelseForBehovForFlereHjemreiser1 = tilleggsstonad.bekreftelseForBehovForFlereHjemreiser1,
-		kanDuReiseKollektivtOppstartAvslutningHjemreise = validateNoneNull(
-			tilleggsstonad.kanDuReiseKollektivtOppstartAvslutningHjemreise,
-			"Oppstart og avslutning av aktivitet - kan du reise kollektivt svar mangler"
-		),
-		hvilkeUtgifterHarDuIForbindelseMedReisen4 = tilleggsstonad.hvilkeUtgifterHarDuIForbindelseMedReisen4,
-		kanIkkeReiseKollektivtOppstartAvslutningHjemreise = tilleggsstonad.kanIkkeReiseKollektivtOppstartAvslutningHjemreise
-	)
+	// Konverter tilleggsstonadXML til xml-string
+	return convertToXml(tilleggsstonadXmlObj)
 }
 
 fun convertToXml(tilleggsstonad: Tilleggsstoenadsskjema): ByteArray {
@@ -260,13 +89,15 @@ fun convertToRettighetstype(soknadDto: DokumentSoknadDto, tilleggstonadJsonObj: 
 }
 
 fun convertBostotte(tilleggstonadJsonObj: JsonApplication): Boutgifter? {
-	if (!hasBoUtgifter(tilleggstonadJsonObj)) return null
+	if (tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.bostotte == null ||
+		tilleggstonadJsonObj.tilleggsstonad.rettighetstype.bostotte.aktivitetsperiode == null
+	) return null
 
-	// TODO eksempel op oppretting av Boutgifter
+	val bostottesoknad = tilleggstonadJsonObj.tilleggsstonad.rettighetstype.bostotte
 	return Boutgifter(
 		periode = Periode(
-			fom = convertToDateStringWithTimeZone("2023-12-01+01:00"),
-			tom = convertToDateStringWithTimeZone("2024-03-30+01:00")
+			fom = convertToDateStringWithTimeZone(bostottesoknad.aktivitetsperiode.startdatoDdMmAaaa),
+			tom = convertToDateStringWithTimeZone(bostottesoknad.aktivitetsperiode.sluttdatoDdMmAaaa)
 		),
 		harFasteBoutgifter = true,
 		harBoutgifterVedSamling = false,
@@ -278,60 +109,89 @@ fun convertBostotte(tilleggstonadJsonObj: JsonApplication): Boutgifter? {
 
 }
 
-private fun hasBoUtgifter(tilleggstonadJsonObj: JsonApplication): Boolean {
-	//val details = tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.boutgifter
-	return false
-}
-
 fun convertLaremiddler(tilleggstonadJsonObj: JsonApplication): Laeremiddelutgifter? {
-	if (!hasLaeremiddelutgifter(tilleggstonadJsonObj)) return null
+	if (tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.laeremiddelutgifter == null) return null
 
-	// TODO eksempel på oppretting av Laeremiddelutgifter
+	val laeremiddelutgifter = tilleggstonadJsonObj.tilleggsstonad.rettighetstype.laeremiddelutgifter
+
 	return Laeremiddelutgifter(
-		periode = convertPeriode(fom = "2024-01-01", tom = "2024-12-18"),
-		hvorMyeDekkesAvAnnenAktoer = null,
-		hvorMyeDekkesAvNAV = "100".toDouble(),
-		skolenivaa = Skolenivaaer(value = "HGU"),
-		prosentandelForUtdanning = 100,
-		beloep = 2000,
-		erUtgifterDekket = ErUtgifterDekket("DEL")
+		periode = convertPeriode(
+			fom = laeremiddelutgifter.aktivitetsperiode.startdatoDdMmAaaa,
+			tom = laeremiddelutgifter.aktivitetsperiode.sluttdatoDdMmAaaa
+		),
+		hvorMyeDekkesAvAnnenAktoer = laeremiddelutgifter.hvorMyeFarDuDekketAvEnAnnenAktor?.toDouble(),
+		hvorMyeDekkesAvNAV = laeremiddelutgifter.hvorStortBelopSokerDuOmAFaDekketAvNav.toDouble(),
+		skolenivaa = Skolenivaaer(value = "HGU"), // TODO mapping av laeremiddelutgifter.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore
+		prosentandelForUtdanning = laeremiddelutgifter.oppgiHvorMangeProsentDuStudererEllerGarPaKurs,
+		beloep = laeremiddelutgifter.utgifterTilLaeremidler,
+		erUtgifterDekket = ErUtgifterDekket("DEL")   // TODO mapping av laeremiddelutgifter.farDuDekketLaeremidlerEtterAndreOrdninger
 	)
-}
-
-private fun hasLaeremiddelutgifter(tilleggstonadJsonObj: JsonApplication): Boolean {
-	return false
 }
 
 fun convertFlytteutgifter(tilleggstonadJsonObj: JsonApplication): Flytteutgifter? {
-	if (!hasFlytteutgifter(tilleggstonadJsonObj)) return null
+	if (tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.flytteutgifter == null) return null
 
-	// TODO, eksempel
+	val flytteutgifter = tilleggstonadJsonObj.tilleggsstonad.rettighetstype.flytteutgifter
+
 	return Flytteutgifter(
-		flyttingPgaAktivitet = true,
-		erUtgifterTilFlyttingDekketAvAndreEnnNAV = false,
-		flytterSelv = "true",
-		flyttingPgaNyStilling = false,
-		flyttedato = convertToDateStringWithTimeZone("2023-12-24"),
-		tilflyttingsadresse = SammensattAdresse(
-			land = null,
-			adresse = "Kongens Gate 1",
-			postnr = "3701"
+		flyttingPgaAktivitet = "Jeg flytter i forbindelse med at jeg skal gjennomføre en aktivitet".equals(
+			flytteutgifter.hvorforFlytterDu,
+			true
+		),
+		erUtgifterTilFlyttingDekketAvAndreEnnNAV = convertToBoolean(flytteutgifter.farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav)
+			?: false,
+		flytterSelv = (flytteutgifter.jegFlytterSelv != null).toString(),
+		flyttingPgaNyStilling = "Jeg flytter fordi jeg har fått ny jobb".equals(flytteutgifter.hvorforFlytterDu, true),
+		flyttedato = convertToDateStringWithTimeZone(flytteutgifter.narFlytterDuDdMmAaaa),
+		tilflyttingsadresse = SammensattAdresse( // TODO mangler adresse angivelse i skjema
+			land = "Norge",
+			adresse = flytteutgifter.hvorforFlytterDu,
+			postnr = ""
 		).sammensattAdresse,
-		avstand = 130,
-		sumTilleggsutgifter = 10000.00
+		avstand = convertFlytteAvstand(flytteutgifter), // TODO sjekk avstand i skjema; avstanden er uavhengig av hvordan flytting skjer
+		sumTilleggsutgifter = convertFlytteutgifter(flytteutgifter).toDouble()
 	)
 
 }
 
-private fun hasFlytteutgifter(tilleggstonadJsonObj: JsonApplication): Boolean {
-	return false
+fun convertFlytteAvstand(flytteutgifter: JsonFlytteutgifter): Int {
+	return if (flytteutgifter.jegFlytterSelv != null) {
+		flytteutgifter.jegFlytterSelv.hvorLangtSkalDuFlytte
+	} else if (flytteutgifter.jegVilBrukeFlyttebyra != null) {
+		0
+	} else if (flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv != null) {
+		flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv.hvorLangtSkalDuFlytte
+	} else {
+		return 0
+	}
+
+}
+
+fun convertFlytteutgifter(flytteutgifter: JsonFlytteutgifter): Int {
+	if (flytteutgifter.jegFlytterSelv != null) {
+		val flytterSelv = flytteutgifter.jegFlytterSelv
+		return (flytterSelv.bom ?: 0) + (flytterSelv.annet ?: 0) + (flytterSelv.hengerleie ?: 0) + (flytterSelv.parkering
+			?: 0) + (flytterSelv.ferje ?: 0)
+	} else if (flytteutgifter.jegVilBrukeFlyttebyra != null) {
+		val flytteByra = flytteutgifter.jegVilBrukeFlyttebyra
+		return when {
+			"Flyttebyrå 1".equals(flytteByra.jegVelgerABruke, true) -> flytteByra.belop
+			else -> flytteByra.belop1
+		}
+	} else if (flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv != null) {
+		val flytterSelv = flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv
+		return (flytterSelv.bom ?: 0) + (flytterSelv.annet ?: 0) + (flytterSelv.hengerleie ?: 0) + (flytterSelv.parkering
+			?: 0) + (flytterSelv.ferje ?: 0)
+	} else {
+		return 0
+	}
 }
 
 fun convertTilsynsutgifter(tilleggstonadJsonObj: JsonApplication): Tilsynsutgifter? {
 	if (!hasTilsynsutgifter(tilleggstonadJsonObj)) return null
 
 	val utgifterBarn = convertTilsynsutgifterBarn(tilleggstonadJsonObj)
-	val utgifterFamilie = convertFamilieutgifter(tilleggstonadJsonObj)
+	val utgifterFamilie = convertFamilieutgifter(tilleggstonadJsonObj) // TODO er denne relevant?
 
 	if (utgifterBarn == null && utgifterFamilie == null) return null
 
@@ -339,33 +199,32 @@ fun convertTilsynsutgifter(tilleggstonadJsonObj: JsonApplication): Tilsynsutgift
 }
 
 private fun hasTilsynsutgifter(tilleggstonadJsonObj: JsonApplication): Boolean {
-	return false
+	return tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.tilsynsutgifter != null
 }
 
 private fun convertTilsynsutgifterBarn(tilleggstonadJsonObj: JsonApplication): TilsynsutgifterBarn? {
-	if (!hasTilsynsutgifterBarn(tilleggstonadJsonObj)) return null
+	if (tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.tilsynsutgifter == null) return null
 
-	// TODO erstatt eksempel nedenfor
+	val tilsynsutgifter = tilleggstonadJsonObj.tilleggsstonad.rettighetstype.tilsynsutgifter
 	return TilsynsutgifterBarn(
 		Periode(
-			fom = convertToDateStringWithTimeZone("2023-12-01+01:00"),
-			tom = convertToDateStringWithTimeZone("2024-03-30+01:00")
-		), barn = listOf(
+			fom = convertToDateStringWithTimeZone(tilsynsutgifter.aktivitetsPeriode.startdatoDdMmAaaa),
+			tom = convertToDateStringWithTimeZone(tilsynsutgifter.aktivitetsPeriode.sluttdatoDdMmAaaa)
+		),
+		barn = tilsynsutgifter.barnePass.filter { convertToBoolean(it.jegSokerOmStonadTilPassAvDetteBarnet) ?: false }.map {
 			Barn(
-				personidentifikator = "12345678901", tilsynskategori = Tilsynskategorier("KOM", ""),
-				"Morsomt Navn", harFullfoertFjerdeSkoleaar = false, maanedligUtgiftTilsynBarn = 4500
-			),
-			Barn(
-				personidentifikator = "12345678902", tilsynskategori = Tilsynskategorier("OFF", ""),
-				"Rart Navn", harFullfoertFjerdeSkoleaar = false, maanedligUtgiftTilsynBarn = 3500
+				personidentifikator = it.fodselsdatoDdMmAaaa,
+				tilsynskategori = Tilsynskategorier("KOM", ""), // TODO mapping av it.sokerStonadForDetteBarnet.hvemPasserBarnet
+				navn = it.fornavn + " " + it.etternavn,
+				harFullfoertFjerdeSkoleaar = convertToBoolean(it.sokerStonadForDetteBarnet?.harBarnetFullfortFjerdeSkolear)
+					?: false,
+				maanedligUtgiftTilsynBarn = it.sokerStonadForDetteBarnet?.oppgiManedligUtgiftTilBarnepass ?: 0
 			)
-		), annenForsoergerperson = "01123456789"
+		},
+		annenForsoergerperson = tilsynsutgifter.fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa
 	)
 }
 
-private fun hasTilsynsutgifterBarn(tilleggstonadJsonObj: JsonApplication): Boolean {
-	return false
-}
 
 private fun convertFamilieutgifter(tilleggstonadJsonObj: JsonApplication): TilsynsutgifterFamilie? {
 	if (!hasTilsynsutgifterFamilie(tilleggstonadJsonObj)) return null
