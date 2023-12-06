@@ -6,6 +6,12 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.consumerapis.arena.ArenaConsumerInterface
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
+import no.nav.soknad.innsending.consumerapis.pdl.transformers.AddressTransformer.transformAddresses
+import no.nav.soknad.innsending.consumerapis.pdl.transformers.NameTransformer.transformName
+import no.nav.soknad.innsending.consumerapis.pdl.transformers.PhoneNumberTransformer.transformPhoneNumbers
+import no.nav.soknad.innsending.exceptions.NonCriticalException
+import no.nav.soknad.innsending.model.Aktivitet
+import no.nav.soknad.innsending.model.Maalgruppe
 import no.nav.soknad.innsending.model.PrefillData
 import no.nav.soknad.innsending.util.Constants.ARENA_AKTIVITETER
 import no.nav.soknad.innsending.util.Constants.ARENA_MAALGRUPPER
@@ -48,23 +54,43 @@ class PrefillService(
 				sokerFornavn = obj.sokerFornavn ?: acc.sokerFornavn,
 				sokerEtternavn = obj.sokerEtternavn ?: acc.sokerEtternavn,
 				sokerMaalgrupper = obj.sokerMaalgrupper ?: acc.sokerMaalgrupper,
-				sokerAktiviteter = obj.sokerAktiviteter ?: acc.sokerAktiviteter
+				sokerAktiviteter = obj.sokerAktiviteter ?: acc.sokerAktiviteter,
+				sokerAdresser = obj.sokerAdresser ?: acc.sokerAdresser,
+				sokerKjonn = obj.sokerKjonn ?: acc.sokerKjonn,
+				sokerTelefonnummer = obj.sokerTelefonnummer ?: acc.sokerTelefonnummer
 			)
 		}
 	}
 
 	suspend fun getPDLData(userId: String, properties: List<String>): PrefillData {
 		val personInfo = pdlApi.getPrefillPersonInfo(userId)
-		val navn = personInfo?.hentPerson?.navn?.first()
+		val name = transformName(personInfo?.hentPerson?.navn)
+		val addresses = transformAddresses(
+			adressebeskyttelser = personInfo?.hentPerson?.adressebeskyttelse,
+			bostedsAdresser = personInfo?.hentPerson?.bostedsadresse,
+			kontaktadresser = personInfo?.hentPerson?.kontaktadresse,
+			oppholdsadresser = personInfo?.hentPerson?.oppholdsadresse
+		)
+		val phoneNumber = transformPhoneNumbers(personInfo?.hentPerson?.telefonnummer)
+		val gender = personInfo?.hentPerson?.kjoenn?.firstOrNull()?.kjoenn?.name
+
 		return PrefillData(
-			sokerFornavn = if (properties.contains("sokerFornavn")) navn?.fornavn else null,
-			sokerEtternavn = if (properties.contains("sokerEtternavn")) navn?.etternavn else null
+			sokerFornavn = if (properties.contains("sokerFornavn")) name?.fornavn else null,
+			sokerEtternavn = if (properties.contains("sokerEtternavn")) name?.etternavn else null,
+			sokerAdresser = if (properties.contains("sokerAdresser")) addresses else null,
+			sokerTelefonnummer = if (properties.contains("sokerTelefonnummer")) phoneNumber else null,
+			sokerKjonn = if (properties.contains("sokerKjonn")) gender else null
 		)
 	}
 
 	suspend fun getArenaMaalgrupper(userId: String, properties: List<String>): PrefillData {
-		val maalgrupper = arenaConsumer.getMaalgrupper()
-		if (maalgrupper.isEmpty()) return PrefillData()
+		val maalgrupper: List<Maalgruppe>
+		try {
+			maalgrupper = arenaConsumer.getMaalgrupper()
+			if (maalgrupper.isEmpty()) return PrefillData()
+		} catch (exception: NonCriticalException) {
+			return PrefillData()
+		}
 
 		return PrefillData(
 			sokerMaalgrupper = if (properties.contains("sokerMaalgrupper")) maalgrupper else null,
@@ -72,8 +98,14 @@ class PrefillService(
 	}
 
 	suspend fun getArenaAktiviteter(userId: String, properties: List<String>): PrefillData {
-		val aktiviteter = arenaConsumer.getAktiviteter()
-		if (aktiviteter.isEmpty()) return PrefillData()
+		val aktiviteter: List<Aktivitet>
+
+		try {
+			aktiviteter = arenaConsumer.getAktiviteter()
+			if (aktiviteter.isEmpty()) return PrefillData()
+		} catch (arenaException: NonCriticalException) {
+			return PrefillData()
+		}
 
 		return PrefillData(
 			sokerAktiviteter = if (properties.contains("sokerAktiviteter")) aktiviteter else null,

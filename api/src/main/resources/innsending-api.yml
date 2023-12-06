@@ -910,6 +910,71 @@ paths:
 
 components:
   schemas:
+    Adresser:
+      type: object
+      description: Søkerens adresse
+      properties:
+        bostedsadresse:
+          description: Bostedsadresse - Adressen hvor en person er registrert som bosatt i henhold til landets lovverk. Kan kun være en adresse til enhver tid, enten i Norge eller utlandet.
+          $ref: "#/components/schemas/Adresse"
+        oppholdsadresser:
+          type: array
+          description: Liste av oppholdsadresser - Adresse hvor en person oppholder seg, men hvor det ikke er bekreftet at personen er bosatt. Kan være både norsk og utlandsk adresse.
+          items:
+              $ref: "#/components/schemas/Adresse"
+        kontaktadresser:
+          type: array
+          description: Liste av kontaktadresser - Adresse som kan benyttes for å kontakte personen per post. Det er ikke bekreftet om personen er bosatt eller oppholder seg der. Det er ikke krav til dokumentasjon for å registrere denne type adresse i PDL.
+          items:
+              $ref: "#/components/schemas/Adresse"
+
+    Adresse:
+      type: object
+      description: Adresse
+      properties:
+        gyldigFraOgMed:
+          type: string
+          format: date
+          description: Gyldig fra og med dato
+          example: "2020-01-01"
+        gyldigTilOgMed:
+          type: string
+          format: date
+          description: Gyldig fra og med dato
+          example: "2030-01-01"
+        co:
+          type: string
+          description: C/O-adresse
+          example: "c/o Ola Nordmann"
+        adresse:
+          type: string
+          description: Gatenavn og husnummer o.l.
+          example: "Klostergata 57A"
+        bygning:
+          type: string
+          description: Informasjon som navn på bygg, etasje i et bygg, leilighetsnummer o.l. (utenlandske adresser har dette feltet i PDL)
+        postboks:
+          type: string
+          description: Postboksnummer og postboksanlegg
+          example: "P.O.Box 1234 Place"
+        postnummer:
+          type: string
+          description: Postnummer
+          example: "SE-12345"
+        bySted:
+          type: string
+          description: By/Bydel/Bysted (utenlandske adresser har dette feltet i PDL)
+          example: "Roma"
+        region:
+          type: string
+          description: Navn på et område innenfor et land, kan være landsby, stat eller noe i mellom (utenlandske adresser har dette feltet i PDL)
+          example: "Yorkshire"
+        landkode:
+          type: string
+          description: Alpha-3 landekode
+          example: "SWE"
+
+
     Aktivitet:
       type: object
       properties:
@@ -1409,6 +1474,14 @@ components:
           nullable: true
           description: Søkerens etternavn
           example: Nordmann
+        sokerAdresser:
+          $ref: "#/components/schemas/Adresser"
+        sokerKjonn:
+          type: string
+          description: Søkerens kjønn
+          example: MANN
+        sokerTelefonnummer:
+            $ref: "#/components/schemas/Telefonnummer"
         sokerMaalgrupper:
           type: array
           description: Liste av målgrupper for søker på angitt tidsperiode. Dersom ingen målgrupper ble funnet i tidsperioden, returneres en tom liste
@@ -1567,6 +1640,11 @@ components:
       type: string
       description: Søkers foretrukne språk. Det er alltid støtte for nb_NO (norsk bokmål). Det er varierende støtte for andre språk på ulike skjema.
       example: nb_NO
+
+    Telefonnummer:
+      type: string
+      description: Telefonnummer
+      example: "+4712345678"
 
     Tema:
       type: string

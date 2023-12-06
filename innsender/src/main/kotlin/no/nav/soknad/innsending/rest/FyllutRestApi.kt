@@ -150,7 +150,7 @@ class FyllutRestApi(
 		loggBegge("$innsendingsId: Utfylt søknad fra Fyllut", brukerId)
 
 		return ResponseEntity
-			.status(HttpStatus.OK)
+			.status(HttpStatus.FOUND).location(URI.create(restConfig.sendInnUrl + "/" + innsendingsId))
 			.build()
 	}
 
