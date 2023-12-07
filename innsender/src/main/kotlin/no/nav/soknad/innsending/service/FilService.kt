@@ -15,7 +15,6 @@ import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
 
 @Service
@@ -36,8 +35,12 @@ class FilService(
 		innsendtVedleggDtos: List<VedleggDto>
 	) {
 		val matchInnsendtVedleggDto = innsendtVedleggDtos.firstOrNull {
-			it.vedleggsnr == lagretVedleggDto.vedleggsnr && it.mimetype == lagretVedleggDto.mimetype && it.document?.isNotEmpty() ?: false
-				&& it.erHoveddokument == lagretVedleggDto.erHoveddokument && it.erVariant == lagretVedleggDto.erVariant && it.formioId == lagretVedleggDto.formioId
+			it.vedleggsnr == lagretVedleggDto.vedleggsnr
+				&& it.mimetype == lagretVedleggDto.mimetype
+				&& it.document?.isNotEmpty() ?: false
+				&& it.erHoveddokument == lagretVedleggDto.erHoveddokument
+				&& it.erVariant == lagretVedleggDto.erVariant
+				&& it.formioId == lagretVedleggDto.formioId
 		} ?: run {
 			logger.error("Fant ikke matchende lagret vedlegg med innsendt vedlegg")
 			throw BackendErrorException("Feil ved lagring av dokument ${lagretVedleggDto.tittel}. Fant ikke matchende lagret vedlegg ${lagretVedleggDto.tittel} med innsendt vedlegg, er variant = ${lagretVedleggDto.erVariant}")
@@ -115,11 +118,10 @@ class FilService(
 			restConfig.maxFileSizeSum.toLong(),
 			ErrorCode.FILE_SIZE_SUM_TOO_LARGE
 		)
-		repo.oppdaterVedleggStatus(
+		repo.updateVedleggStatus(
 			soknadDto.innsendingsId!!,
 			filDto.vedleggsid,
-			OpplastingsStatus.LASTET_OPP,
-			LocalDateTime.now()
+			OpplastingsStatus.LASTET_OPP
 		)
 		innsenderMetrics.operationsCounterInc(operation, soknadDto.tema)
 		return lagFilDto(savedFilDbData, false)

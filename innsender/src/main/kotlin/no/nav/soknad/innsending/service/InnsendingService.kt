@@ -19,12 +19,12 @@ import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.erEttersending
 import no.nav.soknad.innsending.util.models.hovedDokument
+import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -68,8 +68,16 @@ class InnsendingService(
 		val alleVedlegg: List<VedleggDto> = filService.ferdigstillVedleggsFiler(soknadDto)
 
 		val opplastedeVedlegg = alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
-		val manglendePakrevdeVedlegg =
-			alleVedlegg.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") && (it.opplastingsStatus == OpplastingsStatusDto.sendSenere || it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt) }
+
+		val missingRequiredVedlegg = alleVedlegg.filter {
+			val isNotHoveddokument = !it.erHoveddokument
+			val isRequiredN6Vedlegg = it.erPakrevd && it.vedleggsnr == "N6"
+			val isNotN6Vedlegg = it.vedleggsnr != "N6"
+			val hasStatusSendSenereEllerIkkevalgt =
+				it.opplastingsStatus == OpplastingsStatusDto.sendSenere || it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt
+
+			isNotHoveddokument && (isRequiredN6Vedlegg || isNotN6Vedlegg) && hasStatusSendSenereEllerIkkevalgt
+		}
 
 		validerAtSoknadHarEndringSomKanSendesInn(soknadDto, opplastedeVedlegg, alleVedlegg)
 
@@ -83,20 +91,21 @@ class InnsendingService(
 		)
 
 		logger.info("${soknadDtoInput.innsendingsId}: Opplastede vedlegg = ${opplastedeVedlegg.map { it.vedleggsnr + ':' + it.uuid + ':' + it.opprettetdato + ':' + it.document?.size }}")
-		logger.info("${soknadDtoInput.innsendingsId}: Ikke opplastede påkrevde vedlegg = ${manglendePakrevdeVedlegg.map { it.vedleggsnr + ':' + it.opprettetdato }}")
+		logger.info("${soknadDtoInput.innsendingsId}: Ikke opplastede påkrevde vedlegg = ${missingRequiredVedlegg.map { it.vedleggsnr + ':' + it.opprettetdato }}")
 
 		val kvitteringForArkivering =
-			lagInnsendingsKvitteringOgLagre(soknadDto, opplastedeVedlegg, manglendePakrevdeVedlegg)
+			lagInnsendingsKvitteringOgLagre(soknadDto, opplastedeVedlegg, missingRequiredVedlegg)
 
 		// Ekstra sjekk på at søker ikke allerede har sendt inn søknaden. Dette fordi det har vært tilfeller der søker har klart å trigge innsending request av søknaden flere ganger på rappen
-		val soknadDb = repo.hentSoknadDb(soknadDto.id!!)
-		if (soknadDb.status == SoknadsStatus.Innsendt) {
+		val existingSoknad = soknadService.hentSoknad(soknadDto.innsendingsId!!)
+		if (existingSoknad.status == SoknadsStatusDto.innsendt) {
 			logger.warn("${soknadDto.innsendingsId}: Søknad allerede innsendt, avbryter")
 			throw IllegalActionException(
 				message = "Søknaden er allerede sendt inn. Søknaden er innsendt og kan ikke sendes på nytt.",
 				errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 			)
 		}
+		vedleggService.deleteVedleggNotRelevantAnymore(existingSoknad.vedleggsListeUtenHoveddokument)
 
 		// send soknadmetada til soknadsmottaker
 		try {
@@ -127,12 +136,11 @@ class InnsendingService(
 			)
 		)
 
-		manglendePakrevdeVedlegg.forEach {
-			repo.oppdaterVedleggStatus(
+		missingRequiredVedlegg.forEach {
+			repo.updateVedleggStatus(
 				innsendingsId = soknadDto.innsendingsId!!,
 				vedleggsId = it.id!!,
-				opplastingsStatus = OpplastingsStatus.SEND_SENERE,
-				LocalDateTime.now()
+				opplastingsStatus = OpplastingsStatus.SEND_SENERE
 			)
 		}
 
@@ -143,7 +151,7 @@ class InnsendingService(
 			throw BackendErrorException(message = "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV")
 		}
 
-		return Pair(opplastedeVedlegg, manglendePakrevdeVedlegg)
+		return Pair(opplastedeVedlegg, missingRequiredVedlegg)
 	}
 
 	private fun validerAtSoknadHarEndringSomKanSendesInn(

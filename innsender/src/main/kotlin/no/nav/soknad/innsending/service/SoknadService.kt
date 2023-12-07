@@ -314,7 +314,7 @@ class SoknadService(
 
 			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
 			// lagre mottatte filer i fil tabellen.
-			lagreFiler(savedDokumentSoknadDto, innsendingsId, dokumentSoknadDto)
+			lagreFiler(savedDokumentSoknadDto, dokumentSoknadDto)
 			publiserBrukernotifikasjon(savedDokumentSoknadDto)
 
 			innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
@@ -477,20 +477,19 @@ class SoknadService(
 		}
 	}
 
-	fun oppdaterSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
+	fun updateSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		if (dokumentSoknadDto.vedleggsListe.size != 2) {
 			throw BackendErrorException("Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant. Innsendt vedleggsliste skal være tom")
 		}
 
-		val eksisterendeSoknad = hentSoknad(innsendingsId)
-		val oppdatertDokumentSoknadDto = oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto, SoknadsStatus.Opprettet)
+		val existingSoknad = hentSoknad(innsendingsId)
+		val updatedDokumentSoknadDto = updateSoknad(existingSoknad, dokumentSoknadDto, SoknadsStatus.Opprettet)
 
-		return mapTilSkjemaDto(oppdatertDokumentSoknadDto)
+		return mapTilSkjemaDto(updatedDokumentSoknadDto)
 	}
 
 	fun lagreFiler(
 		oppdatertDokumentSoknadDto: DokumentSoknadDto,
-		innsendingsId: String,
 		dokumentSoknadDto: DokumentSoknadDto
 	) {
 		oppdatertDokumentSoknadDto.vedleggsListe
@@ -498,46 +497,61 @@ class SoknadService(
 			.forEach { filService.lagreFil(oppdatertDokumentSoknadDto, it, dokumentSoknadDto.vedleggsListe) }
 	}
 
-	fun oppdaterUtfyltSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
-		val eksisterendeSoknad = hentSoknad(innsendingsId)
-
-		vedleggService.slettEksisterendeVedleggVedOppdatering(eksisterendeSoknad.vedleggsListe, dokumentSoknadDto)
-
-		val oppdatertDokumentSoknadDto = oppdaterSoknad(eksisterendeSoknad, dokumentSoknadDto, SoknadsStatus.Utfylt)
-		return mapTilSkjemaDto(oppdatertDokumentSoknadDto)
+	fun saveHoveddokumentFiler(
+		oppdatertDokumentSoknadDto: DokumentSoknadDto,
+		dokumentSoknadDto: DokumentSoknadDto
+	) {
+		oppdatertDokumentSoknadDto.vedleggsListe
+			.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp && it.erHoveddokument }
+			.forEach {
+				filService.lagreFil(
+					savedDokumentSoknadDto = oppdatertDokumentSoknadDto,
+					lagretVedleggDto = it,
+					innsendtVedleggDtos = dokumentSoknadDto.vedleggsListe
+				)
+			}
 	}
 
-	fun oppdaterSoknad(
-		eksisterendeSoknad: DokumentSoknadDto,
+
+	fun updateUtfyltSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
+		val existingSoknad = hentSoknad(innsendingsId)
+
+		vedleggService.updateVedleggStatuses(existingSoknad.vedleggsListe, dokumentSoknadDto)
+
+		val updatedDokumentSoknadDto = updateSoknad(existingSoknad, dokumentSoknadDto, SoknadsStatus.Utfylt)
+		return mapTilSkjemaDto(updatedDokumentSoknadDto)
+	}
+
+	fun updateSoknad(
+		existingSoknad: DokumentSoknadDto,
 		dokumentSoknadDto: DokumentSoknadDto,
 		status: SoknadsStatus
 	): DokumentSoknadDto {
 		// Valider søknaden mot eksisterende søknad ved å sjekke felter som ikke er lov til å oppdatere
-		validerInnsendtSoknadMotEksisterende(dokumentSoknadDto, eksisterendeSoknad)
-		val innsendingsId = eksisterendeSoknad.innsendingsId!!
+		validerInnsendtSoknadMotEksisterende(dokumentSoknadDto, existingSoknad)
+		val innsendingsId = existingSoknad.innsendingsId!!
 
-		// Oppdater søknaden
+		// Update søknad
 		val soknadDb = mapTilSoknadDb(
 			dokumentSoknadDto = dokumentSoknadDto,
 			innsendingsId = innsendingsId,
-			id = eksisterendeSoknad.id,
+			id = existingSoknad.id,
 			status = status
 		)
-		val oppdatertSoknad = repo.lagreSoknad(soknadDb)
-		val soknadsId = oppdatertSoknad.id!!
+		val updatedSoknad = repo.lagreSoknad(soknadDb)
+		val soknadId = updatedSoknad.id!!
 
-		// Oppdater vedlegg
+		// Update vedlegg
 		dokumentSoknadDto.vedleggsListe.forEach { nyttVedlegg ->
-			vedleggService.lagreVedleggVedOppdatering(eksisterendeSoknad, nyttVedlegg, soknadsId)
+			vedleggService.lagreVedleggVedOppdatering(existingSoknad, nyttVedlegg, soknadId)
 		}
 
-		// Lagre filer
-		val oppdatertDokumentSoknadDto = hentSoknad(innsendingsId)
-		lagreFiler(oppdatertDokumentSoknadDto, innsendingsId, dokumentSoknadDto)
+		val updatedDokumentSoknadDto = hentSoknad(innsendingsId)
+		saveHoveddokumentFiler(updatedDokumentSoknadDto, dokumentSoknadDto)
 
-		logger.info("Oppdatert søknad for innsendingsId: {}", eksisterendeSoknad.innsendingsId)
+		logger.info("Oppdatert søknad for innsendingsId: {}", existingSoknad.innsendingsId)
 
-		return oppdatertDokumentSoknadDto
+		return updatedDokumentSoknadDto
 	}
 
 

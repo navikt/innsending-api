@@ -30,8 +30,9 @@ import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
-import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.getBytesFromFile
 import no.nav.soknad.innsending.utils.SoknadAssertions
+import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -682,7 +683,7 @@ class SoknadServiceTest : ApplicationTest() {
 		)
 
 		// Når
-		soknadService.oppdaterSoknad(innsendingsId, dokumentSoknad)
+		soknadService.updateSoknad(innsendingsId, dokumentSoknad)
 		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
 
 		// Så
@@ -698,80 +699,56 @@ class SoknadServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Skal oppdatere utfylt søknad med nye vedlegg`() {
-		// Gitt
-		val tema = "HJE"
+	fun `Should update utfylt søknad with new vedlegg`() {
+		// Given
 		val skjemanr = "NAV 10-07.04"
-		val tittel = "Tittel"
-		val spraak = "nb_no"
 
-		val eksisterendeSoknad = lagDokumentSoknad(tema, skjemanr)
-		val innsendingsId = soknadService.opprettNySoknad(eksisterendeSoknad).innsendingsId!!
+		val newSoknad = DokumentSoknadDtoTestBuilder(brukerId = testpersonid, skjemanr = skjemanr).build()
+		val innsendingsId = soknadService.opprettNySoknad(newSoknad).innsendingsId!!
 
-		val vedleggDto1 =
-			Hjelpemetoder.lagVedleggDto(
-				erHoveddokument = false,
-				vedleggsnr = "vedleggsnr1",
-				tittel = "vedleggTittel1",
-				mimeType = Mimetype.applicationSlashPdf.toString(),
-				fil = getBytesFromFile("/litenPdf.pdf"),
-				formioId = UUID.randomUUID().toString()
-			)
-		val vedleggDto2 =
-			Hjelpemetoder.lagVedleggDto(
-				erHoveddokument = false,
-				vedleggsnr = "vedleggsnr2",
-				tittel = "vedleggTittel2",
-				mimeType = Mimetype.applicationSlashPdf.toString(),
-				fil = getBytesFromFile("/litenPdf.pdf"),
-				formioId = UUID.randomUUID().toString()
-			)
+		val vedleggDto1 = VedleggDtoTestBuilder(erHoveddokument = false, vedleggsnr = "vedleggsnr1").build()
+		val vedleggDto2 = VedleggDtoTestBuilder(erHoveddokument = false, vedleggsnr = "vedleggsnr2").build()
 
-		val vedleggDtoList =
-			listOf(eksisterendeSoknad.hoveddokument!!, eksisterendeSoknad.hoveddokumentVariant!!, vedleggDto1, vedleggDto2)
-		val dokumentSoknad = DokumentSoknadDto(
+		val vedleggDtoList = listOf(newSoknad.hoveddokument!!, newSoknad.hoveddokumentVariant!!, vedleggDto1, vedleggDto2)
+
+		val utfyltSoknad = DokumentSoknadDtoTestBuilder(
 			brukerId = testpersonid,
-			skjemanr = skjemanr,
-			tittel = tittel,
-			tema = tema,
-			status = SoknadsStatusDto.opprettet,
-			opprettetDato = OffsetDateTime.now(),
-			vedleggsListe = vedleggDtoList,
 			innsendingsId = innsendingsId,
-			spraak = spraak,
-		)
+			vedleggsListe = vedleggDtoList,
+			skjemanr = skjemanr
+		).build()
 
-		// Når
-		soknadService.oppdaterUtfyltSoknad(innsendingsId, dokumentSoknad)
-		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
+		// When
+		soknadService.updateUtfyltSoknad(innsendingsId, utfyltSoknad)
+		val updatedSoknad = soknadService.hentSoknad(innsendingsId)
 
-		val filer = oppdatertSoknad.vedleggsListe.flatMap {
+		val files = updatedSoknad.vedleggsListe.flatMap {
 			filService.hentFiler(
-				oppdatertSoknad, innsendingsId,
+				updatedSoknad, innsendingsId,
 				it.id!!, true
 			)
 		}
 
-		// Så
+		// Then
 		assertEquals(
 			4,
-			oppdatertSoknad.vedleggsListe.size,
+			updatedSoknad.vedleggsListe.size,
 			"Skal ha to vedlegg i den oppdaterte søknaden + hoveddokument og variant"
 		)
 
-		assertEquals(4, filer.size, "Skal ha 4 filer lagret i databasen")
+		assertEquals(2, files.size, "Skal ha 2 filer lagret i databasen")
 
 		assertTrue(
-			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == vedleggDto1.vedleggsnr },
+			updatedSoknad.vedleggsListe.any { it.vedleggsnr == vedleggDto1.vedleggsnr },
 			"Skal ha vedlegg 1 i den oppdaterte søknaden"
 		)
 		assertTrue(
-			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == vedleggDto2.vedleggsnr },
+			updatedSoknad.vedleggsListe.any { it.vedleggsnr == vedleggDto2.vedleggsnr },
 			"Skal ha vedlegg 2 i den oppdaterte søknaden"
 		)
 
 
-		// og ingen ny hendelse registrert på søknad
+		// and no new ny hendelse registered on søknad
 		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(innsendingsId)
 		assertEquals(2, hendelseDbDatas.size)
 		assertEquals(HendelseType.Opprettet, hendelseDbDatas[0].hendelsetype)
