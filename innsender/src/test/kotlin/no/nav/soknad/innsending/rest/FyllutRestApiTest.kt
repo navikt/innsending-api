@@ -188,7 +188,7 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Should update utfylt søknad and vedlegg with updated properties for språk and tittel, old vedlegg should be marked as lastetOppIkkeRelevantLenger`() {
+	fun `Should update utfylt søknad and vedlegg with updated properties for språk and tittel, old vedlegg should be deleted`() {
 		// Given
 		val newSpraak = "en_gb"
 		val newTittel = "Application for one-time grant at birth"
@@ -226,13 +226,14 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals(newTittel, updatedSoknad.tittel)
 		assertEquals("en", updatedSoknad.spraak, "Språk is updated (gets converted to the first 2 letters)")
 		assertEquals(
-			6,
+			4,
 			updatedSoknad.vedleggsListe.size,
-			"Hoveddokument, hoveddokumentVariant, two vedlegg that will be deleted and two new vedlegg"
+			"Hoveddokument, hoveddokumentVariant and two new vedlegg"
 		)
 		assertEquals(
-			2,
-			updatedSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOppIkkeRelevantLenger }.size
+			0,
+			updatedSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOppIkkeRelevantLenger }.size,
+			"Vedlegg should be deleted, not have status lastetOppIkkeRelevantLenger"
 		)
 		assertTrue(
 			updatedSoknad.vedleggsListe.any { it.vedleggsnr == "T7" && it.tittel == newVedleggstittel1 },
@@ -251,7 +252,61 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Should keep vedlegg from send-inn, even after updating from fyllUt`() {
+	fun `Should set status lastetOppIkkeRelevantLenger for vedlegg`() {
+		// Given
+		val skjemanr = "NAV 10-07.41"
+		val vedleggsnr = "T7"
+		val hoveddokument = SkjemaDokumentDtoTestBuilder(vedleggsnr = skjemanr).asHovedDokument(skjemanr).build()
+		val hoveddokumentVariant =
+			SkjemaDokumentDtoTestBuilder(vedleggsnr = skjemanr).asHovedDokumentVariant(skjemanr).build()
+		val vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = vedleggsnr, tittel = "vedlegg1").build()
+
+		val skjemaDto = SkjemaDtoTestBuilder(
+			skjemanr = skjemanr,
+			hoveddokument = hoveddokument,
+			hoveddokumentVariant = hoveddokumentVariant
+		).build()
+
+		val skjemaDtoWithVedlegg = skjemaDto.copy(vedleggsListe = listOf(vedlegg))
+
+		// When
+		val opprettSoknadResponse = api?.opprettSoknad(skjemaDto)
+		val innsendingsId = opprettSoknadResponse?.body?.innsendingsId!!
+
+		// Complete søknad in fyllUt
+		api?.utfyltSoknad(innsendingsId, skjemaDtoWithVedlegg)
+
+		val savedSoknad = soknadService.hentSoknad(innsendingsId)
+		val vedleggsId = savedSoknad.vedleggsListe.first { it.vedleggsnr == vedleggsnr }.id!!
+
+		// Upload vedlegg in send-inn
+		val uploadFileResponse = api?.uploadFile(innsendingsId = innsendingsId, vedleggsId = vedleggsId)
+		// Go back and remove vedlegg in fyllUt
+		val utfyltResponse = api?.utfyltSoknad(innsendingsId, skjemaDto)
+
+		val updatedSoknad = soknadService.hentSoknad(innsendingsId)
+
+		// Then
+		assertEquals(302, utfyltResponse!!.statusCode.value())
+		assertEquals(201, uploadFileResponse!!.statusCode.value())
+		assertEquals(
+			"http://localhost:3100/sendinn/${innsendingsId}",
+			utfyltResponse.headers.location!!.toString()
+		)
+		assertEquals(3, updatedSoknad.vedleggsListe.size)
+		assertEquals(
+			1,
+			updatedSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOppIkkeRelevantLenger }.size
+		)
+		assertEquals(
+			"vedlegg1",
+			updatedSoknad.vedleggsListe.first { it.opplastingsStatus == OpplastingsStatusDto.lastetOppIkkeRelevantLenger }.tittel
+		)
+	}
+
+
+	@Test
+	fun `Should keep vedlegg from send-inn, even after updating from fyllUt and should delete old vedlegg not relevant anymore`() {
 		// Given
 		val dokumentSoknadDto = opprettSoknad() // med vedlegg vedleggsnr1 og vedleggsnr2
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
@@ -299,10 +354,11 @@ class FyllutRestApiTest : ApplicationTest() {
 			updatedUtfyltResponse.headers.location!!.toString()
 		)
 
-		assertEquals(6, updatedSoknad.vedleggsListe.size)
+		assertEquals(4, updatedSoknad.vedleggsListe.size)
 		assertEquals(
-			2,
-			updatedSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOppIkkeRelevantLenger }.size
+			0,
+			updatedSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOppIkkeRelevantLenger }.size,
+			"Vedlegg should be deleted, not have status lastetOppIkkeRelevantLenger"
 		)
 
 		val n6FyllUtVedlegg =
@@ -313,6 +369,10 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertNotNull(n6FyllUtVedlegg!!.formioId, "Vedlegg from fyllUt has formioId")
 		assertNull(n6SendInnVedlegg!!.formioId, "Vedlegg from sendInn does not have formioId")
 
+		assertFalse(
+			updatedSoknad.vedleggsListe.any { it.vedleggsnr == "vedleggsnr1" || it.vedleggsnr == "vedleggsnr2" },
+			"Should not have old vedlegg"
+		)
 		assertFalse(
 			updatedSoknad.vedleggsListe.any { it.vedleggsnr == "T1" },
 			"Should not have old vedlegg"
