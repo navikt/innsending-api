@@ -332,7 +332,8 @@ class VedleggService(
 		}
 	}
 
-	// Set status=LASTET_OPP_IKKE_RELEVANT_LENGER and erPakrevd=false for all vedlegg that are not part of the updated søknad
+	// Set status=LASTET_OPP_IKKE_RELEVANT_LENGER and erPakrevd=false for all vedlegg that are not part of the updated søknad if they have status=LASTET_OPP
+	// Delete vedlegg that are not part of the updated søknad if they have any other status
 	// Concerns vedlegg from fyllUt (vedlegg with formioId). Vedlegg without formioId (ex: hoveddokument and N6 vedlegg from sendInn) will still be part of the søknad
 	fun updateVedleggStatuses(
 		existingVedleggListe: List<VedleggDto>,
@@ -342,16 +343,20 @@ class VedleggService(
 			existingVedlegg.formioId != null &&
 				dokumentSoknadDto.vedleggsListeUtenHoveddokument.none { newVedlegg -> existingVedlegg.formioId == newVedlegg.formioId }
 		}.forEach {
-			logger.info("Setter status=LASTET_OPP_IKKE_RELEVANT_LENGER og erPakrevd=false på vedlegg id:${it.id}")
-
 			it.id?.let { vedleggId ->
 				dokumentSoknadDto.innsendingsId?.let { innsendingsId ->
-					repo.updateVedleggErPakrevd(vedleggId, false)
-					repo.updateVedleggStatus(
-						innsendingsId = innsendingsId,
-						vedleggsId = vedleggId,
-						opplastingsStatus = OpplastingsStatus.LASTET_OPP_IKKE_RELEVANT_LENGER
-					)
+					if (it.opplastingsStatus == OpplastingsStatusDto.lastetOpp) {
+						logger.info("Vedleggstatus er ${it.opplastingsStatus}, setter status=lastetOppIkkeRelevantLenger og erPakrevd=false på vedlegg id:${it.id}")
+						repo.updateVedleggErPakrevd(vedleggId, false)
+						repo.updateVedleggStatus(
+							innsendingsId = innsendingsId,
+							vedleggsId = vedleggId,
+							opplastingsStatus = OpplastingsStatus.LASTET_OPP_IKKE_RELEVANT_LENGER
+						)
+					} else {
+						logger.info("Vedleggstatus er ${it.opplastingsStatus}, sletter vedlegg id:${it.id}")
+						slettVedleggOgDensFiler(it)
+					}
 				}
 			}
 		}
