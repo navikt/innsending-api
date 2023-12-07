@@ -6,6 +6,8 @@ on:
       - opened
       - edited
       - synchronize
+    branches-ignore:
+      - dependabot/**
   schedule:
     # https://crontab.guru/every-hour
     - cron: '0 * * * *'
