@@ -338,9 +338,9 @@ class VedleggService(
 		existingVedleggListe: List<VedleggDto>,
 		dokumentSoknadDto: DokumentSoknadDto
 	) {
-		existingVedleggListe.filter { eksisterendeVedlegg ->
-			eksisterendeVedlegg.formioId != null &&
-				dokumentSoknadDto.vedleggsListeUtenHoveddokument.none { nyttVedlegg -> eksisterendeVedlegg.formioId == nyttVedlegg.formioId }
+		existingVedleggListe.filter { existingVedlegg ->
+			existingVedlegg.formioId != null &&
+				dokumentSoknadDto.vedleggsListeUtenHoveddokument.none { newVedlegg -> existingVedlegg.formioId == newVedlegg.formioId }
 		}.forEach {
 			logger.info("Setter status=LASTET_OPP_IKKE_RELEVANT_LENGER og erPakrevd=false på vedlegg id:${it.id}")
 
