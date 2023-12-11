@@ -48,6 +48,10 @@ data class JsonFlytteutgifter(
 	val hvorforFlytterDu: String, // "Jeg flytter fordi jeg har fått ny jobb" | "Jeg flytter i forbindelse med at jeg skal gjennomføre en aktivitet"
 	val narFlytterDuDdMmAaaa: String, // 01-01-2023
 	val oppgiForsteDagINyJobbDdMmAaaa: String?, // 02-01-2023 dersom flytting pga ny jobb
+	val erBostedEtterFlytting: Boolean,
+	val velgLand1: VelgLand1,
+	val adresse1: String,
+	val postnr1: String,
 	val farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav: String, // Ja | nei
 	val ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra: String, // 	"Jeg flytter selv" | "Jeg vil bruke flyttebyrå" |"Jeg har innhentet tilbud fra minst to flyttebyråer, men velger å flytte selv"
 	val jegFlytterSelv: JegFlytterSelv?, // Hvis "Jeg flytter selv"

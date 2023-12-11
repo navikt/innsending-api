@@ -55,7 +55,7 @@
 		<jakarta-validation-api.version>3.0.2</jakarta-validation-api.version>
 		<jakarta-annotation.version>2.1.1</jakarta-annotation.version>
 		<jackson-databind-nullable.version>0.2.6</jackson-databind-nullable.version>
-		<jackson.version>2.15.3</jackson.version>
+		<jackson.version>2.16.0</jackson.version>
 		<coroutines.version>1.7.3</coroutines.version>
 		<prometheus-client.version>0.16.0</prometheus-client.version>
 		<logstash.version>7.4</logstash.version>

@@ -1,47 +1,107 @@
 package no.nav.soknad.innsending.utils.builders
 
 import no.nav.soknad.innsending.util.mapping.*
+import no.nav.soknad.innsending.utils.Date
+import java.time.LocalDateTime
 
-class JsonDagligReiseTestBuilder(
-	var startdatoDdMmAaaa: String?,
-	var sluttdatoDdMmAaaa: String?,
-	var hvorMangeReisedagerHarDuPerUke: Int = 5,
-	var harDuEnReiseveiPaSeksKilometerEllerMer: String = "Ja",
-	var harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String? = null,
-	var hvorLangReiseveiHarDu: Int = 10,
-	var velgLand1: VelgLand1 = VelgLand1(
+class JsonDagligReiseTestBuilder {
+
+	private var startdatoDdMmAaaa: String? = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
+	private var sluttdatoDdMmAaaa: String? = Date.formatToLocalDate(LocalDateTime.now().plusMonths(1))
+	private var hvorMangeReisedagerHarDuPerUke: Int = 5
+	private var harDuEnReiseveiPaSeksKilometerEllerMer: String = "Ja"
+	private var harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String? = null
+	private var hvorLangReiseveiHarDu: Int = 10
+	private var velgLand1: VelgLand1 = VelgLand1(
 		label = "Norge", value = "NO"
-	),
-	var adresse1: String = "Kongensgate 10",
-	var postnr1: String = "3701",
-	var kanDuReiseKollektivtDagligReise: String = "Nei",
-	var hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise: Int? = null,
-	var beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt: String? = "Mange transportbytter, ekstra lang reisetid",
-	var hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt: String? = "Ingen",
-	var kanIkkeReiseKollektivtDagligReise: KanIkkeReiseKollektivtDagligReise? = KanIkkeReiseKollektivtDagligReise(
-		hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt = "hentingEllerLeveringAvBarn",
-		beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt = "Få og upraktiske tidspunkt for avganger",
-		hentingEllerLeveringAvBarn = HentingEllerLeveringAvBarn(
-			adressenHvorDuHenterEllerLevererBarn = "Damfaret 10",
-			postnr = "0682"
-		),
-		annet = null,
-		kanDuBenytteEgenBil = "ja",
-		kanBenytteEgenBil = KanBenytteEgenBil(
-			bompenger = 150,
-			piggdekkavgift = 1000,
-			ferje = null,
-			annet = null,
-			vilDuHaUtgifterTilParkeringPaAktivitetsstedet = "JA",
-			oppgiForventetBelopTilParkeringPaAktivitetsstedet = 200,
-			hvorOfteOnskerDuASendeInnKjoreliste = "UKE"
-		),
-		kanIkkeBenytteEgenBilDagligReise = null,
-		kanDuBenytteDrosje = null,
-		oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIPeriodenDuSokerOmStonadFor = null,
-		hvorforKanDuIkkeBenytteDrosje = null
 	)
-) {
+	private var adresse1: String = "Kongensgate 10"
+	private var postnr1: String = "3701"
+	private var kanDuReiseKollektivtDagligReise: String = "Nei"
+	private var hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise: Int? = null
+	private var beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt: String? =
+		"Mange transportbytter, ekstra lang reisetid"
+	private var hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt: String? = "Ingen"
+	private var kanBenytteEgenBil: KanBenytteEgenBil? = KanBenytteEgenBil(
+		bompenger = 150,
+		piggdekkavgift = 1000,
+		ferje = null,
+		annet = null,
+		vilDuHaUtgifterTilParkeringPaAktivitetsstedet = "JA",
+		oppgiForventetBelopTilParkeringPaAktivitetsstedet = 200,
+		hvorOfteOnskerDuASendeInnKjoreliste = "UKE"
+	)
+	private var kanIkkeBenytteEgenBil: KanIkkeBenytteEgenBil? = null
+	private var kanDuBenytteDrosje: String? = null
+	private var oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIPeriodenDuSokerOmStonadFor: Int? = null
+	private var hvorforKanDuIkkeBenytteDrosje: String? = null
+	private var kanIkkeReiseKollektivtDagligReise: KanIkkeReiseKollektivtDagligReise? =
+		buildKanIkkeReiseKollektivtDagligReise()
+
+	fun startdatoDdMmAaaa(startdatoDdMmAaaa: String) = apply { this.startdatoDdMmAaaa = startdatoDdMmAaaa }
+	fun sluttdatoDdMmAaaa(sluttdatoDdMmAaaa: String) = apply { this.sluttdatoDdMmAaaa = sluttdatoDdMmAaaa }
+	fun hvorMangeReisedagerHarDuPerUke(hvorMangeReisedagerHarDuPerUke: Int) =
+		apply { this.hvorMangeReisedagerHarDuPerUke = hvorMangeReisedagerHarDuPerUke }
+
+	fun harDuEnReiseveiPaSeksKilometerEllerMer(harDuEnReiseveiPaSeksKilometerEllerMer: String) =
+		apply { this.harDuEnReiseveiPaSeksKilometerEllerMer = harDuEnReiseveiPaSeksKilometerEllerMer }
+
+	fun harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde(
+		harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String?
+	) = apply {
+		this.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde =
+			harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde
+	}
+
+	fun hvorLangReiseveiHarDu(hvorLangReiseveiHarDu: Int) = apply { this.hvorLangReiseveiHarDu = hvorLangReiseveiHarDu }
+	fun velgLand1(velgLand1: VelgLand1) = apply { this.velgLand1 = velgLand1 }
+	fun adresse1(adresse1: String) = apply { this.adresse1 = adresse1 }
+	fun postnr1(postnr1: String) = apply { this.postnr1 = postnr1 }
+	fun kanDuReiseKollektivtDagligReise(kanDuReiseKollektivtDagligReise: String) =
+		apply { this.kanDuReiseKollektivtDagligReise = kanDuReiseKollektivtDagligReise }
+
+	fun hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise(hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise: Int?) =
+		apply {
+			this.hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise = hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise
+		}
+
+	fun kanIkkeReiseKollektivtDagligReise(kanIkkeReiseKollektivtDagligReise: KanIkkeReiseKollektivtDagligReise?) =
+		apply { this.kanIkkeReiseKollektivtDagligReise = kanIkkeReiseKollektivtDagligReise }
+
+	fun kanBenytteEgenBil(kanBenytteEgenBil: KanBenytteEgenBil?) = apply { this.kanBenytteEgenBil = kanBenytteEgenBil }
+	fun kanIkkeBenytteEgenBil(kanIkkeBenytteEgenBil: KanIkkeBenytteEgenBil?) =
+		apply { this.kanIkkeBenytteEgenBil = kanIkkeBenytteEgenBil }
+
+	fun kanDuBenytteDrosje(kanDuBenytteDrosje: String?) = apply { this.kanDuBenytteDrosje = kanDuBenytteDrosje }
+	fun oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIPeriodenDuSokerOmStonadFor(
+		oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIPeriodenDuSokerOmStonadFor: Int?
+	) = apply {
+		this.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIPeriodenDuSokerOmStonadFor =
+			oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIPeriodenDuSokerOmStonadFor
+	}
+
+	fun buildKanIkkeReiseKollektivtDagligReise(): KanIkkeReiseKollektivtDagligReise? {
+		if (!"Ja".equals(this.kanDuReiseKollektivtDagligReise, true)) {
+			return KanIkkeReiseKollektivtDagligReise(
+				hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt = "hentingEllerLeveringAvBarn",
+				beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt = "Få og upraktiske tidspunkt for avganger",
+				hentingEllerLeveringAvBarn = HentingEllerLeveringAvBarn(
+					adressenHvorDuHenterEllerLevererBarn = "Damfaret 10",
+					postnr = "0682"
+				),
+				annet = null,
+				kanDuBenytteEgenBil = if (kanBenytteEgenBil != null) "ja" else null,
+				kanBenytteEgenBil = kanBenytteEgenBil,
+				kanIkkeBenytteEgenBilDagligReise = kanIkkeBenytteEgenBil,
+			)
+		} else {
+			return null
+		}
+	}
+
+	fun hvorforKanDuIkkeBenytteDrosje(hvorforKanDuIkkeBenytteDrosje: String?) =
+		apply { this.hvorforKanDuIkkeBenytteDrosje = hvorforKanDuIkkeBenytteDrosje }
+
 	fun build() = JsonDagligReise(
 		startdatoDdMmAaaa = startdatoDdMmAaaa,
 		sluttdatoDdMmAaaa = sluttdatoDdMmAaaa,
@@ -55,7 +115,7 @@ class JsonDagligReiseTestBuilder(
 		kanDuReiseKollektivtDagligReise = kanDuReiseKollektivtDagligReise,
 		hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise = hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise,
 		hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt = hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt,
-		kanIkkeReiseKollektivtDagligReise = kanIkkeReiseKollektivtDagligReise
+		kanIkkeReiseKollektivtDagligReise = buildKanIkkeReiseKollektivtDagligReise()
 	)
 
 }

@@ -1,11 +1,14 @@
 package no.nav.soknad.innsending.utils.builders
 
 import no.nav.soknad.innsending.util.mapping.*
+import no.nav.soknad.innsending.utils.Date
+import java.time.LocalDateTime
 
-class JsonBarnePassTestBuilder(
-	var fradato: String,
-	var tildato: String,
-	var barnePass: List<BarnePass> = listOf(
+class JsonBarnePassTestBuilder {
+
+	protected var fradato: String = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
+	protected var tildato: String = Date.formatToLocalDate(LocalDateTime.now().plusMonths(1))
+	protected var barnePass: List<BarnePass> = listOf(
 		BarnePass(
 			fornavn = "Lite",
 			etternavn = "Barn",
@@ -20,7 +23,7 @@ class JsonBarnePassTestBuilder(
 		)
 	)
 
-) {
+	fun barnePass(barnePass: List<BarnePass>) = apply { this.barnePass = barnePass }
 
 	fun build() = JsonRettighetstyper(
 		tilsynsutgifter = JsonTilsynsutgifter(

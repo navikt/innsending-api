@@ -106,6 +106,10 @@ data class Application(
 	val hvorforFlytterDu: String?, // "Jeg flytter fordi jeg har fått ny jobb" | "Jeg flytter i forbindelse med at jeg skal gjennomføre en aktivitet"
 	val narFlytterDuDdMmAaaa: String?, // 01-01-2023
 	val oppgiForsteDagINyJobbDdMmAaaa: String?, // 02-01-2023 dersom flytting pga ny jobb
+	val detteErAdressenJegSkalBoPaEtterAtJegHarFlyttet: String?, // Dette er adressen jeg skal bo på etter at jeg har flyttet
+	//val velgLand1: VelgLand1?, // Samme som daglig reise
+	//val adresse1: String?, // Samme som daglig reise
+	//val postnr1: String, // Samme som daglig reise
 	val farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav: String?, // Ja | nei
 	val ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra: String?, // 	"Jeg flytter selv" | "Jeg vil bruke flyttebyrå" |"Jeg har innhentet tilbud fra minst to flyttebyråer, men velger å flytte selv"
 	val jegFlytterSelv: JegFlytterSelv?, // Hvis "Jeg flytter selv"
@@ -195,7 +199,7 @@ data class JegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv(
 	val belop: Int,
 	val navnPaFlyttebyra2: String,
 	val belop1: Int,
-	val hvorLangtSkalDuFlytte: Int,
+	val hvorLangtSkalDuFlytte1: Int,
 	val hengerleie: Int?,
 	val bom: Int?,
 	val parkering: Int?,
@@ -222,9 +226,6 @@ data class KanIkkeReiseKollektivtDagligReise(
 	val kanDuBenytteEgenBil: String?, // Ja|Nei
 	val kanBenytteEgenBil: KanBenytteEgenBil?,
 	val kanIkkeBenytteEgenBilDagligReise: KanIkkeBenytteEgenBil?,
-	val kanDuBenytteDrosje: String?, // Ja|Nei
-	val oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIPeriodenDuSokerOmStonadFor: Int?,
-	val hvorforKanDuIkkeBenytteDrosje: String?
 )
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

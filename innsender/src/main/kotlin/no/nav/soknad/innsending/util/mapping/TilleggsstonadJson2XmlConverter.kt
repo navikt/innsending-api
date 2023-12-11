@@ -6,6 +6,8 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 
@@ -124,7 +126,7 @@ fun convertLaremiddler(tilleggstonadJsonObj: JsonApplication): Laeremiddelutgift
 		skolenivaa = Skolenivaaer(value = "HGU"), // TODO mapping av laeremiddelutgifter.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore
 		prosentandelForUtdanning = laeremiddelutgifter.oppgiHvorMangeProsentDuStudererEllerGarPaKurs,
 		beloep = laeremiddelutgifter.utgifterTilLaeremidler,
-		erUtgifterDekket = ErUtgifterDekket("DEL")   // TODO mapping av laeremiddelutgifter.farDuDekketLaeremidlerEtterAndreOrdninger
+		//erUtgifterDekket = ErUtgifterDekket("Nei")   // TODO mapping av laeremiddelutgifter.farDuDekketLaeremidlerEtterAndreOrdninger
 	)
 }
 
@@ -140,13 +142,13 @@ fun convertFlytteutgifter(tilleggstonadJsonObj: JsonApplication): Flytteutgifter
 		),
 		erUtgifterTilFlyttingDekketAvAndreEnnNAV = convertToBoolean(flytteutgifter.farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav)
 			?: false,
-		flytterSelv = (flytteutgifter.jegFlytterSelv != null).toString(),
+		flytterSelv = (flytteutgifter.jegFlytterSelv != null || flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv != null).toString(),
 		flyttingPgaNyStilling = "Jeg flytter fordi jeg har fått ny jobb".equals(flytteutgifter.hvorforFlytterDu, true),
 		flyttedato = convertToDateStringWithTimeZone(flytteutgifter.narFlytterDuDdMmAaaa),
 		tilflyttingsadresse = SammensattAdresse( // TODO mangler adresse angivelse i skjema
-			land = "Norge",
-			adresse = flytteutgifter.hvorforFlytterDu,
-			postnr = ""
+			land = flytteutgifter.velgLand1.value,
+			adresse = flytteutgifter.adresse1,
+			postnr = flytteutgifter.postnr1
 		).sammensattAdresse,
 		avstand = convertFlytteAvstand(flytteutgifter), // TODO sjekk avstand i skjema; avstanden er uavhengig av hvordan flytting skjer
 		sumTilleggsutgifter = convertFlytteutgifter(flytteutgifter).toDouble()
@@ -160,7 +162,7 @@ fun convertFlytteAvstand(flytteutgifter: JsonFlytteutgifter): Int {
 	} else if (flytteutgifter.jegVilBrukeFlyttebyra != null) {
 		0
 	} else if (flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv != null) {
-		flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv.hvorLangtSkalDuFlytte
+		flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv.hvorLangtSkalDuFlytte1
 	} else {
 		return 0
 	}
@@ -213,8 +215,8 @@ private fun convertTilsynsutgifterBarn(tilleggstonadJsonObj: JsonApplication): T
 		),
 		barn = tilsynsutgifter.barnePass.filter { convertToBoolean(it.jegSokerOmStonadTilPassAvDetteBarnet) ?: false }.map {
 			Barn(
-				personidentifikator = it.fodselsdatoDdMmAaaa,
-				tilsynskategori = Tilsynskategorier("KOM", ""), // TODO mapping av it.sokerStonadForDetteBarnet.hvemPasserBarnet
+				personidentifikator = stripAndFormatToDDMMYY(it.fodselsdatoDdMmAaaa),
+				tilsynskategori = Tilsynskategorier("KOM"), // TODO mapping av it.sokerStonadForDetteBarnet.hvemPasserBarnet
 				navn = it.fornavn + " " + it.etternavn,
 				harFullfoertFjerdeSkoleaar = convertToBoolean(it.sokerStonadForDetteBarnet?.harBarnetFullfortFjerdeSkolear)
 					?: false,
@@ -225,6 +227,13 @@ private fun convertTilsynsutgifterBarn(tilleggstonadJsonObj: JsonApplication): T
 	)
 }
 
+private fun stripAndFormatToDDMMYY(date: String): String {
+	// Anta YYYY-MM-DD
+	val localDate = LocalDate.parse(date)
+	val dtf = DateTimeFormatter.ofPattern("ddMMyy")
+
+	return dtf.format(localDate)
+}
 
 private fun convertFamilieutgifter(tilleggstonadJsonObj: JsonApplication): TilsynsutgifterFamilie? {
 	if (!hasTilsynsutgifterFamilie(tilleggstonadJsonObj)) return null
@@ -447,11 +456,11 @@ private fun convertAlternativeTransportutgifter_DagligReise(details: JsonDagligR
 		kanOffentligTransportBrukes = convertToBoolean(details.kanDuReiseKollektivtDagligReise),
 		kanEgenBilBrukes = kanBenytteEgenBil,
 		kollektivTransportutgifter = convertKollektivTransportutgifter(details.hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise),
-		drosjeTransportutgifter = convertDrosjeTransportutgifter(details.kanIkkeReiseKollektivtDagligReise?.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIPeriodenDuSokerOmStonadFor),
+		drosjeTransportutgifter = convertDrosjeTransportutgifter(details.kanIkkeReiseKollektivtDagligReise?.kanIkkeBenytteEgenBilDagligReise?.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor),
 		egenBilTransportutgifter = convertEgenBilTransportutgifter(details.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil),
 		aarsakTilIkkeOffentligTransport = convertAarsakTilIkkeOffentligTransport(details.kanIkkeReiseKollektivtDagligReise?.beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt),
 		aarsakTilIkkeEgenBil = convertAarsakTilIkkeEgenBil(details.kanIkkeReiseKollektivtDagligReise?.kanIkkeBenytteEgenBilDagligReise?.hvaErArsakenTilAtDuIkkeKanBenytteEgenBil),
-		aarsakTilIkkeDrosje = convertAarsakTilIkkeDrosje(details.kanIkkeReiseKollektivtDagligReise?.hvorforKanDuIkkeBenytteDrosje)
+		aarsakTilIkkeDrosje = convertAarsakTilIkkeDrosje(details.kanIkkeReiseKollektivtDagligReise?.kanIkkeBenytteEgenBilDagligReise?.hvorforKanDuIkkeBenytteDrosje)
 	)
 }
 
