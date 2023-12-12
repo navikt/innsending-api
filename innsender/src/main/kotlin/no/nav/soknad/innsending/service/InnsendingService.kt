@@ -183,6 +183,7 @@ class InnsendingService(
 
 		// Create dokumentDto for xml variant of main document
 		val xmlDocumentVariant = vedleggService.leggTilHoveddokumentVariant(soknadDto, Mimetype.applicationSlashXml)
+		logger.info("${soknadDto.innsendingsId}: Lagt til xmlVedlegg på vedleggsId = ${xmlDocumentVariant.id}")
 		//
 		val xmlFile = json2Xml(
 			soknadDto = soknadDto,
@@ -198,7 +199,7 @@ class InnsendingService(
 		)
 		// Persist created xml file
 		filService.lagreFil(
-			soknadDto,
+			soknadService.hentSoknad(soknadDto.innsendingsId!!),
 			FilDto(
 				vedleggsid = xmlDocumentVariant.id!!,
 				filnavn = soknadDto.skjemanr + ".xml",
