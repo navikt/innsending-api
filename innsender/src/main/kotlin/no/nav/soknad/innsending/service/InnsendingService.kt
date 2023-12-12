@@ -211,7 +211,7 @@ class InnsendingService(
 		)
 		// Update state of json variant
 		vedleggService.endreVedlegg(
-			PatchVedleggDto(jsonVariant.tittel, OpplastingsStatusDto.sendesIkke),
+			PatchVedleggDto(tittel = null, OpplastingsStatusDto.sendesIkke),
 			jsonVariant.id!!,
 			soknadDto
 		)

@@ -327,10 +327,10 @@ class VedleggService(
 		if (vedleggDbData.soknadsid != soknadDto.id) {
 			throw IllegalActionException("Søknad ${soknadDto.innsendingsId} har ikke vedlegg med id $vedleggsId. Kan ikke endre vedlegg da søknaden ikke har et slikt vedlegg")
 		}
-		if (!(patchVedleggDto.tittel == null && patchVedleggDto.opplastingsStatus == OpplastingsStatusDto.sendesIkke)
-			&& (vedleggDbData.vedleggsnr != "N6" && patchVedleggDto.tittel != null)
-		) {
-			throw IllegalActionException("Ulovlig endring av tittel på vedlegg. Vedlegg med id $vedleggsId er av type ${vedleggDbData.vedleggsnr}.Tittel kan kun endres på vedlegg av type N6 ('Annet').")
+		if (!(patchVedleggDto.tittel == null && patchVedleggDto.opplastingsStatus == OpplastingsStatusDto.sendesIkke)) {
+			if (vedleggDbData.vedleggsnr != "N6" && patchVedleggDto.tittel != null) {
+				throw IllegalActionException("Ulovlig endring av tittel på vedlegg. Vedlegg med id $vedleggsId er av type ${vedleggDbData.vedleggsnr}.Tittel kan kun endres på vedlegg av type N6 ('Annet').")
+			}
 		}
 
 		/* Sletter ikke eventuelle filer som søker har lastet opp på vedlegget før vedkommende endrer status til sendSenere eller sendesAvAndre.
