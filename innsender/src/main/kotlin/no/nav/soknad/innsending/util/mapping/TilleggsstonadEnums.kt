@@ -1,6 +1,10 @@
 package no.nav.soknad.innsending.util.mapping
 
-
+/**
+ * TODO må ryddes opp i før ferdigstillelse av jobben med å flytte tilleggsstønader til fyllut-sendinn
+ * Innholdet i denne klassen er hentet fra sendsoknad. Den er tatt med som kontroll og i tilfelle det er nødvendig å benytte disse verdiene i forbindelse med mapping fra JSON til XML.
+ *
+ */
 class SammensattAdresse(val land: String?, val adresse: String?, val postnr: String?) {
 	var sammensattAdresse: String = ""
 

@@ -48,6 +48,7 @@ class InnsendingService(
 
 	private val tilleggsstonadSkjema =
 		listOf(
+			"NAV 00-01.01",
 			"NAV 11-12.10",
 			"NAV 11-12.11",
 			"NAV 11-12.12",
@@ -169,6 +170,7 @@ class InnsendingService(
 
 	private fun isTilleggsstonad(soknadDto: DokumentSoknadDto): Boolean {
 		return tilleggsstonadSkjema.contains(soknadDto.skjemanr)
+			&& ("TSO".equals(soknadDto.tema, true) || "TSR".equals(soknadDto.tema, true))
 	}
 
 	private fun addXmlDokumentvariantToSoknad(soknadDto: DokumentSoknadDto): DokumentSoknadDto {

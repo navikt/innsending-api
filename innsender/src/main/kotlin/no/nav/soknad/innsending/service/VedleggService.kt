@@ -110,7 +110,7 @@ class VedleggService(
 				tittel = tittel,
 				label = tittel,
 				beskrivelse = "",
-				mimetype = mapTilDbMimetype(mimetype),
+				mimetype = mimetype?.value,
 				uuid = UUID.randomUUID().toString(),
 				opprettetdato = LocalDateTime.now(),
 				endretdato = LocalDateTime.now(),

@@ -250,10 +250,8 @@ data class Laeremiddelutgifter(
 	val prosentandelForUtdanning: Int,
 	@JacksonXmlProperty(localName = "beloep")
 	val beloep: Int,
-	/*
-		@JacksonXmlProperty(localName = "erUtgifterDekket")
-		val erUtgifterDekket: ErUtgifterDekket
-	*/
+	@JacksonXmlProperty(localName = "erUtgifterDekket")
+	val erUtgifterDekket: ErUtgifterDekket
 )
 
 @JacksonXmlRootElement(localName = "Maalgruppeinformasjon")

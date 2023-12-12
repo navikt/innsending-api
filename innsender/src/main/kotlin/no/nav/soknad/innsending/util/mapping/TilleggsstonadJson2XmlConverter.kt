@@ -27,7 +27,7 @@ fun json2Xml(soknadDto: DokumentSoknadDto, tilleggstonadJsonObj: JsonApplication
 	// Map tilleggsstonadFraJson til tilleggsstonadXML
 	val tilleggsstonadXmlObj = convertToTilleggsstonadsskjema(soknadDto, tilleggstonadJsonObj)
 
-	// Konverter tilleggsstonadXML til xml-string
+	// Konverter tilleggsstonadXML til xml-bytearray
 	return convertToXml(tilleggsstonadXmlObj)
 }
 
@@ -126,7 +126,7 @@ fun convertLaremiddler(tilleggstonadJsonObj: JsonApplication): Laeremiddelutgift
 		skolenivaa = Skolenivaaer(value = "HGU"), // TODO mapping av laeremiddelutgifter.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore
 		prosentandelForUtdanning = laeremiddelutgifter.oppgiHvorMangeProsentDuStudererEllerGarPaKurs,
 		beloep = laeremiddelutgifter.utgifterTilLaeremidler,
-		//erUtgifterDekket = ErUtgifterDekket("Nei")   // TODO mapping av laeremiddelutgifter.farDuDekketLaeremidlerEtterAndreOrdninger
+		erUtgifterDekket = ErUtgifterDekket("Nei")   // TODO mapping av laeremiddelutgifter.farDuDekketLaeremidlerEtterAndreOrdninger
 	)
 }
 
