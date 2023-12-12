@@ -75,7 +75,7 @@ fun convertToMaalgruppeinformasjon(tilleggstonadJsonObj: JsonApplication): Maalg
 
 private fun convertToDateStringWithTimeZone(date: String): String {
 	val inputFormat = SimpleDateFormat("yyyy-MM-dd")
-	val inputDate = inputFormat.parse(date.substring(0, 9))
+	val inputDate = inputFormat.parse(date.substring(0, 10))
 	val outputFormat = SimpleDateFormat("yyyy-MM-ddXXX", Locale.getDefault())
 	return outputFormat.format(inputDate)
 }
@@ -346,8 +346,7 @@ private fun convertReiseVedOppstartOgAvsluttetAktivitet(tilleggstonadJsonObj: Js
 
 	val reiseStartSlutt = details.oppstartOgAvsluttetAktivitet
 	return ReiseVedOppstartOgAvsluttetAktivitet(
-		periode = convertPeriode("2022-07-11", "2023-08-13") // TODO Bruke HvilkenPeriodeVilDuSokeFor1 når den er ok
-		,
+		periode = convertPeriode(reiseStartSlutt.startdatoDdMmAaaa1, reiseStartSlutt.sluttdatoDdMmAaaa1),
 		aktivitetsstedAdresse = SammensattAdresse(
 			land = reiseStartSlutt.velgLand3.label,
 			adresse = reiseStartSlutt.adresse3,

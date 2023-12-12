@@ -34,7 +34,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 			JsonDagligReiseTestBuilder().startdatoDdMmAaaa("2023-12-01").sluttdatoDdMmAaaa("2024-06-20").build()
 		val jsonReisestottesoknad = JsonReiseTestBuilder().dagligReise(dagligReise = dagligReise).build()
 		val tilleggsstonad =
-			JsonApplicationTestBuilder(rettighetstyper = jsonReisestottesoknad).build()
+			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = jsonReisestottesoknad).build()
 
 		val xmlFil = json2Xml(
 			soknadDto, tilleggsstonad
@@ -44,9 +44,10 @@ class TilleggsstonadJson2XmlConverterKtTest {
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(
 			xmlString.contains(
-				"<periode>\n" +
-					"          <fom>2023-09-30+02:00</fom>\n" +
-					"          <tom>2024-01-03+01:00</tom>\n" +
+				"      <dagligReise>\n" +
+					"        <periode>\n" +
+					"          <fom>2023-10-01+02:00</fom>\n" +
+					"          <tom>2024-01-31+01:00</tom>\n" +
 					"        </periode>\n"
 			)
 		)
@@ -67,7 +68,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 			.build()
 		val jsonReisestottesoknad = JsonReiseTestBuilder().dagligReise(dagligReise).build()
 		val tilleggsstonad =
-			JsonApplicationTestBuilder(rettighetstyper = jsonReisestottesoknad).build()
+			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = jsonReisestottesoknad).build()
 
 		val xmlFil = json2Xml(
 			soknadDto, tilleggsstonad
@@ -102,7 +103,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 			.build()
 		val jsonReisestottesoknad = JsonReiseTestBuilder().dagligReise(dagligReise).build()
 		val tilleggsstonad =
-			JsonApplicationTestBuilder(rettighetstyper = jsonReisestottesoknad).build()
+			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = jsonReisestottesoknad).build()
 
 		val xmlFil = json2Xml(
 			soknadDto, tilleggsstonad
@@ -131,7 +132,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 			JsonReiseSamlingTestBuilder().build()
 		val jsonReisestottesoknad = JsonReiseTestBuilder().samling(reiseSamling).build()
 		val tilleggsstonad =
-			JsonApplicationTestBuilder(rettighetstyper = jsonReisestottesoknad).build()
+			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = jsonReisestottesoknad).build()
 
 		val xmlFil = json2Xml(
 			soknadDto, tilleggsstonad
@@ -141,8 +142,15 @@ class TilleggsstonadJson2XmlConverterKtTest {
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(xmlString.contains("<reiseObligatoriskSamling>"))
 		assertTrue(xmlString.contains("<avstand>120</avstand>"))
-		assertTrue(xmlString.contains("<fom>2023-12-31+01:00</fom>"))
-		assertTrue(xmlString.contains("<tom>2023-12-31+01:00</tom>"))
+		assertTrue(
+			xmlString.contains(
+				"      <reiseObligatoriskSamling>\n" +
+					"        <periode>\n" +
+					"          <fom>2024-01-02+01:00</fom>\n" +
+					"          <tom>2024-02-07+01:00</tom>\n" +
+					"        </periode>\n"
+			)
+		)
 		assertTrue(xmlString.contains("<beloepPerMaaned>1000</beloepPerMaaned>"))
 
 	}
@@ -154,7 +162,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 			JsonReiseOppstartSluttTestBuilder().build()
 		val jsonReisestottesoknad = JsonReiseTestBuilder().startAvslutning(oppstartOgAvslutningAvAktivitet).build()
 		val tilleggsstonad =
-			JsonApplicationTestBuilder(rettighetstyper = jsonReisestottesoknad).build()
+			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = jsonReisestottesoknad).build()
 
 		val xmlFil = json2Xml(
 			soknadDto, tilleggsstonad
@@ -177,7 +185,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 			JsonReiseOppstartSluttTestBuilder().hvilkeUtgifterHarDuIForbindelseMedReisen4(99999).build()
 		val jsonReisestottesoknad = JsonReiseTestBuilder().startAvslutning(oppstartOgAvslutningAvAktivitet).build()
 		val tilleggsstonad =
-			JsonApplicationTestBuilder(rettighetstyper = jsonReisestottesoknad).build()
+			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = jsonReisestottesoknad).build()
 
 		val xmlFil = json2Xml(
 			soknadDto, tilleggsstonad
@@ -199,7 +207,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 			JsonReiseArbeidssokerTestBuilder().build()
 		val jsonReisestottesoknad = JsonReiseTestBuilder().reiseArbeidssoker(reiseArbeidssoker).build()
 		val tilleggsstonad =
-			JsonApplicationTestBuilder(rettighetstyper = jsonReisestottesoknad).build()
+			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = jsonReisestottesoknad).build()
 
 		val xmlFil = json2Xml(
 			soknadDto, tilleggsstonad
@@ -217,12 +225,42 @@ class TilleggsstonadJson2XmlConverterKtTest {
 
 	}
 
+
+	@Test
+	fun `Convert to XML of combined travel excpenses`() {
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val startOgSluttPaAktivitet =
+			JsonReiseOppstartSluttTestBuilder().startdatoDdMmAaaa1("2023-11-30").sluttdatoDdMmAaaa1("2024-06-21").build()
+		val dagligReise =
+			JsonDagligReiseTestBuilder().startdatoDdMmAaaa("2023-12-01").sluttdatoDdMmAaaa("2024-06-20").build()
+		val jsonReisestottesoknad = JsonReiseTestBuilder().dagligReise(dagligReise = dagligReise)
+			.startAvslutning(startAvslutning = startOgSluttPaAktivitet).build()
+		val tilleggsstonad =
+			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = jsonReisestottesoknad).build()
+
+		val xmlFil = json2Xml(
+			soknadDto, tilleggsstonad
+		)
+
+		assertNotNull(xmlFil)
+		val xmlString = xmlFil.decodeToString()
+		assertTrue(xmlString.contains("<aktivitetsadresse>Kongensgate 10, 3701</aktivitetsadresse>"))
+		assertTrue(xmlString.contains("<dagligReise>"))
+		assertTrue(xmlString.contains("<avstand>10.0</avstand>"))
+		assertTrue(xmlString.contains("<innsendingsintervall>UKE</innsendingsintervall>"))
+		assertTrue(xmlString.contains("<sumAndreUtgifter>1150.0</sumAndreUtgifter>"))
+		assertTrue(xmlString.contains("<reiseVedOppstartOgAvsluttetAktivitet>"))
+		assertTrue(xmlString.contains("<avstand>100</avstand>"))
+		assertTrue(xmlString.contains("<antallReiser>4</antallReiser>"))
+		assertTrue(xmlString.contains("<beloepPerMaaned>3000</beloepPerMaaned>"))
+	}
+
 	@Test
 	fun `Default case test convert to XML child care expenses`() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
 		val barnePass = JsonBarnePassTestBuilder().build()
 		val tilleggsstonad =
-			JsonApplicationTestBuilder(rettighetstyper = barnePass).build()
+			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = barnePass).build()
 		val xmlFil = json2Xml(soknadDto, tilleggsstonad)
 
 		assertNotNull(xmlFil)
@@ -275,7 +313,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 			)
 			.build()
 		val tilleggsstonad =
-			JsonApplicationTestBuilder(rettighetstyper = barnePass).build()
+			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = barnePass).build()
 		val xmlFil = json2Xml(soknadDto, tilleggsstonad)
 
 		assertNotNull(xmlFil)
@@ -309,7 +347,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
 		val boStotte = JsonBostotteTestBuilder().build()
 		val tilleggsstonad =
-			JsonApplicationTestBuilder(rettighetstyper = boStotte).build()
+			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = boStotte).build()
 		val xmlFil = json2Xml(
 			soknadDto, tilleggsstonad
 		)
@@ -334,7 +372,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
 		val laerestotte = JsonLaeremiddelTestBuilder().build()
 		val tilleggsstonad =
-			JsonApplicationTestBuilder(rettighetstyper = laerestotte).build()
+			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = laerestotte).build()
 		val xmlFil = json2Xml(soknadDto, tilleggsstonad)
 
 		assertNotNull(xmlFil)
@@ -356,7 +394,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 
 		val flytteutgifter = JsonFlyttingTestBuilder().build()
 		val tilleggsstonad =
-			JsonApplicationTestBuilder(rettighetstyper = flytteutgifter).build()
+			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = flytteutgifter).build()
 		val xmlFil = json2Xml(soknadDto, tilleggsstonad)
 
 		assertNotNull(xmlFil)
@@ -386,7 +424,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 			.build()
 
 		val tilleggsstonad =
-			JsonApplicationTestBuilder(rettighetstyper = flytteutgifter).build()
+			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = flytteutgifter).build()
 		val xmlFil = json2Xml(soknadDto, tilleggsstonad)
 
 		assertNotNull(xmlFil)
@@ -422,7 +460,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 			.build()
 
 		val tilleggsstonad =
-			JsonApplicationTestBuilder(rettighetstyper = flytteutgifter).build()
+			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = flytteutgifter).build()
 		val xmlFil = json2Xml(soknadDto, tilleggsstonad)
 
 		assertNotNull(xmlFil)
