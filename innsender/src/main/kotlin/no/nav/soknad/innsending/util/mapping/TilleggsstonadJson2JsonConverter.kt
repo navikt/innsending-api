@@ -149,12 +149,15 @@ private fun convertToJsonDagligReise(tilleggsstonad: Application): JsonDagligRei
 		startdatoDdMmAaaa = tilleggsstonad.startdatoDdMmAaaa,
 		sluttdatoDdMmAaaa = tilleggsstonad.sluttdatoDdMmAaaa,
 		hvorMangeReisedagerHarDuPerUke = tilleggsstonad.hvorMangeReisedagerHarDuPerUke,
-		harDuEnReiseveiPaSeksKilometerEllerMer = tilleggsstonad.harDuEnReiseveiPaSeksKilometerEllerMer, // JA|NEI
 		harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde = tilleggsstonad.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde, // JA | NEI,
 		hvorLangReiseveiHarDu = validateNoneNull(
 			tilleggsstonad.hvorLangReiseveiHarDu?.toString(),
 			"Daglig reise reisevei"
 		).toInt(),
+		harDuEnReiseveiPaSeksKilometerEllerMer = validateNoneNull(
+			tilleggsstonad.harDuEnReiseveiPaSeksKilometerEllerMer,
+			"Daglig reise avstand mer enn 6 km"
+		), // JA|NEI
 		velgLand1 = tilleggsstonad.velgLand1 ?: VelgLand1(label = "NOR", "Norge"),
 		adresse1 = validateNoneNull(tilleggsstonad.adresse1, "Daglig reise adresse"),
 		postnr1 = validateNoneNull(tilleggsstonad.postnr1, "Daglig reise postnummer"),
