@@ -23,10 +23,6 @@ data class ApplicationInfo(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Application(
 	val hvorforReiserDu: HvorforReiserDu? = null,
-	val harDuFlytteutgifter: Boolean? = null, // TODO midlertidig lagt til
-	val harDuTilsynsutgifter: Boolean? = null, // TODO midlertidig lagt til
-	val harDuBoutgifter: Boolean? = null, // TODO midlertidig lagt til
-	val harDuLaeremiddelutgifter: Boolean? = null, // TODO midlertidig lagt til
 
 	// Dine opplysninger
 	val fornavnSoker: String,
@@ -49,7 +45,7 @@ data class Application(
 	val startdatoDdMmAaaa: String?,
 	val sluttdatoDdMmAaaa: String?,
 	val hvorMangeReisedagerHarDuPerUke: Int?,
-	val harDuEnReiseveiPaSeksKilometerEllerMer: String, // JA|NEI
+	val harDuEnReiseveiPaSeksKilometerEllerMer: String?, // JA|NEI
 	val harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String? = null, // JA | NEI,
 	val hvorLangReiseveiHarDu: Int?,
 	val velgLand1: VelgLand1?,
