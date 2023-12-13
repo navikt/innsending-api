@@ -28,6 +28,7 @@ fun filExtention(dokumentDto: VedleggDto): String =
 		Mimetype.imageSlashPng -> "png"
 		Mimetype.imageSlashJpeg -> "jpeg"
 		Mimetype.applicationSlashJson -> "json"
+		Mimetype.applicationSlashXml -> "xml"
 		Mimetype.applicationSlashPdf -> if (dokumentDto.erPdfa) "pdfa" else "pdf"
 		else -> ""
 	}
