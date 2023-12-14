@@ -103,12 +103,6 @@ spec:
           - name: {{ database-name }}
             envVarPrefix: DATABASE
 
-  envFrom:
-    - secret: shared-innsending-secret
-      metadata:
-        annotations:
-          reloader.stakater.com/match: "true"
-
   env:
   {{#each env}}
     - name: {{@key}}

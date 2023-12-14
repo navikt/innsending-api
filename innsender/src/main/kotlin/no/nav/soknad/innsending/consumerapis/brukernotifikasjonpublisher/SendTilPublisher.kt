@@ -4,7 +4,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import no.nav.soknad.arkivering.soknadsmottaker.api.CancelNotificationApi
 import no.nav.soknad.arkivering.soknadsmottaker.api.HealthApi
 import no.nav.soknad.arkivering.soknadsmottaker.api.NewNotificationApi
-import no.nav.soknad.arkivering.soknadsmottaker.infrastructure.ApiClient
 import no.nav.soknad.arkivering.soknadsmottaker.infrastructure.Serializer.jacksonObjectMapper
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
@@ -32,8 +31,6 @@ class SendTilPublisher(
 
 	init {
 		jacksonObjectMapper.registerModule(JavaTimeModule())
-		ApiClient.username = restConfig.sharedUsername
-		ApiClient.password = restConfig.sharedPassword
 		notificationPublisherApi = NewNotificationApi(restConfig.soknadsMottakerHost, soknadsmottakerClient)
 		cancelNotificationPublisherApi = CancelNotificationApi(restConfig.soknadsMottakerHost, soknadsmottakerClient)
 		healthApi = HealthApi(restConfig.soknadsMottakerHost)
