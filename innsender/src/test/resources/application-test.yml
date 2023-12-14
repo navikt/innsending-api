@@ -46,10 +46,6 @@ kafka:
 
 restconfig:
   version: 1.0
-  username: srvuser
-  password: password
-  sharedUsername: innsending
-  sharedPassword: password
   maxFileSize: 50
   maxFileSizeSum: 150
   sanityHost: localhost:5490
