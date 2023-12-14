@@ -57,7 +57,7 @@ class VedleggService(
 		)
 	}
 
-	fun opprettVedleggTilSoknad(
+	fun saveVedlegg(
 		soknadsId: Long, vedleggsnrListe: List<String>, spraak: String, tittel: String? = null, formioid: String? = null
 	): List<VedleggDbData> {
 		val vedleggDbDataListe = vedleggsnrListe.map { nr -> skjemaService.hentSkjema(nr, spraak) }.map { v ->
@@ -87,14 +87,14 @@ class VedleggService(
 		return vedleggDbDataListe
 	}
 
-	fun opprettVedleggTilSoknad(
+	fun saveVedlegg(
 		soknadsId: Long,
 		spraak: String,
 		tittel: String = "",
 		skjemanr: String? = "N6",
 		mimetype: Mimetype? = null,
-		erHoveddokument: Boolean? = false,
-		erVariant: Boolean? = false,
+		erHoveddokument: Boolean = false,
+		erVariant: Boolean = false,
 		formioid: String? = null
 	): VedleggDbData {
 		return repo.lagreVedlegg(
@@ -102,8 +102,8 @@ class VedleggService(
 				id = null,
 				soknadsid = soknadsId,
 				status = OpplastingsStatus.IKKE_VALGT,
-				erhoveddokument = false,
-				ervariant = false,
+				erhoveddokument = erHoveddokument,
+				ervariant = erVariant,
 				erpdfa = false,
 				erpakrevd = skjemanr != "N6",
 				vedleggsnr = skjemanr,
@@ -121,7 +121,7 @@ class VedleggService(
 		)
 	}
 
-	fun opprettInnsendteVedleggTilSoknad(
+	fun createAndSaveInnsendteVedleggTilEttersendingsSoknad(
 		soknadsId: Long, arkivertSoknad: AktivSakDto
 	): List<VedleggDbData> {
 		val vedleggDbDataListe =
@@ -152,7 +152,7 @@ class VedleggService(
 		return vedleggDbDataListe
 	}
 
-	fun opprettVedleggTilSoknad(soknadDbData: SoknadDbData, vedleggsListe: List<VedleggDto>): List<VedleggDbData> {
+	fun saveVedlegg(soknadDbData: SoknadDbData, vedleggsListe: List<VedleggDto>): List<VedleggDbData> {
 
 		return vedleggsListe.filter { !(it.erHoveddokument || it.vedleggsnr == KVITTERINGS_NR) }.map { v ->
 			repo.lagreVedlegg(
@@ -186,7 +186,7 @@ class VedleggService(
 		}
 	}
 
-	fun opprettVedleggTilSoknad(soknadDbData: SoknadDbData, arkivertSoknad: AktivSakDto): List<VedleggDbData> {
+	fun saveVedlegg(soknadDbData: SoknadDbData, arkivertSoknad: AktivSakDto): List<VedleggDbData> {
 
 		return arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != soknadDbData.skjemanr }.map { v ->
 			repo.lagreVedlegg(
@@ -223,7 +223,7 @@ class VedleggService(
 		)
 
 		// Lagre vedlegget i databasen
-		val vedleggDbDataList = opprettVedleggTilSoknad(
+		val vedleggDbDataList = saveVedlegg(
 			soknadDb.id!!,
 			listOf("N6"),
 			soknadDto.spraak!!,
@@ -237,10 +237,10 @@ class VedleggService(
 	}
 
 	@Transactional
-	fun leggTilHoveddokumentVariant(soknadDto: DokumentSoknadDto, mimetype: Mimetype): VedleggDto {
+	fun lagreNyHoveddokumentVariant(soknadDto: DokumentSoknadDto, mimetype: Mimetype): VedleggDto {
 
 		// Lagre vedlegget i databasen
-		val vedleggDbData = opprettVedleggTilSoknad(
+		val vedleggDbData = saveVedlegg(
 			soknadsId = soknadDto.id!!,
 			spraak = soknadDto.spraak!!,
 			tittel = soknadDto.tittel,
@@ -314,6 +314,31 @@ class VedleggService(
 	}
 
 	@Transactional
+	fun endreVedleggStatus(
+		soknadDto: DokumentSoknadDto,
+		vedleggsId: Long,
+		opplastingsStatus: OpplastingsStatusDto
+	) {
+		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException("Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet. Det kan ikke gjøres endring på en slettet eller innsendt søknad")
+
+		val vedleggDbData = repo.hentVedlegg(vedleggsId)
+		if (vedleggDbData.soknadsid != soknadDto.id) {
+			throw IllegalActionException("Søknad ${soknadDto.innsendingsId} har ikke vedlegg med id $vedleggsId. Kan ikke endre vedlegg da søknaden ikke har et slikt vedlegg")
+		}
+		val oppdatertVedlegg =
+			repo.oppdaterVedleggStatus(
+				soknadDto.innsendingsId!!,
+				vedleggsId,
+				mapTilDbOpplastingsStatus(opplastingsStatus),
+				LocalDateTime.now()
+			)
+		if (oppdatertVedlegg.toLong() != vedleggsId) {
+			logger.debug("${soknadDto.innsendingsId}: Oppdatering av status = $opplastingsStatus for vedlegg $vedleggsId feilet")
+		}
+	}
+
+
+	@Transactional
 	fun endreVedlegg(
 		patchVedleggDto: PatchVedleggDto,
 		vedleggsId: Long,
@@ -327,10 +352,8 @@ class VedleggService(
 		if (vedleggDbData.soknadsid != soknadDto.id) {
 			throw IllegalActionException("Søknad ${soknadDto.innsendingsId} har ikke vedlegg med id $vedleggsId. Kan ikke endre vedlegg da søknaden ikke har et slikt vedlegg")
 		}
-		if (!(patchVedleggDto.tittel == null && patchVedleggDto.opplastingsStatus == OpplastingsStatusDto.sendesIkke)) {
-			if (vedleggDbData.vedleggsnr != "N6" && patchVedleggDto.tittel != null) {
-				throw IllegalActionException("Ulovlig endring av tittel på vedlegg. Vedlegg med id $vedleggsId er av type ${vedleggDbData.vedleggsnr}.Tittel kan kun endres på vedlegg av type N6 ('Annet').")
-			}
+		if (vedleggDbData.vedleggsnr != "N6" && patchVedleggDto.tittel != null) {
+			throw IllegalActionException("Ulovlig endring av tittel på vedlegg. Vedlegg med id $vedleggsId er av type ${vedleggDbData.vedleggsnr}.Tittel kan kun endres på vedlegg av type N6 ('Annet').")
 		}
 
 		/* Sletter ikke eventuelle filer som søker har lastet opp på vedlegget før vedkommende endrer status til sendSenere eller sendesAvAndre.

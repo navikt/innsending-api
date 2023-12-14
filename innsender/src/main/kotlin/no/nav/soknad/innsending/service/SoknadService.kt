@@ -68,7 +68,7 @@ class SoknadService(
 			// Lagre soknadens hovedvedlegg
 			val skjemaDbData = vedleggService.opprettHovedddokumentVedlegg(savedSoknadDbData, kodeverkSkjema)
 
-			val vedleggDbDataListe = vedleggService.opprettVedleggTilSoknad(savedSoknadDbData.id!!, vedleggsnrListe, spraak)
+			val vedleggDbDataListe = vedleggService.saveVedlegg(savedSoknadDbData.id!!, vedleggsnrListe, spraak)
 
 			val savedVedleggDbDataListe = listOf(skjemaDbData) + vedleggDbDataListe
 
@@ -112,7 +112,7 @@ class SoknadService(
 
 			// For hvert vedleggsnr hent definisjonen fra Sanity og lagr vedlegg.
 			val vedleggDbDataListe =
-				vedleggService.opprettVedleggTilSoknad(ettersendingsSoknadDb.id!!, vedleggsnrListe, spraak, null)
+				vedleggService.saveVedlegg(ettersendingsSoknadDb.id!!, vedleggsnrListe, spraak, null)
 
 			val dokumentSoknadDto = lagDokumentSoknadDto(ettersendingsSoknadDb, vedleggDbDataListe)
 
@@ -176,10 +176,10 @@ class SoknadService(
 			val filtrertVedleggsnrListe = vedleggsnrListe.filter { !nyesteSoknadVedleggsNrListe.contains(it) }
 
 			val vedleggDbDataListe =
-				vedleggService.opprettVedleggTilSoknad(ettersendingsSoknadDb.id!!, filtrertVedleggsnrListe, sprak)
+				vedleggService.saveVedlegg(ettersendingsSoknadDb.id!!, filtrertVedleggsnrListe, sprak)
 
 			val innsendtDbDataListe =
-				vedleggService.opprettVedleggTilSoknad(ettersendingsSoknadDb, nyesteSoknad.vedleggsListe)
+				vedleggService.saveVedlegg(ettersendingsSoknadDb, nyesteSoknad.vedleggsListe)
 
 			val dokumentSoknadDto = lagDokumentSoknadDto(ettersendingsSoknadDb, vedleggDbDataListe + innsendtDbDataListe)
 
@@ -221,9 +221,9 @@ class SoknadService(
 				opprettEttersendingGittSkjemaNr.vedleggsListe?.filter { !nyesteSoknadVedleggsNrListe.contains(it) }.orEmpty()
 
 			val vedleggDbDataListe =
-				vedleggService.opprettVedleggTilSoknad(ettersendingsSoknadDb.id!!, filtrertVedleggsnrListe, sprak ?: "nb")
+				vedleggService.saveVedlegg(ettersendingsSoknadDb.id!!, filtrertVedleggsnrListe, sprak ?: "nb")
 
-			val innsendtDbDataListe = vedleggService.opprettVedleggTilSoknad(ettersendingsSoknadDb, arkivertSoknad)
+			val innsendtDbDataListe = vedleggService.saveVedlegg(ettersendingsSoknadDb, arkivertSoknad)
 
 			val dokumentSoknadDto = lagDokumentSoknadDto(ettersendingsSoknadDb, vedleggDbDataListe + innsendtDbDataListe)
 
@@ -279,14 +279,14 @@ class SoknadService(
 				arkivertSoknad.innsendtVedleggDtos.filter { !(it.vedleggsnr == arkivertSoknad.skjemanr || it.vedleggsnr == KVITTERINGS_NR) }
 					.map { it.vedleggsnr }
 			// Opprett vedlegg til ettersendingssøknaden gitt spesifiserte skjemanr som ikke er funnet i nyeste relaterte arkiverte søknad.
-			val vedleggDbDataListe = vedleggService.opprettVedleggTilSoknad(
+			val vedleggDbDataListe = vedleggService.saveVedlegg(
 				savedSoknadDbData.id!!,
 				vedleggsnrListe.filter { !innsendtVedleggsnrListe.contains(it) },
 				sprak
 			)
 			// Opprett vedlegg til ettersendingssøknad gitt vedlegg i nyeste arkiverte søknad for spesifisert skjemanummer
 			val innsendtVedleggDbDataListe =
-				vedleggService.opprettInnsendteVedleggTilSoknad(savedSoknadDbData.id, arkivertSoknad)
+				vedleggService.createAndSaveInnsendteVedleggTilEttersendingsSoknad(savedSoknadDbData.id, arkivertSoknad)
 			val savedVedleggDbDataListe = vedleggDbDataListe + innsendtVedleggDbDataListe
 
 			val dokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbDataListe)

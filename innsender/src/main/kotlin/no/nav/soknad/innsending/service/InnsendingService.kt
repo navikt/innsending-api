@@ -182,7 +182,7 @@ class InnsendingService(
 		}
 
 		// Create dokumentDto for xml variant of main document
-		val xmlDocumentVariant = vedleggService.leggTilHoveddokumentVariant(soknadDto, Mimetype.applicationSlashXml)
+		val xmlDocumentVariant = vedleggService.lagreNyHoveddokumentVariant(soknadDto, Mimetype.applicationSlashXml)
 		logger.info("${soknadDto.innsendingsId}: Lagt til xmlVedlegg på vedleggsId = ${xmlDocumentVariant.id}")
 		//
 		val xmlFile = json2Xml(
@@ -210,10 +210,10 @@ class InnsendingService(
 			)
 		)
 		// Update state of json variant
-		vedleggService.endreVedlegg(
-			PatchVedleggDto(tittel = null, OpplastingsStatusDto.sendesIkke),
+		vedleggService.endreVedleggStatus(
+			soknadDto,
 			jsonVariant.id!!,
-			soknadDto
+			OpplastingsStatusDto.sendesIkke
 		)
 
 		return soknadService.hentSoknad(soknadDto.innsendingsId!!)

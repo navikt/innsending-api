@@ -43,15 +43,21 @@ data class AktivitetsPeriode(
 	val sluttdatoDdMmAaaa: String,
 )
 
+data class DestinasjonsAdresse(
+	val velgLand1: VelgLand,
+	val adresse1: String,
+	val postnr1: String?
+)
+
 data class JsonFlytteutgifter(
-	val aktivitetsperiode: IkkeRegistrertAktivitetsperiode,
+	val aktivitetsperiode: JsonPeriode,
 	val hvorforFlytterDu: String, // "Jeg flytter fordi jeg har fått ny jobb" | "Jeg flytter i forbindelse med at jeg skal gjennomføre en aktivitet"
 	val narFlytterDuDdMmAaaa: String, // 01-01-2023
 	val oppgiForsteDagINyJobbDdMmAaaa: String?, // 02-01-2023 dersom flytting pga ny jobb
 	val erBostedEtterFlytting: Boolean,
-	val velgLand1: VelgLand1,
+	val velgLand1: VelgLand,
 	val adresse1: String,
-	val postnr1: String,
+	val postnr1: String?,
 	val farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav: String, // Ja | nei
 	val ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra: String, // 	"Jeg flytter selv" | "Jeg vil bruke flyttebyrå" |"Jeg har innhentet tilbud fra minst to flyttebyråer, men velger å flytte selv"
 	val jegFlytterSelv: JegFlytterSelv?, // Hvis "Jeg flytter selv"
@@ -60,9 +66,9 @@ data class JsonFlytteutgifter(
 )
 
 data class JsonBostottesoknad(
-	val aktivitetsperiode: IkkeRegistrertAktivitetsperiode,
+	val aktivitetsperiode: JsonPeriode,
 	val hvilkeBoutgifterSokerDuOmAFaDekket: String, // "Jeg søker om å få dekket faste boutgifter" | "Jeg søker om å få dekket boutgifter i forbindelse med samling"
-	val bostotteIForbindelseMedSamling: List<PeriodeForSamling>?,
+	val bostotteIForbindelseMedSamling: List<JsonPeriode>?,
 
 	val mottarDuBostotteFraKommunen: String = "Nei", // "Ja" | "Nei"
 	val hvilkeAdresserHarDuBoutgifterPa: List<String>?, // "Jeg har boutgifter på aktivitetsadressen min" | "Jeg har fortsatt boutgifter på hjemstedet mitt" | "Jeg har hatt boutgifter på hjemstedet mitt, som har opphørt i forbindelse med aktiviteten"
@@ -73,7 +79,7 @@ data class JsonBostottesoknad(
 )
 
 data class JsonLaeremiddelutgifter(
-	val aktivitetsperiode: IkkeRegistrertAktivitetsperiode,
+	val aktivitetsperiode: JsonPeriode,
 	val hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore: String, // "Jeg skal ta videregående utdanning, eller forkurs på universitet" | "Jeg skal ta utdanning på fagskole, høyskole eller universitet" | "Jeg skal ta kurs eller annen form for utdanning"
 	val hvilketKursEllerAnnenFormForUtdanningSkalDuTa: String?,
 	val oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Int, // 0-100
@@ -107,19 +113,19 @@ data class JsonReisestottesoknad(
 )
 
 data class JsonDagligReise(
-	val startdatoDdMmAaaa: String?,
-	val sluttdatoDdMmAaaa: String?,
+	val startdatoDdMmAaaa: String,
+	val sluttdatoDdMmAaaa: String,
 	val hvorMangeReisedagerHarDuPerUke: Int?,
 	val harDuEnReiseveiPaSeksKilometerEllerMer: String, // JA|NEI
 	val harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String? = null, // JA | NEI,
 	val hvorLangReiseveiHarDu: Int,
-	val velgLand1: VelgLand1,
+	val velgLand1: VelgLand,
 	val adresse1: String,
-	val postnr1: String,
+	val postnr1: String?, // Null hvis land != Norge
 	val kanDuReiseKollektivtDagligReise: String, // ja | nei
 	val hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise: Int?, // Hvis kanDuReiseKollektivtDagligReise == ja
 	val hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt: String?,
-	val kanIkkeReiseKollektivtDagligReise: KanIkkeReiseKollektivtDagligReise?
+	val kanIkkeReiseKollektivtDagligReise: KanIkkeReiseKollektivt?
 )
 
 data class JsonDagligReiseArbeidssoker(
@@ -129,23 +135,23 @@ data class JsonDagligReiseArbeidssoker(
 	val mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene: String, // ja|nei
 	val harMottattDagpengerSiste6Maneder: HarMottattDagpengerSiste6Maneder?, // hvis mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene == ja
 	val hvorLangReiseveiHarDu3: Int,
-	val velgLandArbeidssoker: VelgLandArbeidssoker,
+	val velgLandArbeidssoker: VelgLand,
 	val adresse: String,
-	val postnr: String,
+	val postnr: String?, // Null hvis land != Norge
 	val kanDuReiseKollektivtArbeidssoker: String, // ja|nei
 	val hvilkeUtgifterHarDuIForbindelseMedReisen3: Int?, // hvis kanDuReiseKollektivtArbeidssoker==ja?
-	val kanIkkeReiseKollektivtArbeidssoker: KanIkkeReiseKollektivtArbeidssoker?,
+	val kanIkkeReiseKollektivtArbeidssoker: KanIkkeReiseKollektivt?,
 )
 
 data class JsonReiseSamling(
-	val startOgSluttdatoForSamlingene: List<StartOgSluttdatoForSamlingene>, // hvis skalDuDeltaEllerHarDuDeltattPaFlereSamlinger == Ja
+	val startOgSluttdatoForSamlingene: List<JsonPeriode>, // hvis skalDuDeltaEllerHarDuDeltattPaFlereSamlinger == Ja
 	val hvorLangReiseveiHarDu1: Int?,
-	val velgLandReiseTilSamling: VelgLandReiseTilSamling,
+	val velgLandReiseTilSamling: VelgLand,
 	val adresse2: String,
-	val postnr2: String,
+	val postnr2: String?, // Null hvis land != Norge
 	val kanDuReiseKollektivtReiseTilSamling: String, // Ja|nei
 	val kanReiseKollektivt: KanReiseKollektivt?, // hvis kanDuReiseKollektivtReiseTilSamling == ja
-	val kanIkkeReiseKollektivtReiseTilSamling: KanIkkeReiseKollektivtReiseTilSamling?, // hvis kanDuReiseKollektivtReiseTilSamling == nei
+	val kanIkkeReiseKollektivtReiseTilSamling: KanIkkeReiseKollektivt?, // hvis kanDuReiseKollektivtReiseTilSamling == nei
 	val bekreftelseForAlleSamlingeneDuSkalDeltaPa: String?,
 )
 
@@ -154,9 +160,9 @@ data class JsonOppstartOgAvsluttetAktivitet(
 	val sluttdatoDdMmAaaa1: String,
 	val hvorLangReiseveiHarDu2: Int?,
 	val hvorMangeGangerSkalDuReiseEnVei: Int,
-	val velgLand3: VelgLand3,
+	val velgLand3: VelgLand,
 	val adresse3: String,
-	val postnr3: String,
+	val postnr3: String?,  // Null hvis land != Norge
 	val harDuBarnSomSkalFlytteMedDeg: String, // ja|nei
 	val barnSomSkalFlytteMedDeg: List<BarnSomSkalFlytteMedDeg>?,  //hvis harDuBarnSomSkalFlytteMedDeg == ja
 	val harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear: String?, // ja|nei
@@ -164,7 +170,7 @@ data class JsonOppstartOgAvsluttetAktivitet(
 	val bekreftelseForBehovForFlereHjemreiser1: String?,
 	val kanDuReiseKollektivtOppstartAvslutningHjemreise: String, // ja/nei
 	val hvilkeUtgifterHarDuIForbindelseMedReisen4: Int?, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==ja
-	val kanIkkeReiseKollektivtOppstartAvslutningHjemreise: KanIkkeReiseKollektivtOppstartAvslutningHjemreise?, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==nei
+	val kanIkkeReiseKollektivtOppstartAvslutningHjemreise: KanIkkeReiseKollektivt?, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==nei
 )
 
 data class JsonMaalgruppeinformasjon(

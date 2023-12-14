@@ -14,7 +14,10 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SoknadFile
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
+import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.lagDokumentSoknad
+import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.lagVedlegg
 import no.nav.soknad.innsending.utils.SoknadAssertions
 import no.nav.soknad.pdfutilities.AntallSider
 import no.nav.soknad.pdfutilities.PdfGenerator
@@ -304,5 +307,47 @@ class InnsendingServiceTest : ApplicationTest() {
 
 	}
 
+
+	@Test
+	fun sendInnTilleggssoknad() {
+		val innsendingService = lagInnsendingService(soknadService)
+		val hoveddokDto = lagVedlegg(
+			vedleggsnr = "NAV 11-12.12",
+			tittel = "Tilleggssoknad",
+			erHoveddokument = true,
+			erVariant = false,
+			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			vedleggsNavn = "/litenPdf.pdf"
+		)
+		val hoveddokVariantDto = lagVedlegg(
+			vedleggsnr = "NAV 11-12.12",
+			tittel = "Tilleggssoknad",
+			erHoveddokument = true,
+			erVariant = true,
+			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			vedleggsNavn = "/__files/tilleggsstonad-dagligreise-m-bil.json"
+		)
+		val inputDokumentSoknadDto = lagDokumentSoknad(
+			skjemanr = "NAV 11-12.12",
+			tittel = "Tilleggssoknad",
+			brukerId = testpersonid,
+			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
+			spraak = "no_NB",
+			tema = "TSO"
+		)
+		val skjemaDto =
+			SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService = soknadService, inputDokumentSoknadDto)
+
+		val opprettetSoknad = soknadService.hentSoknad(skjemaDto.innsendingsId!!)
+		val kvitteringsDto =
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				soknadsmottakerAPI,
+				opprettetSoknad,
+				innsendingService
+			)
+		Assertions.assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
+		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+	}
 
 }

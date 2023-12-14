@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.utils.builders
 
-import no.nav.soknad.innsending.util.mapping.IkkeRegistrertAktivitetsperiode
 import no.nav.soknad.innsending.util.mapping.JsonLaeremiddelutgifter
+import no.nav.soknad.innsending.util.mapping.JsonPeriode
 import no.nav.soknad.innsending.util.mapping.JsonRettighetstyper
 import no.nav.soknad.innsending.utils.Date
 import java.time.LocalDateTime
@@ -21,7 +21,7 @@ class JsonLaeremiddelTestBuilder {
 	protected var hvorStortBelopSokerDuOmAFaDekketAvNav: Int = 4000
 
 	fun buildLaermiddelutgifter() = JsonLaeremiddelutgifter(
-		aktivitetsperiode = IkkeRegistrertAktivitetsperiode(startdatoDdMmAaaa = fradato, sluttdatoDdMmAaaa = tildato),
+		aktivitetsperiode = JsonPeriode(startdatoDdMmAaaa = fradato, sluttdatoDdMmAaaa = tildato),
 		hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore = hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore,
 		hvilketKursEllerAnnenFormForUtdanningSkalDuTa = hvilketKursEllerAnnenFormForUtdanningSkalDuTa,
 		oppgiHvorMangeProsentDuStudererEllerGarPaKurs = oppgiHvorMangeProsentDuStudererEllerGarPaKurs,

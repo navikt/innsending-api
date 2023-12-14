@@ -2,25 +2,60 @@ package no.nav.soknad.innsending.utils.builders
 
 import no.nav.soknad.innsending.util.mapping.HarMottattDagpengerSiste6Maneder
 import no.nav.soknad.innsending.util.mapping.JsonDagligReiseArbeidssoker
-import no.nav.soknad.innsending.util.mapping.KanIkkeReiseKollektivtArbeidssoker
-import no.nav.soknad.innsending.util.mapping.VelgLandArbeidssoker
+import no.nav.soknad.innsending.util.mapping.KanIkkeReiseKollektivt
+import no.nav.soknad.innsending.util.mapping.VelgLand
 import no.nav.soknad.innsending.utils.Date
 import java.time.LocalDateTime
 
 class JsonReiseArbeidssokerTestBuilder {
 
-	protected var reisedatoDdMmAaaa: String = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
-	protected var hvorforReiserDuArbeidssoker: String = "oppfolgingFraNav"
-	protected var dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis: String = "Nei"
-	protected var mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene: String = "Nei"
-	protected var harMottattDagpengerSiste6Maneder: HarMottattDagpengerSiste6Maneder? = null
-	protected var hvorLangReiseveiHarDu3: Int = 120
-	protected var velgLandArbeidssoker: VelgLandArbeidssoker = VelgLandArbeidssoker(label = "Norge", value = "NO")
-	protected var adresse: String = "Kongensgate 10"
-	protected var postnr: String = "3701"
-	protected var kanDuReiseKollektivtArbeidssoker: String = "Ja"
-	protected var hvilkeUtgifterHarDuIForbindelseMedReisen3: Int? = 5000
-	protected var kanIkkeReiseKollektivtArbeidssoker: KanIkkeReiseKollektivtArbeidssoker? = null
+	private var reisedatoDdMmAaaa: String = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
+	private var hvorforReiserDuArbeidssoker: String = "oppfolgingFraNav"
+	private var dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis: String = "Nei"
+	private var mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene: String = "Nei"
+	private var harMottattDagpengerSiste6Maneder: HarMottattDagpengerSiste6Maneder? = null
+	private var hvorLangReiseveiHarDu3: Int = 120
+	private var velgLandArbeidssoker: VelgLand = VelgLand(label = "Norge", value = "NO")
+	private var adresse: String = "Kongensgate 10"
+	private var postnr: String = "3701"
+	private var kanDuReiseKollektivtArbeidssoker: String = "Ja"
+	private var hvilkeUtgifterHarDuIForbindelseMedReisen3: Int? = 5000
+	private var kanIkkeReiseKollektivtArbeidssoker: KanIkkeReiseKollektivt? = null
+
+	fun reisedatoDdMmAaaa(reisedatoDdMmAaaa: String) = apply { this.reisedatoDdMmAaaa = reisedatoDdMmAaaa }
+	fun hvorforReiserDuArbeidssoker(hvorforReiserDuArbeidssoker: String) =
+		apply { this.hvorforReiserDuArbeidssoker = hvorforReiserDuArbeidssoker }
+
+	fun dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis(dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis: String) =
+		apply {
+			this.dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis = dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis
+		}
+
+	fun mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene(
+		mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene: String
+	) = apply {
+		this.mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene =
+			mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene
+	}
+
+	fun harMottattDagpengerSiste6Maneder(harMottattDagpengerSiste6Maneder: HarMottattDagpengerSiste6Maneder) =
+		apply { this.harMottattDagpengerSiste6Maneder = harMottattDagpengerSiste6Maneder }
+
+	fun hvorLangReiseveiHarDu3(hvorLangReiseveiHarDu3: Int) =
+		apply { this.hvorLangReiseveiHarDu3 = hvorLangReiseveiHarDu3 }
+
+	fun velgLandArbeidssoker(velgLandArbeidssoker: VelgLand) = apply { this.velgLandArbeidssoker = velgLandArbeidssoker }
+	fun adresse(adresse: String) = apply { this.adresse = adresse }
+	fun postnr(postnr: String) = apply { this.postnr = postnr }
+	fun kanDuReiseKollektivtArbeidssoker(kanDuReiseKollektivtArbeidssoker: String) =
+		apply { this.kanDuReiseKollektivtArbeidssoker = kanDuReiseKollektivtArbeidssoker }
+
+	fun hvilkeUtgifterHarDuIForbindelseMedReisen3(hvilkeUtgifterHarDuIForbindelseMedReisen3: Int) =
+		apply { this.hvilkeUtgifterHarDuIForbindelseMedReisen3 = hvilkeUtgifterHarDuIForbindelseMedReisen3 }
+
+	fun kanIkkeReiseKollektivtArbeidssoker(kanIkkeReiseKollektivtArbeidssoker: KanIkkeReiseKollektivt) =
+		apply { this.kanIkkeReiseKollektivtArbeidssoker = kanIkkeReiseKollektivtArbeidssoker }
+
 
 	fun build() = JsonDagligReiseArbeidssoker(
 		reisedatoDdMmAaaa = reisedatoDdMmAaaa,

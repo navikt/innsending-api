@@ -1,9 +1,8 @@
 package no.nav.soknad.innsending.utils.builders
 
-import no.nav.soknad.innsending.util.mapping.IkkeRegistrertAktivitetsperiode
 import no.nav.soknad.innsending.util.mapping.JsonBostottesoknad
+import no.nav.soknad.innsending.util.mapping.JsonPeriode
 import no.nav.soknad.innsending.util.mapping.JsonRettighetstyper
-import no.nav.soknad.innsending.util.mapping.PeriodeForSamling
 import no.nav.soknad.innsending.utils.Date
 import java.time.LocalDateTime
 
@@ -12,7 +11,7 @@ class JsonBostotteTestBuilder {
 	protected var fradato: String = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
 	protected var tildato: String = Date.formatToLocalDate(LocalDateTime.now().plusMonths(3))
 	protected var boutgiftType: String = "Jeg søker om å få dekket faste boutgifter"
-	protected var bostotteIForbindelseMedSamling: List<PeriodeForSamling>? = null
+	protected var bostotteIForbindelseMedSamling: List<JsonPeriode>? = null
 	protected var mottarDuBostotteFraKommunen: String = "Nei"
 	protected var hvilkeAdresserHarDuBoutgifterPa: List<String> = listOf(
 		"Jeg har boutgifter på aktivitetsadressen min",
@@ -23,7 +22,7 @@ class JsonBostotteTestBuilder {
 	protected var erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet: String = "Nei"
 
 	fun buildBostotteSoknad() = JsonBostottesoknad(
-		aktivitetsperiode = IkkeRegistrertAktivitetsperiode(startdatoDdMmAaaa = fradato, sluttdatoDdMmAaaa = tildato),
+		aktivitetsperiode = JsonPeriode(startdatoDdMmAaaa = fradato, sluttdatoDdMmAaaa = tildato),
 		hvilkeBoutgifterSokerDuOmAFaDekket = boutgiftType,
 		bostotteIForbindelseMedSamling = bostotteIForbindelseMedSamling,
 		mottarDuBostotteFraKommunen = mottarDuBostotteFraKommunen,

@@ -70,7 +70,8 @@ class Hjelpemetoder {
 			opplastingsStatus: OpplastingsStatusDto = OpplastingsStatusDto.ikkeValgt,
 			erHoveddokument: Boolean = false,
 			vedleggsNavn: String? = null,
-			label: String? = null
+			label: String? = null,
+			erVariant: Boolean? = false
 		): VedleggDto =
 			lagVedleggDto(
 				vedleggsnr, tittel,
@@ -79,7 +80,7 @@ class Hjelpemetoder {
 				if (opplastingsStatus == OpplastingsStatusDto.lastetOpp && vedleggsNavn != null) getBytesFromFile(
 					vedleggsNavn
 				) else null,
-				id, erHoveddokument, erVariant = false, erPakrevd = false, label = label
+				id, erHoveddokument, erVariant = erVariant, erPakrevd = false, label = label
 			)
 
 

@@ -146,7 +146,7 @@ fun convertFlytteutgifter(tilleggstonadJsonObj: JsonApplication): Flytteutgifter
 		flyttingPgaNyStilling = "Jeg flytter fordi jeg har fått ny jobb".equals(flytteutgifter.hvorforFlytterDu, true),
 		flyttedato = convertToDateStringWithTimeZone(flytteutgifter.narFlytterDuDdMmAaaa),
 		tilflyttingsadresse = SammensattAdresse( // TODO mangler adresse angivelse i skjema
-			land = flytteutgifter.velgLand1.value,
+			land = flytteutgifter.velgLand1.label,
 			adresse = flytteutgifter.adresse1,
 			postnr = flytteutgifter.postnr1
 		).sammensattAdresse,
@@ -290,7 +290,7 @@ private fun convertDagligReise(tilleggstonadJsonObj: JsonApplication): DagligRei
 
 	val jsonDagligReise = details.dagligReise
 	return DagligReise(
-		periode = convertPeriode("2023-10-01+02:00", "2024-01-31+01:00"), // TODO erstatt med hvilkenPeriodeVilDuSokeFor
+		periode = convertPeriode(jsonDagligReise.startdatoDdMmAaaa, jsonDagligReise.sluttdatoDdMmAaaa),
 		aktivitetsadresse = SammensattAdresse(
 			land = jsonDagligReise.velgLand1.label,
 			adresse = jsonDagligReise.adresse1,
@@ -435,7 +435,7 @@ private fun convertToBoolean(string: String?): Boolean? {
 	return "JA".equals(string, true)
 }
 
-private fun createPeriodeList(fromJsonPeriodes: List<StartOgSluttdatoForSamlingene>): List<Periode> {
+private fun createPeriodeList(fromJsonPeriodes: List<JsonPeriode>): List<Periode> {
 	return fromJsonPeriodes.map { convertPeriode(fom = it.startdatoDdMmAaaa, tom = it.sluttdatoDdMmAaaa) }.toList()
 }
 
@@ -455,11 +455,11 @@ private fun convertAlternativeTransportutgifter_DagligReise(details: JsonDagligR
 		kanOffentligTransportBrukes = convertToBoolean(details.kanDuReiseKollektivtDagligReise),
 		kanEgenBilBrukes = kanBenytteEgenBil,
 		kollektivTransportutgifter = convertKollektivTransportutgifter(details.hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise),
-		drosjeTransportutgifter = convertDrosjeTransportutgifter(details.kanIkkeReiseKollektivtDagligReise?.kanIkkeBenytteEgenBilDagligReise?.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor),
+		drosjeTransportutgifter = convertDrosjeTransportutgifter(details.kanIkkeReiseKollektivtDagligReise?.kanIkkeBenytteEgenBil?.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor),
 		egenBilTransportutgifter = convertEgenBilTransportutgifter(details.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil),
-		aarsakTilIkkeOffentligTransport = convertAarsakTilIkkeOffentligTransport(details.kanIkkeReiseKollektivtDagligReise?.beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt),
-		aarsakTilIkkeEgenBil = convertAarsakTilIkkeEgenBil(details.kanIkkeReiseKollektivtDagligReise?.kanIkkeBenytteEgenBilDagligReise?.hvaErArsakenTilAtDuIkkeKanBenytteEgenBil),
-		aarsakTilIkkeDrosje = convertAarsakTilIkkeDrosje(details.kanIkkeReiseKollektivtDagligReise?.kanIkkeBenytteEgenBilDagligReise?.hvorforKanDuIkkeBenytteDrosje)
+		aarsakTilIkkeOffentligTransport = convertAarsakTilIkkeOffentligTransport(details.kanIkkeReiseKollektivtDagligReise?.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt),
+		aarsakTilIkkeEgenBil = convertAarsakTilIkkeEgenBil(details.kanIkkeReiseKollektivtDagligReise?.kanIkkeBenytteEgenBil?.hvaErArsakenTilAtDuIkkeKanBenytteEgenBil),
+		aarsakTilIkkeDrosje = convertAarsakTilIkkeDrosje(details.kanIkkeReiseKollektivtDagligReise?.kanIkkeBenytteEgenBil?.hvorforKanDuIkkeBenytteDrosje)
 	)
 }
 

@@ -6,9 +6,9 @@ import java.time.LocalDateTime
 
 class JsonBarnePassTestBuilder {
 
-	protected var fradato: String = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
-	protected var tildato: String = Date.formatToLocalDate(LocalDateTime.now().plusMonths(1))
-	protected var barnePass: List<BarnePass> = listOf(
+	private var fradato: String = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
+	private var tildato: String = Date.formatToLocalDate(LocalDateTime.now().plusMonths(1))
+	private var barnePass: List<BarnePass> = listOf(
 		BarnePass(
 			fornavn = "Lite",
 			etternavn = "Barn",
@@ -22,14 +22,19 @@ class JsonBarnePassTestBuilder {
 			)
 		)
 	)
+	private var fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa: String? = "1995-03-04"
 
 	fun barnePass(barnePass: List<BarnePass>) = apply { this.barnePass = barnePass }
+	fun fradato(fradato: String) = apply { this.fradato = fradato }
+	fun tildato(tildato: String) = apply { this.tildato = tildato }
+	fun fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa(fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa: String) =
+		apply { this.fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa = fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa }
 
 	fun build() = JsonRettighetstyper(
 		tilsynsutgifter = JsonTilsynsutgifter(
 			aktivitetsPeriode = AktivitetsPeriode(startdatoDdMmAaaa = fradato, sluttdatoDdMmAaaa = tildato),
 			barnePass = barnePass,
-			fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa = "1995-03-04"
+			fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa = fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa
 		)
 	)
 

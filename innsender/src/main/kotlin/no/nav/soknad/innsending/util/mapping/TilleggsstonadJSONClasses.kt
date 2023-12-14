@@ -48,23 +48,23 @@ data class Application(
 	val harDuEnReiseveiPaSeksKilometerEllerMer: String?, // JA|NEI
 	val harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String? = null, // JA | NEI,
 	val hvorLangReiseveiHarDu: Int?,
-	val velgLand1: VelgLand1?,
+	val velgLand1: VelgLand?,
 	val adresse1: String?,
 	val postnr1: String?,
 	val kanDuReiseKollektivtDagligReise: String?, // ja | nei
 	val hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise: Int?, // Hvis kanDuReiseKollektivtDagligReise == ja
 	val hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt: String?,
-	val kanIkkeReiseKollektivtDagligReise: KanIkkeReiseKollektivtDagligReise?,
+	val kanIkkeReiseKollektivtDagligReise: KanIkkeReiseKollektivt?,
 
 	// Reise til samling
-	val startOgSluttdatoForSamlingene: List<StartOgSluttdatoForSamlingene>?, // hvis skalDuDeltaEllerHarDuDeltattPaFlereSamlinger == Ja
+	val startOgSluttdatoForSamlingene: List<JsonPeriode>?, // hvis skalDuDeltaEllerHarDuDeltattPaFlereSamlinger == Ja
 	val hvorLangReiseveiHarDu1: Int?,
-	val velgLandReiseTilSamling: VelgLandReiseTilSamling?,
+	val velgLandReiseTilSamling: VelgLand?,
 	val adresse2: String?,
 	val postnr2: String?,
 	val kanDuReiseKollektivtReiseTilSamling: String?, // Ja|nei
 	val kanReiseKollektivt: KanReiseKollektivt?, // hvis kanDuReiseKollektivtReiseTilSamling == ja
-	val kanIkkeReiseKollektivtReiseTilSamling: KanIkkeReiseKollektivtReiseTilSamling?, // hvis kanDuReiseKollektivtReiseTilSamling == nei
+	val kanIkkeReiseKollektivtReiseTilSamling: KanIkkeReiseKollektivt?, // hvis kanDuReiseKollektivtReiseTilSamling == nei
 	val bekreftelseForAlleSamlingeneDuSkalDeltaPa: String?,
 
 	// Reise på grunn av oppstart, avslutning eller hjemreise
@@ -72,7 +72,7 @@ data class Application(
 	val sluttdatoDdMmAaaa1: String?,
 	val hvorLangReiseveiHarDu2: Int?,
 	val hvorMangeGangerSkalDuReiseEnVei: Int?,
-	val velgLand3: VelgLand3?,
+	val velgLand3: VelgLand?,
 	val adresse3: String?,
 	val postnr3: String?,
 	val harDuBarnSomSkalFlytteMedDeg: String?, // ja|nei
@@ -82,7 +82,7 @@ data class Application(
 	val bekreftelseForBehovForFlereHjemreiser1: String?,
 	val kanDuReiseKollektivtOppstartAvslutningHjemreise: String?, // ja/nei
 	val hvilkeUtgifterHarDuIForbindelseMedReisen4: Int?, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==ja
-	val kanIkkeReiseKollektivtOppstartAvslutningHjemreise: KanIkkeReiseKollektivtOppstartAvslutningHjemreise?, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==nei
+	val kanIkkeReiseKollektivtOppstartAvslutningHjemreise: KanIkkeReiseKollektivt?, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==nei
 
 	// Reise når du er arbeidssøker
 	val reisedatoDdMmAaaa: String?,
@@ -91,19 +91,19 @@ data class Application(
 	val mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene: String?, // ja|nei
 	val harMottattDagpengerSiste6Maneder: HarMottattDagpengerSiste6Maneder?, // hvis mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene == ja
 	val hvorLangReiseveiHarDu3: Int?,
-	val velgLandArbeidssoker: VelgLandArbeidssoker?,
+	val velgLandArbeidssoker: VelgLand?,
 	val adresse: String?,
 	val postnr: String?,
 	val kanDuReiseKollektivtArbeidssoker: String?, // ja|nei
 	val hvilkeUtgifterHarDuIForbindelseMedReisen3: Int?, // hvis kanDuReiseKollektivtArbeidssoker==ja?
-	val kanIkkeReiseKollektivtArbeidssoker: KanIkkeReiseKollektivtArbeidssoker?,
+	val kanIkkeReiseKollektivtArbeidssoker: KanIkkeReiseKollektivt?,
 
 	// Flytting
 	val hvorforFlytterDu: String?, // "Jeg flytter fordi jeg har fått ny jobb" | "Jeg flytter i forbindelse med at jeg skal gjennomføre en aktivitet"
 	val narFlytterDuDdMmAaaa: String?, // 01-01-2023
 	val oppgiForsteDagINyJobbDdMmAaaa: String?, // 02-01-2023 dersom flytting pga ny jobb
 	val detteErAdressenJegSkalBoPaEtterAtJegHarFlyttet: String?, // Dette er adressen jeg skal bo på etter at jeg har flyttet
-	//val velgLand1: VelgLand1?, // Samme som daglig reise
+	//val velgLand1: VelgLand?, // Samme som daglig reise
 	//val adresse1: String?, // Samme som daglig reise
 	//val postnr1: String, // Samme som daglig reise
 	val farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav: String?, // Ja | nei
@@ -113,7 +113,7 @@ data class Application(
 	val jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv: JegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv?,
 
 	// Periode for Laeremidler og boutgifter og pass av barn
-	val ikkeRegistrertAktivitetsperiode: IkkeRegistrertAktivitetsperiode?,
+	val ikkeRegistrertAktivitetsperiode: JsonPeriode?,
 
 	// Laeremidler
 	val hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore: String?, // "Jeg skal ta videregående utdanning, eller forkurs på universitet" | "Jeg skal ta utdanning på fagskole, høyskole eller universitet" | "Jeg skal ta kurs eller annen form for utdanning"
@@ -127,7 +127,7 @@ data class Application(
 
 	// Boutgifter
 	val hvilkeBoutgifterSokerDuOmAFaDekket: String?, // "Jeg søker om å få dekket faste boutgifter" | "Jeg søker om å få dekket boutgifter i forbindelse med samling"
-	val bostotteIForbindelseMedSamling: List<PeriodeForSamling>?,
+	val bostotteIForbindelseMedSamling: List<JsonPeriode>?,
 
 	val mottarDuBostotteFraKommunen: String?, // "Ja" | "Nei"
 	val hvilkeAdresserHarDuBoutgifterPa: List<String>?, // "Jeg har boutgifter på aktivitetsadressen min" | "Jeg har fortsatt boutgifter på hjemstedet mitt" | "Jeg har hatt boutgifter på hjemstedet mitt, som har opphørt i forbindelse med aktiviteten"
@@ -162,14 +162,23 @@ data class SokerStonadForDetteBarnet(
 	val hvaErArsakenTilAtBarnetDittTrengerPass: String? // Hvis harBarnetFullfortFjerdeSkolear == ja. "Langvarig eller uregelmessig fravær på grunn av arbeid eller utdanning" | "Barnet mitt har et særlig behov for pass" | "Ingen av alternativene passer"
 )
 
-data class PeriodeForSamling(
-	val startdatoDdMmAaaa: String,
-	val sluttdatoDdMmAaaa: String
-)
-
-data class IkkeRegistrertAktivitetsperiode(
+data class JsonPeriode(
 	val startdatoDdMmAaaa: String,
 	val sluttdatoDdMmAaaa: String,
+)
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class Annet(
+	val hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt: String?
+)
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class BarnSomSkalFlytteMedDeg(
+	val fornavn: String,
+	val etternavn: String,
+	val fodselsdatoDdMmAaaa: String,
 )
 
 data class JegFlytterSelv(
@@ -214,66 +223,20 @@ data class HvorforReiserDu(
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class KanIkkeReiseKollektivtDagligReise(
-	val hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt: String?, // helsemessigeArsaker | darligTransporttilbud | hentingEllerLeveringAvBarn | annet
-	val beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt: String?,
-	val hentingEllerLeveringAvBarn: HentingEllerLeveringAvBarn?,
-	val annet: Map<String, Any>?,
-	val kanDuBenytteEgenBil: String?, // Ja|Nei
-	val kanBenytteEgenBil: KanBenytteEgenBil?,
-	val kanIkkeBenytteEgenBilDagligReise: KanIkkeBenytteEgenBil?,
-)
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class StartOgSluttdatoForSamlingene(
-	val startdatoDdMmAaaa: String,
-	val sluttdatoDdMmAaaa: String,
-)
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
 data class KanReiseKollektivt(
 	val hvilkeUtgifterHarDuIForbindelseMedReisen1: Int?
 )
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class KanIkkeReiseKollektivtReiseTilSamling(
-	//TODO hva burde sjekkbokser mappes til?
-	val hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt: String?, // helsemessigeArsaker |darligTransporttilbud|hentingEllerLeveringAvBarn|annet
-	val beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt: String? = null,
-	val hentingEllerLeveringAvBarn: HentingEllerLeveringAvBarn? = null,
-	val annet: Annet? = null, // TODO hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt
-	val kanDuBenytteEgenBil: String? = "nei", // ja|nei
-	val kanBenytteEgenBil: KanBenytteEgenBil? = null, // hvis kanDuBenytteEgenBil == ja
-	val kanIkkeBenytteEgenBil: KanIkkeBenytteEgenBil? = null, // hvis kanDuBenytteEgenBil == nei
-)
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class BarnSomSkalFlytteMedDeg(
-	val fornavn: String,
-	val etternavn: String,
-	val fodselsdatoDdMmAaaa: String,
-)
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Annet(
-	val hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt: String?
-)
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class KanIkkeReiseKollektivtOppstartAvslutningHjemreise(
-	val hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt: String?,
+data class KanIkkeReiseKollektivt(
+	val hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt: String?, // helsemessigeArsaker | darligTransporttilbud | hentingEllerLeveringAvBarn | annet
 	val beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt: String?,
 	val hentingEllerLeveringAvBarn: HentingEllerLeveringAvBarn?,
-	val annet: Map<String, Any>?,  // TODO hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt
-	val kanDuBenytteEgenBil: String, // JA | NEI
-	val kanBenytteEgenBil: KanBenytteEgenBil, // hvis kanDuBenytteEgenBil == ja
-	val kanIkkeBenytteEgenBil: KanIkkeBenytteEgenBil?, // hvis kanDuBenytteEgenBil == nei
+	val annet: Map<String, Any>?, // TODO skaldet være String?
+	val kanDuBenytteEgenBil: String?, // Ja|Nei
+	val kanBenytteEgenBil: KanBenytteEgenBil?,
+	val kanIkkeBenytteEgenBil: KanIkkeBenytteEgenBil?,
 )
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -297,18 +260,6 @@ data class HarMottattDagpengerSiste6Maneder(
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class KanIkkeReiseKollektivtArbeidssoker(
-	val hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt: String?,
-	val beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt: String?,
-	val hentingEllerLeveringAvBarn: HentingEllerLeveringAvBarn?,
-	val annet: Map<String, Any>, // TODO hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt
-	val kanDuBenytteEgenBil: String, // ja|nei
-	val kanBenytteEgenBil: KanBenytteEgenBil?,
-	val kanIkkeBenytteEgenBil: KanIkkeBenytteEgenBil?
-)
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
 data class HentingEllerLeveringAvBarn(
 	val adressenHvorDuHenterEllerLevererBarn: String = "",
 	val postnr: String = "",
@@ -327,41 +278,7 @@ data class KanIkkeBenytteEgenBil(
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class HvilkenPeriodeVilDuSokeFor(
-	val fom: String,
-	val tom: String
-)
-
-data class HvilkenPeriodeVilDuSokeFor1(
-	val fom: String,
-	val tom: String
-)
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class VelgLand1(
-	val label: String,
-	val value: String,
-)
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class VelgLandReiseTilSamling(
-	val label: String,
-	val value: String,
-)
-
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class VelgLand3(
-	val label: String,
-	val value: String,
-)
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class VelgLandArbeidssoker(
+data class VelgLand(
 	val label: String,
 	val value: String,
 )

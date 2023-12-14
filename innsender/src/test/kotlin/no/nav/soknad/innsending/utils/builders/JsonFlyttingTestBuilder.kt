@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 class JsonFlyttingTestBuilder {
 
 	fun buildFlytteutgifter() = JsonFlytteutgifter(
-		aktivitetsperiode = IkkeRegistrertAktivitetsperiode(startdatoDdMmAaaa = fradato, sluttdatoDdMmAaaa = tildato),
+		aktivitetsperiode = JsonPeriode(startdatoDdMmAaaa = fradato, sluttdatoDdMmAaaa = tildato),
 		hvorforFlytterDu = hvorforFlytterDu,
 		narFlytterDuDdMmAaaa = narFlytterDuDdMmAaaa,
 		oppgiForsteDagINyJobbDdMmAaaa = oppgiForsteDagINyJobbDdMmAaaa,
@@ -27,7 +27,7 @@ class JsonFlyttingTestBuilder {
 	private var narFlytterDuDdMmAaaa: String = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
 	private var oppgiForsteDagINyJobbDdMmAaaa: String? = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
 	private var erBostedEtterFlytting: Boolean = true
-	private var velgLand1: VelgLand1 = VelgLand1(label = "NO", value = "Norge")
+	private var velgLand1: VelgLand = VelgLand(label = "Norge", value = "NO")
 	private var adresse1: String = "Kongensgate 10"
 	private var postnr1: String = "3701"
 	private var hvorforFlytterDu: String = "Jeg flytter fordi jeg har fått ny jobb"
@@ -50,7 +50,7 @@ class JsonFlyttingTestBuilder {
 	fun erBostedEtterFlytting(erBostedEtterFlytting: Boolean?) =
 		apply { this.erBostedEtterFlytting = erBostedEtterFlytting ?: false }
 
-	fun velgLand1(velgLand1: VelgLand1) = apply { this.velgLand1 = velgLand1 }
+	fun velgLand1(velgLand1: VelgLand) = apply { this.velgLand1 = velgLand1 }
 	fun adresse1(adresse1: String) = apply { this.adresse1 = adresse1 }
 	fun postnr1(postnr1: String) = apply { this.postnr1 = postnr1 }
 	fun hvorforFlytterDu(hvorforFlytterDu: String) = apply { this.hvorforFlytterDu = hvorforFlytterDu }

@@ -6,8 +6,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText
-import javax.xml.bind.annotation.XmlAttribute
-import javax.xml.bind.annotation.XmlSchemaType
 import javax.xml.datatype.XMLGregorianCalendar
 
 @JacksonXmlRootElement(localName = "Aktivitetsinformasjon")
@@ -214,18 +212,6 @@ data class Flytteutgifter(
 	val anbud: List<Anbud>? = null
 )
 
-
-@JacksonXmlRootElement(localName = "Kodeverdi")
-@JsonPropertyOrder("value")
-data class Kodeverdi(
-	@JacksonXmlProperty(localName = "value")
-	val value: String,
-	@XmlAttribute(name = "kodeRef")
-	@XmlSchemaType(name = "anyURI")
-	@JsonProperty("@koderef")
-	val kodeRef: String
-)
-
 @JacksonXmlRootElement(localName = "Laeremiddelutgifter")
 @JsonPropertyOrder(
 	"periode",
@@ -259,15 +245,11 @@ data class Laeremiddelutgifter(
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class Maalgruppeinformasjon(
 	@JacksonXmlProperty(localName = "periode")
-	@JsonProperty("periode")
 	val periode: Periode,
 
-	//@JacksonXmlText
 	@JacksonXmlProperty(localName = "kilde")
-	@JsonProperty("kilde")
 	val kilde: String = "BRUKERREGISTRERT",
 
-	//@JacksonXmlText
 	@JsonProperty("maalgruppetype")
 	val maalgruppetype: Maalgruppetyper
 )
@@ -291,16 +273,9 @@ data class Maalgruppetyper(
 @JsonPropertyOrder("fom", "tom")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class Periode(
-	/*
-		@XmlElement(required = true)
-		@XmlSchemaType(name = "date")
-	*/
-	@JsonProperty("fom")
+	@JacksonXmlProperty(localName = "fom")
 	val fom: String,
-	/*
-		@XmlSchemaType(name = "date")
-	*/
-	@JsonProperty("tom")
+	@JacksonXmlProperty(localName = "tom")
 	val tom: String
 )
 

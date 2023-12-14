@@ -67,9 +67,9 @@ private fun convertToJsonFlytteutgifter(tilleggsstonad: Application): JsonFlytte
 		narFlytterDuDdMmAaaa = tilleggsstonad.narFlytterDuDdMmAaaa,
 		oppgiForsteDagINyJobbDdMmAaaa = tilleggsstonad.oppgiForsteDagINyJobbDdMmAaaa,
 		erBostedEtterFlytting = tilleggsstonad.detteErAdressenJegSkalBoPaEtterAtJegHarFlyttet != null,
-		velgLand1 = tilleggsstonad.velgLand1 ?: VelgLand1(label = "NOR", "Norge"),
+		velgLand1 = tilleggsstonad.velgLand1 ?: VelgLand(label = "Norge", "NO"),
 		adresse1 = validateNoneNull(tilleggsstonad.adresse1, "Daglig reise adresse"),
-		postnr1 = validateNoneNull(tilleggsstonad.postnr1, "Daglig reise postnummer"),
+		postnr1 = tilleggsstonad.postnr1,
 		farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav = tilleggsstonad.farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav,
 		ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra = tilleggsstonad.ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra,
 		jegFlytterSelv = tilleggsstonad.jegFlytterSelv,
@@ -146,8 +146,8 @@ private fun convertToReisestottesoknad(tilleggsstonad: Application): JsonReisest
 
 private fun convertToJsonDagligReise(tilleggsstonad: Application): JsonDagligReise {
 	return JsonDagligReise(
-		startdatoDdMmAaaa = tilleggsstonad.startdatoDdMmAaaa,
-		sluttdatoDdMmAaaa = tilleggsstonad.sluttdatoDdMmAaaa,
+		startdatoDdMmAaaa = validateNoneNull(tilleggsstonad.startdatoDdMmAaaa, "DagligReise startdato"),
+		sluttdatoDdMmAaaa = validateNoneNull(tilleggsstonad.sluttdatoDdMmAaaa, "DagligReise sluttdato"),
 		hvorMangeReisedagerHarDuPerUke = tilleggsstonad.hvorMangeReisedagerHarDuPerUke,
 		harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde = tilleggsstonad.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde, // JA | NEI,
 		hvorLangReiseveiHarDu = validateNoneNull(
@@ -158,9 +158,9 @@ private fun convertToJsonDagligReise(tilleggsstonad: Application): JsonDagligRei
 			tilleggsstonad.harDuEnReiseveiPaSeksKilometerEllerMer,
 			"Daglig reise avstand mer enn 6 km"
 		), // JA|NEI
-		velgLand1 = tilleggsstonad.velgLand1 ?: VelgLand1(label = "NOR", "Norge"),
+		velgLand1 = tilleggsstonad.velgLand1 ?: VelgLand(label = "Norge", "NO"),
 		adresse1 = validateNoneNull(tilleggsstonad.adresse1, "Daglig reise adresse"),
-		postnr1 = validateNoneNull(tilleggsstonad.postnr1, "Daglig reise postnummer"),
+		postnr1 = tilleggsstonad.postnr1,
 		kanDuReiseKollektivtDagligReise = validateNoneNull(
 			tilleggsstonad.kanDuReiseKollektivtDagligReise,
 			"Daglig reise kan du reise kollektivt"
@@ -183,7 +183,7 @@ private fun convertToJsonReiseSamling(tilleggsstonad: Application): JsonReiseSam
 			"Reise til samling - mangler land"
 		),
 		adresse2 = validateNoneNull(tilleggsstonad.adresse2, "Reise til samling - mangler adresse"),
-		postnr2 = validateNoneNull(tilleggsstonad.postnr2, "Reise til samling -mangler postnummer"),
+		postnr2 = tilleggsstonad.postnr2,
 		kanDuReiseKollektivtReiseTilSamling = validateNoneNull(
 			tilleggsstonad.kanDuReiseKollektivtReiseTilSamling,
 			"Reise til samling - mangler svar kan du reise kollektivt"
@@ -217,9 +217,9 @@ private fun convertToJsonReise_Arbeidssoker(tilleggsstonad: Application): JsonDa
 			tilleggsstonad.hvorLangReiseveiHarDu3,
 			"Daglig reise reisevei"
 		).toInt(),
-		velgLandArbeidssoker = tilleggsstonad.velgLandArbeidssoker ?: VelgLandArbeidssoker(label = "NOR", "Norge"),
+		velgLandArbeidssoker = tilleggsstonad.velgLandArbeidssoker ?: VelgLand(label = "Norge", "NO"),
 		adresse = validateNoneNull(tilleggsstonad.adresse, "Reise arbeidssøker -  adresse mangler"),
-		postnr = validateNoneNull(tilleggsstonad.postnr, "Reise arbeidssøker -  postnummer mangler"),
+		postnr = tilleggsstonad.postnr,
 		kanDuReiseKollektivtArbeidssoker = validateNoneNull(
 			tilleggsstonad.kanDuReiseKollektivtArbeidssoker,
 			"Reise arbeidssøker - kan du reise kollektivt mangler"
@@ -248,9 +248,9 @@ private fun convertToJsonOppstartOgAvsluttetAktivitet(tilleggsstonad: Applicatio
 			tilleggsstonad.hvorMangeGangerSkalDuReiseEnVei,
 			"Oppstart og avslutning av aktivitet - antall reiser svar mangler"
 		).toInt(),
-		velgLand3 = tilleggsstonad.velgLand3 ?: VelgLand3(label = "NOR", "Norge"),
+		velgLand3 = tilleggsstonad.velgLand3 ?: VelgLand(label = "Norge", "NO"),
 		adresse3 = validateNoneNull(tilleggsstonad.adresse3, "Oppstart og avslutning av aktivitet -  adresse mangler"),
-		postnr3 = validateNoneNull(tilleggsstonad.postnr3, "Oppstart og avslutning av aktivitet -  postnummer mangler"),
+		postnr3 = tilleggsstonad.postnr3,
 		harDuBarnSomSkalFlytteMedDeg = validateNoneNull(
 			tilleggsstonad.harDuBarnSomSkalFlytteMedDeg,
 			"Oppstart og avslutning av aktivitet - har du barn som skal flytte med deg svar mangler"
