@@ -1,6 +1,7 @@
-package no.nav.soknad.innsending.rest
+package no.nav.soknad.innsending.rest.fyllut
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
+import no.nav.soknad.innsending.api.FrontendApi
 import no.nav.soknad.innsending.api.FyllUtApi
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.ErrorCode
@@ -14,6 +15,8 @@ import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH
 import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_LEVEL_4
 import no.nav.soknad.innsending.util.Constants.TOKENX
+import no.nav.soknad.innsending.util.logging.CombinedLogger
+import no.nav.soknad.innsending.util.mapping.SkjemaDokumentSoknadTransformer
 import no.nav.soknad.innsending.util.mapping.mapTilSkjemaDto
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import org.slf4j.LoggerFactory
@@ -29,23 +32,18 @@ class FyllutRestApi(
 	val soknadService: SoknadService,
 	val tilgangskontroll: Tilgangskontroll,
 	val prefillService: PrefillService
-) : FyllUtApi {
+) : FyllUtApi, FrontendApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val secureLogger = LoggerFactory.getLogger("secureLogger")
-
-	// Logg både vanlig og sikker logg (med brukerId)
-	fun loggBegge(melding: String, brukerId: String) {
-		logger.info(melding)
-		secureLogger.info("[$brukerId] $melding")
-	}
+	private val combinedLogger = CombinedLogger(logger, secureLogger)
 
 	// FIXME: Fjern dette endepunktet etter at det er byttet ut
 	@Timed(InnsenderOperation.OPPRETT)
 	override fun fyllUt(skjemaDto: SkjemaDto): ResponseEntity<Unit> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-		loggBegge(
+		combinedLogger.log(
 			"Skal opprette søknad fra FyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}",
 			brukerId
 		)
@@ -58,7 +56,7 @@ class FyllutRestApi(
 			)
 		)
 
-		loggBegge(
+		combinedLogger.log(
 			"${opprettetSoknad.innsendingsId}: Soknad fra FyllUt opprettet. Antall vedlegg fra FyllUt=${skjemaDto.vedleggsListe?.size}",
 			brukerId
 		)
@@ -74,7 +72,7 @@ class FyllutRestApi(
 	): ResponseEntity<Any> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-		loggBegge(
+		combinedLogger.log(
 			"Skal opprette søknad fra FyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}",
 			brukerId
 		)
@@ -86,7 +84,7 @@ class FyllutRestApi(
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(skjemaDto, brukerId)
 		val opprettetSoknad = soknadService.opprettNySoknad(dokumentSoknadDto)
 
-		loggBegge(
+		combinedLogger.log(
 			"${opprettetSoknad.innsendingsId}: Soknad fra FyllUt opprettet",
 			brukerId
 		)
@@ -117,7 +115,7 @@ class FyllutRestApi(
 	override fun fyllUtOppdaterSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<SkjemaDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-		loggBegge("$innsendingsId: Skal oppdatere søknad fra FyllUt", brukerId)
+		combinedLogger.log("$innsendingsId: Skal oppdatere søknad fra FyllUt", brukerId)
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
 			skjemaDto,
@@ -126,7 +124,7 @@ class FyllutRestApi(
 
 		val updatedSoknad = soknadService.updateSoknad(innsendingsId, dokumentSoknadDto)
 
-		loggBegge("$innsendingsId: Soknad fra FyllUt oppdatert", brukerId)
+		combinedLogger.log("$innsendingsId: Soknad fra FyllUt oppdatert", brukerId)
 
 		return ResponseEntity.status(HttpStatus.OK).body(updatedSoknad)
 	}
@@ -135,7 +133,7 @@ class FyllutRestApi(
 	override fun fyllUtUtfyltSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<Unit> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-		loggBegge("$innsendingsId: Skal fullføre søknad fra FyllUt", brukerId)
+		combinedLogger.log("$innsendingsId: Skal fullføre søknad fra FyllUt", brukerId)
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
 			skjemaDto,
@@ -144,7 +142,7 @@ class FyllutRestApi(
 
 		soknadService.updateUtfyltSoknad(innsendingsId, dokumentSoknadDto)
 
-		loggBegge("$innsendingsId: Utfylt søknad fra Fyllut", brukerId)
+		combinedLogger.log("$innsendingsId: Utfylt søknad fra Fyllut", brukerId)
 
 		return ResponseEntity
 			.status(HttpStatus.FOUND).location(URI.create(restConfig.sendInnUrl + "/" + innsendingsId))
@@ -154,12 +152,12 @@ class FyllutRestApi(
 	@Timed(InnsenderOperation.HENT)
 	override fun fyllUtHentSoknad(innsendingsId: String): ResponseEntity<SkjemaDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
-		loggBegge("$innsendingsId: Kall fra FyllUt for å hente søknad", brukerId)
+		combinedLogger.log("$innsendingsId: Kall fra FyllUt for å hente søknad", brukerId)
 
 		val dokumentSoknadDto = soknadService.hentSoknadMedHoveddokumentVariant(innsendingsId)
 		validerSoknadsTilgang(dokumentSoknadDto)
 
-		loggBegge("$innsendingsId: Hentet søknad fra FyllUt", brukerId)
+		combinedLogger.log("$innsendingsId: Hentet søknad fra FyllUt", brukerId)
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -169,13 +167,13 @@ class FyllutRestApi(
 	@Timed(InnsenderOperation.SLETT)
 	override fun fyllUtSlettSoknad(innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
-		loggBegge("$innsendingsId: Kall fra FyllUt for å slette søknad", brukerId)
+		combinedLogger.log("$innsendingsId: Kall fra FyllUt for å slette søknad", brukerId)
 
 		val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
 		validerSoknadsTilgang(dokumentSoknadDto)
 
 		soknadService.slettSoknadAvBruker(dokumentSoknadDto)
-		loggBegge("$innsendingsId: Slettet søknad", brukerId)
+		combinedLogger.log("$innsendingsId: Slettet søknad", brukerId)
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -185,13 +183,48 @@ class FyllutRestApi(
 
 	override fun fyllUtPrefillData(properties: List<String>): ResponseEntity<PrefillData> {
 		val userId = tilgangskontroll.hentBrukerFraToken()
-		loggBegge("Kall fra FyllUt for å hente prefill-data", userId)
+		combinedLogger.log("Kall fra FyllUt for å hente prefill-data", userId)
 
 		val prefillData = prefillService.getPrefillData(properties, userId)
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(prefillData)
+	}
+
+	// Used by fyllut and fyllut-ettersending
+	@Timed(InnsenderOperation.HENT)
+	override fun hentSoknaderForSkjemanr(
+		skjemanr: String,
+		soknadstyper: List<SoknadType>?
+	): ResponseEntity<List<DokumentSoknadDto>> {
+		val brukerIds = tilgangskontroll.hentPersonIdents()
+
+		brukerIds.forEach {
+			combinedLogger.log(
+				"Kall for å hente søknader med $skjemanr for bruker. Soknadstyper=${soknadstyper ?: "ikke spesifisert"}",
+				it
+			)
+		}
+
+		val soknader = mutableListOf<DokumentSoknadDto>()
+
+		if (soknadstyper.isNullOrEmpty()) {
+			brukerIds.forEach { combinedLogger.log("Henter søknader med alle søknadstyper for $skjemanr", it) }
+			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr) })
+		}
+
+		if (soknadstyper?.contains(SoknadType.soknad) == true) {
+			brukerIds.forEach { combinedLogger.log("Henter søknader med søknadstype 'soknad' for $skjemanr", it) }
+			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, SoknadType.soknad) })
+		}
+
+		if (soknadstyper?.contains(SoknadType.ettersendelse) == true) {
+			brukerIds.forEach { combinedLogger.log("Henter søknader med søknadstype 'ettersendelse' for $skjemanr", it) }
+			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, SoknadType.ettersendelse) })
+		}
+
+		return ResponseEntity.status(HttpStatus.OK).body(soknader)
 	}
 
 	private fun validerSoknadsTilgang(dokumentSoknadDto: DokumentSoknadDto) {
