@@ -1,4 +1,4 @@
-package no.nav.soknad.innsending.util.mapping
+package no.nav.soknad.innsending.util.mapping.tilleggsstonad
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.soknad.innsending.exceptions.BackendErrorException

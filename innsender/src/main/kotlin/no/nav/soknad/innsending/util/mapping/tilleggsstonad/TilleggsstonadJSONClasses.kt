@@ -1,4 +1,4 @@
-package no.nav.soknad.innsending.util.mapping
+package no.nav.soknad.innsending.util.mapping.tilleggsstonad
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude

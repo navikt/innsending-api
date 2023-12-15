@@ -1,9 +1,9 @@
-package no.nav.soknad.innsending.utils.builders
+package no.nav.soknad.innsending.utils.builders.tilleggsstonad
 
-import no.nav.soknad.innsending.util.mapping.HarMottattDagpengerSiste6Maneder
-import no.nav.soknad.innsending.util.mapping.JsonDagligReiseArbeidssoker
-import no.nav.soknad.innsending.util.mapping.KanIkkeReiseKollektivt
-import no.nav.soknad.innsending.util.mapping.VelgLand
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.HarMottattDagpengerSiste6Maneder
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.JsonDagligReiseArbeidssoker
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.KanIkkeReiseKollektivt
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.VelgLand
 import no.nav.soknad.innsending.utils.Date
 import java.time.LocalDateTime
 

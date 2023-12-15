@@ -1,6 +1,6 @@
-package no.nav.soknad.innsending.utils.builders
+package no.nav.soknad.innsending.utils.builders.tilleggsstonad
 
-import no.nav.soknad.innsending.util.mapping.*
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.*
 
 
 class JsonReiseTestBuilder {

@@ -1,8 +1,8 @@
-package no.nav.soknad.innsending.utils.builders
+package no.nav.soknad.innsending.utils.builders.tilleggsstonad
 
-import no.nav.soknad.innsending.util.mapping.JsonLaeremiddelutgifter
-import no.nav.soknad.innsending.util.mapping.JsonPeriode
-import no.nav.soknad.innsending.util.mapping.JsonRettighetstyper
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.JsonLaeremiddelutgifter
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.JsonPeriode
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.JsonRettighetstyper
 import no.nav.soknad.innsending.utils.Date
 import java.time.LocalDateTime
 

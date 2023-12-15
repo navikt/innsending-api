@@ -1,9 +1,9 @@
-package no.nav.soknad.innsending.utils.builders
+package no.nav.soknad.innsending.utils.builders.tilleggsstonad
 
-import no.nav.soknad.innsending.util.mapping.BarnSomSkalFlytteMedDeg
-import no.nav.soknad.innsending.util.mapping.JsonOppstartOgAvsluttetAktivitet
-import no.nav.soknad.innsending.util.mapping.KanIkkeReiseKollektivt
-import no.nav.soknad.innsending.util.mapping.VelgLand
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.BarnSomSkalFlytteMedDeg
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.JsonOppstartOgAvsluttetAktivitet
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.KanIkkeReiseKollektivt
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.VelgLand
 import no.nav.soknad.innsending.utils.Date
 import java.time.LocalDateTime
 

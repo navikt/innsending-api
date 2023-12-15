@@ -1,4 +1,4 @@
-package no.nav.soknad.innsending.util.mapping
+package no.nav.soknad.innsending.util.mapping.tilleggsstonad
 
 data class JsonApplication(
 	val personInfo: JsonPersonInfo? = null,
