@@ -416,19 +416,42 @@ class VedleggService(
 		}
 	}
 
-	// Slett alle eksisterende vedlegg (og eventuelt tilhørende filer) som ikke er med i den nye søknaden
-	// Kun vedlegg fra fyllUt skal slettes (vedlegg med formioId). Vedlegg uten formioId (feks: hoveddokument og N6 vedlegg fra sendInn) skal ikke slettes
-	fun slettEksisterendeVedleggVedOppdatering(
-		eksisterendeVedleggsListe: List<VedleggDto>,
+	// Set status=LASTET_OPP_IKKE_RELEVANT_LENGER and erPakrevd=false for all vedlegg that are not part of the updated søknad if they have status=LASTET_OPP
+	// Delete vedlegg that are not part of the updated søknad if they have any other status
+	// Concerns vedlegg from fyllUt (vedlegg with formioId). Vedlegg without formioId (ex: hoveddokument and N6 vedlegg from sendInn) will still be part of the søknad
+	fun updateVedleggStatuses(
+		existingVedleggListe: List<VedleggDto>,
 		dokumentSoknadDto: DokumentSoknadDto
 	) {
-		eksisterendeVedleggsListe.filter { eksisterendeVedlegg ->
-			eksisterendeVedlegg.formioId != null &&
-				dokumentSoknadDto.vedleggsListeUtenHoveddokument.none { nyttVedlegg -> eksisterendeVedlegg.formioId == nyttVedlegg.formioId }
+		existingVedleggListe.filter { existingVedlegg ->
+			existingVedlegg.formioId != null &&
+				dokumentSoknadDto.vedleggsListeUtenHoveddokument.none { newVedlegg -> existingVedlegg.formioId == newVedlegg.formioId }
 		}.forEach {
-			logger.info("Slettet vedlegg id:${it.id} ved oppdatering")
-			slettVedleggOgDensFiler(it)
+			it.id?.let { vedleggId ->
+				dokumentSoknadDto.innsendingsId?.let { innsendingsId ->
+					if (it.opplastingsStatus == OpplastingsStatusDto.lastetOpp) {
+						logger.info("Vedleggstatus er ${it.opplastingsStatus}, setter status=lastetOppIkkeRelevantLenger og erPakrevd=false på vedlegg id:${it.id}")
+						repo.updateVedleggErPakrevd(vedleggId, false)
+						repo.updateVedleggStatus(
+							innsendingsId = innsendingsId,
+							vedleggsId = vedleggId,
+							opplastingsStatus = OpplastingsStatus.LASTET_OPP_IKKE_RELEVANT_LENGER
+						)
+					} else {
+						logger.info("Vedleggstatus er ${it.opplastingsStatus}, sletter vedlegg id:${it.id}")
+						slettVedleggOgDensFiler(it)
+					}
+				}
+			}
 		}
+	}
+
+	fun deleteVedleggNotRelevantAnymore(existingVedlegg: List<VedleggDto>) {
+		existingVedlegg.filter { vedlegg -> vedlegg.opplastingsStatus == OpplastingsStatusDto.lastetOppIkkeRelevantLenger }
+			.forEach {
+				logger.info("Sletter vedlegg id:${it.id} vedleggsnr:${it.vedleggsnr} med status LASTET_OPP_IKKE_RELEVANT_LENGER")
+				slettVedleggOgDensFiler(it)
+			}
 	}
 
 

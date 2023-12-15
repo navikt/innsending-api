@@ -22,7 +22,7 @@ class SkjemaDokumentSoknadTransformer {
 		endretDato = mapTilOffsetDateTime(LocalDateTime.now()),
 		vedleggsListe = lagVedleggsListe(input),
 		id = null,
-		innsendingsId = null,
+		innsendingsId = input.innsendingsId,
 		ettersendingsId = null,
 		spraak = finnSpraakFraInput(input.spraak),
 		innsendtDato = null,

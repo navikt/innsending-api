@@ -21,7 +21,6 @@
 		"DATABASE_NAME": "dokumentinnsending-dev",
 		"SPRING_PROFILES_ACTIVE": "dev",
 		"APP_VERSION": "0.0.1",
-		"APPLICATION_USERNAME": "srvinnsending-api",
 		"MAX_FILE_SIZE": "50",
 		"MAX_FILE_SIZE_SUM": "150",
 		"ETTERSENDINGSFRIST": 14,

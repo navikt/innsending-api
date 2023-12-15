@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
-import java.util.*
 
 @Repository
 interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
@@ -29,6 +28,15 @@ interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
 	fun updateStatus(
 		@Param("id") id: Long,
 		@Param("status") status: OpplastingsStatus,
+		@Param("endretdato") endretdato: LocalDateTime
+	): Int
+
+	@Transactional
+	@Modifying
+	@Query(value = "UPDATE VedleggDbData v SET v.erpakrevd = :erpakrevd, v.endretdato = :endretdato WHERE v.id = :id")
+	fun updateErPakrevd(
+		@Param("id") id: Long,
+		@Param("erpakrevd") erpakrevd: Boolean,
 		@Param("endretdato") endretdato: LocalDateTime
 	): Int
 

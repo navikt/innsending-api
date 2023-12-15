@@ -41,7 +41,6 @@ private fun validerVedleggVedOppdatering(vedlegg: VedleggDto, eksisterendeSoknad
 
 	val likeFelterVedOppdatering = listOf(
 		VedleggDto::erHoveddokument,
-		VedleggDto::erPakrevd,
 		VedleggDto::erVariant,
 		VedleggDto::vedleggsnr,
 		VedleggDto::formioId

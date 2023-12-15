@@ -7,8 +7,12 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.util.LinkedMultiValueMap
+import org.springframework.util.MultiValueMap
 import org.springframework.web.util.UriComponentsBuilder
+
 
 class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth2Server: MockOAuth2Server) {
 
@@ -91,6 +95,26 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 			HttpMethod.POST,
 			createHttpEntity(postVedleggDto),
 			VedleggDto::class.java
+		)
+	}
+
+	fun uploadFile(
+		innsendingsId: String,
+		vedleggsId: Long,
+		file: ByteArray = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
+	): ResponseEntity<FilDto> {
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		val requestBody: MultiValueMap<String, ByteArray> = LinkedMultiValueMap()
+		requestBody.add("file", file)
+
+		val httpEntity = HttpEntity(requestBody, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
+
+		return restTemplate.exchange(
+			"${baseUrl}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggsId}/fil",
+			HttpMethod.POST,
+			httpEntity,
+			FilDto::class.java
 		)
 	}
 

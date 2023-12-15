@@ -1,8 +1,10 @@
 package no.nav.soknad.innsending.consumerapis.pdl.transformers
 
+import no.nav.soknad.innsending.pdl.generated.prefilldata.Telefonnummer
 import no.nav.soknad.innsending.utils.builders.pdl.TelefonnummerTestBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import kotlin.test.assertNull
 
 class PhoneNumberTransformerTest {
 	@Test
@@ -34,5 +36,17 @@ class PhoneNumberTransformerTest {
 
 		// Then
 		assertEquals("+4712345678", result)
+	}
+
+	@Test
+	fun `Should return null if phonenumber is empty list`() {
+		// Given
+		val phoneNumbers = emptyList<Telefonnummer>()
+
+		// When
+		val result = PhoneNumberTransformer.transformPhoneNumbers(phoneNumbers)
+
+		// Then
+		assertNull(result)
 	}
 }

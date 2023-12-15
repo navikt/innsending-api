@@ -127,11 +127,11 @@ class FyllutRestApi(
 			brukerId
 		)
 
-		val oppdatertSoknad = soknadService.oppdaterSoknad(innsendingsId, dokumentSoknadDto)
+		val updatedSoknad = soknadService.updateSoknad(innsendingsId, dokumentSoknadDto)
 
 		loggBegge("$innsendingsId: Soknad fra FyllUt oppdatert", brukerId)
 
-		return ResponseEntity.status(HttpStatus.OK).body(oppdatertSoknad)
+		return ResponseEntity.status(HttpStatus.OK).body(updatedSoknad)
 	}
 
 	@Timed(InnsenderOperation.ENDRE)
@@ -145,7 +145,7 @@ class FyllutRestApi(
 			brukerId
 		)
 
-		soknadService.oppdaterUtfyltSoknad(innsendingsId, dokumentSoknadDto)
+		soknadService.updateUtfyltSoknad(innsendingsId, dokumentSoknadDto)
 
 		loggBegge("$innsendingsId: Utfylt søknad fra Fyllut", brukerId)
 

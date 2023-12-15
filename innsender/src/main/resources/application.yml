@@ -77,10 +77,6 @@ status_log_url: "https://logs.adeo.no"
 
 restconfig:
   version: 1.0
-  username: srvuser
-  password: password
-  sharedUsername: innsending
-  sharedPassword: password
   maxFileSize: 50
   maxFileSizeSum: 150
   sanityHost: https://www.nav.no
@@ -88,7 +84,7 @@ restconfig:
   filesInOneRequestToFilestorage: 10
   soknadsMottakerHost: http://localhost:9043/soknadsmottaker-api
   soknadsMottakerEndpoint: /save
-  sendInnUrl: http://localhost:3100/sendInn
+  sendInnUrl: http://localhost:3100/sendinn
   fyllUtUrl: http://localhost:3001/fyllut
   clientId: clientId
   clientSecret: clientSecret
@@ -136,10 +132,6 @@ status_log_url: ${STATUS_LOG_URL}
 
 restconfig:
   version: ${APP_VERSION}
-  username: ${APPLICATION_USERNAME}
-  password: ${APPLICATION_PASSWORD}
-  sharedUsername: ${INNSENDING_USERNAME}
-  sharedPassword: ${INNSENDING_PASSWORD}
   maxFileSize: ${MAX_FILE_SIZE}
   maxFileSizeSum: ${MAX_FILE_SIZE_SUM}
   sanityHost: ${SANITY_HOST}
