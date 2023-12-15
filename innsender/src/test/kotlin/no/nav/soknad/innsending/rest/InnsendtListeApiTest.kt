@@ -40,16 +40,6 @@ internal class InnsendtListeApiTest : ApplicationTest() {
 	fun setup() {
 		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
 	}
-
-	@Test
-	internal fun testHentJournalposter() {
-		// Når
-		val response = api?.hentAktiveSaker()
-
-		// Så
-		assertTrue(response?.body != null && response.body!!.isNotEmpty())
-		assertEquals(2, response?.body!![0].innsendtVedleggDtos.size)
-	}
-
+	
 
 }

@@ -4,7 +4,6 @@ import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.dto.RestErrorResponseDto
 import no.nav.soknad.innsending.model.*
 import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
@@ -116,14 +115,6 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 			httpEntity,
 			FilDto::class.java
 		)
-	}
-
-	fun hentAktiveSaker(): ResponseEntity<List<AktivSakDto>>? {
-		return restTemplate.exchange(
-			"${baseUrl}/innsendte/v1/hentAktiveSaker",
-			HttpMethod.GET,
-			createHttpEntity(null),
-			object : ParameterizedTypeReference<List<AktivSakDto>>() {})
 	}
 
 	fun getPrefillData(properties: String): ResponseEntity<PrefillData>? {
