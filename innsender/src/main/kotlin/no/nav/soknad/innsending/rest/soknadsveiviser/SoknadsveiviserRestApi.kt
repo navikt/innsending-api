@@ -92,8 +92,10 @@ class SoknadsveiviserRestApi(
 		logger.info("Gitt skjemaNr ${opprettEttersendingGittSkjemaNr.skjemanr}: Antall innsendteSoknader=${innsendteSoknader.size} og Antall arkiverteSoknader=${arkiverteSoknader.size}")
 		val dokumentSoknadDto =
 			opprettDokumentSoknadDto(
-				innsendteSoknader = innsendteSoknader, arkiverteSoknader = arkiverteSoknader,
-				brukerId = brukerId, opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr
+				innsendteSoknader = innsendteSoknader,
+				arkiverteSoknader = arkiverteSoknader,
+				brukerId = brukerId,
+				opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr
 			)
 
 		combinedLogger.log(
@@ -117,7 +119,7 @@ class SoknadsveiviserRestApi(
 				if (innsendteSoknader[0].innsendingsId == arkiverteSoknader[0].innsendingsId ||
 					innsendteSoknader[0].innsendtDato!!.isAfter(arkiverteSoknader[0].innsendtDato)
 				) {
-					soknadService.opprettSoknadForettersendingAvVedleggGittSoknadOgVedlegg(
+					soknadService.opprettEttersendingGittSoknadOgVedlegg(
 						brukerId = brukerId, nyesteSoknad = innsendteSoknader[0],
 						sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
 						vedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
@@ -125,7 +127,7 @@ class SoknadsveiviserRestApi(
 				} else {
 					// Det er blitt sendt inn en søknad en annen vei til arkivet, knytt ettersendingen til denne ved å liste innsendte dokumenter
 					// Opprett en ettersendingssøknad med innsendte vedlegg fra arkiverteSoknader[0]+ eventuelle ekstra vedlegg fra input.
-					soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(
+					soknadService.opprettEttersendingGittArkivertSoknadOgVedlegg(
 						brukerId = brukerId, arkivertSoknad = arkiverteSoknader[0],
 						opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr,
 						sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
@@ -133,7 +135,7 @@ class SoknadsveiviserRestApi(
 					)
 				}
 			} else {
-				soknadService.opprettSoknadForettersendingAvVedleggGittSoknadOgVedlegg(
+				soknadService.opprettEttersendingGittSoknadOgVedlegg(
 					brukerId = brukerId, nyesteSoknad = innsendteSoknader[0],
 					sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
 					vedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
@@ -142,14 +144,14 @@ class SoknadsveiviserRestApi(
 		} else if (arkiverteSoknader.isNotEmpty()) {
 			// Det er blitt sendt inn en søknad en annen vei til arkivet, knytt ettersendingen til denne ved å liste innsendte dokumenter
 			// Opprett en ettersendingssøknad med innsendte vedlegg fra arkiverteSoknader[0]+ eventuelle ekstra vedlegg fra input.
-			soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(
+			soknadService.opprettEttersendingGittArkivertSoknadOgVedlegg(
 				brukerId = brukerId, arkivertSoknad = arkiverteSoknader[0],
 				opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr,
 				sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
 				forsteInnsendingsDato = arkiverteSoknader[0].innsendtDato
 			)
 		} else {
-			soknadService.opprettSoknadForEttersendingGittSkjemanr(
+			soknadService.opprettEttersendingGittSkjemanr(
 				brukerId = brukerId,
 				skjemanr = opprettEttersendingGittSkjemaNr.skjemanr,
 				spraak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),

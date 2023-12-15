@@ -86,14 +86,14 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun opprettSoknadForEttersendingGittSkjemanr(
+	fun opprettEttersendingGittSkjemanr(
 		brukerId: String,
 		skjemanr: String,
 		spraak: String = "nb",
 		vedleggsnrListe: List<String> = emptyList()
 	): DokumentSoknadDto {
 		val operation = InnsenderOperation.OPPRETT.name
-		logger.info("opprettSoknadForEttersendingGittSkjemanr: for skjemanr=$skjemanr")
+		logger.info("opprettEttersendingGittSkjemanr: for skjemanr=$skjemanr")
 
 		val kodeverkSkjema = try {
 			// hentSkjema informasjon gitt skjemanr
@@ -129,7 +129,7 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun opprettSoknadForettersendingAvVedlegg(brukerId: String, ettersendingsId: String): DokumentSoknadDto {
+	fun opprettEttersending(brukerId: String, ettersendingsId: String): DokumentSoknadDto {
 		val operation = InnsenderOperation.OPPRETT.name
 
 		// Skal opprette en soknad basert på status på vedlegg som skal ettersendes.
@@ -155,19 +155,23 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun opprettSoknadForettersendingAvVedleggGittSoknadOgVedlegg(
+	fun opprettEttersendingGittSoknadOgVedlegg(
 		brukerId: String, nyesteSoknad: DokumentSoknadDto, sprak: String, vedleggsnrListe: List<String>
 	): DokumentSoknadDto {
 		val operation = InnsenderOperation.OPPRETT.name
 
 		try {
-			logger.info("opprettSoknadForettersendingAvVedleggGittSoknadOgVedlegg fra ${nyesteSoknad.innsendingsId} og vedleggsliste = $vedleggsnrListe")
+			logger.info("opprettEttersendingGittSoknadOgVedlegg fra ${nyesteSoknad.innsendingsId} og vedleggsliste = $vedleggsnrListe")
 			val ettersendingsSoknadDb = ettersendingService.opprettEttersendingsSoknad(
-				brukerId, nyesteSoknad.ettersendingsId ?: nyesteSoknad.innsendingsId!!,
-				nyesteSoknad.tittel, nyesteSoknad.skjemanr, nyesteSoknad.tema, nyesteSoknad.spraak!!,
-				nyesteSoknad.forsteInnsendingsDato ?: nyesteSoknad.innsendtDato ?: nyesteSoknad.endretDato
-				?: nyesteSoknad.opprettetDato,
-				nyesteSoknad.fristForEttersendelse
+				brukerId = brukerId,
+				ettersendingsId = nyesteSoknad.ettersendingsId ?: nyesteSoknad.innsendingsId!!,
+				tittel = nyesteSoknad.tittel,
+				skjemanr = nyesteSoknad.skjemanr,
+				tema = nyesteSoknad.tema,
+				sprak = nyesteSoknad.spraak!!,
+				forsteInnsendingsDato = nyesteSoknad.forsteInnsendingsDato ?: nyesteSoknad.innsendtDato
+				?: nyesteSoknad.endretDato ?: nyesteSoknad.opprettetDato,
+				fristForEttersendelse = nyesteSoknad.fristForEttersendelse
 			)
 
 			val nyesteSoknadVedleggsNrListe =
@@ -196,13 +200,13 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(
+	fun opprettEttersendingGittArkivertSoknadOgVedlegg(
 		brukerId: String, arkivertSoknad: AktivSakDto, opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr,
 		sprak: String?, forsteInnsendingsDato: OffsetDateTime?
 	): DokumentSoknadDto {
 		val operation = InnsenderOperation.OPPRETT.name
 
-		logger.info("opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg: for skjemanr=${arkivertSoknad.skjemanr}")
+		logger.info("opprettEttersendingGittArkivertSoknadOgVedlegg: for skjemanr=${arkivertSoknad.skjemanr}")
 		try {
 			val ettersendingsSoknadDb = ettersendingService.opprettEttersendingsSoknad(
 				brukerId = brukerId,
@@ -240,7 +244,7 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun opprettSoknadForEttersendingAvVedleggGittArkivertSoknad(
+	fun opprettEttersendingGittArkivertSoknad(
 		brukerId: String,
 		arkivertSoknad: AktivSakDto,
 		sprak: String,

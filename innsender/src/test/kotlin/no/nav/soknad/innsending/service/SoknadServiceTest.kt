@@ -220,7 +220,7 @@ class SoknadServiceTest : ApplicationTest() {
 
 		// Opprett ettersendingssoknad
 		val ettersendingsSoknadDto =
-			soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
+			soknadService.opprettEttersending(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.none { it.opplastingsStatus == OpplastingsStatusDto.innsendt })
@@ -320,7 +320,7 @@ class SoknadServiceTest : ApplicationTest() {
 
 		// Oppretter ettersendingssoknad
 		val ettersendingsSoknadDto =
-			soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
+			soknadService.opprettEttersending(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
@@ -357,7 +357,7 @@ class SoknadServiceTest : ApplicationTest() {
 
 		// Oppretter ettersendingssoknad2
 		val ettersendingsSoknadDto2 =
-			soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
+			soknadService.opprettEttersending(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 
 		assertTrue(ettersendingsSoknadDto2.vedleggsListe.isNotEmpty())
 		assertTrue(ettersendingsSoknadDto2.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
@@ -422,7 +422,7 @@ class SoknadServiceTest : ApplicationTest() {
 			innsendtVedleggDtos = arkiverteVedlegg
 		)
 
-		val ettersending = soknadService.opprettSoknadForEttersendingAvVedleggGittArkivertSoknad(
+		val ettersending = soknadService.opprettEttersendingGittArkivertSoknad(
 			brukerId = "1234",
 			arkivertSoknad = arkivertSoknad,
 			"no_NO",
@@ -486,7 +486,7 @@ class SoknadServiceTest : ApplicationTest() {
 			arkivertInnsendingsId
 		)
 
-		val dokumentSoknadDto = soknadService.opprettSoknadForEttersendingAvVedleggGittArkivertSoknad(
+		val dokumentSoknadDto = soknadService.opprettEttersendingGittArkivertSoknad(
 			brukerid,
 			arkivertSoknad,
 			spraak,
@@ -510,7 +510,7 @@ class SoknadServiceTest : ApplicationTest() {
 		val spraak = "nb_NO"
 
 		val dokumentSoknadDto =
-			soknadService.opprettSoknadForEttersendingGittSkjemanr(brukerid, skjemanr, spraak, listOf("C1", "L8"))
+			soknadService.opprettEttersendingGittSkjemanr(brukerid, skjemanr, spraak, listOf("C1", "L8"))
 
 		assertTrue(dokumentSoknadDto.innsendingsId != null && VisningsType.ettersending == dokumentSoknadDto.visningsType && dokumentSoknadDto.ettersendingsId == dokumentSoknadDto.innsendingsId)
 		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
@@ -551,7 +551,7 @@ class SoknadServiceTest : ApplicationTest() {
 
 		val innsendtSoknadDto = soknadService.hentSoknad(dokumentSoknadDto.innsendingsId!!)
 
-		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedleggGittSoknadOgVedlegg(
+		val ettersendingsSoknadDto = soknadService.opprettEttersendingGittSoknadOgVedlegg(
 			brukerId = testpersonid,
 			nyesteSoknad = innsendtSoknadDto,
 			sprak = "nb_NO",
@@ -593,7 +593,7 @@ class SoknadServiceTest : ApplicationTest() {
 		)
 		val opprettEttersendingGittSkjemaNr = OpprettEttersendingGittSkjemaNr(skjemanr, spraak, listOf("C1", "L8"))
 
-		val dokumentSoknadDto = soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(
+		val dokumentSoknadDto = soknadService.opprettEttersendingGittArkivertSoknadOgVedlegg(
 			brukerid,
 			arkivertSoknad,
 			opprettEttersendingGittSkjemaNr,
