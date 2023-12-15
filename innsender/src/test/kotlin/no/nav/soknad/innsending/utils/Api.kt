@@ -4,6 +4,7 @@ import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.dto.RestErrorResponseDto
 import no.nav.soknad.innsending.model.*
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
@@ -22,7 +23,7 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		return HttpEntity(body, Hjelpemetoder.createHeaders(token))
 	}
 
-	fun opprettSoknad(skjemaDto: SkjemaDto, forceCreate: Boolean = true): ResponseEntity<SkjemaDto> {
+	fun createSoknad(skjemaDto: SkjemaDto, forceCreate: Boolean = true): ResponseEntity<SkjemaDto> {
 		val uri = UriComponentsBuilder.fromHttpUrl("${baseUrl}/fyllUt/v1/soknad")
 			.queryParam("force", forceCreate)
 			.build()
@@ -31,7 +32,17 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		return restTemplate.exchange(uri, HttpMethod.POST, createHttpEntity(skjemaDto), SkjemaDto::class.java)
 	}
 
-	fun opprettSoknadRedirect(
+	fun createSoknadForSkjemanr(skjemanr: String, spraak: String = "nb_NO"): ResponseEntity<DokumentSoknadDto> {
+		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak)
+		return restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad",
+			HttpMethod.POST,
+			createHttpEntity(opprettSoknadBody),
+			DokumentSoknadDto::class.java
+		)
+	}
+
+	fun createSoknadRedirect(
 		skjemaDto: SkjemaDto,
 		forceCreate: Boolean = true
 	): ResponseEntity<BodyStatusResponseDto> {
@@ -43,7 +54,7 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		return restTemplate.exchange(uri, HttpMethod.POST, createHttpEntity(skjemaDto), BodyStatusResponseDto::class.java)
 	}
 
-	fun oppdaterSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<SkjemaDto>? {
+	fun updateSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<SkjemaDto>? {
 		return restTemplate.exchange(
 			"${baseUrl}/fyllUt/v1/soknad/${innsendingsId}",
 			HttpMethod.PUT,
@@ -52,7 +63,7 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 	}
 
-	fun slettSoknad(innsendingsId: String): ResponseEntity<BodyStatusResponseDto>? {
+	fun deleteSoknad(innsendingsId: String): ResponseEntity<BodyStatusResponseDto>? {
 		return restTemplate.exchange(
 			"http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}",
 			HttpMethod.DELETE,
@@ -61,12 +72,38 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 	}
 
-	fun hentSoknad(innsendingsId: String): ResponseEntity<SkjemaDto>? {
+	fun getSoknad(innsendingsId: String): ResponseEntity<SkjemaDto>? {
 		return restTemplate.exchange(
 			"${baseUrl}/fyllUt/v1/soknad/${innsendingsId}",
 			HttpMethod.GET,
 			createHttpEntity(null),
 			SkjemaDto::class.java
+		)
+	}
+
+	fun getSoknadSendinn(innsendingsId: String): ResponseEntity<DokumentSoknadDto>? {
+		return restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}",
+			HttpMethod.GET,
+			createHttpEntity(null),
+			DokumentSoknadDto::class.java
+		)
+	}
+
+	// Query param ex: "soknad,ettersendelse"
+	fun getExistingSoknader(skjemanr: String, queryParam: String? = null): ResponseEntity<List<DokumentSoknadDto>>? {
+		val url = if (queryParam != null) {
+			"http://localhost:${serverPort}/frontend/v1/skjema/${skjemanr}/soknader?soknadstyper=$queryParam"
+		} else {
+			"http://localhost:${serverPort}/frontend/v1/skjema/${skjemanr}/soknader"
+		}
+
+		val responseType = object : ParameterizedTypeReference<List<DokumentSoknadDto>>() {}
+		return restTemplate.exchange(
+			url,
+			HttpMethod.GET,
+			createHttpEntity(null),
+			responseType
 		)
 	}
 
@@ -88,7 +125,7 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 	}
 
-	fun leggTilVedlegg(innsendingsId: String, postVedleggDto: PostVedleggDto): ResponseEntity<VedleggDto>? {
+	fun addVedlegg(innsendingsId: String, postVedleggDto: PostVedleggDto): ResponseEntity<VedleggDto>? {
 		return restTemplate.exchange(
 			"${baseUrl}/frontend/v1/soknad/${innsendingsId}/vedlegg",
 			HttpMethod.POST,
