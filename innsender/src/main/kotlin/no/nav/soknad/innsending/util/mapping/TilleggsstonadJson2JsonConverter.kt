@@ -86,7 +86,9 @@ private fun convertToJsonBostotte(tilleggsstonad: Application): JsonBostottesokn
 		hvilkeBoutgifterSokerDuOmAFaDekket = tilleggsstonad.hvilkeBoutgifterSokerDuOmAFaDekket,
 		bostotteIForbindelseMedSamling = tilleggsstonad.bostotteIForbindelseMedSamling,
 		mottarDuBostotteFraKommunen = tilleggsstonad.mottarDuBostotteFraKommunen ?: "Nei", // "Ja" | "Nei"
+		bostottebelop = tilleggsstonad.hvorMyeBostotteMottarDu,
 		hvilkeAdresserHarDuBoutgifterPa = tilleggsstonad.hvilkeAdresserHarDuBoutgifterPa,
+		boutgifterPaHjemstedetMitt = tilleggsstonad.boutgifterPaHjemstedetMitt,
 		boutgifterPaAktivitetsadressen = tilleggsstonad.boutgifterPaAktivitetsadressen,
 		boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten = tilleggsstonad.boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten,
 		erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet = tilleggsstonad.erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet

@@ -101,12 +101,27 @@ fun convertBostotte(tilleggstonadJsonObj: JsonApplication): Boutgifter? {
 			fom = convertToDateStringWithTimeZone(bostottesoknad.aktivitetsperiode.startdatoDdMmAaaa),
 			tom = convertToDateStringWithTimeZone(bostottesoknad.aktivitetsperiode.sluttdatoDdMmAaaa)
 		),
-		harFasteBoutgifter = true,
-		harBoutgifterVedSamling = false,
-		boutgifterHjemstedAktuell = 8000,
-		boutgifterPgaFunksjonshemminger = null,
-		mottarBostoette = false,
-		samlingsperiode = null
+		mottarBostoette = convertToBoolean(bostottesoknad.mottarDuBostotteFraKommunen) ?: false,
+		bostoetteBeloep = bostottesoknad.bostottebelop,
+
+		boutgifterPgaFunksjonshemminger = convertToBoolean(bostottesoknad.erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet)
+			?: false,
+		harFasteBoutgifter = bostottesoknad.hvilkeBoutgifterSokerDuOmAFaDekket.contains("Jeg søker om å få dekket faste boutgifter"),
+		boutgifterHjemstedAktuell = bostottesoknad.boutgifterPaHjemstedetMitt,
+		boutgifterHjemstedOpphoert = bostottesoknad.boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten,
+
+		boutgifterAktivitetsted = bostottesoknad.boutgifterPaAktivitetsadressen,
+
+		harBoutgifterVedSamling = bostottesoknad.hvilkeBoutgifterSokerDuOmAFaDekket.contains("Jeg søker om å få dekket boutgifter i forbindelse med samling"),
+		samlingsperiode = if (bostottesoknad.bostotteIForbindelseMedSamling == null) null else {
+			bostottesoknad.bostotteIForbindelseMedSamling
+				.map {
+					Periode(
+						fom = convertToDateStringWithTimeZone(it.startdatoDdMmAaaa),
+						tom = convertToDateStringWithTimeZone(it.sluttdatoDdMmAaaa)
+					)
+				}
+		},
 	)
 
 }
@@ -123,12 +138,29 @@ fun convertLaremiddler(tilleggstonadJsonObj: JsonApplication): Laeremiddelutgift
 		),
 		hvorMyeDekkesAvAnnenAktoer = laeremiddelutgifter.hvorMyeFarDuDekketAvEnAnnenAktor?.toDouble(),
 		hvorMyeDekkesAvNAV = laeremiddelutgifter.hvorStortBelopSokerDuOmAFaDekketAvNav.toDouble(),
-		skolenivaa = Skolenivaaer(value = "HGU"), // TODO mapping av laeremiddelutgifter.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore
+		skolenivaa = convertToSkolenvaaer(laeremiddelutgifter.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore),
 		prosentandelForUtdanning = laeremiddelutgifter.oppgiHvorMangeProsentDuStudererEllerGarPaKurs,
 		beloep = laeremiddelutgifter.utgifterTilLaeremidler,
-		erUtgifterDekket = ErUtgifterDekket("Nei")   // TODO mapping av laeremiddelutgifter.farDuDekketLaeremidlerEtterAndreOrdninger
+		erUtgifterDekket = convertToErUtgifterDekket(laeremiddelutgifter.farDuDekketLaeremidlerEtterAndreOrdninger)
 	)
 }
+
+fun convertToSkolenvaaer(nivaString: String): Skolenivaaer =
+	when (nivaString) {
+		"Jeg skal ta videregående utdanning, eller forkurs på universitet" -> Skolenivaaer(value = "VGS")
+		"Jeg skal ta utdanning på fagskole, høyskole eller universitet" -> Skolenivaaer(value = "HGU")
+		"Jeg skal ta kurs eller annen form for utdanning" -> Skolenivaaer(value = "ANN")
+		else -> Skolenivaaer(value = "VGS")
+	}
+
+fun convertToErUtgifterDekket(svar: String): ErUtgifterDekket =
+	when (svar.uppercase(Locale.getDefault())) {
+		"JA" -> ErUtgifterDekket(value = "JA")
+		"NEI" -> ErUtgifterDekket(value = "NEI")
+		"DELVIS" -> ErUtgifterDekket(value = "DELVIS")
+		else -> ErUtgifterDekket(value = "NEI")
+	}
+
 
 fun convertFlytteutgifter(tilleggstonadJsonObj: JsonApplication): Flytteutgifter? {
 	if (tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.flytteutgifter == null) return null
@@ -145,12 +177,12 @@ fun convertFlytteutgifter(tilleggstonadJsonObj: JsonApplication): Flytteutgifter
 		flytterSelv = (flytteutgifter.jegFlytterSelv != null || flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv != null).toString(),
 		flyttingPgaNyStilling = "Jeg flytter fordi jeg har fått ny jobb".equals(flytteutgifter.hvorforFlytterDu, true),
 		flyttedato = convertToDateStringWithTimeZone(flytteutgifter.narFlytterDuDdMmAaaa),
-		tilflyttingsadresse = SammensattAdresse( // TODO mangler adresse angivelse i skjema
+		tilflyttingsadresse = SammensattAdresse(
 			land = flytteutgifter.velgLand1.label,
 			adresse = flytteutgifter.adresse1,
 			postnr = flytteutgifter.postnr1
 		).sammensattAdresse,
-		avstand = convertFlytteAvstand(flytteutgifter), // TODO sjekk avstand i skjema; avstanden er uavhengig av hvordan flytting skjer
+		avstand = convertFlytteAvstand(flytteutgifter),
 		sumTilleggsutgifter = convertFlytteutgifter(flytteutgifter).toDouble()
 	)
 
@@ -160,7 +192,7 @@ fun convertFlytteAvstand(flytteutgifter: JsonFlytteutgifter): Int {
 	return if (flytteutgifter.jegFlytterSelv != null) {
 		flytteutgifter.jegFlytterSelv.hvorLangtSkalDuFlytte
 	} else if (flytteutgifter.jegVilBrukeFlyttebyra != null) {
-		0
+		flytteutgifter.jegVilBrukeFlyttebyra.hvorLangtSkalDuFlytte1
 	} else if (flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv != null) {
 		flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv.hvorLangtSkalDuFlytte1
 	} else {

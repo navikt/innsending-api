@@ -130,8 +130,10 @@ data class Application(
 	val bostotteIForbindelseMedSamling: List<JsonPeriode>?,
 
 	val mottarDuBostotteFraKommunen: String?, // "Ja" | "Nei"
+	var hvorMyeBostotteMottarDu: Int?, // Hvis mottarDuBostotteFraKommunen = Ja
 	val hvilkeAdresserHarDuBoutgifterPa: List<String>?, // "Jeg har boutgifter på aktivitetsadressen min" | "Jeg har fortsatt boutgifter på hjemstedet mitt" | "Jeg har hatt boutgifter på hjemstedet mitt, som har opphørt i forbindelse med aktiviteten"
 	val boutgifterPaAktivitetsadressen: Int?,
+	val boutgifterPaHjemstedetMitt: Int?,
 	val boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten: Int?,
 	val erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet: String?, // "Ja" | "Nei"
 
@@ -196,7 +198,8 @@ data class JegVilBrukeFlyttebyra(
 	val belop: Int,
 	val navnPaFlyttebyra2: String,
 	val belop1: Int,
-	val jegVelgerABruke: String // "Flyttebyrå 1" | "Flyttebyrå 2"
+	val jegVelgerABruke: String, // "Flyttebyrå 1" | "Flyttebyrå 2"
+	val hvorLangtSkalDuFlytte1: Int
 )
 
 data class JegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv(

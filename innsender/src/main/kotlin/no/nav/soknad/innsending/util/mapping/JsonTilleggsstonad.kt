@@ -71,8 +71,10 @@ data class JsonBostottesoknad(
 	val bostotteIForbindelseMedSamling: List<JsonPeriode>?,
 
 	val mottarDuBostotteFraKommunen: String = "Nei", // "Ja" | "Nei"
+	val bostottebelop: Int?,
 	val hvilkeAdresserHarDuBoutgifterPa: List<String>?, // "Jeg har boutgifter på aktivitetsadressen min" | "Jeg har fortsatt boutgifter på hjemstedet mitt" | "Jeg har hatt boutgifter på hjemstedet mitt, som har opphørt i forbindelse med aktiviteten"
 	val boutgifterPaAktivitetsadressen: Int?,
+	val boutgifterPaHjemstedetMitt: Int?,
 	val boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten: Int?,
 	val erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet: String?, // "Ja" | "Nei"
 

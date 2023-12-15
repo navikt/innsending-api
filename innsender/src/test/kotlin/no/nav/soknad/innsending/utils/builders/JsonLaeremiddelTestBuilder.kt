@@ -8,17 +8,50 @@ import java.time.LocalDateTime
 
 class JsonLaeremiddelTestBuilder {
 
-	protected var fradato: String = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
-	protected var tildato: String = Date.formatToLocalDate(LocalDateTime.now().plusMonths(3))
-	protected var hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore: String =
+	private var fradato: String = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
+	private var tildato: String = Date.formatToLocalDate(LocalDateTime.now().plusMonths(3))
+	private var hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore: String =
 		"Jeg skal ta videregående utdanning, eller forkurs på universitet"
-	protected var hvilketKursEllerAnnenFormForUtdanningSkalDuTa: String? = null
-	protected var oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Int = 100
-	protected var harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler: String = "Ja"
-	protected var utgifterTilLaeremidler: Int = 6000
-	protected var farDuDekketLaeremidlerEtterAndreOrdninger: String = "Delvis"
-	protected var hvorMyeFarDuDekketAvEnAnnenAktor: Int = 2000
-	protected var hvorStortBelopSokerDuOmAFaDekketAvNav: Int = 4000
+	private var hvilketKursEllerAnnenFormForUtdanningSkalDuTa: String? = null
+	private var oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Int = 100
+	private var harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler: String = "Ja"
+	private var utgifterTilLaeremidler: Int = 6000
+	private var farDuDekketLaeremidlerEtterAndreOrdninger: String = "Delvis"
+	private var hvorMyeFarDuDekketAvEnAnnenAktor: Int? = 2000
+	private var hvorStortBelopSokerDuOmAFaDekketAvNav: Int = 4000
+
+	fun fradato(fradato: String) = apply { this.fradato = fradato }
+	fun tildato(tildato: String) = apply { this.tildato = tildato }
+	fun hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore(hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore: String) =
+		apply {
+			this.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore = hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore
+		}
+
+	fun hvilketKursEllerAnnenFormForUtdanningSkalDuTa(hvilketKursEllerAnnenFormForUtdanningSkalDuTa: String?) =
+		apply { this.hvilketKursEllerAnnenFormForUtdanningSkalDuTa = hvilketKursEllerAnnenFormForUtdanningSkalDuTa }
+
+	fun oppgiHvorMangeProsentDuStudererEllerGarPaKurs(oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Int) =
+		apply { this.oppgiHvorMangeProsentDuStudererEllerGarPaKurs = oppgiHvorMangeProsentDuStudererEllerGarPaKurs }
+
+	fun harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler(
+		harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler: String
+	) = apply {
+		this.harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler =
+			harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler
+	}
+
+	fun utgifterTilLaeremidler(utgifterTilLaeremidler: Int) =
+		apply { this.utgifterTilLaeremidler = utgifterTilLaeremidler }
+
+	fun farDuDekketLaeremidlerEtterAndreOrdninger(farDuDekketLaeremidlerEtterAndreOrdninger: String) =
+		apply { this.farDuDekketLaeremidlerEtterAndreOrdninger = farDuDekketLaeremidlerEtterAndreOrdninger }
+
+	fun hvorMyeFarDuDekketAvEnAnnenAktor(hvorMyeFarDuDekketAvEnAnnenAktor: Int?) =
+		apply { this.hvorMyeFarDuDekketAvEnAnnenAktor = hvorMyeFarDuDekketAvEnAnnenAktor }
+
+	fun hvorStortBelopSokerDuOmAFaDekketAvNav(hvorStortBelopSokerDuOmAFaDekketAvNav: Int) =
+		apply { this.hvorStortBelopSokerDuOmAFaDekketAvNav = hvorStortBelopSokerDuOmAFaDekketAvNav }
+
 
 	fun buildLaermiddelutgifter() = JsonLaeremiddelutgifter(
 		aktivitetsperiode = JsonPeriode(startdatoDdMmAaaa = fradato, sluttdatoDdMmAaaa = tildato),

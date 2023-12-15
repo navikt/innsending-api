@@ -500,7 +500,16 @@ class TilleggsstonadJson2XmlConverterKtTest {
 	@Test
 	fun `Default case test convert to XML housing expenses`() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
-		val boStotte = JsonBostotteTestBuilder().build()
+		val boStotte = JsonBostotteTestBuilder()
+			.fradato("2023-12-02")
+			.tildato("2024-06-20")
+			.boutgiftType("Jeg søker om å få dekket faste boutgifter")
+			.boutgifterPaHjemstedetMitt(5000)
+			.erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet("Nei")
+			.mottarDuBostotteFraKommunen("Nei")
+			.hvilkeAdresserHarDuBoutgifterPa(listOf("Kongens gate 10, 3701 Skien"))
+			.boutgifterPaAktivitetsadressen(8000)
+			.build()
 		val tilleggsstonad =
 			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = boStotte).build()
 		val xmlFil = json2Xml(
@@ -510,14 +519,98 @@ class TilleggsstonadJson2XmlConverterKtTest {
 		assertNotNull(xmlFil)
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(xmlString.contains("<boutgifter>"))
-		assertTrue(xmlString.contains("<boutgifterHjemstedAktuell>8000</boutgifterHjemstedAktuell>"))
+		assertTrue(
+			xmlString.contains(
+				"    <boutgifter>\n" +
+					"      <periode>\n" +
+					"        <fom>2023-12-02+01:00</fom>\n" +
+					"        <tom>2024-06-20+02:00</tom>\n" +
+					"      </periode>\n"
+			)
+		)
+		assertTrue(xmlString.contains("<harBoutgifterVedSamling>false</harBoutgifterVedSamling>"))
+		assertTrue(xmlString.contains("<harFasteBoutgifter>true</harFasteBoutgifter>"))
+		assertTrue(xmlString.contains("<mottarBostoette>false</mottarBostoette>"))
+		assertTrue(xmlString.contains("<boutgifterHjemstedAktuell>5000</boutgifterHjemstedAktuell>"))
+		assertTrue(xmlString.contains("<boutgifterAktivitetsted>8000</boutgifterAktivitetsted>"))
+
+	}
+
+	@Test
+	fun `Test convert to XML housing expenses - convention periods`() {
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val boStotte = JsonBostotteTestBuilder()
+			.fradato("2023-12-02")
+			.tildato("2024-06-20")
+			.boutgiftType("Jeg søker om å få dekket boutgifter i forbindelse med samling")
+			.mottarDuBostotteFraKommunen("Ja")
+			.bostottebelop(3500)
+			.boutgifterPaHjemstedetMitt(5000)
+			.bostotteIForbindelseMedSamling(
+				listOf(
+					JsonPeriode(startdatoDdMmAaaa = "2023-12-02", sluttdatoDdMmAaaa = "2023-12-20"),
+					JsonPeriode(startdatoDdMmAaaa = "2024-01-02", sluttdatoDdMmAaaa = "2024-01-20"),
+					JsonPeriode(startdatoDdMmAaaa = "2024-02-01", sluttdatoDdMmAaaa = "2024-02-20"),
+					JsonPeriode(startdatoDdMmAaaa = "2024-06-01", sluttdatoDdMmAaaa = "2024-06-20")
+				),
+			)
+			.erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet("Ja")
+			.hvilkeAdresserHarDuBoutgifterPa(listOf("Kongens gate 10, 3701 Skien"))
+			.boutgifterPaAktivitetsadressen(10000)
+			.build()
+		val tilleggsstonad =
+			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = boStotte).build()
+		val xmlFil = json2Xml(
+			soknadDto, tilleggsstonad
+		)
+
+		assertNotNull(xmlFil)
+		val xmlString = xmlFil.decodeToString()
+		assertTrue(xmlString.contains("<boutgifter>"))
+		assertTrue(
+			xmlString.contains(
+				"      <samlingsperiode>\n" +
+					"        <fom>2023-12-02+01:00</fom>\n" +
+					"        <tom>2023-12-20+01:00</tom>\n" +
+					"      </samlingsperiode>\n" +
+					"      <samlingsperiode>\n" +
+					"        <fom>2024-01-02+01:00</fom>\n" +
+					"        <tom>2024-01-20+01:00</tom>\n" +
+					"      </samlingsperiode>\n" +
+					"      <samlingsperiode>\n" +
+					"        <fom>2024-02-01+01:00</fom>\n" +
+					"        <tom>2024-02-20+01:00</tom>\n" +
+					"      </samlingsperiode>\n" +
+					"      <samlingsperiode>\n" +
+					"        <fom>2024-06-01+02:00</fom>\n" +
+					"        <tom>2024-06-20+02:00</tom>\n" +
+					"      </samlingsperiode>\n"
+			)
+		)
+		assertTrue(xmlString.contains("<harBoutgifterVedSamling>true</harBoutgifterVedSamling>"))
+		assertTrue(xmlString.contains("<harFasteBoutgifter>false</harFasteBoutgifter>"))
+		assertTrue(xmlString.contains("<mottarBostoette>true</mottarBostoette>"))
+		assertTrue(xmlString.contains("<bostoetteBeloep>3500</bostoetteBeloep>"))
+		assertTrue(xmlString.contains("<boutgifterHjemstedAktuell>5000</boutgifterHjemstedAktuell>"))
+		assertTrue(xmlString.contains("<boutgifterAktivitetsted>10000</boutgifterAktivitetsted>"))
 
 	}
 
 	@Test
 	fun `Default case test convert to XML learning material expenses`() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
-		val laerestotte = JsonLaeremiddelTestBuilder().build()
+		val laerestotte = JsonLaeremiddelTestBuilder()
+			.fradato("2023-12-02")
+			.tildato("2024-06-20")
+			.farDuDekketLaeremidlerEtterAndreOrdninger("Delvis")
+			.hvorMyeFarDuDekketAvEnAnnenAktor(1500)
+			.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore("Jeg skal ta videregående utdanning, eller forkurs på universitet")
+			.hvilketKursEllerAnnenFormForUtdanningSkalDuTa(null)
+			.oppgiHvorMangeProsentDuStudererEllerGarPaKurs(100)
+			.utgifterTilLaeremidler(7500)
+			.hvorMyeFarDuDekketAvEnAnnenAktor(1500)
+			.hvorStortBelopSokerDuOmAFaDekketAvNav(6000)
+			.build()
 		val tilleggsstonad =
 			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = laerestotte).build()
 		val xmlFil = json2Xml(soknadDto, tilleggsstonad)
@@ -525,15 +618,85 @@ class TilleggsstonadJson2XmlConverterKtTest {
 		assertNotNull(xmlFil)
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(xmlString.contains("laeremiddelutgifter"))
-		assertTrue(xmlString.contains("<beloep>6000</beloep>"))
+		assertTrue(
+			xmlString.contains(
+				"    <laeremiddelutgifter>\n" +
+					"      <periode>\n" +
+					"        <fom>2023-12-02+01:00</fom>\n" +
+					"        <tom>2024-06-20+02:00</tom>\n" +
+					"      </periode>\n"
+			)
+		)
+		assertTrue(xmlString.contains("<skolenivaa kodeverksRef=\"Skolenivaa\">VGS</skolenivaa>"))
+		assertTrue(xmlString.contains("<prosentandelForUtdanning>100</prosentandelForUtdanning>"))
+		assertTrue(xmlString.contains("<erUtgifterDekket kodeverksRef=\"utgifterdekket\">DELVIS</erUtgifterDekket>"))
+		assertTrue(xmlString.contains("<beloep>7500</beloep>"))
+		assertTrue(xmlString.contains("<hvorMyeDekkesAvAnnenAktoer>1500.0</hvorMyeDekkesAvAnnenAktoer>"))
+		assertTrue(xmlString.contains("<hvorMyeDekkesAvNAV>6000.0</hvorMyeDekkesAvNAV>"))
+
 	}
 
 
 	@Test
-	fun `Default case test convert to XML moving expenses`() {
+	fun `Convert to XML learning material expenses - Universitet deltid, ikke dekket  `() {
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val laerestotte = JsonLaeremiddelTestBuilder()
+			.fradato("2023-12-02")
+			.tildato("2024-06-20")
+			.farDuDekketLaeremidlerEtterAndreOrdninger("Nei")
+			.hvorMyeFarDuDekketAvEnAnnenAktor(null)
+			.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore("Jeg skal ta utdanning på fagskole, høyskole eller universitet")
+			.hvilketKursEllerAnnenFormForUtdanningSkalDuTa(null)
+			.oppgiHvorMangeProsentDuStudererEllerGarPaKurs(50)
+			.utgifterTilLaeremidler(12000)
+			.hvorMyeFarDuDekketAvEnAnnenAktor(null)
+			.hvorStortBelopSokerDuOmAFaDekketAvNav(10000)
+			.build()
+		val tilleggsstonad =
+			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = laerestotte).build()
+		val xmlFil = json2Xml(soknadDto, tilleggsstonad)
+
+		assertNotNull(xmlFil)
+		val xmlString = xmlFil.decodeToString()
+		assertTrue(xmlString.contains("laeremiddelutgifter"))
+		assertTrue(
+			xmlString.contains(
+				"    <laeremiddelutgifter>\n" +
+					"      <periode>\n" +
+					"        <fom>2023-12-02+01:00</fom>\n" +
+					"        <tom>2024-06-20+02:00</tom>\n" +
+					"      </periode>\n"
+			)
+		)
+		assertTrue(xmlString.contains("<skolenivaa kodeverksRef=\"Skolenivaa\">HGU</skolenivaa>"))
+		assertTrue(xmlString.contains("<prosentandelForUtdanning>50</prosentandelForUtdanning>"))
+		assertTrue(xmlString.contains("<erUtgifterDekket kodeverksRef=\"utgifterdekket\">NEI</erUtgifterDekket>"))
+		assertTrue(xmlString.contains("<beloep>12000</beloep>"))
+		assertTrue(xmlString.contains("<hvorMyeDekkesAvNAV>10000.0</hvorMyeDekkesAvNAV>"))
+
+	}
+
+
+	@Test
+	fun `Test convert to XML moving expenses - move by myself`() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
 
-		val flytteutgifter = JsonFlyttingTestBuilder().build()
+		val flytteutgifter = JsonFlyttingTestBuilder()
+			.hvorforFlytterDu("Jeg flytter fordi jeg har fått ny jobb")
+			.oppgiForsteDagINyJobbDdMmAaaa("2024-01-02")
+			.velgLand1(VelgLand(label = "Norge", value = "NO"))
+			.adresse1("Kongens gate 10")
+			.postnr1("3701")
+			.farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav("Nei")
+			.erBostedEtterFlytting(true)
+			.narFlytterDuDdMmAaaa("2023-12-29")
+			.ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra("Jeg flytter selv")
+			.jegFlytterSelv(
+				JegFlytterSelv(
+					hvorLangtSkalDuFlytte = 130, hengerleie = 1000, bom = null, parkering = 200, ferje = 0, annet = null
+				)
+			)
+			.build()
 		val tilleggsstonad =
 			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = flytteutgifter).build()
 		val xmlFil = json2Xml(soknadDto, tilleggsstonad)
@@ -541,7 +704,13 @@ class TilleggsstonadJson2XmlConverterKtTest {
 		assertNotNull(xmlFil)
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(xmlString.contains("flytteutgifter"))
+		assertTrue(xmlString.contains("flyttingPgaAktivitet>false</flyttingPgaAktivitet>"))
+		assertTrue(xmlString.contains("<erUtgifterTilFlyttingDekketAvAndreEnnNAV>false</erUtgifterTilFlyttingDekketAvAndreEnnNAV>"))
+		assertTrue(xmlString.contains("<flyttingPgaNyStilling>true</flyttingPgaNyStilling>"))
 		assertTrue(xmlString.contains("<flytterSelv>true</flytterSelv>"))
+		assertTrue(xmlString.contains("<flyttedato>2023-12-29+01:00</flyttedato>"))
+		assertTrue(xmlString.contains("<avstand>130</avstand>"))
+		assertTrue(xmlString.contains("<tilflyttingsadresse>Kongens gate 10, 3701</tilflyttingsadresse>"))
 		assertTrue(xmlString.contains("<sumTilleggsutgifter>1200.0</sumTilleggsutgifter>"))
 
 	}
@@ -558,7 +727,8 @@ class TilleggsstonadJson2XmlConverterKtTest {
 					belop = 4000,
 					navnPaFlyttebyra2 = "Flytte2",
 					belop1 = 5000,
-					jegVelgerABruke = "Flyttebyrå 1"
+					jegVelgerABruke = "Flyttebyrå 1",
+					hvorLangtSkalDuFlytte1 = 130
 				)
 			)
 			.jegFlytterSelv(jegFlytterSelv = null)
@@ -573,6 +743,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 		assertTrue(xmlString.contains("flytteutgifter"))
 		assertTrue(xmlString.contains("<flytterSelv>false</flytterSelv>"))
 		assertTrue(xmlString.contains("<sumTilleggsutgifter>4000.0</sumTilleggsutgifter>"))
+		assertTrue(xmlString.contains("<avstand>130</avstand>"))
 
 	}
 
@@ -609,6 +780,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 		assertTrue(xmlString.contains("flytteutgifter"))
 		assertTrue(xmlString.contains("<flytterSelv>true</flytterSelv>"))
 		assertTrue(xmlString.contains("<sumTilleggsutgifter>1400.0</sumTilleggsutgifter>"))
+		assertTrue(xmlString.contains("<avstand>130</avstand>"))
 
 	}
 
