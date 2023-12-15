@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.rest.sendinn
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
-import no.nav.soknad.innsending.api.FrontendApi
+import no.nav.soknad.innsending.api.SendinnFilApi
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
@@ -34,7 +34,7 @@ class FilRestApi(
 	val tilgangskontroll: Tilgangskontroll,
 	private val filService: FilService,
 	private val filValidatorService: FilValidatorService
-) : FrontendApi {
+) : SendinnFilApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val secureLogger = LoggerFactory.getLogger("secureLogger")

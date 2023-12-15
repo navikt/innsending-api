@@ -10,12 +10,20 @@ info:
     name: MIT License
     url: https://github.com/navikt/soknadsfillager/blob/main/LICENSE
 tags:
-  - name: frontend
-    description: Endepunkt for å opprette søknad basert på skjemanummer, støtte opplasting av vedlegg og innsending av søknad.
+  - name: ettersending
+    description: TODO
+  - name: fyllut
+    description: Endepunkt for å opprette søknad gitt utfylt skjema, slik at søker kan bruke frontend til å legge til vedlegg og sende inn.
   - name: innsendte
     description: Endepunkt for å hente liste av allerede innsendte søknader.
-  - name: fyllUt
-    description: Endepunkt for å opprette søknad gitt utfylt skjema, slik at søker kan bruke frontend til å legge til vedlegg og sende inn.
+  - name: sendinn-soknad
+    description: TODO
+  - name: sendinn-vedlegg
+    description: TODO
+  - name: sendinn-fil
+    description: TODO
+  - name: soknadsveiviser
+    description: TODO
 
 paths:
   /fyllUt/v1/leggTilVedlegg:
@@ -36,7 +44,7 @@ paths:
         302:
           description: Found
       tags:
-        - soknadFraFyllUt
+        - fyllut
 
   /fyllUt/v1/soknad/{innsendingsId}:
     get:
@@ -63,7 +71,7 @@ paths:
         404:
           description: Ingen søknad funnet.
       tags:
-        - fyllUtHentSoknad
+        - fyllut
     put:
       summary: Oppdater en eksisterende søknadsutfylling
       description: Dette endepunktet kalles for hvert steg i FyllUt-flyten og oppdaterer søknaden. Alle felter blir overskrevet unntatt brukerId og skjemanr. Vedleggslisten skal være tom. (Vedleggslisten og hoveddokument (PDF) vil bli lagt til i "PUT /fyllUt/v1/utfyltSoknad/{innsendingsId}").
@@ -95,7 +103,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/SkjemaDto"
       tags:
-        - fyllUtOppdaterSoknad
+        - fyllut
 
     delete:
       summary: Kall for å slette opprettet søknad gitt innsendingsId.
@@ -119,7 +127,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/BodyStatusResponseDto"
       tags:
-        - fyllUtSlettSoknad
+        - fyllut
 
   /fyllUt/v1/utfyltSoknad/{innsendingsId}:
     put:
@@ -148,7 +156,7 @@ paths:
         302:
           description: Oppdatering av ferdig utfylt søknad, med redirect til SendInn
       tags:
-        - fyllUtUtfyltSoknad
+        - fyllut
 
   /fyllUt/v1/soknad:
     post:
@@ -188,7 +196,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/SkjemaDto"
       tags:
-        - fyllUtOpprettSoknad
+        - fyllut
 
   /fyllUt/v1/prefill-data:
       get:
@@ -215,7 +223,7 @@ paths:
                 schema:
                   $ref: "#/components/schemas/PrefillData"
         tags:
-          - fyllUtPrefillData
+          - fyllut
 
   /innsendte/v1/files/{uuids}:
     get:
@@ -253,7 +261,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/SoknadFile"
       tags:
-        - hentInnsendteFiler
+        - innsendte
 
 
   /frontend/v1/soknad:
@@ -278,7 +286,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/DokumentSoknadDto"
       tags:
-        - opprettSoknad
+        - soknadsveiviser
 
 
   /frontend/v1/ettersendPaSkjema:
@@ -303,7 +311,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/DokumentSoknadDto"
       tags:
-        - opprettEttersendingGittSkjemanr
+        - soknadsveiviser
 
   /frontend/v1/soknad/{innsendingsId}:
     get:
@@ -328,7 +336,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/DokumentSoknadDto"
       tags:
-        - hentSoknad
+        - sendinn-soknad
 
     patch:
       summary: Kall for å endre visningsSteg på søknad gitt innsendingsId.
@@ -356,7 +364,7 @@ paths:
         204:
           description: No content
       tags:
-        - endreSoknad
+        - sendinn-soknad
 
     delete:
       summary: Kall for å slette opprettet søknad gitt innsendingsId.
@@ -380,7 +388,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/BodyStatusResponseDto"
       tags:
-        - slettSoknad
+        - sendinn-soknad
 
   /frontend/v1/soknad/{innsendingsId}/vedlegg:
     post:
@@ -414,7 +422,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/VedleggDto"
       tags:
-        - lagreVedlegg
+        - sendinn-vedlegg
 
     get:
       summary: Kall for å hente vedlegg (inkludert hoveddokument) til søknad gitt innsendingsId.
@@ -440,7 +448,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/VedleggDto"
       tags:
-        - hentVedleggsListe
+        - sendinn-vedlegg
 
   /frontend/v1/soknad/{innsendingsId}/vedlegg/{vedleggsId}:
     get:
@@ -473,7 +481,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/VedleggDto"
       tags:
-        - hentVedlegg
+        - sendinn-vedlegg
 
     patch:
       summary: Kall for å endre tittel og status på et vedlegg.
@@ -514,7 +522,7 @@ paths:
                 $ref: "#/components/schemas/VedleggDto"
 
       tags:
-        - endreVedlegg
+        - sendinn-vedlegg
 
     delete:
       summary: Kall for å slette ett spesifikt vedlegg med dens filer til søknad gitt innsendingsId.
@@ -546,7 +554,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/BodyStatusResponseDto"
       tags:
-        - slettVedlegg
+        - sendinn-vedlegg
 
   /frontend/v1/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil:
     post:
@@ -591,7 +599,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/FilDto"
       tags:
-        - lagreFil
+        - sendinn-fil
 
     get:
       summary: Kall for å hente en opplastede filer på ett vedlegg til en søknad gitt innsendingsId, vedleggsId og filId.
@@ -625,7 +633,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/FilDto"
       tags:
-        - hentFilInfoForVedlegg
+        - sendinn-fil
 
 
   /frontend/v1/soknad/{innsendingsId}/vedlegg/{vedleggsId}/fil/{filId}:
@@ -668,7 +676,7 @@ paths:
                 type: string
                 format: binary
       tags:
-        - hentFil
+        - sendinn-fil
 
     delete:
       summary: Kall for å slette en opplastet fil på en søknad gitt innsendingsId, vedleggsId og filId.
@@ -708,7 +716,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/VedleggDto"
       tags:
-        - slettFil
+        - sendinn-fil
 
   /frontend/v1/sendInn/{innsendingsId}:
     post:
@@ -733,7 +741,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/KvitteringsDto"
       tags:
-        - sendInnSoknad
+        - sendinn-soknad
 
   /frontend/v1/skjema/{skjemanr}/soknader:
     get:
@@ -767,7 +775,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/DokumentSoknadDto"
       tags:
-        - hentSoknaderForSkjemanr
+        - fyllut
 
   /health/ping:
     get:

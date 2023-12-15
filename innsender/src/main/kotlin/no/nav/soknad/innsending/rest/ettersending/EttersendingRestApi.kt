@@ -2,7 +2,6 @@ package no.nav.soknad.innsending.rest.ettersending
 
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
-import no.nav.soknad.innsending.api.FrontendApi
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.SafService
 import no.nav.soknad.innsending.service.SoknadService
@@ -19,7 +18,7 @@ class EttersendingRestApi(
 	val soknadService: SoknadService,
 	val tilgangskontroll: Tilgangskontroll,
 	private val safService: SafService,
-) : FrontendApi {
+) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val secureLogger = LoggerFactory.getLogger("secureLogger")

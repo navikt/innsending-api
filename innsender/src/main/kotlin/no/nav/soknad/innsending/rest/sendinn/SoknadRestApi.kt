@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.rest.sendinn
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
-import no.nav.soknad.innsending.api.FrontendApi
+import no.nav.soknad.innsending.api.SendinnSoknadApi
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.BodyStatusResponseDto
@@ -29,7 +29,7 @@ class SoknadRestApi(
 	val soknadService: SoknadService,
 	val tilgangskontroll: Tilgangskontroll,
 	private val innsendingService: InnsendingService,
-) : FrontendApi {
+) : SendinnSoknadApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val secureLogger = LoggerFactory.getLogger("secureLogger")

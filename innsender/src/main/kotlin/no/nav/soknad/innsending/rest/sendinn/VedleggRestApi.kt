@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.rest.sendinn
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
-import no.nav.soknad.innsending.api.FrontendApi
+import no.nav.soknad.innsending.api.SendinnVedleggApi
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
@@ -32,7 +32,7 @@ class VedleggRestApi(
 	private val restConfig: RestConfig,
 	private val filService: FilService,
 	private val vedleggService: VedleggService,
-) : FrontendApi {
+) : SendinnVedleggApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val secureLogger = LoggerFactory.getLogger("secureLogger")

@@ -1,8 +1,7 @@
 package no.nav.soknad.innsending.rest.fyllut
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
-import no.nav.soknad.innsending.api.FrontendApi
-import no.nav.soknad.innsending.api.FyllUtApi
+import no.nav.soknad.innsending.api.FyllutApi
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
@@ -32,7 +31,7 @@ class FyllutRestApi(
 	val soknadService: SoknadService,
 	val tilgangskontroll: Tilgangskontroll,
 	val prefillService: PrefillService
-) : FyllUtApi, FrontendApi {
+) : FyllutApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val secureLogger = LoggerFactory.getLogger("secureLogger")
