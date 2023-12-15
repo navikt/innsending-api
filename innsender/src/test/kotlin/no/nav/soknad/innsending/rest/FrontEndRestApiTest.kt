@@ -1,10 +1,7 @@
 package no.nav.soknad.innsending.rest
 
 import com.google.gson.Gson
-import com.nimbusds.jose.JOSEObjectType
 import no.nav.security.mock.oauth2.MockOAuth2Server
-import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
-import no.nav.security.token.support.spring.test.MockLoginController
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.InnsendingApiApplication
 import no.nav.soknad.innsending.model.*
@@ -60,10 +57,6 @@ class FrontEndRestApiTest : ApplicationTest() {
 	@Value("\${server.port}")
 	var serverPort: Int? = 9064
 
-	private val tokenx = "tokenx"
-	private val subject = "12345678901"
-	private val audience = "aud-localhost"
-	private val expiry = 2 * 3600
 	private val defaultUser = "12345678901"
 	private val defaultSkjemanr = "NAV 55-00.60"
 
@@ -73,18 +66,7 @@ class FrontEndRestApiTest : ApplicationTest() {
 		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 
-		val token: String = mockOAuth2Server.issueToken(
-			tokenx,
-			MockLoginController::class.java.simpleName,
-			DefaultOAuth2TokenCallback(
-				tokenx,
-				subject,
-				JOSEObjectType.JWT.type,
-				listOf(audience),
-				mapOf("acr" to "Level4"),
-				expiry.toLong()
-			)
-		).serialize()
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
 		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak)
 		val requestEntity = HttpEntity(opprettSoknadBody, Hjelpemetoder.createHeaders(token))
@@ -103,18 +85,7 @@ class FrontEndRestApiTest : ApplicationTest() {
 		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 
-		val token: String = mockOAuth2Server.issueToken(
-			tokenx,
-			MockLoginController::class.java.simpleName,
-			DefaultOAuth2TokenCallback(
-				tokenx,
-				subject,
-				JOSEObjectType.JWT.type,
-				listOf(audience),
-				mapOf("acr" to "Level4"),
-				expiry.toLong()
-			)
-		).serialize()
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
 		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak)
 		val postRequestEntity = HttpEntity(opprettSoknadBody, Hjelpemetoder.createHeaders(token))
@@ -143,19 +114,7 @@ class FrontEndRestApiTest : ApplicationTest() {
 		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 		val vedlegg = listOf("N6")
-
-		val token: String = mockOAuth2Server.issueToken(
-			tokenx,
-			MockLoginController::class.java.simpleName,
-			DefaultOAuth2TokenCallback(
-				tokenx,
-				subject,
-				JOSEObjectType.JWT.type,
-				listOf(audience),
-				mapOf("acr" to "Level4"),
-				expiry.toLong()
-			)
-		).serialize()
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
 		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak, vedlegg)
 		val postRequestEntity = HttpEntity(opprettSoknadBody, Hjelpemetoder.createHeaders(token))
@@ -362,18 +321,7 @@ class FrontEndRestApiTest : ApplicationTest() {
 	}
 
 	private fun getToken(): String {
-		return mockOAuth2Server.issueToken(
-			tokenx,
-			MockLoginController::class.java.simpleName,
-			DefaultOAuth2TokenCallback(
-				tokenx,
-				subject,
-				JOSEObjectType.JWT.type,
-				listOf(audience),
-				mapOf("acr" to "Level4"),
-				expiry.toLong()
-			)
-		).serialize()
+		return TokenGenerator(mockOAuth2Server).lagTokenXToken()
 	}
 
 	@Test
@@ -420,18 +368,7 @@ class FrontEndRestApiTest : ApplicationTest() {
 		val spraak = "nb_NO"
 		val vedlegg = emptyList<String>()
 
-		val token: String = mockOAuth2Server.issueToken(
-			tokenx,
-			MockLoginController::class.java.simpleName,
-			DefaultOAuth2TokenCallback(
-				tokenx,
-				subject,
-				JOSEObjectType.JWT.type,
-				listOf(audience),
-				mapOf("acr" to "Level4"),
-				expiry.toLong()
-			)
-		).serialize()
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
 		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak, vedlegg)
 		val postRequestEntity = HttpEntity(opprettSoknadBody, Hjelpemetoder.createHeaders(token))
@@ -464,18 +401,7 @@ class FrontEndRestApiTest : ApplicationTest() {
 		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 
-		val token: String = mockOAuth2Server.issueToken(
-			tokenx,
-			MockLoginController::class.java.simpleName,
-			DefaultOAuth2TokenCallback(
-				tokenx,
-				subject,
-				JOSEObjectType.JWT.type,
-				listOf(audience),
-				mapOf("acr" to "idporten-loa-high"),
-				expiry.toLong()
-			)
-		).serialize()
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
 		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak)
 		val requestEntity = HttpEntity(opprettSoknadBody, Hjelpemetoder.createHeaders(token))

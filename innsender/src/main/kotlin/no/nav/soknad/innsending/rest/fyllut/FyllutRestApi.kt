@@ -12,7 +12,6 @@ import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH
-import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_LEVEL_4
 import no.nav.soknad.innsending.util.Constants.TOKENX
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.mapping.SkjemaDokumentSoknadTransformer
@@ -25,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.net.URI
 
 @RestController
-@ProtectedWithClaims(issuer = TOKENX, claimMap = [CLAIM_ACR_LEVEL_4, CLAIM_ACR_IDPORTEN_LOA_HIGH], combineWithOr = true)
+@ProtectedWithClaims(issuer = TOKENX, claimMap = [CLAIM_ACR_IDPORTEN_LOA_HIGH])
 class FyllutRestApi(
 	val restConfig: RestConfig,
 	val soknadService: SoknadService,
