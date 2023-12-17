@@ -221,7 +221,7 @@ class RepositoryUtils(
 	//NB! metoden vedleggRepository.updateStatusAndInnsendtdato fungerer ved lokal testing, men feiler når kjøring på nais.
 	fun oppdaterVedleggStatusOgInnsendtdato(
 		innsendingsId: String, vedleggsId: Long, opplastingsStatus: OpplastingsStatus,
-		endretDato: LocalDateTime, innsendtDato: LocalDateTime
+		endretDato: LocalDateTime, innsendtDato: LocalDateTime?
 	): Int = try {
 		logger.info("oppdaterVedleggStatusOgInnsendtdato: vedlegg=$vedleggsId, innsendtdato=$innsendtDato ")
 		val raderEndret = vedleggRepository.updateStatusAndInnsendtdato(

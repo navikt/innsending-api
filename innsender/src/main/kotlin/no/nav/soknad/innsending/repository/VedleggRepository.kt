@@ -47,7 +47,7 @@ interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
 		@Param("id") id: Long,
 		@Param("status") status: OpplastingsStatus,
 		@Param("endretdato") endretdato: LocalDateTime,
-		@Param("innsendtdato") innsendtdato: LocalDateTime
+		@Param("innsendtdato") innsendtdato: LocalDateTime?
 	): Int
 
 	@Transactional

@@ -72,7 +72,7 @@ class VedleggService(
 					erpakrevd = v.skjemanummer != "N6",
 					vedleggsnr = v.skjemanummer,
 					tittel = tittel ?: v.tittel ?: "",
-					label = tittel ?: v.tittel ?: "",
+					label = tittel ?: v.tittel,
 					beskrivelse = "",
 					mimetype = null,
 					uuid = UUID.randomUUID().toString(),
@@ -326,11 +326,12 @@ class VedleggService(
 			throw IllegalActionException("Søknad ${soknadDto.innsendingsId} har ikke vedlegg med id $vedleggsId. Kan ikke endre vedlegg da søknaden ikke har et slikt vedlegg")
 		}
 		val oppdatertVedlegg =
-			repo.oppdaterVedleggStatus(
-				soknadDto.innsendingsId!!,
-				vedleggsId,
-				mapTilDbOpplastingsStatus(opplastingsStatus),
-				LocalDateTime.now()
+			repo.oppdaterVedleggStatusOgInnsendtdato(
+				innsendingsId = soknadDto.innsendingsId!!,
+				vedleggsId = vedleggsId,
+				opplastingsStatus = mapTilDbOpplastingsStatus(opplastingsStatus),
+				endretDato = LocalDateTime.now(),
+				innsendtDato = null
 			)
 		if (oppdatertVedlegg.toLong() != vedleggsId) {
 			logger.debug("${soknadDto.innsendingsId}: Oppdatering av status = $opplastingsStatus for vedlegg $vedleggsId feilet")
