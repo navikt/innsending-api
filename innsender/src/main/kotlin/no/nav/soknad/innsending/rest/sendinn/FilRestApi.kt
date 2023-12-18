@@ -30,8 +30,8 @@ import java.time.OffsetDateTime
 @CrossOrigin(maxAge = 3600)
 @ProtectedWithClaims(issuer = Constants.TOKENX, claimMap = [Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH])
 class FilRestApi(
-	val soknadService: SoknadService,
-	val tilgangskontroll: Tilgangskontroll,
+	private val soknadService: SoknadService,
+	private val tilgangskontroll: Tilgangskontroll,
 	private val filService: FilService,
 	private val filValidatorService: FilValidatorService
 ) : SendinnFilApi {

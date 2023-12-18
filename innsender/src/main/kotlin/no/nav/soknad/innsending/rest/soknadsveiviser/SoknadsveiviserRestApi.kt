@@ -3,8 +3,12 @@ package no.nav.soknad.innsending.rest.ettersending
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.SoknadsveiviserApi
-import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.model.AktivSakDto
+import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.OpprettEttersendingGittSkjemaNr
+import no.nav.soknad.innsending.model.OpprettSoknadBody
 import no.nav.soknad.innsending.security.Tilgangskontroll
+import no.nav.soknad.innsending.service.EttersendingService
 import no.nav.soknad.innsending.service.SafService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
@@ -26,8 +30,9 @@ import java.time.OffsetDateTime
 @CrossOrigin(maxAge = 3600)
 @ProtectedWithClaims(issuer = Constants.TOKENX, claimMap = [Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH])
 class SoknadsveiviserRestApi(
-	val soknadService: SoknadService,
-	val tilgangskontroll: Tilgangskontroll,
+	private val soknadService: SoknadService,
+	private val tilgangskontroll: Tilgangskontroll,
+	private val ettersendingService: EttersendingService,
 	private val safService: SafService,
 ) : SoknadsveiviserApi {
 
@@ -41,7 +46,7 @@ class SoknadsveiviserRestApi(
 
 		combinedLogger.log("Skal opprette søknad for ${opprettSoknadBody.skjemanr}", brukerId)
 
-		soknadService.loggWarningVedEksisterendeSoknad(brukerId, opprettSoknadBody.skjemanr, SoknadType.soknad)
+		soknadService.loggWarningVedEksisterendeSoknad(brukerId, opprettSoknadBody.skjemanr)
 
 		val dokumentSoknadDto = soknadService.opprettSoknad(
 			brukerId,
@@ -68,10 +73,9 @@ class SoknadsveiviserRestApi(
 			brukerId
 		)
 
-		soknadService.loggWarningVedEksisterendeSoknad(
+		ettersendingService.loggWarningVedEksisterendeEttersendelse(
 			brukerId,
 			opprettEttersendingGittSkjemaNr.skjemanr,
-			SoknadType.ettersendelse
 		)
 
 		val arkiverteSoknader = safService.hentInnsendteSoknader(brukerId)
@@ -119,24 +123,27 @@ class SoknadsveiviserRestApi(
 				if (innsendteSoknader[0].innsendingsId == arkiverteSoknader[0].innsendingsId ||
 					innsendteSoknader[0].innsendtDato!!.isAfter(arkiverteSoknader[0].innsendtDato)
 				) {
-					soknadService.opprettEttersendingGittSoknadOgVedlegg(
-						brukerId = brukerId, nyesteSoknad = innsendteSoknader[0],
+					ettersendingService.opprettEttersendingGittSoknadOgVedlegg(
+						brukerId = brukerId,
+						nyesteSoknad = innsendteSoknader[0],
 						sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
 						vedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
 					)
 				} else {
 					// Det er blitt sendt inn en søknad en annen vei til arkivet, knytt ettersendingen til denne ved å liste innsendte dokumenter
 					// Opprett en ettersendingssøknad med innsendte vedlegg fra arkiverteSoknader[0]+ eventuelle ekstra vedlegg fra input.
-					soknadService.opprettEttersendingGittArkivertSoknadOgVedlegg(
-						brukerId = brukerId, arkivertSoknad = arkiverteSoknader[0],
+					ettersendingService.opprettEttersendingGittArkivertSoknadOgVedlegg(
+						brukerId = brukerId,
+						arkivertSoknad = arkiverteSoknader[0],
 						opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr,
 						sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
 						forsteInnsendingsDato = innsendteSoknader[0].forsteInnsendingsDato
 					)
 				}
 			} else {
-				soknadService.opprettEttersendingGittSoknadOgVedlegg(
-					brukerId = brukerId, nyesteSoknad = innsendteSoknader[0],
+				ettersendingService.opprettEttersendingGittSoknadOgVedlegg(
+					brukerId = brukerId,
+					nyesteSoknad = innsendteSoknader[0],
 					sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
 					vedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
 				)
@@ -144,14 +151,15 @@ class SoknadsveiviserRestApi(
 		} else if (arkiverteSoknader.isNotEmpty()) {
 			// Det er blitt sendt inn en søknad en annen vei til arkivet, knytt ettersendingen til denne ved å liste innsendte dokumenter
 			// Opprett en ettersendingssøknad med innsendte vedlegg fra arkiverteSoknader[0]+ eventuelle ekstra vedlegg fra input.
-			soknadService.opprettEttersendingGittArkivertSoknadOgVedlegg(
-				brukerId = brukerId, arkivertSoknad = arkiverteSoknader[0],
+			ettersendingService.opprettEttersendingGittArkivertSoknadOgVedlegg(
+				brukerId = brukerId,
+				arkivertSoknad = arkiverteSoknader[0],
 				opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr,
 				sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
 				forsteInnsendingsDato = arkiverteSoknader[0].innsendtDato
 			)
 		} else {
-			soknadService.opprettEttersendingGittSkjemanr(
+			ettersendingService.opprettEttersendingGittSkjemanr(
 				brukerId = brukerId,
 				skjemanr = opprettEttersendingGittSkjemaNr.skjemanr,
 				spraak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),

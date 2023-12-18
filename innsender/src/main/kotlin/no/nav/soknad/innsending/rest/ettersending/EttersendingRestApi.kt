@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RestController
 @CrossOrigin(maxAge = 3600)
 @ProtectedWithClaims(issuer = Constants.TOKENX, claimMap = [Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH])
 class EttersendingRestApi(
-	val soknadService: SoknadService,
-	val tilgangskontroll: Tilgangskontroll,
+	private val soknadService: SoknadService,
+	private val tilgangskontroll: Tilgangskontroll,
 	private val safService: SafService,
 ) {
 

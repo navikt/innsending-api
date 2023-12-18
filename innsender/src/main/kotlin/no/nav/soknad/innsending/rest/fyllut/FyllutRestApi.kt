@@ -26,10 +26,10 @@ import java.net.URI
 @RestController
 @ProtectedWithClaims(issuer = TOKENX, claimMap = [CLAIM_ACR_IDPORTEN_LOA_HIGH])
 class FyllutRestApi(
-	val restConfig: RestConfig,
-	val soknadService: SoknadService,
-	val tilgangskontroll: Tilgangskontroll,
-	val prefillService: PrefillService
+	private val restConfig: RestConfig,
+	private val soknadService: SoknadService,
+	private val tilgangskontroll: Tilgangskontroll,
+	private val prefillService: PrefillService
 ) : FyllutApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -45,7 +45,7 @@ class FyllutRestApi(
 			"Skal opprette søknad fra FyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}",
 			brukerId
 		)
-		soknadService.loggWarningVedEksisterendeSoknad(brukerId, skjemaDto.skjemanr, SoknadType.soknad)
+		soknadService.loggWarningVedEksisterendeSoknad(brukerId, skjemaDto.skjemanr)
 
 		val opprettetSoknad = soknadService.opprettNySoknad(
 			SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
