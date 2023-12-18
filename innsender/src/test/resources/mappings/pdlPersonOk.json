@@ -1,0 +1,35 @@
+{
+	"request": {
+		"urlPattern": "/pdl-api/graphql",
+		"method": "POST",
+		"headers": {
+			"Authorization": {
+				"matches": ".*"
+			}
+		},
+		"bodyPatterns": [
+			{
+				"matchesJsonPath": "$[?(@.operationName == 'HentPerson')]"
+			}
+		]
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": {
+			"data": {
+				"hentPerson": {
+					"navn": [
+						{
+							"fornavn": "Ola",
+							"mellomnavn": null,
+							"etternavn": "Normann"
+						}
+					]
+				}
+			}
+		}
+	}
+}

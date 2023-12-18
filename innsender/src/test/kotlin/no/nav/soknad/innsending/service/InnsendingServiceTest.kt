@@ -153,7 +153,7 @@ class InnsendingServiceTest : ApplicationTest() {
 		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
 
 		val ettersendingsSoknadDto =
-			soknadService.opprettEttersending(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
+			ettersendingService.opprettEttersending(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 
 		Assertions.assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
 		Assertions.assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
@@ -225,7 +225,7 @@ class InnsendingServiceTest : ApplicationTest() {
 
 		// Opprett ettersendingssoknad
 		val ettersendingsSoknadDto =
-			soknadService.opprettEttersending(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
+			ettersendingService.opprettEttersending(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
 
 		Assertions.assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
 		Assertions.assertTrue(ettersendingsSoknadDto.vedleggsListe.none { it.opplastingsStatus == OpplastingsStatusDto.innsendt })

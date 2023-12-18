@@ -402,6 +402,61 @@ class EttersendingService(
 		}
 	}
 
+	fun opprettDokumentSoknadDto(
+		innsendteSoknader: List<DokumentSoknadDto>,
+		arkiverteSoknader: List<AktivSakDto>,
+		brukerId: String,
+		opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr
+	): DokumentSoknadDto =
+		if (innsendteSoknader.isNotEmpty()) {
+			if (arkiverteSoknader.isNotEmpty()) {
+				if (innsendteSoknader[0].innsendingsId == arkiverteSoknader[0].innsendingsId ||
+					innsendteSoknader[0].innsendtDato!!.isAfter(arkiverteSoknader[0].innsendtDato)
+				) {
+					opprettEttersendingGittSoknadOgVedlegg(
+						brukerId = brukerId,
+						nyesteSoknad = innsendteSoknader[0],
+						sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
+						vedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
+					)
+				} else {
+					// Det er blitt sendt inn en søknad en annen vei til arkivet, knytt ettersendingen til denne ved å liste innsendte dokumenter
+					// Opprett en ettersendingssøknad med innsendte vedlegg fra arkiverteSoknader[0]+ eventuelle ekstra vedlegg fra input.
+					opprettEttersendingGittArkivertSoknadOgVedlegg(
+						brukerId = brukerId,
+						arkivertSoknad = arkiverteSoknader[0],
+						opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr,
+						sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
+						forsteInnsendingsDato = innsendteSoknader[0].forsteInnsendingsDato
+					)
+				}
+			} else {
+				opprettEttersendingGittSoknadOgVedlegg(
+					brukerId = brukerId,
+					nyesteSoknad = innsendteSoknader[0],
+					sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
+					vedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
+				)
+			}
+		} else if (arkiverteSoknader.isNotEmpty()) {
+			// Det er blitt sendt inn en søknad en annen vei til arkivet, knytt ettersendingen til denne ved å liste innsendte dokumenter
+			// Opprett en ettersendingssøknad med innsendte vedlegg fra arkiverteSoknader[0]+ eventuelle ekstra vedlegg fra input.
+			opprettEttersendingGittArkivertSoknadOgVedlegg(
+				brukerId = brukerId,
+				arkivertSoknad = arkiverteSoknader[0],
+				opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr,
+				sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
+				forsteInnsendingsDato = arkiverteSoknader[0].innsendtDato
+			)
+		} else {
+			opprettEttersendingGittSkjemanr(
+				brukerId = brukerId,
+				skjemanr = opprettEttersendingGittSkjemaNr.skjemanr,
+				spraak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak),
+				vedleggsnrListe = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
+			)
+		}
+
 	fun loggWarningVedEksisterendeEttersendelse(brukerId: String, skjemanr: String) {
 		val aktiveSoknaderGittSkjemanr = soknadService.hentAktiveSoknader(brukerId, skjemanr, SoknadType.ettersendelse)
 		if (aktiveSoknaderGittSkjemanr.isNotEmpty()) {
