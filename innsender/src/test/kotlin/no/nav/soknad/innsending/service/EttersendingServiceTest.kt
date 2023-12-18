@@ -149,7 +149,7 @@ class EttersendingServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun opprettSoknadForEttersendingAvVedleggGittArkivertSoknadTest() {
+	fun opprettEttersendingGittArkivertSoknadTest() {
 
 		val brukerid = testpersonid
 		val skjemanr = "NAV 10-07.20"
@@ -185,7 +185,7 @@ class EttersendingServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun opprettSoknadForEttersendingGittSkjemanrTest() {
+	fun opprettEttersendingGittSkjemanrTest() {
 
 		val brukerid = testpersonid
 		val skjemanr = "NAV 10-07.20"
@@ -210,7 +210,7 @@ class EttersendingServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun opprettSoknadForEttersendingGittSoknadOgVedleggTest() {
+	fun opprettEttersendingGittSoknadOgVedleggTest() {
 		val ettersendingService = lagEttersendingService()
 		val innsendingService = lagInnsendingService()
 		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1", "C1", "L8"))
@@ -373,7 +373,7 @@ class EttersendingServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun opprettSoknadForettersendingAvVedlegg() {
+	fun opprettEttersending() {
 		val innsendingService = lagInnsendingService()
 		val ettersendingService = lagEttersendingService()
 
@@ -419,7 +419,7 @@ class EttersendingServiceTest : ApplicationTest() {
 
 
 	@Test
-	fun opprettSoknadForEttersendingGittArkivertSoknadOgVedleggTest() {
+	fun opprettEttersendingGittArkivertSoknadOgVedleggTest() {
 		val ettersendingService = lagEttersendingService()
 
 		val brukerid = testpersonid

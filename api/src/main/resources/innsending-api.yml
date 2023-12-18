@@ -19,9 +19,9 @@ tags:
   - name: sendinn-soknad
     description: API for sendinn-frontend applikasjonen for å håndtere søknader.
   - name: sendinn-vedlegg
-    description: API for sendinn-frontend applikasjonen for å håndtere vedleg.
+    description: API for sendinn-frontend applikasjonen for å håndtere vedlegg.
   - name: sendinn-fil
-    description: API for sendinn-frontend applikasjonen for å håndtere filter.
+    description: API for sendinn-frontend applikasjonen for å håndtere filer.
   - name: soknadsveiviser
     description: API for soknadsveiviser applikasjonen.
 
