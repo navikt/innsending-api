@@ -79,7 +79,7 @@ class SoknadsveiviserRestApi(
 		)
 
 		combinedLogger.log(
-			"${ettersending.innsendingsId}: Opprettet ettersending på skjema ${ettersending.skjemanr}",
+			"${ettersending.innsendingsId}: Opprettet ettersending fra soknadsveiviser på skjema ${ettersending.skjemanr}",
 			brukerId
 		)
 

@@ -2,12 +2,16 @@ package no.nav.soknad.innsending.rest.ettersending
 
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
+import no.nav.soknad.innsending.api.EttersendingApi
+import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.OpprettEttersending
 import no.nav.soknad.innsending.security.Tilgangskontroll
-import no.nav.soknad.innsending.service.SafService
-import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.service.EttersendingService
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.RestController
 
@@ -15,16 +19,36 @@ import org.springframework.web.bind.annotation.RestController
 @CrossOrigin(maxAge = 3600)
 @ProtectedWithClaims(issuer = Constants.TOKENX, claimMap = [Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH])
 class EttersendingRestApi(
-	private val soknadService: SoknadService,
 	private val tilgangskontroll: Tilgangskontroll,
-	private val safService: SafService,
-) {
+	private val ettersendingService: EttersendingService,
+) : EttersendingApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val secureLogger = LoggerFactory.getLogger("secureLogger")
 	private val combinedLogger = CombinedLogger(logger, secureLogger)
 
-	// TODO: Implement endpoint for ettersending
+	override fun opprettEttersending(opprettEttersending: OpprettEttersending): ResponseEntity<DokumentSoknadDto> {
+		val brukerId = tilgangskontroll.hentBrukerFraToken()
+		combinedLogger.log(
+			"Kall for å opprette ettersending på skjema ${opprettEttersending.skjemanr}",
+			brukerId
+		)
 
+		// FIXME: Do we need to log warning if ettersending already exists?
+
+		val ettersending = ettersendingService.createEttersendingFromExistingSoknader(
+			ettersending = opprettEttersending,
+			brukerId = brukerId
+		)
+
+		combinedLogger.log(
+			"${ettersending.innsendingsId}: Opprettet ettersending fra soknadsveiviser på skjema ${ettersending.skjemanr}",
+			brukerId
+		)
+
+		return ResponseEntity
+			.status(HttpStatus.CREATED)
+			.body(ettersending)
+	}
 }
 
