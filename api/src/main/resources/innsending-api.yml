@@ -293,14 +293,14 @@ paths:
     post:
       summary: Kall for å opprette en ettersendingssøknad basert på et skjemanummer.
       description: På basis av oppgitt skjemanummer, blir det opprettet en ettersendingssøknad som inviterer søker til å laste opp vedlegg.
-      operationId: opprettEttersendingGittSkjemanr
+      operationId: OpprettEttersending
 
       requestBody:
         description: Data neccessary in order to publish a new task or message user notification.
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/OpprettEttersendingGittSkjemaNr"
+              $ref: "#/components/schemas/OpprettEttersending"
         required: true
 
       responses:
@@ -1312,18 +1312,10 @@ components:
       enum: [ "IkkeValgt", "LastetOpp", "Innsendt", "SendSenere", "SendesAvAndre", "SendesIkke", "LastetOppIkkeRelevantLenger" ]
       description: Status på om et vedlegg til søknad er enda ikke er lastet opp, lastet opp eller innsendt
 
-    OpprettEttersendingGittInnsendingsId:
-      type: object
-      description: Data for å angi hvilken søknad søker ønsker å ettersende på
-      required:
-        - ettersendingTilinnsendingsId
-      properties:
-        ettersendingTilinnsendingsId:
-          $ref: "#/components/schemas/InnsendingsId"
 
-    OpprettEttersendingGittSkjemaNr:
+    OpprettEttersending:
       type: object
-      description: Data for å opprette en søknad gitt skjemanummer
+      description: Data for å opprette en ettersending gitt skjemanummer
       required:
         - skjemanr
         - sprak
@@ -1336,7 +1328,7 @@ components:
           type: array
           description: Liste av vedlegg som kan lastes opp
           items:
-            $ref: "#/components/schemas/Vedleggsnr"
+            $ref: "#/components/schemas/InnsendtVedleggDto"
 
     OpprettSoknadBody:
       type: object
