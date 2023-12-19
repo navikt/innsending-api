@@ -56,11 +56,9 @@ class VedleggService(
 
 	fun saveVedlegg(
 		soknadsId: Long,
-		vedlegg: List<InnsendtVedleggDto>,
-		sprak: String
+		vedleggList: List<InnsendtVedleggDto>,
 	): List<VedleggDbData> {
-		return vedlegg.map { v ->
-			val skjema = skjemaService.hentSkjema(v.vedleggsnr, sprak)
+		return vedleggList.map {
 			repo.lagreVedlegg(
 				VedleggDbData(
 					id = null,
@@ -69,17 +67,17 @@ class VedleggService(
 					erhoveddokument = false,
 					ervariant = false,
 					erpdfa = false,
-					erpakrevd = skjema.skjemanummer != "N6",
-					vedleggsnr = skjema.skjemanummer,
-					tittel = v.tittel,
-					label = v.tittel,
+					erpakrevd = it.vedleggsnr != "N6",
+					vedleggsnr = it.vedleggsnr,
+					tittel = it.tittel,
+					label = it.tittel,
 					beskrivelse = "",
 					mimetype = null,
 					uuid = UUID.randomUUID().toString(),
 					opprettetdato = LocalDateTime.now(),
 					endretdato = LocalDateTime.now(),
 					innsendtdato = null,
-					vedleggsurl = skjema.url,
+					vedleggsurl = null,
 					formioid = null
 				)
 			)
@@ -117,35 +115,6 @@ class VedleggService(
 				)
 			)
 		}
-		return vedleggDbDataListe
-	}
-
-	fun opprettInnsendteVedleggTilSoknad(soknadsId: Long, arkivertSoknad: AktivSakDto): List<VedleggDbData> {
-		val vedleggDbDataListe =
-			arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map { v ->
-				repo.lagreVedlegg(
-					VedleggDbData(
-						null,
-						soknadsId,
-						OpplastingsStatus.INNSENDT,
-						false,
-						ervariant = false,
-						erpdfa = true,
-						erpakrevd = true,
-						vedleggsnr = v.vedleggsnr,
-						tittel = v.tittel,
-						label = v.tittel,
-						beskrivelse = "",
-						mimetype = null,
-						uuid = UUID.randomUUID().toString(),
-						opprettetdato = mapTilLocalDateTime(arkivertSoknad.innsendtDato) ?: LocalDateTime.now(),
-						endretdato = mapTilLocalDateTime(arkivertSoknad.innsendtDato) ?: LocalDateTime.now(),
-						innsendtdato = mapTilLocalDateTime(arkivertSoknad.innsendtDato) ?: LocalDateTime.now(),
-						vedleggsurl = null,
-						formioid = null
-					)
-				)
-			}
 		return vedleggDbDataListe
 	}
 
@@ -404,6 +373,16 @@ class VedleggService(
 
 	fun vedleggHarFiler(innsendingsId: String, vedleggsId: Long): Boolean {
 		return repo.findAllByVedleggsid(innsendingsId, vedleggsId).any { it.data != null }
+	}
+
+	fun enrichVedleggListFromSanity(vedleggsnrList: List<String>, sprak: String): List<InnsendtVedleggDto> {
+		return vedleggsnrList.map { vedleggsnr ->
+			val kodeverkSkjema = skjemaService.hentSkjema(vedleggsnr, sprak)
+			InnsendtVedleggDto(
+				tittel = kodeverkSkjema.tittel ?: "",
+				vedleggsnr = vedleggsnr,
+			)
+		}
 	}
 
 	private fun reportException(e: Exception, operation: String, tema: String) {

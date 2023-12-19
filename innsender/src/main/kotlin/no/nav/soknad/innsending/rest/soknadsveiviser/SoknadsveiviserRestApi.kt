@@ -4,7 +4,7 @@ package no.nav.soknad.innsending.rest.soknadsveiviser
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.SoknadsveiviserApi
 import no.nav.soknad.innsending.model.DokumentSoknadDto
-import no.nav.soknad.innsending.model.OpprettEttersending
+import no.nav.soknad.innsending.model.OpprettEttersendingGittSkjemaNr
 import no.nav.soknad.innsending.model.OpprettSoknadBody
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.EttersendingService
@@ -61,31 +61,31 @@ class SoknadsveiviserRestApi(
 	}
 
 	@Timed(InnsenderOperation.OPPRETT)
-	override fun opprettEttersending(ettersending: OpprettEttersending): ResponseEntity<DokumentSoknadDto> {
+	override fun opprettEttersendingGittSkjemanr(opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr): ResponseEntity<DokumentSoknadDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		combinedLogger.log(
-			"Kall for å opprette ettersending på skjema ${ettersending.skjemanr}",
+			"Kall for å opprette ettersending på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}",
 			brukerId
 		)
 
 		ettersendingService.logWarningForExistingEttersendelse(
 			brukerId = brukerId,
-			skjemanr = ettersending.skjemanr,
+			skjemanr = opprettEttersendingGittSkjemaNr.skjemanr,
 		)
 
-		val createdEttersending = ettersendingService.createEttersendingFromExistingSoknader(
-			ettersending = ettersending,
+		val ettersending = ettersendingService.createEttersendingFromExistingSoknaderUsingSanity(
+			opprettEttersendingGittSkjemaNr = opprettEttersendingGittSkjemaNr,
 			brukerId = brukerId
 		)
 
 		combinedLogger.log(
-			"${createdEttersending.innsendingsId}: Opprettet ettersending på skjema ${createdEttersending.skjemanr}",
+			"${ettersending.innsendingsId}: Opprettet ettersending på skjema ${ettersending.skjemanr}",
 			brukerId
 		)
 
 		return ResponseEntity
 			.status(HttpStatus.CREATED)
-			.body(createdEttersending)
+			.body(ettersending)
 	}
 
 }

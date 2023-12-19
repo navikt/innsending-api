@@ -293,14 +293,14 @@ paths:
     post:
       summary: Kall for å opprette en ettersendingssøknad basert på et skjemanummer.
       description: På basis av oppgitt skjemanummer, blir det opprettet en ettersendingssøknad som inviterer søker til å laste opp vedlegg.
-      operationId: OpprettEttersending
+      operationId: opprettEttersendingGittSkjemanr
 
       requestBody:
         description: Data neccessary in order to publish a new task or message user notification.
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/OpprettEttersending"
+              $ref: "#/components/schemas/OpprettEttersendingGittSkjemaNr"
         required: true
 
       responses:
@@ -1312,10 +1312,32 @@ components:
       enum: [ "IkkeValgt", "LastetOpp", "Innsendt", "SendSenere", "SendesAvAndre", "SendesIkke", "LastetOppIkkeRelevantLenger" ]
       description: Status på om et vedlegg til søknad er enda ikke er lastet opp, lastet opp eller innsendt
 
-
     OpprettEttersending:
       type: object
-      description: Data for å opprette en ettersending gitt skjemanummer
+      description: Data for å opprette en ettersending
+      required:
+        - tittel
+        - skjemanr
+        - sprak
+        - tema
+      properties:
+        tittel:
+          $ref: "#/components/schemas/Tittel"
+        skjemanr:
+          $ref: "#/components/schemas/Skjemanr"
+        sprak:
+          $ref: "#/components/schemas/Spraak"
+        tema:
+          $ref: "#/components/schemas/Tema"
+        vedleggsListe:
+          type: array
+          description: Liste av vedlegg som kan lastes opp
+          items:
+            $ref: "#/components/schemas/InnsendtVedleggDto"
+
+    OpprettEttersendingGittSkjemaNr:
+      type: object
+      description: Data for å opprette en søknad gitt skjemanummer
       required:
         - skjemanr
         - sprak
@@ -1328,7 +1350,7 @@ components:
           type: array
           description: Liste av vedlegg som kan lastes opp
           items:
-            $ref: "#/components/schemas/InnsendtVedleggDto"
+            $ref: "#/components/schemas/Vedleggsnr"
 
     OpprettSoknadBody:
       type: object

@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
-import no.nav.soknad.innsending.consumerapis.skjema.KodeverkSkjema
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
@@ -203,11 +202,10 @@ class EttersendingService(
 		ettersending: OpprettEttersending
 	): DokumentSoknadDto {
 		val operation = InnsenderOperation.OPPRETT.name
-		val sprak = finnSpraakFraInput(ettersending.sprak)
-		val vedleggsnrListe = ettersending.vedleggsListe?.map { it.vedleggsnr } ?: emptyList()
+		val vedleggsnrList = ettersending.vedleggsListe?.map { it.vedleggsnr } ?: emptyList()
 
 		try {
-			logger.info("Oppretter ettersending fra innsendt søknad fra ${existingSoknad.innsendingsId} og vedleggsliste = $vedleggsnrListe")
+			logger.info("Oppretter ettersending fra innsendt søknad fra ${existingSoknad.innsendingsId} og vedleggsliste = $vedleggsnrList")
 			val ettersendingDb = saveEttersending(
 				brukerId = brukerId,
 				ettersendingsId = existingSoknad.ettersendingsId ?: existingSoknad.innsendingsId!!,
@@ -220,23 +218,24 @@ class EttersendingService(
 				fristForEttersendelse = existingSoknad.fristForEttersendelse
 			)
 
-			val existingSoknadVedleggsNrListe =
+			val existingSoknadVedleggsNrList =
 				existingSoknad.vedleggsListe.filter { !(it.erHoveddokument || it.vedleggsnr == KVITTERINGS_NR) }
 					.map { it.vedleggsnr }
-			val filteredVedleggsnrListe = vedleggsnrListe.filter { !existingSoknadVedleggsNrListe.contains(it) }
+
+			val newVedleggsListe =
+				ettersending.vedleggsListe?.filter { !existingSoknadVedleggsNrList.contains(it.vedleggsnr) }.orEmpty()
 
 			val vedleggDbDataListe =
-				vedleggService.saveVedlegg(ettersendingDb.id!!, filteredVedleggsnrListe, sprak)
+				vedleggService.saveVedlegg(
+					soknadsId = ettersendingDb.id!!,
+					vedleggList = newVedleggsListe
+				)
 
 			val innsendtDbDataListe =
 				vedleggService.saveVedlegg(ettersendingDb, existingSoknad.vedleggsListe)
 
-			val dokumentSoknadDto = lagDokumentSoknadDto(ettersendingDb, vedleggDbDataListe + innsendtDbDataListe)
-
-			publiserBrukernotifikasjon(dokumentSoknadDto)
-
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
-			return dokumentSoknadDto
+			return lagDokumentSoknadDto(ettersendingDb, vedleggDbDataListe + innsendtDbDataListe)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, existingSoknad.tema)
 			throw e
@@ -270,7 +269,7 @@ class EttersendingService(
 			val archivedVedleggsnrList =
 				archivedSoknad.innsendtVedleggDtos.filter { !(it.vedleggsnr == archivedSoknad.skjemanr || it.vedleggsnr == KVITTERINGS_NR) }
 					.map { it.vedleggsnr }
-			val newVedleggsnrListe =
+			val newVedleggsListe =
 				ettersending.vedleggsListe?.filter { !archivedVedleggsnrList.contains(it.vedleggsnr) }.orEmpty()
 
 			val archivedVedleggDbList = vedleggService.saveVedlegg(
@@ -280,16 +279,11 @@ class EttersendingService(
 
 			val newVedleggDbList = vedleggService.saveVedlegg(
 				soknadsId = ettersendingDb.id!!,
-				vedlegg = newVedleggsnrListe,
-				sprak = sprak
+				vedleggList = newVedleggsListe,
 			)
 
-			val dokumentSoknadDto = lagDokumentSoknadDto(ettersendingDb, newVedleggDbList + archivedVedleggDbList)
-
-			publiserBrukernotifikasjon(dokumentSoknadDto)
-
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
-			return dokumentSoknadDto
+			return lagDokumentSoknadDto(ettersendingDb, newVedleggDbList + archivedVedleggDbList)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, archivedSoknad.tema)
 			throw e
@@ -298,53 +292,36 @@ class EttersendingService(
 		}
 	}
 
-	fun getKodeverkSkjema(skjemanr: String, sprak: String): KodeverkSkjema {
-		return try {
-			skjemaService.hentSkjema(skjemanr, finnSpraakFraInput(sprak))
-		} catch (e: Exception) {
-			exceptionHelper.reportException(e, InnsenderOperation.OPPRETT.name, "Ukjent")
-			throw e
-		}
-	}
-
 	@Transactional
 	fun createEttersending(brukerId: String, ettersending: OpprettEttersending): DokumentSoknadDto {
-		val operation = InnsenderOperation.OPPRETT.name
 		logger.info("Oppretter ettersending for skjemanr=${ettersending.skjemanr}")
-		val sprak = finnSpraakFraInput(ettersending.sprak)
-
-		val kodeverkSkjema = getKodeverkSkjema(ettersending.skjemanr, sprak)
+		val operation = InnsenderOperation.OPPRETT.name
 
 		try {
 			// lagre soknad
 			val ettersendingsSoknadDb = saveEttersending(
 				brukerId = brukerId,
 				ettersendingsId = null,
-				tittel = kodeverkSkjema.tittel ?: "",
+				tittel = ettersending.tittel,
 				skjemanr = ettersending.skjemanr,
-				tema = kodeverkSkjema.tema ?: "",
-				sprak = sprak,
+				tema = ettersending.tema,
+				sprak = ettersending.sprak,
 				forsteInnsendingsDato = OffsetDateTime.now()
 			)
 
 			// For hvert vedleggsnr hent definisjonen fra Sanity og lagre vedlegg.
 			val vedleggDbDataListe = vedleggService.saveVedlegg(
 				soknadsId = ettersendingsSoknadDb.id!!,
-				vedlegg = ettersending.vedleggsListe ?: emptyList(),
-				sprak = sprak
+				vedleggList = ettersending.vedleggsListe ?: emptyList(),
 			)
 
-			val dokumentSoknadDto = lagDokumentSoknadDto(ettersendingsSoknadDb, vedleggDbDataListe)
-
-			publiserBrukernotifikasjon(dokumentSoknadDto)
-
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
-			return dokumentSoknadDto
+			return lagDokumentSoknadDto(ettersendingsSoknadDb, vedleggDbDataListe)
 		} catch (e: Exception) {
-			exceptionHelper.reportException(e, operation, kodeverkSkjema.tema ?: "Ukjent")
+			exceptionHelper.reportException(e, operation, ettersending.tema)
 			throw e
 		} finally {
-			innsenderMetrics.operationsCounterInc(operation, kodeverkSkjema.tema ?: "Ukjent")
+			innsenderMetrics.operationsCounterInc(operation, ettersending.tema)
 		}
 	}
 
@@ -402,59 +379,81 @@ class EttersendingService(
 		val innsendteSoknader = getInnsendteSoknader(ettersending.skjemanr)
 		val arkiverteSoknader = getArkiverteEttersendinger(ettersending.skjemanr, brukerId)
 
-		return createEttersendingFromExistingSoknader(
+		val dokumentSoknadDto = createEttersendingFromExistingSoknader(
 			innsendteSoknader = innsendteSoknader,
 			arkiverteSoknader = arkiverteSoknader,
 			brukerId = brukerId,
 			ettersending = ettersending
 		)
+
+		publiserBrukernotifikasjon(dokumentSoknadDto)
+
+		return dokumentSoknadDto
 	}
+
+	// Gets info from Sanity before creating an ettersending
+	fun createEttersendingFromExistingSoknaderUsingSanity(
+		brukerId: String,
+		opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr
+	): DokumentSoknadDto {
+		val vedleggList = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
+		val skjemanr = opprettEttersendingGittSkjemaNr.skjemanr
+		val sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak)
+
+		val kodeverkSkjema = skjemaService.hentSkjema(skjemanr, sprak)
+
+		val ettersending = OpprettEttersending(
+			tittel = kodeverkSkjema.tittel ?: "",
+			skjemanr = skjemanr,
+			sprak = sprak,
+			tema = kodeverkSkjema.tema ?: "",
+			vedleggsListe = vedleggService.enrichVedleggListFromSanity(vedleggList, sprak)
+		)
+
+		return createEttersendingFromExistingSoknader(brukerId, ettersending)
+	}
+
 
 	fun createEttersendingFromExistingSoknader(
 		innsendteSoknader: List<DokumentSoknadDto>,
 		arkiverteSoknader: List<AktivSakDto>,
 		brukerId: String,
 		ettersending: OpprettEttersending
-	): DokumentSoknadDto =
+	): DokumentSoknadDto {
+		// Create a new ettersending without connecting it to an existing søknad
+		if (innsendteSoknader.isEmpty() && arkiverteSoknader.isEmpty()) {
+			return createEttersending(brukerId = brukerId, ettersending = ettersending)
+		}
+
+		// Create a new ettersending based on the latest innsendt søknad
 		if (innsendteSoknader.isNotEmpty()) {
-			if (arkiverteSoknader.isNotEmpty()) {
-				if (innsendteSoknader[0].innsendingsId == arkiverteSoknader[0].innsendingsId ||
-					innsendteSoknader[0].innsendtDato!!.isAfter(arkiverteSoknader[0].innsendtDato)
-				) {
-					createEttersendingFromInnsendtSoknad(
-						brukerId = brukerId,
-						existingSoknad = innsendteSoknader[0],
-						ettersending = ettersending,
-					)
-				} else {
-					// Det er blitt sendt inn en søknad en annen vei til arkivet, knytt ettersendingen til denne ved å liste innsendte dokumenter
-					// Opprett en ettersendingssøknad med innsendte vedlegg fra arkiverteSoknader[0]+ eventuelle ekstra vedlegg fra input.
-					createEttersendingFromArchivedSoknad(
-						brukerId = brukerId,
-						archivedSoknad = arkiverteSoknader[0],
-						ettersending = ettersending,
-						forsteInnsendingsDato = innsendteSoknader[0].forsteInnsendingsDato
-					)
-				}
-			} else {
-				createEttersendingFromInnsendtSoknad(
+			if (arkiverteSoknader.isEmpty() ||
+				innsendteSoknader[0].innsendingsId == arkiverteSoknader[0].innsendingsId ||
+				innsendteSoknader[0].innsendtDato!!.isAfter(arkiverteSoknader[0].innsendtDato)
+			) {
+				return createEttersendingFromInnsendtSoknad(
 					brukerId = brukerId,
 					existingSoknad = innsendteSoknader[0],
+					ettersending = ettersending
+				)
+			} else {
+				return createEttersendingFromArchivedSoknad(
+					brukerId = brukerId,
+					archivedSoknad = arkiverteSoknader[0],
 					ettersending = ettersending,
+					forsteInnsendingsDato = innsendteSoknader[0].forsteInnsendingsDato
 				)
 			}
-		} else if (arkiverteSoknader.isNotEmpty()) {
-			// Det er blitt sendt inn en søknad en annen vei til arkivet, knytt ettersendingen til denne ved å liste innsendte dokumenter
-			// Opprett en ettersendingssøknad med innsendte vedlegg fra arkiverteSoknader[0]+ eventuelle ekstra vedlegg fra input.
-			createEttersendingFromArchivedSoknad(
-				brukerId = brukerId,
-				archivedSoknad = arkiverteSoknader[0],
-				ettersending = ettersending,
-				forsteInnsendingsDato = arkiverteSoknader[0].innsendtDato
-			)
-		} else {
-			createEttersending(brukerId = brukerId, ettersending = ettersending)
 		}
+		// Create a new ettersending based on the latest archived søknad + additional vedlegg from input
+		return createEttersendingFromArchivedSoknad(
+			brukerId = brukerId,
+			archivedSoknad = arkiverteSoknader[0],
+			ettersending = ettersending,
+			forsteInnsendingsDato = arkiverteSoknader[0].innsendtDato
+		)
+	}
+
 
 	fun logWarningForExistingEttersendelse(brukerId: String, skjemanr: String) {
 		val aktiveSoknaderGittSkjemanr = soknadService.hentAktiveSoknader(brukerId, skjemanr, SoknadType.ettersendelse)
