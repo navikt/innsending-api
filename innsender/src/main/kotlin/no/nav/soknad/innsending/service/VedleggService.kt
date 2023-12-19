@@ -29,10 +29,7 @@ class VedleggService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	fun opprettHovedddokumentVedlegg(
-		savedSoknadDbData: SoknadDbData, kodeverkSkjema: KodeverkSkjema
-	): VedleggDbData {
-
+	fun opprettHovedddokumentVedlegg(savedSoknadDbData: SoknadDbData, kodeverkSkjema: KodeverkSkjema): VedleggDbData {
 		return repo.lagreVedlegg(
 			VedleggDbData(
 				null,
@@ -57,8 +54,44 @@ class VedleggService(
 		)
 	}
 
-	fun opprettVedleggTilSoknad(
-		soknadsId: Long, vedleggsnrListe: List<String>, spraak: String, tittel: String? = null, formioid: String? = null
+	fun saveVedlegg(
+		soknadsId: Long,
+		vedlegg: List<InnsendtVedleggDto>,
+		sprak: String
+	): List<VedleggDbData> {
+		return vedlegg.map { v ->
+			val skjema = skjemaService.hentSkjema(v.vedleggsnr, sprak)
+			repo.lagreVedlegg(
+				VedleggDbData(
+					id = null,
+					soknadsid = soknadsId,
+					status = OpplastingsStatus.IKKE_VALGT,
+					erhoveddokument = false,
+					ervariant = false,
+					erpdfa = false,
+					erpakrevd = skjema.skjemanummer != "N6",
+					vedleggsnr = skjema.skjemanummer,
+					tittel = v.tittel,
+					label = v.tittel,
+					beskrivelse = "",
+					mimetype = null,
+					uuid = UUID.randomUUID().toString(),
+					opprettetdato = LocalDateTime.now(),
+					endretdato = LocalDateTime.now(),
+					innsendtdato = null,
+					vedleggsurl = skjema.url,
+					formioid = null
+				)
+			)
+		}
+	}
+
+	fun saveVedlegg(
+		soknadsId: Long,
+		vedleggsnrListe: List<String>,
+		spraak: String,
+		tittel: String? = null,
+		formioid: String? = null
 	): List<VedleggDbData> {
 		val vedleggDbDataListe = vedleggsnrListe.map { nr -> skjemaService.hentSkjema(nr, spraak) }.map { v ->
 			repo.lagreVedlegg(
@@ -87,9 +120,7 @@ class VedleggService(
 		return vedleggDbDataListe
 	}
 
-	fun opprettInnsendteVedleggTilSoknad(
-		soknadsId: Long, arkivertSoknad: AktivSakDto
-	): List<VedleggDbData> {
+	fun opprettInnsendteVedleggTilSoknad(soknadsId: Long, arkivertSoknad: AktivSakDto): List<VedleggDbData> {
 		val vedleggDbDataListe =
 			arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map { v ->
 				repo.lagreVedlegg(
@@ -118,7 +149,7 @@ class VedleggService(
 		return vedleggDbDataListe
 	}
 
-	fun opprettVedleggTilSoknad(soknadDbData: SoknadDbData, vedleggsListe: List<VedleggDto>): List<VedleggDbData> {
+	fun saveVedlegg(soknadDbData: SoknadDbData, vedleggsListe: List<VedleggDto>): List<VedleggDbData> {
 
 		return vedleggsListe.filter { !(it.erHoveddokument || it.vedleggsnr == KVITTERINGS_NR) }.map { v ->
 			repo.lagreVedlegg(
@@ -152,7 +183,7 @@ class VedleggService(
 		}
 	}
 
-	fun opprettVedleggTilSoknad(soknadDbData: SoknadDbData, arkivertSoknad: AktivSakDto): List<VedleggDbData> {
+	fun saveVedlegg(soknadDbData: SoknadDbData, arkivertSoknad: AktivSakDto): List<VedleggDbData> {
 
 		return arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != soknadDbData.skjemanr }.map { v ->
 			repo.lagreVedlegg(
@@ -189,7 +220,7 @@ class VedleggService(
 		)
 
 		// Lagre vedlegget i databasen
-		val vedleggDbDataList = opprettVedleggTilSoknad(
+		val vedleggDbDataList = saveVedlegg(
 			soknadDb.id!!,
 			listOf("N6"),
 			soknadDto.spraak!!,
