@@ -32,6 +32,8 @@ import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -265,11 +267,14 @@ class SoknadServiceTest : ApplicationTest() {
 			innsendtVedleggDtos = arkiverteVedlegg
 		)
 
-		val ettersending = ettersendingService.opprettEttersendingGittArkivertSoknad(
+		val opprettEttersending =
+			OpprettEttersendingTestBuilder().vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().build())).build()
+
+		val ettersending = ettersendingService.createEttersendingFromArchivedSoknad(
 			brukerId = "1234",
-			arkivertSoknad = arkivertSoknad,
-			"no_NO",
-			listOf("W1")
+			archivedSoknad = arkivertSoknad,
+			opprettEttersending,
+			null
 		)
 
 		assertNotNull(ettersending)

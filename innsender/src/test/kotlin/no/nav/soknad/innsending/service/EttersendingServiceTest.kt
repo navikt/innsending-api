@@ -12,14 +12,20 @@ import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
-import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.model.AktivSakDto
+import no.nav.soknad.innsending.model.InnsendtVedleggDto
+import no.nav.soknad.innsending.model.OpplastingsStatusDto
+import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.HendelseRepository
 import no.nav.soknad.innsending.repository.domain.enums.HendelseType
+import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
+import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -58,6 +64,12 @@ class EttersendingServiceTest : ApplicationTest() {
 	@Autowired
 	private lateinit var restConfig: RestConfig
 
+	@Autowired
+	private lateinit var safService: SafService
+
+	@Autowired
+	private lateinit var tilgangskontroll: Tilgangskontroll
+
 	@InjectMockKs
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
 
@@ -82,7 +94,9 @@ class EttersendingServiceTest : ApplicationTest() {
 		brukerNotifikasjon = brukernotifikasjonPublisher!!,
 		innsenderMetrics = innsenderMetrics,
 		soknadService = soknadService,
-		vedleggService = vedleggService
+		vedleggService = vedleggService,
+		safService = safService,
+		tilgangskontroll = tilgangskontroll,
 	)
 
 	private fun lagInnsendingService(): InnsendingService = InnsendingService(
@@ -135,7 +149,7 @@ class EttersendingServiceTest : ApplicationTest() {
 		val ettersendingService = lagEttersendingService()
 		val ettersendingServiceMock = spyk(ettersendingService)
 
-		every { ettersendingServiceMock.opprettEttersendingsSoknad(any(), any()) } answers { callOriginal() }
+		every { ettersendingServiceMock.saveEttersending(any(), any()) } answers { callOriginal() }
 
 		// Når
 		ettersendingServiceMock.sjekkOgOpprettEttersendingsSoknad(
@@ -145,7 +159,7 @@ class EttersendingServiceTest : ApplicationTest() {
 		)
 
 		// Så
-		verify { ettersendingServiceMock.opprettEttersendingsSoknad(any(), any()) wasNot Called }
+		verify { ettersendingServiceMock.saveEttersending(any(), any()) wasNot Called }
 	}
 
 	@Test
@@ -167,12 +181,19 @@ class EttersendingServiceTest : ApplicationTest() {
 			arkivertInnsendingsId
 		)
 		val ettersendingService = lagEttersendingService()
+		val ettersending = OpprettEttersendingTestBuilder().vedleggsListe(
+			listOf(
+				InnsendtVedleggDtoTestBuilder().vedleggsnr("C1").tittel("Vedlegg1").build(),
+				InnsendtVedleggDtoTestBuilder().vedleggsnr("N6").tittel("Vedlegg2").build(),
+				InnsendtVedleggDtoTestBuilder().vedleggsnr("L8").tittel("Vedlegg3").build(),
+			)
+		).build()
 
-		val dokumentSoknadDto = ettersendingService.opprettEttersendingGittArkivertSoknad(
-			brukerid,
-			arkivertSoknad,
-			spraak,
-			listOf("C1", "N6", "L8")
+		val dokumentSoknadDto = ettersendingService.createEttersendingFromArchivedSoknad(
+			brukerId = brukerid,
+			archivedSoknad = arkivertSoknad,
+			ettersending = ettersending,
+			forsteInnsendingsDato = null
 		)
 
 		assertTrue(dokumentSoknadDto.innsendingsId != null && VisningsType.ettersending == dokumentSoknadDto.visningsType && dokumentSoknadDto.ettersendingsId == arkivertInnsendingsId)
@@ -189,12 +210,20 @@ class EttersendingServiceTest : ApplicationTest() {
 
 		val brukerid = testpersonid
 		val skjemanr = "NAV 10-07.20"
-		val spraak = "nb_NO"
+
+		val ettersending = OpprettEttersendingTestBuilder()
+			.skjemanr(skjemanr)
+			.vedleggsListe(
+				listOf(
+					InnsendtVedleggDtoTestBuilder().vedleggsnr("C1").tittel("Vedlegg1").build(),
+					InnsendtVedleggDtoTestBuilder().vedleggsnr("L8").tittel("Vedlegg3").build(),
+				)
+			).build()
 
 		val ettersendingService = lagEttersendingService()
 
 		val dokumentSoknadDto =
-			ettersendingService.opprettEttersendingGittSkjemanr(brukerid, skjemanr, spraak, listOf("C1", "L8"))
+			ettersendingService.createEttersendingFromExistingSoknader(brukerid, ettersending)
 
 		assertTrue(dokumentSoknadDto.innsendingsId != null && VisningsType.ettersending == dokumentSoknadDto.visningsType && dokumentSoknadDto.ettersendingsId == dokumentSoknadDto.innsendingsId)
 		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
@@ -235,12 +264,17 @@ class EttersendingServiceTest : ApplicationTest() {
 		assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
 
 		val innsendtSoknadDto = soknadService.hentSoknad(dokumentSoknadDto.innsendingsId!!)
+		val ettersending = OpprettEttersendingTestBuilder().vedleggsListe(
+			listOf(
+				InnsendtVedleggDtoTestBuilder().vedleggsnr("N6").tittel("Vedlegg1").build(),
+				InnsendtVedleggDtoTestBuilder().vedleggsnr("L8").tittel("Vedlegg2").build(),
+			)
+		).build()
 
-		val ettersendingsSoknadDto = ettersendingService.opprettEttersendingGittSoknadOgVedlegg(
+		val ettersendingsSoknadDto = ettersendingService.createEttersendingFromInnsendtSoknad(
 			brukerId = testpersonid,
-			nyesteSoknad = innsendtSoknadDto,
-			sprak = "nb_NO",
-			vedleggsnrListe = listOf("N6", "W1")
+			existingSoknad = innsendtSoknadDto,
+			ettersending
 		)
 
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
@@ -424,7 +458,6 @@ class EttersendingServiceTest : ApplicationTest() {
 
 		val brukerid = testpersonid
 		val skjemanr = "NAV 10-07.20"
-		val spraak = "nb_NO"
 		val arkivertSoknad = AktivSakDto(
 			skjemanr,
 			"Tittel",
@@ -434,13 +467,20 @@ class EttersendingServiceTest : ApplicationTest() {
 			listOf(InnsendtVedleggDto(skjemanr, "Tittel")),
 			Utilities.laginnsendingsId()
 		)
-		val opprettEttersendingGittSkjemaNr = OpprettEttersendingGittSkjemaNr(skjemanr, spraak, listOf("C1", "L8"))
 
-		val dokumentSoknadDto = ettersendingService.opprettEttersendingGittArkivertSoknadOgVedlegg(
-			brukerid,
-			arkivertSoknad,
-			opprettEttersendingGittSkjemaNr,
-			spraak,
+		val ettersending = OpprettEttersendingTestBuilder()
+			.skjemanr(skjemanr)
+			.vedleggsListe(
+				listOf(
+					InnsendtVedleggDtoTestBuilder().vedleggsnr("C1").tittel("Vedlegg1").build(),
+					InnsendtVedleggDtoTestBuilder().vedleggsnr("L8").tittel("Vedlegg2").build(),
+				)
+			).build()
+
+		val dokumentSoknadDto = ettersendingService.createEttersendingFromArchivedSoknad(
+			brukerId = brukerid,
+			archivedSoknad = arkivertSoknad,
+			ettersending = ettersending,
 			null
 		)
 
