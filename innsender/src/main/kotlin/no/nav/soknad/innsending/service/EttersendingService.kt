@@ -17,10 +17,7 @@ import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
-import no.nav.soknad.innsending.util.mapping.lagDokumentSoknadDto
-import no.nav.soknad.innsending.util.mapping.mapTilDbMimetype
-import no.nav.soknad.innsending.util.mapping.mapTilDbOpplastingsStatus
-import no.nav.soknad.innsending.util.mapping.mapTilLocalDateTime
+import no.nav.soknad.innsending.util.mapping.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -374,8 +371,26 @@ class EttersendingService(
 		}
 	}
 
+	// 
+	fun externalCreateEttersending(
+		brukerId: String,
+		eksternOpprettEttersending: EksternOpprettEttersending
+	): DokumentSoknadDto {
+		val ettersending = mapToOpprettEttersending(eksternOpprettEttersending)
+
+		return if (eksternOpprettEttersending.brukernotifkasjonstype == BrukernotifikasjonsType.oppgave) {
+			createEttersendingFromExistingSoknader(brukerId = brukerId, ettersending = ettersending, erSystemGenerert = true)
+		} else {
+			createEttersendingFromExistingSoknader(brukerId = brukerId, ettersending = ettersending)
+		}
+	}
+
 	// Create an ettersending based on previous soknader (from db or JOARK)
-	fun createEttersendingFromExistingSoknader(brukerId: String, ettersending: OpprettEttersending): DokumentSoknadDto {
+	fun createEttersendingFromExistingSoknader(
+		brukerId: String,
+		ettersending: OpprettEttersending,
+		erSystemGenerert: Boolean? = false
+	): DokumentSoknadDto {
 		val innsendteSoknader = getInnsendteSoknader(ettersending.skjemanr)
 		val arkiverteSoknader = getArkiverteEttersendinger(ettersending.skjemanr, brukerId)
 
@@ -385,6 +400,10 @@ class EttersendingService(
 			brukerId = brukerId,
 			ettersending = ettersending
 		)
+
+		if (erSystemGenerert == true) {
+			publiserBrukernotifikasjon(dokumentSoknadDto.copy(erSystemGenerert = true))
+		}
 
 		publiserBrukernotifikasjon(dokumentSoknadDto)
 
