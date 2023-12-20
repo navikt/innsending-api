@@ -322,9 +322,19 @@ class EttersendingServiceTest : ApplicationTest() {
 		val soknader = soknadService.hentAktiveSoknader(listOf(dokumentSoknadDto.brukerId))
 		assertTrue(soknader.isNotEmpty())
 
+		val ettersending = OpprettEttersendingTestBuilder()
+			.skjemanr(dokumentSoknadDto.skjemanr)
+			.vedleggsListe(
+				listOf(
+					InnsendtVedleggDtoTestBuilder().vedleggsnr("W1").tittel("Vedlegg1").build(),
+					InnsendtVedleggDtoTestBuilder().vedleggsnr("W2").tittel("Vedlegg2").build()
+				)
+			)
+			.build()
+
 		// Oppretter ettersendingssoknad
 		val ettersendingsSoknadDto =
-			ettersendingService.opprettEttersending(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
+			ettersendingService.createEttersendingFromExistingSoknader(dokumentSoknadDto.brukerId, ettersending)
 
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
@@ -361,7 +371,7 @@ class EttersendingServiceTest : ApplicationTest() {
 
 		// Oppretter ettersendingssoknad2
 		val ettersendingsSoknadDto2 =
-			ettersendingService.opprettEttersending(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
+			ettersendingService.createEttersendingFromExistingSoknader(dokumentSoknadDto.brukerId, ettersending)
 
 		assertTrue(ettersendingsSoknadDto2.vedleggsListe.isNotEmpty())
 		assertTrue(ettersendingsSoknadDto2.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
@@ -436,9 +446,18 @@ class EttersendingServiceTest : ApplicationTest() {
 		assertEquals(HendelseType.Opprettet, hendelseDbDatasInnsendt[0].hendelsetype)
 		assertEquals(HendelseType.Innsendt, hendelseDbDatasInnsendt[1].hendelsetype)
 
+		val ettersending = OpprettEttersendingTestBuilder()
+			.skjemanr(dokumentSoknadDto.skjemanr)
+			.vedleggsListe(
+				listOf(
+					InnsendtVedleggDtoTestBuilder().vedleggsnr("W1").tittel("Vedlegg1").build(),
+					InnsendtVedleggDtoTestBuilder().vedleggsnr("W2").tittel("Vedlegg2").build(),
+				)
+			).build()
+
 		// Opprett ettersendingssoknad
 		val ettersendingsSoknadDto =
-			ettersendingService.opprettEttersending(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
+			ettersendingService.createEttersendingFromExistingSoknader(dokumentSoknadDto.brukerId, ettersending)
 
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.none { it.opplastingsStatus == OpplastingsStatusDto.innsendt })

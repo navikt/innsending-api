@@ -3,7 +3,6 @@ package no.nav.soknad.innsending.service
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
-import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
@@ -41,6 +40,7 @@ class EttersendingService(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	// Lagre ettersendingssøknad i DB
+	@Transactional
 	fun saveEttersending(
 		brukerId: String,
 		ettersendingsId: String?,
@@ -77,6 +77,7 @@ class EttersendingService(
 		)
 	}
 
+	@Transactional
 	fun saveEttersending(
 		nyesteSoknad: DokumentSoknadDto,
 		ettersendingsId: String,
@@ -160,36 +161,6 @@ class EttersendingService(
 			exceptionHelper.reportException(e, operation, nyesteSoknad.tema)
 			throw e
 		}
-	}
-
-	@Transactional
-	fun opprettEttersending(brukerId: String, ettersendingsId: String): DokumentSoknadDto {
-		val operation = InnsenderOperation.OPPRETT.name
-
-		// Skal opprette en soknad basert på status på vedlegg som skal ettersendes.
-		// Basere opplastingsstatus på nyeste innsending på ettersendingsId, dvs. nyeste soknad der innsendingsId eller ettersendingsId lik oppgitt ettersendingsId
-		// Det skal være mulig å ettersende allerede ettersendte vedlegg på nytt
-		val soknadDbDataList = try {
-			repo.finnNyesteSoknadGittEttersendingsId(ettersendingsId)
-		} catch (e: Exception) {
-			exceptionHelper.reportException(e, operation, "Ukjent")
-			throw BackendErrorException("Feil ved henting av søknad $ettersendingsId", e)
-		}
-
-		if (soknadDbDataList.isEmpty()) {
-			exceptionHelper.reportException(Exception("No SoknadDbData found"), operation, "Ukjent")
-			throw ResourceNotFoundException("Kan ikke opprette søknad for ettersending. Soknad med id $ettersendingsId som det skal ettersendes data for ble ikke funnet")
-		}
-
-		logWarningForExistingEttersendelse(
-			brukerId,
-			soknadDbDataList.first().skjemanr,
-		)
-
-		return saveEttersending(
-			vedleggService.hentAlleVedlegg(soknadDbDataList.first()),
-			ettersendingsId
-		)
 	}
 
 	@Transactional
@@ -322,6 +293,7 @@ class EttersendingService(
 		}
 	}
 
+	// Creates ettersending if required documents are missing
 	fun sjekkOgOpprettEttersendingsSoknad(
 		innsendtSoknadDto: DokumentSoknadDto,
 		manglende: List<VedleggDto>,
@@ -371,7 +343,7 @@ class EttersendingService(
 		}
 	}
 
-	// 
+	//
 	fun externalCreateEttersending(
 		brukerId: String,
 		eksternOpprettEttersending: EksternOpprettEttersending
@@ -432,8 +404,7 @@ class EttersendingService(
 		return createEttersendingFromExistingSoknader(brukerId, ettersending)
 	}
 
-
-	fun createEttersendingFromExistingSoknader(
+	private fun createEttersendingFromExistingSoknader(
 		innsendteSoknader: List<DokumentSoknadDto>,
 		arkiverteSoknader: List<AktivSakDto>,
 		brukerId: String,
