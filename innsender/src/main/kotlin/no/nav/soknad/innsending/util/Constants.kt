@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.util
 object Constants {
 	const val SELVBETJENING = "selvbetjening"
 	const val CLAIM_ACR_IDPORTEN_LOA_HIGH = "acr=idporten-loa-high"
+	const val CLAIM_ACR_LEVEL_4 = "acr=Level4"
 	const val TOKENX = "tokenx"
 	const val AZURE = "azure"
 
