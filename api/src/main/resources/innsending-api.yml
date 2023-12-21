@@ -826,6 +826,20 @@ paths:
                 application/json:
                   schema:
                     $ref: "#/components/schemas/RestErrorResponseDto"
+                  example:
+                    message: Autentisering feilet
+                    timestamp: 2023-12-21T09:31:40.549032434
+                    errorCode: errorCode.unauthorized
+            500:
+              description: Feil i backend
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/RestErrorResponseDto"
+                  example:
+                    message: Noe gikk galt, prøv igjen senere
+                    timestamp: 2023-12-21T09:31:40.549032434
+                    errorCode: somethingFailedTryLater
           tags:
             - ekstern
 
@@ -1116,8 +1130,7 @@ components:
 
     BrukernotifikasjonsType:
       type: string
-      enum: [ "utkast", "oppgave" ]
-      description: "Hvilke type brukernotifikasjon som skal sendes. Default: utkast"
+      enum: [utkast, oppgave]
       example: oppgave
 
     Document:
@@ -1234,6 +1247,9 @@ components:
           description: Liste av vedlegg som kan lastes opp
           items:
             $ref: "#/components/schemas/InnsendtVedleggDto"
+          example:
+            - vedleggsnr: W1
+              tittel: "Dokumentasjon på mottatt bidrag"
 
     FilDto:
       type: object
@@ -1550,11 +1566,13 @@ components:
         timestamp:
           type: string
           format: date-time
-          description: Tidspunkt i UTC
-          example: 2021-12-03T14:10:00Z
         errorCode:
           type: string
           description: Feilkode
+      example:
+        message: Noe gikk galt, prøv igjen senere
+        timestamp: 2023-12-21T09:31:40.549032434
+        errorCode: somethingFailedTryLater
 
     Saksinformasjon:
       type: object
