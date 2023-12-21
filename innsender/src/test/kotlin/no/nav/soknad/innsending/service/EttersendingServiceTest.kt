@@ -168,7 +168,6 @@ class EttersendingServiceTest : ApplicationTest() {
 		val brukerid = testpersonid
 		val skjemanr = "NAV 10-07.20"
 		val tittel = "Test av ettersending gitt arkivertsoknad"
-		val spraak = "nb_NO"
 		val tema = "HJE"
 		val arkivertInnsendingsId = "1234567890123345"
 		val arkivertSoknad = AktivSakDto(

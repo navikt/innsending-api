@@ -154,6 +154,24 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 	}
 
+	fun createEttersending(opprettEttersending: OpprettEttersending): ResponseEntity<DokumentSoknadDto> {
+		return restTemplate.exchange(
+			"${baseUrl}/frontend/v1/ettersending",
+			HttpMethod.POST,
+			createHttpEntity(opprettEttersending),
+			DokumentSoknadDto::class.java
+		)
+	}
+
+	fun createEksternEttersending(eksternOpprettEttersending: EksternOpprettEttersending): ResponseEntity<DokumentSoknadDto> {
+		return restTemplate.exchange(
+			"${baseUrl}/ekstern/v1/ettersending",
+			HttpMethod.POST,
+			createHttpEntity(eksternOpprettEttersending),
+			DokumentSoknadDto::class.java
+		)
+	}
+
 	fun getPrefillData(properties: String): ResponseEntity<PrefillData>? {
 		return restTemplate.exchange(
 			"${baseUrl}/fyllUt/v1/prefill-data?properties=$properties",

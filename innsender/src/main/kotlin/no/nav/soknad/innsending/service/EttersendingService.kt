@@ -343,7 +343,7 @@ class EttersendingService(
 		}
 	}
 
-	//
+	// Create an ettersending from external application
 	fun externalCreateEttersending(
 		brukerId: String,
 		eksternOpprettEttersending: EksternOpprettEttersending
@@ -375,14 +375,14 @@ class EttersendingService(
 
 		if (erSystemGenerert == true) {
 			publiserBrukernotifikasjon(dokumentSoknadDto.copy(erSystemGenerert = true))
+		} else {
+			publiserBrukernotifikasjon(dokumentSoknadDto)
 		}
-
-		publiserBrukernotifikasjon(dokumentSoknadDto)
 
 		return dokumentSoknadDto
 	}
 
-	// Gets info from Sanity before creating an ettersending
+	// Get info from Sanity before creating an ettersending
 	fun createEttersendingFromExistingSoknaderUsingSanity(
 		brukerId: String,
 		opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr

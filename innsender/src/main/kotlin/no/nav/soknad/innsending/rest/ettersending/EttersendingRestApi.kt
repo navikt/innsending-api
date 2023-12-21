@@ -12,11 +12,9 @@ import no.nav.soknad.innsending.util.logging.CombinedLogger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@CrossOrigin(maxAge = 3600)
 @ProtectedWithClaims(issuer = Constants.TOKENX, claimMap = [Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH])
 class EttersendingRestApi(
 	private val tilgangskontroll: Tilgangskontroll,
@@ -34,7 +32,10 @@ class EttersendingRestApi(
 			brukerId
 		)
 
-		// FIXME: Do we need to log warning if ettersending already exists?
+		ettersendingService.logWarningForExistingEttersendelse(
+			brukerId = brukerId,
+			skjemanr = opprettEttersending.skjemanr,
+		)
 
 		val ettersending = ettersendingService.createEttersendingFromExistingSoknader(
 			ettersending = opprettEttersending,
@@ -42,7 +43,7 @@ class EttersendingRestApi(
 		)
 
 		combinedLogger.log(
-			"${ettersending.innsendingsId}: Opprettet ettersending fra soknadsveiviser på skjema ${ettersending.skjemanr}",
+			"${ettersending.innsendingsId}: Opprettet ettersending fra fyllut-ettersending på skjema ${ettersending.skjemanr}",
 			brukerId
 		)
 
