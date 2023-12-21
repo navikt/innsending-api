@@ -25,7 +25,11 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @CrossOrigin(maxAge = 3600)
-@ProtectedWithClaims(issuer = Constants.TOKENX, claimMap = [Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH])
+@ProtectedWithClaims(
+	issuer = Constants.TOKENX,
+	claimMap = [Constants.CLAIM_ACR_LEVEL_4, Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH],
+	combineWithOr = true
+)
 class VedleggRestApi(
 	private val soknadService: SoknadService,
 	private val tilgangskontroll: Tilgangskontroll,
