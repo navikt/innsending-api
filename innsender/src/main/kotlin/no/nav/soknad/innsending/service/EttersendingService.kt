@@ -350,7 +350,7 @@ class EttersendingService(
 	): DokumentSoknadDto {
 		val ettersending = mapToOpprettEttersending(eksternOpprettEttersending)
 
-		return if (eksternOpprettEttersending.brukernotifkasjonstype == BrukernotifikasjonsType.oppgave) {
+		return if (eksternOpprettEttersending.brukernotifikasjonstype == BrukernotifikasjonsType.oppgave) {
 			createEttersendingFromExistingSoknader(brukerId = brukerId, ettersending = ettersending, erSystemGenerert = true)
 		} else {
 			createEttersendingFromExistingSoknader(brukerId = brukerId, ettersending = ettersending)

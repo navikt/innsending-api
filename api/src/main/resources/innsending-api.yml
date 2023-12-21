@@ -815,11 +815,17 @@ paths:
 
           responses:
             201:
-              description: Created
+              description: Opprettet ettersending
               content:
                 application/json:
                   schema:
                     $ref: "#/components/schemas/DokumentSoknadDto"
+            401:
+              description: Uautorisert
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/RestErrorResponseDto"
           tags:
             - ekstern
 
@@ -1111,7 +1117,7 @@ components:
     BrukernotifikasjonsType:
       type: string
       enum: [ "utkast", "oppgave" ]
-      description: "Hvilke type brukernotifkasjon som skal sendes. Default: utkast"
+      description: "Hvilke type brukernotifikasjon som skal sendes. Default: utkast"
       example: oppgave
 
     Document:
@@ -1221,7 +1227,7 @@ components:
           $ref: "#/components/schemas/Spraak"
         tema:
           $ref: "#/components/schemas/Tema"
-        brukernotifkasjonstype:
+        brukernotifikasjonstype:
           $ref: "#/components/schemas/BrukernotifikasjonsType"
         vedleggsListe:
           type: array
@@ -1533,6 +1539,22 @@ components:
       type: string
       description: Nøkkelnavn på property. Brukt på vedlegg av type Annet (skjemanr=N6), for å sjekke om dette er default Annet vedlegg eller ikke
       example: annenDokumentasjon,  tilleggsVedleggForSkjemaXX.
+
+    RestErrorResponseDto:
+      type: object
+      description: Feilrespons
+      properties:
+        message:
+          type: string
+          description: Feilmelding
+        timestamp:
+          type: string
+          format: date-time
+          description: Tidspunkt i UTC
+          example: 2021-12-03T14:10:00Z
+        errorCode:
+          type: string
+          description: Feilkode
 
     Saksinformasjon:
       type: object

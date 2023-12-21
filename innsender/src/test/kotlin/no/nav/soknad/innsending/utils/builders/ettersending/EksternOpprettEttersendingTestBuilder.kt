@@ -11,15 +11,15 @@ class EksternOpprettEttersendingTestBuilder {
 	private var vedleggsListe: List<InnsendtVedleggDto> = listOf(InnsendtVedleggDtoTestBuilder().build())
 	private var tema = "FOS"
 	private var tittel = "Ettersendingssøknad tittel"
-	private var brukernotifkasjonstype = BrukernotifikasjonsType.utkast
+	private var brukernotifikasjonstype = BrukernotifikasjonsType.utkast
 
 	fun skjemanr(skjemanr: String) = apply { this.skjemanr = skjemanr }
 	fun sprak(sprak: String) = apply { this.sprak = sprak }
 	fun vedleggsListe(vedleggsListe: List<InnsendtVedleggDto>) = apply { this.vedleggsListe = vedleggsListe }
 	fun tema(tema: String) = apply { this.tema = tema }
 	fun tittel(titel: String) = apply { this.tittel = titel }
-	fun brukernotifkasjonstype(brukernotifkasjonstype: BrukernotifikasjonsType) =
-		apply { this.brukernotifkasjonstype = brukernotifkasjonstype }
+	fun brukernotifikasjonstype(brukernotifikasjonstype: BrukernotifikasjonsType) =
+		apply { this.brukernotifikasjonstype = brukernotifikasjonstype }
 
 	fun build(): EksternOpprettEttersending {
 		return EksternOpprettEttersending(
@@ -28,7 +28,7 @@ class EksternOpprettEttersendingTestBuilder {
 			vedleggsListe = vedleggsListe,
 			tema = tema,
 			tittel = tittel,
-			brukernotifkasjonstype = brukernotifkasjonstype,
+			brukernotifikasjonstype = brukernotifikasjonstype,
 		)
 	}
 }

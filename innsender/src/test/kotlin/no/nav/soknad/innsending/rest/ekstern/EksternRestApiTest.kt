@@ -74,7 +74,7 @@ class EksternRestApiTest : ApplicationTest() {
 	fun `Should create ettersending with oppgave brukernotifikasjon`() {
 		// Given
 		val ettersending = EksternOpprettEttersendingTestBuilder()
-			.brukernotifkasjonstype(BrukernotifikasjonsType.oppgave)
+			.brukernotifikasjonstype(BrukernotifikasjonsType.oppgave)
 			.build()
 
 		// When
