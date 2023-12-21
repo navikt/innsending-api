@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.utils
 
 import no.nav.security.mock.oauth2.MockOAuth2Server
-import no.nav.soknad.innsending.dto.RestErrorResponseDto
 import no.nav.soknad.innsending.model.*
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.ParameterizedTypeReference
