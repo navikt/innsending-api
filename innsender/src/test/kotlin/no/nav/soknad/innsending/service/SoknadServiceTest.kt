@@ -273,8 +273,8 @@ class SoknadServiceTest : ApplicationTest() {
 		val ettersending = ettersendingService.createEttersendingFromArchivedSoknad(
 			brukerId = "1234",
 			archivedSoknad = arkivertSoknad,
-			opprettEttersending,
-			null
+			ettersending = opprettEttersending,
+			forsteInnsendingsDato = null
 		)
 
 		assertNotNull(ettersending)

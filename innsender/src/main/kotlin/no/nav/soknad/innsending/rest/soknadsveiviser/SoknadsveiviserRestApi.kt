@@ -68,7 +68,7 @@ class SoknadsveiviserRestApi(
 	override fun opprettEttersendingGittSkjemanr(opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr): ResponseEntity<DokumentSoknadDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		combinedLogger.log(
-			"Kall for å opprette ettersending på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}",
+			"Kall for å opprette ettersending fra soknadsveiviser (via sendinn) på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}",
 			brukerId
 		)
 
@@ -83,7 +83,7 @@ class SoknadsveiviserRestApi(
 		)
 
 		combinedLogger.log(
-			"${ettersending.innsendingsId}: Opprettet ettersending fra soknadsveiviser på skjema ${ettersending.skjemanr}",
+			"${ettersending.innsendingsId}: Opprettet ettersending fra soknadsveiviser (via sendinn) på skjema ${ettersending.skjemanr}",
 			brukerId
 		)
 

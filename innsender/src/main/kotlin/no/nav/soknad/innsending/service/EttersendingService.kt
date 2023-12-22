@@ -342,8 +342,7 @@ class EttersendingService(
 		}
 	}
 
-	// Create an ettersending from external application
-	fun externalCreateEttersending(
+	fun createEttersendingFromExternalApplication(
 		brukerId: String,
 		eksternOpprettEttersending: EksternOpprettEttersending
 	): DokumentSoknadDto {

@@ -31,7 +31,7 @@ class EksternRestApi(
 	override fun eksternOpprettEttersending(eksternOpprettEttersending: EksternOpprettEttersending): ResponseEntity<DokumentSoknadDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		combinedLogger.log(
-			"Kall for å opprette ettersending på skjema ${eksternOpprettEttersending.skjemanr}",
+			"Kall for å opprette ettersending fra ekstern applikasjon på skjema ${eksternOpprettEttersending.skjemanr}",
 			brukerId
 		)
 
@@ -40,7 +40,7 @@ class EksternRestApi(
 			skjemanr = eksternOpprettEttersending.skjemanr,
 		)
 
-		val ettersending = ettersendingService.externalCreateEttersending(
+		val ettersending = ettersendingService.createEttersendingFromExternalApplication(
 			eksternOpprettEttersending = eksternOpprettEttersending,
 			brukerId = brukerId
 		)

@@ -32,7 +32,7 @@ class EttersendingRestApi(
 	override fun opprettEttersending(opprettEttersending: OpprettEttersending): ResponseEntity<DokumentSoknadDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		combinedLogger.log(
-			"Kall for å opprette ettersending på skjema ${opprettEttersending.skjemanr}",
+			"Kall for å opprette ettersending fra fyllut-ettersending på skjema ${opprettEttersending.skjemanr}",
 			brukerId
 		)
 
