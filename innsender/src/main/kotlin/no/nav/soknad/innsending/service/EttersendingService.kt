@@ -277,7 +277,6 @@ class EttersendingService(
 				forsteInnsendingsDato = OffsetDateTime.now()
 			)
 
-			// For hvert vedleggsnr hent definisjonen fra Sanity og lagre vedlegg.
 			val vedleggDbDataListe = vedleggService.saveVedlegg(
 				soknadsId = ettersendingsSoknadDb.id!!,
 				vedleggList = ettersending.vedleggsListe ?: emptyList(),
@@ -350,36 +349,45 @@ class EttersendingService(
 	): DokumentSoknadDto {
 		val ettersending = mapToOpprettEttersending(eksternOpprettEttersending)
 
-		return if (eksternOpprettEttersending.brukernotifikasjonstype == BrukernotifikasjonsType.oppgave) {
-			createEttersendingFromExistingSoknader(brukerId = brukerId, ettersending = ettersending, erSystemGenerert = true)
-		} else {
-			createEttersendingFromExistingSoknader(brukerId = brukerId, ettersending = ettersending)
-		}
+		val dokumentSoknadDto =
+			if (eksternOpprettEttersending.koblesTilEksisterendeSoknad == true) {
+				createEttersendingFromExistingSoknader(brukerId = brukerId, ettersending = ettersending)
+			} else {
+				createEttersending(brukerId = brukerId, ettersending = ettersending)
+			}
+
+		publiserBrukernotifikasjon(dokumentSoknadDto, eksternOpprettEttersending.brukernotifikasjonstype)
+
+		return dokumentSoknadDto
+
+	}
+
+	fun createEttersendingFromFyllutEttersending(
+		brukerId: String,
+		ettersending: OpprettEttersending,
+	): DokumentSoknadDto {
+		val dokumentSoknadDto = createEttersendingFromExistingSoknader(
+			brukerId = brukerId,
+			ettersending = ettersending
+		)
+		publiserBrukernotifikasjon(dokumentSoknadDto)
+		return dokumentSoknadDto
 	}
 
 	// Create an ettersending based on previous soknader (from db or JOARK)
 	fun createEttersendingFromExistingSoknader(
 		brukerId: String,
-		ettersending: OpprettEttersending,
-		erSystemGenerert: Boolean? = false
+		ettersending: OpprettEttersending
 	): DokumentSoknadDto {
 		val innsendteSoknader = getInnsendteSoknader(ettersending.skjemanr)
 		val arkiverteSoknader = getArkiverteEttersendinger(ettersending.skjemanr, brukerId)
 
-		val dokumentSoknadDto = createEttersendingFromExistingSoknader(
+		return createEttersendingFromExistingSoknader(
 			innsendteSoknader = innsendteSoknader,
 			arkiverteSoknader = arkiverteSoknader,
 			brukerId = brukerId,
 			ettersending = ettersending
 		)
-
-		if (erSystemGenerert == true) {
-			publiserBrukernotifikasjon(dokumentSoknadDto.copy(erSystemGenerert = true))
-		} else {
-			publiserBrukernotifikasjon(dokumentSoknadDto)
-		}
-
-		return dokumentSoknadDto
 	}
 
 	// Get info from Sanity before creating an ettersending
@@ -401,7 +409,10 @@ class EttersendingService(
 			vedleggsListe = vedleggService.enrichVedleggListFromSanity(vedleggList, sprak)
 		)
 
-		return createEttersendingFromExistingSoknader(brukerId, ettersending)
+		val dokumentSoknadDto = createEttersendingFromExistingSoknader(brukerId, ettersending)
+		publiserBrukernotifikasjon(dokumentSoknadDto)
+
+		return dokumentSoknadDto
 	}
 
 	private fun createEttersendingFromExistingSoknader(
@@ -452,8 +463,15 @@ class EttersendingService(
 		}
 	}
 
-	private fun publiserBrukernotifikasjon(dokumentSoknadDto: DokumentSoknadDto): Boolean = try {
-		brukerNotifikasjon.soknadStatusChange(dokumentSoknadDto)
+	private fun publiserBrukernotifikasjon(
+		dokumentSoknadDto: DokumentSoknadDto,
+		brukernotifikasjonstype: BrukernotifikasjonsType? = BrukernotifikasjonsType.utkast
+	): Boolean = try {
+		if (brukernotifikasjonstype == BrukernotifikasjonsType.oppgave) {
+			brukerNotifikasjon.soknadStatusChange(dokumentSoknadDto.copy(erSystemGenerert = true))
+		} else {
+			brukerNotifikasjon.soknadStatusChange(dokumentSoknadDto)
+		}
 	} catch (e: Exception) {
 		throw BackendErrorException("Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}", e)
 	}

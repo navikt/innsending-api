@@ -12,6 +12,7 @@ class EksternOpprettEttersendingTestBuilder {
 	private var tema = "FOS"
 	private var tittel = "Ettersendingssøknad tittel"
 	private var brukernotifikasjonstype = BrukernotifikasjonsType.utkast
+	private var koblesTilEksisterendeSoknad = false
 
 	fun skjemanr(skjemanr: String) = apply { this.skjemanr = skjemanr }
 	fun sprak(sprak: String) = apply { this.sprak = sprak }
@@ -21,6 +22,9 @@ class EksternOpprettEttersendingTestBuilder {
 	fun brukernotifikasjonstype(brukernotifikasjonstype: BrukernotifikasjonsType) =
 		apply { this.brukernotifikasjonstype = brukernotifikasjonstype }
 
+	fun koblesTilEksisterendeSoknad(koblesTilEksisterendeSoknad: Boolean) =
+		apply { this.koblesTilEksisterendeSoknad = koblesTilEksisterendeSoknad }
+
 	fun build(): EksternOpprettEttersending {
 		return EksternOpprettEttersending(
 			skjemanr = skjemanr,
@@ -29,6 +33,7 @@ class EksternOpprettEttersendingTestBuilder {
 			tema = tema,
 			tittel = tittel,
 			brukernotifikasjonstype = brukernotifikasjonstype,
+			koblesTilEksisterendeSoknad = koblesTilEksisterendeSoknad
 		)
 	}
 }

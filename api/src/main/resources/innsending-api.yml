@@ -1242,6 +1242,10 @@ components:
           $ref: "#/components/schemas/Tema"
         brukernotifikasjonstype:
           $ref: "#/components/schemas/BrukernotifikasjonsType"
+        koblesTilEksisterendeSoknad:
+          type: boolean
+          description: "Angir om ettersendingen skal kobles til en eksisterende søknad. Hvis denne er satt til true vil filer som tidligere er lastet opp vises i send-inn. Default: false"
+          example: false
         vedleggsListe:
           type: array
           description: Liste av vedlegg som kan lastes opp

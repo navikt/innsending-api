@@ -41,7 +41,7 @@ class EttersendingRestApi(
 			skjemanr = opprettEttersending.skjemanr,
 		)
 
-		val ettersending = ettersendingService.createEttersendingFromExistingSoknader(
+		val ettersending = ettersendingService.createEttersendingFromFyllutEttersending(
 			ettersending = opprettEttersending,
 			brukerId = brukerId
 		)

@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.BrukernotifikasjonsType
 import no.nav.soknad.innsending.utils.Api
+import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.EksternOpprettEttersendingTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
+import kotlin.test.assertNotEquals
 
 class EksternRestApiTest : ApplicationTest() {
 	@Autowired
@@ -40,7 +42,7 @@ class EksternRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Should create ettersending with utkast brukernotifikasjon (default)`() {
+	fun `Should create ettersending with correct data`() {
 		// Given
 		val skjemanr = "NAV 55-00.60"
 		val tema = "DAG"
@@ -55,9 +57,6 @@ class EksternRestApiTest : ApplicationTest() {
 		// When
 		val response = api?.createEksternEttersending(ettersending)
 
-		val message = slot<AddNotification>()
-		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(message)) }
-
 		// Then
 		assertNotNull(response?.body)
 
@@ -67,6 +66,21 @@ class EksternRestApiTest : ApplicationTest() {
 		assertEquals(1, body.vedleggsListe.size)
 		assertEquals(vedleggsnr, body.vedleggsListe[0].vedleggsnr)
 
+	}
+
+	@Test
+	fun `Should create ettersending with utkast brukernotifikasjon (default)`() {
+		// Given
+		val ettersending = EksternOpprettEttersendingTestBuilder().build()
+
+		// When
+		api?.createEksternEttersending(ettersending)
+
+		val message = slot<AddNotification>()
+		verify { publisherInterface.opprettBrukernotifikasjon(capture(message)) }
+
+		// Then
+		// The notification is an utkast if erSystemGenerert is false
 		assertEquals(false, message.captured.soknadRef.erSystemGenerert)
 	}
 
@@ -86,5 +100,68 @@ class EksternRestApiTest : ApplicationTest() {
 		// Then
 		// The notification is an oppgave if erSystemGenerert is true
 		assertEquals(true, message.captured.soknadRef.erSystemGenerert)
+	}
+
+	@Test
+	fun `Should link ettersending with existing søknad if koblesTilEksisterendeSoknad is true`() {
+		// Given
+		val vedleggsnr = "A1"
+		val skjemaDto = SkjemaDtoTestBuilder().build()
+
+		val opprettetSoknadResponse = api?.createSoknad(skjemaDto)
+		val innsendingsId = opprettetSoknadResponse?.body?.innsendingsId!!
+
+		api?.utfyltSoknad(innsendingsId, skjemaDto)
+		api?.sendInnSoknad(innsendingsId)
+
+		val ettersending = EksternOpprettEttersendingTestBuilder()
+			.skjemanr(skjemaDto.skjemanr)
+			.koblesTilEksisterendeSoknad(true)
+			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(vedleggsnr).build()))
+			.build()
+
+		// When
+		val response = api?.createEksternEttersending(ettersending)
+
+		// Then
+		assertNotNull(response?.body)
+
+		val body = response!!.body!!
+		assertEquals(1, body.vedleggsListe.size)
+		assertEquals(innsendingsId, body.ettersendingsId, "Should have ettersendingId from existing søknad innsendingsId")
+		assertEquals(vedleggsnr, body.vedleggsListe[0].vedleggsnr)
+	}
+
+	@Test
+	fun `Should not link ettersending with existing søknad if koblesTilEksisterendeSoknad is false (default)`() {
+		// Given
+		val vedleggsnr = "A1"
+		val skjemaDto = SkjemaDtoTestBuilder().build()
+
+		val opprettetSoknadResponse = api?.createSoknad(skjemaDto)
+		val innsendingsId = opprettetSoknadResponse?.body?.innsendingsId!!
+
+		api?.utfyltSoknad(innsendingsId, skjemaDto)
+		api?.sendInnSoknad(innsendingsId)
+
+		val ettersending = EksternOpprettEttersendingTestBuilder()
+			.skjemanr(skjemaDto.skjemanr)
+			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(vedleggsnr).build()))
+			.build()
+
+		// When
+		val response = api?.createEksternEttersending(ettersending)
+
+		// Then
+		assertNotNull(response?.body)
+
+		val body = response!!.body!!
+		assertEquals(1, body.vedleggsListe.size)
+		assertNotEquals(
+			innsendingsId,
+			body.ettersendingsId,
+			"Should not have ettersendingId from existing søknad innsendingsId"
+		)
+		assertEquals(vedleggsnr, body.vedleggsListe[0].vedleggsnr)
 	}
 }
