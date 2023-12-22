@@ -226,6 +226,27 @@ paths:
                   $ref: "#/components/schemas/PrefillData"
         tags:
           - fyllut
+  /fyllut/v1/ettersending:
+        post:
+          summary: Kall for å opprette en ettersending
+          operationId: opprettEttersending
+
+          requestBody:
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/OpprettEttersending"
+            required: true
+
+          responses:
+            201:
+              description: Opprettet ettersending
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/DokumentSoknadDto"
+          tags:
+            - ettersending
 
   /innsendte/v1/files/{uuids}:
     get:
@@ -315,27 +336,6 @@ paths:
       tags:
         - soknadsveiviser
 
-  /frontend/v1/ettersending:
-      post:
-        summary: Kall for å opprette en ettersending
-        operationId: opprettEttersending
-
-        requestBody:
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/OpprettEttersending"
-          required: true
-
-        responses:
-          201:
-            description: Opprettet ettersending
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/DokumentSoknadDto"
-        tags:
-          - ettersending
 
   /frontend/v1/soknad/{innsendingsId}:
     get:

@@ -155,7 +155,7 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 
 	fun createEttersending(opprettEttersending: OpprettEttersending): ResponseEntity<DokumentSoknadDto> {
 		return restTemplate.exchange(
-			"${baseUrl}/frontend/v1/ettersending",
+			"${baseUrl}/fyllut/v1/ettersending",
 			HttpMethod.POST,
 			createHttpEntity(opprettEttersending),
 			DokumentSoknadDto::class.java
