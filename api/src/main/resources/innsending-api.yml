@@ -4,8 +4,8 @@ info:
   version: 1.0.1
   title: Innsending-api
   contact:
-    name: team-soknad
-    email: team-soknad@nav.no
+    name: team-fyllut-sendinn
+    url: https://nav-it.slack.com/archives/C04J0SGHQTD
   license:
     name: MIT License
     url: https://github.com/navikt/soknadsfillager/blob/main/LICENSE
@@ -219,7 +219,7 @@ paths:
 
         responses:
           '200':
-            description:
+            description: Data som kan brukes til å preutfylle verdier i fyllut
             content:
               application/json:
                 schema:
@@ -1331,6 +1331,8 @@ components:
           $ref: "#/components/schemas/Vedleggsnr"
         tittel:
           $ref: "#/components/schemas/Tittel"
+        url:
+          $ref: "#/components/schemas/Vedleggsurl"
 
     KanLasteOppAnnet:
       type: boolean
@@ -1806,6 +1808,11 @@ components:
       type: string
       description: NAVs identifikasjon av dokumenttype enten som Skjemanummer eller vedleggsnummer.
       example: NAV 14-35.01 eller T7
+
+    Vedleggsurl:
+      type: string
+      description: Noen vedlegg er NAV-skjemaer som brukeren må fylle ut først og laste det opp som vedlegg. Vedleggsurl er en lenke til skjemaet (enten PDF eller til fyllut) som brukeren kan laste ned/fylle ut.
+      example: https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/7146ae917cf8423f71edbf37369da5a6b2a23524.pdf
 
     Vedtaksinformasjon:
       type: object

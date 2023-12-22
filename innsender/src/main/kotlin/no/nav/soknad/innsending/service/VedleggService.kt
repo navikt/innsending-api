@@ -77,7 +77,7 @@ class VedleggService(
 					opprettetdato = LocalDateTime.now(),
 					endretdato = LocalDateTime.now(),
 					innsendtdato = null,
-					vedleggsurl = null,
+					vedleggsurl = it.url,
 					formioid = null
 				)
 			)
@@ -141,11 +141,7 @@ class VedleggService(
 					opprettetdato = v.opprettetdato.toLocalDateTime(),
 					endretdato = LocalDateTime.now(),
 					innsendtdato = v.innsendtdato?.toLocalDateTime(),
-					vedleggsurl = if (v.vedleggsnr != null) skjemaService.hentSkjema(
-						v.vedleggsnr!!,
-						soknadDbData.spraak ?: "nb",
-						false
-					).url else null,
+					vedleggsurl = v.skjemaurl,
 					formioid = v.formioId
 				)
 			)
@@ -381,6 +377,7 @@ class VedleggService(
 			InnsendtVedleggDto(
 				tittel = kodeverkSkjema.tittel ?: "",
 				vedleggsnr = vedleggsnr,
+				url = kodeverkSkjema.url
 			)
 		}
 	}
