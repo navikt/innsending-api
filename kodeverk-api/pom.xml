@@ -77,6 +77,12 @@
 						<goals>
 							<goal>compile</goal>
 						</goals>
+						<configuration>
+							<sourceDirs>
+								<source>target/generated-sources/openapi/src/main/kotlin</source>
+								<source>src/main/java</source>
+							</sourceDirs>
+						</configuration>
 					</execution>
 					<execution>
 						<id>test-compile</id>

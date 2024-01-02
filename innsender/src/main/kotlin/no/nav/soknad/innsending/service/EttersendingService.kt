@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
-import no.nav.soknad.innsending.consumerapis.skjema.KodeverkSkjema
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.kodeverk.api.KodeverkApi
@@ -81,7 +80,8 @@ class EttersendingService(
 
 	fun validateEttersending(ettersending: OpprettEttersending) {
 		val kodeverkApi = KodeverkApi()
-		val skjema = kodeverkApi.koder("NAVSkjema", "consumerid", "callid") as KodeverkSkjema
+		val skjema = kodeverkApi.koder("NAVSkjema", "consumerid", "callid")
+		println(skjema)
 	}
 
 	@Transactional
@@ -354,6 +354,7 @@ class EttersendingService(
 		eksternOpprettEttersending: EksternOpprettEttersending
 	): DokumentSoknadDto {
 		val ettersending = mapToOpprettEttersending(eksternOpprettEttersending)
+		validateEttersending(ettersending)
 
 		val dokumentSoknadDto =
 			if (eksternOpprettEttersending.koblesTilEksisterendeSoknad == true) {
