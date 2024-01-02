@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending
 
-import com.github.tomakehurst.wiremock.client.WireMock.*
 import io.prometheus.client.CollectorRegistry
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import org.springframework.boot.test.context.SpringBootTest
