@@ -4,8 +4,8 @@ info:
   version: 1.0.1
   title: Innsending-api
   contact:
-    name: team-soknad
-    email: team-soknad@nav.no
+    name: team-fyllut-sendinn
+    url: https://nav-it.slack.com/archives/C04J0SGHQTD
   license:
     name: MIT License
     url: https://github.com/navikt/soknadsfillager/blob/main/LICENSE
@@ -24,6 +24,8 @@ tags:
     description: API for sendinn-frontend applikasjonen for å håndtere filer.
   - name: soknadsveiviser
     description: API for soknadsveiviser applikasjonen.
+  - name: ekstern
+    description: API for eksterne applikasjoner.
 
 paths:
   /fyllUt/v1/leggTilVedlegg:
@@ -217,13 +219,34 @@ paths:
 
         responses:
           '200':
-            description:
+            description: Data som kan brukes til å preutfylle verdier i fyllut
             content:
               application/json:
                 schema:
                   $ref: "#/components/schemas/PrefillData"
         tags:
           - fyllut
+  /fyllut/v1/ettersending:
+        post:
+          summary: Kall for å opprette en ettersending
+          operationId: opprettEttersending
+
+          requestBody:
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/OpprettEttersending"
+            required: true
+
+          responses:
+            201:
+              description: Opprettet ettersending
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/DokumentSoknadDto"
+          tags:
+            - ettersending
 
   /innsendte/v1/files/{uuids}:
     get:
@@ -312,6 +335,7 @@ paths:
                 $ref: "#/components/schemas/DokumentSoknadDto"
       tags:
         - soknadsveiviser
+
 
   /frontend/v1/soknad/{innsendingsId}:
     get:
@@ -777,6 +801,48 @@ paths:
       tags:
         - fyllut
 
+  /ekstern/v1/ettersending:
+        post:
+          summary: Kall for å opprette en ettersending fra eksterne applikasjoner. Det er per nå ingen validering på skjemanr, tema, vedleggskode etc, så det innebærer at klienten har ansvar for at disse er gyldige.
+          operationId: eksternOpprettEttersending
+
+          requestBody:
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/EksternOpprettEttersending"
+            required: true
+
+          responses:
+            201:
+              description: Opprettet ettersending
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/DokumentSoknadDto"
+            401:
+              description: Uautorisert
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/RestErrorResponseDto"
+                  example:
+                    message: Autentisering feilet
+                    timestamp: 2023-12-21T09:31:40.549032434
+                    errorCode: errorCode.unauthorized
+            500:
+              description: Feil i backend
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/RestErrorResponseDto"
+                  example:
+                    message: Noe gikk galt, prøv igjen senere
+                    timestamp: 2023-12-21T09:31:40.549032434
+                    errorCode: somethingFailedTryLater
+          tags:
+            - ekstern
+
   /health/ping:
     get:
       summary: Pings the application to see if it responds
@@ -1062,6 +1128,11 @@ components:
       description: Ident til søker som har opprettet søknad i fyllUt tjenesten.
       example: 12128012345
 
+    BrukernotifikasjonsType:
+      type: string
+      enum: [utkast, oppgave]
+      example: oppgave
+
     Document:
       type: string
       format: byte
@@ -1151,6 +1222,39 @@ components:
         soknadstype:
           $ref: "#/components/schemas/SoknadType"
 
+    EksternOpprettEttersending:
+      type: object
+      description: Data for å opprette en ettersending
+      required:
+        - tittel
+        - skjemanr
+        - sprak
+        - tema
+        - vedleggsListe
+      properties:
+        tittel:
+          $ref: "#/components/schemas/Tittel"
+        skjemanr:
+          $ref: "#/components/schemas/Skjemanr"
+        sprak:
+          $ref: "#/components/schemas/Spraak"
+        tema:
+          $ref: "#/components/schemas/Tema"
+        brukernotifikasjonstype:
+          $ref: "#/components/schemas/BrukernotifikasjonsType"
+        koblesTilEksisterendeSoknad:
+          type: boolean
+          description: "Angir om ettersendingen skal kobles til en eksisterende søknad. Hvis denne er satt til true vil filer som tidligere er lastet opp vises i send-inn. Default: false"
+          example: false
+        vedleggsListe:
+          type: array
+          description: Liste av vedlegg som kan lastes opp
+          items:
+            $ref: "#/components/schemas/InnsendtVedleggDto"
+          example:
+            - vedleggsnr: W1
+              tittel: "Dokumentasjon på mottatt bidrag"
+
     FilDto:
       type: object
       description: Data om en opplastet fil
@@ -1231,6 +1335,8 @@ components:
           $ref: "#/components/schemas/Vedleggsnr"
         tittel:
           $ref: "#/components/schemas/Tittel"
+        url:
+          $ref: "#/components/schemas/Vedleggsurl"
 
     KanLasteOppAnnet:
       type: boolean
@@ -1312,14 +1418,28 @@ components:
       enum: [ "IkkeValgt", "LastetOpp", "Innsendt", "SendSenere", "SendesAvAndre", "SendesIkke", "LastetOppIkkeRelevantLenger" ]
       description: Status på om et vedlegg til søknad er enda ikke er lastet opp, lastet opp eller innsendt
 
-    OpprettEttersendingGittInnsendingsId:
+    OpprettEttersending:
       type: object
-      description: Data for å angi hvilken søknad søker ønsker å ettersende på
+      description: Data for å opprette en ettersending
       required:
-        - ettersendingTilinnsendingsId
+        - tittel
+        - skjemanr
+        - sprak
+        - tema
       properties:
-        ettersendingTilinnsendingsId:
-          $ref: "#/components/schemas/InnsendingsId"
+        tittel:
+          $ref: "#/components/schemas/Tittel"
+        skjemanr:
+          $ref: "#/components/schemas/Skjemanr"
+        sprak:
+          $ref: "#/components/schemas/Spraak"
+        tema:
+          $ref: "#/components/schemas/Tema"
+        vedleggsListe:
+          type: array
+          description: Liste av vedlegg som kan lastes opp
+          items:
+            $ref: "#/components/schemas/InnsendtVedleggDto"
 
     OpprettEttersendingGittSkjemaNr:
       type: object
@@ -1441,6 +1561,24 @@ components:
       type: string
       description: Nøkkelnavn på property. Brukt på vedlegg av type Annet (skjemanr=N6), for å sjekke om dette er default Annet vedlegg eller ikke
       example: annenDokumentasjon,  tilleggsVedleggForSkjemaXX.
+
+    RestErrorResponseDto:
+      type: object
+      description: Feilrespons
+      properties:
+        message:
+          type: string
+          description: Feilmelding
+        timestamp:
+          type: string
+          format: date-time
+        errorCode:
+          type: string
+          description: Feilkode
+      example:
+        message: Noe gikk galt, prøv igjen senere
+        timestamp: 2023-12-21T09:31:40.549032434
+        errorCode: somethingFailedTryLater
 
     Saksinformasjon:
       type: object
@@ -1674,6 +1812,11 @@ components:
       type: string
       description: NAVs identifikasjon av dokumenttype enten som Skjemanummer eller vedleggsnummer.
       example: NAV 14-35.01 eller T7
+
+    Vedleggsurl:
+      type: string
+      description: Noen vedlegg er NAV-skjemaer som brukeren må fylle ut først og laste det opp som vedlegg. Vedleggsurl er en lenke til skjemaet (enten PDF eller til fyllut) som brukeren kan laste ned/fylle ut.
+      example: https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/7146ae917cf8423f71edbf37369da5a6b2a23524.pdf
 
     Vedtaksinformasjon:
       type: object

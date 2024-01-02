@@ -1,10 +1,9 @@
-package no.nav.soknad.innsending.rest.ettersending
-
+package no.nav.soknad.innsending.rest.ekstern
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
-import no.nav.soknad.innsending.api.EttersendingApi
+import no.nav.soknad.innsending.api.EksternApi
 import no.nav.soknad.innsending.model.DokumentSoknadDto
-import no.nav.soknad.innsending.model.OpprettEttersending
+import no.nav.soknad.innsending.model.EksternOpprettEttersending
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.EttersendingService
 import no.nav.soknad.innsending.util.Constants
@@ -20,34 +19,34 @@ import org.springframework.web.bind.annotation.RestController
 	claimMap = [Constants.CLAIM_ACR_LEVEL_4, Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH],
 	combineWithOr = true
 )
-class EttersendingRestApi(
+class EksternRestApi(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val ettersendingService: EttersendingService,
-) : EttersendingApi {
+) : EksternApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val secureLogger = LoggerFactory.getLogger("secureLogger")
 	private val combinedLogger = CombinedLogger(logger, secureLogger)
 
-	override fun opprettEttersending(opprettEttersending: OpprettEttersending): ResponseEntity<DokumentSoknadDto> {
+	override fun eksternOpprettEttersending(eksternOpprettEttersending: EksternOpprettEttersending): ResponseEntity<DokumentSoknadDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		combinedLogger.log(
-			"Kall for å opprette ettersending fra fyllut-ettersending på skjema ${opprettEttersending.skjemanr}",
+			"Kall for å opprette ettersending fra ekstern applikasjon på skjema ${eksternOpprettEttersending.skjemanr}",
 			brukerId
 		)
 
 		ettersendingService.logWarningForExistingEttersendelse(
 			brukerId = brukerId,
-			skjemanr = opprettEttersending.skjemanr,
+			skjemanr = eksternOpprettEttersending.skjemanr,
 		)
 
-		val ettersending = ettersendingService.createEttersendingFromFyllutEttersending(
-			ettersending = opprettEttersending,
+		val ettersending = ettersendingService.createEttersendingFromExternalApplication(
+			eksternOpprettEttersending = eksternOpprettEttersending,
 			brukerId = brukerId
 		)
 
 		combinedLogger.log(
-			"${ettersending.innsendingsId}: Opprettet ettersending fra fyllut-ettersending på skjema ${ettersending.skjemanr}",
+			"${ettersending.innsendingsId}: Opprettet ettersending fra ekstern applikasjon på skjema ${ettersending.skjemanr}",
 			brukerId
 		)
 
@@ -55,5 +54,6 @@ class EttersendingRestApi(
 			.status(HttpStatus.CREATED)
 			.body(ettersending)
 	}
-}
 
+
+}

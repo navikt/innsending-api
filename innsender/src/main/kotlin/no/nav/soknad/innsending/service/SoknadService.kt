@@ -63,7 +63,7 @@ class SoknadService(
 			// Lagre soknadens hovedvedlegg
 			val skjemaDbData = vedleggService.opprettHovedddokumentVedlegg(savedSoknadDbData, kodeverkSkjema)
 
-			val vedleggDbDataListe = vedleggService.opprettVedleggTilSoknad(savedSoknadDbData.id!!, vedleggsnrListe, spraak)
+			val vedleggDbDataListe = vedleggService.saveVedlegg(savedSoknadDbData.id!!, vedleggsnrListe, spraak)
 
 			val savedVedleggDbDataListe = listOf(skjemaDbData) + vedleggDbDataListe
 

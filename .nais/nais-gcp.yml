@@ -72,6 +72,9 @@ spec:
           cluster: dev-gcp
         - application: statuspoll
           namespace: navdig
+        - application: sykepengesoknad-backend
+          namespace: flex
+
     outbound:
       external:
       {{#each outboundExternalHosts}}

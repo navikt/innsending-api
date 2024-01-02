@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.utils
 
 import no.nav.security.mock.oauth2.MockOAuth2Server
-import no.nav.soknad.innsending.dto.RestErrorResponseDto
 import no.nav.soknad.innsending.model.*
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.ParameterizedTypeReference
@@ -151,6 +150,24 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 			HttpMethod.POST,
 			httpEntity,
 			FilDto::class.java
+		)
+	}
+
+	fun createEttersending(opprettEttersending: OpprettEttersending): ResponseEntity<DokumentSoknadDto> {
+		return restTemplate.exchange(
+			"${baseUrl}/fyllut/v1/ettersending",
+			HttpMethod.POST,
+			createHttpEntity(opprettEttersending),
+			DokumentSoknadDto::class.java
+		)
+	}
+
+	fun createEksternEttersending(eksternOpprettEttersending: EksternOpprettEttersending): ResponseEntity<DokumentSoknadDto> {
+		return restTemplate.exchange(
+			"${baseUrl}/ekstern/v1/ettersending",
+			HttpMethod.POST,
+			createHttpEntity(eksternOpprettEttersending),
+			DokumentSoknadDto::class.java
 		)
 	}
 
