@@ -803,7 +803,7 @@ paths:
 
   /ekstern/v1/ettersending:
         post:
-          summary: Kall for å opprette en ettersending fra eksterne applikasjoner
+          summary: Kall for å opprette en ettersending fra eksterne applikasjoner. Det er per nå ingen validering på skjemanr, tema, vedleggskode etc, så det innebærer at klienten har ansvar for at disse er gyldige.
           operationId: eksternOpprettEttersending
 
           requestBody:
