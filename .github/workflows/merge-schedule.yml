@@ -1,25 +1,23 @@
 name: Merge Schedule
-
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+  statuses: write
 on:
   pull_request:
     types:
       - opened
       - edited
       - synchronize
-    branches-ignore:
-      - dependabot/**
   schedule:
     # https://crontab.guru/every-hour
     - cron: '0 * * * *'
 
 jobs:
   merge_schedule:
-    permissions:
-        contents: write
-        pull-requests: write
-        id-token: write
-        statuses: write
     runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
     steps:
       - uses: gr2m/merge-schedule-action@v2
         with:
