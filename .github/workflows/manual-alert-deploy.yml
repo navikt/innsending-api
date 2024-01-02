@@ -1,5 +1,8 @@
 name: Manually triggered deployment (alerts)
 run-name: Manual ${{ github.event.inputs.environment }} deploy of branch ${{ github.head_ref || github.ref_name }}
+permissions:
+  contents: "read"
+  id-token: "write"
 
 on:
   workflow_dispatch:

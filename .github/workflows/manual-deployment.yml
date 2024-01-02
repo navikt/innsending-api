@@ -1,5 +1,8 @@
 name: Manually triggered deployment
 run-name: Manual ${{ github.event.inputs.environment }} deploy of branch ${{ github.head_ref || github.ref_name }}
+permissions:
+  contents: "read"
+  id-token: "write"
 
 on:
   workflow_dispatch:
@@ -16,9 +19,6 @@ on:
 
 jobs:
   build-and-push:
-    permissions:
-      contents: "read"
-      id-token: "write"
     name: Build and push Docker container preprod
     runs-on: ubuntu-latest
     steps:
