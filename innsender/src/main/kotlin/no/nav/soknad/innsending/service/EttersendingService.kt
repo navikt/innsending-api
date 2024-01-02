@@ -1,8 +1,10 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
+import no.nav.soknad.innsending.consumerapis.skjema.KodeverkSkjema
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
+import no.nav.soknad.innsending.kodeverk.api.KodeverkApi
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
@@ -75,6 +77,11 @@ class EttersendingService(
 				arkiveringsstatus = ArkiveringsStatus.IkkeSatt
 			)
 		)
+	}
+
+	fun validateEttersending(ettersending: OpprettEttersending) {
+		val kodeverkApi = KodeverkApi()
+		val skjema = kodeverkApi.koder("NAVSkjema", "consumerid", "callid") as KodeverkSkjema
 	}
 
 	@Transactional
