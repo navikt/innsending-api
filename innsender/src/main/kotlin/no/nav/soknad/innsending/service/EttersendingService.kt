@@ -1,9 +1,9 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
+import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType.*
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
-import no.nav.soknad.innsending.kodeverk.api.KodeverkApi
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
@@ -18,6 +18,7 @@ import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.innsending.util.mapping.*
+import no.nav.soknad.innsending.util.validators.EttersendingValidator
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -76,12 +77,6 @@ class EttersendingService(
 				arkiveringsstatus = ArkiveringsStatus.IkkeSatt
 			)
 		)
-	}
-
-	fun validateEttersending(ettersending: OpprettEttersending) {
-		val kodeverkApi = KodeverkApi()
-		val skjema = kodeverkApi.koder("NAVSkjema", "consumerid", "callid")
-		println(skjema)
 	}
 
 	@Transactional
@@ -354,7 +349,10 @@ class EttersendingService(
 		eksternOpprettEttersending: EksternOpprettEttersending
 	): DokumentSoknadDto {
 		val ettersending = mapToOpprettEttersending(eksternOpprettEttersending)
-		validateEttersending(ettersending)
+		EttersendingValidator().validateEttersending(
+			ettersending = ettersending,
+			kodeverkTypes = listOf(KODEVERK_NAVSKJEMA, KODEVERK_TEMA, KODEVERK_VEDLEGGSKODER)
+		)
 
 		val dokumentSoknadDto =
 			if (eksternOpprettEttersending.koblesTilEksisterendeSoknad == true) {

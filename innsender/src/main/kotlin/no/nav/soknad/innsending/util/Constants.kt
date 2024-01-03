@@ -13,6 +13,8 @@ object Constants {
 	const val MDC_INNSENDINGS_ID = "innsendingsId"
 	const val NAV_PERSON_IDENT = "NAV-Personident"
 
+	const val APPLICATION_NAME = "innsending-api"
+
 	const val BEARER = "Bearer "
 
 	const val MAX_AKTIVE_DAGER = 3 * 365L
@@ -28,5 +30,4 @@ object Constants {
 	const val PDL = "pdl"
 	const val ARENA_MAALGRUPPER = "arena_maalgrupper"
 	const val ARENA_AKTIVITETER = "arena_aktiviteter"
-
 }

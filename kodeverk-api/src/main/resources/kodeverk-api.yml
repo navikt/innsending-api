@@ -74,7 +74,8 @@ paths:
           description: OK
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/GetKodeverkKoderResponse'
         '400':
           description: Bad Request
           content:
