@@ -1,0 +1,44 @@
+{
+	"mappings": [
+		{
+			"request": {
+				"urlPattern": "/api/v1/kodeverk/Tema/koder",
+				"method": "GET"
+			},
+			"response": {
+				"status": 200,
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"jsonBody": [
+					{
+						"koder": [
+							"AAP",
+							"AAR",
+							"FOS"
+						]
+					}
+				]
+			}
+		},
+		{
+			"scenarioName": "kodeverk-tema",
+			"requiredScenarioState": "failed",
+			"request": {
+				"urlPattern": "/api/v1/kodeverk/Tema/koder",
+				"method": "GET"
+			},
+			"response": {
+				"status": 400,
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"jsonBody": [
+					{
+						"melding": "Failed"
+					}
+				]
+			}
+		}
+	]
+}

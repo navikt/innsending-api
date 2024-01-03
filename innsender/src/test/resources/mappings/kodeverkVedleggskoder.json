@@ -1,0 +1,46 @@
+{
+	"mappings": [
+		{
+			"request": {
+				"urlPattern": "/api/v1/kodeverk/Vedleggskoder/koder",
+				"method": "GET"
+			},
+			"response": {
+				"status": 200,
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"jsonBody": [
+					{
+						"koder": [
+							"AA",
+							"AB",
+							"AC",
+							"N6",
+							"K6"
+						]
+					}
+				]
+			}
+		},
+		{
+			"scenarioName": "kodeverk-vedleggskoder",
+			"requiredScenarioState": "failed",
+			"request": {
+				"urlPattern": "/api/v1/kodeverk/Vedleggskoder/koder",
+				"method": "GET"
+			},
+			"response": {
+				"status": 400,
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"jsonBody": [
+					{
+						"melding": "Failed"
+					}
+				]
+			}
+		}
+	]
+}

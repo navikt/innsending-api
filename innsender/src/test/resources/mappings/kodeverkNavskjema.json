@@ -1,0 +1,47 @@
+{
+	"mappings": [
+		{
+			"request": {
+				"urlPattern": "/api/v1/kodeverk/NAVSkjema/koder",
+				"method": "GET"
+			},
+			"response": {
+				"status": 200,
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"jsonBody": [
+					{
+						"koder": [
+							"NAV 00-00.76",
+							"NAV 00-01.00",
+							"NAV 00-01.01",
+							"NAV 55-00.60",
+							"NAV 76-13.89",
+							"NAV 10-07.20"
+						]
+					}
+				]
+			}
+		},
+		{
+			"scenarioName": "kodeverk-navskjema",
+			"requiredScenarioState": "failed",
+			"request": {
+				"urlPattern": "/api/v1/kodeverk/NAVSkjema/koder",
+				"method": "GET"
+			},
+			"response": {
+				"status": 400,
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"jsonBody": [
+					{
+						"melding": "Failed"
+					}
+				]
+			}
+		}
+	]
+}
