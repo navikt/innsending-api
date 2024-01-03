@@ -57,16 +57,22 @@ paths:
           required: true
           schema:
             type: string
+        - name: spraak
+          in: query
+          description: Hvilke språk kodene skal være på. Eksempelverdier er "nb" og "nn" for henholdsvis bokmål og nynorsk.
+          required: true
+          schema:
+            type: string
         - name: Nav-Consumer-Id
           in: header
           description: ID'en på systemet som gjør kallet, som regel service brukeren til applikasjonen, for eksempel "srvmedl2".
-          required: true
+          required: false
           schema:
             type: string
         - name: Nav-Call-Id
           in: header
           description: En ID som identifiserer kallkjeden som dette kallet er en del av.
-          required: true
+          required: false
           schema:
             type: string
       responses:
@@ -82,12 +88,6 @@ paths:
             '*/*':
               schema:
                 $ref: '#/components/schemas/Feil'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetKodeverkKoderResponse'
   /api/v1/kodeverk/{kodeverksnavn}/koder/betydninger:
     get:
       tags:
@@ -126,28 +126,28 @@ paths:
         - name: Nav-Consumer-Id
           in: header
           description: ID'en på systemet som gjør kallet, som regel service brukeren til applikasjonen, for eksempel "srvmedl2".
-          required: true
+          required: false
           schema:
             type: string
         - name: Nav-Call-Id
           in: header
           description: En ID som identifiserer kallkjeden som dette kallet er en del av.
-          required: true
+          required: false
           schema:
             type: string
       responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetKodeverkKoderBetydningerResponse'
         '400':
           description: Bad Request
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/Feil'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetKodeverkKoderBetydningerResponse'
   /api/v1/hierarki:
     get:
       tags:

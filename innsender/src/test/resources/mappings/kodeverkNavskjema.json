@@ -2,7 +2,7 @@
 	"mappings": [
 		{
 			"request": {
-				"urlPattern": "/api/v1/kodeverk/NAVSkjema/koder",
+				"urlPattern": "/kodeverk-api/api/v1/kodeverk/NAVSkjema/koder.*",
 				"method": "GET"
 			},
 			"response": {
@@ -10,25 +10,37 @@
 				"headers": {
 					"Content-Type": "application/json"
 				},
-				"jsonBody": [
-					{
-						"koder": [
-							"NAV 00-00.76",
-							"NAV 00-01.00",
-							"NAV 00-01.01",
-							"NAV 55-00.60",
-							"NAV 76-13.89",
-							"NAV 10-07.20"
+				"jsonBody": {
+					"betydninger": {
+						"NAV 02-07.05": [
+							{
+								"gyldigFra": "2006-09-14",
+								"gyldigTil": "9999-12-31",
+								"beskrivelser": {
+									"nb": {
+										"term": "Søknad om å bli medlem i folketrygden under opphold i Norge",
+										"tekst": "Søknad om å bli medlem i folketrygden under opphold i Norge"
+									},
+									"en": {
+										"term": "Application for insurance during stay in Norway",
+										"tekst": "Application for insurance during stay in Norway"
+									},
+									"nn": {
+										"term": "Søknad om å bli medlem i folketrygden under opphold i Norge",
+										"tekst": "Søknad om å bli medlem i folketrygden under opphold i Norge"
+									}
+								}
+							}
 						]
 					}
-				]
+				}
 			}
 		},
 		{
 			"scenarioName": "kodeverk-navskjema",
 			"requiredScenarioState": "failed",
 			"request": {
-				"urlPattern": "/api/v1/kodeverk/NAVSkjema/koder",
+				"urlPattern": "kodeverk-api/api/v1/kodeverk/NAVSkjema/koder",
 				"method": "GET"
 			},
 			"response": {

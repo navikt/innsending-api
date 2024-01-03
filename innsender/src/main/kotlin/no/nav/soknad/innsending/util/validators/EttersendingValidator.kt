@@ -1,19 +1,25 @@
 package no.nav.soknad.innsending.util.validators
 
+import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.kodeverk.api.KodeverkApi
-import no.nav.soknad.innsending.kodeverk.model.GetKodeverkKoderResponse
+import no.nav.soknad.innsending.kodeverk.model.GetKodeverkKoderBetydningerResponse
 import no.nav.soknad.innsending.model.OpprettEttersending
-import no.nav.soknad.innsending.util.Constants.APPLICATION_NAME
-import no.nav.soknad.innsending.util.MDCUtil
+import okhttp3.OkHttpClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 
-class EttersendingValidator {
+@Component
+class EttersendingValidator(
+	private val restConfig: RestConfig,
+	private val kodeverkApiClient: OkHttpClient
+) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
+	private val kodeverkApi = KodeverkApi(restConfig.kodeverkUrl, kodeverkApiClient)
 
 	// Validate ettersending against the felles kodeverk
 	fun validateEttersending(ettersending: OpprettEttersending, kodeverkTypes: List<KodeverkType>) {
@@ -32,18 +38,22 @@ class EttersendingValidator {
 	}
 
 	private fun validateValueInKodeverk(value: String, kodeverkType: KodeverkType) {
-		val response: GetKodeverkKoderResponse
+		val response: GetKodeverkKoderBetydningerResponse
 
 		try {
-			val kodeverkApi = KodeverkApi()
-			response = kodeverkApi.koder(kodeverkType.value, APPLICATION_NAME, MDCUtil.callIdOrNew())
+			response = kodeverkApi.betydning(
+				kodeverksnavn = kodeverkType.value,
+				spraak = setOf("nb", "nn", "en"),
+				ekskluderUgyldige = true
+			)
 		} catch (e: Exception) {
 			// Log error, but continue execution
+			println(e)
 			logger.error("Kodeverk error", e)
 			return
 		}
 
-		if (!response.koder.contains(value)) {
+		if (response.betydninger[value] == null) {
 			throw IllegalActionException(
 				message = "$value finnes ikke i kodeverket: ${kodeverkType.value}",
 				errorCode = ErrorCode.INVALID_KODEVERK_VALUE
@@ -54,11 +64,14 @@ class EttersendingValidator {
 	private fun validateValueInKodeverk(values: List<String>?, kodeverkType: KodeverkType) {
 		if (values.isNullOrEmpty()) return
 
-		val response: GetKodeverkKoderResponse
+		val response: GetKodeverkKoderBetydningerResponse
 
 		try {
-			val kodeverkApi = KodeverkApi()
-			response = kodeverkApi.koder(kodeverkType.value, APPLICATION_NAME, MDCUtil.callIdOrNew())
+			response = kodeverkApi.betydning(
+				kodeverksnavn = kodeverkType.value,
+				spraak = setOf("nb", "nn", "en"),
+				ekskluderUgyldige = true
+			)
 		} catch (e: Exception) {
 			// Log error, but continue execution
 			logger.error("Kodeverk error", e)
@@ -66,7 +79,7 @@ class EttersendingValidator {
 		}
 
 		values.forEach { value ->
-			if (!response.koder.contains(value)) {
+			if (response.betydninger[value] == null) {
 				throw IllegalActionException(
 					message = "$value finnes ikke i kodeverket: ${kodeverkType.value}",
 					errorCode = ErrorCode.INVALID_KODEVERK_VALUE

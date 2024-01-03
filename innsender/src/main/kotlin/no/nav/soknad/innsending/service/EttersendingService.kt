@@ -37,6 +37,7 @@ class EttersendingService(
 	private val soknadService: SoknadService,
 	private val safService: SafService,
 	private val tilgangskontroll: Tilgangskontroll,
+	private val ettersendingValidator: EttersendingValidator
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -349,7 +350,7 @@ class EttersendingService(
 		eksternOpprettEttersending: EksternOpprettEttersending
 	): DokumentSoknadDto {
 		val ettersending = mapToOpprettEttersending(eksternOpprettEttersending)
-		EttersendingValidator().validateEttersending(
+		ettersendingValidator.validateEttersending(
 			ettersending = ettersending,
 			kodeverkTypes = listOf(KODEVERK_NAVSKJEMA, KODEVERK_TEMA, KODEVERK_VEDLEGGSKODER)
 		)

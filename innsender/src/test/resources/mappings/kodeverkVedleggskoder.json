@@ -2,7 +2,7 @@
 	"mappings": [
 		{
 			"request": {
-				"urlPattern": "/api/v1/kodeverk/Vedleggskoder/koder",
+				"urlPattern": "/kodeverk-api/api/v1/kodeverk/Vedleggskoder/koder.*",
 				"method": "GET"
 			},
 			"response": {
@@ -10,24 +10,57 @@
 				"headers": {
 					"Content-Type": "application/json"
 				},
-				"jsonBody": [
-					{
-						"koder": [
-							"AA",
-							"AB",
-							"AC",
-							"N6",
-							"K6"
+				"jsonBody": {
+					"betydninger": {
+						"Y9": [
+							{
+								"gyldigFra": "2020-02-06",
+								"gyldigTil": "9999-12-31",
+								"beskrivelser": {
+									"nn": {
+										"term": "Dokumentasjon av veiforhold",
+										"tekst": "Dokumentasjon av veiforhold"
+									},
+									"nb": {
+										"term": "Dokumentasjon av veiforhold",
+										"tekst": "Dokumentasjon av veiforhold"
+									},
+									"en": {
+										"term": "Dokumentasjon av veiforhold",
+										"tekst": "Dokumentasjon av veiforhold"
+									}
+								}
+							}
+						],
+						"N6": [
+							{
+								"gyldigFra": "2020-02-11",
+								"gyldigTil": "9999-12-31",
+								"beskrivelser": {
+									"nn": {
+										"term": "Annet",
+										"tekst": "Annet"
+									},
+									"nb": {
+										"term": "Annet",
+										"tekst": "Annet"
+									},
+									"en": {
+										"term": "Annet",
+										"tekst": "Annet"
+									}
+								}
+							}
 						]
 					}
-				]
+				}
 			}
 		},
 		{
 			"scenarioName": "kodeverk-vedleggskoder",
 			"requiredScenarioState": "failed",
 			"request": {
-				"urlPattern": "/api/v1/kodeverk/Vedleggskoder/koder",
+				"urlPattern": "kodeverk-api/api/v1/kodeverk/Vedleggskoder/koder",
 				"method": "GET"
 			},
 			"response": {

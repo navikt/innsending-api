@@ -64,6 +64,7 @@ restconfig:
   azureUrl: http://localhost:${wiremock.server.port}/azure-api
   antivirusUrl: http://localhost:${wiremock.server.port}/antivirus
   arenaUrl: http://localhost:${wiremock.server.port}/arena-api
+  kodeverkUrl: http://localhost:${wiremock.server.port}/kodeverk-api
 
 
 brukernotifikasjonconfig:
