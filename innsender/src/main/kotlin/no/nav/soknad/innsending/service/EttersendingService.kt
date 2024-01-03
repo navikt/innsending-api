@@ -18,7 +18,6 @@ import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.innsending.util.mapping.*
-import no.nav.soknad.innsending.util.validators.EttersendingValidator
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -37,7 +36,7 @@ class EttersendingService(
 	private val soknadService: SoknadService,
 	private val safService: SafService,
 	private val tilgangskontroll: Tilgangskontroll,
-	private val ettersendingValidator: EttersendingValidator
+	private val kodeverkService: KodeverkService
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -350,7 +349,7 @@ class EttersendingService(
 		eksternOpprettEttersending: EksternOpprettEttersending
 	): DokumentSoknadDto {
 		val ettersending = mapToOpprettEttersending(eksternOpprettEttersending)
-		ettersendingValidator.validateEttersending(
+		kodeverkService.validateEttersending(
 			ettersending = ettersending,
 			kodeverkTypes = listOf(KODEVERK_NAVSKJEMA, KODEVERK_TEMA, KODEVERK_VEDLEGGSKODER)
 		)

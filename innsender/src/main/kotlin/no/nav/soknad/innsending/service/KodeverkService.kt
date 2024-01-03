@@ -1,4 +1,4 @@
-package no.nav.soknad.innsending.util.validators
+package no.nav.soknad.innsending.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.LoadingCache
@@ -12,11 +12,11 @@ import no.nav.soknad.innsending.model.OpprettEttersending
 import okhttp3.OkHttpClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
 import java.time.Duration
 
-@Component
-class EttersendingValidator(
+@Service
+class KodeverkService(
 	restConfig: RestConfig,
 	kodeverkApiClient: OkHttpClient
 ) {
@@ -43,7 +43,7 @@ class EttersendingValidator(
 			when (kodeverkType) {
 				KodeverkType.KODEVERK_NAVSKJEMA -> validateValueInKodeverk(ettersending.skjemanr, kodeverkType)
 				KodeverkType.KODEVERK_TEMA -> validateValueInKodeverk(ettersending.tema, kodeverkType)
-				KodeverkType.KODEVERK_VEDLEGGSKODER -> validateValueInKodeverk(
+				KodeverkType.KODEVERK_VEDLEGGSKODER -> validateValuesInKodeverk(
 					ettersending.vedleggsListe?.map { it.vedleggsnr },
 					kodeverkType
 				)
@@ -69,7 +69,7 @@ class EttersendingValidator(
 		}
 	}
 
-	private fun validateValueInKodeverk(values: List<String>?, kodeverkType: KodeverkType) {
+	private fun validateValuesInKodeverk(values: List<String>?, kodeverkType: KodeverkType) {
 		if (values.isNullOrEmpty()) return
 
 		val response = try {

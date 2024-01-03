@@ -22,7 +22,6 @@ import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.testpersonid
-import no.nav.soknad.innsending.util.validators.EttersendingValidator
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
@@ -63,7 +62,7 @@ class EttersendingServiceTest : ApplicationTest() {
 	private lateinit var filService: FilService
 
 	@Autowired
-	private lateinit var ettersendingValidator: EttersendingValidator
+	private lateinit var kodeverkService: KodeverkService
 
 	@Autowired
 	private lateinit var restConfig: RestConfig
@@ -101,7 +100,7 @@ class EttersendingServiceTest : ApplicationTest() {
 		vedleggService = vedleggService,
 		safService = safService,
 		tilgangskontroll = tilgangskontroll,
-		ettersendingValidator = ettersendingValidator
+		kodeverkService = kodeverkService
 	)
 
 	private fun lagInnsendingService(): InnsendingService = InnsendingService(

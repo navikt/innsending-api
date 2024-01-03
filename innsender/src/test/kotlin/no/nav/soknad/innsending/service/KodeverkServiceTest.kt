@@ -1,4 +1,4 @@
-package no.nav.soknad.innsending.util.validators
+package no.nav.soknad.innsending.service
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import no.nav.soknad.innsending.ApplicationTest
@@ -11,10 +11,10 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 
-class EttersendingValidatorTest : ApplicationTest() {
+class KodeverkServiceTest : ApplicationTest() {
 
 	@Autowired
-	private lateinit var ettersendingValidator: EttersendingValidator
+	private lateinit var kodeverkService: KodeverkService
 
 	@Test
 	fun `Should not throw exception if skjemanr is valid`() {
@@ -24,7 +24,7 @@ class EttersendingValidatorTest : ApplicationTest() {
 
 		// When / Then
 		assertDoesNotThrow {
-			ettersendingValidator.validateEttersending(ettersending, kodeverkTypes)
+			kodeverkService.validateEttersending(ettersending, kodeverkTypes)
 		}
 	}
 
@@ -36,7 +36,7 @@ class EttersendingValidatorTest : ApplicationTest() {
 
 		// When / Then
 		assertThrows<IllegalActionException> {
-			ettersendingValidator.validateEttersending(ettersending, kodeverkTypes)
+			kodeverkService.validateEttersending(ettersending, kodeverkTypes)
 		}
 	}
 
@@ -48,7 +48,7 @@ class EttersendingValidatorTest : ApplicationTest() {
 
 		// When / Then
 		assertDoesNotThrow {
-			ettersendingValidator.validateEttersending(ettersending, kodeverkTypes)
+			kodeverkService.validateEttersending(ettersending, kodeverkTypes)
 		}
 	}
 
@@ -60,7 +60,7 @@ class EttersendingValidatorTest : ApplicationTest() {
 
 		// When / Then
 		assertThrows<IllegalActionException> {
-			ettersendingValidator.validateEttersending(ettersending, kodeverkTypes)
+			kodeverkService.validateEttersending(ettersending, kodeverkTypes)
 		}
 	}
 
@@ -73,7 +73,7 @@ class EttersendingValidatorTest : ApplicationTest() {
 
 		// When / Then
 		assertDoesNotThrow {
-			ettersendingValidator.validateEttersending(ettersending, kodeverkTypes)
+			kodeverkService.validateEttersending(ettersending, kodeverkTypes)
 		}
 	}
 
@@ -86,7 +86,7 @@ class EttersendingValidatorTest : ApplicationTest() {
 
 		// When / Then
 		assertThrows<IllegalActionException> {
-			ettersendingValidator.validateEttersending(ettersending, kodeverkTypes)
+			kodeverkService.validateEttersending(ettersending, kodeverkTypes)
 		}
 	}
 
@@ -99,7 +99,7 @@ class EttersendingValidatorTest : ApplicationTest() {
 
 		// When
 		assertDoesNotThrow {
-			ettersendingValidator.validateEttersending(ettersending, kodeverkTypes)
+			kodeverkService.validateEttersending(ettersending, kodeverkTypes)
 		}
 
 	}
