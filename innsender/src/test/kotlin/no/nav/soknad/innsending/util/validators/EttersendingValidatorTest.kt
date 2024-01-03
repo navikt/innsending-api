@@ -19,7 +19,7 @@ class EttersendingValidatorTest : ApplicationTest() {
 	@Test
 	fun `Should not throw exception if skjemanr is valid`() {
 		// Given
-		val ettersending = OpprettEttersendingTestBuilder().skjemanr("valid").build()
+		val ettersending = OpprettEttersendingTestBuilder().skjemanr("NAV 02-07.05").build()
 		val kodeverkTypes = listOf(KodeverkType.KODEVERK_NAVSKJEMA)
 
 		// When / Then
@@ -67,7 +67,7 @@ class EttersendingValidatorTest : ApplicationTest() {
 	@Test
 	fun `Should not throw exception if vedleggsnr is valid`() {
 		// Given
-		val vedlegg = listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr("AA").build())
+		val vedlegg = listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr("N6").build())
 		val ettersending = OpprettEttersendingTestBuilder().vedleggsListe(vedlegg).build()
 		val kodeverkTypes = listOf(KodeverkType.KODEVERK_VEDLEGGSKODER)
 

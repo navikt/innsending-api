@@ -40,7 +40,7 @@
 			"scenarioName": "kodeverk-navskjema",
 			"requiredScenarioState": "failed",
 			"request": {
-				"urlPattern": "kodeverk-api/api/v1/kodeverk/NAVSkjema/koder",
+				"urlPattern": "/kodeverk-api/api/v1/kodeverk/NAVSkjema/koder.*",
 				"method": "GET"
 			},
 			"response": {

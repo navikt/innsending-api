@@ -1,5 +1,7 @@
 package no.nav.soknad.innsending.util.validators
 
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.LoadingCache
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType
 import no.nav.soknad.innsending.exceptions.ErrorCode
@@ -11,15 +13,27 @@ import okhttp3.OkHttpClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import java.time.Duration
 
 @Component
 class EttersendingValidator(
-	private val restConfig: RestConfig,
-	private val kodeverkApiClient: OkHttpClient
+	restConfig: RestConfig,
+	kodeverkApiClient: OkHttpClient
 ) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 	private val kodeverkApi = KodeverkApi(restConfig.kodeverkUrl, kodeverkApiClient)
+
+	val cache: LoadingCache<String, GetKodeverkKoderBetydningerResponse> = Caffeine
+		.newBuilder()
+		.refreshAfterWrite(Duration.ofHours(1))
+		.build {
+			kodeverkApi.betydning(
+				kodeverksnavn = it,
+				spraak = setOf("nb", "nn", "en"),
+				ekskluderUgyldige = true
+			)
+		}
 
 	// Validate ettersending against the felles kodeverk
 	fun validateEttersending(ettersending: OpprettEttersending, kodeverkTypes: List<KodeverkType>) {
@@ -38,17 +52,11 @@ class EttersendingValidator(
 	}
 
 	private fun validateValueInKodeverk(value: String, kodeverkType: KodeverkType) {
-		val response: GetKodeverkKoderBetydningerResponse
 
-		try {
-			response = kodeverkApi.betydning(
-				kodeverksnavn = kodeverkType.value,
-				spraak = setOf("nb", "nn", "en"),
-				ekskluderUgyldige = true
-			)
+		val response = try {
+			cache.get(kodeverkType.value)
 		} catch (e: Exception) {
 			// Log error, but continue execution
-			println(e)
 			logger.error("Kodeverk error", e)
 			return
 		}
@@ -64,14 +72,8 @@ class EttersendingValidator(
 	private fun validateValueInKodeverk(values: List<String>?, kodeverkType: KodeverkType) {
 		if (values.isNullOrEmpty()) return
 
-		val response: GetKodeverkKoderBetydningerResponse
-
-		try {
-			response = kodeverkApi.betydning(
-				kodeverksnavn = kodeverkType.value,
-				spraak = setOf("nb", "nn", "en"),
-				ekskluderUgyldige = true
-			)
+		val response = try {
+			cache.get(kodeverkType.value)
 		} catch (e: Exception) {
 			// Log error, but continue execution
 			logger.error("Kodeverk error", e)
