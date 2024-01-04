@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
+import kotlin.test.assertEquals
 
 class KodeverkServiceTest : ApplicationTest() {
 
@@ -97,11 +98,24 @@ class KodeverkServiceTest : ApplicationTest() {
 		val kodeverkTypes = listOf(KodeverkType.KODEVERK_NAVSKJEMA)
 		WireMock.setScenarioState("kodeverk-navskjema", "failed")
 
-		// When
+		// When / Then
 		assertDoesNotThrow {
 			kodeverkService.validateEttersending(ettersending, kodeverkTypes)
 		}
 
 	}
+
+	@Test
+	fun `Should add tittel to ettersending from kodeverk if not specified`() {
+		// Given
+		val ettersending = OpprettEttersendingTestBuilder().tittel(null).skjemanr("NAV 02-07.05").sprak("nb_NO").build()
+
+		// When
+		val enrichedEttersending = kodeverkService.enrichEttersendingWithKodeverkInfo(ettersending)
+
+		// Then
+		assertEquals("Søknad om å bli medlem i folketrygden under opphold i Norge", enrichedEttersending.tittel)
+	}
+
 
 }

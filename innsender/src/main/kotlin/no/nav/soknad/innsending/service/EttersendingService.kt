@@ -272,7 +272,7 @@ class EttersendingService(
 			val ettersendingsSoknadDb = saveEttersending(
 				brukerId = brukerId,
 				ettersendingsId = null,
-				tittel = ettersending.tittel,
+				tittel = ettersending.tittel ?: "",
 				skjemanr = ettersending.skjemanr,
 				tema = ettersending.tema,
 				sprak = ettersending.sprak,
@@ -348,12 +348,16 @@ class EttersendingService(
 		brukerId: String,
 		eksternOpprettEttersending: EksternOpprettEttersending
 	): DokumentSoknadDto {
-		val ettersending = mapToOpprettEttersending(eksternOpprettEttersending)
+		val mappedEttersending = mapToOpprettEttersending(eksternOpprettEttersending)
+
 		kodeverkService.validateEttersending(
-			ettersending = ettersending,
+			ettersending = mappedEttersending,
 			kodeverkTypes = listOf(KODEVERK_NAVSKJEMA, KODEVERK_TEMA, KODEVERK_VEDLEGGSKODER)
 		)
 
+		val ettersending = kodeverkService.enrichEttersendingWithKodeverkInfo(mappedEttersending)
+
+		// Create ettersending based on existing søknad or create a new one
 		val dokumentSoknadDto =
 			if (eksternOpprettEttersending.koblesTilEksisterendeSoknad == true) {
 				createEttersendingFromExistingSoknader(brukerId = brukerId, ettersending = ettersending)

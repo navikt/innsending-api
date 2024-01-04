@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.kodeverk.api.KodeverkApi
 import no.nav.soknad.innsending.kodeverk.model.GetKodeverkKoderBetydningerResponse
 import no.nav.soknad.innsending.model.OpprettEttersending
+import no.nav.soknad.innsending.util.finnSpraakFraInput
 import okhttp3.OkHttpClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -34,6 +35,24 @@ class KodeverkService(
 				ekskluderUgyldige = true
 			)
 		}
+
+	// Add extra info from kodeverk such as 'tittel' (if not specified in input)
+	fun enrichEttersendingWithKodeverkInfo(ettersending: OpprettEttersending): OpprettEttersending {
+		if (ettersending.tittel != null) return ettersending
+		val sprak = finnSpraakFraInput(ettersending.sprak)
+
+		val kodeverk = try {
+			cache.get(KodeverkType.KODEVERK_NAVSKJEMA.value)
+		} catch (e: Exception) {
+			// Log error, but continue execution
+			logger.error("Kodeverk error", e)
+			return ettersending
+		}
+
+		return ettersending.copy(
+			tittel = kodeverk.betydninger[ettersending.skjemanr]?.first()?.beskrivelser?.get(sprak)?.term
+		)
+	}
 
 	// Validate ettersending against the felles kodeverk
 	fun validateEttersending(ettersending: OpprettEttersending, kodeverkTypes: List<KodeverkType>) {
