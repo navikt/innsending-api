@@ -95,6 +95,7 @@
 		<module>api</module>
 		<module>soknadsmottaker-api</module>
 		<module>innsender</module>
+		<module>kodeverk-api</module>
 	</modules>
 
 	<repositories>

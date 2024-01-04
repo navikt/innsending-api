@@ -9,14 +9,14 @@ class OpprettEttersendingTestBuilder {
 	private var sprak: String = "nb_NO"
 	private var vedleggsListe: List<InnsendtVedleggDto>? = emptyList()
 	private var tema = "FOS"
-	private var tittel = "Ettersendingssøknad tittel"
+	private var tittel: String? = "Ettersendingssøknad tittel"
 
 	fun skjemanr(skjemanr: String) = apply { this.skjemanr = skjemanr }
 	fun sprak(sprak: String) = apply { this.sprak = sprak }
 	fun vedleggsListe(vedleggsListe: List<InnsendtVedleggDto>) = apply { this.vedleggsListe = vedleggsListe }
 
 	fun tema(tema: String) = apply { this.tema = tema }
-	fun tittel(titel: String) = apply { this.tittel = titel }
+	fun tittel(tittel: String?) = apply { this.tittel = tittel }
 
 	fun build(): OpprettEttersending {
 		return OpprettEttersending(

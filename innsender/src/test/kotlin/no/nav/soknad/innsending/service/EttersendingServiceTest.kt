@@ -62,6 +62,9 @@ class EttersendingServiceTest : ApplicationTest() {
 	private lateinit var filService: FilService
 
 	@Autowired
+	private lateinit var kodeverkService: KodeverkService
+
+	@Autowired
 	private lateinit var restConfig: RestConfig
 
 	@Autowired
@@ -97,6 +100,7 @@ class EttersendingServiceTest : ApplicationTest() {
 		vedleggService = vedleggService,
 		safService = safService,
 		tilgangskontroll = tilgangskontroll,
+		kodeverkService = kodeverkService
 	)
 
 	private fun lagInnsendingService(): InnsendingService = InnsendingService(

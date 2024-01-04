@@ -803,7 +803,8 @@ paths:
 
   /ekstern/v1/ettersending:
         post:
-          summary: Kall for å opprette en ettersending fra eksterne applikasjoner. Det er per nå ingen validering på skjemanr, tema, vedleggskode etc, så det innebærer at klienten har ansvar for at disse er gyldige.
+          summary: Kall for å opprette en ettersending fra eksterne applikasjoner. Skjemanr, tema og vedleggskoder valideres mot kodeverket (se https://kodeverk-web.dev.intern.nav.no/).
+                   Skjemanr og vedleggskoder er valgfrie og vil bli hentet fra kodeverket hvis de ikke er oppgitt. Merk at kodeverket ikke alltid har oversettelser for alle språk og vil bruke norsk som fallback.
           operationId: eksternOpprettEttersending
 
           requestBody:
@@ -1226,7 +1227,6 @@ components:
       type: object
       description: Data for å opprette en ettersending
       required:
-        - tittel
         - skjemanr
         - sprak
         - tema
@@ -1329,7 +1329,6 @@ components:
       description: Data om et dokument på en søknad.
       required:
         - vedleggsnr
-        - tittel
       properties:
         vedleggsnr:
           $ref: "#/components/schemas/Vedleggsnr"
@@ -1422,7 +1421,6 @@ components:
       type: object
       description: Data for å opprette en ettersending
       required:
-        - tittel
         - skjemanr
         - sprak
         - tema

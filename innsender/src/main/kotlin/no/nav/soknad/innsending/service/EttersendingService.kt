@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
+import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType.*
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.*
@@ -35,6 +36,7 @@ class EttersendingService(
 	private val soknadService: SoknadService,
 	private val safService: SafService,
 	private val tilgangskontroll: Tilgangskontroll,
+	private val kodeverkService: KodeverkService
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -270,7 +272,7 @@ class EttersendingService(
 			val ettersendingsSoknadDb = saveEttersending(
 				brukerId = brukerId,
 				ettersendingsId = null,
-				tittel = ettersending.tittel,
+				tittel = ettersending.tittel ?: "",
 				skjemanr = ettersending.skjemanr,
 				tema = ettersending.tema,
 				sprak = ettersending.sprak,
@@ -346,13 +348,21 @@ class EttersendingService(
 		brukerId: String,
 		eksternOpprettEttersending: EksternOpprettEttersending
 	): DokumentSoknadDto {
-		val ettersending = mapToOpprettEttersending(eksternOpprettEttersending)
+		val mappedEttersending = mapToOpprettEttersending(eksternOpprettEttersending)
 
+		kodeverkService.validateEttersending(
+			ettersending = mappedEttersending,
+			kodeverkTypes = listOf(KODEVERK_NAVSKJEMA, KODEVERK_TEMA, KODEVERK_VEDLEGGSKODER)
+		)
+
+		val enrichedEttersending = kodeverkService.enrichEttersendingWithKodeverkInfo(mappedEttersending)
+
+		// Create ettersending based on existing søknad or create a new one
 		val dokumentSoknadDto =
 			if (eksternOpprettEttersending.koblesTilEksisterendeSoknad == true) {
-				createEttersendingFromExistingSoknader(brukerId = brukerId, ettersending = ettersending)
+				createEttersendingFromExistingSoknader(brukerId = brukerId, ettersending = enrichedEttersending)
 			} else {
-				createEttersending(brukerId = brukerId, ettersending = ettersending)
+				createEttersending(brukerId = brukerId, ettersending = enrichedEttersending)
 			}
 
 		publiserBrukernotifikasjon(dokumentSoknadDto, eksternOpprettEttersending.brukernotifikasjonstype)

@@ -95,6 +95,7 @@ restconfig:
   azureUrl: http://localhost:9043/azure-api
   antivirusUrl: http://localhost:9043/antivirus
   arenaUrl: http://localhost:9043/arena-api
+  kodeverkUrl: https://kodeverk.dev.intern.nav.no
 
 brukernotifikasjonconfig:
   profiles: test
@@ -150,6 +151,7 @@ restconfig:
   azureUrl: ${AZURE_OPENID_CONFIG_TOKEN_ENDPOINT}
   antivirusUrl: ${ANTIVIRUS_URL}
   arenaUrl: ${ARENA_URL}
+  kodeverkUrl: ${KODEVERK_URL}
 
 
 brukernotifikasjonconfig:
