@@ -355,14 +355,14 @@ class EttersendingService(
 			kodeverkTypes = listOf(KODEVERK_NAVSKJEMA, KODEVERK_TEMA, KODEVERK_VEDLEGGSKODER)
 		)
 
-		val ettersending = kodeverkService.enrichEttersendingWithKodeverkInfo(mappedEttersending)
+		val enrichedEttersending = kodeverkService.enrichEttersendingWithKodeverkInfo(mappedEttersending)
 
 		// Create ettersending based on existing søknad or create a new one
 		val dokumentSoknadDto =
 			if (eksternOpprettEttersending.koblesTilEksisterendeSoknad == true) {
-				createEttersendingFromExistingSoknader(brukerId = brukerId, ettersending = ettersending)
+				createEttersendingFromExistingSoknader(brukerId = brukerId, ettersending = enrichedEttersending)
 			} else {
-				createEttersending(brukerId = brukerId, ettersending = ettersending)
+				createEttersending(brukerId = brukerId, ettersending = enrichedEttersending)
 			}
 
 		publiserBrukernotifikasjon(dokumentSoknadDto, eksternOpprettEttersending.brukernotifikasjonstype)
