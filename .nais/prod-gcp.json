@@ -17,7 +17,7 @@
 		"soknadsmottaker-gcp.intern.nav.no",
 		"www.nav.no",
 		"arena-api.prod-fss-pub.nais.io",
-		"kodeverk.intern.nav.no"
+		"kodeverk.prod-fss-pub.nais.io"
 	],
 	"kafka-pool": "nav-prod",
 	"env": {
@@ -50,6 +50,6 @@
 		"ARENA_URL": "https://arena-api.prod-fss-pub.nais.io",
 		"ARENA_TOKEN_X_AUDIENCE": "prod-fss:teamarenanais:arena-api",
 		"ARENA_SCOPE": "api://prod-fss.teamarenanais.arena-api/.default",
-		"KODEVERK_URL": "https://kodeverk.intern.nav.no"
+		"KODEVERK_URL": "https://kodeverk.prod-fss-pub.nais.io"
 	}
 }
