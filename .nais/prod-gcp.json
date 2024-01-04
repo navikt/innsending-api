@@ -16,7 +16,8 @@
 		"saf.prod-fss-pub.nais.io",
 		"soknadsmottaker-gcp.intern.nav.no",
 		"www.nav.no",
-		"arena-api.prod-fss-pub.nais.io"
+		"arena-api.prod-fss-pub.nais.io",
+		"kodeverk.intern.nav.no"
 	],
 	"kafka-pool": "nav-prod",
 	"env": {
