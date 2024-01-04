@@ -803,7 +803,7 @@ paths:
 
   /ekstern/v1/ettersending:
         post:
-          summary: Kall for å opprette en ettersending fra eksterne applikasjoner. Skjemanr, tema og vedleggskoder valideres mot [kodeverket](https://kodeverk-web.dev.intern.nav.no/).
+          summary: Kall for å opprette en ettersending fra eksterne applikasjoner. Skjemanr, tema og vedleggskoder valideres mot kodeverket (se https://kodeverk-web.dev.intern.nav.no/).
                    Skjemanr og vedleggskoder er valgfrie og vil bli hentet fra kodeverket hvis de ikke er oppgitt. Merk at kodeverket ikke alltid har oversettelser for alle språk og vil bruke norsk som fallback.
           operationId: eksternOpprettEttersending
 

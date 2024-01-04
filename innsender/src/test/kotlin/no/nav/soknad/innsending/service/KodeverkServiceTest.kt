@@ -18,10 +18,14 @@ class KodeverkServiceTest : ApplicationTest() {
 	@Autowired
 	private lateinit var kodeverkService: KodeverkService
 
+	val validSkjemanr = "NAV 02-07.05"
+	val validTema = "AAP"
+	val validVedleggsnr = "N6"
+
 	@Test
 	fun `Should not throw exception if skjemanr is valid`() {
 		// Given
-		val ettersending = OpprettEttersendingTestBuilder().skjemanr("NAV 02-07.05").build()
+		val ettersending = OpprettEttersendingTestBuilder().skjemanr(validSkjemanr).build()
 		val kodeverkTypes = listOf(KodeverkType.KODEVERK_NAVSKJEMA)
 
 		// When / Then
@@ -45,7 +49,7 @@ class KodeverkServiceTest : ApplicationTest() {
 	@Test
 	fun `Should not throw exception if tema is valid`() {
 		// Given
-		val ettersending = OpprettEttersendingTestBuilder().tema("AAP").build()
+		val ettersending = OpprettEttersendingTestBuilder().tema(validTema).build()
 		val kodeverkTypes = listOf(KodeverkType.KODEVERK_TEMA)
 
 		// When / Then
@@ -69,7 +73,7 @@ class KodeverkServiceTest : ApplicationTest() {
 	@Test
 	fun `Should not throw exception if vedleggsnr is valid`() {
 		// Given
-		val vedlegg = listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr("N6").build())
+		val vedlegg = listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(validVedleggsnr).build())
 		val ettersending = OpprettEttersendingTestBuilder().vedleggsListe(vedlegg).build()
 		val kodeverkTypes = listOf(KodeverkType.KODEVERK_VEDLEGGSKODER)
 
@@ -93,7 +97,7 @@ class KodeverkServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Should throw exception if kodeverk request fails`() {
+	fun `Should throw exception if kodeverk request fails and cache is empty`() {
 		// Given
 		val ettersending = OpprettEttersendingTestBuilder().skjemanr("invalid").build()
 		val kodeverkTypes = listOf(KodeverkType.KODEVERK_NAVSKJEMA)
@@ -102,6 +106,27 @@ class KodeverkServiceTest : ApplicationTest() {
 		// When / Then
 		assertThrows<BackendErrorException> {
 			kodeverkService.cache.invalidateAll()
+			kodeverkService.validateEttersending(ettersending, kodeverkTypes)
+		}
+	}
+
+	@Test
+	fun `Should use old cache if kodeverk request fails`() {
+		// Given
+		val ettersending = OpprettEttersendingTestBuilder().skjemanr(validSkjemanr).build()
+		val kodeverkTypes = listOf(KodeverkType.KODEVERK_NAVSKJEMA)
+
+		// When / Then
+
+		assertDoesNotThrow {
+			kodeverkService.validateEttersending(ettersending, kodeverkTypes)
+		}
+
+		// Request fails for refreshing
+		WireMock.setScenarioState("kodeverk-navskjema", "failed")
+		kodeverkService.cache.refresh(KodeverkType.KODEVERK_NAVSKJEMA.value)
+
+		assertDoesNotThrow {
 			kodeverkService.validateEttersending(ettersending, kodeverkTypes)
 		}
 
