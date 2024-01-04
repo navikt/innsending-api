@@ -41,17 +41,17 @@ class EksternRestApiTest : ApplicationTest() {
 		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
 	}
 
+	val defaultSkjemanr = "NAV 02-07.05"
+	val defaultTema = "FOS"
+	val defaultVedleggsnr = "Y9"
+
 	@Test
 	fun `Should create ettersending with correct data`() {
 		// Given
-		val skjemanr = "NAV 55-00.60"
-		val tema = "DAG"
-		val vedleggsnr = "A1"
-
 		val ettersending = EksternOpprettEttersendingTestBuilder()
-			.skjemanr(skjemanr)
-			.tema(tema)
-			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(vedleggsnr).build()))
+			.skjemanr(defaultSkjemanr)
+			.tema(defaultTema)
+			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(defaultVedleggsnr).build()))
 			.build()
 
 		// When
@@ -61,17 +61,21 @@ class EksternRestApiTest : ApplicationTest() {
 		assertNotNull(response?.body)
 
 		val body = response!!.body!!
-		assertEquals(skjemanr, body.skjemanr)
-		assertEquals(tema, body.tema)
+		assertEquals(defaultSkjemanr, body.skjemanr)
+		assertEquals(defaultTema, body.tema)
 		assertEquals(1, body.vedleggsListe.size)
-		assertEquals(vedleggsnr, body.vedleggsListe[0].vedleggsnr)
+		assertEquals(defaultVedleggsnr, body.vedleggsListe[0].vedleggsnr)
 
 	}
 
 	@Test
 	fun `Should create ettersending with utkast brukernotifikasjon (default)`() {
 		// Given
-		val ettersending = EksternOpprettEttersendingTestBuilder().build()
+		val ettersending = EksternOpprettEttersendingTestBuilder()
+			.skjemanr(defaultSkjemanr)
+			.tema(defaultTema)
+			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(defaultVedleggsnr).build()))
+			.build()
 
 		// When
 		api?.createEksternEttersending(ettersending)
@@ -88,7 +92,10 @@ class EksternRestApiTest : ApplicationTest() {
 	fun `Should create ettersending with oppgave brukernotifikasjon`() {
 		// Given
 		val ettersending = EksternOpprettEttersendingTestBuilder()
-			.brukernotifikasjonstype(BrukernotifikasjonsType.oppgave)
+			.skjemanr(defaultSkjemanr)
+			.tema(defaultTema)
+			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(defaultVedleggsnr).build()))
+			.brukernotifikasjonstype(BrukernotifikasjonsType.oppgave) // Testing this
 			.build()
 
 		// When
@@ -105,8 +112,7 @@ class EksternRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should link ettersending with existing søknad if koblesTilEksisterendeSoknad is true`() {
 		// Given
-		val vedleggsnr = "A1"
-		val skjemaDto = SkjemaDtoTestBuilder().build()
+		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = defaultSkjemanr, tema = defaultTema).build()
 
 		val opprettetSoknadResponse = api?.createSoknad(skjemaDto)
 		val innsendingsId = opprettetSoknadResponse?.body?.innsendingsId!!
@@ -116,8 +122,9 @@ class EksternRestApiTest : ApplicationTest() {
 
 		val ettersending = EksternOpprettEttersendingTestBuilder()
 			.skjemanr(skjemaDto.skjemanr)
-			.koblesTilEksisterendeSoknad(true)
-			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(vedleggsnr).build()))
+			.tema(defaultTema)
+			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(defaultVedleggsnr).build()))
+			.koblesTilEksisterendeSoknad(true) // Testing this
 			.build()
 
 		// When
@@ -129,14 +136,13 @@ class EksternRestApiTest : ApplicationTest() {
 		val body = response!!.body!!
 		assertEquals(1, body.vedleggsListe.size)
 		assertEquals(innsendingsId, body.ettersendingsId, "Should have ettersendingId from existing søknad innsendingsId")
-		assertEquals(vedleggsnr, body.vedleggsListe[0].vedleggsnr)
+		assertEquals(defaultVedleggsnr, body.vedleggsListe[0].vedleggsnr)
 	}
 
 	@Test
 	fun `Should not link ettersending with existing søknad if koblesTilEksisterendeSoknad is false (default)`() {
 		// Given
-		val vedleggsnr = "A1"
-		val skjemaDto = SkjemaDtoTestBuilder().build()
+		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = defaultSkjemanr, tema = defaultTema).build()
 
 		val opprettetSoknadResponse = api?.createSoknad(skjemaDto)
 		val innsendingsId = opprettetSoknadResponse?.body?.innsendingsId!!
@@ -146,7 +152,8 @@ class EksternRestApiTest : ApplicationTest() {
 
 		val ettersending = EksternOpprettEttersendingTestBuilder()
 			.skjemanr(skjemaDto.skjemanr)
-			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(vedleggsnr).build()))
+			.tema(skjemaDto.tema)
+			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(defaultVedleggsnr).build()))
 			.build()
 
 		// When
@@ -162,6 +169,6 @@ class EksternRestApiTest : ApplicationTest() {
 			body.ettersendingsId,
 			"Should not have ettersendingId from existing søknad innsendingsId"
 		)
-		assertEquals(vedleggsnr, body.vedleggsListe[0].vedleggsnr)
+		assertEquals(defaultVedleggsnr, body.vedleggsListe[0].vedleggsnr)
 	}
 }
