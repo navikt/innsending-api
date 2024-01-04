@@ -48,6 +48,7 @@
 		"STATUS_LOG_URL": "https://logs.adeo.no/app/discover#/view/170a6860-df4c-11ed-8b42-0b0644af4500",
 		"ARENA_URL": "https://arena-api.prod-fss-pub.nais.io",
 		"ARENA_TOKEN_X_AUDIENCE": "prod-fss:teamarenanais:arena-api",
-		"ARENA_SCOPE": "api://prod-fss.teamarenanais.arena-api/.default"
+		"ARENA_SCOPE": "api://prod-fss.teamarenanais.arena-api/.default",
+		"KODEVERK_URL": "https://kodeverk.intern.nav.no"
 	}
 }
