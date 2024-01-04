@@ -8,6 +8,7 @@ enum class ErrorCode(val code: String) {
 	NON_CRITICAL("nonCriticalError"),
 
 	ARENA_ERROR("arenaError"),
+	KODEVERK_ERROR("kodeverkError"),
 
 	// Illegal Actions
 	APPLICATION_SENT_IN_OR_DELETED("illegalAction.applicationSentInOrDeleted"),

@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.LoadingCache
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.kodeverk.api.KodeverkApi
@@ -36,21 +37,35 @@ class KodeverkService(
 			)
 		}
 
+	private fun getKodeverk(kodeverkType: KodeverkType): GetKodeverkKoderBetydningerResponse? {
+		val response = try {
+			cache.get(kodeverkType.value)
+		} catch (e: Exception) {
+			throw BackendErrorException(
+				message = "Kunne ikke hente kodeverk: ${kodeverkType.value}",
+				errorCode = ErrorCode.KODEVERK_ERROR,
+				cause = e
+			)
+		}
+		return response
+	}
+
 	// Add extra info from kodeverk such as 'tittel' (if not specified in input)
 	fun enrichEttersendingWithKodeverkInfo(ettersending: OpprettEttersending): OpprettEttersending {
-		if (ettersending.tittel != null) return ettersending
 		val sprak = finnSpraakFraInput(ettersending.sprak)
 
-		val kodeverk = try {
-			cache.get(KodeverkType.KODEVERK_NAVSKJEMA.value)
-		} catch (e: Exception) {
-			// Log error, but continue execution
-			logger.error("Kodeverk error", e)
-			return ettersending
-		}
+		val kodeverkNavSkjema = getKodeverk(KodeverkType.KODEVERK_NAVSKJEMA) ?: return ettersending
+		val kodeverkVedleggskoder = getKodeverk(KodeverkType.KODEVERK_VEDLEGGSKODER) ?: return ettersending
 
 		return ettersending.copy(
-			tittel = kodeverk.betydninger[ettersending.skjemanr]?.first()?.beskrivelser?.get(sprak)?.term
+			tittel = ettersending.tittel
+				?: kodeverkNavSkjema.betydninger[ettersending.skjemanr]?.first()?.beskrivelser?.get(sprak)?.term,
+			vedleggsListe = ettersending.vedleggsListe?.map { vedlegg ->
+				vedlegg.copy(
+					tittel = vedlegg.tittel
+						?: kodeverkVedleggskoder.betydninger[vedlegg.vedleggsnr]?.first()?.beskrivelser?.get(sprak)?.term
+				)
+			}
 		)
 	}
 
@@ -71,16 +86,9 @@ class KodeverkService(
 	}
 
 	private fun validateValueInKodeverk(value: String, kodeverkType: KodeverkType) {
+		val kodeverk = getKodeverk(kodeverkType) ?: return
 
-		val response = try {
-			cache.get(kodeverkType.value)
-		} catch (e: Exception) {
-			// Log error, but continue execution
-			logger.error("Kodeverk error", e)
-			return
-		}
-
-		if (response.betydninger[value] == null) {
+		if (kodeverk.betydninger[value] == null) {
 			throw IllegalActionException(
 				message = "$value finnes ikke i kodeverket: ${kodeverkType.value}",
 				errorCode = ErrorCode.INVALID_KODEVERK_VALUE
@@ -91,16 +99,10 @@ class KodeverkService(
 	private fun validateValuesInKodeverk(values: List<String>?, kodeverkType: KodeverkType) {
 		if (values.isNullOrEmpty()) return
 
-		val response = try {
-			cache.get(kodeverkType.value)
-		} catch (e: Exception) {
-			// Log error, but continue execution
-			logger.error("Kodeverk error", e)
-			return
-		}
+		val kodeverk = getKodeverk(kodeverkType) ?: return
 
 		values.forEach { value ->
-			if (response.betydninger[value] == null) {
+			if (kodeverk.betydninger[value] == null) {
 				throw IllegalActionException(
 					message = "$value finnes ikke i kodeverket: ${kodeverkType.value}",
 					errorCode = ErrorCode.INVALID_KODEVERK_VALUE

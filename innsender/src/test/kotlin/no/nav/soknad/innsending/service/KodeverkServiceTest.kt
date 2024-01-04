@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.service
 import com.github.tomakehurst.wiremock.client.WireMock
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
@@ -92,21 +93,22 @@ class KodeverkServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Should continue execution if kodeverk request fails`() {
+	fun `Should throw exception if kodeverk request fails`() {
 		// Given
 		val ettersending = OpprettEttersendingTestBuilder().skjemanr("invalid").build()
 		val kodeverkTypes = listOf(KodeverkType.KODEVERK_NAVSKJEMA)
 		WireMock.setScenarioState("kodeverk-navskjema", "failed")
 
 		// When / Then
-		assertDoesNotThrow {
+		assertThrows<BackendErrorException> {
+			kodeverkService.cache.invalidateAll()
 			kodeverkService.validateEttersending(ettersending, kodeverkTypes)
 		}
 
 	}
 
 	@Test
-	fun `Should add tittel to ettersending from kodeverk if not specified`() {
+	fun `Should add tittel to ettersending from kodeverk if not specified (norwegian)`() {
 		// Given
 		val ettersending = OpprettEttersendingTestBuilder().tittel(null).skjemanr("NAV 02-07.05").sprak("nb_NO").build()
 
@@ -115,6 +117,34 @@ class KodeverkServiceTest : ApplicationTest() {
 
 		// Then
 		assertEquals("Søknad om å bli medlem i folketrygden under opphold i Norge", enrichedEttersending.tittel)
+	}
+
+	@Test
+	fun `Should add tittel to ettersending from kodeverk if not specified (english)`() {
+		// Given
+		val ettersending = OpprettEttersendingTestBuilder().tittel(null).skjemanr("NAV 02-07.05").sprak("en_GB").build()
+
+		// When
+		val enrichedEttersending = kodeverkService.enrichEttersendingWithKodeverkInfo(ettersending)
+
+		// Then
+		assertEquals("Application for insurance during stay in Norway", enrichedEttersending.tittel)
+	}
+
+	@Test
+	fun `Should add tittel to vedlegg from kodeverk if not specified (norwegian)`() {
+		// Given
+		val ettersending = OpprettEttersendingTestBuilder()
+			.skjemanr("NAV 02-07.05")
+			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().tittel(null).vedleggsnr("N6").build()))
+			.sprak("nb_NO")
+			.build()
+
+		// When
+		val enrichedEttersending = kodeverkService.enrichEttersendingWithKodeverkInfo(ettersending)
+
+		// Then
+		assertEquals("Annet", enrichedEttersending.vedleggsListe?.get(0)?.tittel)
 	}
 
 
