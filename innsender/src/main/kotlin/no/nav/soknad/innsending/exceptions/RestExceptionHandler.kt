@@ -4,13 +4,13 @@ import jakarta.servlet.http.HttpServletRequest
 import no.nav.security.token.support.core.exceptions.JwtTokenMissingException
 import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
 import no.nav.soknad.innsending.model.RestErrorResponseDto
-import org.apache.catalina.connector.ClientAbortException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.multipart.MultipartException
 import java.time.OffsetDateTime
 
 
@@ -89,8 +89,14 @@ class RestExceptionHandler {
 	}
 
 	@ExceptionHandler
-	fun clientAbortException(exception: ClientAbortException): ResponseEntity<RestErrorResponseDto> {
+	fun clientAbortException(exception: MultipartException): ResponseEntity<RestErrorResponseDto> {
 		logger.warn(exception.message, exception)
+		logger.info("Most specific cause", exception.mostSpecificCause)
+		logger.info("Root cause", exception.rootCause)
+		logger.info("Cause", exception.cause)
+		logger.info("Suppressed", exception.suppressed)
+
+		exception.cause
 		return ResponseEntity(
 			RestErrorResponseDto(
 				message = exception.message ?: "Noe gikk galt, prøv igjen senere",
