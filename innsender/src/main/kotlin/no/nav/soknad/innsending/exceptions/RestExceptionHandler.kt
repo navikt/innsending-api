@@ -88,15 +88,12 @@ class RestExceptionHandler {
 		)
 	}
 
+	// When the client aborts there is a multipart exception caused by ClientAbortException. We don't want to log this as an error.
+	// Causes could be that the user closes the browser, loses internet connection or that the upload times out.
 	@ExceptionHandler
-	fun clientAbortException(exception: MultipartException): ResponseEntity<RestErrorResponseDto> {
+	fun multipartException(exception: MultipartException): ResponseEntity<RestErrorResponseDto> {
 		logger.warn(exception.message, exception)
-		logger.info("Most specific cause", exception.mostSpecificCause)
-		logger.info("Root cause", exception.rootCause)
-		logger.info("Cause", exception.cause)
-		logger.info("Suppressed", exception.suppressed)
 
-		exception.cause
 		return ResponseEntity(
 			RestErrorResponseDto(
 				message = exception.message ?: "Noe gikk galt, prøv igjen senere",
