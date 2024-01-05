@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest
 import no.nav.security.token.support.core.exceptions.JwtTokenMissingException
 import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
 import no.nav.soknad.innsending.model.RestErrorResponseDto
+import org.apache.catalina.connector.ClientAbortException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -78,6 +79,18 @@ class RestExceptionHandler {
 	@ExceptionHandler
 	fun generalException(exception: Exception): ResponseEntity<RestErrorResponseDto> {
 		logger.error(exception.message, exception)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = exception.message ?: "Noe gikk galt, prøv igjen senere",
+				timestamp = OffsetDateTime.now(),
+				errorCode = ErrorCode.GENERAL_ERROR.code,
+			), HttpStatus.INTERNAL_SERVER_ERROR
+		)
+	}
+
+	@ExceptionHandler
+	fun clientAbortException(exception: ClientAbortException): ResponseEntity<RestErrorResponseDto> {
+		logger.warn(exception.message, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
 				message = exception.message ?: "Noe gikk galt, prøv igjen senere",
