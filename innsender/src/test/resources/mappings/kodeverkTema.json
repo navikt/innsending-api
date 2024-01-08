@@ -1,0 +1,79 @@
+{
+	"mappings": [
+		{
+			"request": {
+				"urlPattern": "/kodeverk-api/api/v1/kodeverk/Tema/koder.*",
+				"method": "GET"
+			},
+			"response": {
+				"status": 200,
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"jsonBody": {
+					"betydninger": {
+						"AAP": [
+							{
+								"gyldigFra": "2017-05-01",
+								"gyldigTil": "9999-12-31",
+								"beskrivelser": {
+									"nn": {
+										"term": "Arbeidsavklaringspenger",
+										"tekst": "Arbeidsavklaringspenger"
+									},
+									"nb": {
+										"term": "Arbeidsavklaringspenger",
+										"tekst": "Arbeidsavklaringspenger"
+									},
+									"en": {
+										"term": "Arbeidsavklaringspenger",
+										"tekst": "Arbeidsavklaringspenger"
+									}
+								}
+							}
+						],
+						"FOS": [
+							{
+								"gyldigFra": "2017-05-01",
+								"gyldigTil": "9999-12-31",
+								"beskrivelser": {
+									"nn": {
+										"term": "Forsikring",
+										"tekst": "Forsikring"
+									},
+									"nb": {
+										"term": "Forsikring",
+										"tekst": "Forsikring"
+									},
+									"en": {
+										"term": "Forsikring",
+										"tekst": "Forsikring"
+									}
+								}
+							}
+						]
+					}
+				}
+			}
+		},
+		{
+			"scenarioName": "kodeverk-tema",
+			"requiredScenarioState": "failed",
+			"request": {
+				"urlPattern": "kodeverk-api/api/v1/kodeverk/Tema/koder",
+				"method": "GET"
+			},
+			"response": {
+				"status": 400,
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"jsonBody": [
+					{
+						"melding": "Failed"
+					}
+				]
+			}
+		}
+	]
+}

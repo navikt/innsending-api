@@ -5,10 +5,6 @@ import kotlin.properties.Delegates
 
 @ConfigurationProperties("restconfig")
 class RestConfig {
-	lateinit var username: String
-	lateinit var password: String
-	lateinit var sharedUsername: String
-	lateinit var sharedPassword: String
 	lateinit var clientId: String
 	lateinit var clientSecret: String
 	var maxFileSize by Delegates.notNull<Int>()
@@ -25,4 +21,5 @@ class RestConfig {
 	lateinit var safUrl: String
 	lateinit var azureUrl: String
 	lateinit var arenaUrl: String
+	lateinit var kodeverkUrl: String
 }

@@ -2,8 +2,8 @@ package no.nav.soknad.innsending.util
 
 object Constants {
 	const val SELVBETJENING = "selvbetjening"
-	const val CLAIM_ACR_LEVEL_4 = "acr=Level4"
 	const val CLAIM_ACR_IDPORTEN_LOA_HIGH = "acr=idporten-loa-high"
+	const val CLAIM_ACR_LEVEL_4 = "acr=Level4"
 	const val TOKENX = "tokenx"
 	const val AZURE = "azure"
 
@@ -12,7 +12,7 @@ object Constants {
 	const val CORRELATION_ID = "correlation_id"
 	const val MDC_INNSENDINGS_ID = "innsendingsId"
 	const val NAV_PERSON_IDENT = "NAV-Personident"
-
+	
 	const val BEARER = "Bearer "
 
 	const val MAX_AKTIVE_DAGER = 3 * 365L
@@ -28,5 +28,4 @@ object Constants {
 	const val PDL = "pdl"
 	const val ARENA_MAALGRUPPER = "arena_maalgrupper"
 	const val ARENA_AKTIVITETER = "arena_aktiviteter"
-
 }

@@ -3,7 +3,6 @@ package no.nav.soknad.innsending.consumerapis.soknadsmottaker
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import no.nav.soknad.arkivering.soknadsmottaker.api.HealthApi
 import no.nav.soknad.arkivering.soknadsmottaker.api.SoknadApi
-import no.nav.soknad.arkivering.soknadsmottaker.infrastructure.ApiClient
 import no.nav.soknad.arkivering.soknadsmottaker.infrastructure.Serializer
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
@@ -32,8 +31,6 @@ class MottakerAPI(
 
 	init {
 		Serializer.jacksonObjectMapper.registerModule(JavaTimeModule())
-		ApiClient.username = restConfig.sharedUsername
-		ApiClient.password = restConfig.sharedPassword
 
 		mottakerClient = SoknadApi(restConfig.soknadsMottakerHost, soknadsmottakerClient)
 		healthApi = HealthApi(restConfig.soknadsMottakerHost)

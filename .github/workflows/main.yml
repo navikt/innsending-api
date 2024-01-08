@@ -8,16 +8,17 @@ on:
       - '**.md'
       - '**/**.md'
 
+permissions:
+    contents: "write"
+    id-token: "write"
+
 jobs:
   build-and-push:
-    permissions:
-        contents: "write"
-        id-token: "write"
     name: Build and push Docker container prod
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: 21
@@ -51,9 +52,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: nais/deploy/actions/deploy@v1
+      - uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: prod-gcp
           RESOURCE: .nais/nais-gcp.yml
           VARS: .nais/prod-gcp.json
@@ -68,9 +68,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Deploy to prod
-        uses: nais/deploy/actions/deploy@v1
+        uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: prod-gcp
           RESOURCE: .nais/alerts.yml
           VARS: .nais/prod-alert.json

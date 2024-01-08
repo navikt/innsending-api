@@ -29,10 +29,7 @@ class VedleggService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	fun opprettHovedddokumentVedlegg(
-		savedSoknadDbData: SoknadDbData, kodeverkSkjema: KodeverkSkjema
-	): VedleggDbData {
-
+	fun opprettHovedddokumentVedlegg(savedSoknadDbData: SoknadDbData, kodeverkSkjema: KodeverkSkjema): VedleggDbData {
 		return repo.lagreVedlegg(
 			VedleggDbData(
 				null,
@@ -57,8 +54,42 @@ class VedleggService(
 		)
 	}
 
-	fun opprettVedleggTilSoknad(
-		soknadsId: Long, vedleggsnrListe: List<String>, spraak: String, tittel: String? = null, formioid: String? = null
+	fun saveVedlegg(
+		soknadsId: Long,
+		vedleggList: List<InnsendtVedleggDto>,
+	): List<VedleggDbData> {
+		return vedleggList.map {
+			repo.lagreVedlegg(
+				VedleggDbData(
+					id = null,
+					soknadsid = soknadsId,
+					status = OpplastingsStatus.IKKE_VALGT,
+					erhoveddokument = false,
+					ervariant = false,
+					erpdfa = false,
+					erpakrevd = it.vedleggsnr != "N6",
+					vedleggsnr = it.vedleggsnr,
+					tittel = it.tittel ?: "",
+					label = it.tittel,
+					beskrivelse = "",
+					mimetype = null,
+					uuid = UUID.randomUUID().toString(),
+					opprettetdato = LocalDateTime.now(),
+					endretdato = LocalDateTime.now(),
+					innsendtdato = null,
+					vedleggsurl = it.url,
+					formioid = null
+				)
+			)
+		}
+	}
+
+	fun saveVedlegg(
+		soknadsId: Long,
+		vedleggsnrListe: List<String>,
+		spraak: String,
+		tittel: String? = null,
+		formioid: String? = null
 	): List<VedleggDbData> {
 		val vedleggDbDataListe = vedleggsnrListe.map { nr -> skjemaService.hentSkjema(nr, spraak) }.map { v ->
 			repo.lagreVedlegg(
@@ -87,38 +118,7 @@ class VedleggService(
 		return vedleggDbDataListe
 	}
 
-	fun opprettInnsendteVedleggTilSoknad(
-		soknadsId: Long, arkivertSoknad: AktivSakDto
-	): List<VedleggDbData> {
-		val vedleggDbDataListe =
-			arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != arkivertSoknad.skjemanr }.map { v ->
-				repo.lagreVedlegg(
-					VedleggDbData(
-						null,
-						soknadsId,
-						OpplastingsStatus.INNSENDT,
-						false,
-						ervariant = false,
-						erpdfa = true,
-						erpakrevd = true,
-						vedleggsnr = v.vedleggsnr,
-						tittel = v.tittel,
-						label = v.tittel,
-						beskrivelse = "",
-						mimetype = null,
-						uuid = UUID.randomUUID().toString(),
-						opprettetdato = mapTilLocalDateTime(arkivertSoknad.innsendtDato) ?: LocalDateTime.now(),
-						endretdato = mapTilLocalDateTime(arkivertSoknad.innsendtDato) ?: LocalDateTime.now(),
-						innsendtdato = mapTilLocalDateTime(arkivertSoknad.innsendtDato) ?: LocalDateTime.now(),
-						vedleggsurl = null,
-						formioid = null
-					)
-				)
-			}
-		return vedleggDbDataListe
-	}
-
-	fun opprettVedleggTilSoknad(soknadDbData: SoknadDbData, vedleggsListe: List<VedleggDto>): List<VedleggDbData> {
+	fun saveVedlegg(soknadDbData: SoknadDbData, vedleggsListe: List<VedleggDto>): List<VedleggDbData> {
 
 		return vedleggsListe.filter { !(it.erHoveddokument || it.vedleggsnr == KVITTERINGS_NR) }.map { v ->
 			repo.lagreVedlegg(
@@ -141,18 +141,14 @@ class VedleggService(
 					opprettetdato = v.opprettetdato.toLocalDateTime(),
 					endretdato = LocalDateTime.now(),
 					innsendtdato = v.innsendtdato?.toLocalDateTime(),
-					vedleggsurl = if (v.vedleggsnr != null) skjemaService.hentSkjema(
-						v.vedleggsnr!!,
-						soknadDbData.spraak ?: "nb",
-						false
-					).url else null,
+					vedleggsurl = v.skjemaurl,
 					formioid = v.formioId
 				)
 			)
 		}
 	}
 
-	fun opprettVedleggTilSoknad(soknadDbData: SoknadDbData, arkivertSoknad: AktivSakDto): List<VedleggDbData> {
+	fun saveVedlegg(soknadDbData: SoknadDbData, arkivertSoknad: AktivSakDto): List<VedleggDbData> {
 
 		return arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != soknadDbData.skjemanr }.map { v ->
 			repo.lagreVedlegg(
@@ -165,7 +161,7 @@ class VedleggService(
 					erpdfa = true,
 					erpakrevd = true,
 					vedleggsnr = v.vedleggsnr,
-					tittel = v.tittel,
+					tittel = v.tittel ?: "",
 					label = v.tittel,
 					beskrivelse = "",
 					mimetype = mapTilDbMimetype(Mimetype.applicationSlashPdf),
@@ -189,7 +185,7 @@ class VedleggService(
 		)
 
 		// Lagre vedlegget i databasen
-		val vedleggDbDataList = opprettVedleggTilSoknad(
+		val vedleggDbDataList = saveVedlegg(
 			soknadDb.id!!,
 			listOf("N6"),
 			soknadDto.spraak!!,
@@ -332,24 +328,58 @@ class VedleggService(
 		}
 	}
 
-	// Slett alle eksisterende vedlegg (og eventuelt tilhørende filer) som ikke er med i den nye søknaden
-	// Kun vedlegg fra fyllUt skal slettes (vedlegg med formioId). Vedlegg uten formioId (feks: hoveddokument og N6 vedlegg fra sendInn) skal ikke slettes
-	fun slettEksisterendeVedleggVedOppdatering(
-		eksisterendeVedleggsListe: List<VedleggDto>,
+	// Set status=LASTET_OPP_IKKE_RELEVANT_LENGER and erPakrevd=false for all vedlegg that are not part of the updated søknad if they have status=LASTET_OPP
+	// Delete vedlegg that are not part of the updated søknad if they have any other status
+	// Concerns vedlegg from fyllUt (vedlegg with formioId). Vedlegg without formioId (ex: hoveddokument and N6 vedlegg from sendInn) will still be part of the søknad
+	fun updateVedleggStatuses(
+		existingVedleggListe: List<VedleggDto>,
 		dokumentSoknadDto: DokumentSoknadDto
 	) {
-		eksisterendeVedleggsListe.filter { eksisterendeVedlegg ->
-			eksisterendeVedlegg.formioId != null &&
-				dokumentSoknadDto.vedleggsListeUtenHoveddokument.none { nyttVedlegg -> eksisterendeVedlegg.formioId == nyttVedlegg.formioId }
+		existingVedleggListe.filter { existingVedlegg ->
+			existingVedlegg.formioId != null &&
+				dokumentSoknadDto.vedleggsListeUtenHoveddokument.none { newVedlegg -> existingVedlegg.formioId == newVedlegg.formioId }
 		}.forEach {
-			logger.info("Slettet vedlegg id:${it.id} ved oppdatering")
-			slettVedleggOgDensFiler(it)
+			it.id?.let { vedleggId ->
+				dokumentSoknadDto.innsendingsId?.let { innsendingsId ->
+					if (it.opplastingsStatus == OpplastingsStatusDto.lastetOpp) {
+						logger.info("Vedleggstatus er ${it.opplastingsStatus}, setter status=lastetOppIkkeRelevantLenger og erPakrevd=false på vedlegg id:${it.id}")
+						repo.updateVedleggErPakrevd(vedleggId, false)
+						repo.updateVedleggStatus(
+							innsendingsId = innsendingsId,
+							vedleggsId = vedleggId,
+							opplastingsStatus = OpplastingsStatus.LASTET_OPP_IKKE_RELEVANT_LENGER
+						)
+					} else {
+						logger.info("Vedleggstatus er ${it.opplastingsStatus}, sletter vedlegg id:${it.id}")
+						slettVedleggOgDensFiler(it)
+					}
+				}
+			}
 		}
+	}
+
+	fun deleteVedleggNotRelevantAnymore(existingVedlegg: List<VedleggDto>) {
+		existingVedlegg.filter { vedlegg -> vedlegg.opplastingsStatus == OpplastingsStatusDto.lastetOppIkkeRelevantLenger }
+			.forEach {
+				logger.info("Sletter vedlegg id:${it.id} vedleggsnr:${it.vedleggsnr} med status LASTET_OPP_IKKE_RELEVANT_LENGER")
+				slettVedleggOgDensFiler(it)
+			}
 	}
 
 
 	fun vedleggHarFiler(innsendingsId: String, vedleggsId: Long): Boolean {
 		return repo.findAllByVedleggsid(innsendingsId, vedleggsId).any { it.data != null }
+	}
+
+	fun enrichVedleggListFromSanity(vedleggsnrList: List<String>, sprak: String): List<InnsendtVedleggDto> {
+		return vedleggsnrList.map { vedleggsnr ->
+			val kodeverkSkjema = skjemaService.hentSkjema(vedleggsnr, sprak)
+			InnsendtVedleggDto(
+				tittel = kodeverkSkjema.tittel ?: "",
+				vedleggsnr = vedleggsnr,
+				url = kodeverkSkjema.url
+			)
+		}
 	}
 
 	private fun reportException(e: Exception, operation: String, tema: String) {

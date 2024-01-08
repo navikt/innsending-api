@@ -6,8 +6,9 @@ enum class ErrorCode(val code: String) {
 	GENERAL_ERROR("somethingFailedTryLater"),
 	NOT_FOUND("resourceNotFound"),
 	NON_CRITICAL("nonCriticalError"),
-	
+
 	ARENA_ERROR("arenaError"),
+	KODEVERK_ERROR("kodeverkError"),
 
 	// Illegal Actions
 	APPLICATION_SENT_IN_OR_DELETED("illegalAction.applicationSentInOrDeleted"),
@@ -19,6 +20,7 @@ enum class ErrorCode(val code: String) {
 	VEDLEGG_FILE_SIZE_SUM_TOO_LARGE("illegalAction.vedleggFileSizeSumTooLarge"),
 	TITLE_STRING_TOO_LONG("illegalAction.titleStringTooLong"), // (ikke i bruk)
 	VIRUS_SCAN_FAILED("illegalAction.virusScanFailed"),
+	INVALID_KODEVERK_VALUE("illegalAction.invalidKodeverkValue"),
 
 	SOKNAD_ALREADY_EXISTS("soknadAlreadyExists"),
 

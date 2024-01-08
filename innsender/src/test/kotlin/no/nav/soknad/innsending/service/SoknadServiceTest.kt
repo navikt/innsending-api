@@ -22,7 +22,6 @@ import no.nav.soknad.innsending.repository.VedleggRepository
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.HendelseType
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
-import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.mapping.mapTilOffsetDateTime
 import no.nav.soknad.innsending.util.models.hovedDokument
 import no.nav.soknad.innsending.util.models.hovedDokumentVariant
@@ -30,8 +29,11 @@ import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
-import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.getBytesFromFile
 import no.nav.soknad.innsending.utils.SoknadAssertions
+import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -39,7 +41,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
 import java.util.*
 
 
@@ -188,50 +189,6 @@ class SoknadServiceTest : ApplicationTest() {
 		assertNotNull(dokumentSoknadDto)
 	}
 
-
-	@Test
-	fun opprettSoknadForettersendingAvVedlegg() {
-		val innsendingService = lagInnsendingService(soknadService)
-		// Opprett original soknad
-		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1", "W2"))
-
-		filService.lagreFil(
-			dokumentSoknadDto,
-			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
-		)
-
-		// Sender inn original soknad
-		val kvitteringsDto =
-			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				soknadsmottakerAPI,
-				dokumentSoknadDto,
-				innsendingService
-			)
-		assertTrue(kvitteringsDto.hoveddokumentRef != null)
-		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
-		assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
-
-		val hendelseDbDatasInnsendt =
-			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
-		assertTrue(hendelseDbDatasInnsendt.size > 1)
-		assertEquals(HendelseType.Opprettet, hendelseDbDatasInnsendt[0].hendelsetype)
-		assertEquals(HendelseType.Innsendt, hendelseDbDatasInnsendt[1].hendelsetype)
-
-		// Opprett ettersendingssoknad
-		val ettersendingsSoknadDto =
-			soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
-
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.none { it.opplastingsStatus == OpplastingsStatusDto.innsendt })
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
-
-		val hendelseDbDatasEttersending =
-			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(ettersendingsSoknadDto.innsendingsId!!)
-		assertTrue(hendelseDbDatasEttersending.isNotEmpty())
-		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending[0].hendelsetype)
-
-	}
-
 	@Test
 	fun testAtFilerIkkeSlettesVedInnsending() {
 		val innsendingService = lagInnsendingService(soknadService)
@@ -290,117 +247,6 @@ class SoknadServiceTest : ApplicationTest() {
 		assertTrue(filerForVedlegg.isNotEmpty())
 	}
 
-	@Test
-	fun testFlereEttersendingerPaSoknad() {
-		val innsendingService = lagInnsendingService(soknadService)
-
-		// Opprett original soknad
-		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1", "W2"))
-
-		// Laster opp skjema (hoveddokumentet) til soknaden
-		filService.lagreFil(
-			dokumentSoknadDto,
-			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
-		)
-
-		// Sender inn original soknad
-		val kvitteringsDto =
-			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				soknadsmottakerAPI,
-				dokumentSoknadDto,
-				innsendingService
-			)
-		assertTrue(kvitteringsDto.hoveddokumentRef != null)
-		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
-		assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
-
-		val soknader = soknadService.hentAktiveSoknader(listOf(dokumentSoknadDto.brukerId))
-		assertTrue(soknader.isNotEmpty())
-
-		// Oppretter ettersendingssoknad
-		val ettersendingsSoknadDto =
-			soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
-
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
-
-		// Laster opp fil til vedlegg W1 til ettersendingssøknaden
-		val lagretFil =
-			filService.lagreFil(
-				ettersendingsSoknadDto,
-				Hjelpemetoder.lagFilDtoMedFil(ettersendingsSoknadDto.vedleggsListe.first {
-					!it.erHoveddokument && it.vedleggsnr.equals(
-						"W1",
-						true
-					)
-				})
-			)
-
-		assertTrue(lagretFil.id != null)
-		assertTrue(lagretFil.vedleggsid == ettersendingsSoknadDto.vedleggsListe.first {
-			!it.erHoveddokument && it.vedleggsnr.equals(
-				"W1",
-				true
-			)
-		}.id)
-
-		val ettersendingsKvitteringsDto =
-			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				soknadsmottakerAPI,
-				ettersendingsSoknadDto,
-				innsendingService
-			)
-		assertTrue(ettersendingsKvitteringsDto.hoveddokumentRef == null)
-		assertTrue(ettersendingsKvitteringsDto.innsendteVedlegg!!.isNotEmpty())
-		assertTrue(ettersendingsKvitteringsDto.skalEttersendes!!.isNotEmpty())
-
-		// Oppretter ettersendingssoknad2
-		val ettersendingsSoknadDto2 =
-			soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
-
-		assertTrue(ettersendingsSoknadDto2.vedleggsListe.isNotEmpty())
-		assertTrue(ettersendingsSoknadDto2.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
-		assertEquals(
-			1,
-			ettersendingsSoknadDto2.vedleggsListe.count { it.opplastingsStatus == OpplastingsStatusDto.innsendt })
-		assertTrue(ettersendingsSoknadDto2.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }
-			.all { it.innsendtdato != null })
-		// Laster opp fil til vedlegg W1 til ettersendingssøknaden
-		filService.lagreFil(
-			ettersendingsSoknadDto2,
-			Hjelpemetoder.lagFilDtoMedFil(ettersendingsSoknadDto2.vedleggsListe.first {
-				!it.erHoveddokument && it.vedleggsnr.equals(
-					"W2",
-					true
-				)
-			})
-		)
-
-		val ettersendingsKvitteringsDto2 =
-			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				soknadsmottakerAPI,
-				ettersendingsSoknadDto2,
-				innsendingService
-			)
-		assertTrue(ettersendingsKvitteringsDto2.hoveddokumentRef == null)
-		assertTrue(ettersendingsKvitteringsDto2.innsendteVedlegg!!.isNotEmpty())
-		assertTrue(ettersendingsKvitteringsDto2.skalEttersendes!!.isEmpty())
-
-		val hendelseDbDatasEttersending2 =
-			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(ettersendingsSoknadDto2.innsendingsId!!)
-		assertTrue(hendelseDbDatasEttersending2.size > 1)
-		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending2[0].hendelsetype)
-		assertEquals(HendelseType.Innsendt, hendelseDbDatasEttersending2[1].hendelsetype)
-
-		val vedleggDto = filService.hentFiler(
-			ettersendingsSoknadDto2,
-			ettersendingsSoknadDto2.innsendingsId!!,
-			ettersendingsSoknadDto2.vedleggsListe.last().id!!,
-			true
-		)
-		assertTrue(vedleggDto.isNotEmpty())
-	}
-
 
 	@Test
 	fun opprettSoknadForettersendingAvVedleggGittArkivertSoknadTest_MedUkjentSkjemanr() {
@@ -421,11 +267,14 @@ class SoknadServiceTest : ApplicationTest() {
 			innsendtVedleggDtos = arkiverteVedlegg
 		)
 
-		val ettersending = soknadService.opprettSoknadForEttersendingAvVedleggGittArkivertSoknad(
+		val opprettEttersending =
+			OpprettEttersendingTestBuilder().vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().build())).build()
+
+		val ettersending = ettersendingService.createEttersendingFromArchivedSoknad(
 			brukerId = "1234",
-			arkivertSoknad = arkivertSoknad,
-			"no_NO",
-			listOf("W1")
+			archivedSoknad = arkivertSoknad,
+			ettersending = opprettEttersending,
+			forsteInnsendingsDato = null
 		)
 
 		assertNotNull(ettersending)
@@ -464,153 +313,6 @@ class SoknadServiceTest : ApplicationTest() {
 
 		assertTrue(dokumentSoknadDtos.filter { listOf(testpersonid, "12345678902").contains(it.brukerId) }.size == 3)
 		assertTrue(dokumentSoknadDtos.none { listOf("12345678903").contains(it.brukerId) })
-	}
-
-	@Test
-	fun opprettSoknadForEttersendingAvVedleggGittArkivertSoknadTest() {
-
-		val brukerid = testpersonid
-		val skjemanr = "NAV 10-07.20"
-		val tittel = "Test av ettersending gitt arkivertsoknad"
-		val spraak = "nb_NO"
-		val tema = "HJE"
-		val arkivertInnsendingsId = "1234567890123345"
-		val arkivertSoknad = AktivSakDto(
-			skjemanr, tittel, tema,
-			OffsetDateTime.now().minusDays(2L), false,
-			listOf(
-				InnsendtVedleggDto(skjemanr, tittel),
-				InnsendtVedleggDto("C1", "Vedlegg til $tittel")
-			),
-			arkivertInnsendingsId
-		)
-
-		val dokumentSoknadDto = soknadService.opprettSoknadForEttersendingAvVedleggGittArkivertSoknad(
-			brukerid,
-			arkivertSoknad,
-			spraak,
-			listOf("C1", "N6", "L8")
-		)
-
-		assertTrue(dokumentSoknadDto.innsendingsId != null && VisningsType.ettersending == dokumentSoknadDto.visningsType && dokumentSoknadDto.ettersendingsId == arkivertInnsendingsId)
-		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
-		assertEquals(3, dokumentSoknadDto.vedleggsListe.size)
-		assertTrue(!dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })
-		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.innsendt && it.innsendtdato != null })
-		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "N6" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
-		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
-	}
-
-	@Test
-	fun opprettSoknadForEttersendingGittSkjemanrTest() {
-
-		val brukerid = testpersonid
-		val skjemanr = "NAV 10-07.20"
-		val spraak = "nb_NO"
-
-		val dokumentSoknadDto =
-			soknadService.opprettSoknadForEttersendingGittSkjemanr(brukerid, skjemanr, spraak, listOf("C1", "L8"))
-
-		assertTrue(dokumentSoknadDto.innsendingsId != null && VisningsType.ettersending == dokumentSoknadDto.visningsType && dokumentSoknadDto.ettersendingsId == dokumentSoknadDto.innsendingsId)
-		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
-		assertEquals(2, dokumentSoknadDto.vedleggsListe.size)
-		assertTrue(!dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })
-		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
-		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
-
-		val hendelseDbDatasEttersending2 =
-			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
-		assertTrue(hendelseDbDatasEttersending2.isNotEmpty())
-		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending2[0].hendelsetype)
-	}
-
-	@Test
-	fun opprettSoknadForEttersendingGittSoknadOgVedleggTest() {
-		val innsendingService = lagInnsendingService(soknadService)
-		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1", "C1", "L8"))
-
-		filService.lagreFil(
-			dokumentSoknadDto,
-			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
-		)
-		filService.lagreFil(
-			dokumentSoknadDto,
-			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.vedleggsnr == "W1" })
-		)
-
-		val kvitteringsDto =
-			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				soknadsmottakerAPI,
-				dokumentSoknadDto,
-				innsendingService
-			)
-		assertTrue(kvitteringsDto.hoveddokumentRef != null)
-		assertTrue(kvitteringsDto.innsendteVedlegg!!.isNotEmpty())
-		assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
-
-		val innsendtSoknadDto = soknadService.hentSoknad(dokumentSoknadDto.innsendingsId!!)
-
-		val ettersendingsSoknadDto = soknadService.opprettSoknadForettersendingAvVedleggGittSoknadOgVedlegg(
-			brukerId = testpersonid,
-			nyesteSoknad = innsendtSoknadDto,
-			sprak = "nb_NO",
-			vedleggsnrListe = listOf("N6", "W1")
-		)
-
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
-		assertTrue(ettersendingsSoknadDto.innsendingsId != null && VisningsType.ettersending == ettersendingsSoknadDto.visningsType && ettersendingsSoknadDto.ettersendingsId == dokumentSoknadDto.innsendingsId)
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
-		assertEquals(4, ettersendingsSoknadDto.vedleggsListe.size)
-		assertTrue(!ettersendingsSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == dokumentSoknadDto.skjemanr })
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "N6" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "W1" && it.opplastingsStatus == OpplastingsStatusDto.innsendt && it.innsendtdato != null })
-
-		val hendelseDbDatasEttersending2 =
-			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(ettersendingsSoknadDto.innsendingsId!!)
-		assertTrue(hendelseDbDatasEttersending2.isNotEmpty())
-		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending2[0].hendelsetype)
-
-	}
-
-
-	@Test
-	fun opprettSoknadForEttersendingGittArkivertSoknadOgVedleggTest() {
-
-		val brukerid = testpersonid
-		val skjemanr = "NAV 10-07.20"
-		val spraak = "nb_NO"
-		val arkivertSoknad = AktivSakDto(
-			skjemanr,
-			"Tittel",
-			"Tema",
-			OffsetDateTime.now(),
-			false,
-			listOf(InnsendtVedleggDto(skjemanr, "Tittel")),
-			Utilities.laginnsendingsId()
-		)
-		val opprettEttersendingGittSkjemaNr = OpprettEttersendingGittSkjemaNr(skjemanr, spraak, listOf("C1", "L8"))
-
-		val dokumentSoknadDto = soknadService.opprettSoknadForettersendingAvVedleggGittArkivertSoknadOgVedlegg(
-			brukerid,
-			arkivertSoknad,
-			opprettEttersendingGittSkjemaNr,
-			spraak,
-			null
-		)
-
-		assertTrue(dokumentSoknadDto.innsendingsId != null && VisningsType.ettersending == dokumentSoknadDto.visningsType && dokumentSoknadDto.ettersendingsId == arkivertSoknad.innsendingsId)
-		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
-		assertEquals(2, dokumentSoknadDto.vedleggsListe.size)
-		assertTrue(!dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })
-		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
-		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
-
-		val hendelseDbDatasEttersending2 =
-			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
-		assertTrue(hendelseDbDatasEttersending2.isNotEmpty())
-		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending2[0].hendelsetype)
 	}
 
 
@@ -682,7 +384,7 @@ class SoknadServiceTest : ApplicationTest() {
 		)
 
 		// Når
-		soknadService.oppdaterSoknad(innsendingsId, dokumentSoknad)
+		soknadService.updateSoknad(innsendingsId, dokumentSoknad)
 		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
 
 		// Så
@@ -698,80 +400,56 @@ class SoknadServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Skal oppdatere utfylt søknad med nye vedlegg`() {
-		// Gitt
-		val tema = "HJE"
+	fun `Should update utfylt søknad with new vedlegg`() {
+		// Given
 		val skjemanr = "NAV 10-07.04"
-		val tittel = "Tittel"
-		val spraak = "nb_no"
 
-		val eksisterendeSoknad = lagDokumentSoknad(tema, skjemanr)
-		val innsendingsId = soknadService.opprettNySoknad(eksisterendeSoknad).innsendingsId!!
+		val newSoknad = DokumentSoknadDtoTestBuilder(brukerId = testpersonid, skjemanr = skjemanr).build()
+		val innsendingsId = soknadService.opprettNySoknad(newSoknad).innsendingsId!!
 
-		val vedleggDto1 =
-			Hjelpemetoder.lagVedleggDto(
-				erHoveddokument = false,
-				vedleggsnr = "vedleggsnr1",
-				tittel = "vedleggTittel1",
-				mimeType = Mimetype.applicationSlashPdf.toString(),
-				fil = getBytesFromFile("/litenPdf.pdf"),
-				formioId = UUID.randomUUID().toString()
-			)
-		val vedleggDto2 =
-			Hjelpemetoder.lagVedleggDto(
-				erHoveddokument = false,
-				vedleggsnr = "vedleggsnr2",
-				tittel = "vedleggTittel2",
-				mimeType = Mimetype.applicationSlashPdf.toString(),
-				fil = getBytesFromFile("/litenPdf.pdf"),
-				formioId = UUID.randomUUID().toString()
-			)
+		val vedleggDto1 = VedleggDtoTestBuilder(erHoveddokument = false, vedleggsnr = "vedleggsnr1").build()
+		val vedleggDto2 = VedleggDtoTestBuilder(erHoveddokument = false, vedleggsnr = "vedleggsnr2").build()
 
-		val vedleggDtoList =
-			listOf(eksisterendeSoknad.hoveddokument!!, eksisterendeSoknad.hoveddokumentVariant!!, vedleggDto1, vedleggDto2)
-		val dokumentSoknad = DokumentSoknadDto(
+		val vedleggDtoList = listOf(newSoknad.hoveddokument!!, newSoknad.hoveddokumentVariant!!, vedleggDto1, vedleggDto2)
+
+		val utfyltSoknad = DokumentSoknadDtoTestBuilder(
 			brukerId = testpersonid,
-			skjemanr = skjemanr,
-			tittel = tittel,
-			tema = tema,
-			status = SoknadsStatusDto.opprettet,
-			opprettetDato = OffsetDateTime.now(),
-			vedleggsListe = vedleggDtoList,
 			innsendingsId = innsendingsId,
-			spraak = spraak,
-		)
+			vedleggsListe = vedleggDtoList,
+			skjemanr = skjemanr
+		).build()
 
-		// Når
-		soknadService.oppdaterUtfyltSoknad(innsendingsId, dokumentSoknad)
-		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
+		// When
+		soknadService.updateUtfyltSoknad(innsendingsId, utfyltSoknad)
+		val updatedSoknad = soknadService.hentSoknad(innsendingsId)
 
-		val filer = oppdatertSoknad.vedleggsListe.flatMap {
+		val files = updatedSoknad.vedleggsListe.flatMap {
 			filService.hentFiler(
-				oppdatertSoknad, innsendingsId,
+				updatedSoknad, innsendingsId,
 				it.id!!, true
 			)
 		}
 
-		// Så
+		// Then
 		assertEquals(
 			4,
-			oppdatertSoknad.vedleggsListe.size,
+			updatedSoknad.vedleggsListe.size,
 			"Skal ha to vedlegg i den oppdaterte søknaden + hoveddokument og variant"
 		)
 
-		assertEquals(4, filer.size, "Skal ha 4 filer lagret i databasen")
+		assertEquals(2, files.size, "Skal ha 2 filer lagret i databasen")
 
 		assertTrue(
-			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == vedleggDto1.vedleggsnr },
+			updatedSoknad.vedleggsListe.any { it.vedleggsnr == vedleggDto1.vedleggsnr },
 			"Skal ha vedlegg 1 i den oppdaterte søknaden"
 		)
 		assertTrue(
-			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == vedleggDto2.vedleggsnr },
+			updatedSoknad.vedleggsListe.any { it.vedleggsnr == vedleggDto2.vedleggsnr },
 			"Skal ha vedlegg 2 i den oppdaterte søknaden"
 		)
 
 
-		// og ingen ny hendelse registrert på søknad
+		// and no new ny hendelse registered on søknad
 		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(innsendingsId)
 		assertEquals(2, hendelseDbDatas.size)
 		assertEquals(HendelseType.Opprettet, hendelseDbDatas[0].hendelsetype)

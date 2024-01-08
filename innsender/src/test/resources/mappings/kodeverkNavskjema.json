@@ -1,0 +1,79 @@
+{
+	"mappings": [
+		{
+			"request": {
+				"urlPattern": "/kodeverk-api/api/v1/kodeverk/NAVSkjema/koder.*",
+				"method": "GET"
+			},
+			"response": {
+				"status": 200,
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"jsonBody": {
+					"betydninger": {
+						"NAV 02-07.05": [
+							{
+								"gyldigFra": "2006-09-14",
+								"gyldigTil": "9999-12-31",
+								"beskrivelser": {
+									"nb": {
+										"term": "Søknad om å bli medlem i folketrygden under opphold i Norge",
+										"tekst": "Søknad om å bli medlem i folketrygden under opphold i Norge"
+									},
+									"en": {
+										"term": "Application for insurance during stay in Norway",
+										"tekst": "Application for insurance during stay in Norway"
+									},
+									"nn": {
+										"term": "Søknad om å bli medlem i folketrygden under opphold i Norge",
+										"tekst": "Søknad om å bli medlem i folketrygden under opphold i Norge"
+									}
+								}
+							}
+						],
+						"NAV 04-02.01": [
+							{
+								"gyldigFra": "2008-03-19",
+								"gyldigTil": "9999-12-31",
+								"beskrivelser": {
+									"nn": {
+										"term": "Søknad om utstedelse av attest PD U2",
+										"tekst": "Søknad om utstedelse av attest PD U2"
+									},
+									"nb": {
+										"term": "Søknad om utstedelse av attest PD U2",
+										"tekst": "Søknad om utstedelse av attest PD U2"
+									},
+									"en": {
+										"term": "Application for certificate PD U2/N-301 for coordination of social security rights in EEA countries",
+										"tekst": "Application for certificate PD U2/N-301 for coordination of social security rights in EEA countries"
+									}
+								}
+							}
+						]
+					}
+				}
+			}
+		},
+		{
+			"scenarioName": "kodeverk-navskjema",
+			"requiredScenarioState": "failed",
+			"request": {
+				"urlPattern": "/kodeverk-api/api/v1/kodeverk/NAVSkjema/koder.*",
+				"method": "GET"
+			},
+			"response": {
+				"status": 400,
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"jsonBody": [
+					{
+						"melding": "Failed"
+					}
+				]
+			}
+		}
+	]
+}

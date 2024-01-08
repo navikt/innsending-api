@@ -31,6 +31,11 @@
 							"ident": "12345678902",
 							"gruppe": "FOLKEREGISTERIDENT",
 							"historisk": "true"
+						},
+						{
+							"ident": "19876898104",
+							"gruppe": "FOLKEREGISTERIDENT",
+							"historisk": "true"
 						}
 					]
 				}

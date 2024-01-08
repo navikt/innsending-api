@@ -1,8 +1,7 @@
-package no.nav.soknad.innsending.rest
+package no.nav.soknad.innsending.rest.fyllut
 
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.dto.RestErrorResponseDto
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
@@ -71,7 +70,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val skjemaDto = SkjemaDtoTestBuilder(vedleggsListe = listOf(t7Vedlegg, n6Vedlegg)).build()
 
 		// Når
-		val opprettetSoknadResponse = api?.opprettSoknad(skjemaDto)
+		val opprettetSoknadResponse = api?.createSoknad(skjemaDto)
 
 		// Så
 		assertTrue(opprettetSoknadResponse != null)
@@ -86,7 +85,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val skjemaDto = SkjemaDtoTestBuilder().build()
 
 		// Når
-		val opprettetSoknadResponse = api?.opprettSoknad(skjemaDto)
+		val opprettetSoknadResponse = api?.createSoknad(skjemaDto)
 		val innsendingsId = opprettetSoknadResponse?.body?.innsendingsId!!
 
 		api?.utfyltSoknad(innsendingsId, skjemaDto)
@@ -188,130 +187,194 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Skal oppdatere utfylt søknad og vedlegg med nytt språk og tittel, gamle vedlegg blir slettet`() {
-		// Gitt
-		val nyttSpraak = "en_gb"
-		val nyTittel = "Application for one-time grant at birth"
-		val nyVedleggstittel1 = "Birth certificate"
-		val nyVedleggstittel2 = "Marriage certificate"
+	fun `Should update utfylt søknad and vedlegg with updated properties for språk and tittel, old vedlegg should be deleted`() {
+		// Given
+		val newSpraak = "en_gb"
+		val newTittel = "Application for one-time grant at birth"
+		val newVedleggstittel1 = "Birth certificate"
+		val newVedleggstittel2 = "Marriage certificate"
 
 		val dokumentSoknadDto = opprettSoknad()
 		val skjemanr = dokumentSoknadDto.skjemanr
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
-		val oppdatertT7 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7", tittel = nyVedleggstittel1).build()
-		val oppdatertN6 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6", tittel = nyVedleggstittel2).build()
-		val oppdatertHovedDokument = SkjemaDokumentDtoTestBuilder(tittel = nyTittel).asHovedDokument(skjemanr).build()
-		val oppdatertHovedDokumentVariant =
-			SkjemaDokumentDtoTestBuilder(tittel = nyTittel).asHovedDokumentVariant(skjemanr).build()
+		val updatedT7 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7", tittel = newVedleggstittel1).build()
+		val updatedN6 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6", tittel = newVedleggstittel2).build()
+		val updatedHovedDokument = SkjemaDokumentDtoTestBuilder(tittel = newTittel).asHovedDokument(skjemanr).build()
+		val updatedHovedDokumentVariant =
+			SkjemaDokumentDtoTestBuilder(tittel = newTittel).asHovedDokumentVariant(skjemanr).build()
 
 		val fraFyllUt = SkjemaDtoTestBuilder(
 			skjemanr = dokumentSoknadDto.skjemanr,
-			spraak = nyttSpraak,
-			tittel = nyTittel,
-			vedleggsListe = listOf(oppdatertT7, oppdatertN6),
-			hoveddokument = oppdatertHovedDokument,
-			hoveddokumentVariant = oppdatertHovedDokumentVariant
+			spraak = newSpraak,
+			tittel = newTittel,
+			vedleggsListe = listOf(updatedT7, updatedN6),
+			hoveddokument = updatedHovedDokument,
+			hoveddokumentVariant = updatedHovedDokumentVariant
 		).build()
 
-		// Når
+		// When
 		val response = api?.utfyltSoknad(innsendingsId, fraFyllUt)
-		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
+		val updatedSoknad = soknadService.hentSoknad(innsendingsId)
 
-		// Så
+		// Then
 		assertTrue(response != null)
-		assertEquals(SoknadsStatusDto.utfylt, oppdatertSoknad.status, "Status er satt til utfylt")
+		assertEquals(SoknadsStatusDto.utfylt, updatedSoknad.status, "Status is set to utfylt")
 		assertEquals(302, response.statusCode.value())
 		assertEquals("http://localhost:3100/sendinn/${innsendingsId}", response.headers.location!!.toString())
-		assertEquals(nyTittel, oppdatertSoknad.tittel)
-		assertEquals("en", oppdatertSoknad.spraak, "Språk er oppdatert (blir konvertert til de første 2 bokstavene)")
-		assertEquals(4, oppdatertSoknad.vedleggsListe.size, "Hoveddokument, hoveddokumentVariant og to vedlegg")
-		assertFalse(
-			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == "vedleggsnr1" && it.tittel == "vedleggTittel1" },
-			"Skal ikke ha gammelt vedlegg"
+		assertEquals(newTittel, updatedSoknad.tittel)
+		assertEquals("en", updatedSoknad.spraak, "Språk is updated (gets converted to the first 2 letters)")
+		assertEquals(
+			4,
+			updatedSoknad.vedleggsListe.size,
+			"Hoveddokument, hoveddokumentVariant and two new vedlegg"
 		)
-		assertFalse(
-			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == "vedleggsnr2" && it.tittel == "vedleggTittel2" },
-			"Skal ikke ha gammelt vedlegg"
-		)
-		assertTrue(
-			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == "T7" && it.tittel == nyVedleggstittel1 },
-			"Skal ha vedlegg T7"
+		assertEquals(
+			0,
+			updatedSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOppIkkeRelevantLenger }.size,
+			"Vedlegg should be deleted, not have status lastetOppIkkeRelevantLenger"
 		)
 		assertTrue(
-			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == "N6" && it.tittel == nyVedleggstittel2 },
-			"Skal ha vedlegg N6"
+			updatedSoknad.vedleggsListe.any { it.vedleggsnr == "T7" && it.tittel == newVedleggstittel1 },
+			"Should have vedlegg T7"
 		)
-		assertEquals(nyTittel, oppdatertSoknad.hoveddokument!!.tittel, "Skal ha ny tittel på hoveddokument")
-		assertEquals(nyTittel, oppdatertSoknad.hoveddokumentVariant!!.tittel, "Skal ha ny tittel på hoveddokumentVariant")
+		assertTrue(
+			updatedSoknad.vedleggsListe.any { it.vedleggsnr == "N6" && it.tittel == newVedleggstittel2 },
+			"Should have vedlegg N6"
+		)
+		assertEquals(newTittel, updatedSoknad.hoveddokument!!.tittel, "Should have a new title for the hoveddokument")
+		assertEquals(
+			newTittel,
+			updatedSoknad.hoveddokumentVariant!!.tittel,
+			"Should have a new title for the hoveddokumentVariant"
+		)
 	}
 
 	@Test
-	fun `Skal bevare vedlegg fra send-inn, selv etter oppdatering fra fyllUt`() {
-		// Gitt
+	fun `Should set status lastetOppIkkeRelevantLenger for vedlegg`() {
+		// Given
+		val skjemanr = "NAV 10-07.41"
+		val vedleggsnr = "T7"
+		val hoveddokument = SkjemaDokumentDtoTestBuilder(vedleggsnr = skjemanr).asHovedDokument(skjemanr).build()
+		val hoveddokumentVariant =
+			SkjemaDokumentDtoTestBuilder(vedleggsnr = skjemanr).asHovedDokumentVariant(skjemanr).build()
+		val vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = vedleggsnr, tittel = "vedlegg1").build()
+
+		val skjemaDto = SkjemaDtoTestBuilder(
+			skjemanr = skjemanr,
+			hoveddokument = hoveddokument,
+			hoveddokumentVariant = hoveddokumentVariant
+		).build()
+
+		val skjemaDtoWithVedlegg = skjemaDto.copy(vedleggsListe = listOf(vedlegg))
+
+		// When
+		val opprettSoknadResponse = api?.createSoknad(skjemaDto)
+		val innsendingsId = opprettSoknadResponse?.body?.innsendingsId!!
+
+		// Complete søknad in fyllUt
+		api?.utfyltSoknad(innsendingsId, skjemaDtoWithVedlegg)
+
+		val savedSoknad = soknadService.hentSoknad(innsendingsId)
+		val vedleggsId = savedSoknad.vedleggsListe.first { it.vedleggsnr == vedleggsnr }.id!!
+
+		// Upload vedlegg in send-inn
+		val uploadFileResponse = api?.uploadFile(innsendingsId = innsendingsId, vedleggsId = vedleggsId)
+		// Go back and remove vedlegg in fyllUt
+		val utfyltResponse = api?.utfyltSoknad(innsendingsId, skjemaDto)
+
+		val updatedSoknad = soknadService.hentSoknad(innsendingsId)
+
+		// Then
+		assertEquals(302, utfyltResponse!!.statusCode.value())
+		assertEquals(201, uploadFileResponse!!.statusCode.value())
+		assertEquals(
+			"http://localhost:3100/sendinn/${innsendingsId}",
+			utfyltResponse.headers.location!!.toString()
+		)
+		assertEquals(3, updatedSoknad.vedleggsListe.size)
+		assertEquals(
+			1,
+			updatedSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOppIkkeRelevantLenger }.size
+		)
+		assertEquals(
+			"vedlegg1",
+			updatedSoknad.vedleggsListe.first { it.opplastingsStatus == OpplastingsStatusDto.lastetOppIkkeRelevantLenger }.tittel
+		)
+	}
+
+
+	@Test
+	fun `Should keep vedlegg from send-inn, even after updating from fyllUt and should delete old vedlegg not relevant anymore`() {
+		// Given
 		val dokumentSoknadDto = opprettSoknad() // med vedlegg vedleggsnr1 og vedleggsnr2
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		val fyllUtVedleggstittel = "N6-ny-vedleggstittel"
 
 		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
-		val fraFyllUt =
+		val fromFyllUt =
 			SkjemaDtoTestBuilder(vedleggsListe = listOf(n6Vedlegg), skjemanr = dokumentSoknadDto.skjemanr).build()
 
-		val formioId = fraFyllUt.vedleggsListe?.find { it.vedleggsnr == "N6" }!!.formioId!!
+		val formioId = fromFyllUt.vedleggsListe?.find { it.vedleggsnr == "N6" }!!.formioId!!
 
-		val oppdatertN6Vedlegg = SkjemaDokumentDtoTestBuilder(
+		val updatedN6Vedlegg = SkjemaDokumentDtoTestBuilder(
 			vedleggsnr = "N6",
 			tittel = fyllUtVedleggstittel,
 			formioId = formioId
 		).build()
-		val oppdatertFyllUt =
-			SkjemaDtoTestBuilder(vedleggsListe = listOf(oppdatertN6Vedlegg), skjemanr = dokumentSoknadDto.skjemanr).build()
+		val updatedFyllUt =
+			SkjemaDtoTestBuilder(vedleggsListe = listOf(updatedN6Vedlegg), skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		val sendInnVedleggsTittel = "N6-fra-send-inn"
-		val fraSendInn = PostVedleggDto(tittel = sendInnVedleggsTittel)
+		val fromSendInn = PostVedleggDto(tittel = sendInnVedleggsTittel)
 
-		// Når
-		// Fullfører søknad i fyllUt med N6 og T1 vedlegg (de to eksisterende vedleggene vedleggsnr1 og vedleggsnr2 fjernes)
-		val utfyltResponse = api?.utfyltSoknad(innsendingsId, fraFyllUt)
+		// When
+		// Complete søknad in fyllUt with N6 and T1 vedlegg
+		val utfyltResponse = api?.utfyltSoknad(innsendingsId, fromFyllUt)
 
-		// Legger til N6 vedlegg i send-inn
-		val leggTilVedleggResponse = api?.leggTilVedlegg(innsendingsId, fraSendInn)
+		// Add N6 vedlegg i send-inn
+		val leggTilVedleggResponse = api?.addVedlegg(innsendingsId, fromSendInn)
 
-		// Går tilbake til fyllUt og fjerner T1 vedlegg. Beholder N6, men endrer tittel
-		val oppdatertUtfyltResponse = api?.utfyltSoknad(innsendingsId, oppdatertFyllUt)
-		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
+		// Go back to fyllUt and remove the T1 vedlegg. Keep N6 from send-inn, but also add one from fyllUt with different title
+		val updatedUtfyltResponse = api?.utfyltSoknad(innsendingsId, updatedFyllUt)
+		val updatedSoknad = soknadService.hentSoknad(innsendingsId)
 
-		// Så
+		// Then
 		assertTrue(utfyltResponse != null)
 		assertTrue(leggTilVedleggResponse != null)
-		assertTrue(oppdatertUtfyltResponse != null)
+		assertTrue(updatedUtfyltResponse != null)
 
 		assertEquals(302, utfyltResponse.statusCode.value())
 		assertEquals(201, leggTilVedleggResponse.statusCode.value())
-		assertEquals(302, oppdatertUtfyltResponse.statusCode.value())
+		assertEquals(302, updatedUtfyltResponse.statusCode.value())
 		assertEquals(
 			"http://localhost:3100/sendinn/${innsendingsId}",
-			oppdatertUtfyltResponse.headers.location!!.toString()
+			updatedUtfyltResponse.headers.location!!.toString()
 		)
 
-		assertEquals(4, oppdatertSoknad.vedleggsListe.size)
+		assertEquals(4, updatedSoknad.vedleggsListe.size)
+		assertEquals(
+			0,
+			updatedSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOppIkkeRelevantLenger }.size,
+			"Vedlegg should be deleted, not have status lastetOppIkkeRelevantLenger"
+		)
 
 		val n6FyllUtVedlegg =
-			oppdatertSoknad.vedleggsListe.find { it.vedleggsnr == "N6" && it.tittel == fyllUtVedleggstittel }
+			updatedSoknad.vedleggsListe.find { it.vedleggsnr == "N6" && it.tittel == fyllUtVedleggstittel }
 		val n6SendInnVedlegg =
-			oppdatertSoknad.vedleggsListe.find { it.vedleggsnr == "N6" && it.tittel == sendInnVedleggsTittel }
+			updatedSoknad.vedleggsListe.find { it.vedleggsnr == "N6" && it.tittel == sendInnVedleggsTittel }
 
-		assertNotNull(n6FyllUtVedlegg!!.formioId, "Vedlegg fra fyllUt har formioId")
-		assertNull(n6SendInnVedlegg!!.formioId, "Vedlegg fra sendInn har ikke formioId")
+		assertNotNull(n6FyllUtVedlegg!!.formioId, "Vedlegg from fyllUt has formioId")
+		assertNull(n6SendInnVedlegg!!.formioId, "Vedlegg from sendInn does not have formioId")
 
 		assertFalse(
-			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == "vedleggsnr1" || it.vedleggsnr == "vedleggsnr2" },
-			"Skal ikke ha gammelt vedlegg"
+			updatedSoknad.vedleggsListe.any { it.vedleggsnr == "vedleggsnr1" || it.vedleggsnr == "vedleggsnr2" },
+			"Should not have old vedlegg"
 		)
 		assertFalse(
-			oppdatertSoknad.vedleggsListe.any { it.vedleggsnr == "T1" },
-			"Skal ikke ha gammelt vedlegg"
+			updatedSoknad.vedleggsListe.any { it.vedleggsnr == "T1" },
+			"Should not have old vedlegg"
 		)
 
 	}
@@ -325,7 +388,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		// Når
-		api?.oppdaterSoknad(innsendingsId, fraFyllUt)
+		api?.updateSoknad(innsendingsId, fraFyllUt)
 		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
 
 		val filer = oppdatertSoknad.vedleggsListe.flatMap {
@@ -359,7 +422,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr, spraak = nyttSpraak).build()
 
 		// Når
-		val response = api?.oppdaterSoknad(innsendingsId, fraFyllUt)
+		val response = api?.updateSoknad(innsendingsId, fraFyllUt)
 		val oppdatertSoknad = response?.body!!
 
 		// Så
@@ -420,7 +483,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		// Når
-		val response = api?.hentSoknad(innsendingsId)
+		val response = api?.getSoknad(innsendingsId)
 
 		val opprettetSoknad = response?.body!!
 
@@ -457,7 +520,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		// Når
-		val response = api?.slettSoknad(innsendingsId)
+		val response = api?.deleteSoknad(innsendingsId)
 
 		// Så
 		assertTrue(response != null)
@@ -476,7 +539,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		// Når
-		val response = api?.opprettSoknadRedirect(fraFyllUt, false)
+		val response = api?.createSoknadRedirect(fraFyllUt, false)
 
 		// Så
 		assertTrue(response != null)
@@ -493,7 +556,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		// Når
-		val response = api?.opprettSoknad(fraFyllUt, true)
+		val response = api?.createSoknad(fraFyllUt, true)
 
 		// Så
 		assertTrue(response != null)

@@ -72,6 +72,9 @@ spec:
           cluster: dev-gcp
         - application: statuspoll
           namespace: navdig
+        - application: sykepengesoknad-backend
+          namespace: flex
+
     outbound:
       external:
       {{#each outboundExternalHosts}}
@@ -102,12 +105,6 @@ spec:
         databases:
           - name: {{ database-name }}
             envVarPrefix: DATABASE
-
-  envFrom:
-    - secret: shared-innsending-secret
-      metadata:
-        annotations:
-          reloader.stakater.com/match: "true"
 
   env:
   {{#each env}}

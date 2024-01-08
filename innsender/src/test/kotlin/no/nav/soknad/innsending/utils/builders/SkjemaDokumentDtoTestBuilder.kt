@@ -18,17 +18,23 @@ data class SkjemaDokumentDtoTestBuilder(
 	var formioId: String? = UUID.randomUUID().toString()
 ) {
 
-	fun asHovedDokument(skjemanr: String): SkjemaDokumentDtoTestBuilder {
-		document = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
-		mimetype = Mimetype.applicationSlashPdf
+	// Hoveddokument uses skjemanr as vedleggsnr
+	fun asHovedDokument(skjemanr: String, withFile: Boolean = true): SkjemaDokumentDtoTestBuilder {
+		if (withFile) {
+			document = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
+			mimetype = Mimetype.applicationSlashPdf
+		}
 		formioId = null
 		vedleggsnr = skjemanr
 		return this
 	}
 
-	fun asHovedDokumentVariant(skjemanr: String): SkjemaDokumentDtoTestBuilder {
-		document = Hjelpemetoder.getBytesFromFile("/__files/sanity.json")
-		mimetype = Mimetype.applicationSlashJson
+	// Hoveddokument uses skjemanr as vedleggsnr
+	fun asHovedDokumentVariant(skjemanr: String, withFile: Boolean = true): SkjemaDokumentDtoTestBuilder {
+		if (withFile) {
+			document = Hjelpemetoder.getBytesFromFile("/__files/sanity.json")
+			mimetype = Mimetype.applicationSlashJson
+		}
 		formioId = null
 		vedleggsnr = skjemanr
 		return this

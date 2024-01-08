@@ -5,18 +5,22 @@ import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.soknad.arkivering.soknadsarkiverer.service.tokensupport.TokenService
 import no.nav.soknad.innsending.util.Constants.MDC_INNSENDINGS_ID
+import no.nav.soknad.innsending.util.MDCUtil
 import okhttp3.OkHttpClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import java.util.concurrent.TimeUnit
 
 @Configuration
-class OkHttpOAuth2ClientConfig {
+class OkHttpOAuth2ClientConfig(
+	@Value("\$spring.application.name}") private val applicationName: String
+) {
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 
 	@Bean
@@ -50,6 +54,25 @@ class OkHttpOAuth2ClientConfig {
 				it.proceed(bearerRequest)
 			}.build()
 	}
+
+	@Bean
+	@Qualifier("kodeverkApiClient")
+	fun kodeverkApiClient(): OkHttpClient {
+		return OkHttpClient().newBuilder()
+			.connectTimeout(20, TimeUnit.SECONDS)
+			.callTimeout(62, TimeUnit.SECONDS)
+			.readTimeout(1, TimeUnit.MINUTES)
+			.writeTimeout(1, TimeUnit.MINUTES)
+			.addInterceptor {
+				val callId = MDCUtil.callIdOrNew()
+				val request = it.request().newBuilder().headers(it.request().headers)
+					.header("Nav-Consumer-Id", applicationName)
+					.header("Nav-Call-Id", callId)
+					.build()
+				it.proceed(request)
+			}.build()
+	}
+
 
 	@Bean
 	@Profile("!(prod | dev)")

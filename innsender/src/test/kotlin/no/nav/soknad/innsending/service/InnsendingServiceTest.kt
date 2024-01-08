@@ -16,6 +16,8 @@ import no.nav.soknad.innsending.model.SoknadFile
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
+import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
 import no.nav.soknad.pdfutilities.AntallSider
 import no.nav.soknad.pdfutilities.PdfGenerator
 import org.junit.jupiter.api.Assertions
@@ -152,8 +154,17 @@ class InnsendingServiceTest : ApplicationTest() {
 		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
 		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
 
+		val ettersending = OpprettEttersendingTestBuilder()
+			.skjemanr(dokumentSoknadDto.skjemanr)
+			.vedleggsListe(
+				listOf(
+					InnsendtVedleggDtoTestBuilder().vedleggsnr("W1").tittel("Vedlegg1").build(),
+				)
+			)
+			.build()
+
 		val ettersendingsSoknadDto =
-			soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
+			ettersendingService.createEttersendingFromExistingSoknader(dokumentSoknadDto.brukerId, ettersending)
 
 		Assertions.assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
 		Assertions.assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
@@ -223,9 +234,18 @@ class InnsendingServiceTest : ApplicationTest() {
 		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
 		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
 
+		val ettersending = OpprettEttersendingTestBuilder()
+			.skjemanr(dokumentSoknadDto.skjemanr)
+			.vedleggsListe(
+				listOf(
+					InnsendtVedleggDtoTestBuilder().vedleggsnr("W1").tittel("Vedlegg1").build(),
+				)
+			)
+			.build()
+
 		// Opprett ettersendingssoknad
 		val ettersendingsSoknadDto =
-			soknadService.opprettSoknadForettersendingAvVedlegg(dokumentSoknadDto.brukerId, dokumentSoknadDto.innsendingsId!!)
+			ettersendingService.createEttersendingFromExistingSoknader(dokumentSoknadDto.brukerId, ettersending)
 
 		Assertions.assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
 		Assertions.assertTrue(ettersendingsSoknadDto.vedleggsListe.none { it.opplastingsStatus == OpplastingsStatusDto.innsendt })
