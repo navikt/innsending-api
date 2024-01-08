@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.multipart.MultipartException
 import java.time.OffsetDateTime
 
 
@@ -78,6 +79,21 @@ class RestExceptionHandler {
 	@ExceptionHandler
 	fun generalException(exception: Exception): ResponseEntity<RestErrorResponseDto> {
 		logger.error(exception.message, exception)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = exception.message ?: "Noe gikk galt, prøv igjen senere",
+				timestamp = OffsetDateTime.now(),
+				errorCode = ErrorCode.GENERAL_ERROR.code,
+			), HttpStatus.INTERNAL_SERVER_ERROR
+		)
+	}
+
+	// When the client aborts there is a multipart exception caused by ClientAbortException. We don't want to log this as an error.
+	// Causes could be that the user closes the browser, loses internet connection or that the upload times out.
+	@ExceptionHandler
+	fun multipartException(exception: MultipartException): ResponseEntity<RestErrorResponseDto> {
+		logger.warn(exception.message, exception)
+
 		return ResponseEntity(
 			RestErrorResponseDto(
 				message = exception.message ?: "Noe gikk galt, prøv igjen senere",
