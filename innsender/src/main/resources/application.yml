@@ -1,6 +1,6 @@
 server:
   port: 9064
-  max-http-header-size: 16384
+  max-http-request-header-size: 32KB
 
 spring:
   jackson:
