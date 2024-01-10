@@ -20,7 +20,8 @@ import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTe
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
 import no.nav.soknad.pdfutilities.AntallSider
 import no.nav.soknad.pdfutilities.PdfGenerator
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -99,9 +100,10 @@ class InnsendingServiceTest : ApplicationTest() {
 				dokumentSoknadDto,
 				innsendingService
 			)
-		Assertions.assertTrue(kvitteringsDto.hoveddokumentRef != null)
-		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
-		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
+
+		assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
+		assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
 
 		assertThrows<IllegalActionException> {
 			vedleggService.leggTilVedlegg(dokumentSoknadDto, null)
@@ -115,8 +117,8 @@ class InnsendingServiceTest : ApplicationTest() {
 		)
 
 		// Så skal
-		Assertions.assertEquals(1, hoveddok.size)
-		Assertions.assertTrue(hoveddok.all { it.fileStatus == SoknadFile.FileStatus.ok })
+		assertEquals(1, hoveddok.size)
+		assertTrue(hoveddok.all { it.fileStatus == SoknadFile.FileStatus.ok })
 
 	}
 
@@ -150,9 +152,9 @@ class InnsendingServiceTest : ApplicationTest() {
 				dokumentSoknadDto,
 				innsendingService
 			)
-		Assertions.assertTrue(kvitteringsDto.hoveddokumentRef != null)
-		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
-		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
+		assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
+		assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
 
 		val ettersending = OpprettEttersendingTestBuilder()
 			.skjemanr(dokumentSoknadDto.skjemanr)
@@ -166,8 +168,9 @@ class InnsendingServiceTest : ApplicationTest() {
 		val ettersendingsSoknadDto =
 			ettersendingService.createEttersendingFromExistingSoknader(dokumentSoknadDto.brukerId, ettersending)
 
-		Assertions.assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
-		Assertions.assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+		assertEquals(1, ettersendingsSoknadDto.vedleggsListe.size)
 
 		assertThrows<IllegalActionException> {
 			innsendingService.sendInnSoknad(ettersendingsSoknadDto)
@@ -193,9 +196,9 @@ class InnsendingServiceTest : ApplicationTest() {
 				dokumentSoknadDto,
 				innsendingService
 			)
-		Assertions.assertTrue(kvitteringsDto.hoveddokumentRef != null)
-		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
-		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
+		assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
+		assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
 
 
 		// Test generering av kvittering for innsendt soknad.
@@ -230,9 +233,9 @@ class InnsendingServiceTest : ApplicationTest() {
 				dokumentSoknadDto,
 				innsendingService
 			)
-		Assertions.assertTrue(kvitteringsDto.hoveddokumentRef != null)
-		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
-		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
+		assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
+		assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
 
 		val ettersending = OpprettEttersendingTestBuilder()
 			.skjemanr(dokumentSoknadDto.skjemanr)
@@ -247,9 +250,9 @@ class InnsendingServiceTest : ApplicationTest() {
 		val ettersendingsSoknadDto =
 			ettersendingService.createEttersendingFromExistingSoknader(dokumentSoknadDto.brukerId, ettersending)
 
-		Assertions.assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
-		Assertions.assertTrue(ettersendingsSoknadDto.vedleggsListe.none { it.opplastingsStatus == OpplastingsStatusDto.innsendt })
-		Assertions.assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
+		assertEquals(1, ettersendingsSoknadDto.vedleggsListe.size)
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 
 		val dummyHovedDokument = PdfGenerator().lagForsideEttersending(ettersendingsSoknadDto)
 		assertNotNull(dummyHovedDokument)
@@ -303,9 +306,9 @@ class InnsendingServiceTest : ApplicationTest() {
 				dokumentSoknadDto,
 				innsendingService
 			)
-		Assertions.assertTrue(kvitteringsDto.hoveddokumentRef != null)
-		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isNotEmpty())
-		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+		assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		assertTrue(kvitteringsDto.innsendteVedlegg!!.isNotEmpty())
+		assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
 
 		assertThrows<IllegalActionException> {
 			vedleggService.leggTilVedlegg(dokumentSoknadDto, null)
@@ -318,9 +321,9 @@ class InnsendingServiceTest : ApplicationTest() {
 		)
 
 		// Så skal
-		Assertions.assertEquals(2, vedleggsFiler.size)
-		Assertions.assertTrue(vedleggsFiler.all { it.fileStatus == SoknadFile.FileStatus.ok })
-		Assertions.assertEquals(2, AntallSider().finnAntallSider(vedleggsFiler.last().content))
+		assertEquals(2, vedleggsFiler.size)
+		assertTrue(vedleggsFiler.all { it.fileStatus == SoknadFile.FileStatus.ok })
+		assertEquals(2, AntallSider().finnAntallSider(vedleggsFiler.last().content))
 
 	}
 
