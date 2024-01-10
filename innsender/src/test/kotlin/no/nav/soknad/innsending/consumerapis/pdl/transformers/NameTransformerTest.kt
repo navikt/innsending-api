@@ -40,16 +40,10 @@ class NameTransformerTest {
 		val tenDaysAgo = formatToLocalDate(LocalDateTime.now().minusDays(10))
 		val tenDaysFromNow = formatToLocalDate(LocalDateTime.now().plusDays(10))
 
-		logger.info("tenDaysAgo is $tenDaysAgo")
-		logger.info("tenDaysFromNow is $tenDaysFromNow")
-
 		val nameTenDaysAgo = NavnTestBuilder().gyldigFraOgMed(tenDaysAgo).build()
 		val nameTenDaysFromNow = NavnTestBuilder().gyldigFraOgMed(tenDaysFromNow).build()
 
 		val names = listOf(nameTenDaysAgo, nameTenDaysFromNow)
-
-		logger.info("nameTenDaysAgo is $nameTenDaysAgo")
-		logger.info("nameTenDaysFromNow is $nameTenDaysFromNow")
 
 		// When
 		val result = transformName(names)
