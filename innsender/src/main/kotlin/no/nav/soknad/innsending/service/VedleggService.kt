@@ -10,7 +10,6 @@ import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
-import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
@@ -54,11 +53,15 @@ class VedleggService(
 		)
 	}
 
-	fun saveVedlegg(
+	fun saveVedleggWithExistingData(
 		soknadsId: Long,
 		vedleggList: List<InnsendtVedleggDto>,
+		existingSoknad: DokumentSoknadDto
 	): List<VedleggDbData> {
 		return vedleggList.map {
+			val existingVedlegg =
+				existingSoknad.vedleggsListe.firstOrNull { existingVedlegg -> existingVedlegg.vedleggsnr == it.vedleggsnr }
+
 			repo.lagreVedlegg(
 				VedleggDbData(
 					id = null,
@@ -72,11 +75,46 @@ class VedleggService(
 					tittel = it.tittel ?: "",
 					label = it.tittel,
 					beskrivelse = "",
-					mimetype = null,
+					mimetype = mapTilDbMimetype(Mimetype.applicationSlashPdf),
 					uuid = UUID.randomUUID().toString(),
 					opprettetdato = LocalDateTime.now(),
 					endretdato = LocalDateTime.now(),
-					innsendtdato = null,
+					innsendtdato = existingVedlegg?.innsendtdato?.toLocalDateTime(),
+					vedleggsurl = it.url,
+					formioid = null
+				)
+			)
+		}
+	}
+
+	fun saveVedleggWithArchivedData(
+		soknadsId: Long,
+		vedleggList: List<InnsendtVedleggDto>,
+		archivedSoknad: AktivSakDto
+	): List<VedleggDbData> {
+
+		return vedleggList.map {
+			val existingVedlegg =
+				archivedSoknad.innsendtVedleggDtos.firstOrNull { existingVedlegg -> existingVedlegg.vedleggsnr == it.vedleggsnr }
+
+			repo.lagreVedlegg(
+				VedleggDbData(
+					id = null,
+					soknadsid = soknadsId,
+					status = OpplastingsStatus.IKKE_VALGT,
+					erhoveddokument = false,
+					ervariant = false,
+					erpdfa = existingVedlegg != null,
+					erpakrevd = it.vedleggsnr != "N6",
+					vedleggsnr = it.vedleggsnr,
+					tittel = it.tittel ?: "",
+					label = it.tittel,
+					beskrivelse = "",
+					mimetype = mapTilDbMimetype(Mimetype.applicationSlashPdf),
+					uuid = UUID.randomUUID().toString(),
+					opprettetdato = LocalDateTime.now(),
+					endretdato = LocalDateTime.now(),
+					innsendtdato = archivedSoknad.innsendtDato.toLocalDateTime(),
 					vedleggsurl = it.url,
 					formioid = null
 				)
@@ -118,58 +156,27 @@ class VedleggService(
 		return vedleggDbDataListe
 	}
 
-	fun saveVedlegg(soknadDbData: SoknadDbData, vedleggsListe: List<VedleggDto>): List<VedleggDbData> {
-
-		return vedleggsListe.filter { !(it.erHoveddokument || it.vedleggsnr == KVITTERINGS_NR) }.map { v ->
+	fun saveVedlegg(soknadsId: Long, vedleggList: List<InnsendtVedleggDto>): List<VedleggDbData> {
+		return vedleggList.map {
 			repo.lagreVedlegg(
 				VedleggDbData(
 					id = null,
-					soknadsid = soknadDbData.id!!,
-					status = if (OpplastingsStatusDto.sendSenere == v.opplastingsStatus) OpplastingsStatus.IKKE_VALGT else mapTilDbOpplastingsStatus(
-						v.opplastingsStatus
-					),
-					erhoveddokument = v.erHoveddokument,
-					ervariant = v.erVariant,
-					erpdfa = v.erPdfa,
-					erpakrevd = v.erPakrevd,
-					vedleggsnr = v.vedleggsnr,
-					tittel = v.tittel,
-					label = v.label,
-					beskrivelse = v.beskrivelse,
-					mimetype = mapTilDbMimetype(v.mimetype),
-					uuid = UUID.randomUUID().toString(),
-					opprettetdato = v.opprettetdato.toLocalDateTime(),
-					endretdato = LocalDateTime.now(),
-					innsendtdato = v.innsendtdato?.toLocalDateTime(),
-					vedleggsurl = v.skjemaurl,
-					formioid = v.formioId
-				)
-			)
-		}
-	}
-
-	fun saveVedlegg(soknadDbData: SoknadDbData, arkivertSoknad: AktivSakDto): List<VedleggDbData> {
-
-		return arkivertSoknad.innsendtVedleggDtos.filter { it.vedleggsnr != soknadDbData.skjemanr }.map { v ->
-			repo.lagreVedlegg(
-				VedleggDbData(
-					id = null,
-					soknadsid = soknadDbData.id!!,
-					status = OpplastingsStatus.INNSENDT,
+					soknadsid = soknadsId,
+					status = OpplastingsStatus.IKKE_VALGT,
 					erhoveddokument = false,
 					ervariant = false,
-					erpdfa = true,
-					erpakrevd = true,
-					vedleggsnr = v.vedleggsnr,
-					tittel = v.tittel ?: "",
-					label = v.tittel,
+					erpdfa = false,
+					erpakrevd = it.vedleggsnr != "N6",
+					vedleggsnr = it.vedleggsnr,
+					tittel = it.tittel ?: "",
+					label = it.tittel,
 					beskrivelse = "",
-					mimetype = mapTilDbMimetype(Mimetype.applicationSlashPdf),
+					mimetype = null,
 					uuid = UUID.randomUUID().toString(),
-					opprettetdato = arkivertSoknad.innsendtDato.toLocalDateTime(),
+					opprettetdato = LocalDateTime.now(),
 					endretdato = LocalDateTime.now(),
-					innsendtdato = arkivertSoknad.innsendtDato.toLocalDateTime(),
-					vedleggsurl = skjemaService.hentSkjema(v.vedleggsnr, soknadDbData.spraak ?: "nb", false).url,
+					innsendtdato = null,
+					vedleggsurl = it.url,
 					formioid = null
 				)
 			)
