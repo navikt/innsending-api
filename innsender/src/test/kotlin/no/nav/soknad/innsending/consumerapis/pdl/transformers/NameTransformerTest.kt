@@ -7,9 +7,12 @@ import no.nav.soknad.innsending.utils.builders.pdl.NavnTestBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 class NameTransformerTest {
+	private val logger = LoggerFactory.getLogger(javaClass)
+
 	@Test
 	fun `Should return null if names list is empty`() {
 		// Given
@@ -37,10 +40,16 @@ class NameTransformerTest {
 		val tenDaysAgo = formatToLocalDate(LocalDateTime.now().minusDays(10))
 		val tenDaysFromNow = formatToLocalDate(LocalDateTime.now().plusDays(10))
 
+		logger.info("tenDaysAgo is $tenDaysAgo")
+		logger.info("tenDaysFromNow is $tenDaysFromNow")
+
 		val nameTenDaysAgo = NavnTestBuilder().gyldigFraOgMed(tenDaysAgo).build()
 		val nameTenDaysFromNow = NavnTestBuilder().gyldigFraOgMed(tenDaysFromNow).build()
 
 		val names = listOf(nameTenDaysAgo, nameTenDaysFromNow)
+
+		logger.info("nameTenDaysAgo is $nameTenDaysAgo")
+		logger.info("nameTenDaysFromNow is $nameTenDaysFromNow")
 
 		// When
 		val result = transformName(names)
