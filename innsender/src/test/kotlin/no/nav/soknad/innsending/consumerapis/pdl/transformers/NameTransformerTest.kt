@@ -7,11 +7,9 @@ import no.nav.soknad.innsending.utils.builders.pdl.NavnTestBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
-import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 class NameTransformerTest {
-	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Test
 	fun `Should return null if names list is empty`() {
