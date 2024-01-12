@@ -245,7 +245,7 @@ data class Laeremiddelutgifter(
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class Maalgruppeinformasjon(
 	@JacksonXmlProperty(localName = "periode")
-	val periode: Periode,
+	val periode: Periode?,
 
 	@JacksonXmlProperty(localName = "kilde")
 	val kilde: String = "BRUKERREGISTRERT",
@@ -469,7 +469,7 @@ data class Tilleggsstoenadsskjema(
 	@JacksonXmlProperty(localName = "personidentifikator")
 	val personidentifikator: String,
 	@JacksonXmlProperty(localName = "maalgruppeinformasjon")
-	val maalgruppeinformasjon: Maalgruppeinformasjon,
+	val maalgruppeinformasjon: Maalgruppeinformasjon?,
 	@JacksonXmlProperty(localName = "rettighetstype")
 	val rettighetstype: Rettighetstype
 )

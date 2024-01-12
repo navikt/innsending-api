@@ -18,7 +18,7 @@ class JsonApplicationTestBuilder {
 	private var malgruppeInformasjon: JsonMaalgruppeinformasjon = JsonMaalgruppeinformasjon(
 		periode = AktivitetsPeriode(startdatoDdMmAaaa = "01-01-2024", sluttdatoDdMmAaaa = "30-06-2024"),
 		kilde = "BRUKERREGISTRERT",
-		maalgruppetype = JsonMaalgruppetyper(value = "ENSFORARBS")
+		maalgruppetype = "ENSFORARBS"
 	)
 	private var language: String = "nb-NO"
 	private var rettighetstyper: JsonRettighetstyper? = null

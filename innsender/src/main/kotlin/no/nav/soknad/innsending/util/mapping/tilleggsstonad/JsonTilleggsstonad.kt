@@ -176,11 +176,20 @@ data class JsonOppstartOgAvsluttetAktivitet(
 )
 
 data class JsonMaalgruppeinformasjon(
-	val periode: AktivitetsPeriode,
+	val periode: AktivitetsPeriode?,
 	val kilde: String, // f.eks. BRUKERREGISTRERT
-	val maalgruppetype: JsonMaalgruppetyper
+	val maalgruppetype: String // f.eks. ENSFORARBS
 )
 
-data class JsonMaalgruppetyper(
-	val value: String  // f.eks. ENSFORARBS
+data class Livssituasjon(
+	val erDuArbeidssoker: String, // Ja | Nei
+	val mottarDuEllerHarDuSoktOmDagpenger: String,  // Ja | Nei
+	val mottarDuEllerHarDuSoktOmTiltakspenger: String,  // Ja | Nei
+	val gjennomforerDuEnUtdanningSomNavHarGodkjent: String,  // Ja | Nei
+	val erDuGjenlevendeEktefelle: String,  // Ja | Nei
+	val erDuTidligereFamiliepleier: String,  // Ja | Nei
+	val erDuUgiftSkiltEllerSeparertOgErAleneOmOmsorgenForBarn: String,  // Ja | Nei
+	val erDuUgiftSkiltEllerSeparertOgErAleneOmOmsorgenForBarn1: String,  // Har du barn under 8 år Ja | Nei.
+	val nedsattArbeidsevnePgaSykdom: NedsattArbeidsevnePgaSykdom,
+	val annet1: String? // Ingen av valgene ovenfor passer situasjon min
 )

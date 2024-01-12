@@ -28,19 +28,126 @@ fun convertToJson(soknadDto: DokumentSoknadDto, json: ByteArray?): JsonApplicati
 
 fun convertToJsonTilleggsstonad(tilleggsstonad: Application): JsonTilleggsstonad {
 	return JsonTilleggsstonad(
-		aktivitetsinformasjon = JsonAktivitetsInformasjon("12345"), // TODO
+		aktivitetsinformasjon = convertAktivitetsinformasjon(tilleggsstonad), // TODO
 		maalgruppeinformasjon = convertToJsonMaalgruppeinformasjon(tilleggsstonad),
 		rettighetstype = convertToJsonRettighetstyper(tilleggsstonad)
 
 	)
 }
 
-private fun convertToJsonMaalgruppeinformasjon(tilleggsstonad: Application): JsonMaalgruppeinformasjon { // TODO
-	return JsonMaalgruppeinformasjon(
-		periode = AktivitetsPeriode(startdatoDdMmAaaa = "01-01-2024", sluttdatoDdMmAaaa = "30-06-2024"),
-		kilde = "BRUKERREGISTRERT",
-		maalgruppetype = JsonMaalgruppetyper(value = "ENSFORARBS")
+private fun convertAktivitetsinformasjon(tilleggsstonad: Application): JsonAktivitetsInformasjon? {
+	return if (tilleggsstonad.aktivitetsId != null)
+		JsonAktivitetsInformasjon(aktivitet = tilleggsstonad.aktivitetsId)
+	else
+		null
+}
+
+private fun convertToJsonMaalgruppeinformasjon(tilleggsstonad: Application): JsonMaalgruppeinformasjon? { // TODO
+
+	// Bruk maalgruppeinformasjon hvis dette er hentet fra Arena og lagt inn på søknaden
+	if (tilleggsstonad.maalgruppeType != null) {
+		return JsonMaalgruppeinformasjon(
+			kilde = (tilleggsstonad.maalgruppeKilde ?: "BRUKERDEFINERT"),
+			maalgruppetype = tilleggsstonad.maalgruppeType,
+			periode = if (tilleggsstonad.maalgruppePeriode == null)
+				null
+			else
+				AktivitetsPeriode(
+					startdatoDdMmAaaa = tilleggsstonad.maalgruppePeriode.startdatoDdMmAaaa,
+					sluttdatoDdMmAaaa = tilleggsstonad.maalgruppePeriode.sluttdatoDdMmAaaa
+				)
+
+		)
+	}
+
+	// Basert på søker sin spesifisering av livssituasjon, avled prioritert målgruppe
+	// Pri 1
+	if ("ja".equals(tilleggsstonad.nedsattArbeidsevnePgaSykdom?.harDuNedsattArbeidsevnePaGrunnAvSykdom, true) &&
+		!"ja".equals(
+			tilleggsstonad.nedsattArbeidsevnePgaSykdom?.mottarDuSykepenger,
+			true
+		) &&
+		"ja".equals(
+			tilleggsstonad.nedsattArbeidsevnePgaSykdom?.harDuVedtakFraNavOmNedsattArbeidsevnePaGrunnAvSykdom,
+			true
+		) &&
+		!"ja".equals(
+			tilleggsstonad.nedsattArbeidsevnePgaSykdom?.mottarDuLonnFraArbeidsgiverMensDuGjennomforerEnAktivitetSomNavHarGodkjent,
+			true
+		)
 	)
+		return JsonMaalgruppeinformasjon(
+			periode = null,
+			kilde = "BRUKERREGISTRERT",
+			maalgruppetype = "NEDSARBEVN"
+		)
+	// Pri 2
+	if ("ja".equals(tilleggsstonad.gjennomforerDuEnUtdanningSomNavHarGodkjent, true) &&
+		"ja".equals(tilleggsstonad.erDuUgiftSkiltEllerSeparertOgErAleneOmOmsorgenForBarn1, true)
+	)
+		return JsonMaalgruppeinformasjon(
+			periode = null,
+			kilde = "BRUKERREGISTRERT",
+			maalgruppetype = "ENSFORUTD"
+		)
+	// Pri 3
+	if ("ja".equals(tilleggsstonad.erDuArbeidssoker, true) &&
+		"ja".equals(tilleggsstonad.erDuUgiftSkiltEllerSeparertOgErAleneOmOmsorgenForBarn, true)
+	)
+		return JsonMaalgruppeinformasjon(
+			periode = null,
+			kilde = "BRUKERREGISTRERT",
+			maalgruppetype = "ENSFORARBS"
+		)
+	// Pri 4
+	if ("ja".equals(tilleggsstonad.gjennomforerDuEnUtdanningSomNavHarGodkjent, true) &&
+		"ja".equals(tilleggsstonad.erDuTidligereFamiliepleier, true)
+	)
+		return JsonMaalgruppeinformasjon(
+			periode = null,
+			kilde = "BRUKERREGISTRERT",
+			maalgruppetype = "TIDLFAMPL"
+		)
+	// Pri 5
+	if ("ja".equals(tilleggsstonad.gjennomforerDuEnUtdanningSomNavHarGodkjent, true) &&
+		"ja".equals(tilleggsstonad.erDuGjenlevendeEktefelle, true)
+	)
+		return JsonMaalgruppeinformasjon(
+			periode = null,
+			kilde = "BRUKERREGISTRERT",
+			maalgruppetype = "GJENEKUTD"
+		)
+	// Pri 6
+	if ("ja".equals(tilleggsstonad.erDuArbeidssoker, true) &&
+		"ja".equals(tilleggsstonad.erDuGjenlevendeEktefelle, true)
+	)
+		return JsonMaalgruppeinformasjon(
+			periode = null,
+			kilde = "BRUKERREGISTRERT",
+			maalgruppetype = "GJENEKARBS"
+		)
+	// Pri 7
+	if ("ja".equals(tilleggsstonad.mottarDuEllerHarDuSoktOmTiltakspenger, true))
+		return JsonMaalgruppeinformasjon(
+			periode = null,
+			kilde = "BRUKERREGISTRERT",
+			maalgruppetype = "MOTTILTPEN"
+		)
+	// Pri 8
+	if ("ja".equals(tilleggsstonad.mottarDuEllerHarDuSoktOmDagpenger, true))
+		return JsonMaalgruppeinformasjon(periode = null, kilde = "BRUKERREGISTRERT", maalgruppetype = "MOTDAGPEN")
+	// Pri 9
+	if ("ja".equals(tilleggsstonad.erDuArbeidssoker, true))
+		return JsonMaalgruppeinformasjon(periode = null, kilde = "BRUKERREGISTRERT", maalgruppetype = "ARBSOKERE")
+	// 10
+	if ("ja".equals(tilleggsstonad.annet1, true))
+		return JsonMaalgruppeinformasjon(
+			periode = null,
+			kilde = "BRUKERREGISTRERT",
+			maalgruppetype = "ANNET"
+		)
+
+	return null
 }
 
 private fun convertToJsonRettighetstyper(tilleggsstonad: Application): JsonRettighetstyper {

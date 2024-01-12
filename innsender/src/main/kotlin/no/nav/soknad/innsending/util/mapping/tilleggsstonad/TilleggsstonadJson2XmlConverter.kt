@@ -60,17 +60,27 @@ fun convertToTilleggsstonadsskjema(
 }
 
 fun convertToAktivitetsinformasjon(tilleggstonadJsonObj: JsonApplication): Aktivitetsinformasjon {
-	return Aktivitetsinformasjon(tilleggstonadJsonObj.tilleggsstonad.aktivitetsinformasjon?.aktivitet) // TODO
+	return Aktivitetsinformasjon(tilleggstonadJsonObj.tilleggsstonad.aktivitetsinformasjon?.aktivitet)
 }
 
-fun convertToMaalgruppeinformasjon(tilleggstonadJsonObj: JsonApplication): Maalgruppeinformasjon {
-	return Maalgruppeinformasjon(
-		periode = Periode(
-			fom = convertToDateStringWithTimeZone("2023-12-01"), tom = convertToDateStringWithTimeZone("2024-01-31")
-		),
-		kilde = "BRUKERREGISTRERT",
-		maalgruppetype = Maalgruppetyper(value = "NEDSARBEVN", kodeverksRef = "NEDSARBEVN")
-	) // TODO
+fun convertToMaalgruppeinformasjon(tilleggstonadJsonObj: JsonApplication): Maalgruppeinformasjon? {
+	val jsonMaalgruppeinformasjon = tilleggstonadJsonObj.tilleggsstonad.maalgruppeinformasjon
+	return if (jsonMaalgruppeinformasjon != null) {
+		Maalgruppeinformasjon(
+			periode = if (jsonMaalgruppeinformasjon.periode != null)
+				Periode(
+					fom = convertToDateStringWithTimeZone(jsonMaalgruppeinformasjon.periode.startdatoDdMmAaaa),
+					tom = convertToDateStringWithTimeZone(jsonMaalgruppeinformasjon.periode.sluttdatoDdMmAaaa)
+				) else null,
+			kilde = jsonMaalgruppeinformasjon.kilde,
+			maalgruppetype = Maalgruppetyper(
+				value = jsonMaalgruppeinformasjon.maalgruppetype,
+				kodeverksRef = jsonMaalgruppeinformasjon.maalgruppetype
+			)
+		)
+	} else {
+		null
+	}
 }
 
 private fun convertToDateStringWithTimeZone(date: String): String {

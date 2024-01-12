@@ -22,6 +22,28 @@ data class ApplicationInfo(
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Application(
+
+	// Dersom søker har en aktivitet skal den være hentet fra Arena og lagt inn i søknaden og sendes inn i XMLen
+	val aktivitetsId: String? = null, // TODO mangler foreløpig i fra FyllUt
+
+	// Dersom det er hentet maalgrupper fra Arena skal den maalgruppen som har overlappende periode med hentet aktivitet sendes inn.
+	val maalgruppePeriode: JsonPeriode? = null, // TODO mangler foreløpig i fra FyllUt
+	val maalgruppeKilde: String? = null, // TODO mangler foreløpig i fra FyllUt
+	val maalgruppeType: String? = null, // TODO mangler foreløpig i fra FyllUt
+
+	// Dersom det ikke er registrert maalgrupper i Arena for søker, må søker angi Livssituasjon.
+	// Denne skal mappes til en prioritert liste av maalgrupper, der den høyest prioriterte sendes inn.
+	val erDuArbeidssoker: String? = null, // true | false
+	val mottarDuEllerHarDuSoktOmDagpenger: String? = null,  // true | false
+	val mottarDuEllerHarDuSoktOmTiltakspenger: String? = null,  //  true | false
+	val gjennomforerDuEnUtdanningSomNavHarGodkjent: String? = null,  //  true | false
+	val erDuGjenlevendeEktefelle: String? = null,  // true | false
+	val erDuTidligereFamiliepleier: String? = null,  // true | false
+	val erDuUgiftSkiltEllerSeparertOgErAleneOmOmsorgenForBarn: String? = null,  //  true | false
+	val erDuUgiftSkiltEllerSeparertOgErAleneOmOmsorgenForBarn1: String? = null,  // Har du barn under 8 år true | false.
+	val nedsattArbeidsevnePgaSykdom: NedsattArbeidsevnePgaSykdom? = null,
+	val annet1: String? = null, // Ingen av valgene ovenfor passer min situasjon
+
 	val hvorforReiserDu: HvorforReiserDu? = null,
 
 	// Dine opplysninger
@@ -30,123 +52,123 @@ data class Application(
 	@JsonProperty("harDuNorskFodselsnummerEllerDNummer")
 	val harDuNorskFodselsnummerEllerDnummer: String, // ja|nei
 	@JsonProperty("fodselsnummerDNummerSoker")
-	val fodselsnummerDnummerSoker: String?,
+	val fodselsnummerDnummerSoker: String? = null,
 
 
-	val annenDokumentasjon: String?,
+	val annenDokumentasjon: String? = null,
 
 	// Tilleggsopplysninger
-	val harDuNoenTilleggsopplysningerDuMenerErViktigeForSoknadenDin: String?,
-	val tilleggsopplysninger: String?,
-	val harRegistrertAktivitetsperiode: String?, // Ja | nei
+	val harDuNoenTilleggsopplysningerDuMenerErViktigeForSoknadenDin: String? = null,
+	val tilleggsopplysninger: String? = null,
+	val harRegistrertAktivitetsperiode: String? = null, // Ja | nei
 
 	// Daglig reise
 	@JsonProperty("startdatoDdMmAaaa")
-	val startdatoDdMmAaaa: String?,
-	val sluttdatoDdMmAaaa: String?,
-	val hvorMangeReisedagerHarDuPerUke: Int?,
-	val harDuEnReiseveiPaSeksKilometerEllerMer: String?, // JA|NEI
+	val startdatoDdMmAaaa: String? = null,
+	val sluttdatoDdMmAaaa: String? = null,
+	val hvorMangeReisedagerHarDuPerUke: Int? = null,
+	val harDuEnReiseveiPaSeksKilometerEllerMer: String? = null, // JA|NEI
 	val harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String? = null, // JA | NEI,
-	val hvorLangReiseveiHarDu: Int?,
-	val velgLand1: VelgLand?,
-	val adresse1: String?,
-	val postnr1: String?,
-	val kanDuReiseKollektivtDagligReise: String?, // ja | nei
-	val hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise: Int?, // Hvis kanDuReiseKollektivtDagligReise == ja
-	val hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt: String?,
-	val kanIkkeReiseKollektivtDagligReise: KanIkkeReiseKollektivt?,
+	val hvorLangReiseveiHarDu: Int? = null,
+	val velgLand1: VelgLand? = null,
+	val adresse1: String? = null,
+	val postnr1: String? = null,
+	val kanDuReiseKollektivtDagligReise: String? = null, // ja | nei
+	val hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise: Int? = null, // Hvis kanDuReiseKollektivtDagligReise == ja
+	val hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt: String? = null,
+	val kanIkkeReiseKollektivtDagligReise: KanIkkeReiseKollektivt? = null,
 
 	// Reise til samling
-	val startOgSluttdatoForSamlingene: List<JsonPeriode>?, // hvis skalDuDeltaEllerHarDuDeltattPaFlereSamlinger == Ja
-	val hvorLangReiseveiHarDu1: Int?,
-	val velgLandReiseTilSamling: VelgLand?,
-	val adresse2: String?,
-	val postnr2: String?,
-	val kanDuReiseKollektivtReiseTilSamling: String?, // Ja|nei
-	val kanReiseKollektivt: KanReiseKollektivt?, // hvis kanDuReiseKollektivtReiseTilSamling == ja
-	val kanIkkeReiseKollektivtReiseTilSamling: KanIkkeReiseKollektivt?, // hvis kanDuReiseKollektivtReiseTilSamling == nei
-	val bekreftelseForAlleSamlingeneDuSkalDeltaPa: String?,
+	val startOgSluttdatoForSamlingene: List<JsonPeriode>? = null, // hvis skalDuDeltaEllerHarDuDeltattPaFlereSamlinger == Ja
+	val hvorLangReiseveiHarDu1: Int? = null,
+	val velgLandReiseTilSamling: VelgLand? = null,
+	val adresse2: String? = null,
+	val postnr2: String? = null,
+	val kanDuReiseKollektivtReiseTilSamling: String? = null, // Ja|nei
+	val kanReiseKollektivt: KanReiseKollektivt? = null, // hvis kanDuReiseKollektivtReiseTilSamling == ja
+	val kanIkkeReiseKollektivtReiseTilSamling: KanIkkeReiseKollektivt? = null, // hvis kanDuReiseKollektivtReiseTilSamling == nei
+	val bekreftelseForAlleSamlingeneDuSkalDeltaPa: String? = null,
 
 	// Reise på grunn av oppstart, avslutning eller hjemreise
-	val startdatoDdMmAaaa1: String?,
-	val sluttdatoDdMmAaaa1: String?,
-	val hvorLangReiseveiHarDu2: Int?,
-	val hvorMangeGangerSkalDuReiseEnVei: Int?,
-	val velgLand3: VelgLand?,
-	val adresse3: String?,
-	val postnr3: String?,
-	val harDuBarnSomSkalFlytteMedDeg: String?, // ja|nei
-	val barnSomSkalFlytteMedDeg: List<BarnSomSkalFlytteMedDeg>?,  //hvis harDuBarnSomSkalFlytteMedDeg == ja
-	val harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear: String?, // ja|nei
-	val harDuSaerligBehovForFlereHjemreiserEnnNevntOvenfor: String?, // ja|nei
-	val bekreftelseForBehovForFlereHjemreiser1: String?,
-	val kanDuReiseKollektivtOppstartAvslutningHjemreise: String?, // ja/nei
-	val hvilkeUtgifterHarDuIForbindelseMedReisen4: Int?, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==ja
-	val kanIkkeReiseKollektivtOppstartAvslutningHjemreise: KanIkkeReiseKollektivt?, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==nei
+	val startdatoDdMmAaaa1: String? = null,
+	val sluttdatoDdMmAaaa1: String? = null,
+	val hvorLangReiseveiHarDu2: Int? = null,
+	val hvorMangeGangerSkalDuReiseEnVei: Int? = null,
+	val velgLand3: VelgLand? = null,
+	val adresse3: String? = null,
+	val postnr3: String? = null,
+	val harDuBarnSomSkalFlytteMedDeg: String? = null, // ja|nei
+	val barnSomSkalFlytteMedDeg: List<BarnSomSkalFlytteMedDeg>? = null,  //hvis harDuBarnSomSkalFlytteMedDeg == ja
+	val harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear: String? = null, // ja|nei
+	val harDuSaerligBehovForFlereHjemreiserEnnNevntOvenfor: String? = null, // ja|nei
+	val bekreftelseForBehovForFlereHjemreiser1: String? = null,
+	val kanDuReiseKollektivtOppstartAvslutningHjemreise: String? = null, // ja/nei
+	val hvilkeUtgifterHarDuIForbindelseMedReisen4: Int? = null, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==ja
+	val kanIkkeReiseKollektivtOppstartAvslutningHjemreise: KanIkkeReiseKollektivt? = null, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==nei
 
 	// Reise når du er arbeidssøker
-	val reisedatoDdMmAaaa: String?,
-	val hvorforReiserDuArbeidssoker: String?, // oppfolgingFraNav | jobbintervju | arbeidPaNyttSted
-	val dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis: String?, // Ja | nei
-	val mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene: String?, // ja|nei
-	val harMottattDagpengerSiste6Maneder: HarMottattDagpengerSiste6Maneder?, // hvis mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene == ja
-	val hvorLangReiseveiHarDu3: Int?,
-	val velgLandArbeidssoker: VelgLand?,
-	val adresse: String?,
-	val postnr: String?,
-	val kanDuReiseKollektivtArbeidssoker: String?, // ja|nei
-	val hvilkeUtgifterHarDuIForbindelseMedReisen3: Int?, // hvis kanDuReiseKollektivtArbeidssoker==ja?
-	val kanIkkeReiseKollektivtArbeidssoker: KanIkkeReiseKollektivt?,
+	val reisedatoDdMmAaaa: String? = null,
+	val hvorforReiserDuArbeidssoker: String? = null, // oppfolgingFraNav | jobbintervju | arbeidPaNyttSted
+	val dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis: String? = null, // Ja | nei
+	val mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene: String? = null, // ja|nei
+	val harMottattDagpengerSiste6Maneder: HarMottattDagpengerSiste6Maneder? = null, // hvis mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene == ja
+	val hvorLangReiseveiHarDu3: Int? = null,
+	val velgLandArbeidssoker: VelgLand? = null,
+	val adresse: String? = null,
+	val postnr: String? = null,
+	val kanDuReiseKollektivtArbeidssoker: String? = null, // ja|nei
+	val hvilkeUtgifterHarDuIForbindelseMedReisen3: Int? = null, // hvis kanDuReiseKollektivtArbeidssoker==ja?
+	val kanIkkeReiseKollektivtArbeidssoker: KanIkkeReiseKollektivt? = null,
 
 	// Flytting
-	val hvorforFlytterDu: String?, // "Jeg flytter fordi jeg har fått ny jobb" | "Jeg flytter i forbindelse med at jeg skal gjennomføre en aktivitet"
-	val narFlytterDuDdMmAaaa: String?, // 01-01-2023
-	val oppgiForsteDagINyJobbDdMmAaaa: String?, // 02-01-2023 dersom flytting pga ny jobb
-	val detteErAdressenJegSkalBoPaEtterAtJegHarFlyttet: String?, // Dette er adressen jeg skal bo på etter at jeg har flyttet
+	val hvorforFlytterDu: String? = null, // "Jeg flytter fordi jeg har fått ny jobb" | "Jeg flytter i forbindelse med at jeg skal gjennomføre en aktivitet"
+	val narFlytterDuDdMmAaaa: String? = null, // 01-01-2023
+	val oppgiForsteDagINyJobbDdMmAaaa: String? = null, // 02-01-2023 dersom flytting pga ny jobb
+	val detteErAdressenJegSkalBoPaEtterAtJegHarFlyttet: String? = null, // Dette er adressen jeg skal bo på etter at jeg har flyttet
 	//val velgLand1: VelgLand?, // Samme som daglig reise
 	//val adresse1: String?, // Samme som daglig reise
 	//val postnr1: String, // Samme som daglig reise
-	val farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav: String?, // Ja | nei
-	val ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra: String?, // 	"Jeg flytter selv" | "Jeg vil bruke flyttebyrå" |"Jeg har innhentet tilbud fra minst to flyttebyråer, men velger å flytte selv"
-	val jegFlytterSelv: JegFlytterSelv?, // Hvis "Jeg flytter selv"
-	val jegVilBrukeFlyttebyra: JegVilBrukeFlyttebyra?, // Hvis "Jeg vil bruke flyttebyrå"
-	val jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv: JegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv?,
+	val farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav: String? = null, // Ja | nei
+	val ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra: String? = null, // 	"Jeg flytter selv" | "Jeg vil bruke flyttebyrå" |"Jeg har innhentet tilbud fra minst to flyttebyråer, men velger å flytte selv"
+	val jegFlytterSelv: JegFlytterSelv? = null, // Hvis "Jeg flytter selv"
+	val jegVilBrukeFlyttebyra: JegVilBrukeFlyttebyra? = null, // Hvis "Jeg vil bruke flyttebyrå"
+	val jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv: JegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv? = null,
 
 	// Periode for Laeremidler og boutgifter og pass av barn
-	val ikkeRegistrertAktivitetsperiode: JsonPeriode?,
+	val ikkeRegistrertAktivitetsperiode: JsonPeriode? = null,
 
 	// Laeremidler
-	val hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore: String?, // "Jeg skal ta videregående utdanning, eller forkurs på universitet" | "Jeg skal ta utdanning på fagskole, høyskole eller universitet" | "Jeg skal ta kurs eller annen form for utdanning"
-	val hvilketKursEllerAnnenFormForUtdanningSkalDuTa: String?,
-	val oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Int?, // 0-100
-	val harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler: String?, // Ja| Nei
-	val utgifterTilLaeremidler: Int?,
-	val farDuDekketLaeremidlerEtterAndreOrdninger: String?, // Ja | Nei | Delvis
-	val hvorMyeFarDuDekketAvEnAnnenAktor: Int?,
-	val hvorStortBelopSokerDuOmAFaDekketAvNav: Int?,
+	val hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore: String? = null, // "Jeg skal ta videregående utdanning, eller forkurs på universitet" | "Jeg skal ta utdanning på fagskole, høyskole eller universitet" | "Jeg skal ta kurs eller annen form for utdanning"
+	val hvilketKursEllerAnnenFormForUtdanningSkalDuTa: String? = null,
+	val oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Int? = null, // 0-100
+	val harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler: String? = null, // Ja| Nei
+	val utgifterTilLaeremidler: Int? = null,
+	val farDuDekketLaeremidlerEtterAndreOrdninger: String? = null, // Ja | Nei | Delvis
+	val hvorMyeFarDuDekketAvEnAnnenAktor: Int? = null,
+	val hvorStortBelopSokerDuOmAFaDekketAvNav: Int? = null,
 
 	// Boutgifter
-	val hvilkeBoutgifterSokerDuOmAFaDekket: String?, // "Jeg søker om å få dekket faste boutgifter" | "Jeg søker om å få dekket boutgifter i forbindelse med samling"
-	val bostotteIForbindelseMedSamling: List<JsonPeriode>?,
+	val hvilkeBoutgifterSokerDuOmAFaDekket: String? = null, // "Jeg søker om å få dekket faste boutgifter" | "Jeg søker om å få dekket boutgifter i forbindelse med samling"
+	val bostotteIForbindelseMedSamling: List<JsonPeriode>? = null,
 
-	val mottarDuBostotteFraKommunen: String?, // "Ja" | "Nei"
-	var hvorMyeBostotteMottarDu: Int?, // Hvis mottarDuBostotteFraKommunen = Ja
-	val hvilkeAdresserHarDuBoutgifterPa: List<String>?, // "Jeg har boutgifter på aktivitetsadressen min" | "Jeg har fortsatt boutgifter på hjemstedet mitt" | "Jeg har hatt boutgifter på hjemstedet mitt, som har opphørt i forbindelse med aktiviteten"
-	val boutgifterPaAktivitetsadressen: Int?,
-	val boutgifterPaHjemstedetMitt: Int?,
-	val boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten: Int?,
-	val erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet: String?, // "Ja" | "Nei"
+	val mottarDuBostotteFraKommunen: String? = null, // "Ja" | "Nei"
+	var hvorMyeBostotteMottarDu: Int? = null, // Hvis mottarDuBostotteFraKommunen = Ja
+	val hvilkeAdresserHarDuBoutgifterPa: List<String>? = null, // "Jeg har boutgifter på aktivitetsadressen min" | "Jeg har fortsatt boutgifter på hjemstedet mitt" | "Jeg har hatt boutgifter på hjemstedet mitt, som har opphørt i forbindelse med aktiviteten"
+	val boutgifterPaAktivitetsadressen: Int? = null,
+	val boutgifterPaHjemstedetMitt: Int? = null,
+	val boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten: Int? = null,
+	val erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet: String? = null, // "Ja" | "Nei"
 
 	// Pass av barn
-	val datagrid: List<Datagrid>?,
-	val fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa: String?,
+	val datagrid: List<Datagrid>? = null,
+	val fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa: String? = null,
 
 
 	// Annet som ikke blir brukt
-	val legeerklaeringPaMedisinskeArakerTilAtDuIkkeKanReiseKollektivt2: String?,
-	val dokumentasjonAvReiseutgifter: String?,
-	val dokumentasjonAvPlassIbarnehageEllerSkolefritidsordningSfo3: String?,
-	val dokumentasjonAvUtgifterTilDrosje3: String?,
+	val legeerklaeringPaMedisinskeArakerTilAtDuIkkeKanReiseKollektivt2: String? = null,
+	val dokumentasjonAvReiseutgifter: String? = null,
+	val dokumentasjonAvPlassIbarnehageEllerSkolefritidsordningSfo3: String? = null,
+	val dokumentasjonAvUtgifterTilDrosje3: String? = null,
 )
 
 data class Datagrid(
@@ -181,6 +203,13 @@ data class BarnSomSkalFlytteMedDeg(
 	val fornavn: String,
 	val etternavn: String,
 	val fodselsdatoDdMmAaaa: String,
+)
+
+data class NedsattArbeidsevnePgaSykdom(
+	val harDuNedsattArbeidsevnePaGrunnAvSykdom: String? = null, //  true | false
+	val harDuVedtakFraNavOmNedsattArbeidsevnePaGrunnAvSykdom: String? = null, //  true | false
+	val mottarDuSykepenger: String? = null, //  true | false
+	val mottarDuLonnFraArbeidsgiverMensDuGjennomforerEnAktivitetSomNavHarGodkjent: String? = null //  true | false
 )
 
 data class JegFlytterSelv(
@@ -289,12 +318,12 @@ data class VelgLand(
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Metadata(
-	val timezone: String,
-	val offset: Int,
-	val origin: String,
-	val referrer: String,
-	val browserName: String,
-	val userAgent: String,
-	val pathName: String,
-	val onLine: Boolean,
+	val timezone: String? = null,
+	val offset: Int? = null,
+	val origin: String? = null,
+	val referrer: String? = null,
+	val browserName: String? = null,
+	val userAgent: String? = null,
+	val pathName: String? = null,
+	val onLine: Boolean? = null,
 )
