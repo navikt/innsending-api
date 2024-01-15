@@ -14,7 +14,8 @@
 		"saf.dev-fss-pub.nais.io",
 		"soknadsmottaker-gcp.intern.dev.nav.no",
 		"www.nav.no",
-		"arena-api-q1.dev-fss-pub.nais.io"
+		"arena-api-q1.dev-fss-pub.nais.io",
+		"kodeverk.dev-fss-pub.nais.io"
 	],
 	"kafka-pool": "nav-dev",
 	"env": {
@@ -46,6 +47,7 @@
 		"STATUS_LOG_URL": "https://logs.adeo.no/app/discover#/view/2ca13b70-df5d-11ed-8b42-0b0644af4500",
 		"ARENA_URL": "https://arena-api-q1.dev-fss-pub.nais.io",
 		"ARENA_TOKEN_X_AUDIENCE": "dev-fss:teamarenanais:arena-api-q1",
-		"ARENA_SCOPE": "api://dev-fss.teamarenanais.arena-api-q1/.default"
+		"ARENA_SCOPE": "api://dev-fss.teamarenanais.arena-api-q1/.default",
+		"KODEVERK_URL": "https://kodeverk.dev-fss-pub.nais.io"
 	}
 }

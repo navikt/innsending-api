@@ -57,7 +57,6 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 		skjemaService = skjemaService,
 		repo = repo,
 		vedleggService = vedleggService,
-		ettersendingService = ettersendingService,
 		filService = filService,
 		brukernotifikasjonPublisher = brukernotifikasjonPublisher,
 		innsenderMetrics = innsenderMetrics,

@@ -39,6 +39,12 @@
 		<logger name="no.nav" level="INFO"/>
 		<logger name="no.nav.soknad.arkivering" level="INFO"/>
 
+		<!-- Turn off irrelevant pdfbox logging -->
+		<logger name="org.apache.fontbox.ttf.CmapSubtable" level="off"/>
+		<logger name="org.apache.fontbox.ttf.GlyphSubstitutionTable" level="off"/>
+		<logger name="org.apache.pdfbox.pdmodel.font.FileSystemFontProvider" level="off"/>
+		<logger name="org.apache.fontbox.cff.Type1CharString" level="off"/>
+
 		<root level="INFO">
 			<appender-ref ref="STDOUT_JSON"/>
 		</root>

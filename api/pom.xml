@@ -84,6 +84,7 @@
 								<exceptionHandler>false</exceptionHandler>
 								<interfaceOnly>true</interfaceOnly>
 								<swaggerAnnotations>true</swaggerAnnotations>
+								<useTags>true</useTags>
 							</configOptions>
 						</configuration>
 					</execution>

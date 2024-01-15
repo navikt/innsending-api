@@ -61,16 +61,19 @@ class Validerer {
 				erGyldigPdDocument(innsendingId, document)
 			}
 		} catch (invalidPasswordException: InvalidPasswordException) {
-			logger.warn("$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert, ${invalidPasswordException.message}")
+			logger.warn(
+				"$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert, ${invalidPasswordException.message}",
+				invalidPasswordException
+			)
 			throw IllegalActionException(
 				message = "Opplastet fil er ikke lesbar. Kan ikke laste opp kryptert fil",
 				errorCode = ErrorCode.FILE_CANNOT_BE_READ
 			)
 		} catch (ex: Exception) {
 			if ("Kan ikke laste opp kryptert fil" == ex.message) {
-				logger.warn("$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert, ${ex.message}")
+				logger.warn("$innsendingId: Opplasting av vedlegg feilet da PDF er kryptert, ${ex.message}", ex)
 			} else {
-				logger.error("$innsendingId: Opplasting av vedlegg feilet av ukjent årsak, ${ex.message}")
+				logger.warn("$innsendingId: Opplasting av vedlegg feilet av ukjent årsak, ${ex.message}", ex)
 			}
 			throw IllegalActionException(
 				message = "Lesing av filen feilet. Opplastet fil er ikke lesbar",
@@ -113,7 +116,7 @@ class Validerer {
 
 			return result?.isValid == true
 		} catch (ex: SyntaxValidationException) {
-			logger.warn("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
+			logger.warn("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}", ex)
 			if (result != null) {
 				val sb = StringBuilder()
 				for (error in result.errorsList) {
@@ -122,7 +125,7 @@ class Validerer {
 				logger.error("Feil liste:\n$sb")
 			}
 		} catch (ex: Error) {
-			logger.warn("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}")
+			logger.warn("Klarte ikke å lese fil for å sjekke om gyldig PDF/a, ${ex.message}", ex)
 		} finally {
 			file?.deleteOnExit()
 			file?.delete()

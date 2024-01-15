@@ -1,0 +1,360 @@
+openapi: 3.0.1
+info:
+  title: API versjon 1
+  description: REST-grensesnittet som er tilgjengelig for konsumering av andre applikasjoner og komponenter, for å hente informasjon om kodeverkene som finnes.
+  version: v0
+servers:
+  - url: https://kodeverk.dev.intern.nav.no
+    description: Generated server url
+tags:
+  - name: hierarki
+    description: Endepunkt for å hente hierarki
+  - name: kodeverk
+    description: Endepunkt for å hente kodeverk
+paths:
+  /api/v1/kodeverk:
+    get:
+      tags:
+        - kodeverk
+      summary: Returnerer en liste med navnene på alle kodeverkene som er registrert.
+      operationId: kodeverk
+      parameters:
+        - name: Nav-Consumer-Id
+          in: header
+          description: ID'en på systemet som gjør kallet, som regel service brukeren til applikasjonen, for eksempel "srvmedl2".
+          required: true
+          schema:
+            type: string
+        - name: Nav-Call-Id
+          in: header
+          description: En ID som identifiserer kallkjeden som dette kallet er en del av.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetKodeverkResponse'
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Feil'
+  /api/v1/kodeverk/{kodeverksnavn}/koder:
+    get:
+      tags:
+        - kodeverk
+      summary: Returnerer en liste med de kodene som er registrert under det angitte kodeverket.
+      operationId: koder
+      parameters:
+        - name: kodeverksnavn
+          in: path
+          description: Hvilket kodeverk man skal hente koder fra.
+          required: true
+          schema:
+            type: string
+        - name: spraak
+          in: query
+          description: Hvilke språk kodene skal være på. Eksempelverdier er "nb" og "nn" for henholdsvis bokmål og nynorsk.
+          required: true
+          schema:
+            type: string
+        - name: Nav-Consumer-Id
+          in: header
+          description: ID'en på systemet som gjør kallet, som regel service brukeren til applikasjonen, for eksempel "srvmedl2".
+          required: false
+          schema:
+            type: string
+        - name: Nav-Call-Id
+          in: header
+          description: En ID som identifiserer kallkjeden som dette kallet er en del av.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetKodeverkKoderResponse'
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Feil'
+  /api/v1/kodeverk/{kodeverksnavn}/koder/betydninger:
+    get:
+      tags:
+        - kodeverk
+      summary: Returnerer informasjon om betydningene av kodene som finnes i et gitt kodeverk.
+      operationId: betydning
+      parameters:
+        - name: kodeverksnavn
+          in: path
+          description: Hvilket kodeverk man skal hente koders betydninger fra.
+          required: true
+          schema:
+            type: string
+        - name: spraak
+          in: query
+          description: En liste over de språkene som beskrivelsene skal returneres på. Tjenesten vil ikke feile dersom de angitte språkene er utilgjengelige, men beskrivelsene vil komme på bokmål isteden. Eksempelverdier er "nb" og "nn" for henholdsvis bokmål og nynorsk.
+          required: false
+          schema:
+            uniqueItems: true
+            type: array
+            items:
+              type: string
+        - name: ekskluderUgyldige
+          in: query
+          description: Kan brukes for filtrering av betydninger basert på gyldighetsperiodene. Er denne satt til "false" så vil alle betydningene for alle kodene i kodeverket returneres, og er den "true" så vil kun de betydningene som er gyldige på den angitte "oppslagsdato" inkluderes. Dersom denne ikke er spesifisert vil den settes til "true".
+          required: false
+          schema:
+            type: boolean
+        - name: oppslagsdato
+          in: query
+          description: Den funksjonelle datoen man henter betydninger for, på YYYY-MM-DD format. Denne parameteren har ingen effekt med mindre "ekskluderUgyldige" er satt til "true". Dersom denne ikke er spesifisert vil dagens dato brukes.
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: Nav-Consumer-Id
+          in: header
+          description: ID'en på systemet som gjør kallet, som regel service brukeren til applikasjonen, for eksempel "srvmedl2".
+          required: false
+          schema:
+            type: string
+        - name: Nav-Call-Id
+          in: header
+          description: En ID som identifiserer kallkjeden som dette kallet er en del av.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetKodeverkKoderBetydningerResponse'
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Feil'
+  /api/v1/hierarki:
+    get:
+      tags:
+        - hierarki
+      summary: Returnerer en liste med navnene på alle hierarkiene som er registrert.
+      operationId: hierarki
+      parameters:
+        - name: Nav-Consumer-Id
+          in: header
+          description: ID'en på systemet som gjør kallet, som regel service brukeren til applikasjonen, for eksempel "srvmedl2".
+          required: true
+          schema:
+            type: string
+        - name: Nav-Call-Id
+          in: header
+          description: En ID som identifiserer kallkjeden som dette kallet er en del av.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetHierarkiResponse'
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Feil'
+  /api/v1/hierarki/{hierarkinavn}/noder:
+    get:
+      tags:
+        - hierarki
+      summary: Returnerer to lister som viser informasjon om et hierarki. Første liste er nivåer, andre liste er hierarkiet.
+      operationId: noderTilHierarki
+      parameters:
+        - name: hierarkinavn
+          in: path
+          description: Hvilket hierarki man skal hente.
+          required: true
+          schema:
+            type: string
+        - name: spraak
+          in: query
+          description: En liste over de språkene som termene skal returneres på. Tjenesten vil hente ut alle termene på norsk. Om du ønsker flere spraak kan du angi det. Eksempelverdier er "nb" og "nn" for henholdsvis bokmål og nynorsk.
+          required: false
+          schema:
+            uniqueItems: true
+            type: array
+            items:
+              type: string
+        - name: Nav-Consumer-Id
+          in: header
+          description: ID'en på systemet som gjør kallet, som regel service brukeren til applikasjonen, for eksempel "srvmedl2".
+          required: true
+          schema:
+            type: string
+        - name: Nav-Call-Id
+          in: header
+          description: En ID som identifiserer kallkjeden som dette kallet er en del av.
+          required: true
+          schema:
+            type: string
+      responses:
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Feil'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetHierarkiNoderResponse'
+components:
+  schemas:
+    Feil:
+      type: object
+      properties:
+        melding:
+          type: string
+    GetKodeverkResponse:
+      required:
+        - kodeverksnavn
+      type: object
+      properties:
+        kodeverksnavn:
+          type: array
+          description: En liste med navnene på alle eksisterende kodeverk.
+          items:
+            type: string
+            description: En liste med navnene på alle eksisterende kodeverk.
+      description: Responsen fra GET /api/v1/kodeverk.
+    GetKodeverkKoderResponse:
+      required:
+        - koder
+      type: object
+      properties:
+        koder:
+          type: array
+          description: En liste med alle de eksisterende kodene som tilhører kodeverket.
+          items:
+            type: string
+            description: En liste med alle de eksisterende kodene som tilhører kodeverket.
+      description: Responsen fra GET /api/v1/kodeverk/{kodeverksnavn}/koder.
+    Beskrivelse:
+      required:
+        - tekst
+        - term
+      type: object
+      properties:
+        term:
+          type: string
+          description: En kort versjon av beskrivelsen, og passer derfor godt til fremvisning i GUI-elementer.
+        tekst:
+          type: string
+          description: En mer utfyllende versjon av beskrivelsen, og derfor passer denne verdien bedre som ledetekster der antall tegn ikke er et like stort problem. Ikke alle beskrivelser har en utfyllende versjon, og i de tilfellene vil kortversjonen gå igjen i dette feltet.
+      description: En beskrivelse er den tekstlige delen av betydningen til en kode, og den kan derfor komme på flere språk. For eksempel, landkoden "NOR" kan ha beskrivelsen "Norge" på norsk, men "Norway" på engelsk. Dersom man ber om å få beskrivelsene på et språk som ikke finnes, så vil bokmålsversjonen brukes isteden.
+    Betydning:
+      required:
+        - beskrivelser
+        - gyldigFra
+        - gyldigTil
+      type: object
+      properties:
+        gyldigFra:
+          type: string
+          description: Når denne betydningen trådte i kraft, på YYYY-MM-DD format.
+          format: date
+        gyldigTil:
+          type: string
+          description: Når denne betydningen slutter å være gyldig, på YYYY-MM-DD format.
+          format: date
+        beskrivelser:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Beskrivelse'
+          description: En samling beskrivelser for denne betydningen, mappet til en språkkode.
+      description: 'En betydning er en tidsbegrenset periode hvor en gitt kode har en reell betydning. For eksempel kunne koden "OSLO" hatt to betydninger: en fra 1048 til 1624, og en fra 1925. Dette er fordi Oslo ble omdøpt til Christiania i en periode.'
+    GetKodeverkKoderBetydningerResponse:
+      required:
+        - betydninger
+      type: object
+      properties:
+        betydninger:
+          type: object
+          additionalProperties:
+            type: array
+            description: Et map med alle eksisterende koder for kodeverket og alle tilhørende betydninger som passer søkekriteriene.
+            items:
+              $ref: '#/components/schemas/Betydning'
+          description: Et map med alle eksisterende koder for kodeverket og alle tilhørende betydninger som passer søkekriteriene.
+      description: Responsen fra GET /api/v1/kodeverk/{kodeverksnavn}/koder/betydninger.
+    GetHierarkiResponse:
+      required:
+        - hierarkinavn
+      type: object
+      properties:
+        hierarkinavn:
+          type: array
+          description: En liste med navnene på alle eksisterende hierarki.
+          items:
+            type: string
+            description: En liste med navnene på alle eksisterende hierarki.
+      description: Responsen fra GET /api/v1/hierarki.
+    GetHierarkiNoderResponse:
+      required:
+        - hierarkinivaaer
+        - noder
+      type: object
+      properties:
+        hierarkinivaaer:
+          type: array
+          description: 'En liste over kodeverk som tilsvarer nivåene i hierarkiet. '
+          items:
+            type: string
+            description: 'En liste over kodeverk som tilsvarer nivåene i hierarkiet. '
+        noder:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Hierarkinode'
+          description: 'Et map med alle de gyldige nodene i et hierarki. '
+      description: Responsen fra GET /api/v1/hierarki/{hierarkinavn}/noder/.
+    Hierarkinode:
+      required:
+        - kode
+        - undernoder
+      type: object
+      properties:
+        kode:
+          type: string
+          description: Kode er navn på kode i et kodeverk og vil være navnet til en node.
+        termer:
+          type: object
+          additionalProperties:
+            type: string
+            description: Termene er er beskrivelsen for noden, mappet til en språkkode.
+          description: Termene er er beskrivelsen for noden, mappet til en språkkode.
+        undernoder:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Hierarkinode'
+          description: En samling av undernoder til en node. Koden er navnet til noden.
+          readOnly: true
+      description: 'Et hierarki inneholder kodeverk og koder som er fremstilt på en hierarkisk måte. For eksempel, hierarkiet Geografi, inneholder flere nivåer av kodeverk som inneholder koder. '

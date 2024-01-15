@@ -1,8 +1,7 @@
-package no.nav.soknad.innsending.rest
+package no.nav.soknad.innsending.rest.fyllut
 
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.dto.RestErrorResponseDto
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
@@ -71,7 +70,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val skjemaDto = SkjemaDtoTestBuilder(vedleggsListe = listOf(t7Vedlegg, n6Vedlegg)).build()
 
 		// Når
-		val opprettetSoknadResponse = api?.opprettSoknad(skjemaDto)
+		val opprettetSoknadResponse = api?.createSoknad(skjemaDto)
 
 		// Så
 		assertTrue(opprettetSoknadResponse != null)
@@ -86,7 +85,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val skjemaDto = SkjemaDtoTestBuilder().build()
 
 		// Når
-		val opprettetSoknadResponse = api?.opprettSoknad(skjemaDto)
+		val opprettetSoknadResponse = api?.createSoknad(skjemaDto)
 		val innsendingsId = opprettetSoknadResponse?.body?.innsendingsId!!
 
 		api?.utfyltSoknad(innsendingsId, skjemaDto)
@@ -270,7 +269,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val skjemaDtoWithVedlegg = skjemaDto.copy(vedleggsListe = listOf(vedlegg))
 
 		// When
-		val opprettSoknadResponse = api?.opprettSoknad(skjemaDto)
+		val opprettSoknadResponse = api?.createSoknad(skjemaDto)
 		val innsendingsId = opprettSoknadResponse?.body?.innsendingsId!!
 
 		// Complete søknad in fyllUt
@@ -335,7 +334,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val utfyltResponse = api?.utfyltSoknad(innsendingsId, fromFyllUt)
 
 		// Add N6 vedlegg i send-inn
-		val leggTilVedleggResponse = api?.leggTilVedlegg(innsendingsId, fromSendInn)
+		val leggTilVedleggResponse = api?.addVedlegg(innsendingsId, fromSendInn)
 
 		// Go back to fyllUt and remove the T1 vedlegg. Keep N6 from send-inn, but also add one from fyllUt with different title
 		val updatedUtfyltResponse = api?.utfyltSoknad(innsendingsId, updatedFyllUt)
@@ -389,7 +388,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		// Når
-		api?.oppdaterSoknad(innsendingsId, fraFyllUt)
+		api?.updateSoknad(innsendingsId, fraFyllUt)
 		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
 
 		val filer = oppdatertSoknad.vedleggsListe.flatMap {
@@ -423,7 +422,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr, spraak = nyttSpraak).build()
 
 		// Når
-		val response = api?.oppdaterSoknad(innsendingsId, fraFyllUt)
+		val response = api?.updateSoknad(innsendingsId, fraFyllUt)
 		val oppdatertSoknad = response?.body!!
 
 		// Så
@@ -484,7 +483,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		// Når
-		val response = api?.hentSoknad(innsendingsId)
+		val response = api?.getSoknad(innsendingsId)
 
 		val opprettetSoknad = response?.body!!
 
@@ -521,7 +520,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		// Når
-		val response = api?.slettSoknad(innsendingsId)
+		val response = api?.deleteSoknad(innsendingsId)
 
 		// Så
 		assertTrue(response != null)
@@ -540,7 +539,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		// Når
-		val response = api?.opprettSoknadRedirect(fraFyllUt, false)
+		val response = api?.createSoknadRedirect(fraFyllUt, false)
 
 		// Så
 		assertTrue(response != null)
@@ -557,7 +556,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		// Når
-		val response = api?.opprettSoknad(fraFyllUt, true)
+		val response = api?.createSoknad(fraFyllUt, true)
 
 		// Så
 		assertTrue(response != null)

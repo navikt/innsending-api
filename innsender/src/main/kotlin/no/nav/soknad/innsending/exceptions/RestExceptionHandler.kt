@@ -3,14 +3,15 @@ package no.nav.soknad.innsending.exceptions
 import jakarta.servlet.http.HttpServletRequest
 import no.nav.security.token.support.core.exceptions.JwtTokenMissingException
 import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
-import no.nav.soknad.innsending.dto.RestErrorResponseDto
+import no.nav.soknad.innsending.model.RestErrorResponseDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
-import java.time.LocalDateTime
+import org.springframework.web.multipart.MultipartException
+import java.time.OffsetDateTime
 
 
 @ControllerAdvice
@@ -24,9 +25,9 @@ class RestExceptionHandler {
 		logger.warn(exception.message, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
-				exception.message,
-				LocalDateTime.now(),
-				exception.errorCode.code
+				message = exception.message,
+				timestamp = OffsetDateTime.now(),
+				errorCode = exception.errorCode.code
 			), HttpStatus.NOT_FOUND
 		)
 	}
@@ -37,9 +38,9 @@ class RestExceptionHandler {
 		logger.error(exception.message, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
-				exception.message,
-				LocalDateTime.now(),
-				exception.errorCode.code
+				message = exception.message,
+				timestamp = OffsetDateTime.now(),
+				errorCode = exception.errorCode.code
 			), HttpStatus.INTERNAL_SERVER_ERROR
 		)
 	}
@@ -50,9 +51,9 @@ class RestExceptionHandler {
 		logger.warn(exception.message, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
-				exception.message,
-				LocalDateTime.now(),
-				exception.errorCode.code
+				message = exception.message,
+				timestamp = OffsetDateTime.now(),
+				errorCode = exception.errorCode.code
 			), HttpStatus.BAD_REQUEST
 		)
 	}
@@ -68,7 +69,7 @@ class RestExceptionHandler {
 		return ResponseEntity(
 			RestErrorResponseDto(
 				message = "Autentisering feilet",
-				timeStamp = LocalDateTime.now(),
+				timestamp = OffsetDateTime.now(),
 				errorCode = "errorCode.unauthorized"
 			), HttpStatus.UNAUTHORIZED
 		)
@@ -80,9 +81,24 @@ class RestExceptionHandler {
 		logger.error(exception.message, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
-				exception.message ?: "Noe gikk galt, prøv igjen senere",
-				LocalDateTime.now(),
-				ErrorCode.GENERAL_ERROR.code,
+				message = exception.message ?: "Noe gikk galt, prøv igjen senere",
+				timestamp = OffsetDateTime.now(),
+				errorCode = ErrorCode.GENERAL_ERROR.code,
+			), HttpStatus.INTERNAL_SERVER_ERROR
+		)
+	}
+
+	// When the client aborts there is a multipart exception caused by ClientAbortException. We don't want to log this as an error.
+	// Causes could be that the user closes the browser, loses internet connection or that the upload times out.
+	@ExceptionHandler
+	fun multipartException(exception: MultipartException): ResponseEntity<RestErrorResponseDto> {
+		logger.warn(exception.message, exception)
+
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = exception.message ?: "Noe gikk galt, prøv igjen senere",
+				timestamp = OffsetDateTime.now(),
+				errorCode = ErrorCode.GENERAL_ERROR.code,
 			), HttpStatus.INTERNAL_SERVER_ERROR
 		)
 	}

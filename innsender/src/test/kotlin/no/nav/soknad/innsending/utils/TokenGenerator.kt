@@ -26,7 +26,7 @@ class TokenGenerator(
 				subject = pid,
 				typeHeader = JOSEObjectType.JWT.type,
 				audience = listOf(audience),
-				claims = mapOf("acr" to "Level4", "pid" to pid),
+				claims = mapOf("acr" to "idporten-loa-high", "pid" to pid),
 				expiry = expiry.toLong()
 			)
 		).serialize()
