@@ -37,11 +37,11 @@ fun fiksSkjemanr(skjemanr: String): String {
 	val tsoSkjemanr = "NAV 11-12.12"
 	if (!skjemanr.startsWith(tsoSkjemanr)) return skjemanr
 	return when (skjemanr) {
-		tsoSkjemanr + " reise" -> tsoSkjemanr + "R"
-		tsoSkjemanr + " - pass av barn" -> tsoSkjemanr + "B"
-		tsoSkjemanr + " - bolig og overnatting" -> tsoSkjemanr + "O"
-		tsoSkjemanr + " - læremidler" -> tsoSkjemanr + "L"
-		tsoSkjemanr + " - flytting" -> tsoSkjemanr + "F"
+		tsoSkjemanr + " reise" -> "NAV 11-12.21B"
+		tsoSkjemanr + " - pass av barn" -> "NAV 11-12.15B"
+		tsoSkjemanr + " - bolig og overnatting" -> "NAV 11-12.15B"
+		tsoSkjemanr + " - læremidler" -> "NAV 11-12.16B"
+		tsoSkjemanr + " - flytting" -> "NAV 11-12.23B"
 		else -> tsoSkjemanr
 	}
 }

@@ -21,8 +21,8 @@ import no.nav.soknad.innsending.util.mapping.tilleggsstonad.convertToJson
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.json2Xml
 import no.nav.soknad.innsending.util.models.erEttersending
 import no.nav.soknad.innsending.util.models.hovedDokument
-import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
+import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
@@ -61,6 +61,15 @@ class InnsendingService(
 			"NAV 11-12.12O",
 			"NAV 11-12.12L",
 			"NAV 11-12.12F",
+			"NAV 11-12.15B", // Støtte til Barnepass
+			"NAV 11-12.16B", // Støtte til Læremidler
+			"NAV 11-12.17B", // Støtte til samling
+			"NAV 11-12.18B", // Støtte til ved oppstart, avslutning eller hjemreiser
+			"NAV 11-12.19B", // Støtte til bolig og overnatting
+			"NAV 11-12.20B", // Støtte til skolemateriell
+			"NAV 11-12.21B", // Støtte til daglig reise
+			"NAV 11-12.22B", // Støtte til reise for å komme i arbeid
+			"NAV 11-12.23B", // Støtte til flytting
 		)
 
 	@Transactional
