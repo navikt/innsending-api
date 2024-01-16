@@ -250,9 +250,10 @@ class SoknadServiceTest : ApplicationTest() {
 
 	@Test
 	fun opprettSoknadForettersendingAvVedleggGittArkivertSoknadTest_MedUkjentSkjemanr() {
+		val vedleggsnr = "NAV 08-09.10"
 		val arkiverteVedlegg: List<InnsendtVedleggDto> = listOf(
 			InnsendtVedleggDto(
-				vedleggsnr = "NAV 08-09.10",
+				vedleggsnr = vedleggsnr,
 				tittel = "Søknad om å beholde sykepenger under opphold i utlandet"
 			)
 		)
@@ -268,7 +269,9 @@ class SoknadServiceTest : ApplicationTest() {
 		)
 
 		val opprettEttersending =
-			OpprettEttersendingTestBuilder().vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().build())).build()
+			OpprettEttersendingTestBuilder().vedleggsListe(
+				listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(vedleggsnr).build())
+			).build()
 
 		val ettersending = ettersendingService.createEttersendingFromArchivedSoknad(
 			brukerId = "1234",
@@ -278,7 +281,12 @@ class SoknadServiceTest : ApplicationTest() {
 		)
 
 		assertNotNull(ettersending)
-		assertEquals(2, ettersending.vedleggsListe.size)
+		assertEquals(1, ettersending.vedleggsListe.size)
+
+		val vedlegg = ettersending.vedleggsListe.first()
+		assertEquals(vedleggsnr, vedlegg.vedleggsnr)
+		assertNotNull(vedlegg.innsendtdato)
+		assertEquals(OpplastingsStatusDto.ikkeValgt, vedlegg.opplastingsStatus)
 
 	}
 

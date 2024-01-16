@@ -179,33 +179,24 @@ class EttersendingService(
 			val ettersendingDb = saveEttersending(
 				brukerId = brukerId,
 				ettersendingsId = existingSoknad.ettersendingsId ?: existingSoknad.innsendingsId!!,
-				tittel = existingSoknad.tittel,
-				skjemanr = existingSoknad.skjemanr,
-				tema = existingSoknad.tema,
-				sprak = existingSoknad.spraak!!,
+				tittel = ettersending.tittel ?: existingSoknad.tittel,
+				skjemanr = ettersending.skjemanr,
+				tema = ettersending.tema,
+				sprak = ettersending.sprak,
 				forsteInnsendingsDato = existingSoknad.forsteInnsendingsDato ?: existingSoknad.innsendtDato
 				?: existingSoknad.endretDato ?: existingSoknad.opprettetDato,
 				fristForEttersendelse = existingSoknad.fristForEttersendelse
 			)
 
-			val existingSoknadVedleggsNrList =
-				existingSoknad.vedleggsListe.filter { !(it.erHoveddokument || it.vedleggsnr == KVITTERINGS_NR) }
-					.map { it.vedleggsnr }
-
-			val newVedleggsListe =
-				ettersending.vedleggsListe?.filter { !existingSoknadVedleggsNrList.contains(it.vedleggsnr) }.orEmpty()
-
-			val vedleggDbDataListe =
-				vedleggService.saveVedlegg(
+			val combinedVedleggList =
+				vedleggService.saveVedleggWithExistingData(
 					soknadsId = ettersendingDb.id!!,
-					vedleggList = newVedleggsListe
+					vedleggList = ettersending.vedleggsListe ?: emptyList(),
+					existingSoknad = existingSoknad
 				)
 
-			val innsendtDbDataListe =
-				vedleggService.saveVedlegg(ettersendingDb, existingSoknad.vedleggsListe)
-
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
-			return lagDokumentSoknadDto(ettersendingDb, vedleggDbDataListe + innsendtDbDataListe)
+			return lagDokumentSoknadDto(ettersendingDb, combinedVedleggList)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, existingSoknad.tema)
 			throw e
@@ -222,38 +213,28 @@ class EttersendingService(
 		forsteInnsendingsDato: OffsetDateTime?
 	): DokumentSoknadDto {
 		val operation = InnsenderOperation.OPPRETT.name
-		val sprak = finnSpraakFraInput(ettersending.sprak)
 
 		logger.info("Oppretter ettersending fra arkivert søknad fra ${archivedSoknad.innsendingsId} for skjemanr=${archivedSoknad.skjemanr}")
 		try {
 			val ettersendingDb = saveEttersending(
 				brukerId = brukerId,
 				ettersendingsId = archivedSoknad.innsendingsId,
-				tittel = archivedSoknad.tittel,
-				skjemanr = archivedSoknad.skjemanr,
-				tema = archivedSoknad.tema,
-				sprak = sprak,
+				tittel = ettersending.tittel ?: archivedSoknad.tittel,
+				skjemanr = ettersending.skjemanr,
+				tema = ettersending.tema,
+				sprak = ettersending.sprak,
 				forsteInnsendingsDato = forsteInnsendingsDato ?: archivedSoknad.innsendtDato
 			)
 
-			val archivedVedleggsnrList =
-				archivedSoknad.innsendtVedleggDtos.filter { !(it.vedleggsnr == archivedSoknad.skjemanr || it.vedleggsnr == KVITTERINGS_NR) }
-					.map { it.vedleggsnr }
-			val newVedleggsListe =
-				ettersending.vedleggsListe?.filter { !archivedVedleggsnrList.contains(it.vedleggsnr) }.orEmpty()
-
-			val archivedVedleggDbList = vedleggService.saveVedlegg(
-				soknadDbData = ettersendingDb,
-				arkivertSoknad = archivedSoknad
-			)
-
-			val newVedleggDbList = vedleggService.saveVedlegg(
-				soknadsId = ettersendingDb.id!!,
-				vedleggList = newVedleggsListe,
-			)
+			val combinedVedleggList =
+				vedleggService.saveVedleggWithArchivedData(
+					soknadsId = ettersendingDb.id!!,
+					vedleggList = ettersending.vedleggsListe ?: emptyList(),
+					archivedSoknad = archivedSoknad
+				)
 
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
-			return lagDokumentSoknadDto(ettersendingDb, newVedleggDbList + archivedVedleggDbList)
+			return lagDokumentSoknadDto(ettersendingDb, combinedVedleggList)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, archivedSoknad.tema)
 			throw e
