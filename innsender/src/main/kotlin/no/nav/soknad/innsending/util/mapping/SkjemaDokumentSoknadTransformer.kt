@@ -80,7 +80,7 @@ class SkjemaDokumentSoknadTransformer {
 			uuid = null,
 			mimetype = skjemaDokumentDto.mimetype,
 			document = skjemaDokumentDto.document,
-			skjemaurl = null,
+			skjemaurl = skjemaDokumentDto.vedleggsurl,
 			innsendtdato = null,
 			formioId = skjemaDokumentDto.formioId,
 		)

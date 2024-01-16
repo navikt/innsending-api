@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
 class NameTransformerTest {
+
 	@Test
 	fun `Should return null if names list is empty`() {
 		// Given

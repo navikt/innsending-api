@@ -1619,6 +1619,8 @@ components:
           $ref: "#/components/schemas/PropertyNavn"
         formioId:
           $ref: "#/components/schemas/FormioId"
+        vedleggsurl:
+          $ref: "#/components/schemas/Vedleggsurl"
 
     SkjemaDto:
       type: object
