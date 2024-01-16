@@ -5,7 +5,7 @@ import java.time.format.DateTimeFormatter
 
 object Date {
 	fun formatToLocalDate(date: LocalDateTime): String {
-		val formatter = DateTimeFormatter.ofPattern("YYYY-MM-dd")
+		val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 		return date.format(formatter)
 	}
 
