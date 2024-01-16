@@ -368,9 +368,9 @@ class InnsendingServiceTest : ApplicationTest() {
 				opprettetSoknad,
 				innsendingService
 			)
-		Assertions.assertTrue(kvitteringsDto.hoveddokumentRef != null)
-		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
-		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+		assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
+		assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
 	}
 
 }
