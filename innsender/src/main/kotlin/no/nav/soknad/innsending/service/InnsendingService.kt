@@ -66,10 +66,17 @@ class InnsendingService(
 			"NAV 11-12.17B", // Støtte til samling
 			"NAV 11-12.18B", // Støtte til ved oppstart, avslutning eller hjemreiser
 			"NAV 11-12.19B", // Støtte til bolig og overnatting
-			"NAV 11-12.20B", // Støtte til skolemateriell
 			"NAV 11-12.21B", // Støtte til daglig reise
 			"NAV 11-12.22B", // Støtte til reise for å komme i arbeid
 			"NAV 11-12.23B", // Støtte til flytting
+			"NAV 11-12.15 B", // Støtte til Barnepass
+			"NAV 11-12.16 B", // Støtte til Læremidler
+			"NAV 11-12.17 B", // Støtte til samling
+			"NAV 11-12.18 B", // Støtte til ved oppstart, avslutning eller hjemreiser
+			"NAV 11-12.19 B", // Støtte til bolig og overnatting
+			"NAV 11-12.21 B", // Støtte til daglig reise
+			"NAV 11-12.22 B", // Støtte til reise for å komme i arbeid
+			"NAV 11-12.23 B", // Støtte til flytting
 		)
 
 	@Transactional
