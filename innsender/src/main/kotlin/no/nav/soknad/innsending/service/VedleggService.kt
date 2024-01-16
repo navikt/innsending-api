@@ -202,15 +202,29 @@ class VedleggService(
 	fun lagreNyHoveddokumentVariant(soknadDto: DokumentSoknadDto, mimetype: Mimetype): VedleggDto {
 
 		// Lagre vedlegget i databasen
-		val vedleggDbData = saveVedlegg(
-			soknadsId = soknadDto.id!!,
-			spraak = soknadDto.spraak!!,
-			tittel = soknadDto.tittel,
-			skjemanr = soknadDto.skjemanr,
-			mimetype = mimetype,
-			erHoveddokument = true,
-			erVariant = true
-		)
+		val vedleggDbData =
+			repo.lagreVedlegg(
+				VedleggDbData(
+					null,
+					soknadDto.id!!,
+					OpplastingsStatus.IKKE_VALGT,
+					true,
+					ervariant = true,
+					false,
+					erpakrevd = true,
+					vedleggsnr = soknadDto.skjemanr,
+					tittel = soknadDto.tittel,
+					label = soknadDto.tittel,
+					beskrivelse = "",
+					mimetype = mimetype.value,
+					uuid = UUID.randomUUID().toString(),
+					opprettetdato = LocalDateTime.now(),
+					endretdato = LocalDateTime.now(),
+					innsendtdato = null,
+					vedleggsurl = null,
+					formioid = null
+				)
+			)
 
 		// Oppdater soknadens sist endret dato
 		repo.oppdaterEndretDato(soknadDto.id!!)

@@ -48,7 +48,7 @@ class FyllutRestApi(
 			brukerId
 		)
 
-		soknadService.loggWarningVedEksisterendeSoknad(brukerId, fiksSkjemanr(skjemaDto.skjemanr), SoknadType.soknad)
+		soknadService.loggWarningVedEksisterendeSoknad(brukerId, fiksSkjemanr(skjemaDto.skjemanr))
 
 		val opprettetSoknad = soknadService.opprettNySoknad(
 			SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
