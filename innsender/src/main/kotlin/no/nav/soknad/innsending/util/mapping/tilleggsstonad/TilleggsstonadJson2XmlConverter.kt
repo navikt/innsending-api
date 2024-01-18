@@ -122,8 +122,8 @@ fun convertBostotte(tilleggstonadJsonObj: JsonApplication): Boutgifter? {
 		boutgifterAktivitetsted = bostottesoknad.boutgifterPaAktivitetsadressen,
 
 		harBoutgifterVedSamling = bostottesoknad.hvilkeBoutgifterSokerDuOmAFaDekket.contains("boutgifterIForbindelseMedSamling"),
-		samlingsperiode = if (bostottesoknad.bostotteIForbindelseMedSamling == null) null else {
-			bostottesoknad.bostotteIForbindelseMedSamling
+		samlingsperiode = if (bostottesoknad.bostotteIForbindelseMedSamling?.periodeForSamling == null) null else {
+			bostottesoknad.bostotteIForbindelseMedSamling.periodeForSamling
 				.map {
 					Periode(
 						fom = convertToDateStringWithTimeZone(it.startdatoDdMmAaaa),

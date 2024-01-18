@@ -560,12 +560,14 @@ class TilleggsstonadJson2XmlConverterKtTest {
 			.mottarDuBostotteFraKommunen("Ja")
 			.bostottebelop(3500)
 			.bostotteIForbindelseMedSamling(
-				listOf(
-					JsonPeriode(startdatoDdMmAaaa = "2023-12-02", sluttdatoDdMmAaaa = "2023-12-20"),
-					JsonPeriode(startdatoDdMmAaaa = "2024-01-02", sluttdatoDdMmAaaa = "2024-01-20"),
-					JsonPeriode(startdatoDdMmAaaa = "2024-02-01", sluttdatoDdMmAaaa = "2024-02-20"),
-					JsonPeriode(startdatoDdMmAaaa = "2024-06-01", sluttdatoDdMmAaaa = "2024-06-20")
-				),
+				BostotteIForbindelseMedSamling(
+					periodeForSamling = listOf(
+						JsonPeriode(startdatoDdMmAaaa = "2023-12-02", sluttdatoDdMmAaaa = "2023-12-20"),
+						JsonPeriode(startdatoDdMmAaaa = "2024-01-02", sluttdatoDdMmAaaa = "2024-01-20"),
+						JsonPeriode(startdatoDdMmAaaa = "2024-02-01", sluttdatoDdMmAaaa = "2024-02-20"),
+						JsonPeriode(startdatoDdMmAaaa = "2024-06-01", sluttdatoDdMmAaaa = "2024-06-20")
+					)
+				)
 			)
 			.erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet("Ja")
 			.boutgifterPaAktivitetsadressen(10000)

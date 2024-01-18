@@ -149,7 +149,7 @@ data class Application(
 
 	// Boutgifter
 	val hvilkeBoutgifterSokerDuOmAFaDekket: String? = null, // "fasteBoutgifter" | "boutgifterIForbindelseMedSamling"
-	val bostotteIForbindelseMedSamling: List<JsonPeriode>? = null,
+	val bostotteIForbindelseMedSamling: BostotteIForbindelseMedSamling? = null,
 
 	val mottarDuBostotteFraKommunen: String? = null, // "Ja" | "Nei"
 	var hvorMyeBostotteMottarDu: Int? = null, // Hvis mottarDuBostotteFraKommunen = Ja
@@ -169,6 +169,10 @@ data class Application(
 	val dokumentasjonAvReiseutgifter: String? = null,
 	val dokumentasjonAvPlassIbarnehageEllerSkolefritidsordningSfo3: String? = null,
 	val dokumentasjonAvUtgifterTilDrosje3: String? = null,
+)
+
+data class BostotteIForbindelseMedSamling(
+	val periodeForSamling: List<JsonPeriode>
 )
 
 data class HvilkeAdresserHarDuBoutgifterPa(
@@ -333,3 +337,4 @@ data class Metadata(
 	val pathName: String? = null,
 	val onLine: Boolean? = null,
 )
+

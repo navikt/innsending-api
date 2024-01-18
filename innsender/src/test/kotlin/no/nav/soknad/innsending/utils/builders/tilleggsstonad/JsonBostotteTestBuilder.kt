@@ -1,9 +1,6 @@
 package no.nav.soknad.innsending.utils.builders.tilleggsstonad
 
-import no.nav.soknad.innsending.util.mapping.tilleggsstonad.HvilkeAdresserHarDuBoutgifterPa
-import no.nav.soknad.innsending.util.mapping.tilleggsstonad.JsonBostottesoknad
-import no.nav.soknad.innsending.util.mapping.tilleggsstonad.JsonPeriode
-import no.nav.soknad.innsending.util.mapping.tilleggsstonad.JsonRettighetstyper
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.*
 import no.nav.soknad.innsending.utils.Date
 import java.time.LocalDateTime
 
@@ -13,7 +10,7 @@ class JsonBostotteTestBuilder {
 	private var tildato: String = Date.formatToLocalDate(LocalDateTime.now().plusMonths(3))
 	private var hvilkeBoutgifterSokerDuOmAFaDekket: String =
 		"boutgifterIForbindelseMedSamling" // alternativt "fasteBoutgifter"
-	private var bostotteIForbindelseMedSamling: List<JsonPeriode>? = null
+	private var bostotteIForbindelseMedSamling: BostotteIForbindelseMedSamling? = null
 	private var mottarDuBostotteFraKommunen: String = "Nei"
 	private var hvilkeAdresserHarDuBoutgifterPa: HvilkeAdresserHarDuBoutgifterPa = HvilkeAdresserHarDuBoutgifterPa(
 		boutgifterPaAktivitetsadressen = "true",
@@ -31,7 +28,7 @@ class JsonBostotteTestBuilder {
 	fun hvilkeBoutgifterSokerDuOmAFaDekket(hvilkeBoutgifterSokerDuOmAFaDekket: String) =
 		apply { this.hvilkeBoutgifterSokerDuOmAFaDekket = hvilkeBoutgifterSokerDuOmAFaDekket }
 
-	fun bostotteIForbindelseMedSamling(bostotteIForbindelseMedSamling: List<JsonPeriode>?) =
+	fun bostotteIForbindelseMedSamling(bostotteIForbindelseMedSamling: BostotteIForbindelseMedSamling?) =
 		apply { this.bostotteIForbindelseMedSamling = bostotteIForbindelseMedSamling }
 
 	fun mottarDuBostotteFraKommunen(mottarDuBostotteFraKommunen: String) =

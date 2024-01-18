@@ -203,50 +203,52 @@ class InnsendingService(
 	}
 
 	private fun addXmlDokumentvariantToSoknad(soknadDto: DokumentSoknadDto): DokumentSoknadDto {
+		try {
+			val jsonVariant = soknadDto.hoveddokumentVariant
+			if (jsonVariant == null) {
+				logger.warn("${soknadDto.innsendingsId!!}: Json variant av hoveddokument mangler")
+				throw BackendErrorException("${soknadDto.innsendingsId}: json fil av søknaden mangler")
+			}
 
-		val jsonVariant = soknadDto.hoveddokumentVariant
-		if (jsonVariant == null) {
-			logger.warn("${soknadDto.innsendingsId!!}: Json variant av hoveddokument mangler")
-			throw BackendErrorException("${soknadDto.innsendingsId}: json fil av søknaden mangler")
-		}
-
-		// Create dokumentDto for xml variant of main document
-		val xmlDocumentVariant = vedleggService.lagreNyHoveddokumentVariant(soknadDto, Mimetype.applicationSlashXml)
-		logger.info("${soknadDto.innsendingsId}: Lagt til xmlVedlegg på vedleggsId = ${xmlDocumentVariant.id}")
-		//
-		val xmlFile = json2Xml(
-			soknadDto = soknadDto,
-			tilleggstonadJsonObj = convertToJson(
+			// Create dokumentDto for xml variant of main document
+			val xmlDocumentVariant = vedleggService.lagreNyHoveddokumentVariant(soknadDto, Mimetype.applicationSlashXml)
+			logger.info("${soknadDto.innsendingsId}: Lagt til xmlVedlegg på vedleggsId = ${xmlDocumentVariant.id}")
+			//
+			val xmlFile = json2Xml(
 				soknadDto = soknadDto,
-				json = filService.hentFiler(
+				tilleggstonadJsonObj = convertToJson(
 					soknadDto = soknadDto,
-					innsendingsId = soknadDto.innsendingsId!!,
-					vedleggsId = jsonVariant.id!!,
-					medFil = true
-				).first().data
+					json = filService.hentFiler(
+						soknadDto = soknadDto,
+						innsendingsId = soknadDto.innsendingsId!!,
+						vedleggsId = jsonVariant.id!!,
+						medFil = true
+					).first().data
+				)
 			)
-		)
-		// Persist created xml file
-		filService.lagreFil(
-			soknadService.hentSoknad(soknadDto.innsendingsId!!),
-			FilDto(
-				vedleggsid = xmlDocumentVariant.id!!,
-				filnavn = soknadDto.skjemanr + ".xml",
-				mimetype = Mimetype.applicationSlashXml,
-				storrelse = xmlFile.size,
-				data = xmlFile,
-				opprettetdato = OffsetDateTime.now()
+			// Persist created xml file
+			filService.lagreFil(
+				soknadService.hentSoknad(soknadDto.innsendingsId!!),
+				FilDto(
+					vedleggsid = xmlDocumentVariant.id!!,
+					filnavn = soknadDto.skjemanr + ".xml",
+					mimetype = Mimetype.applicationSlashXml,
+					storrelse = xmlFile.size,
+					data = xmlFile,
+					opprettetdato = OffsetDateTime.now()
+				)
 			)
-		)
-		// Update state of json variant
-		vedleggService.endreVedleggStatus(
-			soknadDto,
-			jsonVariant.id!!,
-			OpplastingsStatusDto.sendesIkke
-		)
+			// Update state of json variant
+			vedleggService.endreVedleggStatus(
+				soknadDto,
+				jsonVariant.id!!,
+				OpplastingsStatusDto.sendesIkke
+			)
 
-		return soknadService.hentSoknad(soknadDto.innsendingsId!!)
-
+			return soknadService.hentSoknad(soknadDto.innsendingsId!!)
+		} catch (ex: Exception) {
+			throw BackendErrorException("${soknadDto.innsendingsId}: Konvertering av JSON til XML feilet", ex)
+		}
 	}
 
 

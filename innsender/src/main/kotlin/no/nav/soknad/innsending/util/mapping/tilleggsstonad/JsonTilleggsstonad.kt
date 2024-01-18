@@ -68,7 +68,7 @@ data class JsonFlytteutgifter(
 data class JsonBostottesoknad(
 	val aktivitetsperiode: JsonPeriode,
 	val hvilkeBoutgifterSokerDuOmAFaDekket: String, // "fasteBoutgifter" | "boutgifterIForbindelseMedSamling"
-	val bostotteIForbindelseMedSamling: List<JsonPeriode>?,
+	val bostotteIForbindelseMedSamling: BostotteIForbindelseMedSamling?,
 
 	val mottarDuBostotteFraKommunen: String = "Nei", // "Ja" | "Nei"
 	val bostottebelop: Int?,
