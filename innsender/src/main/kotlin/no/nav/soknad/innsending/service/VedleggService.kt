@@ -321,7 +321,7 @@ class VedleggService(
 		}
 		val delme = repo.hentVedlegg(vedleggsId)
 		if (delme.status != mapTilDbOpplastingsStatus(opplastingsStatus)) {
-			logger.warn("${soknadDto.innsendingsId}: Oppdatering av status til $opplastingsStatus for vedlegg $vedleggsId feilet, status på vedlegget er = ${delme.status}")
+			logger.warn("${soknadDto.innsendingsId}: Oppdatering av status til ${mapTilDbOpplastingsStatus(opplastingsStatus)} for vedlegg $vedleggsId feilet, status på vedlegget er = ${delme.status}")
 		}
 	}
 
