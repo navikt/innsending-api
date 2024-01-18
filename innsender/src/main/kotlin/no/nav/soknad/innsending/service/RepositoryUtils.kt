@@ -223,7 +223,7 @@ class RepositoryUtils(
 		innsendingsId: String, vedleggsId: Long, opplastingsStatus: OpplastingsStatus,
 		endretDato: LocalDateTime, innsendtDato: LocalDateTime?
 	): Int = try {
-		logger.info("oppdaterVedleggStatusOgInnsendtdato: vedlegg=$vedleggsId, innsendtdato=$innsendtDato ")
+		logger.info("oppdaterVedleggStatusOgInnsendtdato: vedlegg=$vedleggsId, innsendtdato=$innsendtDato, opplastingsStatus=$opplastingsStatus")
 		val raderEndret = vedleggRepository.updateStatusAndInnsendtdato(
 			id = vedleggsId, status = opplastingsStatus, endretdato = endretDato, innsendtdato = innsendtDato
 		)

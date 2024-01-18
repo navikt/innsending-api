@@ -319,6 +319,10 @@ class VedleggService(
 		if (oppdatertVedlegg.toLong() != vedleggsId) {
 			logger.debug("${soknadDto.innsendingsId}: Oppdatering av status = $opplastingsStatus for vedlegg $vedleggsId feilet")
 		}
+		val delme = repo.hentVedlegg(vedleggsId)
+		if (delme.status != mapTilDbOpplastingsStatus(opplastingsStatus)) {
+			logger.warn("${soknadDto.innsendingsId}: Oppdatering av status = $opplastingsStatus for vedlegg $vedleggsId feilet")
+		}
 	}
 
 
