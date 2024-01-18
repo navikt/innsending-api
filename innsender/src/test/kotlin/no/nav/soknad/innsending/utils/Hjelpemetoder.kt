@@ -4,6 +4,7 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.service.SoknadServiceTest
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.BEARER
+import no.nav.soknad.innsending.util.mapping.mapTilMimetype
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import java.io.ByteArrayOutputStream
@@ -109,7 +110,7 @@ class Hjelpemetoder {
 				vedleggsnr,
 				"Beskrivelse",
 				UUID.randomUUID().toString(),
-				Mimetype.applicationSlashPdf,
+				mapTilMimetype(mimeType),
 				fil,
 				if (erHoveddokument) "https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/1b736c8e28abcb80f654166318f130e5ed2a0aad.pdf" else null,
 				formioId = formioId

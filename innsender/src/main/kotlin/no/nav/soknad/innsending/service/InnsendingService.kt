@@ -104,7 +104,7 @@ class InnsendingService(
 			}
 		}
 
-		// Finn alle vedlegg med korrekt status i forhold til hvem som skal sendes inn
+		// Finn alle vedlegg med korrekt status i forhold til hva som skal sendes inn
 		val alleVedlegg: List<VedleggDto> = filService.ferdigstillVedleggsFiler(soknadDto)
 
 		val opplastedeVedlegg = alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
@@ -195,8 +195,11 @@ class InnsendingService(
 	}
 
 	private fun isTilleggsstonad(soknadDto: DokumentSoknadDto): Boolean {
-		return tilleggsstonadSkjema.contains(soknadDto.skjemanr)
-			&& ("TSO".equals(soknadDto.tema, true) || "TSR".equals(soknadDto.tema, true))
+		if ("TSO".equals(soknadDto.tema, true) || "TSR".equals(soknadDto.tema, true)) {
+			logger.debug("${soknadDto.innsendingsId}: Skal sjekke om generering av XML for Tilleggstonad med skjemanummer ${soknadDto.skjemanr}")
+			return tilleggsstonadSkjema.contains(soknadDto.skjemanr)
+		}
+		return false
 	}
 
 	private fun addXmlDokumentvariantToSoknad(soknadDto: DokumentSoknadDto): DokumentSoknadDto {

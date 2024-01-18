@@ -504,12 +504,18 @@ class TilleggsstonadJson2XmlConverterKtTest {
 		val boStotte = JsonBostotteTestBuilder()
 			.fradato("2023-12-02")
 			.tildato("2024-06-20")
-			.boutgiftType("Jeg søker om å få dekket faste boutgifter")
+			.hvilkeBoutgifterSokerDuOmAFaDekket("fasteBoutgifter")
+			.hvilkeAdresserHarDuBoutgifterPa(
+				HvilkeAdresserHarDuBoutgifterPa(
+					boutgifterPaAktivitetsadressen = "false",
+					boutgifterPaHjemstedet = "true",
+					boutgifterPaHjemstedetMittSomHarOpphortIForbindelseMedAktiviteten = "false"
+				)
+			)
 			.boutgifterPaHjemstedetMitt(5000)
+			.boutgifterPaAktivitetsadressen(0)
 			.erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet("Nei")
 			.mottarDuBostotteFraKommunen("Nei")
-			.hvilkeAdresserHarDuBoutgifterPa(listOf("Kongens gate 10, 3701 Skien"))
-			.boutgifterPaAktivitetsadressen(8000)
 			.build()
 		val tilleggsstonad =
 			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = boStotte).build()
@@ -533,7 +539,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 		assertTrue(xmlString.contains("<harFasteBoutgifter>true</harFasteBoutgifter>"))
 		assertTrue(xmlString.contains("<mottarBostoette>false</mottarBostoette>"))
 		assertTrue(xmlString.contains("<boutgifterHjemstedAktuell>5000</boutgifterHjemstedAktuell>"))
-		assertTrue(xmlString.contains("<boutgifterAktivitetsted>8000</boutgifterAktivitetsted>"))
+		assertTrue(xmlString.contains("<boutgifterAktivitetsted>0</boutgifterAktivitetsted>"))
 
 	}
 
@@ -543,10 +549,16 @@ class TilleggsstonadJson2XmlConverterKtTest {
 		val boStotte = JsonBostotteTestBuilder()
 			.fradato("2023-12-02")
 			.tildato("2024-06-20")
-			.boutgiftType("Jeg søker om å få dekket boutgifter i forbindelse med samling")
+			.hvilkeBoutgifterSokerDuOmAFaDekket("boutgifterIForbindelseMedSamling")
+			.hvilkeAdresserHarDuBoutgifterPa(
+				HvilkeAdresserHarDuBoutgifterPa(
+					boutgifterPaAktivitetsadressen = "true",
+					boutgifterPaHjemstedet = "true",
+					boutgifterPaHjemstedetMittSomHarOpphortIForbindelseMedAktiviteten = "true"
+				)
+			)
 			.mottarDuBostotteFraKommunen("Ja")
 			.bostottebelop(3500)
-			.boutgifterPaHjemstedetMitt(5000)
 			.bostotteIForbindelseMedSamling(
 				listOf(
 					JsonPeriode(startdatoDdMmAaaa = "2023-12-02", sluttdatoDdMmAaaa = "2023-12-20"),
@@ -556,8 +568,9 @@ class TilleggsstonadJson2XmlConverterKtTest {
 				),
 			)
 			.erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet("Ja")
-			.hvilkeAdresserHarDuBoutgifterPa(listOf("Kongens gate 10, 3701 Skien"))
 			.boutgifterPaAktivitetsadressen(10000)
+			.boutgifterPaHjemstedetMitt(5000)
+			.boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten(4000)
 			.build()
 		val tilleggsstonad =
 			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = boStotte).build()
@@ -594,7 +607,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 		assertTrue(xmlString.contains("<bostoetteBeloep>3500</bostoetteBeloep>"))
 		assertTrue(xmlString.contains("<boutgifterHjemstedAktuell>5000</boutgifterHjemstedAktuell>"))
 		assertTrue(xmlString.contains("<boutgifterAktivitetsted>10000</boutgifterAktivitetsted>"))
-
+		assertTrue(xmlString.contains("<boutgifterHjemstedOpphoert>4000</boutgifterHjemstedOpphoert>"))
 	}
 
 	@Test

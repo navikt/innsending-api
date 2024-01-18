@@ -22,15 +22,15 @@ fun convertToJson(soknadDto: DokumentSoknadDto, json: ByteArray?): JsonApplicati
 			etternavn = json.data.data.etternavnSoker,
 			ident = PersonIdent(ident = json.data.data.fodselsnummerDnummerSoker, identType = IdentType.PERSONNR)
 		),
-		tilleggsstonad = convertToJsonTilleggsstonad(json.data.data)
+		tilleggsstonad = convertToJsonTilleggsstonad(json.data.data, soknadDto)
 	)
 }
 
-fun convertToJsonTilleggsstonad(tilleggsstonad: Application): JsonTilleggsstonad {
+fun convertToJsonTilleggsstonad(tilleggsstonad: Application, soknadDto: DokumentSoknadDto): JsonTilleggsstonad {
 	return JsonTilleggsstonad(
 		aktivitetsinformasjon = convertAktivitetsinformasjon(tilleggsstonad), // TODO
 		maalgruppeinformasjon = convertToJsonMaalgruppeinformasjon(tilleggsstonad),
-		rettighetstype = convertToJsonRettighetstyper(tilleggsstonad)
+		rettighetstype = convertToJsonRettighetstyper(tilleggsstonad, soknadDto)
 
 	)
 }
@@ -150,9 +150,12 @@ private fun convertToJsonMaalgruppeinformasjon(tilleggsstonad: Application): Jso
 	return null
 }
 
-private fun convertToJsonRettighetstyper(tilleggsstonad: Application): JsonRettighetstyper {
+private fun convertToJsonRettighetstyper(
+	tilleggsstonad: Application,
+	soknadDto: DokumentSoknadDto
+): JsonRettighetstyper {
 	return JsonRettighetstyper(
-		reise = convertToReisestottesoknad(tilleggsstonad),
+		reise = convertToReisestottesoknad(tilleggsstonad, soknadDto),
 		tilsynsutgifter = convertToTilsynsutgifter(tilleggsstonad),
 		laeremiddelutgifter = convertToLaeremiddelutgifter(tilleggsstonad),
 		bostotte = convertToJsonBostotte(tilleggsstonad),
@@ -186,7 +189,10 @@ private fun convertToJsonFlytteutgifter(tilleggsstonad: Application): JsonFlytte
 }
 
 private fun convertToJsonBostotte(tilleggsstonad: Application): JsonBostottesoknad? {
-	if (tilleggsstonad.hvilkeBoutgifterSokerDuOmAFaDekket == null || tilleggsstonad.ikkeRegistrertAktivitetsperiode == null) return null
+	if (tilleggsstonad.hvilkeAdresserHarDuBoutgifterPa == null
+		|| tilleggsstonad.hvilkeBoutgifterSokerDuOmAFaDekket == null
+		|| tilleggsstonad.ikkeRegistrertAktivitetsperiode == null
+	) return null
 
 	return JsonBostottesoknad(
 		aktivitetsperiode = tilleggsstonad.ikkeRegistrertAktivitetsperiode,
@@ -237,16 +243,40 @@ private fun convertToTilsynsutgifter(tilleggsstonad: Application): JsonTilsynsut
 	)
 }
 
-private fun convertToReisestottesoknad(tilleggsstonad: Application): JsonReisestottesoknad? {
-	if (tilleggsstonad.hvorforReiserDu == null) return null
+val reiseDaglig = "NAV 11-12.21"
+val reiseSamling = "NAV 11-12.17"
+val reiseOppstartSlutt = "NAV 11-12.18"
+val reiseArbeid = "NAV 11-12.22"
+val reisestotteskjemaer = listOf(reiseDaglig, reiseSamling, reiseOppstartSlutt, reiseArbeid)
+private fun erReisestottesoknad(skjemanr: String): Boolean {
+	return reisestotteskjemaer.contains(skjemanr.substring(0, reisestotteskjemaer[0].length))
+}
+
+
+private fun convertToReisestottesoknad(
+	tilleggsstonad: Application,
+	soknadDto: DokumentSoknadDto
+): JsonReisestottesoknad? {
+	if (tilleggsstonad.hvorforReiserDu == null && !erReisestottesoknad(soknadDto.skjemanr)) return null
 	return JsonReisestottesoknad(
 		hvorforReiserDu = tilleggsstonad.hvorforReiserDu,
-		dagligReise = if (tilleggsstonad.hvorforReiserDu.dagligReise == true) convertToJsonDagligReise(tilleggsstonad) else null,
-		reiseSamling = if (tilleggsstonad.hvorforReiserDu.reiseTilSamling == true) convertToJsonReiseSamling(tilleggsstonad) else null,
-		dagligReiseArbeidssoker = if (tilleggsstonad.hvorforReiserDu.reiseNarDuErArbeidssoker == true) convertToJsonReise_Arbeidssoker(
+		dagligReise = if (tilleggsstonad.hvorforReiserDu?.dagligReise == true || soknadDto.skjemanr.startsWith(reiseDaglig)) convertToJsonDagligReise(
 			tilleggsstonad
 		) else null,
-		oppstartOgAvsluttetAktivitet = if (tilleggsstonad.hvorforReiserDu.reisePaGrunnAvOppstartAvslutningEllerHjemreise == true) convertToJsonOppstartOgAvsluttetAktivitet(
+		reiseSamling = if (tilleggsstonad.hvorforReiserDu?.reiseTilSamling == true || soknadDto.skjemanr.startsWith(
+				reiseSamling
+			)
+		) convertToJsonReiseSamling(tilleggsstonad) else null,
+		dagligReiseArbeidssoker = if (tilleggsstonad.hvorforReiserDu?.reiseNarDuErArbeidssoker == true || soknadDto.skjemanr.startsWith(
+				reiseArbeid
+			)
+		) convertToJsonReise_Arbeidssoker(
+			tilleggsstonad
+		) else null,
+		oppstartOgAvsluttetAktivitet = if (tilleggsstonad.hvorforReiserDu?.reisePaGrunnAvOppstartAvslutningEllerHjemreise == true || soknadDto.skjemanr.startsWith(
+				reiseOppstartSlutt
+			)
+		) convertToJsonOppstartOgAvsluttetAktivitet(
 			tilleggsstonad
 		) else null
 	)

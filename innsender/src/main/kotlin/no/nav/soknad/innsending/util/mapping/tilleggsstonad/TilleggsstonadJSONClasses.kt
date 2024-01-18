@@ -148,12 +148,12 @@ data class Application(
 	val hvorStortBelopSokerDuOmAFaDekketAvNav: Int? = null,
 
 	// Boutgifter
-	val hvilkeBoutgifterSokerDuOmAFaDekket: String? = null, // "Jeg søker om å få dekket faste boutgifter" | "Jeg søker om å få dekket boutgifter i forbindelse med samling"
+	val hvilkeBoutgifterSokerDuOmAFaDekket: String? = null, // "fasteBoutgifter" | "boutgifterIForbindelseMedSamling"
 	val bostotteIForbindelseMedSamling: List<JsonPeriode>? = null,
 
 	val mottarDuBostotteFraKommunen: String? = null, // "Ja" | "Nei"
 	var hvorMyeBostotteMottarDu: Int? = null, // Hvis mottarDuBostotteFraKommunen = Ja
-	val hvilkeAdresserHarDuBoutgifterPa: List<String>? = null, // "Jeg har boutgifter på aktivitetsadressen min" | "Jeg har fortsatt boutgifter på hjemstedet mitt" | "Jeg har hatt boutgifter på hjemstedet mitt, som har opphørt i forbindelse med aktiviteten"
+	val hvilkeAdresserHarDuBoutgifterPa: HvilkeAdresserHarDuBoutgifterPa? = null,
 	val boutgifterPaAktivitetsadressen: Int? = null,
 	val boutgifterPaHjemstedetMitt: Int? = null,
 	val boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten: Int? = null,
@@ -169,6 +169,12 @@ data class Application(
 	val dokumentasjonAvReiseutgifter: String? = null,
 	val dokumentasjonAvPlassIbarnehageEllerSkolefritidsordningSfo3: String? = null,
 	val dokumentasjonAvUtgifterTilDrosje3: String? = null,
+)
+
+data class HvilkeAdresserHarDuBoutgifterPa(
+	val boutgifterPaAktivitetsadressen: String, // true | false
+	val boutgifterPaHjemstedet: String,
+	val boutgifterPaHjemstedetMittSomHarOpphortIForbindelseMedAktiviteten: String
 )
 
 data class Datagrid(

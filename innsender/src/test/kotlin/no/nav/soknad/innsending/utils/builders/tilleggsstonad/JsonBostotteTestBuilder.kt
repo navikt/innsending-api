@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.utils.builders.tilleggsstonad
 
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.HvilkeAdresserHarDuBoutgifterPa
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.JsonBostottesoknad
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.JsonPeriode
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.JsonRettighetstyper
@@ -10,12 +11,14 @@ class JsonBostotteTestBuilder {
 
 	private var fradato: String = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
 	private var tildato: String = Date.formatToLocalDate(LocalDateTime.now().plusMonths(3))
-	private var boutgiftType: String = "Jeg søker om å få dekket faste boutgifter"
+	private var hvilkeBoutgifterSokerDuOmAFaDekket: String =
+		"boutgifterIForbindelseMedSamling" // alternativt "fasteBoutgifter"
 	private var bostotteIForbindelseMedSamling: List<JsonPeriode>? = null
 	private var mottarDuBostotteFraKommunen: String = "Nei"
-	private var hvilkeAdresserHarDuBoutgifterPa: List<String> = listOf(
-		"Jeg har boutgifter på aktivitetsadressen min",
-		"Jeg har fortsatt boutgifter på hjemstedet mitt"
+	private var hvilkeAdresserHarDuBoutgifterPa: HvilkeAdresserHarDuBoutgifterPa = HvilkeAdresserHarDuBoutgifterPa(
+		boutgifterPaAktivitetsadressen = "true",
+		boutgifterPaHjemstedet = "true",
+		boutgifterPaHjemstedetMittSomHarOpphortIForbindelseMedAktiviteten = "true"
 	)
 	private var bostottebelop: Int? = 1000
 	private var boutgifterPaHjemstedetMitt: Int? = 4000
@@ -25,7 +28,9 @@ class JsonBostotteTestBuilder {
 
 	fun fradato(fradato: String) = apply { this.fradato = fradato }
 	fun tildato(tildato: String) = apply { this.tildato = tildato }
-	fun boutgiftType(boutgiftType: String) = apply { this.boutgiftType = boutgiftType }
+	fun hvilkeBoutgifterSokerDuOmAFaDekket(hvilkeBoutgifterSokerDuOmAFaDekket: String) =
+		apply { this.hvilkeBoutgifterSokerDuOmAFaDekket = hvilkeBoutgifterSokerDuOmAFaDekket }
+
 	fun bostotteIForbindelseMedSamling(bostotteIForbindelseMedSamling: List<JsonPeriode>?) =
 		apply { this.bostotteIForbindelseMedSamling = bostotteIForbindelseMedSamling }
 
@@ -35,7 +40,7 @@ class JsonBostotteTestBuilder {
 			if (!"Ja".equals(mottarDuBostotteFraKommunen, true)) this.bostottebelop = null
 		}
 
-	fun hvilkeAdresserHarDuBoutgifterPa(hvilkeAdresserHarDuBoutgifterPa: List<String>) =
+	fun hvilkeAdresserHarDuBoutgifterPa(hvilkeAdresserHarDuBoutgifterPa: HvilkeAdresserHarDuBoutgifterPa) =
 		apply { this.hvilkeAdresserHarDuBoutgifterPa = hvilkeAdresserHarDuBoutgifterPa }
 
 	fun bostottebelop(bostottebelop: Int?) =
@@ -64,7 +69,7 @@ class JsonBostotteTestBuilder {
 
 	fun buildBostotteSoknad() = JsonBostottesoknad(
 		aktivitetsperiode = JsonPeriode(startdatoDdMmAaaa = fradato, sluttdatoDdMmAaaa = tildato),
-		hvilkeBoutgifterSokerDuOmAFaDekket = boutgiftType,
+		hvilkeBoutgifterSokerDuOmAFaDekket = hvilkeBoutgifterSokerDuOmAFaDekket,
 		boutgifterPaHjemstedetMitt = boutgifterPaHjemstedetMitt,
 		bostotteIForbindelseMedSamling = bostotteIForbindelseMedSamling,
 		mottarDuBostotteFraKommunen = mottarDuBostotteFraKommunen,

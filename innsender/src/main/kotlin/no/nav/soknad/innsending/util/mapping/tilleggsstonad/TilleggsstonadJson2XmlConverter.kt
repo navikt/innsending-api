@@ -96,13 +96,12 @@ fun convertToRettighetstype(soknadDto: DokumentSoknadDto, tilleggstonadJsonObj: 
 		laeremiddelutgifter = convertLaremiddler(tilleggstonadJsonObj),
 		flytteutgifter = convertFlytteutgifter(tilleggstonadJsonObj),
 		tilsynsutgifter = convertTilsynsutgifter(tilleggstonadJsonObj),
-		reiseutgifter = convertReiseUtgifter(tilleggstonadJsonObj)
+		reiseutgifter = convertReiseUtgifter(tilleggstonadJsonObj, soknadDto)
 	)
 }
 
 fun convertBostotte(tilleggstonadJsonObj: JsonApplication): Boutgifter? {
-	if (tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.bostotte == null ||
-		tilleggstonadJsonObj.tilleggsstonad.rettighetstype.bostotte.aktivitetsperiode == null
+	if (tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.bostotte?.aktivitetsperiode == null
 	) return null
 
 	val bostottesoknad = tilleggstonadJsonObj.tilleggsstonad.rettighetstype.bostotte
@@ -116,13 +115,13 @@ fun convertBostotte(tilleggstonadJsonObj: JsonApplication): Boutgifter? {
 
 		boutgifterPgaFunksjonshemminger = convertToBoolean(bostottesoknad.erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet)
 			?: false,
-		harFasteBoutgifter = bostottesoknad.hvilkeBoutgifterSokerDuOmAFaDekket.contains("Jeg søker om å få dekket faste boutgifter"),
+		harFasteBoutgifter = bostottesoknad.hvilkeBoutgifterSokerDuOmAFaDekket.contains("fasteBoutgifter"),
 		boutgifterHjemstedAktuell = bostottesoknad.boutgifterPaHjemstedetMitt,
 		boutgifterHjemstedOpphoert = bostottesoknad.boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten,
 
 		boutgifterAktivitetsted = bostottesoknad.boutgifterPaAktivitetsadressen,
 
-		harBoutgifterVedSamling = bostottesoknad.hvilkeBoutgifterSokerDuOmAFaDekket.contains("Jeg søker om å få dekket boutgifter i forbindelse med samling"),
+		harBoutgifterVedSamling = bostottesoknad.hvilkeBoutgifterSokerDuOmAFaDekket.contains("boutgifterIForbindelseMedSamling"),
 		samlingsperiode = if (bostottesoknad.bostotteIForbindelseMedSamling == null) null else {
 			bostottesoknad.bostotteIForbindelseMedSamling
 				.map {
@@ -299,10 +298,10 @@ private fun hasTilsynsutgifterFamilie(tilleggstonadJsonObj: JsonApplication): Bo
 	return false
 }
 
-fun convertReiseUtgifter(tilleggstonadJsonObj: JsonApplication): Reiseutgifter? {
+fun convertReiseUtgifter(tilleggstonadJsonObj: JsonApplication, soknadDto: DokumentSoknadDto): Reiseutgifter? {
 	//if (!hasReiseutgifter(tilleggstonadJsonObj.data.data.hvorforReiserDu)) return null
 
-	val utgiftDagligReise = convertDagligReise(tilleggstonadJsonObj)
+	val utgiftDagligReise = convertDagligReise(tilleggstonadJsonObj, soknadDto)
 	val reisestoenadForArbeidssoeker = convertReisestoenadForArbeidssoeker(tilleggstonadJsonObj)
 	val reiseVedOppstartOgAvsluttetAktivitet = convertReiseVedOppstartOgAvsluttetAktivitet(tilleggstonadJsonObj)
 	val reiseObligatoriskSamling = convertReiseObligatoriskSamling(tilleggstonadJsonObj)
@@ -326,9 +325,9 @@ private fun hasReiseutgifter(hasTravelExpenses: HvorforReiserDu?): Boolean {
 		|| hasTravelExpenses.reiseTilSamling || hasTravelExpenses.reisePaGrunnAvOppstartAvslutningEllerHjemreise
 }
 
-private fun convertDagligReise(tilleggstonadJsonObj: JsonApplication): DagligReise? {
+private fun convertDagligReise(tilleggstonadJsonObj: JsonApplication, soknadDto: DokumentSoknadDto): DagligReise? {
 	val details = tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.reise
-	if (details == null || details.dagligReise == null || details.hvorforReiserDu == null || details.hvorforReiserDu.dagligReise != true) return null
+	if (details == null || (details.dagligReise == null)) return null
 
 	val jsonDagligReise = details.dagligReise
 	return DagligReise(

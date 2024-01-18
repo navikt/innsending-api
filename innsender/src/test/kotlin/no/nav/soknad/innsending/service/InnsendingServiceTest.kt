@@ -332,10 +332,10 @@ class InnsendingServiceTest : ApplicationTest() {
 
 
 	@Test
-	fun sendInnTilleggssoknad() {
+	fun sendInnTilleggssoknad_dagligreise() {
 		val innsendingService = lagInnsendingService(soknadService)
 		val hoveddokDto = lagVedlegg(
-			vedleggsnr = "NAV 11-12.12",
+			vedleggsnr = "NAV 11-12.21 B",
 			tittel = "Tilleggssoknad",
 			erHoveddokument = true,
 			erVariant = false,
@@ -343,15 +343,15 @@ class InnsendingServiceTest : ApplicationTest() {
 			vedleggsNavn = "/litenPdf.pdf"
 		)
 		val hoveddokVariantDto = lagVedlegg(
-			vedleggsnr = "NAV 11-12.12",
+			vedleggsnr = "NAV 11-12.21 B",
 			tittel = "Tilleggssoknad",
 			erHoveddokument = true,
 			erVariant = true,
 			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
-			vedleggsNavn = "/__files/tilleggsstonad-dagligreise-m-bil.json"
+			vedleggsNavn = "/__files/tilleggsstonad-NAV-11-12.21B.json"
 		)
 		val inputDokumentSoknadDto = lagDokumentSoknad(
-			skjemanr = "NAV 11-12.12",
+			skjemanr = "NAV 11-12.21 B",
 			tittel = "Tilleggssoknad",
 			brukerId = testpersonid,
 			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
@@ -373,4 +373,47 @@ class InnsendingServiceTest : ApplicationTest() {
 		assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
 	}
 
+
+	@Test
+	fun sendInnTilleggssoknad_bostotte() {
+		val innsendingService = lagInnsendingService(soknadService)
+		val skjemaNr = "NAV 11-12.19 B"
+		val hoveddokDto = lagVedlegg(
+			vedleggsnr = skjemaNr,
+			tittel = "Tilleggssoknad",
+			erHoveddokument = true,
+			erVariant = false,
+			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			vedleggsNavn = "/litenPdf.pdf"
+		)
+		val hoveddokVariantDto = lagVedlegg(
+			vedleggsnr = skjemaNr,
+			tittel = "Tilleggssoknad",
+			erHoveddokument = true,
+			erVariant = true,
+			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			vedleggsNavn = "/__files/tilleggsstonad-NAV-11-12.19B.json"
+		)
+		val inputDokumentSoknadDto = lagDokumentSoknad(
+			skjemanr = skjemaNr,
+			tittel = "Tilleggssoknad",
+			brukerId = testpersonid,
+			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
+			spraak = "no_NB",
+			tema = "TSO"
+		)
+		val skjemaDto =
+			SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService = soknadService, inputDokumentSoknadDto)
+
+		val opprettetSoknad = soknadService.hentSoknad(skjemaDto.innsendingsId!!)
+		val kvitteringsDto =
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				soknadsmottakerAPI,
+				opprettetSoknad,
+				innsendingService
+			)
+		assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
+		assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+	}
 }
