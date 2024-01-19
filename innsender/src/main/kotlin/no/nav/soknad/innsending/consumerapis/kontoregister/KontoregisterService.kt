@@ -12,7 +12,7 @@ class KontoregisterService(
 	restConfig: RestConfig,
 	kontoregisterApiClient: OkHttpClient
 ) : KontoregisterInterface {
-	private val kontoregisterApi = KontoregisterV1Api(restConfig.kontoregiserUrl, kontoregisterApiClient)
+	private val kontoregisterApi = KontoregisterV1Api(restConfig.kontoregisterUrl, kontoregisterApiClient)
 
 	override fun getKontonummer(): String {
 		return kontoregisterApi.kontooppslagMedGet().kontonummer

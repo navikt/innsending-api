@@ -79,9 +79,9 @@ class OkHttpOAuth2ClientConfig(
 	fun kontoregisterApiClient(
 		clientConfigProperties: ClientConfigurationProperties,
 		oAuth2AccessTokenService: OAuth2AccessTokenService
-	) = kontoregisterApiClient(clientConfigProperties.registration["kontoregister"]!!, oAuth2AccessTokenService)
+	) = kontoregisterClient(clientConfigProperties.registration["kontoregister"]!!, oAuth2AccessTokenService)
 
-	private fun kontoregisterApiClient(
+	private fun kontoregisterClient(
 		clientProperties: ClientProperties,
 		oAuth2AccessTokenService: OAuth2AccessTokenService,
 	): OkHttpClient {
@@ -96,7 +96,7 @@ class OkHttpOAuth2ClientConfig(
 			.addInterceptor {
 				val token = tokenService.getToken()
 				val callId = MDCUtil.callIdOrNew()
-				
+
 				val bearerRequest = it.request().newBuilder().headers(it.request().headers)
 					.header("Nav-Call-Id", callId)
 					.header("Authorization", "Bearer $token").build()
