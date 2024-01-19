@@ -308,18 +308,14 @@ class VedleggService(
 		if (vedleggDbData.soknadsid != soknadDto.id) {
 			throw IllegalActionException("Søknad ${soknadDto.innsendingsId} har ikke vedlegg med id $vedleggsId. Kan ikke endre vedlegg da søknaden ikke har et slikt vedlegg")
 		}
-		val oppdatertVedlegg =
-			repo.oppdaterVedleggStatusOgInnsendtdato(
-				innsendingsId = soknadDto.innsendingsId!!,
-				vedleggsId = vedleggsId,
-				opplastingsStatus = mapTilDbOpplastingsStatus(opplastingsStatus),
-				endretDato = LocalDateTime.now(),
-				innsendtDato = null
-			)
-		if (oppdatertVedlegg.toLong() != vedleggsId) {
-			logger.debug("${soknadDto.innsendingsId}: Oppdatering av status = $opplastingsStatus for vedlegg $vedleggsId feilet")
-		}
-		val delme = repo.hentVedlegg(vedleggsId)
+		repo.oppdaterVedleggStatusOgInnsendtdato(
+			innsendingsId = soknadDto.innsendingsId!!,
+			vedleggsId = vedleggsId,
+			opplastingsStatus = mapTilDbOpplastingsStatus(opplastingsStatus),
+			endretDato = LocalDateTime.now(),
+			innsendtDato = null
+		)
+		val delme = repo.hentVedlegg(vedleggsId) // TODO slett når årsak til at hvorfor status ikke er oppdatert er funnet
 		if (delme.status != mapTilDbOpplastingsStatus(opplastingsStatus)) {
 			logger.warn("${soknadDto.innsendingsId}: Oppdatering av status til ${mapTilDbOpplastingsStatus(opplastingsStatus)} for vedlegg $vedleggsId feilet, status på vedlegget er = ${delme.status}")
 		}
