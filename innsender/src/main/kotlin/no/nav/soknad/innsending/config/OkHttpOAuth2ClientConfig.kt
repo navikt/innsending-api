@@ -73,6 +73,37 @@ class OkHttpOAuth2ClientConfig(
 			}.build()
 	}
 
+	@Bean
+	@Profile("prod | dev")
+	@Qualifier("kontoregisterApiClient")
+	fun kontoregisterApiClient(
+		clientConfigProperties: ClientConfigurationProperties,
+		oAuth2AccessTokenService: OAuth2AccessTokenService
+	) = kontoregisterApiClient(clientConfigProperties.registration["kontoregister"]!!, oAuth2AccessTokenService)
+
+	private fun kontoregisterApiClient(
+		clientProperties: ClientProperties,
+		oAuth2AccessTokenService: OAuth2AccessTokenService,
+	): OkHttpClient {
+
+		val tokenService = TokenService(clientProperties, oAuth2AccessTokenService)
+
+		return OkHttpClient().newBuilder()
+			.connectTimeout(20, TimeUnit.SECONDS)
+			.callTimeout(62, TimeUnit.SECONDS)
+			.readTimeout(1, TimeUnit.MINUTES)
+			.writeTimeout(1, TimeUnit.MINUTES)
+			.addInterceptor {
+				val token = tokenService.getToken()
+				val callId = MDCUtil.callIdOrNew()
+				
+				val bearerRequest = it.request().newBuilder().headers(it.request().headers)
+					.header("Nav-Call-Id", callId)
+					.header("Authorization", "Bearer $token").build()
+
+				it.proceed(bearerRequest)
+			}.build()
+	}
 
 	@Bean
 	@Profile("!(prod | dev)")

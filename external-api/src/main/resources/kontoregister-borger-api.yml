@@ -29,9 +29,6 @@ paths:
           required: true
           schema:
             $ref: '#/definitions/HentAktivKonto'
-        - name: nav-call-id
-          in: header
-          type: string
       responses:
         '200':
           description: OK
@@ -70,10 +67,6 @@ paths:
         - application/json
       produces:
         - application/json
-      parameters:
-        - name: nav-call-id
-          in: header
-          type: string
       responses:
         '200':
           description: OK
@@ -119,9 +112,6 @@ paths:
           required: true
           schema:
             $ref: '#/definitions/OppdaterKonto'
-        - name: nav-call-id
-          in: header
-          type: string
       responses:
         '200':
           description: OK

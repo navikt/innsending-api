@@ -5,6 +5,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.consumerapis.arena.ArenaConsumerInterface
+import no.nav.soknad.innsending.consumerapis.kontoregister.KontoregisterInterface
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.transformers.AddressTransformer.transformAddresses
 import no.nav.soknad.innsending.consumerapis.pdl.transformers.NameTransformer.transformName
@@ -15,6 +16,7 @@ import no.nav.soknad.innsending.model.Maalgruppe
 import no.nav.soknad.innsending.model.PrefillData
 import no.nav.soknad.innsending.util.Constants.ARENA_AKTIVITETER
 import no.nav.soknad.innsending.util.Constants.ARENA_MAALGRUPPER
+import no.nav.soknad.innsending.util.Constants.KONTORREGISTER_BORGER
 import no.nav.soknad.innsending.util.Constants.PDL
 import no.nav.soknad.innsending.util.prefill.ServiceProperties.createServicePropertiesMap
 import org.springframework.stereotype.Service
@@ -23,7 +25,8 @@ import org.springframework.stereotype.Service
 @Service
 class PrefillService(
 	private val arenaConsumer: ArenaConsumerInterface,
-	private val pdlApi: PdlInterface
+	private val pdlApi: PdlInterface,
+	private val kontoregisterService: KontoregisterInterface
 ) {
 
 	fun getPrefillData(properties: List<String>, userId: String): PrefillData = runBlocking {
@@ -38,6 +41,7 @@ class PrefillService(
 				PDL -> requestList.add(async { getPDLData(userId, properties) })
 				ARENA_MAALGRUPPER -> requestList.add(async { getArenaMaalgrupper(userId, properties) })
 				ARENA_AKTIVITETER -> requestList.add(async { getArenaAktiviteter(userId, properties) })
+				KONTORREGISTER_BORGER -> requestList.add(async { getKontonummer() })
 			}
 		}
 
@@ -57,9 +61,15 @@ class PrefillService(
 				sokerAktiviteter = obj.sokerAktiviteter ?: acc.sokerAktiviteter,
 				sokerAdresser = obj.sokerAdresser ?: acc.sokerAdresser,
 				sokerKjonn = obj.sokerKjonn ?: acc.sokerKjonn,
-				sokerTelefonnummer = obj.sokerTelefonnummer ?: acc.sokerTelefonnummer
+				sokerTelefonnummer = obj.sokerTelefonnummer ?: acc.sokerTelefonnummer,
+				sokerKontonummer = obj.sokerKontonummer ?: acc.sokerKontonummer,
 			)
 		}
+	}
+
+	suspend fun getKontonummer(): PrefillData {
+		val kontonummer = kontoregisterService.getKontonummer()
+		return PrefillData(sokerKontonummer = kontonummer)
 	}
 
 	suspend fun getPDLData(userId: String, properties: List<String>): PrefillData {
