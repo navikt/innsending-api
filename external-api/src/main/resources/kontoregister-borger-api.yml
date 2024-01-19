@@ -1,0 +1,249 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: Kontoregister borger-API
+  description: Kontoregister borger-API er tiltenkt systemer som er i direkte kontakt med borgere og går via TokenX. Det vil si at tokenet inneholder info om hvem borger er.
+  contact:
+    name: TØB
+    email: okonomi@nav.no
+basePath: /api/borger
+tags:
+  - name: kontoregister.v1
+schemes:
+  - https
+  - http
+paths:
+  /v1/hent-aktiv-konto:
+    post:
+      tags:
+        - kontoregister.v1
+      summary: Slår opp kontohaver i Kontoregisteret.
+      operationId: kontooppslag
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: hentAktivKonto
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/HentAktivKonto'
+        - name: nav-call-id
+          in: header
+          type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Konto'
+        '400':
+          description: Ugyldig request, oppfyller ikke swagger-kontrakt
+          schema:
+            $ref: '#/definitions/Feilmelding'
+        '401':
+          description: Unauthorized, Ikke tilgang
+        '404':
+          description: Kontohaver ikke funnet
+          schema:
+            $ref: '#/definitions/Feilmelding'
+        '405':
+          description: Ugyldig input
+          schema:
+            $ref: '#/definitions/Feilmelding'
+        '403':
+          description: Forbudt - Det er kun lov for personer å hente sin egen kontoinfo
+          schema:
+            $ref: '#/definitions/Feilmelding'
+        '500':
+          description: Annen feil
+          schema:
+            $ref: '#/definitions/Feilmelding'
+      security:
+        - Bearer: [ ]
+    get:
+      tags:
+        - kontoregister.v1
+      summary: Slår opp kontohaver i Kontoregisteret.
+      operationId: kontooppslag med get
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: nav-call-id
+          in: header
+          type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Konto'
+        '400':
+          description: Ugyldig request, oppfyller ikke swagger-kontrakt
+          schema:
+            $ref: '#/definitions/Feilmelding'
+        '401':
+          description: Unauthorized, Ikke tilgang
+        '404':
+          description: Kontohaver ikke funnet
+          schema:
+            $ref: '#/definitions/Feilmelding'
+        '405':
+          description: Ugyldig input
+          schema:
+            $ref: '#/definitions/Feilmelding'
+        '403':
+          description: Forbudt - Det er kun lov for personer å hente sin egen kontoinfo
+          schema:
+            $ref: '#/definitions/Feilmelding'
+        '500':
+          description: Annen feil
+          schema:
+            $ref: '#/definitions/Feilmelding'
+      security:
+        - Bearer: [ ]
+  /v1/oppdater-konto:
+    post:
+      tags:
+        - kontoregister.v1
+      summary: Oppdaterer konto for kontohaver i Kontoregisteret.
+      operationId: oppdaterKonto
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: oppdaterKonto
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/OppdaterKonto'
+        - name: nav-call-id
+          in: header
+          type: string
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Ugyldig request, oppfyller ikke swagger-kontrakt
+          schema:
+            $ref: '#/definitions/Feilmelding'
+        '401':
+          description: Unauthorized, Ikke tilgang
+        '404':
+          description: Kontohaver ikke funnet
+          schema:
+            $ref: '#/definitions/Feilmelding'
+        '405':
+          description: Ugyldig input
+          schema:
+            $ref: '#/definitions/Feilmelding'
+        '406':
+          description: Valideringsfeil
+          schema:
+            $ref: '#/definitions/Feilmelding'
+        '403':
+          description: Forbudt - Det er kun lov for personer å hente sin egen kontoinfo
+          schema:
+            $ref: '#/definitions/Feilmelding'
+        '500':
+          description: Annen feil
+          schema:
+            $ref: '#/definitions/Feilmelding'
+      security:
+        - Bearer: []
+securityDefinitions:
+  Bearer:
+    description: |-
+      Dette api'et krever "TokenX med On-Behalf-Of flow"
+      Følgende format må brukes i input-feltet "Value" under: <strong>"Bearer {token}"</strong>.
+      Eksempel på verdi i input-felt: <strong>Bearer eYdmifml0ejugm</strong>
+    type: apiKey
+    name: Authorization
+    in: header
+definitions:
+  OppdaterKonto:
+    type: object
+    required:
+      - kontohaver
+      - nyttKontonummer
+    properties:
+      kontohaver:
+        type: string
+        description: Eier av konto
+        example: 'fødselsnummer'
+      nyttKontonummer:
+        type: string
+        description: nytt kontonummer
+        example: '8361347234732292'
+      utenlandskKontoInfo:
+        $ref: '#/definitions/utenlandskKontoInfo'
+  Konto:
+    type: object
+    required:
+      - kontonummer
+    properties:
+      kontonummer:
+        type: string
+        description: Kontonummer
+        example: '8361347234732292'
+      utenlandskKontoInfo:
+        $ref: '#/definitions/utenlandskKontoInfo'
+  utenlandskKontoInfo:
+    type: object
+    x-nullable: true
+    required:
+      - valutakode
+    properties:
+      banknavn:
+        type: string
+        x-nullable: true
+      bankkode:
+        type: string
+        x-nullable: true
+        description: Bankkode brukes i noen land som ikke har IBAN. Koden er forskjellig fra land til land, og bør brukes sammen med swiftBicKode.
+        example: CC123456789
+      bankLandkode:
+        type: string
+        description: Bankens landkode ihht ISO 3166-1 alfa-2 (https://no.wikipedia.org/wiki/ISO_3166-1_alfa-2)
+        example: SE
+      valutakode:
+        type: string
+        description: Hvilken valuta man ønsker utbetalingen i. Vil være ihht ISO 4217 (https://no.wikipedia.org/wiki/ISO_4217)
+        example: SEK
+      swiftBicKode:
+        type: string
+        x-nullable: true
+        description: BIC/SWIFT er et internasjonalt system som brukes for å identifisere banker. Du får oppgitt BIC av banken din. BIC/SWIFT-koden består av 8 eller 11 bokstaver.
+        example: SHEDNO22
+      bankadresse1:
+        type: string
+        x-nullable: true
+        description: Benyttes når man bruker bankkode
+      bankadresse2:
+        type: string
+        x-nullable: true
+        description: Benyttes når man bruker bankkode
+      bankadresse3:
+        type: string
+        x-nullable: true
+        description: Benyttes når man bruker bankkode
+  HentAktivKonto:
+    type: object
+    required:
+      - kontohaver
+    properties:
+      kontohaver:
+        type: string
+        description: Eier av konto.
+        example: '12312312311'
+  Feilmelding:
+    type: object
+    required:
+      - feilmelding
+    properties:
+      feilmelding:
+        type: string
+        description: Informasjon om hva som gikk galt
+        example: person ikke funnet i kontoregister

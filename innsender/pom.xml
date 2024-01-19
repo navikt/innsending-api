@@ -224,7 +224,7 @@
 		</dependency>
 		<dependency>
 			<groupId>no.nav.soknad.innsending</groupId>
-			<artifactId>kodeverk-api</artifactId>
+			<artifactId>external-api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
