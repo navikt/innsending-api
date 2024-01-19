@@ -9,11 +9,16 @@ WORKDIR $HOME
 # Kopier alle pom.xml
 COPY pom.xml $HOME
 
+COPY kodeverk-api/pom.xml $HOME/kodeverk-api/pom.xml
 COPY api/pom.xml $HOME/api/pom.xml
 COPY soknadsmottaker-api/pom.xml $HOME/soknadsmottaker-api/pom.xml
 COPY innsender/pom.xml $HOME/innsender/pom.xml
 
 # Rekkefølgen her burde være fra minst til mest endring siden hvert layer blir cachet
+RUN mvn -pl kodeverk-api verify --fail-never -DskipTests
+COPY kodeverk-api/src $HOME/kodeverk-api/src
+RUN mvn -pl kodeverk-api install
+
 RUN mvn -pl api verify --fail-never -DskipTests
 COPY api/src $HOME/api/src
 RUN mvn -pl api install
@@ -26,7 +31,7 @@ RUN mvn -pl innsender-api verify --fail-never -DskipTests
 COPY innsender/src $HOME/innsender/src
 
 # Kompiler og pakk inn i en jar
-RUN --mount=type=cache,target=/root/.m2,rw mvn -q -pl api,soknadsmottaker-api,innsender package -DskipTests -DskipBomPlugin
+RUN --mount=type=cache,target=/root/.m2,rw mvn -q -pl kodeverk-api,api,soknadsmottaker-api,innsender package -DskipTests -DskipBomPlugin
 
 
 FROM gcr.io/distroless/java21-debian12:nonroot
