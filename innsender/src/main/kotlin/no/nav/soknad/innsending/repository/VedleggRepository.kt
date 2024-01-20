@@ -41,7 +41,7 @@ interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
 	): Int
 
 	@Transactional
-	@Modifying(flushAutomatically = true)
+	@Modifying(clearAutomatically = true)
 	@Query(value = "UPDATE VedleggDbData v SET v.status = :status, v.innsendtdato = :innsendtdato, v.endretdato = :endretdato WHERE v.id = :id")
 	fun updateStatusAndInnsendtdato(
 		@Param("id") id: Long,
