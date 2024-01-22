@@ -14,6 +14,7 @@ import java.time.LocalDateTime
 interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
 
 	@Query(value = "FROM VedleggDbData WHERE soknadsid = :soknadsid order by id")
+	@Modifying(clearAutomatically = true)
 	fun findAllBySoknadsid(@Param("soknadsid") soknadsid: Long): List<VedleggDbData>
 
 	@Query(value = "FROM VedleggDbData WHERE id = :vedleggsid")
