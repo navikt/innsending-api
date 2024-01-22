@@ -1,0 +1,48 @@
+{
+	"mappings": [
+		{
+			"request": {
+				"urlPattern": "/kontoregister-api/v1/hent-aktiv-konto.*",
+				"method": "GET"
+			},
+			"response": {
+				"status": 200,
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"jsonBody": {
+					"kontonummer": "8361347234732292",
+					"utenlandskKontoInfo": {
+						"banknavn": "Swebank",
+						"bankkode": "CC123456789",
+						"bankLandkode": "SE",
+						"valutakode": "SEK",
+						"swiftBicKode": "SHEDNO22",
+						"bankadresse1": "string",
+						"bankadresse2": "string",
+						"bankadresse3": "string"
+					}
+				}
+			}
+		},
+		{
+			"scenarioName": "kontoregister-borger",
+			"requiredScenarioState": "failed",
+			"request": {
+				"urlPattern": "/kontoregister-api/v1/hent-aktiv-konto.*",
+				"method": "GET"
+			},
+			"response": {
+				"status": 400,
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"jsonBody": [
+					{
+						"feilmelding": "person ikke funnet i kontoregister"
+					}
+				]
+			}
+		}
+	]
+}

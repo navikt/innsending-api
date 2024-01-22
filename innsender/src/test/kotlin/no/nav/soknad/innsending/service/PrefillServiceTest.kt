@@ -33,6 +33,20 @@ class PrefillServiceTest : ApplicationTest() {
 	}
 
 	@Test
+	fun `Should get prefill data for kontoregister`() {
+		// Given
+		val properties = listOf("sokerKontonummer")
+		val userId = "12128012345"
+		every { subjectHandler.getToken() } returns "token"
+
+		// When
+		val result = runBlocking { prefillService.getPrefillData(properties, userId) }
+
+		// Then
+		assertEquals("8361347234732292", result.sokerKontonummer)
+	}
+
+	@Test
 	fun `Should get prefill data for Arena (målgrupper)`() {
 		// Given
 		val properties = listOf("sokerMaalgrupper")

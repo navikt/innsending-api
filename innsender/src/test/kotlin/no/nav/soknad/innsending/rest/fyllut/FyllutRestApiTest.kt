@@ -585,6 +585,20 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	@Test
+	fun `Should return correct prefill-data from kontoregister`() {
+		// Given
+		val properties = "sokerKontonummer"
+
+		// When
+		val response = api?.getPrefillData(properties)
+
+		// Then
+		assertTrue(response != null)
+		assertEquals(200, response.statusCode.value())
+		assertEquals("8361347234732292", response.body?.sokerKontonummer)
+	}
+
+	@Test
 	fun `Should return correct prefill-data from Arena (maalgrupper)`() {
 		// Given
 		val properties = "sokerMaalgrupper"

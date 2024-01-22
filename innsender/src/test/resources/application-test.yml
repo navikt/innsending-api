@@ -65,6 +65,7 @@ restconfig:
   antivirusUrl: http://localhost:${wiremock.server.port}/antivirus
   arenaUrl: http://localhost:${wiremock.server.port}/arena-api
   kodeverkUrl: http://localhost:${wiremock.server.port}/kodeverk-api
+  kontoregisterUrl: http://localhost:${wiremock.server.port}/kontoregister-api
 
 
 brukernotifikasjonconfig:
@@ -121,6 +122,17 @@ no.nav.security.jwt:
           client-id: "dev-gcp:team-soknad:innsending-api"
           client-jwk: src/test/resources/tokenx-jwk.json
           client-auth-method: private_key_jwt
+
+      kontoregister:
+        token-endpoint-url: http://localhost:${mock-oauth2-server.port}/tokenx/token
+        grant-type: client_credentials
+        scope: dummyScope
+        authentication:
+          client-id: "dev-gcp:team-soknad:innsending-api"
+          client-jwk: src/test/resources/tokenx-jwk.json
+          client-auth-method: private_key_jwt
+        token-exchange:
+          audience: dummyAudience
 
       arena:
         token-endpoint-url: http://localhost:${mock-oauth2-server.port}/tokenx/token
