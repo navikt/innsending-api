@@ -1,6 +1,10 @@
 package no.nav.soknad.innsending.rest.fyllut
 
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.every
 import no.nav.security.mock.oauth2.MockOAuth2Server
+import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenResponse
+import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
@@ -33,6 +37,9 @@ import kotlin.test.*
 
 class FyllutRestApiTest : ApplicationTest() {
 
+	@MockkBean
+	lateinit var oauth2TokenService: OAuth2AccessTokenService
+
 	@Autowired
 	lateinit var restTemplate: TestRestTemplate
 
@@ -53,6 +60,8 @@ class FyllutRestApiTest : ApplicationTest() {
 	@BeforeEach
 	fun setup() {
 		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
+		every { oauth2TokenService.getAccessToken(any()) } returns
+			OAuth2AccessTokenResponse.builder().accessToken("token").build()
 	}
 
 	@Value("\${server.port}")

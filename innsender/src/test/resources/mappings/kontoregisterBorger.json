@@ -2,7 +2,7 @@
 	"mappings": [
 		{
 			"request": {
-				"urlPattern": "/kontoregister-api/v1/hent-aktiv-konto.*",
+				"urlPattern": "/kontoregister-api/api/borger/v1/hent-aktiv-konto.*",
 				"method": "GET"
 			},
 			"response": {
@@ -29,7 +29,7 @@
 			"scenarioName": "kontoregister-borger",
 			"requiredScenarioState": "failed",
 			"request": {
-				"urlPattern": "/kontoregister-api/v1/hent-aktiv-konto.*",
+				"urlPattern": "/kontoregister-api/api/borger/v1/hent-aktiv-konto.*",
 				"method": "GET"
 			},
 			"response": {
