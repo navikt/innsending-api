@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service
 
 @Service
 @Profile("local | docker")
-class KontoregisterServiceTest : KontoregisterInterface {
+class KontoregisterServiceLocal : KontoregisterInterface {
 	override fun getKontonummer(): String {
 		return "8361347234732292"
 	}

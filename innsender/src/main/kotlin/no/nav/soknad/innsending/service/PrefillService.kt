@@ -68,7 +68,13 @@ class PrefillService(
 	}
 
 	suspend fun getKontonummer(): PrefillData {
-		val kontonummer = kontoregisterService.getKontonummer()
+		val kontonummer: String
+		try {
+			kontonummer = kontoregisterService.getKontonummer()
+		} catch (exception: NonCriticalException) {
+			return PrefillData()
+		}
+		
 		return PrefillData(sokerKontonummer = kontonummer)
 	}
 

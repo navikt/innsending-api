@@ -74,7 +74,6 @@ class OkHttpOAuth2ClientConfig(
 	}
 
 	@Bean
-	@Profile("prod | dev")
 	@Qualifier("kontoregisterApiClient")
 	fun kontoregisterApiClient(
 		clientConfigProperties: ClientConfigurationProperties,
@@ -94,7 +93,9 @@ class OkHttpOAuth2ClientConfig(
 			.readTimeout(1, TimeUnit.MINUTES)
 			.writeTimeout(1, TimeUnit.MINUTES)
 			.addInterceptor {
+
 				val token = tokenService.getToken()
+				logger.info("Token: $token")
 				val callId = MDCUtil.callIdOrNew()
 
 				val bearerRequest = it.request().newBuilder().headers(it.request().headers)
