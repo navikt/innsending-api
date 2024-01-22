@@ -17,7 +17,7 @@ class KontoregisterService(
 	@Qualifier("kontoregisterApiClient")
 	kontoregisterApiClient: OkHttpClient
 ) : KontoregisterInterface {
-	private val kontoregisterApi = KontoregisterV1Api(restConfig.kontoregisterUrl, kontoregisterApiClient)
+	private val kontoregisterApi = KontoregisterV1Api("${restConfig.kontoregisterUrl}/api/borger", kontoregisterApiClient)
 
 	private val logger: Logger = LoggerFactory.getLogger(javaClass)
 

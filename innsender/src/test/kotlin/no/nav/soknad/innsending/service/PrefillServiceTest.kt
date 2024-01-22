@@ -37,7 +37,6 @@ class PrefillServiceTest : ApplicationTest() {
 		// Given
 		val properties = listOf("sokerKontonummer")
 		val userId = "12128012345"
-		every { subjectHandler.getToken() } returns "token"
 
 		// When
 		val result = runBlocking { prefillService.getPrefillData(properties, userId) }
