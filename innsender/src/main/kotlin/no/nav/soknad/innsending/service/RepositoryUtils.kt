@@ -91,11 +91,15 @@ class RepositoryUtils(
 			)
 		}
 
-	fun lagreSoknad(soknadDbData: SoknadDbData): SoknadDbData = try {
-		lagreHendelse(soknadDbData)
-		soknadRepository.save(soknadDbData)
-	} catch (ex: Exception) {
-		throw BackendErrorException("Feil i lagring av søknad ${soknadDbData.tittel}", ex)
+	fun lagreSoknad(soknadDbData: SoknadDbData): SoknadDbData {
+		try {
+			lagreHendelse(soknadDbData)
+			val savedSoknad = soknadRepository.save(soknadDbData)
+			logger.info("Lagret søknad med status: ${savedSoknad.status}, skjemanr: ${savedSoknad.skjemanr}, type: ${savedSoknad.visningstype}")
+			return savedSoknad
+		} catch (ex: Exception) {
+			throw BackendErrorException("Feil i lagring av søknad ${soknadDbData.tittel}", ex)
+		}
 	}
 
 	fun soknadSaveAndFlush(soknadDbData: SoknadDbData): SoknadDbData = try {
@@ -176,10 +180,14 @@ class RepositoryUtils(
 		throw BackendErrorException("Feil ved forsøk på henting av alle vedlegg til søknad med id $soknadsId", ex)
 	}
 
-	fun lagreVedlegg(vedleggDbData: VedleggDbData): VedleggDbData = try {
-		vedleggRepository.save(vedleggDbData)
-	} catch (ex: Exception) {
-		throw BackendErrorException("Feil i lagring av vedleggsdata ${vedleggDbData.vedleggsnr} til søknad", ex)
+	fun lagreVedlegg(vedleggDbData: VedleggDbData): VedleggDbData {
+		try {
+			val savedVedlegg = vedleggRepository.save(vedleggDbData)
+			logger.info("Lagret vedlegg soknadsId: ${savedVedlegg.soknadsid}, vedleggsnr: ${savedVedlegg.vedleggsnr}, status: ${savedVedlegg.status}, formioId: ${savedVedlegg.formioid}")
+			return savedVedlegg
+		} catch (ex: Exception) {
+			throw BackendErrorException("Feil i lagring av vedleggsdata ${vedleggDbData.vedleggsnr} til søknad", ex)
+		}
 	}
 
 	fun flushVedlegg() = try {
@@ -235,20 +243,27 @@ class RepositoryUtils(
 		throw BackendErrorException("Feil ved oppdatering av status for vedlegg $vedleggsId for søknad $innsendingsId", ex)
 	}
 
-	fun slettVedlegg(vedleggsId: Long) =
+	fun slettVedlegg(vedleggsId: Long) {
 		try {
 			vedleggRepository.deleteById(vedleggsId)
+			logger.info("Slettet vedlegg med id $vedleggsId")
 		} catch (ex: Exception) {
 			throw BackendErrorException("Feil i forbindelse med sletting av vedlegg til søknad", ex)
 		}
+	}
 
-	fun saveFilDbData(innsendingsId: String, filDbData: FilDbData): FilDbData = try {
-		filRepository.save(filDbData)
-	} catch (ex: Exception) {
-		throw BackendErrorException(
-			message = "Feil ved lagring av filDbData for vedlegg ${filDbData.vedleggsid} til søknad $innsendingsId",
-			cause = ex
-		)
+
+	fun saveFilDbData(innsendingsId: String, filDbData: FilDbData): FilDbData {
+		try {
+			val fil = filRepository.save(filDbData)
+			logger.info("Lagret fil med vedleggsid ${fil.vedleggsid}")
+			return fil
+		} catch (ex: Exception) {
+			throw BackendErrorException(
+				message = "Feil ved lagring av filDbData for vedlegg ${filDbData.vedleggsid} til søknad $innsendingsId",
+				cause = ex
+			)
+		}
 	}
 
 	fun hentFilDb(innsendingsId: String, vedleggsId: Long, filId: Long): FilDbData = try {
