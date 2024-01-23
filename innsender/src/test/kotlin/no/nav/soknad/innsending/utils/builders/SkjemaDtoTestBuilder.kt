@@ -3,12 +3,14 @@ package no.nav.soknad.innsending.utils.builders
 import no.nav.soknad.innsending.model.SkjemaDokumentDto
 import no.nav.soknad.innsending.model.SkjemaDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
+import no.nav.soknad.innsending.util.Skjema
+import no.nav.soknad.innsending.utils.Skjema.generateSkjemanr
 import java.util.*
 
 
 data class SkjemaDtoTestBuilder(
 	var brukerId: String = "12128012345",
-	var skjemanr: String = "NAV-${UUID.randomUUID().toString().take(4)}",
+	var skjemanr: String = generateSkjemanr(),
 	var tittel: String = "Forsikring mot ansvar for sykepenger i arbeidsgiverperioden for små bedrifter.",
 	var tema: String = "FOS",
 	var spraak: String = "nb_NO",
@@ -18,7 +20,8 @@ data class SkjemaDtoTestBuilder(
 	var status: SoknadsStatusDto? = SoknadsStatusDto.opprettet,
 	var vedleggsListe: List<SkjemaDokumentDto>? = emptyList(),
 	var kanLasteOppAnnet: Boolean? = false,
-	var fristForEttersendelse: Long? = 14L
+	var fristForEttersendelse: Long? = 14L,
+	var skjemaPath: String = Skjema.createSkjemaPathFromSkjemanr(skjemanr)
 ) {
 	fun build() = SkjemaDto(
 		brukerId = brukerId,
@@ -32,7 +35,8 @@ data class SkjemaDtoTestBuilder(
 		status = status,
 		vedleggsListe = vedleggsListe,
 		kanLasteOppAnnet = kanLasteOppAnnet,
-		fristForEttersendelse = fristForEttersendelse
+		fristForEttersendelse = fristForEttersendelse,
+		skjemaPath = skjemaPath
 	)
 }
 

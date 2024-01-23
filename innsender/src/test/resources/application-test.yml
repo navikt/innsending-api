@@ -69,7 +69,8 @@ restconfig:
 
 brukernotifikasjonconfig:
   profiles: test
-  tjenesteUrl: https://localhost
+  fyllutUrl: http://localhost:3001/fyllut
+  sendinnUrl: http://localhost:3100/sendinn
   publisereEndringer: true
 
 ettersendingsfrist: 14
