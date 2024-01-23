@@ -101,6 +101,7 @@ class FyllutRestApi(
 		val harSoknadUnderArbeid = aktiveSoknader.isNotEmpty()
 
 		if (harSoknadUnderArbeid && !forceCreate) {
+			logger.info("Redirecter til side for å velge mellom å fortsette påbegynt søknad eller opprette ny søknad.")
 			val body = BodyStatusResponseDto(
 				status = ErrorCode.SOKNAD_ALREADY_EXISTS.code,
 				info = "Søknad for dette skjemanummeret er allerede påbegynt. Redirect til side for å velge mellom å fortsette påbegynt søknad eller opprette ny søknad.",

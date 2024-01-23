@@ -308,6 +308,7 @@ class SoknadService(
 	): DokumentSoknadDto {
 		// Valider søknaden mot eksisterende søknad ved å sjekke felter som ikke er lov til å oppdatere
 		validerInnsendtSoknadMotEksisterende(dokumentSoknadDto, existingSoknad)
+		logger.info("Validert søknad mot eksisterende søknader")
 		val innsendingsId = existingSoknad.innsendingsId!!
 
 		// Update søknad

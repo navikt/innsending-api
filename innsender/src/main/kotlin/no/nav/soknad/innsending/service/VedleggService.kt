@@ -10,7 +10,10 @@ import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
-import no.nav.soknad.innsending.util.mapping.*
+import no.nav.soknad.innsending.util.mapping.lagDokumentSoknadDto
+import no.nav.soknad.innsending.util.mapping.lagVedleggDto
+import no.nav.soknad.innsending.util.mapping.mapTilVedleggDb
+import no.nav.soknad.innsending.util.mapping.oppdaterVedleggDb
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import org.slf4j.LoggerFactory
@@ -300,9 +303,11 @@ class VedleggService(
 
 		if (eksisterendeVedleggsListe.isNotEmpty()) {
 			oppdaterEksisterendeVedlegg(eksisterendeVedleggsListe, nyttVedlegg, soknadsId)
+			logger.info("Oppdatert eksisterende vedlegg ${eksisterendeVedleggsListe.map { it.vedleggsnr }}, opplastingsStatus: ${eksisterendeVedleggsListe.map { it.opplastingsStatus }}")
 		} else {
 			// Lag nytt vedlegg
 			repo.lagreVedlegg(mapTilVedleggDb(nyttVedlegg, soknadsId))
+			logger.info("Laget nytt vedlegg ${nyttVedlegg.vedleggsnr}")
 		}
 
 	}
