@@ -77,6 +77,7 @@ class OkHttpOAuth2ClientConfig(
 	}
 
 	@Bean
+	@Profile("prod | dev")
 	@Qualifier("kontoregisterApiClient")
 	fun kontoregisterApiClient(
 		clientConfigProperties: ClientConfigurationProperties,
@@ -113,4 +114,9 @@ class OkHttpOAuth2ClientConfig(
 	@Profile("!(prod | dev)")
 	@Qualifier("soknadsmottakerClient")
 	fun soknadsmottakerClientWithoutOAuth() = OkHttpClient.Builder().build()
+
+	@Bean
+	@Profile("!(prod | dev)")
+	@Qualifier("kontoregisterApiClient")
+	fun kontoregisterApiClientWithoutAuth() = OkHttpClient.Builder().build()
 }
