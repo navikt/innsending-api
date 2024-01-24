@@ -93,9 +93,8 @@
 
 	<modules>
 		<module>api</module>
-		<module>soknadsmottaker-api</module>
 		<module>innsender</module>
-		<module>kodeverk-api</module>
+		<module>external-api</module>
 	</modules>
 
 	<repositories>

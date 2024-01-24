@@ -183,7 +183,7 @@ class FyllutRestApi(
 
 	override fun fyllUtPrefillData(properties: List<String>): ResponseEntity<PrefillData> {
 		val userId = tilgangskontroll.hentBrukerFraToken()
-		combinedLogger.log("Kall fra FyllUt for å hente prefill-data", userId)
+		combinedLogger.log("Kall fra FyllUt for å hente prefill-data for $properties", userId)
 
 		val prefillData = prefillService.getPrefillData(properties, userId)
 
