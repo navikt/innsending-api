@@ -65,6 +65,9 @@ class OkHttpOAuth2ClientConfig(
 			.writeTimeout(1, TimeUnit.MINUTES)
 			.addInterceptor {
 				val callId = MDCUtil.callIdOrNew()
+
+				logger.info("Kaller kodeverket med callId: $callId")
+
 				val request = it.request().newBuilder().headers(it.request().headers)
 					.header("Nav-Consumer-Id", applicationName)
 					.header("Nav-Call-Id", callId)
@@ -95,9 +98,9 @@ class OkHttpOAuth2ClientConfig(
 			.addInterceptor {
 
 				val token = tokenService.getToken()
-				logger.info("Token: $token")
 				val callId = MDCUtil.callIdOrNew()
 
+				logger.info("Kaller kontoregister med callId: $callId")
 				val bearerRequest = it.request().newBuilder().headers(it.request().headers)
 					.header("Nav-Call-Id", callId)
 					.header("Authorization", "Bearer $token").build()
