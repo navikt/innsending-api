@@ -4,6 +4,7 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.service.SoknadServiceTest
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.BEARER
+import no.nav.soknad.innsending.util.Skjema
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import java.io.ByteArrayOutputStream
@@ -24,7 +25,8 @@ class Hjelpemetoder {
 			soknadsStatus: SoknadsStatusDto? = SoknadsStatusDto.opprettet,
 			vedleggsListe: List<VedleggDto>? = null,
 			ettersendingsId: String? = null,
-			opprettetDato: OffsetDateTime? = OffsetDateTime.now()
+			opprettetDato: OffsetDateTime? = OffsetDateTime.now(),
+			soknadstype: SoknadType = SoknadType.soknad
 		): DokumentSoknadDto {
 			val vedleggDtoPdf = lagVedleggDto(
 				vedleggsnr = skjemanr,
@@ -58,7 +60,8 @@ class Hjelpemetoder {
 				spraak = spraak,
 				endretDato = OffsetDateTime.now(),
 				innsendtDato = null,
-				soknadstype = SoknadType.soknad
+				soknadstype = soknadstype,
+				skjemaPath = Skjema.createSkjemaPathFromSkjemanr(skjemanr)
 			)
 		}
 

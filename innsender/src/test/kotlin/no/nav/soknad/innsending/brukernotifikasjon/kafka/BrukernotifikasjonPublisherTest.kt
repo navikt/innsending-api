@@ -13,6 +13,7 @@ import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.config.BrukerNotifikasjonConfig
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
+import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -54,13 +55,14 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 
 		brukernotifikasjonPublisher?.soknadStatusChange(
 			Hjelpemetoder.lagDokumentSoknad(
-				personId,
-				skjemanr,
-				spraak,
-				tittel,
-				tema,
-				id,
-				innsendingsid
+				brukerId = personId,
+				skjemanr = skjemanr,
+				spraak = spraak,
+				tittel = tittel,
+				tema = tema,
+				id = id,
+				innsendingsid = innsendingsid,
+				soknadstype = SoknadType.soknad
 			)
 		)
 
@@ -72,7 +74,10 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 			brukernotifikasjonPublisher?.tittelPrefixNySoknad?.get(spraak)!! + tittel,
 			message.captured.brukernotifikasjonInfo.notifikasjonsTittel
 		)
-		assertEquals(notifikasjonConfig.tjenesteUrl + "/" + innsendingsid, message.captured.brukernotifikasjonInfo.lenke)
+		assertEquals(
+			"${notifikasjonConfig.fyllutUrl}/nav550060/oppsummering?sub=digital&innsendingsId=$innsendingsid",
+			message.captured.brukernotifikasjonInfo.lenke
+		)
 		assertEquals(0, message.captured.brukernotifikasjonInfo.eksternVarsling.size)
 	}
 
@@ -126,11 +131,19 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		every { sendTilPublisher.opprettBrukernotifikasjon(capture(oppgave)) } returns Unit
 
 		val soknad = Hjelpemetoder.lagDokumentSoknad(
-			personId, skjemanr, spraak, tittel, tema, id, innsendingsid, SoknadsStatusDto.innsendt,
-			listOf(
+			brukerId = personId,
+			skjemanr = skjemanr,
+			spraak = spraak,
+			tittel = tittel,
+			tema = tema,
+			id = id,
+			innsendingsid = innsendingsid,
+			soknadsStatus = SoknadsStatusDto.innsendt,
+			vedleggsListe = listOf(
 				Hjelpemetoder.lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.innsendt, false, "/litenPdf.pdf"),
 				Hjelpemetoder.lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.sendSenere, false)
 			),
+			soknadstype = SoknadType.ettersendelse
 		)
 
 		brukernotifikasjonPublisher?.soknadStatusChange(soknad)
@@ -140,11 +153,20 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		assertEquals(innsendingsid, done.captured.innsendingId)
 
 		val ettersending = Hjelpemetoder.lagDokumentSoknad(
-			personId, skjemanr, spraak, tittel, tema, id, ettersendingsSoknadsId, SoknadsStatusDto.opprettet,
-			listOf(
+			brukerId = personId,
+			skjemanr = skjemanr,
+			spraak = spraak,
+			tittel = tittel,
+			tema = tema,
+			id = id,
+			innsendingsid = ettersendingsSoknadsId,
+			soknadsStatus = SoknadsStatusDto.opprettet,
+			vedleggsListe = listOf(
 				Hjelpemetoder.lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.innsendt, false, "/litenPdf.pdf"),
 				Hjelpemetoder.lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.ikkeValgt, false)
-			), soknad.innsendingsId
+			),
+			ettersendingsId = soknad.innsendingsId,
+			soknadstype = SoknadType.ettersendelse
 		)
 
 		brukernotifikasjonPublisher?.soknadStatusChange(ettersending)
@@ -159,7 +181,7 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 			oppgave.captured.brukernotifikasjonInfo.notifikasjonsTittel
 		)
 		assertEquals(
-			notifikasjonConfig.tjenesteUrl + "/" + ettersendingsSoknadsId,
+			notifikasjonConfig.sendinnUrl + "/" + ettersendingsSoknadsId,
 			oppgave.captured.brukernotifikasjonInfo.lenke
 		)
 	}
