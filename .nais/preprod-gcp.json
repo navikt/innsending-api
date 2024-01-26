@@ -34,7 +34,7 @@
 		"SOKNADSMOTTAKER_ENDPOINT": "/save",
 		"PUBLISERE_BRUKERNOTIFIKASJONER": "true",
 		"SEND_INN_URL": "https://www.intern.dev.nav.no/sendinn",
-		"FYLL_UT_URL": "https://www.intern.dev.nav.no/fyllut",
+		"FYLL_UT_URL": "https://fyllut-preprod.intern.dev.nav.no/fyllut",
 		"SAFSELVBETJENING_TOKEN_X_AUDIENCE": "dev-fss:teamdokumenthandtering:safselvbetjening-q1",
 		"PDL_TOKEN_X_AUDIENCE": "dev-fss:pdl:pdl-api",
 		"PDL_SCOPE": "api://dev-fss.pdl.pdl-api/.default",
@@ -48,6 +48,9 @@
 		"ARENA_URL": "https://arena-api-q1.dev-fss-pub.nais.io",
 		"ARENA_TOKEN_X_AUDIENCE": "dev-fss:teamarenanais:arena-api-q1",
 		"ARENA_SCOPE": "api://dev-fss.teamarenanais.arena-api-q1/.default",
-		"KODEVERK_URL": "https://kodeverk.dev-fss-pub.nais.io"
+		"KODEVERK_URL": "https://kodeverk.dev-fss-pub.nais.io",
+		"KONTOREGISTER_TOKEN_X_AUDIENCE": "dev-gcp:okonomi:sokos-kontoregister-person",
+		"KONTOREGISTER_SCOPE": "api://dev-gcp.okonomi.sokos-kontoregister-person/.default",
+		"KONTOREGISTER_URL": "http://sokos-kontoregister-person.okonomi"
 	}
 }

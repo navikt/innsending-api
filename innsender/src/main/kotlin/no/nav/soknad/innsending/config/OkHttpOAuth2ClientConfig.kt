@@ -65,6 +65,9 @@ class OkHttpOAuth2ClientConfig(
 			.writeTimeout(1, TimeUnit.MINUTES)
 			.addInterceptor {
 				val callId = MDCUtil.callIdOrNew()
+
+				logger.info("Kaller kodeverket med callId: $callId")
+
 				val request = it.request().newBuilder().headers(it.request().headers)
 					.header("Nav-Consumer-Id", applicationName)
 					.header("Nav-Call-Id", callId)
@@ -73,9 +76,47 @@ class OkHttpOAuth2ClientConfig(
 			}.build()
 	}
 
+	@Bean
+	@Profile("prod | dev")
+	@Qualifier("kontoregisterApiClient")
+	fun kontoregisterApiClient(
+		clientConfigProperties: ClientConfigurationProperties,
+		oAuth2AccessTokenService: OAuth2AccessTokenService
+	) = kontoregisterClient(clientConfigProperties.registration["kontoregister"]!!, oAuth2AccessTokenService)
+
+	private fun kontoregisterClient(
+		clientProperties: ClientProperties,
+		oAuth2AccessTokenService: OAuth2AccessTokenService,
+	): OkHttpClient {
+
+		val tokenService = TokenService(clientProperties, oAuth2AccessTokenService)
+
+		return OkHttpClient().newBuilder()
+			.connectTimeout(20, TimeUnit.SECONDS)
+			.callTimeout(62, TimeUnit.SECONDS)
+			.readTimeout(1, TimeUnit.MINUTES)
+			.writeTimeout(1, TimeUnit.MINUTES)
+			.addInterceptor {
+
+				val token = tokenService.getToken()
+				val callId = MDCUtil.callIdOrNew()
+
+				logger.info("Kaller kontoregister med callId: $callId")
+				val bearerRequest = it.request().newBuilder().headers(it.request().headers)
+					.header("Nav-Call-Id", callId)
+					.header("Authorization", "Bearer $token").build()
+
+				it.proceed(bearerRequest)
+			}.build()
+	}
 
 	@Bean
 	@Profile("!(prod | dev)")
 	@Qualifier("soknadsmottakerClient")
 	fun soknadsmottakerClientWithoutOAuth() = OkHttpClient.Builder().build()
+
+	@Bean
+	@Profile("!(prod | dev)")
+	@Qualifier("kontoregisterApiClient")
+	fun kontoregisterApiClientWithoutAuth() = OkHttpClient.Builder().build()
 }

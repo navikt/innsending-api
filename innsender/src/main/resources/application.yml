@@ -96,10 +96,12 @@ restconfig:
   antivirusUrl: http://localhost:9043/antivirus
   arenaUrl: http://localhost:9043/arena-api
   kodeverkUrl: https://kodeverk.dev.intern.nav.no
+  kontoregisterUrl: http://localhost:9043/kontoregister-api
 
 brukernotifikasjonconfig:
   profiles: test
-  tjenesteUrl: https://localhost
+  fyllutUrl: http://localhost:3001/fyllut
+  sendinnUrl: http://localhost:3100/sendinn
   publisereEndringer: true
 
 
@@ -152,11 +154,13 @@ restconfig:
   antivirusUrl: ${ANTIVIRUS_URL}
   arenaUrl: ${ARENA_URL}
   kodeverkUrl: ${KODEVERK_URL}
+  kontoregisterUrl: ${KONTOREGISTER_URL}
 
 
 brukernotifikasjonconfig:
   profiles: ${SPRING_PROFILES_ACTIVE}
-  tjenesteUrl: ${SEND_INN_URL}
+  fyllutUrl: ${FYLL_UT_URL}
+  sendinnUrl: ${SEND_INN_URL}
   publisereEndringer: ${PUBLISERE_BRUKERNOTIFIKASJONER}
 
 ettersendingsfrist: ${ETTERSENDINGSFRIST}
@@ -200,6 +204,17 @@ no.nav.security.jwt:
           client-id: ${AZURE_APP_CLIENT_ID}
           client-secret: ${AZURE_APP_CLIENT_SECRET}
           client-auth-method: client_secret_basic
+
+      kontoregister:
+        token-endpoint-url: ${TOKEN_X_TOKEN_ENDPOINT}
+        grant-type: urn:ietf:params:oauth:grant-type:token-exchange
+        scope: ${KONTOREGISTER_SCOPE}
+        authentication:
+          client-auth-method: private_key_jwt
+          client-id: ${TOKEN_X_CLIENT_ID}
+          client-jwk: ${TOKEN_X_PRIVATE_JWK}
+        token-exchange:
+          audience: ${KONTOREGISTER_TOKEN_X_AUDIENCE}
 
       saf-maskintilmaskin:
         token-endpoint-url: ${AZURE_OPENID_CONFIG_TOKEN_ENDPOINT}

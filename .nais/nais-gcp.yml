@@ -87,6 +87,8 @@ spec:
           namespace: skjemadigitalisering
         - application: clamav
           namespace: nais-system
+        - application: sokos-kontoregister-person
+          namespace: okonomi
 
   ingresses:
   {{#each ingresses}}

@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.util.prefill
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.util.Constants.ARENA_AKTIVITETER
 import no.nav.soknad.innsending.util.Constants.ARENA_MAALGRUPPER
+import no.nav.soknad.innsending.util.Constants.KONTORREGISTER_BORGER
 import no.nav.soknad.innsending.util.Constants.PDL
 
 object ServiceProperties {
@@ -10,7 +11,8 @@ object ServiceProperties {
 	private val availableServicePropertiesMap = hashMapOf(
 		PDL to listOf("sokerFornavn", "sokerEtternavn", "sokerAdresser", "sokerTelefonnummer", "sokerKjonn"),
 		ARENA_MAALGRUPPER to listOf("sokerMaalgrupper"),
-		ARENA_AKTIVITETER to listOf("sokerAktiviteter")
+		ARENA_AKTIVITETER to listOf("sokerAktiviteter"),
+		KONTORREGISTER_BORGER to listOf("sokerKontonummer")
 	)
 
 	// Creates a hashmap with each external service to call with the corresponding properties to fetch from that service
