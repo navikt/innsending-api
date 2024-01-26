@@ -4,7 +4,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import no.nav.soknad.arkivering.soknadsmottaker.api.CancelNotificationApi
 import no.nav.soknad.arkivering.soknadsmottaker.api.HealthApi
 import no.nav.soknad.arkivering.soknadsmottaker.api.NewNotificationApi
+import no.nav.soknad.arkivering.soknadsmottaker.infrastructure.ClientException
 import no.nav.soknad.arkivering.soknadsmottaker.infrastructure.Serializer.jacksonObjectMapper
+import no.nav.soknad.arkivering.soknadsmottaker.infrastructure.ServerException
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
 import no.nav.soknad.innsending.config.RestConfig
@@ -13,6 +15,8 @@ import okhttp3.OkHttpClient
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 
 @Service
@@ -36,10 +40,20 @@ class SendTilPublisher(
 		healthApi = HealthApi(restConfig.soknadsMottakerHost)
 	}
 
+	@Retryable(
+		include = [ServerException::class, ClientException::class],
+		maxAttempts = 3,
+		backoff = Backoff(delay = 500)
+	)
 	override fun avsluttBrukernotifikasjon(soknadRef: SoknadRef) {
 		cancelNotificationPublisherApi.cancelNotification(soknadRef)
 	}
 
+	@Retryable(
+		include = [ServerException::class, ClientException::class],
+		maxAttempts = 3,
+		backoff = Backoff(delay = 500)
+	)
 	override fun opprettBrukernotifikasjon(nyNotifikasjon: AddNotification) {
 		logger.info("Send melding til ${restConfig.soknadsMottakerHost} for publisering av Brukernotifikasjon for ${nyNotifikasjon.soknadRef.innsendingId}")
 		notificationPublisherApi.newNotification(nyNotifikasjon)
