@@ -122,6 +122,9 @@ class FyllutRestApi(
 			brukerId
 		)
 
+		val existingSoknad = soknadService.hentSoknad(innsendingsId)
+		validerSoknadsTilgang(existingSoknad)
+
 		val updatedSoknad = soknadService.updateSoknad(innsendingsId, dokumentSoknadDto)
 
 		combinedLogger.log("$innsendingsId: Soknad fra FyllUt oppdatert", brukerId)
@@ -139,6 +142,9 @@ class FyllutRestApi(
 			skjemaDto,
 			brukerId
 		)
+
+		val existingSoknad = soknadService.hentSoknad(innsendingsId)
+		validerSoknadsTilgang(existingSoknad)
 
 		soknadService.updateUtfyltSoknad(innsendingsId, dokumentSoknadDto)
 
