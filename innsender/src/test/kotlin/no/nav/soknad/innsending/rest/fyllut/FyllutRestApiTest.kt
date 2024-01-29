@@ -541,16 +541,16 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Should throw exception if user tries to update søknad that is sent in`() {
-		// Gitt
+	fun `Should return error code with status 400 if user tries to update søknad that is sent in`() {
+		// Given
 		val skjemaDto = SkjemaDtoTestBuilder().build()
 
-		// Når
+		// When
 		val createdSoknad = api?.createSoknad(skjemaDto)
 		val sentInSoknad = api?.sendInnSoknad(createdSoknad?.body?.innsendingsId!!)
 		val response = api?.updateSoknadFail(sentInSoknad?.body?.innsendingsId!!, skjemaDto)
 
-		// Så
+		// Then
 		assertTrue(response != null)
 		assertEquals(400, response.statusCode.value())
 		assertEquals(ErrorCode.APPLICATION_SENT_IN_OR_DELETED.code, response.body?.errorCode)
