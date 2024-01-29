@@ -62,6 +62,15 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 	}
 
+	fun updateSoknadFail(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<RestErrorResponseDto>? {
+		return restTemplate.exchange(
+			"${baseUrl}/fyllUt/v1/soknad/${innsendingsId}",
+			HttpMethod.PUT,
+			createHttpEntity(skjemaDto),
+			RestErrorResponseDto::class.java
+		)
+	}
+
 	fun deleteSoknad(innsendingsId: String): ResponseEntity<BodyStatusResponseDto>? {
 		return restTemplate.exchange(
 			"http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}",
