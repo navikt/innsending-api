@@ -541,6 +541,22 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	@Test
+	fun `Should throw exception if user tries to update søknad that is sent in`() {
+		// Gitt
+		val dokumentSoknadDto = DokumentSoknadDtoTestBuilder(status = SoknadsStatusDto.innsendt).build()
+		val innsendingsId = dokumentSoknadDto.innsendingsId!!
+		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
+
+		// Når
+		val response = api?.updateSoknad(innsendingsId, skjemaDto)
+
+		// Så
+		assertTrue(response != null)
+		assertEquals(400, response.statusCode.value())
+
+	}
+
+	@Test
 	fun `Skal redirecte ved eksisterende søknad gitt at force er false`() {
 		// Gitt
 		val dokumentSoknadDto = opprettSoknad(skjemanr = "NAV-redirect")
