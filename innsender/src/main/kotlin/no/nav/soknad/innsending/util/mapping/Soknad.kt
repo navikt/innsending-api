@@ -144,7 +144,8 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		fristForEttersendelse = dokumentSoknadDto.fristForEttersendelse,
 		endretDato = dokumentSoknadDto.endretDato,
 		skalSlettesDato = deletionDate,
-		skjemaPath = dokumentSoknadDto.skjemaPath
+		skjemaPath = dokumentSoknadDto.skjemaPath,
+		visningsType = dokumentSoknadDto.visningsType
 	)
 }
 

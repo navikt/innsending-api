@@ -1675,6 +1675,8 @@ components:
           $ref: "#/components/schemas/SkalSlettesDato"
         skjemaPath:
           $ref: "#/components/schemas/SkjemaPath"
+        visningsType:
+          $ref: "#/components/schemas/VisningsType"
 
     Skjemanr:
       type: string
