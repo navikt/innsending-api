@@ -61,7 +61,8 @@ class Hjelpemetoder {
 				endretDato = OffsetDateTime.now(),
 				innsendtDato = null,
 				soknadstype = soknadstype,
-				skjemaPath = Skjema.createSkjemaPathFromSkjemanr(skjemanr)
+				skjemaPath = Skjema.createSkjemaPathFromSkjemanr(skjemanr),
+				visningsType = VisningsType.fyllUt
 			)
 		}
 
