@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.rest.ekstern
 
 import com.ninjasquad.springmockk.SpykBean
-import io.mockk.slot
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
@@ -80,12 +79,12 @@ class EksternRestApiTest : ApplicationTest() {
 		// When
 		api?.createEksternEttersending(ettersending)
 
-		val message = slot<AddNotification>()
+		val message = mutableListOf<AddNotification>()
 		verify { publisherInterface.opprettBrukernotifikasjon(capture(message)) }
 
 		// Then
 		// The notification is an utkast if erSystemGenerert is false
-		assertEquals(false, message.captured.soknadRef.erSystemGenerert)
+		assertEquals(false, message.last.soknadRef.erSystemGenerert)
 	}
 
 	@Test
@@ -101,12 +100,12 @@ class EksternRestApiTest : ApplicationTest() {
 		// When
 		api?.createEksternEttersending(ettersending)
 
-		val message = slot<AddNotification>()
+		val message = mutableListOf<AddNotification>()
 		verify { publisherInterface.opprettBrukernotifikasjon(capture(message)) }
 
 		// Then
 		// The notification is an oppgave if erSystemGenerert is true
-		assertEquals(true, message.captured.soknadRef.erSystemGenerert)
+		assertEquals(true, message.last.soknadRef.erSystemGenerert)
 	}
 
 	@Test
