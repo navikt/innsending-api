@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.HendelseType
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
@@ -156,8 +157,12 @@ class SoknadService(
 
 		val vedleggDbData = repo.hentAlleVedleggGittSoknadsid(soknadDbData.id!!)
 
-		val hovedDokumentVariantFilerDbData =
-			repo.hentFilerTilVedlegg(innsendingsId, vedleggDbData.hovedDokumentVariant?.id!!)
+		var hovedDokumentVariantFilerDbData = emptyList<FilDbData>()
+
+		if (vedleggDbData.hovedDokumentVariant != null) {
+			hovedDokumentVariantFilerDbData =
+				repo.hentFilerTilVedlegg(innsendingsId, vedleggDbData.hovedDokumentVariant?.id!!)
+		}
 
 		return mapTilDokumentSoknadDto(soknadDbData, vedleggDbData, hovedDokumentVariantFilerDbData)
 	}
