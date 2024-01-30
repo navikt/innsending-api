@@ -148,7 +148,7 @@ class BrukernotifikasjonPublisher(
 	}
 
 	private fun createLink(dokumentSoknad: DokumentSoknadDto): String {
-		if (dokumentSoknad.soknadstype == SoknadType.soknad) {
+		if (dokumentSoknad.soknadstype == SoknadType.soknad && dokumentSoknad.visningsType == VisningsType.fyllUt) {
 			val baseUrl = "${notifikasjonConfig.fyllutUrl}/${dokumentSoknad.skjemaPath}/oppsummering"
 
 			val uriBuilder = UriComponentsBuilder.fromUriString(baseUrl)
