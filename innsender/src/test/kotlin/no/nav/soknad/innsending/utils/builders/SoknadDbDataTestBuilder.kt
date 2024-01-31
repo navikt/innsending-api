@@ -26,7 +26,8 @@ data class SoknadDbDataTestBuilder(
 	var kanLasteOppAnnet: Boolean = false,
 	var forsteinnsendingsdato: LocalDateTime? = null,
 	var ettersendingsFrist: Long = 14,
-	var arkiveringsStatus: ArkiveringsStatus = ArkiveringsStatus.IkkeSatt
+	var arkiveringsStatus: ArkiveringsStatus = ArkiveringsStatus.IkkeSatt,
+	var applikasjon: String? = "fyllut",
 ) {
 	fun build() = SoknadDbData(
 		id = id,
@@ -46,6 +47,7 @@ data class SoknadDbDataTestBuilder(
 		kanlasteoppannet = kanLasteOppAnnet,
 		forsteinnsendingsdato = forsteinnsendingsdato,
 		ettersendingsfrist = ettersendingsFrist,
-		arkiveringsstatus = arkiveringsStatus
+		arkiveringsstatus = arkiveringsStatus,
+		applikasjon = applikasjon,
 	)
 }

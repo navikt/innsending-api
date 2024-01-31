@@ -39,7 +39,8 @@ fun mapTilSoknadDb(
 		kanlasteoppannet = dokumentSoknadDto.kanLasteOppAnnet ?: true,
 		forsteinnsendingsdato = mapTilLocalDateTime(dokumentSoknadDto.forsteInnsendingsDato),
 		ettersendingsfrist = dokumentSoknadDto.fristForEttersendelse,
-		arkiveringsstatus = mapTilDbArkiveringsStatus(dokumentSoknadDto.arkiveringsStatus ?: ArkiveringsStatusDto.ikkeSatt)
+		arkiveringsstatus = mapTilDbArkiveringsStatus(dokumentSoknadDto.arkiveringsStatus ?: ArkiveringsStatusDto.ikkeSatt),
+		applikasjon = dokumentSoknadDto.applikasjon
 	)
 
 fun lagDokumentSoknadDto(
@@ -72,7 +73,8 @@ fun lagDokumentSoknadDto(
 		arkiveringsStatus = mapTilArkiveringsStatusDto(soknadDbData.arkiveringsstatus),
 		erSystemGenerert = erSystemGenerert,
 		soknadstype = if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad,
-		skjemaPath = createSkjemaPathFromSkjemanr(soknadDbData.skjemanr)
+		skjemaPath = createSkjemaPathFromSkjemanr(soknadDbData.skjemanr),
+		applikasjon = soknadDbData.applikasjon
 	)
 }
 
@@ -114,7 +116,8 @@ fun mapTilDokumentSoknadDto(
 		arkiveringsStatus = mapTilArkiveringsStatusDto(soknadDbData.arkiveringsstatus),
 		erSystemGenerert = false,
 		soknadstype = if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad,
-		skjemaPath = createSkjemaPathFromSkjemanr(soknadDbData.skjemanr)
+		skjemaPath = createSkjemaPathFromSkjemanr(soknadDbData.skjemanr),
+		applikasjon = soknadDbData.applikasjon
 	)
 }
 
