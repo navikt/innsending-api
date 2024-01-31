@@ -65,5 +65,28 @@ class EksternRestApi(
 			.body(ettersending)
 	}
 
+	override fun eksternSlettEttersending(
+		innsendingsId: String,
+		navCallId: String?
+	): ResponseEntity<BodyStatusResponseDto> {
+		val brukerId = tilgangskontroll.hentBrukerFraToken()
+		val applikasjon = subjectHandler.getClientId()
 
+		combinedLogger.log(
+			"[${applikasjon}] - $innsendingsId: Kall for å slette ettersending fra ekstern applikasjon",
+			brukerId
+		)
+
+		val ettersending = soknadService.hentSoknad(innsendingsId)
+		tilgangskontroll.validerSoknadsTilgang(ettersending)
+
+		soknadService.deleteSoknadFromExternalApplication(ettersending, applikasjon)
+
+		combinedLogger.log("[${applikasjon}] - $innsendingsId: Slettet ettersending fra ekstern applikasjon", brukerId)
+
+		return ResponseEntity
+			.status(HttpStatus.OK)
+			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet ettersending med id $innsendingsId"))
+
+	}
 }

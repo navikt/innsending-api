@@ -210,6 +210,14 @@ class SoknadService(
 		innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
 	}
 
+	@Transactional
+	fun deleteSoknadFromExternalApplication(dokumentSoknadDto: DokumentSoknadDto, applikasjon: String) {
+		if (dokumentSoknadDto.applikasjon != applikasjon) {
+			throw IllegalActionException("Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den er opprettet av en annen applikasjon")
+		}
+		return slettSoknadAvBruker(dokumentSoknadDto)
+	}
+
 	// Slett opprettet soknad gitt innsendingsId
 	@Transactional
 	fun slettSoknadAutomatisk(innsendingsId: String) {
