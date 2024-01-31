@@ -212,9 +212,6 @@ class SoknadService(
 
 	@Transactional
 	fun deleteSoknadFromExternalApplication(dokumentSoknadDto: DokumentSoknadDto, applikasjon: String) {
-		if (dokumentSoknadDto.applikasjon != applikasjon) {
-			throw IllegalActionException("Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den er opprettet av en annen applikasjon")
-		}
 		return slettSoknadAvBruker(dokumentSoknadDto)
 	}
 
@@ -286,6 +283,7 @@ class SoknadService(
 		}
 	}
 
+	@Transactional
 	fun updateSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		if (dokumentSoknadDto.vedleggsListe.size != 2) {
 			throw BackendErrorException("Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant. Innsendt vedleggsliste skal være tom")

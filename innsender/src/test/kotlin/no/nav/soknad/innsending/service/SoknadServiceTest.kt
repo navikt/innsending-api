@@ -13,7 +13,6 @@ import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.skjema.SkjemaClient
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
-import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.FilRepository
@@ -407,26 +406,6 @@ class SoknadServiceTest : ApplicationTest() {
 		assertEquals(HendelseType.Opprettet, hendelseDbDatas[0].hendelsetype)
 		assertEquals(HendelseType.Endret, hendelseDbDatas[1].hendelsetype)
 
-	}
-
-	@Test
-	fun `Should throw exception if attempting to delete soknad that is created by another application`() {
-		// Given
-		val applicationName = "application"
-		val soknadDbData = SoknadDbDataTestBuilder(applikasjon = "anotherApplication").build()
-		repo.lagreSoknad(soknadDbData)
-
-		val createdSoknad = soknadService.hentSoknad(soknadDbData.innsendingsid)
-
-		// When / Then
-		val exception = assertThrows<IllegalActionException> {
-			soknadService.deleteSoknadFromExternalApplication(createdSoknad, applicationName)
-		}
-
-		assertEquals(
-			"Søknad ${createdSoknad.innsendingsId} kan ikke slettes da den er opprettet av en annen applikasjon",
-			exception.message
-		)
 	}
 
 	@Test
