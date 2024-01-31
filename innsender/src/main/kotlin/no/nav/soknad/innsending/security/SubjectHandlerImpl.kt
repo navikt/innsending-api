@@ -47,11 +47,13 @@ class SubjectHandlerImpl(private val ctxHolder: TokenValidationContextHolder) : 
 
 	override fun getClientId(): String {
 		return tokenValidationContext.getClaims(TOKENX).getStringClaim(CLIENT_ID)
+			?: tokenValidationContext.getClaims(TOKENX).getStringClaim(AZP)
 	}
 
 	companion object {
 		private const val CLAIM_PID = "pid"
 		private const val CLIENT_ID = "client_id"
+		private const val AZP = "azp"
 	}
 }
 

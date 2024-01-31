@@ -170,4 +170,31 @@ class EksternRestApiTest : ApplicationTest() {
 		)
 		assertEquals(defaultVedleggsnr, body.vedleggsListe[0].vedleggsnr)
 	}
+
+	@Test
+	fun `Should delete ettersending`() {
+		// Given
+		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = defaultSkjemanr, tema = defaultTema).build()
+
+		val ettersending = EksternOpprettEttersendingTestBuilder()
+			.skjemanr(skjemaDto.skjemanr)
+			.tema(skjemaDto.tema)
+			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(defaultVedleggsnr).build()))
+			.build()
+		
+		val createdEttersendingResponse = api?.createEksternEttersending(ettersending)
+		val innsendingsId = createdEttersendingResponse?.body?.ettersendingsId!!
+
+		// When
+		val response = api?.deleteEksternEttersending(innsendingsId)
+
+		// Then
+		assertNotNull(response?.body)
+
+		val body = response!!.body!!
+		assertEquals("Slettet ettersending med id $innsendingsId", body.info)
+		assertEquals("OK", body.status)
+
+	}
+
 }
