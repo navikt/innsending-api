@@ -2,21 +2,21 @@ package no.nav.soknad.innsending.cleanup
 
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import io.mockk.mockk
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
-import no.nav.soknad.innsending.config.RestConfig
-import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
+import no.nav.soknad.innsending.consumerapis.pdl.PdlAPI
 import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
-import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
-import no.nav.soknad.innsending.exceptions.ExceptionHelper
+import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
-import no.nav.soknad.innsending.service.*
+import no.nav.soknad.innsending.service.FilService
+import no.nav.soknad.innsending.service.InnsendingService
+import no.nav.soknad.innsending.service.RepositoryUtils
+import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.utils.Hjelpemetoder
@@ -33,66 +33,36 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 	private lateinit var repo: RepositoryUtils
 
 	@Autowired
-	private lateinit var skjemaService: SkjemaService
-
-	@Autowired
 	private lateinit var innsenderMetrics: InnsenderMetrics
-
-	@Autowired
-	private lateinit var vedleggService: VedleggService
-
-	@Autowired
-	private lateinit var ettersendingService: EttersendingService
 
 	@Autowired
 	private lateinit var filService: FilService
 
 	@Autowired
-	private lateinit var restConfig: RestConfig
+	private lateinit var soknadService: SoknadService
 
 	@Autowired
-	private lateinit var exceptionHelper: ExceptionHelper
+	private lateinit var innsendingService: InnsendingService
 
-	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
-	private val leaderSelectionUtility = mockk<LeaderSelectionUtility>()
-	private val soknadsmottakerAPI = mockk<MottakerInterface>()
-	private val pdlInterface = mockk<PdlInterface>()
+	@MockkBean
+	private lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher
+
+	@MockkBean
+	private lateinit var leaderSelectionUtility: LeaderSelectionUtility
+
+	@MockkBean
+	private lateinit var soknadsmottakerAPI: MottakerAPITest
+
+	@MockkBean
+	private lateinit var pdlInterface: PdlAPI
 
 	@MockkBean
 	private lateinit var subjectHandler: SubjectHandlerInterface
-
-	private fun lagSoknadService(): SoknadService = SoknadService(
-		skjemaService = skjemaService,
-		repo = repo,
-		vedleggService = vedleggService,
-		filService = filService,
-		brukernotifikasjonPublisher = brukernotifikasjonPublisher,
-		innsenderMetrics = innsenderMetrics,
-		exceptionHelper = exceptionHelper,
-		subjectHandler = subjectHandler,
-	)
-
-	private fun lagInnsendingService(soknadService: SoknadService): InnsendingService = InnsendingService(
-		repo = repo,
-		soknadService = soknadService,
-		filService = filService,
-		vedleggService = vedleggService,
-		soknadsmottakerAPI = soknadsmottakerAPI,
-		restConfig = restConfig,
-		exceptionHelper = exceptionHelper,
-		ettersendingService = ettersendingService,
-		brukernotifikasjonPublisher = brukernotifikasjonPublisher,
-		innsenderMetrics = innsenderMetrics,
-		pdlInterface = pdlInterface
-	)
-
 
 	private val defaultSkjemanr = "NAV 55-00.60"
 
 	@Test
 	fun testSlettingAvInnsendteSoknader() {
-		val soknadService = lagSoknadService()
-		val innsendingService = lagInnsendingService(soknadService)
 		SlettArkiverteSoknader(leaderSelectionUtility, soknadService)
 
 		val soknader = mutableListOf<DokumentSoknadDto>()
