@@ -879,7 +879,16 @@ paths:
                   application/json:
                     schema:
                       $ref: "#/components/schemas/BodyStatusResponseDto"
-
+              401:
+                description: Uautorisert
+                content:
+                  application/json:
+                    schema:
+                      $ref: "#/components/schemas/RestErrorResponseDto"
+                    example:
+                      message: Autentisering feilet
+                      timestamp: 2023-12-21T09:31:40.549032434
+                      errorCode: errorCode.unauthorized
               404:
                 description: Ingen ettersending funnet
                 content:
@@ -890,6 +899,16 @@ paths:
                       message: Ingen ettersending funnet
                       timestamp: 2023-12-21T09:31:40.549032434
                       errorCode: errorCode.resourceNotFound
+              500:
+                description: Feil i backend
+                content:
+                  application/json:
+                    schema:
+                      $ref: "#/components/schemas/RestErrorResponseDto"
+                    example:
+                      message: Noe gikk galt, prøv igjen senere
+                      timestamp: 2023-12-21T09:31:40.549032434
+                      errorCode: somethingFailedTryLater
             tags:
               - ekstern
 

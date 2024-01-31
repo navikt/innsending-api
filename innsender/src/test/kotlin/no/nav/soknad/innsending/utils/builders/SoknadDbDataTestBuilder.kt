@@ -27,7 +27,7 @@ data class SoknadDbDataTestBuilder(
 	var forsteinnsendingsdato: LocalDateTime? = null,
 	var ettersendingsFrist: Long = 14,
 	var arkiveringsStatus: ArkiveringsStatus = ArkiveringsStatus.IkkeSatt,
-	var applikasjon: String? = "fyllut",
+	var applikasjon: String? = "application",
 ) {
 	fun build() = SoknadDbData(
 		id = id,

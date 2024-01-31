@@ -33,7 +33,7 @@ class DokumentSoknadDtoTestBuilder(
 	var erSystemGenerert: Boolean? = true,
 	var soknadType: SoknadType? = null,
 	var skjemaPath: String = Skjema.createSkjemaPathFromSkjemanr(skjemanr),
-	var applikasjon: String? = "fyllut",
+	var applikasjon: String? = "application",
 ) {
 
 	val erEttersending = ettersendingsId != null || visningsType == VisningsType.ettersending
