@@ -70,6 +70,7 @@ class DokumentSoknadDtoTestBuilder(
 		arkiveringsStatus = arkiveringsStatus,
 		erSystemGenerert = erSystemGenerert,
 		soknadstype = soknadType ?: (if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad),
-		skjemaPath = skjemaPath
+		skjemaPath = skjemaPath,
+		applikasjon = applikasjon,
 	)
 }

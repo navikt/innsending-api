@@ -181,7 +181,7 @@ class EksternRestApiTest : ApplicationTest() {
 			.tema(skjemaDto.tema)
 			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(defaultVedleggsnr).build()))
 			.build()
-		
+
 		val createdEttersendingResponse = api?.createEksternEttersending(ettersending)
 		val innsendingsId = createdEttersendingResponse?.body?.ettersendingsId!!
 
@@ -194,7 +194,21 @@ class EksternRestApiTest : ApplicationTest() {
 		val body = response!!.body!!
 		assertEquals("Slettet ettersending med id $innsendingsId", body.info)
 		assertEquals("OK", body.status)
+	}
 
+	@Test
+	fun `Should return 404 if ettersending doesn't exist when deleting`() {
+		// Given
+		val innsendingsId = "non-existing-id"
+
+		// When
+		val response = api?.deleteEksternEttersendingFail(innsendingsId)
+
+		// Then
+		assertNotNull(response?.body)
+		assertEquals(404, response?.statusCode?.value())
+		val body = response!!.body!!
+		assertEquals("resourceNotFound", body.errorCode)
 	}
 
 }
