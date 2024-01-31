@@ -2,7 +2,6 @@ package no.nav.soknad.innsending.service
 
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
@@ -41,11 +40,10 @@ class VedleggServiceTest : ApplicationTest() {
 	@Autowired
 	private lateinit var exceptionHelper: ExceptionHelper
 
-	@InjectMockKs
-	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
-
 	@MockkBean
 	private lateinit var subjectHandler: SubjectHandlerInterface
+
+	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
 
 	private fun lagSoknadService(): SoknadService = SoknadService(
 		skjemaService = skjemaService,

@@ -2,7 +2,6 @@ package no.nav.soknad.innsending.cleanup
 
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
@@ -54,16 +53,9 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 	@Autowired
 	private lateinit var exceptionHelper: ExceptionHelper
 
-	@InjectMockKs
 	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
-
-	@InjectMockKs
 	private val leaderSelectionUtility = mockk<LeaderSelectionUtility>()
-
-	@InjectMockKs
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
-
-	@InjectMockKs
 	private val pdlInterface = mockk<PdlInterface>()
 
 	@MockkBean

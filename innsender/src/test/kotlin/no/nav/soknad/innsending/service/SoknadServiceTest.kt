@@ -2,7 +2,6 @@ package no.nav.soknad.innsending.service
 
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
 import io.mockk.slot
 import no.nav.soknad.innsending.ApplicationTest
@@ -89,21 +88,16 @@ class SoknadServiceTest : ApplicationTest() {
 	@Autowired
 	private lateinit var restConfig: RestConfig
 
-	@InjectMockKs
 	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
 
-	@InjectMockKs
 	private val hentSkjemaData = mockk<SkjemaClient>()
 
-	@InjectMockKs
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
 
-	@InjectMockKs
 	private val pdlInterface = mockk<PdlInterface>()
 
 	@MockkBean
 	private lateinit var subjectHandler: SubjectHandlerInterface
-
 
 	private val defaultSkjemanr = "NAV 55-00.60"
 
