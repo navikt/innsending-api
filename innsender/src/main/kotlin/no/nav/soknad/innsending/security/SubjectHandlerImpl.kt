@@ -45,6 +45,7 @@ class SubjectHandlerImpl(private val ctxHolder: TokenValidationContextHolder) : 
 	}
 
 
+	// The MockOAuth2Server sets AZP claim for the client id, while the real tokens uses client_id claim
 	override fun getClientId(): String {
 		return tokenValidationContext.getClaims(TOKENX).getStringClaim(CLIENT_ID)
 			?: tokenValidationContext.getClaims(TOKENX).getStringClaim(AZP)
