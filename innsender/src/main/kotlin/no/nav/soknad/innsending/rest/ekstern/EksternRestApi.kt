@@ -78,7 +78,7 @@ class EksternRestApi(
 		)
 
 		val ettersending = soknadService.hentSoknad(innsendingsId)
-		tilgangskontroll.validerSoknadsTilgang(ettersending)
+		tilgangskontroll.validateSoknadAccess(ettersending)
 
 		soknadService.deleteSoknadFromExternalApplication(ettersending, applikasjon)
 

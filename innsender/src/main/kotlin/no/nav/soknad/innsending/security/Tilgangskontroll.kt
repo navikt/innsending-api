@@ -54,7 +54,7 @@ class Tilgangskontroll(
 		throw ResourceNotFoundException("Søknad finnes ikke eller er ikke tilgjengelig for innlogget bruker") //FIXME: Bytte til 403?
 	}
 
-	fun validerSoknadsTilgang(dokumentSoknadDto: DokumentSoknadDto) {
+	fun validateSoknadAccess(dokumentSoknadDto: DokumentSoknadDto) {
 		harTilgang(dokumentSoknadDto)
 		if (!dokumentSoknadDto.kanGjoreEndringer) {
 			throw IllegalActionException(
