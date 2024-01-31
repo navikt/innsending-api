@@ -415,6 +415,44 @@ class SoknadServiceTest : ApplicationTest() {
 	}
 
 	@Test
+	fun `Should throw exception if attempting to delete soknad that is created by another application`() {
+		// Given
+		val applicationName = "application"
+		val soknadDbData = SoknadDbDataTestBuilder(applikasjon = "anotherApplication").build()
+		repo.lagreSoknad(soknadDbData)
+
+		val createdSoknad = soknadService.hentSoknad(soknadDbData.innsendingsid)
+
+		// When / Then
+		val exception = assertThrows<IllegalActionException> {
+			soknadService.deleteSoknadFromExternalApplication(createdSoknad, applicationName)
+		}
+
+		assertEquals(
+			"Søknad ${createdSoknad.innsendingsId} kan ikke slettes da den er opprettet av en annen applikasjon",
+			exception.message
+		)
+	}
+
+	@Test
+	fun `Should delete søknad from external application`() {
+		// Given
+		val applicationName = "application"
+		val soknadDbData = SoknadDbDataTestBuilder(applikasjon = applicationName).build()
+		repo.lagreSoknad(soknadDbData)
+
+		val createdSoknad = soknadService.hentSoknad(soknadDbData.innsendingsid)
+
+		// When
+		soknadService.deleteSoknadFromExternalApplication(createdSoknad, applicationName)
+
+		// Then
+		assertThrows<ResourceNotFoundException> {
+			soknadService.hentSoknad(soknadDbData.innsendingsid)
+		}
+	}
+
+	@Test
 	fun `Should update utfylt søknad with new vedlegg`() {
 		// Given
 		val skjemanr = "NAV 10-07.04"
