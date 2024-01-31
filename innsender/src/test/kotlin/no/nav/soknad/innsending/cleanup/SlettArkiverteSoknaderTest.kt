@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.cleanup
 
+import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
@@ -65,8 +66,8 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 	@InjectMockKs
 	private val pdlInterface = mockk<PdlInterface>()
 
-	@InjectMockKs
-	private val subjectHandler = mockk<SubjectHandlerInterface>()
+	@MockkBean
+	private lateinit var subjectHandler: SubjectHandlerInterface
 
 	private fun lagSoknadService(): SoknadService = SoknadService(
 		skjemaService = skjemaService,
@@ -108,6 +109,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 		every { soknadsmottakerAPI.sendInnSoknad(any(), any()) } returns Unit
 		every { pdlInterface.hentPersonIdents(any()) } returns listOf(IdentDto("123456789", "FOLKEREGISTERIDENT", false))
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("123456789", "Fornavn", null, "Etternavn")
+		every { subjectHandler.getClientId() } returns "application"
 
 		val spraak = "no"
 		val tema = "BID"

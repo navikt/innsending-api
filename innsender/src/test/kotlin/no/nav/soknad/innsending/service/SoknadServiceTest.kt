@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.service
 
+import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
@@ -100,8 +101,8 @@ class SoknadServiceTest : ApplicationTest() {
 	@InjectMockKs
 	private val pdlInterface = mockk<PdlInterface>()
 
-	@InjectMockKs
-	private val subjectHandler = mockk<SubjectHandlerInterface>()
+	@MockkBean
+	private lateinit var subjectHandler: SubjectHandlerInterface
 
 
 	private val defaultSkjemanr = "NAV 55-00.60"

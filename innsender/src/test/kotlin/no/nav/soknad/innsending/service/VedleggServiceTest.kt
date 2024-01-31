@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.service
 
+import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
@@ -43,8 +44,8 @@ class VedleggServiceTest : ApplicationTest() {
 	@InjectMockKs
 	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
 
-	@InjectMockKs
-	private val subjectHandler = mockk<SubjectHandlerInterface>()
+	@MockkBean
+	private lateinit var subjectHandler: SubjectHandlerInterface
 
 	private fun lagSoknadService(): SoknadService = SoknadService(
 		skjemaService = skjemaService,
@@ -60,6 +61,7 @@ class VedleggServiceTest : ApplicationTest() {
 	@BeforeEach
 	fun setup() {
 		every { brukernotifikasjonPublisher.soknadStatusChange(any()) } returns true
+		every { subjectHandler.getClientId() } returns "application"
 	}
 
 	@Test

@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.service
 
+import com.ninjasquad.springmockk.MockkBean
 import io.mockk.*
-import io.mockk.impl.annotations.InjectMockKs
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
@@ -74,24 +74,22 @@ class EttersendingServiceTest : ApplicationTest() {
 	@Autowired
 	private lateinit var tilgangskontroll: Tilgangskontroll
 
-	@InjectMockKs
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
 
-	@InjectMockKs
 	private val sendTilPublisher = mockk<PublisherInterface>()
 
-	@InjectMockKs
 	private val pdlInterface = mockk<PdlInterface>()
 
 	private var brukernotifikasjonPublisher: BrukernotifikasjonPublisher? = null
 
-	@InjectMockKs
-	private val subjectHandler = mockk<SubjectHandlerInterface>()
+	@MockkBean
+	private lateinit var subjectHandler: SubjectHandlerInterface
 
 	@BeforeEach
 	fun setUp() {
 		brukernotifikasjonPublisher = spyk(BrukernotifikasjonPublisher(notifikasjonConfig, sendTilPublisher))
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("1234567890", "Kan", null, "Søke")
+		every { subjectHandler.getClientId() } returns "application"
 	}
 
 	private fun lagEttersendingService(): EttersendingService = EttersendingService(
