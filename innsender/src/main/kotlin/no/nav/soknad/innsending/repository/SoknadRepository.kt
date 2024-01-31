@@ -11,7 +11,6 @@ import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import java.util.*
 
 @Repository
 interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
@@ -51,6 +50,18 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 		@Param("visningssteg") visningsSteg: Long,
 		@Param("endretdato") endretdato: LocalDateTime
 	)
+
+	@Transactional
+	@Modifying
+	@Query(
+		value = "UPDATE SoknadDbData SET endretdato = :endretdato, applikasjon = :applikasjon WHERE id = :id",
+		nativeQuery = false
+	)
+	fun updateApplikasjon(
+		@Param("id") id: Long,
+		@Param("applikasjon") applikasjon: String,
+		@Param("endretdato") endretdato: LocalDateTime
+	): Int
 
 	@Query(
 		value = "SELECT * FROM soknad WHERE status IN (:statuses) AND opprettetdato <= :opprettetFor ORDER BY opprettetdato",
