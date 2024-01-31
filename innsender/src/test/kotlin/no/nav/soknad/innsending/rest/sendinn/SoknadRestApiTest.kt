@@ -64,7 +64,7 @@ class SoknadRestApiTest : ApplicationTest() {
 		assertTrue(postResponse?.body != null)
 		assertTrue(getResponse?.body != null)
 		assertEquals(postResponse?.body?.innsendingsId, getSoknadDto!!.innsendingsId)
-		assertEquals("applikasjon", getResponse.body?.applikasjon)
+		assertEquals("application", getResponse.body?.applikasjon)
 	}
 
 	companion object {
