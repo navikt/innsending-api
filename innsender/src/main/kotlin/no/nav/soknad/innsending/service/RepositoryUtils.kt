@@ -70,12 +70,6 @@ class RepositoryUtils(
 		throw BackendErrorException("Feil ved henting av alle soknader for bruker xxxx med status $status", ex)
 	}
 
-	fun finnNyesteSoknadGittEttersendingsId(ettersendingsId: String): List<SoknadDbData> = try {
-		soknadRepository.findNewestByEttersendingsId(ettersendingsId)
-	} catch (ex: Exception) {
-		throw BackendErrorException("Feil ved henting av nyeste søknad gitt ettersendingsid $$ettersendingsId", ex)
-	}
-
 	fun findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(
 		eldreEnn: Long,
 		vindu: Long
@@ -100,12 +94,6 @@ class RepositoryUtils(
 		} catch (ex: Exception) {
 			throw BackendErrorException("Feil i lagring av søknad ${soknadDbData.tittel}", ex)
 		}
-	}
-
-	fun soknadSaveAndFlush(soknadDbData: SoknadDbData): SoknadDbData = try {
-		soknadRepository.saveAndFlush(soknadDbData)
-	} catch (ex: Exception) {
-		throw BackendErrorException("Feil ved lagring og flush av søknad ${soknadDbData.innsendingsid}", ex)
 	}
 
 	fun slettSoknad(dokumentSoknadDto: DokumentSoknadDto, hendelseType: HendelseType): HendelseDbData = try {
@@ -166,14 +154,6 @@ class RepositoryUtils(
 		throw BackendErrorException("Feil ved forsøk på henting av vedlegg med id $vedleggsId", ex)
 	}
 
-	fun hentVedleggGittUuid(uuid: String): VedleggDbData? = try {
-		vedleggRepository.findByUuid(uuid) ?: throw ResourceNotFoundException("Fant ikke vedlegg med uuid $uuid")
-	} catch (ex: ResourceNotFoundException) {
-		throw ex
-	} catch (ex: Exception) {
-		throw BackendErrorException("Feil ved forsøk på henting av vedlegg med uuid $uuid", ex)
-	}
-
 	fun hentAlleVedleggGittSoknadsid(soknadsId: Long): List<VedleggDbData> = try {
 		vedleggRepository.findAllBySoknadsid(soknadsId)
 	} catch (ex: Exception) {
@@ -190,12 +170,6 @@ class RepositoryUtils(
 		}
 	}
 
-	fun flushVedlegg() = try {
-		vedleggRepository.flush()
-	} catch (ex: Exception) {
-		throw BackendErrorException("Feil ved flush av vedlegg", ex)
-	}
-
 	fun oppdaterVedlegg(innsendingsId: String, vedleggDbData: VedleggDbData): VedleggDbData = try {
 		vedleggRepository.save(vedleggDbData)
 		vedleggRepository.findByVedleggsid(vedleggDbData.id!!)
@@ -205,7 +179,6 @@ class RepositoryUtils(
 	} catch (ex: Exception) {
 		throw BackendErrorException("Feil ved oppdatering av vedlegg ${vedleggDbData.id} for søknad $innsendingsId", ex)
 	}
-
 
 	fun updateVedleggStatus(
 		innsendingsId: String,
@@ -217,15 +190,6 @@ class RepositoryUtils(
 		throw BackendErrorException("Feil ved oppdatering av status for vedlegg $vedleggsId for søknad $innsendingsId", ex)
 	}
 
-	fun updateSoknadApplikasjon(
-		soknadsId: Long,
-		applikasjon: String,
-	): Int = try {
-		soknadRepository.updateApplikasjon(id = soknadsId, applikasjon = applikasjon, endretdato = LocalDateTime.now())
-	} catch (ex: Exception) {
-		throw BackendErrorException("Feil ved oppdatering av søknadens applikasjonsnavn for $soknadsId", ex)
-	}
-
 	fun updateVedleggErPakrevd(
 		vedleggsId: Long,
 		erPakrevd: Boolean
@@ -233,23 +197,6 @@ class RepositoryUtils(
 		vedleggRepository.updateErPakrevd(id = vedleggsId, erpakrevd = erPakrevd, endretdato = LocalDateTime.now())
 	} catch (ex: Exception) {
 		throw BackendErrorException("Feil ved oppdatering av status for vedlegg $vedleggsId", ex)
-	}
-
-	//NB! metoden vedleggRepository.updateStatusAndInnsendtdato fungerer ved lokal testing, men feiler når kjøring på nais.
-	fun oppdaterVedleggStatusOgInnsendtdato(
-		innsendingsId: String, vedleggsId: Long, opplastingsStatus: OpplastingsStatus,
-		endretDato: LocalDateTime, innsendtDato: LocalDateTime
-	): Int = try {
-		logger.info("oppdaterVedleggStatusOgInnsendtdato: vedlegg=$vedleggsId, innsendtdato=$innsendtDato ")
-		val raderEndret = vedleggRepository.updateStatusAndInnsendtdato(
-			id = vedleggsId, status = opplastingsStatus, endretdato = endretDato, innsendtdato = innsendtDato
-		)
-		if (raderEndret != 1) {
-			logger.error("$innsendingsId: oppdaterVedleggStatusOgInnsendtdato: uventet antall, $raderEndret, rader endret for vedlegg $vedleggsId")
-		}
-		raderEndret
-	} catch (ex: Exception) {
-		throw BackendErrorException("Feil ved oppdatering av status for vedlegg $vedleggsId for søknad $innsendingsId", ex)
 	}
 
 	fun slettVedlegg(vedleggsId: Long) {
