@@ -1,8 +1,11 @@
 package no.nav.soknad.innsending.security
 
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
+import no.nav.soknad.innsending.exceptions.ErrorCode
+import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.innsending.util.testpersonid
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -49,6 +52,16 @@ class Tilgangskontroll(
 
 		logger.info("Bruker har ikke tilgang til soknad ${soknadDto.innsendingsId}")
 		throw ResourceNotFoundException("Søknad finnes ikke eller er ikke tilgjengelig for innlogget bruker") //FIXME: Bytte til 403?
+	}
+
+	fun validerSoknadsTilgang(dokumentSoknadDto: DokumentSoknadDto) {
+		harTilgang(dokumentSoknadDto)
+		if (!dokumentSoknadDto.kanGjoreEndringer) {
+			throw IllegalActionException(
+				message = "Søknaden kan ikke vises. Søknaden er slettet eller innsendt og kan ikke vises eller endres.",
+				errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
+			)
+		}
 	}
 
 }
