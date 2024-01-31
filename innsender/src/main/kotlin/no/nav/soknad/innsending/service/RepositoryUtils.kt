@@ -95,7 +95,7 @@ class RepositoryUtils(
 		try {
 			lagreHendelse(soknadDbData)
 			val savedSoknad = soknadRepository.save(soknadDbData)
-			logger.info("Lagret søknad med status: ${savedSoknad.status}, skjemanr: ${savedSoknad.skjemanr}, type: ${savedSoknad.visningstype}")
+			logger.info("Lagret søknad med status: ${savedSoknad.status}, skjemanr: ${savedSoknad.skjemanr}, innsendingsId: ${savedSoknad.innsendingsid} type: ${savedSoknad.visningstype}, applikasjon: ${savedSoknad.applikasjon}")
 			return savedSoknad
 		} catch (ex: Exception) {
 			throw BackendErrorException("Feil i lagring av søknad ${soknadDbData.tittel}", ex)
@@ -215,6 +215,15 @@ class RepositoryUtils(
 		vedleggRepository.updateStatus(id = vedleggsId, status = opplastingsStatus, endretdato = LocalDateTime.now())
 	} catch (ex: Exception) {
 		throw BackendErrorException("Feil ved oppdatering av status for vedlegg $vedleggsId for søknad $innsendingsId", ex)
+	}
+
+	fun updateSoknadApplikasjon(
+		soknadsId: Long,
+		applikasjon: String,
+	): Int = try {
+		soknadRepository.updateApplikasjon(id = soknadsId, applikasjon = applikasjon, endretdato = LocalDateTime.now())
+	} catch (ex: Exception) {
+		throw BackendErrorException("Feil ved oppdatering av søknadens applikasjonsnavn for $soknadsId", ex)
 	}
 
 	fun updateVedleggErPakrevd(
