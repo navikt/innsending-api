@@ -15,6 +15,7 @@ import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
@@ -64,6 +65,8 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 	@InjectMockKs
 	private val pdlInterface = mockk<PdlInterface>()
 
+	@InjectMockKs
+	private val subjectHandler = mockk<SubjectHandlerInterface>()
 
 	private fun lagSoknadService(): SoknadService = SoknadService(
 		skjemaService = skjemaService,
@@ -72,7 +75,8 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 		filService = filService,
 		brukernotifikasjonPublisher = brukernotifikasjonPublisher,
 		innsenderMetrics = innsenderMetrics,
-		exceptionHelper = exceptionHelper
+		exceptionHelper = exceptionHelper,
+		subjectHandler = subjectHandler,
 	)
 
 	private fun lagInnsendingService(soknadService: SoknadService): InnsendingService = InnsendingService(

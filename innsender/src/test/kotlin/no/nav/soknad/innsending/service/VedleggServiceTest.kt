@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.PatchVedleggDto
 import no.nav.soknad.innsending.model.PostVedleggDto
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.SoknadAssertions
 import org.junit.jupiter.api.Assertions.*
@@ -42,6 +43,9 @@ class VedleggServiceTest : ApplicationTest() {
 	@InjectMockKs
 	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
 
+	@InjectMockKs
+	private val subjectHandler = mockk<SubjectHandlerInterface>()
+
 	private fun lagSoknadService(): SoknadService = SoknadService(
 		skjemaService = skjemaService,
 		repo = repo,
@@ -49,7 +53,8 @@ class VedleggServiceTest : ApplicationTest() {
 		filService = filService,
 		brukernotifikasjonPublisher = brukernotifikasjonPublisher,
 		innsenderMetrics = innsenderMetrics,
-		exceptionHelper = exceptionHelper
+		exceptionHelper = exceptionHelper,
+		subjectHandler = subjectHandler,
 	)
 
 	@BeforeEach

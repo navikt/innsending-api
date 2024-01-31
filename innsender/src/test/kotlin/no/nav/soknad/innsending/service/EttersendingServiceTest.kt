@@ -18,6 +18,7 @@ import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.HendelseRepository
 import no.nav.soknad.innsending.repository.domain.enums.HendelseType
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.Utilities
@@ -84,6 +85,9 @@ class EttersendingServiceTest : ApplicationTest() {
 
 	private var brukernotifikasjonPublisher: BrukernotifikasjonPublisher? = null
 
+	@InjectMockKs
+	private val subjectHandler = mockk<SubjectHandlerInterface>()
+
 	@BeforeEach
 	fun setUp() {
 		brukernotifikasjonPublisher = spyk(BrukernotifikasjonPublisher(notifikasjonConfig, sendTilPublisher))
@@ -100,7 +104,8 @@ class EttersendingServiceTest : ApplicationTest() {
 		vedleggService = vedleggService,
 		safService = safService,
 		tilgangskontroll = tilgangskontroll,
-		kodeverkService = kodeverkService
+		kodeverkService = kodeverkService,
+		subjectHandler = subjectHandler,
 	)
 
 	private fun lagInnsendingService(): InnsendingService = InnsendingService(

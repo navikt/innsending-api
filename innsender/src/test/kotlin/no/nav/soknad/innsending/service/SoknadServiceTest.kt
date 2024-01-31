@@ -13,6 +13,7 @@ import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.consumerapis.skjema.SkjemaClient
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
+import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.FilRepository
@@ -21,6 +22,7 @@ import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.repository.VedleggRepository
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.HendelseType
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.mapping.mapTilOffsetDateTime
 import no.nav.soknad.innsending.util.models.hovedDokument
@@ -31,6 +33,7 @@ import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
 import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
@@ -97,6 +100,9 @@ class SoknadServiceTest : ApplicationTest() {
 	@InjectMockKs
 	private val pdlInterface = mockk<PdlInterface>()
 
+	@InjectMockKs
+	private val subjectHandler = mockk<SubjectHandlerInterface>()
+
 
 	private val defaultSkjemanr = "NAV 55-00.60"
 
@@ -105,6 +111,7 @@ class SoknadServiceTest : ApplicationTest() {
 		every { hentSkjemaData.hent() } returns hentSkjemaDataConsumer.initSkjemaDataFromDisk()
 		every { brukernotifikasjonPublisher.soknadStatusChange(any()) } returns true
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("1234567890", "Kan", null, "Søke")
+		every { subjectHandler.getClientId() } returns "application"
 	}
 
 

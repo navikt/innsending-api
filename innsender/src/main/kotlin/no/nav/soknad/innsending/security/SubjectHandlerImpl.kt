@@ -44,8 +44,14 @@ class SubjectHandlerImpl(private val ctxHolder: TokenValidationContextHolder) : 
 		return "srvinnsending-api"
 	}
 
+
+	override fun getClientId(): String {
+		return tokenValidationContext.getClaims(TOKENX).getStringClaim(CLIENT_ID)
+	}
+
 	companion object {
 		private const val CLAIM_PID = "pid"
+		private const val CLIENT_ID = "client_id"
 	}
 }
 
