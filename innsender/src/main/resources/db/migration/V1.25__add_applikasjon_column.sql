@@ -1,0 +1,2 @@
+ALTER TABLE soknad
+	ADD COLUMN applikasjon VARCHAR(255);

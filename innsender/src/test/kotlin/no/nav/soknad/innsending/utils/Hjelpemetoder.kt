@@ -5,6 +5,7 @@ import no.nav.soknad.innsending.service.SoknadServiceTest
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.BEARER
 import no.nav.soknad.innsending.util.Skjema
+import no.nav.soknad.pdfutilities.AntallSider
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import java.io.ByteArrayOutputStream
@@ -151,7 +152,7 @@ class Hjelpemetoder {
 			val fil = getBytesFromFile("/litenPdf.pdf")
 			return FilDto(
 				vedleggDto.id!!, null, "OpplastetFil.pdf",
-				Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now()
+				Mimetype.applicationSlashPdf, fil.size, AntallSider().finnAntallSider(fil), fil, OffsetDateTime.now()
 			)
 		}
 

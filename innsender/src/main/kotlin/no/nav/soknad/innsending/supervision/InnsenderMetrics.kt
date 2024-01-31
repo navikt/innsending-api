@@ -26,6 +26,10 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 	private val latencyHelp = "Innsending latency distribution"
 	private val databaseSizeName = "database_size"
 	private val databaseSizeHelp = "Database size"
+	private val fileNumberOfPages = "numberOfPagesInFile"
+	private val fileNumberOfPagesHelp = "Numer of pages in an uploaded file"
+	private val fileSize = "fileSize"
+	private val fileSizeHelp = "Size of an uploaded file"
 	private val absentInArchiveName = "applications_absent_in_archive_total"
 	private val absentInArchiveHelp = "Number of sent in applications that not yet have been archived"
 	private val archivingFailedName = "archiving_of_applications_failed_total"
@@ -37,6 +41,9 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 	private val databaseGauge = registerGauge(databaseSizeName, databaseSizeHelp)
 	private val absentInArchiveGauge = registerGauge(absentInArchiveName, absentInArchiveHelp)
 	private val archivingFailedGauge = registerGauge(archivingFailedName, archivingFailedHelp)
+	private val fileNumberOfPagesGauge = registerGauge(fileNumberOfPages, fileNumberOfPagesHelp)
+	private val fileSizeGauge = registerGauge(fileSize, fileSizeHelp)
+
 
 	private val jobLastSuccessGauge = Gauge
 		.build()
@@ -101,4 +108,8 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 	fun archivingFailedSet(number: Long) = archivingFailedGauge.set(number.toDouble())
 
 	fun updateJobLastSuccess(jobName: String) = jobLastSuccessGauge.labels(jobName).setToCurrentTime()
+
+	fun fileNumberOfPagesSet(pages: Long) = fileNumberOfPagesGauge.set(pages.toDouble())
+	fun fileSizeSet(size: Long) = fileSizeGauge.set(size.toDouble())
+
 }

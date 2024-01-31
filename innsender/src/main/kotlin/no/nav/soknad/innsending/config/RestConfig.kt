@@ -9,6 +9,7 @@ class RestConfig {
 	lateinit var clientSecret: String
 	var maxFileSize by Delegates.notNull<Int>()
 	var maxFileSizeSum by Delegates.notNull<Int>()
+	var maxNumberOfPages by Delegates.notNull<Int>()
 	lateinit var sanityHost: String
 	lateinit var sanityEndpoint: String
 	var filesInOneRequestToFilestorage by Delegates.notNull<Int>()

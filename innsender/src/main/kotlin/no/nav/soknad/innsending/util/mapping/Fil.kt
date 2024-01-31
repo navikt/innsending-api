@@ -14,12 +14,13 @@ fun mapTilFilDb(filDto: FilDto) = FilDbData(
 	mapTilDbMimetype(filDto.mimetype) ?: "application/pdf",
 	if (filDto.data == null) null else filDto.data?.size,
 	filDto.data,
-	mapTilLocalDateTime(filDto.opprettetdato) ?: LocalDateTime.now()
+	mapTilLocalDateTime(filDto.opprettetdato) ?: LocalDateTime.now(),
+	antallsider = filDto.antallsider
 )
 
 fun lagFilDto(filDbData: FilDbData, medFil: Boolean = true) = FilDto(
 	filDbData.vedleggsid, filDbData.id,
-	filDbData.filnavn, mapTilMimetype(filDbData.mimetype), filDbData.storrelse,
+	filDbData.filnavn, mapTilMimetype(filDbData.mimetype), filDbData.storrelse, filDbData.antallsider,
 	if (medFil) filDbData.data else null, mapTilOffsetDateTime(filDbData.opprettetdato)
 )
 

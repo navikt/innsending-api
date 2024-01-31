@@ -9,7 +9,6 @@ import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
-import no.nav.soknad.pdfutilities.KonverterTilPdf
 import no.nav.soknad.pdfutilities.PdfMerger
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
@@ -316,7 +315,7 @@ class FilService(
 
 		val vedleggDtos = mutableListOf<VedleggDto>()
 		logger.info("$innsendingsId: HentOgMerge for ${vedleggDbList.map { it.uuid }}")
-		vedleggDbList.forEach {
+		vedleggDbList.forEach { it ->
 			val filer = repo.hentFilerTilVedlegg(innsendingsId, it.id!!).filterNot { it.data == null }
 			val vedleggsFil =
 				if (filer.isEmpty()) {
@@ -324,13 +323,17 @@ class FilService(
 					null
 				} else if (filer[0].mimetype == Mimetype.applicationSlashPdf.value) {
 					logger.info("$innsendingsId: HentOgMerge skal merge ${filer.size} PDFer til vedlegg ${it.uuid}")
-					if (filer.all { it.data == null }) {
+					if (filer.all { fil -> fil.data == null }) {
 						logger.warn("$innsendingsId: HentOgMerge vedlegg ${it.uuid} mangler opplastet filer på alle filobjekter, returnerer null")
 						null
 					} else {
-						val flater = KonverterTilPdf()
-						val flatetPdfs = filer.mapNotNull { fil -> fil.data?.let { data -> flater.flatUtPdf(data) } }
-						PdfMerger().mergePdfer(flatetPdfs)
+						/*
+							val flater = KonverterTilPdf()
+							val flatetPdfs =
+								filer.mapNotNull { fil -> fil.data?.let { data -> flater.flatUtPdf(data) } } // filene blir flatet ut allerede ved opplasting
+						*/
+						PdfMerger().mergePdfer(
+							filer.filter { fil -> fil.data != null }.map { fil -> fil.data!! })
 					}
 				} else {
 					if (filer.size > 1) {

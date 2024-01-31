@@ -26,6 +26,10 @@ class Validerer {
 		kontroller(innsendingId, file, fileName)
 	}
 
+	fun validereAntallSider(innsendingId: String, file: ByteArray, maxAntallSider: Int = 150) {
+		kontrollerAntallSider(innsendingId, file, maxAntallSider)
+	}
+
 	private fun kontroller(innsendingId: String, file: ByteArray, fileName: String? = "") {
 		if (isPDF(file)) {
 			// Kontroller at PDF er lovlig, dvs. ikke encrypted og passordbeskyttet
@@ -36,6 +40,19 @@ class Validerer {
 				message = "$innsendingId: Ugyldig filtype for opplasting. Kan kun laste opp filer av type PDF, JPEG, PNG og IMG",
 				errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
 			)
+		}
+	}
+
+	private fun kontrollerAntallSider(innsendingId: String, file: ByteArray, maxAntallSider: Int) {
+		if (isPDF(file)) {
+			val antallSider = AntallSider().finnAntallSider(file)
+			if (antallSider > maxAntallSider) {
+				logger.warn("$innsendingId: Opplastet fil med $antallSider sider overskrider $maxAntallSider")
+				throw IllegalActionException(
+					message = "$innsendingId: For mange sider i fil. Opplastet fil med $antallSider sider som overskrider $maxAntallSider",
+					errorCode = ErrorCode.FILE_WITH_TOO_TO_MANY_PAGES
+				)
+			}
 		}
 	}
 

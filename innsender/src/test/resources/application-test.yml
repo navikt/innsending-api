@@ -48,6 +48,7 @@ restconfig:
   version: 1.0
   maxFileSize: 50
   maxFileSizeSum: 150
+  maxNumberOfPages: 200
   sanityHost: localhost:5490
   sanityEndpoint: /soknader/api/sanity/skjemautlisting
   filesInOneRequestToFilestorage: 10

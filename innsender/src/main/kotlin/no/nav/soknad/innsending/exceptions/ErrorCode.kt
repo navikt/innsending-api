@@ -17,6 +17,7 @@ enum class ErrorCode(val code: String) {
 	SEND_IN_ERROR_NO_CHANGE("illegalAction.sendInErrorNoChange"),
 	NOT_SUPPORTED_FILE_FORMAT("illegalAction.notSupportedFileFormat"),
 	FILE_SIZE_SUM_TOO_LARGE("illegalAction.fileSizeSumTooLarge"),
+	FILE_WITH_TOO_TO_MANY_PAGES("illegalAction.fileWithTooManyPages"),
 	VEDLEGG_FILE_SIZE_SUM_TOO_LARGE("illegalAction.vedleggFileSizeSumTooLarge"),
 	TITLE_STRING_TOO_LONG("illegalAction.titleStringTooLong"), // (ikke i bruk)
 	VIRUS_SCAN_FAILED("illegalAction.virusScanFailed"),

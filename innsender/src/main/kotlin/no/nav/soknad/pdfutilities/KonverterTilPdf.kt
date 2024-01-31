@@ -30,7 +30,7 @@ class KonverterTilPdf {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	fun tilPdf(fil: ByteArray): ByteArray {
+	fun tilPdf(fil: ByteArray): Pair<ByteArray, Int> {
 		if (FiltypeSjekker().isPdf(fil)) {
 			return flatUtPdf(fil) // Bare hvis inneholder formfields?
 		} else if (FiltypeSjekker().isImage(fil)) {
@@ -57,7 +57,7 @@ class KonverterTilPdf {
 		return pdfDocument.documentCatalog.acroForm
 	}
 
-	fun flatUtPdf(fil: ByteArray): ByteArray {
+	fun flatUtPdf(fil: ByteArray): Pair<ByteArray, Int> {
 		val antallSider = AntallSider().finnAntallSider(fil)
 		logger.info("Antall sider i PDF: {}", antallSider)
 
@@ -70,20 +70,20 @@ class KonverterTilPdf {
 
 			val images = KonverterTilPng().konverterTilPng(fil)
 			val pdfList = mutableListOf<ByteArray>()
-			for (element in images) pdfList.add(createPDFFromImage(element))
+			for (element in images) pdfList.add(createPDFFromImage(element).first)
 
 			val end = System.currentTimeMillis()
 			logger.info("Tid brukt for å konvertere PDF til bilde og tilbake til PDF = {}", end - start)
-			
-			return PdfMerger().mergePdfer(pdfList)
+
+			return Pair(PdfMerger().mergePdfer(pdfList), antallSider)
+		} else {
+			logger.info("Antall sider = $antallSider er over max grense (50) for utflating av PDF")
 		}
 
-
-
-		return fil
+		return Pair(fil, antallSider)
 	}
 
-	private fun createPDFFromImage(image: ByteArray): ByteArray {
+	private fun createPDFFromImage(image: ByteArray): Pair<ByteArray, Int> {
 		try {
 			PDDocument().use { doc ->
 				val pdImage = PDImageXObject.createFromByteArray(doc, image, null)
@@ -103,7 +103,7 @@ class KonverterTilPdf {
 				addDC(doc)
 				ByteArrayOutputStream().use { byteArrayOutputStream ->
 					doc.save(byteArrayOutputStream)
-					return byteArrayOutputStream.toByteArray()
+					return Pair(byteArrayOutputStream.toByteArray(), 1)
 				}
 			}
 		} catch (ioe: IOException) {

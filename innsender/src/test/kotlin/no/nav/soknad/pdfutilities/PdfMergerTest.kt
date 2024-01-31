@@ -79,8 +79,7 @@ class PdfMergerTest {
 	private fun konverterTilPdfOgReturner(filPath: String): ByteArray {
 		val jpg = Hjelpemetoder.getBytesFromFile(filPath)
 
-		val pdf = KonverterTilPdf().tilPdf(jpg)
-		val antallSider = AntallSider().finnAntallSider(pdf)
+		val (pdf, antallSider) = KonverterTilPdf().tilPdf(jpg)
 		assertEquals(1, antallSider)
 
 		val erPdfa = Validerer().isPDFa(pdf)

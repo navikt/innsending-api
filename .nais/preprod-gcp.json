@@ -24,6 +24,7 @@
 		"APP_VERSION": "0.0.1",
 		"MAX_FILE_SIZE": "50",
 		"MAX_FILE_SIZE_SUM": "150",
+		"MAX_NUMBER_OF_PAGES": "200",
 		"ETTERSENDINGSFRIST": 14,
 		"PDL_URL": "https://pdl-api.dev-fss-pub.nais.io",
 		"SAFSELVBETJENING_URL": "https://safselvbetjening-q1.dev-fss-pub.nais.io",

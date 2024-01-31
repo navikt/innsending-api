@@ -60,12 +60,21 @@ class FilRestApi(
 		val opplastet = (file as ByteArrayResource).byteArray
 
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
-		val fil = KonverterTilPdf().tilPdf(opplastet)
+		val (fil, antallsider) = KonverterTilPdf().tilPdf(opplastet)
 
 		// Lagre
 		val lagretFilDto = filService.lagreFil(
 			soknadDto,
-			FilDto(vedleggsId, null, file.filename ?: "", Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now())
+			FilDto(
+				vedleggsid = vedleggsId,
+				id = null,
+				filnavn = file.filename ?: "",
+				mimetype = Mimetype.applicationSlashPdf,
+				storrelse = fil.size,
+				antallsider = antallsider,
+				fil,
+				OffsetDateTime.now()
+			)
 		)
 
 		combinedLogger.log("$innsendingsId: Lagret fil ${lagretFilDto.id} på vedlegg $vedleggsId til søknad", brukerId)

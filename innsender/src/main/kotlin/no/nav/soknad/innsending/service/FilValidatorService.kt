@@ -40,6 +40,7 @@ class FilValidatorService(private val restConfig: RestConfig, private val antivi
 			ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE
 		)
 		Validerer().validereFilformat(innsendingsId, opplastet, fileName)
+		Validerer().validereAntallSider(innsendingsId, opplastet, restConfig.maxNumberOfPages)
 
 		// Sjekk om filen inneholder virus
 		// TODO: Fiks dette
