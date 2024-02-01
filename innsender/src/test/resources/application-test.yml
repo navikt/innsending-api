@@ -11,6 +11,9 @@ spring:
     activate:
       on-profile: test
 
+  application:
+    name: innsending-api
+
   flyway:
     enabled: true
 

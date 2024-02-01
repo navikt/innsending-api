@@ -3,6 +3,8 @@ server:
   max-http-request-header-size: 32KB
 
 spring:
+  application:
+    name: innsending-api
   jackson:
     default-property-inclusion: non_null
 
@@ -57,7 +59,7 @@ spring:
       on-profile: local | docker
 
   application:
-    name:
+    name: innsending-api
 
   codec:
     max-in-memory-size: 104857600
@@ -111,6 +113,9 @@ spring:
   config:
     activate:
       on-profile: dev | prod
+
+  application:
+    name: innsending-api
 
   servlet:
     multipart:

@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit
 
 @Configuration
 class OkHttpOAuth2ClientConfig(
-	@Value("\$spring.application.name}") private val applicationName: String
+	@Value("\${spring.application.name}") private val applicationName: String
 ) {
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 
