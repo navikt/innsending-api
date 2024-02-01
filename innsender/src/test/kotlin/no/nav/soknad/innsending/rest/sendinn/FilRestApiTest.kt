@@ -70,7 +70,7 @@ class FilRestApiTest : ApplicationTest() {
 		assertTrue(postFilResponseN6.body != null)
 		assertEquals(Mimetype.applicationSlashPdf, postFilResponseN6.body!!.mimetype)
 		assertEquals(1.0, filePages.sum)
-		assertEquals(7187, fileSize.sum)
+		assertEquals(7187.0, fileSize.sum)
 		val opplastetFilDto = postFilResponseN6.body
 
 		val vedleggN6Request = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
