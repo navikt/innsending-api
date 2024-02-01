@@ -1,9 +1,6 @@
 package no.nav.soknad.innsending.supervision
 
-import io.prometheus.client.CollectorRegistry
-import io.prometheus.client.Counter
-import io.prometheus.client.Gauge
-import io.prometheus.client.Histogram
+import io.prometheus.client.*
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
@@ -41,8 +38,8 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 	private val databaseGauge = registerGauge(databaseSizeName, databaseSizeHelp)
 	private val absentInArchiveGauge = registerGauge(absentInArchiveName, absentInArchiveHelp)
 	private val archivingFailedGauge = registerGauge(archivingFailedName, archivingFailedHelp)
-	private val fileNumberOfPagesGauge = registerGauge(fileNumberOfPages, fileNumberOfPagesHelp)
-	private val fileSizeGauge = registerGauge(fileSize, fileSizeHelp)
+	private val fileNumberOfPagesSummary = registerSummary(fileNumberOfPages, fileNumberOfPagesHelp)
+	private val fileSizeSummary = registerSummary(fileSize, fileSizeHelp)
 
 
 	private val jobLastSuccessGauge = Gauge
@@ -81,6 +78,16 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 			.register(registry)
 
 
+	private fun registerSummary(name: String, help: String): Summary =
+		Summary
+			.build()
+			.namespace(soknadNamespace)
+			.name(name)
+			.help(help)
+			.quantile(0.95, 0.01)
+			.register(registry)
+
+
 	fun operationsCounterInc(operation: String, tema: String) = operationsCounter.labels(operation, tema, appName).inc()
 	fun operationsCounterGet(operation: String, tema: String) = operationsCounter.labels(operation, tema, appName)?.get()
 
@@ -109,7 +116,13 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 
 	fun updateJobLastSuccess(jobName: String) = jobLastSuccessGauge.labels(jobName).setToCurrentTime()
 
-	fun fileNumberOfPagesSet(pages: Long) = fileNumberOfPagesGauge.set(pages.toDouble())
-	fun fileSizeSet(size: Long) = fileSizeGauge.set(size.toDouble())
+	fun fileNumberOfPagesSet(pages: Long) = fileNumberOfPagesSummary.observe(pages.toDouble())
+	fun fileNumberOfPagesGet() = fileNumberOfPagesSummary.get()
+	fun fileNumberOfPagesClear() = fileNumberOfPagesSummary.clear()
+
+	fun fileSizeSet(size: Long) = fileSizeSummary.observe(size.toDouble())
+	fun fileSizeGet() = fileSizeSummary.get()
+	fun fileSizeClear() = fileSizeSummary.clear()
+
 
 }
