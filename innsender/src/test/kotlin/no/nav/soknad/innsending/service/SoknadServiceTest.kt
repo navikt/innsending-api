@@ -418,7 +418,7 @@ class SoknadServiceTest : ApplicationTest() {
 		val createdSoknad = soknadService.hentSoknad(soknadDbData.innsendingsid)
 
 		// When
-		soknadService.deleteSoknadFromExternalApplication(createdSoknad, applicationName)
+		soknadService.deleteSoknadFromExternalApplication(createdSoknad)
 
 		// Then
 		assertThrows<ResourceNotFoundException> {

@@ -211,7 +211,7 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun deleteSoknadFromExternalApplication(dokumentSoknadDto: DokumentSoknadDto, applikasjon: String) {
+	fun deleteSoknadFromExternalApplication(dokumentSoknadDto: DokumentSoknadDto) {
 		return slettSoknadAvBruker(dokumentSoknadDto)
 	}
 
