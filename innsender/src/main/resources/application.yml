@@ -97,7 +97,7 @@ restconfig:
   azureUrl: http://localhost:9043/azure-api
   antivirusUrl: http://localhost:9043/antivirus
   arenaUrl: http://localhost:9043/arena-api
-  kodeverkUrl: https://kodeverk.dev.intern.nav.no
+  kodeverkUrl: https://kodeverk-api.nav.no
   kontoregisterUrl: http://localhost:9043/kontoregister-api
 
 brukernotifikasjonconfig:
