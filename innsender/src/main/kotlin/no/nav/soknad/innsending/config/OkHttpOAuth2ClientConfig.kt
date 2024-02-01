@@ -58,7 +58,6 @@ class OkHttpOAuth2ClientConfig(
 	@Bean
 	@Qualifier("kodeverkApiClient")
 	fun kodeverkApiClient(): OkHttpClient {
-		logger.info("Kodeverk with applicationName: $applicationName")
 		return OkHttpClient().newBuilder()
 			.connectTimeout(20, TimeUnit.SECONDS)
 			.callTimeout(62, TimeUnit.SECONDS)
