@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
@@ -45,6 +46,9 @@ class SoknadServiceUnitTest {
 
 	@RelaxedMockK
 	lateinit var repo: RepositoryUtils
+
+	@RelaxedMockK
+	lateinit var subjectHandler: SubjectHandlerInterface
 
 	@InjectMockKs
 	lateinit var soknadService: SoknadService

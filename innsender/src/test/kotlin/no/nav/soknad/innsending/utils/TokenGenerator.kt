@@ -3,7 +3,6 @@ package no.nav.soknad.innsending.utils
 import com.nimbusds.jose.JOSEObjectType
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
-import no.nav.security.token.support.spring.test.MockLoginController
 
 class TokenGenerator(
 	private val mockOAuth2Server: MockOAuth2Server,
@@ -20,7 +19,7 @@ class TokenGenerator(
 		val pid = fnr ?: subject
 		return mockOAuth2Server.issueToken(
 			issuerId = tokenx,
-			clientId = MockLoginController::class.java.simpleName,
+			clientId = "application",
 			tokenCallback = DefaultOAuth2TokenCallback(
 				issuerId = tokenx,
 				subject = pid,

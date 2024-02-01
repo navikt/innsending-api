@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.repository.domain.enums.HendelseType
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
@@ -33,6 +34,7 @@ class SoknadService(
 	private val brukernotifikasjonPublisher: BrukernotifikasjonPublisher,
 	private val innsenderMetrics: InnsenderMetrics,
 	private val exceptionHelper: ExceptionHelper,
+	private val subjectHandler: SubjectHandlerInterface
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -48,16 +50,31 @@ class SoknadService(
 
 		// hentSkjema informasjon gitt skjemanr
 		val kodeverkSkjema = skjemaService.hentSkjema(skjemanr, spraak)
+		val applikasjon = subjectHandler.getClientId()
 
 		try {
 			// lagre soknad
 			val savedSoknadDbData = repo.lagreSoknad(
 				SoknadDbData(
-					null, Utilities.laginnsendingsId(), kodeverkSkjema.tittel ?: "", kodeverkSkjema.skjemanummer ?: "",
-					kodeverkSkjema.tema ?: "", spraak, SoknadsStatus.Opprettet, brukerId, null, LocalDateTime.now(),
-					LocalDateTime.now(), null, 0, VisningsType.dokumentinnsending, true,
-					forsteinnsendingsdato = null, ettersendingsfrist = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
-					arkiveringsstatus = ArkiveringsStatus.IkkeSatt
+					id = null,
+					innsendingsid = Utilities.laginnsendingsId(),
+					tittel = kodeverkSkjema.tittel ?: "",
+					skjemanr = kodeverkSkjema.skjemanummer ?: "",
+					tema = kodeverkSkjema.tema ?: "",
+					spraak = spraak,
+					status = SoknadsStatus.Opprettet,
+					brukerid = brukerId,
+					ettersendingsid = null,
+					opprettetdato = LocalDateTime.now(),
+					endretdato = LocalDateTime.now(),
+					innsendtdato = null,
+					visningssteg = 0,
+					visningstype = VisningsType.dokumentinnsending,
+					kanlasteoppannet = true,
+					forsteinnsendingsdato = null,
+					ettersendingsfrist = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
+					arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
+					applikasjon = applikasjon
 				)
 			)
 
@@ -193,6 +210,11 @@ class SoknadService(
 		innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
 	}
 
+	@Transactional
+	fun deleteSoknadFromExternalApplication(dokumentSoknadDto: DokumentSoknadDto) {
+		return slettSoknadAvBruker(dokumentSoknadDto)
+	}
+
 	// Slett opprettet soknad gitt innsendingsId
 	@Transactional
 	fun slettSoknadAutomatisk(innsendingsId: String) {
@@ -261,6 +283,7 @@ class SoknadService(
 		}
 	}
 
+	@Transactional
 	fun updateSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		if (dokumentSoknadDto.vedleggsListe.size != 2) {
 			throw BackendErrorException("Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant. Innsendt vedleggsliste skal være tom")
