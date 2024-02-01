@@ -14,8 +14,7 @@
 		"saf.dev-fss-pub.nais.io",
 		"soknadsmottaker-gcp.intern.dev.nav.no",
 		"www.nav.no",
-		"arena-api-q1.dev-fss-pub.nais.io",
-		"kodeverk-api.nav.no"
+		"arena-api-q1.dev-fss-pub.nais.io"
 	],
 	"kafka-pool": "nav-dev",
 	"env": {
@@ -48,7 +47,7 @@
 		"ARENA_URL": "https://arena-api-q1.dev-fss-pub.nais.io",
 		"ARENA_TOKEN_X_AUDIENCE": "dev-fss:teamarenanais:arena-api-q1",
 		"ARENA_SCOPE": "api://dev-fss.teamarenanais.arena-api-q1/.default",
-		"KODEVERK_URL": "https://kodeverk-api.nav.no",
+		"KODEVERK_URL": "http://kodeverk-api.team-rocket",
 		"KONTOREGISTER_TOKEN_X_AUDIENCE": "dev-gcp:okonomi:sokos-kontoregister-person",
 		"KONTOREGISTER_SCOPE": "api://dev-gcp.okonomi.sokos-kontoregister-person/.default",
 		"KONTOREGISTER_URL": "http://sokos-kontoregister-person.okonomi"
