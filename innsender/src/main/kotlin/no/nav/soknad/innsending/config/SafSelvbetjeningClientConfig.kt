@@ -27,7 +27,7 @@ class SafSelvbetjeningClientConfig(
 	private val restConfig: RestConfig,
 	oauth2Config: ClientConfigurationProperties,
 	private val oAuth2AccessTokenService: OAuth2AccessTokenService,
-	@Value("\$spring.application.name}") private val applicationName: String
+	@Value("\${spring.application.name}") private val applicationName: String
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 

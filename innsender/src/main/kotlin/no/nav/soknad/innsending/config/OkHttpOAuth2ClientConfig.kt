@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit
 
 @Configuration
 class OkHttpOAuth2ClientConfig(
-	@Value("\$spring.application.name}") private val applicationName: String
+	@Value("\${spring.application.name}") private val applicationName: String
 ) {
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -58,6 +58,7 @@ class OkHttpOAuth2ClientConfig(
 	@Bean
 	@Qualifier("kodeverkApiClient")
 	fun kodeverkApiClient(): OkHttpClient {
+		logger.info("Kodeverk with applicationName: $applicationName")
 		return OkHttpClient().newBuilder()
 			.connectTimeout(20, TimeUnit.SECONDS)
 			.callTimeout(62, TimeUnit.SECONDS)
