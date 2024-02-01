@@ -26,10 +26,6 @@ class Validerer {
 		kontroller(innsendingId, file, fileName)
 	}
 
-	fun validereAntallSider(innsendingId: String, file: ByteArray, maxAntallSider: Int = 150) {
-		kontrollerAntallSider(innsendingId, file, maxAntallSider)
-	}
-
 	private fun kontroller(innsendingId: String, file: ByteArray, fileName: String? = "") {
 		if (isPDF(file)) {
 			// Kontroller at PDF er lovlig, dvs. ikke encrypted og passordbeskyttet
@@ -43,9 +39,10 @@ class Validerer {
 		}
 	}
 
-	private fun kontrollerAntallSider(innsendingId: String, file: ByteArray, maxAntallSider: Int) {
+	fun validereAntallSider(innsendingId: String, file: ByteArray, maxAntallSider: Int = 200): Int {
+		var antallSider = 1
 		if (isPDF(file)) {
-			val antallSider = AntallSider().finnAntallSider(file)
+			antallSider = AntallSider().finnAntallSider(file)
 			if (antallSider > maxAntallSider) {
 				logger.warn("$innsendingId: Opplastet fil med $antallSider sider overskrider $maxAntallSider")
 				throw IllegalActionException(
@@ -54,6 +51,7 @@ class Validerer {
 				)
 			}
 		}
+		return antallSider
 	}
 
 	fun validerStorrelse(

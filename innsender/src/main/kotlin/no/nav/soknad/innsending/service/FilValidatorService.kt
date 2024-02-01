@@ -4,6 +4,7 @@ import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.antivirus.AntivirusInterface
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
+import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ByteArrayResource
@@ -11,7 +12,11 @@ import org.springframework.core.io.Resource
 import org.springframework.stereotype.Service
 
 @Service
-class FilValidatorService(private val restConfig: RestConfig, private val antivirus: AntivirusInterface) {
+class FilValidatorService(
+	private val restConfig: RestConfig,
+	private val antivirus: AntivirusInterface,
+	private val innsenderMetrics: InnsenderMetrics
+) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -39,8 +44,11 @@ class FilValidatorService(private val restConfig: RestConfig, private val antivi
 			restConfig.maxFileSize.toLong(),
 			ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE
 		)
+		innsenderMetrics.fileSizeSet(opplastet.size.toLong())
+
 		Validerer().validereFilformat(innsendingsId, opplastet, fileName)
-		Validerer().validereAntallSider(innsendingsId, opplastet, restConfig.maxNumberOfPages)
+		val antallSider = Validerer().validereAntallSider(innsendingsId, opplastet, restConfig.maxNumberOfPages)
+		innsenderMetrics.fileNumberOfPagesSet(antallSider.toLong())
 
 		// Sjekk om filen inneholder virus
 		// TODO: Fiks dette
