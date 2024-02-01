@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.service
 
+import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
 import io.mockk.slot
 import no.nav.soknad.innsending.ApplicationTest
@@ -21,6 +21,7 @@ import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.repository.VedleggRepository
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.HendelseType
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.mapping.mapTilOffsetDateTime
 import no.nav.soknad.innsending.util.models.hovedDokument
@@ -31,6 +32,7 @@ import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
 import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
@@ -85,18 +87,16 @@ class SoknadServiceTest : ApplicationTest() {
 	@Autowired
 	private lateinit var restConfig: RestConfig
 
-	@InjectMockKs
 	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
 
-	@InjectMockKs
 	private val hentSkjemaData = mockk<SkjemaClient>()
 
-	@InjectMockKs
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
 
-	@InjectMockKs
 	private val pdlInterface = mockk<PdlInterface>()
 
+	@MockkBean
+	private lateinit var subjectHandler: SubjectHandlerInterface
 
 	private val defaultSkjemanr = "NAV 55-00.60"
 
@@ -105,6 +105,7 @@ class SoknadServiceTest : ApplicationTest() {
 		every { hentSkjemaData.hent() } returns hentSkjemaDataConsumer.initSkjemaDataFromDisk()
 		every { brukernotifikasjonPublisher.soknadStatusChange(any()) } returns true
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("1234567890", "Kan", null, "Søke")
+		every { subjectHandler.getClientId() } returns "application"
 	}
 
 
@@ -405,6 +406,24 @@ class SoknadServiceTest : ApplicationTest() {
 		assertEquals(HendelseType.Opprettet, hendelseDbDatas[0].hendelsetype)
 		assertEquals(HendelseType.Endret, hendelseDbDatas[1].hendelsetype)
 
+	}
+
+	@Test
+	fun `Should delete søknad from external application`() {
+		// Given
+		val applicationName = "application"
+		val soknadDbData = SoknadDbDataTestBuilder(applikasjon = applicationName).build()
+		repo.lagreSoknad(soknadDbData)
+
+		val createdSoknad = soknadService.hentSoknad(soknadDbData.innsendingsid)
+
+		// When
+		soknadService.deleteSoknadFromExternalApplication(createdSoknad)
+
+		// Then
+		assertThrows<ResourceNotFoundException> {
+			soknadService.hentSoknad(soknadDbData.innsendingsid)
+		}
 	}
 
 	@Test

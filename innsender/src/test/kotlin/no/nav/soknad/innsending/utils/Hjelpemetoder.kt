@@ -62,7 +62,8 @@ class Hjelpemetoder {
 				innsendtDato = null,
 				soknadstype = soknadstype,
 				skjemaPath = Skjema.createSkjemaPathFromSkjemanr(skjemanr),
-				visningsType = VisningsType.fyllUt
+				visningsType = VisningsType.fyllUt,
+				applikasjon = "application"
 			)
 		}
 

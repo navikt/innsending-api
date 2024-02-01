@@ -6,6 +6,7 @@ import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.PrefillService
 import no.nav.soknad.innsending.service.SoknadService
@@ -30,7 +31,8 @@ class FyllutRestApi(
 	private val restConfig: RestConfig,
 	private val soknadService: SoknadService,
 	private val tilgangskontroll: Tilgangskontroll,
-	private val prefillService: PrefillService
+	private val prefillService: PrefillService,
+	private val subjectHandler: SubjectHandlerInterface
 ) : FyllutApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -41,6 +43,7 @@ class FyllutRestApi(
 	@Timed(InnsenderOperation.OPPRETT)
 	override fun fyllUt(skjemaDto: SkjemaDto): ResponseEntity<Unit> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
+		val applikasjon = subjectHandler.getClientId()
 
 		combinedLogger.log(
 			"Skal opprette søknad fra FyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}",
@@ -50,8 +53,9 @@ class FyllutRestApi(
 
 		val opprettetSoknad = soknadService.opprettNySoknad(
 			SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
-				skjemaDto,
-				brukerId
+				input = skjemaDto,
+				brukerId = brukerId,
+				applikasjon = applikasjon
 			)
 		)
 
@@ -70,6 +74,7 @@ class FyllutRestApi(
 		force: Boolean?
 	): ResponseEntity<Any> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
+		val applikasjon = subjectHandler.getClientId()
 
 		combinedLogger.log(
 			"Skal opprette søknad fra FyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}",
@@ -80,7 +85,11 @@ class FyllutRestApi(
 			redirectVedPaabegyntSoknad(brukerId, skjemaDto, force ?: false)
 		if (redirectVedPaabegyntSoknad != null) return redirectVedPaabegyntSoknad
 
-		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(skjemaDto, brukerId)
+		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
+			input = skjemaDto,
+			brukerId = brukerId,
+			applikasjon = applikasjon
+		)
 		val opprettetSoknad = soknadService.opprettNySoknad(dokumentSoknadDto)
 
 		combinedLogger.log(
@@ -114,12 +123,14 @@ class FyllutRestApi(
 	@Timed(InnsenderOperation.ENDRE)
 	override fun fyllUtOppdaterSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<SkjemaDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
+		val applikasjon = subjectHandler.getClientId()
 
 		combinedLogger.log("$innsendingsId: Skal oppdatere søknad fra FyllUt", brukerId)
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
-			skjemaDto,
-			brukerId
+			input = skjemaDto,
+			brukerId = brukerId,
+			applikasjon = applikasjon
 		)
 
 		val existingSoknad = soknadService.hentSoknad(innsendingsId)
@@ -135,12 +146,14 @@ class FyllutRestApi(
 	@Timed(InnsenderOperation.ENDRE)
 	override fun fyllUtUtfyltSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<Unit> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
+		val applikasjon = subjectHandler.getClientId()
 
 		combinedLogger.log("$innsendingsId: Skal fullføre søknad fra FyllUt", brukerId)
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
-			skjemaDto,
-			brukerId
+			input = skjemaDto,
+			brukerId = brukerId,
+			applikasjon = applikasjon
 		)
 
 		val existingSoknad = soknadService.hentSoknad(innsendingsId)

@@ -1,13 +1,14 @@
 package no.nav.soknad.innsending.service
 
+import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.PatchVedleggDto
 import no.nav.soknad.innsending.model.PostVedleggDto
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.SoknadAssertions
 import org.junit.jupiter.api.Assertions.*
@@ -39,7 +40,9 @@ class VedleggServiceTest : ApplicationTest() {
 	@Autowired
 	private lateinit var exceptionHelper: ExceptionHelper
 
-	@InjectMockKs
+	@MockkBean
+	private lateinit var subjectHandler: SubjectHandlerInterface
+
 	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
 
 	private fun lagSoknadService(): SoknadService = SoknadService(
@@ -49,12 +52,14 @@ class VedleggServiceTest : ApplicationTest() {
 		filService = filService,
 		brukernotifikasjonPublisher = brukernotifikasjonPublisher,
 		innsenderMetrics = innsenderMetrics,
-		exceptionHelper = exceptionHelper
+		exceptionHelper = exceptionHelper,
+		subjectHandler = subjectHandler,
 	)
 
 	@BeforeEach
 	fun setup() {
 		every { brukernotifikasjonPublisher.soknadStatusChange(any()) } returns true
+		every { subjectHandler.getClientId() } returns "application"
 	}
 
 	@Test

@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
@@ -36,7 +37,8 @@ class EttersendingService(
 	private val soknadService: SoknadService,
 	private val safService: SafService,
 	private val tilgangskontroll: Tilgangskontroll,
-	private val kodeverkService: KodeverkService
+	private val kodeverkService: KodeverkService,
+	private val subjectHandler: SubjectHandlerInterface
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -55,6 +57,8 @@ class EttersendingService(
 	)
 		: SoknadDbData {
 		val innsendingsId = Utilities.laginnsendingsId()
+		val applikasjon = subjectHandler.getClientId()
+
 		// lagre soknad
 		return repo.lagreSoknad(
 			SoknadDbData(
@@ -74,7 +78,8 @@ class EttersendingService(
 				visningstype = VisningsType.ettersending,
 				forsteinnsendingsdato = mapTilLocalDateTime(forsteInnsendingsDato),
 				ettersendingsfrist = fristForEttersendelse,
-				arkiveringsstatus = ArkiveringsStatus.IkkeSatt
+				arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
+				applikasjon = applikasjon
 			)
 		)
 	}
@@ -325,9 +330,10 @@ class EttersendingService(
 		}
 	}
 
+	@Transactional
 	fun createEttersendingFromExternalApplication(
 		brukerId: String,
-		eksternOpprettEttersending: EksternOpprettEttersending
+		eksternOpprettEttersending: EksternOpprettEttersending,
 	): DokumentSoknadDto {
 		val mappedEttersending = mapToOpprettEttersending(eksternOpprettEttersending)
 
@@ -345,7 +351,7 @@ class EttersendingService(
 			} else {
 				createEttersending(brukerId = brukerId, ettersending = enrichedEttersending)
 			}
-
+		
 		publiserBrukernotifikasjon(dokumentSoknadDto, eksternOpprettEttersending.brukernotifikasjonstype)
 
 		return dokumentSoknadDto

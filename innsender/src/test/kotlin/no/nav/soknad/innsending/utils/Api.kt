@@ -180,6 +180,24 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 	}
 
+	fun deleteEksternEttersending(innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
+		return restTemplate.exchange(
+			"${baseUrl}/ekstern/v1/ettersending/${innsendingsId}",
+			HttpMethod.DELETE,
+			createHttpEntity(null),
+			BodyStatusResponseDto::class.java
+		)
+	}
+
+	fun deleteEksternEttersendingFail(innsendingsId: String): ResponseEntity<RestErrorResponseDto> {
+		return restTemplate.exchange(
+			"${baseUrl}/ekstern/v1/ettersending/${innsendingsId}",
+			HttpMethod.DELETE,
+			createHttpEntity(null),
+			RestErrorResponseDto::class.java
+		)
+	}
+
 	fun getPrefillData(properties: String): ResponseEntity<PrefillData>? {
 		return restTemplate.exchange(
 			"${baseUrl}/fyllUt/v1/prefill-data?properties=$properties",

@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.cleanup
 
+import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.*
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
@@ -43,15 +44,14 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 	@Autowired
 	private lateinit var exceptionHelper: ExceptionHelper
 
-	@InjectMockKs
 	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
 
-	@InjectMockKs
 	private val leaderSelectionUtility = mockk<LeaderSelectionUtility>()
 
-	@InjectMockKs
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
 
+	@MockkBean
+	private lateinit var subjectHandler: SubjectHandlerInterface
 
 	private fun lagSoknadService(): SoknadService = SoknadService(
 		skjemaService = skjemaService,
@@ -60,7 +60,8 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 		filService = filService,
 		brukernotifikasjonPublisher = brukernotifikasjonPublisher,
 		innsenderMetrics = innsenderMetrics,
-		exceptionHelper = exceptionHelper
+		exceptionHelper = exceptionHelper,
+		subjectHandler = subjectHandler,
 	)
 
 	private val defaultSkjemanr = "NAV 55-00.60"
@@ -73,6 +74,7 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 		every { brukernotifikasjonPublisher.soknadStatusChange(capture(soknader)) } returns true
 		every { leaderSelectionUtility.isLeader() } returns true
 		every { soknadsmottakerAPI.sendInnSoknad(any(), any()) } returns Unit
+		every { subjectHandler.getClientId() } returns "application"
 
 		val spraak = "no"
 		val tema = "BID"
