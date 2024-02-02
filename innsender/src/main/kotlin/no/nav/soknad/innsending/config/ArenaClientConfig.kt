@@ -71,8 +71,13 @@ class ArenaClientConfig(
 	private fun bearerTokenExchange(clientProperties: ClientProperties): ExchangeFilterFunction {
 		return ExchangeFilterFunction { clientRequest: ClientRequest?, exchangeFunction: ExchangeFunction ->
 			val response = oAuth2AccessTokenService.getAccessToken(clientProperties)
+
+			if (response.accessToken == null) {
+				throw BackendErrorException("Fikk ikke accessToken via token exchange for arena")
+			}
+
 			val filtered = ClientRequest.from(clientRequest!!)
-				.headers { headers: HttpHeaders -> headers.setBearerAuth(response.accessToken) }
+				.headers { headers: HttpHeaders -> headers.setBearerAuth(response.accessToken!!) }
 				.build()
 			exchangeFunction.exchange(filtered)
 		}
