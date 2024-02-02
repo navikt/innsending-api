@@ -85,6 +85,7 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 			.name(name)
 			.help(help)
 			.quantile(0.95, 0.01)
+			.maxAgeSeconds(10 * 60)
 			.register(registry)
 
 

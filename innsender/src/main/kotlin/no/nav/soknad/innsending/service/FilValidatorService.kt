@@ -44,11 +44,9 @@ class FilValidatorService(
 			restConfig.maxFileSize.toLong(),
 			ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE
 		)
-		innsenderMetrics.fileSizeSet(opplastet.size.toLong())
 
 		Validerer().validereFilformat(innsendingsId, opplastet, fileName)
 		val antallSider = Validerer().validereAntallSider(innsendingsId, opplastet, restConfig.maxNumberOfPages)
-		innsenderMetrics.fileNumberOfPagesSet(antallSider.toLong())
 
 		// Sjekk om filen inneholder virus
 		// TODO: Fiks dette
@@ -56,5 +54,8 @@ class FilValidatorService(
 //			message = "Opplasting feilet. Filen inneholder virus",
 //			errorCode = ErrorCode.VIRUS_SCAN_FAILED
 //		)
+
+		innsenderMetrics.fileSizeSet(opplastet.size.toLong())
+		innsenderMetrics.fileNumberOfPagesSet(antallSider.toLong())
 	}
 }
