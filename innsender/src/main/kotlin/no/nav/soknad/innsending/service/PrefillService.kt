@@ -11,13 +11,12 @@ import no.nav.soknad.innsending.consumerapis.pdl.transformers.AddressTransformer
 import no.nav.soknad.innsending.consumerapis.pdl.transformers.NameTransformer.transformName
 import no.nav.soknad.innsending.consumerapis.pdl.transformers.PhoneNumberTransformer.transformPhoneNumbers
 import no.nav.soknad.innsending.exceptions.NonCriticalException
-import no.nav.soknad.innsending.model.Aktivitet
 import no.nav.soknad.innsending.model.Maalgruppe
 import no.nav.soknad.innsending.model.PrefillData
-import no.nav.soknad.innsending.util.Constants.ARENA_AKTIVITETER
-import no.nav.soknad.innsending.util.Constants.ARENA_MAALGRUPPER
+import no.nav.soknad.innsending.util.Constants.ARENA_MAALGRUPPE
 import no.nav.soknad.innsending.util.Constants.KONTORREGISTER_BORGER
 import no.nav.soknad.innsending.util.Constants.PDL
+import no.nav.soknad.innsending.util.prefill.MaalgruppeUtils
 import no.nav.soknad.innsending.util.prefill.ServiceProperties.createServicePropertiesMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -43,8 +42,7 @@ class PrefillService(
 		servicePropertiesMap.forEach { (service, properties) ->
 			when (service) {
 				PDL -> requestList.add(async { getPDLData(userId, properties) })
-				ARENA_MAALGRUPPER -> requestList.add(async { getArenaMaalgrupper(userId, properties) })
-				ARENA_AKTIVITETER -> requestList.add(async { getArenaAktiviteter(userId, properties) })
+				ARENA_MAALGRUPPE -> requestList.add(async { getArenaMaalgruppe(userId, properties) })
 				KONTORREGISTER_BORGER -> requestList.add(async { getKontonummer() })
 			}
 		}
@@ -61,8 +59,7 @@ class PrefillService(
 			PrefillData(
 				sokerFornavn = obj.sokerFornavn ?: acc.sokerFornavn,
 				sokerEtternavn = obj.sokerEtternavn ?: acc.sokerEtternavn,
-				sokerMaalgrupper = obj.sokerMaalgrupper ?: acc.sokerMaalgrupper,
-				sokerAktiviteter = obj.sokerAktiviteter ?: acc.sokerAktiviteter,
+				sokerMaalgruppe = obj.sokerMaalgruppe ?: acc.sokerMaalgruppe,
 				sokerAdresser = obj.sokerAdresser ?: acc.sokerAdresser,
 				sokerKjonn = obj.sokerKjonn ?: acc.sokerKjonn,
 				sokerTelefonnummer = obj.sokerTelefonnummer ?: acc.sokerTelefonnummer,
@@ -110,7 +107,7 @@ class PrefillService(
 		)
 	}
 
-	suspend fun getArenaMaalgrupper(userId: String, properties: List<String>): PrefillData {
+	suspend fun getArenaMaalgruppe(userId: String, properties: List<String>): PrefillData {
 		logger.info("Henter målgrupper fra Arena")
 
 		val maalgrupper: List<Maalgruppe>
@@ -123,27 +120,10 @@ class PrefillService(
 
 		logger.info("Hentet målgrupper fra Arena")
 
-		return PrefillData(
-			sokerMaalgrupper = if (properties.contains("sokerMaalgrupper")) maalgrupper else null,
-		)
-	}
-
-	suspend fun getArenaAktiviteter(userId: String, properties: List<String>): PrefillData {
-		logger.info("Henter aktiviteter fra Arena")
-
-		val aktiviteter: List<Aktivitet>
-
-		try {
-			aktiviteter = arenaConsumer.getAktiviteter()
-			if (aktiviteter.isEmpty()) return PrefillData()
-		} catch (arenaException: NonCriticalException) {
-			return PrefillData()
-		}
-
-		logger.info("Hentet aktiviteter fra Arena")
+		val prioritizedMaalgruppe = MaalgruppeUtils.getPrioritzedMaalgruppe(maalgrupper)?.maalgruppetype
 
 		return PrefillData(
-			sokerAktiviteter = if (properties.contains("sokerAktiviteter")) aktiviteter else null,
+			sokerMaalgruppe = if (properties.contains("sokerMaalgruppe")) prioritizedMaalgruppe else null,
 		)
 	}
 

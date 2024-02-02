@@ -1,0 +1,33 @@
+package no.nav.soknad.innsending.util.prefill
+
+import no.nav.soknad.innsending.model.Maalgruppe
+import no.nav.soknad.innsending.model.MaalgruppeType
+import no.nav.soknad.innsending.utils.builders.tilleggsstonader.MaalgruppeTestBuilder
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+
+class MaalgruppeUtilsTest {
+
+	@Test
+	fun `Should return highest priority maalgruppe when multiple maalgrupper are given`() {
+		val maalgrupper = listOf(
+			MaalgruppeTestBuilder().maalgruppetype(MaalgruppeType.ARBSOKERE).build(), // Priority 9
+			MaalgruppeTestBuilder().maalgruppetype(MaalgruppeType.ENSFORUTD).build(), // Priority 2
+			MaalgruppeTestBuilder().maalgruppetype(MaalgruppeType.GJENEKARBS).build(), // Priority 6
+		)
+
+		val result = MaalgruppeUtils.getPrioritzedMaalgruppe(maalgrupper)
+
+		assertEquals("ENSFORUTD", result?.maalgruppetype)
+	}
+
+	@Test
+	fun `Should return null when no maalgrupper are given`() {
+		val maalgrupper = emptyList<Maalgruppe>()
+
+		val result = MaalgruppeUtils.getPrioritzedMaalgruppe(maalgrupper)
+
+		assertEquals(null, result)
+	}
+
+}

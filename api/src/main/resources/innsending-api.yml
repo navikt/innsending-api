@@ -1626,16 +1626,11 @@ components:
           nullable: true
           description: Søkerens kontonummer
           example: 8361347234732292
-        sokerMaalgrupper:
-          type: array
-          description: Liste av målgrupper for søker på angitt tidsperiode. Dersom ingen målgrupper ble funnet i tidsperioden, returneres en tom liste
-          items:
-            $ref: "#/components/schemas/Maalgruppe"
-        sokerAktiviteter:
-          type: array
-          description: Liste av aktiviteter med sak, vedtak og betalingsplaner for bruker innenfor angitt tidsinternvall. Dersom ingen aktiviteter ble funnet i tidsperioden, returneres en tom liste.
-          items:
-            $ref: "#/components/schemas/Aktivitet"
+        sokerMaalgruppe:
+          type: string
+          nullable: true
+          description: Søkerens målgruppe
+          example: ARBSOKERE
 
     PropertyNavn:
       type: string
