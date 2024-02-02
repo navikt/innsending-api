@@ -216,7 +216,7 @@ class InnsendingService(
 			return lagKvittering(innsendtSoknadDto, opplastet, manglende)
 
 		} finally {
-			innsenderMetrics.operationsCounterInc(operation, soknadDtoInput.tema)
+			innsenderMetrics.incOperationsCounter(operation, soknadDtoInput.tema)
 			logger.debug("${soknadDtoInput.innsendingsId}: Tid: sendInnSoknad = ${System.currentTimeMillis() - startSendInn}")
 		}
 	}
@@ -392,7 +392,7 @@ class InnsendingService(
 
 
 	fun getFiles(innsendingId: String, uuids: List<String>): List<SoknadFile> {
-		val timer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.HENT.name)
+		val timer = innsenderMetrics.startOperationHistogramLatency(InnsenderOperation.HENT.name)
 		logger.info("$innsendingId: Skal hente ${uuids.joinToString(",")}")
 
 		try {
@@ -412,7 +412,7 @@ class InnsendingService(
 
 			return fetchSoknadFiles(innsendingId, uuids, erArkivert)
 		} finally {
-			innsenderMetrics.operationHistogramLatencyEnd(timer)
+			innsenderMetrics.endOperationHistogramLatency(timer)
 		}
 	}
 

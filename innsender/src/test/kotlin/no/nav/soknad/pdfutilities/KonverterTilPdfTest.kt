@@ -12,14 +12,16 @@ class KonverterTilPdfTest {
 		val skrivbarPdf = Hjelpemetoder.getBytesFromFile("/NAV 54-editert.pdf")
 		assertTrue(KonverterTilPdf().harSkrivbareFelt(skrivbarPdf))
 
+		val antallSiderSkrivbarPdf = AntallSider().finnAntallSider(skrivbarPdf)
 		val start = System.currentTimeMillis()
-		val (flatetPdf, antallSiderFlatetPdf) = KonverterTilPdf().flatUtPdf(skrivbarPdf)
+		val flatetPdf = KonverterTilPdf().flatUtPdf(skrivbarPdf, antallSiderSkrivbarPdf ?: 0)
 		val ferdig = System.currentTimeMillis()
 		println("Tid til flate ut PDF = ${ferdig - start}")
+
 		//writeBytesToFile(flatetPdf, "./delme.pdf")
 		assertEquals(false, KonverterTilPdf().harSkrivbareFelt(flatetPdf))
 
-		val antallSiderSkrivbarPdf = AntallSider().finnAntallSider(skrivbarPdf)
+		val antallSiderFlatetPdf = AntallSider().finnAntallSider(flatetPdf)
 		assertEquals(antallSiderSkrivbarPdf, antallSiderFlatetPdf)
 
 		val erPdfa = Validerer().isPDFa(flatetPdf)
@@ -32,11 +34,11 @@ class KonverterTilPdfTest {
 		val skrivbarPdf = Hjelpemetoder.getBytesFromFile("/pdfs/acroform-fields-tom-array.pdf")
 		assertTrue(KonverterTilPdf().harSkrivbareFelt(skrivbarPdf))
 
-		val (flatetPdf, antallSider) = KonverterTilPdf().flatUtPdf(skrivbarPdf)
+		val antallSiderSkrivbarPdf = AntallSider().finnAntallSider(skrivbarPdf) ?: 0
+		val flatetPdf = KonverterTilPdf().flatUtPdf(skrivbarPdf, antallSiderSkrivbarPdf)
 		assertTrue(KonverterTilPdf().harSkrivbareFelt(flatetPdf)) // Skal fortsatt ha skrivbare felt
 
-		assertEquals(antallSider, AntallSider().finnAntallSider(flatetPdf))
-
+		assertEquals(antallSiderSkrivbarPdf, AntallSider().finnAntallSider(flatetPdf))
 		assertEquals(skrivbarPdf, flatetPdf)
 	}
 

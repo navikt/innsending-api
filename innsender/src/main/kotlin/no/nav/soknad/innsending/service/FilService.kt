@@ -122,7 +122,7 @@ class FilService(
 			filDto.vedleggsid,
 			OpplastingsStatus.LASTET_OPP
 		)
-		innsenderMetrics.operationsCounterInc(operation, soknadDto.tema)
+		innsenderMetrics.incOperationsCounter(operation, soknadDto.tema)
 		return lagFilDto(savedFilDbData, false)
 	}
 
@@ -149,7 +149,7 @@ class FilService(
 
 		try {
 			val filDbData = repo.hentFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
-			innsenderMetrics.operationsCounterInc(operation, soknadDto.tema)
+			innsenderMetrics.incOperationsCounter(operation, soknadDto.tema)
 			return lagFilDto(filDbData)
 		} catch (e: ResourceNotFoundException) {
 			when (soknadDto.status) {
@@ -248,7 +248,7 @@ class FilService(
 			)
 		}
 		val vedleggDto = vedleggService.hentVedleggDto(vedleggsId)
-		innsenderMetrics.operationsCounterInc(operation, soknadDto.tema)
+		innsenderMetrics.incOperationsCounter(operation, soknadDto.tema)
 		return vedleggDto
 	}
 
@@ -327,11 +327,6 @@ class FilService(
 						logger.warn("$innsendingsId: HentOgMerge vedlegg ${it.uuid} mangler opplastet filer på alle filobjekter, returnerer null")
 						null
 					} else {
-						/*
-							val flater = KonverterTilPdf()
-							val flatetPdfs =
-								filer.mapNotNull { fil -> fil.data?.let { data -> flater.flatUtPdf(data) } } // filene blir flatet ut allerede ved opplasting
-						*/
 						PdfMerger().mergePdfer(
 							filer.filter { fil -> fil.data != null }.map { fil -> fil.data!! })
 					}

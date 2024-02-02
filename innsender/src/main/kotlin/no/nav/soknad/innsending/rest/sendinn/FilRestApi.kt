@@ -72,8 +72,8 @@ class FilRestApi(
 				mimetype = Mimetype.applicationSlashPdf,
 				storrelse = fil.size,
 				antallsider = antallsider,
-				fil,
-				OffsetDateTime.now()
+				data = fil,
+				opprettetdato = OffsetDateTime.now()
 			)
 		)
 

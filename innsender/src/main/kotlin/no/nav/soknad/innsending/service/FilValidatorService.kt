@@ -5,6 +5,7 @@ import no.nav.soknad.innsending.consumerapis.antivirus.AntivirusInterface
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
+import no.nav.soknad.pdfutilities.AntallSider
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ByteArrayResource
@@ -38,15 +39,17 @@ class FilValidatorService(
 		// Sjekk filstørrelse og filformat
 		val opplastet = (fil as ByteArrayResource).byteArray
 		Validerer().validerStorrelse(
-			innsendingsId,
-			0,
-			opplastet.size.toLong(),
-			restConfig.maxFileSize.toLong(),
-			ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE
+			innsendingId = innsendingsId,
+			alleredeOpplastet = 0,
+			opplastet = opplastet.size.toLong(),
+			max = restConfig.maxFileSize.toLong(),
+			errorCode = ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE
 		)
 
 		Validerer().validereFilformat(innsendingsId, opplastet, fileName)
-		val antallSider = Validerer().validereAntallSider(innsendingsId, opplastet, restConfig.maxNumberOfPages)
+
+		val antallSider = AntallSider().finnAntallSider(opplastet)
+		Validerer().validereAntallSider(antallSider ?: 0, restConfig.maxNumberOfPages, opplastet)
 
 		// Sjekk om filen inneholder virus
 		// TODO: Fiks dette
@@ -55,7 +58,7 @@ class FilValidatorService(
 //			errorCode = ErrorCode.VIRUS_SCAN_FAILED
 //		)
 
-		innsenderMetrics.fileSizeSet(opplastet.size.toLong())
-		innsenderMetrics.fileNumberOfPagesSet(antallSider.toLong())
+		innsenderMetrics.setFileSize(opplastet.size.toLong())
+		innsenderMetrics.setFileNumberOfPages(antallSider?.toLong() ?: 0)
 	}
 }

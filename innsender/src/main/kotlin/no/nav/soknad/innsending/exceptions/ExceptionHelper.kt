@@ -11,6 +11,6 @@ class ExceptionHelper(private val innsenderMetrics: InnsenderMetrics) {
 
 	fun reportException(e: Exception, operation: String, tema: String) {
 		logger.error("Feil ved operasjon $operation", e)
-		innsenderMetrics.operationsErrorCounterInc(operation, tema)
+		innsenderMetrics.incOperationsErrorCounter(operation, tema)
 	}
 }

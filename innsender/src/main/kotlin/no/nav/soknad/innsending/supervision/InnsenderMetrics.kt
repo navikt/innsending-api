@@ -89,41 +89,41 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 			.register(registry)
 
 
-	fun operationsCounterInc(operation: String, tema: String) = operationsCounter.labels(operation, tema, appName).inc()
-	fun operationsCounterGet(operation: String, tema: String) = operationsCounter.labels(operation, tema, appName)?.get()
+	fun incOperationsCounter(operation: String, tema: String) = operationsCounter.labels(operation, tema, appName).inc()
+	fun getOperationsCounter(operation: String, tema: String) = operationsCounter.labels(operation, tema, appName)?.get()
 
-	fun operationsErrorCounterInc(operation: String, tema: String) =
+	fun incOperationsErrorCounter(operation: String, tema: String) =
 		operationsErrorCounter.labels(operation, tema, appName).inc()
 
-	fun operationsErrorCounterGet(operation: String, tema: String) =
+	fun getOperationsErrorCounter(operation: String, tema: String) =
 		operationsErrorCounter.labels(operation, tema, appName)?.get()
 
-	fun operationHistogramLatencyStart(operation: String): Histogram.Timer =
+	fun startOperationHistogramLatency(operation: String): Histogram.Timer =
 		operationLatencyHistogram.labels(operation, appName).startTimer()
 
-	fun operationHistogramLatencyEnd(timer: Histogram.Timer) {
+	fun endOperationHistogramLatency(timer: Histogram.Timer) {
 		timer.observeDuration()
 	}
 
-	fun operationHistogramGetLatency(operation: String): Histogram.Child.Value =
+	fun getOperationHistogramLatency(operation: String): Histogram.Child.Value =
 		operationLatencyHistogram.labels(operation, appName).get()
 
-	fun databaseSizeSet(number: Long) = databaseGauge.set(number.toDouble())
-	fun databaseSizeGet() = databaseGauge.get()
+	fun setDatabaseSize(number: Long) = databaseGauge.set(number.toDouble())
+	fun getDatabaseSize() = databaseGauge.get()
 
-	fun absentInArchive(number: Long) = absentInArchiveGauge.set(number.toDouble())
+	fun setAbsentInArchive(number: Long) = absentInArchiveGauge.set(number.toDouble())
 
-	fun archivingFailedSet(number: Long) = archivingFailedGauge.set(number.toDouble())
+	fun setArchivingFailed(number: Long) = archivingFailedGauge.set(number.toDouble())
 
 	fun updateJobLastSuccess(jobName: String) = jobLastSuccessGauge.labels(jobName).setToCurrentTime()
 
-	fun fileNumberOfPagesSet(pages: Long) = fileNumberOfPagesSummary.observe(pages.toDouble())
-	fun fileNumberOfPagesGet() = fileNumberOfPagesSummary.get()
-	fun fileNumberOfPagesClear() = fileNumberOfPagesSummary.clear()
+	fun setFileNumberOfPages(pages: Long) = fileNumberOfPagesSummary.observe(pages.toDouble())
+	fun getFileNumberOfPages() = fileNumberOfPagesSummary.get()
+	fun clearFileNumberOfPages() = fileNumberOfPagesSummary.clear()
 
-	fun fileSizeSet(size: Long) = fileSizeSummary.observe(size.toDouble())
-	fun fileSizeGet() = fileSizeSummary.get()
-	fun fileSizeClear() = fileSizeSummary.clear()
+	fun setFileSize(size: Long) = fileSizeSummary.observe(size.toDouble())
+	fun getFileSize() = fileSizeSummary.get()
+	fun clearFileSize() = fileSizeSummary.clear()
 
 
 }

@@ -32,7 +32,8 @@ class KonverterTilPdf {
 
 	fun tilPdf(fil: ByteArray): Pair<ByteArray, Int> {
 		if (FiltypeSjekker().isPdf(fil)) {
-			return flatUtPdf(fil) // Bare hvis inneholder formfields?
+			val antallSider = AntallSider().finnAntallSider(fil) ?: 0
+			return Pair(flatUtPdf(fil, antallSider), antallSider) // Bare hvis inneholder formfields?
 		} else if (FiltypeSjekker().isImage(fil)) {
 			return createPDFFromImage(fil)
 		}
@@ -57,10 +58,8 @@ class KonverterTilPdf {
 		return pdfDocument.documentCatalog.acroForm
 	}
 
-	fun flatUtPdf(fil: ByteArray): Pair<ByteArray, Int> {
-		val antallSider = AntallSider().finnAntallSider(fil)
+	fun flatUtPdf(fil: ByteArray, antallSider: Int): ByteArray {
 		logger.info("Antall sider i PDF: {}", antallSider)
-
 
 		// Konvertere fra PDF til bilde og tilbake til PDF
 		// Max størrelse på vedlegg er 50mb og for å ikke overskride dette så konverterer vi ikke PDF'er på over 50 sider
@@ -75,12 +74,12 @@ class KonverterTilPdf {
 			val end = System.currentTimeMillis()
 			logger.info("Tid brukt for å konvertere PDF til bilde og tilbake til PDF = {}", end - start)
 
-			return Pair(PdfMerger().mergePdfer(pdfList), antallSider)
+			return PdfMerger().mergePdfer(pdfList)
 		} else {
 			logger.info("Antall sider = $antallSider er over max grense (50) for utflating av PDF")
 		}
 
-		return Pair(fil, antallSider)
+		return fil
 	}
 
 	private fun createPDFFromImage(image: ByteArray): Pair<ByteArray, Int> {

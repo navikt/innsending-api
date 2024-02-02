@@ -212,7 +212,7 @@ class VedleggService(
 		val operation = InnsenderOperation.HENT.name
 
 		try {
-			innsenderMetrics.operationsCounterInc(operation, soknadDbDataOpt.tema)
+			innsenderMetrics.incOperationsCounter(operation, soknadDbDataOpt.tema)
 			return hentAlleVedlegg(soknadDbDataOpt)
 		} catch (e: Exception) {
 			reportException(e, operation, soknadDbDataOpt.tema)
@@ -396,6 +396,6 @@ class VedleggService(
 
 	private fun reportException(e: Exception, operation: String, tema: String) {
 		logger.error("Feil ved operasjon $operation", e)
-		innsenderMetrics.operationsErrorCounterInc(operation, tema)
+		innsenderMetrics.incOperationsErrorCounter(operation, tema)
 	}
 }

@@ -1363,7 +1363,7 @@ components:
         antallsider:
            type: integer
            description: Antall sider. Dette er aktuelt for PDF filerer
-           example: 12345678
+           example: 10
         data:
           $ref: "#/components/schemas/Document"
         opprettetdato:

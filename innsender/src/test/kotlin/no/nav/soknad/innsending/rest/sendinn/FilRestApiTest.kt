@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.TokenGenerator
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -37,12 +38,16 @@ class FilRestApiTest : ApplicationTest() {
 	@Value("\${server.port}")
 	var serverPort: Int? = 9064
 
+	@BeforeEach
+	fun init() {
+		innsenderMetrics.clearFileSize()
+		innsenderMetrics.clearFileNumberOfPages()
+	}
+
 	private val defaultSkjemanr = "NAV 55-00.60"
 
 	@Test
 	fun sjekkOpplastingsstatusEtterOpplastingOgSlettingAvFilPaVedleggTest() {
-		innsenderMetrics.fileSizeClear()
-		innsenderMetrics.fileNumberOfPagesClear()
 		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 		val vedlegg = listOf("N6", "W2")
@@ -63,8 +68,8 @@ class FilRestApiTest : ApplicationTest() {
 			postFilRequestN6,
 			FilDto::class.java
 		)
-		val filePages = innsenderMetrics.fileNumberOfPagesGet()
-		val fileSize = innsenderMetrics.fileSizeGet()
+		val filePages = innsenderMetrics.getFileNumberOfPages()
+		val fileSize = innsenderMetrics.getFileSize()
 
 		assertEquals(HttpStatus.CREATED, postFilResponseN6.statusCode)
 		assertTrue(postFilResponseN6.body != null)

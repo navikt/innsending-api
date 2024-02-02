@@ -152,8 +152,14 @@ class Hjelpemetoder {
 		fun lagFilDtoMedFil(vedleggDto: VedleggDto): FilDto {
 			val fil = getBytesFromFile("/litenPdf.pdf")
 			return FilDto(
-				vedleggDto.id!!, null, "OpplastetFil.pdf",
-				Mimetype.applicationSlashPdf, fil.size, AntallSider().finnAntallSider(fil), fil, OffsetDateTime.now()
+				vedleggDto.id!!,
+				id = null,
+				filnavn = "OpplastetFil.pdf",
+				mimetype = Mimetype.applicationSlashPdf,
+				storrelse = fil.size,
+				antallsider = AntallSider().finnAntallSider(fil),
+				data = fil,
+				opprettetdato = OffsetDateTime.now()
 			)
 		}
 

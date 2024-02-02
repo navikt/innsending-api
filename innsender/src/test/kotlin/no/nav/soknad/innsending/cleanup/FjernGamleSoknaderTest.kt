@@ -96,7 +96,7 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 		).innsendingsId!!
 
 
-		val initAntall = innsenderMetrics.operationsCounterGet(InnsenderOperation.SLETT.name, tema)
+		val initAntall = innsenderMetrics.getOperationsCounter(InnsenderOperation.SLETT.name, tema)
 		val fjernGamleSoknader = FjernGamleSoknader(soknadService, leaderSelectionUtility)
 
 		fjernGamleSoknader.fjernGamleIkkeInnsendteSoknader()
@@ -104,7 +104,7 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 		val slettetSoknad = soknadService.hentSoknad(gammelSoknadId)
 		assertTrue(slettetSoknad.status == SoknadsStatusDto.automatiskSlettet)
 		assertTrue(soknader.any { it.innsendingsId == gammelSoknadId && it.status == SoknadsStatusDto.automatiskSlettet })
-		assertEquals(1.0 + (initAntall ?: 0.0), innsenderMetrics.operationsCounterGet(InnsenderOperation.SLETT.name, tema))
+		assertEquals(1.0 + (initAntall ?: 0.0), innsenderMetrics.getOperationsCounter(InnsenderOperation.SLETT.name, tema))
 
 		val beholdtSoknad = soknadService.hentSoknad(nyereSoknadId)
 		assertTrue(beholdtSoknad.status == SoknadsStatusDto.opprettet)
