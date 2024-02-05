@@ -92,7 +92,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 			)
 		).innsendingsId!!
 
-		val initAntall = innsenderMetrics.operationsCounterGet(InnsenderOperation.SLETT.name, tema) ?: 0.0
+		val initAntall = innsenderMetrics.getOperationsCounter(InnsenderOperation.SLETT.name, tema) ?: 0.0
 		sendInnSoknad(soknadService, skalSendeInnOgArkivereId, innsendingService)
 		sendInnSoknad(soknadService, skalSendeInnIkkeArkivereId, innsendingService)
 
@@ -115,7 +115,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 		// Og metrics for antall slettede søknader er økt med 1
 		Assertions.assertEquals(
 			initAntall + 1.0,
-			innsenderMetrics.operationsCounterGet(InnsenderOperation.SLETT.name, tema)
+			innsenderMetrics.getOperationsCounter(InnsenderOperation.SLETT.name, tema)
 		)
 
 	}

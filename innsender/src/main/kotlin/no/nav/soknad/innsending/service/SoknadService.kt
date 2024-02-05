@@ -94,7 +94,7 @@ class SoknadService(
 			exceptionHelper.reportException(e, operation, kodeverkSkjema.tema ?: "Ukjent")
 			throw e
 		} finally {
-			innsenderMetrics.operationsCounterInc(operation, kodeverkSkjema.tema ?: "Ukjent")
+			innsenderMetrics.incOperationsCounter(operation, kodeverkSkjema.tema ?: "Ukjent")
 		}
 	}
 
@@ -114,7 +114,7 @@ class SoknadService(
 			lagreFiler(savedDokumentSoknadDto, dokumentSoknadDto)
 			publiserBrukernotifikasjon(savedDokumentSoknadDto)
 
-			innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
+			innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
 			return mapTilSkjemaDto(savedDokumentSoknadDto)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, dokumentSoknadDto.tema)
@@ -207,7 +207,7 @@ class SoknadService(
 			soknadDbData,
 			dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id!!) })
 		publiserBrukernotifikasjon(slettetSoknad)
-		innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
+		innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
 	}
 
 	@Transactional
@@ -236,7 +236,7 @@ class SoknadService(
 		publiserBrukernotifikasjon(slettetSoknadDto)
 		logger.info("slettSoknadAutomatisk: Status for søknad $innsendingsId er satt til ${SoknadsStatus.AutomatiskSlettet}")
 
-		innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
+		innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
 	}
 
 	@Transactional
@@ -250,7 +250,7 @@ class SoknadService(
 
 		logger.info("$innsendingsId: opprettet:${dokumentSoknadDto.opprettetDato}, status: ${dokumentSoknadDto.status} er permanent slettet")
 
-		innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
+		innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
 	}
 
 	@Transactional

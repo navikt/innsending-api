@@ -4,9 +4,11 @@ import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.TokenGenerator
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -29,8 +31,18 @@ class FilRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var soknadService: SoknadService
 
+	@Autowired
+	private lateinit var innsenderMetrics: InnsenderMetrics
+
+
 	@Value("\${server.port}")
 	var serverPort: Int? = 9064
+
+	@BeforeEach
+	fun init() {
+		innsenderMetrics.clearFileSize()
+		innsenderMetrics.clearFileNumberOfPages()
+	}
 
 	private val defaultSkjemanr = "NAV 55-00.60"
 
@@ -56,10 +68,14 @@ class FilRestApiTest : ApplicationTest() {
 			postFilRequestN6,
 			FilDto::class.java
 		)
+		val filePages = innsenderMetrics.getFileNumberOfPages()
+		val fileSize = innsenderMetrics.getFileSize()
 
 		assertEquals(HttpStatus.CREATED, postFilResponseN6.statusCode)
 		assertTrue(postFilResponseN6.body != null)
 		assertEquals(Mimetype.applicationSlashPdf, postFilResponseN6.body!!.mimetype)
+		assertEquals(1.0, filePages.sum)
+		assertEquals(7187.0, fileSize.sum)
 		val opplastetFilDto = postFilResponseN6.body
 
 		val vedleggN6Request = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))

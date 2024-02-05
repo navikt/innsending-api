@@ -36,8 +36,8 @@ class ScheduledOperationsServiceTest : ApplicationTest() {
 
 	@BeforeEach
 	fun setup() {
-		every { innsenderMetrics.absentInArchive(any()) } just runs
-		every { innsenderMetrics.archivingFailedSet(any()) } just runs
+		every { innsenderMetrics.setAbsentInArchive(any()) } just runs
+		every { innsenderMetrics.setArchivingFailed(any()) } just runs
 	}
 
 	@AfterEach
@@ -64,7 +64,7 @@ class ScheduledOperationsServiceTest : ApplicationTest() {
 		assertTrue(lagretSoknad.isPresent)
 		assertTrue(lagretSoknad.get().arkiveringsstatus == ArkiveringsStatus.IkkeSatt)
 
-		verify { innsenderMetrics.absentInArchive(1) }
+		verify { innsenderMetrics.setAbsentInArchive(1) }
 	}
 
 	@Test
@@ -81,7 +81,7 @@ class ScheduledOperationsServiceTest : ApplicationTest() {
 		assertTrue(lagretSoknad.isPresent)
 		assertEquals(ArkiveringsStatus.Arkivert, lagretSoknad.get().arkiveringsstatus)
 
-		verify { innsenderMetrics.absentInArchive(0) }
+		verify { innsenderMetrics.setAbsentInArchive(0) }
 	}
 
 	@Test
@@ -99,8 +99,8 @@ class ScheduledOperationsServiceTest : ApplicationTest() {
 		assertEquals(ArkiveringsStatus.ArkiveringFeilet, lagretSoknad.get().arkiveringsstatus)
 
 		verify {
-			innsenderMetrics.absentInArchive(0)
-			innsenderMetrics.archivingFailedSet(1)
+			innsenderMetrics.setAbsentInArchive(0)
+			innsenderMetrics.setArchivingFailed(1)
 		}
 	}
 
@@ -122,7 +122,7 @@ class ScheduledOperationsServiceTest : ApplicationTest() {
 		val service = lagScheduledOperationsService()
 		service.checkIfApplicationsAreArchived(OFFSET_MINUTES)
 
-		verify { innsenderMetrics.absentInArchive(1) }
+		verify { innsenderMetrics.setAbsentInArchive(1) }
 	}
 
 	@Test
@@ -147,10 +147,10 @@ class ScheduledOperationsServiceTest : ApplicationTest() {
 		assertEquals(ArkiveringsStatus.Arkivert, lagretSoknad2.get().arkiveringsstatus)
 
 		verifySequence {
-			innsenderMetrics.absentInArchive(1)
-			innsenderMetrics.archivingFailedSet(0)
-			innsenderMetrics.absentInArchive(0)
-			innsenderMetrics.archivingFailedSet(0)
+			innsenderMetrics.setAbsentInArchive(1)
+			innsenderMetrics.setArchivingFailed(0)
+			innsenderMetrics.setAbsentInArchive(0)
+			innsenderMetrics.setArchivingFailed(0)
 		}
 	}
 
@@ -173,7 +173,7 @@ class ScheduledOperationsServiceTest : ApplicationTest() {
 		assertTrue(lagretSoknad.isPresent)
 		assertEquals(ArkiveringsStatus.IkkeSatt, lagretSoknad.get().arkiveringsstatus)
 
-		verify { innsenderMetrics.absentInArchive(1) }
+		verify { innsenderMetrics.setAbsentInArchive(1) }
 	}
 
 	private fun simulateKafkaPolling(ok: Boolean, innsendingId: String) {
