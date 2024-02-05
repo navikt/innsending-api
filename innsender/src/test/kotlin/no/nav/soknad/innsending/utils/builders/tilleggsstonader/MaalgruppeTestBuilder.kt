@@ -6,9 +6,9 @@ import no.nav.soknad.innsending.model.Periode
 import java.time.LocalDate
 
 class MaalgruppeTestBuilder(
-	var gyldighetsperiode: Periode? = Periode(LocalDate.now().minusMonths(1), LocalDate.now()),
-	var maalgruppetype: MaalgruppeType? = MaalgruppeType.ARBSOKERE,
-	var maalgruppenavn: String? = "Arbeidssøker"
+	var gyldighetsperiode: Periode = Periode(LocalDate.now().minusMonths(1), LocalDate.now().plusMonths(1)),
+	var maalgruppetype: MaalgruppeType = MaalgruppeType.ARBSOKERE,
+	var maalgruppenavn: String = "Arbeidssøker"
 ) {
 	fun gyldighetsperiode(gyldighetsperiode: Periode) = apply { this.gyldighetsperiode = gyldighetsperiode }
 	fun maalgruppetype(maalgruppetype: MaalgruppeType) = apply { this.maalgruppetype = maalgruppetype }

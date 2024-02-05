@@ -10,23 +10,29 @@ class MaalgruppeUtilsTest {
 
 	@Test
 	fun `Should return highest priority maalgruppe when multiple maalgrupper are given`() {
+		// Given
 		val maalgrupper = listOf(
 			MaalgruppeTestBuilder().maalgruppetype(MaalgruppeType.ARBSOKERE).build(), // Priority 9
 			MaalgruppeTestBuilder().maalgruppetype(MaalgruppeType.ENSFORUTD).build(), // Priority 2
 			MaalgruppeTestBuilder().maalgruppetype(MaalgruppeType.GJENEKARBS).build(), // Priority 6
 		)
 
+		// When
 		val result = MaalgruppeUtils.getPrioritzedMaalgruppe(maalgrupper)
 
-		assertEquals("ENSFORUTD", result?.maalgruppetype)
+		// Then
+		assertEquals(MaalgruppeType.ENSFORUTD, result)
 	}
 
 	@Test
 	fun `Should return null when no maalgrupper are given`() {
+		// Given
 		val maalgrupper = emptyList<Maalgruppe>()
 
+		// When
 		val result = MaalgruppeUtils.getPrioritzedMaalgruppe(maalgrupper)
 
+		// Then
 		assertEquals(null, result)
 	}
 

@@ -635,7 +635,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Then
 		assertTrue(response != null)
 		assertEquals(200, response.statusCode.value())
-		assertEquals("NEDSARBEVN", response.body?.sokerMaalgruppe)
+		assertEquals(MaalgruppeType.NEDSARBEVN, response.body?.sokerMaalgruppe)
 	}
 
 	@Test
