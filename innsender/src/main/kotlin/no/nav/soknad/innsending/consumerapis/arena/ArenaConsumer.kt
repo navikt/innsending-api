@@ -94,7 +94,7 @@ class ArenaConsumer(
 					handleErrorResponse(clientResponse, "Feil ved henting av aktiviteter")
 				})
 			.awaitBodyOrNull()
-			?: throw NonCriticalException(message = "Kunne ikke hente aktiviteter")
+			?: emptyList()
 
 		secureLogger.info("[{}] Aktiviteter: {}", userId, aktiviteter.toString())
 
@@ -103,7 +103,9 @@ class ArenaConsumer(
 
 	private fun handleErrorResponse(clientResponse: ClientResponse, errorMessage: String): Mono<Exception> {
 		val status = clientResponse.statusCode()
-		val message = "${status.value()}: $errorMessage"
+		val message = "${status.value()}: Arena consumer feil - $errorMessage"
+
+		logger.warn(message)
 
 		if (status.is4xxClientError) {
 			throw NonCriticalException(message = message)

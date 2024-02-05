@@ -5,7 +5,9 @@ import no.nav.soknad.innsending.consumerapis.arena.ArenaConsumerInterface
 import no.nav.soknad.innsending.model.Aktivitet
 import no.nav.soknad.innsending.util.prefill.MaalgruppeUtils
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
+@Service
 class ArenaService(private val arenaConsumer: ArenaConsumerInterface) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 

@@ -89,7 +89,7 @@ object MaalgruppeUtils {
 		return getPrioritzedMaalgruppe(maalgrupper)
 	}
 
-	private fun isOverlapping(maalgruppe: Maalgruppe, aktivitet: Aktivitet): Boolean {
+	fun isOverlapping(maalgruppe: Maalgruppe, aktivitet: Aktivitet): Boolean {
 		val aktivitetStart = aktivitet.periode.fom
 		val aktivitetEnd = aktivitet.periode.tom ?: LocalDate.now()
 
