@@ -6,6 +6,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenResponse
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.soknad.innsending.ApplicationTest
+import no.nav.soknad.innsending.model.MaalgruppeType
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -68,7 +69,7 @@ class PrefillServiceTest : ApplicationTest() {
 		val result = runBlocking { prefillService.getPrefillData(properties, userId) }
 
 		// Then
-		assertEquals("NEDSARBEVN", result.sokerMaalgruppe)
+		assertEquals(MaalgruppeType.NEDSARBEVN, result.sokerMaalgruppe)
 	}
 
 }
