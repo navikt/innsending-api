@@ -92,9 +92,9 @@
 	</properties>
 
 	<modules>
+		<module>external-api</module>
 		<module>api</module>
 		<module>innsender</module>
-		<module>external-api</module>
 	</modules>
 
 	<repositories>

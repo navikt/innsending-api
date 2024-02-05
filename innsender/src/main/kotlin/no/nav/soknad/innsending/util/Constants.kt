@@ -14,6 +14,7 @@ object Constants {
 	const val NAV_PERSON_IDENT = "NAV-Personident"
 
 	const val BEARER = "Bearer "
+	const val AUTHORIZATION = "Authorization"
 
 	const val MAX_AKTIVE_DAGER = 3 * 365L
 

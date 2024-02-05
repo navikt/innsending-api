@@ -85,6 +85,25 @@
 					</execution>
 
 					<execution>
+						<id>arena-api</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<inputSpec>${project.basedir}/src/main/resources/arena-api.yml</inputSpec>
+							<generatorName>kotlin</generatorName>
+							<apiPackage>no.nav.soknad.innsending.api</apiPackage>
+							<modelPackage>no.nav.soknad.innsending.model</modelPackage>
+							<configOptions>
+								<serializationLibrary>jackson</serializationLibrary>
+								<omitGradlePluginVersions>true</omitGradlePluginVersions>
+								<groupId>no.nav.soknad.innsending</groupId>
+								<artifactId>arena-client</artifactId>
+							</configOptions>
+						</configuration>
+					</execution>
+
+					<execution>
 						<id>soknadsmottaker-api</id>
 						<goals>
 							<goal>generate</goal>

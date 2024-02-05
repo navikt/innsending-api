@@ -241,7 +241,7 @@ paths:
                 schema:
                   type: array
                   items:
-                    $ref: "#/components/schemas/Aktivitet"
+                    $ref: "./../../../../external-api/src/main/resources/arena-api.yml#/components/schemas/Aktivitet"
         tags:
           - fyllut
 
@@ -1072,56 +1072,6 @@ components:
           description: Alpha-3 landekode
           example: "SWE"
 
-
-    Aktivitet:
-      type: object
-      required:
-        - aktivitetId
-        - aktivitetstype
-        - aktivitetsnavn
-        - periode
-      properties:
-        aktivitetId:
-          type: string
-          description: Unik identifikator for aktiviteten
-        aktivitetstype:
-          type: string
-          description: Arena-spesifikk kode for aktivitetstypen
-        aktivitetsnavn:
-          type: string
-          description: Funksjonelt navn på aktivitet
-        periode:
-          $ref: '#/components/schemas/Periode'
-          description: Tidsperioden som målgruppen gjelder for
-        antallDagerPerUke:
-          type: integer
-          format: int64
-          description: Aktivitetsdeltakelse i antall dager per uke
-        prosentAktivitetsdeltakelse:
-          type: integer
-          format: int64
-          description: Aktivitetsdeltakelse i prosent, relativt til 100%
-        aktivitetsstatus:
-          type: string
-          description: Arena-spesifikk kode for aktivitetstatus
-        aktivitetsstatusnavn:
-          type: string
-          description: Funksjonelt navn på aktivitetstatus
-        erStoenadsberettigetAktivitet:
-          type: boolean
-          description: Flagg som spesfiserer om aktivitetstypen er stønadsberettiget
-        erUtdanningsaktivitet:
-          type: boolean
-          description: Flagg som spesifiserer om aktivitetstype er utdanningsaktivitet
-        arrangoer:
-          type: string
-          description: Navn på tiltaksarrangør. Vil alltid vil være en organisasjon
-        saksinformasjon:
-          $ref: '#/components/schemas/Saksinformasjon'
-          description: Informasjon om saken
-        maalgruppe:
-          $ref: '#/components/schemas/MaalgruppeType'
-
     AktivSakDto:
       type: object
       description: Data om en allerede innsendt søknad
@@ -1191,27 +1141,6 @@ components:
       type: string
       description: Utdypende forklaring til et vedlegg.
       example: Dette er opplysninger som er nødvendig for beregning av utbetaling av foreldrepenger eller svangerskapspenger.
-
-    Betalingsplan:
-      type: object
-      required:
-        - betalingsplanId
-        - beloep
-        - utgiftsperiode
-      properties:
-        betalingsplanId:
-          type: string
-          description: Unik id til betalingsplanlinje i Arena
-        beloep:
-          type: integer
-          format: int64
-          description: Foreløpig beregnet beløp for perioden
-        utgiftsperiode:
-          $ref: '#/components/schemas/Periode'
-          description: Periode for brukers utgift
-        journalpostId:
-          type: string
-          description: Unik id til journalpost
 
     BodyStatusResponseDto:
       type: object
@@ -1502,27 +1431,6 @@ components:
       description: Angivelse av formatet på opplastet vedlegg.
       example: application/pdf or image/jpeg.
 
-    Maalgruppe:
-      type: object
-      required:
-        - gyldighetsperiode
-        - maalgruppetype
-        - maalgruppenavn
-      properties:
-        gyldighetsperiode:
-          $ref: "#/components/schemas/Periode"
-        maalgruppetype:
-          $ref: "#/components/schemas/MaalgruppeType"
-        maalgruppenavn:
-          type: string
-          description: Kort beskrivelse av målgruppen
-          example: "Arbeidssøkere"
-
-    MaalgruppeType:
-      type: string
-      enum: [ "ARBSOKERE", "ENSFORARBS", "ENSFORUTD", "GJENEKARBS", "GJENEKUTD", "MOTDAGPEN", "MOTTILTPEN", "NEDSARBEVN", "TIDLFAMPL", "ANNET" ]
-      x-enum-varnames: [ "ARBSOKERE", "ENSFORARBS", "ENSFORUTD", "GJENEKARBS", "GJENEKUTD", "MOTDAGPEN", "MOTTILTPEN", "NEDSARBEVN", "TIDLFAMPL", "ANNET" ]
-
     OpplastingsStatusDto:
       type: string
       enum: [ "IkkeValgt", "LastetOpp", "Innsendt", "SendSenere", "SendesAvAndre", "SendesIkke", "LastetOppIkkeRelevantLenger" ]
@@ -1611,23 +1519,6 @@ components:
         opplastingsStatus:
           $ref: "#/components/schemas/OpplastingsStatusDto"
 
-    Periode:
-      type: object
-      description: Tidsperiode med fom/tom
-      required:
-        - fom
-      properties:
-        fom:
-          type: string
-          format: date
-          description: Fra dato (yyyy-MM-dd)
-          example: 2020-01-01
-        tom:
-          type: string
-          format: date
-          description: Til dato (yyyy-MM-dd)
-          example: 2030-01-01
-
     PostVedleggDto:
       type: object
       description: Properties som skal settes på vedlegg som skal opprettes.
@@ -1663,7 +1554,7 @@ components:
           description: Søkerens kontonummer
           example: 8361347234732292
         sokerMaalgruppe:
-          $ref: "#/components/schemas/MaalgruppeType"
+          $ref: "./../../../../external-api/src/main/resources/arena-api.yml#/components/schemas/MaalgruppeType"
 
     PropertyNavn:
       type: string
@@ -1687,24 +1578,6 @@ components:
         message: Noe gikk galt, prøv igjen senere
         timestamp: 2023-12-21T09:31:40.549032434
         errorCode: somethingFailedTryLater
-
-    Saksinformasjon:
-      type: object
-      required:
-        - saksnummerArena
-        - sakstype
-      properties:
-        saksnummerArena:
-          type: string
-          description: Unikt saksnummer i Arena
-        sakstype:
-          type: string
-          description: Sakstype. TSO/TSR
-        vedtaksinformasjon:
-          type: array
-          items:
-            $ref: '#/components/schemas/Vedtaksinformasjon'
-          description: Liste av vedtak
 
     SkjemaDokumentDto:
       type: object
@@ -1939,37 +1812,6 @@ components:
       type: string
       description: Noen vedlegg er NAV-skjemaer som brukeren må fylle ut først og laste det opp som vedlegg. Vedleggsurl er en lenke til skjemaet (enten PDF eller til fyllut) som brukeren kan laste ned/fylle ut.
       example: https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/7146ae917cf8423f71edbf37369da5a6b2a23524.pdf
-
-    Vedtaksinformasjon:
-      type: object
-      required:
-        - vedtakId
-        - dagsats
-        - periode
-        - trengerParkering
-      properties:
-        vedtakId:
-          type: string
-          description: Unik id for vedtaket
-        forventetDagligParkeringsutgift:
-          type: integer
-          format: int64
-          description: Forventet daglig parkeringsutgift
-        dagsats:
-          type: integer
-          format: int64
-          description: Dagsats uten parkering
-        periode:
-          $ref: '#/components/schemas/Periode'
-          description: Periode for aktivitetens vedtak
-        trengerParkering:
-          type: boolean
-          description: Opplysning om bruker har krysset av for behov for parkering i søknaden. Skal brukes i logikk i innsending av påløpte utgifter
-        betalingsplan:
-          type: array
-          items:
-            $ref: '#/components/schemas/Betalingsplan'
-          description: Liste av betalingsplanlinjer
 
     VisningsSteg:
       type: integer

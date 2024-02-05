@@ -4,7 +4,11 @@ import no.nav.security.token.support.client.core.ClientProperties
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.soknad.arkivering.soknadsarkiverer.service.tokensupport.TokenService
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
+import no.nav.soknad.innsending.util.Constants.AUTHORIZATION
+import no.nav.soknad.innsending.util.Constants.HEADER_CALL_ID
 import no.nav.soknad.innsending.util.Constants.MDC_INNSENDINGS_ID
+import no.nav.soknad.innsending.util.Constants.NAV_PERSON_IDENT
 import no.nav.soknad.innsending.util.MDCUtil
 import okhttp3.OkHttpClient
 import org.slf4j.Logger
@@ -111,6 +115,44 @@ class OkHttpOAuth2ClientConfig(
 	}
 
 	@Bean
+	@Profile("prod | dev")
+	@Qualifier("arenaApiClient")
+	fun arenaApiClient(
+		clientConfigProperties: ClientConfigurationProperties,
+		oAuth2AccessTokenService: OAuth2AccessTokenService,
+		subjectHandler: SubjectHandlerInterface
+	) = arenaClient(clientConfigProperties.registration["arena"]!!, oAuth2AccessTokenService, subjectHandler)
+
+	private fun arenaClient(
+		clientProperties: ClientProperties,
+		oAuth2AccessTokenService: OAuth2AccessTokenService,
+		subjectHandler: SubjectHandlerInterface
+	): OkHttpClient {
+
+		val tokenService = TokenService(clientProperties, oAuth2AccessTokenService)
+
+		return OkHttpClient().newBuilder()
+			.connectTimeout(20, TimeUnit.SECONDS)
+			.callTimeout(62, TimeUnit.SECONDS)
+			.readTimeout(1, TimeUnit.MINUTES)
+			.writeTimeout(1, TimeUnit.MINUTES)
+			.addInterceptor {
+
+				val token = tokenService.getToken()
+				val callId = MDCUtil.callIdOrNew()
+				val userId = subjectHandler.getUserIdFromToken()
+
+				logger.info("Kaller arena med callId: $callId")
+				val bearerRequest = it.request().newBuilder().headers(it.request().headers)
+					.header(HEADER_CALL_ID, callId)
+					.header(NAV_PERSON_IDENT, userId)
+					.header(AUTHORIZATION, "Bearer $token").build()
+
+				it.proceed(bearerRequest)
+			}.build()
+	}
+
+	@Bean
 	@Profile("!(prod | dev)")
 	@Qualifier("soknadsmottakerClient")
 	fun soknadsmottakerClientWithoutOAuth() = OkHttpClient.Builder().build()
@@ -119,4 +161,9 @@ class OkHttpOAuth2ClientConfig(
 	@Profile("!(prod | dev)")
 	@Qualifier("kontoregisterApiClient")
 	fun kontoregisterApiClientWithoutAuth() = OkHttpClient.Builder().build()
+
+	@Bean
+	@Profile("!(prod | dev)")
+	@Qualifier("arenaApiClient")
+	fun arenaApiClientWithoutAuth() = OkHttpClient.Builder().build()
 }

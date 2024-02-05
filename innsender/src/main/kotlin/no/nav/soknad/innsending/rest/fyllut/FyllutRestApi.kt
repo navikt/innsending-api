@@ -5,7 +5,12 @@ import no.nav.soknad.innsending.api.FyllutApi
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
-import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.model.Aktivitet
+import no.nav.soknad.innsending.model.BodyStatusResponseDto
+import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.PrefillData
+import no.nav.soknad.innsending.model.SkjemaDto
+import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.ArenaService

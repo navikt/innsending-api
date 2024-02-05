@@ -114,7 +114,7 @@ class PrefillService(
 		try {
 			maalgrupper = arenaConsumer.getMaalgrupper()
 			if (maalgrupper.isEmpty()) return PrefillData()
-		} catch (exception: NonCriticalException) {
+		} catch (exception: Exception) {
 			return PrefillData()
 		}
 
