@@ -230,7 +230,7 @@ paths:
   /fyllUt/v1/aktiviteter:
       get:
         summary: Hent aktiviteter for bruker
-        description: Henter aktiviteter for bruker
+        description: "Henter aktiviteter fra Arena for bruker. Dokumentasjon: (https://confluence.adeo.no/display/ARENA/Arena+-+Tjeneste+REST+-+Tilleggsstoenad+API)"
         operationId: fyllUtAktiviteter
 
         responses:

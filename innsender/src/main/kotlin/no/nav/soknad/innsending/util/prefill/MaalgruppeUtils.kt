@@ -76,10 +76,10 @@ object MaalgruppeUtils {
 			.maalgruppetype
 	}
 
+	// Find målgruppe with a periode that overlaps with the periode for aktivitet
 	fun getPrioritzedMaalgruppeFromAktivitet(maalgrupper: List<Maalgruppe>, aktivitet: Aktivitet): MaalgruppeType? {
 		if (maalgrupper.isEmpty()) return null
 
-		// Find maalgruppe
 		val overlappingMaalgrupper = maalgrupper.filter { maalgruppe -> isOverlapping(maalgruppe, aktivitet) }
 		if (overlappingMaalgrupper.isNotEmpty()) {
 			logger.info("Fant overlappende målgruppe(r) for aktivitet $overlappingMaalgrupper")
