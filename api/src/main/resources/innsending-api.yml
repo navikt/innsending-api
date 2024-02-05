@@ -1075,6 +1075,11 @@ components:
 
     Aktivitet:
       type: object
+      required:
+        - aktivitetId
+        - aktivitetstype
+        - aktivitetsnavn
+        - periode
       properties:
         aktivitetId:
           type: string
@@ -1189,6 +1194,10 @@ components:
 
     Betalingsplan:
       type: object
+      required:
+        - betalingsplanId
+        - beloep
+        - utgiftsperiode
       properties:
         betalingsplanId:
           type: string
@@ -1495,6 +1504,10 @@ components:
 
     Maalgruppe:
       type: object
+      required:
+        - gyldighetsperiode
+        - maalgruppetype
+        - maalgruppenavn
       properties:
         gyldighetsperiode:
           $ref: "#/components/schemas/Periode"
@@ -1507,8 +1520,8 @@ components:
 
     MaalgruppeType:
       type: string
-      enum: [ "ARBSOKERE", "ENSFORARBS", "ENSFORUTD", "GJENEKARBS", "GJENEKUTD", "MOTDAGPEN", "MOTTILTPEN", "NEDSARBEVN", "TIDLFAMPL" ]
-      x-enum-varnames: [ "ARBSOKERE", "ENSFORARBS", "ENSFORUTD", "GJENEKARBS", "GJENEKUTD", "MOTDAGPEN", "MOTTILTPEN", "NEDSARBEVN", "TIDLFAMPL" ]
+      enum: [ "ARBSOKERE", "ENSFORARBS", "ENSFORUTD", "GJENEKARBS", "GJENEKUTD", "MOTDAGPEN", "MOTTILTPEN", "NEDSARBEVN", "TIDLFAMPL", "ANNET" ]
+      x-enum-varnames: [ "ARBSOKERE", "ENSFORARBS", "ENSFORUTD", "GJENEKARBS", "GJENEKUTD", "MOTDAGPEN", "MOTTILTPEN", "NEDSARBEVN", "TIDLFAMPL", "ANNET" ]
 
     OpplastingsStatusDto:
       type: string
@@ -1601,6 +1614,8 @@ components:
     Periode:
       type: object
       description: Tidsperiode med fom/tom
+      required:
+        - fom
       properties:
         fom:
           type: string
@@ -1641,17 +1656,14 @@ components:
           description: Søkerens kjønn
           example: MANN
         sokerTelefonnummer:
-            $ref: "#/components/schemas/Telefonnummer"
+          $ref: "#/components/schemas/Telefonnummer"
         sokerKontonummer:
           type: string
           nullable: true
           description: Søkerens kontonummer
           example: 8361347234732292
         sokerMaalgruppe:
-          type: string
-          nullable: true
-          description: Søkerens målgruppe
-          example: ARBSOKERE
+          $ref: "#/components/schemas/MaalgruppeType"
 
     PropertyNavn:
       type: string

@@ -120,7 +120,7 @@ class PrefillService(
 
 		logger.info("Hentet målgrupper fra Arena")
 
-		val prioritizedMaalgruppe = MaalgruppeUtils.getPrioritzedMaalgruppe(maalgrupper)?.maalgruppetype
+		val prioritizedMaalgruppe = MaalgruppeUtils.getPrioritzedMaalgruppe(maalgrupper)
 
 		return PrefillData(
 			sokerMaalgruppe = if (properties.contains("sokerMaalgruppe")) prioritizedMaalgruppe else null,
