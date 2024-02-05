@@ -249,6 +249,9 @@ class FyllutRestApi(
 	}
 
 	override fun fyllUtAktiviteter(): ResponseEntity<List<Aktivitet>> {
+		val brukerId = tilgangskontroll.hentBrukerFraToken()
+		combinedLogger.log("Kall fra FyllUt for å hente aktiviteter", brukerId)
+
 		val aktivteter = arenaService.getAktiviteterWithMaalgrupper()
 		return ResponseEntity.status(HttpStatus.OK).body(aktivteter)
 	}
