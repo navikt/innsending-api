@@ -75,7 +75,7 @@ class KonverterTilPdf {
 			logger.info("Tid brukt for å konvertere PDF til bilde og tilbake til PDF = {}", end - start)
 
 			return PdfMerger().mergePdfer(pdfList)
-		} else {
+		} else if (antallSider > 50) {
 			logger.info("Antall sider = $antallSider er over max grense (50) for utflating av PDF")
 		}
 
