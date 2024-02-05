@@ -226,6 +226,25 @@ paths:
                   $ref: "#/components/schemas/PrefillData"
         tags:
           - fyllut
+
+  /fyllUt/v1/aktiviteter:
+      get:
+        summary: Hent aktiviteter for bruker
+        description: Henter aktiviteter for bruker
+        operationId: fyllUtAktiviteter
+
+        responses:
+          '200':
+            description: Liste av aktiviteter for bruker. Målgruppen er den høyeste prioriterte målgruppen som overlapper samme periode.
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Aktivitet"
+        tags:
+          - fyllut
+
   /fyllut/v1/ettersending:
         post:
           summary: Kall for å opprette en ettersending
@@ -1095,6 +1114,8 @@ components:
         saksinformasjon:
           $ref: '#/components/schemas/Saksinformasjon'
           description: Informasjon om saken
+        maalgruppe:
+          $ref: '#/components/schemas/MaalgruppeType'
 
     AktivSakDto:
       type: object
@@ -1657,6 +1678,9 @@ components:
 
     Saksinformasjon:
       type: object
+      required:
+        - saksnummerArena
+        - sakstype
       properties:
         saksnummerArena:
           type: string
@@ -1906,6 +1930,11 @@ components:
 
     Vedtaksinformasjon:
       type: object
+      required:
+        - vedtakId
+        - dagsats
+        - periode
+        - trengerParkering
       properties:
         vedtakId:
           type: string

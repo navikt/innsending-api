@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
+import no.nav.soknad.innsending.service.ArenaService
 import no.nav.soknad.innsending.service.PrefillService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
@@ -32,7 +33,8 @@ class FyllutRestApi(
 	private val soknadService: SoknadService,
 	private val tilgangskontroll: Tilgangskontroll,
 	private val prefillService: PrefillService,
-	private val subjectHandler: SubjectHandlerInterface
+	private val subjectHandler: SubjectHandlerInterface,
+	private val arenaService: ArenaService
 ) : FyllutApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -244,6 +246,11 @@ class FyllutRestApi(
 		}
 
 		return ResponseEntity.status(HttpStatus.OK).body(soknader)
+	}
+
+	override fun fyllUtAktiviteter(): ResponseEntity<List<Aktivitet>> {
+		val aktivteter = arenaService.getAktiviteterWithMaalgrupper()
+		return ResponseEntity.status(HttpStatus.OK).body(aktivteter)
 	}
 
 	private fun validerSoknadsTilgang(dokumentSoknadDto: DokumentSoknadDto) {
