@@ -16,8 +16,7 @@
 		"saf.prod-fss-pub.nais.io",
 		"soknadsmottaker-gcp.intern.nav.no",
 		"www.nav.no",
-		"arena-api.prod-fss-pub.nais.io",
-		"kodeverk.prod-fss-pub.nais.io"
+		"arena-api.prod-fss-pub.nais.io"
 	],
 	"kafka-pool": "nav-prod",
 	"env": {
@@ -51,7 +50,7 @@
 		"ARENA_URL": "https://arena-api.prod-fss-pub.nais.io",
 		"ARENA_TOKEN_X_AUDIENCE": "prod-fss:teamarenanais:arena-api",
 		"ARENA_SCOPE": "api://prod-fss.teamarenanais.arena-api/.default",
-		"KODEVERK_URL": "https://kodeverk.prod-fss-pub.nais.io",
+		"KODEVERK_URL": "http://kodeverk-api.team-rocket",
 		"KONTOREGISTER_TOKEN_X_AUDIENCE": "prod-gcp:okonomi:sokos-kontoregister-person",
 		"KONTOREGISTER_SCOPE": "api://prod-gcp.okonomi.sokos-kontoregister-person/.default",
 		"KONTOREGISTER_URL": "http://sokos-kontoregister-person.okonomi"
