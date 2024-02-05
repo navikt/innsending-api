@@ -94,7 +94,6 @@ no.nav.security.jwt:
     tokenx:
       discoveryurl: http://localhost:${mock-oauth2-server.port}/tokenx/.well-known/openid-configuration
       accepted_audience: aud-localhost
-      cookie_name: tokenx
 
   client:
     registration:

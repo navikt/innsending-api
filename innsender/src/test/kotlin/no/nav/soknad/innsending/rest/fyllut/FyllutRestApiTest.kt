@@ -60,8 +60,7 @@ class FyllutRestApiTest : ApplicationTest() {
 	@BeforeEach
 	fun setup() {
 		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
-		every { oauth2TokenService.getAccessToken(any()) } returns
-			OAuth2AccessTokenResponse.builder().accessToken("token").build()
+		every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
 	}
 
 	@Value("\${server.port}")
