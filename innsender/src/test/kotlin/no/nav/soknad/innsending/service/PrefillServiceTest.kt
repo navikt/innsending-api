@@ -26,8 +26,7 @@ class PrefillServiceTest : ApplicationTest() {
 
 	@BeforeEach
 	fun setup() {
-		every { oauth2TokenService.getAccessToken(any()) } returns
-			OAuth2AccessTokenResponse.builder().accessToken("token").build()
+		every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
 	}
 
 	@Test

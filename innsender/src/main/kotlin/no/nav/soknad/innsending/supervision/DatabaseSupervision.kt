@@ -33,7 +33,7 @@ class DatabaseSupervision(
 		val databaseSize = filRepository.totalDbSize()
 		logger.info("Total database size: $databaseSize")
 
-		innsenderMetrics.databaseSizeSet(databaseSize)
+		innsenderMetrics.setDatabaseSize(databaseSize)
 	}
 }
 

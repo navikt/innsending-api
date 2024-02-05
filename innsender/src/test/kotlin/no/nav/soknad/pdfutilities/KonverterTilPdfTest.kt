@@ -12,15 +12,17 @@ class KonverterTilPdfTest {
 		val skrivbarPdf = Hjelpemetoder.getBytesFromFile("/NAV 54-editert.pdf")
 		assertTrue(KonverterTilPdf().harSkrivbareFelt(skrivbarPdf))
 
+		val antallSiderSkrivbarPdf = AntallSider().finnAntallSider(skrivbarPdf)
 		val start = System.currentTimeMillis()
-		val flatetPdf = KonverterTilPdf().flatUtPdf(skrivbarPdf)
+		val flatetPdf = KonverterTilPdf().flatUtPdf(skrivbarPdf, antallSiderSkrivbarPdf ?: 0)
 		val ferdig = System.currentTimeMillis()
 		println("Tid til flate ut PDF = ${ferdig - start}")
+
 		//writeBytesToFile(flatetPdf, "./delme.pdf")
 		assertEquals(false, KonverterTilPdf().harSkrivbareFelt(flatetPdf))
 
-		val antallSider = AntallSider().finnAntallSider(skrivbarPdf)
-		assertEquals(antallSider, AntallSider().finnAntallSider(flatetPdf))
+		val antallSiderFlatetPdf = AntallSider().finnAntallSider(flatetPdf)
+		assertEquals(antallSiderSkrivbarPdf, antallSiderFlatetPdf)
 
 		val erPdfa = Validerer().isPDFa(flatetPdf)
 		assertTrue(erPdfa)
@@ -32,12 +34,11 @@ class KonverterTilPdfTest {
 		val skrivbarPdf = Hjelpemetoder.getBytesFromFile("/pdfs/acroform-fields-tom-array.pdf")
 		assertTrue(KonverterTilPdf().harSkrivbareFelt(skrivbarPdf))
 
-		val flatetPdf = KonverterTilPdf().flatUtPdf(skrivbarPdf)
+		val antallSiderSkrivbarPdf = AntallSider().finnAntallSider(skrivbarPdf) ?: 0
+		val flatetPdf = KonverterTilPdf().flatUtPdf(skrivbarPdf, antallSiderSkrivbarPdf)
 		assertTrue(KonverterTilPdf().harSkrivbareFelt(flatetPdf)) // Skal fortsatt ha skrivbare felt
 
-		val antallSider = AntallSider().finnAntallSider(skrivbarPdf)
-		assertEquals(antallSider, AntallSider().finnAntallSider(flatetPdf))
-
+		assertEquals(antallSiderSkrivbarPdf, AntallSider().finnAntallSider(flatetPdf))
 		assertEquals(skrivbarPdf, flatetPdf)
 	}
 
@@ -45,8 +46,7 @@ class KonverterTilPdfTest {
 	fun verifiserKonverteringAvJpg() {
 		val jpg = Hjelpemetoder.getBytesFromFile("/2MbJpg.jpg")
 
-		val pdf = KonverterTilPdf().tilPdf(jpg)
-		val antallSider = AntallSider().finnAntallSider(pdf)
+		val (pdf, antallSider) = KonverterTilPdf().tilPdf(jpg)
 		assertEquals(1, antallSider)
 
 		val erPdfa = Validerer().isPDFa(pdf)
@@ -58,10 +58,9 @@ class KonverterTilPdfTest {
 		val jpg = Hjelpemetoder.getBytesFromFile("/mellomstorJpg.jpg")
 
 		val start = System.currentTimeMillis()
-		val pdf = KonverterTilPdf().tilPdf(jpg)
+		val (pdf, antallSider) = KonverterTilPdf().tilPdf(jpg)
 		val ferdig = System.currentTimeMillis()
 		println("Tid til konvertering av mellomstorJpg = ${ferdig - start}")
-		val antallSider = AntallSider().finnAntallSider(pdf)
 		assertEquals(1, antallSider)
 
 		val erPdfa = Validerer().isPDFa(pdf)

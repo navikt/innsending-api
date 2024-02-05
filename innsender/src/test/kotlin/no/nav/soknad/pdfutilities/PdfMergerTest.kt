@@ -71,7 +71,7 @@ class PdfMergerTest {
 		val ferdig = System.currentTimeMillis()
 		println("Tid brukt for å merge ${pdfFiler.size} PDFer der en av PDFene består av mange sider = ${ferdig - start}")
 
-		assertEquals(antallFiler + antallSider.finnAntallSider(storPdf), AntallSider().finnAntallSider(mergedPdf))
+		assertEquals(antallFiler + (antallSider.finnAntallSider(storPdf) ?: 0), AntallSider().finnAntallSider(mergedPdf))
 
 	}
 
@@ -79,8 +79,7 @@ class PdfMergerTest {
 	private fun konverterTilPdfOgReturner(filPath: String): ByteArray {
 		val jpg = Hjelpemetoder.getBytesFromFile(filPath)
 
-		val pdf = KonverterTilPdf().tilPdf(jpg)
-		val antallSider = AntallSider().finnAntallSider(pdf)
+		val (pdf, antallSider) = KonverterTilPdf().tilPdf(jpg)
 		assertEquals(1, antallSider)
 
 		val erPdfa = Validerer().isPDFa(pdf)

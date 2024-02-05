@@ -5,6 +5,7 @@ import no.nav.soknad.innsending.service.SoknadServiceTest
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.BEARER
 import no.nav.soknad.innsending.util.Skjema
+import no.nav.soknad.pdfutilities.AntallSider
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import java.io.ByteArrayOutputStream
@@ -151,8 +152,14 @@ class Hjelpemetoder {
 		fun lagFilDtoMedFil(vedleggDto: VedleggDto): FilDto {
 			val fil = getBytesFromFile("/litenPdf.pdf")
 			return FilDto(
-				vedleggDto.id!!, null, "OpplastetFil.pdf",
-				Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now()
+				vedleggDto.id!!,
+				id = null,
+				filnavn = "OpplastetFil.pdf",
+				mimetype = Mimetype.applicationSlashPdf,
+				storrelse = fil.size,
+				antallsider = AntallSider().finnAntallSider(fil),
+				data = fil,
+				opprettetdato = OffsetDateTime.now()
 			)
 		}
 

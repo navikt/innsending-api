@@ -30,9 +30,10 @@ class KonverterTilPdf {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	fun tilPdf(fil: ByteArray): ByteArray {
+	fun tilPdf(fil: ByteArray): Pair<ByteArray, Int> {
 		if (FiltypeSjekker().isPdf(fil)) {
-			return flatUtPdf(fil) // Bare hvis inneholder formfields?
+			val antallSider = AntallSider().finnAntallSider(fil) ?: 0
+			return Pair(flatUtPdf(fil, antallSider), antallSider) // Bare hvis inneholder formfields?
 		} else if (FiltypeSjekker().isImage(fil)) {
 			return createPDFFromImage(fil)
 		}
@@ -57,10 +58,8 @@ class KonverterTilPdf {
 		return pdfDocument.documentCatalog.acroForm
 	}
 
-	fun flatUtPdf(fil: ByteArray): ByteArray {
-		val antallSider = AntallSider().finnAntallSider(fil)
+	fun flatUtPdf(fil: ByteArray, antallSider: Int): ByteArray {
 		logger.info("Antall sider i PDF: {}", antallSider)
-
 
 		// Konvertere fra PDF til bilde og tilbake til PDF
 		// Max størrelse på vedlegg er 50mb og for å ikke overskride dette så konverterer vi ikke PDF'er på over 50 sider
@@ -70,20 +69,20 @@ class KonverterTilPdf {
 
 			val images = KonverterTilPng().konverterTilPng(fil)
 			val pdfList = mutableListOf<ByteArray>()
-			for (element in images) pdfList.add(createPDFFromImage(element))
+			for (element in images) pdfList.add(createPDFFromImage(element).first)
 
 			val end = System.currentTimeMillis()
 			logger.info("Tid brukt for å konvertere PDF til bilde og tilbake til PDF = {}", end - start)
-			
+
 			return PdfMerger().mergePdfer(pdfList)
+		} else {
+			logger.info("Antall sider = $antallSider er over max grense (50) for utflating av PDF")
 		}
-
-
 
 		return fil
 	}
 
-	private fun createPDFFromImage(image: ByteArray): ByteArray {
+	private fun createPDFFromImage(image: ByteArray): Pair<ByteArray, Int> {
 		try {
 			PDDocument().use { doc ->
 				val pdImage = PDImageXObject.createFromByteArray(doc, image, null)
@@ -103,7 +102,7 @@ class KonverterTilPdf {
 				addDC(doc)
 				ByteArrayOutputStream().use { byteArrayOutputStream ->
 					doc.save(byteArrayOutputStream)
-					return byteArrayOutputStream.toByteArray()
+					return Pair(byteArrayOutputStream.toByteArray(), 1)
 				}
 			}
 		} catch (ioe: IOException) {

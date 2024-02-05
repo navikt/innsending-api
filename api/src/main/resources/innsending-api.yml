@@ -1319,6 +1319,10 @@ components:
           type: integer
           description: Størrelsen på filen
           example: 12345678
+        antallsider:
+           type: integer
+           description: Antall sider. Dette er aktuelt for PDF filerer
+           example: 10
         data:
           $ref: "#/components/schemas/Document"
         opprettetdato:

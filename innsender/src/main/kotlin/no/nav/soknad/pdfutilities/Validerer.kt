@@ -39,6 +39,18 @@ class Validerer {
 		}
 	}
 
+	fun validereAntallSider(antallSider: Int, maxAntallSider: Int = 200, file: ByteArray) {
+		if (isPDF(file)) {
+			if (antallSider > maxAntallSider) {
+				logger.warn("Opplastet fil med $antallSider sider overskrider $maxAntallSider")
+				throw IllegalActionException(
+					message = "For mange sider i fil. Opplastet fil med $antallSider sider som overskrider $maxAntallSider",
+					errorCode = ErrorCode.FILE_WITH_TOO_TO_MANY_PAGES
+				)
+			}
+		}
+	}
+
 	fun validerStorrelse(
 		innsendingId: String,
 		alleredeOpplastet: Long,

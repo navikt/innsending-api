@@ -89,6 +89,8 @@ spec:
           namespace: nais-system
         - application: sokos-kontoregister-person
           namespace: okonomi
+        - application: kodeverk-api
+          namespace: team-rocket
 
   ingresses:
   {{#each ingresses}}

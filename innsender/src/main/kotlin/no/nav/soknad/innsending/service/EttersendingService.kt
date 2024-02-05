@@ -151,8 +151,8 @@ class EttersendingService(
 			publiserBrukernotifikasjon(dokumentSoknadDto)
 
 			// Logg og metrics
-			innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
-			innsenderMetrics.operationsCounterInc(operation, nyesteSoknad.tema)
+			innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
+			innsenderMetrics.incOperationsCounter(operation, nyesteSoknad.tema)
 			logger.debug("Opprettet ${dokumentSoknadDto.innsendingsId} basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
 				"Med vedleggsstatus ${
 					dokumentSoknadDto.vedleggsListe.map {
@@ -206,7 +206,7 @@ class EttersendingService(
 			exceptionHelper.reportException(e, operation, existingSoknad.tema)
 			throw e
 		} finally {
-			innsenderMetrics.operationsCounterInc(operation, existingSoknad.tema)
+			innsenderMetrics.incOperationsCounter(operation, existingSoknad.tema)
 		}
 	}
 
@@ -244,7 +244,7 @@ class EttersendingService(
 			exceptionHelper.reportException(e, operation, archivedSoknad.tema)
 			throw e
 		} finally {
-			innsenderMetrics.operationsCounterInc(operation, archivedSoknad.tema)
+			innsenderMetrics.incOperationsCounter(operation, archivedSoknad.tema)
 		}
 	}
 
@@ -276,7 +276,7 @@ class EttersendingService(
 			exceptionHelper.reportException(e, operation, ettersending.tema)
 			throw e
 		} finally {
-			innsenderMetrics.operationsCounterInc(operation, ettersending.tema)
+			innsenderMetrics.incOperationsCounter(operation, ettersending.tema)
 		}
 	}
 
@@ -351,7 +351,7 @@ class EttersendingService(
 			} else {
 				createEttersending(brukerId = brukerId, ettersending = enrichedEttersending)
 			}
-		
+
 		publiserBrukernotifikasjon(dokumentSoknadDto, eksternOpprettEttersending.brukernotifikasjonstype)
 
 		return dokumentSoknadDto

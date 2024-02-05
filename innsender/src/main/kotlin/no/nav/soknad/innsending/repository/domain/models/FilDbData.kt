@@ -12,7 +12,8 @@ data class FilDbData(
 	@Column(name = "mimetype", columnDefinition = "varchar") val mimetype: String,
 	@Column(name = "storrelse", columnDefinition = "long") val storrelse: Int?,
 	@Column(name = "data", columnDefinition = "bytea") val data: ByteArray?,
-	@Column(name = "opprettetdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val opprettetdato: LocalDateTime
+	@Column(name = "opprettetdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val opprettetdato: LocalDateTime,
+	@Column(name = "antallsider", columnDefinition = "long") val antallsider: Int? = null
 ) {
 
 	override fun equals(other: Any?): Boolean {

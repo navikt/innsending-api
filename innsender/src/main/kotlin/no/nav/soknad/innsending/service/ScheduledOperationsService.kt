@@ -26,8 +26,8 @@ class ScheduledOperationsService(
 			logger.info("Total number of applications absent in archive: $soknaderAbsentInArchive")
 		}
 
-		innsenderMetrics.absentInArchive(soknaderAbsentInArchive)
-		innsenderMetrics.archivingFailedSet(soknadRepository.countArkiveringFeilet())
+		innsenderMetrics.setAbsentInArchive(soknaderAbsentInArchive)
+		innsenderMetrics.setArchivingFailed(soknadRepository.countArkiveringFeilet())
 
 	}
 

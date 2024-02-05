@@ -81,6 +81,7 @@ restconfig:
   version: 1.0
   maxFileSize: 50
   maxFileSizeSum: 150
+  maxNumberOfPages: 200
   sanityHost: https://www.nav.no
   sanityEndpoint: /soknader/api/sanity/skjemautlisting
   filesInOneRequestToFilestorage: 10
@@ -97,7 +98,7 @@ restconfig:
   azureUrl: http://localhost:9043/azure-api
   antivirusUrl: http://localhost:9043/antivirus
   arenaUrl: http://localhost:9043/arena-api
-  kodeverkUrl: https://kodeverk.dev.intern.nav.no
+  kodeverkUrl: https://kodeverk-api.nav.no
   kontoregisterUrl: http://localhost:9043/kontoregister-api
 
 brukernotifikasjonconfig:
@@ -142,6 +143,7 @@ restconfig:
   version: ${APP_VERSION}
   maxFileSize: ${MAX_FILE_SIZE}
   maxFileSizeSum: ${MAX_FILE_SIZE_SUM}
+  maxNumberOfPages: ${MAX_NUMBER_OF_PAGES}
   sanityHost: ${SANITY_HOST}
   sanityEndpoint: ${SANITY_ENDPOINT}
   filesInOneRequestToFilestorage: 10
