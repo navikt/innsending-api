@@ -683,7 +683,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals("ARBTREN", aktivitet.aktivitetstype)
 		assertEquals("Arbeidstrening", aktivitet.aktivitetsnavn)
 		assertEquals("2020-05-04", aktivitet.periode.fom.toString())
-		assertEquals("2021-06-30", aktivitet.periode.tom.toString())
+		assertEquals("2023-06-30", aktivitet.periode.tom.toString())
 		assertEquals(5, aktivitet.antallDagerPerUke)
 		assertEquals(100, aktivitet.prosentAktivitetsdeltakelse)
 		assertEquals("FULLF", aktivitet.aktivitetsstatus)
