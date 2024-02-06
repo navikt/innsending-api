@@ -24,9 +24,8 @@ class ArenaConsumer(
 	restConfig: RestConfig,
 ) : ArenaConsumerInterface {
 
-	private val maalgruppeApi = MaalgrupperApi("${restConfig.arenaUrl}/api/v1/maalgrupper", arenaApiClient)
-	private val tilleggsstonaderApi =
-		TilleggsstonaderApi("${restConfig.arenaUrl}/api/v1/tilleggsstoenad/dagligreise", arenaApiClient)
+	private val maalgruppeApi = MaalgrupperApi(restConfig.arenaUrl, arenaApiClient)
+	private val tilleggsstonaderApi = TilleggsstonaderApi(restConfig.arenaUrl, arenaApiClient)
 
 	private val logger: Logger = LoggerFactory.getLogger(javaClass)
 	private val secureLogger = LoggerFactory.getLogger("secureLogger")
