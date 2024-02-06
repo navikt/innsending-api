@@ -17,7 +17,7 @@ class ArenaService(private val arenaConsumer: ArenaConsumerInterface) {
 		val maalgrupper = arenaConsumer.getMaalgrupper()
 		val aktiviteter = arenaConsumer.getAktiviteter()
 
-		logger.info("Hentet aktiviteter og målgrupper fra Arena. Antall målgrupper: ${maalgrupper.size}, antall aktiviteter: ${aktiviteter.size}")
+		logger.info("Hentet aktiviteter og målgrupper fra Arena. Målgrupper: ${maalgrupper.map { it.maalgruppetype }}, aktiviteter: ${aktiviteter.map { it.aktivitetstype }}")
 
 		aktiviteter.map { aktivitet ->
 			aktivitet.copy(maalgruppe = MaalgruppeUtils.getPrioritzedMaalgruppeFromAktivitet(maalgrupper, aktivitet))
