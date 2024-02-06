@@ -184,10 +184,7 @@ class MaalgruppeUtilsTest {
 		val aktivitet = AktivitetTestBuilder().periode(Periode(oneMonthAgo, oneMonthFromNow)).build()
 
 		// Then
-		assertEquals(
-			MaalgruppeType.TIDLFAMPL,
-			MaalgruppeUtils.getPrioritzedMaalgruppeFromAktivitet(maalgrupper, aktivitet)
-		)
+		assertNull(MaalgruppeUtils.getPrioritzedMaalgruppeFromAktivitet(maalgrupper, aktivitet))
 	}
 
 

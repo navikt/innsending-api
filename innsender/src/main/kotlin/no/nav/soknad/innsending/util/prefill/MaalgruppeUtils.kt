@@ -86,7 +86,7 @@ object MaalgruppeUtils {
 			return getPrioritzedMaalgruppe(overlappingMaalgrupper)
 		}
 
-		return getPrioritzedMaalgruppe(maalgrupper)
+		return null
 	}
 
 	fun isOverlapping(maalgruppe: Maalgruppe, aktivitet: Aktivitet): Boolean {
