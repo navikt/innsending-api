@@ -46,7 +46,7 @@ class ArenaConsumer(
 			logger.warn("Klientfeil ved henting av målgrupper", ex)
 			return emptyList()
 		} catch (ex: Exception) {
-			logger.warn("Serverfeil ved henting av målgrupper", ex)
+			logger.error("Serverfeil ved henting av målgrupper", ex)
 			return emptyList()
 		}
 
@@ -67,7 +67,7 @@ class ArenaConsumer(
 			logger.warn("Klientfeil ved henting av aktiviteter", ex)
 			return emptyList()
 		} catch (ex: Exception) {
-			logger.warn("Serverfeil ved henting av aktiviteter", ex)
+			logger.error("Serverfeil ved henting av aktiviteter", ex)
 			return emptyList()
 		}
 
