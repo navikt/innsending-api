@@ -5,9 +5,15 @@ import no.nav.soknad.innsending.api.FyllutApi
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
-import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.model.Aktivitet
+import no.nav.soknad.innsending.model.BodyStatusResponseDto
+import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.PrefillData
+import no.nav.soknad.innsending.model.SkjemaDto
+import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
+import no.nav.soknad.innsending.service.ArenaService
 import no.nav.soknad.innsending.service.PrefillService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
@@ -32,7 +38,8 @@ class FyllutRestApi(
 	private val soknadService: SoknadService,
 	private val tilgangskontroll: Tilgangskontroll,
 	private val prefillService: PrefillService,
-	private val subjectHandler: SubjectHandlerInterface
+	private val subjectHandler: SubjectHandlerInterface,
+	private val arenaService: ArenaService
 ) : FyllutApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -244,6 +251,14 @@ class FyllutRestApi(
 		}
 
 		return ResponseEntity.status(HttpStatus.OK).body(soknader)
+	}
+
+	override fun fyllUtAktiviteter(): ResponseEntity<List<Aktivitet>> {
+		val brukerId = tilgangskontroll.hentBrukerFraToken()
+		combinedLogger.log("Kall fra FyllUt for å hente aktiviteter", brukerId)
+
+		val aktivteter = arenaService.getAktiviteterWithMaalgrupper()
+		return ResponseEntity.status(HttpStatus.OK).body(aktivteter)
 	}
 
 	private fun validerSoknadsTilgang(dokumentSoknadDto: DokumentSoknadDto) {

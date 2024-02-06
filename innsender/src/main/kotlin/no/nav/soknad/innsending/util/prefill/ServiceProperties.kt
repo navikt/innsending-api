@@ -1,8 +1,7 @@
 package no.nav.soknad.innsending.util.prefill
 
 import no.nav.soknad.innsending.exceptions.IllegalActionException
-import no.nav.soknad.innsending.util.Constants.ARENA_AKTIVITETER
-import no.nav.soknad.innsending.util.Constants.ARENA_MAALGRUPPER
+import no.nav.soknad.innsending.util.Constants.ARENA_MAALGRUPPE
 import no.nav.soknad.innsending.util.Constants.KONTORREGISTER_BORGER
 import no.nav.soknad.innsending.util.Constants.PDL
 
@@ -10,8 +9,7 @@ object ServiceProperties {
 	// Available external services and their corresponding properties that the frontend can request
 	private val availableServicePropertiesMap = hashMapOf(
 		PDL to listOf("sokerFornavn", "sokerEtternavn", "sokerAdresser", "sokerTelefonnummer", "sokerKjonn"),
-		ARENA_MAALGRUPPER to listOf("sokerMaalgrupper"),
-		ARENA_AKTIVITETER to listOf("sokerAktiviteter"),
+		ARENA_MAALGRUPPE to listOf("sokerMaalgruppe"),
 		KONTORREGISTER_BORGER to listOf("sokerKontonummer")
 	)
 
