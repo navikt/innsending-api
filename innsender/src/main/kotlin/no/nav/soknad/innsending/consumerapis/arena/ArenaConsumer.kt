@@ -46,9 +46,10 @@ class ArenaConsumer(
 		val maalgrupper = try {
 			maalgruppeApi.getMaalgrupper(fromDate.toString(), toDate.toString())
 		} catch (ex: ClientException) {
-			if (ex.statusCode == 400) {
-				logger.warn("Klientfeil ved henting av målgrupper", ex)
-			}
+			logger.warn("cause: " + ex.cause.toString())
+			logger.warn("message: " + ex.message)
+			logger.warn("response: " + ex.response.toString())
+			logger.warn("Klientfeil ved henting av målgrupper", ex)
 			return emptyList()
 		} catch (ex: Exception) {
 			throw BackendErrorException("Feil ved henting av målgrupper", ex)
@@ -69,10 +70,14 @@ class ArenaConsumer(
 		val aktiviteter = try {
 			tilleggsstonaderApi.getAktiviteter(fromDate.toString(), toDate.toString())
 		} catch (ex: ClientException) {
-			if (ex.statusCode == 400) {
+			logger.warn("cause: " + ex.cause.toString())
+			logger.warn("message: " + ex.message)
+			logger.warn("response: " + ex.response.toString())
+			if (ex.statusCode == 400 || ex.statusCode == 404) {
 				logger.warn("Klientfeil ved henting av aktiviteter", ex)
+				return emptyList()
 			}
-			return emptyList()
+			throw BackendErrorException("Klientfeil ved henting av aktiviteter", ex)
 		} catch (ex: Exception) {
 			throw BackendErrorException("Feil ved henting av aktiviteter", ex)
 		}
