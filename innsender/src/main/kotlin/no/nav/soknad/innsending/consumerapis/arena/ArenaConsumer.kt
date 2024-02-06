@@ -37,6 +37,9 @@ class ArenaConsumer(
 	override fun getMaalgrupper(): List<Maalgruppe> {
 		val userId = subjectHandler.getUserIdFromToken()
 
+		logger.info("baseurl ${maalgruppeApi.baseUrl}")
+		logger.info("fom tom $fromDate $toDate")
+
 		logger.info("Henter målgrupper")
 		secureLogger.info("[{}] Henter målgrupper", userId)
 

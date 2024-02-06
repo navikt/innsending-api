@@ -143,6 +143,7 @@ class OkHttpOAuth2ClientConfig(
 				val userId = subjectHandler.getUserIdFromToken()
 
 				logger.info("Kaller arena med callId: $callId")
+				logger.info("Kaller arena med brukerId: $userId")
 				val bearerRequest = it.request().newBuilder().headers(it.request().headers)
 					.header(HEADER_CALL_ID, callId)
 					.header(NAV_PERSON_IDENT, userId)
