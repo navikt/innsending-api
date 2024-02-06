@@ -3,11 +3,9 @@ package no.nav.soknad.innsending.consumerapis.arena
 import no.nav.soknad.innsending.api.MaalgrupperApi
 import no.nav.soknad.innsending.api.TilleggsstonaderApi
 import no.nav.soknad.innsending.config.RestConfig
-import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.Aktivitet
 import no.nav.soknad.innsending.model.Maalgruppe
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
-import no.nav.soknad.innsending.util.MDCUtil
 import okhttp3.OkHttpClient
 import org.openapitools.client.infrastructure.ClientException
 import org.slf4j.Logger
@@ -37,52 +35,43 @@ class ArenaConsumer(
 	private val toDate = LocalDate.now().plusMonths(2)
 
 	override fun getMaalgrupper(): List<Maalgruppe> {
-		val callId = MDCUtil.callIdOrNew()
 		val userId = subjectHandler.getUserIdFromToken()
 
-		logger.info("Henter målgruppe med callId:{}", callId)
-		secureLogger.info("[{}] Henter målgrupper for callId:{}", userId, callId)
+		logger.info("Henter målgrupper")
+		secureLogger.info("[{}] Henter målgrupper", userId)
 
 		val maalgrupper = try {
 			maalgruppeApi.getMaalgrupper(fromDate.toString(), toDate.toString())
 		} catch (ex: ClientException) {
-			logger.warn("cause: " + ex.cause.toString())
-			logger.warn("message: " + ex.message)
-			logger.warn("response: " + ex.response.toString())
 			logger.warn("Klientfeil ved henting av målgrupper", ex)
 			return emptyList()
 		} catch (ex: Exception) {
-			throw BackendErrorException("Feil ved henting av målgrupper", ex)
+			logger.warn("Serverfeil ved henting av målgrupper", ex)
+			return emptyList()
 		}
 
-		secureLogger.info("[{}] Målgrupper: {}", userId, maalgrupper.toString())
+		secureLogger.info("[{}] Målgrupper: {}", userId, maalgrupper.map { it.maalgruppetype })
 
 		return maalgrupper
 	}
 
 	override fun getAktiviteter(): List<Aktivitet> {
-		val callId = MDCUtil.callIdOrNew()
 		val userId = subjectHandler.getUserIdFromToken()
 
-		logger.info("Henter aktiviteter for callId:{}", callId)
-		secureLogger.info("[{}] Henter aktiviteter for callId:{}", userId, callId)
+		logger.info("Henter aktiviteter")
+		secureLogger.info("[{}] Henter aktiviteter", userId)
 
 		val aktiviteter = try {
 			tilleggsstonaderApi.getAktiviteter(fromDate.toString(), toDate.toString())
 		} catch (ex: ClientException) {
-			logger.warn("cause: " + ex.cause.toString())
-			logger.warn("message: " + ex.message)
-			logger.warn("response: " + ex.response.toString())
-			if (ex.statusCode == 400 || ex.statusCode == 404) {
-				logger.warn("Klientfeil ved henting av aktiviteter", ex)
-				return emptyList()
-			}
-			throw BackendErrorException("Klientfeil ved henting av aktiviteter", ex)
+			logger.warn("Klientfeil ved henting av aktiviteter", ex)
+			return emptyList()
 		} catch (ex: Exception) {
-			throw BackendErrorException("Feil ved henting av aktiviteter", ex)
+			logger.warn("Serverfeil ved henting av aktiviteter", ex)
+			return emptyList()
 		}
 
-		secureLogger.info("[{}] Aktiviteter: {}", userId, aktiviteter.toString())
+		secureLogger.info("[{}] Aktiviteter: {}", userId, aktiviteter.map { it.aktivitetstype })
 
 		return aktiviteter
 	}
