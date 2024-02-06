@@ -98,7 +98,8 @@ object MaalgruppeUtils {
 
 		return isDateBetween(date = aktivitetStart, start = maalgruppeStart, end = maalgruppeEnd) ||
 			isDateBetween(date = aktivitetEnd, start = maalgruppeStart, end = maalgruppeEnd) ||
-			isDateBetween(date = maalgruppeStart, start = aktivitetStart, end = aktivitetEnd)
+			isDateBetween(date = maalgruppeStart, start = aktivitetStart, end = aktivitetEnd) ||
+			isDateBetween(date = maalgruppeEnd, start = aktivitetStart, end = aktivitetEnd)
 	}
 
 	private fun isDateBetween(date: LocalDate, start: LocalDate, end: LocalDate): Boolean {

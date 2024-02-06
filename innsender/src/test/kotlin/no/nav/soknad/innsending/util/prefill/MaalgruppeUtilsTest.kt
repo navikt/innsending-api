@@ -62,7 +62,7 @@ class MaalgruppeUtilsTest {
 	}
 
 	@Test
-	fun `Should overlap when periodes partially overlap`() {
+	fun `Should overlap målgruppe periode is inside aktivitet periode`() {
 		// Given
 		val maalgruppe = MaalgruppeTestBuilder().gyldighetsperiode(Periode(oneMonthAgo, oneMonthFromNow)).build()
 		val aktivitet = AktivitetTestBuilder().periode(Periode(twoMonthsAgo, twoMonthsFromNow)).build()
@@ -72,9 +72,29 @@ class MaalgruppeUtilsTest {
 	}
 
 	@Test
-	fun `Should overlap when maalgruppe is within aktivitet periode`() {
+	fun `Should overlap when aktivitet has end-date inside målgruppe periode`() {
 		// Given
 		val maalgruppe = MaalgruppeTestBuilder().gyldighetsperiode(Periode(oneMonthAgo, oneMonthFromNow)).build()
+		val aktivitet = AktivitetTestBuilder().periode(Periode(twoMonthsAgo, now)).build()
+
+		// When / Then
+		assertTrue(MaalgruppeUtils.isOverlapping(maalgruppe, aktivitet))
+	}
+
+	@Test
+	fun `Should overlap when aktivitet has start-date inside målgruppe periode`() {
+		// Given
+		val maalgruppe = MaalgruppeTestBuilder().gyldighetsperiode(Periode(twoMonthsAgo, oneMonthFromNow)).build()
+		val aktivitet = AktivitetTestBuilder().periode(Periode(oneMonthAgo, twoMonthsFromNow)).build()
+
+		// When / Then
+		assertTrue(MaalgruppeUtils.isOverlapping(maalgruppe, aktivitet))
+	}
+
+	@Test
+	fun `Should overlap when målgruppe has start-date inside aktivitet periode`() {
+		// Given
+		val maalgruppe = MaalgruppeTestBuilder().gyldighetsperiode(Periode(now, twoMonthsFromNow)).build()
 		val aktivitet = AktivitetTestBuilder().periode(Periode(twoMonthsAgo, oneMonthFromNow)).build()
 
 		// When / Then
@@ -82,10 +102,10 @@ class MaalgruppeUtilsTest {
 	}
 
 	@Test
-	fun `Should overlap when aktivitet is within maalgruppe periode`() {
+	fun `Should overlap when målgruppe has end-date inside aktivitet periode`() {
 		// Given
-		val maalgruppe = MaalgruppeTestBuilder().gyldighetsperiode(Periode(twoMonthsAgo, oneMonthFromNow)).build()
-		val aktivitet = AktivitetTestBuilder().periode(Periode(oneMonthAgo, oneMonthFromNow)).build()
+		val maalgruppe = MaalgruppeTestBuilder().gyldighetsperiode(Periode(twoMonthsAgo, now)).build()
+		val aktivitet = AktivitetTestBuilder().periode(Periode(oneMonthAgo, twoMonthsFromNow)).build()
 
 		// When / Then
 		assertTrue(MaalgruppeUtils.isOverlapping(maalgruppe, aktivitet))
@@ -149,7 +169,7 @@ class MaalgruppeUtilsTest {
 	}
 
 	@Test
-	fun `Should return maalgruppe with lower priority when it is overlapping and the higher priority maalgruppe is not`() {
+	fun `Should return the less prioritzed målgruppe when it is overlapping (and the more prioritized målgruppe is not overlapping)`() {
 		// Given
 		val maalgrupper = listOf(
 			MaalgruppeTestBuilder()
@@ -171,7 +191,7 @@ class MaalgruppeUtilsTest {
 	}
 
 	@Test
-	fun `Should return prioritized maalgruppe when no overlapping maalgrupper are present`() {
+	fun `Should return null when no overlapping maalgrupper are present`() {
 		// Given
 		val maalgrupper = listOf(
 			MaalgruppeTestBuilder().maalgruppetype(MaalgruppeType.GJENEKUTD) // Priority 5, not overlapping
