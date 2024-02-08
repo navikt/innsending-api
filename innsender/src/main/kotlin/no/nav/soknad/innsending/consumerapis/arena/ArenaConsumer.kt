@@ -3,6 +3,9 @@ package no.nav.soknad.innsending.consumerapis.arena
 import no.nav.soknad.innsending.api.MaalgrupperApi
 import no.nav.soknad.innsending.api.TilleggsstonaderApi
 import no.nav.soknad.innsending.config.RestConfig
+import no.nav.soknad.innsending.exceptions.BackendErrorException
+import no.nav.soknad.innsending.exceptions.ErrorCode
+import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.Aktivitet
 import no.nav.soknad.innsending.model.Maalgruppe
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
@@ -63,11 +66,22 @@ class ArenaConsumer(
 		val aktiviteter = try {
 			tilleggsstonaderApi.getAktiviteter(fromDate.toString(), toDate.toString())
 		} catch (ex: ClientException) {
-			logger.warn("Klientfeil ved henting av aktiviteter", ex)
-			return emptyList()
+			if (ex.statusCode == 400) {
+				logger.warn("Ugyldig/manglende input eller fødselsnummer finnes ikke i Arena", ex)
+				return emptyList()
+			}
+
+			throw IllegalActionException(
+				message = "Klientfeil ved henting av aktiviteter",
+				cause = ex,
+				errorCode = ErrorCode.ARENA_ERROR
+			)
 		} catch (ex: Exception) {
-			logger.error("Serverfeil ved henting av aktiviteter", ex)
-			return emptyList()
+			throw BackendErrorException(
+				message = "Serverfeil ved henting av aktiviteter",
+				cause = ex,
+				errorCode = ErrorCode.ARENA_ERROR
+			)
 		}
 
 		secureLogger.info("[{}] Aktiviteter: {}", userId, aktiviteter.map { it.aktivitetstype })

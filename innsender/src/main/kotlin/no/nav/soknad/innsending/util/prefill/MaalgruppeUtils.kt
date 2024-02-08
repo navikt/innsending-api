@@ -82,7 +82,7 @@ object MaalgruppeUtils {
 
 		val overlappingMaalgrupper = maalgrupper.filter { maalgruppe -> isOverlapping(maalgruppe, aktivitet) }
 		if (overlappingMaalgrupper.isNotEmpty()) {
-			logger.info("Fant overlappende målgruppe(r) for aktivitet $overlappingMaalgrupper")
+			logger.info("Fant overlappende målgruppe(r) for aktivitet ${aktivitet.aktivitetstype} (${aktivitet.periode.fom}-${aktivitet.periode.tom}): $overlappingMaalgrupper")
 			return getPrioritzedMaalgruppe(overlappingMaalgrupper)
 		}
 
