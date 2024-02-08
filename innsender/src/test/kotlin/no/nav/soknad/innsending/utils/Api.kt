@@ -215,4 +215,15 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 			RestErrorResponseDto::class.java
 		)
 	}
+
+	fun getAktiviteter(): ResponseEntity<List<Aktivitet>>? {
+		val responseType = object : ParameterizedTypeReference<List<Aktivitet>>() {}
+
+		return restTemplate.exchange(
+			"${baseUrl}/fyllUt/v1/aktiviteter",
+			HttpMethod.GET,
+			createHttpEntity(null),
+			responseType
+		)
+	}
 }

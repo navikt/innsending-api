@@ -2,11 +2,6 @@
 	"request": {
 		"urlPattern": "/arena-api/api/v1/tilleggsstoenad/dagligreise.*",
 		"method": "GET",
-		"headers": {
-			"Authorization": {
-				"matches": ".*"
-			}
-		},
 		"queryParameters": {
 			"fom": {
 				"matches": ".*"
@@ -28,7 +23,7 @@
 				"aktivitetsnavn": "Arbeidstrening",
 				"periode": {
 					"fom": "2020-05-04",
-					"tom": "2021-06-30"
+					"tom": "2023-06-30"
 				},
 				"antallDagerPerUke": 5,
 				"prosentAktivitetsdeltakelse": 100,

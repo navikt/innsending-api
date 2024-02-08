@@ -14,6 +14,7 @@ object Constants {
 	const val NAV_PERSON_IDENT = "NAV-Personident"
 
 	const val BEARER = "Bearer "
+	const val AUTHORIZATION = "Authorization"
 
 	const val MAX_AKTIVE_DAGER = 3 * 365L
 
@@ -26,7 +27,6 @@ object Constants {
 
 	// External services for prefill data
 	const val PDL = "pdl"
-	const val ARENA_MAALGRUPPER = "arena_maalgrupper"
-	const val ARENA_AKTIVITETER = "arena_aktiviteter"
+	const val ARENA_MAALGRUPPE = "arena_maalgruppe"
 	const val KONTORREGISTER_BORGER = "kontorregister_borger"
 }
