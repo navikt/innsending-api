@@ -11,6 +11,8 @@ class InnsenderMetricsTest : ApplicationTest() {
 	@Autowired
 	lateinit var innsenderMetrics: InnsenderMetrics
 
+	private val maxQuantile = 0.99
+
 	@BeforeEach
 	fun init() {
 		innsenderMetrics.clearFileSize()
@@ -28,7 +30,7 @@ class InnsenderMetricsTest : ApplicationTest() {
 
 		Assertions.assertTrue(fileNumberOfPagesMetrics != null)
 
-		Assertions.assertEquals(numbers.max(), fileNumberOfPagesMetrics.quantiles?.get(0.95))
+		Assertions.assertEquals(numbers.max(), fileNumberOfPagesMetrics.quantiles?.get(maxQuantile))
 		Assertions.assertEquals(numbers.sum() / numbers.size, fileNumberOfPagesMetrics.sum / fileNumberOfPagesMetrics.count)
 
 	}
@@ -42,7 +44,7 @@ class InnsenderMetricsTest : ApplicationTest() {
 		val fileSizeMetrics = innsenderMetrics.getFileSize()
 
 		Assertions.assertTrue(fileSizeMetrics != null)
-		Assertions.assertEquals(sizes.max(), fileSizeMetrics.quantiles?.get(0.95))
+		Assertions.assertEquals(sizes.max(), fileSizeMetrics.quantiles?.get(maxQuantile))
 		Assertions.assertEquals(sizes.sum() / sizes.size, fileSizeMetrics.sum / fileSizeMetrics.count)
 
 	}
@@ -66,14 +68,14 @@ class InnsenderMetricsTest : ApplicationTest() {
 		val fileSizeMetrics = innsenderMetrics.getFileSize()
 
 		Assertions.assertTrue(fileNumberOfPagesMetrics != null)
-		Assertions.assertEquals(pagesAndSizes.map { it.get(0) }.max(), fileNumberOfPagesMetrics.quantiles?.get(0.95))
+		Assertions.assertEquals(pagesAndSizes.map { it.get(0) }.max(), fileNumberOfPagesMetrics.quantiles?.get(maxQuantile))
 		Assertions.assertEquals(
 			pagesAndSizes.map { it.get(0) }.sum() / pagesAndSizes.map { it.get(0) }.size,
 			fileNumberOfPagesMetrics.sum / fileNumberOfPagesMetrics.count
 		)
 
 		Assertions.assertTrue(fileSizeMetrics != null)
-		Assertions.assertEquals(pagesAndSizes.map { it.get(1) }.max(), fileSizeMetrics.quantiles?.get(0.95))
+		Assertions.assertEquals(pagesAndSizes.map { it.get(1) }.max(), fileSizeMetrics.quantiles?.get(maxQuantile))
 		Assertions.assertEquals(
 			pagesAndSizes.map { it.get(1) }.sum() / pagesAndSizes.map { it.get(1) }.size,
 			fileSizeMetrics.sum / fileSizeMetrics.count

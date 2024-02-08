@@ -84,7 +84,12 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 			.namespace(soknadNamespace)
 			.name(name)
 			.help(help)
-			.quantile(0.95, 0.01)
+			.quantile(0.99, 0.01)
+			.quantile(0.50, 0.01)
+			.quantile(0.40, 0.01)
+			.quantile(0.30, 0.01)
+			.quantile(0.20, 0.01)
+			.quantile(0.10, 0.01)
 			.maxAgeSeconds(10 * 60)
 			.register(registry)
 
