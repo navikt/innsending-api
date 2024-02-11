@@ -392,28 +392,23 @@ class InnsendingService(
 
 
 	fun getFiles(innsendingId: String, uuids: List<String>): List<SoknadFile> {
-		val timer = innsenderMetrics.startOperationHistogramLatency(InnsenderOperation.HENT.name)
 		logger.info("$innsendingId: Skal hente ${uuids.joinToString(",")}")
 
-		try {
-			// Sjekk om det er noen hendelser for søknaden
-			val hendelseDbData = repo.hentHendelse(innsendingId)
-			if (hendelseDbData.isEmpty()) {
-				logger.info("$innsendingId: ikke funnet innslag for søknad i hendelsesloggen")
-				return emptySoknadFilesWithStatus(uuids, SoknadFile.FileStatus.notfound)
-			}
-
-			// Sjekk om søknaden er arkivert
-			val erArkivert = hendelseDbData.any { it.hendelsetype == HendelseType.Arkivert }
-			if (erArkivert) {
-				logger.info("$innsendingId: søknaden er allerede arkivert")
-				emptySoknadFilesWithStatus(uuids, SoknadFile.FileStatus.deleted)
-			}
-
-			return fetchSoknadFiles(innsendingId, uuids, erArkivert)
-		} finally {
-			innsenderMetrics.endOperationHistogramLatency(timer)
+		// Sjekk om det er noen hendelser for søknaden
+		val hendelseDbData = repo.hentHendelse(innsendingId)
+		if (hendelseDbData.isEmpty()) {
+			logger.info("$innsendingId: ikke funnet innslag for søknad i hendelsesloggen")
+			return emptySoknadFilesWithStatus(uuids, SoknadFile.FileStatus.notfound)
 		}
+
+		// Sjekk om søknaden er arkivert
+		val erArkivert = hendelseDbData.any { it.hendelsetype == HendelseType.Arkivert }
+		if (erArkivert) {
+			logger.info("$innsendingId: søknaden er allerede arkivert")
+			emptySoknadFilesWithStatus(uuids, SoknadFile.FileStatus.deleted)
+		}
+
+		return fetchSoknadFiles(innsendingId, uuids, erArkivert)
 	}
 
 	private fun fetchSoknadFiles(innsendingId: String, uuids: List<String>, erArkivert: Boolean): List<SoknadFile> {

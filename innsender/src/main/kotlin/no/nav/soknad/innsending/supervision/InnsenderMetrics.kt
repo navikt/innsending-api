@@ -66,7 +66,7 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 			.name(name)
 			.help(help)
 			.labelNames(label, appLabel)
-			.buckets(100.0, 200.0, 400.0, 1000.0, 2000.0, 4000.0, 15000.0, 30000.0)
+			.buckets(0.1, 0.2, 0.4, 1.0, 2.0, 4.0, 15.0, 30.0, 60.0, 120.0)
 			.register(registry)
 
 	private fun registerGauge(name: String, help: String): Gauge =
@@ -84,7 +84,12 @@ class InnsenderMetrics(private val registry: CollectorRegistry) {
 			.namespace(soknadNamespace)
 			.name(name)
 			.help(help)
-			.quantile(0.95, 0.01)
+			.quantile(0.99, 0.01)
+			.quantile(0.50, 0.01)
+			.quantile(0.40, 0.01)
+			.quantile(0.30, 0.01)
+			.quantile(0.20, 0.01)
+			.quantile(0.10, 0.01)
 			.maxAgeSeconds(10 * 60)
 			.register(registry)
 
