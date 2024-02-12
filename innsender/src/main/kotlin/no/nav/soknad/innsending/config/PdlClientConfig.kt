@@ -4,6 +4,7 @@ import com.expediagroup.graphql.client.spring.GraphQLWebClient
 import no.nav.soknad.innsending.consumerapis.azure.AzureInterface
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.HEADER_BEHANDLINGSNUMMER
+import no.nav.soknad.innsending.util.Constants.PDL_BEHANDLINGSNUMMER
 import no.nav.soknad.innsending.util.MDCUtil
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -48,7 +49,7 @@ class PdlClientConfig(
 				it.header(Constants.HEADER_CALL_ID, MDCUtil.callIdOrNew())
 				it.header(HttpHeaders.AUTHORIZATION, azureClient.consumerToken())
 				it.header("Tema", "AAP")
-				it.header(HEADER_BEHANDLINGSNUMMER, "B613")
+				it.header(HEADER_BEHANDLINGSNUMMER, PDL_BEHANDLINGSNUMMER)
 			}
 	)
 

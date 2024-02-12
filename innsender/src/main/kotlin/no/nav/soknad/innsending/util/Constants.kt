@@ -26,6 +26,8 @@ object Constants {
 
 	const val ukjentEttersendingsId = "-1" // sette lik innsendingsid istedenfor?
 
+	const val PDL_BEHANDLINGSNUMMER = "B613"
+
 	// External services for prefill data
 	const val PDL = "pdl"
 	const val ARENA_MAALGRUPPE = "arena_maalgruppe"
