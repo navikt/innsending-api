@@ -2,7 +2,7 @@
 	"env-name": "prod-gcp",
 	"max_created_expected": 1000,
 	"max_innsendt_expected": 1000,
-	"heap_jvm_memory_threshold": 1200000000,
+	"heap_jvm_memory_threshold": 2000000000,
 	"number_of_errors": 3,
 	"error_log_url": "https://logs.adeo.no/app/discover#/view/170a6860-df4c-11ed-8b42-0b0644af4500",
 	"archiving_failed_log_url": "https://logs.adeo.no/app/discover#/view/6421f1b0-df4f-11ed-8b42-0b0644af4500",
