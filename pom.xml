@@ -42,7 +42,7 @@
 
 		<!--Database-->
 		<otj-pg-embedded.version>1.0.2</otj-pg-embedded.version>
-		<flyway.version>9.19.4</flyway.version> <!-- Not latest -->
+		<flyway.version>10.7.2</flyway.version>
 
 		<!--Other-->
 		<kotlin-serialization.version>1.6.2</kotlin-serialization.version>
