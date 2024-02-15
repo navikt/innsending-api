@@ -12,8 +12,6 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    ignore:
-      - dependency-name: "org.flywaydb:flyway-core" # Oppdatering fungerer ikke, må fikses
 
   - package-ecosystem: "github-actions"
     directory: "/"

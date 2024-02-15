@@ -124,6 +124,10 @@ spring:
 
   flyway:
     enabled: true
+    validateOnMigrate: true
+    validateMigrationNaming: true
+    outOfOrder: false
+
   datasource:
     url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DATABASE}?user=${DATABASE_USERNAME}&password=${DATABASE_PASSWORD}
     hikari:
