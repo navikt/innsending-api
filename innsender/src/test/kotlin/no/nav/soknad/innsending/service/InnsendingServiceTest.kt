@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.service
 
+import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.mockk
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
@@ -13,6 +13,7 @@ import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SoknadFile
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
@@ -57,14 +58,12 @@ class InnsendingServiceTest : ApplicationTest() {
 	@Autowired
 	private lateinit var exceptionHelper: ExceptionHelper
 
-	@InjectMockKs
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
-
-	@InjectMockKs
 	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
-
-	@InjectMockKs
 	private val pdlInterface = mockk<PdlInterface>()
+
+	@MockkBean
+	private lateinit var subjectHandler: SubjectHandlerInterface
 
 	private fun lagInnsendingService(soknadService: SoknadService): InnsendingService = InnsendingService(
 		soknadService = soknadService,
@@ -84,6 +83,7 @@ class InnsendingServiceTest : ApplicationTest() {
 	fun setup() {
 		every { brukernotifikasjonPublisher.soknadStatusChange(any()) } returns true
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("1234567890", "Kan", null, "Søke")
+		every { subjectHandler.getClientId() } returns "application"
 	}
 
 

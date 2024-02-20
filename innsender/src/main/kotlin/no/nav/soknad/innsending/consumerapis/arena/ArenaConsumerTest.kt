@@ -1,6 +1,12 @@
 package no.nav.soknad.innsending.consumerapis.arena
 
-import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.model.Aktivitet
+import no.nav.soknad.innsending.model.Betalingsplan
+import no.nav.soknad.innsending.model.Maalgruppe
+import no.nav.soknad.innsending.model.MaalgruppeType
+import no.nav.soknad.innsending.model.Periode
+import no.nav.soknad.innsending.model.Saksinformasjon
+import no.nav.soknad.innsending.model.Vedtaksinformasjon
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.time.LocalDate
@@ -8,7 +14,7 @@ import java.time.LocalDate
 @Component
 @Profile("local | docker")
 class ArenaConsumerTest : ArenaConsumerInterface {
-	override suspend fun getMaalgrupper(): List<Maalgruppe> {
+	override fun getMaalgrupper(): List<Maalgruppe> {
 		val maalgruppe =
 			Maalgruppe(
 				gyldighetsperiode = Periode(
@@ -21,7 +27,7 @@ class ArenaConsumerTest : ArenaConsumerInterface {
 		return listOf(maalgruppe)
 	}
 
-	override suspend fun getAktiviteter(): List<Aktivitet> {
+	override fun getAktiviteter(): List<Aktivitet> {
 		val aktivitet = Aktivitet(
 			aktivitetId = "130892484",
 			aktivitetstype = "ARBTREN",

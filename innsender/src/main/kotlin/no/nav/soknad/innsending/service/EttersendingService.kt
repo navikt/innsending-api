@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
@@ -36,7 +37,8 @@ class EttersendingService(
 	private val soknadService: SoknadService,
 	private val safService: SafService,
 	private val tilgangskontroll: Tilgangskontroll,
-	private val kodeverkService: KodeverkService
+	private val kodeverkService: KodeverkService,
+	private val subjectHandler: SubjectHandlerInterface
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -55,6 +57,8 @@ class EttersendingService(
 	)
 		: SoknadDbData {
 		val innsendingsId = Utilities.laginnsendingsId()
+		val applikasjon = subjectHandler.getClientId()
+
 		// lagre soknad
 		return repo.lagreSoknad(
 			SoknadDbData(
@@ -74,7 +78,8 @@ class EttersendingService(
 				visningstype = VisningsType.ettersending,
 				forsteinnsendingsdato = mapTilLocalDateTime(forsteInnsendingsDato),
 				ettersendingsfrist = fristForEttersendelse,
-				arkiveringsstatus = ArkiveringsStatus.IkkeSatt
+				arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
+				applikasjon = applikasjon
 			)
 		)
 	}
@@ -146,8 +151,8 @@ class EttersendingService(
 			publiserBrukernotifikasjon(dokumentSoknadDto)
 
 			// Logg og metrics
-			innsenderMetrics.operationsCounterInc(operation, dokumentSoknadDto.tema)
-			innsenderMetrics.operationsCounterInc(operation, nyesteSoknad.tema)
+			innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
+			innsenderMetrics.incOperationsCounter(operation, nyesteSoknad.tema)
 			logger.debug("Opprettet ${dokumentSoknadDto.innsendingsId} basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
 				"Med vedleggsstatus ${
 					dokumentSoknadDto.vedleggsListe.map {
@@ -201,7 +206,7 @@ class EttersendingService(
 			exceptionHelper.reportException(e, operation, existingSoknad.tema)
 			throw e
 		} finally {
-			innsenderMetrics.operationsCounterInc(operation, existingSoknad.tema)
+			innsenderMetrics.incOperationsCounter(operation, existingSoknad.tema)
 		}
 	}
 
@@ -239,7 +244,7 @@ class EttersendingService(
 			exceptionHelper.reportException(e, operation, archivedSoknad.tema)
 			throw e
 		} finally {
-			innsenderMetrics.operationsCounterInc(operation, archivedSoknad.tema)
+			innsenderMetrics.incOperationsCounter(operation, archivedSoknad.tema)
 		}
 	}
 
@@ -271,7 +276,7 @@ class EttersendingService(
 			exceptionHelper.reportException(e, operation, ettersending.tema)
 			throw e
 		} finally {
-			innsenderMetrics.operationsCounterInc(operation, ettersending.tema)
+			innsenderMetrics.incOperationsCounter(operation, ettersending.tema)
 		}
 	}
 
@@ -325,9 +330,10 @@ class EttersendingService(
 		}
 	}
 
+	@Transactional
 	fun createEttersendingFromExternalApplication(
 		brukerId: String,
-		eksternOpprettEttersending: EksternOpprettEttersending
+		eksternOpprettEttersending: EksternOpprettEttersending,
 	): DokumentSoknadDto {
 		val mappedEttersending = mapToOpprettEttersending(eksternOpprettEttersending)
 

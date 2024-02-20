@@ -21,4 +21,7 @@ class SubjectHandlerTestImpl : SubjectHandlerInterface {
 		return "StaticConsumerId"
 	}
 
+	override fun getClientId(): String {
+		return "StaticClientId"
+	}
 }

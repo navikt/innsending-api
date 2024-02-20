@@ -3,6 +3,8 @@ server:
   max-http-request-header-size: 32KB
 
 spring:
+  application:
+    name: innsending-api
   jackson:
     default-property-inclusion: non_null
 
@@ -57,7 +59,7 @@ spring:
       on-profile: local | docker
 
   application:
-    name:
+    name: innsending-api
 
   codec:
     max-in-memory-size: 104857600
@@ -79,6 +81,7 @@ restconfig:
   version: 1.0
   maxFileSize: 50
   maxFileSizeSum: 150
+  maxNumberOfPages: 200
   sanityHost: https://www.nav.no
   sanityEndpoint: /soknader/api/sanity/skjemautlisting
   filesInOneRequestToFilestorage: 10
@@ -95,7 +98,7 @@ restconfig:
   azureUrl: http://localhost:9043/azure-api
   antivirusUrl: http://localhost:9043/antivirus
   arenaUrl: http://localhost:9043/arena-api
-  kodeverkUrl: https://kodeverk.dev.intern.nav.no
+  kodeverkUrl: https://kodeverk-api.nav.no
   kontoregisterUrl: http://localhost:9043/kontoregister-api
 
 brukernotifikasjonconfig:
@@ -111,6 +114,9 @@ spring:
     activate:
       on-profile: dev | prod
 
+  application:
+    name: innsending-api
+
   servlet:
     multipart:
       max-file-size: ${MAX_FILE_SIZE}MB
@@ -118,6 +124,10 @@ spring:
 
   flyway:
     enabled: true
+    validateOnMigrate: true
+    validateMigrationNaming: true
+    outOfOrder: false
+
   datasource:
     url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DATABASE}?user=${DATABASE_USERNAME}&password=${DATABASE_PASSWORD}
     hikari:
@@ -137,6 +147,7 @@ restconfig:
   version: ${APP_VERSION}
   maxFileSize: ${MAX_FILE_SIZE}
   maxFileSizeSum: ${MAX_FILE_SIZE_SUM}
+  maxNumberOfPages: ${MAX_NUMBER_OF_PAGES}
   sanityHost: ${SANITY_HOST}
   sanityEndpoint: ${SANITY_ENDPOINT}
   filesInOneRequestToFilestorage: 10

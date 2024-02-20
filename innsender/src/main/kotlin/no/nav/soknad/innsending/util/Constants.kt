@@ -12,8 +12,10 @@ object Constants {
 	const val CORRELATION_ID = "correlation_id"
 	const val MDC_INNSENDINGS_ID = "innsendingsId"
 	const val NAV_PERSON_IDENT = "NAV-Personident"
+	const val HEADER_BEHANDLINGSNUMMER = "behandlingsnummer"
 
 	const val BEARER = "Bearer "
+	const val AUTHORIZATION = "Authorization"
 
 	const val MAX_AKTIVE_DAGER = 3 * 365L
 
@@ -24,9 +26,10 @@ object Constants {
 
 	const val ukjentEttersendingsId = "-1" // sette lik innsendingsid istedenfor?
 
+	const val PDL_BEHANDLINGSNUMMER = "B613"
+
 	// External services for prefill data
 	const val PDL = "pdl"
-	const val ARENA_MAALGRUPPER = "arena_maalgrupper"
-	const val ARENA_AKTIVITETER = "arena_aktiviteter"
+	const val ARENA_MAALGRUPPE = "arena_maalgruppe"
 	const val KONTORREGISTER_BORGER = "kontorregister_borger"
 }

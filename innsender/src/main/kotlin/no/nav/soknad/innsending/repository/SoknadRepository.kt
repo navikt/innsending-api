@@ -11,28 +11,11 @@ import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import java.util.*
 
 @Repository
 interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 
 	fun findByInnsendingsid(innsendingsid: String): SoknadDbData?
-
-	@Query(
-		value = "SELECT * FROM soknad WHERE innsendtdato is not null AND (innsendingsid = :ettersendingsid OR (ettersendingsid is not null AND ettersendingsid = :ettersendingsid)) ORDER BY innsendtdato DESC",
-		nativeQuery = true
-	)
-	fun findNewestByEttersendingsId(@Param("ettersendingsid") ettersendingsid: String): List<SoknadDbData>
-
-	@Query(
-		value = "SELECT * FROM soknad WHERE brukerid in (:brukerids) AND status in (:status) ORDER BY endretdato DESC",
-		nativeQuery = true
-	)
-	fun findSoknadDbByAllBrukerIdAndStatus(
-		@Param("brukerids") brukerids: String,
-		@Param("status") status: String
-	): List<SoknadDbData>
-
 	fun findByBrukeridAndStatus(brukerid: String, status: SoknadsStatus): List<SoknadDbData>
 
 	@Transactional
@@ -63,15 +46,6 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 
 	@Query(value = "SELECT * FROM soknad WHERE opprettetdato <= :opprettetFor ORDER BY opprettetdato", nativeQuery = true)
 	fun findAllByOpprettetdatoBefore(@Param("opprettetFor") opprettetFor: OffsetDateTime): List<SoknadDbData>
-
-	@Query(
-		value = "SELECT * FROM soknad WHERE arkiveringsstatus <> 'Arkivert' AND innsendtdato >= :start AND innsendtdato <= :end ORDER BY innsendtdato",
-		nativeQuery = true
-	)
-	fun findAllNotArchivedAndInnsendtdatoBetween(
-		@Param("start") start: LocalDateTime,
-		@Param("end") end: LocalDateTime
-	): List<SoknadDbData>
 
 	@Transactional
 	@Modifying

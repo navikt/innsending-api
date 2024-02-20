@@ -114,3 +114,18 @@ spec:
             special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
             alert_type: custom
             severity: info
+        - alert: JVM heap size alert level exceeded
+          expr: ceil( sum(jvm_memory_used_bytes{app="innsending-api",area="heap"}) by (instance)) > {{ heap_jvm_memory_threshold }}
+          for: 1m
+          annotations:
+            title: "JVM heap size alert level exceeded"
+            consequence: "If this continues the POD might throw Out-OF-Memory exception and will restart."
+            action: {{ grafana_board_url }}
+            summary: "If JVM heap size alert level exceeded might eventually lead to Out-Of-Memory exception"
+            sla: "Check grafana board within 1h"
+          labels:
+            service: "innsending-api"
+            namespace: fyllut-sendinn
+            special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
+            alert_type: custom
+            severity: info

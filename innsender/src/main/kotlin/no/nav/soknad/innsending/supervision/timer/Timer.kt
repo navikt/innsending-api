@@ -16,12 +16,12 @@ class Timer(private val innsenderMetrics: InnsenderMetrics) {
 	@Throws(Throwable::class)
 	fun timer(joinPoint: ProceedingJoinPoint, timed: Timed): Any? {
 		val startTime = System.currentTimeMillis()
-		val histogramTimer = innsenderMetrics.operationHistogramLatencyStart(timed.operation.name)
+		val histogramTimer = innsenderMetrics.startOperationHistogramLatency(timed.operation.name)
 
 		try {
 			return joinPoint.proceed()
 		} finally {
-			innsenderMetrics.operationHistogramLatencyEnd(histogramTimer)
+			innsenderMetrics.endOperationHistogramLatency(histogramTimer)
 
 			val method = "${joinPoint.signature.declaringTypeName}.${joinPoint.signature.name}()"
 			logger.debug("$method took ${System.currentTimeMillis() - startTime}ms to complete")

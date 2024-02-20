@@ -1,21 +1,22 @@
 package no.nav.soknad.innsending.cleanup
 
+import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import io.mockk.impl.annotations.InjectMockKs
-import io.mockk.mockk
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
-import no.nav.soknad.innsending.config.RestConfig
-import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
+import no.nav.soknad.innsending.consumerapis.pdl.PdlAPI
 import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
-import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
-import no.nav.soknad.innsending.exceptions.ExceptionHelper
+import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
-import no.nav.soknad.innsending.service.*
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
+import no.nav.soknad.innsending.service.FilService
+import no.nav.soknad.innsending.service.InnsendingService
+import no.nav.soknad.innsending.service.RepositoryUtils
+import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.utils.Hjelpemetoder
@@ -32,70 +33,36 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 	private lateinit var repo: RepositoryUtils
 
 	@Autowired
-	private lateinit var skjemaService: SkjemaService
-
-	@Autowired
 	private lateinit var innsenderMetrics: InnsenderMetrics
-
-	@Autowired
-	private lateinit var vedleggService: VedleggService
-
-	@Autowired
-	private lateinit var ettersendingService: EttersendingService
 
 	@Autowired
 	private lateinit var filService: FilService
 
 	@Autowired
-	private lateinit var restConfig: RestConfig
+	private lateinit var soknadService: SoknadService
 
 	@Autowired
-	private lateinit var exceptionHelper: ExceptionHelper
+	private lateinit var innsendingService: InnsendingService
 
-	@InjectMockKs
-	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
+	@MockkBean
+	private lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher
 
-	@InjectMockKs
-	private val leaderSelectionUtility = mockk<LeaderSelectionUtility>()
+	@MockkBean
+	private lateinit var leaderSelectionUtility: LeaderSelectionUtility
 
-	@InjectMockKs
-	private val soknadsmottakerAPI = mockk<MottakerInterface>()
+	@MockkBean
+	private lateinit var soknadsmottakerAPI: MottakerAPITest
 
-	@InjectMockKs
-	private val pdlInterface = mockk<PdlInterface>()
+	@MockkBean
+	private lateinit var pdlInterface: PdlAPI
 
-
-	private fun lagSoknadService(): SoknadService = SoknadService(
-		skjemaService = skjemaService,
-		repo = repo,
-		vedleggService = vedleggService,
-		filService = filService,
-		brukernotifikasjonPublisher = brukernotifikasjonPublisher,
-		innsenderMetrics = innsenderMetrics,
-		exceptionHelper = exceptionHelper
-	)
-
-	private fun lagInnsendingService(soknadService: SoknadService): InnsendingService = InnsendingService(
-		repo = repo,
-		soknadService = soknadService,
-		filService = filService,
-		vedleggService = vedleggService,
-		soknadsmottakerAPI = soknadsmottakerAPI,
-		restConfig = restConfig,
-		exceptionHelper = exceptionHelper,
-		ettersendingService = ettersendingService,
-		brukernotifikasjonPublisher = brukernotifikasjonPublisher,
-		innsenderMetrics = innsenderMetrics,
-		pdlInterface = pdlInterface
-	)
-
+	@MockkBean
+	private lateinit var subjectHandler: SubjectHandlerInterface
 
 	private val defaultSkjemanr = "NAV 55-00.60"
 
 	@Test
 	fun testSlettingAvInnsendteSoknader() {
-		val soknadService = lagSoknadService()
-		val innsendingService = lagInnsendingService(soknadService)
 		SlettArkiverteSoknader(leaderSelectionUtility, soknadService)
 
 		val soknader = mutableListOf<DokumentSoknadDto>()
@@ -104,6 +71,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 		every { soknadsmottakerAPI.sendInnSoknad(any(), any()) } returns Unit
 		every { pdlInterface.hentPersonIdents(any()) } returns listOf(IdentDto("123456789", "FOLKEREGISTERIDENT", false))
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("123456789", "Fornavn", null, "Etternavn")
+		every { subjectHandler.getClientId() } returns "application"
 
 		val spraak = "no"
 		val tema = "BID"
@@ -124,7 +92,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 			)
 		).innsendingsId!!
 
-		val initAntall = innsenderMetrics.operationsCounterGet(InnsenderOperation.SLETT.name, tema) ?: 0.0
+		val initAntall = innsenderMetrics.getOperationsCounter(InnsenderOperation.SLETT.name, tema) ?: 0.0
 		sendInnSoknad(soknadService, skalSendeInnOgArkivereId, innsendingService)
 		sendInnSoknad(soknadService, skalSendeInnIkkeArkivereId, innsendingService)
 
@@ -147,7 +115,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 		// Og metrics for antall slettede søknader er økt med 1
 		Assertions.assertEquals(
 			initAntall + 1.0,
-			innsenderMetrics.operationsCounterGet(InnsenderOperation.SLETT.name, tema)
+			innsenderMetrics.getOperationsCounter(InnsenderOperation.SLETT.name, tema)
 		)
 
 	}

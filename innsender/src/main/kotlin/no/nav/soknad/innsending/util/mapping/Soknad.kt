@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.util.mapping
 
 import no.nav.soknad.arkivering.soknadsmottaker.model.Soknad
-import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.FilDbData
@@ -40,7 +39,8 @@ fun mapTilSoknadDb(
 		kanlasteoppannet = dokumentSoknadDto.kanLasteOppAnnet ?: true,
 		forsteinnsendingsdato = mapTilLocalDateTime(dokumentSoknadDto.forsteInnsendingsDato),
 		ettersendingsfrist = dokumentSoknadDto.fristForEttersendelse,
-		arkiveringsstatus = mapTilDbArkiveringsStatus(dokumentSoknadDto.arkiveringsStatus ?: ArkiveringsStatusDto.ikkeSatt)
+		arkiveringsstatus = mapTilDbArkiveringsStatus(dokumentSoknadDto.arkiveringsStatus ?: ArkiveringsStatusDto.ikkeSatt),
+		applikasjon = dokumentSoknadDto.applikasjon
 	)
 
 fun lagDokumentSoknadDto(
@@ -73,7 +73,8 @@ fun lagDokumentSoknadDto(
 		arkiveringsStatus = mapTilArkiveringsStatusDto(soknadDbData.arkiveringsstatus),
 		erSystemGenerert = erSystemGenerert,
 		soknadstype = if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad,
-		skjemaPath = createSkjemaPathFromSkjemanr(soknadDbData.skjemanr)
+		skjemaPath = createSkjemaPathFromSkjemanr(soknadDbData.skjemanr),
+		applikasjon = soknadDbData.applikasjon
 	)
 }
 
@@ -115,7 +116,8 @@ fun mapTilDokumentSoknadDto(
 		arkiveringsStatus = mapTilArkiveringsStatusDto(soknadDbData.arkiveringsstatus),
 		erSystemGenerert = false,
 		soknadstype = if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad,
-		skjemaPath = createSkjemaPathFromSkjemanr(soknadDbData.skjemanr)
+		skjemaPath = createSkjemaPathFromSkjemanr(soknadDbData.skjemanr),
+		applikasjon = soknadDbData.applikasjon
 	)
 }
 
@@ -125,9 +127,12 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 	val vedleggsListe = dokumentSoknadDto.vedleggsListeUtenHoveddokument.map { mapTilSkjemaDokumentDto(it) }
 	val deletionDate = dokumentSoknadDto.opprettetDato.plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD).toLocalDate()
 
-	if (hovedDokument == null || hovedDokumentVariant == null) {
-		throw BackendErrorException("Hoveddokument eller variant mangler. Finner ikke hoveddokument i vedleggsliste")
-	}
+	// FIXME: Add this back. Temporary fix for brukernotifikasjon (https://github.com/navikt/innsending-api/pull/156)
+//	if (hovedDokument == null || hovedDokumentVariant == null) {
+//		throw BackendErrorException("Hoveddokument eller variant mangler. Finner ikke hoveddokument i vedleggsliste")
+//	}
+
+	val emptySkjemaDokumentDto = SkjemaDokumentDto(vedleggsnr = "", tittel = "", label = "", pakrevd = false)
 
 	return SkjemaDto(
 		innsendingsId = dokumentSoknadDto.innsendingsId,
@@ -137,14 +142,17 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		tema = dokumentSoknadDto.tema,
 		spraak = dokumentSoknadDto.spraak ?: "no",
 		status = dokumentSoknadDto.status,
-		hoveddokument = mapTilSkjemaDokumentDto(hovedDokument),
-		hoveddokumentVariant = mapTilSkjemaDokumentDto(hovedDokumentVariant),
+		hoveddokument = if (hovedDokument == null) emptySkjemaDokumentDto else mapTilSkjemaDokumentDto(hovedDokument),
+		hoveddokumentVariant = if (hovedDokumentVariant == null) emptySkjemaDokumentDto else mapTilSkjemaDokumentDto(
+			hovedDokumentVariant
+		),
 		vedleggsListe = vedleggsListe,
 		kanLasteOppAnnet = dokumentSoknadDto.kanLasteOppAnnet,
 		fristForEttersendelse = dokumentSoknadDto.fristForEttersendelse,
 		endretDato = dokumentSoknadDto.endretDato,
 		skalSlettesDato = deletionDate,
-		skjemaPath = dokumentSoknadDto.skjemaPath
+		skjemaPath = dokumentSoknadDto.skjemaPath,
+		visningsType = dokumentSoknadDto.visningsType
 	)
 }
 

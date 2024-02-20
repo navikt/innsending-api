@@ -13,7 +13,11 @@ import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.util.Constants
-import no.nav.soknad.innsending.util.models.*
+import no.nav.soknad.innsending.util.models.hovedDokument
+import no.nav.soknad.innsending.util.models.hovedDokumentVariant
+import no.nav.soknad.innsending.util.models.hoveddokument
+import no.nav.soknad.innsending.util.models.hoveddokumentVariant
+import no.nav.soknad.innsending.util.models.kvittering
 import no.nav.soknad.innsending.utils.Api
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.TokenGenerator
@@ -29,10 +33,19 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.io.ClassPathResource
-import org.springframework.http.*
+import org.springframework.http.HttpEntity
+import org.springframework.http.HttpMethod
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.util.LinkedMultiValueMap
 import java.util.*
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 
 class FyllutRestApiTest : ApplicationTest() {
@@ -60,8 +73,7 @@ class FyllutRestApiTest : ApplicationTest() {
 	@BeforeEach
 	fun setup() {
 		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
-		every { oauth2TokenService.getAccessToken(any()) } returns
-			OAuth2AccessTokenResponse.builder().accessToken("token").build()
+		every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
 	}
 
 	@Value("\${server.port}")
@@ -541,6 +553,23 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	@Test
+	fun `Should return error code with status 400 if user tries to update søknad that is sent in`() {
+		// Given
+		val skjemaDto = SkjemaDtoTestBuilder().build()
+
+		// When
+		val createdSoknad = api?.createSoknad(skjemaDto)
+		val sentInSoknad = api?.sendInnSoknad(createdSoknad?.body?.innsendingsId!!)
+		val response = api?.updateSoknadFail(sentInSoknad?.body?.innsendingsId!!, skjemaDto)
+
+		// Then
+		assertTrue(response != null)
+		assertEquals(400, response.statusCode.value())
+		assertEquals(ErrorCode.APPLICATION_SENT_IN_OR_DELETED.code, response.body?.errorCode)
+
+	}
+
+	@Test
 	fun `Skal redirecte ved eksisterende søknad gitt at force er false`() {
 		// Gitt
 		val dokumentSoknadDto = opprettSoknad(skjemanr = "NAV-redirect")
@@ -608,9 +637,9 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Should return correct prefill-data from Arena (maalgrupper)`() {
+	fun `Should return correct prefill-data from Arena (maalgruppe)`() {
 		// Given
-		val properties = "sokerMaalgrupper"
+		val properties = "sokerMaalgruppe"
 
 		// When
 		val response = api?.getPrefillData(properties)
@@ -618,26 +647,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Then
 		assertTrue(response != null)
 		assertEquals(200, response.statusCode.value())
-		assertEquals(1, response.body?.sokerMaalgrupper?.size)
-		assertEquals("NEDSARBEVN", response.body?.sokerMaalgrupper?.get(0)?.maalgruppetype?.name)
-		assertEquals("2023-01-01", response.body?.sokerMaalgrupper?.get(0)?.gyldighetsperiode?.fom.toString())
-		assertEquals("Person med nedsatt arbeidsevne pga. sykdom", response.body?.sokerMaalgrupper?.get(0)?.maalgruppenavn)
-	}
-
-	@Test
-	fun `Should return correct prefill-data from Arena (aktiviteter)`() {
-		// Given
-		val properties = "sokerAktiviteter"
-
-		// When
-		val response = api?.getPrefillData(properties)
-
-		// Then
-		assertTrue(response != null)
-		assertEquals(200, response.statusCode.value())
-		assertEquals(1, response.body?.sokerAktiviteter?.size)
-		assertEquals("ARBTREN", response.body?.sokerAktiviteter?.get(0)?.aktivitetstype)
-		assertEquals("Arbeidstrening", response.body?.sokerAktiviteter?.get(0)?.aktivitetsnavn)
+		assertEquals(MaalgruppeType.NEDSARBEVN, response.body?.sokerMaalgruppe)
 	}
 
 	@Test
@@ -652,6 +662,56 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertTrue(response != null)
 		assertEquals(400, response.statusCode.value())
 		assertEquals("'sokerInvalid' not a valid property", response.body?.message)
+	}
+
+	@Test
+	fun `Should return aktiviteter from Arena`() {
+		// When
+		val response = api?.getAktiviteter()
+
+		// Then
+		assertTrue(response != null)
+		assertEquals(200, response.statusCode.value())
+
+		val aktivitet = response.body!!.first()
+		val vedtaksinformasjon = aktivitet.saksinformasjon!!.vedtaksinformasjon!![0]
+		val betalingsplan1 = vedtaksinformasjon.betalingsplan!![0]
+		val betalingsplan2 = vedtaksinformasjon.betalingsplan!![1]
+
+		assertEquals(MaalgruppeType.NEDSARBEVN, aktivitet.maalgruppe)
+		assertEquals("130892484", aktivitet.aktivitetId)
+		assertEquals("ARBTREN", aktivitet.aktivitetstype)
+		assertEquals("Arbeidstrening", aktivitet.aktivitetsnavn)
+		assertEquals("2020-05-04", aktivitet.periode.fom.toString())
+		assertEquals("2023-06-30", aktivitet.periode.tom.toString())
+		assertEquals(5, aktivitet.antallDagerPerUke)
+		assertEquals(100, aktivitet.prosentAktivitetsdeltakelse)
+		assertEquals("FULLF", aktivitet.aktivitetsstatus)
+		assertEquals("Fullført", aktivitet.aktivitetsstatusnavn)
+		assertEquals(true, aktivitet.erStoenadsberettigetAktivitet)
+		assertEquals(false, aktivitet.erUtdanningsaktivitet)
+		assertEquals("MOELV BIL & CARAVAN AS", aktivitet.arrangoer)
+		assertEquals("12837895", aktivitet.saksinformasjon?.saksnummerArena)
+		assertEquals("TSR", aktivitet.saksinformasjon?.sakstype)
+
+		assertEquals("34359921", vedtaksinformasjon.vedtakId)
+		assertEquals(63, vedtaksinformasjon.dagsats)
+		assertEquals("2020-06-06", vedtaksinformasjon.periode.fom.toString())
+		assertEquals("2020-12-31", vedtaksinformasjon.periode.tom.toString())
+		assertEquals(false, vedtaksinformasjon.trengerParkering)
+
+		assertEquals("14514540", betalingsplan1.betalingsplanId)
+		assertEquals(315, betalingsplan1.beloep)
+		assertEquals("2020-06-06", betalingsplan1.utgiftsperiode.fom.toString())
+		assertEquals("2020-06-12", betalingsplan1.utgiftsperiode.tom.toString())
+		assertEquals("480716180", betalingsplan1.journalpostId)
+
+		assertEquals("14514541", betalingsplan2.betalingsplanId)
+		assertEquals(315, betalingsplan2.beloep)
+		assertEquals("2020-06-13", betalingsplan2.utgiftsperiode.fom.toString())
+		assertEquals("2020-06-19", betalingsplan2.utgiftsperiode.tom.toString())
+		assertEquals("480716180", betalingsplan2.journalpostId)
+
 	}
 
 

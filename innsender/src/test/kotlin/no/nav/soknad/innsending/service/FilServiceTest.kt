@@ -1,11 +1,15 @@
 package no.nav.soknad.innsending.service
 
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.every
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,6 +22,14 @@ class FilServiceTest : ApplicationTest() {
 
 	@Autowired
 	private lateinit var filService: FilService
+
+	@MockkBean
+	private lateinit var subjectHandler: SubjectHandlerInterface
+
+	@BeforeEach
+	fun setup() {
+		every { subjectHandler.getClientId() } returns "application"
+	}
 
 	@Test
 	fun lastOppFilTilVedlegg() {

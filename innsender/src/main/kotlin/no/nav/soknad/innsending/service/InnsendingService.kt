@@ -23,6 +23,7 @@ import no.nav.soknad.innsending.util.models.erEttersending
 import no.nav.soknad.innsending.util.models.hovedDokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
 import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
+import no.nav.soknad.pdfutilities.AntallSider
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
@@ -314,7 +315,7 @@ class InnsendingService(
 			return lagKvittering(innsendtSoknadDto, opplastet, manglende)
 
 		} finally {
-			innsenderMetrics.operationsCounterInc(operation, soknadDtoInput.tema)
+			innsenderMetrics.incOperationsCounter(operation, soknadDtoInput.tema)
 			logger.debug("${soknadDtoInput.innsendingsId}: Tid: sendInnSoknad = ${System.currentTimeMillis() - startSendInn}")
 		}
 	}
@@ -357,7 +358,7 @@ class InnsendingService(
 			FilDbData(
 				id = null, vedleggsid = kvitteringsVedlegg.id!!,
 				filnavn = "kvittering.pdf", mimetype = Mimetype.applicationSlashPdf.value,
-				storrelse = kvittering.size,
+				storrelse = kvittering.size, antallsider = AntallSider().finnAntallSider(kvittering),
 				data = kvittering, opprettetdato = kvitteringsVedlegg.opprettetdato
 			)
 		)
@@ -402,8 +403,14 @@ class InnsendingService(
 		val oppdatertSoknad = soknadService.hentSoknad(soknadDto.id!!)
 		filService.lagreFil(
 			oppdatertSoknad, FilDto(
-				hovedDokumentDto.id!!, null, hovedDokumentDto.vedleggsnr!!, Mimetype.applicationSlashPdf,
-				dummySkjema.size, dummySkjema, OffsetDateTime.now()
+				vedleggsid = hovedDokumentDto.id!!,
+				id = null,
+				filnavn = hovedDokumentDto.vedleggsnr!!,
+				mimetype = Mimetype.applicationSlashPdf,
+				storrelse = dummySkjema.size,
+				antallsider = 1,
+				data = dummySkjema,
+				opprettetdato = OffsetDateTime.now()
 			)
 		)
 
@@ -484,28 +491,23 @@ class InnsendingService(
 
 
 	fun getFiles(innsendingId: String, uuids: List<String>): List<SoknadFile> {
-		val timer = innsenderMetrics.operationHistogramLatencyStart(InnsenderOperation.HENT.name)
 		logger.info("$innsendingId: Skal hente ${uuids.joinToString(",")}")
 
-		try {
-			// Sjekk om det er noen hendelser for søknaden
-			val hendelseDbData = repo.hentHendelse(innsendingId)
-			if (hendelseDbData.isEmpty()) {
-				logger.info("$innsendingId: ikke funnet innslag for søknad i hendelsesloggen")
-				return emptySoknadFilesWithStatus(uuids, SoknadFile.FileStatus.notfound)
-			}
-
-			// Sjekk om søknaden er arkivert
-			val erArkivert = hendelseDbData.any { it.hendelsetype == HendelseType.Arkivert }
-			if (erArkivert) {
-				logger.info("$innsendingId: søknaden er allerede arkivert")
-				emptySoknadFilesWithStatus(uuids, SoknadFile.FileStatus.deleted)
-			}
-
-			return fetchSoknadFiles(innsendingId, uuids, erArkivert)
-		} finally {
-			innsenderMetrics.operationHistogramLatencyEnd(timer)
+		// Sjekk om det er noen hendelser for søknaden
+		val hendelseDbData = repo.hentHendelse(innsendingId)
+		if (hendelseDbData.isEmpty()) {
+			logger.info("$innsendingId: ikke funnet innslag for søknad i hendelsesloggen")
+			return emptySoknadFilesWithStatus(uuids, SoknadFile.FileStatus.notfound)
 		}
+
+		// Sjekk om søknaden er arkivert
+		val erArkivert = hendelseDbData.any { it.hendelsetype == HendelseType.Arkivert }
+		if (erArkivert) {
+			logger.info("$innsendingId: søknaden er allerede arkivert")
+			emptySoknadFilesWithStatus(uuids, SoknadFile.FileStatus.deleted)
+		}
+
+		return fetchSoknadFiles(innsendingId, uuids, erArkivert)
 	}
 
 	private fun fetchSoknadFiles(innsendingId: String, uuids: List<String>, erArkivert: Boolean): List<SoknadFile> {

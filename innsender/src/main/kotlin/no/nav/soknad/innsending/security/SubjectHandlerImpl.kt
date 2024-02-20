@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.security
 
 import no.nav.security.token.support.core.context.TokenValidationContext
 import no.nav.security.token.support.core.context.TokenValidationContextHolder
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.util.Constants.SELVBETJENING
 import no.nav.soknad.innsending.util.Constants.TOKENX
 import org.slf4j.Logger
@@ -17,9 +18,7 @@ class SubjectHandlerImpl(private val ctxHolder: TokenValidationContextHolder) : 
 
 	private val tokenValidationContext: TokenValidationContext
 		get() {
-			return ctxHolder.tokenValidationContext
-				?: throw RuntimeException("Could not find TokenValidationContext. Possibly no token in request.")
-					.also { logger.error("Could not find TokenValidationContext. Possibly no token in request and request was not captured by token-validation filters.") }
+			return ctxHolder.getTokenValidationContext()
 		}
 
 	override fun getUserIdFromToken(): String {
@@ -31,21 +30,31 @@ class SubjectHandlerImpl(private val ctxHolder: TokenValidationContextHolder) : 
 
 	private fun getUserIdFromTokenWithIssuer(issuer: String): String {
 		val token = tokenValidationContext.getClaims(issuer)
-		val pid: String? = token?.getStringClaim(CLAIM_PID)
-		val sub: String? = token?.subject
+		val pid: String? = token.getStringClaim(CLAIM_PID)
+		val sub: String? = token.subject
 		return pid ?: sub ?: throw RuntimeException("Could not find any userId for token in pid or sub claim")
 	}
 
 	override fun getToken(): String {
-		return tokenValidationContext.getJwtToken(TOKENX).tokenAsString
+		return tokenValidationContext.getJwtToken(TOKENX)?.encodedToken
+			?: throw BackendErrorException("Could not get tokenx token")
 	}
 
 	override fun getConsumerId(): String {
 		return "srvinnsending-api"
 	}
 
+
+	// The MockOAuth2Server sets AZP claim for the client id, while the real tokens uses client_id claim
+	override fun getClientId(): String {
+		return tokenValidationContext.getClaims(TOKENX).getStringClaim(CLIENT_ID)
+			?: tokenValidationContext.getClaims(TOKENX).getStringClaim(AZP)
+	}
+
 	companion object {
 		private const val CLAIM_PID = "pid"
+		private const val CLIENT_ID = "client_id"
+		private const val AZP = "azp"
 	}
 }
 

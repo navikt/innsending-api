@@ -11,6 +11,9 @@ spring:
     activate:
       on-profile: test
 
+  application:
+    name: innsending-api
+
   flyway:
     enabled: true
 
@@ -48,6 +51,7 @@ restconfig:
   version: 1.0
   maxFileSize: 50
   maxFileSizeSum: 150
+  maxNumberOfPages: 200
   sanityHost: localhost:5490
   sanityEndpoint: /soknader/api/sanity/skjemautlisting
   filesInOneRequestToFilestorage: 10
@@ -91,7 +95,6 @@ no.nav.security.jwt:
     tokenx:
       discoveryurl: http://localhost:${mock-oauth2-server.port}/tokenx/.well-known/openid-configuration
       accepted_audience: aud-localhost
-      cookie_name: tokenx
 
   client:
     registration:

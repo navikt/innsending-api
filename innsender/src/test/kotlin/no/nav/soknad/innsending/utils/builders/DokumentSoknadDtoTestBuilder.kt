@@ -32,7 +32,8 @@ class DokumentSoknadDtoTestBuilder(
 	var arkiveringsStatus: ArkiveringsStatusDto = ArkiveringsStatusDto.ikkeSatt,
 	var erSystemGenerert: Boolean? = true,
 	var soknadType: SoknadType? = null,
-	var skjemaPath: String = Skjema.createSkjemaPathFromSkjemanr(skjemanr)
+	var skjemaPath: String = Skjema.createSkjemaPathFromSkjemanr(skjemanr),
+	var applikasjon: String? = "application",
 ) {
 
 	val erEttersending = ettersendingsId != null || visningsType == VisningsType.ettersending
@@ -69,6 +70,7 @@ class DokumentSoknadDtoTestBuilder(
 		arkiveringsStatus = arkiveringsStatus,
 		erSystemGenerert = erSystemGenerert,
 		soknadstype = soknadType ?: (if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad),
-		skjemaPath = skjemaPath
+		skjemaPath = skjemaPath,
+		applikasjon = applikasjon,
 	)
 }

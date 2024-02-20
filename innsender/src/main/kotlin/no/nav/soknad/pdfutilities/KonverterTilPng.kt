@@ -22,7 +22,7 @@ class KonverterTilPng {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	fun konverterTilPng(fil: ByteArray): List<ByteArray> {
-		val antallSider = AntallSider().finnAntallSider(fil)
+		val antallSider = AntallSider().finnAntallSider(fil) ?: 0
 		return (0 until antallSider).map { konverterTilPng(fil, it) }
 	}
 

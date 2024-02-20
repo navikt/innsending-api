@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.util.fiksSkjemanr
 import no.nav.soknad.innsending.util.tilleggsstonad_fiks
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import no.nav.soknad.pdfutilities.AntallSider
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import java.io.ByteArrayOutputStream
@@ -65,7 +66,9 @@ class Hjelpemetoder {
 				endretDato = OffsetDateTime.now(),
 				innsendtDato = null,
 				soknadstype = soknadstype,
-				skjemaPath = Skjema.createSkjemaPathFromSkjemanr(skjemanr)
+				skjemaPath = Skjema.createSkjemaPathFromSkjemanr(skjemanr),
+				visningsType = VisningsType.fyllUt,
+				applikasjon = "application"
 			)
 		}
 
@@ -102,7 +105,6 @@ class Hjelpemetoder {
 			erPakrevd: Boolean? = true,
 			label: String? = null,
 			formioId: String? = null,
-			mimetype: Mimetype = Mimetype.applicationSlashPdf
 		): VedleggDto {
 			return VedleggDto(
 				tittel,
@@ -117,7 +119,7 @@ class Hjelpemetoder {
 				vedleggsnr,
 				"Beskrivelse",
 				UUID.randomUUID().toString(),
-				mimetype,
+				Mimetype.applicationSlashPdf,
 				fil,
 				if (erHoveddokument) "https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/1b736c8e28abcb80f654166318f130e5ed2a0aad.pdf" else null,
 				formioId = formioId
@@ -155,8 +157,14 @@ class Hjelpemetoder {
 		fun lagFilDtoMedFil(vedleggDto: VedleggDto): FilDto {
 			val fil = getBytesFromFile("/litenPdf.pdf")
 			return FilDto(
-				vedleggDto.id!!, null, "OpplastetFil.pdf",
-				Mimetype.applicationSlashPdf, fil.size, fil, OffsetDateTime.now()
+				vedleggDto.id!!,
+				id = null,
+				filnavn = "OpplastetFil.pdf",
+				mimetype = Mimetype.applicationSlashPdf,
+				storrelse = fil.size,
+				antallsider = AntallSider().finnAntallSider(fil),
+				data = fil,
+				opprettetdato = OffsetDateTime.now()
 			)
 		}
 

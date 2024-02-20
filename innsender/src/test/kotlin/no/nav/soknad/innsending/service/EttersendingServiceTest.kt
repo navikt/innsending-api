@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.service
 
+import com.ninjasquad.springmockk.MockkBean
 import io.mockk.*
-import io.mockk.impl.annotations.InjectMockKs
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
@@ -18,6 +18,7 @@ import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.HendelseRepository
 import no.nav.soknad.innsending.repository.domain.enums.HendelseType
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.Utilities
@@ -73,21 +74,22 @@ class EttersendingServiceTest : ApplicationTest() {
 	@Autowired
 	private lateinit var tilgangskontroll: Tilgangskontroll
 
-	@InjectMockKs
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
 
-	@InjectMockKs
 	private val sendTilPublisher = mockk<PublisherInterface>()
 
-	@InjectMockKs
 	private val pdlInterface = mockk<PdlInterface>()
 
 	private var brukernotifikasjonPublisher: BrukernotifikasjonPublisher? = null
+
+	@MockkBean
+	private lateinit var subjectHandler: SubjectHandlerInterface
 
 	@BeforeEach
 	fun setUp() {
 		brukernotifikasjonPublisher = spyk(BrukernotifikasjonPublisher(notifikasjonConfig, sendTilPublisher))
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("1234567890", "Kan", null, "Søke")
+		every { subjectHandler.getClientId() } returns "application"
 	}
 
 	private fun lagEttersendingService(): EttersendingService = EttersendingService(
@@ -100,7 +102,8 @@ class EttersendingServiceTest : ApplicationTest() {
 		vedleggService = vedleggService,
 		safService = safService,
 		tilgangskontroll = tilgangskontroll,
-		kodeverkService = kodeverkService
+		kodeverkService = kodeverkService,
+		subjectHandler = subjectHandler,
 	)
 
 	private fun lagInnsendingService(): InnsendingService = InnsendingService(

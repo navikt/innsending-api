@@ -36,5 +36,6 @@ data class SoknadDbData(
 		name = "ettersendingsfrist",
 		columnDefinition = "int"
 	) val ettersendingsfrist: Long? = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
-	@Column(name = "arkiveringsstatus", columnDefinition = "varchar") val arkiveringsstatus: ArkiveringsStatus
+	@Column(name = "arkiveringsstatus", columnDefinition = "varchar") val arkiveringsstatus: ArkiveringsStatus,
+	@Column(name = "applikasjon", columnDefinition = "varchar") val applikasjon: String?,
 )

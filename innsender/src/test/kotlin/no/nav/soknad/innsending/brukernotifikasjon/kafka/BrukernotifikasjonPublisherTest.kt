@@ -15,7 +15,9 @@ import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.Publish
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.model.SoknadsStatusDto
+import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -62,7 +64,7 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 				tema = tema,
 				id = id,
 				innsendingsid = innsendingsid,
-				soknadstype = SoknadType.soknad
+				soknadstype = SoknadType.soknad,
 			)
 		)
 
@@ -283,6 +285,63 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		// Så
 		assertTrue(message.isCaptured)
 		assertEquals(Varsel.Kanal.sms, message.captured.brukernotifikasjonInfo.eksternVarsling[0].kanal)
+	}
+
+	@Test
+	fun `Should create notification with fyllut url when visningsType=fyllut`() {
+		// Given
+		val dokumentSoknadDto = DokumentSoknadDtoTestBuilder(visningsType = VisningsType.fyllUt).build()
+
+		val message = slot<AddNotification>()
+		every { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) } returns Unit
+
+		// When
+		brukernotifikasjonPublisher?.soknadStatusChange(dokumentSoknadDto)
+
+		// Then
+		assertTrue(message.isCaptured)
+		assertEquals(
+			"http://localhost:3001/fyllut/${dokumentSoknadDto.skjemaPath}/oppsummering?sub=digital&innsendingsId=${dokumentSoknadDto.innsendingsId}",
+			message.captured.brukernotifikasjonInfo.lenke
+		)
+	}
+
+	@Test
+	fun `Should create notification with sendinn url when visningsType=dokumentinnsending`() {
+		// Given
+		val dokumentSoknadDto = DokumentSoknadDtoTestBuilder(visningsType = VisningsType.dokumentinnsending).build()
+
+		val message = slot<AddNotification>()
+		every { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) } returns Unit
+
+		// When
+		brukernotifikasjonPublisher?.soknadStatusChange(dokumentSoknadDto)
+
+		// Then
+		assertTrue(message.isCaptured)
+		assertEquals(
+			"http://localhost:3100/sendinn/${dokumentSoknadDto.innsendingsId}",
+			message.captured.brukernotifikasjonInfo.lenke
+		)
+	}
+
+	@Test
+	fun `Should create notification with sendinn url when visningsType=ettersending`() {
+		// Given
+		val dokumentSoknadDto = DokumentSoknadDtoTestBuilder(visningsType = VisningsType.ettersending).build()
+
+		val message = slot<AddNotification>()
+		every { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) } returns Unit
+
+		// When
+		brukernotifikasjonPublisher?.soknadStatusChange(dokumentSoknadDto)
+
+		// Then
+		assertTrue(message.isCaptured)
+		assertEquals(
+			"http://localhost:3100/sendinn/${dokumentSoknadDto.innsendingsId}",
+			message.captured.brukernotifikasjonInfo.lenke
+		)
 	}
 
 

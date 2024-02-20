@@ -11,30 +11,32 @@ class SkjemaDokumentSoknadTransformer {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	fun konverterTilDokumentSoknadDto(input: SkjemaDto, brukerId: String): DokumentSoknadDto = DokumentSoknadDto(
-		brukerId = brukerId,
-		skjemanr = fiksSkjemanr(input.skjemanr),
-		tittel = input.tittel,
-		tema = input.tema,
-		status = SoknadsStatusDto.opprettet,
-		opprettetDato = mapTilOffsetDateTime(LocalDateTime.now())!!,
-		endretDato = mapTilOffsetDateTime(LocalDateTime.now()),
-		vedleggsListe = lagVedleggsListe(input),
-		id = null,
-		innsendingsId = input.innsendingsId,
-		ettersendingsId = null,
-		spraak = finnSpraakFraInput(input.spraak),
-		innsendtDato = null,
-		visningsSteg = 0,
-		visningsType = VisningsType.fyllUt,
-		kanLasteOppAnnet = input.kanLasteOppAnnet
-			?: input.vedleggsListe?.any { it.propertyNavn != null && it.propertyNavn == "annenDokumentasjon" },
-		forsteInnsendingsDato = null,
-		fristForEttersendelse = input.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
-		arkiveringsStatus = ArkiveringsStatusDto.ikkeSatt,
-		soknadstype = SoknadType.soknad,
-		skjemaPath = input.skjemaPath,
-	)
+	fun konverterTilDokumentSoknadDto(input: SkjemaDto, brukerId: String, applikasjon: String): DokumentSoknadDto =
+		DokumentSoknadDto(
+			brukerId = brukerId,
+			skjemanr = fiksSkjemanr(input.skjemanr),
+			tittel = input.tittel,
+			tema = input.tema,
+			status = SoknadsStatusDto.opprettet,
+			opprettetDato = mapTilOffsetDateTime(LocalDateTime.now())!!,
+			endretDato = mapTilOffsetDateTime(LocalDateTime.now()),
+			vedleggsListe = lagVedleggsListe(input),
+			id = null,
+			innsendingsId = input.innsendingsId,
+			ettersendingsId = null,
+			spraak = finnSpraakFraInput(input.spraak),
+			innsendtDato = null,
+			visningsSteg = 0,
+			visningsType = VisningsType.fyllUt,
+			kanLasteOppAnnet = input.kanLasteOppAnnet
+				?: input.vedleggsListe?.any { it.propertyNavn != null && it.propertyNavn == "annenDokumentasjon" },
+			forsteInnsendingsDato = null,
+			fristForEttersendelse = input.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
+			arkiveringsStatus = ArkiveringsStatusDto.ikkeSatt,
+			soknadstype = SoknadType.soknad,
+			skjemaPath = input.skjemaPath,
+			applikasjon = applikasjon
+		)
 
 //	kanLasteOppAnnet = input.vedleggsListe?.any { it.property == "annenDokumentasjon" : it.vedleggsnr == "N6" && it.label == "Annen dokumentasjon" })
 
@@ -82,7 +84,7 @@ class SkjemaDokumentSoknadTransformer {
 			uuid = null,
 			mimetype = skjemaDokumentDto.mimetype,
 			document = skjemaDokumentDto.document,
-			//skjemaurl = skjemaDokumentDto.vedleggsurl,
+			skjemaurl = skjemaDokumentDto.vedleggsurl,
 			innsendtdato = null,
 			formioId = skjemaDokumentDto.formioId,
 		)
