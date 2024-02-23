@@ -45,7 +45,7 @@ class KafkaConfiguration(
 			it[ConsumerConfig.GROUP_ID_CONFIG] = kafkaConfig.applicationId
 			it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
 			it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = 5000
-			it[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "false"
+			it[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
 			if (kafkaConfig.security.enabled == "TRUE") {
 				it[CommonClientConfigs.SECURITY_PROTOCOL_CONFIG] = kafkaConfig.security.protocol
 				it[SslConfigs.SSL_KEYSTORE_TYPE_CONFIG] = "PKCS12"
