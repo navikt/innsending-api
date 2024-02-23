@@ -43,7 +43,7 @@ class KafkaConfiguration(
 			it[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
 			it[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
 			it[ConsumerConfig.GROUP_ID_CONFIG] = kafkaConfig.applicationId
-			it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
+			it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "latest"
 			it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = 5000
 			it[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "true"
 			if (kafkaConfig.security.enabled == "TRUE") {
