@@ -14,6 +14,7 @@ import org.springframework.kafka.config.KafkaListenerContainerFactory
 import org.springframework.kafka.core.ConsumerFactory
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer
+import org.springframework.kafka.listener.ContainerProperties
 
 
 @Configuration
@@ -27,6 +28,7 @@ class KafkaConfiguration(
 	fun kafkaListenerContainerFactory(): KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, String>> {
 		val factory = ConcurrentKafkaListenerContainerFactory<String, String>().apply {
 			consumerFactory = consumerFactory()
+			containerProperties.ackMode = ContainerProperties.AckMode.MANUAL_IMMEDIATE
 		}
 		return factory
 	}
@@ -44,7 +46,7 @@ class KafkaConfiguration(
 			it[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
 			it[ConsumerConfig.GROUP_ID_CONFIG] = kafkaConfig.applicationId
 			it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
-			it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = 5000
+			it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = 500
 			it[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "false"
 			if (kafkaConfig.security.enabled == "TRUE") {
 				it[CommonClientConfigs.SECURITY_PROTOCOL_CONFIG] = kafkaConfig.security.protocol
