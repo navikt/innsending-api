@@ -46,6 +46,9 @@ class KafkaMessageReader(
 				repo.oppdaterArkiveringsstatus(soknad, ArkiveringsStatus.ArkiveringFeilet)
 				loggAntallAvHendelsetype(HendelseType.ArkiveringFeilet)
 			}
+
+			logger.info("Kafka: Ferdig behandlet mottatt melding med key $messageKey")
+			ack.acknowledge()
 		} catch (ex: ResourceNotFoundException) {
 			logger.info("Kafka: fant ikke søknad med key $messageKey i database. Mest sannsynlig en søknad sendt inn av sendsoknad")
 			ack.acknowledge()
@@ -53,10 +56,6 @@ class KafkaMessageReader(
 			logger.warn("Kafka exception: ${ex.message}", ex)
 			ack.acknowledge()
 		}
-
-		logger.info("Kafka: Ferdig behandlet mottatt melding med key $messageKey")
-		ack.acknowledge()
-
 	}
 
 	private fun loggAntallAvHendelsetype(hendelseType: HendelseType) {
