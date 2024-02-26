@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.service.RepositoryUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.kafka.annotation.KafkaListener
+import org.springframework.kafka.support.Acknowledgment
 import org.springframework.kafka.support.KafkaHeaders
 import org.springframework.messaging.handler.annotation.Header
 import org.springframework.messaging.handler.annotation.Payload
@@ -26,7 +27,7 @@ class KafkaMessageReader(
 		groupId = "\${kafka.applicationId}",
 		containerFactory = "kafkaListenerContainerFactory"
 	)
-	fun listen(@Payload message: String, @Header(KafkaHeaders.RECEIVED_KEY) messageKey: String) {
+	fun listen(@Payload message: String, @Header(KafkaHeaders.RECEIVED_KEY) messageKey: String, ack: Acknowledgment) {
 		// Soknadsarkiverer legger på melding om arkiveringsstatus for både søknader sendt inn av sendsoknad og innsending-api
 		// Henter fra databasen for å oppdatere arkiveringsstatus for søknader sendt inn av innsending-api
 		try {
@@ -45,13 +46,16 @@ class KafkaMessageReader(
 				repo.oppdaterArkiveringsstatus(soknad, ArkiveringsStatus.ArkiveringFeilet)
 				loggAntallAvHendelsetype(HendelseType.ArkiveringFeilet)
 			}
+
+			logger.info("Kafka: Ferdig behandlet mottatt melding med key $messageKey")
+			ack.acknowledge()
 		} catch (ex: ResourceNotFoundException) {
 			logger.info("Kafka: fant ikke søknad med key $messageKey i database. Mest sannsynlig en søknad sendt inn av sendsoknad")
+			ack.acknowledge()
 		} catch (ex: Exception) {
 			logger.warn("Kafka exception: ${ex.message}", ex)
+			ack.acknowledge()
 		}
-
-		logger.info("Kafka: Ferdig behandlet mottatt melding med key $messageKey")
 	}
 
 	private fun loggAntallAvHendelsetype(hendelseType: HendelseType) {

@@ -75,7 +75,7 @@ jobs:
           RESOURCE: .nais/nais-gcp.yml
           VARS: .nais/prod-gcp.json
           VAR: image=${{needs.build-and-push.outputs.image}}
-          DRY_RUN: true
+          DRY_RUN: false
 
   deploy-alerts-preprod:
     if: github.event.inputs.environment == 'preprod'
