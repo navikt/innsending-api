@@ -2,7 +2,6 @@ package no.nav.soknad.innsending.util.mapping
 
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.util.Constants
-import no.nav.soknad.innsending.util.fiksSkjemanr
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -14,7 +13,7 @@ class SkjemaDokumentSoknadTransformer {
 	fun konverterTilDokumentSoknadDto(input: SkjemaDto, brukerId: String, applikasjon: String): DokumentSoknadDto =
 		DokumentSoknadDto(
 			brukerId = brukerId,
-			skjemanr = fiksSkjemanr(input.skjemanr),
+			skjemanr = input.skjemanr,
 			tittel = input.tittel,
 			tema = input.tema,
 			status = SoknadsStatusDto.opprettet,

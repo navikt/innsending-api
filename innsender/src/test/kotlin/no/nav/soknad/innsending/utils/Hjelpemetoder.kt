@@ -5,10 +5,6 @@ import no.nav.soknad.innsending.service.SoknadServiceTest
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.BEARER
 import no.nav.soknad.innsending.util.Skjema
-import no.nav.soknad.innsending.util.fiksSkjemanr
-import no.nav.soknad.innsending.util.tilleggsstonad_fiks
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
 import no.nav.soknad.pdfutilities.AntallSider
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -173,17 +169,6 @@ class Hjelpemetoder {
 			outputStream.write(byteArray)
 			outputStream.close()
 		}
-
-	}
-
-	@Test
-	fun fiksSkjemanrTest() {
-		val skjemanr = tilleggsstonad_fiks[0]
-		val skjemaNr_fixed = fiksSkjemanr(skjemanr)
-		assertTrue(!skjemaNr_fixed.contains(" B"))
-		val skjemanr_ok = "NAV 11-12.15B"
-		val skjemaNr_orig = fiksSkjemanr(skjemanr)
-		assertTrue(skjemanr_ok == skjemaNr_orig)
 
 	}
 }

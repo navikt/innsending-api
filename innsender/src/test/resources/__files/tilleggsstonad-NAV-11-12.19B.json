@@ -2,11 +2,24 @@
 	"language": "nb-NO",
 	"data": {
 		"data": {
-			"hvilkeBoutgifterSokerDuOmAFaDekket": "fasteBoutgifter",
 			"harDuNorskFodselsnummerEllerDNummer": "ja",
+			"fornavnSoker": "Test",
+			"etternavnSoker": "Testesen",
+			"fodselsnummerDNummerSoker": "10108000398",
+			"visesHvisBrukerHarEnRegistrertAktivitetsperiode": {},
 			"harRegistrertAktivitetsperiode": "ja",
 			"startdatoDdMmAaaa": "2023-12-11",
 			"sluttdatoDdMmAaaa": "2024-06-29",
+			"flervalg": {
+				"aapUforeNedsattArbEvne": false,
+				"ensligUtdanning": false,
+				"ensligArbSoker": true,
+				"gjenlevendeUtdanning": false,
+				"gjenlevendeArbSoker": false,
+				"tidligereFamiliepleier": false,
+				"annet": false
+			},
+			"hvilkeBoutgifterSokerDuOmAFaDekket": "fasteBoutgifter",
 			"hvilkeAdresserHarDuBoutgifterPa": {
 				"boutgifterPaAktivitetsadressen": true,
 				"boutgifterPaHjemstedet": true,
@@ -15,10 +28,6 @@
 			"erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet": "ja",
 			"tilleggsopplysninger1": "afgsdfg",
 			"annenDokumentasjon": "",
-			"fornavnSoker": "Test",
-			"etternavnSoker": "Testesen",
-			"fodselsnummerDNummerSoker": "10108000398",
-			"visesHvisBrukerHarEnRegistrertAktivitetsperiode": {},
 			"mottarDuBostotteFraKommunen": "nei",
 			"boutgifterPaAktivitetsadressen": 6000,
 			"boutgifterPaHjemstedetMitt": 5000,

@@ -31,8 +31,12 @@ data class Application(
 	val maalgruppeKilde: String? = null, // TODO mangler foreløpig i fra FyllUt
 	val maalgruppeType: String? = null, // TODO mangler foreløpig i fra FyllUt
 
+	// TODO dersom søker har oppgitt livssituasjon fordi målgruppe mangler
+	val flervalg: Flervalg? = null,
+
 	// Dersom det ikke er registrert maalgrupper i Arena for søker, må søker angi Livssituasjon.
 	// Denne skal mappes til en prioritert liste av maalgrupper, der den høyest prioriterte sendes inn.
+	// -> Slettes
 	val erDuArbeidssoker: String? = null, // true | false
 	val mottarDuEllerHarDuSoktOmDagpenger: String? = null,  // true | false
 	val mottarDuEllerHarDuSoktOmTiltakspenger: String? = null,  //  true | false
@@ -43,6 +47,7 @@ data class Application(
 	val erDuUgiftSkiltEllerSeparertOgErAleneOmOmsorgenForBarn1: String? = null,  // Har du barn under 8 år true | false.
 	val nedsattArbeidsevnePgaSykdom: NedsattArbeidsevnePgaSykdom? = null,
 	val annet1: String? = null, // Ingen av valgene ovenfor passer min situasjon
+	// <- Slettes
 
 	val hvorforReiserDu: HvorforReiserDu? = null,
 
@@ -135,7 +140,7 @@ data class Application(
 	val jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv: JegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv? = null,
 
 	// Periode for Laeremidler og boutgifter og pass av barn
-	val ikkeRegistrertAktivitetsperiode: JsonPeriode? = null,
+	//val ikkeRegistrertAktivitetsperiode: JsonPeriode? = null,
 
 	// Laeremidler
 	val hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore: String? = null, // "Jeg skal ta videregående utdanning, eller forkurs på universitet" | "Jeg skal ta utdanning på fagskole, høyskole eller universitet" | "Jeg skal ta kurs eller annen form for utdanning"
@@ -160,7 +165,7 @@ data class Application(
 	val erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet: String? = null, // "Ja" | "Nei"
 
 	// Pass av barn
-	val datagrid: List<Datagrid>? = null,
+	val opplysningerOmBarn: List<OpplysningerOmBarn>? = null,
 	val fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa: String? = null,
 
 
@@ -175,13 +180,26 @@ data class BostotteIForbindelseMedSamling(
 	val periodeForSamling: List<JsonPeriode>
 )
 
+data class Flervalg(
+	val aapUforeNedsattArbEvne: Boolean = false,
+	val ensligUtdanning: Boolean = false,
+	val ensligArbSoker: Boolean = false,
+	val gjenlevendeUtdanning: Boolean = false,
+	val gjenlevendeArbSoker: Boolean = false,
+	val tiltakspenger: Boolean = false,
+	val dagpenger: Boolean = false,
+	val regArbSoker: Boolean = false,
+	val tidligereFamiliepleier: Boolean = false,
+	val annet: Boolean = false
+)
+
 data class HvilkeAdresserHarDuBoutgifterPa(
 	val boutgifterPaAktivitetsadressen: String, // true | false
 	val boutgifterPaHjemstedet: String,
 	val boutgifterPaHjemstedetMittSomHarOpphortIForbindelseMedAktiviteten: String
 )
 
-data class Datagrid(
+data class OpplysningerOmBarn(
 	val fornavn: String,
 	val etternavn: String,
 	val fodselsdatoDdMmAaaa: String,

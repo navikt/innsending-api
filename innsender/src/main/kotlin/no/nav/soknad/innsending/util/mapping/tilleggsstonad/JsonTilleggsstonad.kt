@@ -82,18 +82,18 @@ data class JsonBostottesoknad(
 
 data class JsonLaeremiddelutgifter(
 	val aktivitetsperiode: JsonPeriode,
-	val hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore: String, // "Jeg skal ta videregående utdanning, eller forkurs på universitet" | "Jeg skal ta utdanning på fagskole, høyskole eller universitet" | "Jeg skal ta kurs eller annen form for utdanning"
+	val hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore: String, // "videregaendeUtdanning" | "hoyereUtdanning" | "kursEllerAnnenUtdanning"
 	val hvilketKursEllerAnnenFormForUtdanningSkalDuTa: String?,
 	val oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Int, // 0-100
-	val harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler: String, // Ja| Nei
+	val harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler: String, // ja | nei
 	val utgifterTilLaeremidler: Int,
-	val farDuDekketLaeremidlerEtterAndreOrdninger: String, // Ja | Nei | Delvis
+	val farDuDekketLaeremidlerEtterAndreOrdninger: String, // ja | nei | delvis
 	val hvorMyeFarDuDekketAvEnAnnenAktor: Int?,
 	val hvorStortBelopSokerDuOmAFaDekketAvNav: Int
 )
 
 data class JsonTilsynsutgifter(
-	val aktivitetsPeriode: AktivitetsPeriode,
+	val aktivitetsPeriode: JsonPeriode,
 	val barnePass: List<BarnePass>,
 	val fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa: String?,
 )

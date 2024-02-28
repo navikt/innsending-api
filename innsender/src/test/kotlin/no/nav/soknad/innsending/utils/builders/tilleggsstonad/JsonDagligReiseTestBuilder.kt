@@ -6,6 +6,13 @@ import java.time.LocalDateTime
 
 class JsonDagligReiseTestBuilder {
 
+	private var aktivitetsinformasjon: JsonAktivitetsInformasjon? = JsonAktivitetsInformasjon(aktivitet = "1234")
+	private var maalgruppeinformasjon: JsonMaalgruppeinformasjon? = JsonMaalgruppeinformasjon(
+		periode = AktivitetsPeriode(startdatoDdMmAaaa = "01012024", sluttdatoDdMmAaaa = "31032024"),
+		kilde = "BRUKERDEFINERT",
+		maalgruppetype = "erDuArbeidssoker"
+	)
+
 	private var startdatoDdMmAaaa: String = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
 	private var sluttdatoDdMmAaaa: String = Date.formatToLocalDate(LocalDateTime.now().plusMonths(1))
 	private var hvorMangeReisedagerHarDuPerUke: Int = 5

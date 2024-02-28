@@ -16,19 +16,58 @@ import javax.xml.stream.XMLInputFactory
 class TilleggsstonadJson2XmlConverterKtTest {
 
 	@Test
-	fun json2XmlTest() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12", tema = "TSO").build()
-		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/tilleggsstonad-dagligreise-m-bil.json")
+	fun json2XmlTest_dagligReise() {
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.21B", tema = "TSO").build()
+		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/tilleggsstonad-NAV-11-12.21B.json")
 
 		val xmlFil = json2Xml(soknadDto, jsonFil)
 
 		assertNotNull(xmlFil)
+		val xmlString = xmlFil.decodeToString()
+		assertTrue(xmlString.contains("<reiseutgifter"))
+		assertTrue(xmlString.contains("<dagligReise"))
 
 	}
 
 	@Test
+	fun json2XmlTest_flytting() {
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.23B", tema = "TSR").build()
+		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/tilleggsstonad-NAV-11-12.23B-27022024.json")
+
+		val xmlFil = json2Xml(soknadDto, jsonFil)
+
+		assertNotNull(xmlFil)
+		val xmlString = xmlFil.decodeToString()
+		assertTrue(xmlString.contains("<flytteutgifter"))
+	}
+
+	@Test
+	fun json2XmlTest_bolig_overnatting() {
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.19B", tema = "TSO").build()
+		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/tilleggsstonad-NAV-11-12.19B-28022024.json")
+
+		val xmlFil = json2Xml(soknadDto, jsonFil)
+
+		assertNotNull(xmlFil)
+		val xmlString = xmlFil.decodeToString()
+		assertTrue(xmlString.contains("<boutgifter"))
+	}
+
+	@Test
+	fun json2XmlTest_barnepass() {
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.15B", tema = "TSO").build()
+		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/tilleggsstonad-NAV-11-12.15B-barnepass-20022024.json")
+
+		val xmlFil = json2Xml(soknadDto, jsonFil)
+
+		assertNotNull(xmlFil)
+		val xmlString = xmlFil.decodeToString()
+		assertTrue(xmlString.contains("<tilsynsutgifterBarn"))
+	}
+
+	@Test
 	fun `Convert to XML of daily travel expences - using own car`() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.21B", tema = "TSO").build()
 		val dagligReise =
 			JsonDagligReiseTestBuilder()
 				.startdatoDdMmAaaa("2023-12-01").sluttdatoDdMmAaaa("2024-06-20")
@@ -46,7 +85,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 						annet = null,
 						vilDuHaUtgifterTilParkeringPaAktivitetsstedet = "JA",
 						oppgiForventetBelopTilParkeringPaAktivitetsstedet = 200,
-						hvorOfteOnskerDuASendeInnKjoreliste = "UKE"
+						hvorOfteOnskerDuASendeInnKjoreliste = "jegOnskerALevereKjorelisteEnGangIUken"
 					)
 				)
 				.kanIkkeBenytteEgenBil(kanIkkeBenytteEgenBil = null)
@@ -81,7 +120,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 
 	@Test
 	fun `Convert to XML of daily travel excpenses - using public transport`() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.21B", tema = "TSO").build()
 		val dagligReise = JsonDagligReiseTestBuilder()
 			.velgLand1(VelgLand(label = "Sverige", value = "SE"))
 			.adresse1("Strømstad Systembolag, 452 38")
@@ -111,7 +150,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 
 	@Test
 	fun `Convert to XML of daily travel excpenses - using taxi`() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.21B", tema = "TSO").build()
 		val dagligReise = JsonDagligReiseTestBuilder()
 			.hvorLangReiseveiHarDu(10)
 			.kanDuReiseKollektivtDagligReise("Nei")
@@ -156,7 +195,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 
 	@Test
 	fun `Convert to XML of daily travel excpenses - neither own car nor taxi`() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.21B", tema = "TSR").build()
 		val dagligReise = JsonDagligReiseTestBuilder()
 			.hvorLangReiseveiHarDu(10)
 			.kanDuReiseKollektivtDagligReise("Nei")
@@ -195,7 +234,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 
 	@Test
 	fun `Default case test convert to XML of meeting conventions travel excpenses`() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.17B", tema = "TSO").build()
 		val reiseSamling =
 			JsonReiseSamlingTestBuilder()
 				.startOgSluttdatoForSamlingene(
@@ -243,7 +282,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 
 	@Test
 	fun `Default case test convert to XML of start and end of activity excpenses`() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.18B", tema = "TSO").build()
 		val oppstartOgAvslutningAvAktivitet =
 			JsonReiseOppstartSluttTestBuilder()
 				.hvorLangReiseveiHarDu2(100)
@@ -283,7 +322,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 
 	@Test
 	fun `Case test convert to XML of start and end of activity excpenses - taxi expences `() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.18B", tema = "TSO").build()
 		val oppstartOgAvslutningAvAktivitet =
 			JsonReiseOppstartSluttTestBuilder()
 				.hvorLangReiseveiHarDu2(100)
@@ -327,7 +366,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 
 	@Test
 	fun `Default case test convert to XML of job applying expences`() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.22B", tema = "TSR").build()
 		val reiseArbeidssoker =
 			JsonReiseArbeidssokerTestBuilder()
 				.reisedatoDdMmAaaa("2023-12-24")
@@ -366,39 +405,40 @@ class TilleggsstonadJson2XmlConverterKtTest {
 
 	}
 
+	/* En søknad med flere rettighetstyper ikke lenger relevant
+		@Test
+		fun `Convert to XML of combined travel excpenses`() {
+			val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+			val startOgSluttPaAktivitet =
+				JsonReiseOppstartSluttTestBuilder().startdatoDdMmAaaa1("2023-11-30").sluttdatoDdMmAaaa1("2024-06-21").build()
+			val dagligReise =
+				JsonDagligReiseTestBuilder().startdatoDdMmAaaa("2023-12-01").sluttdatoDdMmAaaa("2024-06-20").build()
+			val jsonReisestottesoknad = JsonReiseTestBuilder().dagligReise(dagligReise = dagligReise)
+				.startAvslutning(startAvslutning = startOgSluttPaAktivitet).build()
+			val tilleggsstonad =
+				JsonApplicationTestBuilder().rettighetstyper(rettighetstype = jsonReisestottesoknad).build()
 
-	@Test
-	fun `Convert to XML of combined travel excpenses`() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
-		val startOgSluttPaAktivitet =
-			JsonReiseOppstartSluttTestBuilder().startdatoDdMmAaaa1("2023-11-30").sluttdatoDdMmAaaa1("2024-06-21").build()
-		val dagligReise =
-			JsonDagligReiseTestBuilder().startdatoDdMmAaaa("2023-12-01").sluttdatoDdMmAaaa("2024-06-20").build()
-		val jsonReisestottesoknad = JsonReiseTestBuilder().dagligReise(dagligReise = dagligReise)
-			.startAvslutning(startAvslutning = startOgSluttPaAktivitet).build()
-		val tilleggsstonad =
-			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = jsonReisestottesoknad).build()
+			val xmlFil = json2Xml(
+				soknadDto, tilleggsstonad
+			)
 
-		val xmlFil = json2Xml(
-			soknadDto, tilleggsstonad
-		)
-
-		assertNotNull(xmlFil)
-		val xmlString = xmlFil.decodeToString()
-		assertTrue(xmlString.contains("<aktivitetsadresse>Kongensgate 10, 3701</aktivitetsadresse>"))
-		assertTrue(xmlString.contains("<dagligReise>"))
-		assertTrue(xmlString.contains("<avstand>10.0</avstand>"))
-		assertTrue(xmlString.contains("<innsendingsintervall>UKE</innsendingsintervall>"))
-		assertTrue(xmlString.contains("<sumAndreUtgifter>1150.0</sumAndreUtgifter>"))
-		assertTrue(xmlString.contains("<reiseVedOppstartOgAvsluttetAktivitet>"))
-		assertTrue(xmlString.contains("<avstand>100</avstand>"))
-		assertTrue(xmlString.contains("<antallReiser>4</antallReiser>"))
-		assertTrue(xmlString.contains("<beloepPerMaaned>3000</beloepPerMaaned>"))
-	}
+			assertNotNull(xmlFil)
+			val xmlString = xmlFil.decodeToString()
+			assertTrue(xmlString.contains("<aktivitetsadresse>Kongensgate 10, 3701</aktivitetsadresse>"))
+			assertTrue(xmlString.contains("<dagligReise>"))
+			assertTrue(xmlString.contains("<avstand>10.0</avstand>"))
+			assertTrue(xmlString.contains("<innsendingsintervall>UKE</innsendingsintervall>"))
+			assertTrue(xmlString.contains("<sumAndreUtgifter>1150.0</sumAndreUtgifter>"))
+			assertTrue(xmlString.contains("<reiseVedOppstartOgAvsluttetAktivitet>"))
+			assertTrue(xmlString.contains("<avstand>100</avstand>"))
+			assertTrue(xmlString.contains("<antallReiser>4</antallReiser>"))
+			assertTrue(xmlString.contains("<beloepPerMaaned>3000</beloepPerMaaned>"))
+		}
+	*/
 
 	@Test
 	fun `Default case test convert to XML child care expenses`() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.15B", tema = "TSO").build()
 		val barnePass = JsonBarnePassTestBuilder()
 			.fradato("2023-12-01")
 			.tildato("2024-06-20")
@@ -446,7 +486,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 
 	@Test
 	fun `Case test convert to XML child care expenses - two children`() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.15B", tema = "TSO").build()
 		val barnePass = JsonBarnePassTestBuilder()
 			.barnePass(
 				listOf(
@@ -500,7 +540,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 
 	@Test
 	fun `Default case test convert to XML housing expenses`() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.19B", tema = "TSO").build()
 		val boStotte = JsonBostotteTestBuilder()
 			.fradato("2023-12-02")
 			.tildato("2024-06-20")
@@ -545,7 +585,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 
 	@Test
 	fun `Test convert to XML housing expenses - convention periods`() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.19B", tema = "TSO").build()
 		val boStotte = JsonBostotteTestBuilder()
 			.fradato("2023-12-02")
 			.tildato("2024-06-20")
@@ -614,7 +654,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 
 	@Test
 	fun `Default case test convert to XML learning material expenses`() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.16B", tema = "TSO").build()
 		val laerestotte = JsonLaeremiddelTestBuilder()
 			.fradato("2023-12-02")
 			.tildato("2024-06-20")
@@ -655,7 +695,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 
 	@Test
 	fun `Convert to XML learning material expenses - Universitet deltid, ikke dekket  `() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.16B", tema = "TSO").build()
 		val laerestotte = JsonLaeremiddelTestBuilder()
 			.fradato("2023-12-02")
 			.tildato("2024-06-20")
@@ -695,7 +735,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 
 	@Test
 	fun `Test convert to XML moving expenses - move by myself`() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.16B", tema = "TSO").build()
 
 		val flytteutgifter = JsonFlyttingTestBuilder()
 			.hvorforFlytterDu("Jeg flytter fordi jeg har fått ny jobb")
@@ -733,7 +773,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 
 	@Test
 	fun `Convert to XML moving expenses - Paying for transportation`() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.23B", tema = "TSO").build()
 
 		val flytteutgifter = JsonFlyttingTestBuilder()
 			.ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra("Jeg vil bruke flyttebyrå")
@@ -765,7 +805,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 
 	@Test
 	fun `Convert to XML moving expenses - Chosen to move by myself after receiving offers`() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.23B", tema = "TSO").build()
 
 		val flytteutgifter = JsonFlyttingTestBuilder()
 			.ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra("Jeg har innhentet tilbud fra minst to flyttebyråer, men velger å flytte selv")

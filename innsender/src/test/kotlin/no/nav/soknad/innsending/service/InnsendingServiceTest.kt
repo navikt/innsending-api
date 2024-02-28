@@ -335,7 +335,7 @@ class InnsendingServiceTest : ApplicationTest() {
 	fun sendInnTilleggssoknad_dagligreise() {
 		val innsendingService = lagInnsendingService(soknadService)
 		val hoveddokDto = lagVedlegg(
-			vedleggsnr = "NAV 11-12.21 B",
+			vedleggsnr = "NAV 11-12.21B",
 			tittel = "Tilleggssoknad",
 			erHoveddokument = true,
 			erVariant = false,
@@ -343,7 +343,7 @@ class InnsendingServiceTest : ApplicationTest() {
 			vedleggsNavn = "/litenPdf.pdf"
 		)
 		val hoveddokVariantDto = lagVedlegg(
-			vedleggsnr = "NAV 11-12.21 B",
+			vedleggsnr = "NAV 11-12.21B",
 			tittel = "Tilleggssoknad",
 			erHoveddokument = true,
 			erVariant = true,
@@ -351,7 +351,7 @@ class InnsendingServiceTest : ApplicationTest() {
 			vedleggsNavn = "/__files/tilleggsstonad-NAV-11-12.21B.json"
 		)
 		val inputDokumentSoknadDto = lagDokumentSoknad(
-			skjemanr = "NAV 11-12.21 B",
+			skjemanr = "NAV 11-12.21B",
 			tittel = "Tilleggssoknad",
 			brukerId = testpersonid,
 			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
@@ -377,7 +377,7 @@ class InnsendingServiceTest : ApplicationTest() {
 	@Test
 	fun sendInnTilleggssoknad_bostotte() {
 		val innsendingService = lagInnsendingService(soknadService)
-		val skjemaNr = "NAV 11-12.19 B"
+		val skjemaNr = "NAV 11-12.19B"
 		val hoveddokDto = lagVedlegg(
 			vedleggsnr = skjemaNr,
 			tittel = "Tilleggssoknad",
@@ -420,7 +420,7 @@ class InnsendingServiceTest : ApplicationTest() {
 	@Test
 	fun sendInnTilleggssoknad_bostotte_samling() {
 		val innsendingService = lagInnsendingService(soknadService)
-		val skjemaNr = "NAV 11-12.19 B"
+		val skjemaNr = "NAV 11-12.19B"
 		val hoveddokDto = lagVedlegg(
 			vedleggsnr = skjemaNr,
 			tittel = "Tilleggssoknad",

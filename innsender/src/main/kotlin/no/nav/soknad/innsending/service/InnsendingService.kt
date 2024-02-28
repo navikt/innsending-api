@@ -17,6 +17,7 @@ import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.mapping.*
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.JsonApplication
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.convertToJson
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.json2Xml
 import no.nav.soknad.innsending.util.models.erEttersending
@@ -52,17 +53,13 @@ class InnsendingService(
 
 	private val tilleggsstonadSkjema =
 		listOf(
-			"NAV 00-01.01", // TODO skal muligens ikke være med
-			"NAV 11-12.10",
-			"NAV 11-12.11",
-			"NAV 11-12.12",
-			"NAV 11-12.13",
-			"NAV 11-12.14",
-			"NAV 11-12.12R", // TODO midlertidig lagt til, skal muligens få egne skjemanr
-			"NAV 11-12.12B",
-			"NAV 11-12.12O",
-			"NAV 11-12.12L",
-			"NAV 11-12.12F",
+			/* Gamle tilleggsstønadsnummere
+						"NAV 11-12.10", kjøreliste - TSO
+						"NAV 11-12.11", kjøreliste - TSR
+						"NAV 11-12.12", tilleggsstønad -TSO
+						"NAV 11-12.13", tilleggstønad -TSR
+						"NAV 11-12.14", tilleggsstønad -TSO
+			*/
 			"NAV 11-12.15B", // Støtte til Barnepass
 			"NAV 11-12.16B", // Støtte til Læremidler
 			"NAV 11-12.17B", // Støtte til samling
@@ -71,14 +68,6 @@ class InnsendingService(
 			"NAV 11-12.21B", // Støtte til daglig reise
 			"NAV 11-12.22B", // Støtte til reise for å komme i arbeid
 			"NAV 11-12.23B", // Støtte til flytting
-			"NAV 11-12.15 B", // Støtte til Barnepass
-			"NAV 11-12.16 B", // Støtte til Læremidler
-			"NAV 11-12.17 B", // Støtte til samling
-			"NAV 11-12.18 B", // Støtte til ved oppstart, avslutning eller hjemreiser
-			"NAV 11-12.19 B", // Støtte til bolig og overnatting
-			"NAV 11-12.21 B", // Støtte til daglig reise
-			"NAV 11-12.22 B", // Støtte til reise for å komme i arbeid
-			"NAV 11-12.23 B", // Støtte til flytting
 		)
 
 	@Transactional
@@ -215,18 +204,21 @@ class InnsendingService(
 			// Create dokumentDto for xml variant of main document
 			val xmlDocumentVariant = vedleggService.lagreNyHoveddokumentVariant(soknadDto, Mimetype.applicationSlashXml)
 			logger.info("${soknadDto.innsendingsId}: Lagt til xmlVedlegg på vedleggsId = ${xmlDocumentVariant.id}")
-			//
+
+			val jsonObj = convertToJson(
+				soknadDto = soknadDto,
+				json = filService.hentFiler(
+					soknadDto = soknadDto,
+					innsendingsId = soknadDto.innsendingsId!!,
+					vedleggsId = jsonVariant.id!!,
+					medFil = true
+				).first().data
+			)
+
+			// map input json to xml
 			val xmlFile = json2Xml(
 				soknadDto = soknadDto,
-				tilleggstonadJsonObj = convertToJson(
-					soknadDto = soknadDto,
-					json = filService.hentFiler(
-						soknadDto = soknadDto,
-						innsendingsId = soknadDto.innsendingsId!!,
-						vedleggsId = jsonVariant.id!!,
-						medFil = true
-					).first().data
-				)
+				tilleggstonadJsonObj = jsonObj
 			)
 			// Persist created xml file
 			filService.lagreFil(
@@ -247,10 +239,31 @@ class InnsendingService(
 				OpplastingsStatusDto.sendesIkke
 			)
 
+			sjekkOgOppdaterTema(soknadDto, jsonObj)
+
 			return soknadService.hentSoknad(soknadDto.innsendingsId!!)
 		} catch (ex: Exception) {
 			throw BackendErrorException("${soknadDto.innsendingsId}: Konvertering av JSON til XML feilet", ex)
 		}
+	}
+
+	private fun sjekkOgOppdaterTema(soknadDto: DokumentSoknadDto, jsonObj: JsonApplication) {
+		val relevanteSkjemaNrForTsr = listOf(
+			"NAV 11-12.18B", // Støtte til ved oppstart, avslutning eller hjemreiser
+			"NAV 11-12.21B", // Støtte til daglig reise
+			"NAV 11-12.22B", // Støtte til reise for å komme i arbeid
+		)
+		val relevanteMaalgrupperForTsr = listOf(
+			MaalgruppeType.ARBSOKERE.name,
+			MaalgruppeType.MOTDAGPEN.name,
+			MaalgruppeType.MOTTILTPEN.name,
+			MaalgruppeType.ANNET.name
+		)
+		if (!relevanteSkjemaNrForTsr.contains(soknadDto.skjemanr)) return
+
+		if (!relevanteMaalgrupperForTsr.contains(jsonObj.tilleggsstonad.maalgruppeinformasjon?.maalgruppetype)) return
+
+		repo.endreTema(soknadDto.id!!, soknadDto.innsendingsId!!, "TSR")
 	}
 
 

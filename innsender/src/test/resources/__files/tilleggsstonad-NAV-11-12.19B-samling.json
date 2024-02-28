@@ -4,6 +4,15 @@
 		"data": {
 			"hvilkeBoutgifterSokerDuOmAFaDekket": "boutgifterIForbindelseMedSamling",
 			"harDuNorskFodselsnummerEllerDNummer": "ja",
+			"flervalg": {
+				"aapUforeNedsattArbEvne": false,
+				"ensligUtdanning": false,
+				"ensligArbSoker": true,
+				"gjenlevendeUtdanning": false,
+				"gjenlevendeArbSoker": false,
+				"tidligereFamiliepleier": false,
+				"annet": false
+			},
 			"harRegistrertAktivitetsperiode": "ja",
 			"startdatoDdMmAaaa": "2024-01-02",
 			"sluttdatoDdMmAaaa": "2024-04-26",

@@ -60,87 +60,76 @@ private fun convertToJsonMaalgruppeinformasjon(tilleggsstonad: Application): Jso
 		)
 	}
 
+	val livssituasjon = tilleggsstonad.flervalg
+	if (livssituasjon == null) return null
+
 	// Basert på søker sin spesifisering av livssituasjon, avled prioritert målgruppe
 	// Pri 1
-	if ("ja".equals(tilleggsstonad.nedsattArbeidsevnePgaSykdom?.harDuNedsattArbeidsevnePaGrunnAvSykdom, true) &&
-		!"ja".equals(
-			tilleggsstonad.nedsattArbeidsevnePgaSykdom?.mottarDuSykepenger,
-			true
-		) &&
-		"ja".equals(
-			tilleggsstonad.nedsattArbeidsevnePgaSykdom?.harDuVedtakFraNavOmNedsattArbeidsevnePaGrunnAvSykdom,
-			true
-		) &&
-		!"ja".equals(
-			tilleggsstonad.nedsattArbeidsevnePgaSykdom?.mottarDuLonnFraArbeidsgiverMensDuGjennomforerEnAktivitetSomNavHarGodkjent,
-			true
-		)
-	)
+	if (livssituasjon.aapUforeNedsattArbEvne)
 		return JsonMaalgruppeinformasjon(
 			periode = null,
 			kilde = "BRUKERREGISTRERT",
 			maalgruppetype = "NEDSARBEVN"
 		)
+
 	// Pri 2
-	if ("ja".equals(tilleggsstonad.gjennomforerDuEnUtdanningSomNavHarGodkjent, true) &&
-		"ja".equals(tilleggsstonad.erDuUgiftSkiltEllerSeparertOgErAleneOmOmsorgenForBarn1, true)
-	)
+	if (livssituasjon.ensligUtdanning)
 		return JsonMaalgruppeinformasjon(
 			periode = null,
 			kilde = "BRUKERREGISTRERT",
 			maalgruppetype = "ENSFORUTD"
 		)
+
 	// Pri 3
-	if ("ja".equals(tilleggsstonad.erDuArbeidssoker, true) &&
-		"ja".equals(tilleggsstonad.erDuUgiftSkiltEllerSeparertOgErAleneOmOmsorgenForBarn, true)
-	)
+	if (livssituasjon.ensligArbSoker)
 		return JsonMaalgruppeinformasjon(
 			periode = null,
 			kilde = "BRUKERREGISTRERT",
 			maalgruppetype = "ENSFORARBS"
 		)
+
 	// Pri 4
-	if ("ja".equals(tilleggsstonad.gjennomforerDuEnUtdanningSomNavHarGodkjent, true) &&
-		"ja".equals(tilleggsstonad.erDuTidligereFamiliepleier, true)
-	)
+	if (livssituasjon.tidligereFamiliepleier)
 		return JsonMaalgruppeinformasjon(
 			periode = null,
 			kilde = "BRUKERREGISTRERT",
 			maalgruppetype = "TIDLFAMPL"
 		)
+
 	// Pri 5
-	if ("ja".equals(tilleggsstonad.gjennomforerDuEnUtdanningSomNavHarGodkjent, true) &&
-		"ja".equals(tilleggsstonad.erDuGjenlevendeEktefelle, true)
-	)
+	if (livssituasjon.gjenlevendeUtdanning)
 		return JsonMaalgruppeinformasjon(
 			periode = null,
 			kilde = "BRUKERREGISTRERT",
 			maalgruppetype = "GJENEKUTD"
 		)
+
 	// Pri 6
-	if ("ja".equals(tilleggsstonad.erDuArbeidssoker, true) &&
-		"ja".equals(tilleggsstonad.erDuGjenlevendeEktefelle, true)
-	)
+	if (livssituasjon.gjenlevendeArbSoker)
 		return JsonMaalgruppeinformasjon(
 			periode = null,
 			kilde = "BRUKERREGISTRERT",
 			maalgruppetype = "GJENEKARBS"
 		)
+
 	// Pri 7
-	if ("ja".equals(tilleggsstonad.mottarDuEllerHarDuSoktOmTiltakspenger, true))
+	if (livssituasjon.tiltakspenger)
 		return JsonMaalgruppeinformasjon(
 			periode = null,
 			kilde = "BRUKERREGISTRERT",
 			maalgruppetype = "MOTTILTPEN"
 		)
+
 	// Pri 8
-	if ("ja".equals(tilleggsstonad.mottarDuEllerHarDuSoktOmDagpenger, true))
+	if (livssituasjon.dagpenger)
 		return JsonMaalgruppeinformasjon(periode = null, kilde = "BRUKERREGISTRERT", maalgruppetype = "MOTDAGPEN")
+
 	// Pri 9
-	if ("ja".equals(tilleggsstonad.erDuArbeidssoker, true))
+	if (livssituasjon.regArbSoker || "ja".equals(tilleggsstonad.erDuArbeidssoker, true))
 		return JsonMaalgruppeinformasjon(periode = null, kilde = "BRUKERREGISTRERT", maalgruppetype = "ARBSOKERE")
-	// 10
-	if ("ja".equals(tilleggsstonad.annet1, true))
+
+	// Pri 10
+	if (livssituasjon.annet || "nei".equals(tilleggsstonad.erDuArbeidssoker, true))
 		return JsonMaalgruppeinformasjon(
 			periode = null,
 			kilde = "BRUKERREGISTRERT",
@@ -164,15 +153,20 @@ private fun convertToJsonRettighetstyper(
 }
 
 private fun convertToJsonFlytteutgifter(tilleggsstonad: Application): JsonFlytteutgifter? {
-	if (tilleggsstonad.hvorforFlytterDu == null || tilleggsstonad.ikkeRegistrertAktivitetsperiode == null
-		|| tilleggsstonad.oppgiForsteDagINyJobbDdMmAaaa == null
+	if (tilleggsstonad.hvorforFlytterDu == null
+		//|| tilleggsstonad.startdatoDdMmAaaa == null
+		//|| tilleggsstonad.sluttdatoDdMmAaaa == null
+		//|| tilleggsstonad.oppgiForsteDagINyJobbDdMmAaaa == null
 		|| tilleggsstonad.narFlytterDuDdMmAaaa == null
 		|| tilleggsstonad.farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav == null
 		|| tilleggsstonad.ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra == null
 	) return null
 
 	return JsonFlytteutgifter(
-		aktivitetsperiode = tilleggsstonad.ikkeRegistrertAktivitetsperiode,
+		aktivitetsperiode = JsonPeriode(
+			startdatoDdMmAaaa = tilleggsstonad.narFlytterDuDdMmAaaa,
+			sluttdatoDdMmAaaa = tilleggsstonad.narFlytterDuDdMmAaaa
+		),
 		hvorforFlytterDu = tilleggsstonad.hvorforFlytterDu,
 		narFlytterDuDdMmAaaa = tilleggsstonad.narFlytterDuDdMmAaaa,
 		oppgiForsteDagINyJobbDdMmAaaa = tilleggsstonad.oppgiForsteDagINyJobbDdMmAaaa,
@@ -191,11 +185,12 @@ private fun convertToJsonFlytteutgifter(tilleggsstonad: Application): JsonFlytte
 private fun convertToJsonBostotte(tilleggsstonad: Application): JsonBostottesoknad? {
 	if (tilleggsstonad.hvilkeAdresserHarDuBoutgifterPa == null
 		|| tilleggsstonad.hvilkeBoutgifterSokerDuOmAFaDekket == null
-		|| tilleggsstonad.ikkeRegistrertAktivitetsperiode == null
+		|| tilleggsstonad.startdatoDdMmAaaa == null
+		|| tilleggsstonad.sluttdatoDdMmAaaa == null
 	) return null
 
 	return JsonBostottesoknad(
-		aktivitetsperiode = tilleggsstonad.ikkeRegistrertAktivitetsperiode,
+		aktivitetsperiode = JsonPeriode(tilleggsstonad.startdatoDdMmAaaa, tilleggsstonad.sluttdatoDdMmAaaa),
 		hvilkeBoutgifterSokerDuOmAFaDekket = tilleggsstonad.hvilkeBoutgifterSokerDuOmAFaDekket,
 		bostotteIForbindelseMedSamling = tilleggsstonad.bostotteIForbindelseMedSamling,
 		mottarDuBostotteFraKommunen = tilleggsstonad.mottarDuBostotteFraKommunen ?: "Nei", // "Ja" | "Nei"
@@ -209,9 +204,13 @@ private fun convertToJsonBostotte(tilleggsstonad: Application): JsonBostottesokn
 }
 
 private fun convertToLaeremiddelutgifter(tilleggsstonad: Application): JsonLaeremiddelutgifter? {
-	if (tilleggsstonad.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore == null || tilleggsstonad.ikkeRegistrertAktivitetsperiode == null) return null
+	if (tilleggsstonad.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore == null || tilleggsstonad.startdatoDdMmAaaa == null || tilleggsstonad.sluttdatoDdMmAaaa == null) return null
+
 	return JsonLaeremiddelutgifter(
-		aktivitetsperiode = tilleggsstonad.ikkeRegistrertAktivitetsperiode,
+		aktivitetsperiode = JsonPeriode(
+			tilleggsstonad.startdatoDdMmAaaa,
+			tilleggsstonad.sluttdatoDdMmAaaa
+		),
 		hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore = tilleggsstonad.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore,
 		hvilketKursEllerAnnenFormForUtdanningSkalDuTa = tilleggsstonad.hvilketKursEllerAnnenFormForUtdanningSkalDuTa,
 		oppgiHvorMangeProsentDuStudererEllerGarPaKurs = tilleggsstonad.oppgiHvorMangeProsentDuStudererEllerGarPaKurs ?: 0,
@@ -225,13 +224,14 @@ private fun convertToLaeremiddelutgifter(tilleggsstonad: Application): JsonLaere
 }
 
 private fun convertToTilsynsutgifter(tilleggsstonad: Application): JsonTilsynsutgifter? {
-	if (tilleggsstonad.datagrid == null || tilleggsstonad.ikkeRegistrertAktivitetsperiode == null) return null
+	if (tilleggsstonad.opplysningerOmBarn == null || tilleggsstonad.startdatoDdMmAaaa == null || tilleggsstonad.sluttdatoDdMmAaaa == null) return null
+
 	return JsonTilsynsutgifter(
-		aktivitetsPeriode = AktivitetsPeriode(
-			tilleggsstonad.ikkeRegistrertAktivitetsperiode.startdatoDdMmAaaa,
-			tilleggsstonad.ikkeRegistrertAktivitetsperiode.sluttdatoDdMmAaaa
+		aktivitetsPeriode = JsonPeriode(
+			tilleggsstonad.startdatoDdMmAaaa,
+			tilleggsstonad.sluttdatoDdMmAaaa
 		),
-		barnePass = tilleggsstonad.datagrid.map {
+		barnePass = tilleggsstonad.opplysningerOmBarn.map {
 			BarnePass(
 				fornavn = it.fornavn, etternavn = it.etternavn, fodselsdatoDdMmAaaa = it.fodselsdatoDdMmAaaa,
 				jegSokerOmStonadTilPassAvDetteBarnet = it.jegSokerOmStonadTilPassAvDetteBarnet,
@@ -243,10 +243,10 @@ private fun convertToTilsynsutgifter(tilleggsstonad: Application): JsonTilsynsut
 	)
 }
 
-val reiseDaglig = "NAV 11-12.21"
-val reiseSamling = "NAV 11-12.17"
-val reiseOppstartSlutt = "NAV 11-12.18"
-val reiseArbeid = "NAV 11-12.22"
+val reiseDaglig = "NAV 11-12.21B"
+val reiseSamling = "NAV 11-12.17B"
+val reiseOppstartSlutt = "NAV 11-12.18B"
+val reiseArbeid = "NAV 11-12.22B"
 val reisestotteskjemaer = listOf(reiseDaglig, reiseSamling, reiseOppstartSlutt, reiseArbeid)
 private fun erReisestottesoknad(skjemanr: String): Boolean {
 	return reisestotteskjemaer.contains(skjemanr.substring(0, reisestotteskjemaer[0].length))
@@ -290,9 +290,9 @@ private fun convertToJsonDagligReise(tilleggsstonad: Application): JsonDagligRei
 		hvorMangeReisedagerHarDuPerUke = tilleggsstonad.hvorMangeReisedagerHarDuPerUke,
 		harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde = tilleggsstonad.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde, // JA | NEI,
 		hvorLangReiseveiHarDu = validateNoneNull(
-			tilleggsstonad.hvorLangReiseveiHarDu?.toString(),
+			tilleggsstonad.hvorLangReiseveiHarDu,
 			"Daglig reise reisevei"
-		).toInt(),
+		),
 		harDuEnReiseveiPaSeksKilometerEllerMer = validateNoneNull(
 			tilleggsstonad.harDuEnReiseveiPaSeksKilometerEllerMer,
 			"Daglig reise avstand mer enn 6 km"

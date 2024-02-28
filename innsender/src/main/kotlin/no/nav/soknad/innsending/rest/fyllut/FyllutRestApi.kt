@@ -5,12 +5,7 @@ import no.nav.soknad.innsending.api.FyllutApi
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
-import no.nav.soknad.innsending.model.Aktivitet
-import no.nav.soknad.innsending.model.BodyStatusResponseDto
-import no.nav.soknad.innsending.model.DokumentSoknadDto
-import no.nav.soknad.innsending.model.PrefillData
-import no.nav.soknad.innsending.model.SkjemaDto
-import no.nav.soknad.innsending.model.SoknadType
+import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.ArenaService
@@ -21,7 +16,6 @@ import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH
 import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_LEVEL_4
 import no.nav.soknad.innsending.util.Constants.TOKENX
-import no.nav.soknad.innsending.util.fiksSkjemanr
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.mapping.SkjemaDokumentSoknadTransformer
 import no.nav.soknad.innsending.util.mapping.mapTilSkjemaDto
@@ -58,7 +52,7 @@ class FyllutRestApi(
 			brukerId
 		)
 
-		soknadService.loggWarningVedEksisterendeSoknad(brukerId, fiksSkjemanr(skjemaDto.skjemanr))
+		soknadService.loggWarningVedEksisterendeSoknad(brukerId, skjemaDto.skjemanr)
 
 		val opprettetSoknad = soknadService.opprettNySoknad(
 			SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
@@ -115,7 +109,7 @@ class FyllutRestApi(
 		skjemaDto: SkjemaDto,
 		forceCreate: Boolean = false
 	): ResponseEntity<Any>? {
-		val aktiveSoknader = soknadService.hentAktiveSoknader(brukerId, fiksSkjemanr(skjemaDto.skjemanr))
+		val aktiveSoknader = soknadService.hentAktiveSoknader(brukerId, skjemaDto.skjemanr)
 		val harSoknadUnderArbeid = aktiveSoknader.isNotEmpty()
 
 		if (harSoknadUnderArbeid && !forceCreate) {

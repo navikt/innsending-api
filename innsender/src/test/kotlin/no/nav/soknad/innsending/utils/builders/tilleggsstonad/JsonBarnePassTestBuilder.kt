@@ -32,7 +32,7 @@ class JsonBarnePassTestBuilder {
 
 	fun build() = JsonRettighetstyper(
 		tilsynsutgifter = JsonTilsynsutgifter(
-			aktivitetsPeriode = AktivitetsPeriode(startdatoDdMmAaaa = fradato, sluttdatoDdMmAaaa = tildato),
+			aktivitetsPeriode = JsonPeriode(startdatoDdMmAaaa = fradato, sluttdatoDdMmAaaa = tildato),
 			barnePass = barnePass,
 			fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa = fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa
 		)
