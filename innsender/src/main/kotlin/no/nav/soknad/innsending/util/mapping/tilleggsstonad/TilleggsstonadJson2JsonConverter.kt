@@ -36,8 +36,10 @@ fun convertToJsonTilleggsstonad(tilleggsstonad: Application, soknadDto: Dokument
 }
 
 private fun convertAktivitetsinformasjon(tilleggsstonad: Application): JsonAktivitetsInformasjon? {
-	return if (tilleggsstonad.aktivitetsId != null)
-		JsonAktivitetsInformasjon(aktivitet = tilleggsstonad.aktivitetsId)
+	return if (tilleggsstonad.container != null
+		&& tilleggsstonad.container.aktivitet?.aktivitetId != null && tilleggsstonad.container.aktivitet.aktivitetId != "ingenAktivitet"
+	)
+		JsonAktivitetsInformasjon(aktivitet = tilleggsstonad.container.aktivitet.aktivitetId)
 	else
 		null
 }
@@ -45,18 +47,22 @@ private fun convertAktivitetsinformasjon(tilleggsstonad: Application): JsonAktiv
 private fun convertToJsonMaalgruppeinformasjon(tilleggsstonad: Application): JsonMaalgruppeinformasjon? { // TODO
 
 	// Bruk maalgruppeinformasjon hvis dette er hentet fra Arena og lagt inn på søknaden
-	if (tilleggsstonad.maalgruppeType != null) {
+	if (tilleggsstonad.container != null && tilleggsstonad.container.maalgruppe != null
+		&& tilleggsstonad.flervalg == null
+	) {
 		return JsonMaalgruppeinformasjon(
 			kilde = (tilleggsstonad.maalgruppeKilde ?: "BRUKERDEFINERT"),
-			maalgruppetype = tilleggsstonad.maalgruppeType,
-			periode = if (tilleggsstonad.maalgruppePeriode == null)
+			maalgruppetype = tilleggsstonad.container.maalgruppe,
+			periode = if (tilleggsstonad.container.aktivitet?.periode == null
+				|| tilleggsstonad.container.aktivitet.periode.fom == null
+				|| tilleggsstonad.container.aktivitet.periode.tom == null
+			)
 				null
 			else
 				AktivitetsPeriode(
-					startdatoDdMmAaaa = tilleggsstonad.maalgruppePeriode.startdatoDdMmAaaa,
-					sluttdatoDdMmAaaa = tilleggsstonad.maalgruppePeriode.sluttdatoDdMmAaaa
+					startdatoDdMmAaaa = tilleggsstonad.container.aktivitet.periode.fom,
+					sluttdatoDdMmAaaa = tilleggsstonad.container.aktivitet.periode.tom
 				)
-
 		)
 	}
 
