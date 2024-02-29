@@ -36,10 +36,11 @@ data class Application(
 	// TODO dersom søker har oppgitt livssituasjon fordi målgruppe mangler
 	val flervalg: Flervalg? = null,
 
+	val erDuArbeidssoker: String? = null, // true | false
+
 	// Dersom det ikke er registrert maalgrupper i Arena for søker, må søker angi Livssituasjon.
 	// Denne skal mappes til en prioritert liste av maalgrupper, der den høyest prioriterte sendes inn.
 	// -> Slettes
-	val erDuArbeidssoker: String? = null, // true | false
 	val mottarDuEllerHarDuSoktOmDagpenger: String? = null,  // true | false
 	val mottarDuEllerHarDuSoktOmTiltakspenger: String? = null,  //  true | false
 	val gjennomforerDuEnUtdanningSomNavHarGodkjent: String? = null,  //  true | false
