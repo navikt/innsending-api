@@ -33,16 +33,10 @@ class TilleggsstonadJson2JsonConverterTest {
 
 		val maalgruppeType = "NEDSARBEV"
 		val fyllUtObj = FyllUtJsonTestBuilder()
-			.aktivitetsId(aktivitetsId)
 			.language(language)
 			.skjemanr(skjemanr)
-			.flervalg(null)
-			.arenaMaalgruppe(
-				JsonMaalgruppeinformasjon(
-					periode = null,
-					kilde = "BRUKERDEFINERT",
-					maalgruppetype = "NEDSARBEV"
-				)
+			.arenaAktivitetOgMaalgruppe(
+				maalgruppe = maalgruppeType, aktivitetId = aktivitetsId, SkjemaPeriode("2024-01-02", "2024-03-30")
 			)
 			.periode("01-01-2024", "29-03-2024")
 			.passAvBarn(passAvBarn)
@@ -72,16 +66,12 @@ class TilleggsstonadJson2JsonConverterTest {
 
 		val maalgruppeType = "NEDSARBEV"
 		val fyllUtObj = FyllUtJsonTestBuilder()
-			.aktivitetsId(aktivitetsId)
 			.language(language)
 			.skjemanr(skjemanr)
-			.flervalg(null)
-			.arenaMaalgruppe(
-				JsonMaalgruppeinformasjon(
-					periode = null,
-					kilde = "BRUKERDEFINERT",
-					maalgruppetype = "NEDSARBEV"
-				)
+			.arenaAktivitetOgMaalgruppe(
+				maalgruppe = maalgruppeType,
+				aktivitetId = aktivitetsId,
+				SkjemaPeriode("2024-01-02", "2024-03-30")
 			)
 			.periode("01-01-2024", "29-03-2024")
 			.laeremidler(typeUtdanning = "videregaendeUtdanning", utgifter = 10000)
@@ -110,16 +100,12 @@ class TilleggsstonadJson2JsonConverterTest {
 		val language = "no-Nb"
 		val maalgruppeType = "NEDSARBEV"
 		val fyllUtObj = FyllUtJsonTestBuilder()
-			.aktivitetsId(aktivitetsId)
 			.language(language)
 			.skjemanr(skjemanr)
-			.flervalg(null)
-			.arenaMaalgruppe(
-				JsonMaalgruppeinformasjon(
-					periode = null,
-					kilde = "BRUKERDEFINERT",
-					maalgruppetype = "NEDSARBEV"
-				)
+			.arenaAktivitetOgMaalgruppe(
+				maalgruppe = maalgruppeType,
+				aktivitetId = aktivitetsId,
+				SkjemaPeriode("2024-01-02", "2024-03-30")
 			)
 			.periode("01-01-2024", "29-03-2024")
 			.reisemal(VelgLand(label = "Norge", value = "NO"), adresse = "Kongensgate 10", postr = "3701")
@@ -157,11 +143,8 @@ class TilleggsstonadJson2JsonConverterTest {
 	@Test
 	fun `Nedsattarbeidsevne - Mapping av brukers livssituasjon til prioritert maalgruppe`() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.21B", tema = "TSO").build()
-		val aktivitetsId = "12345"
 		val maalgruppeType = "NEDSARBEVN"
 		val fyllUtObj = FyllUtJsonTestBuilder()
-			.aktivitetsId(aktivitetsId)
-			.flervalg(null)
 			.flervalg(Flervalg(aapUforeNedsattArbEvne = true, regArbSoker = true, tiltakspenger = true))
 			.build()
 
@@ -170,18 +153,14 @@ class TilleggsstonadJson2JsonConverterTest {
 		val strukturertJson = convertToJson(soknadDto, fyllUtJson.toString().toByteArray())
 
 		assertTrue(strukturertJson != null)
-		assertEquals(aktivitetsId, strukturertJson.tilleggsstonad.aktivitetsinformasjon?.aktivitet)
 		assertEquals(maalgruppeType, strukturertJson.tilleggsstonad.maalgruppeinformasjon?.maalgruppetype)
 	}
 
 	@Test
 	fun `Ikke Nedsattarbeidsevne når mottar sykepenger og dagpenger - Mapping av brukers livssituasjon til prioritert maalgruppe`() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.21B", tema = "TSO").build()
-		val aktivitetsId = "12345"
 		val maalgruppeType = "MOTDAGPEN"
 		val fyllUtObj = FyllUtJsonTestBuilder()
-			.aktivitetsId(aktivitetsId)
-			.flervalg(null)
 			.flervalg(Flervalg(aapUforeNedsattArbEvne = false, dagpenger = true, regArbSoker = true))
 			.build()
 
@@ -190,18 +169,14 @@ class TilleggsstonadJson2JsonConverterTest {
 		val strukturertJson = convertToJson(soknadDto, fyllUtJson.toString().toByteArray())
 
 		assertTrue(strukturertJson != null)
-		assertEquals(aktivitetsId, strukturertJson.tilleggsstonad.aktivitetsinformasjon?.aktivitet)
 		assertEquals(maalgruppeType, strukturertJson.tilleggsstonad.maalgruppeinformasjon?.maalgruppetype)
 	}
 
 	@Test
 	fun `Enslig forsørger under utdannelse - Mapping av brukers livssituasjon til prioritert maalgruppe`() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
-		val aktivitetsId = "12345"
 		val maalgruppeType = "ENSFORUTD"
 		val fyllUtObj = FyllUtJsonTestBuilder()
-			.aktivitetsId(aktivitetsId)
-			.flervalg(null)
 			.flervalg(Flervalg(ensligUtdanning = true, regArbSoker = true))
 			.build()
 
@@ -210,18 +185,14 @@ class TilleggsstonadJson2JsonConverterTest {
 		val strukturertJson = convertToJson(soknadDto, fyllUtJson.toString().toByteArray())
 
 		assertTrue(strukturertJson != null)
-		assertEquals(aktivitetsId, strukturertJson.tilleggsstonad.aktivitetsinformasjon?.aktivitet)
 		assertEquals(maalgruppeType, strukturertJson.tilleggsstonad.maalgruppeinformasjon?.maalgruppetype)
 	}
 
 	@Test
 	fun `Tidligere familiepleier under utdannelse - Mapping av brukers livssituasjon til prioritert maalgruppe`() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
-		val aktivitetsId = "12345"
 		val maalgruppeType = "TIDLFAMPL"
 		val fyllUtObj = FyllUtJsonTestBuilder()
-			.aktivitetsId(aktivitetsId)
-			.flervalg(null)
 			.flervalg(Flervalg(tidligereFamiliepleier = true, regArbSoker = true, gjenlevendeUtdanning = true))
 			.build()
 
@@ -230,7 +201,6 @@ class TilleggsstonadJson2JsonConverterTest {
 		val strukturertJson = convertToJson(soknadDto, fyllUtJson.toString().toByteArray())
 
 		assertTrue(strukturertJson != null)
-		assertEquals(aktivitetsId, strukturertJson.tilleggsstonad.aktivitetsinformasjon?.aktivitet)
 		assertEquals(maalgruppeType, strukturertJson.tilleggsstonad.maalgruppeinformasjon?.maalgruppetype)
 	}
 

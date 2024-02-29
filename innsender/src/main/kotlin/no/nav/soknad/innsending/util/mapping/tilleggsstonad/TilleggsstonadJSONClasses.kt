@@ -187,6 +187,7 @@ data class Aktivitet(
 
 data class Container(
 	val maalgruppe: String? = null,
+	val kilde: String? = "BRUKERREGISTRERT",
 	val aktivitet: Aktivitet? = null,
 	val text: String = ""
 )

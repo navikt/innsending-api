@@ -9,29 +9,48 @@ class FyllUtJsonTestBuilder {
 	val laeremidlerSkjemanr = "NAV 11-12.16B"
 	val reiseSamlingSkjemanr = "NAV 11-12.17B"
 
-	val defaultMaalgruppeInformasjon = JsonMaalgruppeinformasjon(
-		periode = AktivitetsPeriode(startdatoDdMmAaaa = "2024-01-01", sluttdatoDdMmAaaa = "2024-06-20"),
-		kilde = "BRUKERDEFINERT", "ENSFORARBS"
+	val defaultArenaAktivitetOgMaalgruppe = Container(
+		maalgruppe = "ENSFORARBS",
+		aktivitet = Aktivitet(
+			aktivitetId = "123456789",
+			maalgruppe = "",
+			periode = SkjemaPeriode(fom = "2024-01-01", tom = "2024-06-30")
+		),
+		text = ""
 	)
 
 	var skjemanr: String = dagligReiseSkjemanr
 	var language: String = "no-NB"
-	var aktivitetsId: String? = "123456789"
-	var arenaMaalgruppe: JsonMaalgruppeinformasjon? = defaultMaalgruppeInformasjon
+	var arenaAktivitetOgMaalgruppe: Container? = defaultArenaAktivitetOgMaalgruppe
 	var flervalg: Flervalg? = null
 
 	fun skjemanr(skjemanr: String) = apply { this.skjemanr = skjemanr }
 	fun language(language: String) = apply { this.language = language }
-	fun aktivitetsId(aktivitetsId: String) = apply { this.aktivitetsId = aktivitetsId }
 
-	fun arenaMaalgruppe(hentetFraArena: JsonMaalgruppeinformasjon?) = apply {
-		arenaMaalgruppe = hentetFraArena
-		flervalg = if (hentetFraArena != null) null else Flervalg(regArbSoker = true)
+	fun arenaAktivitetOgMaalgruppe(maalgruppe: String?, aktivitetId: String?, periode: SkjemaPeriode?) = apply {
+		if (maalgruppe != null || aktivitetId != null) {
+			arenaAktivitetOgMaalgruppe = Container(
+				maalgruppe = maalgruppe,
+				kilde = "BRUKERREGISTRERT",
+				text = "",
+				aktivitet = Aktivitet(aktivitetId = aktivitetId ?: "ingenAktivitet", maalgruppe = "", periode = periode)
+			)
+			flervalg = null
+		} else {
+			arenaAktivitetOgMaalgruppe = null
+			flervalg = Flervalg(regArbSoker = true)
+		}
+	}
+
+	fun arenaAktivitetOgMaalgruppe(arenaAktivitetOgMaalgruppe: Container?) = apply {
+		this.arenaAktivitetOgMaalgruppe = arenaAktivitetOgMaalgruppe
+		if (this.defaultArenaAktivitetOgMaalgruppe != null) this.flervalg = null
 	}
 
 	fun flervalg(flervalg: Flervalg?) = apply {
 		this.flervalg = flervalg
-		arenaMaalgruppe = if (flervalg != null) null else defaultMaalgruppeInformasjon
+
+		if (this.flervalg == null) arenaAktivitetOgMaalgruppe = null
 	}
 
 	var startdatoDdMmAaaa: String? = "2024-01-08"
@@ -224,16 +243,7 @@ class FyllUtJsonTestBuilder {
 			language = language,
 			data = ApplicationInfo(
 				data = Application(
-					// TODO forventer aktivitetsId satt dersom hentet fra Arena
-					aktivitetsId = aktivitetsId,
-					// TODO dersom målgruppe hentet fra Arena forvenes dette å komme med
-					maalgruppeType = arenaMaalgruppe?.maalgruppetype,
-					maalgruppePeriode = if (arenaMaalgruppe?.periode == null)
-						null else
-						JsonPeriode(
-							startdatoDdMmAaaa = arenaMaalgruppe?.periode?.startdatoDdMmAaaa ?: "2024-01-01",
-							sluttdatoDdMmAaaa = arenaMaalgruppe?.periode?.sluttdatoDdMmAaaa ?: "2024-06-20"
-						),
+					container = arenaAktivitetOgMaalgruppe,
 					// Dersom ikke målgruppe hentet fra Arena, skal søker oppgi livssituasjon
 					flervalg = flervalg,
 
