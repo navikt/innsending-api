@@ -10,13 +10,13 @@ class KonverterTilPdfTest {
 
 	@Test
 	fun verifiserFlatingAvPdf() {
-		val skrivbarPdf = Hjelpemetoder.getBytesFromFile("/pdfs/writable-overlapping.pdf")
+		val skrivbarPdf = Hjelpemetoder.getBytesFromFile("/NAV 54-editert.pdf")
 		assertTrue(KonverterTilPdf().harSkrivbareFelt(skrivbarPdf))
 
 		val antallSiderSkrivbarPdf = AntallSider().finnAntallSider(skrivbarPdf)
 		val flatetPdf = KonverterTilPdf().flatUtPdf(skrivbarPdf, antallSiderSkrivbarPdf ?: 0)
 
-		writeBytesToFile(flatetPdf, "./testing.pdf")
+//		writeBytesToFile(flatetPdf, "./testing.pdf")
 
 		val antallSiderFlatetPdf = AntallSider().finnAntallSider(flatetPdf)
 		assertEquals(antallSiderSkrivbarPdf, antallSiderFlatetPdf)
@@ -24,6 +24,9 @@ class KonverterTilPdfTest {
 
 	@Test
 	fun `Should not have overlapping text when PDF has been updated and saved multiple times (history of text changes overlaps)`() {
+		// The PDF is created by downloading a writable PDF, saving it in files on iOS, editing it and saving it multiple times and then air dropping it to a Mac
+		// You can see the overlapping text if you try to print the PDF on iOS and look at the preview. The same problem was visible when the PDF was converted to PNG before
+		// https://github.com/navikt/innsending-api/pull/174
 		val skrivbarPdf = Hjelpemetoder.getBytesFromFile("/pdfs/writable-overlapping.pdf")
 		assertTrue(KonverterTilPdf().harSkrivbareFelt(skrivbarPdf))
 
