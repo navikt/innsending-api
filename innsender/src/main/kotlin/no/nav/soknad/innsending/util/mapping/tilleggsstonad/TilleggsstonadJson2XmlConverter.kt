@@ -42,7 +42,7 @@ fun convertToXml(tilleggsstonad: Tilleggsstoenadsskjema): ByteArray {
 		enable(SerializationFeature.INDENT_OUTPUT)
 		disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 	}
-	xmlMapper.setDateFormat(SimpleDateFormat("yyyy-MM-ddXXX"))
+	xmlMapper.setDateFormat(SimpleDateFormat("yyyy-MM-ddXXX", Locale.forLanguageTag("nb")))
 	xmlMapper.registerModule(JaxbAnnotationModule())
 	val xml = xmlMapper.writeValueAsString(tilleggsstonad)
 	return xml.toByteArray()

@@ -11,6 +11,7 @@ import no.nav.soknad.innsending.utils.builders.tilleggsstonad.FyllUtJsonTestBuil
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.text.SimpleDateFormat
+import java.util.*
 
 class DrivinglistExpencesJson2XmlConverterTest {
 
@@ -113,7 +114,7 @@ class DrivinglistExpencesJson2XmlConverterTest {
 			enable(SerializationFeature.INDENT_OUTPUT)
 			disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 		}
-		xmlMapper.setDateFormat(SimpleDateFormat("yyyy-MM-ddXXX"))
+		xmlMapper.setDateFormat(SimpleDateFormat("yyyy-MM-ddXXX", Locale.forLanguageTag("nb")))
 		xmlMapper.registerModule(JaxbAnnotationModule())
 		val xml = xmlMapper.writeValueAsString(convertedDate)
 
