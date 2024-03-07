@@ -1,11 +1,16 @@
 package no.nav.soknad.innsending.util.mapping.tilleggsstonad
 
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule
+import com.fasterxml.jackson.dataformat.xml.XmlMapper
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.tilleggsstonad.FyllUtJsonTestBuilder
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import java.text.SimpleDateFormat
 
 class DrivinglistExpencesJson2XmlConverterTest {
 
@@ -74,6 +79,7 @@ class DrivinglistExpencesJson2XmlConverterTest {
 		val xmlByteArray = json2Xml(strukturertJson, soknadDto)
 
 		val xmlString = xmlByteArray.decodeToString()
+		System.out.println(xmlString)
 
 		Assertions.assertNotNull(xmlString)
 		Assertions.assertTrue(xmlString.contains("<vedtaksId>$vedtaksId</vedtaksId>"))
@@ -92,6 +98,26 @@ class DrivinglistExpencesJson2XmlConverterTest {
 		Assertions.assertTrue(xmlString.contains("<parkeringsutgift>100</parkeringsutgift>"))
 		Assertions.assertTrue(xmlString.contains("<utgiftsdag>2024-01-10+01:00</utgiftsdag>"))
 
+	}
+
+
+	@Test
+	fun convertToGregorianDateWithTimeZoneTest() {
+		val inputDateString = "2024-01-01T00:00:00.000Z"
+		val convertedDate = convertToXmlGregorianWithTimeZone(inputDateString)
+		val xmlMapper = XmlMapper(
+			JacksonXmlModule().apply {
+				setDefaultUseWrapper(false)
+			}
+		).apply {
+			enable(SerializationFeature.INDENT_OUTPUT)
+			disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+		}
+		xmlMapper.setDateFormat(SimpleDateFormat("yyyy-MM-ddXXX"))
+		xmlMapper.registerModule(JaxbAnnotationModule())
+		val xml = xmlMapper.writeValueAsString(convertedDate)
+
+		Assertions.assertEquals("\n<XMLGregorianCalendarImpl>2024-01-01+01:00</XMLGregorianCalendarImpl>", xml)
 	}
 
 }
