@@ -87,7 +87,7 @@ fun convertToMaalgruppeinformasjon(jsonMaalgruppeinformasjon: JsonMaalgruppeinfo
 fun convertToDateStringWithTimeZone(date: String): String {
 	val inputFormat = SimpleDateFormat("yyyy-MM-dd")
 	val inputDate = inputFormat.parse(date.substring(0, 10))
-	val outputFormat = SimpleDateFormat("yyyy-MM-ddXXX", Locale.getDefault())
+	val outputFormat = SimpleDateFormat("yyyy-MM-ddXXX", Locale.of("no", "NO"))
 	return outputFormat.format(inputDate)
 }
 

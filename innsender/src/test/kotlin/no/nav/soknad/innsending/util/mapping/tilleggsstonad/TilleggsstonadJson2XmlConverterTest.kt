@@ -99,7 +99,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertNotNull(xmlFil)
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(xmlString.contains("<periode>"))
-		assertTrue(xmlString.contains("<fom>2023-12-01+01:00</fom>"))
+		assertTrue(xmlString.contains("<fom>2023-12-01+01:00</fom>")) //##
 		assertTrue(xmlString.contains("<tom>2024-06-20+02:00</tom>"))
 		assertTrue(xmlString.contains("</periode>"))
 		assertTrue(xmlString.contains("<aktivitetsadresse>Kongensgate 10, 3701</aktivitetsadresse>"))
@@ -254,7 +254,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("<avstand>120</avstand>"))
 		assertTrue(xmlString.contains("<reiseObligatoriskSamling>"))
 		assertTrue(xmlString.contains("<periode>"))
-		assertTrue(xmlString.contains("<fom>2024-01-02+01:00</fom>"))
+		assertTrue(xmlString.contains("<fom>2024-01-02+01:00</fom>")) //##
 		assertTrue(xmlString.contains("<tom>2024-02-07+01:00</tom>"))
 		assertTrue(xmlString.contains("</periode>"))
 		assertTrue(xmlString.contains("</reiseObligatoriskSamling>"))
@@ -379,7 +379,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertNotNull(xmlFil)
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(xmlString.contains("<reisestoenadForArbeidssoeker>"))
-		assertTrue(xmlString.contains("<reisedato>2023-12-24+01:00</reisedato>"))
+		assertTrue(xmlString.contains("<reisedato>2023-12-24+01:00</reisedato>")) //##
 		assertTrue(xmlString.contains("<formaal>jobbintervju</formaal>"))
 		assertTrue(xmlString.contains("<harMottattDagpengerSisteSeksMaaneder>true</harMottattDagpengerSisteSeksMaaneder>"))
 		assertTrue(xmlString.contains("<avstand>150</avstand>"))
@@ -454,7 +454,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("tilsynsutgifterBarn"))
 		assertTrue(xmlString.contains("<tilsynsutgifterBarn>"))
 		assertTrue(xmlString.contains("<periode>"))
-		assertTrue(xmlString.contains("<fom>2023-12-01+01:00</fom>"))
+		assertTrue(xmlString.contains("<fom>2023-12-01+01:00</fom>")) //##
 		assertTrue(xmlString.contains("<tom>2024-06-20+02:00</tom>"))
 		assertTrue(xmlString.contains("</periode>"))
 		assertTrue(xmlString.contains("<personidentifikator>030420</personidentifikator>"))
@@ -543,7 +543,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(xmlString.contains("<boutgifter>"))
 		assertTrue(xmlString.contains("<periode>"))
-		assertTrue(xmlString.contains("<fom>2023-12-02+01:00</fom>"))
+		assertTrue(xmlString.contains("<fom>2023-12-02+01:00</fom>")) //##
 		assertTrue(xmlString.contains("<tom>2024-06-20+02:00</tom>"))
 		assertTrue(xmlString.contains("</periode>"))
 		assertTrue(xmlString.contains("<harBoutgifterVedSamling>false</harBoutgifterVedSamling>"))
@@ -595,7 +595,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(xmlString.contains("<boutgifter>"))
 		assertTrue(xmlString.contains("<samlingsperiode>"))
-		assertTrue(xmlString.contains("<fom>2023-12-02+01:00</fom>"))
+		assertTrue(xmlString.contains("<fom>2023-12-02+01:00</fom>")) //##
 		assertTrue(xmlString.contains("<tom>2023-12-20+01:00</tom>"))
 		assertTrue(xmlString.contains("</samlingsperiode>"))
 		assertTrue(xmlString.contains("<fom>2024-01-02+01:00</fom>"))
@@ -637,7 +637,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("laeremiddelutgifter"))
 		assertTrue(xmlString.contains("<laeremiddelutgifter>"))
 		assertTrue(xmlString.contains("<periode>"))
-		assertTrue(xmlString.contains("<fom>2023-12-02+01:00</fom>"))
+		assertTrue(xmlString.contains("<fom>2023-12-02+01:00</fom>")) //##
 		assertTrue(xmlString.contains("<tom>2024-06-20+02:00</tom>"))
 		assertTrue(xmlString.contains("</periode>"))
 		assertTrue(xmlString.contains("<skolenivaa kodeverksRef=\"Skolenivaa\">VGS</skolenivaa>"))
@@ -712,7 +712,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("<erUtgifterTilFlyttingDekketAvAndreEnnNAV>false</erUtgifterTilFlyttingDekketAvAndreEnnNAV>"))
 		assertTrue(xmlString.contains("<flyttingPgaNyStilling>true</flyttingPgaNyStilling>"))
 		assertTrue(xmlString.contains("<flytterSelv>true</flytterSelv>"))
-		assertTrue(xmlString.contains("<flyttedato>2023-12-29+01:00</flyttedato>"))
+		assertTrue(xmlString.contains("<flyttedato>2023-12-29+01:00</flyttedato>")) //##
 		assertTrue(xmlString.contains("<avstand>130</avstand>"))
 		assertTrue(xmlString.contains("<tilflyttingsadresse>Kongens gate 10, 3701</tilflyttingsadresse>"))
 		assertTrue(xmlString.contains("<sumTilleggsutgifter>1200.0</sumTilleggsutgifter>"))
