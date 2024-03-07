@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test
 import java.text.SimpleDateFormat
 import javax.xml.stream.XMLInputFactory
 
-class TilleggsstonadJson2XmlConverterKtTest {
+class TilleggsstonadJson2XmlConverterTest {
 
 	@Test
 	fun json2XmlTest_dagligReise() {
@@ -94,9 +94,7 @@ class TilleggsstonadJson2XmlConverterKtTest {
 		val tilleggsstonad =
 			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = jsonReisestottesoknad).build()
 
-		val xmlFil = json2Xml(
-			soknadDto, tilleggsstonad
-		)
+		val xmlFil = json2Xml(soknadDto, tilleggsstonad)
 
 		assertNotNull(xmlFil)
 		val xmlString = xmlFil.decodeToString()

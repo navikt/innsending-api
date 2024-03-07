@@ -171,6 +171,9 @@ data class Application(
 	val opplysningerOmBarn: List<OpplysningerOmBarn>? = null,
 	val fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa: String? = null,
 
+	// Kjøreliste
+	val tekstfelt: String? = null,
+	val drivinglist: Drivinglist? = null,
 
 	// Annet som ikke blir brukt
 	val legeerklaeringPaMedisinskeArakerTilAtDuIkkeKanReiseKollektivt2: String? = null,
@@ -199,6 +202,17 @@ data class SkjemaPeriode(
 
 data class BostotteIForbindelseMedSamling(
 	val periodeForSamling: List<JsonPeriode>
+)
+
+data class Drivinglist(
+	val selectedVedtaksId: String,
+	val dates: List<Dates>
+)
+
+data class Dates(
+	val date: String,
+	val parking: String? = null,
+	val betalingsplanId: String
 )
 
 data class Flervalg(

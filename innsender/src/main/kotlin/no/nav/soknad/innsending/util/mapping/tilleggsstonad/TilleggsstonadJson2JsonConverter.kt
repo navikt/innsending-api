@@ -6,7 +6,7 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 
 
-fun convertToJson(soknadDto: DokumentSoknadDto, json: ByteArray?): JsonApplication {
+fun convertToJsonTilleggsstonad(soknadDto: DokumentSoknadDto, json: ByteArray?): JsonApplication<JsonTilleggsstonad> {
 	if (json == null || json.isEmpty())
 		throw BackendErrorException("${soknadDto.innsendingsId}: json fil av søknaden mangler")
 
@@ -22,13 +22,13 @@ fun convertToJson(soknadDto: DokumentSoknadDto, json: ByteArray?): JsonApplicati
 			etternavn = json.data.data.etternavnSoker,
 			ident = PersonIdent(ident = json.data.data.fodselsnummerDnummerSoker, identType = IdentType.PERSONNR)
 		),
-		tilleggsstonad = convertToJsonTilleggsstonad(json.data.data, soknadDto)
+		applicationDetails = convertToJsonTilleggsstonad(json.data.data, soknadDto)
 	)
 }
 
 fun convertToJsonTilleggsstonad(tilleggsstonad: Application, soknadDto: DokumentSoknadDto): JsonTilleggsstonad {
 	return JsonTilleggsstonad(
-		aktivitetsinformasjon = convertAktivitetsinformasjon(tilleggsstonad), // TODO
+		aktivitetsinformasjon = convertAktivitetsinformasjon(tilleggsstonad),
 		maalgruppeinformasjon = convertToJsonMaalgruppeinformasjon(tilleggsstonad),
 		rettighetstype = convertToJsonRettighetstyper(tilleggsstonad, soknadDto)
 
@@ -44,7 +44,7 @@ private fun convertAktivitetsinformasjon(tilleggsstonad: Application): JsonAktiv
 		null
 }
 
-private fun convertToJsonMaalgruppeinformasjon(tilleggsstonad: Application): JsonMaalgruppeinformasjon? { // TODO
+fun convertToJsonMaalgruppeinformasjon(tilleggsstonad: Application): JsonMaalgruppeinformasjon? { // TODO
 
 	// Bruk maalgruppeinformasjon hvis dette er hentet fra Arena og lagt inn på søknaden
 	if (tilleggsstonad.container != null && tilleggsstonad.container.maalgruppe != null

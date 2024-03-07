@@ -9,6 +9,30 @@ class FyllUtJsonTestBuilder {
 	val laeremidlerSkjemanr = "NAV 11-12.16B"
 	val reiseSamlingSkjemanr = "NAV 11-12.17B"
 
+	val drivingListExpencesSkjemanr = "NAV 11-12.10"
+
+	var drivingListExpences: Drivinglist? = Drivinglist(
+		selectedVedtaksId = "12345678",
+		dates = listOf(
+			Dates(date = "2024-01-01T00:00:00.000Z", parking = "125", betalingsplanId = "21"),
+			Dates(date = "2024-01-02T00:00:00.000Z", parking = "125", betalingsplanId = "21"),
+			Dates(date = "2024-01-03T00:00:00.000Z", parking = "", betalingsplanId = "21"),
+			Dates(date = "2024-01-08T00:00:00.000Z", parking = "125", betalingsplanId = "22"),
+			Dates(date = "2024-01-09T00:00:00.000Z", parking = "125", betalingsplanId = "22"),
+			Dates(date = "2024-01-10T00:00:00.000Z", parking = "", betalingsplanId = "22"),
+			Dates(date = "2024-01-15T00:00:00.000Z", parking = "125", betalingsplanId = "23"),
+			Dates(date = "2024-01-16T00:00:00.000Z", parking = "125", betalingsplanId = "23"),
+			Dates(date = "2024-01-17T00:00:00.000Z", parking = "", betalingsplanId = "23"),
+			Dates(date = "2024-01-22T00:00:00.000Z", parking = "125", betalingsplanId = "24"),
+			Dates(date = "2024-01-23T00:00:00.000Z", parking = "125", betalingsplanId = "24"),
+			Dates(date = "2024-01-240T00:00:00.000Z", parking = "", betalingsplanId = "24"),
+		)
+	)
+
+	fun drivingListExpences(drivingListExpences: Drivinglist?) = apply {
+		this.drivingListExpences = drivingListExpences
+	}
+
 	val defaultArenaAktivitetOgMaalgruppe = Container(
 		maalgruppe = "ENSFORARBS",
 		aktivitet = Aktivitet(
@@ -296,7 +320,10 @@ class FyllUtJsonTestBuilder {
 					kanReiseKollektivt = if (skjemanr == reiseSamlingSkjemanr && kanIkkeReiseKollektivt == null) KanReiseKollektivt(
 						kanReiseKollektivt
 					) else null,
-					kanIkkeReiseKollektivtReiseTilSamling = if (skjemanr == reiseSamlingSkjemanr) kanIkkeReiseKollektivt else null
+					kanIkkeReiseKollektivtReiseTilSamling = if (skjemanr == reiseSamlingSkjemanr) kanIkkeReiseKollektivt else null,
+
+					// DrivingListExpences
+					drivinglist = if (skjemanr == drivingListExpencesSkjemanr) drivingListExpences else null
 
 				),
 				metadata = Metadata(

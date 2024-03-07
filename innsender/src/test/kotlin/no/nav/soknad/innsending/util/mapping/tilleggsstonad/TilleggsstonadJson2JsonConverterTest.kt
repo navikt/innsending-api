@@ -1,9 +1,9 @@
 package no.nav.soknad.innsending.util.mapping.tilleggsstonad
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import junit.framework.TestCase.assertEquals
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.tilleggsstonad.FyllUtJsonTestBuilder
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import kotlin.test.assertTrue
 
@@ -45,16 +45,20 @@ class TilleggsstonadJson2JsonConverterTest {
 
 		val mapper = jacksonObjectMapper()
 		val fyllUtJson = mapper.writeValueAsString(fyllUtObj)
-		val strukturertJson = convertToJson(soknadDto, fyllUtJson.toString().toByteArray())
+		val strukturertJson =
+			convertToJsonTilleggsstonad(soknadDto, fyllUtJson.toString().toByteArray())
 
 		assertTrue(strukturertJson != null)
-		assertEquals(aktivitetsId, strukturertJson.tilleggsstonad.aktivitetsinformasjon?.aktivitet)
-		assertEquals(maalgruppeType, strukturertJson.tilleggsstonad.maalgruppeinformasjon?.maalgruppetype)
-		assertEquals(
+		Assertions.assertEquals(aktivitetsId, strukturertJson.applicationDetails.aktivitetsinformasjon?.aktivitet)
+		Assertions.assertEquals(maalgruppeType, strukturertJson.applicationDetails.maalgruppeinformasjon?.maalgruppetype)
+		Assertions.assertEquals(
 			forelderTo,
-			strukturertJson.tilleggsstonad.rettighetstype?.tilsynsutgifter?.fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa
+			strukturertJson.applicationDetails.rettighetstype?.tilsynsutgifter?.fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa
 		)
-		assertEquals(passAvBarn.size, strukturertJson.tilleggsstonad.rettighetstype?.tilsynsutgifter?.barnePass?.size)
+		Assertions.assertEquals(
+			passAvBarn.size,
+			strukturertJson.applicationDetails.rettighetstype?.tilsynsutgifter?.barnePass?.size
+		)
 	}
 
 	@Test
@@ -79,16 +83,20 @@ class TilleggsstonadJson2JsonConverterTest {
 
 		val mapper = jacksonObjectMapper()
 		val fyllUtJson = mapper.writeValueAsString(fyllUtObj)
-		val strukturertJson = convertToJson(soknadDto, fyllUtJson.toString().toByteArray())
+		val strukturertJson =
+			convertToJsonTilleggsstonad(soknadDto, fyllUtJson.toString().toByteArray())
 
 		assertTrue(strukturertJson != null)
-		assertEquals(aktivitetsId, strukturertJson.tilleggsstonad.aktivitetsinformasjon?.aktivitet)
-		assertEquals(maalgruppeType, strukturertJson.tilleggsstonad.maalgruppeinformasjon?.maalgruppetype)
-		assertEquals(
+		Assertions.assertEquals(aktivitetsId, strukturertJson.applicationDetails.aktivitetsinformasjon?.aktivitet)
+		Assertions.assertEquals(maalgruppeType, strukturertJson.applicationDetails.maalgruppeinformasjon?.maalgruppetype)
+		Assertions.assertEquals(
 			"videregaendeUtdanning",
-			strukturertJson.tilleggsstonad.rettighetstype?.laeremiddelutgifter?.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore
+			strukturertJson.applicationDetails.rettighetstype?.laeremiddelutgifter?.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore
 		)
-		assertEquals(10000, strukturertJson.tilleggsstonad.rettighetstype?.laeremiddelutgifter?.utgifterTilLaeremidler)
+		Assertions.assertEquals(
+			10000,
+			strukturertJson.applicationDetails.rettighetstype?.laeremiddelutgifter?.utgifterTilLaeremidler
+		)
 	}
 
 
@@ -125,17 +133,27 @@ class TilleggsstonadJson2JsonConverterTest {
 
 		val mapper = jacksonObjectMapper()
 		val fyllUtJson = mapper.writeValueAsString(fyllUtObj)
-		val strukturertJson = convertToJson(soknadDto, fyllUtJson.toString().toByteArray())
+		val strukturertJson =
+			convertToJsonTilleggsstonad(soknadDto, fyllUtJson.toString().toByteArray())
 
 		assertTrue(strukturertJson != null)
-		assertEquals(aktivitetsId, strukturertJson.tilleggsstonad.aktivitetsinformasjon?.aktivitet)
-		assertEquals(maalgruppeType, strukturertJson.tilleggsstonad.maalgruppeinformasjon?.maalgruppetype)
-		assertEquals("01-01-2024", strukturertJson.tilleggsstonad.rettighetstype?.reise?.dagligReise?.startdatoDdMmAaaa)
-		assertEquals("Norge", strukturertJson.tilleggsstonad.rettighetstype?.reise?.dagligReise?.velgLand1?.label)
-		assertEquals(120, strukturertJson.tilleggsstonad.rettighetstype?.reise?.dagligReise?.hvorLangReiseveiHarDu)
-		assertEquals(
+		Assertions.assertEquals(aktivitetsId, strukturertJson.applicationDetails.aktivitetsinformasjon?.aktivitet)
+		Assertions.assertEquals(maalgruppeType, strukturertJson.applicationDetails.maalgruppeinformasjon?.maalgruppetype)
+		Assertions.assertEquals(
+			"01-01-2024",
+			strukturertJson.applicationDetails.rettighetstype?.reise?.dagligReise?.startdatoDdMmAaaa
+		)
+		Assertions.assertEquals(
+			"Norge",
+			strukturertJson.applicationDetails.rettighetstype?.reise?.dagligReise?.velgLand1?.label
+		)
+		Assertions.assertEquals(
+			120,
+			strukturertJson.applicationDetails.rettighetstype?.reise?.dagligReise?.hvorLangReiseveiHarDu
+		)
+		Assertions.assertEquals(
 			200,
-			strukturertJson.tilleggsstonad.rettighetstype?.reise?.dagligReise?.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.bompenger
+			strukturertJson.applicationDetails.rettighetstype?.reise?.dagligReise?.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.bompenger
 		)
 
 	}
@@ -150,10 +168,11 @@ class TilleggsstonadJson2JsonConverterTest {
 
 		val mapper = jacksonObjectMapper()
 		val fyllUtJson = mapper.writeValueAsString(fyllUtObj)
-		val strukturertJson = convertToJson(soknadDto, fyllUtJson.toString().toByteArray())
+		val strukturertJson =
+			convertToJsonTilleggsstonad(soknadDto, fyllUtJson.toString().toByteArray())
 
 		assertTrue(strukturertJson != null)
-		assertEquals(maalgruppeType, strukturertJson.tilleggsstonad.maalgruppeinformasjon?.maalgruppetype)
+		Assertions.assertEquals(maalgruppeType, strukturertJson.applicationDetails.maalgruppeinformasjon?.maalgruppetype)
 	}
 
 	@Test
@@ -166,10 +185,11 @@ class TilleggsstonadJson2JsonConverterTest {
 
 		val mapper = jacksonObjectMapper()
 		val fyllUtJson = mapper.writeValueAsString(fyllUtObj)
-		val strukturertJson = convertToJson(soknadDto, fyllUtJson.toString().toByteArray())
+		val strukturertJson =
+			convertToJsonTilleggsstonad(soknadDto, fyllUtJson.toString().toByteArray())
 
 		assertTrue(strukturertJson != null)
-		assertEquals(maalgruppeType, strukturertJson.tilleggsstonad.maalgruppeinformasjon?.maalgruppetype)
+		Assertions.assertEquals(maalgruppeType, strukturertJson.applicationDetails.maalgruppeinformasjon?.maalgruppetype)
 	}
 
 	@Test
@@ -182,10 +202,11 @@ class TilleggsstonadJson2JsonConverterTest {
 
 		val mapper = jacksonObjectMapper()
 		val fyllUtJson = mapper.writeValueAsString(fyllUtObj)
-		val strukturertJson = convertToJson(soknadDto, fyllUtJson.toString().toByteArray())
+		val strukturertJson =
+			convertToJsonTilleggsstonad(soknadDto, fyllUtJson.toString().toByteArray())
 
 		assertTrue(strukturertJson != null)
-		assertEquals(maalgruppeType, strukturertJson.tilleggsstonad.maalgruppeinformasjon?.maalgruppetype)
+		Assertions.assertEquals(maalgruppeType, strukturertJson.applicationDetails.maalgruppeinformasjon?.maalgruppetype)
 	}
 
 	@Test
@@ -198,10 +219,11 @@ class TilleggsstonadJson2JsonConverterTest {
 
 		val mapper = jacksonObjectMapper()
 		val fyllUtJson = mapper.writeValueAsString(fyllUtObj)
-		val strukturertJson = convertToJson(soknadDto, fyllUtJson.toString().toByteArray())
+		val strukturertJson =
+			convertToJsonTilleggsstonad(soknadDto, fyllUtJson.toString().toByteArray())
 
 		assertTrue(strukturertJson != null)
-		assertEquals(maalgruppeType, strukturertJson.tilleggsstonad.maalgruppeinformasjon?.maalgruppetype)
+		Assertions.assertEquals(maalgruppeType, strukturertJson.applicationDetails.maalgruppeinformasjon?.maalgruppetype)
 	}
 
 }

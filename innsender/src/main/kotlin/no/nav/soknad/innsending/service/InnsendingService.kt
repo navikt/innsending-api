@@ -17,9 +17,7 @@ import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.mapping.*
-import no.nav.soknad.innsending.util.mapping.tilleggsstonad.JsonApplication
-import no.nav.soknad.innsending.util.mapping.tilleggsstonad.convertToJson
-import no.nav.soknad.innsending.util.mapping.tilleggsstonad.json2Xml
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.*
 import no.nav.soknad.innsending.util.models.erEttersending
 import no.nav.soknad.innsending.util.models.hovedDokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
@@ -205,21 +203,23 @@ class InnsendingService(
 			val xmlDocumentVariant = vedleggService.lagreNyHoveddokumentVariant(soknadDto, Mimetype.applicationSlashXml)
 			logger.info("${soknadDto.innsendingsId}: Lagt til xmlVedlegg på vedleggsId = ${xmlDocumentVariant.id}")
 
-			val jsonObj = convertToJson(
+			val jsonFil = filService.hentFiler(
 				soknadDto = soknadDto,
-				json = filService.hentFiler(
-					soknadDto = soknadDto,
-					innsendingsId = soknadDto.innsendingsId!!,
-					vedleggsId = jsonVariant.id!!,
-					medFil = true
-				).first().data
-			)
+				innsendingsId = soknadDto.innsendingsId!!,
+				vedleggsId = jsonVariant.id!!,
+				medFil = true
+			).first().data
 
-			// map input json to xml
-			val xmlFile = json2Xml(
-				soknadDto = soknadDto,
-				tilleggstonadJsonObj = jsonObj
-			)
+			val jsonObj: JsonApplication<*>
+			val xmlFile: ByteArray
+			if (soknadDto.skjemanr == "NAV 11.12.10" || soknadDto.skjemanr == "NAV 11.12.11") {
+				jsonObj = convertToJsonDrivingListJson(soknadDto = soknadDto, jsonFil)
+				xmlFile = json2Xml(jsonObj, soknadDto)
+			} else {
+				jsonObj = convertToJsonTilleggsstonad(soknadDto = soknadDto, jsonFil)
+				xmlFile = json2Xml(soknadDto = soknadDto, tilleggstonadJsonObj = jsonObj)
+			}
+
 			// Persist created xml file
 			filService.lagreFil(
 				soknadService.hentSoknad(soknadDto.innsendingsId!!),
@@ -239,7 +239,8 @@ class InnsendingService(
 				OpplastingsStatusDto.sendesIkke
 			)
 
-			sjekkOgOppdaterTema(soknadDto, jsonObj)
+			if (jsonObj.applicationDetails is JsonTilleggsstonad)
+				sjekkOgOppdaterTema(soknadDto, jsonObj.applicationDetails.maalgruppeinformasjon)
 
 			return soknadService.hentSoknad(soknadDto.innsendingsId!!)
 		} catch (ex: Exception) {
@@ -247,7 +248,7 @@ class InnsendingService(
 		}
 	}
 
-	private fun sjekkOgOppdaterTema(soknadDto: DokumentSoknadDto, jsonObj: JsonApplication) {
+	private fun sjekkOgOppdaterTema(soknadDto: DokumentSoknadDto, maalgruppeInformasjon: JsonMaalgruppeinformasjon?) {
 		val relevanteSkjemaNrForTsr = listOf(
 			"NAV 11-12.18B", // Støtte til ved oppstart, avslutning eller hjemreiser
 			"NAV 11-12.21B", // Støtte til daglig reise
@@ -261,7 +262,7 @@ class InnsendingService(
 		)
 		if (!relevanteSkjemaNrForTsr.contains(soknadDto.skjemanr)) return
 
-		if (!relevanteMaalgrupperForTsr.contains(jsonObj.tilleggsstonad.maalgruppeinformasjon?.maalgruppetype)) return
+		if (!relevanteMaalgrupperForTsr.contains(maalgruppeInformasjon?.maalgruppetype)) return
 
 		repo.endreTema(soknadDto.id!!, soknadDto.innsendingsId!!, "TSR")
 	}

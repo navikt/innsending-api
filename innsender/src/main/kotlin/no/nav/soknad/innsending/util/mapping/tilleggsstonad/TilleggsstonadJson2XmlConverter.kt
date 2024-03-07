@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -13,7 +14,8 @@ import java.util.*
 
 fun json2Xml(soknadDto: DokumentSoknadDto, jsonFil: ByteArray?): ByteArray {
 	// Konverter json-string til tilleggsstonadJson
-	val tilleggstonadJsonObj = convertToJson(soknadDto, jsonFil)
+	val tilleggstonadJsonObj =
+		convertToJsonTilleggsstonad(soknadDto, jsonFil)
 
 	// Map tilleggsstonadFraJson til tilleggsstonadXML
 	val tilleggsstonadXmlObj = convertToTilleggsstonadsskjema(soknadDto, tilleggstonadJsonObj)
@@ -22,7 +24,7 @@ fun json2Xml(soknadDto: DokumentSoknadDto, jsonFil: ByteArray?): ByteArray {
 	return convertToXml(tilleggsstonadXmlObj)
 }
 
-fun json2Xml(soknadDto: DokumentSoknadDto, tilleggstonadJsonObj: JsonApplication): ByteArray {
+fun json2Xml(soknadDto: DokumentSoknadDto, tilleggstonadJsonObj: JsonApplication<JsonTilleggsstonad>): ByteArray {
 
 	// Map tilleggsstonadFraJson til tilleggsstonadXML
 	val tilleggsstonadXmlObj = convertToTilleggsstonadsskjema(soknadDto, tilleggstonadJsonObj)
@@ -48,23 +50,22 @@ fun convertToXml(tilleggsstonad: Tilleggsstoenadsskjema): ByteArray {
 
 fun convertToTilleggsstonadsskjema(
 	soknadDto: DokumentSoknadDto,
-	tilleggstonadJsonObj: JsonApplication
+	tilleggstonadJsonObj: JsonApplication<JsonTilleggsstonad>
 ): Tilleggsstoenadsskjema {
 	return Tilleggsstoenadsskjema(
-		aktivitetsinformasjon = convertToAktivitetsinformasjon(tilleggstonadJsonObj),
+		aktivitetsinformasjon = convertToAktivitetsinformasjon(tilleggstonadJsonObj.applicationDetails.aktivitetsinformasjon),
 		personidentifikator = soknadDto.brukerId,
-		maalgruppeinformasjon = convertToMaalgruppeinformasjon(tilleggstonadJsonObj),
-		rettighetstype = convertToRettighetstype(soknadDto, tilleggstonadJsonObj)
+		maalgruppeinformasjon = convertToMaalgruppeinformasjon(tilleggstonadJsonObj.applicationDetails.maalgruppeinformasjon),
+		rettighetstype = convertToRettighetstype(soknadDto, tilleggstonadJsonObj.applicationDetails.rettighetstype)
 	)
 
 }
 
-fun convertToAktivitetsinformasjon(tilleggstonadJsonObj: JsonApplication): Aktivitetsinformasjon {
-	return Aktivitetsinformasjon(tilleggstonadJsonObj.tilleggsstonad.aktivitetsinformasjon?.aktivitet)
+fun convertToAktivitetsinformasjon(jsonAktivitetsInformasjon: JsonAktivitetsInformasjon?): Aktivitetsinformasjon {
+	return Aktivitetsinformasjon(jsonAktivitetsInformasjon?.aktivitet)
 }
 
-fun convertToMaalgruppeinformasjon(tilleggstonadJsonObj: JsonApplication): Maalgruppeinformasjon? {
-	val jsonMaalgruppeinformasjon = tilleggstonadJsonObj.tilleggsstonad.maalgruppeinformasjon
+fun convertToMaalgruppeinformasjon(jsonMaalgruppeinformasjon: JsonMaalgruppeinformasjon?): Maalgruppeinformasjon? {
 	return if (jsonMaalgruppeinformasjon != null) {
 		Maalgruppeinformasjon(
 			periode = if (jsonMaalgruppeinformasjon.periode != null)
@@ -83,28 +84,29 @@ fun convertToMaalgruppeinformasjon(tilleggstonadJsonObj: JsonApplication): Maalg
 	}
 }
 
-private fun convertToDateStringWithTimeZone(date: String): String {
+fun convertToDateStringWithTimeZone(date: String): String {
 	val inputFormat = SimpleDateFormat("yyyy-MM-dd")
 	val inputDate = inputFormat.parse(date.substring(0, 10))
 	val outputFormat = SimpleDateFormat("yyyy-MM-ddXXX", Locale.getDefault())
 	return outputFormat.format(inputDate)
 }
 
-fun convertToRettighetstype(soknadDto: DokumentSoknadDto, tilleggstonadJsonObj: JsonApplication): Rettighetstype {
+fun convertToRettighetstype(soknadDto: DokumentSoknadDto, jsonRettighetstyper: JsonRettighetstyper?): Rettighetstype {
+	if (jsonRettighetstyper == null) throw BackendErrorException("${soknadDto.innsendingsId}: Rettighettype data mangler i søknaden")
 	return Rettighetstype(
-		boutgifter = convertBostotte(tilleggstonadJsonObj),
-		laeremiddelutgifter = convertLaremiddler(tilleggstonadJsonObj),
-		flytteutgifter = convertFlytteutgifter(tilleggstonadJsonObj),
-		tilsynsutgifter = convertTilsynsutgifter(tilleggstonadJsonObj),
-		reiseutgifter = convertReiseUtgifter(tilleggstonadJsonObj, soknadDto)
+		boutgifter = convertBostotte(jsonRettighetstyper),
+		laeremiddelutgifter = convertLaremiddler(jsonRettighetstyper),
+		flytteutgifter = convertFlytteutgifter(jsonRettighetstyper),
+		tilsynsutgifter = convertTilsynsutgifter(jsonRettighetstyper),
+		reiseutgifter = convertReiseUtgifter(jsonRettighetstyper, soknadDto)
 	)
 }
 
-fun convertBostotte(tilleggstonadJsonObj: JsonApplication): Boutgifter? {
-	if (tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.bostotte?.aktivitetsperiode == null
+fun convertBostotte(jsonRettighetstyper: JsonRettighetstyper): Boutgifter? {
+	if (jsonRettighetstyper.bostotte?.aktivitetsperiode == null
 	) return null
 
-	val bostottesoknad = tilleggstonadJsonObj.tilleggsstonad.rettighetstype.bostotte
+	val bostottesoknad = jsonRettighetstyper.bostotte
 	return Boutgifter(
 		periode = Periode(
 			fom = convertToDateStringWithTimeZone(bostottesoknad.aktivitetsperiode.startdatoDdMmAaaa),
@@ -135,10 +137,10 @@ fun convertBostotte(tilleggstonadJsonObj: JsonApplication): Boutgifter? {
 
 }
 
-fun convertLaremiddler(tilleggstonadJsonObj: JsonApplication): Laeremiddelutgifter? {
-	if (tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.laeremiddelutgifter == null) return null
+fun convertLaremiddler(jsonRettighetstyper: JsonRettighetstyper): Laeremiddelutgifter? {
+	if (jsonRettighetstyper.laeremiddelutgifter == null) return null
 
-	val laeremiddelutgifter = tilleggstonadJsonObj.tilleggsstonad.rettighetstype.laeremiddelutgifter
+	val laeremiddelutgifter = jsonRettighetstyper.laeremiddelutgifter
 
 	return Laeremiddelutgifter(
 		periode = convertPeriode(
@@ -171,10 +173,10 @@ fun convertToErUtgifterDekket(svar: String): ErUtgifterDekket =
 	}
 
 
-fun convertFlytteutgifter(tilleggstonadJsonObj: JsonApplication): Flytteutgifter? {
-	if (tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.flytteutgifter == null) return null
+fun convertFlytteutgifter(jsonRettighetstyper: JsonRettighetstyper): Flytteutgifter? {
+	if (jsonRettighetstyper.flytteutgifter == null) return null
 
-	val flytteutgifter = tilleggstonadJsonObj.tilleggsstonad.rettighetstype.flytteutgifter
+	val flytteutgifter = jsonRettighetstyper.flytteutgifter
 
 	return Flytteutgifter(
 		flyttingPgaAktivitet = "Jeg flytter i forbindelse med at jeg skal gjennomføre en aktivitet".equals(
@@ -230,25 +232,25 @@ fun convertFlytteutgifter(flytteutgifter: JsonFlytteutgifter): Int {
 	}
 }
 
-fun convertTilsynsutgifter(tilleggstonadJsonObj: JsonApplication): Tilsynsutgifter? {
-	if (!hasTilsynsutgifter(tilleggstonadJsonObj)) return null
+fun convertTilsynsutgifter(jsonRettighetstyper: JsonRettighetstyper): Tilsynsutgifter? {
+	if (!hasTilsynsutgifter(jsonRettighetstyper)) return null
 
-	val utgifterBarn = convertTilsynsutgifterBarn(tilleggstonadJsonObj)
-	val utgifterFamilie = convertFamilieutgifter(tilleggstonadJsonObj) // TODO er denne relevant?
+	val utgifterBarn = convertTilsynsutgifterBarn(jsonRettighetstyper)
+	val utgifterFamilie = convertFamilieutgifter(jsonRettighetstyper) // TODO er denne relevant?
 
 	if (utgifterBarn == null && utgifterFamilie == null) return null
 
 	return Tilsynsutgifter(tilsynsutgifterBarn = utgifterBarn, tilynsutgifterFamilie = utgifterFamilie)
 }
 
-private fun hasTilsynsutgifter(tilleggstonadJsonObj: JsonApplication): Boolean {
-	return tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.tilsynsutgifter != null
+private fun hasTilsynsutgifter(jsonRettighetstyper: JsonRettighetstyper): Boolean {
+	return jsonRettighetstyper.tilsynsutgifter != null
 }
 
-private fun convertTilsynsutgifterBarn(tilleggstonadJsonObj: JsonApplication): TilsynsutgifterBarn? {
-	if (tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.tilsynsutgifter == null) return null
+private fun convertTilsynsutgifterBarn(jsonRettighetstyper: JsonRettighetstyper): TilsynsutgifterBarn? {
+	if (jsonRettighetstyper.tilsynsutgifter == null) return null
 
-	val tilsynsutgifter = tilleggstonadJsonObj.tilleggsstonad.rettighetstype.tilsynsutgifter
+	val tilsynsutgifter = jsonRettighetstyper.tilsynsutgifter
 	return TilsynsutgifterBarn(
 		Periode(
 			fom = convertToDateStringWithTimeZone(tilsynsutgifter.aktivitetsPeriode.startdatoDdMmAaaa),
@@ -276,8 +278,8 @@ private fun stripAndFormatToDDMMYY(date: String): String {
 	return dtf.format(localDate)
 }
 
-private fun convertFamilieutgifter(tilleggstonadJsonObj: JsonApplication): TilsynsutgifterFamilie? {
-	if (!hasTilsynsutgifterFamilie(tilleggstonadJsonObj)) return null
+private fun convertFamilieutgifter(jsonRettighetstyper: JsonRettighetstyper): TilsynsutgifterFamilie? {
+	if (!hasTilsynsutgifterFamilie(jsonRettighetstyper)) return null
 
 
 	// TODO erstatt eksempel nedenfor
@@ -294,17 +296,17 @@ private fun convertFamilieutgifter(tilleggstonadJsonObj: JsonApplication): Tilsy
 	)
 }
 
-private fun hasTilsynsutgifterFamilie(tilleggstonadJsonObj: JsonApplication): Boolean {
+private fun hasTilsynsutgifterFamilie(jsonRettighetstyper: JsonRettighetstyper): Boolean {
 	return false
 }
 
-fun convertReiseUtgifter(tilleggstonadJsonObj: JsonApplication, soknadDto: DokumentSoknadDto): Reiseutgifter? {
+fun convertReiseUtgifter(jsonRettighetstyper: JsonRettighetstyper, soknadDto: DokumentSoknadDto): Reiseutgifter? {
 	//if (!hasReiseutgifter(tilleggstonadJsonObj.data.data.hvorforReiserDu)) return null
 
-	val utgiftDagligReise = convertDagligReise(tilleggstonadJsonObj, soknadDto)
-	val reisestoenadForArbeidssoeker = convertReisestoenadForArbeidssoeker(tilleggstonadJsonObj)
-	val reiseVedOppstartOgAvsluttetAktivitet = convertReiseVedOppstartOgAvsluttetAktivitet(tilleggstonadJsonObj)
-	val reiseObligatoriskSamling = convertReiseObligatoriskSamling(tilleggstonadJsonObj)
+	val utgiftDagligReise = convertDagligReise(jsonRettighetstyper, soknadDto)
+	val reisestoenadForArbeidssoeker = convertReisestoenadForArbeidssoeker(jsonRettighetstyper)
+	val reiseVedOppstartOgAvsluttetAktivitet = convertReiseVedOppstartOgAvsluttetAktivitet(jsonRettighetstyper)
+	val reiseObligatoriskSamling = convertReiseObligatoriskSamling(jsonRettighetstyper)
 
 	if (utgiftDagligReise == null && reisestoenadForArbeidssoeker == null
 		&& reiseVedOppstartOgAvsluttetAktivitet == null && reiseObligatoriskSamling == null
@@ -325,8 +327,8 @@ private fun hasReiseutgifter(hasTravelExpenses: HvorforReiserDu?): Boolean {
 		|| hasTravelExpenses.reiseTilSamling || hasTravelExpenses.reisePaGrunnAvOppstartAvslutningEllerHjemreise
 }
 
-private fun convertDagligReise(tilleggstonadJsonObj: JsonApplication, soknadDto: DokumentSoknadDto): DagligReise? {
-	val details = tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.reise
+private fun convertDagligReise(jsonRettighetstyper: JsonRettighetstyper, soknadDto: DokumentSoknadDto): DagligReise? {
+	val details = jsonRettighetstyper.reise
 	if (details == null || (details.dagligReise == null)) return null
 
 	val jsonDagligReise = details.dagligReise
@@ -346,8 +348,8 @@ private fun convertDagligReise(tilleggstonadJsonObj: JsonApplication, soknadDto:
 	)
 }
 
-private fun convertReisestoenadForArbeidssoeker(tilleggstonadJsonObj: JsonApplication): ReisestoenadForArbeidssoeker? {
-	val details = tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.reise
+private fun convertReisestoenadForArbeidssoeker(jsonRettighetstyper: JsonRettighetstyper): ReisestoenadForArbeidssoeker? {
+	val details = jsonRettighetstyper.reise
 	if (details == null || details.dagligReiseArbeidssoker == null || details.hvorforReiserDu == null || details.hvorforReiserDu.reiseNarDuErArbeidssoker != true) return null
 
 	val dagligReise = details.dagligReiseArbeidssoker
@@ -381,8 +383,8 @@ private fun convertReisestoenadForArbeidssoeker(tilleggstonadJsonObj: JsonApplic
 }
 
 
-private fun convertReiseVedOppstartOgAvsluttetAktivitet(tilleggstonadJsonObj: JsonApplication): ReiseVedOppstartOgAvsluttetAktivitet? {
-	val details = tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.reise
+private fun convertReiseVedOppstartOgAvsluttetAktivitet(jsonRettighetstyper: JsonRettighetstyper): ReiseVedOppstartOgAvsluttetAktivitet? {
+	val details = jsonRettighetstyper.reise
 	if (details == null || details.oppstartOgAvsluttetAktivitet == null || details.hvorforReiserDu == null || details.hvorforReiserDu.reisePaGrunnAvOppstartAvslutningEllerHjemreise != true) return null
 
 	val reiseStartSlutt = details.oppstartOgAvsluttetAktivitet
@@ -413,8 +415,8 @@ private fun convertReiseVedOppstartOgAvsluttetAktivitet(tilleggstonadJsonObj: Js
 }
 
 
-private fun convertReiseObligatoriskSamling(tilleggstonadJsonObj: JsonApplication): ReiseObligatoriskSamling? {
-	val details = tilleggstonadJsonObj.tilleggsstonad.rettighetstype?.reise
+private fun convertReiseObligatoriskSamling(jsonRettighetstyper: JsonRettighetstyper): ReiseObligatoriskSamling? {
+	val details = jsonRettighetstyper.reise
 	if (details == null || details.reiseSamling == null || details.hvorforReiserDu == null || details.hvorforReiserDu.reiseTilSamling != true) return null
 
 	val reiseTilSamling = details.reiseSamling
