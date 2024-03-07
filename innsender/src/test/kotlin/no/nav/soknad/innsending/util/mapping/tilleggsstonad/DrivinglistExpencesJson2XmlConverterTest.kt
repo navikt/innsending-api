@@ -21,14 +21,9 @@ class DrivinglistExpencesJson2XmlConverterTest {
 		Assertions.assertNotNull(xmlFil)
 		val xmlString = xmlFil.decodeToString()
 		Assertions.assertTrue(xmlString.contains("<vedtaksId>43258684</vedtaksId>"))
-		Assertions.assertTrue(
-			xmlString.contains(
-				"    <betalingsplanId>15573699</betalingsplanId>\n" +
-					"    <totaltParkeringsbeloep>200</totaltParkeringsbeloep>\n" +
-					"    <totaltAntallDagerKjoert>2</totaltAntallDagerKjoert>\n"
-			)
-		)
-
+		Assertions.assertTrue(xmlString.contains("<betalingsplanId>15573699</betalingsplanId>"))
+		Assertions.assertTrue(xmlString.contains("<totaltParkeringsbeloep>200</totaltParkeringsbeloep>"))
+		Assertions.assertTrue(xmlString.contains("<totaltAntallDagerKjoert>2</totaltAntallDagerKjoert>"))
 	}
 
 

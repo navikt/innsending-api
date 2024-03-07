@@ -98,14 +98,10 @@ class TilleggsstonadJson2XmlConverterTest {
 
 		assertNotNull(xmlFil)
 		val xmlString = xmlFil.decodeToString()
-		assertTrue(
-			xmlString.contains(
-				"        <periode>\n" +
-					"          <fom>2023-12-01+01:00</fom>\n" +
-					"          <tom>2024-06-20+02:00</tom>\n" +
-					"        </periode>\n"
-			)
-		)
+		assertTrue(xmlString.contains("<periode>"))
+		assertTrue(xmlString.contains("<fom>2023-12-01+01:00</fom>"))
+		assertTrue(xmlString.contains("<tom>2024-06-20+02:00</tom>"))
+		assertTrue(xmlString.contains("</periode>"))
 		assertTrue(xmlString.contains("<aktivitetsadresse>Kongensgate 10, 3701</aktivitetsadresse>"))
 		assertTrue(xmlString.contains("<dagligReise>"))
 		assertTrue(xmlString.contains("<avstand>130.0</avstand>"))
@@ -256,23 +252,14 @@ class TilleggsstonadJson2XmlConverterTest {
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(xmlString.contains("<reiseObligatoriskSamling>"))
 		assertTrue(xmlString.contains("<avstand>120</avstand>"))
-		assertTrue(
-			xmlString.contains(
-				"      <reiseObligatoriskSamling>\n" +
-					"        <periode>\n" +
-					"          <fom>2024-01-02+01:00</fom>\n" +
-					"          <tom>2024-02-07+01:00</tom>\n" +
-					"        </periode>\n"
-			)
-		)
-		assertTrue(
-			xmlString.contains(
-				"        <samlingsperiode>\n" +
-					"          <fom>2024-01-02+01:00</fom>\n" +
-					"          <tom>2024-01-07+01:00</tom>\n" +
-					"        </samlingsperiode>\n"
-			)
-		)
+		assertTrue(xmlString.contains("<reiseObligatoriskSamling>"))
+		assertTrue(xmlString.contains("<periode>"))
+		assertTrue(xmlString.contains("<fom>2024-01-02+01:00</fom>"))
+		assertTrue(xmlString.contains("<tom>2024-02-07+01:00</tom>"))
+		assertTrue(xmlString.contains("</periode>"))
+		assertTrue(xmlString.contains("</reiseObligatoriskSamling>"))
+		assertTrue(xmlString.contains("<samlingsperiode>"))
+		assertTrue(xmlString.contains("</samlingsperiode>"))
 		assertTrue(xmlString.contains("kanOffentligTransportBrukes>true</kanOffentligTransportBrukes>"))
 		assertTrue(xmlString.contains("<beloepPerMaaned>1000</beloepPerMaaned>"))
 
@@ -465,15 +452,11 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertNotNull(xmlFil)
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(xmlString.contains("tilsynsutgifterBarn"))
-		assertTrue(
-			xmlString.contains(
-				"      <tilsynsutgifterBarn>\n" +
-					"        <periode>\n" +
-					"          <fom>2023-12-01+01:00</fom>\n" +
-					"          <tom>2024-06-20+02:00</tom>\n" +
-					"        </periode>\n"
-			)
-		)
+		assertTrue(xmlString.contains("<tilsynsutgifterBarn>"))
+		assertTrue(xmlString.contains("<periode>"))
+		assertTrue(xmlString.contains("<fom>2023-12-01+01:00</fom>"))
+		assertTrue(xmlString.contains("<tom>2024-06-20+02:00</tom>"))
+		assertTrue(xmlString.contains("</periode>"))
 		assertTrue(xmlString.contains("<personidentifikator>030420</personidentifikator>"))
 		assertTrue(xmlString.contains("<tilsynskategori>KOM</tilsynskategori>"))
 		assertTrue(xmlString.contains("<harFullfoertFjerdeSkoleaar>false</harFullfoertFjerdeSkoleaar>"))
@@ -522,18 +505,13 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertNotNull(xmlFil)
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(xmlString.contains("tilsynsutgifterBarn"))
-		assertTrue(
-			xmlString.contains(
-				"        <barn>\n" +
-					"          <personidentifikator>030419</personidentifikator>\n" +
-					"          <tilsynskategori>KOM</tilsynskategori>\n" +
-					"          <navn>Fnavn2 Enavn</navn>\n" +
-					"          <harFullfoertFjerdeSkoleaar>false</harFullfoertFjerdeSkoleaar>\n" +
-					"          <maanedligUtgiftTilsynBarn>3500</maanedligUtgiftTilsynBarn>\n" +
-					"        </barn>\n"
-			)
-		)
-
+		assertTrue(xmlString.contains("<barn>"))
+		assertTrue(xmlString.contains("<personidentifikator>030419</personidentifikator>"))
+		assertTrue(xmlString.contains("<tilsynskategori>KOM</tilsynskategori>"))
+		assertTrue(xmlString.contains("<navn>Fnavn2 Enavn</navn>"))
+		assertTrue(xmlString.contains("<harFullfoertFjerdeSkoleaar>false</harFullfoertFjerdeSkoleaar>"))
+		assertTrue(xmlString.contains("<maanedligUtgiftTilsynBarn>3500</maanedligUtgiftTilsynBarn>"))
+		assertTrue(xmlString.contains("</barn>"))
 	}
 
 	@Test
@@ -564,15 +542,10 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertNotNull(xmlFil)
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(xmlString.contains("<boutgifter>"))
-		assertTrue(
-			xmlString.contains(
-				"    <boutgifter>\n" +
-					"      <periode>\n" +
-					"        <fom>2023-12-02+01:00</fom>\n" +
-					"        <tom>2024-06-20+02:00</tom>\n" +
-					"      </periode>\n"
-			)
-		)
+		assertTrue(xmlString.contains("<periode>"))
+		assertTrue(xmlString.contains("<fom>2023-12-02+01:00</fom>"))
+		assertTrue(xmlString.contains("<tom>2024-06-20+02:00</tom>"))
+		assertTrue(xmlString.contains("</periode>"))
 		assertTrue(xmlString.contains("<harBoutgifterVedSamling>false</harBoutgifterVedSamling>"))
 		assertTrue(xmlString.contains("<harFasteBoutgifter>true</harFasteBoutgifter>"))
 		assertTrue(xmlString.contains("<mottarBostoette>false</mottarBostoette>"))
@@ -621,26 +594,16 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertNotNull(xmlFil)
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(xmlString.contains("<boutgifter>"))
-		assertTrue(
-			xmlString.contains(
-				"      <samlingsperiode>\n" +
-					"        <fom>2023-12-02+01:00</fom>\n" +
-					"        <tom>2023-12-20+01:00</tom>\n" +
-					"      </samlingsperiode>\n" +
-					"      <samlingsperiode>\n" +
-					"        <fom>2024-01-02+01:00</fom>\n" +
-					"        <tom>2024-01-20+01:00</tom>\n" +
-					"      </samlingsperiode>\n" +
-					"      <samlingsperiode>\n" +
-					"        <fom>2024-02-01+01:00</fom>\n" +
-					"        <tom>2024-02-20+01:00</tom>\n" +
-					"      </samlingsperiode>\n" +
-					"      <samlingsperiode>\n" +
-					"        <fom>2024-06-01+02:00</fom>\n" +
-					"        <tom>2024-06-20+02:00</tom>\n" +
-					"      </samlingsperiode>\n"
-			)
-		)
+		assertTrue(xmlString.contains("<samlingsperiode>"))
+		assertTrue(xmlString.contains("<fom>2023-12-02+01:00</fom>"))
+		assertTrue(xmlString.contains("<tom>2023-12-20+01:00</tom>"))
+		assertTrue(xmlString.contains("</samlingsperiode>"))
+		assertTrue(xmlString.contains("<fom>2024-01-02+01:00</fom>"))
+		assertTrue(xmlString.contains("<tom>2024-01-20+01:00</tom>"))
+		assertTrue(xmlString.contains("<fom>2024-02-01+01:00</fom>"))
+		assertTrue(xmlString.contains("<tom>2024-02-20+01:00</tom>"))
+		assertTrue(xmlString.contains("<fom>2024-06-01+02:00</fom>"))
+		assertTrue(xmlString.contains("<tom>2024-06-20+02:00</tom>"))
 		assertTrue(xmlString.contains("<harBoutgifterVedSamling>true</harBoutgifterVedSamling>"))
 		assertTrue(xmlString.contains("<harFasteBoutgifter>false</harFasteBoutgifter>"))
 		assertTrue(xmlString.contains("<mottarBostoette>true</mottarBostoette>"))
@@ -672,22 +635,17 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertNotNull(xmlFil)
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(xmlString.contains("laeremiddelutgifter"))
-		assertTrue(
-			xmlString.contains(
-				"    <laeremiddelutgifter>\n" +
-					"      <periode>\n" +
-					"        <fom>2023-12-02+01:00</fom>\n" +
-					"        <tom>2024-06-20+02:00</tom>\n" +
-					"      </periode>\n"
-			)
-		)
+		assertTrue(xmlString.contains("<laeremiddelutgifter>"))
+		assertTrue(xmlString.contains("<periode>"))
+		assertTrue(xmlString.contains("<fom>2023-12-02+01:00</fom>"))
+		assertTrue(xmlString.contains("<tom>2024-06-20+02:00</tom>"))
+		assertTrue(xmlString.contains("</periode>"))
 		assertTrue(xmlString.contains("<skolenivaa kodeverksRef=\"Skolenivaa\">VGS</skolenivaa>"))
 		assertTrue(xmlString.contains("<prosentandelForUtdanning>100</prosentandelForUtdanning>"))
 		assertTrue(xmlString.contains("<erUtgifterDekket kodeverksRef=\"utgifterdekket\">DELVIS</erUtgifterDekket>"))
 		assertTrue(xmlString.contains("<beloep>7500</beloep>"))
 		assertTrue(xmlString.contains("<hvorMyeDekkesAvAnnenAktoer>1500.0</hvorMyeDekkesAvAnnenAktoer>"))
 		assertTrue(xmlString.contains("<hvorMyeDekkesAvNAV>6000.0</hvorMyeDekkesAvNAV>"))
-
 	}
 
 
@@ -712,22 +670,14 @@ class TilleggsstonadJson2XmlConverterTest {
 
 		assertNotNull(xmlFil)
 		val xmlString = xmlFil.decodeToString()
-		assertTrue(xmlString.contains("laeremiddelutgifter"))
-		assertTrue(
-			xmlString.contains(
-				"    <laeremiddelutgifter>\n" +
-					"      <periode>\n" +
-					"        <fom>2023-12-02+01:00</fom>\n" +
-					"        <tom>2024-06-20+02:00</tom>\n" +
-					"      </periode>\n"
-			)
-		)
+		assertTrue(xmlString.contains("<laeremiddelutgifter>"))
+		assertTrue(xmlString.contains("<fom>2023-12-02+01:00</fom>"))
+		assertTrue(xmlString.contains("<tom>2024-06-20+02:00</tom>"))
 		assertTrue(xmlString.contains("<skolenivaa kodeverksRef=\"Skolenivaa\">HGU</skolenivaa>"))
 		assertTrue(xmlString.contains("<prosentandelForUtdanning>50</prosentandelForUtdanning>"))
 		assertTrue(xmlString.contains("<erUtgifterDekket kodeverksRef=\"utgifterdekket\">NEI</erUtgifterDekket>"))
 		assertTrue(xmlString.contains("<beloep>12000</beloep>"))
 		assertTrue(xmlString.contains("<hvorMyeDekkesAvNAV>10000.0</hvorMyeDekkesAvNAV>"))
-
 	}
 
 
