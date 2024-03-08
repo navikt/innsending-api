@@ -44,29 +44,48 @@ private fun convertAktivitetsinformasjon(tilleggsstonad: Application): JsonAktiv
 		null
 }
 
+fun getMaalgruppeInformasjonFromAktiviteterOgMaalgruppe(aktiviteterOgMaalgruppe: AktiviteterOgMaalgruppe?): JsonMaalgruppeinformasjon? {
+	if (aktiviteterOgMaalgruppe == null) return null
+
+	if (aktiviteterOgMaalgruppe.maalgruppe != null && (aktiviteterOgMaalgruppe.maalgruppe.calculated != null || aktiviteterOgMaalgruppe.maalgruppe.prefilled != null))
+		if (aktiviteterOgMaalgruppe.maalgruppe.calculated != null)
+			return JsonMaalgruppeinformasjon(
+				periode = getAktivitetsPeriode(aktiviteterOgMaalgruppe.aktivitet),
+				maalgruppetype = aktiviteterOgMaalgruppe.maalgruppe.calculated
+			)
+		else if (aktiviteterOgMaalgruppe.maalgruppe.prefilled != null)
+			return JsonMaalgruppeinformasjon(
+				periode = getAktivitetsPeriode(aktiviteterOgMaalgruppe.aktivitet),
+				maalgruppetype = aktiviteterOgMaalgruppe.maalgruppe.prefilled
+			)
+
+	if (aktiviteterOgMaalgruppe.aktivitet?.maalgruppe != null)
+		return JsonMaalgruppeinformasjon(
+			periode = getAktivitetsPeriode(aktiviteterOgMaalgruppe.aktivitet),
+			maalgruppetype = aktiviteterOgMaalgruppe.aktivitet.maalgruppe
+		)
+
+	return null
+}
+
+fun getAktivitetsPeriode(aktivitet: Aktivitet?): AktivitetsPeriode? {
+	if (aktivitet == null || aktivitet.periode == null) return null
+
+	return AktivitetsPeriode(startdatoDdMmAaaa = aktivitet.periode.fom, sluttdatoDdMmAaaa = aktivitet.periode.tom)
+}
+
 fun convertToJsonMaalgruppeinformasjon(tilleggsstonad: Application): JsonMaalgruppeinformasjon? { // TODO
 
-	// Bruk maalgruppeinformasjon hvis dette er hentet fra Arena og lagt inn på søknaden
-	if (tilleggsstonad.container != null && tilleggsstonad.container.maalgruppe != null
-		&& tilleggsstonad.flervalg == null
-	) {
-		return JsonMaalgruppeinformasjon(
-			kilde = (tilleggsstonad.maalgruppeKilde ?: "BRUKERDEFINERT"),
-			maalgruppetype = tilleggsstonad.container.maalgruppe,
-			periode = if (tilleggsstonad.container.aktivitet?.periode == null
-				|| tilleggsstonad.container.aktivitet.periode.fom == null
-				|| tilleggsstonad.container.aktivitet.periode.tom == null
-			)
-				null
-			else
-				AktivitetsPeriode(
-					startdatoDdMmAaaa = tilleggsstonad.container.aktivitet.periode.fom,
-					sluttdatoDdMmAaaa = tilleggsstonad.container.aktivitet.periode.tom
-				)
-		)
-	}
+	return getMaalgruppeInformasjonFromAktiviteterOgMaalgruppe(tilleggsstonad.aktiviteterOgMaalgruppe)
+		?: getMaalgruinformasjonFromLivssituasjon(tilleggsstonad.flervalg, tilleggsstonad)
+}
 
-	val livssituasjon = tilleggsstonad.flervalg
+fun getMaalgruinformasjonFromLivssituasjon(
+	livssituasjon: Flervalg?,
+	tilleggsstonad: Application
+): JsonMaalgruppeinformasjon? {
+	// Bruk maalgruppeinformasjon hvis dette er hentet fra Arena og lagt inn på søknaden
+
 	if (livssituasjon == null) return null
 
 	// Basert på søker sin spesifisering av livssituasjon, avled prioritert målgruppe
@@ -296,11 +315,23 @@ private fun convertToReisestottesoknad(
 	)
 }
 
+private fun getSelectedDate(userDate: String?, activityDate: String?, field: String): String {
+	if (userDate != null && userDate.isNotEmpty()) return userDate
+	return validateNoneNull(activityDate, field)
+}
 
 private fun convertToJsonDagligReise(tilleggsstonad: Application): JsonDagligReise {
 	return JsonDagligReise(
-		startdatoDdMmAaaa = validateNoneNull(tilleggsstonad.startdatoDdMmAaaa, "DagligReise startdato"),
-		sluttdatoDdMmAaaa = validateNoneNull(tilleggsstonad.sluttdatoDdMmAaaa, "DagligReise sluttdato"),
+		startdatoDdMmAaaa = getSelectedDate(
+			tilleggsstonad.startdatoDdMmAaaa,
+			tilleggsstonad.aktiviteterOgMaalgruppe?.aktivitet?.periode?.fom,
+			"DagligReise startdato"
+		),
+		sluttdatoDdMmAaaa = getSelectedDate(
+			tilleggsstonad.sluttdatoDdMmAaaa,
+			tilleggsstonad.aktiviteterOgMaalgruppe?.aktivitet?.periode?.tom,
+			"DagligReise sluttdato"
+		),
 		hvorMangeReisedagerHarDuPerUke = tilleggsstonad.hvorMangeReisedagerHarDuPerUke,
 		harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde = tilleggsstonad.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde, // JA | NEI,
 		hvorLangReiseveiHarDu = validateNoneNull(

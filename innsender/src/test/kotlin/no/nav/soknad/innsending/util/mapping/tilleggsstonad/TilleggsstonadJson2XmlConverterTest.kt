@@ -18,7 +18,7 @@ class TilleggsstonadJson2XmlConverterTest {
 	@Test
 	fun json2XmlTest_dagligReise() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.21B", tema = "TSO").build()
-		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/tilleggsstonad-NAV-11-12.21B.json")
+		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/dagligreise-NAV-11-12.21B-08032024.json")
 
 		val xmlFil = json2Xml(soknadDto, jsonFil)
 

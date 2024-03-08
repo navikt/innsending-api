@@ -27,7 +27,8 @@ data class Application(
 	val aktivitetsId: String? = null, // TODO mangler foreløpig i fra FyllUt
 
 	// Dersom det er hentet maalgrupper fra Arena skal den maalgruppen som har overlappende periode med hentet aktivitet sendes inn.
-	val container: Container? = null,
+	val container: AktiviteterOgMaalgruppe? = null,  // TODO erstatt med aktiviteterOgMaalgruppe
+	val aktiviteterOgMaalgruppe: AktiviteterOgMaalgruppe? = null,
 
 	val maalgruppePeriode: JsonPeriode? = null, // TODO mangler foreløpig i fra FyllUt
 	val maalgruppeKilde: String? = null, // TODO mangler foreløpig i fra FyllUt
@@ -186,19 +187,25 @@ data class Application(
 data class Aktivitet(
 	val aktivitetId: String = "ingenAktivitet",
 	val maalgruppe: String = "",
-	val periode: SkjemaPeriode? = null
-)
-
-data class Container(
-	val maalgruppe: String? = null,
-	val kilde: String? = "BRUKERREGISTRERT",
-	val aktivitet: Aktivitet? = null,
+	val periode: SkjemaPeriode? = null,
 	val text: String? = ""
 )
 
+data class AktiviteterOgMaalgruppe(
+	val maalgruppe: MaalgruppeValg? = null,
+	val kilde: String? = "BRUKERREGISTRERT",
+	val aktivitet: Aktivitet? = null,
+)
+
+
+data class MaalgruppeValg(
+	val calculated: String? = null,
+	val prefilled: String? = null
+)
+
 data class SkjemaPeriode(
-	val fom: String? = null,
-	val tom: String? = null
+	val fom: String,
+	val tom: String
 )
 
 data class BostotteIForbindelseMedSamling(

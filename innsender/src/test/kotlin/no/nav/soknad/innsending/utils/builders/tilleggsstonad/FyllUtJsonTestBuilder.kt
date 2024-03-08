@@ -33,19 +33,19 @@ class FyllUtJsonTestBuilder {
 		this.drivingListExpences = drivingListExpences
 	}
 
-	val defaultArenaAktivitetOgMaalgruppe = Container(
-		maalgruppe = "ENSFORARBS",
+	val defaultArenaAktivitetOgMaalgruppe = AktiviteterOgMaalgruppe(
+		maalgruppe = MaalgruppeValg(calculated = "ENSFORARBS"),
 		aktivitet = Aktivitet(
 			aktivitetId = "123456789",
 			maalgruppe = "",
-			periode = SkjemaPeriode(fom = "2024-01-01", tom = "2024-06-30")
+			periode = SkjemaPeriode(fom = "2024-01-01", tom = "2024-06-30"),
+			text = ""
 		),
-		text = ""
 	)
 
 	var skjemanr: String = dagligReiseSkjemanr
 	var language: String = "no-NB"
-	var arenaAktivitetOgMaalgruppe: Container? = defaultArenaAktivitetOgMaalgruppe
+	var arenaAktivitetOgMaalgruppe: AktiviteterOgMaalgruppe? = defaultArenaAktivitetOgMaalgruppe
 	var flervalg: Flervalg? = null
 
 	fun skjemanr(skjemanr: String) = apply { this.skjemanr = skjemanr }
@@ -53,10 +53,10 @@ class FyllUtJsonTestBuilder {
 
 	fun arenaAktivitetOgMaalgruppe(maalgruppe: String?, aktivitetId: String?, periode: SkjemaPeriode?) = apply {
 		if (maalgruppe != null || aktivitetId != null) {
-			arenaAktivitetOgMaalgruppe = Container(
-				maalgruppe = maalgruppe,
+			arenaAktivitetOgMaalgruppe = AktiviteterOgMaalgruppe(
+				maalgruppe = MaalgruppeValg(calculated = maalgruppe),
 				kilde = "BRUKERREGISTRERT",
-				text = "",
+				//text = "",
 				aktivitet = Aktivitet(aktivitetId = aktivitetId ?: "ingenAktivitet", maalgruppe = "", periode = periode)
 			)
 			flervalg = null
@@ -66,7 +66,7 @@ class FyllUtJsonTestBuilder {
 		}
 	}
 
-	fun arenaAktivitetOgMaalgruppe(arenaAktivitetOgMaalgruppe: Container?) = apply {
+	fun arenaAktivitetOgMaalgruppe(arenaAktivitetOgMaalgruppe: AktiviteterOgMaalgruppe?) = apply {
 		this.arenaAktivitetOgMaalgruppe = arenaAktivitetOgMaalgruppe
 		if (this.defaultArenaAktivitetOgMaalgruppe != null) this.flervalg = null
 	}
@@ -268,6 +268,7 @@ class FyllUtJsonTestBuilder {
 			data = ApplicationInfo(
 				data = Application(
 					container = arenaAktivitetOgMaalgruppe,
+					aktiviteterOgMaalgruppe = arenaAktivitetOgMaalgruppe,
 					// Dersom ikke målgruppe hentet fra Arena, skal søker oppgi livssituasjon
 					flervalg = flervalg,
 

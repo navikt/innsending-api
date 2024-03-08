@@ -177,7 +177,7 @@ data class JsonOppstartOgAvsluttetAktivitet(
 
 data class JsonMaalgruppeinformasjon(
 	val periode: AktivitetsPeriode?,
-	val kilde: String, // f.eks. BRUKERREGISTRERT
+	val kilde: String = "BRUKERREGISTRERT", // f.eks. BRUKERREGISTRERT
 	val maalgruppetype: String // f.eks. ENSFORARBS
 )
 

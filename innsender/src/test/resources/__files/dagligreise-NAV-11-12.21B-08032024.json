@@ -1,0 +1,86 @@
+{
+	"language": "nb-NO",
+	"data": {
+		"data": {
+			"flervalg": {
+				"aapUforeNedsattArbEvne": false,
+				"ensligUtdanning": true,
+				"gjenlevendeUtdanning": false,
+				"tiltakspenger": false,
+				"dagpenger": false,
+				"tidligereFamiliepleier": false,
+				"annet": false
+			},
+			"aktiviteterOgMaalgruppe": {
+				"maalgruppe": {
+					"calculated": "NEDSARBEVN",
+					"prefilled": "NEDSARBEVN"
+				},
+				"aktivitet": {
+					"aktivitetId": "142075146",
+					"maalgruppe": "NEDSARBEVN",
+					"periode": {
+						"fom": "2024-01-01",
+						"tom": "2024-08-31"
+					},
+					"text": "Arbeidstrening: 01.01.2024 - 31.08.2024"
+				}
+			},
+			"container": {
+				"maalgruppe": {
+					"calculated": "NEDSARBEVN",
+					"prefilled": "NEDSARBEVN"
+				},
+				"aktivitet": {
+					"aktivitetId": "142075146",
+					"maalgruppe": "NEDSARBEVN",
+					"periode": {
+						"fom": "2024-01-01",
+						"tom": "2024-08-31"
+					},
+					"text": "Arbeidstrening: 01.01.2024 - 31.08.2024"
+				}
+			},
+			"velgLand1": {
+				"label": "Norge",
+				"value": "NO"
+			},
+			"fornavnSoker": "Skjønn",
+			"etternavnSoker": "Lampett",
+			"postnr1": "6410",
+			"harDuNorskFodselsnummerEllerDNummer": "ja",
+			"fodselsnummerDNummerSoker": "28898698736",
+			"hvorMangeReisedagerHarDuPerUke": 5,
+			"harDuEnReiseveiPaSeksKilometerEllerMer": "ja",
+			"hvorLangReiseveiHarDu": 60,
+			"adresse1": "Kongensgate. 10",
+			"kanDuReiseKollektivtDagligReise": "nei",
+			"kanIkkeReiseKollektivtDagligReise": {
+				"hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt": "darligTransporttilbud",
+				"beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt": "fgsfdg sfdgs",
+				"kanDuBenytteEgenBil": "ja",
+				"kanBenytteEgenBil": {
+					"bompenger": 150,
+					"piggdekkavgift": 0,
+					"ferje": 0,
+					"parkering": 150,
+					"annet": 0,
+					"hvorOfteOnskerDuASendeInnKjoreliste": "jegOnskerALevereKjorelisteEnGangIManeden"
+				}
+			},
+			"tilleggsopplysninger": "ggfh gshfs"
+		},
+		"metadata": {
+			"timezone": "Europe/Oslo",
+			"offset": 60,
+			"origin": "https://skjemadelingslenke.ekstern.dev.nav.no",
+			"referrer": "https://skjemadelingslenke.ekstern.dev.nav.no/fyllut/nav111221b/paabegynt?sub=digital",
+			"browserName": "Netscape",
+			"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+			"pathName": "/fyllut/nav111221b/tilleggsopplysningerPanel",
+			"onLine": true
+		},
+		"state": "submitted",
+		"_vnote": ""
+	}
+}
