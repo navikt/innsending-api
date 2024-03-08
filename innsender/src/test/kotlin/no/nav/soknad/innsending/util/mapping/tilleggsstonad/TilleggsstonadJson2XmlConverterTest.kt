@@ -451,7 +451,8 @@ class TilleggsstonadJson2XmlConverterTest {
 
 		assertNotNull(xmlFil)
 		val xmlString = xmlFil.decodeToString()
-		assertTrue(xmlString.contains("tilsynsutgifterBarn"))
+
+		assertTrue(xmlString.contains("<tilleggsstoenadsskjema>"))
 		assertTrue(xmlString.contains("<tilsynsutgifterBarn>"))
 		assertTrue(xmlString.contains("<periode>"))
 		assertTrue(xmlString.contains("<fom>2023-12-01+01:00</fom>")) //##

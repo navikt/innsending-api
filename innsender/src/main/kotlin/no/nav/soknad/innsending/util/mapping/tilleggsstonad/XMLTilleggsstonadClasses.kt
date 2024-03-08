@@ -460,7 +460,7 @@ data class Skolenivaaer(
 	val kodeverksRef: String? = "Skolenivaa"
 )
 
-@JacksonXmlRootElement(localName = "Tilleggsstoenadsskjema")
+@JacksonXmlRootElement(localName = "tilleggsstoenadsskjema")
 @JsonPropertyOrder("aktivitetsinformasjon", "personidentifikator", "maalgruppeinformasjon", "rettighetstype")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class Tilleggsstoenadsskjema(

@@ -7,7 +7,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement
 import java.math.BigInteger
 import javax.xml.datatype.XMLGregorianCalendar
 
-@JacksonXmlRootElement(localName = "PaaloepteUtgifter")
+@JacksonXmlRootElement(localName = "paaloepteutgifter")
 @JsonPropertyOrder("vedtaksId", "utgiftsperioder")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class PaaloepteUtgifter(
