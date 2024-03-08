@@ -74,7 +74,7 @@ class FyllUtJsonTestBuilder {
 	fun flervalg(flervalg: Flervalg?) = apply {
 		this.flervalg = flervalg
 
-		if (this.flervalg == null) arenaAktivitetOgMaalgruppe = null
+		if (this.flervalg != null) arenaAktivitetOgMaalgruppe = null
 	}
 
 	var startdatoDdMmAaaa: String? = "2024-01-08"
