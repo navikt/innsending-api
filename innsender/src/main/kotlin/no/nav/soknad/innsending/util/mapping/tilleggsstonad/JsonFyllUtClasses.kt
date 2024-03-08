@@ -36,7 +36,8 @@ data class Application(
 	// TODO dersom søker har oppgitt livssituasjon fordi målgruppe mangler
 	val flervalg: Flervalg? = null,
 
-	val erDuArbeidssoker: String? = null, // true | false
+	val erDuArbeidssoker: String? = null, // true | false //TODO skal erstattes med regArbSoker
+	val regArbSoker: String? = null,
 
 	// Dersom det ikke er registrert maalgrupper i Arena for søker, må søker angi Livssituasjon.
 	// Denne skal mappes til en prioritert liste av maalgrupper, der den høyest prioriterte sendes inn.
@@ -192,7 +193,7 @@ data class Container(
 	val maalgruppe: String? = null,
 	val kilde: String? = "BRUKERREGISTRERT",
 	val aktivitet: Aktivitet? = null,
-	val text: String = ""
+	val text: String? = ""
 )
 
 data class SkjemaPeriode(

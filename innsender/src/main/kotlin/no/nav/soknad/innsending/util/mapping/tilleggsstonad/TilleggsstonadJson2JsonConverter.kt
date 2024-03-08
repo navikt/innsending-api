@@ -131,11 +131,19 @@ fun convertToJsonMaalgruppeinformasjon(tilleggsstonad: Application): JsonMaalgru
 		return JsonMaalgruppeinformasjon(periode = null, kilde = "BRUKERREGISTRERT", maalgruppetype = "MOTDAGPEN")
 
 	// Pri 9
-	if (livssituasjon.regArbSoker || "ja".equals(tilleggsstonad.erDuArbeidssoker, true))
+	if (livssituasjon.regArbSoker || "ja".equals(
+			tilleggsstonad.erDuArbeidssoker,
+			true
+		) || "ja".equals(tilleggsstonad.regArbSoker, true)
+	)
 		return JsonMaalgruppeinformasjon(periode = null, kilde = "BRUKERREGISTRERT", maalgruppetype = "ARBSOKERE")
 
 	// Pri 10
-	if (livssituasjon.annet || "nei".equals(tilleggsstonad.erDuArbeidssoker, true))
+	if (livssituasjon.annet || "nei".equals(
+			tilleggsstonad.erDuArbeidssoker,
+			true
+		) || "nei".equals(tilleggsstonad.regArbSoker, true)
+	)
 		return JsonMaalgruppeinformasjon(
 			periode = null,
 			kilde = "BRUKERREGISTRERT",
