@@ -68,7 +68,9 @@ fun convertToAktivitetsinformasjon(jsonAktivitetsInformasjon: JsonAktivitetsInfo
 fun convertToMaalgruppeinformasjon(jsonMaalgruppeinformasjon: JsonMaalgruppeinformasjon?): Maalgruppeinformasjon? {
 	return if (jsonMaalgruppeinformasjon != null) {
 		Maalgruppeinformasjon(
-			periode = if (jsonMaalgruppeinformasjon.periode != null)
+			periode = if (jsonMaalgruppeinformasjon.periode != null
+				&& jsonMaalgruppeinformasjon.periode.startdatoDdMmAaaa.isNotBlank() && jsonMaalgruppeinformasjon.periode.sluttdatoDdMmAaaa.isNotBlank()
+			)
 				Periode(
 					fom = convertToDateStringWithTimeZone(jsonMaalgruppeinformasjon.periode.startdatoDdMmAaaa),
 					tom = convertToDateStringWithTimeZone(jsonMaalgruppeinformasjon.periode.sluttdatoDdMmAaaa)
