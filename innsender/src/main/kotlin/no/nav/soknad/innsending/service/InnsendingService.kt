@@ -17,14 +17,17 @@ import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.mapping.*
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.*
 import no.nav.soknad.innsending.util.models.erEttersending
 import no.nav.soknad.innsending.util.models.hovedDokument
+import no.nav.soknad.innsending.util.models.hoveddokumentVariant
 import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import no.nav.soknad.pdfutilities.AntallSider
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
 import java.util.*
@@ -46,6 +49,25 @@ class InnsendingService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
+	private val tilleggsstonadSkjema =
+		listOf(
+			/* Gamle tilleggsstønadsnummere
+						"NAV 11-12.10", kjøreliste - TSO
+						"NAV 11-12.11", kjøreliste - TSR
+						"NAV 11-12.12", tilleggsstønad -TSO
+						"NAV 11-12.13", tilleggstønad -TSR
+						"NAV 11-12.14", tilleggsstønad -TSO
+			*/
+			"NAV 11-12.15B", // Støtte til Barnepass
+			"NAV 11-12.16B", // Støtte til Læremidler
+			"NAV 11-12.17B", // Støtte til samling
+			"NAV 11-12.18B", // Støtte til ved oppstart, avslutning eller hjemreiser
+			"NAV 11-12.19B", // Støtte til bolig og overnatting
+			"NAV 11-12.21B", // Støtte til daglig reise
+			"NAV 11-12.22B", // Støtte til reise for å komme i arbeid
+			"NAV 11-12.23B", // Støtte til flytting
+		)
+
 	@Transactional
 	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto): Pair<List<VedleggDto>, List<VedleggDto>> {
 		val operation = InnsenderOperation.SEND_INN.name
@@ -61,11 +83,17 @@ class InnsendingService(
 		// Dato og opplastingsstatus settes på alle vedlegg som er endret
 		// Merk at dersom det ikke er lastet opp filer på et obligatorisk vedlegg, skal status settes SENDES_SENERE. Dette vil trigge oppretting av ettersendingssøknad
 		val soknadDto = if (soknadDtoInput.erEttersending)
-			opprettOgLagreDummyHovedDokument(soknadDtoInput)
-		else
-			soknadDtoInput
+			addDummyHovedDokumentToSoknad(soknadDtoInput)
+		else {
 
-		// Finn alle vedlegg med korrekt status i forhold til hvem som skal sendes inn
+			if (isTilleggsstonad(soknadDtoInput)) {
+				addXmlDokumentvariantToSoknad(soknadDtoInput)
+			} else {
+				soknadDtoInput
+			}
+		}
+
+		// Finn alle vedlegg med korrekt status i forhold til hva som skal sendes inn
 		val alleVedlegg: List<VedleggDto> = filService.ferdigstillVedleggsFiler(soknadDto)
 
 		val opplastedeVedlegg = alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
@@ -155,6 +183,91 @@ class InnsendingService(
 		return Pair(opplastedeVedlegg, missingRequiredVedlegg)
 	}
 
+	private fun isTilleggsstonad(soknadDto: DokumentSoknadDto): Boolean {
+		if ("TSO".equals(soknadDto.tema, true) || "TSR".equals(soknadDto.tema, true)) {
+			logger.debug("${soknadDto.innsendingsId}: Skal sjekke om generering av XML for Tilleggstonad med skjemanummer ${soknadDto.skjemanr}")
+			return tilleggsstonadSkjema.contains(soknadDto.skjemanr)
+		}
+		return false
+	}
+
+	private fun addXmlDokumentvariantToSoknad(soknadDto: DokumentSoknadDto): DokumentSoknadDto {
+		try {
+			val jsonVariant = soknadDto.hoveddokumentVariant
+			if (jsonVariant == null) {
+				logger.warn("${soknadDto.innsendingsId!!}: Json variant av hoveddokument mangler")
+				throw BackendErrorException("${soknadDto.innsendingsId}: json fil av søknaden mangler")
+			}
+
+			// Create dokumentDto for xml variant of main document
+			val xmlDocumentVariant = vedleggService.lagreNyHoveddokumentVariant(soknadDto, Mimetype.applicationSlashXml)
+			logger.info("${soknadDto.innsendingsId}: Lagt til xmlVedlegg på vedleggsId = ${xmlDocumentVariant.id}")
+
+			val jsonFil = filService.hentFiler(
+				soknadDto = soknadDto,
+				innsendingsId = soknadDto.innsendingsId!!,
+				vedleggsId = jsonVariant.id!!,
+				medFil = true
+			).first().data
+
+			val jsonObj: JsonApplication<*>
+			val xmlFile: ByteArray
+			if (soknadDto.skjemanr == "NAV 11.12.10" || soknadDto.skjemanr == "NAV 11.12.11") {
+				jsonObj = convertToJsonDrivingListJson(soknadDto = soknadDto, jsonFil)
+				xmlFile = json2Xml(jsonObj, soknadDto)
+			} else {
+				jsonObj = convertToJsonTilleggsstonad(soknadDto = soknadDto, jsonFil)
+				xmlFile = json2Xml(soknadDto = soknadDto, tilleggstonadJsonObj = jsonObj)
+			}
+
+			// Persist created xml file
+			filService.lagreFil(
+				soknadService.hentSoknad(soknadDto.innsendingsId!!),
+				FilDto(
+					vedleggsid = xmlDocumentVariant.id!!,
+					filnavn = soknadDto.skjemanr + ".xml",
+					mimetype = Mimetype.applicationSlashXml,
+					storrelse = xmlFile.size,
+					data = xmlFile,
+					opprettetdato = OffsetDateTime.now()
+				)
+			)
+			// Update state of json variant
+			vedleggService.endreVedleggStatus(
+				soknadDto,
+				jsonVariant.id!!,
+				OpplastingsStatusDto.sendesIkke
+			)
+
+			if (jsonObj.applicationDetails is JsonTilleggsstonad)
+				sjekkOgOppdaterTema(soknadDto, jsonObj.applicationDetails.maalgruppeinformasjon)
+
+			return soknadService.hentSoknad(soknadDto.innsendingsId!!)
+		} catch (ex: Exception) {
+			throw BackendErrorException("${soknadDto.innsendingsId}: Konvertering av JSON til XML feilet", ex)
+		}
+	}
+
+	private fun sjekkOgOppdaterTema(soknadDto: DokumentSoknadDto, maalgruppeInformasjon: JsonMaalgruppeinformasjon?) {
+		val relevanteSkjemaNrForTsr = listOf(
+			"NAV 11-12.18B", // Støtte til ved oppstart, avslutning eller hjemreiser
+			"NAV 11-12.21B", // Støtte til daglig reise
+			"NAV 11-12.22B", // Støtte til reise for å komme i arbeid
+		)
+		val relevanteMaalgrupperForTsr = listOf(
+			MaalgruppeType.ARBSOKERE.name,
+			MaalgruppeType.MOTDAGPEN.name,
+			MaalgruppeType.MOTTILTPEN.name,
+			MaalgruppeType.ANNET.name
+		)
+		if (!relevanteSkjemaNrForTsr.contains(soknadDto.skjemanr)) return
+
+		if (!relevanteMaalgrupperForTsr.contains(maalgruppeInformasjon?.maalgruppetype)) return
+
+		repo.endreTema(soknadDto.id!!, soknadDto.innsendingsId!!, "TSR")
+	}
+
+
 	private fun validerAtSoknadHarEndringSomKanSendesInn(
 		soknadDto: DokumentSoknadDto,
 		opplastedeVedlegg: List<VedleggDto>,
@@ -201,7 +314,7 @@ class InnsendingService(
 		}
 	}
 
-	@Transactional
+	@Transactional(isolation = Isolation.READ_UNCOMMITTED)
 	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): KvitteringsDto {
 		val operation = InnsenderOperation.SEND_INN.name
 		val startSendInn = System.currentTimeMillis()
@@ -268,7 +381,7 @@ class InnsendingService(
 		return kvitteringsVedleggDto.copy(id = kvitteringsVedlegg.id)
 	}
 
-	private fun opprettOgLagreDummyHovedDokument(soknadDto: DokumentSoknadDto): DokumentSoknadDto {
+	private fun addDummyHovedDokumentToSoknad(soknadDto: DokumentSoknadDto): DokumentSoknadDto {
 		val operation = InnsenderOperation.SEND_INN.name
 
 		// Hvis ettersending, så må det genereres et dummy hoveddokument

@@ -15,7 +15,10 @@ import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SoknadFile
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
+import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.lagDokumentSoknad
+import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.lagVedlegg
 import no.nav.soknad.innsending.utils.SoknadAssertions
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
@@ -328,4 +331,132 @@ class InnsendingServiceTest : ApplicationTest() {
 	}
 
 
+	@Test
+	fun sendInnTilleggssoknad_dagligreise() {
+		val innsendingService = lagInnsendingService(soknadService)
+		val hoveddokDto = lagVedlegg(
+			vedleggsnr = "NAV 11-12.21B",
+			tittel = "Tilleggssoknad",
+			erHoveddokument = true,
+			erVariant = false,
+			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			vedleggsNavn = "/litenPdf.pdf"
+		)
+		val hoveddokVariantDto = lagVedlegg(
+			vedleggsnr = "NAV 11-12.21B",
+			tittel = "Tilleggssoknad",
+			erHoveddokument = true,
+			erVariant = true,
+			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			vedleggsNavn = "/__files/tilleggsstonad-NAV-11-12.21B.json"
+		)
+		val inputDokumentSoknadDto = lagDokumentSoknad(
+			skjemanr = "NAV 11-12.21B",
+			tittel = "Tilleggssoknad",
+			brukerId = testpersonid,
+			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
+			spraak = "no_NB",
+			tema = "TSO"
+		)
+		val skjemaDto =
+			SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService = soknadService, inputDokumentSoknadDto)
+
+		val opprettetSoknad = soknadService.hentSoknad(skjemaDto.innsendingsId!!)
+		val kvitteringsDto =
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				soknadsmottakerAPI,
+				opprettetSoknad,
+				innsendingService
+			)
+		assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
+		assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+	}
+
+
+	@Test
+	fun sendInnTilleggssoknad_bostotte() {
+		val innsendingService = lagInnsendingService(soknadService)
+		val skjemaNr = "NAV 11-12.19B"
+		val hoveddokDto = lagVedlegg(
+			vedleggsnr = skjemaNr,
+			tittel = "Tilleggssoknad",
+			erHoveddokument = true,
+			erVariant = false,
+			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			vedleggsNavn = "/litenPdf.pdf"
+		)
+		val hoveddokVariantDto = lagVedlegg(
+			vedleggsnr = skjemaNr,
+			tittel = "Tilleggssoknad",
+			erHoveddokument = true,
+			erVariant = true,
+			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			vedleggsNavn = "/__files/tilleggsstonad-NAV-11-12.19B.json"
+		)
+		val inputDokumentSoknadDto = lagDokumentSoknad(
+			skjemanr = skjemaNr,
+			tittel = "Tilleggssoknad",
+			brukerId = testpersonid,
+			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
+			spraak = "no_NB",
+			tema = "TSO"
+		)
+		val skjemaDto =
+			SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService = soknadService, inputDokumentSoknadDto)
+
+		val opprettetSoknad = soknadService.hentSoknad(skjemaDto.innsendingsId!!)
+		val kvitteringsDto =
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				soknadsmottakerAPI,
+				opprettetSoknad,
+				innsendingService
+			)
+		assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
+		assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+	}
+
+	@Test
+	fun sendInnTilleggssoknad_bostotte_samling() {
+		val innsendingService = lagInnsendingService(soknadService)
+		val skjemaNr = "NAV 11-12.19B"
+		val hoveddokDto = lagVedlegg(
+			vedleggsnr = skjemaNr,
+			tittel = "Tilleggssoknad",
+			erHoveddokument = true,
+			erVariant = false,
+			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			vedleggsNavn = "/litenPdf.pdf"
+		)
+		val hoveddokVariantDto = lagVedlegg(
+			vedleggsnr = skjemaNr,
+			tittel = "Tilleggssoknad",
+			erHoveddokument = true,
+			erVariant = true,
+			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			vedleggsNavn = "/__files/tilleggsstonad-NAV-11-12.19B-samling.json"
+		)
+		val inputDokumentSoknadDto = lagDokumentSoknad(
+			skjemanr = skjemaNr,
+			tittel = "Tilleggssoknad",
+			brukerId = testpersonid,
+			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
+			spraak = "no_NB",
+			tema = "TSO"
+		)
+		val skjemaDto =
+			SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService = soknadService, inputDokumentSoknadDto)
+
+		val opprettetSoknad = soknadService.hentSoknad(skjemaDto.innsendingsId!!)
+		val kvitteringsDto =
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				soknadsmottakerAPI,
+				opprettetSoknad,
+				innsendingService
+			)
+		assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
+		assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+	}
 }

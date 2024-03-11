@@ -51,6 +51,7 @@ class FyllutRestApi(
 			"Skal opprette søknad fra FyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}",
 			brukerId
 		)
+
 		soknadService.loggWarningVedEksisterendeSoknad(brukerId, skjemaDto.skjemanr)
 
 		val opprettetSoknad = soknadService.opprettNySoknad(

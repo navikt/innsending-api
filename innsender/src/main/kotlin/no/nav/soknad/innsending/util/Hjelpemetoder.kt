@@ -32,3 +32,4 @@ fun finnBackupLanguage(wanted: String): String {
 fun maskerFnr(soknad: Soknad): Soknad {
 	return Soknad(soknad.innsendingId, soknad.erEttersendelse, personId = "*****", soknad.tema, soknad.dokumenter)
 }
+
