@@ -120,7 +120,7 @@ data class Application(
 	val reisedatoDdMmAaaa: String? = null,
 	val hvorforReiserDuArbeidssoker: String? = null, // oppfolgingFraNav | jobbintervju | arbeidPaNyttSted
 	val dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis: String? = null, // Ja | nei
-	val mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene: String? = null, // ja|nei
+	val mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene: String? = "nei", // ja|nei
 	val harMottattDagpengerSiste6Maneder: HarMottattDagpengerSiste6Maneder? = null, // hvis mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene == ja
 	val hvorLangReiseveiHarDu3: Int? = null,
 	val velgLandArbeidssoker: VelgLand? = null,
@@ -224,16 +224,20 @@ data class Dates(
 )
 
 data class Flervalg(
-	val aapUforeNedsattArbEvne: Boolean = false,
-	val ensligUtdanning: Boolean = false,
-	val ensligArbSoker: Boolean = false,
-	val gjenlevendeUtdanning: Boolean = false,
-	val gjenlevendeArbSoker: Boolean = false,
-	val tiltakspenger: Boolean = false,
-	val dagpenger: Boolean = false,
-	val regArbSoker: Boolean = false,
-	val tidligereFamiliepleier: Boolean = false,
-	val annet: Boolean = false
+	val nedsattArbeidsevneInkludererArbeidsavklaringspengerOgUforeftrygd: Boolean? = false,
+	val ensligForsorgerOvergangsstonad: Boolean? = false,
+	val gjenlevendeEktefelleOmstillingsstonad: Boolean? = false,
+	val arbeidssoker: Boolean? = false,
+	val aapUforeNedsattArbEvne: Boolean? = false,
+	val ensligUtdanning: Boolean? = false,
+	val ensligArbSoker: Boolean? = false,
+	val gjenlevendeUtdanning: Boolean? = false,
+	val gjenlevendeArbSoker: Boolean? = false,
+	val tiltakspenger: Boolean? = false,
+	val dagpenger: Boolean? = false,
+	val regArbSoker: Boolean? = false,
+	val tidligereFamiliepleier: Boolean? = false,
+	val annet: Boolean? = false
 )
 
 data class HvilkeAdresserHarDuBoutgifterPa(

@@ -90,7 +90,7 @@ fun getMaalgruinformasjonFromLivssituasjon(
 
 	// Basert på søker sin spesifisering av livssituasjon, avled prioritert målgruppe
 	// Pri 1
-	if (livssituasjon.aapUforeNedsattArbEvne)
+	if (livssituasjon.aapUforeNedsattArbEvne == true)
 		return JsonMaalgruppeinformasjon(
 			periode = null,
 			kilde = "BRUKERREGISTRERT",
@@ -98,7 +98,7 @@ fun getMaalgruinformasjonFromLivssituasjon(
 		)
 
 	// Pri 2
-	if (livssituasjon.ensligUtdanning)
+	if (livssituasjon.ensligUtdanning == true)
 		return JsonMaalgruppeinformasjon(
 			periode = null,
 			kilde = "BRUKERREGISTRERT",
@@ -106,7 +106,7 @@ fun getMaalgruinformasjonFromLivssituasjon(
 		)
 
 	// Pri 3
-	if (livssituasjon.ensligArbSoker)
+	if (livssituasjon.ensligArbSoker == true)
 		return JsonMaalgruppeinformasjon(
 			periode = null,
 			kilde = "BRUKERREGISTRERT",
@@ -114,7 +114,7 @@ fun getMaalgruinformasjonFromLivssituasjon(
 		)
 
 	// Pri 4
-	if (livssituasjon.tidligereFamiliepleier)
+	if (livssituasjon.tidligereFamiliepleier == true)
 		return JsonMaalgruppeinformasjon(
 			periode = null,
 			kilde = "BRUKERREGISTRERT",
@@ -122,7 +122,7 @@ fun getMaalgruinformasjonFromLivssituasjon(
 		)
 
 	// Pri 5
-	if (livssituasjon.gjenlevendeUtdanning)
+	if (livssituasjon.gjenlevendeUtdanning == true)
 		return JsonMaalgruppeinformasjon(
 			periode = null,
 			kilde = "BRUKERREGISTRERT",
@@ -130,7 +130,7 @@ fun getMaalgruinformasjonFromLivssituasjon(
 		)
 
 	// Pri 6
-	if (livssituasjon.gjenlevendeArbSoker)
+	if (livssituasjon.gjenlevendeArbSoker == true)
 		return JsonMaalgruppeinformasjon(
 			periode = null,
 			kilde = "BRUKERREGISTRERT",
@@ -138,7 +138,7 @@ fun getMaalgruinformasjonFromLivssituasjon(
 		)
 
 	// Pri 7
-	if (livssituasjon.tiltakspenger)
+	if (livssituasjon.tiltakspenger == true)
 		return JsonMaalgruppeinformasjon(
 			periode = null,
 			kilde = "BRUKERREGISTRERT",
@@ -146,11 +146,11 @@ fun getMaalgruinformasjonFromLivssituasjon(
 		)
 
 	// Pri 8
-	if (livssituasjon.dagpenger)
+	if (livssituasjon.dagpenger == true)
 		return JsonMaalgruppeinformasjon(periode = null, kilde = "BRUKERREGISTRERT", maalgruppetype = "MOTDAGPEN")
 
 	// Pri 9
-	if (livssituasjon.regArbSoker || "ja".equals(
+	if (livssituasjon.regArbSoker == true || "ja".equals(
 			tilleggsstonad.erDuArbeidssoker,
 			true
 		) || "ja".equals(tilleggsstonad.regArbSoker, true)
@@ -158,7 +158,7 @@ fun getMaalgruinformasjonFromLivssituasjon(
 		return JsonMaalgruppeinformasjon(periode = null, kilde = "BRUKERREGISTRERT", maalgruppetype = "ARBSOKERE")
 
 	// Pri 10
-	if (livssituasjon.annet || "nei".equals(
+	if (livssituasjon.annet == true || "nei".equals(
 			tilleggsstonad.erDuArbeidssoker,
 			true
 		) || "nei".equals(tilleggsstonad.regArbSoker, true)
