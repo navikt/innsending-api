@@ -233,6 +233,13 @@ paths:
         description: "Henter aktiviteter fra Arena for bruker. Dokumentasjon: (https://confluence.adeo.no/display/ARENA/Arena+-+Tjeneste+REST+-+Tilleggsstoenad+API)"
         operationId: fyllUtAktiviteter
 
+        parameters:
+          - name: type
+            in: query
+            description: Type 'aktivitet' returnerer en ufiltrert aktivitetsliste for bruker mens 'dagligreise' er aktivitetsliste kun daglig reise-vedtak. Sistnevnte gir også saksinformasjon (med vedtak) for daglig reise.
+            schema:
+              $ref: "./../../../../external-api/src/main/resources/arena-api.yml#/components/schemas/AktivitetType"
+
         responses:
           '200':
             description: Liste av aktiviteter for bruker. Målgruppen er den høyeste prioriterte målgruppen som overlapper samme periode.

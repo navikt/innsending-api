@@ -5,12 +5,7 @@ import no.nav.soknad.innsending.api.FyllutApi
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
-import no.nav.soknad.innsending.model.Aktivitet
-import no.nav.soknad.innsending.model.BodyStatusResponseDto
-import no.nav.soknad.innsending.model.DokumentSoknadDto
-import no.nav.soknad.innsending.model.PrefillData
-import no.nav.soknad.innsending.model.SkjemaDto
-import no.nav.soknad.innsending.model.SoknadType
+import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.ArenaService
@@ -253,11 +248,11 @@ class FyllutRestApi(
 		return ResponseEntity.status(HttpStatus.OK).body(soknader)
 	}
 
-	override fun fyllUtAktiviteter(): ResponseEntity<List<Aktivitet>> {
+	override fun fyllUtAktiviteter(type: AktivitetType?): ResponseEntity<List<Aktivitet>> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
-		combinedLogger.log("Kall fra FyllUt for å hente aktiviteter", brukerId)
+		combinedLogger.log("Kall fra FyllUt for å hente aktiviteter med type: $type", brukerId)
 
-		val aktivteter = arenaService.getAktiviteterWithMaalgrupper()
+		val aktivteter = arenaService.getAktiviteterWithMaalgrupper(type ?: AktivitetType.aktivitet)
 		return ResponseEntity.status(HttpStatus.OK).body(aktivteter)
 	}
 

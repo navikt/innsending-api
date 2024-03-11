@@ -12,12 +12,52 @@ tags:
   - name: Tilleggsstonader
     description: API for å hente tilleggsstønader for personer.
 paths:
+  /api/v1/tilleggsstoenad/aktiviteter:
+      get:
+        tags:
+          - Tilleggsstonader
+        summary: Finner aktivitetene til en person.
+        operationId: getAktiviteter
+        parameters:
+          - name: fom
+            in: query
+            description: Fra-og-med dato (yyyy-MM-dd).
+            required: true
+            schema:
+              type: string
+          - name: tom
+            in: query
+            description: 'Til-og-med dato (yyyy-MM-dd). Default: 60 dager frem i tid.'
+            required: false
+            schema:
+              type: string
+        responses:
+          '200':
+            description: OK - Returnerer aktivitetene som ble funnet; en tom liste dersom ingen ble funnet.
+            content:
+              application/json;charset=UTF-8:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Aktivitet'
+          '400':
+            description: |-
+              - Ugyldig eller manglende input i forespørselen.
+              - Fødselsnummeret finnes ikke i Arena.
+          '401':
+            description: |-
+              - Ugyldig eller manglende aksesstoken.
+              - Applikasjonen/servicebruker er ikke preautorisert til å kalle tjenesten.
+          '403':
+            description: Konsumenten har ikke tilgang til ressursen.
+          '500':
+            description: Teknisk feil.
   /api/v1/tilleggsstoenad/dagligreise:
     get:
       tags:
         - Tilleggsstonader
       summary: Finner aktiviteter med sak, vedtak og betalingsplaner for daglige reiser til en person.
-      operationId: getAktiviteter
+      operationId: getAktiviteterDagligreise
       parameters:
         - name: fom
           in: query
@@ -146,6 +186,10 @@ components:
           description: Informasjon om saken
         maalgruppe:
           $ref: '#/components/schemas/MaalgruppeType'
+    AktivitetType:
+      type: string
+      enum: [ "aktivitet", "dagligreise" ]
+      example: "aktivitet"
 
     ApiError:
       type: object
