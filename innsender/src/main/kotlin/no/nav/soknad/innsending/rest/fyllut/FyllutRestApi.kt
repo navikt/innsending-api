@@ -249,11 +249,11 @@ class FyllutRestApi(
 		return ResponseEntity.status(HttpStatus.OK).body(soknader)
 	}
 
-	override fun fyllUtAktiviteter(): ResponseEntity<List<Aktivitet>> {
+	override fun fyllUtAktiviteter(type: AktivitetType?): ResponseEntity<List<Aktivitet>> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
-		combinedLogger.log("Kall fra FyllUt for å hente aktiviteter", brukerId)
+		combinedLogger.log("Kall fra FyllUt for å hente aktiviteter med type: $type", brukerId)
 
-		val aktivteter = arenaService.getAktiviteterWithMaalgrupper()
+		val aktivteter = arenaService.getAktiviteterWithMaalgrupper(type ?: AktivitetType.aktivitet)
 		return ResponseEntity.status(HttpStatus.OK).body(aktivteter)
 	}
 

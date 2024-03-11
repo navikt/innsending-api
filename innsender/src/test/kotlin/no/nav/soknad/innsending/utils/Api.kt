@@ -216,11 +216,11 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 	}
 
-	fun getAktiviteter(): ResponseEntity<List<Aktivitet>>? {
+	fun getAktiviteter(type: AktivitetType): ResponseEntity<List<Aktivitet>>? {
 		val responseType = object : ParameterizedTypeReference<List<Aktivitet>>() {}
 
 		return restTemplate.exchange(
-			"${baseUrl}/fyllUt/v1/aktiviteter",
+			"${baseUrl}/fyllUt/v1/aktiviteter?type=${type.value}",
 			HttpMethod.GET,
 			createHttpEntity(null),
 			responseType

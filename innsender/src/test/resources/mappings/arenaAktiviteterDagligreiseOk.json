@@ -1,0 +1,75 @@
+{
+	"request": {
+		"urlPattern": "/arena-api/api/v1/tilleggsstoenad/dagligreise.*",
+		"method": "GET",
+		"queryParameters": {
+			"fom": {
+				"matches": ".*"
+			},
+			"tom": {
+				"matches": ".*"
+			}
+		}
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": [
+			{
+				"aktivitetId": "130892484",
+				"aktivitetstype": "ARBTREN",
+				"aktivitetsnavn": "Arbeidstrening",
+				"periode": {
+					"fom": "2020-05-04",
+					"tom": "2023-06-30"
+				},
+				"antallDagerPerUke": 5,
+				"prosentAktivitetsdeltakelse": 100,
+				"aktivitetsstatus": "FULLF",
+				"aktivitetsstatusnavn": "Fullført",
+				"erStoenadsberettigetAktivitet": true,
+				"erUtdanningsaktivitet": false,
+				"arrangoer": "MOELV BIL & CARAVAN AS",
+				"saksinformasjon": {
+					"saksnummerArena": "12837895",
+					"sakstype": "TSR",
+					"vedtaksinformasjon": [
+						{
+							"vedtakId": "34359921",
+							"dagsats": 63,
+							"periode": {
+								"fom": "2020-06-06",
+								"tom": "2020-12-31"
+							},
+							"trengerParkering": false,
+							"betalingsplan": [
+								{
+									"betalingsplanId": "14514540",
+									"beloep": 315,
+									"utgiftsperiode": {
+										"fom": "2020-06-06",
+										"tom": "2020-06-12"
+									},
+									"journalpostId": "480716180"
+								},
+								{
+									"betalingsplanId": "14514541",
+									"beloep": 315,
+									"utgiftsperiode": {
+										"fom": "2020-06-13",
+										"tom": "2020-06-19"
+									},
+									"journalpostId": "480716180"
+								}
+							]
+						}
+					]
+				}
+			}
+		]
+	}
+}
+
+
