@@ -20,8 +20,10 @@ class ArenaService(private val arenaConsumer: ArenaConsumerInterface) {
 
 		logger.info("Hentet aktiviteter og målgrupper fra Arena. Målgrupper: ${maalgrupper.map { it.maalgruppetype }}, aktiviteter: ${aktiviteter.map { it.aktivitetstype }}")
 
-		aktiviteter.map { aktivitet ->
-			aktivitet.copy(maalgruppe = MaalgruppeUtils.getPrioritzedMaalgruppeFromAktivitet(maalgrupper, aktivitet))
-		}
+		aktiviteter
+			.filter { it.erStoenadsberettigetAktivitet == true }
+			.map { aktivitet ->
+				aktivitet.copy(maalgruppe = MaalgruppeUtils.getPrioritzedMaalgruppeFromAktivitet(maalgrupper, aktivitet))
+			}
 	}
 }
