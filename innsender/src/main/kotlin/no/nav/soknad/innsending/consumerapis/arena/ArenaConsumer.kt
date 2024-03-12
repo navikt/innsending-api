@@ -3,7 +3,9 @@ package no.nav.soknad.innsending.consumerapis.arena
 import no.nav.soknad.innsending.api.MaalgrupperApi
 import no.nav.soknad.innsending.api.TilleggsstonaderApi
 import no.nav.soknad.innsending.config.RestConfig
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.Aktivitet
+import no.nav.soknad.innsending.model.AktivitetEndepunkt
 import no.nav.soknad.innsending.model.Maalgruppe
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import okhttp3.OkHttpClient
@@ -54,14 +56,22 @@ class ArenaConsumer(
 		return maalgrupper
 	}
 
-	override fun getAktiviteter(): List<Aktivitet> {
+	override fun getAktiviteter(aktivitetEndepunkt: AktivitetEndepunkt): List<Aktivitet> {
 		val userId = subjectHandler.getUserIdFromToken()
 
 		logger.info("Henter aktiviteter")
 		secureLogger.info("[{}] Henter aktiviteter", userId)
 
 		val aktiviteter = try {
-			tilleggsstonaderApi.getAktiviteter(fromDate.toString(), toDate.toString())
+			when (aktivitetEndepunkt) {
+				AktivitetEndepunkt.aktivitet -> tilleggsstonaderApi.getAktiviteter(fromDate.toString(), toDate.toString())
+				AktivitetEndepunkt.dagligreise -> tilleggsstonaderApi.getAktiviteterDagligreise(
+					fromDate.toString(),
+					toDate.toString()
+				)
+
+				else -> throw BackendErrorException("Ukjent aktivitetstype")
+			}
 		} catch (ex: ClientException) {
 			logger.warn("Klientfeil ved henting av aktiviteter", ex)
 			return emptyList()

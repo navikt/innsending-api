@@ -40,12 +40,7 @@ import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.util.LinkedMultiValueMap
 import java.util.*
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 
 class FyllutRestApiTest : ApplicationTest() {
@@ -667,7 +662,33 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should return aktiviteter from Arena`() {
 		// When
-		val response = api?.getAktiviteter()
+		val response = api?.getAktiviteter(AktivitetEndepunkt.aktivitet)
+
+		// Then
+		assertTrue(response != null)
+		assertEquals(200, response.statusCode.value())
+
+		val aktivitet = response.body!!.first()
+		assertEquals(MaalgruppeType.NEDSARBEVN, aktivitet.maalgruppe)
+		assertEquals("130892484", aktivitet.aktivitetId)
+		assertEquals("ARBTREN", aktivitet.aktivitetstype)
+		assertEquals("Arbeidstrening", aktivitet.aktivitetsnavn)
+		assertEquals("2020-05-04", aktivitet.periode.fom.toString())
+		assertEquals("2023-06-30", aktivitet.periode.tom.toString())
+		assertEquals(5, aktivitet.antallDagerPerUke)
+		assertEquals(100, aktivitet.prosentAktivitetsdeltakelse)
+		assertEquals("FULLF", aktivitet.aktivitetsstatus)
+		assertEquals("Fullført", aktivitet.aktivitetsstatusnavn)
+		assertEquals(true, aktivitet.erStoenadsberettigetAktivitet)
+		assertEquals(false, aktivitet.erUtdanningsaktivitet)
+		assertEquals("MOELV BIL & CARAVAN AS", aktivitet.arrangoer)
+		assertNull(aktivitet.saksinformasjon)
+	}
+
+	@Test
+	fun `Should return daglig reise aktiviteter from Arena`() {
+		// When
+		val response = api?.getAktiviteter(AktivitetEndepunkt.dagligreise)
 
 		// Then
 		assertTrue(response != null)

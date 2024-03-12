@@ -5,12 +5,7 @@ import no.nav.soknad.innsending.api.FyllutApi
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
-import no.nav.soknad.innsending.model.Aktivitet
-import no.nav.soknad.innsending.model.BodyStatusResponseDto
-import no.nav.soknad.innsending.model.DokumentSoknadDto
-import no.nav.soknad.innsending.model.PrefillData
-import no.nav.soknad.innsending.model.SkjemaDto
-import no.nav.soknad.innsending.model.SoknadType
+import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.ArenaService
@@ -253,12 +248,13 @@ class FyllutRestApi(
 		return ResponseEntity.status(HttpStatus.OK).body(soknader)
 	}
 
-	override fun fyllUtAktiviteter(): ResponseEntity<List<Aktivitet>> {
+	override fun fyllUtAktiviteter(dagligreise: Boolean): ResponseEntity<List<Aktivitet>> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
-		combinedLogger.log("Kall fra FyllUt for å hente aktiviteter", brukerId)
+		combinedLogger.log("Kall fra FyllUt for å hente aktiviteter med type: $dagligreise", brukerId)
 
-		val aktivteter = arenaService.getAktiviteterWithMaalgrupper()
-		return ResponseEntity.status(HttpStatus.OK).body(aktivteter)
+		val aktivitetEndepunkt = if (dagligreise) AktivitetEndepunkt.dagligreise else AktivitetEndepunkt.aktivitet
+		val aktiviteter = arenaService.getAktiviteterWithMaalgrupper(aktivitetEndepunkt)
+		return ResponseEntity.status(HttpStatus.OK).body(aktiviteter)
 	}
 
 	private fun validerSoknadsTilgang(dokumentSoknadDto: DokumentSoknadDto) {
