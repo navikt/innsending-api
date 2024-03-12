@@ -249,12 +249,13 @@ class FyllutRestApi(
 		return ResponseEntity.status(HttpStatus.OK).body(soknader)
 	}
 
-	override fun fyllUtAktiviteter(type: AktivitetType?): ResponseEntity<List<Aktivitet>> {
+	override fun fyllUtAktiviteter(dagligreise: Boolean): ResponseEntity<List<Aktivitet>> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
-		combinedLogger.log("Kall fra FyllUt for å hente aktiviteter med type: $type", brukerId)
+		combinedLogger.log("Kall fra FyllUt for å hente aktiviteter med type: $dagligreise", brukerId)
 
-		val aktivteter = arenaService.getAktiviteterWithMaalgrupper(type ?: AktivitetType.aktivitet)
-		return ResponseEntity.status(HttpStatus.OK).body(aktivteter)
+		val aktivitetEndepunkt = if (dagligreise) AktivitetEndepunkt.dagligreise else AktivitetEndepunkt.aktivitet
+		val aktiviteter = arenaService.getAktiviteterWithMaalgrupper(aktivitetEndepunkt)
+		return ResponseEntity.status(HttpStatus.OK).body(aktiviteter)
 	}
 
 	private fun validerSoknadsTilgang(dokumentSoknadDto: DokumentSoknadDto) {

@@ -5,7 +5,7 @@ import no.nav.soknad.innsending.api.TilleggsstonaderApi
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.Aktivitet
-import no.nav.soknad.innsending.model.AktivitetType
+import no.nav.soknad.innsending.model.AktivitetEndepunkt
 import no.nav.soknad.innsending.model.Maalgruppe
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import okhttp3.OkHttpClient
@@ -56,16 +56,16 @@ class ArenaConsumer(
 		return maalgrupper
 	}
 
-	override fun getAktiviteter(type: AktivitetType): List<Aktivitet> {
+	override fun getAktiviteter(aktivitetEndepunkt: AktivitetEndepunkt): List<Aktivitet> {
 		val userId = subjectHandler.getUserIdFromToken()
 
 		logger.info("Henter aktiviteter")
 		secureLogger.info("[{}] Henter aktiviteter", userId)
 
 		val aktiviteter = try {
-			when (type) {
-				AktivitetType.aktivitet -> tilleggsstonaderApi.getAktiviteter(fromDate.toString(), toDate.toString())
-				AktivitetType.dagligreise -> tilleggsstonaderApi.getAktiviteterDagligreise(
+			when (aktivitetEndepunkt) {
+				AktivitetEndepunkt.aktivitet -> tilleggsstonaderApi.getAktiviteter(fromDate.toString(), toDate.toString())
+				AktivitetEndepunkt.dagligreise -> tilleggsstonaderApi.getAktiviteterDagligreise(
 					fromDate.toString(),
 					toDate.toString()
 				)
