@@ -68,7 +68,7 @@ class ArenaConsumerTest : ArenaConsumerInterface {
 		)
 	}
 
-	override fun getAktiviteter(type: AktivitetType): List<Aktivitet> {
+	override fun getAktiviteter(aktivitetEndepunkt: AktivitetEndepunkt): List<Aktivitet> {
 		val aktivitet = Aktivitet(
 			aktivitetId = "130892484",
 			aktivitetstype = "ARBTREN",
@@ -84,7 +84,7 @@ class ArenaConsumerTest : ArenaConsumerInterface {
 			erStoenadsberettigetAktivitet = true,
 			erUtdanningsaktivitet = false,
 			arrangoer = "MOELV BIL & CARAVAN AS",
-			saksinformasjon = if (type == AktivitetType.dagligreise) createSaksinformasjon() else null
+			saksinformasjon = if (aktivitetEndepunkt == AktivitetEndepunkt.dagligreise) createSaksinformasjon() else null
 		)
 		return listOf(aktivitet)
 	}

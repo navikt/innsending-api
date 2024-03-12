@@ -234,11 +234,12 @@ paths:
         operationId: fyllUtAktiviteter
 
         parameters:
-          - name: type
+          - name: dagligreise
             in: query
-            description: Type 'aktivitet' returnerer en ufiltrert aktivitetsliste for bruker mens 'dagligreise' er aktivitetsliste kun daglig reise-vedtak. Sistnevnte gir også saksinformasjon (med vedtak) for daglig reise.
             schema:
-              $ref: "./../../../../external-api/src/main/resources/arena-api.yml#/components/schemas/AktivitetType"
+             type: boolean
+             default: false
+            allowEmptyValue: true
 
         responses:
           '200':
