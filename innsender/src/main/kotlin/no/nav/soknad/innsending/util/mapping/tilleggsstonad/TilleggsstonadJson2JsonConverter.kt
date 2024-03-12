@@ -47,23 +47,22 @@ private fun convertAktivitetsinformasjon(tilleggsstonad: Application): JsonAktiv
 fun getMaalgruppeInformasjonFromAktiviteterOgMaalgruppe(aktiviteterOgMaalgruppe: AktiviteterOgMaalgruppe?): JsonMaalgruppeinformasjon? {
 	if (aktiviteterOgMaalgruppe == null) return null
 
-	if (aktiviteterOgMaalgruppe.maalgruppe != null && (aktiviteterOgMaalgruppe.maalgruppe.calculated != null || aktiviteterOgMaalgruppe.maalgruppe.prefilled != null))
-		if (aktiviteterOgMaalgruppe.maalgruppe.prefilled != null)
-			return JsonMaalgruppeinformasjon(
-				periode = getAktivitetsPeriode(aktiviteterOgMaalgruppe.aktivitet),
-				maalgruppetype = aktiviteterOgMaalgruppe.maalgruppe.prefilled
-			)
-		else if (aktiviteterOgMaalgruppe.maalgruppe.calculated != null)
-			return JsonMaalgruppeinformasjon(
-				periode = getAktivitetsPeriode(aktiviteterOgMaalgruppe.aktivitet),
-				maalgruppetype = aktiviteterOgMaalgruppe.maalgruppe.calculated
-			)
-
-	if (aktiviteterOgMaalgruppe.aktivitet?.maalgruppe != null)
+	if (aktiviteterOgMaalgruppe.aktivitet?.maalgruppe != null && aktiviteterOgMaalgruppe.aktivitet.maalgruppe.isNotEmpty())
 		return JsonMaalgruppeinformasjon(
 			periode = getAktivitetsPeriode(aktiviteterOgMaalgruppe.aktivitet),
 			maalgruppetype = aktiviteterOgMaalgruppe.aktivitet.maalgruppe
 		)
+	if (aktiviteterOgMaalgruppe.maalgruppe != null && (aktiviteterOgMaalgruppe.maalgruppe.calculated != null || aktiviteterOgMaalgruppe.maalgruppe.prefilled != null))
+		if (aktiviteterOgMaalgruppe.maalgruppe.prefilled != null && aktiviteterOgMaalgruppe.maalgruppe.prefilled.isNotEmpty())
+			return JsonMaalgruppeinformasjon(
+				periode = getAktivitetsPeriode(aktiviteterOgMaalgruppe.aktivitet),
+				maalgruppetype = aktiviteterOgMaalgruppe.maalgruppe.prefilled
+			)
+		else if (aktiviteterOgMaalgruppe.maalgruppe.calculated != null && aktiviteterOgMaalgruppe.maalgruppe.calculated.isNotEmpty())
+			return JsonMaalgruppeinformasjon(
+				periode = getAktivitetsPeriode(aktiviteterOgMaalgruppe.aktivitet),
+				maalgruppetype = aktiviteterOgMaalgruppe.maalgruppe.calculated
+			)
 
 	return null
 }
