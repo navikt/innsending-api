@@ -662,7 +662,7 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should return aktiviteter from Arena`() {
 		// When
-		val response = api?.getAktiviteter(AktivitetType.aktivitet)
+		val response = api?.getAktiviteter(AktivitetEndepunkt.aktivitet)
 
 		// Then
 		assertTrue(response != null)
@@ -688,7 +688,7 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should return daglig reise aktiviteter from Arena`() {
 		// When
-		val response = api?.getAktiviteter(AktivitetType.dagligreise)
+		val response = api?.getAktiviteter(AktivitetEndepunkt.dagligreise)
 
 		// Then
 		assertTrue(response != null)
