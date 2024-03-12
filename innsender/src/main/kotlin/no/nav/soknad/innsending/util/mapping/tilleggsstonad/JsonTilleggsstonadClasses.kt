@@ -102,7 +102,7 @@ data class BarnePass(
 	val fornavn: String,
 	val etternavn: String,
 	val fodselsdatoDdMmAaaa: String,
-	val jegSokerOmStonadTilPassAvDetteBarnet: String?, // "Jeg søker om stønad til pass av dette barnet."
+	val jegSokerOmStonadTilPassAvDetteBarnet: Boolean?, // "Jeg søker om stønad til pass av dette barnet."
 	val sokerStonadForDetteBarnet: SokerStonadForDetteBarnet?
 )
 

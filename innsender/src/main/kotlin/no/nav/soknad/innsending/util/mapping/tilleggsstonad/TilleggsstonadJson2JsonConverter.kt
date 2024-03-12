@@ -48,15 +48,15 @@ fun getMaalgruppeInformasjonFromAktiviteterOgMaalgruppe(aktiviteterOgMaalgruppe:
 	if (aktiviteterOgMaalgruppe == null) return null
 
 	if (aktiviteterOgMaalgruppe.maalgruppe != null && (aktiviteterOgMaalgruppe.maalgruppe.calculated != null || aktiviteterOgMaalgruppe.maalgruppe.prefilled != null))
-		if (aktiviteterOgMaalgruppe.maalgruppe.calculated != null)
-			return JsonMaalgruppeinformasjon(
-				periode = getAktivitetsPeriode(aktiviteterOgMaalgruppe.aktivitet),
-				maalgruppetype = aktiviteterOgMaalgruppe.maalgruppe.calculated
-			)
-		else if (aktiviteterOgMaalgruppe.maalgruppe.prefilled != null)
+		if (aktiviteterOgMaalgruppe.maalgruppe.prefilled != null)
 			return JsonMaalgruppeinformasjon(
 				periode = getAktivitetsPeriode(aktiviteterOgMaalgruppe.aktivitet),
 				maalgruppetype = aktiviteterOgMaalgruppe.maalgruppe.prefilled
+			)
+		else if (aktiviteterOgMaalgruppe.maalgruppe.calculated != null)
+			return JsonMaalgruppeinformasjon(
+				periode = getAktivitetsPeriode(aktiviteterOgMaalgruppe.aktivitet),
+				maalgruppetype = aktiviteterOgMaalgruppe.maalgruppe.calculated
 			)
 
 	if (aktiviteterOgMaalgruppe.aktivitet?.maalgruppe != null)

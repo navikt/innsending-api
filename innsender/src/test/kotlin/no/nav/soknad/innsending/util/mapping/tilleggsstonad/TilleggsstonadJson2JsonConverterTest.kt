@@ -21,7 +21,7 @@ class TilleggsstonadJson2JsonConverterTest {
 				fornavn = "Lite",
 				etternavn = "Barn",
 				fodselsdatoDdMmAaaa = "2019-03-07",
-				jegSokerOmStonadTilPassAvDetteBarnet = "ja",
+				jegSokerOmStonadTilPassAvDetteBarnet = true,
 				sokerStonadForDetteBarnet = SokerStonadForDetteBarnet(
 					hvemPasserBarnet = "barnehageEllerSfo",
 					oppgiManedligUtgiftTilBarnepass = 6000,

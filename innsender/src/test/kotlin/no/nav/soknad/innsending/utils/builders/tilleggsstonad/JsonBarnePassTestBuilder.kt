@@ -13,7 +13,7 @@ class JsonBarnePassTestBuilder {
 			fornavn = "Lite",
 			etternavn = "Barn",
 			fodselsdatoDdMmAaaa = "2020-04-03",
-			jegSokerOmStonadTilPassAvDetteBarnet = "Ja",
+			jegSokerOmStonadTilPassAvDetteBarnet = true,
 			sokerStonadForDetteBarnet = SokerStonadForDetteBarnet(
 				hvemPasserBarnet = "Barnet mitt får pass av dagmamma eller dagpappa",
 				oppgiManedligUtgiftTilBarnepass = 4000,

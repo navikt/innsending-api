@@ -56,13 +56,14 @@ class TilleggsstonadJson2XmlConverterTest {
 	@Test
 	fun json2XmlTest_barnepass() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.15B", tema = "TSO").build()
-		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/tilleggsstonad-NAV-11-12.15B-barnepass-20022024.json")
+		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/barnepass-NAV-11-12.15B-11032024.json")
 
 		val xmlFil = json2Xml(soknadDto, jsonFil)
 
 		assertNotNull(xmlFil)
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(xmlString.contains("<tilsynsutgifterBarn"))
+		assertTrue(xmlString.contains("<barn>"))
 	}
 
 	@Test
@@ -433,7 +434,7 @@ class TilleggsstonadJson2XmlConverterTest {
 						fornavn = "Lite",
 						etternavn = "Barn",
 						fodselsdatoDdMmAaaa = "2020-04-03",
-						jegSokerOmStonadTilPassAvDetteBarnet = "Ja",
+						jegSokerOmStonadTilPassAvDetteBarnet = true,
 						sokerStonadForDetteBarnet = SokerStonadForDetteBarnet(
 							hvemPasserBarnet = "Barnet mitt får pass av dagmamma eller dagpappa",
 							oppgiManedligUtgiftTilBarnepass = 4000,
@@ -476,7 +477,7 @@ class TilleggsstonadJson2XmlConverterTest {
 						fornavn = "Fnavn",
 						etternavn = "Enavn",
 						fodselsdatoDdMmAaaa = "2020-04-03",
-						jegSokerOmStonadTilPassAvDetteBarnet = "Ja",
+						jegSokerOmStonadTilPassAvDetteBarnet = true,
 						sokerStonadForDetteBarnet = SokerStonadForDetteBarnet(
 							hvemPasserBarnet = "Barnet mitt får pass av dagmamma eller dagpappa",
 							oppgiManedligUtgiftTilBarnepass = 4000,
@@ -488,7 +489,7 @@ class TilleggsstonadJson2XmlConverterTest {
 						fornavn = "Fnavn2",
 						etternavn = "Enavn",
 						fodselsdatoDdMmAaaa = "2019-04-03",
-						jegSokerOmStonadTilPassAvDetteBarnet = "Ja",
+						jegSokerOmStonadTilPassAvDetteBarnet = true,
 						sokerStonadForDetteBarnet = SokerStonadForDetteBarnet(
 							hvemPasserBarnet = "Barnet mitt får pass av dagmamma eller dagpappa",
 							oppgiManedligUtgiftTilBarnepass = 3500,

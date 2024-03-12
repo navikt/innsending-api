@@ -258,7 +258,7 @@ private fun convertTilsynsutgifterBarn(jsonRettighetstyper: JsonRettighetstyper)
 			fom = convertToDateStringWithTimeZone(tilsynsutgifter.aktivitetsPeriode.startdatoDdMmAaaa),
 			tom = convertToDateStringWithTimeZone(tilsynsutgifter.aktivitetsPeriode.sluttdatoDdMmAaaa)
 		),
-		barn = tilsynsutgifter.barnePass.filter { convertToBoolean(it.jegSokerOmStonadTilPassAvDetteBarnet) ?: false }.map {
+		barn = tilsynsutgifter.barnePass.filter { it.jegSokerOmStonadTilPassAvDetteBarnet ?: false }.map {
 			Barn(
 				personidentifikator = stripAndFormatToDDMMYY(it.fodselsdatoDdMmAaaa),
 				tilsynskategori = Tilsynskategorier("KOM"), // TODO mapping av it.sokerStonadForDetteBarnet.hvemPasserBarnet
