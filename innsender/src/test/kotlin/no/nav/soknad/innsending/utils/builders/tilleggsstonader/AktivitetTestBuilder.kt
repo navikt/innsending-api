@@ -2,7 +2,6 @@ package no.nav.soknad.innsending.utils.builders.tilleggsstonader
 
 import no.nav.soknad.innsending.model.Aktivitet
 import no.nav.soknad.innsending.model.Maalgruppe
-import no.nav.soknad.innsending.model.MaalgruppeType
 import no.nav.soknad.innsending.model.Periode
 import no.nav.soknad.innsending.model.Saksinformasjon
 import java.time.LocalDate
@@ -20,7 +19,7 @@ class AktivitetTestBuilder {
 	private var erUtdanningsaktivitet: Boolean? = false
 	private var arrangoer: String? = "MOELV BIL & CARAVAN AS"
 	private var saksinformasjon: Saksinformasjon? = SaksinformasjonTestBuilder().build()
-	private var maalgruppe: Maalgruppe = MaalgruppeTestBuilder().build()
+	private var maalgruppe: Maalgruppe? = MaalgruppeTestBuilder().build()
 
 	fun aktivitetId(aktivitetId: String) = apply { this.aktivitetId = aktivitetId }
 	fun aktivitetstype(aktivitetstype: String) = apply { this.aktivitetstype = aktivitetstype }
@@ -42,7 +41,7 @@ class AktivitetTestBuilder {
 
 	fun arrangoer(arrangoer: String?) = apply { this.arrangoer = arrangoer }
 	fun saksinformasjon(saksinformasjon: Saksinformasjon?) = apply { this.saksinformasjon = saksinformasjon }
-	fun maalgruppe(maalgruppe: MaalgruppeType?) = apply { this.maalgruppe = maalgruppe }
+	fun maalgruppe(maalgruppe: Maalgruppe?) = apply { this.maalgruppe = maalgruppe }
 
 	fun build() = Aktivitet(
 		aktivitetId = aktivitetId,

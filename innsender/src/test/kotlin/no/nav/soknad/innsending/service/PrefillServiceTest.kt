@@ -68,7 +68,9 @@ class PrefillServiceTest : ApplicationTest() {
 		val result = runBlocking { prefillService.getPrefillData(properties, userId) }
 
 		// Then
-		assertEquals(MaalgruppeType.NEDSARBEVN, result.sokerMaalgruppe)
+		assertEquals(MaalgruppeType.NEDSARBEVN, result.sokerMaalgruppe?.maalgruppetype)
+		assertEquals("Person med nedsatt arbeidsevne pga. sykdom", result.sokerMaalgruppe?.maalgruppenavn)
+		assertEquals("2023-01-01", result.sokerMaalgruppe?.gyldighetsperiode?.fom.toString())
 	}
 
 }
