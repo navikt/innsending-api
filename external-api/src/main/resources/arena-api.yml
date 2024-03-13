@@ -185,7 +185,7 @@ components:
           $ref: '#/components/schemas/Saksinformasjon'
           description: Informasjon om saken
         maalgruppe:
-          $ref: '#/components/schemas/MaalgruppeType'
+          $ref: '#/components/schemas/Maalgruppe'
     AktivitetEndepunkt:
       type: string
       description: Type 'aktivitet' returnerer en ufiltrert aktivitetsliste for bruker mens 'dagligreise' er aktivitetsliste kun daglig reise-vedtak. Sistnevnte gir også saksinformasjon (med vedtak) for daglig reise.
