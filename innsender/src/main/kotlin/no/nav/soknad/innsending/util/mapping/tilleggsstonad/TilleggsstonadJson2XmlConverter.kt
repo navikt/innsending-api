@@ -261,7 +261,7 @@ private fun convertTilsynsutgifterBarn(jsonRettighetstyper: JsonRettighetstyper)
 		),
 		barn = tilsynsutgifter.barnePass.filter { it.jegSokerOmStonadTilPassAvDetteBarnet ?: false }.map {
 			Barn(
-				personidentifikator = stripAndFormatToDDMMYY(it.fodselsdatoDdMmAaaa),
+				personidentifikator = it.fodselsdatoDdMmAaaa,
 				tilsynskategori = Tilsynskategorier("KOM"), // TODO mapping av it.sokerStonadForDetteBarnet.hvemPasserBarnet
 				navn = it.fornavn + " " + it.etternavn,
 				harFullfoertFjerdeSkoleaar = convertToBoolean(it.sokerStonadForDetteBarnet?.harBarnetFullfortFjerdeSkolear)

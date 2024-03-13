@@ -171,7 +171,8 @@ data class Application(
 
 	// Pass av barn
 	val opplysningerOmBarn: List<OpplysningerOmBarn>? = null,
-	val fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa: String? = null,
+	val fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa: String? = null, // TODO skal denne fjernes, eller kan det være situasjoner der denne personen ikke har fnr?
+	val fodselsnummerDNummerAndreForelder: String? = null,
 
 	// Kjøreliste
 	val tekstfelt: String? = null,
@@ -249,7 +250,8 @@ data class HvilkeAdresserHarDuBoutgifterPa(
 data class OpplysningerOmBarn(
 	val fornavn: String,
 	val etternavn: String,
-	val fodselsdatoDdMmAaaa: String,
+	val fodselsdatoDdMmAaaa: String?, // TODO skal denne fjernes slik at bare fodselsnummer sendes?
+	val fodselsnummerDNummer: String,
 	val jegSokerOmStonadTilPassAvDetteBarnet: Boolean?, // "Jeg søker om stønad til pass av dette barnet."
 	val sokerStonadForDetteBarnet: SokerStonadForDetteBarnet?
 )

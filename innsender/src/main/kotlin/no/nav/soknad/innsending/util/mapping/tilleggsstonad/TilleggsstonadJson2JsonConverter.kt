@@ -76,10 +76,10 @@ fun getAktivitetsPeriode(aktivitet: Aktivitet?): AktivitetsPeriode? {
 fun convertToJsonMaalgruppeinformasjon(tilleggsstonad: Application): JsonMaalgruppeinformasjon? { // TODO
 
 	return getMaalgruppeInformasjonFromAktiviteterOgMaalgruppe(tilleggsstonad.aktiviteterOgMaalgruppe)
-		?: getMaalgruinformasjonFromLivssituasjon(tilleggsstonad.flervalg, tilleggsstonad)
+		?: getMaalgruppeinformasjonFromLivssituasjon(tilleggsstonad.flervalg, tilleggsstonad)
 }
 
-fun getMaalgruinformasjonFromLivssituasjon(
+fun getMaalgruppeinformasjonFromLivssituasjon(
 	livssituasjon: Flervalg?,
 	tilleggsstonad: Application
 ): JsonMaalgruppeinformasjon? {
@@ -265,13 +265,18 @@ private fun convertToTilsynsutgifter(tilleggsstonad: Application): JsonTilsynsut
 		),
 		barnePass = tilleggsstonad.opplysningerOmBarn.map {
 			BarnePass(
-				fornavn = it.fornavn, etternavn = it.etternavn, fodselsdatoDdMmAaaa = it.fodselsdatoDdMmAaaa,
+				fornavn = it.fornavn,
+				etternavn = it.etternavn,
+				fodselsdatoDdMmAaaa = validateNoneNull(
+					it.fodselsnummerDNummer,
+					"Tilsynsutgifter - fødselsdato/fnr mangler"
+				),
 				jegSokerOmStonadTilPassAvDetteBarnet = it.jegSokerOmStonadTilPassAvDetteBarnet,
 				sokerStonadForDetteBarnet = it.sokerStonadForDetteBarnet,
-
-				)
+			)
 		},
-		fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa = tilleggsstonad.fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa
+		fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa = tilleggsstonad.fodselsnummerDNummerAndreForelder
+			?: tilleggsstonad.fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa
 	)
 }
 

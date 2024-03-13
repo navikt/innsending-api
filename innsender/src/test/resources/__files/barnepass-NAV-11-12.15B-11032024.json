@@ -1,63 +1,66 @@
 {
-	"language":"nb-NO",
-	"data":{
-		"data":{
-			"flervalg":{
-				"aapUforeNedsattArbEvne":false,
-				"ensligUtdanning":false,
-				"ensligArbSoker":false,
-				"gjenlevendeUtdanning":false,
-				"gjenlevendeArbSoker":false,
-				"tidligereFamiliepleier":false,
-				"annet":false
+	"language": "nb-NO",
+	"data": {
+		"data": {
+			"flervalg": {
+				"aapUforeNedsattArbEvne": false,
+				"ensligUtdanning": false,
+				"ensligArbSoker": false,
+				"gjenlevendeUtdanning": false,
+				"gjenlevendeArbSoker": false,
+				"tidligereFamiliepleier": false,
+				"annet": false
 			},
-			"aktiviteterOgMaalgruppe":{
-				"maalgruppe":{
-					"calculated":"ANNET",
-					"prefilled":"NEDSARBEVN"
+			"aktiviteterOgMaalgruppe": {
+				"maalgruppe": {
+					"calculated": "ANNET",
+					"prefilled": "NEDSARBEVN"
 				},
-				"aktivitet":{
-					"aktivitetId":"ingenAktivitet",
-					"maalgruppe":"",
-					"periode":{
-						"fom":"",
-						"tom":""
+				"aktivitet": {
+					"aktivitetId": "ingenAktivitet",
+					"maalgruppe": "",
+					"periode": {
+						"fom": "",
+						"tom": ""
 					},
-					"text":"Jeg får ikke opp noen aktiviteter her som stemmer med det jeg vil søke om"
+					"text": "Jeg får ikke opp noen aktiviteter her som stemmer med det jeg vil søke om"
 				}
 			},
-			"opplysningerOmBarn":[
+			"opplysningerOmBarn": [
 				{
-					"fornavn":"Samarbeidsvillig",
-					"etternavn":"Aktivist",
-					"jegSokerOmStonadTilPassAvDetteBarnet":true,
-					"fodselsdatoDdMmAaaa":"2023-02-23",
-					"sokerStonadForDetteBarnet":{
-						"hvemPasserBarnet":"barnehageEllerSfo",
-						"oppgiManedligUtgiftTilBarnepass":6000,
-						"harBarnetFullfortFjerdeSkolear":"nei"
+					"fornavn": "Samarbeidsvillig",
+					"etternavn": "Aktivist",
+					"jegSokerOmStonadTilPassAvDetteBarnet": true,
+					"fodselsdatoDdMmAaaa": "2023-02-23",
+					"fodselsnummerDNummer": "23922399883",
+					"sokerStonadForDetteBarnet": {
+						"hvemPasserBarnet": "barnehageEllerSfo",
+						"oppgiManedligUtgiftTilBarnepass": 6000,
+						"harBarnetFullfortFjerdeSkolear": "nei"
 					}
 				}
 			],
-			"fornavnSoker":"Parodisk",
-			"etternavnSoker":"Aktivist",
-			"harDuNorskFodselsnummerEllerDNummer":"ja",
-			"fodselsnummerDNummerSoker":"20918099892",
-			"startdatoDdMmAaaa":"2024-03-04",
-			"sluttdatoDdMmAaaa":"2024-06-28",
-			"fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa":"1951-09-16",
-			"tilleggsopplysninger":"gsfdgsdfg dsfgdsfg "
+			"fornavnSoker": "Parodisk",
+			"etternavnSoker": "Aktivist",
+			"harDuNorskFodselsnummerEllerDNummer": "ja",
+			"fodselsnummerDNummerSoker": "20918099892",
+			"startdatoDdMmAaaa": "2024-03-04",
+			"sluttdatoDdMmAaaa": "2024-06-28",
+			"fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa": "1951-09-16",
+			"fodselsnummerDNummerAndreForelder": "16905198584",
+			"tilleggsopplysninger": "gsfdgsdfg dsfgdsfg "
 		},
-		"metadata":{
-			"timezone":"Europe/Oslo",
-			"offset":60,
-			"origin":"https://skjemadelingslenke.ekstern.dev.nav.no",
-			"referrer":"https://skjemadelingslenke.ekstern.dev.nav.no/fyllut/nav111215b",
-			"browserName":"Netscape","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-			"pathName":"/fyllut/nav111215b/tilleggsopplysningerPanel",
-			"onLine":true
+		"metadata": {
+			"timezone": "Europe/Oslo",
+			"offset": 60,
+			"origin": "https://skjemadelingslenke.ekstern.dev.nav.no",
+			"referrer": "https://skjemadelingslenke.ekstern.dev.nav.no/fyllut/nav111215b",
+			"browserName": "Netscape",
+			"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+			"pathName": "/fyllut/nav111215b/tilleggsopplysningerPanel",
+			"onLine": true
 		},
-		"state":"submitted",
-		"_vnote":""
+		"state": "submitted",
+		"_vnote": ""
 	}
 }

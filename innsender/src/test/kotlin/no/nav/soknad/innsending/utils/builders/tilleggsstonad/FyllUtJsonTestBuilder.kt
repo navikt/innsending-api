@@ -217,6 +217,7 @@ class FyllUtJsonTestBuilder {
 				etternavn = "Barn",
 				fodselsdatoDdMmAaaa = "2019-03-07",
 				jegSokerOmStonadTilPassAvDetteBarnet = true,
+				fodselsnummerDNummer = "23922399883",
 				sokerStonadForDetteBarnet = SokerStonadForDetteBarnet(
 					hvemPasserBarnet = "barnehageEllerSfo",
 					oppgiManedligUtgiftTilBarnepass = 6000,
@@ -226,10 +227,14 @@ class FyllUtJsonTestBuilder {
 			)
 		)
 	var fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa: String? = "1990-10-10"
+	var fodselsnummerDNummerAndreForelder: String? = "16905198584"
 
 	fun passAvBarn(passAvBarn: List<OpplysningerOmBarn>?) = apply { this.passAvBarn = passAvBarn }
 	fun fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa(fodselsdato: String?) =
 		apply { fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa = fodselsdato }
+
+	fun fodselsnummerDNummerAndreForelder(fnr: String?) =
+		apply { fodselsnummerDNummerAndreForelder = fnr }
 
 	// Læremidler
 	var hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore: String? =
@@ -289,9 +294,11 @@ class FyllUtJsonTestBuilder {
 					// Barnepass
 					opplysningerOmBarn = if (skjemanr == barnepassSkjemanr) passAvBarn else null,
 					fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa = if (skjemanr == barnepassSkjemanr) fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa else null,
+					fodselsnummerDNummerAndreForelder = if (skjemanr == barnepassSkjemanr) fodselsnummerDNummerAndreForelder else null,
 
 					// Læremidler
-					hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore = if (skjemanr == laeremidlerSkjemanr) hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore else null,
+					hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore =
+					if (skjemanr == laeremidlerSkjemanr) hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore else null,
 					hvilketKursEllerAnnenFormForUtdanningSkalDuTa = if (skjemanr == laeremidlerSkjemanr) hvilketKursEllerAnnenFormForUtdanningSkalDuTa else null,
 					oppgiHvorMangeProsentDuStudererEllerGarPaKurs = if (skjemanr == laeremidlerSkjemanr) oppgiHvorMangeProsentDuStudererEllerGarPaKurs else null,
 					harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler = if (skjemanr == laeremidlerSkjemanr) harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler else null,

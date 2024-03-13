@@ -15,12 +15,15 @@ class TilleggsstonadJson2JsonConverterTest {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = skjemanr, tema = "TSO").build()
 		val aktivitetsId = "12345"
 		val language = "no-Nb"
-		val forelderTo = "10-10-1990"
+		val forelderTo = "1990-01-26"
+		val fnrForeldreTo = "16905198584"
+		val fnrLiteBarn = "23922399883"
 		val passAvBarn = listOf(
 			OpplysningerOmBarn(
 				fornavn = "Lite",
 				etternavn = "Barn",
 				fodselsdatoDdMmAaaa = "2019-03-07",
+				fodselsnummerDNummer = fnrLiteBarn,
 				jegSokerOmStonadTilPassAvDetteBarnet = true,
 				sokerStonadForDetteBarnet = SokerStonadForDetteBarnet(
 					hvemPasserBarnet = "barnehageEllerSfo",
@@ -41,6 +44,7 @@ class TilleggsstonadJson2JsonConverterTest {
 			.periode("01-01-2024", "29-03-2024")
 			.passAvBarn(passAvBarn)
 			.fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa(forelderTo)
+			.fodselsnummerDNummerAndreForelder(fnrForeldreTo)
 			.build()
 
 		val mapper = jacksonObjectMapper()
@@ -52,7 +56,11 @@ class TilleggsstonadJson2JsonConverterTest {
 		Assertions.assertEquals(aktivitetsId, strukturertJson.applicationDetails.aktivitetsinformasjon?.aktivitet)
 		Assertions.assertEquals(maalgruppeType, strukturertJson.applicationDetails.maalgruppeinformasjon?.maalgruppetype)
 		Assertions.assertEquals(
-			forelderTo,
+			fnrLiteBarn,
+			strukturertJson.applicationDetails.rettighetstype?.tilsynsutgifter?.barnePass?.first()?.fodselsdatoDdMmAaaa
+		)
+		Assertions.assertEquals(
+			fnrForeldreTo,
 			strukturertJson.applicationDetails.rettighetstype?.tilsynsutgifter?.fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa
 		)
 		Assertions.assertEquals(
