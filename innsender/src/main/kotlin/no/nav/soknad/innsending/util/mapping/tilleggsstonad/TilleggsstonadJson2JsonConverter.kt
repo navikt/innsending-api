@@ -10,7 +10,7 @@ fun convertToJsonTilleggsstonad(soknadDto: DokumentSoknadDto, json: ByteArray?):
 	if (json == null || json.isEmpty())
 		throw BackendErrorException("${soknadDto.innsendingsId}: json fil av søknaden mangler")
 
-	val mapper = jacksonObjectMapper()
+	val mapper = jacksonObjectMapper().findAndRegisterModules()
 	//mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 	val json = mapper.readValue(json, Root::class.java)
 
@@ -53,15 +53,15 @@ fun getMaalgruppeInformasjonFromAktiviteterOgMaalgruppe(aktiviteterOgMaalgruppe:
 			maalgruppetype = aktiviteterOgMaalgruppe.aktivitet.maalgruppe
 		)
 	if (aktiviteterOgMaalgruppe.maalgruppe != null && (aktiviteterOgMaalgruppe.maalgruppe.calculated != null || aktiviteterOgMaalgruppe.maalgruppe.prefilled != null))
-		if (aktiviteterOgMaalgruppe.maalgruppe.prefilled != null && aktiviteterOgMaalgruppe.maalgruppe.prefilled.isNotEmpty())
+		if (aktiviteterOgMaalgruppe.maalgruppe.prefilled?.maalgruppetype != null)
 			return JsonMaalgruppeinformasjon(
 				periode = getAktivitetsPeriode(aktiviteterOgMaalgruppe.aktivitet),
-				maalgruppetype = aktiviteterOgMaalgruppe.maalgruppe.prefilled
+				maalgruppetype = aktiviteterOgMaalgruppe.maalgruppe.prefilled.maalgruppetype.value
 			)
-		else if (aktiviteterOgMaalgruppe.maalgruppe.calculated != null && aktiviteterOgMaalgruppe.maalgruppe.calculated.isNotEmpty())
+		else if (aktiviteterOgMaalgruppe.maalgruppe.calculated?.maalgruppetype != null)
 			return JsonMaalgruppeinformasjon(
 				periode = getAktivitetsPeriode(aktiviteterOgMaalgruppe.aktivitet),
-				maalgruppetype = aktiviteterOgMaalgruppe.maalgruppe.calculated
+				maalgruppetype = aktiviteterOgMaalgruppe.maalgruppe.calculated.maalgruppetype.value
 			)
 
 	return null

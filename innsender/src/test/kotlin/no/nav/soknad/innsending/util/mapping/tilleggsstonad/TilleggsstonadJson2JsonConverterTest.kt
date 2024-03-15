@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.util.mapping.tilleggsstonad
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.nav.soknad.innsending.model.MaalgruppeType
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.tilleggsstonad.FyllUtJsonTestBuilder
 import org.junit.jupiter.api.Assertions
@@ -8,7 +9,6 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertTrue
 
 class TilleggsstonadJson2JsonConverterTest {
-
 	@Test
 	fun `happy case - mapping av barnepass til strukturert json`() {
 		val skjemanr = FyllUtJsonTestBuilder().barnepassSkjemanr
@@ -34,7 +34,7 @@ class TilleggsstonadJson2JsonConverterTest {
 			)
 		)
 
-		val maalgruppeType = "NEDSARBEV"
+		val maalgruppeType = MaalgruppeType.NEDSARBEVN
 		val fyllUtObj = FyllUtJsonTestBuilder()
 			.language(language)
 			.skjemanr(skjemanr)
@@ -47,14 +47,19 @@ class TilleggsstonadJson2JsonConverterTest {
 			.fodselsnummerDNummerAndreForelder(fnrForeldreTo)
 			.build()
 
-		val mapper = jacksonObjectMapper()
+
+		val mapper = jacksonObjectMapper().findAndRegisterModules()
+
 		val fyllUtJson = mapper.writeValueAsString(fyllUtObj)
 		val strukturertJson =
 			convertToJsonTilleggsstonad(soknadDto, fyllUtJson.toString().toByteArray())
 
 		assertTrue(strukturertJson != null)
 		Assertions.assertEquals(aktivitetsId, strukturertJson.applicationDetails.aktivitetsinformasjon?.aktivitet)
-		Assertions.assertEquals(maalgruppeType, strukturertJson.applicationDetails.maalgruppeinformasjon?.maalgruppetype)
+		Assertions.assertEquals(
+			maalgruppeType.value,
+			strukturertJson.applicationDetails.maalgruppeinformasjon?.maalgruppetype
+		)
 		Assertions.assertEquals(
 			fnrLiteBarn,
 			strukturertJson.applicationDetails.rettighetstype?.tilsynsutgifter?.barnePass?.first()?.fodselsdatoDdMmAaaa
@@ -76,7 +81,7 @@ class TilleggsstonadJson2JsonConverterTest {
 		val aktivitetsId = "12345"
 		val language = "no-Nb"
 
-		val maalgruppeType = "NEDSARBEV"
+		val maalgruppeType = MaalgruppeType.NEDSARBEVN
 		val fyllUtObj = FyllUtJsonTestBuilder()
 			.language(language)
 			.skjemanr(skjemanr)
@@ -89,14 +94,17 @@ class TilleggsstonadJson2JsonConverterTest {
 			.laeremidler(typeUtdanning = "videregaendeUtdanning", utgifter = 10000)
 			.build()
 
-		val mapper = jacksonObjectMapper()
+		val mapper = jacksonObjectMapper().findAndRegisterModules()
 		val fyllUtJson = mapper.writeValueAsString(fyllUtObj)
 		val strukturertJson =
 			convertToJsonTilleggsstonad(soknadDto, fyllUtJson.toString().toByteArray())
 
 		assertTrue(strukturertJson != null)
 		Assertions.assertEquals(aktivitetsId, strukturertJson.applicationDetails.aktivitetsinformasjon?.aktivitet)
-		Assertions.assertEquals(maalgruppeType, strukturertJson.applicationDetails.maalgruppeinformasjon?.maalgruppetype)
+		Assertions.assertEquals(
+			maalgruppeType.value,
+			strukturertJson.applicationDetails.maalgruppeinformasjon?.maalgruppetype
+		)
 		Assertions.assertEquals(
 			"videregaendeUtdanning",
 			strukturertJson.applicationDetails.rettighetstype?.laeremiddelutgifter?.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore
@@ -114,7 +122,7 @@ class TilleggsstonadJson2JsonConverterTest {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = skjemanr, tema = "TSO").build()
 		val aktivitetsId = "12345"
 		val language = "no-Nb"
-		val maalgruppeType = "NEDSARBEV"
+		val maalgruppeType = MaalgruppeType.NEDSARBEVN
 		val fyllUtObj = FyllUtJsonTestBuilder()
 			.language(language)
 			.skjemanr(skjemanr)
@@ -139,14 +147,17 @@ class TilleggsstonadJson2JsonConverterTest {
 			)
 			.build()
 
-		val mapper = jacksonObjectMapper()
+		val mapper = jacksonObjectMapper().findAndRegisterModules()
 		val fyllUtJson = mapper.writeValueAsString(fyllUtObj)
 		val strukturertJson =
 			convertToJsonTilleggsstonad(soknadDto, fyllUtJson.toString().toByteArray())
 
 		assertTrue(strukturertJson != null)
 		Assertions.assertEquals(aktivitetsId, strukturertJson.applicationDetails.aktivitetsinformasjon?.aktivitet)
-		Assertions.assertEquals(maalgruppeType, strukturertJson.applicationDetails.maalgruppeinformasjon?.maalgruppetype)
+		Assertions.assertEquals(
+			maalgruppeType.value,
+			strukturertJson.applicationDetails.maalgruppeinformasjon?.maalgruppetype
+		)
 		Assertions.assertEquals(
 			"01-01-2024",
 			strukturertJson.applicationDetails.rettighetstype?.reise?.dagligReise?.startdatoDdMmAaaa

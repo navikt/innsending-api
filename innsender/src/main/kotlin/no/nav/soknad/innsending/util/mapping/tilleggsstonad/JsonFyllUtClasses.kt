@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.util.mapping.tilleggsstonad
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import no.nav.soknad.innsending.model.Maalgruppe
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -198,10 +199,9 @@ data class AktiviteterOgMaalgruppe(
 	val aktivitet: Aktivitet? = null,
 )
 
-
 data class MaalgruppeValg(
-	val calculated: String? = null,
-	val prefilled: String? = null
+	val calculated: Maalgruppe? = null,
+	val prefilled: Maalgruppe? = null
 )
 
 data class SkjemaPeriode(

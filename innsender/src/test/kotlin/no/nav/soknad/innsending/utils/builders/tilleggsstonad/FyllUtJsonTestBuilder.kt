@@ -1,6 +1,8 @@
 package no.nav.soknad.innsending.utils.builders.tilleggsstonad
 
+import no.nav.soknad.innsending.model.MaalgruppeType
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.*
+import no.nav.soknad.innsending.utils.builders.tilleggsstonader.MaalgruppeTestBuilder
 
 class FyllUtJsonTestBuilder {
 
@@ -34,7 +36,7 @@ class FyllUtJsonTestBuilder {
 	}
 
 	val defaultArenaAktivitetOgMaalgruppe = AktiviteterOgMaalgruppe(
-		maalgruppe = MaalgruppeValg(calculated = "ENSFORARBS"),
+		maalgruppe = MaalgruppeValg(calculated = MaalgruppeTestBuilder().build()),
 		aktivitet = Aktivitet(
 			aktivitetId = "123456789",
 			maalgruppe = "",
@@ -51,10 +53,10 @@ class FyllUtJsonTestBuilder {
 	fun skjemanr(skjemanr: String) = apply { this.skjemanr = skjemanr }
 	fun language(language: String) = apply { this.language = language }
 
-	fun arenaAktivitetOgMaalgruppe(maalgruppe: String?, aktivitetId: String?, periode: SkjemaPeriode?) = apply {
+	fun arenaAktivitetOgMaalgruppe(maalgruppe: MaalgruppeType?, aktivitetId: String?, periode: SkjemaPeriode?) = apply {
 		if (maalgruppe != null || aktivitetId != null) {
 			arenaAktivitetOgMaalgruppe = AktiviteterOgMaalgruppe(
-				maalgruppe = MaalgruppeValg(calculated = maalgruppe),
+				maalgruppe = MaalgruppeValg(calculated = MaalgruppeTestBuilder().maalgruppetype(maalgruppe!!).build()),
 				kilde = "BRUKERREGISTRERT",
 				//text = "",
 				aktivitet = Aktivitet(aktivitetId = aktivitetId ?: "ingenAktivitet", maalgruppe = "", periode = periode)
