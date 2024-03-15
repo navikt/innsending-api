@@ -39,7 +39,7 @@ class FyllUtJsonTestBuilder {
 		maalgruppe = MaalgruppeValg(calculated = MaalgruppeTestBuilder().build()),
 		aktivitet = Aktivitet(
 			aktivitetId = "123456789",
-			maalgruppe = "",
+			maalgruppe = null,
 			periode = SkjemaPeriode(fom = "2024-01-01", tom = "2024-06-30"),
 			text = ""
 		),
@@ -59,7 +59,11 @@ class FyllUtJsonTestBuilder {
 				maalgruppe = MaalgruppeValg(calculated = MaalgruppeTestBuilder().maalgruppetype(maalgruppe!!).build()),
 				kilde = "BRUKERREGISTRERT",
 				//text = "",
-				aktivitet = Aktivitet(aktivitetId = aktivitetId ?: "ingenAktivitet", maalgruppe = "", periode = periode)
+				aktivitet = Aktivitet(
+					aktivitetId = aktivitetId ?: "ingenAktivitet",
+					maalgruppe = null,
+					periode = periode
+				)
 			)
 			flervalg = null
 		} else {

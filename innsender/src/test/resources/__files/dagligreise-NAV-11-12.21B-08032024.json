@@ -13,12 +13,28 @@
 			},
 			"aktiviteterOgMaalgruppe": {
 				"maalgruppe": {
-					"calculated": "NEDSARBEVN",
-					"prefilled": "NEDSARBEVN"
+					"calculated": {
+						"maalgruppetype": "NEDSARBEVN"
+					},
+					"prefilled": {
+						"gyldighetsperiode": {
+							"fom": "2024-01-01",
+							"tom": "2024-08-31"
+						},
+						"maalgruppetype": "NEDSARBEVN",
+						"maalgruppenavn": "Person med nedsatt arbeidsevne pga. sykdom"
+					}
 				},
 				"aktivitet": {
 					"aktivitetId": "142075146",
-					"maalgruppe": "NEDSARBEVN",
+					"maalgruppe": {
+						"gyldighetsperiode": {
+							"fom": "2024-01-01",
+							"tom": "2024-08-31"
+						},
+						"maalgruppetype": "NEDSARBEVN",
+						"maalgruppenavn": "Person med nedsatt arbeidsevne pga. sykdom"
+					},
 					"periode": {
 						"fom": "2024-01-01",
 						"tom": "2024-08-31"
@@ -28,12 +44,28 @@
 			},
 			"container": {
 				"maalgruppe": {
-					"calculated": "NEDSARBEVN",
-					"prefilled": "NEDSARBEVN"
+					"calculated": {
+						"maalgruppetype": "NEDSARBEVN"
+					},
+					"prefilled": {
+						"gyldighetsperiode": {
+							"fom": "2024-01-01",
+							"tom": "2024-08-31"
+						},
+						"maalgruppetype": "NEDSARBEVN",
+						"maalgruppenavn": "Person med nedsatt arbeidsevne pga. sykdom"
+					}
 				},
 				"aktivitet": {
 					"aktivitetId": "142075146",
-					"maalgruppe": "NEDSARBEVN",
+					"maalgruppe": {
+						"gyldighetsperiode": {
+							"fom": "2024-01-01",
+							"tom": "2024-08-31"
+						},
+						"maalgruppetype": "NEDSARBEVN",
+						"maalgruppenavn": "Person med nedsatt arbeidsevne pga. sykdom"
+					},
 					"periode": {
 						"fom": "2024-01-01",
 						"tom": "2024-08-31"

@@ -47,10 +47,10 @@ private fun convertAktivitetsinformasjon(tilleggsstonad: Application): JsonAktiv
 fun getMaalgruppeInformasjonFromAktiviteterOgMaalgruppe(aktiviteterOgMaalgruppe: AktiviteterOgMaalgruppe?): JsonMaalgruppeinformasjon? {
 	if (aktiviteterOgMaalgruppe == null) return null
 
-	if (aktiviteterOgMaalgruppe.aktivitet?.maalgruppe != null && aktiviteterOgMaalgruppe.aktivitet.maalgruppe.isNotEmpty())
+	if (aktiviteterOgMaalgruppe.aktivitet?.maalgruppe != null)
 		return JsonMaalgruppeinformasjon(
 			periode = getAktivitetsPeriode(aktiviteterOgMaalgruppe.aktivitet),
-			maalgruppetype = aktiviteterOgMaalgruppe.aktivitet.maalgruppe
+			maalgruppetype = aktiviteterOgMaalgruppe.aktivitet.maalgruppe.maalgruppetype.value
 		)
 	if (aktiviteterOgMaalgruppe.maalgruppe != null && (aktiviteterOgMaalgruppe.maalgruppe.calculated != null || aktiviteterOgMaalgruppe.maalgruppe.prefilled != null))
 		if (aktiviteterOgMaalgruppe.maalgruppe.prefilled?.maalgruppetype != null)

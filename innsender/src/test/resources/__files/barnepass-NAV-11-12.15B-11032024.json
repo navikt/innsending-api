@@ -13,12 +13,21 @@
 			},
 			"aktiviteterOgMaalgruppe": {
 				"maalgruppe": {
-					"calculated": "ANNET",
-					"prefilled": "NEDSARBEVN"
+					"calculated": {
+						"maalgruppetype": "ANNET"
+					},
+					"prefilled": {
+						"gyldighetsperiode": {
+							"fom": "2024-01-13",
+							"tom": "2024-05-13"
+						},
+						"maalgruppetype": "NEDSARBEVN",
+						"maalgruppenavn": "Person med nedsatt arbeidsevne pga. sykdom"
+					}
 				},
 				"aktivitet": {
 					"aktivitetId": "ingenAktivitet",
-					"maalgruppe": "",
+					"maalgruppe": null,
 					"periode": {
 						"fom": "",
 						"tom": ""

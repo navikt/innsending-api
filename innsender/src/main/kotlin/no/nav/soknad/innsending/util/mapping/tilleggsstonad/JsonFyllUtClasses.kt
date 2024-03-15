@@ -188,7 +188,7 @@ data class Application(
 
 data class Aktivitet(
 	val aktivitetId: String = "ingenAktivitet",
-	val maalgruppe: String = "",
+	val maalgruppe: Maalgruppe? = null,
 	val periode: SkjemaPeriode? = null,
 	val text: String? = ""
 )
