@@ -1566,7 +1566,7 @@ components:
           description: Søkerens kontonummer
           example: 8361347234732292
         sokerMaalgruppe:
-          $ref: "./../../../../external-api/src/main/resources/arena-api.yml#/components/schemas/MaalgruppeType"
+          $ref: "./../../../../external-api/src/main/resources/arena-api.yml#/components/schemas/Maalgruppe"
 
     PropertyNavn:
       type: string

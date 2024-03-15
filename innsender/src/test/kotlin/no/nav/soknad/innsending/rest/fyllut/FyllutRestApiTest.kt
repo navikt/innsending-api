@@ -642,7 +642,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Then
 		assertTrue(response != null)
 		assertEquals(200, response.statusCode.value())
-		assertEquals(MaalgruppeType.NEDSARBEVN, response.body?.sokerMaalgruppe)
+		assertEquals(MaalgruppeType.NEDSARBEVN, response.body?.sokerMaalgruppe?.maalgruppetype)
+		assertEquals("Person med nedsatt arbeidsevne pga. sykdom", response.body?.sokerMaalgruppe?.maalgruppenavn)
 	}
 
 	@Test
@@ -669,7 +670,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals(200, response.statusCode.value())
 
 		val aktivitet = response.body!!.first()
-		assertEquals(MaalgruppeType.NEDSARBEVN, aktivitet.maalgruppe)
+		assertEquals(MaalgruppeType.NEDSARBEVN, aktivitet.maalgruppe?.maalgruppetype)
+		assertEquals("Person med nedsatt arbeidsevne pga. sykdom", aktivitet.maalgruppe?.maalgruppenavn)
 		assertEquals("130892484", aktivitet.aktivitetId)
 		assertEquals("ARBTREN", aktivitet.aktivitetstype)
 		assertEquals("Arbeidstrening", aktivitet.aktivitetsnavn)
@@ -699,7 +701,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		val betalingsplan1 = vedtaksinformasjon.betalingsplan!![0]
 		val betalingsplan2 = vedtaksinformasjon.betalingsplan!![1]
 
-		assertEquals(MaalgruppeType.NEDSARBEVN, aktivitet.maalgruppe)
+		assertEquals(MaalgruppeType.NEDSARBEVN, aktivitet.maalgruppe?.maalgruppetype)
+		assertEquals("Person med nedsatt arbeidsevne pga. sykdom", aktivitet.maalgruppe?.maalgruppenavn)
 		assertEquals("130892484", aktivitet.aktivitetId)
 		assertEquals("ARBTREN", aktivitet.aktivitetstype)
 		assertEquals("Arbeidstrening", aktivitet.aktivitetsnavn)

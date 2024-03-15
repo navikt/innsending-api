@@ -68,16 +68,22 @@ object MaalgruppeUtils {
 		)
 	)
 
-	fun getPrioritzedMaalgruppe(maalgrupper: List<Maalgruppe>): MaalgruppeType? {
+	fun getPrioritzedMaalgruppe(maalgrupper: List<Maalgruppe>): Maalgruppe? {
 		if (maalgrupper.isEmpty()) return null
-		return maalgruppePriorities
-			.filter { maalgrupper.any { maalgruppe -> maalgruppe.maalgruppetype == it.maalgruppetype } }
-			.minBy { it.priority }
-			.maalgruppetype
+		val prioritizedMaalgruppe = maalgruppePriorities
+			.filter { maalgruppePriority ->
+				maalgrupper.any { it.maalgruppetype == maalgruppePriority.maalgruppetype }
+			}
+			.minByOrNull { it.priority }
+
+		return prioritizedMaalgruppe?.let { priority ->
+			maalgrupper.find { it.maalgruppetype == priority.maalgruppetype }
+		}
+
 	}
 
 	// Find målgruppe with a periode that overlaps with the periode for aktivitet
-	fun getPrioritzedMaalgruppeFromAktivitet(maalgrupper: List<Maalgruppe>, aktivitet: Aktivitet): MaalgruppeType? {
+	fun getPrioritzedMaalgruppeFromAktivitet(maalgrupper: List<Maalgruppe>, aktivitet: Aktivitet): Maalgruppe? {
 		if (maalgrupper.isEmpty()) return null
 
 		val overlappingMaalgrupper = maalgrupper.filter { maalgruppe -> isOverlapping(maalgruppe, aktivitet) }

@@ -5,7 +5,10 @@ import no.nav.soknad.innsending.model.MaalgruppeType
 import no.nav.soknad.innsending.model.Periode
 import no.nav.soknad.innsending.utils.builders.tilleggsstonader.AktivitetTestBuilder
 import no.nav.soknad.innsending.utils.builders.tilleggsstonader.MaalgruppeTestBuilder
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -35,7 +38,7 @@ class MaalgruppeUtilsTest {
 		val result = MaalgruppeUtils.getPrioritzedMaalgruppe(maalgrupper)
 
 		// Then
-		assertEquals(MaalgruppeType.ENSFORUTD, result)
+		assertEquals(MaalgruppeType.ENSFORUTD, result?.maalgruppetype)
 	}
 
 	@Test
@@ -164,7 +167,7 @@ class MaalgruppeUtilsTest {
 		// Then
 		assertEquals(
 			MaalgruppeType.NEDSARBEVN,
-			MaalgruppeUtils.getPrioritzedMaalgruppeFromAktivitet(maalgrupper, aktivitet)
+			MaalgruppeUtils.getPrioritzedMaalgruppeFromAktivitet(maalgrupper, aktivitet)?.maalgruppetype
 		)
 	}
 
@@ -186,7 +189,7 @@ class MaalgruppeUtilsTest {
 		// Then
 		assertEquals(
 			MaalgruppeType.ANNET,
-			MaalgruppeUtils.getPrioritzedMaalgruppeFromAktivitet(maalgrupper, aktivitet)
+			MaalgruppeUtils.getPrioritzedMaalgruppeFromAktivitet(maalgrupper, aktivitet)?.maalgruppetype
 		)
 	}
 
