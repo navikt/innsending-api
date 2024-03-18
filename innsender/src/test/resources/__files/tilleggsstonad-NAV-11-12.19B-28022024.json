@@ -3,11 +3,42 @@
 	"data": {
 		"data": {
 			"flervalg": {
-				"aapUforeNedsattArbEvne": false,
+				"aapUforeNedsattArbEvne": true,
 				"ensligUtdanning": false,
 				"gjenlevendeUtdanning": false,
 				"tidligereFamiliepleier": true,
 				"annet": false
+			},
+			"aktiviteterOgMaalgruppe": {
+				"maalgruppe": {
+					"calculated": {
+						"maalgruppetype": "ANNET"
+					},
+					"prefilled": {
+						"maalgruppetype": "NEDSARBEVN",
+						"gyldighetsperiode": {
+							"fom": "2023-09-15",
+							"tom": "2024-05-15"
+						},
+						"maalgruppenavn": "Person med nedsatt arbeidsevne pga. sykdom"
+					}
+				},
+				"aktivitet": {
+					"aktivitetId": "142075136",
+					"maalgruppe": {
+						"maalgruppetype": "NEDSARBEVN",
+						"gyldighetsperiode": {
+							"fom": "2023-09-15",
+							"tom": "2024-05-15"
+						},
+						"maalgruppenavn": "Person med nedsatt arbeidsevne pga. sykdom"
+					},
+					"periode": {
+						"fom": "2024-01-01",
+						"tom": "2024-08-31"
+					},
+					"text": "Arbeidstrening: 01.01.2024 - 31.08.2024"
+				}
 			},
 			"harDuNorskFodselsnummerEllerDNummer": "ja",
 			"fodselsnummerDNummerSoker": "10108000398",

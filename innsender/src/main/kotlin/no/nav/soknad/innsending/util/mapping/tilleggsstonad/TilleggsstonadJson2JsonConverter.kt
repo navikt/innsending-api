@@ -36,10 +36,10 @@ fun convertToJsonTilleggsstonad(tilleggsstonad: Application, soknadDto: Dokument
 }
 
 private fun convertAktivitetsinformasjon(tilleggsstonad: Application): JsonAktivitetsInformasjon? {
-	return if (tilleggsstonad.container != null
-		&& tilleggsstonad.container.aktivitet?.aktivitetId != null && tilleggsstonad.container.aktivitet.aktivitetId != "ingenAktivitet"
+	return if (tilleggsstonad.aktiviteterOgMaalgruppe != null
+		&& tilleggsstonad.aktiviteterOgMaalgruppe.aktivitet?.aktivitetId != null
 	)
-		JsonAktivitetsInformasjon(aktivitet = tilleggsstonad.container.aktivitet.aktivitetId)
+		JsonAktivitetsInformasjon(aktivitet = tilleggsstonad.aktiviteterOgMaalgruppe.aktivitet.aktivitetId)
 	else
 		null
 }
@@ -315,12 +315,12 @@ private fun getSelectedDate(userDate: String?, activityDate: String?, field: Str
 private fun convertToJsonDagligReise(tilleggsstonad: Application): JsonDagligReise {
 	return JsonDagligReise(
 		startdatoDdMmAaaa = getSelectedDate(
-			tilleggsstonad.startdatoDdMmAaaa,
+			tilleggsstonad.soknadsPeriode?.startdato,
 			tilleggsstonad.aktiviteterOgMaalgruppe?.aktivitet?.periode?.fom,
 			"DagligReise startdato"
 		),
 		sluttdatoDdMmAaaa = getSelectedDate(
-			tilleggsstonad.sluttdatoDdMmAaaa,
+			tilleggsstonad.soknadsPeriode?.sluttdato,
 			tilleggsstonad.aktiviteterOgMaalgruppe?.aktivitet?.periode?.tom,
 			"DagligReise sluttdato"
 		),
@@ -409,11 +409,11 @@ private fun convertToJsonReise_Arbeidssoker(tilleggsstonad: Application): JsonDa
 private fun convertToJsonOppstartOgAvsluttetAktivitet(tilleggsstonad: Application): JsonOppstartOgAvsluttetAktivitet {
 	return JsonOppstartOgAvsluttetAktivitet(
 		startdatoDdMmAaaa1 = validateNoneNull(
-			tilleggsstonad.startdatoDdMmAaaa1,
+			tilleggsstonad.soknadsperiode1?.startdato,
 			"Oppstart og avslutning av aktivitet - reisetidspunkt mangler"
 		),
 		sluttdatoDdMmAaaa1 = validateNoneNull(
-			tilleggsstonad.sluttdatoDdMmAaaa1,
+			tilleggsstonad.soknadsperiode1?.sluttdato,
 			"Oppstart og avslutning av aktivitet - reisetidspunkt mangler"
 		),
 		hvorLangReiseveiHarDu2 = validateNoneNull(

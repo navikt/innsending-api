@@ -15,6 +15,8 @@ class JsonDagligReiseTestBuilder {
 
 	private var startdatoDdMmAaaa: String = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
 	private var sluttdatoDdMmAaaa: String = Date.formatToLocalDate(LocalDateTime.now().plusMonths(1))
+	private var soknadsPeriode: SoknadsPeriode =
+		SoknadsPeriode(startdato = startdatoDdMmAaaa, sluttdato = sluttdatoDdMmAaaa)
 	private var hvorMangeReisedagerHarDuPerUke: Int = 5
 	private var harDuEnReiseveiPaSeksKilometerEllerMer: String = "Ja"
 	private var harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String? = null
@@ -46,8 +48,10 @@ class JsonDagligReiseTestBuilder {
 	private var kanIkkeReiseKollektivtDagligReise: KanIkkeReiseKollektivt? =
 		buildKanIkkeReiseKollektivtDagligReise()
 
-	fun startdatoDdMmAaaa(startdatoDdMmAaaa: String) = apply { this.startdatoDdMmAaaa = startdatoDdMmAaaa }
-	fun sluttdatoDdMmAaaa(sluttdatoDdMmAaaa: String) = apply { this.sluttdatoDdMmAaaa = sluttdatoDdMmAaaa }
+	fun soknadsPeriode(startdato: String, sluttdato: String) = apply {
+		soknadsPeriode = SoknadsPeriode(startdato, sluttdato)
+	}
+
 	fun hvorMangeReisedagerHarDuPerUke(hvorMangeReisedagerHarDuPerUke: Int) =
 		apply { this.hvorMangeReisedagerHarDuPerUke = hvorMangeReisedagerHarDuPerUke }
 
@@ -114,8 +118,8 @@ class JsonDagligReiseTestBuilder {
 		apply { this.hvorforKanDuIkkeBenytteDrosje = hvorforKanDuIkkeBenytteDrosje }
 
 	fun build() = JsonDagligReise(
-		startdatoDdMmAaaa = startdatoDdMmAaaa,
-		sluttdatoDdMmAaaa = sluttdatoDdMmAaaa,
+		startdatoDdMmAaaa = soknadsPeriode.startdato,
+		sluttdatoDdMmAaaa = soknadsPeriode.sluttdato,
 		hvorMangeReisedagerHarDuPerUke = hvorMangeReisedagerHarDuPerUke,
 		harDuEnReiseveiPaSeksKilometerEllerMer = harDuEnReiseveiPaSeksKilometerEllerMer,
 		harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde = harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde,

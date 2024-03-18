@@ -85,9 +85,17 @@ class FyllUtJsonTestBuilder {
 
 	var startdatoDdMmAaaa: String? = "2024-01-08"
 	var sluttdatoDdMmAaaa: String? = "2024-03-29"
+	var soknadsPeriode: SoknadsPeriode? = SoknadsPeriode(startdato = "2024-01-01", sluttdato = "2024-03-31")
 
 	fun periode(startDato: String?, sluttDato: String?) =
-		apply { this.startdatoDdMmAaaa = startDato; this.sluttdatoDdMmAaaa = sluttDato }
+		apply {
+			this.startdatoDdMmAaaa = startDato
+			this.sluttdatoDdMmAaaa = sluttDato
+			if (startDato != null && sluttDato != null)
+				this.soknadsPeriode = SoknadsPeriode(startdato = startDato, sluttdato = sluttDato)
+			else
+				this.soknadsPeriode = null
+		}
 
 	// Daglig reise
 	var land: VelgLand? = VelgLand(label = "Norge", value = "NO")
@@ -296,6 +304,8 @@ class FyllUtJsonTestBuilder {
 					// Periode det søkes for
 					startdatoDdMmAaaa = startdatoDdMmAaaa,
 					sluttdatoDdMmAaaa = sluttdatoDdMmAaaa,
+					soknadsPeriode = soknadsPeriode,
+					soknadsperiode1 = soknadsPeriode,
 
 					// Barnepass
 					opplysningerOmBarn = if (skjemanr == barnepassSkjemanr) passAvBarn else null,

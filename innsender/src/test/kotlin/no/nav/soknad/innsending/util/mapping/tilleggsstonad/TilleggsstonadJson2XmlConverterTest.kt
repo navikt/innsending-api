@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import no.nav.soknad.innsending.utils.Date
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.tilleggsstonad.*
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
 import javax.xml.stream.XMLInputFactory
 
 class TilleggsstonadJson2XmlConverterTest {
@@ -70,7 +72,7 @@ class TilleggsstonadJson2XmlConverterTest {
 	@Test
 	fun json2XmlTest_barnepass() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.15B", tema = "TSO").build()
-		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/barnepass-NAV-11-12.15B-11032024.json")
+		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/barnepass-NAV-11-12.15B.json")
 
 		val xmlFil = json2Xml(soknadDto, jsonFil)
 
@@ -85,7 +87,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.21B", tema = "TSO").build()
 		val dagligReise =
 			JsonDagligReiseTestBuilder()
-				.startdatoDdMmAaaa("2023-12-01").sluttdatoDdMmAaaa("2024-06-20")
+				.soknadsPeriode("2023-12-01", "2024-06-20")
 				.hvorLangReiseveiHarDu(130)
 				.velgLand1(VelgLand(label = "Norge", value = "NO"))
 				.adresse1("Kongensgate 10")
@@ -161,6 +163,7 @@ class TilleggsstonadJson2XmlConverterTest {
 	fun `Convert to XML of daily travel excpenses - using taxi`() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.21B", tema = "TSO").build()
 		val dagligReise = JsonDagligReiseTestBuilder()
+			.soknadsPeriode("2024-01-02", "2024-06-18")
 			.hvorLangReiseveiHarDu(10)
 			.kanDuReiseKollektivtDagligReise("Nei")
 			.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt("hentingEllerLeveringAvBarn")
@@ -206,6 +209,7 @@ class TilleggsstonadJson2XmlConverterTest {
 	fun `Convert to XML of daily travel excpenses - neither own car nor taxi`() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.21B", tema = "TSR").build()
 		val dagligReise = JsonDagligReiseTestBuilder()
+			.soknadsPeriode("2024-01-02", "2024-06-18")
 			.hvorLangReiseveiHarDu(10)
 			.kanDuReiseKollektivtDagligReise("Nei")
 			.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt("hentingEllerLeveringAvBarn")
@@ -285,6 +289,10 @@ class TilleggsstonadJson2XmlConverterTest {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.18B", tema = "TSO").build()
 		val oppstartOgAvslutningAvAktivitet =
 			JsonReiseOppstartSluttTestBuilder()
+				.soknadsPeriode(
+					Date.formatToLocalDate(LocalDateTime.now().minusMonths(1)),
+					Date.formatToLocalDate(LocalDateTime.now().plusMonths(3))
+				)
 				.hvorLangReiseveiHarDu2(100)
 				.hvorMangeGangerSkalDuReiseEnVei(4)
 				.harDuBarnSomSkalFlytteMedDeg("Ja")
@@ -325,6 +333,10 @@ class TilleggsstonadJson2XmlConverterTest {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.18B", tema = "TSO").build()
 		val oppstartOgAvslutningAvAktivitet =
 			JsonReiseOppstartSluttTestBuilder()
+				.soknadsPeriode(
+					Date.formatToLocalDate(LocalDateTime.now().minusMonths(1)),
+					Date.formatToLocalDate(LocalDateTime.now().plusMonths(3))
+				)
 				.hvorLangReiseveiHarDu2(100)
 				.hvorMangeGangerSkalDuReiseEnVei(4)
 				.kanDuReiseKollektivtOppstartAvslutningHjemreise("Nei")

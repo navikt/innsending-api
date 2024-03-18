@@ -55,7 +55,7 @@ data class Application(
 	val annet1: String? = null, // Ingen av valgene ovenfor passer min situasjon
 	// <- Slettes
 
-	val hvorforReiserDu: HvorforReiserDu? = null,
+	val hvorforReiserDu: HvorforReiserDu? = null, // Slettes?
 
 	// Dine opplysninger
 	val fornavnSoker: String,
@@ -74,8 +74,8 @@ data class Application(
 	val harRegistrertAktivitetsperiode: String? = null, // Ja | nei
 
 	// Daglig reise
-	@JsonProperty("startdatoDdMmAaaa")
 	val soknadsPeriode: SoknadsPeriode? = null,
+//	@JsonProperty("startdatoDdMmAaaa")
 //	val startdatoDdMmAaaa: String? = null,
 //	val sluttdatoDdMmAaaa: String? = null,
 	val hvorMangeReisedagerHarDuPerUke: Int? = null,
@@ -162,6 +162,8 @@ data class Application(
 	val hvorStortBelopSokerDuOmAFaDekketAvNav: Int? = null,
 
 	// Boutgifter
+	val startdatoDdMmAaaa: String? = null,
+	val sluttdatoDdMmAaaa: String? = null,
 	val hvilkeBoutgifterSokerDuOmAFaDekket: String? = null, // "fasteBoutgifter" | "boutgifterIForbindelseMedSamling"
 	val bostotteIForbindelseMedSamling: BostotteIForbindelseMedSamling? = null,
 

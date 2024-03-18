@@ -1,0 +1,79 @@
+{
+	"language": "nb-NO",
+	"data": {
+		"data": {
+			"flervalg": {
+				"aapUforeNedsattArbEvne": false,
+				"ensligUtdanning": false,
+				"ensligArbSoker": false,
+				"gjenlevendeUtdanning": false,
+				"gjenlevendeArbSoker": false,
+				"tidligereFamiliepleier": false,
+				"annet": false
+			},
+			"aktiviteterOgMaalgruppe": {
+				"maalgruppe": {
+					"calculated": {
+						"maalgruppetype": "ANNET"
+					},
+					"prefilled": {
+						"maalgruppetype": "NEDSARBEVN",
+						"gyldighetsperiode": {
+							"fom": "2023-09-15",
+							"tom": "2024-05-15"
+						},
+						"maalgruppenavn": "Person med nedsatt arbeidsevne pga. sykdom"
+					}
+				},
+				"aktivitet": {
+					"aktivitetId": "142075136",
+					"maalgruppe": {
+						"maalgruppetype": "NEDSARBEVN",
+						"gyldighetsperiode": {
+							"fom": "2023-09-15",
+							"tom": "2024-05-15"
+						},
+						"maalgruppenavn": "Person med nedsatt arbeidsevne pga. sykdom"
+					},
+					"periode": {
+						"fom": "2024-01-01",
+						"tom": "2024-08-31"
+					},
+					"text": "Arbeidstrening: 01.01.2024 - 31.08.2024"
+				}
+			},
+			"opplysningerOmBarn": [
+				{
+					"fornavn": "sdf",
+					"etternavn": "sdf",
+					"fodselsnummerDNummer": "28898698736",
+					"jegSokerOmStonadTilPassAvDetteBarnet": true,
+					"sokerStonadForDetteBarnet": {
+						"hvemPasserBarnet": "dagmammaEllerDagpappa",
+						"oppgiManedligUtgiftTilBarnepass": 233,
+						"harBarnetFullfortFjerdeSkolear": "nei"
+					}
+				}
+			],
+			"fornavnSoker": "asd",
+			"etternavnSoker": "asd",
+			"harDuNorskFodselsnummerEllerDNummer": "ja",
+			"fodselsnummerDNummerSoker": "23867399240",
+			"startdatoDdMmAaaa": "2024-03-01",
+			"sluttdatoDdMmAaaa": "2024-03-21",
+			"fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa": "2024-03-01"
+		},
+		"metadata": {
+			"timezone": "Europe/Oslo",
+			"offset": 60,
+			"origin": "https://skjemadelingslenke.ekstern.dev.nav.no",
+			"referrer": "https://skjemadelingslenke.ekstern.dev.nav.no/fyllut/nav111215b/paabegynt?sub=digital",
+			"browserName": "Netscape",
+			"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+			"pathName": "/fyllut/nav111215b/tilleggsopplysningerPanel",
+			"onLine": true
+		},
+		"state": "submitted",
+		"_vnote": ""
+	}
+}

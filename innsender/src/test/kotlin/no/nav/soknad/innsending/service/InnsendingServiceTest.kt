@@ -348,7 +348,7 @@ class InnsendingServiceTest : ApplicationTest() {
 			erHoveddokument = true,
 			erVariant = true,
 			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
-			vedleggsNavn = "/__files/tilleggsstonad-NAV-11-12.21B.json"
+			vedleggsNavn = "/__files/dagligreise-NAV-11-12.21B-08032024.json"
 		)
 		val inputDokumentSoknadDto = lagDokumentSoknad(
 			skjemanr = "NAV 11-12.21B",
@@ -392,7 +392,7 @@ class InnsendingServiceTest : ApplicationTest() {
 			erHoveddokument = true,
 			erVariant = true,
 			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
-			vedleggsNavn = "/__files/tilleggsstonad-NAV-11-12.19B.json"
+			vedleggsNavn = "/__files/tilleggsstonad-NAV-11-12.19B-28022024.json"
 		)
 		val inputDokumentSoknadDto = lagDokumentSoknad(
 			skjemanr = skjemaNr,
@@ -459,4 +459,5 @@ class InnsendingServiceTest : ApplicationTest() {
 		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
 		assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
 	}
+
 }

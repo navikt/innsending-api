@@ -131,7 +131,7 @@ class TilleggsstonadJson2JsonConverterTest {
 				aktivitetId = aktivitetsId,
 				SkjemaPeriode("2024-01-02", "2024-03-30")
 			)
-			.periode("01-01-2024", "29-03-2024")
+			.periode("2024-01-01", "2024-03-29")
 			.reisemal(VelgLand(label = "Norge", value = "NO"), adresse = "Kongensgate 10", postr = "3701")
 			.reiseAvstandOgFrekvens(hvorLangReiseveiHarDu = 120, hvorMangeReisedagerHarDuPerUke = 5)
 			.reiseEgenBil(
@@ -159,7 +159,7 @@ class TilleggsstonadJson2JsonConverterTest {
 			strukturertJson.applicationDetails.maalgruppeinformasjon?.maalgruppetype
 		)
 		Assertions.assertEquals(
-			"01-01-2024",
+			"2024-01-01",
 			strukturertJson.applicationDetails.rettighetstype?.reise?.dagligReise?.startdatoDdMmAaaa
 		)
 		Assertions.assertEquals(
