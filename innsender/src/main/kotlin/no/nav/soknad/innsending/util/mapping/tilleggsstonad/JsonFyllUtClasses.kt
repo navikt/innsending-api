@@ -102,9 +102,11 @@ data class Application(
 	val bekreftelseForAlleSamlingeneDuSkalDeltaPa: String? = null,
 
 	// Reise på grunn av oppstart, avslutning eller hjemreise
-	val soknadsperiode1: SoknadsPeriode? = null,
+	//val soknadsperiode1: SoknadsPeriode? = null,
 	//val startdatoDdMmAaaa1: String? = null,
 	//val sluttdatoDdMmAaaa1: String? = null,
+	val startdato: String? = null,
+	val sluttdato: String? = null,
 	val hvorLangReiseveiHarDu2: Int? = null,
 	val hvorMangeGangerSkalDuReiseEnVei: Int? = null,
 	val velgLand3: VelgLand? = null,

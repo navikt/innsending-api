@@ -409,11 +409,11 @@ private fun convertToJsonReise_Arbeidssoker(tilleggsstonad: Application): JsonDa
 private fun convertToJsonOppstartOgAvsluttetAktivitet(tilleggsstonad: Application): JsonOppstartOgAvsluttetAktivitet {
 	return JsonOppstartOgAvsluttetAktivitet(
 		startdatoDdMmAaaa1 = validateNoneNull(
-			tilleggsstonad.soknadsperiode1?.startdato,
+			tilleggsstonad.startdato,
 			"Oppstart og avslutning av aktivitet - reisetidspunkt mangler"
 		),
 		sluttdatoDdMmAaaa1 = validateNoneNull(
-			tilleggsstonad.soknadsperiode1?.sluttdato,
+			tilleggsstonad.sluttdato,
 			"Oppstart og avslutning av aktivitet - reisetidspunkt mangler"
 		),
 		hvorLangReiseveiHarDu2 = validateNoneNull(

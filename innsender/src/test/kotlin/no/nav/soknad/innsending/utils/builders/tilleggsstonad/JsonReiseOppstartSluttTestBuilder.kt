@@ -1,6 +1,9 @@
 package no.nav.soknad.innsending.utils.builders.tilleggsstonad
 
-import no.nav.soknad.innsending.util.mapping.tilleggsstonad.*
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.BarnSomSkalFlytteMedDeg
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.JsonOppstartOgAvsluttetAktivitet
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.KanIkkeReiseKollektivt
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.VelgLand
 import no.nav.soknad.innsending.utils.Date
 import java.time.LocalDateTime
 
@@ -8,8 +11,13 @@ class JsonReiseOppstartSluttTestBuilder {
 
 	private var startdatoDdMmAaaa1: String = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
 	private var sluttdatoDdMmAaaa1: String = Date.formatToLocalDate(LocalDateTime.now().plusMonths(1))
-	private var soknadsperiode1: SoknadsPeriode =
-		SoknadsPeriode(startdato = startdatoDdMmAaaa1, sluttdato = sluttdatoDdMmAaaa1)
+
+	/*
+		private var soknadsperiode1: SoknadsPeriode =
+			SoknadsPeriode(startdato = startdatoDdMmAaaa1, sluttdato = sluttdatoDdMmAaaa1)
+	*/
+	private var startdato: String = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
+	private var sluttdato: String = Date.formatToLocalDate(LocalDateTime.now().plusMonths(1))
 	private var hvorLangReiseveiHarDu2: Int = 100
 	private var hvorMangeGangerSkalDuReiseEnVei: Int = 4
 	private var velgLand3: VelgLand = VelgLand(label = "Norge", value = "NO")
@@ -35,7 +43,8 @@ class JsonReiseOppstartSluttTestBuilder {
 	fun sluttdatoDdMmAaaa1(sluttdatoDdMmAaaa1: String) = apply { this.sluttdatoDdMmAaaa1 = sluttdatoDdMmAaaa1 }
 
 	fun soknadsPeriode(startdato: String, sluttdato: String) = apply {
-		this.soknadsperiode1 = SoknadsPeriode(startdato = startdato, sluttdato = sluttdato)
+		this.startdato = startdato
+		this.sluttdato = sluttdato
 	}
 
 	fun hvorLangReiseveiHarDu2(hvorLangReiseveiHarDu2: Int) =
@@ -82,8 +91,8 @@ class JsonReiseOppstartSluttTestBuilder {
 
 
 	fun build() = JsonOppstartOgAvsluttetAktivitet(
-		startdatoDdMmAaaa1 = startdatoDdMmAaaa1,
-		sluttdatoDdMmAaaa1 = sluttdatoDdMmAaaa1,
+		startdatoDdMmAaaa1 = startdato,
+		sluttdatoDdMmAaaa1 = sluttdato,
 		hvorLangReiseveiHarDu2 = hvorLangReiseveiHarDu2,
 		hvorMangeGangerSkalDuReiseEnVei = hvorMangeGangerSkalDuReiseEnVei,
 		velgLand3 = velgLand3,

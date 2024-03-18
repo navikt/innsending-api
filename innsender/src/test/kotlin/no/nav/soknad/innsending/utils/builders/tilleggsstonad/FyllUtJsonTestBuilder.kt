@@ -281,6 +281,14 @@ class FyllUtJsonTestBuilder {
 		this.hvorStortBelopSokerDuOmAFaDekketAvNav = hvorStortBelopSokerDuOmAFaDekketAvNav
 	}
 
+	var startdato: String? = null
+	var sluttdato: String? = null
+
+	fun periodeReiseTilSamling(startdato: String?, sluttdato: String?) = apply {
+		this.startdato = startdato
+		this.sluttdato = sluttdato
+	}
+
 	fun build() =
 		Root(
 			language = language,
@@ -305,7 +313,9 @@ class FyllUtJsonTestBuilder {
 					startdatoDdMmAaaa = startdatoDdMmAaaa,
 					sluttdatoDdMmAaaa = sluttdatoDdMmAaaa,
 					soknadsPeriode = soknadsPeriode,
-					soknadsperiode1 = soknadsPeriode,
+					//soknadsperiode1 = soknadsPeriode,
+					startdato = startdato,
+					sluttdato = sluttdato,
 
 					// Barnepass
 					opplysningerOmBarn = if (skjemanr == barnepassSkjemanr) passAvBarn else null,
