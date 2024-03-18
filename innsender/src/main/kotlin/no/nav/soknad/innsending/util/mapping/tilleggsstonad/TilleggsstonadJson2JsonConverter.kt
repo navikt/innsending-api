@@ -294,28 +294,16 @@ private fun convertToReisestottesoknad(
 	tilleggsstonad: Application,
 	soknadDto: DokumentSoknadDto
 ): JsonReisestottesoknad? {
-	if (tilleggsstonad.hvorforReiserDu == null && !erReisestottesoknad(soknadDto.skjemanr)) return null
+	if (!erReisestottesoknad(soknadDto.skjemanr)) return null
 	return JsonReisestottesoknad(
-		hvorforReiserDu = tilleggsstonad.hvorforReiserDu,
-		dagligReise = if (tilleggsstonad.hvorforReiserDu?.dagligReise == true || soknadDto.skjemanr.startsWith(reiseDaglig)) convertToJsonDagligReise(
-			tilleggsstonad
-		) else null,
-		reiseSamling = if (tilleggsstonad.hvorforReiserDu?.reiseTilSamling == true || soknadDto.skjemanr.startsWith(
-				reiseSamling
-			)
-		) convertToJsonReiseSamling(tilleggsstonad) else null,
-		dagligReiseArbeidssoker = if (tilleggsstonad.hvorforReiserDu?.reiseNarDuErArbeidssoker == true || soknadDto.skjemanr.startsWith(
-				reiseArbeid
-			)
-		) convertToJsonReise_Arbeidssoker(
-			tilleggsstonad
-		) else null,
-		oppstartOgAvsluttetAktivitet = if (tilleggsstonad.hvorforReiserDu?.reisePaGrunnAvOppstartAvslutningEllerHjemreise == true || soknadDto.skjemanr.startsWith(
-				reiseOppstartSlutt
-			)
-		) convertToJsonOppstartOgAvsluttetAktivitet(
-			tilleggsstonad
-		) else null
+		dagligReise = if (soknadDto.skjemanr.startsWith(reiseDaglig))
+			convertToJsonDagligReise(tilleggsstonad) else null,
+		reiseSamling = if (soknadDto.skjemanr.startsWith(reiseSamling))
+			convertToJsonReiseSamling(tilleggsstonad) else null,
+		dagligReiseArbeidssoker = if (soknadDto.skjemanr.startsWith(reiseArbeid))
+			convertToJsonReise_Arbeidssoker(tilleggsstonad) else null,
+		oppstartOgAvsluttetAktivitet = if (soknadDto.skjemanr.startsWith(reiseOppstartSlutt))
+			convertToJsonOppstartOgAvsluttetAktivitet(tilleggsstonad) else null
 	)
 }
 
@@ -385,7 +373,7 @@ private fun convertToJsonReiseSamling(tilleggsstonad: Application): JsonReiseSam
 private fun convertToJsonReise_Arbeidssoker(tilleggsstonad: Application): JsonDagligReiseArbeidssoker {
 	return JsonDagligReiseArbeidssoker(
 		reisedatoDdMmAaaa = validateNoneNull(
-			tilleggsstonad.reisedatoDdMmAaaa,
+			tilleggsstonad.reisedatoDdMmAaaa ?: tilleggsstonad.reiseDato,
 			"Reise arbeidssøker - reisetidspunkt mangler"
 		),
 		hvorforReiserDuArbeidssoker = validateNoneNull(

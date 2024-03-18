@@ -75,8 +75,9 @@ data class Application(
 
 	// Daglig reise
 	@JsonProperty("startdatoDdMmAaaa")
-	val startdatoDdMmAaaa: String? = null,
-	val sluttdatoDdMmAaaa: String? = null,
+	val soknadsPeriode: SoknadsPeriode? = null,
+//	val startdatoDdMmAaaa: String? = null,
+//	val sluttdatoDdMmAaaa: String? = null,
 	val hvorMangeReisedagerHarDuPerUke: Int? = null,
 	val harDuEnReiseveiPaSeksKilometerEllerMer: String? = null, // JA|NEI
 	val harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String? = null, // JA | NEI,
@@ -101,8 +102,9 @@ data class Application(
 	val bekreftelseForAlleSamlingeneDuSkalDeltaPa: String? = null,
 
 	// Reise på grunn av oppstart, avslutning eller hjemreise
-	val startdatoDdMmAaaa1: String? = null,
-	val sluttdatoDdMmAaaa1: String? = null,
+	val soknadsperiode1: SoknadsPeriode? = null,
+	//val startdatoDdMmAaaa1: String? = null,
+	//val sluttdatoDdMmAaaa1: String? = null,
 	val hvorLangReiseveiHarDu2: Int? = null,
 	val hvorMangeGangerSkalDuReiseEnVei: Int? = null,
 	val velgLand3: VelgLand? = null,
@@ -118,7 +120,8 @@ data class Application(
 	val kanIkkeReiseKollektivtOppstartAvslutningHjemreise: KanIkkeReiseKollektivt? = null, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==nei
 
 	// Reise når du er arbeidssøker
-	val reisedatoDdMmAaaa: String? = null,
+	val reisedatoDdMmAaaa: String? = null, //TODO reisedatoDdMmAaaa eller reiseDato?
+	val reiseDato: String? = null,
 	val hvorforReiserDuArbeidssoker: String? = null, // oppfolgingFraNav | jobbintervju | arbeidPaNyttSted
 	val dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis: String? = null, // Ja | nei
 	val mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene: String? = "nei", // ja|nei
@@ -202,6 +205,11 @@ data class AktiviteterOgMaalgruppe(
 data class MaalgruppeValg(
 	val calculated: Maalgruppe? = null,
 	val prefilled: Maalgruppe? = null
+)
+
+data class SoknadsPeriode(
+	val startdato: String,
+	val sluttdato: String
 )
 
 data class SkjemaPeriode(

@@ -353,7 +353,7 @@ private fun convertDagligReise(jsonRettighetstyper: JsonRettighetstyper, soknadD
 
 private fun convertReisestoenadForArbeidssoeker(jsonRettighetstyper: JsonRettighetstyper): ReisestoenadForArbeidssoeker? {
 	val details = jsonRettighetstyper.reise
-	if (details == null || details.dagligReiseArbeidssoker == null || details.hvorforReiserDu == null || details.hvorforReiserDu.reiseNarDuErArbeidssoker != true) return null
+	if (details == null || details.dagligReiseArbeidssoker == null) return null
 
 	val dagligReise = details.dagligReiseArbeidssoker
 	return ReisestoenadForArbeidssoeker(

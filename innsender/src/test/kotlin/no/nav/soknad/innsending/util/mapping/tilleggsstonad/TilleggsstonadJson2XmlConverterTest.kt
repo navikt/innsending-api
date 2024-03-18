@@ -30,6 +30,20 @@ class TilleggsstonadJson2XmlConverterTest {
 	}
 
 	@Test
+	fun json2XmlTest_reise_for_arbeid() {
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.22B", tema = "TSR").build()
+		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/reise-for-arbeid-NAV-11-12.22B-18032024.json")
+
+		val xmlFil = json2Xml(soknadDto, jsonFil)
+
+		assertNotNull(xmlFil)
+		val xmlString = xmlFil.decodeToString()
+		assertTrue(xmlString.contains("<reiseutgifter"))
+		assertTrue(xmlString.contains("<reisestoenadForArbeidssoeker"))
+
+	}
+
+	@Test
 	fun json2XmlTest_flytting() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.23B", tema = "TSR").build()
 		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/tilleggsstonad-NAV-11-12.23B-27022024.json")
