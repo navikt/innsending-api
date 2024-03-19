@@ -4,7 +4,7 @@ info:
   description: "<p>REST API'er som er tilbudt av Arena.</p>\n\n<p>Sikkerhet:</p>\n<ul>\n<li>Avhengig av formålet med API'et, støttes aksesstoken utstedt av Azure AD, REST-STS\nog/eller TokenX/ID-porten.</li>\n<li>Preautorisering:</li>\n<ul>\n\t<li>Azure AD: Konsumenter må være registrert med applikasjonsnavn, team og cluster.</li>\n\t<li>REST-STS: Konsumenter må være registrert med servicebruker.</li>\n\t<li>TokenX: Konsumenter må være registrert med applikasjonsnavn, team og cluster.</li>\n</ul>\n<li>Ta kontakt på #arena for avtale om tilgang.</li>\n</ul>\n\n<p>Feilhåndtering:</p>\n<ul>\n<li>400- og 500-feil som returneres av selve API'et vil normalt inneholde et ApiError-objekt\nmed detaljer om feilen. Se Schemas nedenfor for definisjon.</li>\n</ul>"
   version: '1.0'
 servers:
-  - url: https://arena-api-q1.intern.dev.nav.no
+  - url: https://arena-api-q2.intern.dev.nav.no
     description: Generated server url
 tags:
   - name: Maalgrupper
