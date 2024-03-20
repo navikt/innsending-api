@@ -149,19 +149,12 @@ fun getMaalgruppeinformasjonFromLivssituasjon(
         return JsonMaalgruppeinformasjon(periode = null, kilde = "BRUKERREGISTRERT", maalgruppetype = "MOTDAGPEN")
 
     // Pri 9
-    if (livssituasjon.regArbSoker == true || "ja".equals(
-            tilleggsstonad.erDuArbeidssoker,
-            true
-        ) || "ja".equals(tilleggsstonad.regArbSoker, true)
+    if (livssituasjon.regArbSoker == true || "ja".equals(tilleggsstonad.regArbSoker, true)
     )
         return JsonMaalgruppeinformasjon(periode = null, kilde = "BRUKERREGISTRERT", maalgruppetype = "ARBSOKERE")
 
     // Pri 10
-    if (livssituasjon.annet == true || "nei".equals(
-            tilleggsstonad.erDuArbeidssoker,
-            true
-        ) || "nei".equals(tilleggsstonad.regArbSoker, true)
-    )
+    if (livssituasjon.annet == true || "nei".equals(tilleggsstonad.regArbSoker, true))
         return JsonMaalgruppeinformasjon(
             periode = null,
             kilde = "BRUKERREGISTRERT",

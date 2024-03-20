@@ -30,9 +30,6 @@ data class Application(
 	// Dersom søker har oppgitt livssituasjon fordi målgruppe mangler
 	val flervalg: Flervalg? = null,
 
-	val erDuArbeidssoker: String? = null, // true | false //TODO skal erstattes med regArbSoker
-	val regArbSoker: String? = null,
-
 	// Dersom det ikke er registrert maalgrupper i Arena for søker, må søker angi Livssituasjon.
 	// Denne skal mappes til en prioritert liste av maalgrupper, der den høyest prioriterte sendes inn.
 	// Denne prioriteringen gjøres i fyllut skjemaet og resultatet legges i aktiviteterOgMaalgruppe
@@ -105,6 +102,7 @@ data class Application(
 	val kanIkkeReiseKollektivtOppstartAvslutningHjemreise: KanIkkeReiseKollektivt? = null, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==nei
 
 	// Reise når du er arbeidssøker NAV 11-12.22B
+	val regArbSoker: String? = null, // ja || nei
 	val reiseDato: String? = null,
 	val hvorforReiserDuArbeidssoker: String? = null, // oppfolgingFraNav | jobbintervju | arbeidPaNyttSted
 	val dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis: String? = null, // Ja | nei
