@@ -374,7 +374,7 @@ private fun convertToJsonReiseSamling(tilleggsstonad: Application): JsonReiseSam
 private fun convertToJsonReise_Arbeidssoker(tilleggsstonad: Application): JsonDagligReiseArbeidssoker {
     return JsonDagligReiseArbeidssoker(
         reisedatoDdMmAaaa = validateNoneNull(
-            tilleggsstonad.reisedatoDdMmAaaa ?: tilleggsstonad.reiseDato,
+            tilleggsstonad.reiseDato,
             "Reise arbeidssøker - reisetidspunkt mangler"
         ),
         hvorforReiserDuArbeidssoker = validateNoneNull(

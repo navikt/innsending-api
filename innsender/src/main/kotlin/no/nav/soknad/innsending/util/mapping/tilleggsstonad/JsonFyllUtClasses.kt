@@ -24,18 +24,10 @@ data class ApplicationInfo(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Application(
 
-	// Dersom søker har en aktivitet skal den være hentet fra Arena og lagt inn i søknaden og sendes inn i XMLen
-	val aktivitetsId: String? = null, // TODO mangler foreløpig i fra FyllUt
-
-	// Dersom det er hentet maalgrupper fra Arena skal den maalgruppen som har overlappende periode med hentet aktivitet sendes inn.
-	val container: AktiviteterOgMaalgruppe? = null,  // TODO erstatt med aktiviteterOgMaalgruppe
+	// Dersom det er hentet aktivitet / maalgrupper fra Arena skal maalgruppen som har overlappende periode med hentet aktivitet sendes inn.
 	val aktiviteterOgMaalgruppe: AktiviteterOgMaalgruppe? = null,
 
-	val maalgruppePeriode: JsonPeriode? = null, // TODO mangler foreløpig i fra FyllUt
-	val maalgruppeKilde: String? = null, // TODO mangler foreløpig i fra FyllUt
-	val maalgruppeType: String? = null, // TODO mangler foreløpig i fra FyllUt
-
-	// TODO dersom søker har oppgitt livssituasjon fordi målgruppe mangler
+	// Dersom søker har oppgitt livssituasjon fordi målgruppe mangler
 	val flervalg: Flervalg? = null,
 
 	val erDuArbeidssoker: String? = null, // true | false //TODO skal erstattes med regArbSoker
@@ -43,7 +35,8 @@ data class Application(
 
 	// Dersom det ikke er registrert maalgrupper i Arena for søker, må søker angi Livssituasjon.
 	// Denne skal mappes til en prioritert liste av maalgrupper, der den høyest prioriterte sendes inn.
-	// -> Slettes
+	// Denne prioriteringen gjøres i fyllut skjemaet og resultatet legges i aktiviteterOgMaalgruppe
+	// -> TODO Slettes
 	val mottarDuEllerHarDuSoktOmDagpenger: String? = null,  // true | false
 	val mottarDuEllerHarDuSoktOmTiltakspenger: String? = null,  //  true | false
 	val gjennomforerDuEnUtdanningSomNavHarGodkjent: String? = null,  //  true | false
@@ -53,9 +46,7 @@ data class Application(
 	val erDuUgiftSkiltEllerSeparertOgErAleneOmOmsorgenForBarn1: String? = null,  // Har du barn under 8 år true | false.
 	val nedsattArbeidsevnePgaSykdom: NedsattArbeidsevnePgaSykdom? = null,
 	val annet1: String? = null, // Ingen av valgene ovenfor passer min situasjon
-	// <- Slettes
-
-	val hvorforReiserDu: HvorforReiserDu? = null, // Slettes?
+	// <- TODO Slettes
 
 	// Dine opplysninger
 	val fornavnSoker: String,
@@ -65,19 +56,13 @@ data class Application(
 	@JsonProperty("fodselsnummerDNummerSoker")
 	val fodselsnummerDnummerSoker: String? = null,
 
-
-	val annenDokumentasjon: String? = null,
-
 	// Tilleggsopplysninger
 	val harDuNoenTilleggsopplysningerDuMenerErViktigeForSoknadenDin: String? = null,
 	val tilleggsopplysninger: String? = null,
 	val harRegistrertAktivitetsperiode: String? = null, // Ja | nei
 
-	// Daglig reise
-	val soknadsPeriode: SoknadsPeriode? = null,
-//	@JsonProperty("startdatoDdMmAaaa")
-//	val startdatoDdMmAaaa: String? = null,
-//	val sluttdatoDdMmAaaa: String? = null,
+	// Daglig reise, NAV 11-12.21B
+	val soknadsPeriode: SoknadsPeriode? = null,  // Samme som Reise på grunn av oppstart, avslutning eller hjemreise
 	val hvorMangeReisedagerHarDuPerUke: Int? = null,
 	val harDuEnReiseveiPaSeksKilometerEllerMer: String? = null, // JA|NEI
 	val harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String? = null, // JA | NEI,
@@ -90,7 +75,7 @@ data class Application(
 	val hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt: String? = null,
 	val kanIkkeReiseKollektivtDagligReise: KanIkkeReiseKollektivt? = null,
 
-	// Reise til samling
+	// Reise til samling, NAV 11-12.17B
 	val startOgSluttdatoForSamlingene: List<JsonPeriode>? = null, // hvis skalDuDeltaEllerHarDuDeltattPaFlereSamlinger == Ja
 	val hvorLangReiseveiHarDu1: Int? = null,
 	val velgLandReiseTilSamling: VelgLand? = null,
@@ -102,11 +87,9 @@ data class Application(
 	val bekreftelseForAlleSamlingeneDuSkalDeltaPa: String? = null,
 
 	// Reise på grunn av oppstart, avslutning eller hjemreise
-	//val soknadsperiode1: SoknadsPeriode? = null,
-	//val startdatoDdMmAaaa1: String? = null,
-	//val sluttdatoDdMmAaaa1: String? = null,
-	val startdato: String? = null,
-	val sluttdato: String? = null,
+	//val soknadsPeriode: SoknadsPeriode? = null, NAV 11-12.18B
+	val startdato: String? = null,  // Erstattes av soknadsPeriode
+	val sluttdato: String? = null,  // Erstattes av soknadsPeriode
 	val hvorLangReiseveiHarDu2: Int? = null,
 	val hvorMangeGangerSkalDuReiseEnVei: Int? = null,
 	val velgLand3: VelgLand? = null,
@@ -121,8 +104,7 @@ data class Application(
 	val hvilkeUtgifterHarDuIForbindelseMedReisen4: Int? = null, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==ja
 	val kanIkkeReiseKollektivtOppstartAvslutningHjemreise: KanIkkeReiseKollektivt? = null, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==nei
 
-	// Reise når du er arbeidssøker
-	val reisedatoDdMmAaaa: String? = null, //TODO reisedatoDdMmAaaa eller reiseDato?
+	// Reise når du er arbeidssøker NAV 11-12.22B
 	val reiseDato: String? = null,
 	val hvorforReiserDuArbeidssoker: String? = null, // oppfolgingFraNav | jobbintervju | arbeidPaNyttSted
 	val dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis: String? = null, // Ja | nei
@@ -136,7 +118,7 @@ data class Application(
 	val hvilkeUtgifterHarDuIForbindelseMedReisen3: Int? = null, // hvis kanDuReiseKollektivtArbeidssoker==ja?
 	val kanIkkeReiseKollektivtArbeidssoker: KanIkkeReiseKollektivt? = null,
 
-	// Flytting
+	// Flytting, NAV 11-12.23B
 	val hvorforFlytterDu: String? = null, // "Jeg flytter fordi jeg har fått ny jobb" | "Jeg flytter i forbindelse med at jeg skal gjennomføre en aktivitet"
 	val narFlytterDuDdMmAaaa: String? = null, // 01-01-2023
 	val oppgiForsteDagINyJobbDdMmAaaa: String? = null, // 02-01-2023 dersom flytting pga ny jobb
@@ -153,7 +135,9 @@ data class Application(
 	// Periode for Laeremidler og boutgifter og pass av barn
 	//val ikkeRegistrertAktivitetsperiode: JsonPeriode? = null,
 
-	// Laeremidler
+	// Laeremidler, NAV 11-12.16B
+	// val startdatoDdMmAaaa: String, // Brukes også av boutgifter
+	// val sluttdatoDdMmAaaa: String? = null,  // Brukes også av boutgifter
 	val hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore: String? = null, // "Jeg skal ta videregående utdanning, eller forkurs på universitet" | "Jeg skal ta utdanning på fagskole, høyskole eller universitet" | "Jeg skal ta kurs eller annen form for utdanning"
 	val hvilketKursEllerAnnenFormForUtdanningSkalDuTa: String? = null,
 	val oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Int? = null, // 0-100
@@ -163,7 +147,7 @@ data class Application(
 	val hvorMyeFarDuDekketAvEnAnnenAktor: Int? = null,
 	val hvorStortBelopSokerDuOmAFaDekketAvNav: Int? = null,
 
-	// Boutgifter
+	// Boutgifter, NAV 11-12.19B
 	val startdatoDdMmAaaa: String? = null,
 	val sluttdatoDdMmAaaa: String? = null,
 	val hvilkeBoutgifterSokerDuOmAFaDekket: String? = null, // "fasteBoutgifter" | "boutgifterIForbindelseMedSamling"
@@ -177,21 +161,17 @@ data class Application(
 	val boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten: Int? = null,
 	val erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet: String? = null, // "Ja" | "Nei"
 
-	// Pass av barn
+	// Pass av barn, NAV 11-12.15B
+	// val startdatoDdMmAaaa: String? = null, Brukes også av boutgifter
+	// val sluttdatoDdMmAaaa: String? = null, Brukes også av boutgifter
 	val opplysningerOmBarn: List<OpplysningerOmBarn>? = null,
-	val fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa: String? = null, // TODO skal denne fjernes, eller kan det være situasjoner der denne personen ikke har fnr?
+	val fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa: String? = null, // Skal oppgi fødselsdato
 	val fodselsnummerDNummerAndreForelder: String? = null,
 
 	// Kjøreliste
-	val tekstfelt: String? = null,
 	val drivinglist: Drivinglist? = null,
 
-	// Annet som ikke blir brukt
-	val legeerklaeringPaMedisinskeArakerTilAtDuIkkeKanReiseKollektivt2: String? = null,
-	val dokumentasjonAvReiseutgifter: String? = null,
-	val dokumentasjonAvPlassIbarnehageEllerSkolefritidsordningSfo3: String? = null,
-	val dokumentasjonAvUtgifterTilDrosje3: String? = null,
-)
+	)
 
 data class Aktivitet(
 	val aktivitetId: String = "ingenAktivitet",
