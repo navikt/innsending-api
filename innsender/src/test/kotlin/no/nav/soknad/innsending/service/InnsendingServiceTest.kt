@@ -11,8 +11,10 @@ import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
+import no.nav.soknad.innsending.model.Mimetype
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SoknadFile
+import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.testpersonid
@@ -415,6 +417,21 @@ class InnsendingServiceTest : ApplicationTest() {
 		assertTrue(kvitteringsDto.hoveddokumentRef != null)
 		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
 		assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+
+		val innsendtSoknad = soknadService.hentSoknadMedHoveddokumentVariant(opprettetSoknad.innsendingsId!!)
+		assertTrue(innsendtSoknad.status == SoknadsStatusDto.innsendt)
+		assertEquals("TSO", innsendtSoknad.tema)
+		assertEquals(
+			Mimetype.applicationSlashXml,
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.innsendt }
+				.first().mimetype
+		)
+		assertEquals(
+			Mimetype.applicationSlashJson,
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.sendesIkke }
+				.first().mimetype
+		)
+
 	}
 
 	@Test
@@ -458,6 +475,80 @@ class InnsendingServiceTest : ApplicationTest() {
 		assertTrue(kvitteringsDto.hoveddokumentRef != null)
 		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
 		assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+
+		val innsendtSoknad = soknadService.hentSoknadMedHoveddokumentVariant(opprettetSoknad.innsendingsId!!)
+		assertTrue(innsendtSoknad.status == SoknadsStatusDto.innsendt)
+		assertEquals("TSO", innsendtSoknad.tema)
+		assertEquals(
+			Mimetype.applicationSlashXml,
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.innsendt }
+				.first().mimetype
+		)
+		assertEquals(
+			Mimetype.applicationSlashJson,
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.sendesIkke }
+				.first().mimetype
+		)
+
 	}
+
+
+	@Test
+	fun sendInnKjoreliste() {
+		val innsendingService = lagInnsendingService(soknadService)
+		val hoveddokDto = lagVedlegg(
+			vedleggsnr = "kjoreliste", // TODO kjøreliste skjemanr ikke avklart
+			tittel = "Kjøreliste",
+			erHoveddokument = true,
+			erVariant = false,
+			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			vedleggsNavn = "/litenPdf.pdf"
+		)
+		val hoveddokVariantDto = lagVedlegg(
+			vedleggsnr = "kjoreliste", // TODO kjøreliste skjemanr ikke avklart
+			tittel = "Kjøreliste",
+			erHoveddokument = true,
+			erVariant = true,
+			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			vedleggsNavn = "/__files/kjøreliste-NAV-11-12.10-05032024.json"
+		)
+		val inputDokumentSoknadDto = lagDokumentSoknad(
+			skjemanr = "kjoreliste", // TODO
+			tittel = "Kjøreliste",
+			brukerId = testpersonid,
+			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
+			spraak = "no_NB",
+			tema = "TSO"
+		)
+		val skjemaDto =
+			SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService = soknadService, inputDokumentSoknadDto)
+
+		val opprettetSoknad = soknadService.hentSoknad(skjemaDto.innsendingsId!!)
+		val kvitteringsDto =
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				soknadsmottakerAPI,
+				opprettetSoknad,
+				innsendingService
+			)
+		assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
+		assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+
+		val innsendtSoknad = soknadService.hentSoknadMedHoveddokumentVariant(opprettetSoknad.innsendingsId!!)
+		assertTrue(innsendtSoknad.status == SoknadsStatusDto.innsendt)
+		assertEquals("TSR", innsendtSoknad.tema)
+		assertEquals(
+			Mimetype.applicationSlashXml,
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.innsendt }
+				.first().mimetype
+		)
+		assertEquals(
+			Mimetype.applicationSlashJson,
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.sendesIkke }
+				.first().mimetype
+		)
+
+	}
+
 
 }

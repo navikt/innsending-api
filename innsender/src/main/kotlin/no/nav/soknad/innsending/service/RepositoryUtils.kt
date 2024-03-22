@@ -143,7 +143,7 @@ class RepositoryUtils(
 
 	fun endreTema(id: Long, innsendingsid: String, tema: String) {
 		try {
-			soknadRepository.updateTemaById(id, tema)
+			soknadRepository.updateTema(id, tema)
 		} catch (ex: Exception) {
 			throw BackendErrorException(
 				message = "Feil ved oppdatering av tema på søknad med innsendingsId $innsendingsid",

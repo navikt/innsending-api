@@ -29,7 +29,11 @@ fun convertToJsonTilleggsstonad(soknadDto: DokumentSoknadDto, json: ByteArray?):
 fun convertToJsonTilleggsstonad(tilleggsstonad: Application, soknadDto: DokumentSoknadDto): JsonTilleggsstonad {
     return JsonTilleggsstonad(
         aktivitetsinformasjon = convertAktivitetsinformasjon(tilleggsstonad),
-        maalgruppeinformasjon = convertToJsonMaalgruppeinformasjon(tilleggsstonad),
+        maalgruppeinformasjon = convertToJsonMaalgruppeinformasjon(
+            tilleggsstonad.aktiviteterOgMaalgruppe,
+            tilleggsstonad.flervalg,
+            tilleggsstonad.regArbSoker
+        ),
         rettighetstype = convertToJsonRettighetstyper(tilleggsstonad, soknadDto)
 
     )
@@ -73,15 +77,19 @@ fun getAktivitetsPeriode(aktivitet: Aktivitet?): AktivitetsPeriode? {
     return AktivitetsPeriode(startdatoDdMmAaaa = aktivitet.periode.fom, sluttdatoDdMmAaaa = aktivitet.periode.tom)
 }
 
-fun convertToJsonMaalgruppeinformasjon(tilleggsstonad: Application): JsonMaalgruppeinformasjon? { // TODO
+fun convertToJsonMaalgruppeinformasjon(
+    aktiviteterOgMaalgruppe: AktiviteterOgMaalgruppe?,
+    flervalg: Flervalg?,
+    regArbSoker: String?
+): JsonMaalgruppeinformasjon? { // TODO
 
-    return getMaalgruppeInformasjonFromAktiviteterOgMaalgruppe(tilleggsstonad.aktiviteterOgMaalgruppe)
-        ?: getMaalgruppeinformasjonFromLivssituasjon(tilleggsstonad.flervalg, tilleggsstonad)
+    return getMaalgruppeInformasjonFromAktiviteterOgMaalgruppe(aktiviteterOgMaalgruppe)
+        ?: getMaalgruppeinformasjonFromLivssituasjon(flervalg, regArbSoker)
 }
 
 fun getMaalgruppeinformasjonFromLivssituasjon(
     livssituasjon: Flervalg?,
-    tilleggsstonad: Application
+    regArbSoker: String?
 ): JsonMaalgruppeinformasjon? {
     // Bruk maalgruppeinformasjon hvis dette er hentet fra Arena og lagt inn på søknaden
 
@@ -149,12 +157,12 @@ fun getMaalgruppeinformasjonFromLivssituasjon(
         return JsonMaalgruppeinformasjon(periode = null, kilde = "BRUKERREGISTRERT", maalgruppetype = "MOTDAGPEN")
 
     // Pri 9
-    if (livssituasjon.regArbSoker == true || "ja".equals(tilleggsstonad.regArbSoker, true)
+    if (livssituasjon.regArbSoker == true || "ja".equals(regArbSoker, true)
     )
         return JsonMaalgruppeinformasjon(periode = null, kilde = "BRUKERREGISTRERT", maalgruppetype = "ARBSOKERE")
 
     // Pri 10
-    if (livssituasjon.annet == true || "nei".equals(tilleggsstonad.regArbSoker, true))
+    if (livssituasjon.annet == true || "nei".equals(regArbSoker, true))
         return JsonMaalgruppeinformasjon(
             periode = null,
             kilde = "BRUKERREGISTRERT",

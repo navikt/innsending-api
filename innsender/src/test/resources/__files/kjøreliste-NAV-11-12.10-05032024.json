@@ -2,7 +2,37 @@
 	"language": "en",
 	"data": {
 		"data": {
-			"tekstfelt": "asd",
+			"aktiviteterOgMaalgruppe": {
+				"maalgruppe": {
+					"calculated": {
+						"maalgruppetype": "ANNET"
+					},
+					"prefilled": {
+						"maalgruppetype": "ARBSOKERE",
+						"gyldighetsperiode": {
+							"fom": "2023-09-18",
+							"tom": "2024-05-18"
+						},
+						"maalgruppenavn": "Person med nedsatt arbeidsevne pga. sykdom"
+					}
+				},
+				"aktivitet": {
+					"aktivitetId": "142075146",
+					"maalgruppe": {
+						"maalgruppetype": "ARBSOKERE",
+						"gyldighetsperiode": {
+							"fom": "2023-09-18",
+							"tom": "2024-05-18"
+						},
+						"maalgruppenavn": "Arbeidssøker"
+					},
+					"periode": {
+						"fom": "2024-01-01",
+						"tom": "2024-08-31"
+					},
+					"text": "Arbeidstrening: 01.01.2024 - 31.08.2024"
+				}
+			},
 			"drivinglist": {
 				"selectedVedtaksId": "43258684",
 				"dates": [

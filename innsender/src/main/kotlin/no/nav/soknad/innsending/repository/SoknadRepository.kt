@@ -64,12 +64,13 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 	)
 	fun countErArkivert(): Long
 
+	@Transactional
 	@Modifying
 	@Query(
 		value = "UPDATE SoknadDbData SET tema = :tema WHERE id = :id",
 		nativeQuery = false
 	)
-	fun updateTemaById(
+	fun updateTema(
 		@Param("id") id: Long, @Param("tema") tema: String
 	)
 

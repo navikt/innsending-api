@@ -24,6 +24,17 @@ data class ApplicationInfo(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Application(
 
+	// Dine opplysninger
+	val fornavnSoker: String,
+	val etternavnSoker: String,
+	@JsonProperty("harDuNorskFodselsnummerEllerDNummer")
+	val harDuNorskFodselsnummerEllerDnummer: String, // ja|nei
+	@JsonProperty("fodselsnummerDNummerSoker")
+	val fodselsnummerDnummerSoker: String? = null,
+
+	// Tilleggsopplysninger
+	val tilleggsopplysninger: String? = null,
+
 	// Dersom det er hentet aktivitet / maalgrupper fra Arena skal maalgruppen som har overlappende periode med hentet aktivitet sendes inn.
 	val aktiviteterOgMaalgruppe: AktiviteterOgMaalgruppe? = null,
 
@@ -44,19 +55,6 @@ data class Application(
 	val nedsattArbeidsevnePgaSykdom: NedsattArbeidsevnePgaSykdom? = null,
 	val annet1: String? = null, // Ingen av valgene ovenfor passer min situasjon
 	// <- TODO Slettes
-
-	// Dine opplysninger
-	val fornavnSoker: String,
-	val etternavnSoker: String,
-	@JsonProperty("harDuNorskFodselsnummerEllerDNummer")
-	val harDuNorskFodselsnummerEllerDnummer: String, // ja|nei
-	@JsonProperty("fodselsnummerDNummerSoker")
-	val fodselsnummerDnummerSoker: String? = null,
-
-	// Tilleggsopplysninger
-	val harDuNoenTilleggsopplysningerDuMenerErViktigeForSoknadenDin: String? = null,
-	val tilleggsopplysninger: String? = null,
-	val harRegistrertAktivitetsperiode: String? = null, // Ja | nei
 
 	// Daglig reise, NAV 11-12.21B
 	val soknadsPeriode: SoknadsPeriode? = null,  // Samme som Reise på grunn av oppstart, avslutning eller hjemreise

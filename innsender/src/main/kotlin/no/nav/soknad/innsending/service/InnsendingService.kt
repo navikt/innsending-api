@@ -66,6 +66,7 @@ class InnsendingService(
 			"NAV 11-12.21B", // Støtte til daglig reise
 			"NAV 11-12.22B", // Støtte til reise for å komme i arbeid
 			"NAV 11-12.23B", // Støtte til flytting
+			"kjoreliste" // TODO kjøreliste skjemanummer ikke avklart
 		)
 
 	@Transactional
@@ -212,7 +213,7 @@ class InnsendingService(
 
 			val jsonObj: JsonApplication<*>
 			val xmlFile: ByteArray
-			if (soknadDto.skjemanr == "NAV 11.12.10" || soknadDto.skjemanr == "NAV 11.12.11") {
+			if (soknadDto.skjemanr == "NAV 11.12.10" || soknadDto.skjemanr == "NAV 11.12.11" || soknadDto.skjemanr == "kjoreliste") { // TODO
 				jsonObj = convertToJsonDrivingListJson(soknadDto = soknadDto, jsonFil)
 				xmlFile = json2Xml(jsonObj, soknadDto)
 			} else {
@@ -241,6 +242,8 @@ class InnsendingService(
 
 			if (jsonObj.applicationDetails is JsonTilleggsstonad)
 				sjekkOgOppdaterTema(soknadDto, jsonObj.applicationDetails.maalgruppeinformasjon)
+			else if (jsonObj.applicationDetails is JsonDrivingListSubmission)
+				sjekkOgOppdaterTema(soknadDto, jsonObj.applicationDetails.maalgruppeinformasjon)
 
 			return soknadService.hentSoknad(soknadDto.innsendingsId!!)
 		} catch (ex: Exception) {
@@ -253,6 +256,7 @@ class InnsendingService(
 			"NAV 11-12.18B", // Støtte til ved oppstart, avslutning eller hjemreiser
 			"NAV 11-12.21B", // Støtte til daglig reise
 			"NAV 11-12.22B", // Støtte til reise for å komme i arbeid
+			"kjoreliste" // TODO kjøreliste skjemanummer ikke avklart
 		)
 		val relevanteMaalgrupperForTsr = listOf(
 			MaalgruppeType.ARBSOKERE.name,

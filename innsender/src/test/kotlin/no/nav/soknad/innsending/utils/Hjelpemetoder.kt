@@ -5,6 +5,7 @@ import no.nav.soknad.innsending.service.SoknadServiceTest
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.BEARER
 import no.nav.soknad.innsending.util.Skjema
+import no.nav.soknad.innsending.util.mapping.mapTilMimetype
 import no.nav.soknad.pdfutilities.AntallSider
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -80,12 +81,17 @@ class Hjelpemetoder {
 			erVariant: Boolean? = false
 		): VedleggDto =
 			lagVedleggDto(
-				vedleggsnr, tittel,
-				if (opplastingsStatus == OpplastingsStatusDto.lastetOpp)
-					(if (vedleggsNavn != null && vedleggsNavn.contains(".pdf")) "application/pdf" else "application/json") else null,
-				if (opplastingsStatus == OpplastingsStatusDto.lastetOpp && vedleggsNavn != null) getBytesFromFile(
-					vedleggsNavn
-				) else null,
+				vedleggsnr = vedleggsnr,
+				tittel = tittel,
+				mimeType = if (opplastingsStatus == OpplastingsStatusDto.lastetOpp)
+					(if (vedleggsNavn != null && vedleggsNavn.contains(".pdf"))
+						Mimetype.applicationSlashPdf.value
+					else
+						Mimetype.applicationSlashJson.value)
+				else null,
+				if (opplastingsStatus == OpplastingsStatusDto.lastetOpp && vedleggsNavn != null)
+					getBytesFromFile(vedleggsNavn)
+				else null,
 				id, erHoveddokument, erVariant = erVariant, erPakrevd = false, label = label
 			)
 
@@ -93,7 +99,7 @@ class Hjelpemetoder {
 		fun lagVedleggDto(
 			vedleggsnr: String,
 			tittel: String,
-			mimeType: String?,
+			mimeType: String? = "application/pdf",
 			fil: ByteArray?,
 			id: Long? = null,
 			erHoveddokument: Boolean? = true,
@@ -103,22 +109,22 @@ class Hjelpemetoder {
 			formioId: String? = null,
 		): VedleggDto {
 			return VedleggDto(
-				tittel,
-				label ?: tittel,
-				erHoveddokument!!,
-				erVariant!!,
-				"application/pdf".equals(mimeType, true),
-				erPakrevd!!,
-				if (fil != null) OpplastingsStatusDto.lastetOpp else OpplastingsStatusDto.ikkeValgt,
-				OffsetDateTime.now(),
-				id,
-				vedleggsnr,
-				"Beskrivelse",
-				UUID.randomUUID().toString(),
-				Mimetype.applicationSlashPdf,
-				fil,
-				if (erHoveddokument) "https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/1b736c8e28abcb80f654166318f130e5ed2a0aad.pdf" else null,
-				formioId = formioId
+				tittel = tittel,
+				label = label ?: tittel,
+				erHoveddokument = erHoveddokument!!,
+				erVariant = erVariant!!,
+				mimetype = mapTilMimetype(mimeType),
+				erPakrevd = erPakrevd!!,
+				opplastingsStatus = if (fil != null) OpplastingsStatusDto.lastetOpp else OpplastingsStatusDto.ikkeValgt,
+				opprettetdato = OffsetDateTime.now(),
+				id = id,
+				vedleggsnr = vedleggsnr,
+				beskrivelse = "Beskrivelse",
+				uuid = UUID.randomUUID().toString(),
+				document = fil,
+				skjemaurl = if (erHoveddokument) "https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/1b736c8e28abcb80f654166318f130e5ed2a0aad.pdf" else null,
+				formioId = formioId,
+				erPdfa = false
 			)
 
 		}

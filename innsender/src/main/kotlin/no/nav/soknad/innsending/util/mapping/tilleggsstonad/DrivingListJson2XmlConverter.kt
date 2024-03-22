@@ -36,7 +36,8 @@ fun convertXmlToByteArray(paaloepteUtgifter: PaaloepteUtgifter): ByteArray {
 	}
 	xmlMapper.setDateFormat(SimpleDateFormat("yyyy-MM-ddXXX", Locale.of("nb", "NO")))
 	xmlMapper.registerModule(JaxbAnnotationModule())
-	val xml = xmlMapper.writeValueAsString(paaloepteUtgifter)
+	val xml =
+		"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + xmlMapper.writeValueAsString(paaloepteUtgifter)
 	return xml.toByteArray()
 }
 
