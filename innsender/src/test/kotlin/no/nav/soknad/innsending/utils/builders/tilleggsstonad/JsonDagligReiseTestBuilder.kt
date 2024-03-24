@@ -38,7 +38,7 @@ class JsonDagligReiseTestBuilder {
 		ferje = null,
 		annet = null,
 		vilDuHaUtgifterTilParkeringPaAktivitetsstedet = "JA",
-		oppgiForventetBelopTilParkeringPaAktivitetsstedet = 200,
+		parkering = 200,
 		hvorOfteOnskerDuASendeInnKjoreliste = "UKE"
 	)
 	private var kanIkkeBenytteEgenBil: KanIkkeBenytteEgenBil? = null

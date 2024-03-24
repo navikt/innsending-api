@@ -7,8 +7,6 @@ import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 
@@ -236,7 +234,6 @@ fun convertFlytteutgifter(flytteutgifter: JsonFlytteutgifter): Int {
 }
 
 fun convertTilsynsutgifter(jsonRettighetstyper: JsonRettighetstyper): Tilsynsutgifter? {
-	if (!hasTilsynsutgifter(jsonRettighetstyper)) return null
 
 	val utgifterBarn = convertTilsynsutgifterBarn(jsonRettighetstyper)
 	val utgifterFamilie = convertFamilieutgifter(jsonRettighetstyper) // TODO er denne relevant?
@@ -244,10 +241,6 @@ fun convertTilsynsutgifter(jsonRettighetstyper: JsonRettighetstyper): Tilsynsutg
 	if (utgifterBarn == null && utgifterFamilie == null) return null
 
 	return Tilsynsutgifter(tilsynsutgifterBarn = utgifterBarn, tilynsutgifterFamilie = utgifterFamilie)
-}
-
-private fun hasTilsynsutgifter(jsonRettighetstyper: JsonRettighetstyper): Boolean {
-	return jsonRettighetstyper.tilsynsutgifter != null
 }
 
 private fun convertTilsynsutgifterBarn(jsonRettighetstyper: JsonRettighetstyper): TilsynsutgifterBarn? {
@@ -273,17 +266,8 @@ private fun convertTilsynsutgifterBarn(jsonRettighetstyper: JsonRettighetstyper)
 	)
 }
 
-private fun stripAndFormatToDDMMYY(date: String): String {
-	// Anta YYYY-MM-DD
-	val localDate = LocalDate.parse(date)
-	val dtf = DateTimeFormatter.ofPattern("ddMMyy")
-
-	return dtf.format(localDate)
-}
-
 private fun convertFamilieutgifter(jsonRettighetstyper: JsonRettighetstyper): TilsynsutgifterFamilie? {
 	if (!hasTilsynsutgifterFamilie(jsonRettighetstyper)) return null
-
 
 	// TODO erstatt eksempel nedenfor
 	return TilsynsutgifterFamilie(
@@ -304,7 +288,6 @@ private fun hasTilsynsutgifterFamilie(jsonRettighetstyper: JsonRettighetstyper):
 }
 
 fun convertReiseUtgifter(jsonRettighetstyper: JsonRettighetstyper, soknadDto: DokumentSoknadDto): Reiseutgifter? {
-	//if (!hasReiseutgifter(tilleggstonadJsonObj.data.data.hvorforReiserDu)) return null
 
 	val utgiftDagligReise = convertDagligReise(jsonRettighetstyper, soknadDto)
 	val reisestoenadForArbeidssoeker = convertReisestoenadForArbeidssoeker(jsonRettighetstyper)
@@ -324,12 +307,6 @@ fun convertReiseUtgifter(jsonRettighetstyper: JsonRettighetstyper, soknadDto: Do
 
 }
 
-private fun hasReiseutgifter(hasTravelExpenses: HvorforReiserDu?): Boolean {
-	if (hasTravelExpenses == null) return false
-	return hasTravelExpenses.dagligReise || hasTravelExpenses.reiseNarDuErArbeidssoker
-		|| hasTravelExpenses.reiseTilSamling || hasTravelExpenses.reisePaGrunnAvOppstartAvslutningEllerHjemreise
-}
-
 private fun convertDagligReise(jsonRettighetstyper: JsonRettighetstyper, soknadDto: DokumentSoknadDto): DagligReise? {
 	val details = jsonRettighetstyper.reise
 	if (details == null || (details.dagligReise == null)) return null
@@ -346,8 +323,8 @@ private fun convertDagligReise(jsonRettighetstyper: JsonRettighetstyper, soknadD
 		harMedisinskeAarsakerTilTransport = convertToBoolean(jsonDagligReise.kanDuReiseKollektivtDagligReise) ?: false,
 		alternativeTransportutgifter = convertAlternativeTransportutgifter_DagligReise(jsonDagligReise),
 		innsendingsintervall = convertInnsendingsintervaller(jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.hvorOfteOnskerDuASendeInnKjoreliste),
-		harParkeringsutgift = convertToBoolean(jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanDuBenytteEgenBil) ?: false && jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.oppgiForventetBelopTilParkeringPaAktivitetsstedet ?: 0 > 0,
-		parkeringsutgiftBeloep = jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.oppgiForventetBelopTilParkeringPaAktivitetsstedet
+		harParkeringsutgift = convertToBoolean(jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanDuBenytteEgenBil) ?: false && jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.parkering ?: 0 > 0,
+		parkeringsutgiftBeloep = jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.parkering
 	)
 }
 
@@ -388,7 +365,7 @@ private fun convertReisestoenadForArbeidssoeker(jsonRettighetstyper: JsonRettigh
 
 private fun convertReiseVedOppstartOgAvsluttetAktivitet(jsonRettighetstyper: JsonRettighetstyper): ReiseVedOppstartOgAvsluttetAktivitet? {
 	val details = jsonRettighetstyper.reise
-	if (details == null || details.oppstartOgAvsluttetAktivitet == null || details.hvorforReiserDu == null || details.hvorforReiserDu.reisePaGrunnAvOppstartAvslutningEllerHjemreise != true) return null
+	if (details == null || details.oppstartOgAvsluttetAktivitet == null) return null
 
 	val reiseStartSlutt = details.oppstartOgAvsluttetAktivitet
 	return ReiseVedOppstartOgAvsluttetAktivitet(
@@ -420,7 +397,7 @@ private fun convertReiseVedOppstartOgAvsluttetAktivitet(jsonRettighetstyper: Jso
 
 private fun convertReiseObligatoriskSamling(jsonRettighetstyper: JsonRettighetstyper): ReiseObligatoriskSamling? {
 	val details = jsonRettighetstyper.reise
-	if (details == null || details.reiseSamling == null || details.hvorforReiserDu == null || details.hvorforReiserDu.reiseTilSamling != true) return null
+	if (details == null || details.reiseSamling == null) return null
 
 	val reiseTilSamling = details.reiseSamling
 
@@ -487,13 +464,8 @@ private fun createPeriodeList(fromJsonPeriodes: List<JsonPeriode>): List<Periode
 
 private fun convertPeriode(fom: String, tom: String): Periode {
 	return Periode(fom = convertToDateStringWithTimeZone(fom), tom = convertToDateStringWithTimeZone(tom))
-// TODO bruker startOgSluttdatoForSamlingene da dette er eneste fornuftige i json eksempelet, HvilkenPeriodeVilDuSokeFor kan ikke benyttes.
-// TODO vi må bli enig om korrekt mapping av data format. I "fasit skal det være YYYY-MM-DD+HH:MM (kooreksjon i forhold til GMT)
 }
 
-private fun convertAdresse(adresse: String, postnummer: String, landKode: String): String {
-	return adresse + ", " + postnummer + ", " + landKode // TODO uklar mapping av felter.
-}
 
 private fun convertAlternativeTransportutgifter_DagligReise(details: JsonDagligReise): AlternativeTransportutgifter {
 	val kanBenytteEgenBil = convertToBoolean(details.kanIkkeReiseKollektivtDagligReise?.kanDuBenytteEgenBil) ?: false
@@ -530,7 +502,7 @@ private fun convertInnsendingsintervaller(details: String?): Innsendingsinterval
 private fun convertEgenBilTransportutgifter(utgifter: KanBenytteEgenBil?): EgenBilTransportutgifter? {
 	if (utgifter == null) return null
 	return EgenBilTransportutgifter(
-		sumAndreUtgifter = ((utgifter.annet ?: 0) + (utgifter.bompenger ?: 0)
+		sumAndreUtgifter = ((utgifter.annet ?: 0) + (utgifter.bompenger ?: 0) + (utgifter.parkering ?: 0)
 			+ (utgifter.ferje ?: 0) + (utgifter.piggdekkavgift ?: 0)).toDouble()
 	)
 }

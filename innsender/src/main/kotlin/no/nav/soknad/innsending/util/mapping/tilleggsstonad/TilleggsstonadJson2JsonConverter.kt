@@ -197,8 +197,10 @@ private fun convertToJsonFlytteutgifter(tilleggsstonad: Application): JsonFlytte
 
     return JsonFlytteutgifter(
         aktivitetsperiode = JsonPeriode(
-            startdatoDdMmAaaa = tilleggsstonad.narFlytterDuDdMmAaaa,
-            sluttdatoDdMmAaaa = tilleggsstonad.narFlytterDuDdMmAaaa
+            startdatoDdMmAaaa = tilleggsstonad.aktiviteterOgMaalgruppe?.aktivitet?.periode?.fom
+                ?: tilleggsstonad.narFlytterDuDdMmAaaa,
+            sluttdatoDdMmAaaa = tilleggsstonad.aktiviteterOgMaalgruppe?.aktivitet?.periode?.tom
+                ?: tilleggsstonad.narFlytterDuDdMmAaaa
         ),
         hvorforFlytterDu = tilleggsstonad.hvorforFlytterDu,
         narFlytterDuDdMmAaaa = tilleggsstonad.narFlytterDuDdMmAaaa,

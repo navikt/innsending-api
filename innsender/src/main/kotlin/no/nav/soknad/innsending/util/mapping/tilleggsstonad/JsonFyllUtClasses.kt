@@ -344,7 +344,7 @@ data class KanBenytteEgenBil(
 	val ferje: Int?,
 	val annet: Int?,
 	val vilDuHaUtgifterTilParkeringPaAktivitetsstedet: String?, // Ja |nei
-	val oppgiForventetBelopTilParkeringPaAktivitetsstedet: Int?,
+	val parkering: Int?,
 	val hvorOfteOnskerDuASendeInnKjoreliste: String? // Ønsker svar UKE | MANED (Jeg ønsker å levere kjøreliste én gang i måneden) jegOnskerALevereKjorelisteEnGangIManeden | jegOnskerALevereKjorelisteEnGangIUken
 )
 
