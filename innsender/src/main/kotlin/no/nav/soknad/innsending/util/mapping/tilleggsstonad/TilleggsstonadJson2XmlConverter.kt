@@ -157,12 +157,13 @@ fun convertLaremiddler(jsonRettighetstyper: JsonRettighetstyper): Laeremiddelutg
 	)
 }
 
+//"videregaendeUtdanning" | "hoyereUtdanning" | "kursEllerAnnenUtdanning"
 fun convertToSkolenvaaer(nivaString: String): Skolenivaaer =
 	when (nivaString) {
-		"Jeg skal ta videregående utdanning, eller forkurs på universitet" -> Skolenivaaer(value = "VGS")
-		"Jeg skal ta utdanning på fagskole, høyskole eller universitet" -> Skolenivaaer(value = "HGU")
-		"Jeg skal ta kurs eller annen form for utdanning" -> Skolenivaaer(value = "ANN")
-		else -> Skolenivaaer(value = "VGS")
+		"videregaendeUtdanning" -> Skolenivaaer(value = "VGS")
+		"hoyereUtdanning" -> Skolenivaaer(value = "HGU")
+		"kursEllerAnnenUtdanning" -> Skolenivaaer(value = "ANN")
+		else -> Skolenivaaer(value = "ANN")
 	}
 
 fun convertToErUtgifterDekket(svar: String): ErUtgifterDekket =
@@ -379,8 +380,7 @@ private fun convertReiseVedOppstartOgAvsluttetAktivitet(jsonRettighetstyper: Jso
 		antallReiser = reiseStartSlutt.hvorMangeGangerSkalDuReiseEnVei,
 		harBarnUnderFemteklasse = convertToBoolean(reiseStartSlutt.harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear)
 			?: false,
-		harBarnUnderAtten = null // TODO mangler i eksempelet
-		,
+		harBarnUnderAtten = convertToBoolean(reiseStartSlutt.harDuBarnSomSkalFlytteMedDeg) ?: false,
 		alternativeTransportutgifter = AlternativeTransportutgifter(
 			kanOffentligTransportBrukes = convertToBoolean(reiseStartSlutt.kanDuReiseKollektivtOppstartAvslutningHjemreise),
 			kanEgenBilBrukes = convertToBoolean(reiseStartSlutt.kanIkkeReiseKollektivtOppstartAvslutningHjemreise?.kanDuBenytteEgenBil),
