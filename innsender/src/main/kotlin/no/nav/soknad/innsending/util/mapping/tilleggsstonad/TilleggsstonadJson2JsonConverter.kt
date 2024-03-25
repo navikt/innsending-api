@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.Maalgruppe
 
 
 fun convertToJsonTilleggsstonad(soknadDto: DokumentSoknadDto, json: ByteArray?): JsonApplication<JsonTilleggsstonad> {
@@ -42,6 +43,7 @@ fun convertToJsonTilleggsstonad(tilleggsstonad: Application, soknadDto: Dokument
 private fun convertAktivitetsinformasjon(tilleggsstonad: Application): JsonAktivitetsInformasjon? {
     return if (tilleggsstonad.aktiviteterOgMaalgruppe != null
         && tilleggsstonad.aktiviteterOgMaalgruppe.aktivitet?.aktivitetId != null
+        && tilleggsstonad.aktiviteterOgMaalgruppe.aktivitet.aktivitetId != "ingenAktivitet"
     )
         JsonAktivitetsInformasjon(aktivitet = tilleggsstonad.aktiviteterOgMaalgruppe.aktivitet.aktivitetId)
     else
@@ -51,30 +53,24 @@ private fun convertAktivitetsinformasjon(tilleggsstonad: Application): JsonAktiv
 fun getMaalgruppeInformasjonFromAktiviteterOgMaalgruppe(aktiviteterOgMaalgruppe: AktiviteterOgMaalgruppe?): JsonMaalgruppeinformasjon? {
     if (aktiviteterOgMaalgruppe == null) return null
 
-    if (aktiviteterOgMaalgruppe.aktivitet?.maalgruppe != null)
-        return JsonMaalgruppeinformasjon(
-            periode = getAktivitetsPeriode(aktiviteterOgMaalgruppe.aktivitet),
-            maalgruppetype = aktiviteterOgMaalgruppe.aktivitet.maalgruppe.maalgruppetype.value
-        )
-    if (aktiviteterOgMaalgruppe.maalgruppe != null && (aktiviteterOgMaalgruppe.maalgruppe.calculated != null || aktiviteterOgMaalgruppe.maalgruppe.prefilled != null))
-        if (aktiviteterOgMaalgruppe.maalgruppe.prefilled?.maalgruppetype != null)
-            return JsonMaalgruppeinformasjon(
-                periode = getAktivitetsPeriode(aktiviteterOgMaalgruppe.aktivitet),
-                maalgruppetype = aktiviteterOgMaalgruppe.maalgruppe.prefilled.maalgruppetype.value
-            )
-        else if (aktiviteterOgMaalgruppe.maalgruppe.calculated?.maalgruppetype != null)
-            return JsonMaalgruppeinformasjon(
-                periode = getAktivitetsPeriode(aktiviteterOgMaalgruppe.aktivitet),
-                maalgruppetype = aktiviteterOgMaalgruppe.maalgruppe.calculated.maalgruppetype.value
-            )
+    val maalgruppe = getSelectedMaalgruppe(aktiviteterOgMaalgruppe)
+    if (maalgruppe == null) return null
 
-    return null
+    return JsonMaalgruppeinformasjon(
+        periode = if (maalgruppe.gyldighetsperiode != null) AktivitetsPeriode(
+            maalgruppe.gyldighetsperiode!!.fom.toString(),
+            maalgruppe.gyldighetsperiode!!.tom.toString()
+        ) else null,
+        maalgruppetype = maalgruppe.maalgruppetype.value
+    )
 }
 
-fun getAktivitetsPeriode(aktivitet: Aktivitet?): AktivitetsPeriode? {
-    if (aktivitet == null || aktivitet.periode == null) return null
+fun getSelectedMaalgruppe(aktiviteterOgMaalgruppe: AktiviteterOgMaalgruppe): Maalgruppe? {
+    if (aktiviteterOgMaalgruppe.aktivitet?.maalgruppe != null) return aktiviteterOgMaalgruppe.aktivitet.maalgruppe
+    if (aktiviteterOgMaalgruppe.maalgruppe?.prefilled != null) return aktiviteterOgMaalgruppe.maalgruppe.prefilled
+    if (aktiviteterOgMaalgruppe.maalgruppe?.calculated != null) return aktiviteterOgMaalgruppe.maalgruppe.calculated
 
-    return AktivitetsPeriode(startdatoDdMmAaaa = aktivitet.periode.fom, sluttdatoDdMmAaaa = aktivitet.periode.tom)
+    return null
 }
 
 fun convertToJsonMaalgruppeinformasjon(
