@@ -256,15 +256,34 @@ private fun convertTilsynsutgifterBarn(jsonRettighetstyper: JsonRettighetstyper)
 		barn = tilsynsutgifter.barnePass.filter { it.jegSokerOmStonadTilPassAvDetteBarnet ?: false }.map {
 			Barn(
 				personidentifikator = it.fodselsdatoDdMmAaaa,
-				tilsynskategori = Tilsynskategorier("KOM"), // TODO mapping av it.sokerStonadForDetteBarnet.hvemPasserBarnet
+				tilsynskategori = Tilsynskategorier(convertTilsynskategori(it.sokerStonadForDetteBarnet?.hvemPasserBarnet)),
 				navn = it.fornavn + " " + it.etternavn,
 				harFullfoertFjerdeSkoleaar = convertToBoolean(it.sokerStonadForDetteBarnet?.harBarnetFullfortFjerdeSkolear)
 					?: false,
+				aarsakTilBarnepass = convertAarsakTilBarnepass(it.sokerStonadForDetteBarnet?.hvaErArsakenTilAtBarnetDittTrengerPass),
 				maanedligUtgiftTilsynBarn = it.sokerStonadForDetteBarnet?.oppgiManedligUtgiftTilBarnepass ?: 0
 			)
 		},
 		annenForsoergerperson = tilsynsutgifter.fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa
 	)
+}
+
+private fun convertAarsakTilBarnepass(aarsak: String?): List<String>? {
+	when (aarsak) {
+		"langvarigUregelmessigFravaer" -> return listOf(BarnepassAarsak.langvarig.cmsKey)
+		"saerligBehovForPass" -> return listOf(BarnepassAarsak.trengertilsyn.cmsKey)
+		else -> return listOf(BarnepassAarsak.ingen.cmsKey)
+	}
+
+}
+
+private fun convertTilsynskategori(kategori: String?): String {
+	when (kategori) {
+		"dagmammaEllerDagpappa" -> return TilsynForetasAvKodeverk.dagmamma.kodeverksverdi // KOM
+		"barnehageEllerSfo" -> return TilsynForetasAvKodeverk.barnehage.kodeverksverdi // OFF
+		"privatOrdning" -> return TilsynForetasAvKodeverk.privat.kodeverksverdi // PRI
+		else -> return "KOM"
+	}
 }
 
 private fun convertFamilieutgifter(jsonRettighetstyper: JsonRettighetstyper): TilsynsutgifterFamilie? {

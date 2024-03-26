@@ -479,7 +479,7 @@ class TilleggsstonadJson2XmlConverterTest {
 						fodselsdatoDdMmAaaa = fnrBarn,
 						jegSokerOmStonadTilPassAvDetteBarnet = true,
 						sokerStonadForDetteBarnet = SokerStonadForDetteBarnet(
-							hvemPasserBarnet = "Barnet mitt får pass av dagmamma eller dagpappa",
+							hvemPasserBarnet = "barnehageEllerSfo",
 							oppgiManedligUtgiftTilBarnepass = utgifter,
 							harBarnetFullfortFjerdeSkolear = "Nei",
 							hvaErArsakenTilAtBarnetDittTrengerPass = null
@@ -504,7 +504,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("<tom>2024-06-20+02:00</tom>"))
 		assertTrue(xmlString.contains("</periode>"))
 		assertTrue(xmlString.contains("<personidentifikator>$fnrBarn</personidentifikator>"))
-		assertTrue(xmlString.contains("<tilsynskategori>KOM</tilsynskategori>"))
+		assertTrue(xmlString.contains("<tilsynskategori>OFF</tilsynskategori>"))
 		assertTrue(xmlString.contains("<harFullfoertFjerdeSkoleaar>false</harFullfoertFjerdeSkoleaar>"))
 		assertTrue(xmlString.contains("<maanedligUtgiftTilsynBarn>$utgifter</maanedligUtgiftTilsynBarn>"))
 		assertTrue(xmlString.contains("annenForsoergerperson>$fnrForeldreTo</annenForsoergerperson>"))
@@ -528,7 +528,7 @@ class TilleggsstonadJson2XmlConverterTest {
 						fodselsdatoDdMmAaaa = fnrBarn1,
 						jegSokerOmStonadTilPassAvDetteBarnet = true,
 						sokerStonadForDetteBarnet = SokerStonadForDetteBarnet(
-							hvemPasserBarnet = "Barnet mitt får pass av dagmamma eller dagpappa",
+							hvemPasserBarnet = "dagmammaEllerDagpappa",
 							oppgiManedligUtgiftTilBarnepass = utgifter1,
 							harBarnetFullfortFjerdeSkolear = "Nei",
 							hvaErArsakenTilAtBarnetDittTrengerPass = null
@@ -540,10 +540,10 @@ class TilleggsstonadJson2XmlConverterTest {
 						fodselsdatoDdMmAaaa = fnrBarn2,
 						jegSokerOmStonadTilPassAvDetteBarnet = true,
 						sokerStonadForDetteBarnet = SokerStonadForDetteBarnet(
-							hvemPasserBarnet = "Barnet mitt får pass av dagmamma eller dagpappa",
+							hvemPasserBarnet = "dagmammaEllerDagpappa",
 							oppgiManedligUtgiftTilBarnepass = utgifter2,
-							harBarnetFullfortFjerdeSkolear = "Nei",
-							hvaErArsakenTilAtBarnetDittTrengerPass = null
+							harBarnetFullfortFjerdeSkolear = "Ja",
+							hvaErArsakenTilAtBarnetDittTrengerPass = "saerligBehovForPass"
 						)
 					)
 				)
