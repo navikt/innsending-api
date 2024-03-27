@@ -13,9 +13,9 @@ class JsonBostotteTestBuilder {
 	private var bostotteIForbindelseMedSamling: BostotteIForbindelseMedSamling? = null
 	private var mottarDuBostotteFraKommunen: String = "Nei"
 	private var hvilkeAdresserHarDuBoutgifterPa: HvilkeAdresserHarDuBoutgifterPa = HvilkeAdresserHarDuBoutgifterPa(
-		boutgifterPaAktivitetsadressen = "true",
-		boutgifterPaHjemstedet = "true",
-		boutgifterPaHjemstedetMittSomHarOpphortIForbindelseMedAktiviteten = "true"
+		boutgifterPaAktivitetsadressen = true,
+		boutgifterPaHjemstedet = true,
+		boutgifterPaHjemstedetMittSomHarOpphortIForbindelseMedAktiviteten = true
 	)
 	private var bostottebelop: Int? = 1000
 	private var boutgifterPaHjemstedetMitt: Int? = 4000

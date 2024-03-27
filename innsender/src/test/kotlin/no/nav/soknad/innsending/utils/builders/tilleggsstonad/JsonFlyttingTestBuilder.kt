@@ -32,7 +32,7 @@ class JsonFlyttingTestBuilder {
 	private var postnr1: String = "3701"
 	private var hvorforFlytterDu: String = "Jeg flytter fordi jeg har fått ny jobb"
 	private var farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav: String = "Nei"
-	private var ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra: String = "Jeg flytter selv"
+	private var ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra: String = "jegFlytterSelv"
 	private var jegFlytterSelv: JegFlytterSelv? = JegFlytterSelv(
 		hvorLangtSkalDuFlytte = 130, hengerleie = 1000, bom = null, parkering = 200, ferje = 0, annet = null
 	)

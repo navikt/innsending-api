@@ -201,6 +201,12 @@ data class BostotteIForbindelseMedSamling(
 	val periodeForSamling: List<JsonPeriode>
 )
 
+data class HvilkeAdresserHarDuBoutgifterPa (
+	val boutgifterPaAktivitetsadressen: Boolean,
+	val boutgifterPaHjemstedet: Boolean,
+	val boutgifterPaHjemstedetMittSomHarOpphortIForbindelseMedAktiviteten: Boolean
+)
+
 data class Drivinglist(
 	val selectedVedtaksId: String,
 	val dates: List<Dates>
@@ -227,12 +233,6 @@ data class Flervalg(
 	val regArbSoker: Boolean? = false,
 	val tidligereFamiliepleier: Boolean? = false,
 	val annet: Boolean? = false
-)
-
-data class HvilkeAdresserHarDuBoutgifterPa(
-	val boutgifterPaAktivitetsadressen: String, // true | false
-	val boutgifterPaHjemstedet: String,
-	val boutgifterPaHjemstedetMittSomHarOpphortIForbindelseMedAktiviteten: String
 )
 
 data class OpplysningerOmBarn(

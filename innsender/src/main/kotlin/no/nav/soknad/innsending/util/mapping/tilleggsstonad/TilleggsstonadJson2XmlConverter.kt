@@ -118,7 +118,7 @@ fun convertBostotte(jsonRettighetstyper: JsonRettighetstyper): Boutgifter? {
 
 		boutgifterPgaFunksjonshemminger = convertToBoolean(bostottesoknad.erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet)
 			?: false,
-		harFasteBoutgifter = bostottesoknad.hvilkeBoutgifterSokerDuOmAFaDekket.contains("fasteBoutgifter"),
+		harFasteBoutgifter = bostottesoknad.hvilkeAdresserHarDuBoutgifterPa.boutgifterPaHjemstedet,
 		boutgifterHjemstedAktuell = bostottesoknad.boutgifterPaHjemstedetMitt,
 		boutgifterHjemstedOpphoert = bostottesoknad.boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten,
 
@@ -168,10 +168,10 @@ fun convertToSkolenvaaer(nivaString: String): Skolenivaaer =
 
 fun convertToErUtgifterDekket(svar: String): ErUtgifterDekket =
 	when (svar.uppercase(Locale.getDefault())) {
-		"JA" -> ErUtgifterDekket(value = "JA")
-		"NEI" -> ErUtgifterDekket(value = "NEI")
-		"DELVIS" -> ErUtgifterDekket(value = "DELVIS")
-		else -> ErUtgifterDekket(value = "NEI")
+		"JA" -> ErUtgifterDekket(value = ErUtgifterDekketKodeverk.ja.kodeverk)
+		"NEI" -> ErUtgifterDekket(value = ErUtgifterDekketKodeverk.nei.kodeverk)
+		"DELVIS" -> ErUtgifterDekket(value = ErUtgifterDekketKodeverk.delvis.kodeverk)
+		else -> ErUtgifterDekket(value = ErUtgifterDekketKodeverk.nei.kodeverk)
 	}
 
 
@@ -181,14 +181,12 @@ fun convertFlytteutgifter(jsonRettighetstyper: JsonRettighetstyper): Flytteutgif
 	val flytteutgifter = jsonRettighetstyper.flytteutgifter
 
 	return Flytteutgifter(
-		flyttingPgaAktivitet = "Jeg flytter i forbindelse med at jeg skal gjennomføre en aktivitet".equals(
-			flytteutgifter.hvorforFlytterDu,
-			true
-		),
+		flyttingPgaAktivitet =
+			flytteutgifter.hvorforFlytterDu.equals("aktivitet", true),
 		erUtgifterTilFlyttingDekketAvAndreEnnNAV = convertToBoolean(flytteutgifter.farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav)
 			?: false,
 		flytterSelv = (flytteutgifter.jegFlytterSelv != null || flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv != null).toString(),
-		flyttingPgaNyStilling = "Jeg flytter fordi jeg har fått ny jobb".equals(flytteutgifter.hvorforFlytterDu, true),
+		flyttingPgaNyStilling = flytteutgifter.hvorforFlytterDu.equals("nyJobb", true),
 		flyttedato = convertToDateStringWithTimeZone(flytteutgifter.narFlytterDuDdMmAaaa),
 		tilflyttingsadresse = SammensattAdresse(
 			land = flytteutgifter.velgLand1.label,
@@ -343,7 +341,8 @@ private fun convertDagligReise(jsonRettighetstyper: JsonRettighetstyper, soknadD
 		harMedisinskeAarsakerTilTransport = convertToBoolean(jsonDagligReise.kanDuReiseKollektivtDagligReise) ?: false,
 		alternativeTransportutgifter = convertAlternativeTransportutgifter_DagligReise(jsonDagligReise),
 		innsendingsintervall = convertInnsendingsintervaller(jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.hvorOfteOnskerDuASendeInnKjoreliste),
-		harParkeringsutgift = convertToBoolean(jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanDuBenytteEgenBil) ?: false && jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.parkering ?: 0 > 0,
+		harParkeringsutgift = (convertToBoolean(jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanDuBenytteEgenBil)
+			?: false) && ((jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.parkering ?: 0) > 0),
 		parkeringsutgiftBeloep = jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.parkering
 	)
 }
@@ -357,7 +356,7 @@ private fun convertReisestoenadForArbeidssoeker(jsonRettighetstyper: JsonRettigh
 		reisedato = convertToDateStringWithTimeZone(date = dagligReise.reisedatoDdMmAaaa),
 		harMottattDagpengerSisteSeksMaaneder = convertToBoolean(dagligReise.mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene)
 			?: false,
-		formaal = Formaal(value = dagligReise.hvorforReiserDuArbeidssoker),
+		formaal = Formaal(value = convertToFormaal(dagligReise.hvorforReiserDuArbeidssoker)),
 		adresse = SammensattAdresse(
 			land = dagligReise.velgLandArbeidssoker.label,
 			adresse = dagligReise.adresse,
@@ -380,6 +379,16 @@ private fun convertReisestoenadForArbeidssoeker(jsonRettighetstyper: JsonRettigh
 		)
 
 	)
+}
+
+private fun convertToFormaal(formaalEnumValue: String): String {
+	// FormaalKodeverk
+	when (formaalEnumValue) {
+		"oppfolgingFraNav" -> return FormaalKodeverk.oppfolging.kodeverksverdi
+		"jobbintervju" -> return  FormaalKodeverk.jobbintervju.kodeverksverdi
+		"arbeidPaNyttSted" -> return FormaalKodeverk.tiltraa.kodeverksverdi
+		else -> return FormaalKodeverk.oppfolging.kodeverksverdi
+	}
 }
 
 
@@ -443,8 +452,6 @@ private fun convertReiseObligatoriskSamling(jsonRettighetstyper: JsonRettighetst
 		samlingsperiode = periodeList,
 		alternativeTransportutgifter = AlternativeTransportutgifter(
 			kanOffentligTransportBrukes = convertToBoolean(reiseTilSamling.kanDuReiseKollektivtReiseTilSamling),
-			// TODO Trenger ikke spesifisering av utgift pr reise
-			// TODO burde vært liste med utgift pr samling?
 			kollektivTransportutgifter = convertKollektivTransportutgifter(
 				reiseTilSamling.kanReiseKollektivt?.hvilkeUtgifterHarDuIForbindelseMedReisen1
 			),
@@ -526,16 +533,19 @@ private fun convertEgenBilTransportutgifter(utgifter: KanBenytteEgenBil?): EgenB
 	)
 }
 
+// Årsak til ikke offentlig transport er definert i XML, men aldri inkludert i koden i sendsoknnad.
 private fun convertAarsakTilIkkeOffentligTransport(aarsakTilIkkeOffentligTransport: String?): List<String>? {
 	if (aarsakTilIkkeOffentligTransport == null) return null
 	return listOf(aarsakTilIkkeOffentligTransport)
 }
 
+// Årsak til ikke egen bil er definert i XML, men aldri inkludert i koden i sendsoknnad.
 private fun convertAarsakTilIkkeEgenBil(ikkeEgenBil: String?): List<String>? {
 	if (ikkeEgenBil == null) return null
 	return listOf(ikkeEgenBil)
 }
 
+// Årsak til ikke drosje er definert i XML, men aldri inkludert i koden i sendsoknnad.
 private fun convertAarsakTilIkkeDrosje(aarsak: String?): String? {
 	if (aarsak.isNullOrBlank()) return null
 	return aarsak

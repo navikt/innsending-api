@@ -74,7 +74,7 @@ class TilleggsstonadJson2XmlConverterTest {
 	@Test
 	fun json2XmlTest_bolig_overnatting() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.19B", tema = "TSO").build()
-		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/tilleggsstonad-NAV-11-12.19B-28022024.json")
+		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/bolig-overnatting-NAV-11-12.19B-19032024.json")
 
 		val xmlFil = json2Xml(soknadDto, jsonFil)
 
@@ -421,7 +421,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(xmlString.contains("<reisestoenadForArbeidssoeker>"))
 		assertTrue(xmlString.contains("<reisedato>2023-12-24+01:00</reisedato>")) //##
-		assertTrue(xmlString.contains("<formaal>jobbintervju</formaal>"))
+		assertTrue(xmlString.contains("<formaal>JOBB</formaal>"))
 		assertTrue(xmlString.contains("<harMottattDagpengerSisteSeksMaaneder>true</harMottattDagpengerSisteSeksMaaneder>"))
 		assertTrue(xmlString.contains("<avstand>150</avstand>"))
 		assertTrue(xmlString.contains("<erUtgifterDekketAvAndre>false</erUtgifterDekketAvAndre>"))
@@ -577,9 +577,9 @@ class TilleggsstonadJson2XmlConverterTest {
 			.hvilkeBoutgifterSokerDuOmAFaDekket("fasteBoutgifter")
 			.hvilkeAdresserHarDuBoutgifterPa(
 				HvilkeAdresserHarDuBoutgifterPa(
-					boutgifterPaAktivitetsadressen = "false",
-					boutgifterPaHjemstedet = "true",
-					boutgifterPaHjemstedetMittSomHarOpphortIForbindelseMedAktiviteten = "false"
+					boutgifterPaAktivitetsadressen = false,
+					boutgifterPaHjemstedet = true,
+					boutgifterPaHjemstedetMittSomHarOpphortIForbindelseMedAktiviteten = false
 				)
 			)
 			.boutgifterPaHjemstedetMitt(utgifterHjemsted)
@@ -621,9 +621,9 @@ class TilleggsstonadJson2XmlConverterTest {
 			.hvilkeBoutgifterSokerDuOmAFaDekket("boutgifterIForbindelseMedSamling")
 			.hvilkeAdresserHarDuBoutgifterPa(
 				HvilkeAdresserHarDuBoutgifterPa(
-					boutgifterPaAktivitetsadressen = "true",
-					boutgifterPaHjemstedet = "true",
-					boutgifterPaHjemstedetMittSomHarOpphortIForbindelseMedAktiviteten = "true"
+					boutgifterPaAktivitetsadressen = true,
+					boutgifterPaHjemstedet = true,
+					boutgifterPaHjemstedetMittSomHarOpphortIForbindelseMedAktiviteten = true
 				)
 			)
 			.mottarDuBostotteFraKommunen("Ja")
@@ -663,7 +663,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("<fom>2024-06-01+02:00</fom>"))
 		assertTrue(xmlString.contains("<tom>2024-06-20+02:00</tom>"))
 		assertTrue(xmlString.contains("<harBoutgifterVedSamling>true</harBoutgifterVedSamling>"))
-		assertTrue(xmlString.contains("<harFasteBoutgifter>false</harFasteBoutgifter>"))
+		assertTrue(xmlString.contains("<harFasteBoutgifter>true</harFasteBoutgifter>"))
 		assertTrue(xmlString.contains("<mottarBostoette>true</mottarBostoette>"))
 		assertTrue(xmlString.contains("<bostoetteBeloep>$mottattStotte</bostoetteBeloep>"))
 		assertTrue(xmlString.contains("<boutgifterHjemstedAktuell>$utgifterHjemsted</boutgifterHjemstedAktuell>"))
@@ -700,7 +700,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("</periode>"))
 		assertTrue(xmlString.contains("<skolenivaa kodeverksRef=\"Skolenivaa\">VGS</skolenivaa>"))
 		assertTrue(xmlString.contains("<prosentandelForUtdanning>100</prosentandelForUtdanning>"))
-		assertTrue(xmlString.contains("<erUtgifterDekket kodeverksRef=\"utgifterdekket\">DELVIS</erUtgifterDekket>"))
+		assertTrue(xmlString.contains("<erUtgifterDekket kodeverksRef=\"utgifterdekket\">DEL</erUtgifterDekket>"))
 		assertTrue(xmlString.contains("<beloep>7500</beloep>"))
 		assertTrue(xmlString.contains("<hvorMyeDekkesAvAnnenAktoer>1500.0</hvorMyeDekkesAvAnnenAktoer>"))
 		assertTrue(xmlString.contains("<hvorMyeDekkesAvNAV>6000.0</hvorMyeDekkesAvNAV>"))
@@ -744,7 +744,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.16B", tema = "TSO").build()
 
 		val flytteutgifter = JsonFlyttingTestBuilder()
-			.hvorforFlytterDu("Jeg flytter fordi jeg har fått ny jobb")
+			.hvorforFlytterDu("nyJobb")
 			.oppgiForsteDagINyJobbDdMmAaaa("2024-01-02")
 			.velgLand1(VelgLand(label = "Norge", value = "NO"))
 			.adresse1("Kongens gate 10")
@@ -752,7 +752,7 @@ class TilleggsstonadJson2XmlConverterTest {
 			.farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav("Nei")
 			.erBostedEtterFlytting(true)
 			.narFlytterDuDdMmAaaa("2023-12-29")
-			.ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra("Jeg flytter selv")
+			.ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra("jegFlytterSelv")
 			.jegFlytterSelv(
 				JegFlytterSelv(
 					hvorLangtSkalDuFlytte = 130, hengerleie = 1000, bom = null, parkering = 200, ferje = 0, annet = null
@@ -782,7 +782,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.23B", tema = "TSO").build()
 
 		val flytteutgifter = JsonFlyttingTestBuilder()
-			.ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra("Jeg vil bruke flyttebyrå")
+			.ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra("jegVilBrukeFlyttebyra")
 			.jegVilBrukeFlyttebyra(
 				JegVilBrukeFlyttebyra(
 					navnPaFlyttebyra1 = "Flytte1",
@@ -814,7 +814,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.23B", tema = "TSO").build()
 
 		val flytteutgifter = JsonFlyttingTestBuilder()
-			.ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra("Jeg har innhentet tilbud fra minst to flyttebyråer, men velger å flytte selv")
+			.ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra("jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv")
 			.jegVilBrukeFlyttebyra(jegVilBrukeFlyttebyra = null)
 			.jegFlytterSelv(jegFlytterSelv = null)
 			.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv(
