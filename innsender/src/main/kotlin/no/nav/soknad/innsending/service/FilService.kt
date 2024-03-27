@@ -42,7 +42,7 @@ class FilService(
 				&& it.formioId == lagretVedleggDto.formioId
 		} ?: run {
 			logger.error("Fant ikke matchende lagret vedlegg med innsendt vedlegg")
-			throw BackendErrorException("Feil ved lagring av dokument ${lagretVedleggDto.tittel}. Fant ikke matchende lagret vedlegg ${lagretVedleggDto.tittel} med innsendt vedlegg, er variant = ${lagretVedleggDto.erVariant}")
+			throw BackendErrorException("Feil ved lagring av dokument ${lagretVedleggDto.tittel}. Fant ikke matchende lagret vedlegg ${lagretVedleggDto.tittel} med innsendt vedlegg, er variant = ${lagretVedleggDto.erVariant}") // TODO
 		}
 
 		// Finn eksisterende filer
@@ -93,7 +93,7 @@ class FilService(
 		}
 
 		if (soknadDto.vedleggsListe.none { it.id == filDto.vedleggsid })
-			throw ResourceNotFoundException("Vedlegg $filDto.vedleggsid til søknad ${soknadDto.innsendingsId} eksisterer ikke")
+			throw ResourceNotFoundException("Vedlegg ${filDto.vedleggsid} til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
 		logger.debug("${soknadDto.innsendingsId!!}: Skal lagre fil med størrelse ${filDto.data!!.size} på vedlegg ${filDto.vedleggsid}")
 		val savedFilDbData = try {

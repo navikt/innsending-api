@@ -1,0 +1,53 @@
+{
+	"language": "nb-NO",
+	"data": {
+		"data": {
+			"flervalg": {
+				"aapUforeNedsattArbEvne": false,
+				"ensligUtdanning": false,
+				"ensligArbSoker": false,
+				"gjenlevendeUtdanning": false,
+				"gjenlevendeArbSoker": false,
+				"regArbSoker": true,
+				"tidligereFamiliepleier": false,
+				"annet": false
+			},
+			"detteErAdressenJegSkalBoPaEtterAtJegHarFlyttet": true,
+			"fornavnSoker": "Test",
+			"etternavnSoker": "Testesen",
+			"harDuNorskFodselsnummerEllerDNummer": "ja",
+			"fodselsnummerDNummerSoker": "10108000398",
+			"narFlytterDuDdMmAaaa": "2024-03-02",
+			"hvorforFlytterDu": "aktivitet",
+			"velgLand1": {
+				"label": "Norge",
+				"value": "NO"
+			},
+			"adresse1": "Kongensgate 10",
+			"postnr1": "3701",
+			"ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra": "jegFlytterSelv",
+			"jegFlytterSelv": {
+				"hvorLangtSkalDuFlytte": "600",
+				"hengerleie": 4000,
+				"bom": 1000,
+				"parkering": 300,
+				"ferje": 350,
+				"annet": 120
+			},
+			"farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav": "nei",
+			"tilleggsopplysninger": "fgfda adf ga"
+		},
+		"metadata": {
+			"timezone": "Europe/Oslo",
+			"offset": 60,
+			"origin": "https://skjemadelingslenke.ekstern.dev.nav.no",
+			"referrer": "https://skjemadelingslenke.ekstern.dev.nav.no/fyllut/nav111223b",
+			"browserName": "Netscape",
+			"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+			"pathName": "/fyllut/nav111223b/tilleggsopplysningerPanel",
+			"onLine": true
+		},
+		"state": "submitted",
+		"_vnote": ""
+	}
+}

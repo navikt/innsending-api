@@ -14,6 +14,7 @@ import java.time.LocalDateTime
 interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
 
 	@Query(value = "FROM VedleggDbData WHERE soknadsid = :soknadsid order by id")
+	@Modifying(clearAutomatically = true)
 	fun findAllBySoknadsid(@Param("soknadsid") soknadsid: Long): List<VedleggDbData>
 
 	@Query(value = "FROM VedleggDbData WHERE id = :vedleggsid")
@@ -41,13 +42,13 @@ interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
 	): Int
 
 	@Transactional
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Query(value = "UPDATE VedleggDbData v SET v.status = :status, v.innsendtdato = :innsendtdato, v.endretdato = :endretdato WHERE v.id = :id")
 	fun updateStatusAndInnsendtdato(
 		@Param("id") id: Long,
 		@Param("status") status: OpplastingsStatus,
 		@Param("endretdato") endretdato: LocalDateTime,
-		@Param("innsendtdato") innsendtdato: LocalDateTime
+		@Param("innsendtdato") innsendtdato: LocalDateTime?
 	): Int
 
 	@Transactional

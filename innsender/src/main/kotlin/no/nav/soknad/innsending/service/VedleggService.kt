@@ -10,10 +10,7 @@ import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
-import no.nav.soknad.innsending.util.mapping.lagDokumentSoknadDto
-import no.nav.soknad.innsending.util.mapping.lagVedleggDto
-import no.nav.soknad.innsending.util.mapping.mapTilVedleggDb
-import no.nav.soknad.innsending.util.mapping.oppdaterVedleggDb
+import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import org.slf4j.LoggerFactory
@@ -208,6 +205,40 @@ class VedleggService(
 		return lagVedleggDto(vedleggDbDataList.first())
 	}
 
+	@Transactional
+	fun lagreNyHoveddokumentVariant(soknadDto: DokumentSoknadDto, mimetype: Mimetype): VedleggDto {
+
+		// Lagre vedlegget i databasen
+		val vedleggDbData =
+			repo.lagreVedlegg(
+				VedleggDbData(
+					null,
+					soknadDto.id!!,
+					OpplastingsStatus.IKKE_VALGT,
+					true,
+					ervariant = true,
+					false,
+					erpakrevd = true,
+					vedleggsnr = soknadDto.skjemanr,
+					tittel = soknadDto.tittel,
+					label = soknadDto.tittel,
+					beskrivelse = "",
+					mimetype = mimetype.value,
+					uuid = UUID.randomUUID().toString(),
+					opprettetdato = LocalDateTime.now(),
+					endretdato = LocalDateTime.now(),
+					innsendtdato = null,
+					vedleggsurl = null,
+					formioid = null
+				)
+			)
+
+		// Oppdater soknadens sist endret dato
+		repo.oppdaterEndretDato(soknadDto.id!!)
+
+		return lagVedleggDto(vedleggDbData)
+	}
+
 	fun hentAlleVedlegg(soknadDbDataOpt: SoknadDbData, ident: String): DokumentSoknadDto {
 		val operation = InnsenderOperation.HENT.name
 
@@ -266,7 +297,38 @@ class VedleggService(
 	}
 
 	@Transactional
-	fun endreVedlegg(patchVedleggDto: PatchVedleggDto, vedleggsId: Long, soknadDto: DokumentSoknadDto): VedleggDto {
+	fun endreVedleggStatus(
+		soknadDto: DokumentSoknadDto,
+		vedleggsId: Long,
+		opplastingsStatus: OpplastingsStatusDto
+	) {
+		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException("Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet. Det kan ikke gjøres endring på en slettet eller innsendt søknad")
+
+		val vedleggDbData = repo.hentVedlegg(vedleggsId)
+		if (vedleggDbData.soknadsid != soknadDto.id) {
+			throw IllegalActionException("Søknad ${soknadDto.innsendingsId} har ikke vedlegg med id $vedleggsId. Kan ikke endre vedlegg da søknaden ikke har et slikt vedlegg")
+		}
+		repo.oppdaterVedleggStatusOgInnsendtdato(
+			innsendingsId = soknadDto.innsendingsId!!,
+			vedleggsId = vedleggsId,
+			opplastingsStatus = mapTilDbOpplastingsStatus(opplastingsStatus),
+			endretDato = LocalDateTime.now(),
+			innsendtDato = null
+		)
+		val delme = repo.hentVedlegg(vedleggsId) // TODO slett når årsak til at hvorfor status ikke er oppdatert er funnet
+		if (delme.status != mapTilDbOpplastingsStatus(opplastingsStatus)) {
+			logger.warn("${soknadDto.innsendingsId}: Oppdatering av status til ${mapTilDbOpplastingsStatus(opplastingsStatus)} for vedlegg $vedleggsId feilet, status på vedlegget er = ${delme.status}")
+		}
+	}
+
+
+	@Transactional
+	fun endreVedlegg(
+		patchVedleggDto: PatchVedleggDto,
+		vedleggsId: Long,
+		soknadDto: DokumentSoknadDto,
+		required: Boolean? = null
+	): VedleggDto {
 
 		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException("Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet. Det kan ikke gjøres endring på en slettet eller innsendt søknad")
 
@@ -284,7 +346,7 @@ class VedleggService(
 		*/
 
 		val oppdatertVedlegg =
-			repo.oppdaterVedlegg(soknadDto.innsendingsId!!, oppdaterVedleggDb(vedleggDbData, patchVedleggDto))
+			repo.oppdaterVedlegg(soknadDto.innsendingsId!!, oppdaterVedleggDb(vedleggDbData, patchVedleggDto, required))
 
 		// Oppdater soknadens sist endret dato
 		repo.oppdaterEndretDato(soknadDto.id!!)

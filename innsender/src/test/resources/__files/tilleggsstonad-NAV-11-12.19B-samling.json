@@ -1,0 +1,67 @@
+{
+	"language": "nb-NO",
+	"data": {
+		"data": {
+			"hvilkeBoutgifterSokerDuOmAFaDekket": "boutgifterIForbindelseMedSamling",
+			"harDuNorskFodselsnummerEllerDNummer": "ja",
+			"flervalg": {
+				"aapUforeNedsattArbEvne": false,
+				"ensligUtdanning": false,
+				"ensligArbSoker": true,
+				"gjenlevendeUtdanning": false,
+				"gjenlevendeArbSoker": false,
+				"tidligereFamiliepleier": false,
+				"annet": false
+			},
+			"harRegistrertAktivitetsperiode": "ja",
+			"startdatoDdMmAaaa": "2024-01-02",
+			"sluttdatoDdMmAaaa": "2024-04-26",
+			"hvilkeAdresserHarDuBoutgifterPa": {
+				"boutgifterPaAktivitetsadressen": true,
+				"boutgifterPaHjemstedet": true,
+				"boutgifterPaHjemstedetMittSomHarOpphortIForbindelseMedAktiviteten": true
+			},
+			"erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet": "nei",
+			"tilleggsopplysninger1": "fgsdfg",
+			"annenDokumentasjon": "",
+			"fornavnSoker": "Test",
+			"etternavnSoker": "Testesen",
+			"fodselsnummerDNummerSoker": "10108000398",
+			"visesHvisBrukerHarEnRegistrertAktivitetsperiode": {},
+			"bostotteIForbindelseMedSamling": {
+				"periodeForSamling": [
+					{
+						"startdatoDdMmAaaa": "2024-01-02",
+						"sluttdatoDdMmAaaa": "2024-01-12"
+					},
+					{
+						"startdatoDdMmAaaa": "2024-02-05",
+						"sluttdatoDdMmAaaa": "2024-02-16"
+					},
+					{
+						"startdatoDdMmAaaa": "2024-03-04",
+						"sluttdatoDdMmAaaa": "2024-03-15"
+					}
+				]
+			},
+			"boutgifterPaAktivitetsadressen": 5000,
+			"boutgifterPaHjemstedetMitt": 10000,
+			"boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten": 2000,
+			"dokumentasjonAvBoutgifterPaAktivitetsadressen1": "",
+			"dokumentasjonAvBoutgifterPaHjemstedetDitt": "",
+			"dokumentasjonAvBoutgifterPaHjemstedetDittSomHarOpphortIForbindelseMedAktiviteten": ""
+		},
+		"metadata": {
+			"timezone": "Europe/Oslo",
+			"offset": 60,
+			"origin": "https://skjemadelingslenke.ekstern.dev.nav.no",
+			"referrer": "https://skjemadelingslenke.ekstern.dev.nav.no/fyllut/nav111219b",
+			"browserName": "Netscape",
+			"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+			"pathName": "/fyllut/nav111219b/tilleggsopplysninger",
+			"onLine": true
+		},
+		"state": "submitted",
+		"_vnote": ""
+	}
+}

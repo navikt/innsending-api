@@ -1,0 +1,68 @@
+{
+	"language": "nb-NO",
+	"data": {
+		"data": {
+			"erDuArbeidssoker": "ja",
+			"mottarDuEllerHarDuSoktOmDagpenger": "nei",
+			"mottarDuEllerHarDuSoktOmTiltakspenger": "nei",
+			"gjennomforerDuEnUtdanningSomNavHarGodkjent": "ja",
+			"erDuGjenlevendeEktefelle": "nei",
+			"erDuTidligereFamiliepleier": "ja",
+			"erDuUgiftSkiltEllerSeparertOgErAleneOmOmsorgenForBarn": "ja",
+			"erDuUgiftSkiltEllerSeparertOgErAleneOmOmsorgenForBarn1": "ja",
+			"nedsattArbeidsevnePgaSykdom": {
+				"harDuNedsattArbeidsevnePaGrunnAvSykdom": "nei"
+			},
+			"annet1": false,
+			"harDuNorskFodselsnummerEllerDNummer": "ja",
+			"fornavnSoker": "Test",
+			"etternavnSoker": "Testesen",
+			"fodselsnummerDNummerSoker": "10108000398",
+			"harRegistrertAktivitetsperiode": "ja",
+			"startdatoDdMmAaaa": "2024-01-02",
+			"sluttdatoDdMmAaaa": "2024-06-28",
+			"harDuEnReiseveiPaSeksKilometerEllerMer": "ja",
+			"velgLand1": {
+				"label": "Norge",
+				"value": "NO"
+			},
+			"adresse1": "Kongensgate10",
+			"postnr1": "3701",
+			"kanDuReiseKollektivtDagligReise": "nei",
+			"visesHvisBrukerHarEnRegistrertAktivitetsperiode": {},
+			"hvorMangeReisedagerHarDuPerUke": 5,
+			"hvorLangReiseveiHarDu": 630,
+			"kanIkkeReiseKollektivtDagligReise": {
+				"hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt": "darligTransporttilbud",
+				"beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt": "dfadfa",
+				"hentingEllerLeveringAvBarn": {},
+				"annet": {},
+				"kanDuBenytteEgenBil": "ja",
+				"kanBenytteEgenBil": {
+					"bompenger": 500,
+					"piggdekkavgift": 1000,
+					"ferje": 200,
+					"annet": 30,
+					"vilDuHaUtgifterTilParkeringPaAktivitetsstedet": "ja",
+					"oppgiForventetBelopTilParkeringPaAktivitetsstedet": 6000,
+					"hvorOfteOnskerDuASendeInnKjoreliste": "jegOnskerALevereKjorelisteEnGangIUken"
+				},
+				"kanIkkeBenytteEgenBil": {}
+			},
+			"tilleggsopplysninger": "fgsdfg",
+			"annenDokumentasjon1": ""
+		},
+		"metadata": {
+			"timezone": "Europe/Oslo",
+			"offset": 60,
+			"origin": "https://skjemadelingslenke.ekstern.dev.nav.no",
+			"referrer": "https://skjemadelingslenke.ekstern.dev.nav.no/fyllut/nav111221b/paabegynt?sub=digital",
+			"browserName": "Netscape",
+			"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+			"pathName": "/fyllut/nav111221b/tilleggsopplysningerPanel",
+			"onLine": true
+		},
+		"state": "submitted",
+		"_vnote": ""
+	}
+}

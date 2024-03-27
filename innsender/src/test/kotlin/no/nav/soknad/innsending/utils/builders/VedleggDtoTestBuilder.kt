@@ -38,10 +38,10 @@ data class VedleggDtoTestBuilder(
 		return this
 	}
 
-	fun asHovedDokumentVariant(): VedleggDtoTestBuilder {
+	fun asHovedDokumentVariant(document_path: String = "/__files/sanity.json"): VedleggDtoTestBuilder {
 		erHoveddokument = true
 		erVariant = true
-		document = Hjelpemetoder.getBytesFromFile("/__files/sanity.json")
+		document = Hjelpemetoder.getBytesFromFile(document_path)
 		mimetype = Mimetype.applicationSlashJson
 		formioId = null
 		opplastingsStatus = OpplastingsStatusDto.lastetOpp

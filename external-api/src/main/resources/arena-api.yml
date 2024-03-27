@@ -234,9 +234,7 @@ components:
     Maalgruppe:
       type: object
       required:
-        - gyldighetsperiode
         - maalgruppetype
-        - maalgruppenavn
       properties:
         gyldighetsperiode:
           $ref: "#/components/schemas/Periode"

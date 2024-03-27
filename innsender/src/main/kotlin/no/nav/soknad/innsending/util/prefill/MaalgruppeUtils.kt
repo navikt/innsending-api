@@ -99,8 +99,12 @@ object MaalgruppeUtils {
 		val aktivitetStart = aktivitet.periode.fom
 		val aktivitetEnd = aktivitet.periode.tom ?: LocalDate.now()
 
-		val maalgruppeStart = maalgruppe.gyldighetsperiode.fom
-		val maalgruppeEnd = maalgruppe.gyldighetsperiode.tom ?: LocalDate.now()
+		val maalgruppeStart = maalgruppe.gyldighetsperiode?.fom
+		val maalgruppeEnd = maalgruppe.gyldighetsperiode?.tom ?: LocalDate.now()
+		
+		if (maalgruppeStart == null) {
+			return false
+		}
 
 		return isDateBetween(date = aktivitetStart, start = maalgruppeStart, end = maalgruppeEnd) ||
 			isDateBetween(date = aktivitetEnd, start = maalgruppeStart, end = maalgruppeEnd) ||
