@@ -339,7 +339,7 @@ class FyllUtJsonTestBuilder {
 					//visesHvisBrukerHarEnRegistrertAktivitetsperiode = null, // TODO
 					hvorMangeReisedagerHarDuPerUke = if (skjemanr == dagligReiseSkjemanr) hvorMangeReisedagerHarDuPerUke else null,
 					hvorLangReiseveiHarDu = if (skjemanr == dagligReiseSkjemanr) hvorLangReiseveiHarDu else null,
-					hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise = if (skjemanr == dagligReiseSkjemanr) hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise else null,
+					hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise = if (skjemanr == dagligReiseSkjemanr) hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise else null,
 					kanIkkeReiseKollektivtDagligReise = if (skjemanr == dagligReiseSkjemanr) kanIkkeReiseKollektivt else null,
 
 					// Reise til samling

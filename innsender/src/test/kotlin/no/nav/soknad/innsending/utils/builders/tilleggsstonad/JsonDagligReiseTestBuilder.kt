@@ -128,7 +128,7 @@ class JsonDagligReiseTestBuilder {
 		adresse1 = adresse1,
 		postnr1 = postnr1,
 		kanDuReiseKollektivtDagligReise = kanDuReiseKollektivtDagligReise,
-		hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise = hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise,
+		hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise = hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise,
 		hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt = hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt,
 		kanIkkeReiseKollektivtDagligReise = buildKanIkkeReiseKollektivtDagligReise()
 	)

@@ -60,8 +60,9 @@ fun convertToTilleggsstonadsskjema(
 
 }
 
-fun convertToAktivitetsinformasjon(jsonAktivitetsInformasjon: JsonAktivitetsInformasjon?): Aktivitetsinformasjon {
-	return Aktivitetsinformasjon(jsonAktivitetsInformasjon?.aktivitet)
+fun convertToAktivitetsinformasjon(jsonAktivitetsInformasjon: JsonAktivitetsInformasjon?): Aktivitetsinformasjon? {
+	if (jsonAktivitetsInformasjon?.aktivitet == null) return null
+	return Aktivitetsinformasjon(jsonAktivitetsInformasjon.aktivitet)
 }
 
 fun convertToMaalgruppeinformasjon(jsonMaalgruppeinformasjon: JsonMaalgruppeinformasjon?): Maalgruppeinformasjon? {
@@ -494,11 +495,11 @@ private fun convertPeriode(fom: String, tom: String): Periode {
 
 
 private fun convertAlternativeTransportutgifter_DagligReise(details: JsonDagligReise): AlternativeTransportutgifter {
-	val kanBenytteEgenBil = convertToBoolean(details.kanIkkeReiseKollektivtDagligReise?.kanDuBenytteEgenBil) ?: false
+	val kanBenytteEgenBil = convertToBoolean(details.kanIkkeReiseKollektivtDagligReise?.kanDuBenytteEgenBil)
 	return AlternativeTransportutgifter(
 		kanOffentligTransportBrukes = convertToBoolean(details.kanDuReiseKollektivtDagligReise),
 		kanEgenBilBrukes = kanBenytteEgenBil,
-		kollektivTransportutgifter = convertKollektivTransportutgifter(details.hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise),
+		kollektivTransportutgifter = convertKollektivTransportutgifter(details.hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise),
 		drosjeTransportutgifter = convertDrosjeTransportutgifter(details.kanIkkeReiseKollektivtDagligReise?.kanIkkeBenytteEgenBil?.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor),
 		egenBilTransportutgifter = convertEgenBilTransportutgifter(details.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil),
 		aarsakTilIkkeOffentligTransport = convertAarsakTilIkkeOffentligTransport(details.kanIkkeReiseKollektivtDagligReise?.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt),

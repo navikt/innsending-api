@@ -66,7 +66,7 @@ data class Application(
 	val adresse1: String? = null,
 	val postnr1: String? = null,
 	val kanDuReiseKollektivtDagligReise: String? = null, // ja | nei
-	val hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise: Int? = null, // Hvis kanDuReiseKollektivtDagligReise == ja
+	val hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise: Int? = null, // Hvis kanDuReiseKollektivtDagligReise == ja
 	val hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt: String? = null,
 	val kanIkkeReiseKollektivtDagligReise: KanIkkeReiseKollektivt? = null,
 

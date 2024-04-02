@@ -125,7 +125,7 @@ data class JsonDagligReise(
 	val adresse1: String,
 	val postnr1: String?, // Null hvis land != Norge
 	val kanDuReiseKollektivtDagligReise: String, // ja | nei
-	val hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise: Int?, // Hvis kanDuReiseKollektivtDagligReise == ja
+	val hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise: Int?, // Hvis kanDuReiseKollektivtDagligReise == ja
 	val hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt: String?,
 	val kanIkkeReiseKollektivtDagligReise: KanIkkeReiseKollektivt?
 )

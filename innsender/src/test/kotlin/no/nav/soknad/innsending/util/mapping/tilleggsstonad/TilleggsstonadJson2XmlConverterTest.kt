@@ -168,7 +168,6 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("<avstand>10.0</avstand>"))
 		assertTrue(xmlString.contains("<aktivitetsadresse>Strømstad Systembolag, 452 38, Sverige</aktivitetsadresse>"))
 		assertTrue(xmlString.contains("<kanOffentligTransportBrukes>true</kanOffentligTransportBrukes>"))
-		assertTrue(xmlString.contains("<kanEgenBilBrukes>false</kanEgenBilBrukes>"))
 		assertTrue(xmlString.contains("<beloepPerMaaned>2000</beloepPerMaaned>"))
 	}
 
@@ -207,7 +206,6 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("<avstand>10.0</avstand>"))
 		assertTrue(xmlString.contains("<kanOffentligTransportBrukes>false</kanOffentligTransportBrukes>"))
 		assertTrue(xmlString.contains("<aarsakTilIkkeOffentligTransport>hentingEllerLeveringAvBarn</aarsakTilIkkeOffentligTransport>"))
-		assertTrue(xmlString.contains("<kanEgenBilBrukes>false</kanEgenBilBrukes>"))
 		assertTrue(xmlString.contains("<aarsakTilIkkeEgenBil>disponererIkkeBil</aarsakTilIkkeEgenBil>"))
 		assertTrue(
 			xmlString.contains(
@@ -254,7 +252,6 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("<avstand>10.0</avstand>"))
 		assertTrue(xmlString.contains("<kanOffentligTransportBrukes>false</kanOffentligTransportBrukes>"))
 		assertTrue(xmlString.contains("<aarsakTilIkkeOffentligTransport>hentingEllerLeveringAvBarn</aarsakTilIkkeOffentligTransport>"))
-		assertTrue(xmlString.contains("<kanEgenBilBrukes>false</kanEgenBilBrukes>"))
 		assertTrue(xmlString.contains("<aarsakTilIkkeEgenBil>disponererIkkeBil</aarsakTilIkkeEgenBil>"))
 		assertTrue(xmlString.contains("<aarsakTilIkkeDrosje>Er sengeliggende og trenger transport med ambulanse</aarsakTilIkkeDrosje>"))
 	}

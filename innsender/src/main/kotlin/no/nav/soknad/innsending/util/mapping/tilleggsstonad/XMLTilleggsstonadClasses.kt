@@ -465,7 +465,7 @@ data class Skolenivaaer(
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class Tilleggsstoenadsskjema(
 	@JacksonXmlProperty(localName = "aktivitetsinformasjon")
-	val aktivitetsinformasjon: Aktivitetsinformasjon,
+	val aktivitetsinformasjon: Aktivitetsinformasjon?,
 	@JacksonXmlProperty(localName = "personidentifikator")
 	val personidentifikator: String,
 	@JacksonXmlProperty(localName = "maalgruppeinformasjon")

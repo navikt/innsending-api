@@ -341,7 +341,7 @@ private fun convertToJsonDagligReise(tilleggsstonad: Application): JsonDagligRei
             tilleggsstonad.kanDuReiseKollektivtDagligReise,
             "Daglig reise kan du reise kollektivt"
         ), // ja | nei
-        hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise = tilleggsstonad.hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise, // Hvis kanDuReiseKollektivtDagligReise == ja
+        hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise = tilleggsstonad.hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise, // Hvis kanDuReiseKollektivtDagligReise == ja
         hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt = tilleggsstonad.hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt,
         kanIkkeReiseKollektivtDagligReise = tilleggsstonad.kanIkkeReiseKollektivtDagligReise
     )
