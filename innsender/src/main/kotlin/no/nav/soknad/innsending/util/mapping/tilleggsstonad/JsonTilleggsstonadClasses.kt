@@ -89,7 +89,7 @@ data class JsonLaeremiddelutgifter(
 	val utgifterTilLaeremidler: Int,
 	val farDuDekketLaeremidlerEtterAndreOrdninger: String, // ja | nei | delvis
 	val hvorMyeFarDuDekketAvEnAnnenAktor: Int?,
-	val hvorStortBelopSokerDuOmAFaDekketAvNav: Int
+	val hvorStortBelopSokerDuOmAFaDekketAvNav: Int?
 )
 
 data class JsonTilsynsutgifter(

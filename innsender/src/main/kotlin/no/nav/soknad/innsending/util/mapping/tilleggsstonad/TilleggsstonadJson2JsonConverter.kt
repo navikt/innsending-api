@@ -251,7 +251,7 @@ private fun convertToLaeremiddelutgifter(tilleggsstonad: Application): JsonLaere
         utgifterTilLaeremidler = tilleggsstonad.utgifterTilLaeremidler ?: 0,
         farDuDekketLaeremidlerEtterAndreOrdninger = tilleggsstonad.farDuDekketLaeremidlerEtterAndreOrdninger ?: "Nei",
         hvorMyeFarDuDekketAvEnAnnenAktor = tilleggsstonad.hvorMyeFarDuDekketAvEnAnnenAktor,
-        hvorStortBelopSokerDuOmAFaDekketAvNav = tilleggsstonad.hvorStortBelopSokerDuOmAFaDekketAvNav ?: 0
+        hvorStortBelopSokerDuOmAFaDekketAvNav = tilleggsstonad.hvorStortBelopSokerDuOmAFaDekketAvNav
     )
 }
 

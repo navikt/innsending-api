@@ -149,11 +149,11 @@ fun convertLaremiddler(jsonRettighetstyper: JsonRettighetstyper): Laeremiddelutg
 			fom = laeremiddelutgifter.aktivitetsperiode.startdatoDdMmAaaa,
 			tom = laeremiddelutgifter.aktivitetsperiode.sluttdatoDdMmAaaa
 		),
-		hvorMyeDekkesAvAnnenAktoer = laeremiddelutgifter.hvorMyeFarDuDekketAvEnAnnenAktor?.toDouble(),
-		hvorMyeDekkesAvNAV = laeremiddelutgifter.hvorStortBelopSokerDuOmAFaDekketAvNav.toDouble(),
+		hvorMyeDekkesAvAnnenAktoer = laeremiddelutgifter.hvorMyeFarDuDekketAvEnAnnenAktor?.toDouble(), //  Blir aldri satt i gammel løsning
+		hvorMyeDekkesAvNAV = laeremiddelutgifter.hvorStortBelopSokerDuOmAFaDekketAvNav?.toDouble(), // Blir aldri satt i gammel løsning
 		skolenivaa = convertToSkolenvaaer(laeremiddelutgifter.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore),
 		prosentandelForUtdanning = laeremiddelutgifter.oppgiHvorMangeProsentDuStudererEllerGarPaKurs,
-		beloep = laeremiddelutgifter.utgifterTilLaeremidler,
+		beloep = laeremiddelutgifter.utgifterTilLaeremidler, // Kun satt dersom funksjonshemning i gammel løsning
 		erUtgifterDekket = convertToErUtgifterDekket(laeremiddelutgifter.farDuDekketLaeremidlerEtterAndreOrdninger)
 	)
 }
