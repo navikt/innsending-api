@@ -28,26 +28,6 @@ tags:
     description: API for eksterne applikasjoner.
 
 paths:
-  /fyllUt/v1/leggTilVedlegg:
-    post:
-      summary: (DEPRECATED) Motta ferdig utfylt søknad og metadata til denne.
-      description: FyllUt tjenesten gir søker mulighet til å fylle ut en søknad. Når vedkommende er ferdig med dette kalles dette endepunktet for å mellomlagre søknaden og gi søker mulighet til å laste opp eventuelle vedlegg og sende inn søknaden og disse til NAV.
-      operationId: fyllUt
-
-      requestBody:
-        description: Søknadsmetadata og søknad som PDF og Json samt liste over eventuelle obligatoriske og valgfrie vedlegg som skal/kan legges til.
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SkjemaDto"
-        required: true
-
-      responses:
-        302:
-          description: Found
-      tags:
-        - fyllut
-
   /fyllUt/v1/soknad/{innsendingsId}:
     get:
       summary: Hent en eksisterende søknadsutfylling
