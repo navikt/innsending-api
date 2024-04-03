@@ -23,9 +23,9 @@ class SammensattAdresse(val land: String?, val adresse: String?, val postnr: Str
 
 
 enum class BarnepassAarsak(val cmsKey: String) {
-	langvarig("soknad.barnepass.fjerdeklasse.aarsak.langvarig"),
-	trengertilsyn("soknad.barnepass.fjerdeklasse.aarsak.tilsyn"),
-	ingen("soknad.barnepass.fjerdeklasse.aarsak.ingen")
+	langvarig("Langvarig/uregelmessig fravær på grunn av arbeid eller utdanning"), // fra "soknad.barnepass.fjerdeklasse.aarsak.langvarig"
+	trengertilsyn("Barnet mitt har et særlig behov for pass"), // fra "soknad.barnepass.fjerdeklasse.aarsak.tilsyn"
+	ingen("Ingen av disse passer") //  fra "soknad.barnepass.fjerdeklasse.aarsak.ingen"
 }
 
 

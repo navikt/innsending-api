@@ -158,13 +158,12 @@ fun convertLaremiddler(jsonRettighetstyper: JsonRettighetstyper): Laeremiddelutg
 	)
 }
 
-//"videregaendeUtdanning" | "hoyereUtdanning" | "kursEllerAnnenUtdanning"
 fun convertToSkolenvaaer(nivaString: String): Skolenivaaer =
 	when (nivaString) {
-		"videregaendeUtdanning" -> Skolenivaaer(value = "VGS")
-		"hoyereUtdanning" -> Skolenivaaer(value = "HGU")
-		"kursEllerAnnenUtdanning" -> Skolenivaaer(value = "ANN")
-		else -> Skolenivaaer(value = "ANN")
+		"videregaendeUtdanning" -> Skolenivaaer(SkolenivaaerKodeverk.videregaende.kodeverk)
+		"hoyereUtdanning" -> Skolenivaaer(SkolenivaaerKodeverk.hoyereutdanning.kodeverk)
+		"kursEllerAnnenUtdanning" -> Skolenivaaer(SkolenivaaerKodeverk.annet.kodeverk)
+		else -> Skolenivaaer(SkolenivaaerKodeverk.annet.kodeverk)
 	}
 
 fun convertToErUtgifterDekket(svar: String): ErUtgifterDekket =
@@ -268,6 +267,7 @@ private fun convertTilsynsutgifterBarn(jsonRettighetstyper: JsonRettighetstyper)
 }
 
 private fun convertAarsakTilBarnepass(aarsak: String?): List<String>? {
+	if (aarsak == null) return null
 	when (aarsak) {
 		"langvarigUregelmessigFravaer" -> return listOf(BarnepassAarsak.langvarig.cmsKey)
 		"saerligBehovForPass" -> return listOf(BarnepassAarsak.trengertilsyn.cmsKey)
@@ -285,6 +285,7 @@ private fun convertTilsynskategori(kategori: String?): String {
 	}
 }
 
+// IKKE I BRUK I GAMMEL LØSNING
 private fun convertFamilieutgifter(jsonRettighetstyper: JsonRettighetstyper): TilsynsutgifterFamilie? {
 	if (!hasTilsynsutgifterFamilie(jsonRettighetstyper)) return null
 
@@ -534,19 +535,19 @@ private fun convertEgenBilTransportutgifter(utgifter: KanBenytteEgenBil?): EgenB
 	)
 }
 
-// Årsak til ikke offentlig transport er definert i XML, men aldri inkludert i koden i sendsoknnad.
+// Årsak til ikke offentlig transport er definert i XML, men aldri inkludert i koden i sendsoknad.
 private fun convertAarsakTilIkkeOffentligTransport(aarsakTilIkkeOffentligTransport: String?): List<String>? {
 	if (aarsakTilIkkeOffentligTransport == null) return null
 	return listOf(aarsakTilIkkeOffentligTransport)
 }
 
-// Årsak til ikke egen bil er definert i XML, men aldri inkludert i koden i sendsoknnad.
+// Årsak til ikke egen bil er definert i XML, men aldri inkludert i koden i sendsoknad.
 private fun convertAarsakTilIkkeEgenBil(ikkeEgenBil: String?): List<String>? {
 	if (ikkeEgenBil == null) return null
 	return listOf(ikkeEgenBil)
 }
 
-// Årsak til ikke drosje er definert i XML, men aldri inkludert i koden i sendsoknnad.
+// Årsak til ikke drosje er definert i XML, men aldri inkludert i koden i sendsoknad.
 private fun convertAarsakTilIkkeDrosje(aarsak: String?): String? {
 	if (aarsak.isNullOrBlank()) return null
 	return aarsak
