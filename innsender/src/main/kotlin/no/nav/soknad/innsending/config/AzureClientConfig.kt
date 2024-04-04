@@ -4,6 +4,7 @@ import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.MDCUtil
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.web.client.RestClient
 import org.springframework.web.reactive.function.client.WebClient
 
 @Configuration
@@ -15,6 +16,16 @@ class AzureClientConfig(
 	@Bean
 	fun azureWebClient(): WebClient {
 		return webClientBuilder
+			.baseUrl(restConfig.azureUrl)
+			.defaultRequest {
+				it.header(Constants.HEADER_CALL_ID, MDCUtil.callIdOrNew())
+			}
+			.build()
+	}
+
+	@Bean
+	fun azureRestClient(): RestClient {
+		return RestClient.builder()
 			.baseUrl(restConfig.azureUrl)
 			.defaultRequest {
 				it.header(Constants.HEADER_CALL_ID, MDCUtil.callIdOrNew())
