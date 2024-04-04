@@ -502,7 +502,7 @@ private fun convertAlternativeTransportutgifter_DagligReise(details: JsonDagligR
 		kanEgenBilBrukes = kanBenytteEgenBil,
 		kollektivTransportutgifter = convertKollektivTransportutgifter(details.hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise),
 		drosjeTransportutgifter = convertDrosjeTransportutgifter(details.kanIkkeReiseKollektivtDagligReise?.kanIkkeBenytteEgenBil?.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor),
-		egenBilTransportutgifter = convertEgenBilTransportutgifter(details.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil),
+		egenBilTransportutgifter = convertEgenBilTransportutgifter(details.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil, true),
 		aarsakTilIkkeOffentligTransport = convertAarsakTilIkkeOffentligTransport(details.kanIkkeReiseKollektivtDagligReise?.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt),
 		aarsakTilIkkeEgenBil = convertAarsakTilIkkeEgenBil(details.kanIkkeReiseKollektivtDagligReise?.kanIkkeBenytteEgenBil?.hvaErArsakenTilAtDuIkkeKanBenytteEgenBil),
 		aarsakTilIkkeDrosje = convertAarsakTilIkkeDrosje(details.kanIkkeReiseKollektivtDagligReise?.kanIkkeBenytteEgenBil?.hvorforKanDuIkkeBenytteDrosje)
@@ -527,10 +527,10 @@ private fun convertInnsendingsintervaller(details: String?): Innsendingsinterval
 	}
 }
 
-private fun convertEgenBilTransportutgifter(utgifter: KanBenytteEgenBil?): EgenBilTransportutgifter? {
+private fun convertEgenBilTransportutgifter(utgifter: KanBenytteEgenBil?, isDagligReise: Boolean = false): EgenBilTransportutgifter? {
 	if (utgifter == null) return null
 	return EgenBilTransportutgifter(
-		sumAndreUtgifter = ((utgifter.annet ?: 0) + (utgifter.bompenger ?: 0) + (utgifter.parkering ?: 0)
+		sumAndreUtgifter = ((utgifter.annet ?: 0) + (utgifter.bompenger ?: 0) + (if (isDagligReise) 0 else utgifter.parkering ?: 0)
 			+ (utgifter.ferje ?: 0) + (utgifter.piggdekkavgift ?: 0)).toDouble()
 	)
 }

@@ -139,7 +139,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("<kanOffentligTransportBrukes>false</kanOffentligTransportBrukes>"))
 		assertTrue(xmlString.contains("<aarsakTilIkkeOffentligTransport>helsemessigeArsaker</aarsakTilIkkeOffentligTransport>"))
 		assertTrue(xmlString.contains("<innsendingsintervall>UKE</innsendingsintervall>"))
-		assertTrue(xmlString.contains("<sumAndreUtgifter>1350.0</sumAndreUtgifter>"))
+		assertTrue(xmlString.contains("<sumAndreUtgifter>1150.0</sumAndreUtgifter>"))
 		assertTrue(xmlString.contains("<parkeringsutgiftBeloep>200</parkeringsutgiftBeloep>"))
 	}
 
