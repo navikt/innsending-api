@@ -70,7 +70,7 @@ class JsonFlyttingTestBuilder {
 
 	fun jegFlytterSelv(jegFlytterSelv: JegFlytterSelv?) = apply { this.jegFlytterSelv = jegFlytterSelv }
 	fun jegVilBrukeFlyttebyra(jegVilBrukeFlyttebyra: JegVilBrukeFlyttebyra?) =
-		apply { this.jegVilBrukeFlyttebyra = jegVilBrukeFlyttebyra }
+		apply { this.jegVilBrukeFlyttebyra = jegVilBrukeFlyttebyra  }
 
 	fun jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv(
 		jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv: JegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv?

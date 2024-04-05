@@ -183,9 +183,6 @@ private fun convertToJsonRettighetstyper(
 
 private fun convertToJsonFlytteutgifter(tilleggsstonad: Application): JsonFlytteutgifter? {
     if (tilleggsstonad.hvorforFlytterDu == null
-        //|| tilleggsstonad.startdatoDdMmAaaa == null
-        //|| tilleggsstonad.sluttdatoDdMmAaaa == null
-        //|| tilleggsstonad.oppgiForsteDagINyJobbDdMmAaaa == null
         || tilleggsstonad.narFlytterDuDdMmAaaa == null
         || tilleggsstonad.farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav == null
         || tilleggsstonad.ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra == null

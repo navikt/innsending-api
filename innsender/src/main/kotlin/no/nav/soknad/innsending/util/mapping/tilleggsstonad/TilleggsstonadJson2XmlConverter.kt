@@ -194,7 +194,18 @@ fun convertFlytteutgifter(jsonRettighetstyper: JsonRettighetstyper): Flytteutgif
 			postnr = flytteutgifter.postnr1
 		).sammensattAdresse,
 		avstand = convertFlytteAvstand(flytteutgifter),
-		sumTilleggsutgifter = convertFlytteutgifter(flytteutgifter).toDouble()
+		sumTilleggsutgifter = convertFlytteutgifter(flytteutgifter)?.toDouble(),
+		anbud = comvertAnbud(flytteutgifter),
+		valgtFlyttebyraa = flytteutgifter.jegVilBrukeFlyttebyra?.jegVelgerABruke
+	)
+}
+
+fun comvertAnbud(flytteutgifter: JsonFlytteutgifter): List<Anbud>? {
+	if (flytteutgifter.jegVilBrukeFlyttebyra == null) return null
+
+	return listOf(
+		Anbud(firmanavn = flytteutgifter.jegVilBrukeFlyttebyra.navnPaFlyttebyra1, tilbudsbeloep = flytteutgifter.jegVilBrukeFlyttebyra.belop),
+		Anbud(firmanavn = flytteutgifter.jegVilBrukeFlyttebyra.navnPaFlyttebyra2, tilbudsbeloep = flytteutgifter.jegVilBrukeFlyttebyra.belop1)
 	)
 
 }
@@ -212,23 +223,19 @@ fun convertFlytteAvstand(flytteutgifter: JsonFlytteutgifter): Int {
 
 }
 
-fun convertFlytteutgifter(flytteutgifter: JsonFlytteutgifter): Int {
+fun convertFlytteutgifter(flytteutgifter: JsonFlytteutgifter): Int? {
 	if (flytteutgifter.jegFlytterSelv != null) {
 		val flytterSelv = flytteutgifter.jegFlytterSelv
 		return (flytterSelv.bom ?: 0) + (flytterSelv.annet ?: 0) + (flytterSelv.hengerleie ?: 0) + (flytterSelv.parkering
 			?: 0) + (flytterSelv.ferje ?: 0)
 	} else if (flytteutgifter.jegVilBrukeFlyttebyra != null) {
-		val flytteByra = flytteutgifter.jegVilBrukeFlyttebyra
-		return when {
-			"Flyttebyrå 1".equals(flytteByra.jegVelgerABruke, true) -> flytteByra.belop
-			else -> flytteByra.belop1
-		}
+		return null
 	} else if (flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv != null) {
 		val flytterSelv = flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv
 		return (flytterSelv.bom ?: 0) + (flytterSelv.annet ?: 0) + (flytterSelv.hengerleie ?: 0) + (flytterSelv.parkering
 			?: 0) + (flytterSelv.ferje ?: 0)
 	} else {
-		return 0
+		return null
 	}
 }
 

@@ -786,7 +786,7 @@ class TilleggsstonadJson2XmlConverterTest {
 					belop = 4000,
 					navnPaFlyttebyra2 = "Flytte2",
 					belop1 = 5000,
-					jegVelgerABruke = "Flyttebyrå 1",
+					jegVelgerABruke = "Flytte1",
 					hvorLangtSkalDuFlytte1 = 130
 				)
 			)
@@ -801,8 +801,8 @@ class TilleggsstonadJson2XmlConverterTest {
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(xmlString.contains("flytteutgifter"))
 		assertTrue(xmlString.contains("<flytterSelv>false</flytterSelv>"))
-		assertTrue(xmlString.contains("<sumTilleggsutgifter>4000.0</sumTilleggsutgifter>"))
 		assertTrue(xmlString.contains("<avstand>130</avstand>"))
+		assertTrue(xmlString.contains("<valgtFlyttebyraa>Flytte1</valgtFlyttebyraa>"))
 
 	}
 

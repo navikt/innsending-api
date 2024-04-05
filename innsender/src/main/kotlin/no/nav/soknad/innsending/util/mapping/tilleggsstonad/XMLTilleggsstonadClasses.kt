@@ -207,7 +207,7 @@ data class Flytteutgifter(
 	@JacksonXmlProperty(localName = "avstand")
 	val avstand: Int,
 	@JacksonXmlProperty(localName = "sumTilleggsutgifter")
-	val sumTilleggsutgifter: Double,
+	val sumTilleggsutgifter: Double?,
 	@JacksonXmlProperty(localName = "anbud")
 	val anbud: List<Anbud>? = null
 )
