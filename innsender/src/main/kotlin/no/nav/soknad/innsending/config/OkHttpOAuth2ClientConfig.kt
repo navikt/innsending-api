@@ -59,26 +59,6 @@ class OkHttpOAuth2ClientConfig(
 			}.build()
 	}
 
-	@Bean
-	@Qualifier("kodeverkApiClient")
-	fun kodeverkApiClient(): OkHttpClient {
-		return OkHttpClient().newBuilder()
-			.connectTimeout(20, TimeUnit.SECONDS)
-			.callTimeout(62, TimeUnit.SECONDS)
-			.readTimeout(1, TimeUnit.MINUTES)
-			.writeTimeout(1, TimeUnit.MINUTES)
-			.addInterceptor {
-				val callId = MDCUtil.callIdOrNew()
-
-				logger.info("Kaller kodeverket med callId: $callId")
-
-				val request = it.request().newBuilder().headers(it.request().headers)
-					.header("Nav-Consumer-Id", applicationName)
-					.header("Nav-Call-Id", callId)
-					.build()
-				it.proceed(request)
-			}.build()
-	}
 
 	@Bean
 	@Profile("prod | dev")
