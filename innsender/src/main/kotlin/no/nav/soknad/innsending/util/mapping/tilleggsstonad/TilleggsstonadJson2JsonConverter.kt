@@ -7,6 +7,12 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.Maalgruppe
 
 
+val reiseDaglig = "NAV 11-12.21B"
+val reiseSamling = "NAV 11-12.17B"
+val reiseOppstartSlutt = "NAV 11-12.18B"
+val reiseArbeid = "NAV 11-12.22B"
+val reisestotteskjemaer = listOf(reiseDaglig, reiseSamling, reiseOppstartSlutt, reiseArbeid)
+
 fun convertToJsonTilleggsstonad(soknadDto: DokumentSoknadDto, json: ByteArray?): JsonApplication<JsonTilleggsstonad> {
     if (json == null || json.isEmpty())
         throw BackendErrorException("${soknadDto.innsendingsId}: json fil av søknaden mangler")
@@ -276,12 +282,6 @@ private fun convertToTilsynsutgifter(tilleggsstonad: Application): JsonTilsynsut
             ?: tilleggsstonad.fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa
     )
 }
-
-val reiseDaglig = "NAV 11-12.21B"
-val reiseSamling = "NAV 11-12.17B"
-val reiseOppstartSlutt = "NAV 11-12.18B"
-val reiseArbeid = "NAV 11-12.22B"
-val reisestotteskjemaer = listOf(reiseDaglig, reiseSamling, reiseOppstartSlutt, reiseArbeid)
 private fun erReisestottesoknad(skjemanr: String): Boolean {
     return reisestotteskjemaer.contains(skjemanr.substring(0, reisestotteskjemaer[0].length))
 }

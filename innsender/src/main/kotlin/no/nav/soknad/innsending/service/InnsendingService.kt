@@ -51,13 +51,6 @@ class InnsendingService(
 
 	private val tilleggsstonadSkjema =
 		listOf(
-			/* Gamle tilleggsstønadsnummere
-						"NAV 11-12.10", kjøreliste - TSO
-						"NAV 11-12.11", kjøreliste - TSR
-						"NAV 11-12.12", tilleggsstønad -TSO
-						"NAV 11-12.13", tilleggstønad -TSR
-						"NAV 11-12.14", tilleggsstønad -TSO
-			*/
 			"NAV 11-12.15B", // Støtte til Barnepass
 			"NAV 11-12.16B", // Støtte til Læremidler
 			"NAV 11-12.17B", // Støtte til samling
@@ -213,7 +206,7 @@ class InnsendingService(
 
 			val jsonObj: JsonApplication<*>
 			val xmlFile: ByteArray
-			if (soknadDto.skjemanr == "NAV 11.12.10" || soknadDto.skjemanr == "NAV 11.12.11" || soknadDto.skjemanr == "kjoreliste") { // TODO
+			if (soknadDto.skjemanr == "kjoreliste") { // TODO kjøreliste skjemanummer ikke avklart
 				jsonObj = convertToJsonDrivingListJson(soknadDto = soknadDto, jsonFil)
 				xmlFile = json2Xml(jsonObj, soknadDto)
 			} else {
@@ -240,6 +233,7 @@ class InnsendingService(
 				OpplastingsStatusDto.sendesIkke
 			)
 
+			// Based on skjemanumber and maalgruppe, it might be neccessary to change the application's tema from TSO to TSR
 			if (jsonObj.applicationDetails is JsonTilleggsstonad)
 				sjekkOgOppdaterTema(soknadDto, jsonObj.applicationDetails.maalgruppeinformasjon)
 			else if (jsonObj.applicationDetails is JsonDrivingListSubmission)
