@@ -21,7 +21,6 @@ import java.time.Duration
 
 @Service
 class KodeverkService(
-	restConfig: RestConfig,
 	kodeverkApiClient: RestClient
 ) {
 

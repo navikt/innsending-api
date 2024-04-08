@@ -12,12 +12,14 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpRequest
 import org.springframework.http.client.*
 import org.springframework.web.client.RestClient
 import java.time.Duration
 
+@Configuration
 class RestClientOAuthConfig {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
@@ -92,6 +94,19 @@ class RestClientOAuthConfig {
 		oAuth2AccessTokenService: OAuth2AccessTokenService
 	) = restClientOAuth2Client(restConfig, clientConfigProperties.registration["soknadsmottaker"]!!, oAuth2AccessTokenService)
 
+	@Bean
+	@Profile("!(prod | dev)")
+	@Qualifier("soknadsmottakerRestClient")
+	fun soknadsmottakerClientWithoutOAuth() = RestClient.builder().build()
+
+	private fun timeouts(): ReactorNettyClientRequestFactory {
+		val factory = ReactorNettyClientRequestFactory()
+		factory.setReadTimeout(Duration.ofMinutes(1))
+		factory.setConnectTimeout(Duration.ofSeconds(20L))
+		return factory
+	}
+
+
 	private fun restClientOAuth2Client(
 		restConfig: RestConfig,
 		clientProperties: ClientProperties,
@@ -108,19 +123,6 @@ class RestClientOAuthConfig {
 				headers.setBearerAuth(tokenService.getToken() ?:"") // Bruker bearerAuth for OAuth2 token
 			}
 			.build()
-	}
-
-
-	@Bean
-	@Profile("!(prod | dev)")
-	@Qualifier("soknadsmottakerRestClient")
-	fun soknadsmottakerClientWithoutOAuth() = RestClient.builder().build()
-
-	private fun timeouts(): ReactorNettyClientRequestFactory {
-		val factory = ReactorNettyClientRequestFactory()
-		factory.setReadTimeout(Duration.ofMinutes(1))
-		factory.setConnectTimeout(Duration.ofSeconds(20L))
-		return factory
 	}
 
 

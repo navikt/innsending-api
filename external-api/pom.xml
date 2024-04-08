@@ -79,6 +79,8 @@
 						<configuration>
 							<inputSpec>${project.basedir}/src/main/resources/kontoregister-borger-api.yml</inputSpec>
 							<generatorName>kotlin</generatorName>
+							<additionalProperties>useSpringBoot3</additionalProperties>
+							<library>jvm-spring-restclient</library>
 							<apiPackage>no.nav.soknad.innsending.kontoregisterborger.api</apiPackage>
 							<modelPackage>no.nav.soknad.innsending.kontoregisterborger.model</modelPackage>
 							<configOptions>
@@ -99,6 +101,8 @@
 						<configuration>
 							<inputSpec>${project.basedir}/src/main/resources/arena-api.yml</inputSpec>
 							<generatorName>kotlin</generatorName>
+							<additionalProperties>useSpringBoot3</additionalProperties>
+							<library>jvm-spring-restclient</library>
 							<apiPackage>no.nav.soknad.innsending.api</apiPackage>
 							<modelPackage>no.nav.soknad.innsending.model</modelPackage>
 							<configOptions>
@@ -118,6 +122,8 @@
 						<configuration>
 							<inputSpec>${project.basedir}/src/main/resources/soknadsmottaker-api.yml</inputSpec>
 							<generatorName>kotlin</generatorName>
+							<additionalProperties>useSpringBoot3</additionalProperties>
+							<library>jvm-spring-restclient</library>
 							<apiPackage>no.nav.soknad.arkivering.soknadsmottaker.api</apiPackage>
 							<modelPackage>no.nav.soknad.arkivering.soknadsmottaker.model</modelPackage>
 							<configOptions>

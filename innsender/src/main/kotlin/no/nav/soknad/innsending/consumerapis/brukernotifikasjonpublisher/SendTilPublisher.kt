@@ -14,13 +14,14 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
+import org.springframework.web.client.RestClient
 
 @Service
 @Profile("dev | prod")
 @Qualifier("notifikasjon")
 class SendTilPublisher(
 	private val restConfig: RestConfig,
-	soknadsmottakerClient: OkHttpClient
+	@Qualifier("soknadsmottakerRestClient") soknadsmottakerRestClient: RestClient
 ) : PublisherInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -31,18 +32,18 @@ class SendTilPublisher(
 
 	init {
 		jacksonObjectMapper.registerModule(JavaTimeModule())
-		notificationPublisherApi = NewNotificationApi(restConfig.soknadsMottakerHost, soknadsmottakerClient)
-		cancelNotificationPublisherApi = CancelNotificationApi(restConfig.soknadsMottakerHost, soknadsmottakerClient)
+		notificationPublisherApi = NewNotificationApi(soknadsmottakerRestClient)
+		cancelNotificationPublisherApi = CancelNotificationApi(soknadsmottakerRestClient)
 		healthApi = HealthApi(restConfig.soknadsMottakerHost)
 	}
 
 	override fun avsluttBrukernotifikasjon(soknadRef: SoknadRef) {
-		cancelNotificationPublisherApi.cancelNotification(soknadRef)
+		cancelNotificationPublisherApi.cancelNotification(soknadRef, "false")
 	}
 
 	override fun opprettBrukernotifikasjon(nyNotifikasjon: AddNotification) {
 		logger.info("Send melding til ${restConfig.soknadsMottakerHost} for publisering av Brukernotifikasjon for ${nyNotifikasjon.soknadRef.innsendingId}")
-		notificationPublisherApi.newNotification(nyNotifikasjon)
+		notificationPublisherApi.newNotification(nyNotifikasjon, "false")
 	}
 
 	override fun isReady(): String {

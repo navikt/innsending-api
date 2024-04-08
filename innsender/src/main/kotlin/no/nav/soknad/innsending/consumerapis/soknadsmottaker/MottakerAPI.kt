@@ -15,13 +15,14 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
+import org.springframework.web.client.RestClient
 
 @Service
 @Profile("dev | prod")
 @Qualifier("mottaker")
 class MottakerAPI(
 	private val restConfig: RestConfig,
-	soknadsmottakerClient: OkHttpClient
+	@Qualifier("soknadsmottakerRestClient") soknadsmottakerRestClient: RestClient
 ) : MottakerInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -32,7 +33,7 @@ class MottakerAPI(
 	init {
 		Serializer.jacksonObjectMapper.registerModule(JavaTimeModule())
 
-		mottakerClient = SoknadApi(restConfig.soknadsMottakerHost, soknadsmottakerClient)
+		mottakerClient = SoknadApi(soknadsmottakerRestClient)
 		healthApi = HealthApi(restConfig.soknadsMottakerHost)
 	}
 
@@ -59,7 +60,7 @@ class MottakerAPI(
 	override fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggsListe: List<VedleggDto>) {
 		val soknad = translate(soknadDto, vedleggsListe)
 		logger.info("${soknadDto.innsendingsId}: klar til å sende inn\n${maskerFnr(soknad)}\ntil ${restConfig.soknadsMottakerHost}")
-		mottakerClient.receive(soknad)
+		mottakerClient.receive(soknad, "false")
 		logger.info("${soknadDto.innsendingsId}: sendt inn")
 	}
 
