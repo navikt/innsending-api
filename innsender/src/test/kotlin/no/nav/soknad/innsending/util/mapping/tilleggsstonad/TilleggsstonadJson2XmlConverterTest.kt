@@ -768,6 +768,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("<flyttingPgaNyStilling>true</flyttingPgaNyStilling>"))
 		assertTrue(xmlString.contains("<flytterSelv>true</flytterSelv>"))
 		assertTrue(xmlString.contains("<flyttedato>2023-12-29+01:00</flyttedato>")) //##
+		assertTrue(xmlString.contains("<tiltredelsesdato>2024-01-02+01:00</tiltredelsesdato>"))
 		assertTrue(xmlString.contains("<avstand>130</avstand>"))
 		assertTrue(xmlString.contains("<tilflyttingsadresse>Kongens gate 10, 3701</tilflyttingsadresse>"))
 		assertTrue(xmlString.contains("<sumTilleggsutgifter>1200.0</sumTilleggsutgifter>"))

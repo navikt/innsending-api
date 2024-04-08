@@ -201,7 +201,7 @@ data class Flytteutgifter(
 	@JacksonXmlProperty(localName = "flyttedato")
 	val flyttedato: String,
 	@JacksonXmlProperty(localName = "tiltredelsesdato")
-	val tiltredelsesdato: XMLGregorianCalendar? = null,
+	val tiltredelsesdato: String? = null,
 	@JacksonXmlProperty(localName = "tilflyttingsadresse")
 	val tilflyttingsadresse: String,
 	@JacksonXmlProperty(localName = "avstand")

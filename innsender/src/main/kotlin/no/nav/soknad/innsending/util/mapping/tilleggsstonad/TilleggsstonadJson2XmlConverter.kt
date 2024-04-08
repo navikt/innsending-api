@@ -188,6 +188,8 @@ fun convertFlytteutgifter(jsonRettighetstyper: JsonRettighetstyper): Flytteutgif
 		flytterSelv = (flytteutgifter.jegFlytterSelv != null || flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv != null).toString(),
 		flyttingPgaNyStilling = flytteutgifter.hvorforFlytterDu.equals("nyJobb", true),
 		flyttedato = convertToDateStringWithTimeZone(flytteutgifter.narFlytterDuDdMmAaaa),
+		tiltredelsesdato = if (!flytteutgifter.hvorforFlytterDu.equals("aktivitet", true) && flytteutgifter.oppgiForsteDagINyJobbDdMmAaaa != null)
+			convertToDateStringWithTimeZone(flytteutgifter.oppgiForsteDagINyJobbDdMmAaaa) else null,
 		tilflyttingsadresse = SammensattAdresse(
 			land = flytteutgifter.velgLand1.label,
 			adresse = flytteutgifter.adresse1,
