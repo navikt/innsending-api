@@ -117,7 +117,6 @@ class FyllUtJsonTestBuilder {
 			annet = 0,
 			parkering = 200
 		),
-		annet = null,
 		beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt = null,
 		hentingEllerLeveringAvBarn = null,
 		kanIkkeBenytteEgenBil = null
@@ -147,7 +146,6 @@ class FyllUtJsonTestBuilder {
 			hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt = "helsemessigeArsaker",
 			kanDuBenytteEgenBil = "ja",
 			kanBenytteEgenBil = kanBenytteEgenBil,
-			annet = null,
 			beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt = "bla, bla",
 			hentingEllerLeveringAvBarn = null,
 			kanIkkeBenytteEgenBil = null
@@ -168,7 +166,6 @@ class FyllUtJsonTestBuilder {
 	var kanIkkeReiseKollektivtReiseTilSamling: KanIkkeReiseKollektivt? = KanIkkeReiseKollektivt(
 		hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt = "hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt",
 		beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt = "Bla bla",
-		annet = null,
 		kanDuBenytteEgenBil = "nei",
 		kanBenytteEgenBil = null,
 		kanIkkeBenytteEgenBil = KanIkkeBenytteEgenBil(
@@ -198,7 +195,7 @@ class FyllUtJsonTestBuilder {
 		this.kanIkkeReiseKollektivtReiseTilSamling = if (kanBenytteEgenBil == null && kanIkkeBenytteEgenBil == null)
 			null
 		else KanIkkeReiseKollektivt(
-			hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt = "hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt",
+			hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt = "helsemessigeArsaker",
 			beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt = "Bla bla",
 			annet = null,
 			kanDuBenytteEgenBil = if (kanBenytteEgenBil != null) "ja" else "nei",
@@ -213,10 +210,10 @@ class FyllUtJsonTestBuilder {
 		this.kanDuReiseKollektivtDagligReise = "nei"
 		this.hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise = null
 		this.kanIkkeReiseKollektivt = KanIkkeReiseKollektivt(
-			hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt = "helsemessigeArsaker",
+			hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt = "annet",
+			annet = AndreArsakerIkkeKollektivt(hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt= "Bla bla"),
 			kanDuBenytteEgenBil = "nei",
 			kanBenytteEgenBil = null,
-			annet = null,
 			beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt = "bla, bla",
 			hentingEllerLeveringAvBarn = null,
 			kanIkkeBenytteEgenBil = kanIkkeBenytteEgenBil

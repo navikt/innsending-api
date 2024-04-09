@@ -31,12 +31,12 @@ class VedleggService(
 	fun opprettHovedddokumentVedlegg(savedSoknadDbData: SoknadDbData, kodeverkSkjema: KodeverkSkjema): VedleggDbData {
 		return repo.lagreVedlegg(
 			VedleggDbData(
-				null,
-				savedSoknadDbData.id!!,
-				OpplastingsStatus.IKKE_VALGT,
-				true,
+				id = null,
+				soknadsid =savedSoknadDbData.id!!,
+				status = OpplastingsStatus.IKKE_VALGT,
+				erhoveddokument =true,
 				ervariant = false,
-				true,
+				erpdfa = true,
 				erpakrevd = true,
 				vedleggsnr = kodeverkSkjema.skjemanummer ?: kodeverkSkjema.vedleggsid,
 				tittel = kodeverkSkjema.tittel ?: "",
@@ -193,10 +193,10 @@ class VedleggService(
 
 		// Lagre vedlegget i databasen
 		val vedleggDbDataList = saveVedlegg(
-			soknadDb.id!!,
-			listOf("N6"),
-			soknadDto.spraak!!,
-			vedleggDto?.tittel
+			soknadsId = soknadDb.id!!,
+			vedleggsnrListe = listOf("N6"),
+			spraak = soknadDto.spraak!!,
+			tittel =vedleggDto?.tittel
 		)
 
 		// Oppdater soknadens sist endret dato
@@ -212,12 +212,12 @@ class VedleggService(
 		val vedleggDbData =
 			repo.lagreVedlegg(
 				VedleggDbData(
-					null,
+					id = null,
 					soknadDto.id!!,
-					OpplastingsStatus.IKKE_VALGT,
-					true,
+					status = OpplastingsStatus.IKKE_VALGT,
+					erhoveddokument = true,
 					ervariant = true,
-					false,
+					erpdfa = false,
 					erpakrevd = true,
 					vedleggsnr = soknadDto.skjemanr,
 					tittel = soknadDto.tittel,
@@ -315,10 +315,6 @@ class VedleggService(
 			endretDato = LocalDateTime.now(),
 			innsendtDato = null
 		)
-		val delme = repo.hentVedlegg(vedleggsId) // TODO slett når årsak til at hvorfor status ikke er oppdatert er funnet
-		if (delme.status != mapTilDbOpplastingsStatus(opplastingsStatus)) {
-			logger.warn("${soknadDto.innsendingsId}: Oppdatering av status til ${mapTilDbOpplastingsStatus(opplastingsStatus)} for vedlegg $vedleggsId feilet, status på vedlegget er = ${delme.status}")
-		}
 	}
 
 

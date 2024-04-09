@@ -46,11 +46,11 @@ fun convertToJsonDrivingListToXML(
 	soknadDto: DokumentSoknadDto,
 	dailyTravelingExpencesJson: JsonApplication<JsonDrivingListSubmission>
 ): PaaloepteUtgifter {
-	if (dailyTravelingExpencesJson.applicationDetails.expencePeriodes == null) throw BackendErrorException("{${soknadDto.innsendingsId}: Ingen reisekostnader spesifisert")
+	if (dailyTravelingExpencesJson.applicationDetails.expensePeriodes == null) throw BackendErrorException("{${soknadDto.innsendingsId}: Ingen reisekostnader spesifisert")
 
 	return PaaloepteUtgifter(
-		vedtaksId = dailyTravelingExpencesJson.applicationDetails.expencePeriodes.selectedVedtaksId,
-		utgiftsperioder = convertToUtgiftsperioder(dailyTravelingExpencesJson.applicationDetails.expencePeriodes.dates)
+		vedtaksId = dailyTravelingExpencesJson.applicationDetails.expensePeriodes.selectedVedtaksId,
+		utgiftsperioder = convertToUtgiftsperioder(dailyTravelingExpencesJson.applicationDetails.expensePeriodes.dates)
 	)
 }
 
@@ -84,7 +84,6 @@ fun convertToXmlGregorianWithTimeZone(dateString: String): XMLGregorianCalendar 
 
 	val date: Date = dateFormat.parse(dateString)
 
-	//val targetDateFormat = SimpleDateFormat("yyyy-MM-ddXXX")
 	val targetDateFormat = SimpleDateFormat("yyyy-MM-dd")
 	val targetDateString: String = targetDateFormat.format(date)
 	val targetDate: Date = targetDateFormat.parse(targetDateString)

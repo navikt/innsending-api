@@ -56,20 +56,6 @@ enum class InnsendingsintervallerKodeverk(val kodeverksverdi: String) {
 }
 
 
-enum class FlytterSelv(val cms: String) {
-	flytterselv("soknad.flytting.spm.selvellerbistand.flytterselv"),
-	flyttebyraa("soknad.flytting.spm.selvellerbistand.flyttebyraa"),
-	tilbudmenflytterselv("soknad.flytting.spm.selvellerbistand.tilbudmenflytterselv")
-}
-
-
-enum class TilsynForetasAv(val stofoString: String) {
-	privat("Privat"),
-	offentlig("Offentlig"),
-	annet("Annet");
-}
-
-
 enum class TilsynForetasAvKodeverk(val kodeverksverdi: String) {
 	dagmamma("KOM"),
 	barnehage("OFF"),

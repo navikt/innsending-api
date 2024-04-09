@@ -104,7 +104,7 @@ class JsonDagligReiseTestBuilder {
 					adressenHvorDuHenterEllerLevererBarn = "Damfaret 10",
 					postnr = "0682"
 				),
-				annet = null,
+				annet = if (hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt?.equals("annet", true)?: false) AndreArsakerIkkeKollektivt(hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt = "Andre årsaker") else  null,
 				kanDuBenytteEgenBil = if (kanBenytteEgenBil != null) "ja" else null,
 				kanBenytteEgenBil = kanBenytteEgenBil,
 				kanIkkeBenytteEgenBil = kanIkkeBenytteEgenBil,

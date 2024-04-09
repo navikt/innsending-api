@@ -40,6 +40,7 @@
 					"text": "Arbeidstrening: 01.01.2024 - 31.08.2024"
 				}
 			},
+			"mottarDuBostotteFraKommunen":"nei",
 			"hvilkeAdresserHarDuBoutgifterPa": {
 				"boutgifterPaAktivitetsadressen": true,
 				"boutgifterPaHjemstedet": true,

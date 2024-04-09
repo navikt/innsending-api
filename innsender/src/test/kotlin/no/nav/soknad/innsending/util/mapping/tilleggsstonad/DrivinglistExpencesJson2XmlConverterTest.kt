@@ -17,8 +17,8 @@ class DrivinglistExpencesJson2XmlConverterTest {
 
 	@Test
 	fun json2XmlTest_drivingListExpences_flereBetalingsplaner() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.10", tema = "TSR").build()
-		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/kjøreliste-NAV-11-12.10-05032024.json")
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.24B", tema = "TSR").build()
+		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/kjøreliste-NAV-11-12.24B-05032024.json")
 
 		val jsonObj = convertToJsonDrivingListJson(soknadDto, jsonFil)
 
@@ -35,8 +35,8 @@ class DrivinglistExpencesJson2XmlConverterTest {
 
 	@Test
 	fun json2XmlTest_drivingListExpences_enBetalingsplan() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.10", tema = "TSO").build()
-		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/kjøreliste-NAV-11-12.10-26032024.json")
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.24B", tema = "TSO").build()
+		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/kjøreliste-NAV-11-12.24B-26032024.json")
 
 		val jsonObj = convertToJsonDrivingListJson(soknadDto, jsonFil)
 

@@ -54,6 +54,7 @@
 			"fornavnSoker": "Test",
 			"etternavnSoker": "Testesen",
 			"hvilkeBoutgifterSokerDuOmAFaDekket": "boutgifterIForbindelseMedSamling",
+			"mottarDuBostotteFraKommunen":"nei",
 			"bostotteIForbindelseMedSamling": {
 				"periodeForSamling": [
 					{

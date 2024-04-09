@@ -12,10 +12,6 @@ class JsonReiseOppstartSluttTestBuilder {
 	private var startdatoDdMmAaaa1: String = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
 	private var sluttdatoDdMmAaaa1: String = Date.formatToLocalDate(LocalDateTime.now().plusMonths(1))
 
-	/*
-		private var soknadsperiode1: SoknadsPeriode =
-			SoknadsPeriode(startdato = startdatoDdMmAaaa1, sluttdato = sluttdatoDdMmAaaa1)
-	*/
 	private var startdato: String = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
 	private var sluttdato: String = Date.formatToLocalDate(LocalDateTime.now().plusMonths(1))
 	private var hvorLangReiseveiHarDu2: Int = 100

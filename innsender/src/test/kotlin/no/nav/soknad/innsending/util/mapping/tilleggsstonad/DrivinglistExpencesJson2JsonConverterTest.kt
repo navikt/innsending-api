@@ -55,10 +55,10 @@ class DrivinglistExpencesJson2JsonConverterTest {
 			convertToJsonDrivingListJson(soknadDto, fyllUtJson.toString().toByteArray())
 
 		assertTrue(strukturertJson != null)
-		Assertions.assertEquals(vedtaksId, strukturertJson.applicationDetails.expencePeriodes?.selectedVedtaksId)
+		Assertions.assertEquals(vedtaksId, strukturertJson.applicationDetails.expensePeriodes?.selectedVedtaksId)
 		Assertions.assertEquals(
 			drivingListExpences.dates.size,
-			strukturertJson.applicationDetails.expencePeriodes?.dates?.size
+			strukturertJson.applicationDetails.expensePeriodes?.dates?.size
 		)
 
 	}

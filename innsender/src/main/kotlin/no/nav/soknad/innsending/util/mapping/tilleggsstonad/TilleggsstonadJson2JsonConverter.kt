@@ -6,11 +6,14 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.Maalgruppe
 
-
-val reiseDaglig = "NAV 11-12.21B"
-val reiseSamling = "NAV 11-12.17B"
-val reiseOppstartSlutt = "NAV 11-12.18B"
-val reiseArbeid = "NAV 11-12.22B"
+const val passAvBarn  = "NAV 11-12.15B"
+const val stotteTilLaeremidler = "NAV 11-12.16B"
+const val stotteTilBolig = "NAV 11-12.19B"
+const val stotteTilFlytting = "NAV 11-12.23B"
+const val reiseDaglig = "NAV 11-12.21B"
+const val reiseSamling = "NAV 11-12.17B"
+const val reiseOppstartSlutt = "NAV 11-12.18B"
+const val reiseArbeid = "NAV 11-12.22B"
 val reisestotteskjemaer = listOf(reiseDaglig, reiseSamling, reiseOppstartSlutt, reiseArbeid)
 
 fun convertToJsonTilleggsstonad(soknadDto: DokumentSoknadDto, json: ByteArray?): JsonApplication<JsonTilleggsstonad> {
@@ -18,7 +21,6 @@ fun convertToJsonTilleggsstonad(soknadDto: DokumentSoknadDto, json: ByteArray?):
         throw BackendErrorException("${soknadDto.innsendingsId}: json fil av søknaden mangler")
 
     val mapper = jacksonObjectMapper().findAndRegisterModules()
-    //mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     val json = mapper.readValue(json, Root::class.java)
 
     return JsonApplication(
@@ -36,11 +38,11 @@ fun convertToJsonTilleggsstonad(soknadDto: DokumentSoknadDto, json: ByteArray?):
 fun convertToJsonTilleggsstonad(tilleggsstonad: Application, soknadDto: DokumentSoknadDto): JsonTilleggsstonad {
     return JsonTilleggsstonad(
         aktivitetsinformasjon = convertAktivitetsinformasjon(tilleggsstonad),
-        maalgruppeinformasjon = convertToJsonMaalgruppeinformasjon(
+        maalgruppeinformasjon = validateNotNull( convertToJsonMaalgruppeinformasjon(
             tilleggsstonad.aktiviteterOgMaalgruppe,
             tilleggsstonad.flervalg,
             tilleggsstonad.regArbSoker
-        ),
+        ), "Mangler: 'Målgruppde informasjon'"),
         rettighetstype = convertToJsonRettighetstyper(tilleggsstonad, soknadDto)
 
     )
@@ -83,7 +85,7 @@ fun convertToJsonMaalgruppeinformasjon(
     aktiviteterOgMaalgruppe: AktiviteterOgMaalgruppe?,
     flervalg: Flervalg?,
     regArbSoker: String?
-): JsonMaalgruppeinformasjon? { // TODO
+): JsonMaalgruppeinformasjon? {
 
     return getMaalgruppeInformasjonFromAktiviteterOgMaalgruppe(aktiviteterOgMaalgruppe)
         ?: getMaalgruppeinformasjonFromLivssituasjon(flervalg, regArbSoker)
@@ -180,56 +182,51 @@ private fun convertToJsonRettighetstyper(
 ): JsonRettighetstyper {
     return JsonRettighetstyper(
         reise = convertToReisestottesoknad(tilleggsstonad, soknadDto),
-        tilsynsutgifter = convertToTilsynsutgifter(tilleggsstonad),
-        laeremiddelutgifter = convertToLaeremiddelutgifter(tilleggsstonad),
-        bostotte = convertToJsonBostotte(tilleggsstonad),
-        flytteutgifter = convertToJsonFlytteutgifter(tilleggsstonad)
+        tilsynsutgifter = convertToTilsynsutgifter(tilleggsstonad, soknadDto),
+        laeremiddelutgifter = convertToLaeremiddelutgifter(tilleggsstonad, soknadDto),
+        bostotte = convertToJsonBostotte(tilleggsstonad, soknadDto),
+        flytteutgifter = convertToJsonFlytteutgifter(tilleggsstonad, soknadDto)
     )
 }
 
-private fun convertToJsonFlytteutgifter(tilleggsstonad: Application): JsonFlytteutgifter? {
-    if (tilleggsstonad.hvorforFlytterDu == null
-        || tilleggsstonad.narFlytterDuDdMmAaaa == null
-        || tilleggsstonad.farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav == null
-        || tilleggsstonad.ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra == null
-    ) return null
+private fun convertToJsonFlytteutgifter(tilleggsstonad: Application, soknadDto: DokumentSoknadDto): JsonFlytteutgifter? {
+    if (soknadDto.skjemanr != stotteTilFlytting) return null
 
     return JsonFlytteutgifter(
         aktivitetsperiode = JsonPeriode(
             startdatoDdMmAaaa = tilleggsstonad.aktiviteterOgMaalgruppe?.aktivitet?.periode?.fom
-                ?: tilleggsstonad.narFlytterDuDdMmAaaa,
+                ?: getSelectedDate(tilleggsstonad.narFlytterDuDdMmAaaa, null, "Mangler: 'Flyttedato"),
             sluttdatoDdMmAaaa = tilleggsstonad.aktiviteterOgMaalgruppe?.aktivitet?.periode?.tom
-                ?: tilleggsstonad.narFlytterDuDdMmAaaa
+                ?:getSelectedDate(tilleggsstonad.narFlytterDuDdMmAaaa, null, "Mangler: 'Flyttedato")
         ),
-        hvorforFlytterDu = tilleggsstonad.hvorforFlytterDu,
-        narFlytterDuDdMmAaaa = tilleggsstonad.narFlytterDuDdMmAaaa,
+        hvorforFlytterDu = validateNotNull(tilleggsstonad.hvorforFlytterDu, "Mangler: 'Hvorfor flytter du'"),
+        narFlytterDuDdMmAaaa = getSelectedDate(tilleggsstonad.narFlytterDuDdMmAaaa, null, "Mangler: 'Flyttedato"),
         oppgiForsteDagINyJobbDdMmAaaa = tilleggsstonad.oppgiForsteDagINyJobbDdMmAaaa,
         erBostedEtterFlytting = tilleggsstonad.detteErAdressenJegSkalBoPaEtterAtJegHarFlyttet != null,
-        velgLand1 = tilleggsstonad.velgLand1 ?: VelgLand(label = "Norge", "NO"),
-        adresse1 = validateNoneNull(tilleggsstonad.adresse1, "Daglig reise adresse"),
+        velgLand1 = tilleggsstonad.velgLand1 ?: VelgLand(label = "Norge", "NO"), // Default Norge
+        adresse1 = validateNotNull(tilleggsstonad.adresse1, "Daglig reise adresse"),
         postnr1 = tilleggsstonad.postnr1,
-        farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav = tilleggsstonad.farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav,
-        ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra = tilleggsstonad.ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra,
+        farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav = validateNotNull(tilleggsstonad.farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav,"Mangler: 'Får du dekket utgiftene dine til flytting på annen måte enn med stønad fra NAV'"),
+        ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra = validateNotNull(tilleggsstonad.ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra, "Mangler: 'Ordner du flytting selv eller kommer du til å bruke flyttebyrå mangler'"),
         jegFlytterSelv = tilleggsstonad.jegFlytterSelv,
         jegVilBrukeFlyttebyra = tilleggsstonad.jegVilBrukeFlyttebyra,
         jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv = tilleggsstonad.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv
     )
 }
 
-private fun convertToJsonBostotte(tilleggsstonad: Application): JsonBostottesoknad? {
-    if (tilleggsstonad.hvilkeAdresserHarDuBoutgifterPa == null
-        || tilleggsstonad.hvilkeBoutgifterSokerDuOmAFaDekket == null
-        || tilleggsstonad.startdatoDdMmAaaa == null
-        || tilleggsstonad.sluttdatoDdMmAaaa == null
-    ) return null
+private fun convertToJsonBostotte(tilleggsstonad: Application, soknadDto: DokumentSoknadDto): JsonBostottesoknad? {
+		if (soknadDto.skjemanr != stotteTilBolig) return null
 
     return JsonBostottesoknad(
-        aktivitetsperiode = JsonPeriode(tilleggsstonad.startdatoDdMmAaaa, tilleggsstonad.sluttdatoDdMmAaaa),
-        hvilkeBoutgifterSokerDuOmAFaDekket = tilleggsstonad.hvilkeBoutgifterSokerDuOmAFaDekket,
+        aktivitetsperiode = JsonPeriode(
+					getSelectedDate(tilleggsstonad.startdatoDdMmAaaa, null, "Mangler: 'Start dato for bostøtte'"),
+					getSelectedDate(tilleggsstonad.sluttdatoDdMmAaaa, null, "Mangler: 'Slutt dato for bostøtte'")
+				),
+        hvilkeBoutgifterSokerDuOmAFaDekket = validateNotNull(tilleggsstonad.hvilkeBoutgifterSokerDuOmAFaDekket, "Mangler: 'Hvilke boutgifter søker du om å få dekket'"),
         bostotteIForbindelseMedSamling = tilleggsstonad.bostotteIForbindelseMedSamling,
-        mottarDuBostotteFraKommunen = tilleggsstonad.mottarDuBostotteFraKommunen ?: "Nei", // "Ja" | "Nei"
+        mottarDuBostotteFraKommunen = validateNotNull(tilleggsstonad.mottarDuBostotteFraKommunen, "'Mottar du bostøtte fra kommunen'"), // "Ja" | "Nei"
         bostottebelop = tilleggsstonad.hvorMyeBostotteMottarDu,
-        hvilkeAdresserHarDuBoutgifterPa = tilleggsstonad.hvilkeAdresserHarDuBoutgifterPa,
+        hvilkeAdresserHarDuBoutgifterPa = validateNotNull(tilleggsstonad.hvilkeAdresserHarDuBoutgifterPa, "'Hvilke adresser har du utgifter på'"),
         boutgifterPaHjemstedetMitt = tilleggsstonad.boutgifterPaHjemstedetMitt,
         boutgifterPaAktivitetsadressen = tilleggsstonad.boutgifterPaAktivitetsadressen,
         boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten = tilleggsstonad.boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten,
@@ -237,50 +234,53 @@ private fun convertToJsonBostotte(tilleggsstonad: Application): JsonBostottesokn
     )
 }
 
-private fun convertToLaeremiddelutgifter(tilleggsstonad: Application): JsonLaeremiddelutgifter? {
-    if (tilleggsstonad.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore == null || tilleggsstonad.startdatoDdMmAaaa == null || tilleggsstonad.sluttdatoDdMmAaaa == null) return null
+private fun convertToLaeremiddelutgifter(tilleggsstonad: Application, soknadDto: DokumentSoknadDto): JsonLaeremiddelutgifter? {
+	if (soknadDto.skjemanr != stotteTilLaeremidler) return null
 
-    return JsonLaeremiddelutgifter(
-        aktivitetsperiode = JsonPeriode(
-            tilleggsstonad.startdatoDdMmAaaa,
-            tilleggsstonad.sluttdatoDdMmAaaa
-        ),
-        hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore = tilleggsstonad.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore,
-        hvilketKursEllerAnnenFormForUtdanningSkalDuTa = tilleggsstonad.hvilketKursEllerAnnenFormForUtdanningSkalDuTa,
-        oppgiHvorMangeProsentDuStudererEllerGarPaKurs = tilleggsstonad.oppgiHvorMangeProsentDuStudererEllerGarPaKurs
-            ?: 0,
-        harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler = tilleggsstonad.harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler
-            ?: "Nei",
-        utgifterTilLaeremidler = tilleggsstonad.utgifterTilLaeremidler ?: 0,
-        farDuDekketLaeremidlerEtterAndreOrdninger = tilleggsstonad.farDuDekketLaeremidlerEtterAndreOrdninger ?: "Nei",
-        hvorMyeFarDuDekketAvEnAnnenAktor = tilleggsstonad.hvorMyeFarDuDekketAvEnAnnenAktor,
-        hvorStortBelopSokerDuOmAFaDekketAvNav = tilleggsstonad.hvorStortBelopSokerDuOmAFaDekketAvNav
-    )
+	return JsonLaeremiddelutgifter(
+			aktivitetsperiode = JsonPeriode(
+				getSelectedDate(tilleggsstonad.startdatoDdMmAaaa, null, "'Start dato læremidler'"),
+				getSelectedDate(tilleggsstonad.sluttdatoDdMmAaaa, null, "'Slutt dato læremidler'")
+			),
+			hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore = validateNotNull(tilleggsstonad.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore, "'Hvilke type utdanning eller opplæring skal du gjennomføre'"),
+			hvilketKursEllerAnnenFormForUtdanningSkalDuTa = tilleggsstonad.hvilketKursEllerAnnenFormForUtdanningSkalDuTa,
+			oppgiHvorMangeProsentDuStudererEllerGarPaKurs = tilleggsstonad.oppgiHvorMangeProsentDuStudererEllerGarPaKurs
+					?: 0,
+			harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler = tilleggsstonad.harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler
+					?: "Nei",
+			utgifterTilLaeremidler = tilleggsstonad.utgifterTilLaeremidler ?: 0,
+			farDuDekketLaeremidlerEtterAndreOrdninger = validateNotNull(tilleggsstonad.farDuDekketLaeremidlerEtterAndreOrdninger, "'Får du dekket læremidler etter andre ordninger'"),
+			hvorMyeFarDuDekketAvEnAnnenAktor = tilleggsstonad.hvorMyeFarDuDekketAvEnAnnenAktor,
+			hvorStortBelopSokerDuOmAFaDekketAvNav = tilleggsstonad.hvorStortBelopSokerDuOmAFaDekketAvNav
+	)
 }
 
-private fun convertToTilsynsutgifter(tilleggsstonad: Application): JsonTilsynsutgifter? {
-    if (tilleggsstonad.opplysningerOmBarn == null || tilleggsstonad.startdatoDdMmAaaa == null || tilleggsstonad.sluttdatoDdMmAaaa == null) return null
+private fun convertToTilsynsutgifter(tilleggsstonad: Application, soknadDto: DokumentSoknadDto): JsonTilsynsutgifter? {
+	if (soknadDto.skjemanr != passAvBarn) return null
 
-    return JsonTilsynsutgifter(
-        aktivitetsPeriode = JsonPeriode(
-            tilleggsstonad.startdatoDdMmAaaa,
-            tilleggsstonad.sluttdatoDdMmAaaa
-        ),
-        barnePass = tilleggsstonad.opplysningerOmBarn.map {
-            BarnePass(
-                fornavn = it.fornavn,
-                etternavn = it.etternavn,
-                fodselsdatoDdMmAaaa = validateNoneNull(
-                    it.fodselsnummerDNummer,
-                    "Tilsynsutgifter - fødselsdato/fnr mangler"
-                ),
-                jegSokerOmStonadTilPassAvDetteBarnet = it.jegSokerOmStonadTilPassAvDetteBarnet,
-                sokerStonadForDetteBarnet = it.sokerStonadForDetteBarnet,
-            )
-        },
-        fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa = tilleggsstonad.fodselsnummerDNummerAndreForelder
-            ?: tilleggsstonad.fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa
-    )
+	val opplysningerOmBarn = validateNotNull(tilleggsstonad.opplysningerOmBarn, "'Opplysninger om barn'")
+
+	return JsonTilsynsutgifter(
+			aktivitetsPeriode = JsonPeriode(
+				getSelectedDate(tilleggsstonad.startdatoDdMmAaaa, null, "'Start dato for pass av barn'"),
+				getSelectedDate( tilleggsstonad.sluttdatoDdMmAaaa, null, "'Slutt dato for pass av barn'")
+			),
+
+			barnePass = opplysningerOmBarn.map {
+					BarnePass(
+							fornavn = it.fornavn,
+							etternavn = it.etternavn,
+							fodselsdatoDdMmAaaa = validateNotNull(
+									it.fodselsnummerDNummer,
+									"Tilsynsutgifter - fødselsdato/fnr mangler"
+							),
+							jegSokerOmStonadTilPassAvDetteBarnet = it.jegSokerOmStonadTilPassAvDetteBarnet,
+							sokerStonadForDetteBarnet = it.sokerStonadForDetteBarnet,
+					)
+			},
+			fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa = tilleggsstonad.fodselsnummerDNummerAndreForelder
+					?: tilleggsstonad.fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa
+	)
 }
 private fun erReisestottesoknad(skjemanr: String): Boolean {
     return reisestotteskjemaer.contains(skjemanr.substring(0, reisestotteskjemaer[0].length))
@@ -298,7 +298,7 @@ private fun convertToReisestottesoknad(
         reiseSamling = if (soknadDto.skjemanr.startsWith(reiseSamling))
             convertToJsonReiseSamling(tilleggsstonad) else null,
         dagligReiseArbeidssoker = if (soknadDto.skjemanr.startsWith(reiseArbeid))
-            convertToJsonReise_Arbeidssoker(tilleggsstonad) else null,
+            convertToJsonReiseArbeidssoker(tilleggsstonad) else null,
         oppstartOgAvsluttetAktivitet = if (soknadDto.skjemanr.startsWith(reiseOppstartSlutt))
             convertToJsonOppstartOgAvsluttetAktivitet(tilleggsstonad) else null
     )
@@ -306,7 +306,7 @@ private fun convertToReisestottesoknad(
 
 private fun getSelectedDate(userDate: String?, activityDate: String?, field: String): String {
     if (userDate != null && userDate.isNotEmpty()) return userDate
-    return validateNoneNull(activityDate, field)
+    return validateNotNull(activityDate, field)
 }
 
 private fun convertToJsonDagligReise(tilleggsstonad: Application): JsonDagligReise {
@@ -323,18 +323,18 @@ private fun convertToJsonDagligReise(tilleggsstonad: Application): JsonDagligRei
         ),
         hvorMangeReisedagerHarDuPerUke = tilleggsstonad.hvorMangeReisedagerHarDuPerUke,
         harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde = tilleggsstonad.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde, // JA | NEI,
-        hvorLangReiseveiHarDu = validateNoneNull(
+        hvorLangReiseveiHarDu = validateNotNull(
             tilleggsstonad.hvorLangReiseveiHarDu,
             "Daglig reise reisevei"
         ),
-        harDuEnReiseveiPaSeksKilometerEllerMer = validateNoneNull(
+        harDuEnReiseveiPaSeksKilometerEllerMer = validateNotNull(
             tilleggsstonad.harDuEnReiseveiPaSeksKilometerEllerMer,
             "Daglig reise avstand mer enn 6 km"
         ), // JA|NEI
         velgLand1 = tilleggsstonad.velgLand1 ?: VelgLand(label = "Norge", "NO"),
-        adresse1 = validateNoneNull(tilleggsstonad.adresse1, "Daglig reise adresse"),
+        adresse1 = validateNotNull(tilleggsstonad.adresse1, "Daglig reise adresse"),
         postnr1 = tilleggsstonad.postnr1,
-        kanDuReiseKollektivtDagligReise = validateNoneNull(
+        kanDuReiseKollektivtDagligReise = validateNotNull(
             tilleggsstonad.kanDuReiseKollektivtDagligReise,
             "Daglig reise kan du reise kollektivt"
         ), // ja | nei
@@ -346,18 +346,18 @@ private fun convertToJsonDagligReise(tilleggsstonad: Application): JsonDagligRei
 
 private fun convertToJsonReiseSamling(tilleggsstonad: Application): JsonReiseSamling {
     return JsonReiseSamling(
-        startOgSluttdatoForSamlingene = validateNoneNull(
+        startOgSluttdatoForSamlingene = validateNotNull(
             tilleggsstonad.startOgSluttdatoForSamlingene,
             "Reise til samling start- og sluttdato mangler"
         ),
         hvorLangReiseveiHarDu1 = tilleggsstonad.hvorLangReiseveiHarDu1,
-        velgLandReiseTilSamling = validateNoneNull(
+        velgLandReiseTilSamling = validateNotNull(
             tilleggsstonad.velgLandReiseTilSamling,
             "Reise til samling - mangler land"
         ),
-        adresse2 = validateNoneNull(tilleggsstonad.adresse2, "Reise til samling - mangler adresse"),
+        adresse2 = validateNotNull(tilleggsstonad.adresse2, "Reise til samling - mangler adresse"),
         postnr2 = tilleggsstonad.postnr2,
-        kanDuReiseKollektivtReiseTilSamling = validateNoneNull(
+        kanDuReiseKollektivtReiseTilSamling = validateNotNull(
             tilleggsstonad.kanDuReiseKollektivtReiseTilSamling,
             "Reise til samling - mangler svar kan du reise kollektivt"
         ),
@@ -367,33 +367,33 @@ private fun convertToJsonReiseSamling(tilleggsstonad: Application): JsonReiseSam
     )
 }
 
-private fun convertToJsonReise_Arbeidssoker(tilleggsstonad: Application): JsonDagligReiseArbeidssoker {
+private fun convertToJsonReiseArbeidssoker(tilleggsstonad: Application): JsonDagligReiseArbeidssoker {
     return JsonDagligReiseArbeidssoker(
-        reisedatoDdMmAaaa = validateNoneNull(
+        reisedatoDdMmAaaa = validateNotNull(
             tilleggsstonad.reiseDato,
             "Reise arbeidssøker - reisetidspunkt mangler"
         ),
-        hvorforReiserDuArbeidssoker = validateNoneNull(
+        hvorforReiserDuArbeidssoker = validateNotNull(
             tilleggsstonad.hvorforReiserDuArbeidssoker,
             "Reise arbeidssøker - hvorfor reiser du svar mangler"
         ),
-        dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis = validateNoneNull(
+        dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis = validateNotNull(
             tilleggsstonad.dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis,
             "Reise arbeissøker - dekker andre reisen svar mangler"
         ),// JA|NEI
-        mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene = validateNoneNull(
+        mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene = validateNotNull(
             tilleggsstonad.mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene,
             "Reise arbeidssøker -  mottatt dagpenger svar mangler"
         ), // JA|NEI
         harMottattDagpengerSiste6Maneder = tilleggsstonad.harMottattDagpengerSiste6Maneder,
-        hvorLangReiseveiHarDu3 = validateNoneNull(
+        hvorLangReiseveiHarDu3 = validateNotNull(
             tilleggsstonad.hvorLangReiseveiHarDu3,
             "Daglig reise reisevei"
         ).toInt(),
         velgLandArbeidssoker = tilleggsstonad.velgLandArbeidssoker ?: VelgLand(label = "Norge", "NO"),
-        adresse = validateNoneNull(tilleggsstonad.adresse, "Reise arbeidssøker -  adresse mangler"),
+        adresse = validateNotNull(tilleggsstonad.adresse, "Reise arbeidssøker -  adresse mangler"),
         postnr = tilleggsstonad.postnr,
-        kanDuReiseKollektivtArbeidssoker = validateNoneNull(
+        kanDuReiseKollektivtArbeidssoker = validateNotNull(
             tilleggsstonad.kanDuReiseKollektivtArbeidssoker,
             "Reise arbeidssøker - kan du reise kollektivt mangler"
         ), // ja | nei
@@ -405,37 +405,37 @@ private fun convertToJsonReise_Arbeidssoker(tilleggsstonad: Application): JsonDa
 
 private fun convertToJsonOppstartOgAvsluttetAktivitet(tilleggsstonad: Application): JsonOppstartOgAvsluttetAktivitet {
     return JsonOppstartOgAvsluttetAktivitet(
-        startdatoDdMmAaaa1 = validateNoneNull(
+        startdatoDdMmAaaa1 = validateNotNull(
             tilleggsstonad.soknadsPeriode?.startdato ?: tilleggsstonad.startdato,
             "Oppstart og avslutning av aktivitet - reisetidspunkt mangler"
         ),
-        sluttdatoDdMmAaaa1 = validateNoneNull(
+        sluttdatoDdMmAaaa1 = validateNotNull(
             tilleggsstonad.soknadsPeriode?.sluttdato ?: tilleggsstonad.sluttdato,
             "Oppstart og avslutning av aktivitet - reisetidspunkt mangler"
         ),
-        hvorLangReiseveiHarDu2 = validateNoneNull(
+        hvorLangReiseveiHarDu2 = validateNotNull(
             tilleggsstonad.hvorLangReiseveiHarDu2,
             "Oppstart og avslutning av aktivitet - reiseveilengde svar mangler"
         ).toInt(),
-        hvorMangeGangerSkalDuReiseEnVei = validateNoneNull(
+        hvorMangeGangerSkalDuReiseEnVei = validateNotNull(
             tilleggsstonad.hvorMangeGangerSkalDuReiseEnVei,
             "Oppstart og avslutning av aktivitet - antall reiser svar mangler"
         ).toInt(),
         velgLand3 = tilleggsstonad.velgLand3 ?: VelgLand(label = "Norge", "NO"),
-        adresse3 = validateNoneNull(tilleggsstonad.adresse3, "Oppstart og avslutning av aktivitet -  adresse mangler"),
+        adresse3 = validateNotNull(tilleggsstonad.adresse3, "Oppstart og avslutning av aktivitet -  adresse mangler"),
         postnr3 = tilleggsstonad.postnr3,
-        harDuBarnSomSkalFlytteMedDeg = validateNoneNull(
+        harDuBarnSomSkalFlytteMedDeg = validateNotNull(
             tilleggsstonad.harDuBarnSomSkalFlytteMedDeg,
             "Oppstart og avslutning av aktivitet - har du barn som skal flytte med deg svar mangler"
         ),
         barnSomSkalFlytteMedDeg = tilleggsstonad.barnSomSkalFlytteMedDeg,
         harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear = tilleggsstonad.harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear,
-        harDuSaerligBehovForFlereHjemreiserEnnNevntOvenfor = validateNoneNull(
+        harDuSaerligBehovForFlereHjemreiserEnnNevntOvenfor = validateNotNull(
             tilleggsstonad.harDuSaerligBehovForFlereHjemreiserEnnNevntOvenfor,
             "Oppstart og avslutning av aktivitet - Særlige behov svar mangler"
         ),
         bekreftelseForBehovForFlereHjemreiser1 = tilleggsstonad.bekreftelseForBehovForFlereHjemreiser1,
-        kanDuReiseKollektivtOppstartAvslutningHjemreise = validateNoneNull(
+        kanDuReiseKollektivtOppstartAvslutningHjemreise = validateNotNull(
             tilleggsstonad.kanDuReiseKollektivtOppstartAvslutningHjemreise,
             "Oppstart og avslutning av aktivitet - kan du reise kollektivt svar mangler"
         ),
@@ -444,6 +444,6 @@ private fun convertToJsonOppstartOgAvsluttetAktivitet(tilleggsstonad: Applicatio
     )
 }
 
-private fun <T : Any> validateNoneNull(input: T?, field: String): T {
+private fun <T : Any> validateNotNull(input: T?, field: String): T {
     return input ?: throw IllegalActionException("Mangler input for $field")
 }

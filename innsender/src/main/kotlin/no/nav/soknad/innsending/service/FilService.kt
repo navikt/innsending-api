@@ -42,7 +42,7 @@ class FilService(
 				&& it.formioId == lagretVedleggDto.formioId
 		} ?: run {
 			logger.error("Fant ikke matchende lagret vedlegg med innsendt vedlegg")
-			throw BackendErrorException("Feil ved lagring av dokument ${lagretVedleggDto.tittel}. Fant ikke matchende lagret vedlegg ${lagretVedleggDto.tittel} med innsendt vedlegg, er variant = ${lagretVedleggDto.erVariant}") // TODO
+			throw BackendErrorException("Feil ved lagring av dokument ${lagretVedleggDto.tittel}. Fant ikke matchende lagret vedlegg ${lagretVedleggDto.tittel} med innsendt vedlegg, er variant = ${lagretVedleggDto.erVariant}")
 		}
 
 		// Finn eksisterende filer

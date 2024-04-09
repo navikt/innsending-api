@@ -5,6 +5,7 @@ import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule
 import no.nav.soknad.innsending.exceptions.BackendErrorException
+import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import java.text.SimpleDateFormat
 import java.util.*
@@ -244,11 +245,10 @@ fun convertFlytteutgifter(flytteutgifter: JsonFlytteutgifter): Int? {
 fun convertTilsynsutgifter(jsonRettighetstyper: JsonRettighetstyper): Tilsynsutgifter? {
 
 	val utgifterBarn = convertTilsynsutgifterBarn(jsonRettighetstyper)
-	val utgifterFamilie = convertFamilieutgifter(jsonRettighetstyper) // TODO er denne relevant?
 
-	if (utgifterBarn == null && utgifterFamilie == null) return null
+	if (utgifterBarn == null ) return null
 
-	return Tilsynsutgifter(tilsynsutgifterBarn = utgifterBarn, tilynsutgifterFamilie = utgifterFamilie)
+	return Tilsynsutgifter(tilsynsutgifterBarn = utgifterBarn, tilynsutgifterFamilie = null)
 }
 
 private fun convertTilsynsutgifterBarn(jsonRettighetstyper: JsonRettighetstyper): TilsynsutgifterBarn? {
@@ -294,27 +294,6 @@ private fun convertTilsynskategori(kategori: String?): String {
 	}
 }
 
-// IKKE I BRUK I GAMMEL LØSNING
-private fun convertFamilieutgifter(jsonRettighetstyper: JsonRettighetstyper): TilsynsutgifterFamilie? {
-	if (!hasTilsynsutgifterFamilie(jsonRettighetstyper)) return null
-
-	// TODO erstatt eksempel nedenfor
-	return TilsynsutgifterFamilie(
-		Periode(
-			fom = convertToDateStringWithTimeZone("2023-12-01"), // TODO
-			tom = convertToDateStringWithTimeZone("2024-03-30")  // TODO
-		),
-		deltTilsyn = true,
-		annenTilsynsperson = "Annen Person",
-		tilsynForetasAv = "Annen Person",
-		tilsynsmottaker = "Rart Barn",
-		maanedligUtgiftTilsynFam = 3500
-	)
-}
-
-private fun hasTilsynsutgifterFamilie(jsonRettighetstyper: JsonRettighetstyper): Boolean {
-	return false
-}
 
 fun convertReiseUtgifter(jsonRettighetstyper: JsonRettighetstyper, soknadDto: DokumentSoknadDto): Reiseutgifter? {
 
@@ -351,9 +330,9 @@ private fun convertDagligReise(jsonRettighetstyper: JsonRettighetstyper, soknadD
 		avstand = jsonDagligReise.hvorLangReiseveiHarDu.toDouble(),
 		harMedisinskeAarsakerTilTransport = convertToBoolean(jsonDagligReise.kanDuReiseKollektivtDagligReise) ?: false,
 		alternativeTransportutgifter = convertAlternativeTransportutgifter_DagligReise(jsonDagligReise),
-		innsendingsintervall = convertInnsendingsintervaller(jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.hvorOfteOnskerDuASendeInnKjoreliste),
 		harParkeringsutgift = (convertToBoolean(jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanDuBenytteEgenBil)
 			?: false) && ((jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.parkering ?: 0) > 0),
+		innsendingsintervall = convertInnsendingsintervaller(jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.hvorOfteOnskerDuASendeInnKjoreliste),
 		parkeringsutgiftBeloep = jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.parkering
 	)
 }
@@ -531,8 +510,9 @@ private fun convertDrosjeTransportutgifter(utgifter: Int?): DrosjeTransportutgif
 private fun convertInnsendingsintervaller(details: String?): Innsendingsintervaller? {
 	if (details == null) return null
 	return when (details) {
-		"UKE", "MND" -> Innsendingsintervaller(details)
-		else -> Innsendingsintervaller("UKE")
+		"jegOnskerALevereKjorelisteEnGangIManeden" -> Innsendingsintervaller(InnsendingsintervallerKodeverk.maned.name)
+		"jegOnskerALevereKjorelisteEnGangIUken" -> Innsendingsintervaller(InnsendingsintervallerKodeverk.uke.name)
+		else -> throw IllegalActionException("Ukjent kode for periode for levering av kjøreliste")
 	}
 }
 

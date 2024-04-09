@@ -138,7 +138,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("<avstand>130.0</avstand>"))
 		assertTrue(xmlString.contains("<kanOffentligTransportBrukes>false</kanOffentligTransportBrukes>"))
 		assertTrue(xmlString.contains("<aarsakTilIkkeOffentligTransport>helsemessigeArsaker</aarsakTilIkkeOffentligTransport>"))
-		assertTrue(xmlString.contains("<innsendingsintervall>UKE</innsendingsintervall>"))
+		assertTrue(xmlString.contains("<innsendingsintervall>uke</innsendingsintervall>"))
 		assertTrue(xmlString.contains("<sumAndreUtgifter>1150.0</sumAndreUtgifter>"))
 		assertTrue(xmlString.contains("<parkeringsutgiftBeloep>200</parkeringsutgiftBeloep>"))
 	}
@@ -358,7 +358,7 @@ class TilleggsstonadJson2XmlConverterTest {
 						hentingEllerLeveringAvBarn = HentingEllerLeveringAvBarn(
 							adressenHvorDuHenterEllerLevererBarn = "Damfaret 12", postnr = "0682"
 						),
-						annet = null,
+						annet  = null,
 						kanDuBenytteEgenBil = "Nei",
 						kanBenytteEgenBil = null,
 						kanIkkeBenytteEgenBil = KanIkkeBenytteEgenBil(
@@ -428,36 +428,6 @@ class TilleggsstonadJson2XmlConverterTest {
 
 	}
 
-	/* En søknad med flere rettighetstyper ikke lenger relevant
-			@Test
-			fun `Convert to XML of combined travel excpenses`() {
-					val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.12B", tema = "TSO").build()
-					val startOgSluttPaAktivitet =
-							JsonReiseOppstartSluttTestBuilder().startdatoDdMmAaaa1("2023-11-30").sluttdatoDdMmAaaa1("2024-06-21").build()
-					val dagligReise =
-							JsonDagligReiseTestBuilder().startdatoDdMmAaaa("2023-12-01").sluttdatoDdMmAaaa("2024-06-20").build()
-					val jsonReisestottesoknad = JsonReiseTestBuilder().dagligReise(dagligReise = dagligReise)
-							.startAvslutning(startAvslutning = startOgSluttPaAktivitet).build()
-					val tilleggsstonad =
-							JsonApplicationTestBuilder().rettighetstyper(rettighetstype = jsonReisestottesoknad).build()
-
-					val xmlFil = json2Xml(
-							soknadDto, tilleggsstonad
-					)
-
-					assertNotNull(xmlFil)
-					val xmlString = xmlFil.decodeToString()
-					assertTrue(xmlString.contains("<aktivitetsadresse>Kongensgate 10, 3701</aktivitetsadresse>"))
-					assertTrue(xmlString.contains("<dagligReise>"))
-					assertTrue(xmlString.contains("<avstand>10.0</avstand>"))
-					assertTrue(xmlString.contains("<innsendingsintervall>UKE</innsendingsintervall>"))
-					assertTrue(xmlString.contains("<sumAndreUtgifter>1150.0</sumAndreUtgifter>"))
-					assertTrue(xmlString.contains("<reiseVedOppstartOgAvsluttetAktivitet>"))
-					assertTrue(xmlString.contains("<avstand>100</avstand>"))
-					assertTrue(xmlString.contains("<antallReiser>4</antallReiser>"))
-					assertTrue(xmlString.contains("<beloepPerMaaned>3000</beloepPerMaaned>"))
-			}
-	*/
 
 	@Test
 	fun `Default case test convert to XML child care expenses`() {

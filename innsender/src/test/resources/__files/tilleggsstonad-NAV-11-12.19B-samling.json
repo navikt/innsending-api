@@ -3,6 +3,7 @@
 	"data": {
 		"data": {
 			"hvilkeBoutgifterSokerDuOmAFaDekket": "boutgifterIForbindelseMedSamling",
+			"mottarDuBostotteFraKommunen":"nei",
 			"harDuNorskFodselsnummerEllerDNummer": "ja",
 			"flervalg": {
 				"aapUforeNedsattArbEvne": false,

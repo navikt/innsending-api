@@ -17,7 +17,7 @@ data class JsonDrivingListSubmission(
 	// Dersom det er hentet aktivitet / maalgrupper fra Arena skal maalgruppen som har overlappende periode med hentet aktivitet sendes inn.
 	val maalgruppeinformasjon: JsonMaalgruppeinformasjon? = null,
 
-	val expencePeriodes: JsonDrivingListExpences? = null
+	val expensePeriodes: JsonDrivingListExpences? = null
 )
 
 data class JsonDrivingListExpences(

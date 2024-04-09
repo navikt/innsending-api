@@ -38,23 +38,10 @@ data class Application(
 	// Dersom det er hentet aktivitet / maalgrupper fra Arena skal maalgruppen som har overlappende periode med hentet aktivitet sendes inn.
 	val aktiviteterOgMaalgruppe: AktiviteterOgMaalgruppe? = null,
 
-	// Dersom søker har oppgitt livssituasjon fordi målgruppe mangler
-	val flervalg: Flervalg? = null,
-
 	// Dersom det ikke er registrert maalgrupper i Arena for søker, må søker angi Livssituasjon.
 	// Denne skal mappes til en prioritert liste av maalgrupper, der den høyest prioriterte sendes inn.
 	// Denne prioriteringen gjøres i fyllut skjemaet og resultatet legges i aktiviteterOgMaalgruppe
-	// -> TODO Slettes
-	val mottarDuEllerHarDuSoktOmDagpenger: String? = null,  // true | false
-	val mottarDuEllerHarDuSoktOmTiltakspenger: String? = null,  //  true | false
-	val gjennomforerDuEnUtdanningSomNavHarGodkjent: String? = null,  //  true | false
-	val erDuGjenlevendeEktefelle: String? = null,  // true | false
-	val erDuTidligereFamiliepleier: String? = null,  // true | false
-	val erDuUgiftSkiltEllerSeparertOgErAleneOmOmsorgenForBarn: String? = null,  //  true | false
-	val erDuUgiftSkiltEllerSeparertOgErAleneOmOmsorgenForBarn1: String? = null,  // Har du barn under 8 år true | false.
-	val nedsattArbeidsevnePgaSykdom: NedsattArbeidsevnePgaSykdom? = null,
-	val annet1: String? = null, // Ingen av valgene ovenfor passer min situasjon
-	// <- TODO Slettes
+	val flervalg: Flervalg? = null,
 
 	// Daglig reise, NAV 11-12.21B
 	val soknadsPeriode: SoknadsPeriode? = null,  // Samme som Reise på grunn av oppstart, avslutning eller hjemreise
@@ -330,10 +317,16 @@ data class KanIkkeReiseKollektivt(
 	val hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt: String?, // helsemessigeArsaker | darligTransporttilbud | hentingEllerLeveringAvBarn | annet
 	val beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt: String?,
 	val hentingEllerLeveringAvBarn: HentingEllerLeveringAvBarn?,
-	val annet: Map<String, Any>?, // TODO skaldet være String?
+	val annet: AndreArsakerIkkeKollektivt? = null,
 	val kanDuBenytteEgenBil: String?, // Ja|Nei
 	val kanBenytteEgenBil: KanBenytteEgenBil?,
 	val kanIkkeBenytteEgenBil: KanIkkeBenytteEgenBil?,
+)
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class AndreArsakerIkkeKollektivt(
+	val hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt: String
 )
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -365,7 +358,7 @@ data class HentingEllerLeveringAvBarn(
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class KanIkkeBenytteEgenBil(
-	val hvaErArsakenTilAtDuIkkeKanBenytteEgenBil: String? = null, // TODO mapping sjekkboks eller radioknapper? helsemessigeArsaker | disponererIkkeBil | annet
+	val hvaErArsakenTilAtDuIkkeKanBenytteEgenBil: String? = null, // helsemessigeArsaker | disponererIkkeBil | annet
 	val hvilkeAndreArsakerGjorAtDuIkkeKanBenytteEgenBil: String?,
 	val kanDuBenytteDrosje: String? = null, // ja|nei
 	@JsonProperty("oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIPeriodenDuSokerOmStonadFor")

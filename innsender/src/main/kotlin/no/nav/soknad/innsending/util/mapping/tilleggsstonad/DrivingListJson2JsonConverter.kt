@@ -13,7 +13,6 @@ fun convertToJsonDrivingListJson(
 
 	val mapper = jacksonObjectMapper()
 	mapper.findAndRegisterModules()
-	//mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 	val json = mapper.readValue(jsonFile, Root::class.java)
 
 	return JsonApplication(
@@ -37,20 +36,17 @@ fun convertToJsonDrivingListSubmission(
 		throw BackendErrorException("${soknadDto.innsendingsId}: Søknaden mangler vedtaksId")
 
 	return JsonDrivingListSubmission(
-
 		fornavnSoker = drivingListSubmission.fornavnSoker,
 		etternavnSoker = drivingListSubmission.etternavnSoker,
 		harDuNorskFodselsnummerEllerDnummer = drivingListSubmission.harDuNorskFodselsnummerEllerDnummer,
 		fodselsnummerDnummerSoker = drivingListSubmission.fodselsnummerDnummerSoker,
 		tilleggsopplysninger = drivingListSubmission.tilleggsopplysninger,
-
 		maalgruppeinformasjon = convertToJsonMaalgruppeinformasjon(
 			drivingListSubmission.aktiviteterOgMaalgruppe,
-			null,
-			null
+			flervalg = null,
+			regArbSoker = null
 		),
-
-		expencePeriodes = JsonDrivingListExpences(
+		expensePeriodes = JsonDrivingListExpences(
 			selectedVedtaksId = drivingListSubmission.drivinglist.selectedVedtaksId,
 			dates = drivingListSubmission.drivinglist.dates.map {
 				JsonDailyExpences(
