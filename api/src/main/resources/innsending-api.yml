@@ -26,6 +26,8 @@ tags:
     description: API for soknadsveiviser applikasjonen.
   - name: ekstern
     description: API for eksterne applikasjoner.
+  - name: pdf
+    description: API for å generere PDF'er
 
 paths:
   /fyllUt/v1/leggTilVedlegg:
@@ -938,6 +940,28 @@ paths:
                       errorCode: somethingFailedTryLater
             tags:
               - ekstern
+  /fyllut/v1/pdf:
+    post:
+      summary: Konverter HTML til PDF
+      description: TODO
+      operationId: htmlToPdf
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PDFData"
+        required: true
+
+      responses:
+          201:
+            description: Opprettet ettersending
+            content:
+              application/json:
+                schema:
+                    $ref: "#/components/schemas/PDFDto"
+      tags:
+        - fyllut
 
   /health/ping:
     get:
@@ -1530,6 +1554,22 @@ components:
           $ref: "#/components/schemas/Tittel"
         opplastingsStatus:
           $ref: "#/components/schemas/OpplastingsStatusDto"
+    PDFData:
+      type: object
+      description: Data for å konvertere til PDF
+      properties:
+          html:
+            type: string
+            description: HTML
+    PDFDto:
+      type: object
+      description: Data om en konvertert PDF
+      required:
+        - pdf
+      properties:
+        pdf:
+          type: string
+          description: PDF innhold som en Byte array
 
     PostVedleggDto:
       type: object

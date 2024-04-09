@@ -155,6 +155,24 @@
 			<version>${tika-core.version}</version>
 			<scope>compile</scope>
 		</dependency>
+
+		<!-- OpenHtmlToPdf-->
+		<dependency>
+			<groupId>at.datenwort.openhtmltopdf</groupId>
+			<artifactId>openhtmltopdf-core</artifactId>
+			<version>${openhtml.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>at.datenwort.openhtmltopdf</groupId>
+			<artifactId>openhtmltopdf-pdfbox</artifactId>
+			<version>${openhtml.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>at.datenwort.openhtmltopdf</groupId>
+			<artifactId>openhtmltopdf-slf4j</artifactId>
+			<version>${openhtml.version}</version>
+		</dependency>
+		
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>pdfbox</artifactId>

@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.ArenaService
+import no.nav.soknad.innsending.service.PdfGeneratorService
 import no.nav.soknad.innsending.service.PrefillService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
@@ -25,6 +26,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
 import java.net.URI
+import java.util.*
 
 @RestController
 @ProtectedWithClaims(issuer = TOKENX, claimMap = [CLAIM_ACR_LEVEL_4, CLAIM_ACR_IDPORTEN_LOA_HIGH], combineWithOr = true)
@@ -34,7 +36,7 @@ class FyllutRestApi(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val prefillService: PrefillService,
 	private val subjectHandler: SubjectHandlerInterface,
-	private val arenaService: ArenaService
+	private val arenaService: ArenaService,
 ) : FyllutApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -246,6 +248,16 @@ class FyllutRestApi(
 		}
 
 		return ResponseEntity.status(HttpStatus.OK).body(soknader)
+	}
+
+	fun ByteArray.toBase64(): String =
+		String(Base64.getEncoder().encode(this))
+
+	override fun htmlToPdf(pdFData: PDFData): ResponseEntity<PDFDto> {
+		println(pdFData)
+		val pdf = PdfGeneratorService().generatePdf(pdFData.html!!)
+
+		return ResponseEntity.status(HttpStatus.OK).body(PDFDto(pdf.toBase64()))
 	}
 
 	override fun fyllUtAktiviteter(dagligreise: Boolean): ResponseEntity<List<Aktivitet>> {
