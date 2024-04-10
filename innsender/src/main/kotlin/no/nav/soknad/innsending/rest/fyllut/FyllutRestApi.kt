@@ -40,36 +40,7 @@ class FyllutRestApi(
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val secureLogger = LoggerFactory.getLogger("secureLogger")
 	private val combinedLogger = CombinedLogger(logger, secureLogger)
-
-	// FIXME: Fjern dette endepunktet etter at det er byttet ut
-	@Timed(InnsenderOperation.OPPRETT)
-	override fun fyllUt(skjemaDto: SkjemaDto): ResponseEntity<Unit> {
-		val brukerId = tilgangskontroll.hentBrukerFraToken()
-		val applikasjon = subjectHandler.getClientId()
-
-		combinedLogger.log(
-			"Skal opprette søknad fra FyllUt: ${skjemaDto.skjemanr}, ${skjemaDto.tittel}, ${skjemaDto.tema}, ${skjemaDto.spraak}",
-			brukerId
-		)
-		soknadService.loggWarningVedEksisterendeSoknad(brukerId, skjemaDto.skjemanr)
-
-		val opprettetSoknad = soknadService.opprettNySoknad(
-			SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
-				input = skjemaDto,
-				brukerId = brukerId,
-				applikasjon = applikasjon
-			)
-		)
-
-		combinedLogger.log(
-			"${opprettetSoknad.innsendingsId}: Soknad fra FyllUt opprettet. Antall vedlegg fra FyllUt=${skjemaDto.vedleggsListe?.size}",
-			brukerId
-		)
-
-		return ResponseEntity.status(HttpStatus.FOUND)
-			.location(URI.create(restConfig.sendInnUrl + "/" + opprettetSoknad.innsendingsId)).build()
-	}
-
+	
 	@Timed(InnsenderOperation.OPPRETT)
 	override fun fyllUtOpprettSoknad(
 		skjemaDto: SkjemaDto,
