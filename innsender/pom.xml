@@ -172,7 +172,13 @@
 			<artifactId>openhtmltopdf-slf4j</artifactId>
 			<version>${openhtml.version}</version>
 		</dependency>
-		
+
+		<dependency>
+			<groupId>com.github.jknack</groupId>
+			<artifactId>handlebars</artifactId>
+			<version>${handlebars.version}</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>pdfbox</artifactId>

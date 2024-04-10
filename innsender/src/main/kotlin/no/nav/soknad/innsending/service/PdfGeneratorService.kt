@@ -1,22 +1,66 @@
 package no.nav.soknad.innsending.service
 
+import com.github.jknack.handlebars.Handlebars
+import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder.CacheStore
+import no.nav.soknad.innsending.model.PDFData
+import no.nav.soknad.innsending.model.PDFDto
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.*
 
+data class HTMLInput(
+	val content: String,
+	val date: String = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd. MMMM yyyy, 'kl' HH.mm")),
+	val language: String,
+	val title: String,
+	val fnr: String,
+	val skjemanummer: String,
+	val githash: String
+)
 
+@Service
 class PdfGeneratorService {
 	private val logger = LoggerFactory.getLogger(javaClass)
+	private var handlebars: Handlebars = Handlebars()
+	fun ByteArray.toBase64(): String =
+		String(Base64.getEncoder().encode(this))
 
-	// Generer PDF fra html string
+	fun generatePdfDtoFromData(pdfData: PDFData): PDFDto {
+		if (pdfData.base64Html == null) throw IllegalArgumentException("HTML input (base64) is null")
+
+		val html = Base64.getDecoder().decode(pdfData.base64Html).toString(Charsets.UTF_8)
+
+		val htmlInput =
+			HTMLInput(
+				content = html,
+				language = pdfData.spraakkode ?: "nb-NO",
+				title = pdfData.dokumentTittel ?: "",
+				fnr = pdfData.fnr ?: "",
+				skjemanummer = pdfData.skjemanummer ?: "",
+				githash = pdfData.skjemaversjon ?: ""
+			)
+		val template = handlebars.compile("pdf/base").apply(htmlInput)
+
+		val pdfByteArray = generatePdf(template)
+		return PDFDto(pdfByteArray.toBase64())
+	}
+
+	// Generate PDF from HTML string
 	fun generatePdf(html: String): ByteArray {
 		try {
+			print(CacheStore.entries.toTypedArray())
 			ByteArrayOutputStream().use { os ->
 				val builder = PdfRendererBuilder()
 
 				builder.useFastMode()
-				builder.usePdfAConformance(PdfRendererBuilder.PdfAConformance.PDFA_1_A)
+				builder.usePdfAConformance(PdfRendererBuilder.PdfAConformance.PDFA_3_U)
+				builder.usePdfUaAccessbility(true)
 
 				// Fargeprofil, må være byte array
 				builder.useColorProfile(
@@ -32,7 +76,7 @@ class PdfGeneratorService {
 				builder.useFont(
 					PdfGeneratorService::class.java.getResource("/pdf/fonts/arial/arialbd.ttf")?.path?.let {
 						File(it)
-					}, "arial"
+					}, "arial", 600, BaseRendererBuilder.FontStyle.NORMAL, true
 				)
 
 				// Mappe for html filer (som fonter og bilder), må være string uri
@@ -43,6 +87,7 @@ class PdfGeneratorService {
 
 				builder.toStream(os)
 				builder.run()
+
 				return os.toByteArray()
 			}
 		} catch (e: Exception) {

@@ -940,7 +940,7 @@ paths:
                       errorCode: somethingFailedTryLater
             tags:
               - ekstern
-  /fyllut/v1/pdf:
+  /fyllUt/v1/pdf:
     post:
       summary: Konverter HTML til PDF
       description: TODO
@@ -1554,14 +1554,29 @@ components:
           $ref: "#/components/schemas/Tittel"
         opplastingsStatus:
           $ref: "#/components/schemas/OpplastingsStatusDto"
-    PDFData:
+    PdfData:
       type: object
       description: Data for å konvertere til PDF
       properties:
-          html:
+          dokumentTittel:
+            type: string
+            description: Tittel på dokumentet
+          spraakkode:
+            type: string
+            description: Språkkode
+          skjemanummer:
+            type: string
+            description: Skjemanummer
+          fnr:
+            type: string
+            description: Fødselsnummer
+          skjemaversjon:
+            type: string
+            description: Skjemaversjon
+          base64Html:
             type: string
             description: HTML
-    PDFDto:
+    PdfDto:
       type: object
       description: Data om en konvertert PDF
       required:
@@ -1569,7 +1584,7 @@ components:
       properties:
         pdf:
           type: string
-          description: PDF innhold som en Byte array
+          description: PDF innhold som base64
 
     PostVedleggDto:
       type: object

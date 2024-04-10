@@ -80,6 +80,8 @@
 		<tika-core.version>2.9.1</tika-core.version>
 		<openhtml.version>1.1.4</openhtml.version>
 
+		<handlebars.version>4.4.0</handlebars.version>
+
 		<!--Plugins-->
 		<versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
 		<maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>

@@ -37,6 +37,7 @@ class FyllutRestApi(
 	private val prefillService: PrefillService,
 	private val subjectHandler: SubjectHandlerInterface,
 	private val arenaService: ArenaService,
+	private val pdfGeneratorService: PdfGeneratorService
 ) : FyllutApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -250,14 +251,13 @@ class FyllutRestApi(
 		return ResponseEntity.status(HttpStatus.OK).body(soknader)
 	}
 
-	fun ByteArray.toBase64(): String =
-		String(Base64.getEncoder().encode(this))
 
 	override fun htmlToPdf(pdFData: PDFData): ResponseEntity<PDFDto> {
 		println(pdFData)
-		val pdf = PdfGeneratorService().generatePdf(pdFData.html!!)
 
-		return ResponseEntity.status(HttpStatus.OK).body(PDFDto(pdf.toBase64()))
+		val pdf = pdfGeneratorService.generatePdfDtoFromData(pdFData)
+
+		return ResponseEntity.status(HttpStatus.OK).body(pdf)
 	}
 
 	override fun fyllUtAktiviteter(dagligreise: Boolean): ResponseEntity<List<Aktivitet>> {
