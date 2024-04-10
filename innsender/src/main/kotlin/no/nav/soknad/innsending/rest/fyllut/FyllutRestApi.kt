@@ -26,7 +26,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
 import java.net.URI
-import java.util.*
 
 @RestController
 @ProtectedWithClaims(issuer = TOKENX, claimMap = [CLAIM_ACR_LEVEL_4, CLAIM_ACR_IDPORTEN_LOA_HIGH], combineWithOr = true)
@@ -252,10 +251,10 @@ class FyllutRestApi(
 	}
 
 
-	override fun htmlToPdf(pdFData: PDFData): ResponseEntity<PDFDto> {
-		println(pdFData)
+	override fun htmlToPdf(pdfData: PdfData): ResponseEntity<PdfDto> {
+		println(pdfData)
 
-		val pdf = pdfGeneratorService.generatePdfDtoFromData(pdFData)
+		val pdf = pdfGeneratorService.generatePdfDtoFromData(pdfData)
 
 		return ResponseEntity.status(HttpStatus.OK).body(pdf)
 	}

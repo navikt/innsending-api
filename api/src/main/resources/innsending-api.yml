@@ -950,7 +950,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PDFData"
+              $ref: "#/components/schemas/PdfData"
         required: true
 
       responses:
@@ -959,7 +959,7 @@ paths:
             content:
               application/json:
                 schema:
-                    $ref: "#/components/schemas/PDFDto"
+                    $ref: "#/components/schemas/PdfDto"
       tags:
         - fyllut
 
