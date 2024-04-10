@@ -134,7 +134,7 @@ data class DagligReise(
 	@JacksonXmlProperty(localName = "periode")
 	val periode: Periode,
 	@JacksonXmlProperty(localName = "harMedisinskeAarsakerTilTransport")
-	val harMedisinskeAarsakerTilTransport: Boolean,
+	val harMedisinskeAarsakerTilTransport: Boolean? = null,
 	@JacksonXmlProperty(localName = "harParkeringsutgift")
 	val harParkeringsutgift: Boolean? = null,
 	@JacksonXmlProperty(localName = "aktivitetsadresse")

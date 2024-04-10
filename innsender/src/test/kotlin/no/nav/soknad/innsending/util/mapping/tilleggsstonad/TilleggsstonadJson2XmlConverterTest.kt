@@ -31,6 +31,23 @@ class TilleggsstonadJson2XmlConverterTest {
 
 	}
 
+
+	@Test
+	fun json2XmlTest_dagligReise_merEnn6Km() {
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.21B", tema = "TSO").build()
+		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/dagligreise-NAV-11-12.21B-10042024.json")
+
+		val xmlFil = json2Xml(soknadDto, jsonFil)
+
+		assertNotNull(xmlFil)
+		val xmlString = xmlFil.decodeToString()
+		assertTrue(xmlString.contains("<reiseutgifter"))
+		assertTrue(xmlString.contains("<dagligReise"))
+		assertTrue(xmlString.contains("<avstand>12.0</avstand>"))
+		assertTrue(xmlString.contains("<innsendingsintervall>MND</innsendingsintervall>"))
+
+	}
+
 	@Test
 	fun json2XmlTest_samling() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.17B", tema = "TSO").build()
@@ -150,11 +167,11 @@ class TilleggsstonadJson2XmlConverterTest {
 		val dagligReise =
 			JsonDagligReiseTestBuilder()
 				.soknadsPeriode("2023-12-01", "2024-06-20")
-				.hvorLangReiseveiHarDu(130)
+				.hvorLangReiseveiHarDu(5)
+				.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde("ja")
 				.velgLand1(VelgLand(label = "Norge", value = "NO"))
 				.adresse1("Kongensgate 10")
 				.postnr1("3701")
-				.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde("ja")
 				.kanDuReiseKollektivtDagligReise("Nei")
 				.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt("annet")
 				.kanBenytteEgenBil(
@@ -184,7 +201,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("</periode>"))
 		assertTrue(xmlString.contains("<aktivitetsadresse>Kongensgate 10, 3701</aktivitetsadresse>"))
 		assertTrue(xmlString.contains("<dagligReise>"))
-		assertTrue(xmlString.contains("<avstand>130.0</avstand>"))
+		assertTrue(xmlString.contains("<avstand>5.0</avstand>"))
 		assertTrue(xmlString.contains("<harMedisinskeAarsakerTilTransport>true</harMedisinskeAarsakerTilTransport>"))
 		assertTrue(xmlString.contains("<kanOffentligTransportBrukes>false</kanOffentligTransportBrukes>"))
 		assertTrue(xmlString.contains("<aarsakTilIkkeOffentligTransport>annet</aarsakTilIkkeOffentligTransport>"))

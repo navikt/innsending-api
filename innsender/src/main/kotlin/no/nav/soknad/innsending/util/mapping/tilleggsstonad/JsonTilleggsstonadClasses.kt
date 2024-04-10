@@ -119,7 +119,7 @@ data class JsonDagligReise(
 	val sluttdatoDdMmAaaa: String,
 	val hvorMangeReisedagerHarDuPerUke: Int?,
 	val harDuEnReiseveiPaSeksKilometerEllerMer: String, // JA|NEI
-	val harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String, // JA | NEI,
+	val harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String?, // JA | NEI hvis harDuEnReiseveiPaSeksKilometerEllerMer = nei,
 	val hvorLangReiseveiHarDu: Int,
 	val velgLand1: VelgLand,
 	val adresse1: String,

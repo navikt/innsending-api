@@ -19,7 +19,7 @@ class JsonDagligReiseTestBuilder {
 		SoknadsPeriode(startdato = startdatoDdMmAaaa, sluttdato = sluttdatoDdMmAaaa)
 	private var hvorMangeReisedagerHarDuPerUke: Int = 5
 	private var harDuEnReiseveiPaSeksKilometerEllerMer: String = "Ja"
-	private var harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String = "nei"
+	private var harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String? = null
 	private var hvorLangReiseveiHarDu: Int = 10
 	private var velgLand1: VelgLand = VelgLand(
 		label = "Norge", value = "NO"
@@ -59,7 +59,7 @@ class JsonDagligReiseTestBuilder {
 		apply { this.harDuEnReiseveiPaSeksKilometerEllerMer = harDuEnReiseveiPaSeksKilometerEllerMer }
 
 	fun harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde(
-		harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String
+		harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String?
 	) = apply {
 		this.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde =
 			harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde

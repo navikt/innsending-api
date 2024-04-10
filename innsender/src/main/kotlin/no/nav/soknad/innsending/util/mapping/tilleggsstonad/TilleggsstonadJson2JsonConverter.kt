@@ -310,38 +310,43 @@ private fun getSelectedDate(userDate: String?, activityDate: String?, field: Str
 }
 
 private fun convertToJsonDagligReise(tilleggsstonad: Application): JsonDagligReise {
-    return JsonDagligReise(
-        startdatoDdMmAaaa = getSelectedDate(
-            tilleggsstonad.soknadsPeriode?.startdato ?: tilleggsstonad.startdato,
-            tilleggsstonad.aktiviteterOgMaalgruppe?.aktivitet?.periode?.fom,
-            "DagligReise startdato"
-        ),
-        sluttdatoDdMmAaaa = getSelectedDate(
-            tilleggsstonad.soknadsPeriode?.sluttdato ?: tilleggsstonad.sluttdato,
-            tilleggsstonad.aktiviteterOgMaalgruppe?.aktivitet?.periode?.tom,
-            "DagligReise sluttdato"
-        ),
-        hvorMangeReisedagerHarDuPerUke = tilleggsstonad.hvorMangeReisedagerHarDuPerUke,
-        harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde = validateNotNull(tilleggsstonad.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde, "Har du av medisinske årsaker behov for transport uavhengig av reisens lengde" ), // JA | NEI,
-        hvorLangReiseveiHarDu = validateNotNull(
-            tilleggsstonad.hvorLangReiseveiHarDu,
-            "Daglig reise reisevei"
-        ),
-        harDuEnReiseveiPaSeksKilometerEllerMer = validateNotNull(
-            tilleggsstonad.harDuEnReiseveiPaSeksKilometerEllerMer,
-            "Daglig reise avstand mer enn 6 km"
-        ), // JA|NEI
-        velgLand1 = tilleggsstonad.velgLand1 ?: VelgLand(label = "Norge", "NO"),
-        adresse1 = validateNotNull(tilleggsstonad.adresse1, "Daglig reise adresse"),
-        postnr1 = tilleggsstonad.postnr1,
-        kanDuReiseKollektivtDagligReise = validateNotNull(
-            tilleggsstonad.kanDuReiseKollektivtDagligReise,
-            "Daglig reise kan du reise kollektivt"
-        ), // ja | nei
-        hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise = tilleggsstonad.hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise, // Hvis kanDuReiseKollektivtDagligReise == ja
-        hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt = tilleggsstonad.hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt,
-        kanIkkeReiseKollektivtDagligReise = tilleggsstonad.kanIkkeReiseKollektivtDagligReise
-    )
+	val harDuReiseveiPaMerEnn6Km = 	validateNotNull(
+		tilleggsstonad.harDuEnReiseveiPaSeksKilometerEllerMer,
+		"Daglig reise avstand mer enn 6 km"
+	) // JA|NEI
+	return JsonDagligReise(
+			startdatoDdMmAaaa = getSelectedDate(
+					tilleggsstonad.soknadsPeriode?.startdato ?: tilleggsstonad.startdato,
+					tilleggsstonad.aktiviteterOgMaalgruppe?.aktivitet?.periode?.fom,
+					"DagligReise startdato"
+			),
+			sluttdatoDdMmAaaa = getSelectedDate(
+					tilleggsstonad.soknadsPeriode?.sluttdato ?: tilleggsstonad.sluttdato,
+					tilleggsstonad.aktiviteterOgMaalgruppe?.aktivitet?.periode?.tom,
+					"DagligReise sluttdato"
+			),
+			hvorMangeReisedagerHarDuPerUke = tilleggsstonad.hvorMangeReisedagerHarDuPerUke,
+			hvorLangReiseveiHarDu = validateNotNull(
+					tilleggsstonad.hvorLangReiseveiHarDu,
+					"Daglig reise reisevei"
+			),
+			harDuEnReiseveiPaSeksKilometerEllerMer = harDuReiseveiPaMerEnn6Km, // JA|NEI
+			harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde =
+				if (harDuReiseveiPaMerEnn6Km.equals("nei", true))
+					// JA | NEI,
+					validateNotNull(tilleggsstonad.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde, "Har du av medisinske årsaker behov for transport uavhengig av reisens lengde" )
+				else null,
+			velgLand1 = tilleggsstonad.velgLand1 ?: VelgLand(label = "Norge", "NO"),
+			adresse1 = validateNotNull(tilleggsstonad.adresse1, "Daglig reise adresse"),
+			postnr1 = tilleggsstonad.postnr1,
+			kanDuReiseKollektivtDagligReise = validateNotNull(
+					tilleggsstonad.kanDuReiseKollektivtDagligReise,
+					"Daglig reise kan du reise kollektivt"
+			), // ja | nei
+			hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise = tilleggsstonad.hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise, // Hvis kanDuReiseKollektivtDagligReise == ja
+			hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt = tilleggsstonad.hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt,
+			kanIkkeReiseKollektivtDagligReise = tilleggsstonad.kanIkkeReiseKollektivtDagligReise
+	)
 }
 
 private fun convertToJsonReiseSamling(tilleggsstonad: Application): JsonReiseSamling {

@@ -134,7 +134,6 @@ class TilleggsstonadJson2JsonConverterTest {
             .periode("2024-01-01", "2024-03-29")
             .reisemal(VelgLand(label = "Norge", value = "NO"), adresse = "Kongensgate 10", postr = "3701")
             .reiseAvstandOgFrekvens(hvorLangReiseveiHarDu = 120, hvorMangeReisedagerHarDuPerUke = 5)
-						.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde("ja")
             .reiseEgenBil(
                 kanBenytteEgenBil = KanBenytteEgenBil(
                     bompenger = 200,
@@ -177,5 +176,72 @@ class TilleggsstonadJson2JsonConverterTest {
         )
 
     }
+
+
+	@Test
+	fun `medical reason - mapping av reisesoknad til strukturert json`() {
+		val skjemanr = FyllUtJsonTestBuilder().dagligReiseSkjemanr
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = skjemanr, tema = "TSO").build()
+		val aktivitetsId = "12345"
+		val language = "no-Nb"
+		val maalgruppeType = MaalgruppeType.NEDSARBEVN
+		val fyllUtObj = FyllUtJsonTestBuilder()
+			.language(language)
+			.skjemanr(skjemanr)
+			.arenaAktivitetOgMaalgruppe(
+				maalgruppe = maalgruppeType,
+				aktivitetId = aktivitetsId,
+				SkjemaPeriode("2024-01-02", "2024-03-30")
+			)
+			.periode("2024-01-01", "2024-03-29")
+			.reisemal(VelgLand(label = "Norge", value = "NO"), adresse = "Kongensgate 10", postr = "3701")
+			.reiseAvstandOgFrekvens(hvorLangReiseveiHarDu = 5, hvorMangeReisedagerHarDuPerUke = 5)
+			.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde("ja")
+			.reiseEgenBil(
+				kanBenytteEgenBil = KanBenytteEgenBil(
+					bompenger = 200,
+					piggdekkavgift = 1000,
+					ferje = 100,
+					annet = 0,
+					vilDuHaUtgifterTilParkeringPaAktivitetsstedet = "ja",
+					parkering = 150,
+					hvorOfteOnskerDuASendeInnKjoreliste = "jegOnskerALevereKjorelisteEnGangIManeden"
+				)
+			)
+			.build()
+
+		val mapper = jacksonObjectMapper().findAndRegisterModules()
+		val fyllUtJson = mapper.writeValueAsString(fyllUtObj)
+		val strukturertJson =
+			convertToJsonTilleggsstonad(soknadDto, fyllUtJson.toString().toByteArray())
+
+		assertTrue(strukturertJson != null)
+		Assertions.assertEquals(aktivitetsId, strukturertJson.applicationDetails.aktivitetsinformasjon?.aktivitet)
+		Assertions.assertEquals(
+			maalgruppeType.value,
+			strukturertJson.applicationDetails.maalgruppeinformasjon?.maalgruppetype
+		)
+		Assertions.assertEquals(
+			"2024-01-01",
+			strukturertJson.applicationDetails.rettighetstype?.reise?.dagligReise?.startdatoDdMmAaaa
+		)
+		Assertions.assertEquals(
+			"Norge",
+			strukturertJson.applicationDetails.rettighetstype?.reise?.dagligReise?.velgLand1?.label
+		)
+		Assertions.assertEquals(
+			5,
+			strukturertJson.applicationDetails.rettighetstype?.reise?.dagligReise?.hvorLangReiseveiHarDu
+		)
+		Assertions.assertEquals(
+			200,
+			strukturertJson.applicationDetails.rettighetstype?.reise?.dagligReise?.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.bompenger
+		)
+		Assertions.assertEquals(
+			"ja",
+			strukturertJson.applicationDetails.rettighetstype?.reise?.dagligReise?.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde
+		)
+
+	}
 
 }

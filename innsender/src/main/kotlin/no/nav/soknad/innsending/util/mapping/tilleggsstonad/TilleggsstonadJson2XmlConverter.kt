@@ -328,7 +328,7 @@ private fun convertDagligReise(jsonRettighetstyper: JsonRettighetstyper, soknadD
 			postnr = jsonDagligReise.postnr1
 		).sammensattAdresse,
 		avstand = jsonDagligReise.hvorLangReiseveiHarDu.toDouble(),
-		harMedisinskeAarsakerTilTransport = convertToBoolean(jsonDagligReise.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde) ?: false,
+		harMedisinskeAarsakerTilTransport = convertToBoolean(jsonDagligReise.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde),
 		alternativeTransportutgifter = convertAlternativeTransportutgifter_DagligReise(jsonDagligReise),
 		harParkeringsutgift = (convertToBoolean(jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanDuBenytteEgenBil)
 			?: false) && ((jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.parkering ?: 0) > 0),
