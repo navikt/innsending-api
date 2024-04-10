@@ -111,7 +111,7 @@ data class Boutgifter(
 	@JacksonXmlProperty(localName = "boutgifterPgaFunksjonshemminger")
 	val boutgifterPgaFunksjonshemminger: Boolean? = null,
 	@JacksonXmlProperty(localName = "mottarBostoette")
-	val mottarBostoette: Boolean,
+	val mottarBostoette: Boolean?,
 	@JacksonXmlProperty(localName = "bostoetteBeloep")
 	val bostoetteBeloep: Int? = null,
 	@JacksonXmlProperty(localName = "samlingsperiode")

@@ -70,7 +70,7 @@ data class JsonBostottesoknad(
 	val hvilkeBoutgifterSokerDuOmAFaDekket: String, // "fasteBoutgifter" | "boutgifterIForbindelseMedSamling"
 	val bostotteIForbindelseMedSamling: BostotteIForbindelseMedSamling?,
 
-	val mottarDuBostotteFraKommunen: String = "Nei", // "Ja" | "Nei"
+	val mottarDuBostotteFraKommunen: String? = "Nei", // "Ja" | "Nei"
 	val bostottebelop: Int?,
 	val hvilkeAdresserHarDuBoutgifterPa: HvilkeAdresserHarDuBoutgifterPa,
 	val boutgifterPaAktivitetsadressen: Int?,
@@ -119,7 +119,7 @@ data class JsonDagligReise(
 	val sluttdatoDdMmAaaa: String,
 	val hvorMangeReisedagerHarDuPerUke: Int?,
 	val harDuEnReiseveiPaSeksKilometerEllerMer: String, // JA|NEI
-	val harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String? = null, // JA | NEI,
+	val harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String, // JA | NEI,
 	val hvorLangReiseveiHarDu: Int,
 	val velgLand1: VelgLand,
 	val adresse1: String,

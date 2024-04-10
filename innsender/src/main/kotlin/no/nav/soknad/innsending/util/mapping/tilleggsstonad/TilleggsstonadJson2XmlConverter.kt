@@ -115,7 +115,7 @@ fun convertBostotte(jsonRettighetstyper: JsonRettighetstyper): Boutgifter? {
 			fom = convertToDateStringWithTimeZone(bostottesoknad.aktivitetsperiode.startdatoDdMmAaaa),
 			tom = convertToDateStringWithTimeZone(bostottesoknad.aktivitetsperiode.sluttdatoDdMmAaaa)
 		),
-		mottarBostoette = convertToBoolean(bostottesoknad.mottarDuBostotteFraKommunen) ?: false,
+		mottarBostoette = convertToBoolean(bostottesoknad.mottarDuBostotteFraKommunen),
 		bostoetteBeloep = bostottesoknad.bostottebelop,
 
 		boutgifterPgaFunksjonshemminger = convertToBoolean(bostottesoknad.erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet)
@@ -328,7 +328,7 @@ private fun convertDagligReise(jsonRettighetstyper: JsonRettighetstyper, soknadD
 			postnr = jsonDagligReise.postnr1
 		).sammensattAdresse,
 		avstand = jsonDagligReise.hvorLangReiseveiHarDu.toDouble(),
-		harMedisinskeAarsakerTilTransport = convertToBoolean(jsonDagligReise.kanDuReiseKollektivtDagligReise) ?: false,
+		harMedisinskeAarsakerTilTransport = convertToBoolean(jsonDagligReise.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde) ?: false,
 		alternativeTransportutgifter = convertAlternativeTransportutgifter_DagligReise(jsonDagligReise),
 		harParkeringsutgift = (convertToBoolean(jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanDuBenytteEgenBil)
 			?: false) && ((jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.parkering ?: 0) > 0),
@@ -510,8 +510,8 @@ private fun convertDrosjeTransportutgifter(utgifter: Int?): DrosjeTransportutgif
 private fun convertInnsendingsintervaller(details: String?): Innsendingsintervaller? {
 	if (details == null) return null
 	return when (details) {
-		"jegOnskerALevereKjorelisteEnGangIManeden" -> Innsendingsintervaller(InnsendingsintervallerKodeverk.maned.name)
-		"jegOnskerALevereKjorelisteEnGangIUken" -> Innsendingsintervaller(InnsendingsintervallerKodeverk.uke.name)
+		"jegOnskerALevereKjorelisteEnGangIManeden" -> Innsendingsintervaller(InnsendingsintervallerKodeverk.maned.kodeverksverdi)
+		"jegOnskerALevereKjorelisteEnGangIUken" -> Innsendingsintervaller(InnsendingsintervallerKodeverk.uke.kodeverksverdi)
 		else -> throw IllegalActionException("Ukjent kode for periode for levering av kjøreliste")
 	}
 }

@@ -138,9 +138,59 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("<avstand>130.0</avstand>"))
 		assertTrue(xmlString.contains("<kanOffentligTransportBrukes>false</kanOffentligTransportBrukes>"))
 		assertTrue(xmlString.contains("<aarsakTilIkkeOffentligTransport>helsemessigeArsaker</aarsakTilIkkeOffentligTransport>"))
-		assertTrue(xmlString.contains("<innsendingsintervall>uke</innsendingsintervall>"))
+		assertTrue(xmlString.contains("<innsendingsintervall>UKE</innsendingsintervall>"))
 		assertTrue(xmlString.contains("<sumAndreUtgifter>1150.0</sumAndreUtgifter>"))
 		assertTrue(xmlString.contains("<parkeringsutgiftBeloep>200</parkeringsutgiftBeloep>"))
+	}
+
+
+	@Test
+	fun `Convert to XML of daily travel expences - using own car - monthly`() {
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.21B", tema = "TSO").build()
+		val dagligReise =
+			JsonDagligReiseTestBuilder()
+				.soknadsPeriode("2023-12-01", "2024-06-20")
+				.hvorLangReiseveiHarDu(130)
+				.velgLand1(VelgLand(label = "Norge", value = "NO"))
+				.adresse1("Kongensgate 10")
+				.postnr1("3701")
+				.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde("ja")
+				.kanDuReiseKollektivtDagligReise("Nei")
+				.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt("annet")
+				.kanBenytteEgenBil(
+					KanBenytteEgenBil(
+						bompenger = 150,
+						piggdekkavgift = 1000,
+						ferje = null,
+						annet = 23,
+						vilDuHaUtgifterTilParkeringPaAktivitetsstedet = "ja",
+						parkering = 150,
+						hvorOfteOnskerDuASendeInnKjoreliste = "jegOnskerALevereKjorelisteEnGangIManeden"
+					)
+				)
+				.kanIkkeBenytteEgenBil(kanIkkeBenytteEgenBil = null)
+				.build()
+		val jsonReisestottesoknad = JsonReiseTestBuilder().dagligReise(dagligReise = dagligReise).build()
+		val tilleggsstonad =
+			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = jsonReisestottesoknad).build()
+
+		val xmlFil = json2Xml(soknadDto, tilleggsstonad)
+
+		assertNotNull(xmlFil)
+		val xmlString = xmlFil.decodeToString()
+		assertTrue(xmlString.contains("<periode>"))
+		assertTrue(xmlString.contains("<fom>2023-12-01+01:00</fom>")) //##
+		assertTrue(xmlString.contains("<tom>2024-06-20+02:00</tom>"))
+		assertTrue(xmlString.contains("</periode>"))
+		assertTrue(xmlString.contains("<aktivitetsadresse>Kongensgate 10, 3701</aktivitetsadresse>"))
+		assertTrue(xmlString.contains("<dagligReise>"))
+		assertTrue(xmlString.contains("<avstand>130.0</avstand>"))
+		assertTrue(xmlString.contains("<harMedisinskeAarsakerTilTransport>true</harMedisinskeAarsakerTilTransport>"))
+		assertTrue(xmlString.contains("<kanOffentligTransportBrukes>false</kanOffentligTransportBrukes>"))
+		assertTrue(xmlString.contains("<aarsakTilIkkeOffentligTransport>annet</aarsakTilIkkeOffentligTransport>"))
+		assertTrue(xmlString.contains("<innsendingsintervall>MND</innsendingsintervall>"))
+		assertTrue(xmlString.contains("<sumAndreUtgifter>1173.0</sumAndreUtgifter>"))
+		assertTrue(xmlString.contains("<parkeringsutgiftBeloep>150</parkeringsutgiftBeloep>"))
 	}
 
 	@Test

@@ -106,7 +106,8 @@ class TilleggsstonadService(
 			"NAV 11-12.18B", // Støtte til ved oppstart, avslutning eller hjemreiser
 			"NAV 11-12.21B", // Støtte til daglig reise
 			"NAV 11-12.22B", // Støtte til reise for å komme i arbeid
-			"NAV 11-12.24B",
+			"NAV 11-12.23B", // Støtte til flytting
+			"NAV 11-12.24B", // Kjøreliste
 			"kjoreliste" // TODO fjern kjoreliste
 		)
 		val relevanteMaalgrupperForTsr = listOf(

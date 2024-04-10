@@ -134,6 +134,7 @@ class TilleggsstonadJson2JsonConverterTest {
             .periode("2024-01-01", "2024-03-29")
             .reisemal(VelgLand(label = "Norge", value = "NO"), adresse = "Kongensgate 10", postr = "3701")
             .reiseAvstandOgFrekvens(hvorLangReiseveiHarDu = 120, hvorMangeReisedagerHarDuPerUke = 5)
+						.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde("ja")
             .reiseEgenBil(
                 kanBenytteEgenBil = KanBenytteEgenBil(
                     bompenger = 200,

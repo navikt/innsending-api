@@ -224,7 +224,7 @@ private fun convertToJsonBostotte(tilleggsstonad: Application, soknadDto: Dokume
 				),
         hvilkeBoutgifterSokerDuOmAFaDekket = validateNotNull(tilleggsstonad.hvilkeBoutgifterSokerDuOmAFaDekket, "Mangler: 'Hvilke boutgifter søker du om å få dekket'"),
         bostotteIForbindelseMedSamling = tilleggsstonad.bostotteIForbindelseMedSamling,
-        mottarDuBostotteFraKommunen = validateNotNull(tilleggsstonad.mottarDuBostotteFraKommunen, "'Mottar du bostøtte fra kommunen'"), // "Ja" | "Nei"
+        mottarDuBostotteFraKommunen = if (tilleggsstonad.hvilkeBoutgifterSokerDuOmAFaDekket == "fasteBoutgifter") validateNotNull(tilleggsstonad.mottarDuBostotteFraKommunen, "'Mottar du bostøtte fra kommunen'") else null, // "Ja" | "Nei"
         bostottebelop = tilleggsstonad.hvorMyeBostotteMottarDu,
         hvilkeAdresserHarDuBoutgifterPa = validateNotNull(tilleggsstonad.hvilkeAdresserHarDuBoutgifterPa, "'Hvilke adresser har du utgifter på'"),
         boutgifterPaHjemstedetMitt = tilleggsstonad.boutgifterPaHjemstedetMitt,
@@ -322,7 +322,7 @@ private fun convertToJsonDagligReise(tilleggsstonad: Application): JsonDagligRei
             "DagligReise sluttdato"
         ),
         hvorMangeReisedagerHarDuPerUke = tilleggsstonad.hvorMangeReisedagerHarDuPerUke,
-        harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde = tilleggsstonad.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde, // JA | NEI,
+        harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde = validateNotNull(tilleggsstonad.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde, "Har du av medisinske årsaker behov for transport uavhengig av reisens lengde" ), // JA | NEI,
         hvorLangReiseveiHarDu = validateNotNull(
             tilleggsstonad.hvorLangReiseveiHarDu,
             "Daglig reise reisevei"

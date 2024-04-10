@@ -103,6 +103,7 @@ class FyllUtJsonTestBuilder {
 	var postnr: String? = "3701"
 	var hvorMangeReisedagerHarDuPerUke: Int? = 5
 	var harDuEnReiseveiPaSeksKilometerEllerMer: String? = "ja"
+	var harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String? = "nei"
 	var hvorLangReiseveiHarDu: Int? = 120
 	var kanDuReiseKollektivtDagligReise: String? = "nei"
 	var kanReiseMedBil = KanIkkeReiseKollektivt(
@@ -126,6 +127,9 @@ class FyllUtJsonTestBuilder {
 
 	fun reisemal(land: VelgLand, adresse: String, postr: String) =
 		apply { this.land = land; this.adresse = adresse; }
+
+	fun harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde(harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String?) =
+		apply {this.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde = harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde}
 
 	fun reiseAvstandOgFrekvens(hvorLangReiseveiHarDu: Int?, hvorMangeReisedagerHarDuPerUke: Int?) = apply {
 		harDuEnReiseveiPaSeksKilometerEllerMer = if ((hvorLangReiseveiHarDu ?: 0) >= 6) "ja" else "nei"
@@ -336,6 +340,7 @@ class FyllUtJsonTestBuilder {
 					//visesHvisBrukerHarEnRegistrertAktivitetsperiode = null, // TODO
 					hvorMangeReisedagerHarDuPerUke = if (skjemanr == dagligReiseSkjemanr) hvorMangeReisedagerHarDuPerUke else null,
 					hvorLangReiseveiHarDu = if (skjemanr == dagligReiseSkjemanr) hvorLangReiseveiHarDu else null,
+					harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde = if (skjemanr == dagligReiseSkjemanr) harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde else null,
 					hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise = if (skjemanr == dagligReiseSkjemanr) hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise else null,
 					kanIkkeReiseKollektivtDagligReise = if (skjemanr == dagligReiseSkjemanr) kanIkkeReiseKollektivt else null,
 
