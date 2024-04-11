@@ -6,13 +6,6 @@ import no.nav.soknad.innsending.utils.builders.tilleggsstonader.MaalgruppeTestBu
 
 class FyllUtJsonTestBuilder {
 
-	val dagligReiseSkjemanr = "NAV 11-12.21B"
-	val barnepassSkjemanr = "NAV 11-12.15B"
-	val laeremidlerSkjemanr = "NAV 11-12.16B"
-	val reiseSamlingSkjemanr = "NAV 11-12.17B"
-
-	val drivingListExpencesSkjemanr = "NAV 11-12.10"
-
 	var drivingListExpences: Drivinglist? = Drivinglist(
 		selectedVedtaksId = "12345678",
 		dates = listOf(
@@ -45,7 +38,7 @@ class FyllUtJsonTestBuilder {
 		),
 	)
 
-	var skjemanr: String = dagligReiseSkjemanr
+	var skjemanr: String = reiseDaglig
 	var language: String = "no-NB"
 	var arenaAktivitetOgMaalgruppe: AktiviteterOgMaalgruppe? = defaultArenaAktivitetOgMaalgruppe
 	var flervalg: Flervalg? = null
@@ -192,7 +185,7 @@ class FyllUtJsonTestBuilder {
 		kanBenytteEgenBil: KanBenytteEgenBil? = null,
 		kanIkkeBenytteEgenBil: KanIkkeBenytteEgenBil? = null
 	) = apply {
-		this.skjemanr = reiseSamlingSkjemanr
+		this.skjemanr = reiseSamling
 		this.kanDuReiseKollektivtReiseTilSamling =
 			if (kanBenytteEgenBil == null && kanIkkeBenytteEgenBil == null) "ja" else "nei"
 		this.kanReiseKollektivt = if (kanBenytteEgenBil == null && kanIkkeBenytteEgenBil == null) 2000 else null
@@ -225,7 +218,7 @@ class FyllUtJsonTestBuilder {
 	}
 
 	// Barnepass
-	var passAvBarn: List<OpplysningerOmBarn>? =
+	var passAvBarna: List<OpplysningerOmBarn>? =
 		listOf(
 			OpplysningerOmBarn(
 				fornavn = "Lite",
@@ -244,7 +237,7 @@ class FyllUtJsonTestBuilder {
 	var fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa: String? = "1990-10-10"
 	var fodselsnummerDNummerAndreForelder: String? = "16905198584"
 
-	fun passAvBarn(passAvBarn: List<OpplysningerOmBarn>?) = apply { this.passAvBarn = passAvBarn }
+	fun passAvBarn(passAvBarn: List<OpplysningerOmBarn>?) = apply { this.passAvBarna = passAvBarn }
 	fun fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa(fodselsdato: String?) =
 		apply { fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa = fodselsdato }
 
@@ -316,47 +309,47 @@ class FyllUtJsonTestBuilder {
 					sluttdato = sluttdato,
 
 					// Barnepass
-					opplysningerOmBarn = if (skjemanr == barnepassSkjemanr) passAvBarn else null,
-					fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa = if (skjemanr == barnepassSkjemanr) fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa else null,
-					fodselsnummerDNummerAndreForelder = if (skjemanr == barnepassSkjemanr) fodselsnummerDNummerAndreForelder else null,
+					opplysningerOmBarn = if (skjemanr == stotteTilPassAvBarn) passAvBarna else null,
+					fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa = if (skjemanr == stotteTilPassAvBarn) fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa else null,
+					fodselsnummerDNummerAndreForelder = if (skjemanr == stotteTilPassAvBarn) fodselsnummerDNummerAndreForelder else null,
 
 					// Læremidler
 					hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore =
-					if (skjemanr == laeremidlerSkjemanr) hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore else null,
-					hvilketKursEllerAnnenFormForUtdanningSkalDuTa = if (skjemanr == laeremidlerSkjemanr) hvilketKursEllerAnnenFormForUtdanningSkalDuTa else null,
-					oppgiHvorMangeProsentDuStudererEllerGarPaKurs = if (skjemanr == laeremidlerSkjemanr) oppgiHvorMangeProsentDuStudererEllerGarPaKurs else null,
-					harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler = if (skjemanr == laeremidlerSkjemanr) harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler else null,
-					utgifterTilLaeremidler = if (skjemanr == laeremidlerSkjemanr) utgifterTilLaeremidler else null,
-					farDuDekketLaeremidlerEtterAndreOrdninger = if (skjemanr == laeremidlerSkjemanr) farDuDekketLaeremidlerEtterAndreOrdninger else null,
-					hvorMyeFarDuDekketAvEnAnnenAktor = if (skjemanr == laeremidlerSkjemanr) hvorMyeFarDuDekketAvEnAnnenAktor else null,
-					hvorStortBelopSokerDuOmAFaDekketAvNav = if (skjemanr == laeremidlerSkjemanr) hvorStortBelopSokerDuOmAFaDekketAvNav else null,
+					if (skjemanr == stotteTilLaeremidler) hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore else null,
+					hvilketKursEllerAnnenFormForUtdanningSkalDuTa = if (skjemanr == stotteTilLaeremidler) hvilketKursEllerAnnenFormForUtdanningSkalDuTa else null,
+					oppgiHvorMangeProsentDuStudererEllerGarPaKurs = if (skjemanr == stotteTilLaeremidler) oppgiHvorMangeProsentDuStudererEllerGarPaKurs else null,
+					harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler = if (skjemanr == stotteTilLaeremidler) harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler else null,
+					utgifterTilLaeremidler = if (skjemanr == stotteTilLaeremidler) utgifterTilLaeremidler else null,
+					farDuDekketLaeremidlerEtterAndreOrdninger = if (skjemanr == stotteTilLaeremidler) farDuDekketLaeremidlerEtterAndreOrdninger else null,
+					hvorMyeFarDuDekketAvEnAnnenAktor = if (skjemanr == stotteTilLaeremidler) hvorMyeFarDuDekketAvEnAnnenAktor else null,
+					hvorStortBelopSokerDuOmAFaDekketAvNav = if (skjemanr == stotteTilLaeremidler) hvorStortBelopSokerDuOmAFaDekketAvNav else null,
 
 					// Daglig reise
-					harDuEnReiseveiPaSeksKilometerEllerMer = if (skjemanr == dagligReiseSkjemanr) harDuEnReiseveiPaSeksKilometerEllerMer else null,
-					velgLand1 = if (skjemanr == dagligReiseSkjemanr) land else null,
-					adresse1 = if (skjemanr == dagligReiseSkjemanr) adresse else null,
-					postnr1 = if (skjemanr == dagligReiseSkjemanr) postnr else null,
-					kanDuReiseKollektivtDagligReise = if (skjemanr == dagligReiseSkjemanr) kanDuReiseKollektivtDagligReise else null,
+					harDuEnReiseveiPaSeksKilometerEllerMer = if (skjemanr == reiseDaglig) harDuEnReiseveiPaSeksKilometerEllerMer else null,
+					velgLand1 = if (skjemanr == reiseDaglig) land else null,
+					adresse1 = if (skjemanr == reiseDaglig) adresse else null,
+					postnr1 = if (skjemanr == reiseDaglig) postnr else null,
+					kanDuReiseKollektivtDagligReise = if (skjemanr == reiseDaglig) kanDuReiseKollektivtDagligReise else null,
 					//visesHvisBrukerHarEnRegistrertAktivitetsperiode = null, // TODO
-					hvorMangeReisedagerHarDuPerUke = if (skjemanr == dagligReiseSkjemanr) hvorMangeReisedagerHarDuPerUke else null,
-					hvorLangReiseveiHarDu = if (skjemanr == dagligReiseSkjemanr) hvorLangReiseveiHarDu else null,
-					harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde = if (skjemanr == dagligReiseSkjemanr) harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde else null,
-					hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise = if (skjemanr == dagligReiseSkjemanr) hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise else null,
-					kanIkkeReiseKollektivtDagligReise = if (skjemanr == dagligReiseSkjemanr) kanIkkeReiseKollektivt else null,
+					hvorMangeReisedagerHarDuPerUke = if (skjemanr == reiseDaglig) hvorMangeReisedagerHarDuPerUke else null,
+					hvorLangReiseveiHarDu = if (skjemanr == reiseDaglig) hvorLangReiseveiHarDu else null,
+					harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde = if (skjemanr == reiseDaglig) harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde else null,
+					hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise = if (skjemanr == reiseDaglig) hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise else null,
+					kanIkkeReiseKollektivtDagligReise = if (skjemanr == reiseDaglig) kanIkkeReiseKollektivt else null,
 
 					// Reise til samling
-					startOgSluttdatoForSamlingene = if (skjemanr == reiseSamlingSkjemanr) startOgSluttdatoForSamlingene else null,
-					velgLandReiseTilSamling = if (skjemanr == reiseSamlingSkjemanr) velgLandReiseTilSamling else null,
-					postnr2 = if (skjemanr == reiseSamlingSkjemanr) postnr2 else null,
-					adresse2 = if (skjemanr == reiseSamlingSkjemanr) adresse2 else null,
-					kanDuReiseKollektivtReiseTilSamling = if (skjemanr == reiseSamlingSkjemanr) kanDuReiseKollektivtReiseTilSamling else null,
-					kanReiseKollektivt = if (skjemanr == reiseSamlingSkjemanr && kanIkkeReiseKollektivt == null) KanReiseKollektivt(
+					startOgSluttdatoForSamlingene = if (skjemanr == reiseSamling) startOgSluttdatoForSamlingene else null,
+					velgLandReiseTilSamling = if (skjemanr == reiseSamling) velgLandReiseTilSamling else null,
+					postnr2 = if (skjemanr == reiseSamling) postnr2 else null,
+					adresse2 = if (skjemanr == reiseSamling) adresse2 else null,
+					kanDuReiseKollektivtReiseTilSamling = if (skjemanr == reiseSamling) kanDuReiseKollektivtReiseTilSamling else null,
+					kanReiseKollektivt = if (skjemanr == reiseSamling && kanIkkeReiseKollektivt == null) KanReiseKollektivt(
 						kanReiseKollektivt
 					) else null,
-					kanIkkeReiseKollektivtReiseTilSamling = if (skjemanr == reiseSamlingSkjemanr) kanIkkeReiseKollektivt else null,
+					kanIkkeReiseKollektivtReiseTilSamling = if (skjemanr == reiseSamling) kanIkkeReiseKollektivt else null,
 
 					// DrivingListExpences
-					drivinglist = if (skjemanr == drivingListExpencesSkjemanr) drivingListExpences else null
+					drivinglist = if (skjemanr == kjoreliste) drivingListExpences else null
 
 				),
 				metadata = Metadata(

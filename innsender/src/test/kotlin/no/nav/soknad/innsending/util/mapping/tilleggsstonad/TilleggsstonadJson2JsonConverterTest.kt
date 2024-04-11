@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
 class TilleggsstonadJson2JsonConverterTest {
     @Test
     fun `happy case - mapping av barnepass til strukturert json`() {
-        val skjemanr = FyllUtJsonTestBuilder().barnepassSkjemanr
+        val skjemanr = stotteTilPassAvBarn
         val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = skjemanr, tema = "TSO").build()
         val aktivitetsId = "12345"
         val language = "no-Nb"
@@ -76,7 +76,7 @@ class TilleggsstonadJson2JsonConverterTest {
 
     @Test
     fun `happy case - mapping av laermidler til strukturert json`() {
-        val skjemanr = FyllUtJsonTestBuilder().laeremidlerSkjemanr
+        val skjemanr = stotteTilLaeremidler
         val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = skjemanr, tema = "TSO").build()
         val aktivitetsId = "12345"
         val language = "no-Nb"
@@ -118,7 +118,7 @@ class TilleggsstonadJson2JsonConverterTest {
 
     @Test
     fun `happy case - mapping av reisesoknad til strukturert json`() {
-        val skjemanr = FyllUtJsonTestBuilder().dagligReiseSkjemanr
+        val skjemanr = reiseDaglig
         val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = skjemanr, tema = "TSO").build()
         val aktivitetsId = "12345"
         val language = "no-Nb"
@@ -180,7 +180,7 @@ class TilleggsstonadJson2JsonConverterTest {
 
 	@Test
 	fun `medical reason - mapping av reisesoknad til strukturert json`() {
-		val skjemanr = FyllUtJsonTestBuilder().dagligReiseSkjemanr
+		val skjemanr = reiseDaglig
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = skjemanr, tema = "TSO").build()
 		val aktivitetsId = "12345"
 		val language = "no-Nb"

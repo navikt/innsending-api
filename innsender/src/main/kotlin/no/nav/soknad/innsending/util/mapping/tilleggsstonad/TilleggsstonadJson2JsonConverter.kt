@@ -6,15 +6,6 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.Maalgruppe
 
-const val passAvBarn  = "NAV 11-12.15B"
-const val stotteTilLaeremidler = "NAV 11-12.16B"
-const val stotteTilBolig = "NAV 11-12.19B"
-const val stotteTilFlytting = "NAV 11-12.23B"
-const val reiseDaglig = "NAV 11-12.21B"
-const val reiseSamling = "NAV 11-12.17B"
-const val reiseOppstartSlutt = "NAV 11-12.18B"
-const val reiseArbeid = "NAV 11-12.22B"
-val reisestotteskjemaer = listOf(reiseDaglig, reiseSamling, reiseOppstartSlutt, reiseArbeid)
 
 fun convertToJsonTilleggsstonad(soknadDto: DokumentSoknadDto, json: ByteArray?): JsonApplication<JsonTilleggsstonad> {
     if (json == null || json.isEmpty())
@@ -256,7 +247,7 @@ private fun convertToLaeremiddelutgifter(tilleggsstonad: Application, soknadDto:
 }
 
 private fun convertToTilsynsutgifter(tilleggsstonad: Application, soknadDto: DokumentSoknadDto): JsonTilsynsutgifter? {
-	if (soknadDto.skjemanr != passAvBarn) return null
+	if (soknadDto.skjemanr != stotteTilPassAvBarn) return null
 
 	val opplysningerOmBarn = validateNotNull(tilleggsstonad.opplysningerOmBarn, "'Opplysninger om barn'")
 

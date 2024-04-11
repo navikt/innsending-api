@@ -13,7 +13,7 @@ class DrivinglistExpencesJson2JsonConverterTest {
 	@Test
 	fun happyCase() {
 
-		val skjemanr = FyllUtJsonTestBuilder().drivingListExpencesSkjemanr
+		val skjemanr = kjoreliste
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = skjemanr, tema = "TSR").build()
 		val language = "no-Nb"
 		val vedtaksId = "12345678"

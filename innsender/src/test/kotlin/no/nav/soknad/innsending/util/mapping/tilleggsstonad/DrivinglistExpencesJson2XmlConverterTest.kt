@@ -17,7 +17,7 @@ class DrivinglistExpencesJson2XmlConverterTest {
 
 	@Test
 	fun json2XmlTest_drivingListExpences_flereBetalingsplaner() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.24B", tema = "TSR").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = kjoreliste, tema = "TSR").build()
 		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/kjøreliste-NAV-11-12.24B-05032024.json")
 
 		val jsonObj = convertToJsonDrivingListJson(soknadDto, jsonFil)
@@ -35,7 +35,7 @@ class DrivinglistExpencesJson2XmlConverterTest {
 
 	@Test
 	fun json2XmlTest_drivingListExpences_enBetalingsplan() {
-		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = "NAV 11-12.24B", tema = "TSO").build()
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = kjoreliste, tema = "TSO").build()
 		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/kjøreliste-NAV-11-12.24B-26032024.json")
 
 		val jsonObj = convertToJsonDrivingListJson(soknadDto, jsonFil)
@@ -53,7 +53,7 @@ class DrivinglistExpencesJson2XmlConverterTest {
 	@Test
 	fun `Convert to XML of drivingListExppences`() {
 
-		val skjemanr = FyllUtJsonTestBuilder().drivingListExpencesSkjemanr
+		val skjemanr = kjoreliste
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = skjemanr, tema = "TSR").build()
 		val language = "no-Nb"
 		val vedtaksId = "12345678"

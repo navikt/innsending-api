@@ -3,6 +3,10 @@ package no.nav.soknad.innsending.service
 import no.nav.soknad.innsending.model.Mimetype
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.kjoreliste
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.reiseDaglig
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.stotteTilBolig
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.stotteTilFlytting
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
@@ -16,7 +20,7 @@ class TilleggsstonadServiceTest: InnsendingServiceTest() {
 	fun sendInnTilleggssoknad_dagligreise() {
 		val innsendingService = lagInnsendingService(soknadService)
 		val hoveddokDto = Hjelpemetoder.lagVedlegg(
-			vedleggsnr = "NAV 11-12.21B",
+			vedleggsnr = reiseDaglig,
 			tittel = "Tilleggssoknad",
 			erHoveddokument = true,
 			erVariant = false,
@@ -24,7 +28,7 @@ class TilleggsstonadServiceTest: InnsendingServiceTest() {
 			vedleggsNavn = "/litenPdf.pdf"
 		)
 		val hoveddokVariantDto = Hjelpemetoder.lagVedlegg(
-			vedleggsnr = "NAV 11-12.21B",
+			vedleggsnr = reiseDaglig,
 			tittel = "Tilleggssoknad",
 			erHoveddokument = true,
 			erVariant = true,
@@ -32,7 +36,7 @@ class TilleggsstonadServiceTest: InnsendingServiceTest() {
 			vedleggsNavn = "/__files/dagligreise-NAV-11-12.21B-08032024.json"
 		)
 		val inputDokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad(
-			skjemanr = "NAV 11-12.21B",
+			skjemanr = reiseDaglig,
 			tittel = "Tilleggssoknad",
 			brukerId = testpersonid,
 			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
@@ -58,7 +62,7 @@ class TilleggsstonadServiceTest: InnsendingServiceTest() {
 	@Test
 	fun sendInnTilleggssoknad_bostotte() {
 		val innsendingService = lagInnsendingService(soknadService)
-		val skjemaNr = "NAV 11-12.19B"
+		val skjemaNr = stotteTilBolig
 		val hoveddokDto = Hjelpemetoder.lagVedlegg(
 			vedleggsnr = skjemaNr,
 			tittel = "Tilleggssoknad",
@@ -116,7 +120,7 @@ class TilleggsstonadServiceTest: InnsendingServiceTest() {
 	@Test
 	fun sendInnTilleggssoknad_bostotte_samling() {
 		val innsendingService = lagInnsendingService(soknadService)
-		val skjemaNr = "NAV 11-12.19B"
+		val skjemaNr = stotteTilBolig
 		val hoveddokDto = Hjelpemetoder.lagVedlegg(
 			vedleggsnr = skjemaNr,
 			tittel = "Tilleggssoknad",
@@ -175,7 +179,7 @@ class TilleggsstonadServiceTest: InnsendingServiceTest() {
 	@Test
 	fun sendInnTilleggssoknad_flytting() {
 		val innsendingService = lagInnsendingService(soknadService)
-		val skjemaNr = "NAV 11-12.23B"
+		val skjemaNr = stotteTilFlytting
 		val hoveddokDto = Hjelpemetoder.lagVedlegg(
 			vedleggsnr = skjemaNr,
 			tittel = "Tilleggssoknad",
@@ -234,7 +238,7 @@ class TilleggsstonadServiceTest: InnsendingServiceTest() {
 	fun sendInnKjoreliste() {
 		val innsendingService = lagInnsendingService(soknadService)
 		val hoveddokDto = Hjelpemetoder.lagVedlegg(
-			vedleggsnr = "NAV 11-12.24B",
+			vedleggsnr = kjoreliste,
 			tittel = "Kjøreliste",
 			erHoveddokument = true,
 			erVariant = false,
@@ -242,7 +246,7 @@ class TilleggsstonadServiceTest: InnsendingServiceTest() {
 			vedleggsNavn = "/litenPdf.pdf"
 		)
 		val hoveddokVariantDto = Hjelpemetoder.lagVedlegg(
-			vedleggsnr = "NAV 11-12.24B",
+			vedleggsnr = kjoreliste,
 			tittel = "Kjøreliste",
 			erHoveddokument = true,
 			erVariant = true,
@@ -250,7 +254,7 @@ class TilleggsstonadServiceTest: InnsendingServiceTest() {
 			vedleggsNavn = "/__files/kjøreliste-NAV-11-12.24B-05032024.json"
 		)
 		val inputDokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad(
-			skjemanr = "NAV 11-12.24B",
+			skjemanr = kjoreliste,
 			tittel = "Kjøreliste",
 			brukerId = testpersonid,
 			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
