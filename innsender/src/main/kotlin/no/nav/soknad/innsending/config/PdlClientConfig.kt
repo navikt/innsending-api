@@ -3,7 +3,6 @@ package no.nav.soknad.innsending.config
 import com.expediagroup.graphql.client.spring.GraphQLWebClient
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
-import no.nav.soknad.innsending.consumerapis.azure.AzureInterface
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.HEADER_BEHANDLINGSNUMMER
 import no.nav.soknad.innsending.util.Constants.PDL_BEHANDLINGSNUMMER
