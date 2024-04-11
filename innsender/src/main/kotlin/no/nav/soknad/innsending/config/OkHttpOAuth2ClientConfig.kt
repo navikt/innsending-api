@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit
 class OkHttpOAuth2ClientConfig(
 	@Value("\${spring.application.name}") private val applicationName: String
 ) {
+/*
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 
 	@Bean
@@ -147,4 +148,5 @@ class OkHttpOAuth2ClientConfig(
 	@Profile("!(prod | dev)")
 	@Qualifier("arenaApiClient")
 	fun arenaApiClientWithoutAuth() = OkHttpClient.Builder().build()
+*/
 }

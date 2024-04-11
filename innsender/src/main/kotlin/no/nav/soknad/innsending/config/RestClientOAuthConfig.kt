@@ -11,6 +11,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -20,7 +21,9 @@ import org.springframework.web.client.RestClient
 import java.time.Duration
 
 @Configuration
-class RestClientOAuthConfig {
+class RestClientOAuthConfig(
+	@Value("\${spring.application.name}") private val applicationName: String,
+	) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -53,7 +56,54 @@ class RestClientOAuthConfig {
 	@Bean
 	@Profile("!(prod | dev)")
 	@Qualifier("arenaApiRestClient")
-	fun arenaApiClientWithoutAuth() = RestClient.builder().build()
+	fun arenaApiClientWithoutAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.arenaUrl).build()
+
+
+	@Bean
+	@Profile("prod | dev")
+	@Qualifier("azureApiRestClient")
+	fun azureApiClient(
+		restConfig: RestConfig,
+		clientConfigProperties: ClientConfigurationProperties,
+		oAuth2AccessTokenService: OAuth2AccessTokenService,
+		subjectHandler: SubjectHandlerInterface
+	) = azureClient(restConfig.azureUrl, clientConfigProperties.registration["azure"]!!, oAuth2AccessTokenService, subjectHandler)
+
+	private fun azureClient(
+		baseUrl: String,
+		clientProperties: ClientProperties,
+		oAuth2AccessTokenService: OAuth2AccessTokenService,
+		subjectHandler: SubjectHandlerInterface
+	): RestClient {
+
+		val tokenService = TokenService(clientProperties, oAuth2AccessTokenService)
+
+		return RestClient.builder()
+			.baseUrl(baseUrl)
+			.requestFactory(timeouts())
+			.requestInterceptor(AddRequestHeaders(tokenService, subjectHandler))
+			.build()
+	}
+
+	@Bean
+	@Profile("!(prod | dev)")
+	@Qualifier("azureApiRestClient")
+	fun azureApiClientWithoutAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.azureUrl).build()
+
+	@Bean
+	@Qualifier("kodeverkApiClient")
+	fun kodeverkApiClient(restConfig: RestConfig): RestClient {
+		val callId = MDCUtil.callIdOrNew()
+
+		return RestClient.builder()
+			.baseUrl(restConfig.kodeverkUrl)
+			.requestFactory(timeouts())
+			.defaultHeaders { headers ->
+				headers.set("Nav-Consumer-Id", applicationName)
+				headers.set("Nav-Call-Id", callId)
+			}
+			.build()
+	}
 
 	@Bean
 	@Profile("prod | dev")
@@ -82,7 +132,7 @@ class RestClientOAuthConfig {
 	@Bean
 	@Profile("!(prod | dev)")
 	@Qualifier("kontoregisterApiRestClient")
-	fun kontoregisterApiClientWithoutAuth() = RestClient.builder().build()
+	fun kontoregisterApiClientWithoutAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.kontoregisterUrl+"/api/borger").build()
 
 
 	@Bean
@@ -97,7 +147,7 @@ class RestClientOAuthConfig {
 	@Bean
 	@Profile("!(prod | dev)")
 	@Qualifier("soknadsmottakerRestClient")
-	fun soknadsmottakerClientWithoutOAuth() = RestClient.builder().build()
+	fun soknadsmottakerClientWithoutOAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.soknadsMottakerHost).build()
 
 	private fun timeouts(): ReactorNettyClientRequestFactory {
 		val factory = ReactorNettyClientRequestFactory()
@@ -106,6 +156,9 @@ class RestClientOAuthConfig {
 		return factory
 	}
 
+	@Bean
+	@Qualifier("skjemaRestClient")
+	fun skjemaClientWithoutOAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.sanityHost).build()
 
 	private fun restClientOAuth2Client(
 		restConfig: RestConfig,

@@ -1,6 +1,8 @@
 package no.nav.soknad.innsending.config
 
 import com.expediagroup.graphql.client.spring.GraphQLWebClient
+import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
+import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.soknad.innsending.consumerapis.azure.AzureInterface
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.HEADER_BEHANDLINGSNUMMER
@@ -20,11 +22,12 @@ import reactor.netty.http.client.*
 @EnableConfigurationProperties(RestConfig::class)
 class PdlClientConfig(
 	private val restConfig: RestConfig,
-	private val azureClient: AzureInterface
+	oauth2Config: ClientConfigurationProperties,
+	private val oAuth2AccessTokenService: OAuth2AccessTokenService,
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	@Bean("pdlGraphQLClient")
+	@Bean(					"pdlGraphQLClient")
 	fun graphQLClient() = GraphQLWebClient(
 		url = "${restConfig.pdlUrl}/graphql",
 		builder = WebClient.builder()
@@ -47,11 +50,15 @@ class PdlClientConfig(
 			)
 			.defaultRequest {
 				it.header(Constants.HEADER_CALL_ID, MDCUtil.callIdOrNew())
-				it.header(HttpHeaders.AUTHORIZATION, azureClient.consumerToken())
+				it.header(HttpHeaders.AUTHORIZATION, "Bearer ${oAuth2AccessTokenService.getAccessToken(tokenxPDLClientProperties).accessToken}")
 				it.header("Tema", "AAP")
 				it.header(HEADER_BEHANDLINGSNUMMER, PDL_BEHANDLINGSNUMMER)
 			}
 	)
+
+	private val tokenxPDLClientProperties =
+		oauth2Config.registration["tokenx-pdl"]
+			?: throw RuntimeException("could not find oauth2 client config for tokenx-pdl")
 
 
 }

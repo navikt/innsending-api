@@ -13,6 +13,7 @@ class AzureClientConfig(
 	private val restConfig: RestConfig
 ) {
 
+/*
 	@Bean
 	fun azureWebClient(): WebClient {
 		return webClientBuilder
@@ -32,4 +33,5 @@ class AzureClientConfig(
 			}
 			.build()
 	}
+*/
 }
