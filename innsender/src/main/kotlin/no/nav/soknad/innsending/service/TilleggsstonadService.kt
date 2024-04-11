@@ -103,6 +103,7 @@ class TilleggsstonadService(
 
 	private fun sjekkOgOppdaterTema(soknadDto: DokumentSoknadDto, maalgruppeInformasjon: JsonMaalgruppeinformasjon?) {
 		val relevanteSkjemaNrForTsr = listOf(
+			"NAV 11-12.17B", // Støtte til samling
 			"NAV 11-12.18B", // Støtte til ved oppstart, avslutning eller hjemreiser
 			"NAV 11-12.21B", // Støtte til daglig reise
 			"NAV 11-12.22B", // Støtte til reise for å komme i arbeid
