@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.util.mapping
 
 import no.nav.soknad.arkivering.soknadsmottaker.model.Soknad
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.FilDbData
@@ -127,10 +128,9 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 	val vedleggsListe = dokumentSoknadDto.vedleggsListeUtenHoveddokument.map { mapTilSkjemaDokumentDto(it) }
 	val deletionDate = dokumentSoknadDto.opprettetDato.plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD).toLocalDate()
 
-	// FIXME: Add this back. Temporary fix for brukernotifikasjon (https://github.com/navikt/innsending-api/pull/156)
-//	if (hovedDokument == null || hovedDokumentVariant == null) {
-//		throw BackendErrorException("Hoveddokument eller variant mangler. Finner ikke hoveddokument i vedleggsliste")
-//	}
+	if (hovedDokument == null || hovedDokumentVariant == null) {
+		throw BackendErrorException("Hoveddokument eller variant mangler. Finner ikke hoveddokument i vedleggsliste")
+	}
 
 	val emptySkjemaDokumentDto = SkjemaDokumentDto(vedleggsnr = "", tittel = "", label = "", pakrevd = false)
 

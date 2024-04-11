@@ -40,7 +40,10 @@ spec:
   kafka:
     pool: {{kafka-pool}}
     streams: true
-
+  observability:
+    autoInstrumentation:
+      enabled: true
+      runtime: java
   tokenx:
     enabled: true
   azure:
