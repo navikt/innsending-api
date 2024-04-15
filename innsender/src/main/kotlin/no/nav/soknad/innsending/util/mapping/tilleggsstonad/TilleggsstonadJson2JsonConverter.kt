@@ -15,7 +15,7 @@ fun convertToJsonTilleggsstonad(soknadDto: DokumentSoknadDto, json: ByteArray?):
     val json = mapper.readValue(json, Root::class.java)
 
     return JsonApplication(
-        timezone = json.data.metadata.timezone,
+        timezone = json.data.metadata?.timezone,
         language = json.language,
         personInfo = JsonPersonInfo(
             fornavn = json.data.data.fornavnSoker,
