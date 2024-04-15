@@ -70,6 +70,9 @@ class SoknadServiceTest : ApplicationTest() {
 	private lateinit var vedleggRepository: VedleggRepository
 
 	@Autowired
+	private lateinit var tilleggstonadService: TilleggsstonadService
+
+	@Autowired
 	private lateinit var filRepository: FilRepository
 
 	@Autowired
@@ -122,6 +125,7 @@ class SoknadServiceTest : ApplicationTest() {
 		soknadService = soknadService,
 		repo = repo,
 		vedleggService = vedleggService,
+		tilleggstonadService = tilleggstonadService,
 		ettersendingService = ettersendingService,
 		filService = filService,
 		brukernotifikasjonPublisher = brukernotifikasjonPublisher,

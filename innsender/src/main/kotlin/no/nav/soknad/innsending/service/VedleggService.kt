@@ -10,10 +10,7 @@ import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
-import no.nav.soknad.innsending.util.mapping.lagDokumentSoknadDto
-import no.nav.soknad.innsending.util.mapping.lagVedleggDto
-import no.nav.soknad.innsending.util.mapping.mapTilVedleggDb
-import no.nav.soknad.innsending.util.mapping.oppdaterVedleggDb
+import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import org.slf4j.LoggerFactory
@@ -34,12 +31,12 @@ class VedleggService(
 	fun opprettHovedddokumentVedlegg(savedSoknadDbData: SoknadDbData, kodeverkSkjema: KodeverkSkjema): VedleggDbData {
 		return repo.lagreVedlegg(
 			VedleggDbData(
-				null,
-				savedSoknadDbData.id!!,
-				OpplastingsStatus.IKKE_VALGT,
-				true,
+				id = null,
+				soknadsid =savedSoknadDbData.id!!,
+				status = OpplastingsStatus.IKKE_VALGT,
+				erhoveddokument =true,
 				ervariant = false,
-				true,
+				erpdfa = true,
 				erpakrevd = true,
 				vedleggsnr = kodeverkSkjema.skjemanummer ?: kodeverkSkjema.vedleggsid,
 				tittel = kodeverkSkjema.tittel ?: "",
@@ -196,16 +193,50 @@ class VedleggService(
 
 		// Lagre vedlegget i databasen
 		val vedleggDbDataList = saveVedlegg(
-			soknadDb.id!!,
-			listOf("N6"),
-			soknadDto.spraak!!,
-			vedleggDto?.tittel
+			soknadsId = soknadDb.id!!,
+			vedleggsnrListe = listOf("N6"),
+			spraak = soknadDto.spraak!!,
+			tittel =vedleggDto?.tittel
 		)
 
 		// Oppdater soknadens sist endret dato
 		repo.oppdaterEndretDato(soknadDto.id!!)
 
 		return lagVedleggDto(vedleggDbDataList.first())
+	}
+
+	@Transactional
+	fun lagreNyHoveddokumentVariant(soknadDto: DokumentSoknadDto, mimetype: Mimetype): VedleggDto {
+
+		// Lagre vedlegget i databasen
+		val vedleggDbData =
+			repo.lagreVedlegg(
+				VedleggDbData(
+					id = null,
+					soknadDto.id!!,
+					status = OpplastingsStatus.IKKE_VALGT,
+					erhoveddokument = true,
+					ervariant = true,
+					erpdfa = false,
+					erpakrevd = true,
+					vedleggsnr = soknadDto.skjemanr,
+					tittel = soknadDto.tittel,
+					label = soknadDto.tittel,
+					beskrivelse = "",
+					mimetype = mimetype.value,
+					uuid = UUID.randomUUID().toString(),
+					opprettetdato = LocalDateTime.now(),
+					endretdato = LocalDateTime.now(),
+					innsendtdato = null,
+					vedleggsurl = null,
+					formioid = null
+				)
+			)
+
+		// Oppdater soknadens sist endret dato
+		repo.oppdaterEndretDato(soknadDto.id!!)
+
+		return lagVedleggDto(vedleggDbData)
 	}
 
 	fun hentAlleVedlegg(soknadDbDataOpt: SoknadDbData, ident: String): DokumentSoknadDto {
@@ -266,7 +297,34 @@ class VedleggService(
 	}
 
 	@Transactional
-	fun endreVedlegg(patchVedleggDto: PatchVedleggDto, vedleggsId: Long, soknadDto: DokumentSoknadDto): VedleggDto {
+	fun endreVedleggStatus(
+		soknadDto: DokumentSoknadDto,
+		vedleggsId: Long,
+		opplastingsStatus: OpplastingsStatusDto
+	) {
+		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException("Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet. Det kan ikke gjøres endring på en slettet eller innsendt søknad")
+
+		val vedleggDbData = repo.hentVedlegg(vedleggsId)
+		if (vedleggDbData.soknadsid != soknadDto.id) {
+			throw IllegalActionException("Søknad ${soknadDto.innsendingsId} har ikke vedlegg med id $vedleggsId. Kan ikke endre vedlegg da søknaden ikke har et slikt vedlegg")
+		}
+		repo.oppdaterVedleggStatusOgInnsendtdato(
+			innsendingsId = soknadDto.innsendingsId!!,
+			vedleggsId = vedleggsId,
+			opplastingsStatus = mapTilDbOpplastingsStatus(opplastingsStatus),
+			endretDato = LocalDateTime.now(),
+			innsendtDato = null
+		)
+	}
+
+
+	@Transactional
+	fun endreVedlegg(
+		patchVedleggDto: PatchVedleggDto,
+		vedleggsId: Long,
+		soknadDto: DokumentSoknadDto,
+		required: Boolean? = null
+	): VedleggDto {
 
 		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException("Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet. Det kan ikke gjøres endring på en slettet eller innsendt søknad")
 
@@ -284,7 +342,7 @@ class VedleggService(
 		*/
 
 		val oppdatertVedlegg =
-			repo.oppdaterVedlegg(soknadDto.innsendingsId!!, oppdaterVedleggDb(vedleggDbData, patchVedleggDto))
+			repo.oppdaterVedlegg(soknadDto.innsendingsId!!, oppdaterVedleggDb(vedleggDbData, patchVedleggDto, required))
 
 		// Oppdater soknadens sist endret dato
 		repo.oppdaterEndretDato(soknadDto.id!!)

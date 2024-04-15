@@ -140,6 +140,18 @@ class RepositoryUtils(
 			)
 		}
 
+
+	fun endreTema(id: Long, innsendingsid: String, tema: String) {
+		try {
+			soknadRepository.updateTema(id, tema)
+		} catch (ex: Exception) {
+			throw BackendErrorException(
+				message = "Feil ved oppdatering av tema på søknad med innsendingsId $innsendingsid",
+				cause = ex,
+			)
+		}
+	}
+
 	fun findNumberOfEventsByType(hendelseType: HendelseType): Long? = try {
 		hendelseRepository.countByHendelsetype(hendelseType)
 	} catch (ex: Exception) {
@@ -186,6 +198,22 @@ class RepositoryUtils(
 		opplastingsStatus: OpplastingsStatus
 	): Int = try {
 		vedleggRepository.updateStatus(id = vedleggsId, status = opplastingsStatus, endretdato = LocalDateTime.now())
+	} catch (ex: Exception) {
+		throw BackendErrorException("Feil ved oppdatering av status for vedlegg $vedleggsId for søknad $innsendingsId", ex)
+	}
+
+	fun oppdaterVedleggStatusOgInnsendtdato(
+		innsendingsId: String, vedleggsId: Long, opplastingsStatus: OpplastingsStatus,
+		endretDato: LocalDateTime, innsendtDato: LocalDateTime?
+	): Int = try {
+		logger.info("oppdaterVedleggStatusOgInnsendtdato: vedlegg=$vedleggsId, innsendtdato=$innsendtDato, opplastingsStatus=$opplastingsStatus")
+		val raderEndret = vedleggRepository.updateStatusAndInnsendtdato(
+			id = vedleggsId, status = opplastingsStatus, endretdato = endretDato, innsendtdato = innsendtDato
+		)
+		if (raderEndret != 1) {
+			logger.error("$innsendingsId: oppdaterVedleggStatusOgInnsendtdato: uventet antall, $raderEndret, rader endret for vedlegg $vedleggsId")
+		}
+		raderEndret
 	} catch (ex: Exception) {
 		throw BackendErrorException("Feil ved oppdatering av status for vedlegg $vedleggsId for søknad $innsendingsId", ex)
 	}

@@ -38,7 +38,7 @@ class InnsendingServiceTest : ApplicationTest() {
 	private lateinit var innsenderMetrics: InnsenderMetrics
 
 	@Autowired
-	private lateinit var soknadService: SoknadService
+	lateinit var soknadService: SoknadService
 
 	@Autowired
 	private lateinit var filService: FilService
@@ -50,22 +50,26 @@ class InnsendingServiceTest : ApplicationTest() {
 	private lateinit var vedleggService: VedleggService
 
 	@Autowired
+	private lateinit var tilleggstonadService: TilleggsstonadService
+
+	@Autowired
 	private lateinit var ettersendingService: EttersendingService
 
 	@Autowired
 	private lateinit var exceptionHelper: ExceptionHelper
 
-	private val soknadsmottakerAPI = mockk<MottakerInterface>()
+	val soknadsmottakerAPI = mockk<MottakerInterface>()
 	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
 	private val pdlInterface = mockk<PdlInterface>()
 
 	@MockkBean
 	private lateinit var subjectHandler: SubjectHandlerInterface
 
-	private fun lagInnsendingService(soknadService: SoknadService): InnsendingService = InnsendingService(
+	fun lagInnsendingService(soknadService: SoknadService): InnsendingService = InnsendingService(
 		soknadService = soknadService,
 		repo = repo,
 		vedleggService = vedleggService,
+		tilleggstonadService = tilleggstonadService,
 		ettersendingService = ettersendingService,
 		filService = filService,
 		brukernotifikasjonPublisher = brukernotifikasjonPublisher,
@@ -326,6 +330,7 @@ class InnsendingServiceTest : ApplicationTest() {
 		assertEquals(2, AntallSider().finnAntallSider(vedleggsFiler.last().content))
 
 	}
+
 
 
 }

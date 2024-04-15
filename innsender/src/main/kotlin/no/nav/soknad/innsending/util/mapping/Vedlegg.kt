@@ -42,7 +42,11 @@ fun mapTilVedleggDb(
 		formioid = vedleggDto.formioId
 	)
 
-fun oppdaterVedleggDb(vedleggDbData: VedleggDbData, patchVedleggDto: PatchVedleggDto): VedleggDbData =
+fun oppdaterVedleggDb(
+	vedleggDbData: VedleggDbData,
+	patchVedleggDto: PatchVedleggDto,
+	pakrevd: Boolean? = null
+): VedleggDbData =
 	VedleggDbData(
 		id = vedleggDbData.id,
 		soknadsid = vedleggDbData.soknadsid,
@@ -52,7 +56,7 @@ fun oppdaterVedleggDb(vedleggDbData: VedleggDbData, patchVedleggDto: PatchVedleg
 		erhoveddokument = vedleggDbData.erhoveddokument,
 		ervariant = vedleggDbData.ervariant,
 		erpdfa = vedleggDbData.erpdfa,
-		erpakrevd = vedleggDbData.erpakrevd,
+		erpakrevd = pakrevd ?: vedleggDbData.erpakrevd,
 		vedleggsnr = vedleggDbData.vedleggsnr,
 		tittel = patchVedleggDto.tittel ?: vedleggDbData.tittel,
 		label = patchVedleggDto.tittel ?: vedleggDbData.label,
