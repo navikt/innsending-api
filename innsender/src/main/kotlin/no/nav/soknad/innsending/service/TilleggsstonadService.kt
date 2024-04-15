@@ -15,7 +15,7 @@ class TilleggsstonadService(
 	private val soknadService: SoknadService,
 	private val filService: FilService,
 	private val vedleggService: VedleggService,
-	) {
+) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	enum class TemaValg {
@@ -42,7 +42,7 @@ class TilleggsstonadService(
 	fun isTilleggsstonad(soknadDto: DokumentSoknadDto): Boolean {
 		if ("TSO".equals(soknadDto.tema, true) || "TSR".equals(soknadDto.tema, true)) {
 			logger.debug("${soknadDto.innsendingsId}: Skal sjekke om generering av XML for Tilleggstonad med skjemanummer ${soknadDto.skjemanr}")
-			return tilleggsstonadSkjema.map{it.key}.contains(soknadDto.skjemanr)
+			return tilleggsstonadSkjema.map { it.key }.contains(soknadDto.skjemanr)
 		}
 		return false
 	}
@@ -92,7 +92,7 @@ class TilleggsstonadService(
 			vedleggService.endreVedleggStatus(
 				soknadDto,
 				jsonVariant.id!!,
-				OpplastingsStatusDto.sendesIkke
+				OpplastingsStatusDto.SendesIkke
 			)
 
 			// Based on skjemanumber and maalgruppe, it might be neccessary to change the application's tema from TSO to TSR
@@ -118,8 +118,8 @@ class TilleggsstonadService(
 
 		if (!(
 				tilleggsstonadSkjema.containsKey(soknadDto.skjemanr)
-				&& tilleggsstonadSkjema[soknadDto.skjemanr] == TemaValg.TSO_og_TSR )
-			) return
+					&& tilleggsstonadSkjema[soknadDto.skjemanr] == TemaValg.TSO_og_TSR)
+		) return
 
 		repo.endreTema(soknadDto.id!!, soknadDto.innsendingsId!!, "TSR")
 	}
