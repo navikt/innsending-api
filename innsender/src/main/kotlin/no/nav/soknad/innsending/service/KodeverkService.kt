@@ -11,10 +11,8 @@ import no.nav.soknad.innsending.kodeverk.api.KodeverkApi
 import no.nav.soknad.innsending.kodeverk.model.GetKodeverkKoderBetydningerResponse
 import no.nav.soknad.innsending.model.OpprettEttersending
 import no.nav.soknad.innsending.util.finnSpraakFraInput
-import okhttp3.OkHttpClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 import java.time.Duration

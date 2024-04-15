@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpRequest
 import org.springframework.http.client.*
 import org.springframework.web.client.RestClient
+import org.springframework.web.reactive.function.client.WebClient
 import java.time.Duration
 
 @Configuration
@@ -27,6 +28,17 @@ class RestClientOAuthConfig(
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 
+	@Value("\${restconfig.antivirusUrl}")
+	private lateinit var antiVirusUrl: String
+
+	@Bean
+	@Qualifier("antivirusRestClient")
+	fun antivirusRestClient(): RestClient {
+		return RestClient.builder()
+			.baseUrl(antiVirusUrl)
+			.build()
+	}
+
 	@Bean
 	@Profile("prod | dev")
 	@Qualifier("arenaApiRestClient")
@@ -35,29 +47,14 @@ class RestClientOAuthConfig(
 		clientConfigProperties: ClientConfigurationProperties,
 		oAuth2AccessTokenService: OAuth2AccessTokenService,
 		subjectHandler: SubjectHandlerInterface
-	) = arenaClient(restConfig.arenaUrl, clientConfigProperties.registration["arena"]!!, oAuth2AccessTokenService, subjectHandler)
-
-	private fun arenaClient(
-		baseUrl: String,
-		clientProperties: ClientProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService,
-		subjectHandler: SubjectHandlerInterface
-	): RestClient {
-
-		val tokenService = TokenService(clientProperties, oAuth2AccessTokenService)
-
-		return RestClient.builder()
-			.baseUrl(baseUrl)
-			.requestFactory(timeouts())
-			.requestInterceptor(AddRequestHeaders(tokenService, subjectHandler))
-			.build()
-	}
+	) = restClientOAuth2Client(restConfig.arenaUrl, clientConfigProperties.registration["arena"]!!, oAuth2AccessTokenService, subjectHandler)
 
 	@Bean
 	@Profile("!(prod | dev)")
 	@Qualifier("arenaApiRestClient")
 	fun arenaApiClientWithoutAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.arenaUrl).build()
 
+/*
 
 	@Bean
 	@Profile("prod | dev")
@@ -89,6 +86,7 @@ class RestClientOAuthConfig(
 	@Profile("!(prod | dev)")
 	@Qualifier("azureApiRestClient")
 	fun azureApiClientWithoutAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.azureUrl).build()
+*/
 
 	@Bean
 	@Qualifier("kodeverkApiClient")
@@ -99,8 +97,8 @@ class RestClientOAuthConfig(
 			.baseUrl(restConfig.kodeverkUrl)
 			.requestFactory(timeouts())
 			.defaultHeaders { headers ->
-				headers.set("Nav-Consumer-Id", applicationName)
-				headers.set("Nav-Call-Id", callId)
+				headers.set(Constants.NAV_CONSUMER_ID, applicationName)
+				headers.set(Constants.HEADER_CALL_ID, callId)
 			}
 			.build()
 	}
@@ -112,22 +110,7 @@ class RestClientOAuthConfig(
 		restConfig: RestConfig,
 		clientConfigProperties: ClientConfigurationProperties,
 		oAuth2AccessTokenService: OAuth2AccessTokenService
-	) = kontoregisterClient(restConfig.kontoregisterUrl, clientConfigProperties.registration["kontoregister"]!!, oAuth2AccessTokenService)
-
-	private fun kontoregisterClient(
-		baseUrl: String,
-		clientProperties: ClientProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService,
-	): RestClient {
-
-		val tokenService = TokenService(clientProperties, oAuth2AccessTokenService)
-
-		return RestClient.builder()
-			.baseUrl(baseUrl)
-			.requestFactory(timeouts())
-			.requestInterceptor(AddRequestHeaders(tokenService))
-			.build()
-	}
+	) = restClientOAuth2Client(restConfig.kontoregisterUrl+"/api/borger", clientConfigProperties.registration["kontoregister"]!!, oAuth2AccessTokenService)
 
 	@Bean
 	@Profile("!(prod | dev)")
@@ -142,12 +125,16 @@ class RestClientOAuthConfig(
 		restConfig: RestConfig,
 		clientConfigProperties: ClientConfigurationProperties,
 		oAuth2AccessTokenService: OAuth2AccessTokenService
-	) = restClientOAuth2Client(restConfig, clientConfigProperties.registration["soknadsmottaker"]!!, oAuth2AccessTokenService)
+	) = restClientOAuth2Client(restConfig.soknadsMottakerHost, clientConfigProperties.registration["soknadsmottaker"]!!, oAuth2AccessTokenService)
 
 	@Bean
 	@Profile("!(prod | dev)")
 	@Qualifier("soknadsmottakerRestClient")
 	fun soknadsmottakerClientWithoutOAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.soknadsMottakerHost).build()
+
+	@Bean
+	@Qualifier("skjemaRestClient")
+	fun skjemaClientWithoutOAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.sanityHost).build()
 
 	private fun timeouts(): ReactorNettyClientRequestFactory {
 		val factory = ReactorNettyClientRequestFactory()
@@ -156,30 +143,23 @@ class RestClientOAuthConfig(
 		return factory
 	}
 
-	@Bean
-	@Qualifier("skjemaRestClient")
-	fun skjemaClientWithoutOAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.sanityHost).build()
-
 	private fun restClientOAuth2Client(
-		restConfig: RestConfig,
+		baseUrl: String,
 		clientProperties: ClientProperties,
 		oAuth2AccessTokenService: OAuth2AccessTokenService,
+		subjectHandler: SubjectHandlerInterface? = null
 	): RestClient {
 
 		val tokenService = TokenService(clientProperties, oAuth2AccessTokenService)
 
 		return RestClient.builder()
-			.baseUrl(restConfig.soknadsMottakerHost) // Sett inn base URL fra ClientProperties
+			.baseUrl(baseUrl)
 			.requestFactory(timeouts())
-			.defaultHeaders { headers ->
-				headers.set("x-innsendingsId", MDC.get(Constants.MDC_INNSENDINGS_ID) ?: "")
-				headers.setBearerAuth(tokenService.getToken() ?:"") // Bruker bearerAuth for OAuth2 token
-			}
+			.requestInterceptor(RequestHeaderInterceptor(tokenService, subjectHandler))
 			.build()
 	}
 
-
-	class AddRequestHeaders(val tokenService: TokenService, val subjectHandler: SubjectHandlerInterface? = null) : ClientHttpRequestInterceptor {
+	class RequestHeaderInterceptor(val tokenService: TokenService, val subjectHandler: SubjectHandlerInterface? = null) : ClientHttpRequestInterceptor {
 
 		val logger: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -195,6 +175,7 @@ class RestClientOAuthConfig(
 
 			request.headers.setBearerAuth(token ?:"")
 			request.headers.set(Constants.HEADER_CALL_ID, callId)
+			request.headers.set(Constants.HEADER_INNSENDINGSID, MDC.get(Constants.MDC_INNSENDINGS_ID) ?: "")
 
 			if (subjectHandler?.getUserIdFromToken() != null) {
 				request.headers.set(Constants.NAV_PERSON_IDENT, subjectHandler.getUserIdFromToken() )

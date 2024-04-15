@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
+import org.springframework.web.client.RestClientResponseException
 import java.time.LocalDate
 
 @Component
@@ -39,9 +40,14 @@ class ArenaConsumer(
 
 		val maalgrupper = try {
 			maalgruppeApi.getMaalgrupper(fromDate.toString(), toDate.toString())
-		} catch (ex: Exception) {
-			logger.error("Serverfeil ved henting av målgrupper", ex)
-			return emptyList()
+		} catch (e: RestClientResponseException) {
+			if (e.statusCode.is4xxClientError) {
+				logger.warn("Klientfeil ved henting av målgrupper", e)
+				return emptyList()
+			} else {
+				logger.error("Serverfeil ved henting av målgrupper", e)
+				return emptyList()
+			}
 		}
 
 		secureLogger.info("[{}] Målgrupper: {}", userId, maalgrupper.map { it.maalgruppetype })
@@ -65,9 +71,14 @@ class ArenaConsumer(
 
 				else -> throw BackendErrorException("Ukjent aktivitetstype")
 			}
-		} catch (ex: Exception) {
-			logger.error("Serverfeil ved henting av aktiviteter", ex)
-			return emptyList()
+		} catch (e: RestClientResponseException) {
+			if (e.statusCode.is4xxClientError) {
+				logger.warn("Klientfeil ved henting av aktiviteter", e)
+				return emptyList()
+			} else {
+				logger.error("Serverfeil ved henting av aktiviteter", e)
+				return emptyList()
+			}
 		}
 
 		secureLogger.info("[{}] Aktiviteter: {}", userId, aktiviteter.map { it.aktivitetstype })

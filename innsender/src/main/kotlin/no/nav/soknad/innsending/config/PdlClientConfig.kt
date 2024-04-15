@@ -26,7 +26,7 @@ class PdlClientConfig(
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	@Bean(					"pdlGraphQLClient")
+	@Bean("pdlGraphQLClient")
 	fun graphQLClient() = GraphQLWebClient(
 		url = "${restConfig.pdlUrl}/graphql",
 		builder = WebClient.builder()

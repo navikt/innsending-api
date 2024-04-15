@@ -10,7 +10,6 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.util.mapping.translate
 import no.nav.soknad.innsending.util.maskerFnr
-import okhttp3.OkHttpClient
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
@@ -60,7 +59,7 @@ class MottakerAPI(
 	override fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggsListe: List<VedleggDto>) {
 		val soknad = translate(soknadDto, vedleggsListe)
 		logger.info("${soknadDto.innsendingsId}: klar til å sende inn\n${maskerFnr(soknad)}\ntil ${restConfig.soknadsMottakerHost}")
-		mottakerClient.receive(soknad, "false")
+		mottakerClient.receive(soknad)
 		logger.info("${soknadDto.innsendingsId}: sendt inn")
 	}
 

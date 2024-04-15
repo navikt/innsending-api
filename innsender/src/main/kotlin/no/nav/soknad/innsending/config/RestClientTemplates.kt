@@ -14,6 +14,7 @@ import java.time.Duration
 @Configuration
 @EnableConfigurationProperties(RestConfig::class)
 class RestClientTemplates {
+/*
 	private val connectionTimeout = 2L
 	private val readTimeout = 1L
 	private val writeTimeout = 60
@@ -50,5 +51,6 @@ class RestClientTemplates {
 		factory.setConnectTimeout(Duration.ofSeconds(connectionTimeout))
 		return factory
 	}
+*/
 
 }

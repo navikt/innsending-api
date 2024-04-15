@@ -54,11 +54,6 @@
 			<version>${spring-boot.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.squareup.okhttp3</groupId>
-			<artifactId>okhttp</artifactId>
-			<version>${okhttp3.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.kafka</groupId>
 			<artifactId>kafka-clients</artifactId>
 			<version>${kafka.version}</version>
@@ -335,12 +330,6 @@
 			<groupId>no.nav.security</groupId>
 			<artifactId>mock-oauth2-server</artifactId>
 			<version>${mock-oauth2-server.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.squareup.okhttp3</groupId>
-			<artifactId>mockwebserver</artifactId>
-			<version>${okhttp3.version}</version>
 			<scope>test</scope>
 		</dependency>
 

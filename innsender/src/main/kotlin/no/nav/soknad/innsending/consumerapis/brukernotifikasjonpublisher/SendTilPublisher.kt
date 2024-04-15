@@ -9,7 +9,6 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
-import okhttp3.OkHttpClient
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
@@ -38,12 +37,12 @@ class SendTilPublisher(
 	}
 
 	override fun avsluttBrukernotifikasjon(soknadRef: SoknadRef) {
-		cancelNotificationPublisherApi.cancelNotification(soknadRef, "false")
+		cancelNotificationPublisherApi.cancelNotification(soknadRef)
 	}
 
 	override fun opprettBrukernotifikasjon(nyNotifikasjon: AddNotification) {
 		logger.info("Send melding til ${restConfig.soknadsMottakerHost} for publisering av Brukernotifikasjon for ${nyNotifikasjon.soknadRef.innsendingId}")
-		notificationPublisherApi.newNotification(nyNotifikasjon, "false")
+		notificationPublisherApi.newNotification(nyNotifikasjon)
 	}
 
 	override fun isReady(): String {
