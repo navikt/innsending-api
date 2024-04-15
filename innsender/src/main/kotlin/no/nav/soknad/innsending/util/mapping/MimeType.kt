@@ -8,6 +8,7 @@ fun mapTilMimetype(mimeString: String?): Mimetype? =
 		"application/json" -> Mimetype.applicationSlashJson
 		"application/jpeg" -> Mimetype.imageSlashJpeg
 		"application/png" -> Mimetype.imageSlashPng
+		"application/xml" -> Mimetype.applicationSlashXml
 		else -> null
 	}
 
@@ -17,5 +18,6 @@ fun mapTilDbMimetype(mimetype: Mimetype?): String? =
 		Mimetype.applicationSlashJson -> "application/json"
 		Mimetype.imageSlashJpeg -> "application/jpeg"
 		Mimetype.imageSlashPng -> "application/png"
+		Mimetype.applicationSlashXml -> "application/xml"
 		else -> null
 	}

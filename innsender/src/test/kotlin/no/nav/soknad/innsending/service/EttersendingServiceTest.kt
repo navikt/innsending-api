@@ -57,6 +57,9 @@ class EttersendingServiceTest : ApplicationTest() {
 	private lateinit var vedleggService: VedleggService
 
 	@Autowired
+	private lateinit var tilleggstonadService: TilleggsstonadService
+
+	@Autowired
 	private lateinit var hendelseRepository: HendelseRepository
 
 	@Autowired
@@ -110,6 +113,7 @@ class EttersendingServiceTest : ApplicationTest() {
 		soknadService = soknadService,
 		repo = repo,
 		vedleggService = vedleggService,
+		tilleggstonadService = tilleggstonadService,
 		ettersendingService = lagEttersendingService(),
 		filService = filService,
 		brukernotifikasjonPublisher = brukernotifikasjonPublisher!!,

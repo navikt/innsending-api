@@ -1,0 +1,90 @@
+{
+	"language": "nb-NO",
+	"data": {
+		"data": {
+			"flervalg": {
+				"aapUforeNedsattArbEvne": false,
+				"ensligUtdanning": false,
+				"gjenlevendeUtdanning": false,
+				"tiltakspenger": false,
+				"dagpenger": false,
+				"tidligereFamiliepleier": false,
+				"annet": false
+			},
+			"aktiviteterOgMaalgruppe": {
+				"maalgruppe": {
+					"calculated": {
+						"maalgruppetype": "ANNET"
+					},
+					"prefilled": {
+						"maalgruppetype": "NEDSARBEVN",
+						"gyldighetsperiode": {
+							"fom": "2023-09-18",
+							"tom": "2024-05-18"
+						},
+						"maalgruppenavn": "Person med nedsatt arbeidsevne pga. sykdom"
+					}
+				},
+				"aktivitet": {
+					"aktivitetId": "142075146",
+					"maalgruppe": {
+						"maalgruppetype": "NEDSARBEVN",
+						"gyldighetsperiode": {
+							"fom": "2023-09-18",
+							"tom": "2024-05-18"
+						},
+						"maalgruppenavn": "Person med nedsatt arbeidsevne pga. sykdom"
+					},
+					"periode": {
+						"fom": "2024-01-01",
+						"tom": "2024-08-31"
+					},
+					"text": "Arbeidstrening: 01.01.2024 - 31.08.2024"
+				}
+			},
+			"velgLand3": {
+				"label": "Norge",
+				"value": "NO"
+			},
+			"fornavnSoker": "Skønn",
+			"etternavnSoker": "Lampett",
+			"postnr3": "6410",
+			"harDuNorskFodselsnummerEllerDNummer": "ja",
+			"fodselsnummerDNummerSoker": "28898698736",
+			"startdato": "2024-03-04",
+			"sluttdato": "2024-06-28",
+			"hvorLangReiseveiHarDu2": 70,
+			"hvorMangeGangerSkalDuReiseEnVei": 4,
+			"adresse3": "Kongensgate 10",
+			"harDuBarnSomSkalFlytteMedDeg": "nei",
+			"harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear": "nei",
+			"harDuSaerligBehovForFlereHjemreiserEnnNevntOvenfor": "nei",
+			"kanDuReiseKollektivtOppstartAvslutningHjemreise": "nei",
+			"kanIkkeReiseKollektivtOppstartAvslutningHjemreise": {
+				"hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt": "darligTransporttilbud",
+				"beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt": "asdfasd asdfa sd",
+				"kanDuBenytteEgenBil": "ja",
+				"kanBenytteEgenBil": {
+					"bompenger": 160,
+					"parkering": 150,
+					"piggdekkavgift": 0,
+					"ferje": 100,
+					"annet": 10
+				}
+			},
+			"tilleggsopplysninger": "adfgadfg fdg "
+		},
+		"metadata": {
+			"timezone": "Europe/Oslo",
+			"offset": 60,
+			"origin": "https://skjemadelingslenke.ekstern.dev.nav.no",
+			"referrer": "https://skjemadelingslenke.ekstern.dev.nav.no/fyllut/nav111218b",
+			"browserName": "Netscape",
+			"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+			"pathName": "/fyllut/nav111218b/tilleggsopplysningerPanel",
+			"onLine": true
+		},
+		"state": "submitted",
+		"_vnote": ""
+	}
+}
