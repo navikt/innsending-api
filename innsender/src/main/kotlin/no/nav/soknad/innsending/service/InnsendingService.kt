@@ -25,6 +25,7 @@ import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
 import java.util.*
@@ -35,6 +36,7 @@ class InnsendingService(
 	private val soknadService: SoknadService,
 	private val filService: FilService,
 	private val vedleggService: VedleggService,
+	private val tilleggstonadService: TilleggsstonadService,
 	private val soknadsmottakerAPI: MottakerInterface,
 	private val restConfig: RestConfig,
 	private val exceptionHelper: ExceptionHelper,
@@ -61,11 +63,17 @@ class InnsendingService(
 		// Dato og opplastingsstatus settes på alle vedlegg som er endret
 		// Merk at dersom det ikke er lastet opp filer på et obligatorisk vedlegg, skal status settes SENDES_SENERE. Dette vil trigge oppretting av ettersendingssøknad
 		val soknadDto = if (soknadDtoInput.erEttersending)
-			opprettOgLagreDummyHovedDokument(soknadDtoInput)
-		else
-			soknadDtoInput
+			addDummyHovedDokumentToSoknad(soknadDtoInput)
+		else {
 
-		// Finn alle vedlegg med korrekt status i forhold til hvem som skal sendes inn
+			if (tilleggstonadService.isTilleggsstonad(soknadDtoInput)) {
+				tilleggstonadService.addXmlDokumentvariantToSoknad(soknadDtoInput)
+			} else {
+				soknadDtoInput
+			}
+		}
+
+		// Finn alle vedlegg med korrekt status i forhold til hva som skal sendes inn
 		val alleVedlegg: List<VedleggDto> = filService.ferdigstillVedleggsFiler(soknadDto)
 
 		val opplastedeVedlegg = alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
@@ -155,6 +163,7 @@ class InnsendingService(
 		return Pair(opplastedeVedlegg, missingRequiredVedlegg)
 	}
 
+
 	private fun validerAtSoknadHarEndringSomKanSendesInn(
 		soknadDto: DokumentSoknadDto,
 		opplastedeVedlegg: List<VedleggDto>,
@@ -201,7 +210,7 @@ class InnsendingService(
 		}
 	}
 
-	@Transactional
+	@Transactional(isolation = Isolation.READ_UNCOMMITTED)
 	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): KvitteringsDto {
 		val operation = InnsenderOperation.SEND_INN.name
 		val startSendInn = System.currentTimeMillis()
@@ -268,7 +277,7 @@ class InnsendingService(
 		return kvitteringsVedleggDto.copy(id = kvitteringsVedlegg.id)
 	}
 
-	private fun opprettOgLagreDummyHovedDokument(soknadDto: DokumentSoknadDto): DokumentSoknadDto {
+	private fun addDummyHovedDokumentToSoknad(soknadDto: DokumentSoknadDto): DokumentSoknadDto {
 		val operation = InnsenderOperation.SEND_INN.name
 
 		// Hvis ettersending, så må det genereres et dummy hoveddokument

@@ -93,7 +93,7 @@ class FilService(
 		}
 
 		if (soknadDto.vedleggsListe.none { it.id == filDto.vedleggsid })
-			throw ResourceNotFoundException("Vedlegg $filDto.vedleggsid til søknad ${soknadDto.innsendingsId} eksisterer ikke")
+			throw ResourceNotFoundException("Vedlegg ${filDto.vedleggsid} til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
 		logger.debug("${soknadDto.innsendingsId!!}: Skal lagre fil med størrelse ${filDto.data!!.size} på vedlegg ${filDto.vedleggsid}")
 		val savedFilDbData = try {

@@ -64,6 +64,16 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 	)
 	fun countErArkivert(): Long
 
+	@Transactional
+	@Modifying
+	@Query(
+		value = "UPDATE SoknadDbData SET tema = :tema WHERE id = :id",
+		nativeQuery = false
+	)
+	fun updateTema(
+		@Param("id") id: Long, @Param("tema") tema: String
+	)
+
 	@Query(
 		value = "SELECT COUNT(*) FROM soknad WHERE arkiveringsstatus = 'ArkiveringFeilet' AND status  = 'Innsendt'",
 		nativeQuery = true
