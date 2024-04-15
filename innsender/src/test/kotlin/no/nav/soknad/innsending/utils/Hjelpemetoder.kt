@@ -23,7 +23,7 @@ class Hjelpemetoder {
 			tema: String,
 			id: Long? = null,
 			innsendingsid: String? = null,
-			soknadsStatus: SoknadsStatusDto? = SoknadsStatusDto.opprettet,
+			soknadsStatus: SoknadsStatusDto? = SoknadsStatusDto.Opprettet,
 			vedleggsListe: List<VedleggDto>? = null,
 			ettersendingsId: String? = null,
 			opprettetDato: OffsetDateTime? = OffsetDateTime.now(),
@@ -73,16 +73,16 @@ class Hjelpemetoder {
 			id: Long? = null,
 			vedleggsnr: String,
 			tittel: String,
-			opplastingsStatus: OpplastingsStatusDto = OpplastingsStatusDto.ikkeValgt,
+			opplastingsStatus: OpplastingsStatusDto = OpplastingsStatusDto.IkkeValgt,
 			erHoveddokument: Boolean = false,
 			vedleggsNavn: String? = null,
 			label: String? = null
 		): VedleggDto =
 			lagVedleggDto(
 				vedleggsnr, tittel,
-				if (opplastingsStatus == OpplastingsStatusDto.lastetOpp)
+				if (opplastingsStatus == OpplastingsStatusDto.LastetOpp)
 					(if (vedleggsNavn != null && vedleggsNavn.contains(".pdf")) "application/pdf" else "application/json") else null,
-				if (opplastingsStatus == OpplastingsStatusDto.lastetOpp && vedleggsNavn != null) getBytesFromFile(
+				if (opplastingsStatus == OpplastingsStatusDto.LastetOpp && vedleggsNavn != null) getBytesFromFile(
 					vedleggsNavn
 				) else null,
 				id, erHoveddokument, erVariant = false, erPakrevd = false, label = label
@@ -108,7 +108,7 @@ class Hjelpemetoder {
 				erVariant!!,
 				"application/pdf".equals(mimeType, true),
 				erPakrevd!!,
-				if (fil != null) OpplastingsStatusDto.lastetOpp else OpplastingsStatusDto.ikkeValgt,
+				if (fil != null) OpplastingsStatusDto.LastetOpp else OpplastingsStatusDto.IkkeValgt,
 				OffsetDateTime.now(),
 				id,
 				vedleggsnr,

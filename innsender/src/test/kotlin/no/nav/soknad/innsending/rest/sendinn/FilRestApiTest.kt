@@ -7,7 +7,10 @@ import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.TokenGenerator
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,7 +59,7 @@ class FilRestApiTest : ApplicationTest() {
 		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
 
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
-		assertEquals(OpplastingsStatusDto.ikkeValgt, vedleggN6.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
 
 		val multipart = LinkedMultiValueMap<Any, Any>()
 		multipart.add("file", ClassPathResource("/litenPdf.pdf"))
@@ -88,7 +91,7 @@ class FilRestApiTest : ApplicationTest() {
 
 		assertTrue(oppdatertVedleggN6Response.body != null)
 		val oppdatertVedleggN6 = oppdatertVedleggN6Response.body
-		assertEquals(OpplastingsStatusDto.lastetOpp, oppdatertVedleggN6!!.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.LastetOpp, oppdatertVedleggN6!!.opplastingsStatus)
 
 		val slettFilRequest = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
 		val slettetFilVedleggN6Response = restTemplate.exchange(
@@ -101,7 +104,7 @@ class FilRestApiTest : ApplicationTest() {
 		assertEquals(HttpStatus.OK, slettetFilVedleggN6Response.statusCode)
 		assertTrue(slettetFilVedleggN6Response.body != null)
 		val oppdatertEtterSlettetFilVedleggN6 = slettetFilVedleggN6Response.body
-		assertEquals(OpplastingsStatusDto.ikkeValgt, oppdatertEtterSlettetFilVedleggN6!!.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.IkkeValgt, oppdatertEtterSlettetFilVedleggN6!!.opplastingsStatus)
 
 	}
 
@@ -115,7 +118,7 @@ class FilRestApiTest : ApplicationTest() {
 		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
 
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
-		assertEquals(OpplastingsStatusDto.ikkeValgt, vedleggN6.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
 
 		val multipart = LinkedMultiValueMap<Any, Any>()
 		multipart.add("file", ClassPathResource("/pdfs/acroform-fields-tom-array.pdf"))
@@ -150,7 +153,7 @@ class FilRestApiTest : ApplicationTest() {
 		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
 
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
-		assertEquals(OpplastingsStatusDto.ikkeValgt, vedleggN6.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
 
 		val multipart = LinkedMultiValueMap<Any, Any>()
 		multipart.add("file", ClassPathResource("/ikke.jpg"))
@@ -180,7 +183,7 @@ class FilRestApiTest : ApplicationTest() {
 		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
 
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
-		assertEquals(OpplastingsStatusDto.ikkeValgt, vedleggN6.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
 
 		val multipart = LinkedMultiValueMap<Any, Any>()
 		multipart.add("file", ClassPathResource("/skjema-passordbeskyttet.pdf"))

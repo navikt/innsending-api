@@ -68,14 +68,14 @@ class InnsendingService(
 		// Finn alle vedlegg med korrekt status i forhold til hvem som skal sendes inn
 		val alleVedlegg: List<VedleggDto> = filService.ferdigstillVedleggsFiler(soknadDto)
 
-		val opplastedeVedlegg = alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
+		val opplastedeVedlegg = alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
 
 		val missingRequiredVedlegg = alleVedlegg.filter {
 			val isNotHoveddokument = !it.erHoveddokument
 			val isRequiredN6Vedlegg = it.erPakrevd && it.vedleggsnr == "N6"
 			val isNotN6Vedlegg = it.vedleggsnr != "N6"
 			val hasStatusSendSenereEllerIkkevalgt =
-				it.opplastingsStatus == OpplastingsStatusDto.sendSenere || it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt
+				it.opplastingsStatus == OpplastingsStatusDto.SendSenere || it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt
 
 			isNotHoveddokument && (isRequiredN6Vedlegg || isNotN6Vedlegg) && hasStatusSendSenereEllerIkkevalgt
 		}
@@ -99,7 +99,7 @@ class InnsendingService(
 
 		// Ekstra sjekk på at søker ikke allerede har sendt inn søknaden. Dette fordi det har vært tilfeller der søker har klart å trigge innsending request av søknaden flere ganger på rappen
 		val existingSoknad = soknadService.hentSoknad(soknadDto.innsendingsId!!)
-		if (existingSoknad.status == SoknadsStatusDto.innsendt) {
+		if (existingSoknad.status == SoknadsStatusDto.Innsendt) {
 			logger.warn("${soknadDto.innsendingsId}: Søknad allerede innsendt, avbryter")
 			throw IllegalActionException(
 				message = "Søknaden er allerede sendt inn. Søknaden er innsendt og kan ikke sendes på nytt.",
@@ -176,7 +176,7 @@ class InnsendingService(
 		if ((opplastedeVedlegg.isEmpty() || opplastedeVedlegg.none { !it.erHoveddokument })) {
 			val allePakrevdeBehandlet = alleVedlegg
 				.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") }
-				.none { !(it.opplastingsStatus == OpplastingsStatusDto.innsendt || it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp) }
+				.none { !(it.opplastingsStatus == OpplastingsStatusDto.Innsendt || it.opplastingsStatus == OpplastingsStatusDto.SendesAvAndre || it.opplastingsStatus == OpplastingsStatusDto.LastetOpp) }
 			if (allePakrevdeBehandlet) {
 				val separator = "\n"
 				logger.warn("Søker har ikke lastet opp filer på ettersendingssøknad ${soknadDto.innsendingsId}, " +
@@ -243,7 +243,7 @@ class InnsendingService(
 			erVariant = false,
 			erPdfa = true,
 			erPakrevd = false,
-			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			opprettetdato = OffsetDateTime.now(),
 			innsendtdato = null,
 			mimetype = Mimetype.applicationSlashPdf,
@@ -341,7 +341,7 @@ class InnsendingService(
 			opplastedeVedlegg.filter { !it.erHoveddokument }.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }
 
 		val skalSendesAvAndre = innsendtSoknadDto.vedleggsListe
-			.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendesAvAndre }
+			.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.SendesAvAndre }
 			.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }
 
 		val skalEtterSendes = manglendePakrevdeVedlegg.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }
@@ -377,7 +377,7 @@ class InnsendingService(
 		// send brukernotifikasjon ved endring av søknadsstatus til innsendt
 		val innsendtSoknadDto = soknadService.hentSoknad(soknadDtoInput.innsendingsId!!)
 		logger.info("${innsendtSoknadDto.innsendingsId}: Sendinn: innsendtdato på vedlegg med status innsendt= " +
-			innsendtSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt }
+			innsendtSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt }
 				.map { it.vedleggsnr + ":" + mapTilLocalDateTime(it.innsendtdato) }
 		)
 		publiserBrukernotifikasjon(innsendtSoknadDto)
@@ -478,7 +478,7 @@ class InnsendingService(
 					erVariant = false,
 					erPdfa = false,
 					erPakrevd = false,
-					opplastingsStatus = OpplastingsStatusDto.ikkeValgt,
+					opplastingsStatus = OpplastingsStatusDto.IkkeValgt,
 					opprettetdato = OffsetDateTime.now(),
 					document = null
 				)

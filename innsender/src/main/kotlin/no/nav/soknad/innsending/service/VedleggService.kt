@@ -353,7 +353,7 @@ class VedleggService(
 		}.forEach {
 			it.id?.let { vedleggId ->
 				dokumentSoknadDto.innsendingsId?.let { innsendingsId ->
-					if (it.opplastingsStatus == OpplastingsStatusDto.lastetOpp) {
+					if (it.opplastingsStatus == OpplastingsStatusDto.LastetOpp) {
 						logger.info("Vedleggstatus er ${it.opplastingsStatus}, setter status=lastetOppIkkeRelevantLenger og erPakrevd=false på vedlegg id:${it.id}")
 						repo.updateVedleggErPakrevd(vedleggId, false)
 						repo.updateVedleggStatus(
@@ -371,7 +371,7 @@ class VedleggService(
 	}
 
 	fun deleteVedleggNotRelevantAnymore(existingVedlegg: List<VedleggDto>) {
-		existingVedlegg.filter { vedlegg -> vedlegg.opplastingsStatus == OpplastingsStatusDto.lastetOppIkkeRelevantLenger }
+		existingVedlegg.filter { vedlegg -> vedlegg.opplastingsStatus == OpplastingsStatusDto.LastetOppIkkeRelevantLenger }
 			.forEach {
 				logger.info("Sletter vedlegg id:${it.id} vedleggsnr:${it.vedleggsnr} med status LASTET_OPP_IKKE_RELEVANT_LENGER")
 				slettVedleggOgDensFiler(it)

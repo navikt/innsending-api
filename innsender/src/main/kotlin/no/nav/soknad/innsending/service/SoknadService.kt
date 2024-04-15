@@ -300,7 +300,7 @@ class SoknadService(
 		dokumentSoknadDto: DokumentSoknadDto
 	) {
 		oppdatertDokumentSoknadDto.vedleggsListe
-			.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
+			.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
 			.forEach { filService.lagreFil(oppdatertDokumentSoknadDto, it, dokumentSoknadDto.vedleggsListe) }
 	}
 
@@ -309,7 +309,7 @@ class SoknadService(
 		dokumentSoknadDto: DokumentSoknadDto
 	) {
 		oppdatertDokumentSoknadDto.vedleggsListe
-			.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOpp && it.erHoveddokument }
+			.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp && it.erHoveddokument }
 			.forEach {
 				filService.lagreFil(
 					savedDokumentSoknadDto = oppdatertDokumentSoknadDto,

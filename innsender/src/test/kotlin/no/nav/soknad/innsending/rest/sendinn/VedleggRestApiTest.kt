@@ -84,7 +84,7 @@ class VedleggRestApiTest : ApplicationTest() {
 		assertTrue(opprettetSoknadDto!!.vedleggsListe.isNotEmpty())
 
 		val vedleggDto = opprettetSoknadDto.vedleggsListe.first { !it.erHoveddokument }
-		val patchVedleggDto = PatchVedleggDto("Endret tittel", OpplastingsStatusDto.sendesAvAndre)
+		val patchVedleggDto = PatchVedleggDto("Endret tittel", OpplastingsStatusDto.SendesAvAndre)
 		val patchRequestEntity = HttpEntity(patchVedleggDto, Hjelpemetoder.createHeaders(token))
 		val patchResponse = restTemplate.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${opprettetSoknadDto.innsendingsId}/vedlegg/${vedleggDto.id}",
@@ -97,7 +97,7 @@ class VedleggRestApiTest : ApplicationTest() {
 		val patchedVedleggDto = patchResponse.body
 		assertEquals(vedleggDto.id, patchedVedleggDto!!.id)
 		assertEquals("Endret tittel", patchedVedleggDto.tittel)
-		assertEquals(OpplastingsStatusDto.sendesAvAndre, patchedVedleggDto.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.SendesAvAndre, patchedVedleggDto.opplastingsStatus)
 	}
 
 

@@ -1,7 +1,9 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
-import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType.*
+import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType.KODEVERK_NAVSKJEMA
+import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType.KODEVERK_TEMA
+import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType.KODEVERK_VEDLEGGSKODER
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.*
@@ -18,7 +20,11 @@ import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
-import no.nav.soknad.innsending.util.mapping.*
+import no.nav.soknad.innsending.util.mapping.lagDokumentSoknadDto
+import no.nav.soknad.innsending.util.mapping.mapTilDbMimetype
+import no.nav.soknad.innsending.util.mapping.mapTilDbOpplastingsStatus
+import no.nav.soknad.innsending.util.mapping.mapTilLocalDateTime
+import no.nav.soknad.innsending.util.mapping.mapToOpprettEttersending
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -123,7 +129,7 @@ class EttersendingService(
 						VedleggDbData(
 							id = null,
 							soknadsid = savedEttersendingsSoknad.id!!,
-							status = if (OpplastingsStatusDto.sendSenere == v.opplastingsStatus)
+							status = if (OpplastingsStatusDto.SendSenere == v.opplastingsStatus)
 								OpplastingsStatus.IKKE_VALGT else mapTilDbOpplastingsStatus(v.opplastingsStatus),
 							erhoveddokument = v.erHoveddokument,
 							ervariant = v.erVariant,
@@ -137,7 +143,7 @@ class EttersendingService(
 							uuid = UUID.randomUUID().toString(),
 							opprettetdato = v.opprettetdato.toLocalDateTime(),
 							endretdato = LocalDateTime.now(),
-							innsendtdato = if (v.opplastingsStatus == OpplastingsStatusDto.innsendt && v.innsendtdato == null)
+							innsendtdato = if (v.opplastingsStatus == OpplastingsStatusDto.Innsendt && v.innsendtdato == null)
 								nyesteSoknad.innsendtDato?.toLocalDateTime() else v.innsendtdato?.toLocalDateTime(),
 							vedleggsurl = if (v.vedleggsnr != null)
 								skjemaService.hentSkjema(v.vedleggsnr!!, nyesteSoknad.spraak ?: "nb", false).url else null,
@@ -288,7 +294,7 @@ class EttersendingService(
 	) {
 		logger.info(
 			"${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes " +
-				"${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size}"
+				"${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.SendSenere }.size}"
 		)
 
 		// Det mangler vedlegg så det opprettes en ettersendingssøknad av systemet

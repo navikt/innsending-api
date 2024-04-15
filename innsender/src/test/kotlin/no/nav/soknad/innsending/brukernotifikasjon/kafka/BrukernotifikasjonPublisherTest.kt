@@ -106,7 +106,7 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 				tema,
 				id,
 				innsendingsid,
-				SoknadsStatusDto.innsendt
+				SoknadsStatusDto.Innsendt
 			)
 		)
 
@@ -140,10 +140,10 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 			tema = tema,
 			id = id,
 			innsendingsid = innsendingsid,
-			soknadsStatus = SoknadsStatusDto.innsendt,
+			soknadsStatus = SoknadsStatusDto.Innsendt,
 			vedleggsListe = listOf(
-				Hjelpemetoder.lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.innsendt, false, "/litenPdf.pdf"),
-				Hjelpemetoder.lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.sendSenere, false)
+				Hjelpemetoder.lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.Innsendt, false, "/litenPdf.pdf"),
+				Hjelpemetoder.lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.SendSenere, false)
 			),
 			soknadstype = SoknadType.ettersendelse
 		)
@@ -162,10 +162,10 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 			tema = tema,
 			id = id,
 			innsendingsid = ettersendingsSoknadsId,
-			soknadsStatus = SoknadsStatusDto.opprettet,
+			soknadsStatus = SoknadsStatusDto.Opprettet,
 			vedleggsListe = listOf(
-				Hjelpemetoder.lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.innsendt, false, "/litenPdf.pdf"),
-				Hjelpemetoder.lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.ikkeValgt, false)
+				Hjelpemetoder.lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.Innsendt, false, "/litenPdf.pdf"),
+				Hjelpemetoder.lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.IkkeValgt, false)
 			),
 			ettersendingsId = soknad.innsendingsId,
 			soknadstype = SoknadType.ettersendelse
@@ -205,10 +205,10 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 
 		brukernotifikasjonPublisher?.soknadStatusChange(
 			Hjelpemetoder.lagDokumentSoknad(
-				personId, skjemanr, spraak, tittel, tema, id, ettersendingsSoknadsId, SoknadsStatusDto.innsendt,
+				personId, skjemanr, spraak, tittel, tema, id, ettersendingsSoknadsId, SoknadsStatusDto.Innsendt,
 				listOf(
-					Hjelpemetoder.lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.lastetOpp, false, "/litenPdf.pdf"),
-					Hjelpemetoder.lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.lastetOpp, false, "/litenPdf.pdf")
+					Hjelpemetoder.lagVedlegg(1L, "X1", "Vedlegg-X1", OpplastingsStatusDto.LastetOpp, false, "/litenPdf.pdf"),
+					Hjelpemetoder.lagVedlegg(2L, "X2", "Vedlegg-X2", OpplastingsStatusDto.LastetOpp, false, "/litenPdf.pdf")
 				),
 				innsendingsid
 			)
@@ -243,7 +243,7 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 				tema,
 				id,
 				innsendingsid,
-				SoknadsStatusDto.slettetAvBruker
+				SoknadsStatusDto.SlettetAvBruker
 			)
 		)
 
