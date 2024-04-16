@@ -91,7 +91,7 @@ class VedleggRestApi(
 		)
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
-		if ((patchVedleggDto.opplastingsStatus == OpplastingsStatusDto.ikkeValgt || patchVedleggDto.opplastingsStatus == OpplastingsStatusDto.lastetOpp)
+		if ((patchVedleggDto.opplastingsStatus == OpplastingsStatusDto.IkkeValgt || patchVedleggDto.opplastingsStatus == OpplastingsStatusDto.LastetOpp)
 			&& soknadDto.vedleggsListe.first { it.id == vedleggsId }.opplastingsStatus != patchVedleggDto.opplastingsStatus
 		) {
 

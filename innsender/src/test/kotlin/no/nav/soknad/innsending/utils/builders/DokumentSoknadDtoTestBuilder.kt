@@ -11,7 +11,7 @@ class DokumentSoknadDtoTestBuilder(
 	var skjemanr: String = generateSkjemanr(),
 	var tittel: String = "Forsikring mot ansvar for sykepenger i arbeidsgiverperioden for små bedrifter.",
 	var tema: String = "FOS",
-	var status: SoknadsStatusDto = SoknadsStatusDto.opprettet,
+	var status: SoknadsStatusDto = SoknadsStatusDto.Opprettet,
 	var opprettetDato: OffsetDateTime = OffsetDateTime.now(),
 	var vedleggsListe: List<VedleggDto> = listOf(
 		VedleggDtoTestBuilder().asHovedDokument().build(),
@@ -29,7 +29,7 @@ class DokumentSoknadDtoTestBuilder(
 	var innsendingsFristDato: OffsetDateTime? = null,
 	var forsteInnsendingsDato: OffsetDateTime? = null,
 	var fristForEttersendelse: Long? = 14L,
-	var arkiveringsStatus: ArkiveringsStatusDto = ArkiveringsStatusDto.ikkeSatt,
+	var arkiveringsStatus: ArkiveringsStatusDto = ArkiveringsStatusDto.IkkeSatt,
 	var erSystemGenerert: Boolean? = true,
 	var soknadType: SoknadType? = null,
 	var skjemaPath: String = Skjema.createSkjemaPathFromSkjemanr(skjemanr),

@@ -17,7 +17,7 @@ data class SkjemaDtoTestBuilder(
 	var hoveddokument: SkjemaDokumentDto = SkjemaDokumentDtoTestBuilder().asHovedDokument(skjemanr).build(),
 	var hoveddokumentVariant: SkjemaDokumentDto = SkjemaDokumentDtoTestBuilder().asHovedDokumentVariant(skjemanr).build(),
 	var innsendingsId: String? = UUID.randomUUID().toString(),
-	var status: SoknadsStatusDto? = SoknadsStatusDto.opprettet,
+	var status: SoknadsStatusDto? = SoknadsStatusDto.Opprettet,
 	var vedleggsListe: List<SkjemaDokumentDto>? = emptyList(),
 	var kanLasteOppAnnet: Boolean? = false,
 	var fristForEttersendelse: Long? = 14L,

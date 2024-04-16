@@ -84,7 +84,7 @@ class EksternRestApiTest : ApplicationTest() {
 
 		// Then
 		// The notification is an utkast if erSystemGenerert is false
-		assertEquals(false, message.last.soknadRef.erSystemGenerert)
+		assertEquals(false, message.last().soknadRef.erSystemGenerert)
 	}
 
 	@Test
@@ -105,7 +105,7 @@ class EksternRestApiTest : ApplicationTest() {
 
 		// Then
 		// The notification is an oppgave if erSystemGenerert is true
-		assertEquals(true, message.last.soknadRef.erSystemGenerert)
+		assertEquals(true, message.last().soknadRef.erSystemGenerert)
 	}
 
 	@Test

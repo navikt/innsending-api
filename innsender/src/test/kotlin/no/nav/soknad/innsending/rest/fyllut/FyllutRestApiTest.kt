@@ -139,7 +139,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertFalse(getSoknadDto.kanLasteOppAnnet!!)
 
 		val vedleggT7 = getSoknadDto.vedleggsListe.first { it.vedleggsnr == "T7" }
-		val patchVedleggT7 = PatchVedleggDto(null, OpplastingsStatusDto.sendesAvAndre)
+		val patchVedleggT7 = PatchVedleggDto(null, OpplastingsStatusDto.SendesAvAndre)
 		val patchRequestT7 = HttpEntity(patchVedleggT7, Hjelpemetoder.createHeaders(token))
 		val patchResponseT7 = restTemplate.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggT7.id}", HttpMethod.PATCH,
@@ -147,10 +147,10 @@ class FyllutRestApiTest : ApplicationTest() {
 		)
 
 		assertTrue(patchResponseT7.body != null)
-		assertEquals(OpplastingsStatusDto.sendesAvAndre, patchResponseT7.body!!.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.SendesAvAndre, patchResponseT7.body!!.opplastingsStatus)
 
 		val vedleggN6 = getSoknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
-		val patchVedleggN6 = PatchVedleggDto(null, OpplastingsStatusDto.ikkeValgt)
+		val patchVedleggN6 = PatchVedleggDto(null, OpplastingsStatusDto.IkkeValgt)
 		val patchRequestN6 = HttpEntity(patchVedleggN6, Hjelpemetoder.createHeaders(token))
 		val patchResponseN6 = restTemplate.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggN6.id}", HttpMethod.PATCH,
@@ -158,7 +158,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		)
 
 		assertTrue(patchResponseN6.body != null)
-		assertEquals(OpplastingsStatusDto.ikkeValgt, patchResponseN6.body!!.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.IkkeValgt, patchResponseN6.body!!.opplastingsStatus)
 		assertEquals(vedleggN6.id, patchResponseN6.body!!.id)
 
 		val multipart = LinkedMultiValueMap<Any, Any>()
@@ -235,7 +235,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Then
 		assertTrue(response != null)
-		assertEquals(SoknadsStatusDto.utfylt, updatedSoknad.status, "Status is set to utfylt")
+		assertEquals(SoknadsStatusDto.Utfylt, updatedSoknad.status, "Status is set to utfylt")
 		assertEquals(302, response.statusCode.value())
 		assertEquals("http://localhost:3100/sendinn/${innsendingsId}", response.headers.location!!.toString())
 		assertEquals(newTittel, updatedSoknad.tittel)
@@ -247,7 +247,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		)
 		assertEquals(
 			0,
-			updatedSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOppIkkeRelevantLenger }.size,
+			updatedSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOppIkkeRelevantLenger }.size,
 			"Vedlegg should be deleted, not have status lastetOppIkkeRelevantLenger"
 		)
 		assertTrue(
@@ -311,11 +311,11 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals(3, updatedSoknad.vedleggsListe.size)
 		assertEquals(
 			1,
-			updatedSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOppIkkeRelevantLenger }.size
+			updatedSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOppIkkeRelevantLenger }.size
 		)
 		assertEquals(
 			"vedlegg1",
-			updatedSoknad.vedleggsListe.first { it.opplastingsStatus == OpplastingsStatusDto.lastetOppIkkeRelevantLenger }.tittel
+			updatedSoknad.vedleggsListe.first { it.opplastingsStatus == OpplastingsStatusDto.LastetOppIkkeRelevantLenger }.tittel
 		)
 	}
 
@@ -372,7 +372,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals(4, updatedSoknad.vedleggsListe.size)
 		assertEquals(
 			0,
-			updatedSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.lastetOppIkkeRelevantLenger }.size,
+			updatedSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOppIkkeRelevantLenger }.size,
 			"Vedlegg should be deleted, not have status lastetOppIkkeRelevantLenger"
 		)
 
@@ -482,7 +482,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Så
 		assertTrue(response != null)
-		assertEquals(SoknadsStatusDto.opprettet, oppdatertSoknad.status, "Status er satt til opprettet")
+		assertEquals(SoknadsStatusDto.Opprettet, oppdatertSoknad.status, "Status er satt til opprettet")
 		assertEquals(500, response.statusCode.value())
 		assertEquals(
 			"Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant. Innsendt vedleggsliste skal være tom",
@@ -521,7 +521,7 @@ class FyllutRestApiTest : ApplicationTest() {
 			"HoveddokumentVariant er riktig"
 		)
 		assertNotNull(opprettetSoknad.endretDato)
-		assertEquals(SoknadsStatusDto.opprettet, opprettetSoknad.status, "Status er satt til opprettet")
+		assertEquals(SoknadsStatusDto.Opprettet, opprettetSoknad.status, "Status er satt til opprettet")
 		assertEquals(
 			opprettetSoknad.skalSlettesDato?.toString(), dokumentSoknadDto.opprettetDato.plusDays(
 				Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD

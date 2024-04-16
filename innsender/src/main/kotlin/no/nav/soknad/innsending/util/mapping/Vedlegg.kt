@@ -3,7 +3,11 @@ package no.nav.soknad.innsending.util.mapping
 import no.nav.soknad.arkivering.soknadsmottaker.model.DocumentData
 import no.nav.soknad.arkivering.soknadsmottaker.model.Varianter
 import no.nav.soknad.innsending.exceptions.BackendErrorException
-import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.model.FilDto
+import no.nav.soknad.innsending.model.OpplastingsStatusDto
+import no.nav.soknad.innsending.model.PatchVedleggDto
+import no.nav.soknad.innsending.model.SkjemaDokumentDto
+import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import java.time.LocalDateTime
@@ -131,17 +135,17 @@ fun translate(vedleggDtos: List<VedleggDto>): List<DocumentData> {
 	 */
 	// Lag documentdata for hoveddokumentet (finn alle vedleggdto markert som hoveddokument)
 	val hoveddokumentVedlegg: List<Varianter> = vedleggDtos
-		.filter { it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
+		.filter { it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
 		.map { translate(it) }
 
 	val hovedDokument: DocumentData = vedleggDtos
-		.filter { it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp && !it.erVariant }
+		.filter { it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp && !it.erVariant }
 		.map { DocumentData(it.vedleggsnr!!, it.erHoveddokument, it.tittel, hoveddokumentVedlegg) }
 		.first()
 
 	// Merk: at det  er antatt at vedlegg ikke har varianter. Hvis vi skal støtte dette må varianter av samme vedlegg linkes sammen
 	val vedlegg: List<DocumentData> = vedleggDtos
-		.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
+		.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
 		.map { DocumentData(it.vedleggsnr!!, it.erHoveddokument, it.tittel, listOf(translate(it))) }
 
 	return listOf(hovedDokument) + vedlegg

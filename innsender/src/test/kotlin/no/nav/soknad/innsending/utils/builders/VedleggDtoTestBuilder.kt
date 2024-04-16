@@ -15,7 +15,7 @@ data class VedleggDtoTestBuilder(
 	var erVariant: Boolean = false,
 	var erPdfa: Boolean = true,
 	var erPakrevd: Boolean = true,
-	var opplastingsStatus: OpplastingsStatusDto = OpplastingsStatusDto.ikkeValgt,
+	var opplastingsStatus: OpplastingsStatusDto = OpplastingsStatusDto.IkkeValgt,
 	var opprettetdato: OffsetDateTime = OffsetDateTime.now(),
 	var id: Long? = null,
 	var vedleggsnr: String? = generateVedleggsnr(),
@@ -34,7 +34,7 @@ data class VedleggDtoTestBuilder(
 		document = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
 		mimetype = Mimetype.applicationSlashPdf
 		formioId = null
-		opplastingsStatus = OpplastingsStatusDto.lastetOpp
+		opplastingsStatus = OpplastingsStatusDto.LastetOpp
 		return this
 	}
 
@@ -44,7 +44,7 @@ data class VedleggDtoTestBuilder(
 		document = Hjelpemetoder.getBytesFromFile(document_path)
 		mimetype = Mimetype.applicationSlashJson
 		formioId = null
-		opplastingsStatus = OpplastingsStatusDto.lastetOpp
+		opplastingsStatus = OpplastingsStatusDto.LastetOpp
 		return this
 	}
 
