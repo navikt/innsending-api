@@ -3,7 +3,11 @@ package no.nav.soknad.innsending.utils
 import io.mockk.every
 import io.mockk.slot
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
-import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.KvitteringsDto
+import no.nav.soknad.innsending.model.Mimetype
+import no.nav.soknad.innsending.model.SkjemaDto
+import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.service.InnsendingService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.util.Constants
@@ -73,7 +77,7 @@ class SoknadAssertions {
 			Assertions.assertTrue(vedleggDtos2.captured.filter { it.vedleggsnr == Constants.KVITTERINGS_NR }.isNotEmpty())
 			val hoveddokumentVariant = vedleggDtos2.captured.filter { it.erVariant && it.erVariant }.toList()
 			if (hoveddokumentVariant != null && hoveddokumentVariant.isNotEmpty()) {
-				assertTrue { hoveddokumentVariant.first.mimetype == Mimetype.applicationSlashXml || hoveddokumentVariant.first.mimetype == Mimetype.applicationSlashJson }
+				assertTrue { hoveddokumentVariant.first().mimetype == Mimetype.applicationSlashXml || hoveddokumentVariant.first().mimetype == Mimetype.applicationSlashJson }
 			}
 
 			Assertions.assertTrue(kvitteringsDto.innsendingsId == dokumentSoknadDto.innsendingsId)

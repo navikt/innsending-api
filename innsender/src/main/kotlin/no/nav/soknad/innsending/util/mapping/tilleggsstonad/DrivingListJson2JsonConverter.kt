@@ -16,7 +16,7 @@ fun convertToJsonDrivingListJson(
 	val json = mapper.readValue(jsonFile, Root::class.java)
 
 	return JsonApplication(
-		timezone = json.data.metadata.timezone,
+		timezone = json.data.metadata?.timezone,
 		language = json.language,
 		personInfo = JsonPersonInfo(
 			fornavn = json.data.data.fornavnSoker,

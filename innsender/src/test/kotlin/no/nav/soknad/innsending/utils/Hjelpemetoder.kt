@@ -24,7 +24,7 @@ class Hjelpemetoder {
 			tema: String,
 			id: Long? = null,
 			innsendingsid: String? = null,
-			soknadsStatus: SoknadsStatusDto? = SoknadsStatusDto.opprettet,
+			soknadsStatus: SoknadsStatusDto? = SoknadsStatusDto.Opprettet,
 			vedleggsListe: List<VedleggDto>? = null,
 			ettersendingsId: String? = null,
 			opprettetDato: OffsetDateTime? = OffsetDateTime.now(),
@@ -74,7 +74,7 @@ class Hjelpemetoder {
 			id: Long? = null,
 			vedleggsnr: String,
 			tittel: String,
-			opplastingsStatus: OpplastingsStatusDto = OpplastingsStatusDto.ikkeValgt,
+			opplastingsStatus: OpplastingsStatusDto = OpplastingsStatusDto.IkkeValgt,
 			erHoveddokument: Boolean = false,
 			vedleggsNavn: String? = null,
 			label: String? = null,
@@ -83,13 +83,13 @@ class Hjelpemetoder {
 			lagVedleggDto(
 				vedleggsnr = vedleggsnr,
 				tittel = tittel,
-				mimeType = if (opplastingsStatus == OpplastingsStatusDto.lastetOpp)
+				mimeType = if (opplastingsStatus == OpplastingsStatusDto.LastetOpp)
 					(if (vedleggsNavn != null && vedleggsNavn.contains(".pdf"))
 						Mimetype.applicationSlashPdf.value
 					else
 						Mimetype.applicationSlashJson.value)
 				else null,
-				if (opplastingsStatus == OpplastingsStatusDto.lastetOpp && vedleggsNavn != null)
+				if (opplastingsStatus == OpplastingsStatusDto.LastetOpp && vedleggsNavn != null)
 					getBytesFromFile(vedleggsNavn)
 				else null,
 				id, erHoveddokument, erVariant = erVariant, erPakrevd = false, label = label
@@ -115,7 +115,7 @@ class Hjelpemetoder {
 				erVariant = erVariant!!,
 				mimetype = mapTilMimetype(mimeType),
 				erPakrevd = erPakrevd!!,
-				opplastingsStatus = if (fil != null) OpplastingsStatusDto.lastetOpp else OpplastingsStatusDto.ikkeValgt,
+				opplastingsStatus = if (fil != null) OpplastingsStatusDto.LastetOpp else OpplastingsStatusDto.IkkeValgt,
 				opprettetdato = OffsetDateTime.now(),
 				id = id,
 				vedleggsnr = vedleggsnr,

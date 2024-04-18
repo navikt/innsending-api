@@ -15,10 +15,10 @@ data class Root(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ApplicationInfo(
 	val data: Application,
-	val metadata: Metadata,
-	val state: String,
+	val metadata: Metadata?,
+	val state: String?,
 	@JsonProperty("_vnote")
-	val vnote: String,
+	val vnote: String?,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
