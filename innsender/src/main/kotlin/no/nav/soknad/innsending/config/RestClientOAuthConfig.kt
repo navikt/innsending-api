@@ -54,39 +54,6 @@ class RestClientOAuthConfig(
 	@Qualifier("arenaApiRestClient")
 	fun arenaApiClientWithoutAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.arenaUrl).build()
 
-/*
-
-	@Bean
-	@Profile("prod | dev")
-	@Qualifier("azureApiRestClient")
-	fun azureApiClient(
-		restConfig: RestConfig,
-		clientConfigProperties: ClientConfigurationProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService,
-		subjectHandler: SubjectHandlerInterface
-	) = azureClient(restConfig.azureUrl, clientConfigProperties.registration["azure"]!!, oAuth2AccessTokenService, subjectHandler)
-
-	private fun azureClient(
-		baseUrl: String,
-		clientProperties: ClientProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService,
-		subjectHandler: SubjectHandlerInterface
-	): RestClient {
-
-		val tokenService = TokenService(clientProperties, oAuth2AccessTokenService)
-
-		return RestClient.builder()
-			.baseUrl(baseUrl)
-			.requestFactory(timeouts())
-			.requestInterceptor(AddRequestHeaders(tokenService, subjectHandler))
-			.build()
-	}
-
-	@Bean
-	@Profile("!(prod | dev)")
-	@Qualifier("azureApiRestClient")
-	fun azureApiClientWithoutAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.azureUrl).build()
-*/
 
 	@Bean
 	@Qualifier("kodeverkApiClient")
@@ -171,7 +138,7 @@ class RestClientOAuthConfig(
 			val token = tokenService.getToken()
 			val callId = MDCUtil.callIdOrNew()
 
-			logger.info("Kaller arena med callId: $callId")
+			logger.info("Kaller service med callId: $callId")
 
 			request.headers.setBearerAuth(token ?:"")
 			request.headers.set(Constants.HEADER_CALL_ID, callId)
