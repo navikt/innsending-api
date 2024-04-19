@@ -82,7 +82,7 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 		val gammelSoknadId = soknadService.opprettNySoknad(
 			Hjelpemetoder.lagDokumentSoknad(
 				brukerId = "12345678901", skjemanr = defaultSkjemanr, spraak = spraak, tittel = "En test",
-				tema = tema, id = null, innsendingsid = null, soknadsStatus = SoknadsStatusDto.Opprettet, vedleggsListe = null,
+				tema = tema, id = null, innsendingsid = null, soknadsStatus = SoknadsStatusDto.opprettet, vedleggsListe = null,
 				ettersendingsId = null, OffsetDateTime.now().minusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD + 1)
 			)
 		).innsendingsId!!
@@ -90,7 +90,7 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 		val nyereSoknadId = soknadService.opprettNySoknad(
 			Hjelpemetoder.lagDokumentSoknad(
 				brukerId = "12345678901", skjemanr = defaultSkjemanr, spraak = spraak, tittel = "En test",
-				tema = tema, id = null, innsendingsid = null, soknadsStatus = SoknadsStatusDto.Opprettet, vedleggsListe = null,
+				tema = tema, id = null, innsendingsid = null, soknadsStatus = SoknadsStatusDto.opprettet, vedleggsListe = null,
 				ettersendingsId = null, OffsetDateTime.now().minusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD - 1)
 			)
 		).innsendingsId!!
@@ -102,13 +102,13 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 		fjernGamleSoknader.fjernGamleIkkeInnsendteSoknader()
 
 		val slettetSoknad = soknadService.hentSoknad(gammelSoknadId)
-		assertTrue(slettetSoknad.status == SoknadsStatusDto.AutomatiskSlettet)
-		assertTrue(soknader.any { it.innsendingsId == gammelSoknadId && it.status == SoknadsStatusDto.AutomatiskSlettet })
+		assertTrue(slettetSoknad.status == SoknadsStatusDto.automatiskSlettet)
+		assertTrue(soknader.any { it.innsendingsId == gammelSoknadId && it.status == SoknadsStatusDto.automatiskSlettet })
 		assertEquals(1.0 + (initAntall ?: 0.0), innsenderMetrics.getOperationsCounter(InnsenderOperation.SLETT.name, tema))
 
 		val beholdtSoknad = soknadService.hentSoknad(nyereSoknadId)
-		assertTrue(beholdtSoknad.status == SoknadsStatusDto.Opprettet)
-		assertTrue(soknader.none { it.innsendingsId == nyereSoknadId && it.status == SoknadsStatusDto.AutomatiskSlettet })
+		assertTrue(beholdtSoknad.status == SoknadsStatusDto.opprettet)
+		assertTrue(soknader.none { it.innsendingsId == nyereSoknadId && it.status == SoknadsStatusDto.automatiskSlettet })
 
 	}
 

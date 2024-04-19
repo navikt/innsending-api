@@ -291,7 +291,7 @@ class SoknadServiceTest : ApplicationTest() {
 		val vedlegg = ettersending.vedleggsListe.first()
 		assertEquals(vedleggsnr, vedlegg.vedleggsnr)
 		assertNotNull(vedlegg.innsendtdato)
-		assertEquals(OpplastingsStatusDto.IkkeValgt, vedlegg.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.ikkeValgt, vedlegg.opplastingsStatus)
 
 	}
 
@@ -371,7 +371,7 @@ class SoknadServiceTest : ApplicationTest() {
 
 		assertTrue(soknad.tema == tema && soknad.skjemanr == skjemanr)
 		assertTrue(soknad.vedleggsListe.size == 2)
-		assertTrue(soknad.vedleggsListe.any { it.erHoveddokument && !it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp })
+		assertTrue(soknad.vedleggsListe.any { it.erHoveddokument && !it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp })
 
 		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(soknad.innsendingsId!!)
 		assertTrue(hendelseDbDatas.size == 1)
@@ -523,12 +523,12 @@ class SoknadServiceTest : ApplicationTest() {
 		dokumentSoknadDtoList.add(soknadService.opprettSoknad(brukerid, skjemanr, spraak))
 
 		soknadService.slettGamleSoknader(1L)
-		dokumentSoknadDtoList.forEach { assertEquals(soknadService.hentSoknad(it.id!!).status, SoknadsStatusDto.Opprettet) }
+		dokumentSoknadDtoList.forEach { assertEquals(soknadService.hentSoknad(it.id!!).status, SoknadsStatusDto.opprettet) }
 
 		soknadService.slettGamleSoknader(-1L)
 		dokumentSoknadDtoList.forEach {
 			assertEquals(
-				SoknadsStatusDto.AutomatiskSlettet,
+				SoknadsStatusDto.automatiskSlettet,
 				soknadService.hentSoknad(it.id!!).status,
 			)
 		}

@@ -40,7 +40,7 @@ fun mapTilSoknadDb(
 		kanlasteoppannet = dokumentSoknadDto.kanLasteOppAnnet ?: true,
 		forsteinnsendingsdato = mapTilLocalDateTime(dokumentSoknadDto.forsteInnsendingsDato),
 		ettersendingsfrist = dokumentSoknadDto.fristForEttersendelse,
-		arkiveringsstatus = mapTilDbArkiveringsStatus(dokumentSoknadDto.arkiveringsStatus ?: ArkiveringsStatusDto.IkkeSatt),
+		arkiveringsstatus = mapTilDbArkiveringsStatus(dokumentSoknadDto.arkiveringsStatus ?: ArkiveringsStatusDto.ikkeSatt),
 		applikasjon = dokumentSoknadDto.applikasjon
 	)
 
@@ -55,7 +55,7 @@ fun lagDokumentSoknadDto(
 		skjemanr = soknadDbData.skjemanr,
 		tittel = soknadDbData.tittel,
 		tema = soknadDbData.tema,
-		status = mapTilSoknadsStatusDto(soknadDbData.status) ?: SoknadsStatusDto.Opprettet,
+		status = mapTilSoknadsStatusDto(soknadDbData.status) ?: SoknadsStatusDto.opprettet,
 		vedleggsListe = vedleggDbDataListe.map { lagVedleggDto(it) },
 		id = soknadDbData.id!!,
 		innsendingsId = soknadDbData.innsendingsid,
@@ -98,7 +98,7 @@ fun mapTilDokumentSoknadDto(
 		skjemanr = soknadDbData.skjemanr,
 		tittel = soknadDbData.tittel,
 		tema = soknadDbData.tema,
-		status = mapTilSoknadsStatusDto(soknadDbData.status) ?: SoknadsStatusDto.Opprettet,
+		status = mapTilSoknadsStatusDto(soknadDbData.status) ?: SoknadsStatusDto.opprettet,
 		vedleggsListe = vedleggsListeMedFiler,
 		id = soknadDbData.id!!,
 		innsendingsId = soknadDbData.innsendingsid,

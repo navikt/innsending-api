@@ -92,7 +92,7 @@ class TilleggsstonadService(
 			vedleggService.endreVedleggStatus(
 				soknadDto,
 				jsonVariant.id!!,
-				OpplastingsStatusDto.SendesIkke
+				OpplastingsStatusDto.sendesIkke
 			)
 
 			// Based on skjemanumber and maalgruppe, it might be neccessary to change the application's tema from TSO to TSR

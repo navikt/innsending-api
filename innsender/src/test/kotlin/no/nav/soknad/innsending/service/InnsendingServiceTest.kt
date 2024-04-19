@@ -173,7 +173,7 @@ class InnsendingServiceTest : ApplicationTest() {
 			ettersendingService.createEttersendingFromExistingSoknader(dokumentSoknadDto.brukerId, ettersending)
 
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 		assertEquals(1, ettersendingsSoknadDto.vedleggsListe.size)
 
 		assertThrows<IllegalActionException> {
@@ -209,8 +209,8 @@ class InnsendingServiceTest : ApplicationTest() {
 		// Merk det er besluttet og ikke sende kvittering med innsendingen av søknaden. Det innebærer at denne koden pt er redundant
 		val innsendtSoknad = soknadService.hentSoknad(dokumentSoknadDto.innsendingsId!!)
 		val kvitteringsDokument = PdfGenerator().lagKvitteringsSide(innsendtSoknad, "Per Person",
-			innsendtSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt },
-			innsendtSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
+			innsendtSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt },
+			innsendtSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.sendSenere })
 		assertNotNull(kvitteringsDokument)
 
 		// Skriver til tmp fil for manuell sjekk av innholdet av generert PDF
@@ -256,7 +256,7 @@ class InnsendingServiceTest : ApplicationTest() {
 
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
 		assertEquals(1, ettersendingsSoknadDto.vedleggsListe.size)
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
 
 		val dummyHovedDokument = PdfGenerator().lagForsideEttersending(ettersendingsSoknadDto)
 		assertNotNull(dummyHovedDokument)

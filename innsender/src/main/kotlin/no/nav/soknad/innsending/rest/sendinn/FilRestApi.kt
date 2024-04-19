@@ -99,7 +99,7 @@ class FilRestApi(
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll.harTilgang(soknadDto)
 		if (!(soknadDto.kanGjoreEndringer ||
-				(soknadDto.status == SoknadsStatusDto.Innsendt && soknadDto.vedleggsListe.any { it.id == vedleggsId && it.erHoveddokument && !it.erVariant }))
+				(soknadDto.status == SoknadsStatusDto.innsendt && soknadDto.vedleggsListe.any { it.id == vedleggsId && it.erHoveddokument && !it.erVariant }))
 		) {
 			throw IllegalActionException(
 				message = "Søknaden kan ikke vises. Søknaden er slettet eller innsendt og kan ikke vises eller endres.",

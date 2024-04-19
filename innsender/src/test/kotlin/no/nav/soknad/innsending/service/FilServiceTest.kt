@@ -61,13 +61,13 @@ class FilServiceTest : ApplicationTest() {
 
 		val oppdatertSoknadDto = soknadService.hentSoknad(dokumentSoknadDto.id!!)
 		Assertions.assertEquals(
-			OpplastingsStatusDto.LastetOpp,
+			OpplastingsStatusDto.lastetOpp,
 			oppdatertSoknadDto.vedleggsListe.first { it.id == vedleggDto.id!! }.opplastingsStatus
 		)
 
 		val oppdatertVedleggDto = filService.slettFil(oppdatertSoknadDto, filDtoSaved.vedleggsid, filDtoSaved.id!!)
 
-		Assertions.assertEquals(OpplastingsStatusDto.IkkeValgt, oppdatertVedleggDto.opplastingsStatus)
+		Assertions.assertEquals(OpplastingsStatusDto.ikkeValgt, oppdatertVedleggDto.opplastingsStatus)
 	}
 
 	@Test

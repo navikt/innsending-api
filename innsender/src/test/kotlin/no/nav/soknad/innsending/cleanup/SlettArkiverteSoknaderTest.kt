@@ -79,7 +79,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 		val skalSendeInnOgArkivereId = soknadService.opprettNySoknad(
 			Hjelpemetoder.lagDokumentSoknad(
 				brukerId = "12345678901", skjemanr = defaultSkjemanr, spraak = spraak, tittel = "En test",
-				tema = tema, id = null, innsendingsid = null, soknadsStatus = SoknadsStatusDto.Opprettet, vedleggsListe = null,
+				tema = tema, id = null, innsendingsid = null, soknadsStatus = SoknadsStatusDto.opprettet, vedleggsListe = null,
 				ettersendingsId = null, OffsetDateTime.now().minusDays(1)
 			)
 		).innsendingsId!!
@@ -87,7 +87,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 		val skalSendeInnIkkeArkivereId = soknadService.opprettNySoknad(
 			Hjelpemetoder.lagDokumentSoknad(
 				brukerId = "12345678901", skjemanr = defaultSkjemanr, spraak = spraak, tittel = "En test",
-				tema = tema, id = null, innsendingsid = null, soknadsStatus = SoknadsStatusDto.Opprettet, vedleggsListe = null,
+				tema = tema, id = null, innsendingsid = null, soknadsStatus = SoknadsStatusDto.opprettet, vedleggsListe = null,
 				ettersendingsId = null, OffsetDateTime.now().minusDays(1)
 			)
 		).innsendingsId!!
@@ -110,7 +110,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 
 		// Og innsendt og ikke arkivert Soknad skal ikke være slettet.
 		val beholdtSoknad = soknadService.hentSoknad(skalSendeInnIkkeArkivereId)
-		Assertions.assertTrue(beholdtSoknad.status == SoknadsStatusDto.Innsendt)
+		Assertions.assertTrue(beholdtSoknad.status == SoknadsStatusDto.innsendt)
 
 		// Og metrics for antall slettede søknader er økt med 1
 		Assertions.assertEquals(

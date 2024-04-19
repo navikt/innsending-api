@@ -135,17 +135,17 @@ fun translate(vedleggDtos: List<VedleggDto>): List<DocumentData> {
 	 */
 	// Lag documentdata for hoveddokumentet (finn alle vedleggdto markert som hoveddokument)
 	val hoveddokumentVedlegg: List<Varianter> = vedleggDtos
-		.filter { it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
+		.filter { it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
 		.map { translate(it) }
 
 	val hovedDokument: DocumentData = vedleggDtos
-		.filter { it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp && !it.erVariant }
+		.filter { it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp && !it.erVariant }
 		.map { DocumentData(it.vedleggsnr!!, it.erHoveddokument, it.tittel, hoveddokumentVedlegg) }
 		.first()
 
 	// Merk: at det  er antatt at vedlegg ikke har varianter. Hvis vi skal støtte dette må varianter av samme vedlegg linkes sammen
 	val vedlegg: List<DocumentData> = vedleggDtos
-		.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
+		.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
 		.map { DocumentData(it.vedleggsnr!!, it.erHoveddokument, it.tittel, listOf(translate(it))) }
 
 	return listOf(hovedDokument) + vedlegg

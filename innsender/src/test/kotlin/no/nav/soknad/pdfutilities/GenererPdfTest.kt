@@ -35,8 +35,8 @@ class GenererPdfTest {
 		val kvittering = PdfGenerator().lagKvitteringsSide(
 			soknad,
 			sammensattnavn,
-			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt },
-			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
+			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt },
+			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.sendSenere })
 
 		//writeBytesToFile(kvittering, "./delme.pdf")
 
@@ -56,8 +56,8 @@ class GenererPdfTest {
 		val kvittering = PdfGenerator().lagKvitteringsSide(
 			soknad,
 			sammensattnavn,
-			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt },
-			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
+			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt },
+			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.sendSenere })
 
 		//writeBytesToFile(kvittering, "./soknadskvittering.pdf")
 
@@ -76,8 +76,8 @@ class GenererPdfTest {
 		val kvittering = PdfGenerator().lagKvitteringsSide(
 			soknad,
 			sammensattnavn,
-			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt && it.opprettetdato > OffsetDateTime.MIN },
-			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
+			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt && it.opprettetdato > OffsetDateTime.MIN },
+			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.sendSenere })
 
 		//writeBytesToFile(kvittering, "./ettersendingskvittering.pdf")
 
@@ -96,8 +96,8 @@ class GenererPdfTest {
 		val kvittering = PdfGenerator().lagKvitteringsSide(
 			soknad,
 			sammensattnavn,
-			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt && it.opprettetdato > OffsetDateTime.MIN },
-			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
+			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.innsendt && it.opprettetdato > OffsetDateTime.MIN },
+			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.sendSenere })
 
 		//writeBytesToFile(kvittering, "./ettersendingskvittering2.pdf")
 
@@ -114,7 +114,7 @@ class GenererPdfTest {
 			VedleggDto(
 				tittel = tittel, label = tittel + ", " + skjemanr,
 				erHoveddokument = true, erVariant = false, erPdfa = true, erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.Innsendt, opprettetdato = OffsetDateTime.MIN
+				opplastingsStatus = OpplastingsStatusDto.innsendt, opprettetdato = OffsetDateTime.MIN
 			),
 			VedleggDto(
 				tittel = tittel,
@@ -123,7 +123,7 @@ class GenererPdfTest {
 				erVariant = true,
 				erPdfa = true,
 				erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.Innsendt,
+				opplastingsStatus = OpplastingsStatusDto.innsendt,
 				opprettetdato = OffsetDateTime.MIN,
 				innsendtdato = OffsetDateTime.now()
 			),
@@ -134,40 +134,40 @@ class GenererPdfTest {
 				erVariant = false,
 				erPdfa = true,
 				erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.Innsendt,
+				opplastingsStatus = OpplastingsStatusDto.innsendt,
 				opprettetdato = OffsetDateTime.MIN,
 				innsendtdato = OffsetDateTime.now()
 			),
 			VedleggDto(
 				tittel = "Vedlegg2", label = "Vedlegg2, NAV 08-36.03",
 				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.SendSenere, opprettetdato = OffsetDateTime.MIN
+				opplastingsStatus = OpplastingsStatusDto.sendSenere, opprettetdato = OffsetDateTime.MIN
 			),
 			VedleggDto(
 				tittel = "Vedlegg3", label = "Vedlegg3, NAV 08-36.04",
 				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.SendSenere, opprettetdato = OffsetDateTime.MIN
+				opplastingsStatus = OpplastingsStatusDto.sendSenere, opprettetdato = OffsetDateTime.MIN
 			),
 			VedleggDto(
 				tittel = "Vedlegg4", label = "Vedlegg4",
 				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = false,
-				opplastingsStatus = OpplastingsStatusDto.SendesAvAndre, opprettetdato = OffsetDateTime.MIN
+				opplastingsStatus = OpplastingsStatusDto.sendesAvAndre, opprettetdato = OffsetDateTime.MIN
 			),
 			VedleggDto(
 				tittel = "Vedlegg5", label = "Vedlegg5",
 				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.SendesIkke, opprettetdato = OffsetDateTime.MIN
+				opplastingsStatus = OpplastingsStatusDto.sendesIkke, opprettetdato = OffsetDateTime.MIN
 			),
 			VedleggDto(
 				tittel = "Vedlegg6", label = "Vedlegg6",
 				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = false,
-				opplastingsStatus = OpplastingsStatusDto.SendesIkke, opprettetdato = OffsetDateTime.MIN
+				opplastingsStatus = OpplastingsStatusDto.sendesIkke, opprettetdato = OffsetDateTime.MIN
 			)
 
 		)
 		return DokumentSoknadDto(
 			brukerId = brukerid, skjemanr = skjemanr, tittel = tittel, tema = "TMA",
-			status = SoknadsStatusDto.Innsendt, innsendtDato = OffsetDateTime.now(),
+			status = SoknadsStatusDto.innsendt, innsendtDato = OffsetDateTime.now(),
 			innsendingsId = UUID.randomUUID().toString(), opprettetDato = opprettetDato, vedleggsListe = vedleggDtos
 		)
 	}
@@ -183,7 +183,7 @@ class GenererPdfTest {
 				erVariant = false,
 				erPdfa = true,
 				erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.Innsendt,
+				opplastingsStatus = OpplastingsStatusDto.innsendt,
 				opprettetdato = OffsetDateTime.now(),
 				innsendtdato = OffsetDateTime.now()
 			),
@@ -194,7 +194,7 @@ class GenererPdfTest {
 				erVariant = false,
 				erPdfa = true,
 				erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.Innsendt,
+				opplastingsStatus = OpplastingsStatusDto.innsendt,
 				opprettetdato = OffsetDateTime.MIN,
 				innsendtdato = OffsetDateTime.MIN
 			),
@@ -205,24 +205,24 @@ class GenererPdfTest {
 				erVariant = false,
 				erPdfa = true,
 				erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.Innsendt,
+				opplastingsStatus = OpplastingsStatusDto.innsendt,
 				opprettetdato = OffsetDateTime.now(),
 				innsendtdato = OffsetDateTime.now()
 			),
 			VedleggDto(
 				tittel = "Vedlegg3", label = "Vedlegg3, NAV 08-36.04",
 				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.SendSenere, opprettetdato = OffsetDateTime.MIN
+				opplastingsStatus = OpplastingsStatusDto.sendSenere, opprettetdato = OffsetDateTime.MIN
 			),
 			VedleggDto(
 				tittel = "Vedlegg4", label = "Vedlegg4",
 				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = false,
-				opplastingsStatus = OpplastingsStatusDto.SendesAvAndre, opprettetdato = OffsetDateTime.MIN
+				opplastingsStatus = OpplastingsStatusDto.sendesAvAndre, opprettetdato = OffsetDateTime.MIN
 			)
 		)
 		return DokumentSoknadDto(
 			brukerId = brukerid, skjemanr = skjemanr, tittel = tittel, tema = "TMA",
-			status = SoknadsStatusDto.Innsendt, innsendtDato = OffsetDateTime.now(),
+			status = SoknadsStatusDto.innsendt, innsendtDato = OffsetDateTime.now(),
 			innsendingsId = UUID.randomUUID().toString(), ettersendingsId = UUID.randomUUID().toString(),
 			opprettetDato = opprettetDato, vedleggsListe = vedleggDtos,
 			forsteInnsendingsDato = OffsetDateTime.MIN
@@ -241,7 +241,7 @@ class GenererPdfTest {
 				erVariant = false,
 				erPdfa = true,
 				erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.Innsendt,
+				opplastingsStatus = OpplastingsStatusDto.innsendt,
 				opprettetdato = OffsetDateTime.now(),
 				innsendtdato = OffsetDateTime.now()
 			),
@@ -252,7 +252,7 @@ class GenererPdfTest {
 				erVariant = false,
 				erPdfa = true,
 				erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.Innsendt,
+				opplastingsStatus = OpplastingsStatusDto.innsendt,
 				opprettetdato = OffsetDateTime.MIN,
 				innsendtdato = OffsetDateTime.MIN
 			),
@@ -263,7 +263,7 @@ class GenererPdfTest {
 				erVariant = false,
 				erPdfa = true,
 				erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.Innsendt,
+				opplastingsStatus = OpplastingsStatusDto.innsendt,
 				opprettetdato = OffsetDateTime.now(),
 				innsendtdato = OffsetDateTime.now()
 			),
@@ -274,19 +274,19 @@ class GenererPdfTest {
 				erVariant = false,
 				erPdfa = true,
 				erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.Innsendt,
+				opplastingsStatus = OpplastingsStatusDto.innsendt,
 				opprettetdato = OffsetDateTime.MIN,
 				innsendtdato = OffsetDateTime.now()
 			),
 			VedleggDto(
 				tittel = "Vedlegg4", label = "Vedlegg4",
 				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = false,
-				opplastingsStatus = OpplastingsStatusDto.SendesAvAndre, opprettetdato = OffsetDateTime.MIN
+				opplastingsStatus = OpplastingsStatusDto.sendesAvAndre, opprettetdato = OffsetDateTime.MIN
 			)
 		)
 		return DokumentSoknadDto(
 			brukerId = brukerid, skjemanr = skjemanr, tittel = tittel, tema = "TMA",
-			status = SoknadsStatusDto.Innsendt, innsendtDato = OffsetDateTime.now(),
+			status = SoknadsStatusDto.innsendt, innsendtDato = OffsetDateTime.now(),
 			innsendingsId = UUID.randomUUID().toString(), ettersendingsId = UUID.randomUUID().toString(),
 			opprettetDato = opprettetDato, vedleggsListe = vedleggDtos,
 			forsteInnsendingsDato = OffsetDateTime.MIN

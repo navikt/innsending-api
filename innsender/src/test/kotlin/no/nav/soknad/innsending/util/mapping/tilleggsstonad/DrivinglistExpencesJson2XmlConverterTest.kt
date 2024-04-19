@@ -18,7 +18,7 @@ class DrivinglistExpencesJson2XmlConverterTest {
 	@Test
 	fun json2XmlTest_drivingListExpences_flereBetalingsplaner() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = kjoreliste, tema = "TSR").build()
-		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/kjøreliste-NAV-11-12.24B-05032024.json")
+		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/refusjondagligreise-NAV-11-12.24B-19042024.json")
 
 		val jsonObj = convertToJsonDrivingListJson(soknadDto, jsonFil)
 
@@ -26,9 +26,9 @@ class DrivinglistExpencesJson2XmlConverterTest {
 
 		Assertions.assertNotNull(xmlFil)
 		val xmlString = xmlFil.decodeToString()
-		Assertions.assertTrue(xmlString.contains("<vedtaksId>43258684</vedtaksId>"))
-		Assertions.assertTrue(xmlString.contains("<betalingsplanId>15573699</betalingsplanId>"))
-		Assertions.assertTrue(xmlString.contains("<totaltParkeringsbeloep>200</totaltParkeringsbeloep>"))
+		Assertions.assertTrue(xmlString.contains("<vedtaksId>36989400</vedtaksId>"))
+		Assertions.assertTrue(xmlString.contains("<betalingsplanId>14732303</betalingsplanId>"))
+		Assertions.assertTrue(xmlString.contains("<totaltParkeringsbeloep>46</totaltParkeringsbeloep>"))
 		Assertions.assertTrue(xmlString.contains("<totaltAntallDagerKjoert>2</totaltAntallDagerKjoert>"))
 	}
 

@@ -42,7 +42,7 @@ data class Utgiftsperioder(
 data class Utgiftsdager(
 
 	@JacksonXmlProperty(localName = "date")
-	val utgiftsdag: XMLGregorianCalendar? = null,
+	val utgiftsdag: String? = null,
 
 	@JacksonXmlProperty(localName = "parkeringsutgift")
 	val parkeringsutgift: BigInteger? = null

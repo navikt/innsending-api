@@ -70,7 +70,7 @@ fun convertToUtgiftsdager(expences: List<JsonDailyExpences>?): List<Utgiftsdager
 	if (expences == null) return null
 	return expences.map {
 		Utgiftsdager(
-			utgiftsdag = convertToXmlGregorianWithTimeZone(it.date),
+			utgiftsdag = convertToDateStringWithTimeZone(it.date),
 			parkeringsutgift = it.parking?.toBigDecimal()?.toBigInteger()
 		)
 	}
