@@ -5,7 +5,7 @@ object Constants {
 	const val CLAIM_ACR_IDPORTEN_LOA_HIGH = "acr=idporten-loa-high"
 	const val CLAIM_ACR_LEVEL_4 = "acr=Level4"
 	const val TOKENX = "tokenx"
-	const val AZURE = "azure"
+	const val AZURE = "azuread"
 
 	const val NAV_CONSUMER_ID = "Nav-Consumer-Id"
 	const val HEADER_CALL_ID = "Nav-Call-Id"
