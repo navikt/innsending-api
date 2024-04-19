@@ -1,0 +1,53 @@
+{
+	"language":"nb-NO",
+	"data":{
+		"data":{
+			"jegErKjentMedAtJegKanMisteRettenTilStonadHvisJegOppgirFeilaktigeOpplysninger":true,
+			"aktiviteterOgMaalgruppe":{
+				"maalgruppe":{
+					"calculated":{
+						"maalgruppetype":"ANNET"
+					},
+					"prefilled":{
+						"maalgruppetype":"NEDSARBEVN",
+						"gyldighetsperiode":{
+							"fom":"2024-01-01",
+							"tom":"2024-06-16"
+						},
+						"maalgruppenavn":"Person med nedsatt arbeidsevne pga. sykdom"
+					}
+				}
+			},
+			"drivinglist":{
+				"selectedVedtaksId":"36989400",
+				"dates":[
+					{"date":"2024-01-17",
+						"parking":"23",
+						"betalingsplanId":"14732303"
+					},
+					{
+						"date":"2024-01-18",
+						"parking":"23",
+						"betalingsplanId":"14732303"
+					}
+				]
+			},
+			"fornavnSoker":"asd",
+			"etternavnSoker":"asd",
+			"harDuNorskFodselsnummerEllerDNummer":"ja",
+			"fodselsnummerDNummerSoker":"23867399240"
+		},
+		"metadata":{
+			"timezone":"America/Noronha",
+			"offset":-120,
+			"origin":"https://fyllut-preprod-alt.intern.dev.nav.no",
+			"referrer":"https://fyllut-preprod-alt.intern.dev.nav.no/fyllut/nav111224b/paabegynt?sub=digital",
+			"browserName":"Netscape",
+			"userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+			"pathName":"/fyllut/nav111224b/personopplysninger",
+			"onLine":true
+		},
+		"state":"submitted",
+		"_vnote":""
+	}
+}
