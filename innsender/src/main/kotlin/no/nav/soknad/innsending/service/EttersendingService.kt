@@ -129,7 +129,7 @@ class EttersendingService(
 						VedleggDbData(
 							id = null,
 							soknadsid = savedEttersendingsSoknad.id!!,
-							status = if (OpplastingsStatusDto.sendSenere == v.opplastingsStatus)
+							status = if (OpplastingsStatusDto.SendSenere == v.opplastingsStatus)
 								OpplastingsStatus.IKKE_VALGT else mapTilDbOpplastingsStatus(v.opplastingsStatus),
 							erhoveddokument = v.erHoveddokument,
 							ervariant = v.erVariant,
@@ -143,7 +143,7 @@ class EttersendingService(
 							uuid = UUID.randomUUID().toString(),
 							opprettetdato = v.opprettetdato.toLocalDateTime(),
 							endretdato = LocalDateTime.now(),
-							innsendtdato = if (v.opplastingsStatus == OpplastingsStatusDto.innsendt && v.innsendtdato == null)
+							innsendtdato = if (v.opplastingsStatus == OpplastingsStatusDto.Innsendt && v.innsendtdato == null)
 								nyesteSoknad.innsendtDato?.toLocalDateTime() else v.innsendtdato?.toLocalDateTime(),
 							vedleggsurl = if (v.vedleggsnr != null)
 								skjemaService.hentSkjema(v.vedleggsnr!!, nyesteSoknad.spraak ?: "nb", false).url else null,
@@ -294,7 +294,7 @@ class EttersendingService(
 	) {
 		logger.info(
 			"${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes " +
-				"${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.sendSenere }.size}"
+				"${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.SendSenere }.size}"
 		)
 
 		// Det mangler vedlegg så det opprettes en ettersendingssøknad av systemet

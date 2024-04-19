@@ -212,9 +212,9 @@ class EttersendingServiceTest : ApplicationTest() {
 		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
 		assertEquals(3, dokumentSoknadDto.vedleggsListe.size)
 		assertTrue(!dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })
-		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt && it.innsendtdato != null })
-		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "N6" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
-		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt && it.innsendtdato != null })
+		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "N6" && it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
+		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
 	}
 
 	@Test
@@ -241,8 +241,8 @@ class EttersendingServiceTest : ApplicationTest() {
 		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
 		assertEquals(2, dokumentSoknadDto.vedleggsListe.size)
 		assertTrue(!dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })
-		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
-		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
+		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
 
 		val hendelseDbDatasEttersending2 =
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
@@ -294,8 +294,8 @@ class EttersendingServiceTest : ApplicationTest() {
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
 		assertEquals(2, ettersendingsSoknadDto.vedleggsListe.size)
 		assertTrue(!ettersendingsSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == dokumentSoknadDto.skjemanr })
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "N6" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "W1" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt && it.innsendtdato != null })
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "N6" && it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "W1" && it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt && it.innsendtdato != null })
 
 		val hendelseDbDatasEttersending2 =
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(ettersendingsSoknadDto.innsendingsId!!)
@@ -347,7 +347,7 @@ class EttersendingServiceTest : ApplicationTest() {
 			ettersendingService.createEttersendingFromExistingSoknader(dokumentSoknadDto.brukerId, ettersending)
 
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
 
 		// Laster opp fil til vedlegg W1 til ettersendingssøknaden
 		val lagretFil =
@@ -386,7 +386,7 @@ class EttersendingServiceTest : ApplicationTest() {
 		assertTrue(ettersendingsSoknadDto2.vedleggsListe.isNotEmpty())
 
 		assertEquals(2, ettersendingsSoknadDto2.vedleggsListe.count
-		{ it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+		{ it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
 
 		assertEquals(1, ettersendingsSoknadDto2.vedleggsListe.count { it.innsendtdato != null })
 		assertEquals(1, ettersendingsSoknadDto2.vedleggsListe.count { it.innsendtdato == null })
@@ -471,8 +471,8 @@ class EttersendingServiceTest : ApplicationTest() {
 			ettersendingService.createEttersendingFromExistingSoknader(dokumentSoknadDto.brukerId, ettersending)
 
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.none { it.opplastingsStatus == OpplastingsStatusDto.innsendt })
-		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.none { it.opplastingsStatus == OpplastingsStatusDto.Innsendt })
+		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
 
 		val hendelseDbDatasEttersending =
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(ettersendingsSoknadDto.innsendingsId!!)
@@ -518,8 +518,8 @@ class EttersendingServiceTest : ApplicationTest() {
 		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
 		assertEquals(2, dokumentSoknadDto.vedleggsListe.size)
 		assertTrue(!dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })
-		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
-		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt })
+		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
+		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
 
 		val hendelseDbDatasEttersending2 =
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)

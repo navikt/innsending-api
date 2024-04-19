@@ -24,7 +24,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			tittel = "Tilleggssoknad",
 			erHoveddokument = true,
 			erVariant = false,
-			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			vedleggsNavn = "/litenPdf.pdf"
 		)
 		val hoveddokVariantDto = Hjelpemetoder.lagVedlegg(
@@ -32,7 +32,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			tittel = "Tilleggssoknad",
 			erHoveddokument = true,
 			erVariant = true,
-			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			vedleggsNavn = "/__files/dagligreise-NAV-11-12.21B-08032024.json"
 		)
 		val inputDokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad(
@@ -68,7 +68,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			tittel = "Tilleggssoknad",
 			erHoveddokument = true,
 			erVariant = false,
-			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			vedleggsNavn = "/litenPdf.pdf"
 		)
 		val hoveddokVariantDto = Hjelpemetoder.lagVedlegg(
@@ -76,7 +76,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			tittel = "Tilleggssoknad",
 			erHoveddokument = true,
 			erVariant = true,
-			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			vedleggsNavn = "/__files/tilleggsstonad-NAV-11-12.19B-28022024.json"
 		)
 		val inputDokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad(
@@ -102,16 +102,16 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
 
 		val innsendtSoknad = soknadService.hentSoknadMedHoveddokumentVariant(opprettetSoknad.innsendingsId!!)
-		Assertions.assertTrue(innsendtSoknad.status == SoknadsStatusDto.innsendt)
+		Assertions.assertTrue(innsendtSoknad.status == SoknadsStatusDto.Innsendt)
 		Assertions.assertEquals("TSO", innsendtSoknad.tema)
 		Assertions.assertEquals(
 			Mimetype.applicationSlashXml,
-			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.innsendt }
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.Innsendt }
 				.first().mimetype
 		)
 		Assertions.assertEquals(
 			Mimetype.applicationSlashJson,
-			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.sendesIkke }
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.SendesIkke }
 				.first().mimetype
 		)
 
@@ -126,7 +126,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			tittel = "Tilleggssoknad",
 			erHoveddokument = true,
 			erVariant = false,
-			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			vedleggsNavn = "/litenPdf.pdf"
 		)
 		val hoveddokVariantDto = Hjelpemetoder.lagVedlegg(
@@ -134,7 +134,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			tittel = "Tilleggssoknad",
 			erHoveddokument = true,
 			erVariant = true,
-			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			vedleggsNavn = "/__files/tilleggsstonad-NAV-11-12.19B-samling.json"
 		)
 		val inputDokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad(
@@ -160,16 +160,16 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
 
 		val innsendtSoknad = soknadService.hentSoknadMedHoveddokumentVariant(opprettetSoknad.innsendingsId!!)
-		Assertions.assertTrue(innsendtSoknad.status == SoknadsStatusDto.innsendt)
+		Assertions.assertTrue(innsendtSoknad.status == SoknadsStatusDto.Innsendt)
 		Assertions.assertEquals("TSO", innsendtSoknad.tema)
 		Assertions.assertEquals(
 			Mimetype.applicationSlashXml,
-			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.innsendt }
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.Innsendt }
 				.first().mimetype
 		)
 		Assertions.assertEquals(
 			Mimetype.applicationSlashJson,
-			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.sendesIkke }
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.SendesIkke }
 				.first().mimetype
 		)
 
@@ -185,7 +185,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			tittel = "Tilleggssoknad",
 			erHoveddokument = true,
 			erVariant = false,
-			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			vedleggsNavn = "/litenPdf.pdf"
 		)
 		val hoveddokVariantDto = Hjelpemetoder.lagVedlegg(
@@ -193,7 +193,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			tittel = "Tilleggssoknad",
 			erHoveddokument = true,
 			erVariant = true,
-			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			vedleggsNavn = "/__files/flytteutgifter-NAV-11-12.23B-10042024.json"
 		)
 		val inputDokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad(
@@ -219,16 +219,16 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
 
 		val innsendtSoknad = soknadService.hentSoknadMedHoveddokumentVariant(opprettetSoknad.innsendingsId!!)
-		Assertions.assertTrue(innsendtSoknad.status == SoknadsStatusDto.innsendt)
+		Assertions.assertTrue(innsendtSoknad.status == SoknadsStatusDto.Innsendt)
 		Assertions.assertEquals("TSR", innsendtSoknad.tema)
 		Assertions.assertEquals(
 			Mimetype.applicationSlashXml,
-			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.innsendt }
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.Innsendt }
 				.first().mimetype
 		)
 		Assertions.assertEquals(
 			Mimetype.applicationSlashJson,
-			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.sendesIkke }
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.SendesIkke }
 				.first().mimetype
 		)
 
@@ -242,7 +242,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			tittel = "Kjøreliste",
 			erHoveddokument = true,
 			erVariant = false,
-			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			vedleggsNavn = "/litenPdf.pdf"
 		)
 		val hoveddokVariantDto = Hjelpemetoder.lagVedlegg(
@@ -250,7 +250,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			tittel = "Kjøreliste",
 			erHoveddokument = true,
 			erVariant = true,
-			opplastingsStatus = OpplastingsStatusDto.lastetOpp,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			vedleggsNavn = "/__files/kjøreliste-NAV-11-12.24B-05032024.json"
 		)
 		val inputDokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad(
@@ -276,16 +276,16 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
 
 		val innsendtSoknad = soknadService.hentSoknadMedHoveddokumentVariant(opprettetSoknad.innsendingsId!!)
-		Assertions.assertTrue(innsendtSoknad.status == SoknadsStatusDto.innsendt)
+		Assertions.assertTrue(innsendtSoknad.status == SoknadsStatusDto.Innsendt)
 		Assertions.assertEquals("TSR", innsendtSoknad.tema)
 		Assertions.assertEquals(
 			Mimetype.applicationSlashXml,
-			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.innsendt }
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.Innsendt }
 				.first().mimetype
 		)
 		Assertions.assertEquals(
 			Mimetype.applicationSlashJson,
-			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.sendesIkke }
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.SendesIkke }
 				.first().mimetype
 		)
 

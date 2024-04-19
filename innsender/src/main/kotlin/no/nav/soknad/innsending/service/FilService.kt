@@ -84,12 +84,12 @@ class FilService(
 
 		if (!soknadDto.kanGjoreEndringer) {
 			when (soknadDto.status.name) {
-				SoknadsStatusDto.innsendt.name -> throw IllegalActionException(
+				SoknadsStatusDto.Innsendt.name -> throw IllegalActionException(
 					message = "Søknad ${soknadDto.innsendingsId} er sendt inn og nye filer kan ikke lastes opp på denne. Opprett ny søknad for ettersendelse av informasjon. Innsendte søknader kan ikke endres. Ønsker søker å gjøre oppdateringer, så må vedkommende ettersende dette",
 					errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 				)
 
-				SoknadsStatusDto.slettetAvBruker.name, SoknadsStatusDto.automatiskSlettet.name -> throw IllegalActionException(
+				SoknadsStatusDto.SlettetAvBruker.name, SoknadsStatusDto.AutomatiskSlettet.name -> throw IllegalActionException(
 					message = "Søknaden er slettet og ingen filer kan legges til. Søknader markert som slettet kan ikke endres. Søker må eventuelt opprette ny søknad",
 					errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 				)
@@ -161,13 +161,13 @@ class FilService(
 			return lagFilDto(filDbData)
 		} catch (e: ResourceNotFoundException) {
 			when (soknadDto.status) {
-				SoknadsStatusDto.innsendt -> throw IllegalActionException(
+				SoknadsStatusDto.Innsendt -> throw IllegalActionException(
 					message = "Søknad ${soknadDto.innsendingsId} er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til Ditt Nav og søk opp dine saker der. Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
 					cause = e,
 					errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 				)
 
-				SoknadsStatusDto.slettetAvBruker, SoknadsStatusDto.automatiskSlettet -> throw IllegalActionException(
+				SoknadsStatusDto.SlettetAvBruker, SoknadsStatusDto.AutomatiskSlettet -> throw IllegalActionException(
 					message = "Søknaden er slettet og ingen filer er tilgjengelig. Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
 					cause = e,
 					errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
@@ -205,12 +205,12 @@ class FilService(
 
 		if (filDbDataList.isEmpty() && kastFeilNarNull)
 			when (soknadDto.status) {
-				SoknadsStatusDto.innsendt -> throw IllegalActionException(
+				SoknadsStatusDto.Innsendt -> throw IllegalActionException(
 					message = "Søknad $innsendingsId er sendt inn og opplastede filer er ikke tilgjengelig her. Gå til https://www.nav.no/minside og søk opp dine saker der. Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
 					errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 				)
 
-				SoknadsStatusDto.slettetAvBruker, SoknadsStatusDto.automatiskSlettet -> throw IllegalActionException(
+				SoknadsStatusDto.SlettetAvBruker, SoknadsStatusDto.AutomatiskSlettet -> throw IllegalActionException(
 					message = "Søknaden er slettet og ingen filer er tilgjengelig. Etter innsending eller sletting av søknad, fjernes opplastede filer fra applikasjonen",
 					errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 				)
@@ -229,7 +229,7 @@ class FilService(
 
 	fun finnFilStorrelseSum(soknadDto: DokumentSoknadDto, vedleggListe: List<VedleggDto> = soknadDto.vedleggsListe) =
 		vedleggListe
-			.filter { it.opplastingsStatus == OpplastingsStatusDto.ikkeValgt || it.opplastingsStatus == OpplastingsStatusDto.lastetOpp }
+			.filter { it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt || it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
 			.sumOf { repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, it.id!!) }
 
 	@Transactional
@@ -271,7 +271,7 @@ class FilService(
 		soknadDto: DokumentSoknadDto,
 		vedleggsId: Long
 	) {
-		if (patchVedleggDto.opplastingsStatus != null && patchVedleggDto.opplastingsStatus != OpplastingsStatusDto.lastetOpp
+		if (patchVedleggDto.opplastingsStatus != null && patchVedleggDto.opplastingsStatus != OpplastingsStatusDto.LastetOpp
 			&& repo.findAllByVedleggsid(soknadDto.innsendingsId!!, vedleggsId).isNotEmpty()
 		) {
 			repo.slettFilerForVedlegg(vedleggsId)
