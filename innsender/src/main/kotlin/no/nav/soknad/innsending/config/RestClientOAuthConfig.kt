@@ -107,6 +107,7 @@ class RestClientOAuthConfig(
 		val factory = ReactorNettyClientRequestFactory()
 		factory.setReadTimeout(Duration.ofMinutes(1))
 		factory.setConnectTimeout(Duration.ofSeconds(20L))
+		factory.setExchangeTimeout(Duration.ofMinutes(1))
 		return factory
 	}
 
