@@ -9,18 +9,18 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
-import okhttp3.OkHttpClient
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
+import org.springframework.web.client.RestClient
 
 @Service
 @Profile("dev | prod")
 @Qualifier("notifikasjon")
 class SendTilPublisher(
 	private val restConfig: RestConfig,
-	soknadsmottakerClient: OkHttpClient
+	@Qualifier("soknadsmottakerRestClient") soknadsmottakerRestClient: RestClient
 ) : PublisherInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -31,8 +31,8 @@ class SendTilPublisher(
 
 	init {
 		jacksonObjectMapper.registerModule(JavaTimeModule())
-		notificationPublisherApi = NewNotificationApi(restConfig.soknadsMottakerHost, soknadsmottakerClient)
-		cancelNotificationPublisherApi = CancelNotificationApi(restConfig.soknadsMottakerHost, soknadsmottakerClient)
+		notificationPublisherApi = NewNotificationApi(soknadsmottakerRestClient)
+		cancelNotificationPublisherApi = CancelNotificationApi(soknadsmottakerRestClient)
 		healthApi = HealthApi(restConfig.soknadsMottakerHost)
 	}
 

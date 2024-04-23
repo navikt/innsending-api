@@ -27,18 +27,6 @@ paths:
       description: Receives a benefit application, which will lead to it being put on a Kafka topic and archived.
       operationId: receive
 
-      parameters:
-        - in: header
-          name: X-dryRun
-          description: >
-            If this value is passed in, the service will only log the requests sent, nothing will be sent to
-            Kafka topics. Omit setting this header to properly archive.
-          example: enabled
-          required: false
-          schema:
-            type: string
-            default: null
-
       requestBody:
         description: Metadata about the benefit application being sent in.
         content:
@@ -59,18 +47,6 @@ paths:
       description: Depending on input, a message or a task user notification with a link to continue work is to be published
       operationId: newNotification
 
-      parameters:
-        - in: header
-          name: X-dryRun
-          description: >
-            If this value is passed in, the service will only log the requests sent, nothing will be sent to
-            Kafka topics. Omit setting this header to send proper notifications.
-          example: enabled
-          required: false
-          schema:
-            type: string
-            default: null
-
       requestBody:
         description: Data neccessary in order to publish a new task or message user notification.
         content:
@@ -90,18 +66,6 @@ paths:
       summary: Message in order to publish message in order to cancel an user notification
       description: After an application is sent in or deleted previous added user notification shall be canceled
       operationId: cancelNotification
-
-      parameters:
-        - in: header
-          name: X-dryRun
-          description: >
-            If this value is passed in, the service will only log the requests sent, nothing will be sent to
-            Kafka topics. Omit setting this header to send proper notifications.
-          example: enabled
-          required: false
-          schema:
-            type: string
-            default: null
 
       requestBody:
         description: Data neccessary to identify user notification to be closed.

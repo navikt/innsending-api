@@ -11,20 +11,19 @@ import no.nav.soknad.innsending.kodeverk.api.KodeverkApi
 import no.nav.soknad.innsending.kodeverk.model.GetKodeverkKoderBetydningerResponse
 import no.nav.soknad.innsending.model.OpprettEttersending
 import no.nav.soknad.innsending.util.finnSpraakFraInput
-import okhttp3.OkHttpClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.web.client.RestClient
 import java.time.Duration
 
 @Service
 class KodeverkService(
-	restConfig: RestConfig,
-	kodeverkApiClient: OkHttpClient
+	kodeverkApiClient: RestClient
 ) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
-	private val kodeverkApi = KodeverkApi(restConfig.kodeverkUrl, kodeverkApiClient)
+	private val kodeverkApi = KodeverkApi( kodeverkApiClient)
 
 	val cache: LoadingCache<String, GetKodeverkKoderBetydningerResponse> = Caffeine
 		.newBuilder()
@@ -33,7 +32,10 @@ class KodeverkService(
 			kodeverkApi.betydning(
 				kodeverksnavn = it,
 				spraak = setOf("nb", "nn", "en"),
-				ekskluderUgyldige = true
+				ekskluderUgyldige = true,
+				oppslagsdato = null,
+				navConsumerId = null,
+				navCallId = null
 			)
 		}
 
