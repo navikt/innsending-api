@@ -18,7 +18,6 @@ import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpRequest
 import org.springframework.http.client.*
 import org.springframework.web.client.RestClient
-import org.springframework.web.reactive.function.client.WebClient
 import java.time.Duration
 
 @Configuration
@@ -27,6 +26,11 @@ class RestClientOAuthConfig(
 	) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
+
+	private val defaultReadTimeout: Long = 1 // minutes
+	private val defaultConnectTimeout: Long = 20 // seconds
+	private val defaultExchangeTimeout: Long = 2 // minutes
+
 
 	@Value("\${restconfig.antivirusUrl}")
 	private lateinit var antiVirusUrl: String
@@ -103,11 +107,11 @@ class RestClientOAuthConfig(
 	@Qualifier("skjemaRestClient")
 	fun skjemaClientWithoutOAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.sanityHost).build()
 
-	private fun timeouts(): ReactorNettyClientRequestFactory {
-		val factory = ReactorNettyClientRequestFactory()
-		factory.setReadTimeout(Duration.ofMinutes(1))
-		factory.setConnectTimeout(Duration.ofSeconds(20L))
-		factory.setExchangeTimeout(Duration.ofMinutes(1))
+	private fun timeouts(): ClientHttpRequestFactory {
+		val factory = SimpleClientHttpRequestFactory()
+		factory.setReadTimeout(Duration.ofMinutes(defaultReadTimeout))
+		factory.setConnectTimeout(Duration.ofSeconds(defaultConnectTimeout))
+		//factory.setExchangeTimeout(Duration.ofMinutes(1))
 		return factory
 	}
 
