@@ -40,7 +40,7 @@ data class JsonRettighetstyper(
 
 data class AktivitetsPeriode(
 	val startdatoDdMmAaaa: String,
-	val sluttdatoDdMmAaaa: String,
+	val sluttdatoDdMmAaaa: String? = null,
 )
 
 data class DestinasjonsAdresse(

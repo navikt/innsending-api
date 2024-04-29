@@ -179,9 +179,9 @@ data class SoknadsPeriode(
 	val sluttdato: String
 )
 
-data class SkjemaPeriode(
+data class SkjemaPeriode( // se også no.nav.soknad.innsending.model.Periode
 	val fom: String,
-	val tom: String
+	val tom: String? = null
 )
 
 data class BostotteIForbindelseMedSamling(

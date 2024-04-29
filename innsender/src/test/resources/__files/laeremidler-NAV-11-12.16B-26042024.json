@@ -1,0 +1,50 @@
+{
+	"language":"nb-NO",
+	"data":{
+		"data":{
+			"aktiviteterOgMaalgruppe":{
+				"maalgruppe":{
+					"calculated":{
+						"maalgruppetype":"ANNET"
+					},
+					"prefilled":{
+						"maalgruppetype":"NEDSARBEVN",
+						"gyldighetsperiode":{
+							"fom":"2023-10-25",
+							"tom":"2024-06-25"
+						},
+						"maalgruppenavn":"Person med nedsatt arbeidsevne pga. sykdom"
+					}
+				},
+				"aktivitet":{
+					"aktivitetId":"140913096",
+					"maalgruppe":{
+						"maalgruppetype":"NEDSARBEVN",
+						"gyldighetsperiode":{
+							"fom":"2023-10-25",
+							"tom":"2024-06-25"
+						},
+						"maalgruppenavn":"Person med nedsatt arbeidsevne pga. sykdom"
+					},
+					"periode":{
+						"fom":"2023-08-28"
+					},
+					"text":"Enkeltplass AMO"
+				}
+			},
+			"fornavnSoker":"Blomstrede",
+			"etternavnSoker":"Byregion",
+			"harDuNorskFodselsnummerEllerDNummer":"ja",
+			"fodselsnummerDNummerSoker":"19828898291",
+			"startdatoDdMmAaaa":"2024-04-26",
+			"sluttdatoDdMmAaaa":"2024-04-26",
+			"hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore":"videregaendeUtdanning",
+			"oppgiHvorMangeProsentDuStudererEllerGarPaKurs":70,
+			"harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler":"nei",
+			"farDuDekketLaeremidlerEtterAndreOrdninger":"nei",
+			"tilleggsopplysninger":"Har tatt førerkort"
+		},"metadata":{
+			"timezone":"Europe/Oslo","offset":120,"origin":"https://www.nav.no","referrer":"https://www.nav.no/start/tilleggsstnader?stegvalg=0","browserName":"Netscape","userAgent":"Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1","pathName":"/fyllut/nav111216b/tilleggsopplysningerPanel","onLine":true
+		},"state":"submitted","_vnote":""
+	}
+}
