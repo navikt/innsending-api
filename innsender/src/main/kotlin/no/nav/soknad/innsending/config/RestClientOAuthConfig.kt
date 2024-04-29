@@ -108,7 +108,7 @@ class RestClientOAuthConfig(
 	fun skjemaClientWithoutOAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.sanityHost).build()
 
 	private fun timeouts(): ClientHttpRequestFactory {
-		val factory = SimpleClientHttpRequestFactory()
+		val factory = SimpleClientHttpRequestFactory()  // MERK: støtter ikke http.patch bruk eventuelt JdkClientHttpRequestFactory
 		factory.setReadTimeout(Duration.ofMinutes(defaultReadTimeout))
 		factory.setConnectTimeout(Duration.ofSeconds(defaultConnectTimeout))
 		//factory.setExchangeTimeout(Duration.ofMinutes(1))
