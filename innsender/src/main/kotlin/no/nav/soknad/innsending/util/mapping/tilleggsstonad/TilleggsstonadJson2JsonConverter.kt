@@ -58,7 +58,7 @@ fun getMaalgruppeInformasjonFromAktiviteterOgMaalgruppe(aktiviteterOgMaalgruppe:
     return JsonMaalgruppeinformasjon(
         periode = if (maalgruppe.gyldighetsperiode != null) AktivitetsPeriode(
             maalgruppe.gyldighetsperiode!!.fom.toString(),
-            maalgruppe.gyldighetsperiode!!.tom.toString()
+            maalgruppe.gyldighetsperiode!!.tom?.toString()
         ) else null,
         maalgruppetype = maalgruppe.maalgruppetype.value
     )

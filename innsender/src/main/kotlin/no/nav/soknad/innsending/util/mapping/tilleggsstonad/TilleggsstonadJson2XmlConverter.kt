@@ -70,11 +70,11 @@ fun convertToMaalgruppeinformasjon(jsonMaalgruppeinformasjon: JsonMaalgruppeinfo
 	return if (jsonMaalgruppeinformasjon != null) {
 		Maalgruppeinformasjon(
 			periode = if (jsonMaalgruppeinformasjon.periode != null
-				&& jsonMaalgruppeinformasjon.periode.startdatoDdMmAaaa.isNotBlank() && jsonMaalgruppeinformasjon.periode.sluttdatoDdMmAaaa.isNotBlank()
+				&& jsonMaalgruppeinformasjon.periode.startdatoDdMmAaaa.isNotBlank()
 			)
 				Periode(
 					fom = convertToDateStringWithTimeZone(jsonMaalgruppeinformasjon.periode.startdatoDdMmAaaa),
-					tom = convertToDateStringWithTimeZone(jsonMaalgruppeinformasjon.periode.sluttdatoDdMmAaaa)
+					tom = if (jsonMaalgruppeinformasjon.periode.sluttdatoDdMmAaaa != null) convertToDateStringWithTimeZone(jsonMaalgruppeinformasjon.periode.sluttdatoDdMmAaaa) else null
 				) else null,
 			kilde = jsonMaalgruppeinformasjon.kilde,
 			maalgruppetype = Maalgruppetyper(
@@ -424,7 +424,7 @@ private fun convertReiseObligatoriskSamling(jsonRettighetstyper: JsonRettighetst
 	val periodeList = createPeriodeList(reiseTilSamling.startOgSluttdatoForSamlingene)
 
 	val startOfPeriods = periodeList.map { convertDateToTimeInMillis(it.fom) }.min()
-	val endOfPeriods = periodeList.map { convertDateToTimeInMillis(it.tom) }.max()
+	val endOfPeriods = periodeList.filter{!it.tom.isNullOrEmpty()}.map { convertDateToTimeInMillis(it.tom?: "1990-01-01") }.max()
 	val startDate = convertMillisToDateString(startOfPeriods)
 	val endDate = convertMillisToDateString(endOfPeriods)
 

@@ -276,7 +276,7 @@ data class Periode(
 	@JacksonXmlProperty(localName = "fom")
 	val fom: String,
 	@JacksonXmlProperty(localName = "tom")
-	val tom: String
+	val tom: String?
 )
 
 @JacksonXmlRootElement(localName = "Reiseutgifter")

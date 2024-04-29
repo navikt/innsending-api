@@ -101,6 +101,19 @@ class TilleggsstonadJson2XmlConverterTest {
 	}
 
 	@Test
+	fun json2XmlTest_studymaterials() {
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = stotteTilLaeremidler, tema = "TSO").build()
+		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/laeremidler-NAV-11-12.16B-26042024.json")
+
+		val xmlFil = json2Xml(soknadDto, jsonFil)
+
+		assertNotNull(xmlFil)
+		val xmlString = xmlFil.decodeToString()
+		assertTrue(xmlString.contains("<laeremiddelutgifter"))
+	}
+
+
+	@Test
 	fun json2XmlTest_barnepass() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = stotteTilPassAvBarn, tema = "TSO").build()
 		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/barnepass-NAV-11-12.15B.json")
