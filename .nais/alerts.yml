@@ -25,8 +25,8 @@ spec:
             alert_type: custom
             severity: critical
         - alert: High number of errors
-          expr: sum (increase(log_messages_errors{app="innsending-api",level=~"Error"}[5m])) > {{ number_of_errors }}
-          for: 5m
+          expr: sum (increase(log_messages_errors{app="innsending-api",level=~"Error"}[30m])) > {{ number_of_errors }}
+          for: 30m
           annotations:
             title: "High number of errors logged"
             consequence: "There can be different causes for errors, check logs for cause and evaluation of consequences."
