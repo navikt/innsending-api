@@ -1428,6 +1428,13 @@ components:
       enum: [ "IkkeValgt", "LastetOpp", "Innsendt", "SendSenere", "SendesAvAndre", "SendesIkke", "LastetOppIkkeRelevantLenger" ]
       description: Status på om et vedlegg til søknad er enda ikke er lastet opp, lastet opp eller innsendt
 
+    Opplastingsvalg:
+      type: string
+      enum: [ "LasteOppNa", "LasteOppSenere", "LevertDokumentasjonTidligere", "HarIkkeDokumentasjonen", "SendesAvAndre", "NavKanHenteDokumentasjon" ]
+      description: Spesifikasjon av status på søknaden.
+      example:
+
+
     OpprettEttersending:
       type: object
       description: Data for å opprette en ettersending
@@ -1799,6 +1806,18 @@ components:
       type: string
       description: NAVs identifikasjon av dokumenttype enten som Skjemanummer eller vedleggsnummer.
       example: NAV 14-35.01 eller T7
+
+    VedleggsOpplastingsValg:
+      type: object
+      description: Data som beskriver hvilke valg søker skal få mhp opplasting av dokumentasjon til et vedlegg
+      required:
+        - tittel
+
+      properties:
+        tittel:
+          $ref: "#/components/schemas/Tittel"
+
+
 
     Vedleggsurl:
       type: string
