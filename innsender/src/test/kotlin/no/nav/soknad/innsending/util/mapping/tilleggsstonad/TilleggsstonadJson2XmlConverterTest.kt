@@ -62,6 +62,21 @@ class TilleggsstonadJson2XmlConverterTest {
 
 	}
 
+
+	@Test
+	fun json2XmlTest_oppstartAvslutningSamling() {
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = reiseOppstartSlutt, tema = "TSO").build()
+		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/oppstartslutt-NAV-11-12.18B-30042024.json")
+
+		val xmlFil = json2Xml(soknadDto, jsonFil)
+
+		assertNotNull(xmlFil)
+		val xmlString = xmlFil.decodeToString()
+		assertTrue(xmlString.contains("<reiseutgifter"))
+		assertTrue(xmlString.contains("<reiseVedOppstartOgAvsluttetAktivitet"))
+
+	}
+
 	@Test
 	fun json2XmlTest_reise_for_arbeid() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = reiseArbeid, tema = "TSR").build()

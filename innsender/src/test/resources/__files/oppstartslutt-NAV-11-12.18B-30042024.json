@@ -1,0 +1,57 @@
+{
+	"language":"nb-NO",
+	"data":{
+		"data":{
+			"aktiviteterOgMaalgruppe":{
+				"maalgruppe":{
+					"calculated":{
+						"maalgruppetype":"ANNET"
+					},
+					"prefilled":{
+						"maalgruppetype":"NEDSARBEVN","gyldighetsperiode":{"fom":"2023-11-18","tom":"2024-06-29"},"maalgruppenavn":"Person med nedsatt arbeidsevne pga. sykdom"
+					}
+				},
+				"aktivitet":{
+					"aktivitetId":"141145080","maalgruppe":{
+						"maalgruppetype":"NEDSARBEVN",
+						"gyldighetsperiode":{
+							"fom":"2023-11-18",
+							"tom":"2024-06-30"
+						},
+						"maalgruppenavn":"Person med nedsatt arbeidsevne pga. sykdom"
+					},
+					"periode":{
+						"fom":"2023-10-30","tom":"2024-07-29"
+					},
+					"text":"Arbeidsforberedende trening (AFT): 30. oktober 2023 - 29. juli 2024"
+				}
+			},
+			"soknadsPeriode":{
+				"startdato":"2024-04-30","sluttdato":"2024-08-31"
+			},
+			"velgLand3":{
+				"label":"Norge",
+				"value":"NO"
+			},
+			"fornavnSoker":"Blomstrede",
+			"etternavnSoker":"Byregion",
+			"harDuNorskFodselsnummerEllerDNummer":"ja",
+			"fodselsnummerDNummerSoker":"19828898291",
+			"hvorLangReiseveiHarDu2":24,
+			"hvorMangeGangerSkalDuReiseEnVei":2,
+			"adresse3":"Østsideveien 18",
+			"postnr3":"3701",
+			"harDuBarnSomSkalFlytteMedDeg":"nei",
+			"harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear":"nei",
+			"harDuSaerligBehovForFlereHjemreiserEnnNevntOvenfor":"nei",
+			"kanDuReiseKollektivtOppstartAvslutningHjemreise":"nei",
+			"kanIkkeReiseKollektivtOppstartAvslutningHjemreise":{
+				"hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt":"annet",
+				"annet": {},
+				"kanDuBenytteEgenBil":"ja"
+			},
+			"tilleggsopplysninger":"Se tidligre søknader om kjøring "
+		},
+		"metadata":{"timezone":"Europe/Oslo","offset":120,"origin":"https://www.nav.no","referrer":"https://www.nav.no/fyllut/nav111218b","browserName":"Netscape","userAgent":"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/24.0 Chrome/117.0.0.0 Mobile Safari/537.36","pathName":"/fyllut/nav111218b/tilleggsopplysningerPanel","onLine":true},"state":"submitted","_vnote":""
+	}
+}
