@@ -326,7 +326,7 @@ data class KanIkkeReiseKollektivt(
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class AndreArsakerIkkeKollektivt(
-	val hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt: String
+	val hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt: String?
 )
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
