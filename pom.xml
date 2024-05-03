@@ -38,7 +38,7 @@
 
 		<!--Token-->
 		<token-validation.version>4.1.4</token-validation.version>
-		<mock-oauth2-server.version>2.1.5</mock-oauth2-server.version>
+		<mock-oauth2-server.version>2.1.2</mock-oauth2-server.version>
 
 		<!--Database-->
 		<otj-pg-embedded.version>1.0.3</otj-pg-embedded.version>
