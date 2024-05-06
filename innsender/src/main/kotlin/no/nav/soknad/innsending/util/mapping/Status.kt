@@ -65,6 +65,9 @@ fun mapTilDbOpplastingsStatus(opplastingsStatusDto: OpplastingsStatusDto): Oppla
 		OpplastingsStatusDto.SendesAvAndre -> OpplastingsStatus.SENDES_AV_ANDRE
 		OpplastingsStatusDto.SendesIkke -> OpplastingsStatus.SENDES_IKKE
 		OpplastingsStatusDto.LastetOppIkkeRelevantLenger -> OpplastingsStatus.LASTET_OPP_IKKE_RELEVANT_LENGER
+		OpplastingsStatusDto.HarIkkeDokumentasjonen -> OpplastingsStatus.HAR_IKKE_DOKUMENTASJON
+		OpplastingsStatusDto.LevertDokumentasjonTidligere -> OpplastingsStatus.LEVERT_DOKUMENTASJON_TIDLIGERE
+		OpplastingsStatusDto.NavKanHenteDokumentasjon -> OpplastingsStatus.NAV_KAN_HENTE_DOKUMENTASJON
 	}
 
 fun avledOpplastingsstatusVedInnsending(filDto: FilDto?, vedleggDto: VedleggDto): OpplastingsStatusDto {

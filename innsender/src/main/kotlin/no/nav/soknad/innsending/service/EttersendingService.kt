@@ -12,6 +12,7 @@ import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
+import no.nav.soknad.innsending.repository.domain.models.VedleggVisningsRegelDbData
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
@@ -20,11 +21,7 @@ import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
-import no.nav.soknad.innsending.util.mapping.lagDokumentSoknadDto
-import no.nav.soknad.innsending.util.mapping.mapTilDbMimetype
-import no.nav.soknad.innsending.util.mapping.mapTilDbOpplastingsStatus
-import no.nav.soknad.innsending.util.mapping.mapTilLocalDateTime
-import no.nav.soknad.innsending.util.mapping.mapToOpprettEttersending
+import no.nav.soknad.innsending.util.mapping.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -125,7 +122,7 @@ class EttersendingService(
 			val vedleggDbDataListe = nyesteSoknad.vedleggsListe
 				.filter { !(it.erHoveddokument || it.vedleggsnr == KVITTERINGS_NR) }
 				.map { v ->
-					repo.lagreVedlegg(
+					val savedVedleggDb = repo.lagreVedlegg(
 						VedleggDbData(
 							id = null,
 							soknadsid = savedEttersendingsSoknad.id!!,
@@ -147,13 +144,25 @@ class EttersendingService(
 								nyesteSoknad.innsendtDato?.toLocalDateTime() else v.innsendtdato?.toLocalDateTime(),
 							vedleggsurl = if (v.vedleggsnr != null)
 								skjemaService.hentSkjema(v.vedleggsnr!!, nyesteSoknad.spraak ?: "nb", false).url else null,
-							formioid = v.formioId
+							formioid = v.formioId,
+							opplastingsvalgkommentar = null
 						)
 					)
+					repo.saveOpplastingsValgDbData(
+						savedEttersendingsSoknad.innsendingsid,
+						defaultVisningsRegler().map{ VedleggVisningsRegelDbData(
+							id = null,
+							vedleggsid = savedVedleggDb.id!!,
+							radiovalg = it.radiovalg,
+							kommentarledetekst = it.kommentarLedetekst,
+							kommentarbeskivelsestekst = it.kommentarBeskivelsestekst,
+							notifikasjonstekst = it.notifikasjonstekst) })
+
+					savedVedleggDb
 				}
 
 			// Publiser brukernotifikasjon
-			val dokumentSoknadDto = lagDokumentSoknadDto(savedEttersendingsSoknad, vedleggDbDataListe, erSystemGenerert)
+			val dokumentSoknadDto = lagDokumentSoknadDto(savedEttersendingsSoknad, vedleggDbDataListe, null, erSystemGenerert)
 			publiserBrukernotifikasjon(dokumentSoknadDto)
 
 			// Logg og metrics

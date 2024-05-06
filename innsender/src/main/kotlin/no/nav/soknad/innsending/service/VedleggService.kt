@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
+import no.nav.soknad.innsending.repository.domain.models.VedleggVisningsRegelDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.mapping.*
@@ -48,7 +49,8 @@ class VedleggService(
 				endretdato = LocalDateTime.now(),
 				innsendtdato = null,
 				vedleggsurl = kodeverkSkjema.url,
-				formioid = null
+				formioid = null,
+				opplastingsvalgkommentar = null
 			)
 		)
 	}
@@ -62,7 +64,7 @@ class VedleggService(
 			val existingVedlegg =
 				existingSoknad.vedleggsListe.firstOrNull { existingVedlegg -> existingVedlegg.vedleggsnr == it.vedleggsnr }
 
-			repo.lagreVedlegg(
+			val vedleggDbDatas = repo.lagreVedlegg(
 				VedleggDbData(
 					id = null,
 					soknadsid = soknadsId,
@@ -81,9 +83,21 @@ class VedleggService(
 					endretdato = LocalDateTime.now(),
 					innsendtdato = existingVedlegg?.innsendtdato?.toLocalDateTime(),
 					vedleggsurl = it.url,
-					formioid = null
+					formioid = null,
+					opplastingsvalgkommentar = null
 				)
 			)
+			repo.saveOpplastingsValgDbData(
+				vedleggDbDatas.soknadsid,
+				defaultVisningsRegler().map{ VedleggVisningsRegelDbData(
+					id = null,
+					vedleggsid = vedleggDbDatas.id!!,
+					radiovalg = it.radiovalg,
+					kommentarledetekst = it.kommentarLedetekst,
+					kommentarbeskivelsestekst = it.kommentarBeskivelsestekst,
+					notifikasjonstekst = it.notifikasjonstekst) })
+
+			vedleggDbDatas
 		}
 	}
 
@@ -97,7 +111,7 @@ class VedleggService(
 			val existingVedlegg =
 				archivedSoknad.innsendtVedleggDtos.firstOrNull { existingVedlegg -> existingVedlegg.vedleggsnr == it.vedleggsnr }
 
-			repo.lagreVedlegg(
+			val lagretVedleggDbData = repo.lagreVedlegg(
 				VedleggDbData(
 					id = null,
 					soknadsid = soknadsId,
@@ -116,9 +130,21 @@ class VedleggService(
 					endretdato = LocalDateTime.now(),
 					innsendtdato = archivedSoknad.innsendtDato.toLocalDateTime(),
 					vedleggsurl = it.url,
-					formioid = null
+					formioid = null,
+					opplastingsvalgkommentar = null
 				)
 			)
+			repo.saveOpplastingsValgDbData(
+				lagretVedleggDbData.soknadsid,
+				defaultVisningsRegler().map{ VedleggVisningsRegelDbData(
+					id = null,
+					vedleggsid = lagretVedleggDbData.id!!,
+					radiovalg = it.radiovalg,
+					kommentarledetekst = it.kommentarLedetekst,
+					kommentarbeskivelsestekst = it.kommentarBeskivelsestekst,
+					notifikasjonstekst = it.notifikasjonstekst) })
+
+			lagretVedleggDbData
 		}
 	}
 
@@ -130,7 +156,7 @@ class VedleggService(
 		formioid: String? = null
 	): List<VedleggDbData> {
 		val vedleggDbDataListe = vedleggsnrListe.map { nr -> skjemaService.hentSkjema(nr, spraak) }.map { v ->
-			repo.lagreVedlegg(
+			val lagretVedleggDbData = repo.lagreVedlegg(
 				VedleggDbData(
 					id = null,
 					soknadsid = soknadsId,
@@ -149,16 +175,28 @@ class VedleggService(
 					endretdato = LocalDateTime.now(),
 					innsendtdato = null,
 					vedleggsurl = v.url,
-					formioid = formioid
+					formioid = formioid,
+					opplastingsvalgkommentar = null
 				)
 			)
+			repo.saveOpplastingsValgDbData(
+				lagretVedleggDbData.soknadsid,
+				defaultVisningsRegler().map{ VedleggVisningsRegelDbData(
+					id = null,
+					vedleggsid = lagretVedleggDbData.id!!,
+					radiovalg = it.radiovalg,
+					kommentarledetekst = it.kommentarLedetekst,
+					kommentarbeskivelsestekst = it.kommentarBeskivelsestekst,
+					notifikasjonstekst = it.notifikasjonstekst) })
+
+			lagretVedleggDbData
 		}
 		return vedleggDbDataListe
 	}
 
 	fun saveVedlegg(soknadsId: Long, vedleggList: List<InnsendtVedleggDto>): List<VedleggDbData> {
 		return vedleggList.map {
-			repo.lagreVedlegg(
+			val lagretVedleggDbData = repo.lagreVedlegg(
 				VedleggDbData(
 					id = null,
 					soknadsid = soknadsId,
@@ -177,9 +215,21 @@ class VedleggService(
 					endretdato = LocalDateTime.now(),
 					innsendtdato = null,
 					vedleggsurl = it.url,
-					formioid = null
+					formioid = null,
+					opplastingsvalgkommentar = null
 				)
 			)
+			repo.saveOpplastingsValgDbData(
+				lagretVedleggDbData.soknadsid,
+				defaultVisningsRegler().map{ VedleggVisningsRegelDbData(
+					id = null,
+					vedleggsid = lagretVedleggDbData.id!!,
+					radiovalg = it.radiovalg,
+					kommentarledetekst = it.kommentarLedetekst,
+					kommentarbeskivelsestekst = it.kommentarBeskivelsestekst,
+					notifikasjonstekst = it.notifikasjonstekst) })
+
+			lagretVedleggDbData
 		}
 	}
 
@@ -199,10 +249,25 @@ class VedleggService(
 			tittel =vedleggDto?.tittel
 		)
 
+		val opplastingsValg = saveOpplastingsValg(soknadDto.innsendingsId!!, vedleggDbDataList.first(), listOf(OpplastingsVisningsRegel(Opplastingsvalg.leggerVedNaa)))
+
 		// Oppdater soknadens sist endret dato
 		repo.oppdaterEndretDato(soknadDto.id!!)
 
-		return lagVedleggDto(vedleggDbDataList.first())
+		return lagVedleggDto(vedleggDbDataList.first(), null, opplastingsValg)
+	}
+
+	fun saveOpplastingsValg(innsendingsId: String, vedleggDbData: VedleggDbData, opplastingsVisningsRegler: List<OpplastingsVisningsRegel>): List<OpplastingsVisningsRegel> {
+		repo.saveOpplastingsValgDbData(innsendingsId,
+			opplastingsVisningsRegler.map {
+				VedleggVisningsRegelDbData(id = null,
+					vedleggsid = vedleggDbData.id!!,
+					radiovalg = it.radiovalg,
+					kommentarledetekst = it.kommentarLedetekst,
+					kommentarbeskivelsestekst = it.kommentarBeskivelsestekst,
+					notifikasjonstekst = it.notifikasjonstekst)
+			} )
+		return opplastingsVisningsRegler
 	}
 
 	@Transactional
@@ -229,7 +294,8 @@ class VedleggService(
 					endretdato = LocalDateTime.now(),
 					innsendtdato = null,
 					vedleggsurl = null,
-					formioid = null
+					formioid = null,
+					opplastingsvalgkommentar = null
 				)
 			)
 
@@ -257,7 +323,19 @@ class VedleggService(
 		} catch (e: Exception) {
 			throw ResourceNotFoundException("Fant ingen vedlegg til soknad ${soknadDbData.innsendingsid}. Ved oppretting av søknad skal det minimum være opprettet et vedlegg for selve søknaden")
 		}
-		val dokumentSoknadDto = lagDokumentSoknadDto(soknadDbData, vedleggDbDataListe)
+		val opplastingsVisningsDbReglerMap = mutableMapOf<Long, List<OpplastingsVisningsRegel>>()
+		try {
+			vedleggDbDataListe.filter{!it.erhoveddokument}.forEach {
+				opplastingsVisningsDbReglerMap.put(
+					it.id!!,
+					repo.hentOpplastingsValgDbData(it.soknadsid, it.id).map{OpplastingsVisningsRegel(it.radiovalg, it.kommentarledetekst, it.kommentarbeskivelsestekst, it.notifikasjonstekst) }.toList()
+				)
+			}
+		} catch (e: Exception) {
+			throw ResourceNotFoundException("Fant ingen visningsregler for vedlegg til soknad ${soknadDbData.innsendingsid}")
+		}
+
+		val dokumentSoknadDto = lagDokumentSoknadDto(soknadDbData, vedleggDbDataListe, opplastingsVisningsDbReglerMap)
 		logger.debug("hentAlleVedlegg: Hentet ${dokumentSoknadDto.innsendingsId}. " + "Med vedleggsstatus ${dokumentSoknadDto.vedleggsListe.map { it.vedleggsnr + ':' + it.opplastingsStatus + ':' + it.innsendtdato }}")
 
 		return dokumentSoknadDto
@@ -364,7 +442,16 @@ class VedleggService(
 			logger.info("Oppdatert eksisterende vedlegg ${eksisterendeVedleggsListe.map { it.vedleggsnr }}, opplastingsStatus: ${eksisterendeVedleggsListe.map { it.opplastingsStatus }}")
 		} else {
 			// Lag nytt vedlegg
-			repo.lagreVedlegg(mapTilVedleggDb(nyttVedlegg, soknadsId))
+			val lagretVedlegg = repo.lagreVedlegg(mapTilVedleggDb(nyttVedlegg, soknadsId))
+			val visningsRegler =
+				if (nyttVedlegg.visningsRegler == null)
+					defaultVisningsRegler()
+				else
+					nyttVedlegg.visningsRegler
+			repo.saveOpplastingsValgDbData(
+				eksisterendeSoknad.innsendingsId!!,
+				visningsRegler!!.map { VedleggVisningsRegelDbData(null, vedleggsid = lagretVedlegg.id!!, radiovalg = it.radiovalg, kommentarledetekst = it.kommentarLedetekst, kommentarbeskivelsestekst = it.kommentarBeskivelsestekst, notifikasjonstekst = it.notifikasjonstekst) })
+
 			logger.info("Laget nytt vedlegg ${nyttVedlegg.vedleggsnr}")
 		}
 
@@ -422,17 +509,19 @@ class VedleggService(
 					} else {
 						logger.info("Vedleggstatus er ${it.opplastingsStatus}, sletter vedlegg id:${it.id}")
 						slettVedleggOgDensFiler(it)
+						repo.deleteOpplastingsValgDbData(dokumentSoknadDto.innsendingsId!!, it.id!!)
 					}
 				}
 			}
 		}
 	}
 
-	fun deleteVedleggNotRelevantAnymore(existingVedlegg: List<VedleggDto>) {
+	fun deleteVedleggNotRelevantAnymore(innsendingsId: String, existingVedlegg: List<VedleggDto>) {
 		existingVedlegg.filter { vedlegg -> vedlegg.opplastingsStatus == OpplastingsStatusDto.LastetOppIkkeRelevantLenger }
 			.forEach {
 				logger.info("Sletter vedlegg id:${it.id} vedleggsnr:${it.vedleggsnr} med status LASTET_OPP_IKKE_RELEVANT_LENGER")
 				slettVedleggOgDensFiler(it)
+				repo.deleteOpplastingsValgDbData(innsendingsId, it.id!!)
 			}
 	}
 

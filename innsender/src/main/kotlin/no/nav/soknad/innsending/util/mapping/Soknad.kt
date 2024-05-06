@@ -47,6 +47,7 @@ fun mapTilSoknadDb(
 fun lagDokumentSoknadDto(
 	soknadDbData: SoknadDbData,
 	vedleggDbDataListe: List<VedleggDbData>,
+	vedleggsOpplastingsValg: Map<Long, List<OpplastingsVisningsRegel>>? = null,
 	erSystemGenerert: Boolean = false
 ): DokumentSoknadDto {
 	val erEttersending = soknadDbData.ettersendingsid != null || soknadDbData.visningstype == VisningsType.ettersending
@@ -56,7 +57,7 @@ fun lagDokumentSoknadDto(
 		tittel = soknadDbData.tittel,
 		tema = soknadDbData.tema,
 		status = mapTilSoknadsStatusDto(soknadDbData.status) ?: SoknadsStatusDto.Opprettet,
-		vedleggsListe = vedleggDbDataListe.map { lagVedleggDto(it) },
+		vedleggsListe = vedleggDbDataListe.map { lagVedleggDto(it, opplastingsVisningsRegler = if (vedleggsOpplastingsValg!= null) vedleggsOpplastingsValg[it.id!!] else null) },
 		id = soknadDbData.id!!,
 		innsendingsId = soknadDbData.innsendingsid,
 		ettersendingsId = soknadDbData.ettersendingsid,

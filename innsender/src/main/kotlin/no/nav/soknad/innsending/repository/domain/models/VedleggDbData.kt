@@ -24,7 +24,8 @@ data class VedleggDbData(
 	@Column(name = "endretdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val endretdato: LocalDateTime,
 	@Column(name = "innsendtdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val innsendtdato: LocalDateTime?,
 	@Column(name = "vedleggsurl", columnDefinition = "varchar") val vedleggsurl: String?,
-	@Column(name = "formioid", columnDefinition = "varchar") val formioid: String?
+	@Column(name = "formioid", columnDefinition = "varchar") val formioid: String?,
+	@Column(name = "opplastingsvalgkommentar", columnDefinition = "opplastingsvalgkommentar") val opplastingsvalgkommentar: String?,
 ) {
 
 	override fun equals(other: Any?): Boolean {

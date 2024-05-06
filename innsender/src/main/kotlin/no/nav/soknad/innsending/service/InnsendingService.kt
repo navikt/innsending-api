@@ -114,7 +114,7 @@ class InnsendingService(
 				errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 			)
 		}
-		vedleggService.deleteVedleggNotRelevantAnymore(existingSoknad.vedleggsListeUtenHoveddokument)
+		vedleggService.deleteVedleggNotRelevantAnymore(existingSoknad.innsendingsId!!, existingSoknad.vedleggsListeUtenHoveddokument)
 
 		// send soknadmetada til soknadsmottaker
 		try {

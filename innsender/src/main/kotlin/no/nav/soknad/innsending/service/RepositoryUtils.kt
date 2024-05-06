@@ -21,7 +21,8 @@ class RepositoryUtils(
 	private val vedleggRepository: VedleggRepository,
 	private val filRepository: FilRepository,
 	private val filWithoutDataRepository: FilWithoutDataRepository,
-	private val hendelseRepository: HendelseRepository
+	private val hendelseRepository: HendelseRepository,
+	private val opplastingsValgRepository: OpplastingsValgRepository
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -229,6 +230,7 @@ class RepositoryUtils(
 
 	fun slettVedlegg(vedleggsId: Long) {
 		try {
+			opplastingsValgRepository.deleteAllByVedleggsid(vedleggsId)
 			vedleggRepository.deleteById(vedleggsId)
 			logger.info("Slettet vedlegg med id $vedleggsId")
 		} catch (ex: Exception) {
@@ -269,6 +271,61 @@ class RepositoryUtils(
 		mapTilFilDbData(filWithoutDataRepository.findFilDbWIthoutFileDataByVedleggsid(vedleggsId))
 	} catch (ex: Exception) {
 		throw ResourceNotFoundException("Feil ved henting av filer for  vedlegg $vedleggsId til søknad $innsendingsId", ex)
+	}
+
+
+	fun saveOpplastingsValgDbData(soknadsId: Long, opplastingsValgRegelerDb: List<VedleggVisningsRegelDbData>): List<VedleggVisningsRegelDbData>  {
+		try {
+			val lagretopplastingsValgRegler = opplastingsValgRepository.saveAll(opplastingsValgRegelerDb)
+			logger.info("Lagret opplastingsVisningsValg med vedleggsid ${opplastingsValgRegelerDb.get(0).vedleggsid} til søknadId $soknadsId")
+			return lagretopplastingsValgRegler
+		} catch (ex: Exception) {
+			throw BackendErrorException(
+				message = "Feil ved lagring av opplastingsValgRegelerDb for vedlegg ${opplastingsValgRegelerDb.get(0).vedleggsid} til søknadId $soknadsId",
+				cause = ex
+			)
+		}
+	}
+
+
+	fun saveOpplastingsValgDbData(innsendingsId: String, opplastingsValgRegelerDb: List<VedleggVisningsRegelDbData>): List<VedleggVisningsRegelDbData>  {
+		try {
+			val lagretopplastingsValgRegler = opplastingsValgRepository.saveAll(opplastingsValgRegelerDb)
+			logger.info("Lagret opplastingsVisningsValg med vedleggsid ${opplastingsValgRegelerDb.get(0).vedleggsid} til søknad $innsendingsId")
+			return lagretopplastingsValgRegler
+		} catch (ex: Exception) {
+			throw BackendErrorException(
+				message = "Feil ved lagring av opplastingsValgRegelerDb for vedlegg ${opplastingsValgRegelerDb.get(0).vedleggsid} til søknad $innsendingsId",
+				cause = ex
+			)
+		}
+	}
+
+
+	fun hentOpplastingsValgDbData(soknadsId: Long, vedleggsId: Long): List<VedleggVisningsRegelDbData>  {
+		try {
+			val lagretopplastingsValgRegler = opplastingsValgRepository.findAllByVedleggsid(vedleggsId)
+			logger.debug("Hentet´opplastingsVisningsValg for vedleggsid $vedleggsId til søknadId $soknadsId")
+			return lagretopplastingsValgRegler
+		} catch (ex: Exception) {
+			throw BackendErrorException(
+				message = "Feil ved henting av opplastingsValgRegelerDb for vedlegg $vedleggsId til søknadId $soknadsId",
+				cause = ex
+			)
+		}
+	}
+
+	fun deleteOpplastingsValgDbData(innsendingsId: String, vedleggsid: Long)  {
+		try {
+			val lagretopplastingsValgRegler = opplastingsValgRepository.deleteAllByVedleggsid(vedleggsid)
+			logger.info("Slettet opplastingsVisningsValg med vedleggsid $vedleggsid til søknad $innsendingsId")
+			return lagretopplastingsValgRegler
+		} catch (ex: Exception) {
+			throw BackendErrorException(
+				message = "Feil ved lagring av opplastingsValgRegelerDb for vedlegg $vedleggsid til søknad $innsendingsId",
+				cause = ex
+			)
+		}
 	}
 
 	private fun mapTilFilDbData(filerUtenFilData: List<FilDbWithoutFileData>): List<FilDbData> {
