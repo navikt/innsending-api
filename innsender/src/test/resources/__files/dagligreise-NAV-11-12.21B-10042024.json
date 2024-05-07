@@ -18,7 +18,7 @@
 				"hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt":"helsemessigeArsaker",
 				"kanDuBenytteEgenBil":"ja",
 				"kanBenytteEgenBil":{
-					"bompenger":10,
+					"bompenger":10.60,
 					"kommerDuTilAHaUtgifterTilParkeringPaAktivitetsstedet":"ja",
 					"parkering":100,
 					"hvorOfteOnskerDuASendeInnKjoreliste":"jegOnskerALevereKjorelisteEnGangIManeden"

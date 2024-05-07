@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.roundToInt
 
 
 fun json2Xml(soknadDto: DokumentSoknadDto, jsonFil: ByteArray?): ByteArray {
@@ -196,7 +197,7 @@ fun convertFlytteutgifter(jsonRettighetstyper: JsonRettighetstyper): Flytteutgif
 			adresse = flytteutgifter.adresse1,
 			postnr = flytteutgifter.postnr1
 		).sammensattAdresse,
-		avstand = convertFlytteAvstand(flytteutgifter),
+		avstand = convertFlytteAvstand(flytteutgifter).roundToInt(),
 		sumTilleggsutgifter = convertFlytteutgifter(flytteutgifter)?.toDouble(),
 		anbud = comvertAnbud(flytteutgifter),
 		valgtFlyttebyraa = flytteutgifter.jegVilBrukeFlyttebyra?.jegVelgerABruke
@@ -213,7 +214,7 @@ fun comvertAnbud(flytteutgifter: JsonFlytteutgifter): List<Anbud>? {
 
 }
 
-fun convertFlytteAvstand(flytteutgifter: JsonFlytteutgifter): Int {
+fun convertFlytteAvstand(flytteutgifter: JsonFlytteutgifter): Double {
 	return if (flytteutgifter.jegFlytterSelv != null) {
 		flytteutgifter.jegFlytterSelv.hvorLangtSkalDuFlytte
 	} else if (flytteutgifter.jegVilBrukeFlyttebyra != null) {
@@ -221,7 +222,7 @@ fun convertFlytteAvstand(flytteutgifter: JsonFlytteutgifter): Int {
 	} else if (flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv != null) {
 		flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv.hvorLangtSkalDuFlytte1
 	} else {
-		return 0
+		return 0.0
 	}
 
 }
