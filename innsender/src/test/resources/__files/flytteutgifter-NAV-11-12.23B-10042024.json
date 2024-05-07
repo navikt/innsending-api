@@ -55,7 +55,7 @@
 			"adresse1":"ny",
 			"ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra":"jegFlytterSelv",
 			"jegFlytterSelv":{
-				"hvorLangtSkalDuFlytte":"400",
+				"hvorLangtSkalDuFlytte": 400.5,
 				"hengerleie":0,
 				"bom":300,
 				"parkering":300,

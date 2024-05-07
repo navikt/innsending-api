@@ -265,7 +265,7 @@ data class NedsattArbeidsevnePgaSykdom(
 )
 
 data class JegFlytterSelv(
-	val hvorLangtSkalDuFlytte: Int,
+	val hvorLangtSkalDuFlytte: Double,
 	val hengerleie: Int?,
 	val bom: Int?,
 	val parkering: Int?,
@@ -280,7 +280,7 @@ data class JegVilBrukeFlyttebyra(
 	val navnPaFlyttebyra2: String,
 	val belop1: Int,
 	val jegVelgerABruke: String, // "Flyttebyrå 1" | "Flyttebyrå 2"
-	val hvorLangtSkalDuFlytte1: Int
+	val hvorLangtSkalDuFlytte1: Double
 )
 
 data class JegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv(
@@ -288,7 +288,7 @@ data class JegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv(
 	val belop: Int,
 	val navnPaFlyttebyra2: String,
 	val belop1: Int,
-	val hvorLangtSkalDuFlytte1: Int,
+	val hvorLangtSkalDuFlytte1: Double,
 	val hengerleie: Int?,
 	val bom: Int?,
 	val parkering: Int?,

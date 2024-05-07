@@ -27,7 +27,7 @@
 			"postnr1": "3701",
 			"ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra": "jegFlytterSelv",
 			"jegFlytterSelv": {
-				"hvorLangtSkalDuFlytte": "600",
+				"hvorLangtSkalDuFlytte": "600.5",
 				"hengerleie": 4000,
 				"bom": 1000,
 				"parkering": 300,

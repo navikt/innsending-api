@@ -92,9 +92,21 @@ class TilleggsstonadJson2XmlConverterTest {
 	}
 
 	@Test
-	fun json2XmlTest_flytting() {
+	fun json2XmlTest_flytting_avstandSomString() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = stotteTilFlytting, tema = "TSR").build()
 		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/tilleggsstonad-NAV-11-12.23B-27022024.json")
+
+		val xmlFil = json2Xml(soknadDto, jsonFil)
+
+		assertNotNull(xmlFil)
+		val xmlString = xmlFil.decodeToString()
+		assertTrue(xmlString.contains("<flytteutgifter"))
+	}
+
+	@Test
+	fun json2XmlTest_flytting_avstandSomNumber() {
+		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = stotteTilFlytting, tema = "TSR").build()
+		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/flytteutgifter-NAV-11-12.23B-10042024.json")
 
 		val xmlFil = json2Xml(soknadDto, jsonFil)
 
@@ -817,7 +829,7 @@ class TilleggsstonadJson2XmlConverterTest {
 			.ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra("jegFlytterSelv")
 			.jegFlytterSelv(
 				JegFlytterSelv(
-					hvorLangtSkalDuFlytte = 130, hengerleie = 1000, bom = null, parkering = 200, ferje = 0, annet = null
+					hvorLangtSkalDuFlytte = 130.0, hengerleie = 0, bom = 1000, parkering = 200, ferje = 0, annet = null
 				)
 			)
 			.build()
@@ -853,7 +865,7 @@ class TilleggsstonadJson2XmlConverterTest {
 					navnPaFlyttebyra2 = "Flytte2",
 					belop1 = 5000,
 					jegVelgerABruke = "Flytte1",
-					hvorLangtSkalDuFlytte1 = 130
+					hvorLangtSkalDuFlytte1 = 130.0
 				)
 			)
 			.jegFlytterSelv(jegFlytterSelv = null)
@@ -886,9 +898,9 @@ class TilleggsstonadJson2XmlConverterTest {
 					belop = 4000,
 					navnPaFlyttebyra2 = "Flytte2",
 					belop1 = 5000,
-					hvorLangtSkalDuFlytte1 = 130,
+					hvorLangtSkalDuFlytte1 = 130.0,
 					hengerleie = 1000,
-					200,
+					bom = 200,
 					parkering = 200,
 					ferje = 0,
 					annet = null
