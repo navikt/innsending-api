@@ -215,6 +215,8 @@ class EttersendingServiceTest : ApplicationTest() {
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt && it.innsendtdato != null })
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "N6" && it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
+		assertTrue(dokumentSoknadDto.vedleggsListe.first { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt }.visningsRegler != null)
+
 	}
 
 	@Test

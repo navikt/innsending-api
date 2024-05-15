@@ -65,7 +65,7 @@ fun oppdaterVedleggDb(
 		innsendtdato = vedleggDbData.innsendtdato,
 		vedleggsurl = vedleggDbData.vedleggsurl,
 		formioid = vedleggDbData.formioid,
-		opplastingsvalgkommentar = vedleggDbData.opplastingsvalgkommentar
+		opplastingsvalgkommentar = patchVedleggDto.opplastingsValgKommentar
 	)
 
 fun mapTilSkjemaDokumentDto(vedleggDto: VedleggDto): SkjemaDokumentDto {
@@ -81,6 +81,7 @@ fun mapTilSkjemaDokumentDto(vedleggDto: VedleggDto): SkjemaDokumentDto {
 		pakrevd = vedleggDto.erPakrevd,
 		document = vedleggDto.document,
 		formioId = vedleggDto.formioId,
+		visningsRegler = vedleggDto.visningsRegler
 	)
 }
 
@@ -125,7 +126,8 @@ fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
 		document = null,
 		skjemaurl = vedleggDto.skjemaurl,
 		innsendtdato = OffsetDateTime.now(),
-		opplastingsValgKommentar = vedleggDto.opplastingsValgKommentar
+		opplastingsValgKommentar = vedleggDto.opplastingsValgKommentar,
+		visningsRegler = vedleggDto.visningsRegler
 	)
 
 fun translate(vedleggDtos: List<VedleggDto>): List<DocumentData> {
@@ -171,5 +173,10 @@ fun defaultVisningsRegler(): List<OpplastingsVisningsRegel> {
 			OpplastingsVisningsRegel(radiovalg = Opplastingsvalg.ettersender),
 			OpplastingsVisningsRegel(radiovalg = Opplastingsvalg.sendesAvAndre)
 		)
-
+}
+fun defaultVisningsRegler(vedleggsnr: String? = null): List<OpplastingsVisningsRegel> {
+	if (vedleggsnr == "N6")
+		return listOf(OpplastingsVisningsRegel(radiovalg = Opplastingsvalg.leggerVedNaa))
+	else
+		return defaultVisningsRegler()
 }

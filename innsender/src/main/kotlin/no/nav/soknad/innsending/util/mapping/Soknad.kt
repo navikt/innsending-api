@@ -57,7 +57,7 @@ fun lagDokumentSoknadDto(
 		tittel = soknadDbData.tittel,
 		tema = soknadDbData.tema,
 		status = mapTilSoknadsStatusDto(soknadDbData.status) ?: SoknadsStatusDto.Opprettet,
-		vedleggsListe = vedleggDbDataListe.map { lagVedleggDto(it, opplastingsVisningsRegler = if (vedleggsOpplastingsValg!= null) vedleggsOpplastingsValg[it.id!!] else null) },
+		vedleggsListe = vedleggDbDataListe.map { lagVedleggDto(it, opplastingsVisningsRegler = if (!it.erhoveddokument && vedleggsOpplastingsValg!= null) vedleggsOpplastingsValg[it.id!!] else null) },
 		id = soknadDbData.id!!,
 		innsendingsId = soknadDbData.innsendingsid,
 		ettersendingsId = soknadDbData.ettersendingsid,

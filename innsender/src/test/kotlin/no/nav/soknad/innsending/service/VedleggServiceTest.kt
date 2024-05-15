@@ -71,6 +71,7 @@ class VedleggServiceTest : ApplicationTest() {
 		val vedleggDto = vedleggService.hentVedleggDto(dokumentSoknadDto.vedleggsListe[0].id!!)
 
 		assertEquals(vedleggDto.id, dokumentSoknadDto.vedleggsListe[0].id!!)
+		assertTrue(vedleggDto.visningsRegler != null && vedleggDto.visningsRegler!!.size == 3)
 
 		val filDtoListe =
 			filService.hentFiler(dokumentSoknadDto, dokumentSoknadDto.innsendingsId!!, vedleggDto.id!!, false)
@@ -90,6 +91,7 @@ class VedleggServiceTest : ApplicationTest() {
 		assertNotNull(lagretVedleggDto.id)
 		assertEquals("N6", lagretVedleggDto.vedleggsnr)
 		assertEquals("Litt mer info", lagretVedleggDto.tittel)
+		assertTrue(lagretVedleggDto.visningsRegler != null && lagretVedleggDto.visningsRegler!!.size == 1)
 	}
 
 	@Test
@@ -102,12 +104,12 @@ class VedleggServiceTest : ApplicationTest() {
 		val lagretVedleggDto = vedleggService.leggTilVedlegg(dokumentSoknadDto, null)
 		assertTrue(lagretVedleggDto.id != null && lagretVedleggDto.tittel == "Annet")
 
-		val patchVedleggDto = PatchVedleggDto("Ny tittel", lagretVedleggDto.opplastingsStatus)
+		val patchVedleggDto = PatchVedleggDto("Ny tittel", lagretVedleggDto.opplastingsStatus, opplastingsValgKommentar = "Kommentar")
 		val oppdatertVedleggDto = vedleggService.endreVedlegg(patchVedleggDto, lagretVedleggDto.id!!, dokumentSoknadDto)
 
 		assertTrue(
 			oppdatertVedleggDto.id == lagretVedleggDto.id && oppdatertVedleggDto.tittel == "Ny tittel" && oppdatertVedleggDto.vedleggsnr == "N6"
-				&& oppdatertVedleggDto.label == oppdatertVedleggDto.tittel
+				&& oppdatertVedleggDto.label == oppdatertVedleggDto.tittel && oppdatertVedleggDto.opplastingsValgKommentar == "Kommentar"
 		)
 	}
 
@@ -119,11 +121,14 @@ class VedleggServiceTest : ApplicationTest() {
 		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf(vedleggsnr))
 
 		val lagretVedlegg = dokumentSoknadDto.vedleggsListe.first { e -> vedleggsnr == e.vedleggsnr }
+		val opplastingsVisningsRegler = repo.hentOpplastingsValgDbData(dokumentSoknadDto.id!!, lagretVedlegg.id!!)
+		assertTrue(opplastingsVisningsRegler.isNotEmpty())
 
 		vedleggService.slettVedlegg(dokumentSoknadDto, lagretVedlegg.id!!)
 
 		assertThrows<Exception> {
 			vedleggService.hentVedleggDto(lagretVedlegg.id!!)
 		}
+
 	}
 }

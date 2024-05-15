@@ -13,6 +13,7 @@ import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.mapping.defaultVisningsRegler
 import no.nav.soknad.innsending.util.models.hovedDokument
 import no.nav.soknad.innsending.util.models.hovedDokumentVariant
 import no.nav.soknad.innsending.util.models.hoveddokument
@@ -80,8 +81,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Gitt
 		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val t7Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build()
-		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
+		val t7Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").opplastingsVisningsRegler(defaultVisningsRegler()).build()
+		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").opplastingsVisningsRegler(defaultVisningsRegler("N6")).build()
 
 		val skjemaDto = SkjemaDtoTestBuilder(vedleggsListe = listOf(t7Vedlegg, n6Vedlegg)).build()
 
@@ -91,6 +92,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Så
 		assertTrue(opprettetSoknadResponse != null)
 		assertEquals(201, opprettetSoknadResponse.statusCode.value())
+		assertTrue(opprettetSoknadResponse.body?.vedleggsListe?.first()?.visningsRegler != null)
 		testHentSoknadOgSendInn(opprettetSoknadResponse, token)
 
 	}
@@ -139,7 +141,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertFalse(getSoknadDto.kanLasteOppAnnet!!)
 
 		val vedleggT7 = getSoknadDto.vedleggsListe.first { it.vedleggsnr == "T7" }
-		val patchVedleggT7 = PatchVedleggDto(null, OpplastingsStatusDto.SendesAvAndre)
+		val patchVedleggT7 = PatchVedleggDto(tittel = null, opplastingsStatus = OpplastingsStatusDto.SendesAvAndre, opplastingsValgKommentar = "Sendes av min fastlege")
 		val patchRequestT7 = HttpEntity(patchVedleggT7, Hjelpemetoder.createHeaders(token))
 		val patchResponseT7 = restTemplate.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggT7.id}", HttpMethod.PATCH,
@@ -148,9 +150,10 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		assertTrue(patchResponseT7.body != null)
 		assertEquals(OpplastingsStatusDto.SendesAvAndre, patchResponseT7.body!!.opplastingsStatus)
+		assertEquals("Sendes av min fastlege", patchResponseT7.body!!.opplastingsValgKommentar)
 
 		val vedleggN6 = getSoknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
-		val patchVedleggN6 = PatchVedleggDto(null, OpplastingsStatusDto.IkkeValgt)
+		val patchVedleggN6 = PatchVedleggDto(tittel = null, opplastingsStatus = OpplastingsStatusDto.IkkeValgt, opplastingsValgKommentar = null)
 		val patchRequestN6 = HttpEntity(patchVedleggN6, Hjelpemetoder.createHeaders(token))
 		val patchResponseN6 = restTemplate.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggN6.id}", HttpMethod.PATCH,
@@ -210,13 +213,13 @@ class FyllutRestApiTest : ApplicationTest() {
 		val newVedleggstittel1 = "Birth certificate"
 		val newVedleggstittel2 = "Marriage certificate"
 
-		val dokumentSoknadDto = opprettSoknad()
+		val dokumentSoknadDto = opprettSoknad() // med vedleggTittel1 og vedleggTittel2, begge med unik formio satt
 		val skjemanr = dokumentSoknadDto.skjemanr
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
-		val updatedT7 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7", tittel = newVedleggstittel1).build()
-		val updatedN6 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6", tittel = newVedleggstittel2).build()
-		val updatedHovedDokument = SkjemaDokumentDtoTestBuilder(tittel = newTittel).asHovedDokument(skjemanr).build()
+		val updatedT7 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7", tittel = newVedleggstittel1).build() // Unik Formio settes
+		val updatedN6 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6", tittel = newVedleggstittel2).build() // Unik Formio settes
+		val updatedHovedDokument = SkjemaDokumentDtoTestBuilder(tittel = newTittel).asHovedDokument(skjemanr).build() // Formio = null
 		val updatedHovedDokumentVariant =
 			SkjemaDokumentDtoTestBuilder(tittel = newTittel).asHovedDokumentVariant(skjemanr).build()
 
@@ -254,15 +257,33 @@ class FyllutRestApiTest : ApplicationTest() {
 			updatedSoknad.vedleggsListe.any { it.vedleggsnr == "T7" && it.tittel == newVedleggstittel1 },
 			"Should have vedlegg T7"
 		)
+		assertEquals(
+			3,
+			updatedSoknad.vedleggsListe.first { it.vedleggsnr == "T7" && it.tittel == newVedleggstittel1 }.visningsRegler?.size,
+			"Vedlegg T7 should have 3 visningsRegler"
+		)
 		assertTrue(
 			updatedSoknad.vedleggsListe.any { it.vedleggsnr == "N6" && it.tittel == newVedleggstittel2 },
 			"Should have vedlegg N6"
 		)
+		assertEquals(
+			1,
+			updatedSoknad.vedleggsListe.first { it.vedleggsnr == "N6" && it.tittel == newVedleggstittel2 }.visningsRegler?.size,
+			"vedlegg N6 should have 1 visningsRegler"
+		)
 		assertEquals(newTittel, updatedSoknad.hoveddokument!!.tittel, "Should have a new title for the hoveddokument")
+		assertTrue(
+			updatedSoknad.hoveddokument!!.visningsRegler == null,
+			"Hoveddokument should not have visningsRegler"
+		)
 		assertEquals(
 			newTittel,
 			updatedSoknad.hoveddokumentVariant!!.tittel,
 			"Should have a new title for the hoveddokumentVariant"
+		)
+		assertTrue(
+			updatedSoknad.hoveddokumentVariant!!.visningsRegler == null,
+			"HoveddokumentVariant should not have visningsRegler"
 		)
 	}
 
@@ -382,7 +403,9 @@ class FyllutRestApiTest : ApplicationTest() {
 			updatedSoknad.vedleggsListe.find { it.vedleggsnr == "N6" && it.tittel == sendInnVedleggsTittel }
 
 		assertNotNull(n6FyllUtVedlegg!!.formioId, "Vedlegg from fyllUt has formioId")
+		assertTrue(n6FyllUtVedlegg.visningsRegler?.size == 1, "Vedlegg from fyllUt has not 1 display choices")
 		assertNull(n6SendInnVedlegg!!.formioId, "Vedlegg from sendInn does not have formioId")
+		assertTrue(n6SendInnVedlegg.visningsRegler?.size == 1, "Vedlegg from sendInn has not 1 display choices")
 
 		assertFalse(
 			updatedSoknad.vedleggsListe.any { it.vedleggsnr == "vedleggsnr1" || it.vedleggsnr == "vedleggsnr2" },

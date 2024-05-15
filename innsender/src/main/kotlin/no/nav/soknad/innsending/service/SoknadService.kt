@@ -106,10 +106,13 @@ class SoknadService(
 		try {
 			val savedSoknadDbData = repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId))
 			val soknadsid = savedSoknadDbData.id
-			val savedVedleggDbData = dokumentSoknadDto.vedleggsListe
-				.map { repo.lagreVedlegg(mapTilVedleggDb(it, soknadsid!!)) }
+			val savedVedleggDbData = vedleggService.saveVedleggFromDto(soknadsid!!, dokumentSoknadDto.vedleggsListe)
+			val savedVedleggsOpplastingsValg = savedVedleggDbData
+				//.filter{!it.erhoveddokument}
+				.map{it.id!! to repo.hentOpplastingsValgDbData(soknadsid, it.id )
+					.map{OpplastingsVisningsRegel(it.radiovalg, it.kommentarledetekst, it.kommentarbeskivelsestekst, it.notifikasjonstekst)}}.toMap()
 
-			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
+			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData, savedVedleggsOpplastingsValg)
 			// lagre mottatte filer i fil tabellen.
 			lagreFiler(savedDokumentSoknadDto, dokumentSoknadDto)
 			publiserBrukernotifikasjon(savedDokumentSoknadDto)
