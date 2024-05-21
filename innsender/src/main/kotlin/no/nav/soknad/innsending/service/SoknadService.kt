@@ -82,10 +82,13 @@ class SoknadService(
 			val skjemaDbData = vedleggService.opprettHovedddokumentVedlegg(savedSoknadDbData, kodeverkSkjema)
 
 			val vedleggDbDataListe = vedleggService.saveVedlegg(savedSoknadDbData.id!!, vedleggsnrListe, spraak)
+			val savedVedleggsOpplastingsValg = vedleggDbDataListe
+				.map{it.id!! to repo.hentOpplastingsValgDbData(skjemaDbData.id!!, it.id )
+					.map{OpplastingsVisningsRegel(it.radiovalg, it.kommentarledetekst, it.kommentarbeskivelsestekst, it.notifikasjonstekst)}}.toMap()
 
 			val savedVedleggDbDataListe = listOf(skjemaDbData) + vedleggDbDataListe
 
-			val dokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbDataListe)
+			val dokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbDataListe, savedVedleggsOpplastingsValg)
 
 			publiserBrukernotifikasjon(dokumentSoknadDto)
 
@@ -108,7 +111,6 @@ class SoknadService(
 			val soknadsid = savedSoknadDbData.id
 			val savedVedleggDbData = vedleggService.saveVedleggFromDto(soknadsid!!, dokumentSoknadDto.vedleggsListe)
 			val savedVedleggsOpplastingsValg = savedVedleggDbData
-				//.filter{!it.erhoveddokument}
 				.map{it.id!! to repo.hentOpplastingsValgDbData(soknadsid, it.id )
 					.map{OpplastingsVisningsRegel(it.radiovalg, it.kommentarledetekst, it.kommentarbeskivelsestekst, it.notifikasjonstekst)}}.toMap()
 
