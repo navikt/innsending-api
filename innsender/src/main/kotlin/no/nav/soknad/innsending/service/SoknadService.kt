@@ -129,11 +129,11 @@ class SoknadService(
 	}
 
 	fun hentAktiveSoknader(brukerId: String, skjemanr: String): List<DokumentSoknadDto> {
-		return hentAktiveSoknader(listOf(brukerId)).filter { it.skjemanr == skjemanr }
+		return hentAktiveSoknader(listOf(brukerId)).filter { it.skjemanr == skjemanr && it.visningsType !== VisningsType.dokumentinnsending }
 	}
 
 	fun hentAktiveSoknader(brukerId: String, skjemanr: String, soknadType: SoknadType): List<DokumentSoknadDto> {
-		return hentAktiveSoknader(listOf(brukerId)).filter { it.skjemanr == skjemanr && it.soknadstype == soknadType }
+		return hentAktiveSoknader(listOf(brukerId)).filter { it.skjemanr == skjemanr && it.soknadstype == soknadType && it.visningsType !== VisningsType.dokumentinnsending }
 	}
 
 
