@@ -104,7 +104,8 @@ class TilleggsstonadService(
 			if (jsonObj.applicationDetails is JsonTilleggsstonad)
 				sjekkOgOppdaterTema(soknadDto, jsonObj.applicationDetails.maalgruppeinformasjon)
 			else if (jsonObj.applicationDetails is JsonDrivingListSubmission)
-				sjekkOgOppdaterTema(soknadDto, jsonObj.applicationDetails.maalgruppeinformasjon, jsonObj.applicationDetails.expensePeriodes?.tema)
+				sjekkOgOppdaterTema(soknadDto,
+					jsonObj.applicationDetails.expensePeriodes?.tema)
 
 			return soknadService.hentSoknad(soknadDto.innsendingsId!!)
 		} catch (ex: Exception) {
@@ -112,20 +113,22 @@ class TilleggsstonadService(
 		}
 	}
 
-	private fun sjekkOgOppdaterTema(soknadDto: DokumentSoknadDto, maalgruppeInformasjon: JsonMaalgruppeinformasjon?, tema: String? = null) {
-		if (tema != null) {
-			if (tema == "TSO") return  // Initial default value
-			repo.endreTema(soknadDto.id!!, soknadDto.innsendingsId!!, tema)
-			return
-		}
-
+	private fun sjekkOgOppdaterTema(soknadDto: DokumentSoknadDto, maalgruppeInformasjon: JsonMaalgruppeinformasjon?) {
 		if (!relevanteMaalgrupperForTsr.contains(maalgruppeInformasjon?.maalgruppetype)) return
 
 		if (!(tilleggsstonadSkjema.containsKey(soknadDto.skjemanr)
-					&& tilleggsstonadSkjema[soknadDto.skjemanr] == TemaValg.TSO_og_TSR)
+				&& tilleggsstonadSkjema[soknadDto.skjemanr] == TemaValg.TSO_og_TSR)
 		) return
 
 		repo.endreTema(soknadDto.id!!, soknadDto.innsendingsId!!, "TSR")
+	}
+
+	private fun sjekkOgOppdaterTema(soknadDto: DokumentSoknadDto, tema: String? = null) {
+		if (tema != null) {
+			if (tema == "TSO") return  // Initial default value
+			repo.endreTema(soknadDto.id!!, soknadDto.innsendingsId!!, tema)
+		}
+		return
 	}
 
 }
