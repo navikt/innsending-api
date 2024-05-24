@@ -8,6 +8,7 @@ import io.mockk.verify
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.SoknadType
+import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.*
@@ -54,21 +55,32 @@ class SoknadServiceUnitTest {
 	lateinit var soknadService: SoknadService
 
 	@Test
-	fun `Skal returnere riktig aktive søknader`() {
-		// Gitt 1 søknad for defaultUser
+	fun `Should return correct active soknader`() {
+		// Given 1 søknad from fyllUt, 0 ettersending and 1 dokumentInnsending for defaultUser
 		val soknadDb = SoknadDbDataTestBuilder(brukerId = defaultUser).build()
+		val dokumentInnsendingSoknad =
+			SoknadDbDataTestBuilder(brukerId = defaultUser, visningsType = VisningsType.dokumentinnsending).build()
 		val skjemanr = soknadDb.skjemanr
 		val dokumentSoknadDto = DokumentSoknadDtoTestBuilder(skjemanr = skjemanr, brukerId = defaultUser).build()
+		val dokumentInnsendingSoknadDto = DokumentSoknadDtoTestBuilder(
+			skjemanr = skjemanr,
+			brukerId = defaultUser,
+			visningsType = VisningsType.dokumentinnsending
+		).build()
 
-		every { repo.finnAlleSoknaderGittBrukerIdOgStatus(defaultUser, SoknadsStatus.Opprettet) } returns listOf(soknadDb)
+		every { repo.finnAlleSoknaderGittBrukerIdOgStatus(defaultUser, SoknadsStatus.Opprettet) } returns listOf(
+			soknadDb,
+			dokumentInnsendingSoknad
+		)
 		every { vedleggService.hentAlleVedlegg(soknadDb) } returns dokumentSoknadDto
+		every { vedleggService.hentAlleVedlegg(dokumentInnsendingSoknad) } returns dokumentInnsendingSoknadDto
 
-		// Når
+		// When
 		val soknader = soknadService.hentAktiveSoknader(defaultUser, skjemanr, SoknadType.soknad)
 		val ettersendinger = soknadService.hentAktiveSoknader(defaultUser, skjemanr, SoknadType.ettersendelse)
 
-		// Så
-		// hentAktiveSoknader kalt 2 ganger, en for hver type søknad
+		// Then
+		// hentAktiveSoknader is called 2 times, one for each type
 		verify(exactly = 2) { repo.finnAlleSoknaderGittBrukerIdOgStatus(defaultUser, SoknadsStatus.Opprettet) }
 		verify(exactly = 2) { vedleggService.hentAlleVedlegg(soknadDb) }
 
