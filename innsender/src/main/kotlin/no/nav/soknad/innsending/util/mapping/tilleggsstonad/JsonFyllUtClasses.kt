@@ -196,6 +196,7 @@ data class HvilkeAdresserHarDuBoutgifterPa (
 
 data class Drivinglist(
 	val selectedVedtaksId: String,
+	val tema: String? = null,
 	val dates: List<Dates>
 )
 

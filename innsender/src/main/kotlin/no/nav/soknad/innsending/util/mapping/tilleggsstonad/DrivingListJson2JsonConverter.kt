@@ -48,6 +48,7 @@ fun convertToJsonDrivingListSubmission(
 		),
 		expensePeriodes = JsonDrivingListExpences(
 			selectedVedtaksId = drivingListSubmission.drivinglist.selectedVedtaksId,
+			tema = drivingListSubmission.drivinglist.tema,
 			dates = drivingListSubmission.drivinglist.dates.map {
 				JsonDailyExpences(
 					date = it.date,
