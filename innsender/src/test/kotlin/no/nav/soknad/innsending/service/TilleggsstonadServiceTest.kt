@@ -259,7 +259,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			brukerId = testpersonid,
 			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
 			spraak = "no_NB",
-			tema = "TSO"
+			tema = "TSO" // default tema på dette skjema
 		)
 		val skjemaDto =
 			SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService = soknadService, inputDokumentSoknadDto)
@@ -277,7 +277,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 
 		val innsendtSoknad = soknadService.hentSoknadMedHoveddokumentVariant(opprettetSoknad.innsendingsId!!)
 		Assertions.assertTrue(innsendtSoknad.status == SoknadsStatusDto.Innsendt)
-		Assertions.assertEquals("TSO", innsendtSoknad.tema)
+		Assertions.assertEquals("TSR", innsendtSoknad.tema)
 		Assertions.assertEquals(
 			Mimetype.applicationSlashXml,
 			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.Innsendt }
