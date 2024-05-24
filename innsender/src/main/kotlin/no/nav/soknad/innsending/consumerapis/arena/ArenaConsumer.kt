@@ -81,7 +81,11 @@ class ArenaConsumer(
 			}
 		}
 
-		secureLogger.info("[{}] Aktiviteter: {}", userId, aktiviteter.map { it.aktivitetstype })
+		secureLogger.info(
+			"[{}] Aktiviteter: {}",
+			userId,
+			aktiviteter.map { "aktivitet="+it.aktivitetstype + ", tema=" + it.saksinformasjon?.sakstype + ", periode="+it.periode.fom.toString() + "-" + it.periode.tom?.toString()}
+		)
 
 		return aktiviteter
 	}
