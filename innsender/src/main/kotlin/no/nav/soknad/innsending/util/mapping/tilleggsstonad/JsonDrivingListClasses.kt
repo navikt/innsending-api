@@ -22,6 +22,7 @@ data class JsonDrivingListSubmission(
 
 data class JsonDrivingListExpences(
 	val selectedVedtaksId: String,
+	val tema: String? = null,
 	val dates: List<JsonDailyExpences> = emptyList(),
 )
 

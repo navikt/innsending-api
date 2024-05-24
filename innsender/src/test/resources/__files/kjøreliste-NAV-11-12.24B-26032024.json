@@ -2,6 +2,13 @@
 	"language":"nb-NO",
 	"data":{
 		"data":{
+			"aktiviteterOgMaalgruppe":{
+				"maalgruppe":{
+					"calculated":{
+						"maalgruppetype":"ANNET"
+					},"prefilled":null
+				}
+			},
 			"jegErKjentMedAtJegKanMisteRettenTilStonadHvisJegOppgirFeilaktigeOpplysninger":true,
 			"fornavnSoker":"Blomstrete",
 			"etternavnSoker":"Byregion",
@@ -11,6 +18,7 @@
 			"harVedtakOmStonad1":"ja",
 			"drivinglist":{
 				"selectedVedtaksId":"36989399",
+				"tema": "TSO",
 				"dates":[
 					{
 						"date":"2024-01-02T00:00:00.000Z",
