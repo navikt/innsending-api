@@ -105,7 +105,7 @@ class TilleggsstonadService(
 				sjekkOgOppdaterTema(soknadDto, jsonObj.applicationDetails.maalgruppeinformasjon)
 			else if (jsonObj.applicationDetails is JsonDrivingListSubmission)
 				sjekkOgOppdaterTema(soknadDto,
-					jsonObj.applicationDetails.expensePeriodes?.tema)
+					jsonObj.applicationDetails.expensePeriodes?.tema, jsonObj.applicationDetails.maalgruppeinformasjon)
 
 			return soknadService.hentSoknad(soknadDto.innsendingsId!!)
 		} catch (ex: Exception) {
@@ -123,12 +123,13 @@ class TilleggsstonadService(
 		repo.endreTema(soknadDto.id!!, soknadDto.innsendingsId!!, "TSR")
 	}
 
-	private fun sjekkOgOppdaterTema(soknadDto: DokumentSoknadDto, tema: String? = null) {
+	private fun sjekkOgOppdaterTema(soknadDto: DokumentSoknadDto, tema: String? = null, maalgruppeInformasjon: JsonMaalgruppeinformasjon?) {
 		if (tema != null) {
 			if (tema == "TSO") return  // Initial default value
 			repo.endreTema(soknadDto.id!!, soknadDto.innsendingsId!!, tema)
+		} else {
+			sjekkOgOppdaterTema(soknadDto, maalgruppeInformasjon)
 		}
-		return
 	}
 
 }
