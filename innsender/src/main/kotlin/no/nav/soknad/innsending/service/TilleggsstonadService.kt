@@ -128,6 +128,7 @@ class TilleggsstonadService(
 			if (tema == "TSO") return  // Initial default value
 			repo.endreTema(soknadDto.id!!, soknadDto.innsendingsId!!, tema)
 		} else {
+			logger.warn("${soknadDto.innsendingsId!!}: Kjørelisten mangler tema, setter tema basert på målgruppe istedenfor")
 			sjekkOgOppdaterTema(soknadDto, maalgruppeInformasjon)
 		}
 	}
