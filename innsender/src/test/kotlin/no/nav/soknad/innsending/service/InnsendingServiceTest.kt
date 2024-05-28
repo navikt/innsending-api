@@ -12,10 +12,12 @@ import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
+import no.nav.soknad.innsending.model.PatchVedleggDto
 import no.nav.soknad.innsending.model.SoknadFile
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
 import no.nav.soknad.innsending.utils.SoknadAssertions
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
@@ -186,18 +188,26 @@ class InnsendingServiceTest : ApplicationTest() {
 		val innsendingService = lagInnsendingService(soknadService)
 
 		// Opprett original soknad
-		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1", "X1"))
 
 		filService.lagreFil(
 			dokumentSoknadDto,
 			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
 		)
 
+		val oppdatertVedlegg = vedleggService.endreVedlegg(
+			patchVedleggDto = PatchVedleggDto(tittel = null, opplastingsStatus = OpplastingsStatusDto.NavKanHenteDokumentasjon, opplastingsValgKommentar = "NAV kan innhente inntektsopplysninger for meg fra skatt"),
+			vedleggsId = dokumentSoknadDto.vedleggsListe.first { it.vedleggsnr == "X1" }.id!!,
+			soknadDto = dokumentSoknadDto, required = true
+		)
+
+		val oppdatertDokumentDto = soknadService.hentSoknad(dokumentSoknadDto.id!!)
+
 		// Sender inn original soknad
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
 				soknadsmottakerAPI,
-				dokumentSoknadDto,
+				oppdatertDokumentDto,
 				innsendingService
 			)
 		assertTrue(kvitteringsDto.hoveddokumentRef != null)
@@ -214,7 +224,7 @@ class InnsendingServiceTest : ApplicationTest() {
 		assertNotNull(kvitteringsDokument)
 
 		// Skriver til tmp fil for manuell sjekk av innholdet av generert PDF
-//		writeBytesToFile("dummy", ".pdf", kvitteringsDokument)
+		writeBytesToFile(kvitteringsDokument,"dummy.pdf")
 
 	}
 
