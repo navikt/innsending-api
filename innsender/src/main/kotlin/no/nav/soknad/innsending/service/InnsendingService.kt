@@ -185,7 +185,13 @@ class InnsendingService(
 		if ((opplastedeVedlegg.isEmpty() || opplastedeVedlegg.none { !it.erHoveddokument })) {
 			val allePakrevdeBehandlet = alleVedlegg
 				.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") }
-				.none { !(it.opplastingsStatus == OpplastingsStatusDto.Innsendt || it.opplastingsStatus == OpplastingsStatusDto.SendesAvAndre || it.opplastingsStatus == OpplastingsStatusDto.LastetOpp) }
+				.none { !(
+					it.opplastingsStatus == OpplastingsStatusDto.Innsendt
+					|| it.opplastingsStatus == OpplastingsStatusDto.SendesAvAndre
+					|| it.opplastingsStatus == OpplastingsStatusDto.LastetOpp
+					|| it.opplastingsStatus ==  OpplastingsStatusDto.NavKanHenteDokumentasjon
+					|| it.opplastingsStatus ==  OpplastingsStatusDto.LevertDokumentasjonTidligere
+					|| it.opplastingsStatus ==  OpplastingsStatusDto.HarIkkeDokumentasjonen) }
 			if (allePakrevdeBehandlet) {
 				val separator = "\n"
 				logger.warn("Søker har ikke lastet opp filer på ettersendingssøknad ${soknadDto.innsendingsId}, " +
@@ -193,7 +199,7 @@ class InnsendingService(
 					soknadDto.vedleggsListe.joinToString(separator) { it.tittel + ", med status = " + it.opplastingsStatus + "\n" })
 			} else {
 				throw IllegalActionException(
-					message = "Innsending avbrutt da ingen vedlegg er lastet opp. Søker må ha ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
+					message = "Innsending avbrutt da ingen vedlegg er lastet opp. Søker må ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
 					errorCode = ErrorCode.SEND_IN_ERROR_NO_CHANGE
 				)
 			}

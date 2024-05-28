@@ -56,13 +56,20 @@ class PdfGenerator {
 		val vedleggOpplastet = opplastedeVedlegg.filter { !it.erHoveddokument }
 		val sendSenere = manglendeObligatoriskeVedlegg
 		val sendesIkke =
-			soknad.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.SendesIkke }
+			soknad.vedleggsListe.filter { !it.erHoveddokument && (
+				it.opplastingsStatus == OpplastingsStatusDto.SendesIkke
+					|| it.opplastingsStatus == OpplastingsStatusDto.HarIkkeDokumentasjonen)}
 		val sendesAvAndre =
 			soknad.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.SendesAvAndre }
 		val alleredeInnsendt = soknad.vedleggsListe.filter {
-			!it.erHoveddokument &&
-				it.opplastingsStatus == OpplastingsStatusDto.Innsendt && (it.innsendtdato
-				?: it.opprettetdato) < soknad.opprettetDato
+			!it.erHoveddokument && (
+				it.opplastingsStatus == OpplastingsStatusDto.Innsendt && (it.innsendtdato	?: it.opprettetdato) < soknad.opprettetDato
+				|| it.opplastingsStatus == OpplastingsStatusDto.LevertDokumentasjonTidligere
+			)
+		}
+		val navKanInnhenteDokumentasjon = soknad.vedleggsListe.filter { !it.erHoveddokument && (
+			it.opplastingsStatus == OpplastingsStatusDto.NavKanHenteDokumentasjon
+			)
 		}
 
 		val fnr = soknad.brukerId
@@ -77,6 +84,7 @@ class PdfGenerator {
 		val vedleggSendesAvAndreHeader = tekster.getProperty("kvittering.vedlegg.sendesAvAndre")
 		val vedleggSendesIkkeHeader = tekster.getProperty("kvittering.vedlegg.sendesIkke")
 		val tiligereInnsendtHeader = tekster.getProperty("kvittering.vedlegg.tidligereInnsendt")
+		val navKanHenteHeader = tekster.getProperty("kvittering.vedlegg.navKanHenteDokumentasjon")
 
 		val antallLastetOpp = vedleggOpplastet.size
 		val now = LocalDateTime.now()
@@ -110,6 +118,8 @@ class PdfGenerator {
 				.leggTilDokumenter(sendesIkke, vedleggSendesIkkeHeader)
 				.flyttNedMed(if (sendesIkke.isEmpty()) 0f else 20f)
 				.leggTilDokumenter(alleredeInnsendt, tiligereInnsendtHeader)
+				.flyttNedMed(if (navKanInnhenteDokumentasjon.isEmpty()) 0f else 20f)
+				.leggTilDokumenter(navKanInnhenteDokumentasjon, navKanHenteHeader)
 				.avsluttTekst()
 				.avsluttSide()
 				.leggTilFargeProfil()
