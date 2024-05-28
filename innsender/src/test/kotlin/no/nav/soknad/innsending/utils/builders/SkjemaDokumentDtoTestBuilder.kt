@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.utils.builders
 
 import no.nav.soknad.innsending.model.Mimetype
-import no.nav.soknad.innsending.model.OpplastingsVisningsRegel
 import no.nav.soknad.innsending.model.SkjemaDokumentDto
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.Skjema.generateVedleggsnr
@@ -16,8 +15,7 @@ data class SkjemaDokumentDtoTestBuilder(
 	var mimetype: Mimetype? = null,
 	var document: ByteArray? = null,
 	var propertyNavn: String? = null,
-	var formioId: String? = UUID.randomUUID().toString(),
-	var opplastingsVisningsRegel: List<OpplastingsVisningsRegel>? = null
+	var formioId: String? = UUID.randomUUID().toString()
 ) {
 
 	// Hoveddokument uses skjemanr as vedleggsnr
@@ -28,7 +26,6 @@ data class SkjemaDokumentDtoTestBuilder(
 		}
 		formioId = null
 		vedleggsnr = skjemanr
-		opplastingsVisningsRegel = null
 		return this
 	}
 
@@ -40,11 +37,9 @@ data class SkjemaDokumentDtoTestBuilder(
 		}
 		formioId = null
 		vedleggsnr = skjemanr
-		opplastingsVisningsRegel = null
 		return this
 	}
 
-	fun opplastingsVisningsRegler( visningsRegler: List<OpplastingsVisningsRegel>? ) = apply{this.opplastingsVisningsRegel = visningsRegler}
 
 	fun build(): SkjemaDokumentDto {
 		return SkjemaDokumentDto(
@@ -57,7 +52,6 @@ data class SkjemaDokumentDtoTestBuilder(
 			document = document,
 			propertyNavn = propertyNavn,
 			formioId = formioId,
-			visningsRegler =opplastingsVisningsRegel
 		)
 	}
 }

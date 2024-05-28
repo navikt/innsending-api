@@ -13,7 +13,6 @@ import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.util.Constants
-import no.nav.soknad.innsending.util.mapping.defaultVisningsRegler
 import no.nav.soknad.innsending.util.models.hovedDokument
 import no.nav.soknad.innsending.util.models.hovedDokumentVariant
 import no.nav.soknad.innsending.util.models.hoveddokument
@@ -81,8 +80,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Gitt
 		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val t7Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").opplastingsVisningsRegler(defaultVisningsRegler()).build()
-		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").opplastingsVisningsRegler(defaultVisningsRegler("N6")).build()
+		val t7Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build()
+		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
 
 		val skjemaDto = SkjemaDtoTestBuilder(vedleggsListe = listOf(t7Vedlegg, n6Vedlegg)).build()
 
@@ -92,7 +91,6 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Så
 		assertTrue(opprettetSoknadResponse != null)
 		assertEquals(201, opprettetSoknadResponse.statusCode.value())
-		assertTrue(opprettetSoknadResponse.body?.vedleggsListe?.first()?.visningsRegler != null)
 		testHentSoknadOgSendInn(opprettetSoknadResponse, token)
 
 	}
@@ -257,33 +255,15 @@ class FyllutRestApiTest : ApplicationTest() {
 			updatedSoknad.vedleggsListe.any { it.vedleggsnr == "T7" && it.tittel == newVedleggstittel1 },
 			"Should have vedlegg T7"
 		)
-		assertEquals(
-			3,
-			updatedSoknad.vedleggsListe.first { it.vedleggsnr == "T7" && it.tittel == newVedleggstittel1 }.visningsRegler?.size,
-			"Vedlegg T7 should have 3 visningsRegler"
-		)
 		assertTrue(
 			updatedSoknad.vedleggsListe.any { it.vedleggsnr == "N6" && it.tittel == newVedleggstittel2 },
 			"Should have vedlegg N6"
 		)
-		assertEquals(
-			1,
-			updatedSoknad.vedleggsListe.first { it.vedleggsnr == "N6" && it.tittel == newVedleggstittel2 }.visningsRegler?.size,
-			"vedlegg N6 should have 1 visningsRegler"
-		)
 		assertEquals(newTittel, updatedSoknad.hoveddokument!!.tittel, "Should have a new title for the hoveddokument")
-		assertTrue(
-			updatedSoknad.hoveddokument!!.visningsRegler == null,
-			"Hoveddokument should not have visningsRegler"
-		)
 		assertEquals(
 			newTittel,
 			updatedSoknad.hoveddokumentVariant!!.tittel,
 			"Should have a new title for the hoveddokumentVariant"
-		)
-		assertTrue(
-			updatedSoknad.hoveddokumentVariant!!.visningsRegler == null,
-			"HoveddokumentVariant should not have visningsRegler"
 		)
 	}
 
@@ -403,9 +383,7 @@ class FyllutRestApiTest : ApplicationTest() {
 			updatedSoknad.vedleggsListe.find { it.vedleggsnr == "N6" && it.tittel == sendInnVedleggsTittel }
 
 		assertNotNull(n6FyllUtVedlegg!!.formioId, "Vedlegg from fyllUt has formioId")
-		assertTrue(n6FyllUtVedlegg.visningsRegler?.size == 1, "Vedlegg from fyllUt has not 1 display choices")
 		assertNull(n6SendInnVedlegg!!.formioId, "Vedlegg from sendInn does not have formioId")
-		assertTrue(n6SendInnVedlegg.visningsRegler?.size == 1, "Vedlegg from sendInn has not 1 display choices")
 
 		assertFalse(
 			updatedSoknad.vedleggsListe.any { it.vedleggsnr == "vedleggsnr1" || it.vedleggsnr == "vedleggsnr2" },

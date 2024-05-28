@@ -82,13 +82,10 @@ class SoknadService(
 			val skjemaDbData = vedleggService.opprettHovedddokumentVedlegg(savedSoknadDbData, kodeverkSkjema)
 
 			val vedleggDbDataListe = vedleggService.saveVedlegg(savedSoknadDbData.id!!, vedleggsnrListe, spraak)
-			val savedVedleggsOpplastingsValg = vedleggDbDataListe
-				.map{it.id!! to repo.hentOpplastingsValgDbData(skjemaDbData.id!!, it.id )
-					.map{OpplastingsVisningsRegel(it.radiovalg, it.kommentarledetekst, it.kommentarbeskivelsestekst, it.notifikasjonstekst)}}.toMap()
 
 			val savedVedleggDbDataListe = listOf(skjemaDbData) + vedleggDbDataListe
 
-			val dokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbDataListe, savedVedleggsOpplastingsValg)
+			val dokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbDataListe)
 
 			publiserBrukernotifikasjon(dokumentSoknadDto)
 
@@ -110,11 +107,8 @@ class SoknadService(
 			val savedSoknadDbData = repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId))
 			val soknadsid = savedSoknadDbData.id
 			val savedVedleggDbData = vedleggService.saveVedleggFromDto(soknadsid!!, dokumentSoknadDto.vedleggsListe)
-			val savedVedleggsOpplastingsValg = savedVedleggDbData
-				.map{it.id!! to repo.hentOpplastingsValgDbData(soknadsid, it.id )
-					.map{OpplastingsVisningsRegel(it.radiovalg, it.kommentarledetekst, it.kommentarbeskivelsestekst, it.notifikasjonstekst)}}.toMap()
 
-			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData, savedVedleggsOpplastingsValg)
+			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
 			// lagre mottatte filer i fil tabellen.
 			lagreFiler(savedDokumentSoknadDto, dokumentSoknadDto)
 			publiserBrukernotifikasjon(savedDokumentSoknadDto)

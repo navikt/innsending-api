@@ -8,7 +8,6 @@ import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
-import no.nav.soknad.innsending.repository.domain.models.VedleggVisningsRegelDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.mapping.*
@@ -63,7 +62,6 @@ class VedleggService(
 		return vedleggList.map {
 			val existingVedlegg =
 				existingSoknad.vedleggsListe.firstOrNull { existingVedlegg -> existingVedlegg.vedleggsnr == it.vedleggsnr }
-			val vedleggVisningsRegler = existingVedlegg?.visningsRegler ?: defaultVisningsRegler(it.vedleggsnr)
 
 			val vedleggDbDatas = repo.lagreVedlegg(
 				VedleggDbData(
@@ -88,16 +86,6 @@ class VedleggService(
 					opplastingsvalgkommentar = null
 				)
 			)
-			repo.saveOpplastingsValgDbData(
-				vedleggDbDatas.soknadsid,
-				vedleggVisningsRegler.map{ VedleggVisningsRegelDbData(
-					id = null,
-					vedleggsid = vedleggDbDatas.id!!,
-					radiovalg = it.radiovalg,
-					kommentarledetekst = it.kommentarLedetekst,
-					kommentarbeskivelsestekst = it.kommentarBeskivelsestekst,
-					notifikasjonstekst = it.notifikasjonstekst) })
-
 			vedleggDbDatas
 		}
 	}
@@ -111,7 +99,6 @@ class VedleggService(
 		return vedleggList.map {
 			val existingVedlegg =
 				archivedSoknad.innsendtVedleggDtos.firstOrNull { existingVedlegg -> existingVedlegg.vedleggsnr == it.vedleggsnr }
-			val vedleggVisningsRegler = defaultVisningsRegler(it.vedleggsnr)
 
 			val lagretVedleggDbData = repo.lagreVedlegg(
 				VedleggDbData(
@@ -136,15 +123,6 @@ class VedleggService(
 					opplastingsvalgkommentar = null
 				)
 			)
-			repo.saveOpplastingsValgDbData(
-				lagretVedleggDbData.soknadsid,
-				vedleggVisningsRegler.map{ VedleggVisningsRegelDbData(
-					id = null,
-					vedleggsid = lagretVedleggDbData.id!!,
-					radiovalg = it.radiovalg,
-					kommentarledetekst = it.kommentarLedetekst,
-					kommentarbeskivelsestekst = it.kommentarBeskivelsestekst,
-					notifikasjonstekst = it.notifikasjonstekst) })
 
 			lagretVedleggDbData
 		}
@@ -158,7 +136,6 @@ class VedleggService(
 		formioid: String? = null
 	): List<VedleggDbData> {
 		val vedleggDbDataListe = vedleggsnrListe.map { nr -> skjemaService.hentSkjema(nr, spraak) }.map { v ->
-			val vedleggVisningsRegler = defaultVisningsRegler(v.skjemanummer)
 
 			val lagretVedleggDbData = repo.lagreVedlegg(
 				VedleggDbData(
@@ -183,15 +160,6 @@ class VedleggService(
 					opplastingsvalgkommentar = null
 				)
 			)
-			repo.saveOpplastingsValgDbData(
-				lagretVedleggDbData.soknadsid,
-				vedleggVisningsRegler.map{ VedleggVisningsRegelDbData(
-					id = null,
-					vedleggsid = lagretVedleggDbData.id!!,
-					radiovalg = it.radiovalg,
-					kommentarledetekst = it.kommentarLedetekst,
-					kommentarbeskivelsestekst = it.kommentarBeskivelsestekst,
-					notifikasjonstekst = it.notifikasjonstekst) })
 
 			lagretVedleggDbData
 		}
@@ -223,16 +191,6 @@ class VedleggService(
 					opplastingsvalgkommentar = null
 				)
 			)
-			repo.saveOpplastingsValgDbData(
-				lagretVedleggDbData.soknadsid,
-				defaultVisningsRegler(lagretVedleggDbData.vedleggsnr).map{ VedleggVisningsRegelDbData(
-					id = null,
-					vedleggsid = lagretVedleggDbData.id!!,
-					radiovalg = it.radiovalg,
-					kommentarledetekst = it.kommentarLedetekst,
-					kommentarbeskivelsestekst = it.kommentarBeskivelsestekst,
-					notifikasjonstekst = it.notifikasjonstekst) })
-
 			lagretVedleggDbData
 		}
 	}
@@ -243,7 +201,6 @@ class VedleggService(
 		vedleggList: List<VedleggDto>,
 	): List<VedleggDbData> {
 		return vedleggList.map {
-			val vedleggVisningsRegler = it.visningsRegler ?: if (!it.erHoveddokument) defaultVisningsRegler(it.vedleggsnr) else null
 
 			val vedleggDbDatas = repo.lagreVedlegg(
 				VedleggDbData(
@@ -268,17 +225,6 @@ class VedleggService(
 					opplastingsvalgkommentar = null
 				)
 			)
-			if (vedleggVisningsRegler != null)
-				repo.saveOpplastingsValgDbData(
-					vedleggDbDatas.soknadsid,
-					vedleggVisningsRegler.map{ VedleggVisningsRegelDbData(
-						id = null,
-						vedleggsid = vedleggDbDatas.id!!,
-						radiovalg = it.radiovalg,
-						kommentarledetekst = it.kommentarLedetekst,
-						kommentarbeskivelsestekst = it.kommentarBeskivelsestekst,
-						notifikasjonstekst = it.notifikasjonstekst) }
-				)
 
 			vedleggDbDatas
 		}
@@ -300,27 +246,12 @@ class VedleggService(
 			tittel =vedleggDto?.tittel
 		)
 
-		val opplastingsValg = saveOpplastingsValg(soknadDto.innsendingsId!!, vedleggDbDataList.first(), listOf(OpplastingsVisningsRegel(Opplastingsvalg.leggerVedNaa)))
-
 		// Oppdater soknadens sist endret dato
 		repo.oppdaterEndretDato(soknadDto.id!!)
 
-		return lagVedleggDto(vedleggDbDataList.first(), null, opplastingsValg)
+		return lagVedleggDto(vedleggDbDataList.first(), null)
 	}
 
-	fun saveOpplastingsValg(innsendingsId: String, vedleggDbData: VedleggDbData, opplastingsVisningsRegler: List<OpplastingsVisningsRegel>): List<OpplastingsVisningsRegel> {
-		repo.deleteOpplastingsValgDbData(innsendingsId,vedleggDbData.id!!)
-		repo.saveOpplastingsValgDbData(innsendingsId,
-			opplastingsVisningsRegler.map {
-				VedleggVisningsRegelDbData(id = null,
-					vedleggsid = vedleggDbData.id!!,
-					radiovalg = it.radiovalg,
-					kommentarledetekst = it.kommentarLedetekst,
-					kommentarbeskivelsestekst = it.kommentarBeskivelsestekst,
-					notifikasjonstekst = it.notifikasjonstekst)
-			} )
-		return opplastingsVisningsRegler
-	}
 
 	@Transactional
 	fun lagreNyHoveddokumentVariant(soknadDto: DokumentSoknadDto, mimetype: Mimetype): VedleggDto {
@@ -375,36 +306,18 @@ class VedleggService(
 		} catch (e: Exception) {
 			throw ResourceNotFoundException("Fant ingen vedlegg til soknad ${soknadDbData.innsendingsid}. Ved oppretting av søknad skal det minimum være opprettet et vedlegg for selve søknaden")
 		}
-		val opplastingsVisningsDbReglerMap =
-		try {
-			vedleggDbDataListe.filter{!it.erhoveddokument}.map {
-					it.id!! to
-					hentOpplastingsVisningsRegler(soknadDbData.id, it.id, it.vedleggsnr)
-			}.toMap()
-		} catch (e: Exception) {
-			throw ResourceNotFoundException("Fant ingen visningsregler for vedlegg til soknad ${soknadDbData.innsendingsid}")
-		}
 
-		val dokumentSoknadDto = lagDokumentSoknadDto(soknadDbData, vedleggDbDataListe, opplastingsVisningsDbReglerMap)
+		val dokumentSoknadDto = lagDokumentSoknadDto(soknadDbData, vedleggDbDataListe)
 		logger.debug("hentAlleVedlegg: Hentet ${dokumentSoknadDto.innsendingsId}. " + "Med vedleggsstatus ${dokumentSoknadDto.vedleggsListe.map { it.vedleggsnr + ':' + it.opplastingsStatus + ':' + it.innsendtdato }}")
 
 		return dokumentSoknadDto
-	}
-
-	private fun hentOpplastingsVisningsRegler(soknadsId: Long, vedleggsId: Long, vedleggsnr: String? = null): List<OpplastingsVisningsRegel> {
-		val opplastingsValgRegler = repo.hentOpplastingsValgDbData(soknadsId, vedleggsId).map{OpplastingsVisningsRegel(it.radiovalg, it.kommentarledetekst, it.kommentarbeskivelsestekst, it.notifikasjonstekst)}.toList()
-		return if (opplastingsValgRegler.isEmpty())
-			defaultVisningsRegler(vedleggsnr)
-		else
-			opplastingsValgRegler
 	}
 
 
 	// Hent vedlegg, merk filene knyttet til vedlegget ikke lastes opp
 	fun hentVedleggDto(vedleggsId: Long): VedleggDto {
 		val vedleggDbData = repo.hentVedlegg(vedleggsId)
-		val opplastingsVisningsRegler = hentOpplastingsVisningsRegler(vedleggDbData.soknadsid, vedleggsId, vedleggDbData.vedleggsnr)
-		return lagVedleggDto(vedleggDbData = vedleggDbData, document = null, opplastingsVisningsRegler = opplastingsVisningsRegler)
+		return lagVedleggDto(vedleggDbData = vedleggDbData, document = null)
 	}
 
 	fun slettVedleggOgDensFiler(vedleggDto: VedleggDto) {
@@ -485,7 +398,7 @@ class VedleggService(
 		// Oppdater soknadens sist endret dato
 		repo.oppdaterEndretDato(soknadDto.id!!)
 
-		return lagVedleggDto(vedleggDbData = oppdatertVedlegg, document = null, opplastingsVisningsRegler = hentOpplastingsVisningsRegler(vedleggDbData.soknadsid, vedleggsId))
+		return lagVedleggDto(vedleggDbData = oppdatertVedlegg, document = null)
 	}
 
 
@@ -502,15 +415,7 @@ class VedleggService(
 			logger.info("Oppdatert eksisterende vedlegg ${eksisterendeVedleggsListe.map { it.vedleggsnr }}, opplastingsStatus: ${eksisterendeVedleggsListe.map { it.opplastingsStatus }}")
 		} else {
 			// Lag nytt vedlegg
-			val lagretVedlegg = repo.lagreVedlegg(mapTilVedleggDb(nyttVedlegg, soknadsId))
-			val visningsRegler =
-				if (nyttVedlegg.visningsRegler == null)
-					defaultVisningsRegler(lagretVedlegg.vedleggsnr)
-				else
-					nyttVedlegg.visningsRegler
-			repo.saveOpplastingsValgDbData(
-				eksisterendeSoknad.innsendingsId!!,
-				visningsRegler!!.map { VedleggVisningsRegelDbData(null, vedleggsid = lagretVedlegg.id!!, radiovalg = it.radiovalg, kommentarledetekst = it.kommentarLedetekst, kommentarbeskivelsestekst = it.kommentarBeskivelsestekst, notifikasjonstekst = it.notifikasjonstekst) })
+			repo.lagreVedlegg(mapTilVedleggDb(nyttVedlegg, soknadsId))
 
 			logger.info("Laget nytt vedlegg ${nyttVedlegg.vedleggsnr}")
 		}

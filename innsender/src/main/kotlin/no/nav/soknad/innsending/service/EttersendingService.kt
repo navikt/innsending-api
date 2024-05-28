@@ -12,7 +12,6 @@ import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
-import no.nav.soknad.innsending.repository.domain.models.VedleggVisningsRegelDbData
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
@@ -148,21 +147,12 @@ class EttersendingService(
 							opplastingsvalgkommentar = null
 						)
 					)
-					repo.saveOpplastingsValgDbData(
-						savedEttersendingsSoknad.innsendingsid,
-						defaultVisningsRegler(savedVedleggDb.vedleggsnr?: "").map{ VedleggVisningsRegelDbData(
-							id = null,
-							vedleggsid = savedVedleggDb.id!!,
-							radiovalg = it.radiovalg,
-							kommentarledetekst = it.kommentarLedetekst,
-							kommentarbeskivelsestekst = it.kommentarBeskivelsestekst,
-							notifikasjonstekst = it.notifikasjonstekst) })
 
 					savedVedleggDb
 				}
 
 			// Publiser brukernotifikasjon
-			val dokumentSoknadDto = lagDokumentSoknadDto(savedEttersendingsSoknad, vedleggDbDataListe, null, erSystemGenerert)
+			val dokumentSoknadDto = lagDokumentSoknadDto(savedEttersendingsSoknad, vedleggDbDataListe, erSystemGenerert)
 			publiserBrukernotifikasjon(dokumentSoknadDto)
 
 			// Logg og metrics
@@ -214,13 +204,9 @@ class EttersendingService(
 					vedleggList = ettersending.vedleggsListe ?: emptyList(),
 					existingSoknad = existingSoknad
 				)
-			val savedVedleggsOpplastingsValg = combinedVedleggList
-				.filter{!it.erhoveddokument}
-				.map{it.id!! to repo.hentOpplastingsValgDbData(ettersendingDb.id, it.id )
-					.map{OpplastingsVisningsRegel(it.radiovalg, it.kommentarledetekst, it.kommentarbeskivelsestekst, it.notifikasjonstekst)}}.toMap()
 
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
-			return lagDokumentSoknadDto(ettersendingDb, combinedVedleggList, savedVedleggsOpplastingsValg)
+			return lagDokumentSoknadDto(ettersendingDb, combinedVedleggList)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, existingSoknad.tema)
 			throw e
@@ -256,12 +242,8 @@ class EttersendingService(
 					vedleggList = ettersending.vedleggsListe ?: emptyList(),
 					archivedSoknad = archivedSoknad
 				)
-			val savedVedleggsOpplastingsValg = combinedVedleggList
-				.filter{!it.erhoveddokument}
-				.map{it.id!! to repo.hentOpplastingsValgDbData(ettersendingDb.id, it.id )
-					.map{OpplastingsVisningsRegel(it.radiovalg, it.kommentarledetekst, it.kommentarbeskivelsestekst, it.notifikasjonstekst)}}.toMap()
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
-			return lagDokumentSoknadDto(ettersendingDb, combinedVedleggList, savedVedleggsOpplastingsValg)
+			return lagDokumentSoknadDto(ettersendingDb, combinedVedleggList)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, archivedSoknad.tema)
 			throw e
@@ -292,12 +274,8 @@ class EttersendingService(
 				vedleggList = ettersending.vedleggsListe ?: emptyList(),
 			)
 
-			val savedVedleggsOpplastingsValg = vedleggDbDataListe
-				.filter{!it.erhoveddokument}
-				.map{it.id!! to repo.hentOpplastingsValgDbData(ettersendingsSoknadDb.id, it.id )
-					.map{OpplastingsVisningsRegel(it.radiovalg, it.kommentarledetekst, it.kommentarbeskivelsestekst, it.notifikasjonstekst)}}.toMap()
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
-			return lagDokumentSoknadDto(ettersendingsSoknadDb, vedleggDbDataListe, savedVedleggsOpplastingsValg)
+			return lagDokumentSoknadDto(ettersendingsSoknadDb, vedleggDbDataListe)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, ettersending.tema)
 			throw e

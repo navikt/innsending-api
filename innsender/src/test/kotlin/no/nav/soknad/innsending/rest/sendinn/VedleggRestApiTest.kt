@@ -82,8 +82,6 @@ class VedleggRestApiTest : ApplicationTest() {
 		assertTrue(postResponse.body != null)
 		val opprettetSoknadDto = postResponse.body
 		assertTrue(opprettetSoknadDto!!.vedleggsListe.isNotEmpty())
-		assertTrue(opprettetSoknadDto.vedleggsListe.first{it.erHoveddokument}.visningsRegler == null)
-		assertTrue(opprettetSoknadDto.vedleggsListe.first{!it.erHoveddokument}.visningsRegler != null)
 
 		val vedleggDto = opprettetSoknadDto.vedleggsListe.first { !it.erHoveddokument }
 		val patchVedleggDto = PatchVedleggDto("Endret tittel", OpplastingsStatusDto.SendesAvAndre, opplastingsValgKommentar = "Sendes av min fastlege")

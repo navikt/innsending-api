@@ -71,7 +71,6 @@ class VedleggServiceTest : ApplicationTest() {
 		val vedleggDto = vedleggService.hentVedleggDto(dokumentSoknadDto.vedleggsListe[0].id!!)
 
 		assertEquals(vedleggDto.id, dokumentSoknadDto.vedleggsListe[0].id!!)
-		assertTrue(vedleggDto.visningsRegler != null && vedleggDto.visningsRegler!!.size == 3)
 
 		val filDtoListe =
 			filService.hentFiler(dokumentSoknadDto, dokumentSoknadDto.innsendingsId!!, vedleggDto.id!!, false)
@@ -91,11 +90,10 @@ class VedleggServiceTest : ApplicationTest() {
 		assertNotNull(lagretVedleggDto.id)
 		assertEquals("N6", lagretVedleggDto.vedleggsnr)
 		assertEquals("Litt mer info", lagretVedleggDto.tittel)
-		assertTrue(lagretVedleggDto.visningsRegler != null && lagretVedleggDto.visningsRegler!!.size == 1)
 	}
 
 	@Test
-	fun oppdaterVedleggEndrerKunTittelOgLabel() {
+	fun oppdaterVedleggEndrerKunTittelOgLabelOgKommentar() {
 		// Når søker har endret label på et vedlegg av type annet (N6), skal tittel settes lik label og vedlegget i databasen oppdateres med disse endringene.
 		val soknadService = lagSoknadService()
 
@@ -121,8 +119,6 @@ class VedleggServiceTest : ApplicationTest() {
 		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf(vedleggsnr))
 
 		val lagretVedlegg = dokumentSoknadDto.vedleggsListe.first { e -> vedleggsnr == e.vedleggsnr }
-		val opplastingsVisningsRegler = repo.hentOpplastingsValgDbData(dokumentSoknadDto.id!!, lagretVedlegg.id!!)
-		assertTrue(opplastingsVisningsRegler.isNotEmpty())
 
 		vedleggService.slettVedlegg(dokumentSoknadDto, lagretVedlegg.id!!)
 

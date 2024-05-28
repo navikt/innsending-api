@@ -86,7 +86,6 @@ class SkjemaDokumentSoknadTransformer {
 			skjemaurl = skjemaDokumentDto.vedleggsurl,
 			innsendtdato = null,
 			formioId = skjemaDokumentDto.formioId,
-			visningsRegler = skjemaDokumentDto.visningsRegler ?: if (!erHoveddokument) defaultVisningsRegler(skjemaDokumentDto.vedleggsnr) else null
 		)
 
 }

@@ -1428,23 +1428,11 @@ components:
       enum: [ "IkkeValgt", "LastetOpp", "Innsendt", "SendSenere", "SendesAvAndre", "SendesIkke", "LastetOppIkkeRelevantLenger", "LevertDokumentasjonTidligere", "HarIkkeDokumentasjonen", "NavKanHenteDokumentasjon" ]
       description: Status på om et vedlegg til søknad er enda ikke er lastet opp, lastet opp eller innsendt
 
-    Opplastingsvalg:
-      type: string
-      enum: [ "leggerVedNaa", "ettersender", "levertTidligere", "harIkke", "sendesAvAndre", "navKanHenteDokumentasjon" ]
-      description: Angir hvilke valg søker skal ha for et gitt vedlegg
-      example:
-
     OpplastingsValgKommentar:
       type: string
       default: null
       description: Søkers begrunnelse for opplastingsvalg.
       example: Dokumentasjonen sendes av min fastlege.
-
-    OpplastingsVisningsRegler:
-      type: array
-      description: Liste av redio button valg for et vedlegg med visningsregler for hvert enkelt valg.
-      items:
-        $ref: "#/components/schemas/OpplastingsVisningsRegel"
 
     OpprettEttersending:
       type: object
@@ -1573,25 +1561,6 @@ components:
       description: Nøkkelnavn på property. Brukt på vedlegg av type Annet (skjemanr=N6), for å sjekke om dette er default Annet vedlegg eller ikke
       example: annenDokumentasjon,  tilleggsVedleggForSkjemaXX.
 
-    OpplastingsVisningsRegel:
-      type: object
-      description: For et gitt opplastingsvalg beskriver om søker skal kommentere valget, og om notifikasjonsplakat skal vises til bruker
-      required:
-        - radiovalg
-      properties:
-        radiovalg:
-          $ref: "#/components/schemas/Opplastingsvalg"
-        kommentarLedetekst:
-          description: Ledetekst til kommentar/forklaring som søker skal gi som begrunnelse for opplastingsvalg
-          type: string
-        kommentarBeskivelsestekst:
-          description: Utdypende beskrivelse til hva NAV ønsker at søker skal kommentere/forklare
-          type: string
-        notifikasjonstekst:
-          description: Notifikasjonstekst som skal vises søker dersom dette opplastingsvalget er valgt
-          type: string
-          example: Hvis vi ikke har mottatt dette vedlegget innen 14 dager blir saken med den informasjonen som foreligger.
-
     RestErrorResponseDto:
       type: object
       description: Feilrespons
@@ -1638,8 +1607,6 @@ components:
           $ref: "#/components/schemas/FormioId"
         vedleggsurl:
           $ref: "#/components/schemas/Vedleggsurl"
-        visningsRegler:
-          $ref: "#/components/schemas/OpplastingsVisningsRegler"
 
     SkjemaDto:
       type: object
@@ -1835,8 +1802,6 @@ components:
           example: 2021-12-03T14:10:00Z
         formioId:
           $ref: "#/components/schemas/FormioId"
-        visningsRegler:
-          $ref: "#/components/schemas/OpplastingsVisningsRegler"
         opplastingsValgKommentar:
           $ref: "#/components/schemas/OpplastingsValgKommentar"
 
@@ -1844,15 +1809,6 @@ components:
       type: string
       description: NAVs identifikasjon av dokumenttype enten som Skjemanummer eller vedleggsnummer.
       example: NAV 14-35.01 eller T7
-
-    VedleggsOpplastingsValg:
-      type: object
-      description: Data som beskriver hvilke valg søker skal få mhp opplasting av dokumentasjon til et vedlegg
-      required:
-        - opplastingsValg
-      properties:
-        opplastingsValg:
-          $ref: "#/components/schemas/Opplastingsvalg"
 
     Vedleggsurl:
       type: string

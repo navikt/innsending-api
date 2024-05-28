@@ -81,11 +81,10 @@ fun mapTilSkjemaDokumentDto(vedleggDto: VedleggDto): SkjemaDokumentDto {
 		pakrevd = vedleggDto.erPakrevd,
 		document = vedleggDto.document,
 		formioId = vedleggDto.formioId,
-		visningsRegler = vedleggDto.visningsRegler
 	)
 }
 
-fun lagVedleggDto(vedleggDbData: VedleggDbData, document: ByteArray? = null, opplastingsVisningsRegler: List<OpplastingsVisningsRegel>? = null) =
+fun lagVedleggDto(vedleggDbData: VedleggDbData, document: ByteArray? = null) =
 	VedleggDto(
 		tittel = vedleggDbData.tittel,
 		label = vedleggDbData.label ?: "",
@@ -104,8 +103,7 @@ fun lagVedleggDto(vedleggDbData: VedleggDbData, document: ByteArray? = null, opp
 		skjemaurl = vedleggDbData.vedleggsurl,
 		innsendtdato = mapTilOffsetDateTime(vedleggDbData.innsendtdato),
 		formioId = vedleggDbData.formioid,
-		opplastingsValgKommentar = vedleggDbData.opplastingsvalgkommentar,
-		visningsRegler = opplastingsVisningsRegler
+		opplastingsValgKommentar = vedleggDbData.opplastingsvalgkommentar
 	)
 
 fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
@@ -126,8 +124,7 @@ fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
 		document = null,
 		skjemaurl = vedleggDto.skjemaurl,
 		innsendtdato = OffsetDateTime.now(),
-		opplastingsValgKommentar = vedleggDto.opplastingsValgKommentar,
-		visningsRegler = vedleggDto.visningsRegler
+		opplastingsValgKommentar = vedleggDto.opplastingsValgKommentar
 	)
 
 fun translate(vedleggDtos: List<VedleggDto>): List<DocumentData> {
@@ -166,17 +163,3 @@ fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, vedleggsId: Long) =
 		vedleggsId
 	)
 
-
-fun defaultVisningsRegler(): List<OpplastingsVisningsRegel> {
-	return listOf(
-			OpplastingsVisningsRegel(radiovalg = Opplastingsvalg.leggerVedNaa),
-			OpplastingsVisningsRegel(radiovalg = Opplastingsvalg.ettersender),
-			OpplastingsVisningsRegel(radiovalg = Opplastingsvalg.sendesAvAndre)
-		)
-}
-fun defaultVisningsRegler(vedleggsnr: String? = null): List<OpplastingsVisningsRegel> {
-	if (vedleggsnr == "N6")
-		return listOf(OpplastingsVisningsRegel(radiovalg = Opplastingsvalg.leggerVedNaa))
-	else
-		return defaultVisningsRegler()
-}
