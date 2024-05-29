@@ -568,12 +568,18 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// When
 		api?.updateSoknad(innsendingsId, skjemaDto)
-		api?.utfyltSoknad(innsendingsId, skjemaDto)
-
 		val soknadAfterUpdate = soknadService.hentSoknad(innsendingsId)
+
+		api?.utfyltSoknad(innsendingsId, skjemaDto)
+		val soknadAfterUtfylt = soknadService.hentSoknad(innsendingsId)
+
+		api?.sendInnSoknad(innsendingsId)
+		val soknadAfterInnsending = soknadService.hentSoknad(innsendingsId)
 
 		// Then
 		assertEquals(soknadBeforeUpdate.opprettetDato, soknadAfterUpdate.opprettetDato)
+		assertEquals(soknadBeforeUpdate.opprettetDato, soknadAfterUtfylt.opprettetDato)
+		assertEquals(soknadBeforeUpdate.opprettetDato, soknadAfterInnsending.opprettetDato)
 	}
 
 	@Test
