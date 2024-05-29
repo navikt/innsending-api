@@ -144,6 +144,7 @@ class EttersendingService(
 							vedleggsurl = if (v.vedleggsnr != null)
 								skjemaService.hentSkjema(v.vedleggsnr!!, nyesteSoknad.spraak ?: "nb", false).url else null,
 							formioid = v.formioId,
+							opplastingsvalgkommentarledetekst =  v.opplastingsValgKommentarLedetekst,
 							opplastingsvalgkommentar = null
 						)
 					)

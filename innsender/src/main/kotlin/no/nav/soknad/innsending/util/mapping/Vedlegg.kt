@@ -36,6 +36,7 @@ fun mapTilVedleggDb(
 		innsendtdato = mapTilLocalDateTime(vedleggDto.innsendtdato),
 		vedleggsurl = url ?: vedleggDto.skjemaurl,
 		formioid = vedleggDto.formioId,
+		opplastingsvalgkommentarledetekst = vedleggDto.opplastingsValgKommentarLedetekst,
 		opplastingsvalgkommentar = vedleggDto.opplastingsValgKommentar
 	)
 
@@ -65,6 +66,7 @@ fun oppdaterVedleggDb(
 		innsendtdato = vedleggDbData.innsendtdato,
 		vedleggsurl = vedleggDbData.vedleggsurl,
 		formioid = vedleggDbData.formioid,
+		opplastingsvalgkommentarledetekst = patchVedleggDto.opplastingsValgKommentarLedetekst,
 		opplastingsvalgkommentar = patchVedleggDto.opplastingsValgKommentar
 	)
 
@@ -103,6 +105,7 @@ fun lagVedleggDto(vedleggDbData: VedleggDbData, document: ByteArray? = null) =
 		skjemaurl = vedleggDbData.vedleggsurl,
 		innsendtdato = mapTilOffsetDateTime(vedleggDbData.innsendtdato),
 		formioId = vedleggDbData.formioid,
+		opplastingsValgKommentarLedetekst = vedleggDbData.opplastingsvalgkommentarledetekst,
 		opplastingsValgKommentar = vedleggDbData.opplastingsvalgkommentar
 	)
 
@@ -124,6 +127,7 @@ fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
 		document = null,
 		skjemaurl = vedleggDto.skjemaurl,
 		innsendtdato = OffsetDateTime.now(),
+		opplastingsValgKommentarLedetekst = vedleggDto.opplastingsValgKommentarLedetekst,
 		opplastingsValgKommentar = vedleggDto.opplastingsValgKommentar
 	)
 

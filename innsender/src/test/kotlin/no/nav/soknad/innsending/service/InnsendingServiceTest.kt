@@ -224,7 +224,7 @@ class InnsendingServiceTest : ApplicationTest() {
 		assertNotNull(kvitteringsDokument)
 
 		// Skriver til tmp fil for manuell sjekk av innholdet av generert PDF
-		writeBytesToFile(kvitteringsDokument,"dummy.pdf")
+		// writeBytesToFile(kvitteringsDokument,"dummy.pdf")
 
 	}
 
@@ -295,7 +295,7 @@ class InnsendingServiceTest : ApplicationTest() {
 	@Test
 	fun sendInnSoknadMedVedlegg() {
 		val innsendingService = lagInnsendingService(soknadService)
-		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1", "X1", "X2", "W2", "W3", "W4"))
 
 		// Last opp fil til hoveddokument vedlegg
 		filService.lagreFil(
@@ -306,23 +306,88 @@ class InnsendingServiceTest : ApplicationTest() {
 		// Last opp fil1 til W1 vedlegg
 		filService.lagreFil(
 			dokumentSoknadDto,
-			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { !it.erHoveddokument })
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { !it.erHoveddokument && it.vedleggsnr == "W1"})
 		)
 		// Last opp fil2 til W1 vedlegg
 		filService.lagreFil(
 			dokumentSoknadDto,
-			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { !it.erHoveddokument })
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { !it.erHoveddokument && it.vedleggsnr == "W1" })
 		)
+
+		vedleggService.endreVedlegg(
+			patchVedleggDto =
+			PatchVedleggDto(
+				tittel=null,
+				opplastingsStatus = OpplastingsStatusDto.SendSenere,
+				opplastingsValgKommentarLedetekst = "Hvorfor sender du ikke nå",
+				opplastingsValgKommentar = "Venter på dokumentasjonen fra min arbeidsgiver"
+			),
+			vedleggsId = dokumentSoknadDto.vedleggsListe.first { !it.erHoveddokument && it.vedleggsnr == "X1" }.id!!,
+			soknadDto = dokumentSoknadDto,
+			required = null)
+
+		vedleggService.endreVedlegg(
+			patchVedleggDto =
+			PatchVedleggDto(
+				tittel=null,
+				opplastingsStatus = OpplastingsStatusDto.SendesAvAndre,
+				opplastingsValgKommentarLedetekst = "Hvem sender inn vedlegget",
+				opplastingsValgKommentar = "Min fastlege sender inn dokumentasjonen"
+			),
+			vedleggsId = dokumentSoknadDto.vedleggsListe.first { !it.erHoveddokument && it.vedleggsnr == "X2" }.id!!,
+			soknadDto = dokumentSoknadDto,
+			required = null)
+
+		vedleggService.endreVedlegg(
+			patchVedleggDto =
+			PatchVedleggDto(
+				tittel=null,
+				opplastingsStatus = OpplastingsStatusDto.LevertDokumentasjonTidligere,
+				opplastingsValgKommentarLedetekst = "I hvilken sammenheng sendte du inn denne dokumentasjonen til NAV",
+				opplastingsValgKommentar = "I forbindelse med en tidligere innsendt søknad"
+			),
+			vedleggsId = dokumentSoknadDto.vedleggsListe.first { !it.erHoveddokument && it.vedleggsnr == "W2" }.id!!,
+			soknadDto = dokumentSoknadDto,
+			required = null)
+
+		vedleggService.endreVedlegg(
+			patchVedleggDto =
+			PatchVedleggDto(
+				tittel=null,
+				opplastingsStatus = OpplastingsStatusDto.HarIkkeDokumentasjonen,
+				opplastingsValgKommentarLedetekst = "Forklar hvorfor du ikke har denne informasjonen",
+				opplastingsValgKommentar = "Jeg har aldri fått denne fra min sønns skole"
+			),
+			vedleggsId = dokumentSoknadDto.vedleggsListe.first { !it.erHoveddokument && it.vedleggsnr == "W3" }.id!!,
+			soknadDto = dokumentSoknadDto,
+			required = null)
+
+
+		vedleggService.endreVedlegg(
+			patchVedleggDto =
+			PatchVedleggDto(
+				tittel=null,
+				opplastingsStatus = OpplastingsStatusDto.NavKanHenteDokumentasjon,
+				opplastingsValgKommentarLedetekst = "Bekreft at det du gir NAV tillatelse til å hente denne dokumentasjonen",
+				opplastingsValgKommentar = "Jeg bekrefter at NAV kan ta kontakt med min tidligere samboer for å få denne dokumentasjonen"
+			),
+			vedleggsId = dokumentSoknadDto.vedleggsListe.first { !it.erHoveddokument && it.vedleggsnr == "W4" }.id!!,
+			soknadDto = dokumentSoknadDto,
+			required = null)
+		val oppdatertDokumentDto = soknadService.hentSoknad(dokumentSoknadDto.id!!)
 
 		val kvitteringsDto =
 			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
 				soknadsmottakerAPI,
-				dokumentSoknadDto,
+				oppdatertDokumentDto,
 				innsendingService
 			)
 		assertTrue(kvitteringsDto.hoveddokumentRef != null)
-		assertTrue(kvitteringsDto.innsendteVedlegg!!.isNotEmpty())
-		assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+		assertEquals(1, kvitteringsDto.innsendteVedlegg!!.size)
+		assertEquals(1, kvitteringsDto.skalEttersendes!!.size)
+		assertEquals(1, kvitteringsDto.skalSendesAvAndre!!.size)
+		assertEquals(1, kvitteringsDto.sendesIkkeInn!!.size)
+		assertEquals(1, kvitteringsDto.navKanInnhente!!.size)
 
 		assertThrows<IllegalActionException> {
 			vedleggService.leggTilVedlegg(dokumentSoknadDto, null)
@@ -330,14 +395,14 @@ class InnsendingServiceTest : ApplicationTest() {
 
 		// Hvis hent innsendt hoveddokument
 		val vedleggsFiler = innsendingService.getFiles(
-			dokumentSoknadDto.innsendingsId!!,
-			dokumentSoknadDto.vedleggsListe.map { it.uuid!! }.toList()
+			oppdatertDokumentDto.innsendingsId!!,
+			oppdatertDokumentDto.vedleggsListe.map { it.uuid!! }.toList()
 		)
 
 		// Så skal
-		assertEquals(2, vedleggsFiler.size)
-		assertTrue(vedleggsFiler.all { it.fileStatus == SoknadFile.FileStatus.ok })
-		assertEquals(2, AntallSider().finnAntallSider(vedleggsFiler.last().content))
+		assertEquals(7, vedleggsFiler.size)
+		assertEquals(2, vedleggsFiler.filter { it.fileStatus == SoknadFile.FileStatus.ok }.size)
+		assertEquals(2, AntallSider().finnAntallSider(vedleggsFiler.filter { it.fileStatus == SoknadFile.FileStatus.ok }.last().content))
 
 	}
 

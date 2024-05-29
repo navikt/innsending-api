@@ -25,6 +25,7 @@ data class VedleggDbData(
 	@Column(name = "innsendtdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val innsendtdato: LocalDateTime?,
 	@Column(name = "vedleggsurl", columnDefinition = "varchar") val vedleggsurl: String?,
 	@Column(name = "formioid", columnDefinition = "varchar") val formioid: String?,
+	@Column(name = "opplastingsvalgkommentarledetekst", columnDefinition = "opplastingsvalgkommentarledetekst") val opplastingsvalgkommentarledetekst: String?,
 	@Column(name = "opplastingsvalgkommentar", columnDefinition = "opplastingsvalgkommentar") val opplastingsvalgkommentar: String?,
 ) {
 

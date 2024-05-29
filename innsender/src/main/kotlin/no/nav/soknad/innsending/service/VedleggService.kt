@@ -49,6 +49,7 @@ class VedleggService(
 				innsendtdato = null,
 				vedleggsurl = kodeverkSkjema.url,
 				formioid = null,
+				opplastingsvalgkommentarledetekst = null,
 				opplastingsvalgkommentar = null
 			)
 		)
@@ -83,6 +84,7 @@ class VedleggService(
 					innsendtdato = existingVedlegg?.innsendtdato?.toLocalDateTime(),
 					vedleggsurl = it.url,
 					formioid = null,
+					opplastingsvalgkommentarledetekst = null,
 					opplastingsvalgkommentar = null
 				)
 			)
@@ -120,6 +122,7 @@ class VedleggService(
 					innsendtdato = archivedSoknad.innsendtDato.toLocalDateTime(),
 					vedleggsurl = it.url,
 					formioid = null,
+					opplastingsvalgkommentarledetekst = null,
 					opplastingsvalgkommentar = null
 				)
 			)
@@ -157,6 +160,7 @@ class VedleggService(
 					innsendtdato = null,
 					vedleggsurl = v.url,
 					formioid = formioid,
+					opplastingsvalgkommentarledetekst = null,
 					opplastingsvalgkommentar = null
 				)
 			)
@@ -188,6 +192,7 @@ class VedleggService(
 					innsendtdato = null,
 					vedleggsurl = it.url,
 					formioid = null,
+					opplastingsvalgkommentarledetekst = null,
 					opplastingsvalgkommentar = null
 				)
 			)
@@ -222,7 +227,8 @@ class VedleggService(
 					innsendtdato = null,
 					vedleggsurl = it.skjemaurl,
 					formioid = it.formioId,
-					opplastingsvalgkommentar = null
+					opplastingsvalgkommentarledetekst = it.opplastingsValgKommentarLedetekst,
+					opplastingsvalgkommentar = it.opplastingsValgKommentar
 				)
 			)
 
@@ -278,6 +284,7 @@ class VedleggService(
 					innsendtdato = null,
 					vedleggsurl = null,
 					formioid = null,
+					opplastingsvalgkommentarledetekst = null,
 					opplastingsvalgkommentar = null
 				)
 			)

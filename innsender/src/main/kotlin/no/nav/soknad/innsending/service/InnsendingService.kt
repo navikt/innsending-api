@@ -357,9 +357,17 @@ class InnsendingService(
 
 		val skalSendesAvAndre = innsendtSoknadDto.vedleggsListe
 			.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.SendesAvAndre }
-			.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }
+			.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label, it.opplastingsValgKommentarLedetekst, it.opplastingsValgKommentar) }
 
-		val skalEtterSendes = manglendePakrevdeVedlegg.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }
+		val skalEtterSendes = manglendePakrevdeVedlegg.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label, it.opplastingsValgKommentarLedetekst, it.opplastingsValgKommentar) }
+
+		val blirIkkeInnsendt = innsendtSoknadDto.vedleggsListe
+			.filter { !it.erHoveddokument && (it.opplastingsStatus == OpplastingsStatusDto.HarIkkeDokumentasjonen|| it.opplastingsStatus == OpplastingsStatusDto.SendesIkke) }
+			.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label, it.opplastingsValgKommentarLedetekst, it.opplastingsValgKommentar) }
+
+		val navKanInnhente = innsendtSoknadDto.vedleggsListe
+			.filter { !it.erHoveddokument && (it.opplastingsStatus == OpplastingsStatusDto.NavKanHenteDokumentasjon) }
+			.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label, it.opplastingsValgKommentarLedetekst, it.opplastingsValgKommentar) }
 
 		return KvitteringsDto(
 			innsendingsId = innsendingsId,
@@ -369,6 +377,8 @@ class InnsendingService(
 			innsendteVedlegg = innsendteVedlegg,
 			skalEttersendes = skalEtterSendes,
 			skalSendesAvAndre = skalSendesAvAndre,
+			sendesIkkeInn = blirIkkeInnsendt,
+			navKanInnhente = navKanInnhente,
 			ettersendingsfrist = beregnInnsendingsfrist(innsendtSoknadDto)
 		)
 	}
