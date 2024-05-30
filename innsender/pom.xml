@@ -327,13 +327,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>no.nav.security</groupId>
-			<artifactId>mock-oauth2-server</artifactId>
-			<version>${mock-oauth2-server.version}</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
 			<version>${gson.version}</version>

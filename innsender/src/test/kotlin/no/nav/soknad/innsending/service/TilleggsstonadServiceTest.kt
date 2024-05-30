@@ -235,7 +235,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 	}
 
 	@Test
-	fun sendInnKjoreliste() {
+	fun sendInnKjoreliste_tema_TSR() {
 		val innsendingService = lagInnsendingService(soknadService)
 		val hoveddokDto = Hjelpemetoder.lagVedlegg(
 			vedleggsnr = kjoreliste,
@@ -251,7 +251,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			erHoveddokument = true,
 			erVariant = true,
 			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
-			vedleggsNavn = "/__files/kjøreliste-NAV-11-12.24B-05032024.json"
+			vedleggsNavn = "/__files/kjøreliste-NAV-11-12.24B-05032024.json" // tema=TSR
 		)
 		val inputDokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad(
 			skjemanr = kjoreliste,
@@ -259,7 +259,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			brukerId = testpersonid,
 			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
 			spraak = "no_NB",
-			tema = "TSO"
+			tema = "TSO" // default tema på dette skjema
 		)
 		val skjemaDto =
 			SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService = soknadService, inputDokumentSoknadDto)
@@ -291,4 +291,119 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 
 	}
 
+
+	@Test
+	fun sendInnKjoreliste_tema_TSO() {
+		val innsendingService = lagInnsendingService(soknadService)
+		val hoveddokDto = Hjelpemetoder.lagVedlegg(
+			vedleggsnr = kjoreliste,
+			tittel = "Kjøreliste",
+			erHoveddokument = true,
+			erVariant = false,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
+			vedleggsNavn = "/litenPdf.pdf"
+		)
+		val hoveddokVariantDto = Hjelpemetoder.lagVedlegg(
+			vedleggsnr = kjoreliste,
+			tittel = "Kjøreliste",
+			erHoveddokument = true,
+			erVariant = true,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
+			vedleggsNavn = "/__files/kjøreliste-NAV-11-12.24B-26032024.json" // tema=TSO
+		)
+		val inputDokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad(
+			skjemanr = kjoreliste,
+			tittel = "Kjøreliste",
+			brukerId = testpersonid,
+			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
+			spraak = "no_NB",
+			tema = "TSO"
+		)
+		val skjemaDto =
+			SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService = soknadService, inputDokumentSoknadDto)
+
+		val opprettetSoknad = soknadService.hentSoknad(skjemaDto.innsendingsId!!)
+		val kvitteringsDto =
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				soknadsmottakerAPI,
+				opprettetSoknad,
+				innsendingService
+			)
+		Assertions.assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
+		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+
+		val innsendtSoknad = soknadService.hentSoknadMedHoveddokumentVariant(opprettetSoknad.innsendingsId!!)
+		Assertions.assertTrue(innsendtSoknad.status == SoknadsStatusDto.Innsendt)
+		Assertions.assertEquals("TSO", innsendtSoknad.tema)
+		Assertions.assertEquals(
+			Mimetype.applicationSlashXml,
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.Innsendt }
+				.first().mimetype
+		)
+		Assertions.assertEquals(
+			Mimetype.applicationSlashJson,
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.SendesIkke }
+				.first().mimetype
+		)
+
+	}
+
+
+	@Test
+	fun sendInnKjoreliste_tema_Gitt_Malgruppe() {
+		val innsendingService = lagInnsendingService(soknadService)
+		val hoveddokDto = Hjelpemetoder.lagVedlegg(
+			vedleggsnr = kjoreliste,
+			tittel = "Kjøreliste",
+			erHoveddokument = true,
+			erVariant = false,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
+			vedleggsNavn = "/litenPdf.pdf"
+		)
+		val hoveddokVariantDto = Hjelpemetoder.lagVedlegg(
+			vedleggsnr = kjoreliste,
+			tittel = "Kjøreliste",
+			erHoveddokument = true,
+			erVariant = true,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
+			vedleggsNavn = "/__files/kjøreliste-NAV-11-12.24B-24052024.json" // tema mangler, malgruppe=MOTDAGPEN
+		)
+		val inputDokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad(
+			skjemanr = kjoreliste,
+			tittel = "Kjøreliste",
+			brukerId = testpersonid,
+			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
+			spraak = "no_NB",
+			tema = "TSO" // default tema
+		)
+		val skjemaDto =
+			SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService = soknadService, inputDokumentSoknadDto)
+
+		val opprettetSoknad = soknadService.hentSoknad(skjemaDto.innsendingsId!!)
+		val kvitteringsDto =
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				soknadsmottakerAPI,
+				opprettetSoknad,
+				innsendingService
+			)
+		Assertions.assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
+		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+
+		val innsendtSoknad = soknadService.hentSoknadMedHoveddokumentVariant(opprettetSoknad.innsendingsId!!)
+		Assertions.assertTrue(innsendtSoknad.status == SoknadsStatusDto.Innsendt)
+		Assertions.assertEquals("TSR", innsendtSoknad.tema)
+		Assertions.assertEquals(
+			Mimetype.applicationSlashXml,
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.Innsendt }
+				.first().mimetype
+		)
+		Assertions.assertEquals(
+			Mimetype.applicationSlashJson,
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.SendesIkke }
+				.first().mimetype
+		)
+
+	}
 }

@@ -35,9 +35,14 @@ class TilleggsstonadService(
 			reiseArbeid to TemaValg.kun_TSR, // Støtte til reise for å komme i arbeid
 			stotteTilFlytting to TemaValg.TSO_og_TSR, // Støtte til flytting
 			kjoreliste to TemaValg.TSO_og_TSR, // Kjøreliste
-			"kjoreliste" to TemaValg.TSO_og_TSR // TODO fjern
 		)
 
+	private val relevanteMaalgrupperForTsr = listOf(
+		MaalgruppeType.ARBSOKERE.name,
+		MaalgruppeType.MOTDAGPEN.name,
+		MaalgruppeType.MOTTILTPEN.name,
+		MaalgruppeType.ANNET.name
+	)
 
 	fun isTilleggsstonad(soknadDto: DokumentSoknadDto): Boolean {
 		if ("TSO".equals(soknadDto.tema, true) || "TSR".equals(soknadDto.tema, true)) {
@@ -68,7 +73,7 @@ class TilleggsstonadService(
 
 			val jsonObj: JsonApplication<*>
 			val xmlFile: ByteArray
-			if (soknadDto.skjemanr == kjoreliste || soknadDto.skjemanr == "kjoreliste") { // TODO fjern "kjoreliste"
+			if (soknadDto.skjemanr == kjoreliste) {
 				jsonObj = convertToJsonDrivingListJson(soknadDto = soknadDto, jsonFil)
 				xmlFile = json2Xml(jsonObj, soknadDto)
 			} else {
@@ -99,7 +104,8 @@ class TilleggsstonadService(
 			if (jsonObj.applicationDetails is JsonTilleggsstonad)
 				sjekkOgOppdaterTema(soknadDto, jsonObj.applicationDetails.maalgruppeinformasjon)
 			else if (jsonObj.applicationDetails is JsonDrivingListSubmission)
-				sjekkOgOppdaterTema(soknadDto, jsonObj.applicationDetails.maalgruppeinformasjon)
+				sjekkOgOppdaterTema(soknadDto,
+					jsonObj.applicationDetails.expensePeriodes?.tema, jsonObj.applicationDetails.maalgruppeinformasjon)
 
 			return soknadService.hentSoknad(soknadDto.innsendingsId!!)
 		} catch (ex: Exception) {
@@ -108,20 +114,23 @@ class TilleggsstonadService(
 	}
 
 	private fun sjekkOgOppdaterTema(soknadDto: DokumentSoknadDto, maalgruppeInformasjon: JsonMaalgruppeinformasjon?) {
-		val relevanteMaalgrupperForTsr = listOf(
-			MaalgruppeType.ARBSOKERE.name,
-			MaalgruppeType.MOTDAGPEN.name,
-			MaalgruppeType.MOTTILTPEN.name,
-			MaalgruppeType.ANNET.name
-		)
 		if (!relevanteMaalgrupperForTsr.contains(maalgruppeInformasjon?.maalgruppetype)) return
 
-		if (!(
-				tilleggsstonadSkjema.containsKey(soknadDto.skjemanr)
-					&& tilleggsstonadSkjema[soknadDto.skjemanr] == TemaValg.TSO_og_TSR)
+		if (!(tilleggsstonadSkjema.containsKey(soknadDto.skjemanr)
+				&& tilleggsstonadSkjema[soknadDto.skjemanr] == TemaValg.TSO_og_TSR)
 		) return
 
 		repo.endreTema(soknadDto.id!!, soknadDto.innsendingsId!!, "TSR")
+	}
+
+	private fun sjekkOgOppdaterTema(soknadDto: DokumentSoknadDto, tema: String? = null, maalgruppeInformasjon: JsonMaalgruppeinformasjon?) {
+		if (tema != null) {
+			if (tema == "TSO") return  // Initial default value
+			repo.endreTema(soknadDto.id!!, soknadDto.innsendingsId!!, tema)
+		} else {
+			logger.warn("${soknadDto.innsendingsId!!}: Kjørelisten mangler tema, setter tema basert på målgruppe istedenfor")
+			sjekkOgOppdaterTema(soknadDto, maalgruppeInformasjon)
+		}
 	}
 
 }

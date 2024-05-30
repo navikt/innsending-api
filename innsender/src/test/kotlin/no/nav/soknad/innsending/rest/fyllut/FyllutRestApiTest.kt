@@ -13,11 +13,7 @@ import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.util.Constants
-import no.nav.soknad.innsending.util.models.hovedDokument
-import no.nav.soknad.innsending.util.models.hovedDokumentVariant
-import no.nav.soknad.innsending.util.models.hoveddokument
-import no.nav.soknad.innsending.util.models.hoveddokumentVariant
-import no.nav.soknad.innsending.util.models.kvittering
+import no.nav.soknad.innsending.util.models.*
 import no.nav.soknad.innsending.utils.Api
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.TokenGenerator
@@ -33,11 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.io.ClassPathResource
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
+import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
 import java.util.*
 import kotlin.test.*
@@ -563,6 +555,32 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals(400, response.statusCode.value())
 		assertEquals(ErrorCode.APPLICATION_SENT_IN_OR_DELETED.code, response.body?.errorCode)
 
+	}
+
+
+	@Test
+	fun `Should not update opprettetDato when updating soknad`() {
+		// Given
+		val skjemaDto = SkjemaDtoTestBuilder().build()
+		val createdSoknad = api?.createSoknad(skjemaDto)?.body
+
+		val innsendingsId = createdSoknad?.innsendingsId!!
+		val soknadBeforeUpdate = soknadService.hentSoknad(innsendingsId)
+
+		// When
+		api?.updateSoknad(innsendingsId, skjemaDto)
+		val soknadAfterUpdate = soknadService.hentSoknad(innsendingsId)
+
+		api?.utfyltSoknad(innsendingsId, skjemaDto)
+		val soknadAfterUtfylt = soknadService.hentSoknad(innsendingsId)
+
+		api?.sendInnSoknad(innsendingsId)
+		val soknadAfterInnsending = soknadService.hentSoknad(innsendingsId)
+
+		// Then
+		assertEquals(soknadBeforeUpdate.opprettetDato, soknadAfterUpdate.opprettetDato)
+		assertEquals(soknadBeforeUpdate.opprettetDato, soknadAfterUtfylt.opprettetDato)
+		assertEquals(soknadBeforeUpdate.opprettetDato, soknadAfterInnsending.opprettetDato)
 	}
 
 	@Test

@@ -10,14 +10,19 @@ class SkjemaDokumentSoknadTransformer {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	fun konverterTilDokumentSoknadDto(input: SkjemaDto, brukerId: String, applikasjon: String): DokumentSoknadDto =
+	fun konverterTilDokumentSoknadDto(
+		input: SkjemaDto,
+		existingSoknad: DokumentSoknadDto?,
+		brukerId: String,
+		applikasjon: String
+	): DokumentSoknadDto =
 		DokumentSoknadDto(
 			brukerId = brukerId,
 			skjemanr = input.skjemanr,
 			tittel = input.tittel,
 			tema = input.tema,
 			status = SoknadsStatusDto.Opprettet,
-			opprettetDato = mapTilOffsetDateTime(LocalDateTime.now())!!,
+			opprettetDato = existingSoknad?.opprettetDato ?: mapTilOffsetDateTime(LocalDateTime.now())!!,
 			endretDato = mapTilOffsetDateTime(LocalDateTime.now()),
 			vedleggsListe = lagVedleggsListe(input),
 			id = null,
