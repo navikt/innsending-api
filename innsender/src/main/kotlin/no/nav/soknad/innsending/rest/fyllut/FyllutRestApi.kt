@@ -60,6 +60,7 @@ class FyllutRestApi(
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
 			input = skjemaDto,
+			existingSoknad = null,
 			brukerId = brukerId,
 			applikasjon = applikasjon
 		)
@@ -100,14 +101,15 @@ class FyllutRestApi(
 
 		combinedLogger.log("$innsendingsId: Skal oppdatere søknad fra FyllUt", brukerId)
 
+		val existingSoknad = soknadService.hentSoknad(innsendingsId)
+		validerSoknadsTilgang(existingSoknad)
+
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
 			input = skjemaDto,
+			existingSoknad = existingSoknad,
 			brukerId = brukerId,
 			applikasjon = applikasjon
 		)
-
-		val existingSoknad = soknadService.hentSoknad(innsendingsId)
-		validerSoknadsTilgang(existingSoknad)
 
 		val updatedSoknad = soknadService.updateSoknad(innsendingsId, dokumentSoknadDto)
 
@@ -123,14 +125,15 @@ class FyllutRestApi(
 
 		combinedLogger.log("$innsendingsId: Skal fullføre søknad fra FyllUt", brukerId)
 
+		val existingSoknad = soknadService.hentSoknad(innsendingsId)
+		validerSoknadsTilgang(existingSoknad)
+
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
 			input = skjemaDto,
+			existingSoknad = existingSoknad,
 			brukerId = brukerId,
 			applikasjon = applikasjon
 		)
-
-		val existingSoknad = soknadService.hentSoknad(innsendingsId)
-		validerSoknadsTilgang(existingSoknad)
 
 		soknadService.updateUtfyltSoknad(innsendingsId, dokumentSoknadDto)
 
