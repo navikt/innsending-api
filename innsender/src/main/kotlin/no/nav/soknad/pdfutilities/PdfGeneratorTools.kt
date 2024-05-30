@@ -118,7 +118,7 @@ class PdfGenerator {
 				.leggTilDokumenter(sendesIkke, vedleggSendesIkkeHeader)
 				.flyttNedMed(if (sendesIkke.isEmpty()) 0f else 20f)
 				.leggTilDokumenter(alleredeInnsendt, tiligereInnsendtHeader)
-				.flyttNedMed(if (navKanInnhenteDokumentasjon.isEmpty()) 0f else 20f)
+				.flyttNedMed(if (alleredeInnsendt.isEmpty()) 0f else 20f)
 				.leggTilDokumenter(navKanInnhenteDokumentasjon, navKanHenteHeader)
 				.avsluttTekst()
 				.avsluttSide()
@@ -416,6 +416,14 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 				.flyttNedMed(5f)
 			for (dokument in dokumenter) {
 				textBuilder = textBuilder.leggTilTekst("* " + dokument.label, FONT_VANLIG, LINJEAVSTAND)
+				if(!dokument.opplastingsValgKommentar.isNullOrEmpty()) {
+					textBuilder = textBuilder.leggTilTekst(
+						"-- " + (dokument.opplastingsValgKommentarLedetekst ?: "Kommentar"),
+						FONT_VANLIG,
+						LINJEAVSTAND
+					)
+					textBuilder = textBuilder.leggTilTekst("--- " + dokument.opplastingsValgKommentar, FONT_VANLIG, LINJEAVSTAND)
+				}
 			}
 		} else {
 			textBuilder = textBuilder.leggTilTekst("", FONT_VANLIG, 0f)

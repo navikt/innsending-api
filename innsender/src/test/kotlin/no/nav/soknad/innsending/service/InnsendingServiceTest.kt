@@ -188,16 +188,22 @@ class InnsendingServiceTest : ApplicationTest() {
 		val innsendingService = lagInnsendingService(soknadService)
 
 		// Opprett original soknad
-		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1", "X1"))
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1", "X1", "X2"))
 
 		filService.lagreFil(
 			dokumentSoknadDto,
 			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
 		)
 
-		val oppdatertVedlegg = vedleggService.endreVedlegg(
+		vedleggService.endreVedlegg(
 			patchVedleggDto = PatchVedleggDto(tittel = null, opplastingsStatus = OpplastingsStatusDto.NavKanHenteDokumentasjon, opplastingsValgKommentar = "NAV kan innhente inntektsopplysninger for meg fra skatt"),
 			vedleggsId = dokumentSoknadDto.vedleggsListe.first { it.vedleggsnr == "X1" }.id!!,
+			soknadDto = dokumentSoknadDto, required = true
+		)
+
+		vedleggService.endreVedlegg(
+			patchVedleggDto = PatchVedleggDto(tittel = null, opplastingsStatus = OpplastingsStatusDto.NavKanHenteDokumentasjon, opplastingsValgKommentarLedetekst = "Bekreft at NAV kan innente denne informasjonen", opplastingsValgKommentar = "Bekrefter at NAV kan innhente informasjon om Dokumentasjon av sosialhjelp"),
+			vedleggsId = dokumentSoknadDto.vedleggsListe.first { it.vedleggsnr == "X2" }.id!!,
 			soknadDto = dokumentSoknadDto, required = true
 		)
 
@@ -224,7 +230,7 @@ class InnsendingServiceTest : ApplicationTest() {
 		assertNotNull(kvitteringsDokument)
 
 		// Skriver til tmp fil for manuell sjekk av innholdet av generert PDF
-		// writeBytesToFile(kvitteringsDokument,"dummy.pdf")
+		//writeBytesToFile(kvitteringsDokument,"dummy.pdf")
 
 	}
 
