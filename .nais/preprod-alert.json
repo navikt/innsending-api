@@ -3,7 +3,7 @@
 	"max_created_expected": 10,
 	"max_innsendt_expected": 10,
 	"heap_jvm_memory_threshold": 800000000,
-	"number_of_errors": 1,
+	"number_of_errors": 0,
 	"error_log_url": "https://logs.adeo.no/app/discover#/view/2ca13b70-df5d-11ed-8b42-0b0644af4500",
 	"archiving_failed_log_url": "https://logs.adeo.no/app/discover#/view/9aa683f0-df5d-11ed-8b42-0b0644af4500",
 	"missing_archiving_log_url": "https://logs.adeo.no/app/discover#/view/5da1c350-df55-11ed-8b42-0b0644af4500",
