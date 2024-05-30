@@ -7,14 +7,19 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.BrukernotifikasjonsType
+import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.utils.Api
+import no.nav.soknad.innsending.utils.Skjema
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.EksternOpprettEttersendingTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
+import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -209,6 +214,49 @@ class EksternRestApiTest : ApplicationTest() {
 		assertEquals(404, response?.statusCode?.value())
 		val body = response!!.body!!
 		assertEquals("resourceNotFound", body.errorCode)
+	}
+
+	companion object {
+		@JvmStatic
+		fun hentSoknaderForSkjemanr() = listOf(
+			Arguments.of(null, 3), // Soknadstype not specified, should return all
+			Arguments.of(listOf(SoknadType.ettersendelse), 2), // Soknadstype ettersendelse, should return 2 ettersendelser
+			Arguments.of(listOf(SoknadType.soknad, SoknadType.ettersendelse), 3), // Soknadstyper søknad and ettersendelse, should return all
+			Arguments.of(listOf(SoknadType.soknad), 1) // Soknadstype søknad, should return one
+		)
+	}
+
+	@ParameterizedTest
+	@MethodSource("hentSoknaderForSkjemanr")
+	fun `Should return soknader with reqested type(s)`(
+		querySoknadstyper: List<SoknadType>?,
+		expectedSize: Int,
+	) {
+		// Given
+		val skjemanr = Skjema.generateSkjemanr();
+		api?.createEttersending(
+			OpprettEttersendingTestBuilder()
+				.skjemanr(skjemanr)
+				.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().build()))
+				.build()
+		)
+		api?.createEttersending(
+			OpprettEttersendingTestBuilder()
+				.skjemanr(skjemanr)
+				.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().build()))
+				.build()
+		)
+		api?.createSoknad(SkjemaDtoTestBuilder(skjemanr = skjemanr).build())
+
+		// When
+		val response = api?.getSoknaderForSkjemanr(skjemanr, querySoknadstyper)
+
+		// Then
+		val body = response!!.body!!
+		assertEquals(expectedSize, body.size)
+		if (querySoknadstyper?.isNotEmpty() == true) {
+			assertTrue(body.all { querySoknadstyper.contains(it.soknadstype) })
+		}
 	}
 
 }

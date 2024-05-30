@@ -919,6 +919,41 @@ paths:
             tags:
               - ekstern
 
+  /ekstern/v1/skjema/{skjemanr}/soknader:
+    get:
+      summary: Kall for å hente opprettede søknader for bruker gitt skjemanummer fra eksterne applikasjoner
+      description: Kan filtrere på 'soknad' | 'ettersendelse'
+      operationId: eksternHentSoknaderForSkjemanr
+
+      parameters:
+        - name: skjemanr
+          in: path
+          description: Skjemaet som søknaden er basert på
+          required: true
+          schema:
+            type: string
+          style: simple
+          example: "NAV 55-00.60"
+        - name: soknadstyper
+          in: query
+          description: "Komma-separert liste som filtrerer hvilke type søknader som skal returnes. Feks: 'soknad,ettersendelse'"
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/SoknadType"
+
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DokumentSoknadDto"
+      tags:
+        - ekstern
+
   /health/ping:
     get:
       summary: Pings the application to see if it responds
