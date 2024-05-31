@@ -58,13 +58,13 @@ class PdfGenerator {
 		val sendesIkke =
 			soknad.vedleggsListe.filter { !it.erHoveddokument && (
 				it.opplastingsStatus == OpplastingsStatusDto.SendesIkke
-					|| it.opplastingsStatus == OpplastingsStatusDto.HarIkkeDokumentasjonen)}
+					|| it.opplastingsStatus == OpplastingsStatusDto.HarIkkeDokumentasjonen
+					|| it.opplastingsStatus == OpplastingsStatusDto.LevertDokumentasjonTidligere)}
 		val sendesAvAndre =
 			soknad.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.SendesAvAndre }
 		val alleredeInnsendt = soknad.vedleggsListe.filter {
 			!it.erHoveddokument && (
 				it.opplastingsStatus == OpplastingsStatusDto.Innsendt && (it.innsendtdato	?: it.opprettetdato) < soknad.opprettetDato
-				|| it.opplastingsStatus == OpplastingsStatusDto.LevertDokumentasjonTidligere
 			)
 		}
 		val navKanInnhenteDokumentasjon = soknad.vedleggsListe.filter { !it.erHoveddokument && (

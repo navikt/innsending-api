@@ -392,7 +392,7 @@ class InnsendingServiceTest : ApplicationTest() {
 		assertEquals(1, kvitteringsDto.innsendteVedlegg!!.size)
 		assertEquals(1, kvitteringsDto.skalEttersendes!!.size)
 		assertEquals(1, kvitteringsDto.skalSendesAvAndre!!.size)
-		assertEquals(1, kvitteringsDto.sendesIkkeInn!!.size)
+		assertEquals(2, kvitteringsDto.sendesIkkeInn!!.size)
 		assertEquals(1, kvitteringsDto.navKanInnhente!!.size)
 
 		assertThrows<IllegalActionException> {

@@ -362,7 +362,10 @@ class InnsendingService(
 		val skalEtterSendes = manglendePakrevdeVedlegg.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label, it.opplastingsValgKommentarLedetekst, it.opplastingsValgKommentar) }
 
 		val blirIkkeInnsendt = innsendtSoknadDto.vedleggsListe
-			.filter { !it.erHoveddokument && (it.opplastingsStatus == OpplastingsStatusDto.HarIkkeDokumentasjonen|| it.opplastingsStatus == OpplastingsStatusDto.SendesIkke) }
+			.filter { !it.erHoveddokument && (
+				it.opplastingsStatus == OpplastingsStatusDto.HarIkkeDokumentasjonen
+					|| it.opplastingsStatus == OpplastingsStatusDto.SendesIkke
+					|| it.opplastingsStatus == OpplastingsStatusDto.LevertDokumentasjonTidligere) }
 			.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label, it.opplastingsValgKommentarLedetekst, it.opplastingsValgKommentar) }
 
 		val navKanInnhente = innsendtSoknadDto.vedleggsListe
