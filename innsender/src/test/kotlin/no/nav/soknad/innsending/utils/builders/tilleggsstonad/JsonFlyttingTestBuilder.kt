@@ -34,7 +34,7 @@ class JsonFlyttingTestBuilder {
 	private var farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav: String = "Nei"
 	private var ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra: String = "jegFlytterSelv"
 	private var jegFlytterSelv: JegFlytterSelv? = JegFlytterSelv(
-		hvorLangtSkalDuFlytte = 130.5, hengerleie = 1000, bom = null, parkering = 200, ferje = 0, annet = null
+		hvorLangtSkalDuFlytte = 130.5, hengerleie = 1000.0, bom = null, parkering = 200.0, ferje = 0.0, annet = null
 	)
 	private var jegVilBrukeFlyttebyra: JegVilBrukeFlyttebyra? = null
 	private var jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv: JegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv? =

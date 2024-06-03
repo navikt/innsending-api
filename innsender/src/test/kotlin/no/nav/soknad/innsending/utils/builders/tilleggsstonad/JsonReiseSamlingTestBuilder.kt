@@ -7,20 +7,20 @@ class JsonReiseSamlingTestBuilder {
 		JsonPeriode(startdatoDdMmAaaa = "2024-01-02", sluttdatoDdMmAaaa = "2024-01-07"),
 		JsonPeriode(startdatoDdMmAaaa = "2024-02-02", sluttdatoDdMmAaaa = "2024-02-07")
 	)
-	private var hvorLangReiseveiHarDu1: Int = 120
+	private var hvorLangReiseveiHarDu1: Double = 120.0
 	private var velgLandReiseTilSamling: VelgLand = VelgLand(label = "Norge", value = "NO")
 	private var adresse2: String = "Kongensgate 10"
 	private var postnr2: String = "3701"
 	private var kanDuReiseKollektivtReiseTilSamling: String = "Ja"
 	private var kanReiseKollektivt: KanReiseKollektivt? =
-		KanReiseKollektivt(hvilkeUtgifterHarDuIForbindelseMedReisen1 = 1000)
+		KanReiseKollektivt(hvilkeUtgifterHarDuIForbindelseMedReisen1 = 1000.0)
 	private var kanIkkeReiseKollektivtReiseTilSamling: KanIkkeReiseKollektivt? = null
 	private var bekreftelseForAlleSamlingeneDuSkalDeltaPa: String = "dfasdf"
 
 	fun startOgSluttdatoForSamlingene(startOgSluttdatoForSamlingene: List<JsonPeriode>) =
 		apply { this.startOgSluttdatoForSamlingene = startOgSluttdatoForSamlingene }
 
-	fun hvorLangReiseveiHarDu1(hvorLangReiseveiHarDu1: Int) =
+	fun hvorLangReiseveiHarDu1(hvorLangReiseveiHarDu1: Double) =
 		apply { this.hvorLangReiseveiHarDu1 = hvorLangReiseveiHarDu1 }
 
 	fun velgLandReiseTilSamling(velgLandReiseTilSamling: VelgLand) =

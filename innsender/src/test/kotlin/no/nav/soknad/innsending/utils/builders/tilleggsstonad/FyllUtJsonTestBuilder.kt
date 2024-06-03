@@ -94,10 +94,10 @@ class FyllUtJsonTestBuilder {
 	var land: VelgLand? = VelgLand(label = "Norge", value = "NO")
 	var adresse: String? = "Kongensgate 10"
 	var postnr: String? = "3701"
-	var hvorMangeReisedagerHarDuPerUke: Int? = 5
+	var hvorMangeReisedagerHarDuPerUke: Double? = 5.0
 	var harDuEnReiseveiPaSeksKilometerEllerMer: String? = "ja"
 	var harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String? = "nei"
-	var hvorLangReiseveiHarDu: Int? = 120
+	var hvorLangReiseveiHarDu: Double? = 120.0
 	var kanDuReiseKollektivtDagligReise: String? = "nei"
 	var kanReiseMedBil = KanIkkeReiseKollektivt(
 		hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt = "helsemessigeArsaker",
@@ -105,18 +105,18 @@ class FyllUtJsonTestBuilder {
 		kanBenytteEgenBil = KanBenytteEgenBil(
 			vilDuHaUtgifterTilParkeringPaAktivitetsstedet = "ja",
 			hvorOfteOnskerDuASendeInnKjoreliste = "jegOnskerALevereKjorelisteEnGangIManeden",
-			bompenger = 300,
-			piggdekkavgift = 1000,
-			ferje = 0,
-			annet = 0,
-			parkering = 200
+			bompenger = 300.0,
+			piggdekkavgift = 1000.0,
+			ferje = 0.0,
+			annet = 0.0,
+			parkering = 200.0
 		),
 		beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt = null,
 		hentingEllerLeveringAvBarn = null,
 		kanIkkeBenytteEgenBil = null
 	)
 	var kanIkkeReiseKollektivt: KanIkkeReiseKollektivt? = kanReiseMedBil
-	var hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise: Int? = null
+	var hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise: Double? = null
 
 	fun reisemal(land: VelgLand, adresse: String, postr: String) =
 		apply { this.land = land; this.adresse = adresse; }
@@ -124,13 +124,13 @@ class FyllUtJsonTestBuilder {
 	fun harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde(harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String?) =
 		apply {this.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde = harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde}
 
-	fun reiseAvstandOgFrekvens(hvorLangReiseveiHarDu: Int?, hvorMangeReisedagerHarDuPerUke: Int?) = apply {
-		harDuEnReiseveiPaSeksKilometerEllerMer = if ((hvorLangReiseveiHarDu ?: 0) >= 6) "ja" else "nei"
+	fun reiseAvstandOgFrekvens(hvorLangReiseveiHarDu: Double?, hvorMangeReisedagerHarDuPerUke: Double?) = apply {
+		harDuEnReiseveiPaSeksKilometerEllerMer = if ((hvorLangReiseveiHarDu ?: 0.0) >= 6.0) "ja" else "nei"
 		this.hvorLangReiseveiHarDu = hvorLangReiseveiHarDu
 		this.hvorMangeReisedagerHarDuPerUke = hvorMangeReisedagerHarDuPerUke
 	}
 
-	fun reiseKollektivt(hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise: Int?) = apply {
+	fun reiseKollektivt(hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise: Double?) = apply {
 		this.kanDuReiseKollektivtDagligReise = "ja"
 		this.hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise = hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise
 		this.kanIkkeReiseKollektivt = null
@@ -159,7 +159,7 @@ class FyllUtJsonTestBuilder {
 	var postnr2: String? = "6410"
 	var adresse2: String? = "Kongensgate 10"
 	var kanDuReiseKollektivtReiseTilSamling: String? = "nei"
-	var kanReiseKollektivt: Int? = null
+	var kanReiseKollektivt: Double? = null
 	var kanIkkeReiseKollektivtReiseTilSamling: KanIkkeReiseKollektivt? = KanIkkeReiseKollektivt(
 		hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt = "hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt",
 		beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt = "Bla bla",
@@ -168,7 +168,7 @@ class FyllUtJsonTestBuilder {
 		kanIkkeBenytteEgenBil = KanIkkeBenytteEgenBil(
 			hvaErArsakenTilAtDuIkkeKanBenytteEgenBil = "disponererIkkeBil",
 			kanDuBenytteDrosje = "ja",
-			oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor = 4000,
+			oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor = 4000.0,
 			hvilkeAndreArsakerGjorAtDuIkkeKanBenytteEgenBil = null
 		),
 		hentingEllerLeveringAvBarn = null
@@ -188,7 +188,7 @@ class FyllUtJsonTestBuilder {
 		this.skjemanr = reiseSamling
 		this.kanDuReiseKollektivtReiseTilSamling =
 			if (kanBenytteEgenBil == null && kanIkkeBenytteEgenBil == null) "ja" else "nei"
-		this.kanReiseKollektivt = if (kanBenytteEgenBil == null && kanIkkeBenytteEgenBil == null) 2000 else null
+		this.kanReiseKollektivt = if (kanBenytteEgenBil == null && kanIkkeBenytteEgenBil == null) 2000.0 else null
 		this.kanIkkeReiseKollektivtReiseTilSamling = if (kanBenytteEgenBil == null && kanIkkeBenytteEgenBil == null)
 			null
 		else KanIkkeReiseKollektivt(
@@ -228,7 +228,7 @@ class FyllUtJsonTestBuilder {
 				fodselsnummerDNummer = "23922399883",
 				sokerStonadForDetteBarnet = SokerStonadForDetteBarnet(
 					hvemPasserBarnet = "barnehageEllerSfo",
-					oppgiManedligUtgiftTilBarnepass = 6000,
+					oppgiManedligUtgiftTilBarnepass = 6000.0,
 					harBarnetFullfortFjerdeSkolear = "nei",
 					hvaErArsakenTilAtBarnetDittTrengerPass = null
 				)
@@ -248,22 +248,22 @@ class FyllUtJsonTestBuilder {
 	var hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore: String? =
 		"videregaendeUtdanning" // hoyereUtdanning || kursEllerAnnenUtdanning
 	var hvilketKursEllerAnnenFormForUtdanningSkalDuTa: String? = null // dersom kursEllerAnnenUtdanning
-	var oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Int? = 100 // prosent
+	var oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Double? = 100.0 // prosent
 	var harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler: String? = "nei"
-	var utgifterTilLaeremidler: Int? = 10000
+	var utgifterTilLaeremidler: Double? = 10000.0
 	var farDuDekketLaeremidlerEtterAndreOrdninger: String? = "nei" // ja || delvis
-	var hvorMyeFarDuDekketAvEnAnnenAktor: Int? = null // dersom ja eller delvis
-	var hvorStortBelopSokerDuOmAFaDekketAvNav: Int? = null // dersom ja eller delvis
+	var hvorMyeFarDuDekketAvEnAnnenAktor: Double? = null // dersom ja eller delvis
+	var hvorStortBelopSokerDuOmAFaDekketAvNav: Double? = null // dersom ja eller delvis
 
 	fun laeremidler(
 		typeUtdanning: String?,
-		utgifter: Int? = 10000,
+		utgifter: Double? = 10000.0,
 		hvilketKursEllerAnnenFormForUtdanningSkalDuTa: String? = null,
-		oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Int? = 100,
+		oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Double? = 100.0,
 		funksjonshemning: String? = "nei",
 		farDuDekketLaeremidlerEtterAndreOrdninger: String? = "nei",
-		hvorMyeFarDuDekketAvEnAnnenAktor: Int? = null,
-		hvorStortBelopSokerDuOmAFaDekketAvNav: Int? = null
+		hvorMyeFarDuDekketAvEnAnnenAktor: Double? = null,
+		hvorStortBelopSokerDuOmAFaDekketAvNav: Double? = null
 	) = apply {
 		this.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore = typeUtdanning
 		this.utgifterTilLaeremidler = utgifter

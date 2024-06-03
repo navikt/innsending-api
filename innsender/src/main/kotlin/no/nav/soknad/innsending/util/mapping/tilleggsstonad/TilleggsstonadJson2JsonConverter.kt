@@ -236,10 +236,10 @@ private fun convertToLaeremiddelutgifter(tilleggsstonad: Application, soknadDto:
 			hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore = validateNotNull(tilleggsstonad.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore, "'Hvilke type utdanning eller opplæring skal du gjennomføre'"),
 			hvilketKursEllerAnnenFormForUtdanningSkalDuTa = tilleggsstonad.hvilketKursEllerAnnenFormForUtdanningSkalDuTa,
 			oppgiHvorMangeProsentDuStudererEllerGarPaKurs = tilleggsstonad.oppgiHvorMangeProsentDuStudererEllerGarPaKurs
-					?: 0,
+					?: 0.0,
 			harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler = tilleggsstonad.harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler
 					?: "Nei",
-			utgifterTilLaeremidler = tilleggsstonad.utgifterTilLaeremidler ?: 0,
+			utgifterTilLaeremidler = tilleggsstonad.utgifterTilLaeremidler ?: 0.0,
 			farDuDekketLaeremidlerEtterAndreOrdninger = validateNotNull(tilleggsstonad.farDuDekketLaeremidlerEtterAndreOrdninger, "'Får du dekket læremidler etter andre ordninger'"),
 			hvorMyeFarDuDekketAvEnAnnenAktor = tilleggsstonad.hvorMyeFarDuDekketAvEnAnnenAktor,
 			hvorStortBelopSokerDuOmAFaDekketAvNav = tilleggsstonad.hvorStortBelopSokerDuOmAFaDekketAvNav
@@ -385,7 +385,7 @@ private fun convertToJsonReiseArbeidssoker(tilleggsstonad: Application): JsonDag
         hvorLangReiseveiHarDu3 = validateNotNull(
             tilleggsstonad.hvorLangReiseveiHarDu3,
             "Daglig reise reisevei"
-        ).toInt(),
+        ),
         velgLandArbeidssoker = tilleggsstonad.velgLandArbeidssoker ?: VelgLand(label = "Norge", "NO"),
         adresse = validateNotNull(tilleggsstonad.adresse, "Reise arbeidssøker -  adresse mangler"),
         postnr = tilleggsstonad.postnr,
@@ -412,11 +412,11 @@ private fun convertToJsonOppstartOgAvsluttetAktivitet(tilleggsstonad: Applicatio
         hvorLangReiseveiHarDu2 = validateNotNull(
             tilleggsstonad.hvorLangReiseveiHarDu2,
             "Oppstart og avslutning av aktivitet - reiseveilengde svar mangler"
-        ).toInt(),
+        ),
         hvorMangeGangerSkalDuReiseEnVei = validateNotNull(
             tilleggsstonad.hvorMangeGangerSkalDuReiseEnVei,
             "Oppstart og avslutning av aktivitet - antall reiser svar mangler"
-        ).toInt(),
+        ),
         velgLand3 = tilleggsstonad.velgLand3 ?: VelgLand(label = "Norge", "NO"),
         adresse3 = validateNotNull(tilleggsstonad.adresse3, "Oppstart og avslutning av aktivitet -  adresse mangler"),
         postnr3 = tilleggsstonad.postnr3,

@@ -27,7 +27,7 @@ class TilleggsstonadJson2JsonConverterTest {
                 jegSokerOmStonadTilPassAvDetteBarnet = true,
                 sokerStonadForDetteBarnet = SokerStonadForDetteBarnet(
                     hvemPasserBarnet = "barnehageEllerSfo",
-                    oppgiManedligUtgiftTilBarnepass = 6000,
+                    oppgiManedligUtgiftTilBarnepass = 6000.0,
                     harBarnetFullfortFjerdeSkolear = "nei",
                     hvaErArsakenTilAtBarnetDittTrengerPass = null
                 )
@@ -91,7 +91,7 @@ class TilleggsstonadJson2JsonConverterTest {
                 SkjemaPeriode("2024-01-02", "2024-03-30")
             )
             .periode("01-01-2024", "29-03-2024")
-            .laeremidler(typeUtdanning = "videregaendeUtdanning", utgifter = 10000)
+            .laeremidler(typeUtdanning = "videregaendeUtdanning", utgifter = 10000.0)
             .build()
 
         val mapper = jacksonObjectMapper().findAndRegisterModules()
@@ -110,7 +110,7 @@ class TilleggsstonadJson2JsonConverterTest {
             strukturertJson.applicationDetails.rettighetstype?.laeremiddelutgifter?.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore
         )
         Assertions.assertEquals(
-            10000,
+            10000.0,
             strukturertJson.applicationDetails.rettighetstype?.laeremiddelutgifter?.utgifterTilLaeremidler
         )
     }
@@ -133,15 +133,15 @@ class TilleggsstonadJson2JsonConverterTest {
             )
             .periode("2024-01-01", "2024-03-29")
             .reisemal(VelgLand(label = "Norge", value = "NO"), adresse = "Kongensgate 10", postr = "3701")
-            .reiseAvstandOgFrekvens(hvorLangReiseveiHarDu = 120, hvorMangeReisedagerHarDuPerUke = 5)
+            .reiseAvstandOgFrekvens(hvorLangReiseveiHarDu = 120.0, hvorMangeReisedagerHarDuPerUke = 5.0)
             .reiseEgenBil(
                 kanBenytteEgenBil = KanBenytteEgenBil(
-                    bompenger = 200,
-                    piggdekkavgift = 1000,
-                    ferje = 100,
-                    annet = 0,
+                    bompenger = 200.0,
+                    piggdekkavgift = 1000.0,
+                    ferje = 100.0,
+                    annet = 0.0,
                     vilDuHaUtgifterTilParkeringPaAktivitetsstedet = "ja",
-                    parkering = 150,
+                    parkering = 150.0,
                     hvorOfteOnskerDuASendeInnKjoreliste = "jegOnskerALevereKjorelisteEnGangIManeden"
                 )
             )
@@ -167,11 +167,11 @@ class TilleggsstonadJson2JsonConverterTest {
             strukturertJson.applicationDetails.rettighetstype?.reise?.dagligReise?.velgLand1?.label
         )
         Assertions.assertEquals(
-            120,
+            120.0,
             strukturertJson.applicationDetails.rettighetstype?.reise?.dagligReise?.hvorLangReiseveiHarDu
         )
         Assertions.assertEquals(
-            200,
+            200.0,
             strukturertJson.applicationDetails.rettighetstype?.reise?.dagligReise?.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.bompenger
         )
 
@@ -195,16 +195,16 @@ class TilleggsstonadJson2JsonConverterTest {
 			)
 			.periode("2024-01-01", "2024-03-29")
 			.reisemal(VelgLand(label = "Norge", value = "NO"), adresse = "Kongensgate 10", postr = "3701")
-			.reiseAvstandOgFrekvens(hvorLangReiseveiHarDu = 5, hvorMangeReisedagerHarDuPerUke = 5)
+			.reiseAvstandOgFrekvens(hvorLangReiseveiHarDu = 5.0, hvorMangeReisedagerHarDuPerUke = 5.0)
 			.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde("ja")
 			.reiseEgenBil(
 				kanBenytteEgenBil = KanBenytteEgenBil(
-					bompenger = 200,
-					piggdekkavgift = 1000,
-					ferje = 100,
-					annet = 0,
+					bompenger = 200.0,
+					piggdekkavgift = 1000.0,
+					ferje = 100.0,
+					annet = 0.0,
 					vilDuHaUtgifterTilParkeringPaAktivitetsstedet = "ja",
-					parkering = 150,
+					parkering = 150.0,
 					hvorOfteOnskerDuASendeInnKjoreliste = "jegOnskerALevereKjorelisteEnGangIManeden"
 				)
 			)
@@ -230,11 +230,11 @@ class TilleggsstonadJson2JsonConverterTest {
 			strukturertJson.applicationDetails.rettighetstype?.reise?.dagligReise?.velgLand1?.label
 		)
 		Assertions.assertEquals(
-			5,
+			5.0,
 			strukturertJson.applicationDetails.rettighetstype?.reise?.dagligReise?.hvorLangReiseveiHarDu
 		)
 		Assertions.assertEquals(
-			200,
+			200.0,
 			strukturertJson.applicationDetails.rettighetstype?.reise?.dagligReise?.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.bompenger
 		)
 		Assertions.assertEquals(

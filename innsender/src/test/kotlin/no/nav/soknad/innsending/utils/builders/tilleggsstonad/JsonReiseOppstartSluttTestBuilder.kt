@@ -14,8 +14,8 @@ class JsonReiseOppstartSluttTestBuilder {
 
 	private var startdato: String = Date.formatToLocalDate(LocalDateTime.now().minusMonths(1))
 	private var sluttdato: String = Date.formatToLocalDate(LocalDateTime.now().plusMonths(1))
-	private var hvorLangReiseveiHarDu2: Int = 100
-	private var hvorMangeGangerSkalDuReiseEnVei: Int = 4
+	private var hvorLangReiseveiHarDu2: Double = 100.0
+	private var hvorMangeGangerSkalDuReiseEnVei: Double = 4.0
 	private var velgLand3: VelgLand = VelgLand(label = "Norge", value = "NO")
 	private var adresse3: String = "Kongensgate 10"
 	private var postnr3: String? = "3701"
@@ -31,7 +31,7 @@ class JsonReiseOppstartSluttTestBuilder {
 	private var harDuSaerligBehovForFlereHjemreiserEnnNevntOvenfor: String = "Ja"
 	private var bekreftelseForBehovForFlereHjemreiser1: String? = "ddsfladnk"
 	private var kanDuReiseKollektivtOppstartAvslutningHjemreise: String = "Ja"
-	private var hvilkeUtgifterHarDuIForbindelseMedReisen4: Int? = 3000
+	private var hvilkeUtgifterHarDuIForbindelseMedReisen4: Double? = 3000.0
 	private var kanIkkeReiseKollektivtOppstartAvslutningHjemreise: KanIkkeReiseKollektivt? =
 		null
 
@@ -43,10 +43,10 @@ class JsonReiseOppstartSluttTestBuilder {
 		this.sluttdato = sluttdato
 	}
 
-	fun hvorLangReiseveiHarDu2(hvorLangReiseveiHarDu2: Int) =
+	fun hvorLangReiseveiHarDu2(hvorLangReiseveiHarDu2: Double) =
 		apply { this.hvorLangReiseveiHarDu2 = hvorLangReiseveiHarDu2 }
 
-	fun hvorMangeGangerSkalDuReiseEnVei(hvorMangeGangerSkalDuReiseEnVei: Int) =
+	fun hvorMangeGangerSkalDuReiseEnVei(hvorMangeGangerSkalDuReiseEnVei: Double) =
 		apply { this.hvorMangeGangerSkalDuReiseEnVei = hvorMangeGangerSkalDuReiseEnVei }
 
 	fun velgLand3(velgLand3: VelgLand) = apply { this.velgLand3 = velgLand3 }
@@ -79,7 +79,7 @@ class JsonReiseOppstartSluttTestBuilder {
 				null
 		}
 
-	fun hvilkeUtgifterHarDuIForbindelseMedReisen4(hvilkeUtgifterHarDuIForbindelseMedReisen4: Int?) =
+	fun hvilkeUtgifterHarDuIForbindelseMedReisen4(hvilkeUtgifterHarDuIForbindelseMedReisen4: Double?) =
 		apply { this.hvilkeUtgifterHarDuIForbindelseMedReisen4 = hvilkeUtgifterHarDuIForbindelseMedReisen4 }
 
 	fun kanIkkeReiseKollektivtOppstartAvslutningHjemreise(kanIkkeReiseKollektivtOppstartAvslutningHjemreise: KanIkkeReiseKollektivt?) =
