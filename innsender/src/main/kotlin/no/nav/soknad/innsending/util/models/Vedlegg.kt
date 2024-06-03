@@ -76,11 +76,11 @@ fun innsendteVedlegg(soknadOpprettetDato: OffsetDateTime, vedlegg: List<VedleggD
 }
 
 
-val List<VedleggDto>.vedleggsOpplastingsvalgGjort: List<VedleggDto>
+val List<VedleggDto>.ubehandledeVedlegg: List<VedleggDto>
 	get() {
 		return this.filter { !it.erHoveddokument
 			&& ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6")
-			&& (it.opplastingsStatus == OpplastingsStatusDto.Innsendt
+			&& !(it.opplastingsStatus == OpplastingsStatusDto.Innsendt
 				|| it.opplastingsStatus == OpplastingsStatusDto.SendesAvAndre
 				|| it.opplastingsStatus == OpplastingsStatusDto.LastetOpp
 				|| it.opplastingsStatus ==  OpplastingsStatusDto.NavKanHenteDokumentasjon

@@ -203,13 +203,13 @@ class FyllutRestApiTest : ApplicationTest() {
 		val newVedleggstittel1 = "Birth certificate"
 		val newVedleggstittel2 = "Marriage certificate"
 
-		val dokumentSoknadDto = opprettSoknad() // med vedleggTittel1 og vedleggTittel2, begge med unik formio satt
+		val dokumentSoknadDto = opprettSoknad() // med vedleggTittel1 og vedleggTittel2, begge med unik formioId satt
 		val skjemanr = dokumentSoknadDto.skjemanr
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
-		val updatedT7 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7", tittel = newVedleggstittel1).build() // Unik Formio settes
-		val updatedN6 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6", tittel = newVedleggstittel2).build() // Unik Formio settes
-		val updatedHovedDokument = SkjemaDokumentDtoTestBuilder(tittel = newTittel).asHovedDokument(skjemanr).build() // Formio = null
+		val updatedT7 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7", tittel = newVedleggstittel1).build() // Unik formioId settes
+		val updatedN6 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6", tittel = newVedleggstittel2).build() // Unik formioId settes
+		val updatedHovedDokument = SkjemaDokumentDtoTestBuilder(tittel = newTittel).asHovedDokument(skjemanr).build() // formioId = null
 		val updatedHovedDokumentVariant =
 			SkjemaDokumentDtoTestBuilder(tittel = newTittel).asHovedDokumentVariant(skjemanr).build()
 

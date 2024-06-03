@@ -181,15 +181,7 @@ class InnsendingService(
 	) {
 		// For å sende inn en ettersendingssøknad må det være lastet opp minst ett vedlegg, eller vært gjort endring på opplastingsstatus på vedlegg
 		if ((opplastedeVedlegg.isEmpty() || opplastedeVedlegg.none { !it.erHoveddokument })) {
-			val allePakrevdeBehandlet = alleVedlegg//TODO
-				.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") }
-				.none { !(
-					it.opplastingsStatus == OpplastingsStatusDto.Innsendt
-					|| it.opplastingsStatus == OpplastingsStatusDto.SendesAvAndre
-					|| it.opplastingsStatus == OpplastingsStatusDto.LastetOpp
-					|| it.opplastingsStatus ==  OpplastingsStatusDto.NavKanHenteDokumentasjon
-					|| it.opplastingsStatus ==  OpplastingsStatusDto.LevertDokumentasjonTidligere
-					|| it.opplastingsStatus ==  OpplastingsStatusDto.HarIkkeDokumentasjonen) }
+			val allePakrevdeBehandlet = alleVedlegg.ubehandledeVedlegg.isEmpty()
 			if (allePakrevdeBehandlet) {
 				val separator = "\n"
 				logger.warn("Søker har ikke lastet opp filer på ettersendingssøknad ${soknadDto.innsendingsId}, " +

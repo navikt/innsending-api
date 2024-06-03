@@ -1365,9 +1365,9 @@ components:
         url:
           $ref: "#/components/schemas/Vedleggsurl"
         opplastingsValgKommentarLedetekst:
-          $ref: "#/components/schemas/OpplastingsValgKommentarLedetekst"
+          $ref: "#/components/schemas/OpplastingsvalgKommentarLedetekst"
         opplastingsValgKommentar:
-          $ref: "#/components/schemas/OpplastingsValgKommentar"
+          $ref: "#/components/schemas/OpplastingsvalgKommentar"
 
     KanLasteOppAnnet:
       type: boolean
@@ -1444,13 +1444,13 @@ components:
       enum: [ "IkkeValgt", "LastetOpp", "Innsendt", "SendSenere", "SendesAvAndre", "SendesIkke", "LastetOppIkkeRelevantLenger", "LevertDokumentasjonTidligere", "HarIkkeDokumentasjonen", "NavKanHenteDokumentasjon" ]
       description: Status på om et vedlegg til søknad er enda ikke er lastet opp, lastet opp eller innsendt
 
-    OpplastingsValgKommentar:
+    OpplastingsvalgKommentar:
       type: string
       default: null
       description: Søkers begrunnelse for opplastingsvalg.
       example: Dokumentasjonen sendes av min fastlege.
 
-    OpplastingsValgKommentarLedetekst:
+    OpplastingsvalgKommentarLedetekst:
       type: string
       default: null
       description: Ledetekst som indikerer hva det er ønsket at søker skal kommentere (på bokmål).
@@ -1539,9 +1539,9 @@ components:
         opplastingsStatus:
           $ref: "#/components/schemas/OpplastingsStatusDto"
         opplastingsValgKommentarLedetekst:
-          $ref: "#/components/schemas/OpplastingsValgKommentarLedetekst"
+          $ref: "#/components/schemas/OpplastingsvalgKommentarLedetekst"
         opplastingsValgKommentar:
-          $ref: "#/components/schemas/OpplastingsValgKommentar"
+          $ref: "#/components/schemas/OpplastingsvalgKommentar"
 
     PostVedleggDto:
       type: object
@@ -1827,9 +1827,9 @@ components:
         formioId:
           $ref: "#/components/schemas/FormioId"
         opplastingsValgKommentarLedetekst:
-          $ref: "#/components/schemas/OpplastingsValgKommentarLedetekst"
+          $ref: "#/components/schemas/OpplastingsvalgKommentarLedetekst"
         opplastingsValgKommentar:
-          $ref: "#/components/schemas/OpplastingsValgKommentar"
+          $ref: "#/components/schemas/OpplastingsvalgKommentar"
 
     Vedleggsnr:
       type: string
