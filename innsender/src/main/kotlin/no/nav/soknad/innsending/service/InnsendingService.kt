@@ -17,9 +17,7 @@ import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.mapping.*
-import no.nav.soknad.innsending.util.models.erEttersending
-import no.nav.soknad.innsending.util.models.hovedDokument
-import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
+import no.nav.soknad.innsending.util.models.*
 import no.nav.soknad.pdfutilities.AntallSider
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.Validerer
@@ -183,7 +181,7 @@ class InnsendingService(
 	) {
 		// For å sende inn en ettersendingssøknad må det være lastet opp minst ett vedlegg, eller vært gjort endring på opplastingsstatus på vedlegg
 		if ((opplastedeVedlegg.isEmpty() || opplastedeVedlegg.none { !it.erHoveddokument })) {
-			val allePakrevdeBehandlet = alleVedlegg
+			val allePakrevdeBehandlet = alleVedlegg//TODO
 				.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") }
 				.none { !(
 					it.opplastingsStatus == OpplastingsStatusDto.Innsendt
@@ -355,21 +353,15 @@ class InnsendingService(
 		val innsendteVedlegg =
 			opplastedeVedlegg.filter { !it.erHoveddokument }.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }
 
-		val skalSendesAvAndre = innsendtSoknadDto.vedleggsListe
-			.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.SendesAvAndre }
+		val skalSendesAvAndre = innsendtSoknadDto.vedleggsListe.skalSendesAvAndre
 			.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label, it.opplastingsValgKommentarLedetekst, it.opplastingsValgKommentar) }
 
 		val skalEtterSendes = manglendePakrevdeVedlegg.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label, it.opplastingsValgKommentarLedetekst, it.opplastingsValgKommentar) }
 
-		val blirIkkeInnsendt = innsendtSoknadDto.vedleggsListe
-			.filter { !it.erHoveddokument && (
-				it.opplastingsStatus == OpplastingsStatusDto.HarIkkeDokumentasjonen
-					|| it.opplastingsStatus == OpplastingsStatusDto.SendesIkke
-					|| it.opplastingsStatus == OpplastingsStatusDto.LevertDokumentasjonTidligere) }
+		val blirIkkeInnsendt = innsendtSoknadDto.vedleggsListe.sendesIkke
 			.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label, it.opplastingsValgKommentarLedetekst, it.opplastingsValgKommentar) }
 
-		val navKanInnhente = innsendtSoknadDto.vedleggsListe
-			.filter { !it.erHoveddokument && (it.opplastingsStatus == OpplastingsStatusDto.NavKanHenteDokumentasjon) }
+		val navKanInnhente = innsendtSoknadDto.vedleggsListe.navKanInnhente
 			.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label, it.opplastingsValgKommentarLedetekst, it.opplastingsValgKommentar) }
 
 		return KvitteringsDto(

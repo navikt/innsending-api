@@ -4,6 +4,10 @@ import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
+import no.nav.soknad.innsending.util.models.innsendteVedlegg
+import no.nav.soknad.innsending.util.models.navKanInnhente
+import no.nav.soknad.innsending.util.models.sendesIkke
+import no.nav.soknad.innsending.util.models.skalSendesAvAndre
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -55,22 +59,10 @@ class PdfGenerator {
 	): ByteArray {
 		val vedleggOpplastet = opplastedeVedlegg.filter { !it.erHoveddokument }
 		val sendSenere = manglendeObligatoriskeVedlegg
-		val sendesIkke =
-			soknad.vedleggsListe.filter { !it.erHoveddokument && (
-				it.opplastingsStatus == OpplastingsStatusDto.SendesIkke
-					|| it.opplastingsStatus == OpplastingsStatusDto.HarIkkeDokumentasjonen
-					|| it.opplastingsStatus == OpplastingsStatusDto.LevertDokumentasjonTidligere)}
-		val sendesAvAndre =
-			soknad.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.SendesAvAndre }
-		val alleredeInnsendt = soknad.vedleggsListe.filter {
-			!it.erHoveddokument && (
-				it.opplastingsStatus == OpplastingsStatusDto.Innsendt && (it.innsendtdato	?: it.opprettetdato) < soknad.opprettetDato
-			)
-		}
-		val navKanInnhenteDokumentasjon = soknad.vedleggsListe.filter { !it.erHoveddokument && (
-			it.opplastingsStatus == OpplastingsStatusDto.NavKanHenteDokumentasjon
-			)
-		}
+		val sendesIkke = soknad.vedleggsListe.sendesIkke
+		val sendesAvAndre =	soknad.vedleggsListe.skalSendesAvAndre
+		val alleredeInnsendt = innsendteVedlegg(soknad.opprettetDato, soknad.vedleggsListe)
+		val navKanInnhenteDokumentasjon = soknad.vedleggsListe.navKanInnhente
 
 		val fnr = soknad.brukerId
 		val personInfo = if (sammensattNavn == null) fnr else "$sammensattNavn, $fnr"
