@@ -78,16 +78,21 @@ class SoknadServiceUnitTest {
 		// When
 		val soknader = soknadService.hentAktiveSoknader(defaultUser, skjemanr, SoknadType.soknad)
 		val ettersendinger = soknadService.hentAktiveSoknader(defaultUser, skjemanr, SoknadType.ettersendelse)
+		val alleTyper = soknadService.hentAktiveSoknader(defaultUser, skjemanr, *emptyArray())
 
 		// Then
-		// hentAktiveSoknader is called 2 times, one for each type
-		verify(exactly = 2) { repo.finnAlleSoknaderGittBrukerIdOgStatus(defaultUser, SoknadsStatus.Opprettet) }
-		verify(exactly = 2) { vedleggService.hentAlleVedlegg(soknadDb) }
+		// hentAktiveSoknader is called 3 times
+		verify(exactly = 3) { repo.finnAlleSoknaderGittBrukerIdOgStatus(defaultUser, SoknadsStatus.Opprettet) }
+		verify(exactly = 3) { vedleggService.hentAlleVedlegg(soknadDb) }
 
 		assertEquals(1, soknader.size)
 		assertEquals(skjemanr, soknader[0].skjemanr)
 		assertEquals(SoknadType.soknad, soknader[0].soknadstype)
 
 		assertEquals(0, ettersendinger.size)
+
+		assertEquals(1, alleTyper.size)
+		assertEquals(skjemanr, alleTyper[0].skjemanr)
+		assertEquals(SoknadType.soknad, alleTyper[0].soknadstype)
 	}
 }

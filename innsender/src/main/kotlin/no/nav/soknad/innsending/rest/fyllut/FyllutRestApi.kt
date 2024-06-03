@@ -202,22 +202,9 @@ class FyllutRestApi(
 			)
 		}
 
-		val soknader = mutableListOf<DokumentSoknadDto>()
-
-		if (soknadstyper.isNullOrEmpty()) {
-			brukerIds.forEach { combinedLogger.log("Henter søknader med alle søknadstyper for $skjemanr", it) }
-			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr) })
-		}
-
-		if (soknadstyper?.contains(SoknadType.soknad) == true) {
-			brukerIds.forEach { combinedLogger.log("Henter søknader med søknadstype 'soknad' for $skjemanr", it) }
-			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, SoknadType.soknad) })
-		}
-
-		if (soknadstyper?.contains(SoknadType.ettersendelse) == true) {
-			brukerIds.forEach { combinedLogger.log("Henter søknader med søknadstype 'ettersendelse' for $skjemanr", it) }
-			soknader.addAll(brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, SoknadType.ettersendelse) })
-		}
+		val typeFilter = soknadstyper?.toTypedArray() ?: emptyArray()
+		brukerIds.forEach { combinedLogger.log("Henter søknader med søknadstyper=${soknadstyper ?: "<alle>"} for $skjemanr", it) }
+		val soknader = brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, *typeFilter) }
 
 		return ResponseEntity.status(HttpStatus.OK).body(soknader)
 	}

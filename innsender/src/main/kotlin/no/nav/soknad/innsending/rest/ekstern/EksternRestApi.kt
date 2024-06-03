@@ -5,6 +5,7 @@ import no.nav.soknad.innsending.api.EksternApi
 import no.nav.soknad.innsending.model.BodyStatusResponseDto
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.EksternOpprettEttersending
+import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.EttersendingService
@@ -88,5 +89,26 @@ class EksternRestApi(
 			.status(HttpStatus.OK)
 			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet ettersending med id $innsendingsId"))
 
+	}
+
+	override fun eksternHentSoknaderForSkjemanr(
+		skjemanr: String,
+		soknadstyper: List<SoknadType>?
+	): ResponseEntity<List<DokumentSoknadDto>> {
+		val brukerIds = tilgangskontroll.hentPersonIdents()
+		val applikasjon = subjectHandler.getClientId()
+
+		brukerIds.forEach {
+			combinedLogger.log(
+				"[${applikasjon}] - Henter søknader med $skjemanr for bruker. Soknadstyper=${soknadstyper ?: "ikke spesifisert"}",
+				it
+			)
+		}
+
+		val typeFilter = soknadstyper?.toTypedArray() ?: emptyArray()
+		brukerIds.forEach { combinedLogger.log("[${applikasjon}] - Henter søknader med søknadstyper=${soknadstyper ?: "<alle>"} for $skjemanr", it) }
+		val soknader = brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, *typeFilter) }
+
+		return ResponseEntity.status(HttpStatus.OK).body(soknader)
 	}
 }
