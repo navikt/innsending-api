@@ -123,7 +123,7 @@ fun convertBostotte(jsonRettighetstyper: JsonRettighetstyper): Boutgifter? {
 			?: false,
 		harFasteBoutgifter = bostottesoknad.hvilkeAdresserHarDuBoutgifterPa.boutgifterPaHjemstedet,
 		boutgifterHjemstedAktuell = bostottesoknad.boutgifterPaHjemstedetMitt?.roundToInt(),
-		boutgifterHjemstedOpphoert = bostottesoknad.boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten?.toInt(),
+		boutgifterHjemstedOpphoert = bostottesoknad.boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten?.roundToInt(),
 
 		boutgifterAktivitetsted = bostottesoknad.boutgifterPaAktivitetsadressen?.roundToInt(),
 
@@ -154,8 +154,8 @@ fun convertLaremiddler(jsonRettighetstyper: JsonRettighetstyper): Laeremiddelutg
 		hvorMyeDekkesAvAnnenAktoer = laeremiddelutgifter.hvorMyeFarDuDekketAvEnAnnenAktor, //  Blir aldri satt i gammel løsning
 		hvorMyeDekkesAvNAV = laeremiddelutgifter.hvorStortBelopSokerDuOmAFaDekketAvNav, // Blir aldri satt i gammel løsning
 		skolenivaa = convertToSkolenvaaer(laeremiddelutgifter.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore),
-		prosentandelForUtdanning = laeremiddelutgifter.oppgiHvorMangeProsentDuStudererEllerGarPaKurs.toInt(),
-		beloep = laeremiddelutgifter.utgifterTilLaeremidler.toInt(), // Kun satt dersom funksjonshemning
+		prosentandelForUtdanning = laeremiddelutgifter.oppgiHvorMangeProsentDuStudererEllerGarPaKurs.roundToInt(),
+		beloep = laeremiddelutgifter.utgifterTilLaeremidler.roundToInt(), // Kun satt dersom funksjonshemning
 		erUtgifterDekket = convertToErUtgifterDekket(laeremiddelutgifter.farDuDekketLaeremidlerEtterAndreOrdninger)
 	)
 }
