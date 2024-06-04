@@ -117,15 +117,15 @@ fun convertBostotte(jsonRettighetstyper: JsonRettighetstyper): Boutgifter? {
 			tom = convertToDateStringWithTimeZone(bostottesoknad.aktivitetsperiode.sluttdatoDdMmAaaa)
 		),
 		mottarBostoette = convertToBoolean(bostottesoknad.mottarDuBostotteFraKommunen),
-		bostoetteBeloep = bostottesoknad.bostottebelop,
+		bostoetteBeloep = bostottesoknad.bostottebelop?.roundToInt(),
 
 		boutgifterPgaFunksjonshemminger = convertToBoolean(bostottesoknad.erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet)
 			?: false,
 		harFasteBoutgifter = bostottesoknad.hvilkeAdresserHarDuBoutgifterPa.boutgifterPaHjemstedet,
-		boutgifterHjemstedAktuell = bostottesoknad.boutgifterPaHjemstedetMitt,
-		boutgifterHjemstedOpphoert = bostottesoknad.boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten,
+		boutgifterHjemstedAktuell = bostottesoknad.boutgifterPaHjemstedetMitt?.roundToInt(),
+		boutgifterHjemstedOpphoert = bostottesoknad.boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten?.roundToInt(),
 
-		boutgifterAktivitetsted = bostottesoknad.boutgifterPaAktivitetsadressen,
+		boutgifterAktivitetsted = bostottesoknad.boutgifterPaAktivitetsadressen?.roundToInt(),
 
 		harBoutgifterVedSamling = bostottesoknad.hvilkeBoutgifterSokerDuOmAFaDekket.contains("boutgifterIForbindelseMedSamling"),
 		samlingsperiode = if (bostottesoknad.bostotteIForbindelseMedSamling?.periodeForSamling == null) null else {
@@ -151,11 +151,11 @@ fun convertLaremiddler(jsonRettighetstyper: JsonRettighetstyper): Laeremiddelutg
 			fom = laeremiddelutgifter.aktivitetsperiode.startdatoDdMmAaaa,
 			tom = laeremiddelutgifter.aktivitetsperiode.sluttdatoDdMmAaaa
 		),
-		hvorMyeDekkesAvAnnenAktoer = laeremiddelutgifter.hvorMyeFarDuDekketAvEnAnnenAktor?.toDouble(), //  Blir aldri satt i gammel løsning
-		hvorMyeDekkesAvNAV = laeremiddelutgifter.hvorStortBelopSokerDuOmAFaDekketAvNav?.toDouble(), // Blir aldri satt i gammel løsning
+		hvorMyeDekkesAvAnnenAktoer = laeremiddelutgifter.hvorMyeFarDuDekketAvEnAnnenAktor, //  Blir aldri satt i gammel løsning
+		hvorMyeDekkesAvNAV = laeremiddelutgifter.hvorStortBelopSokerDuOmAFaDekketAvNav, // Blir aldri satt i gammel løsning
 		skolenivaa = convertToSkolenvaaer(laeremiddelutgifter.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore),
-		prosentandelForUtdanning = laeremiddelutgifter.oppgiHvorMangeProsentDuStudererEllerGarPaKurs,
-		beloep = laeremiddelutgifter.utgifterTilLaeremidler, // Kun satt dersom funksjonshemning
+		prosentandelForUtdanning = laeremiddelutgifter.oppgiHvorMangeProsentDuStudererEllerGarPaKurs.roundToInt(),
+		beloep = laeremiddelutgifter.utgifterTilLaeremidler.roundToInt(), // Kun satt dersom funksjonshemning
 		erUtgifterDekket = convertToErUtgifterDekket(laeremiddelutgifter.farDuDekketLaeremidlerEtterAndreOrdninger)
 	)
 }
@@ -197,7 +197,7 @@ fun convertFlytteutgifter(jsonRettighetstyper: JsonRettighetstyper): Flytteutgif
 			adresse = flytteutgifter.adresse1,
 			postnr = flytteutgifter.postnr1
 		).sammensattAdresse,
-		avstand = convertFlytteAvstand(flytteutgifter).roundToInt(),
+		avstand = convertFlytteAvstand(flytteutgifter),
 		sumTilleggsutgifter = convertFlytteutgifter(flytteutgifter)?.toDouble(),
 		anbud = comvertAnbud(flytteutgifter),
 		valgtFlyttebyraa = flytteutgifter.jegVilBrukeFlyttebyra?.jegVelgerABruke
@@ -208,36 +208,36 @@ fun comvertAnbud(flytteutgifter: JsonFlytteutgifter): List<Anbud>? {
 	if (flytteutgifter.jegVilBrukeFlyttebyra == null) return null
 
 	return listOf(
-		Anbud(firmanavn = flytteutgifter.jegVilBrukeFlyttebyra.navnPaFlyttebyra1, tilbudsbeloep = flytteutgifter.jegVilBrukeFlyttebyra.belop),
-		Anbud(firmanavn = flytteutgifter.jegVilBrukeFlyttebyra.navnPaFlyttebyra2, tilbudsbeloep = flytteutgifter.jegVilBrukeFlyttebyra.belop1)
+		Anbud(firmanavn = flytteutgifter.jegVilBrukeFlyttebyra.navnPaFlyttebyra1, tilbudsbeloep = flytteutgifter.jegVilBrukeFlyttebyra.belop.roundToInt()),
+		Anbud(firmanavn = flytteutgifter.jegVilBrukeFlyttebyra.navnPaFlyttebyra2, tilbudsbeloep = flytteutgifter.jegVilBrukeFlyttebyra.belop1.roundToInt())
 	)
 
 }
 
-fun convertFlytteAvstand(flytteutgifter: JsonFlytteutgifter): Double {
+fun convertFlytteAvstand(flytteutgifter: JsonFlytteutgifter): Int {
 	return if (flytteutgifter.jegFlytterSelv != null) {
-		flytteutgifter.jegFlytterSelv.hvorLangtSkalDuFlytte
+		flytteutgifter.jegFlytterSelv.hvorLangtSkalDuFlytte.roundToInt()
 	} else if (flytteutgifter.jegVilBrukeFlyttebyra != null) {
-		flytteutgifter.jegVilBrukeFlyttebyra.hvorLangtSkalDuFlytte1
+		flytteutgifter.jegVilBrukeFlyttebyra.hvorLangtSkalDuFlytte1.roundToInt()
 	} else if (flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv != null) {
-		flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv.hvorLangtSkalDuFlytte1
+		flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv.hvorLangtSkalDuFlytte1.roundToInt()
 	} else {
-		return 0.0
+		return 0
 	}
 
 }
 
-fun convertFlytteutgifter(flytteutgifter: JsonFlytteutgifter): Int? {
+fun convertFlytteutgifter(flytteutgifter: JsonFlytteutgifter): Double? {
 	if (flytteutgifter.jegFlytterSelv != null) {
 		val flytterSelv = flytteutgifter.jegFlytterSelv
-		return (flytterSelv.bom ?: 0) + (flytterSelv.annet ?: 0) + (flytterSelv.hengerleie ?: 0) + (flytterSelv.parkering
-			?: 0) + (flytterSelv.ferje ?: 0)
+		return (flytterSelv.bom ?: 0.0) + (flytterSelv.annet ?: 0.0) + (flytterSelv.hengerleie ?: 0.0) + (flytterSelv.parkering
+			?: 0.0) + (flytterSelv.ferje ?: 0.0)
 	} else if (flytteutgifter.jegVilBrukeFlyttebyra != null) {
 		return null
 	} else if (flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv != null) {
 		val flytterSelv = flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv
-		return (flytterSelv.bom ?: 0) + (flytterSelv.annet ?: 0) + (flytterSelv.hengerleie ?: 0) + (flytterSelv.parkering
-			?: 0) + (flytterSelv.ferje ?: 0)
+		return (flytterSelv.bom ?: 0.0) + (flytterSelv.annet ?: 0.0) + (flytterSelv.hengerleie ?: 0.0) + (flytterSelv.parkering
+			?: 0.0) + (flytterSelv.ferje ?: 0.0)
 	} else {
 		return null
 	}
@@ -269,7 +269,7 @@ private fun convertTilsynsutgifterBarn(jsonRettighetstyper: JsonRettighetstyper)
 				harFullfoertFjerdeSkoleaar = convertToBoolean(it.sokerStonadForDetteBarnet?.harBarnetFullfortFjerdeSkolear)
 					?: false,
 				aarsakTilBarnepass = convertAarsakTilBarnepass(it.sokerStonadForDetteBarnet?.hvaErArsakenTilAtBarnetDittTrengerPass),
-				maanedligUtgiftTilsynBarn = it.sokerStonadForDetteBarnet?.oppgiManedligUtgiftTilBarnepass ?: 0
+				maanedligUtgiftTilsynBarn = it.sokerStonadForDetteBarnet?.oppgiManedligUtgiftTilBarnepass?.roundToInt() ?: 0
 			)
 		},
 		annenForsoergerperson = tilsynsutgifter.fodselsdatoTilDenAndreForelderenAvBarnetDdMmAaaa
@@ -332,9 +332,9 @@ private fun convertDagligReise(jsonRettighetstyper: JsonRettighetstyper, soknadD
 		harMedisinskeAarsakerTilTransport = convertToBoolean(jsonDagligReise.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde),
 		alternativeTransportutgifter = convertAlternativeTransportutgifter_DagligReise(jsonDagligReise),
 		harParkeringsutgift = (convertToBoolean(jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanDuBenytteEgenBil)
-			?: false) && ((jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.parkering ?: 0) > 0),
+			?: false) && ((jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.parkering ?: 0.0) > 0.0),
 		innsendingsintervall = convertInnsendingsintervaller(jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.hvorOfteOnskerDuASendeInnKjoreliste),
-		parkeringsutgiftBeloep = jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.parkering
+		parkeringsutgiftBeloep = jsonDagligReise.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil?.parkering?.roundToInt()
 	)
 }
 
@@ -353,7 +353,7 @@ private fun convertReisestoenadForArbeidssoeker(jsonRettighetstyper: JsonRettigh
 			adresse = dagligReise.adresse,
 			postnr = dagligReise.postnr
 		).sammensattAdresse,
-		avstand = dagligReise.hvorLangReiseveiHarDu3,
+		avstand = dagligReise.hvorLangReiseveiHarDu3.roundToInt(),
 		erUtgifterDekketAvAndre = convertToBoolean(dagligReise.dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis) ?: false,
 		erVentetidForlenget = convertToBoolean(dagligReise.harMottattDagpengerSiste6Maneder?.harDuHattForlengetVentetidDeSisteAtteUkene)
 			?: false,
@@ -395,8 +395,8 @@ private fun convertReiseVedOppstartOgAvsluttetAktivitet(jsonRettighetstyper: Jso
 			adresse = reiseStartSlutt.adresse3,
 			postnr = reiseStartSlutt.postnr3
 		).sammensattAdresse,
-		avstand = reiseStartSlutt.hvorLangReiseveiHarDu2 ?: 0,
-		antallReiser = reiseStartSlutt.hvorMangeGangerSkalDuReiseEnVei,
+		avstand = reiseStartSlutt.hvorLangReiseveiHarDu2?.roundToInt() ?: 0,
+		antallReiser = reiseStartSlutt.hvorMangeGangerSkalDuReiseEnVei.roundToInt(),
 		harBarnUnderFemteklasse = convertToBoolean(reiseStartSlutt.harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear)
 			?: false,
 		harBarnUnderAtten = convertToBoolean(reiseStartSlutt.harDuBarnSomSkalFlytteMedDeg) ?: false,
@@ -439,7 +439,7 @@ private fun convertReiseObligatoriskSamling(jsonRettighetstyper: JsonRettighetst
 			adresse = reiseTilSamling.adresse2,
 			postnr = reiseTilSamling.postnr2
 		).sammensattAdresse,
-		avstand = reiseTilSamling.hvorLangReiseveiHarDu1 ?: 0,
+		avstand = reiseTilSamling.hvorLangReiseveiHarDu1?.roundToInt() ?: 0,
 		samlingsperiode = periodeList,
 		alternativeTransportutgifter = AlternativeTransportutgifter(
 			kanOffentligTransportBrukes = convertToBoolean(reiseTilSamling.kanDuReiseKollektivtReiseTilSamling),
@@ -498,14 +498,14 @@ private fun convertAlternativeTransportutgifter_DagligReise(details: JsonDagligR
 	)
 }
 
-private fun convertKollektivTransportutgifter(utgifter: Int?): KollektivTransportutgifter? {
+private fun convertKollektivTransportutgifter(utgifter: Double?): KollektivTransportutgifter? {
 	if (utgifter == null) return null
-	return KollektivTransportutgifter(beloepPerMaaned = utgifter)
+	return KollektivTransportutgifter(beloepPerMaaned = utgifter.roundToInt())
 }
 
-private fun convertDrosjeTransportutgifter(utgifter: Int?): DrosjeTransportutgifter? {
+private fun convertDrosjeTransportutgifter(utgifter: Double?): DrosjeTransportutgifter? {
 	if (utgifter == null) return null
-	return DrosjeTransportutgifter(beloep = utgifter)
+	return DrosjeTransportutgifter(beloep = utgifter.roundToInt())
 }
 
 private fun convertInnsendingsintervaller(details: String?): Innsendingsintervaller? {
@@ -520,8 +520,8 @@ private fun convertInnsendingsintervaller(details: String?): Innsendingsinterval
 private fun convertEgenBilTransportutgifter(utgifter: KanBenytteEgenBil?, isDagligReise: Boolean = false): EgenBilTransportutgifter? {
 	if (utgifter == null) return null
 	return EgenBilTransportutgifter(
-		sumAndreUtgifter = ((utgifter.annet ?: 0) + (utgifter.bompenger ?: 0) + (if (isDagligReise) 0 else utgifter.parkering ?: 0)
-			+ (utgifter.ferje ?: 0) + (utgifter.piggdekkavgift ?: 0)).toDouble()
+		sumAndreUtgifter = ((utgifter.annet ?: 0.0) + (utgifter.bompenger ?: 0.0) + (if (isDagligReise) 0.0 else utgifter.parkering ?: 0.0)
+			+ (utgifter.ferje ?: 0.0) + (utgifter.piggdekkavgift ?: 0.0))
 	)
 }
 

@@ -12,6 +12,7 @@ import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import kotlin.math.roundToInt
 
 class TilleggsstonadServiceTest : InnsendingServiceTest() {
 

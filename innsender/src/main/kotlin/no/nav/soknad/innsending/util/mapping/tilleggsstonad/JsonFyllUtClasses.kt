@@ -45,21 +45,21 @@ data class Application(
 
 	// Daglig reise, NAV 11-12.21B
 	val soknadsPeriode: SoknadsPeriode? = null,  // Samme som Reise på grunn av oppstart, avslutning eller hjemreise
-	val hvorMangeReisedagerHarDuPerUke: Int? = null,
+	val hvorMangeReisedagerHarDuPerUke: Double? = null,
 	val harDuEnReiseveiPaSeksKilometerEllerMer: String? = null, // JA|NEI
 	val harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String? = null, // JA | NEI,
-	val hvorLangReiseveiHarDu: Int? = null,
+	val hvorLangReiseveiHarDu: Double? = null,
 	val velgLand1: VelgLand? = null,
 	val adresse1: String? = null,
 	val postnr1: String? = null,
 	val kanDuReiseKollektivtDagligReise: String? = null, // ja | nei
-	val hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise: Int? = null, // Hvis kanDuReiseKollektivtDagligReise == ja
+	val hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise: Double? = null, // Hvis kanDuReiseKollektivtDagligReise == ja
 	val hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt: String? = null,
 	val kanIkkeReiseKollektivtDagligReise: KanIkkeReiseKollektivt? = null,
 
 	// Reise til samling, NAV 11-12.17B
 	val startOgSluttdatoForSamlingene: List<JsonPeriode>? = null, // hvis skalDuDeltaEllerHarDuDeltattPaFlereSamlinger == Ja
-	val hvorLangReiseveiHarDu1: Int? = null,
+	val hvorLangReiseveiHarDu1: Double? = null,
 	val velgLandReiseTilSamling: VelgLand? = null,
 	val adresse2: String? = null,
 	val postnr2: String? = null,
@@ -72,8 +72,8 @@ data class Application(
 	//val soknadsPeriode: SoknadsPeriode? = null, NAV 11-12.18B
 	val startdato: String? = null,  // Erstattes av soknadsPeriode
 	val sluttdato: String? = null,  // Erstattes av soknadsPeriode
-	val hvorLangReiseveiHarDu2: Int? = null,
-	val hvorMangeGangerSkalDuReiseEnVei: Int? = null,
+	val hvorLangReiseveiHarDu2: Double? = null,
+	val hvorMangeGangerSkalDuReiseEnVei: Double? = null,
 	val velgLand3: VelgLand? = null,
 	val adresse3: String? = null,
 	val postnr3: String? = null,
@@ -83,7 +83,7 @@ data class Application(
 	val harDuSaerligBehovForFlereHjemreiserEnnNevntOvenfor: String? = null, // ja|nei
 	val bekreftelseForBehovForFlereHjemreiser1: String? = null,
 	val kanDuReiseKollektivtOppstartAvslutningHjemreise: String? = null, // ja/nei
-	val hvilkeUtgifterHarDuIForbindelseMedReisen4: Int? = null, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==ja
+	val hvilkeUtgifterHarDuIForbindelseMedReisen4: Double? = null, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==ja
 	val kanIkkeReiseKollektivtOppstartAvslutningHjemreise: KanIkkeReiseKollektivt? = null, // hvis kanDuReiseKollektivtOppstartAvslutningHjemreise==nei
 
 	// Reise når du er arbeidssøker NAV 11-12.22B
@@ -93,12 +93,12 @@ data class Application(
 	val dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis: String? = null, // Ja | nei
 	val mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene: String? = "nei", // ja|nei
 	val harMottattDagpengerSiste6Maneder: HarMottattDagpengerSiste6Maneder? = null, // hvis mottarDuEllerHarDuMotattDagpengerIlopetAvDeSisteSeksManedene == ja
-	val hvorLangReiseveiHarDu3: Int? = null,
+	val hvorLangReiseveiHarDu3: Double? = null,
 	val velgLandArbeidssoker: VelgLand? = null,
 	val adresse: String? = null,
 	val postnr: String? = null,
 	val kanDuReiseKollektivtArbeidssoker: String? = null, // ja|nei
-	val hvilkeUtgifterHarDuIForbindelseMedReisen3: Int? = null, // hvis kanDuReiseKollektivtArbeidssoker==ja?
+	val hvilkeUtgifterHarDuIForbindelseMedReisen3: Double? = null, // hvis kanDuReiseKollektivtArbeidssoker==ja?
 	val kanIkkeReiseKollektivtArbeidssoker: KanIkkeReiseKollektivt? = null,
 
 	// Flytting, NAV 11-12.23B
@@ -123,12 +123,12 @@ data class Application(
 	// val sluttdatoDdMmAaaa: String? = null,  // Brukes også av boutgifter
 	val hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore: String? = null, // "Jeg skal ta videregående utdanning, eller forkurs på universitet" | "Jeg skal ta utdanning på fagskole, høyskole eller universitet" | "Jeg skal ta kurs eller annen form for utdanning"
 	val hvilketKursEllerAnnenFormForUtdanningSkalDuTa: String? = null,
-	val oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Int? = null, // 0-100
+	val oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Double? = null, // 0-100
 	val harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler: String? = null, // Ja| Nei
-	val utgifterTilLaeremidler: Int? = null,
+	val utgifterTilLaeremidler: Double? = null,
 	val farDuDekketLaeremidlerEtterAndreOrdninger: String? = null, // Ja | Nei | Delvis
-	val hvorMyeFarDuDekketAvEnAnnenAktor: Int? = null,
-	val hvorStortBelopSokerDuOmAFaDekketAvNav: Int? = null,
+	val hvorMyeFarDuDekketAvEnAnnenAktor: Double? = null,
+	val hvorStortBelopSokerDuOmAFaDekketAvNav: Double? = null,
 
 	// Boutgifter, NAV 11-12.19B
 	val startdatoDdMmAaaa: String? = null,
@@ -137,11 +137,11 @@ data class Application(
 	val bostotteIForbindelseMedSamling: BostotteIForbindelseMedSamling? = null,
 
 	val mottarDuBostotteFraKommunen: String? = null, // "Ja" | "Nei"
-	var hvorMyeBostotteMottarDu: Int? = null, // Hvis mottarDuBostotteFraKommunen = Ja
+	var hvorMyeBostotteMottarDu: Double? = null, // Hvis mottarDuBostotteFraKommunen = Ja
 	val hvilkeAdresserHarDuBoutgifterPa: HvilkeAdresserHarDuBoutgifterPa? = null,
-	val boutgifterPaAktivitetsadressen: Int? = null,
-	val boutgifterPaHjemstedetMitt: Int? = null,
-	val boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten: Int? = null,
+	val boutgifterPaAktivitetsadressen: Double? = null,
+	val boutgifterPaHjemstedetMitt: Double? = null,
+	val boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten: Double? = null,
 	val erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet: String? = null, // "Ja" | "Nei"
 
 	// Pass av barn, NAV 11-12.15B
@@ -234,7 +234,7 @@ data class OpplysningerOmBarn(
 
 data class SokerStonadForDetteBarnet(
 	val hvemPasserBarnet: String, // "Barnet mitt får pass av dagmamma eller dagpappa" | "Barnet mitt er i barnehage eller skolefritidsordning (SFO)" | "Barnet mitt har privat ordning for barnepass"
-	val oppgiManedligUtgiftTilBarnepass: Int,
+	val oppgiManedligUtgiftTilBarnepass: Double,
 	val harBarnetFullfortFjerdeSkolear: String, // "Ja" | "Nei"
 	val hvaErArsakenTilAtBarnetDittTrengerPass: String? // Hvis harBarnetFullfortFjerdeSkolear == ja. "Langvarig eller uregelmessig fravær på grunn av arbeid eller utdanning" | "Barnet mitt har et særlig behov for pass" | "Ingen av alternativene passer"
 )
@@ -267,34 +267,34 @@ data class NedsattArbeidsevnePgaSykdom(
 
 data class JegFlytterSelv(
 	val hvorLangtSkalDuFlytte: Double,
-	val hengerleie: Int?,
-	val bom: Int?,
-	val parkering: Int?,
-	val ferje: Int?,
-	val annet: Int?
+	val hengerleie: Double?,
+	val bom: Double?,
+	val parkering: Double?,
+	val ferje: Double?,
+	val annet: Double?
 )
 
 data class JegVilBrukeFlyttebyra(
 	// Tilbud fra flyttebyrå
 	val navnPaFlyttebyra1: String,
-	val belop: Int,
+	val belop: Double,
 	val navnPaFlyttebyra2: String,
-	val belop1: Int,
+	val belop1: Double,
 	val jegVelgerABruke: String, // "Flyttebyrå 1" | "Flyttebyrå 2"
 	val hvorLangtSkalDuFlytte1: Double
 )
 
 data class JegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv(
 	val navnPaFlyttebyra1: String,
-	val belop: Int,
+	val belop: Double,
 	val navnPaFlyttebyra2: String,
-	val belop1: Int,
+	val belop1: Double,
 	val hvorLangtSkalDuFlytte1: Double,
-	val hengerleie: Int?,
-	val bom: Int?,
-	val parkering: Int?,
-	val ferje: Int?,
-	val annet: Int?
+	val hengerleie: Double?,
+	val bom: Double?,
+	val parkering: Double?,
+	val ferje: Double?,
+	val annet: Double?
 )
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -309,7 +309,7 @@ data class HvorforReiserDu(
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class KanReiseKollektivt(
-	val hvilkeUtgifterHarDuIForbindelseMedReisen1: Int?
+	val hvilkeUtgifterHarDuIForbindelseMedReisen1: Double?
 )
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -333,12 +333,12 @@ data class AndreArsakerIkkeKollektivt(
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class KanBenytteEgenBil(
-	val bompenger: Int?,
-	val piggdekkavgift: Int?,
-	val ferje: Int?,
-	val annet: Int?,
+	val bompenger: Double?,
+	val piggdekkavgift: Double?,
+	val ferje: Double?,
+	val annet: Double?,
 	val vilDuHaUtgifterTilParkeringPaAktivitetsstedet: String?, // Ja |nei
-	val parkering: Int?,
+	val parkering: Double?,
 	val hvorOfteOnskerDuASendeInnKjoreliste: String? // Ønsker svar UKE | MANED (Jeg ønsker å levere kjøreliste én gang i måneden) jegOnskerALevereKjorelisteEnGangIManeden | jegOnskerALevereKjorelisteEnGangIUken
 )
 
@@ -363,7 +363,7 @@ data class KanIkkeBenytteEgenBil(
 	val hvilkeAndreArsakerGjorAtDuIkkeKanBenytteEgenBil: String?,
 	val kanDuBenytteDrosje: String? = null, // ja|nei
 	@JsonProperty("oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIPeriodenDuSokerOmStonadFor")
-	val oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor: Int? = null, // hvis kanDuBenytteDrosje==ja
+	val oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor: Double? = null, // hvis kanDuBenytteDrosje==ja
 	val hvorforKanDuIkkeBenytteDrosje: String? = null// hvis kanDuBenytteDrosje==nei
 )
 
