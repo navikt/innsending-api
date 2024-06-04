@@ -17,7 +17,7 @@ class JsonBarnePassTestBuilder {
 			jegSokerOmStonadTilPassAvDetteBarnet = true,
 			sokerStonadForDetteBarnet = SokerStonadForDetteBarnet(
 				hvemPasserBarnet = "Barnet mitt får pass av dagmamma eller dagpappa",
-				oppgiManedligUtgiftTilBarnepass = 4000,
+				oppgiManedligUtgiftTilBarnepass = 4000.0,
 				harBarnetFullfortFjerdeSkolear = "Nei",
 				hvaErArsakenTilAtBarnetDittTrengerPass = null
 			)

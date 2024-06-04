@@ -13,12 +13,12 @@ class JsonLaeremiddelTestBuilder {
 	private var hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore: String =
 		"Jeg skal ta videregående utdanning, eller forkurs på universitet"
 	private var hvilketKursEllerAnnenFormForUtdanningSkalDuTa: String? = null
-	private var oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Int = 100
+	private var oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Double = 100.0
 	private var harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler: String = "Ja"
-	private var utgifterTilLaeremidler: Int = 6000
+	private var utgifterTilLaeremidler: Double = 6000.0
 	private var farDuDekketLaeremidlerEtterAndreOrdninger: String = "Delvis"
-	private var hvorMyeFarDuDekketAvEnAnnenAktor: Int? = 2000
-	private var hvorStortBelopSokerDuOmAFaDekketAvNav: Int = 4000
+	private var hvorMyeFarDuDekketAvEnAnnenAktor: Double? = 2000.0
+	private var hvorStortBelopSokerDuOmAFaDekketAvNav: Double = 4000.0
 
 	fun fradato(fradato: String) = apply { this.fradato = fradato }
 	fun tildato(tildato: String) = apply { this.tildato = tildato }
@@ -30,7 +30,7 @@ class JsonLaeremiddelTestBuilder {
 	fun hvilketKursEllerAnnenFormForUtdanningSkalDuTa(hvilketKursEllerAnnenFormForUtdanningSkalDuTa: String?) =
 		apply { this.hvilketKursEllerAnnenFormForUtdanningSkalDuTa = hvilketKursEllerAnnenFormForUtdanningSkalDuTa }
 
-	fun oppgiHvorMangeProsentDuStudererEllerGarPaKurs(oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Int) =
+	fun oppgiHvorMangeProsentDuStudererEllerGarPaKurs(oppgiHvorMangeProsentDuStudererEllerGarPaKurs: Double) =
 		apply { this.oppgiHvorMangeProsentDuStudererEllerGarPaKurs = oppgiHvorMangeProsentDuStudererEllerGarPaKurs }
 
 	fun harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler(
@@ -40,16 +40,16 @@ class JsonLaeremiddelTestBuilder {
 			harDuEnFunksjonshemningSomGirDegStorreUtgifterTilLaeremidler
 	}
 
-	fun utgifterTilLaeremidler(utgifterTilLaeremidler: Int) =
+	fun utgifterTilLaeremidler(utgifterTilLaeremidler: Double) =
 		apply { this.utgifterTilLaeremidler = utgifterTilLaeremidler }
 
 	fun farDuDekketLaeremidlerEtterAndreOrdninger(farDuDekketLaeremidlerEtterAndreOrdninger: String) =
 		apply { this.farDuDekketLaeremidlerEtterAndreOrdninger = farDuDekketLaeremidlerEtterAndreOrdninger }
 
-	fun hvorMyeFarDuDekketAvEnAnnenAktor(hvorMyeFarDuDekketAvEnAnnenAktor: Int?) =
+	fun hvorMyeFarDuDekketAvEnAnnenAktor(hvorMyeFarDuDekketAvEnAnnenAktor: Double?) =
 		apply { this.hvorMyeFarDuDekketAvEnAnnenAktor = hvorMyeFarDuDekketAvEnAnnenAktor }
 
-	fun hvorStortBelopSokerDuOmAFaDekketAvNav(hvorStortBelopSokerDuOmAFaDekketAvNav: Int) =
+	fun hvorStortBelopSokerDuOmAFaDekketAvNav(hvorStortBelopSokerDuOmAFaDekketAvNav: Double) =
 		apply { this.hvorStortBelopSokerDuOmAFaDekketAvNav = hvorStortBelopSokerDuOmAFaDekketAvNav }
 
 

@@ -55,9 +55,9 @@
 				"startdato": "2024-01-25",
 				"sluttdato": "2024-06-18"
 			},
-			"hvorMangeReisedagerHarDuPerUke": 5,
+			"hvorMangeReisedagerHarDuPerUke": "5.0",
 			"harDuEnReiseveiPaSeksKilometerEllerMer": "ja",
-			"hvorLangReiseveiHarDu": 60,
+			"hvorLangReiseveiHarDu": "60.0",
 			"adresse1": "Kongensgate. 10",
 			"kanDuReiseKollektivtDagligReise": "nei",
 			"kanIkkeReiseKollektivtDagligReise": {
@@ -65,11 +65,11 @@
 				"beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt": "fgsfdg sfdgs",
 				"kanDuBenytteEgenBil": "ja",
 				"kanBenytteEgenBil": {
-					"bompenger": 150,
-					"piggdekkavgift": 0,
-					"ferje": 0,
-					"parkering": 150,
-					"annet": 0,
+					"bompenger": "150.0",
+					"piggdekkavgift": "0.0",
+					"ferje": "0.0",
+					"parkering": "150.0",
+					"annet": "0.0",
 					"hvorOfteOnskerDuASendeInnKjoreliste": "jegOnskerALevereKjorelisteEnGangIManeden"
 				}
 			},

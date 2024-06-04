@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import javax.xml.stream.XMLInputFactory
+import kotlin.math.roundToInt
 
 class TilleggsstonadJson2XmlConverterTest {
 
@@ -159,7 +160,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		val dagligReise =
 			JsonDagligReiseTestBuilder()
 				.soknadsPeriode("2023-12-01", "2024-06-20")
-				.hvorLangReiseveiHarDu(130)
+				.hvorLangReiseveiHarDu(130.0)
 				.velgLand1(VelgLand(label = "Norge", value = "NO"))
 				.adresse1("Kongensgate 10")
 				.postnr1("3701")
@@ -167,12 +168,12 @@ class TilleggsstonadJson2XmlConverterTest {
 				.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt("helsemessigeArsaker")
 				.kanBenytteEgenBil(
 					KanBenytteEgenBil(
-						bompenger = 150,
-						piggdekkavgift = 1000,
+						bompenger = 150.0,
+						piggdekkavgift = 1000.0,
 						ferje = null,
 						annet = null,
 						vilDuHaUtgifterTilParkeringPaAktivitetsstedet = "JA",
-						parkering = 200,
+						parkering = 200.0,
 						hvorOfteOnskerDuASendeInnKjoreliste = "jegOnskerALevereKjorelisteEnGangIUken"
 					)
 				)
@@ -207,7 +208,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		val dagligReise =
 			JsonDagligReiseTestBuilder()
 				.soknadsPeriode("2023-12-01", "2024-06-20")
-				.hvorLangReiseveiHarDu(5)
+				.hvorLangReiseveiHarDu(5.0)
 				.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde("ja")
 				.velgLand1(VelgLand(label = "Norge", value = "NO"))
 				.adresse1("Kongensgate 10")
@@ -216,12 +217,12 @@ class TilleggsstonadJson2XmlConverterTest {
 				.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt("annet")
 				.kanBenytteEgenBil(
 					KanBenytteEgenBil(
-						bompenger = 150,
-						piggdekkavgift = 1000,
+						bompenger = 150.0,
+						piggdekkavgift = 1000.0,
 						ferje = null,
-						annet = 23,
+						annet = 23.0,
 						vilDuHaUtgifterTilParkeringPaAktivitetsstedet = "ja",
-						parkering = 150,
+						parkering = 150.0,
 						hvorOfteOnskerDuASendeInnKjoreliste = "jegOnskerALevereKjorelisteEnGangIManeden"
 					)
 				)
@@ -258,7 +259,7 @@ class TilleggsstonadJson2XmlConverterTest {
 			.adresse1("Strømstad Systembolag, 452 38")
 			.postnr1(null)
 			.kanDuReiseKollektivtDagligReise("Ja")
-			.hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise(2000)
+			.hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise(2000.0)
 			.kanIkkeReiseKollektivtDagligReise(null)
 			.build()
 		val jsonReisestottesoknad = JsonReiseTestBuilder().dagligReise(dagligReise).build()
@@ -284,18 +285,18 @@ class TilleggsstonadJson2XmlConverterTest {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = reiseDaglig, tema = "TSO").build()
 		val dagligReise = JsonDagligReiseTestBuilder()
 			.soknadsPeriode("2024-01-02", "2024-06-18")
-			.hvorLangReiseveiHarDu(10)
+			.hvorLangReiseveiHarDu(10.0)
 			.kanDuReiseKollektivtDagligReise("Nei")
 			.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt("hentingEllerLeveringAvBarn")
 			.kanBenytteEgenBil(null)
 			.kanDuBenytteDrosje("Ja")
-			.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIPeriodenDuSokerOmStonadFor(6000)
+			.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIPeriodenDuSokerOmStonadFor(6000.0)
 			.kanIkkeBenytteEgenBil(
 				KanIkkeBenytteEgenBil(
 					hvaErArsakenTilAtDuIkkeKanBenytteEgenBil = "disponererIkkeBil",
 					hvilkeAndreArsakerGjorAtDuIkkeKanBenytteEgenBil = null,
 					kanDuBenytteDrosje = "Ja",
-					oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor = 6000
+					oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor = 6000.0
 				)
 			)
 			.build()
@@ -329,12 +330,12 @@ class TilleggsstonadJson2XmlConverterTest {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = reiseDaglig, tema = "TSR").build()
 		val dagligReise = JsonDagligReiseTestBuilder()
 			.soknadsPeriode("2024-01-02", "2024-06-18")
-			.hvorLangReiseveiHarDu(10)
+			.hvorLangReiseveiHarDu(10.0)
 			.kanDuReiseKollektivtDagligReise("Nei")
 			.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt("hentingEllerLeveringAvBarn")
 			.kanBenytteEgenBil(null)
 			.kanDuBenytteDrosje("Ja")
-			.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIPeriodenDuSokerOmStonadFor(6000)
+			.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIPeriodenDuSokerOmStonadFor(6000.0)
 			.kanIkkeBenytteEgenBil(
 				KanIkkeBenytteEgenBil(
 					hvaErArsakenTilAtDuIkkeKanBenytteEgenBil = "disponererIkkeBil",
@@ -374,8 +375,8 @@ class TilleggsstonadJson2XmlConverterTest {
 						JsonPeriode(startdatoDdMmAaaa = "2024-02-02", sluttdatoDdMmAaaa = "2024-02-07")
 					)
 				)
-				.hvorLangReiseveiHarDu1(120)
-				.kanReiseKollektivt(KanReiseKollektivt(hvilkeUtgifterHarDuIForbindelseMedReisen1 = 1000))
+				.hvorLangReiseveiHarDu1(120.0)
+				.kanReiseKollektivt(KanReiseKollektivt(hvilkeUtgifterHarDuIForbindelseMedReisen1 = 1000.0))
 				.build()
 		val jsonReisestottesoknad = JsonReiseTestBuilder().samling(reiseSamling).build()
 		val tilleggsstonad =
@@ -411,8 +412,8 @@ class TilleggsstonadJson2XmlConverterTest {
 					Date.formatToLocalDate(LocalDateTime.now().minusMonths(1)),
 					Date.formatToLocalDate(LocalDateTime.now().plusMonths(3))
 				)
-				.hvorLangReiseveiHarDu2(100)
-				.hvorMangeGangerSkalDuReiseEnVei(4)
+				.hvorLangReiseveiHarDu2(100.0)
+				.hvorMangeGangerSkalDuReiseEnVei(4.0)
 				.harDuBarnSomSkalFlytteMedDeg("Ja")
 				.harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear("Ja")
 				.barnSomSkalFlytteMedDeg(
@@ -424,7 +425,7 @@ class TilleggsstonadJson2XmlConverterTest {
 						)
 					)
 				)
-				.hvilkeUtgifterHarDuIForbindelseMedReisen4(3000)
+				.hvilkeUtgifterHarDuIForbindelseMedReisen4(3000.0)
 				.build()
 		val jsonReisestottesoknad = JsonReiseTestBuilder().startAvslutning(oppstartOgAvslutningAvAktivitet).build()
 		val tilleggsstonad =
@@ -455,8 +456,8 @@ class TilleggsstonadJson2XmlConverterTest {
 					Date.formatToLocalDate(LocalDateTime.now().minusMonths(1)),
 					Date.formatToLocalDate(LocalDateTime.now().plusMonths(3))
 				)
-				.hvorLangReiseveiHarDu2(100)
-				.hvorMangeGangerSkalDuReiseEnVei(4)
+				.hvorLangReiseveiHarDu2(100.0)
+				.hvorMangeGangerSkalDuReiseEnVei(4.0)
 				.kanDuReiseKollektivtOppstartAvslutningHjemreise("Nei")
 				.kanIkkeReiseKollektivtOppstartAvslutningHjemreise(
 					KanIkkeReiseKollektivt(
@@ -472,7 +473,7 @@ class TilleggsstonadJson2XmlConverterTest {
 							hvaErArsakenTilAtDuIkkeKanBenytteEgenBil = "eierIkkeBil",
 							hvilkeAndreArsakerGjorAtDuIkkeKanBenytteEgenBil = null,
 							kanDuBenytteDrosje = "Ja",
-							oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor = 6000
+							oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor = 6000.0
 						)
 					)
 				)
@@ -509,9 +510,9 @@ class TilleggsstonadJson2XmlConverterTest {
 						harDuHattTidsbegrensetBortfallDeSisteAtteUkene = "Nei"
 					)
 				)
-				.hvorLangReiseveiHarDu3(150)
+				.hvorLangReiseveiHarDu3(150.0)
 				.kanDuReiseKollektivtArbeidssoker("Ja")
-				.hvilkeUtgifterHarDuIForbindelseMedReisen3(5000)
+				.hvilkeUtgifterHarDuIForbindelseMedReisen3(5000.0)
 				.build()
 		val jsonReisestottesoknad = JsonReiseTestBuilder().reiseArbeidssoker(reiseArbeidssoker).build()
 		val tilleggsstonad =
@@ -541,7 +542,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = stotteTilPassAvBarn, tema = "TSO").build()
 		val fnrBarn = "01902399964"
 		val fnrForeldreTo = "05844198215"
-		val utgifter = 4000
+		val utgifter = 4000.0
 		val barnePass = JsonBarnePassTestBuilder()
 			.fradato("2023-12-01")
 			.tildato("2024-06-20")
@@ -580,7 +581,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("<personidentifikator>$fnrBarn</personidentifikator>"))
 		assertTrue(xmlString.contains("<tilsynskategori>OFF</tilsynskategori>"))
 		assertTrue(xmlString.contains("<harFullfoertFjerdeSkoleaar>false</harFullfoertFjerdeSkoleaar>"))
-		assertTrue(xmlString.contains("<maanedligUtgiftTilsynBarn>$utgifter</maanedligUtgiftTilsynBarn>"))
+		assertTrue(xmlString.contains("<maanedligUtgiftTilsynBarn>${utgifter.roundToInt()}</maanedligUtgiftTilsynBarn>"))
 		assertTrue(xmlString.contains("annenForsoergerperson>$fnrForeldreTo</annenForsoergerperson>"))
 
 	}
@@ -591,8 +592,8 @@ class TilleggsstonadJson2XmlConverterTest {
 		val fnrBarn1 = "23922399883"
 		val fnrBarn2 = "01902399964"
 		val fnrForeldreTo = "05844198215"
-		val utgifter1 = 5000
-		val utgifter2 = 3500
+		val utgifter1 = 5000.0
+		val utgifter2 = 3500.0
 		val barnePass = JsonBarnePassTestBuilder()
 			.barnePass(
 				listOf(
@@ -636,15 +637,15 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("<tilsynskategori>KOM</tilsynskategori>"))
 		assertTrue(xmlString.contains("<navn>Fnavn2 Enavn</navn>"))
 		assertTrue(xmlString.contains("<harFullfoertFjerdeSkoleaar>false</harFullfoertFjerdeSkoleaar>"))
-		assertTrue(xmlString.contains("<maanedligUtgiftTilsynBarn>$utgifter2</maanedligUtgiftTilsynBarn>"))
+		assertTrue(xmlString.contains("<maanedligUtgiftTilsynBarn>${utgifter2.roundToInt()}</maanedligUtgiftTilsynBarn>"))
 		assertTrue(xmlString.contains("</barn>"))
 	}
 
 	@Test
 	fun `Default case test convert to XML housing expenses`() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = stotteTilFlytting, tema = "TSO").build()
-		val utgifterHjemsted = 5000
-		val utgifterAktivitetssted = 0
+		val utgifterHjemsted = 5000.0
+		val utgifterAktivitetssted = 0.0
 		val boStotte = JsonBostotteTestBuilder()
 			.fradato("2023-12-02")
 			.tildato("2024-06-20")
@@ -677,18 +678,18 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("<harBoutgifterVedSamling>false</harBoutgifterVedSamling>"))
 		assertTrue(xmlString.contains("<harFasteBoutgifter>true</harFasteBoutgifter>"))
 		assertTrue(xmlString.contains("<mottarBostoette>false</mottarBostoette>"))
-		assertTrue(xmlString.contains("<boutgifterHjemstedAktuell>$utgifterHjemsted</boutgifterHjemstedAktuell>"))
-		assertTrue(xmlString.contains("<boutgifterAktivitetsted>$utgifterAktivitetssted</boutgifterAktivitetsted>"))
+		assertTrue(xmlString.contains("<boutgifterHjemstedAktuell>${utgifterHjemsted.roundToInt()}</boutgifterHjemstedAktuell>"))
+		assertTrue(xmlString.contains("<boutgifterAktivitetsted>${utgifterAktivitetssted.roundToInt()}</boutgifterAktivitetsted>"))
 
 	}
 
 	@Test
 	fun `Test convert to XML housing expenses - convention periods`() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = stotteTilFlytting, tema = "TSO").build()
-		val utgifterHjemsted = 10000
-		val utgifterAktivitetssted = 5000
-		val utgifterOpphort = 4000
-		val mottattStotte = 3500
+		val utgifterHjemsted = 10000.0
+		val utgifterAktivitetssted = 5000.0
+		val utgifterOpphort = 4000.0
+		val mottattStotte = 3500.0
 		val boStotte = JsonBostotteTestBuilder()
 			.fradato("2023-12-02")
 			.tildato("2024-06-20")
@@ -739,10 +740,10 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("<harBoutgifterVedSamling>true</harBoutgifterVedSamling>"))
 		assertTrue(xmlString.contains("<harFasteBoutgifter>true</harFasteBoutgifter>"))
 		assertTrue(xmlString.contains("<mottarBostoette>true</mottarBostoette>"))
-		assertTrue(xmlString.contains("<bostoetteBeloep>$mottattStotte</bostoetteBeloep>"))
-		assertTrue(xmlString.contains("<boutgifterHjemstedAktuell>$utgifterHjemsted</boutgifterHjemstedAktuell>"))
-		assertTrue(xmlString.contains("<boutgifterAktivitetsted>$utgifterAktivitetssted</boutgifterAktivitetsted>"))
-		assertTrue(xmlString.contains("<boutgifterHjemstedOpphoert>$utgifterOpphort</boutgifterHjemstedOpphoert>"))
+		assertTrue(xmlString.contains("<bostoetteBeloep>${mottattStotte.roundToInt()}</bostoetteBeloep>"))
+		assertTrue(xmlString.contains("<boutgifterHjemstedAktuell>${utgifterHjemsted.roundToInt()}</boutgifterHjemstedAktuell>"))
+		assertTrue(xmlString.contains("<boutgifterAktivitetsted>${utgifterAktivitetssted.roundToInt()}</boutgifterAktivitetsted>"))
+		assertTrue(xmlString.contains("<boutgifterHjemstedOpphoert>${utgifterOpphort.roundToInt()}</boutgifterHjemstedOpphoert>"))
 	}
 
 	@Test
@@ -752,13 +753,13 @@ class TilleggsstonadJson2XmlConverterTest {
 			.fradato("2023-12-02")
 			.tildato("2024-06-20")
 			.farDuDekketLaeremidlerEtterAndreOrdninger("Delvis")
-			.hvorMyeFarDuDekketAvEnAnnenAktor(1500)
+			.hvorMyeFarDuDekketAvEnAnnenAktor(1500.0)
 			.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore("videregaendeUtdanning")
 			.hvilketKursEllerAnnenFormForUtdanningSkalDuTa(null)
-			.oppgiHvorMangeProsentDuStudererEllerGarPaKurs(100)
-			.utgifterTilLaeremidler(7500)
-			.hvorMyeFarDuDekketAvEnAnnenAktor(1500)
-			.hvorStortBelopSokerDuOmAFaDekketAvNav(6000)
+			.oppgiHvorMangeProsentDuStudererEllerGarPaKurs(100.0)
+			.utgifterTilLaeremidler(7500.0)
+			.hvorMyeFarDuDekketAvEnAnnenAktor(1500.0)
+			.hvorStortBelopSokerDuOmAFaDekketAvNav(6000.0)
 			.build()
 		val tilleggsstonad =
 			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = laerestotte).build()
@@ -791,10 +792,10 @@ class TilleggsstonadJson2XmlConverterTest {
 			.hvorMyeFarDuDekketAvEnAnnenAktor(null)
 			.hvilkenTypeUtdanningEllerOpplaeringSkalDuGjennomfore("hoyereUtdanning")
 			.hvilketKursEllerAnnenFormForUtdanningSkalDuTa(null)
-			.oppgiHvorMangeProsentDuStudererEllerGarPaKurs(50)
-			.utgifterTilLaeremidler(12000)
+			.oppgiHvorMangeProsentDuStudererEllerGarPaKurs(50.0)
+			.utgifterTilLaeremidler(12000.0)
 			.hvorMyeFarDuDekketAvEnAnnenAktor(null)
-			.hvorStortBelopSokerDuOmAFaDekketAvNav(10000)
+			.hvorStortBelopSokerDuOmAFaDekketAvNav(10000.0)
 			.build()
 		val tilleggsstonad =
 			JsonApplicationTestBuilder().rettighetstyper(rettighetstype = laerestotte).build()
@@ -829,7 +830,7 @@ class TilleggsstonadJson2XmlConverterTest {
 			.ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra("jegFlytterSelv")
 			.jegFlytterSelv(
 				JegFlytterSelv(
-					hvorLangtSkalDuFlytte = 130.0, hengerleie = 0, bom = 1000, parkering = 200, ferje = 0, annet = null
+					hvorLangtSkalDuFlytte = 130.0, hengerleie = 0.0, bom = 1000.0, parkering = 200.0, ferje = 0.0, annet = null
 				)
 			)
 			.build()
@@ -861,9 +862,9 @@ class TilleggsstonadJson2XmlConverterTest {
 			.jegVilBrukeFlyttebyra(
 				JegVilBrukeFlyttebyra(
 					navnPaFlyttebyra1 = "Flytte1",
-					belop = 4000,
+					belop = 4000.0,
 					navnPaFlyttebyra2 = "Flytte2",
-					belop1 = 5000,
+					belop1 = 5000.0,
 					jegVelgerABruke = "Flytte1",
 					hvorLangtSkalDuFlytte1 = 130.0
 				)
@@ -895,14 +896,14 @@ class TilleggsstonadJson2XmlConverterTest {
 			.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv(
 				JegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv(
 					navnPaFlyttebyra1 = "Flytte1",
-					belop = 4000,
+					belop = 4000.0,
 					navnPaFlyttebyra2 = "Flytte2",
-					belop1 = 5000,
+					belop1 = 5000.0,
 					hvorLangtSkalDuFlytte1 = 130.0,
-					hengerleie = 1000,
-					bom = 200,
-					parkering = 200,
-					ferje = 0,
+					hengerleie = 1000.0,
+					bom = 200.0,
+					parkering = 200.0,
+					ferje = 0.0,
 					annet = null
 				)
 			)

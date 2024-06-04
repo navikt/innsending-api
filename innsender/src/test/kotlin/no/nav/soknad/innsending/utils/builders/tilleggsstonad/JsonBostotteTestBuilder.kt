@@ -17,10 +17,10 @@ class JsonBostotteTestBuilder {
 		boutgifterPaHjemstedet = true,
 		boutgifterPaHjemstedetMittSomHarOpphortIForbindelseMedAktiviteten = true
 	)
-	private var bostottebelop: Int? = 1000
-	private var boutgifterPaHjemstedetMitt: Int? = 4000
-	private var boutgifterPaAktivitetsadressen: Int? = 3500
-	private var boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten: Int? = 0
+	private var bostottebelop: Double? = 1000.0
+	private var boutgifterPaHjemstedetMitt: Double? = 4000.0
+	private var boutgifterPaAktivitetsadressen: Double? = 3500.0
+	private var boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten: Double? = 0.0
 	private var erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet: String = "Nei"
 
 	fun fradato(fradato: String) = apply { this.fradato = fradato }
@@ -40,18 +40,18 @@ class JsonBostotteTestBuilder {
 	fun hvilkeAdresserHarDuBoutgifterPa(hvilkeAdresserHarDuBoutgifterPa: HvilkeAdresserHarDuBoutgifterPa) =
 		apply { this.hvilkeAdresserHarDuBoutgifterPa = hvilkeAdresserHarDuBoutgifterPa }
 
-	fun bostottebelop(bostottebelop: Int?) =
+	fun bostottebelop(bostottebelop: Double?) =
 		apply { this.bostottebelop = bostottebelop }
 
 
-	fun boutgifterPaHjemstedetMitt(boutgifterPaHjemstedetMitt: Int?) =
+	fun boutgifterPaHjemstedetMitt(boutgifterPaHjemstedetMitt: Double?) =
 		apply { this.boutgifterPaHjemstedetMitt = boutgifterPaHjemstedetMitt }
 
-	fun boutgifterPaAktivitetsadressen(boutgifterPaAktivitetsadressen: Int) =
+	fun boutgifterPaAktivitetsadressen(boutgifterPaAktivitetsadressen: Double) =
 		apply { this.boutgifterPaAktivitetsadressen = boutgifterPaAktivitetsadressen }
 
 	fun boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten(
-		boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten: Int
+		boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten: Double
 	) = apply {
 		this.boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten =
 			boutgifterJegHarHattPaHjemstedetMittMenSomHarOpphortIForbindelseMedAktiviteten

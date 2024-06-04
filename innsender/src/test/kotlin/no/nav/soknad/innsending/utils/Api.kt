@@ -198,6 +198,20 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 	}
 
+	fun getSoknaderForSkjemanr(skjemanr: String, soknadstyper: List<SoknadType>? = emptyList()): ResponseEntity<List<DokumentSoknadDto>> {
+		val responseType = object : ParameterizedTypeReference<List<DokumentSoknadDto>>() {}
+		var query = "";
+		if (soknadstyper?.isNotEmpty() == true) {
+			query = "?soknadstyper=${soknadstyper.joinToString()}";
+		}
+		return restTemplate.exchange(
+			"${baseUrl}/ekstern/v1/skjema/${skjemanr}/soknader${query}",
+			HttpMethod.GET,
+			createHttpEntity(null),
+			responseType
+		)
+	}
+
 	fun getPrefillData(properties: String): ResponseEntity<PrefillData>? {
 		return restTemplate.exchange(
 			"${baseUrl}/fyllUt/v1/prefill-data?properties=$properties",

@@ -25,8 +25,7 @@ spec:
             alert_type: custom
             severity: critical
         - alert: High number of errors
-          expr: (sum(max_over_time(log_messages_errors{app=~"innsending-api",level=~"Error"}[1m]) or vector(0)) by (app) -
-                 sum(max_over_time(log_messages_errors{app=~"innsending-api",level=~"Error"}[1m] offset 1m) or vector(0)) by (app)) > {{ number_of_errors }}
+          expr: sum(increase(log_messages_errors{app="innsending-api",level="Error"}[10m])) > {{ number_of_errors }}
           for: 1s
           annotations:
             title: "High number of errors logged"
