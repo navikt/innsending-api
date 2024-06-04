@@ -132,8 +132,8 @@ class SoknadService(
 		return hentAktiveSoknader(listOf(brukerId)).filter { it.skjemanr == skjemanr && it.visningsType !== VisningsType.dokumentinnsending }
 	}
 
-	fun hentAktiveSoknader(brukerId: String, skjemanr: String, soknadType: SoknadType): List<DokumentSoknadDto> {
-		return hentAktiveSoknader(listOf(brukerId)).filter { it.skjemanr == skjemanr && it.soknadstype == soknadType && it.visningsType !== VisningsType.dokumentinnsending }
+	fun hentAktiveSoknader(brukerId: String, skjemanr: String, vararg soknadTyper: SoknadType): List<DokumentSoknadDto> {
+		return hentAktiveSoknader(listOf(brukerId)).filter { it.skjemanr == skjemanr && (soknadTyper.isEmpty() || soknadTyper.contains(it.soknadstype)) && it.visningsType !== VisningsType.dokumentinnsending }
 	}
 
 

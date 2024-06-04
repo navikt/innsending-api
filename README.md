@@ -18,10 +18,10 @@ container og kjører Flyway migrasjonene.
 
 ### Docker Compose
 
-Applikasjonen (sammen med en Postgres database) kan også kjøres lokalt med docker-compose:
+Applikasjonen (sammen med en Postgres database) kan også kjøres lokalt med Docker Compose:
 
 ```
-docker-compose up --build
+docker compose up --build
 ```
 
 Vær oppmerksom på at dette er ganske tidkrevende ved første kjøring siden den laster ned alle dependencies.
