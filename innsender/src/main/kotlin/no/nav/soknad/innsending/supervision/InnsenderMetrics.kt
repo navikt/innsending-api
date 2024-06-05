@@ -43,10 +43,11 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	private var databaseGauge = registerGauge(databaseSizeName, databaseSizeHelp)
 	private var absentInArchiveGauge = registerGauge(absentInArchiveName, absentInArchiveHelp)
 	private var archivingFailedGauge = registerGauge(archivingFailedName, archivingFailedHelp)
-	
+
 	var fileNumberOfPagesSummary = registerSummary(fileNumberOfPages, fileNumberOfPagesHelp)
 	var fileSizeSummary = registerSummary(fileSize, fileSizeHelp)
 
+	// Used in tests
 	fun registerMetrics() {
 		operationsCounter = registerCounter(name, help, operationLabel)
 		operationsErrorCounter = registerCounter(errorName, helpError, operationLabel)
@@ -58,7 +59,8 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 		fileSizeSummary = registerSummary(fileSize, fileSizeHelp)
 	}
 
-	fun unregister() {
+	// Used in tests
+	fun unregisterMetrics() {
 		registry.unregister(operationsCounter)
 		registry.unregister(operationsErrorCounter)
 		registry.unregister(operationLatencyHistogram)
@@ -80,7 +82,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	private fun registerLatencyHistogram(name: String, help: String, label: String): Histogram =
 		Histogram
 			.builder()
-			.classicExponentialUpperBounds(0.1, 2.0, 8)
+			.classicExponentialUpperBounds(0.1, 2.0, 10)
 			.name("${soknadNamespace}_${name}")
 			.help(help)
 			.labelNames(label, appLabel)
