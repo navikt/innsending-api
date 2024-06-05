@@ -40,8 +40,8 @@ class FilRestApiTest : ApplicationTest() {
 
 	@BeforeEach
 	fun init() {
-		innsenderMetrics.clearFileSize()
-		innsenderMetrics.clearFileNumberOfPages()
+		innsenderMetrics.unregisterMetrics()
+		innsenderMetrics.registerMetrics()
 	}
 
 	private val defaultSkjemanr = "NAV 55-00.60"

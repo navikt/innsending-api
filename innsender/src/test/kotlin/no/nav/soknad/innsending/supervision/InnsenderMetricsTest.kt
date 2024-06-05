@@ -13,7 +13,7 @@ class InnsenderMetricsTest : ApplicationTest() {
 
 	@BeforeEach
 	fun init() {
-		innsenderMetrics.unregister()
+		innsenderMetrics.unregisterMetrics()
 		innsenderMetrics.registerMetrics()
 	}
 
