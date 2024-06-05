@@ -7,10 +7,7 @@ import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.TokenGenerator
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -71,14 +68,14 @@ class FilRestApiTest : ApplicationTest() {
 			postFilRequestN6,
 			FilDto::class.java
 		)
-		val filePages = innsenderMetrics.getFileNumberOfPages()
-		val fileSize = innsenderMetrics.getFileSize()
+		val filePages = innsenderMetrics.fileNumberOfPagesSummary
+		val fileSize = innsenderMetrics.fileSizeSummary
 
 		assertEquals(HttpStatus.CREATED, postFilResponseN6.statusCode)
 		assertTrue(postFilResponseN6.body != null)
 		assertEquals(Mimetype.applicationSlashPdf, postFilResponseN6.body!!.mimetype)
-		assertEquals(1.0, filePages.sum)
-		assertEquals(7187.0, fileSize.sum)
+		assertEquals(1.0, filePages.collect().dataPoints[0].sum)
+		assertEquals(7187.0, fileSize.collect().dataPoints[0].sum)
 		val opplastetFilDto = postFilResponseN6.body
 
 		val vedleggN6Request = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))

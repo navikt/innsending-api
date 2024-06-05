@@ -30,7 +30,6 @@ class VerifyArchivedApplications(
 		try {
 			if (leaderSelectionUtility.isLeader()) {
 				scheduledOperationsService.checkIfApplicationsAreArchived(offsetMinutes)
-				metrics.updateJobLastSuccess(JOB_NAME)
 			}
 		} catch (e: Exception) {
 			logger.error("Something went wrong running scheduled job ${javaClass.kotlin.simpleName}", e)

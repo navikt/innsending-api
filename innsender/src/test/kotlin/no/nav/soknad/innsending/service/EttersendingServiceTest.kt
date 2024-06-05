@@ -172,7 +172,7 @@ class EttersendingServiceTest : ApplicationTest() {
 		)
 
 		// Så
-		verify { ettersendingServiceMock.saveEttersending(any(), any()) wasNot Called }
+		verify(exactly = 0) { ettersendingServiceMock.saveEttersending(any(), any()) }
 	}
 
 	@Test
