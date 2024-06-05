@@ -2,12 +2,8 @@ package no.nav.soknad.pdfutilities
 
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
-import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
-import no.nav.soknad.innsending.util.models.innsendteVedlegg
-import no.nav.soknad.innsending.util.models.navKanInnhente
-import no.nav.soknad.innsending.util.models.sendesIkke
-import no.nav.soknad.innsending.util.models.skalSendesAvAndre
+import no.nav.soknad.innsending.util.models.*
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -36,7 +32,9 @@ private const val FONT_EKSTRA_STOR = 18
 private const val FONT_SUB_HEADER = 16
 private const val FONT_STOR = 14
 private const val FONT_LITEN_HEADER = 13
+private const val FONT_DOCUMENT_HEADER = 11
 private const val FONT_VANLIG = 10
+private const val FONT_LITEN = 9
 private const val FONT_INFORMASJON = 11
 private const val LINJEAVSTAND = 1.4f
 private const val LINJEAVSTAND_HEADER = 1f
@@ -59,9 +57,10 @@ class PdfGenerator {
 	): ByteArray {
 		val vedleggOpplastet = opplastedeVedlegg.filter { !it.erHoveddokument }
 		val sendSenere = manglendeObligatoriskeVedlegg
+		val alleredeInnsendt =
+			innsendteVedlegg(soknad.opprettetDato, soknad.vedleggsListe) + soknad.vedleggsListe.tidligereLevert
 		val sendesIkke = soknad.vedleggsListe.sendesIkke
-		val sendesAvAndre =	soknad.vedleggsListe.skalSendesAvAndre
-		val alleredeInnsendt = innsendteVedlegg(soknad.opprettetDato, soknad.vedleggsListe)
+		val sendesAvAndre = soknad.vedleggsListe.skalSendesAvAndre
 		val navKanInnhenteDokumentasjon = soknad.vedleggsListe.navKanInnhente
 
 		val fnr = soknad.brukerId
@@ -407,14 +406,19 @@ class TextBuilder(private val pageBuilder: PageBuilder) {
 				.leggTilHeader(overskrift, FONT_LITEN_HEADER)
 				.flyttNedMed(5f)
 			for (dokument in dokumenter) {
-				textBuilder = textBuilder.leggTilTekst("* " + dokument.label, FONT_VANLIG, LINJEAVSTAND)
-				if(!dokument.opplastingsValgKommentar.isNullOrEmpty()) {
+				val noComment = dokument.opplastingsValgKommentar.isNullOrEmpty()
+				textBuilder = textBuilder.leggTilTekst(
+					"* " + dokument.label,
+					FONT_DOCUMENT_HEADER,
+					LINJEAVSTAND - (if (noComment) 0f else 0.2f)
+				)
+				if (!noComment) {
 					textBuilder = textBuilder.leggTilTekst(
-						"-- " + (dokument.opplastingsValgKommentarLedetekst ?: "Kommentar"),
-						FONT_VANLIG,
-						LINJEAVSTAND
+						"** " + (dokument.opplastingsValgKommentarLedetekst
+							?: "Kommentar") + ": " + dokument.opplastingsValgKommentar,
+						FONT_LITEN,
+						LINJEAVSTAND + 0.2f
 					)
-					textBuilder = textBuilder.leggTilTekst("--- " + dokument.opplastingsValgKommentar, FONT_VANLIG, LINJEAVSTAND)
 				}
 			}
 		} else {

@@ -112,7 +112,10 @@ class InnsendingService(
 				errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 			)
 		}
-		vedleggService.deleteVedleggNotRelevantAnymore(existingSoknad.innsendingsId!!, existingSoknad.vedleggsListeUtenHoveddokument)
+		vedleggService.deleteVedleggNotRelevantAnymore(
+			existingSoknad.innsendingsId!!,
+			existingSoknad.vedleggsListeUtenHoveddokument
+		)
 
 		// send soknadmetada til soknadsmottaker
 		try {
@@ -346,15 +349,56 @@ class InnsendingService(
 			opplastedeVedlegg.filter { !it.erHoveddokument }.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }
 
 		val skalSendesAvAndre = innsendtSoknadDto.vedleggsListe.skalSendesAvAndre
-			.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label, it.opplastingsValgKommentarLedetekst, it.opplastingsValgKommentar) }
+			.map {
+				InnsendtVedleggDto(
+					it.vedleggsnr ?: "",
+					it.label,
+					it.opplastingsValgKommentarLedetekst,
+					it.opplastingsValgKommentar
+				)
+			}
 
-		val skalEtterSendes = manglendePakrevdeVedlegg.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label, it.opplastingsValgKommentarLedetekst, it.opplastingsValgKommentar) }
+		val skalEtterSendes = manglendePakrevdeVedlegg.map {
+			InnsendtVedleggDto(
+				it.vedleggsnr ?: "",
+				it.label,
+				it.opplastingsValgKommentarLedetekst,
+				it.opplastingsValgKommentar
+			)
+		}
 
 		val blirIkkeInnsendt = innsendtSoknadDto.vedleggsListe.sendesIkke
-			.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label, it.opplastingsValgKommentarLedetekst, it.opplastingsValgKommentar) }
+			.map {
+				InnsendtVedleggDto(
+					it.vedleggsnr ?: "",
+					it.label,
+					it.opplastingsValgKommentarLedetekst,
+					it.opplastingsValgKommentar
+				)
+			}
+
+		val levertTidligere = (innsendteVedlegg(
+			innsendtSoknadDto.innsendtDato!!,
+			innsendtSoknadDto.vedleggsListe + innsendtSoknadDto.vedleggsListe.tidligereLevert
+		))
+			.map {
+				InnsendtVedleggDto(
+					it.vedleggsnr ?: "",
+					it.label,
+					it.opplastingsValgKommentarLedetekst,
+					it.opplastingsValgKommentar
+				)
+			}
 
 		val navKanInnhente = innsendtSoknadDto.vedleggsListe.navKanInnhente
-			.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label, it.opplastingsValgKommentarLedetekst, it.opplastingsValgKommentar) }
+			.map {
+				InnsendtVedleggDto(
+					it.vedleggsnr ?: "",
+					it.label,
+					it.opplastingsValgKommentarLedetekst,
+					it.opplastingsValgKommentar
+				)
+			}
 
 		return KvitteringsDto(
 			innsendingsId = innsendingsId,
@@ -364,6 +408,7 @@ class InnsendingService(
 			innsendteVedlegg = innsendteVedlegg,
 			skalEttersendes = skalEtterSendes,
 			skalSendesAvAndre = skalSendesAvAndre,
+			levertTidligere = levertTidligere,
 			sendesIkkeInn = blirIkkeInnsendt,
 			navKanInnhente = navKanInnhente,
 			ettersendingsfrist = beregnInnsendingsfrist(innsendtSoknadDto)

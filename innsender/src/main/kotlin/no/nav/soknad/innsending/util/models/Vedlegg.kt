@@ -39,53 +39,69 @@ val List<VedleggDto>.kvittering: VedleggDto?
 
 val List<VedleggDto>.sendesIkke: List<VedleggDto>
 	get() {
-		return this.filter { !it.erHoveddokument && (
-			it.opplastingsStatus == OpplastingsStatusDto.SendesIkke ||
-				it.opplastingsStatus == OpplastingsStatusDto.HarIkkeDokumentasjonen ||
+		return this.filter {
+			!it.erHoveddokument && (
+				it.opplastingsStatus == OpplastingsStatusDto.SendesIkke ||
+					it.opplastingsStatus == OpplastingsStatusDto.HarIkkeDokumentasjonen
+				)
+		}
+	}
+
+val List<VedleggDto>.tidligereLevert: List<VedleggDto>
+	get() {
+		return this.filter {
+			!it.erHoveddokument && (
 				it.opplastingsStatus == OpplastingsStatusDto.LevertDokumentasjonTidligere
-			)
+				)
 		}
 	}
 
 val List<VedleggDto>.navKanInnhente: List<VedleggDto>
 	get() {
-		return this.filter { !it.erHoveddokument && (
-			it.opplastingsStatus == OpplastingsStatusDto.NavKanHenteDokumentasjon
-			)
+		return this.filter {
+			!it.erHoveddokument && (
+				it.opplastingsStatus == OpplastingsStatusDto.NavKanHenteDokumentasjon
+				)
 		}
 	}
 
 val List<VedleggDto>.skalSendesAvAndre: List<VedleggDto>
 	get() {
-		return this.filter { !it.erHoveddokument && (
-			it.opplastingsStatus == OpplastingsStatusDto.SendesAvAndre
-			)
+		return this.filter {
+			!it.erHoveddokument && (
+				it.opplastingsStatus == OpplastingsStatusDto.SendesAvAndre
+				)
 		}
 	}
 
 val List<VedleggDto>.skalEttersendes: List<VedleggDto>
 	get() {
-		return this.filter { !it.erHoveddokument && (
-			it.opplastingsStatus == OpplastingsStatusDto.SendSenere
-			)
+		return this.filter {
+			!it.erHoveddokument && (
+				it.opplastingsStatus == OpplastingsStatusDto.SendSenere
+				)
 		}
 	}
 
 fun innsendteVedlegg(soknadOpprettetDato: OffsetDateTime, vedlegg: List<VedleggDto>): List<VedleggDto> {
-	return vedlegg.filter{ !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.Innsendt && (it.innsendtdato	?: it.opprettetdato).isBefore(soknadOpprettetDato)}
+	return vedlegg.filter {
+		!it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.Innsendt && (it.innsendtdato
+			?: it.opprettetdato).isBefore(soknadOpprettetDato)
+	}
 }
 
 
 val List<VedleggDto>.ubehandledeVedlegg: List<VedleggDto>
 	get() {
-		return this.filter { !it.erHoveddokument
-			&& ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6")
-			&& !(it.opplastingsStatus == OpplastingsStatusDto.Innsendt
+		return this.filter {
+			!it.erHoveddokument
+				&& ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6")
+				&& !(it.opplastingsStatus == OpplastingsStatusDto.Innsendt
 				|| it.opplastingsStatus == OpplastingsStatusDto.SendesAvAndre
 				|| it.opplastingsStatus == OpplastingsStatusDto.LastetOpp
-				|| it.opplastingsStatus ==  OpplastingsStatusDto.NavKanHenteDokumentasjon
-				|| it.opplastingsStatus ==  OpplastingsStatusDto.LevertDokumentasjonTidligere
-				|| it.opplastingsStatus ==  OpplastingsStatusDto.HarIkkeDokumentasjonen
-			)
+				|| it.opplastingsStatus == OpplastingsStatusDto.NavKanHenteDokumentasjon
+				|| it.opplastingsStatus == OpplastingsStatusDto.LevertDokumentasjonTidligere
+				|| it.opplastingsStatus == OpplastingsStatusDto.HarIkkeDokumentasjonen
+				)
 		}
 	}

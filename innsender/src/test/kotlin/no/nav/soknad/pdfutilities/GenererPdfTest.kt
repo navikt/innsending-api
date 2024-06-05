@@ -4,6 +4,7 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
+import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.OffsetDateTime
@@ -59,7 +60,7 @@ class GenererPdfTest {
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt },
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
 
-		//writeBytesToFile(kvittering, "./soknadskvittering.pdf")
+		writeBytesToFile(kvittering, "./soknadskvittering.pdf")
 
 		assertEquals(1, AntallSider().finnAntallSider(kvittering))
 		val erPdfa = Validerer().isPDFa(kvittering)
@@ -151,18 +152,54 @@ class GenererPdfTest {
 			VedleggDto(
 				tittel = "Vedlegg4", label = "Vedlegg4",
 				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = false,
-				opplastingsStatus = OpplastingsStatusDto.SendesAvAndre, opprettetdato = OffsetDateTime.MIN
+				opplastingsStatus = OpplastingsStatusDto.SendesAvAndre, opprettetdato = OffsetDateTime.MIN,
+				opplastingsValgKommentarLedetekst = "Hvem skal sende inn denne dokumentasjonen",
+				opplastingsValgKommentar = "Jeg har bedt min arbeidsgiver om å sende inn denne dokumentasjonen"
+			),
+			VedleggDto(
+				tittel = "Vedlegg8", label = "Vedlegg8",
+				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = false,
+				opplastingsStatus = OpplastingsStatusDto.SendesAvAndre, opprettetdato = OffsetDateTime.MIN,
+				opplastingsValgKommentarLedetekst = "Hvem skal sende inn denne dokumentasjonen",
+				opplastingsValgKommentar = "Jeg har bedt min lege om å sende inn denne dokumentasjonen"
 			),
 			VedleggDto(
 				tittel = "Vedlegg5", label = "Vedlegg5",
 				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = true,
-				opplastingsStatus = OpplastingsStatusDto.SendesIkke, opprettetdato = OffsetDateTime.MIN
+				opplastingsStatus = OpplastingsStatusDto.HarIkkeDokumentasjonen, opprettetdato = OffsetDateTime.MIN,
+				opplastingsValgKommentarLedetekst = "Forklar hvorfor du ikke har denne dokumentasjonen",
+				opplastingsValgKommentar = "Jeg har ikke mottatt denne dokumentasjonen fra min sønns skole"
 			),
 			VedleggDto(
 				tittel = "Vedlegg6", label = "Vedlegg6",
 				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = false,
-				opplastingsStatus = OpplastingsStatusDto.SendesIkke, opprettetdato = OffsetDateTime.MIN
-			)
+				opplastingsStatus = OpplastingsStatusDto.LevertDokumentasjonTidligere, opprettetdato = OffsetDateTime.MIN,
+				opplastingsValgKommentarLedetekst = "Forklar i hvilken sammenheng du leverte denne dokumentasjonen til NAV",
+				opplastingsValgKommentar = "Jeg leverte denne for ett år siden i forbindelse med en søknad om støtte til barnepass"
+			),
+			VedleggDto(
+				tittel = "Vedlegg7", label = "Vedlegg7",
+				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = false,
+				opplastingsStatus = OpplastingsStatusDto.NavKanHenteDokumentasjon, opprettetdato = OffsetDateTime.MIN,
+				opplastingsValgKommentarLedetekst = "Bekreft at du gir NAV tillatelse til å hente inn denne dokumentasjonen",
+				opplastingsValgKommentar = "Jeg bekrefter at NAV kan innhente denne dokumentasjonen på vegne av meg"
+			),
+			/*
+						VedleggDto(
+							tittel = "Vedlegg9", label = "Vedlegg9",
+							erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = false,
+							opplastingsStatus = OpplastingsStatusDto.LevertDokumentasjonTidligere, opprettetdato = OffsetDateTime.MIN,
+							opplastingsValgKommentarLedetekst = "Forklar i hvilken sammenheng du leverte denne dokumentasjonen til NAV",
+							opplastingsValgKommentar = "Jeg leverte denne for ett år siden i forbindelse med en søknad om støtte til barnepass"
+						),
+						VedleggDto(
+							tittel = "Vedlegg10", label = "Vedlegg10",
+							erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = false,
+							opplastingsStatus = OpplastingsStatusDto.LevertDokumentasjonTidligere, opprettetdato = OffsetDateTime.MIN,
+							opplastingsValgKommentarLedetekst = "Forklar i hvilken sammenheng du leverte denne dokumentasjonen til NAV",
+							opplastingsValgKommentar = "Jeg leverte denne for ett år siden i forbindelse med en søknad om støtte til barnepass"
+						),
+			*/
 
 		)
 		return DokumentSoknadDto(
