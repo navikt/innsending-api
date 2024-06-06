@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending
 
-import io.prometheus.client.CollectorRegistry
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -20,6 +20,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @AutoConfigureWireMock(port = 5490)
 class ApplicationTest {
 	@MockBean
-	lateinit var collectorRegistry: CollectorRegistry
+	lateinit var prometheusRegistry: PrometheusRegistry
 
 }

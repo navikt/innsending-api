@@ -10,7 +10,7 @@ spec:
     - name: {{ env-name }}
       rules:
         - alert: Archiving failed
-          expr: sum(innsendingapi_archiving_of_applications_failed_total{namespace="team-soknad"}) > 0
+          expr: sum(innsendingapi_archiving_of_applications_failed{namespace="team-soknad"}) > 0
           for: 1m
           annotations:
             title: "Archiving service has reported failure when archiving one or more applications"
@@ -40,7 +40,7 @@ spec:
             alert_type: custom
             severity: critical
         - alert: Not yet archived
-          expr: sum(innsendingapi_applications_absent_in_archive_total{namespace="team-soknad"}) > 0
+          expr: sum(innsendingapi_applications_absent_in_archive{namespace="team-soknad"}) > 0
           for: 1m
           annotations:
             title: "Missing response from archiving service for one or more sent in applications"
