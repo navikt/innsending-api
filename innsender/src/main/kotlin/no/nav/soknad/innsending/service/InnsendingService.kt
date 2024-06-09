@@ -281,7 +281,9 @@ class InnsendingService(
 
 		// Hvis ettersending, så må det genereres et dummy hoveddokument
 		val dummySkjema = try {
-			PdfGenerator().lagForsideEttersending(soknadDto)
+			val person = pdlInterface.hentPersonData(soknadDto.brukerId)
+			val sammensattNavn = listOfNotNull(person?.fornavn, person?.mellomnavn, person?.etternavn).joinToString(" ")
+			PdfGenerator().lagForsideEttersending(soknadDto, sammensattNavn)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			throw BackendErrorException(

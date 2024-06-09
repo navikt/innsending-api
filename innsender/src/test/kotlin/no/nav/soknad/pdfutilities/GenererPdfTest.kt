@@ -22,6 +22,8 @@ class GenererPdfTest {
 
 		val forside = PdfGenerator().lagForsideEttersending(soknad)
 
+		writeBytesToFile(forside, "./forside.pdf")
+
 		assertEquals(1, AntallSider().finnAntallSider(forside))
 		val erPdfa = Validerer().isPDFa(forside)
 		assertTrue(erPdfa)
@@ -41,7 +43,7 @@ class GenererPdfTest {
 
 		//writeBytesToFile(kvittering, "./delme.pdf")
 
-		assertEquals(1, AntallSider().finnAntallSider(kvittering))
+		assertEquals(2, AntallSider().finnAntallSider(kvittering))
 		val erPdfa = Validerer().isPDFa(kvittering)
 		assertTrue(erPdfa)
 
@@ -62,7 +64,7 @@ class GenererPdfTest {
 
 		writeBytesToFile(kvittering, "./soknadskvittering.pdf")
 
-		assertEquals(1, AntallSider().finnAntallSider(kvittering))
+		assertEquals(2, AntallSider().finnAntallSider(kvittering))
 		val erPdfa = Validerer().isPDFa(kvittering)
 		assertTrue(erPdfa)
 
@@ -80,7 +82,7 @@ class GenererPdfTest {
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt && it.opprettetdato > OffsetDateTime.MIN },
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
 
-		//writeBytesToFile(kvittering, "./ettersendingskvittering.pdf")
+		writeBytesToFile(kvittering, "./ettersendingskvittering.pdf")
 
 		assertEquals(1, AntallSider().finnAntallSider(kvittering))
 		val erPdfa = Validerer().isPDFa(kvittering)
@@ -184,27 +186,26 @@ class GenererPdfTest {
 				opplastingsValgKommentarLedetekst = "Bekreft at du gir NAV tillatelse til å hente inn denne dokumentasjonen",
 				opplastingsValgKommentar = "Jeg bekrefter at NAV kan innhente denne dokumentasjonen på vegne av meg"
 			),
-			/*
-						VedleggDto(
-							tittel = "Vedlegg9", label = "Vedlegg9",
-							erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = false,
-							opplastingsStatus = OpplastingsStatusDto.LevertDokumentasjonTidligere, opprettetdato = OffsetDateTime.MIN,
-							opplastingsValgKommentarLedetekst = "Forklar i hvilken sammenheng du leverte denne dokumentasjonen til NAV",
-							opplastingsValgKommentar = "Jeg leverte denne for ett år siden i forbindelse med en søknad om støtte til barnepass"
-						),
-						VedleggDto(
-							tittel = "Vedlegg10", label = "Vedlegg10",
-							erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = false,
-							opplastingsStatus = OpplastingsStatusDto.LevertDokumentasjonTidligere, opprettetdato = OffsetDateTime.MIN,
-							opplastingsValgKommentarLedetekst = "Forklar i hvilken sammenheng du leverte denne dokumentasjonen til NAV",
-							opplastingsValgKommentar = "Jeg leverte denne for ett år siden i forbindelse med en søknad om støtte til barnepass"
-						),
-			*/
+			VedleggDto(
+				tittel = "Vedlegg9", label = "Vedlegg9",
+				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = false,
+				opplastingsStatus = OpplastingsStatusDto.LevertDokumentasjonTidligere, opprettetdato = OffsetDateTime.MIN,
+				opplastingsValgKommentarLedetekst = "Forklar i hvilken sammenheng du leverte denne dokumentasjonen til NAV",
+				opplastingsValgKommentar = "Jeg leverte denne for ett år siden i forbindelse med en søknad om støtte til barnepass"
+			),
+			VedleggDto(
+				tittel = "Vedlegg10", label = "Vedlegg10",
+				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = false,
+				opplastingsStatus = OpplastingsStatusDto.LevertDokumentasjonTidligere, opprettetdato = OffsetDateTime.MIN,
+				opplastingsValgKommentarLedetekst = "Forklar i hvilken sammenheng du leverte denne dokumentasjonen til NAV",
+				opplastingsValgKommentar = "Jeg leverte denne for ett år siden i forbindelse med en søknad om støtte til barnepass"
+			),
 
-		)
+			)
 		return DokumentSoknadDto(
 			brukerId = brukerid, skjemanr = skjemanr, tittel = tittel, tema = "TMA",
 			status = SoknadsStatusDto.Innsendt, innsendtDato = OffsetDateTime.now(),
+			spraak = "nb_NO",
 			innsendingsId = UUID.randomUUID().toString(), opprettetDato = opprettetDato, vedleggsListe = vedleggDtos
 		)
 	}
