@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.supervision
 
 import no.nav.soknad.innsending.ApplicationTest
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -11,27 +11,26 @@ class InnsenderMetricsTest : ApplicationTest() {
 	@Autowired
 	lateinit var innsenderMetrics: InnsenderMetrics
 
-	private val maxQuantile = 0.99
-
 	@BeforeEach
 	fun init() {
-		innsenderMetrics.clearFileSize()
-		innsenderMetrics.clearFileNumberOfPages()
+		innsenderMetrics.unregisterMetrics()
+		innsenderMetrics.registerMetrics()
 	}
 
 	@Test
 	fun testFileNumberOfPages() {
 		val numbers = listOf(120.0, 30.0, 50.0)
+
 		for (element in numbers) {
 			innsenderMetrics.setFileNumberOfPages(element.toLong())
 		}
 
-		val fileNumberOfPagesMetrics = innsenderMetrics.getFileNumberOfPages()
+		val summary = innsenderMetrics.fileNumberOfPagesSummary
+		val sum = summary.collect().dataPoints[0].sum
+		val count = summary.collect().dataPoints[0].count
 
-		Assertions.assertTrue(fileNumberOfPagesMetrics != null)
-
-		Assertions.assertEquals(numbers.max(), fileNumberOfPagesMetrics.quantiles?.get(maxQuantile))
-		Assertions.assertEquals(numbers.sum() / numbers.size, fileNumberOfPagesMetrics.sum / fileNumberOfPagesMetrics.count)
+		assertEquals(numbers.sum(), sum)
+		assertEquals(numbers.size.toLong(), count)
 
 	}
 
@@ -41,12 +40,13 @@ class InnsenderMetricsTest : ApplicationTest() {
 		for (element in sizes) {
 			innsenderMetrics.setFileSize(element.toLong())
 		}
-		val fileSizeMetrics = innsenderMetrics.getFileSize()
 
-		Assertions.assertTrue(fileSizeMetrics != null)
-		Assertions.assertEquals(sizes.max(), fileSizeMetrics.quantiles?.get(maxQuantile))
-		Assertions.assertEquals(sizes.sum() / sizes.size, fileSizeMetrics.sum / fileSizeMetrics.count)
+		val summary = innsenderMetrics.fileSizeSummary
+		val sum = summary.collect().dataPoints[0].sum
+		val count = summary.collect().dataPoints[0].count
 
+		assertEquals(sizes.sum(), sum)
+		assertEquals(sizes.size.toLong(), count)
 	}
 
 	@Test
@@ -60,26 +60,24 @@ class InnsenderMetricsTest : ApplicationTest() {
 			listOf(20.0, 35550.0)
 		)
 		for (element in pagesAndSizes) {
-			innsenderMetrics.setFileNumberOfPages(element.get(0).toLong())
-			innsenderMetrics.setFileSize(element.get(1).toLong())
+			innsenderMetrics.setFileNumberOfPages(element[0].toLong())
+			innsenderMetrics.setFileSize(element[1].toLong())
 		}
 
-		val fileNumberOfPagesMetrics = innsenderMetrics.getFileNumberOfPages()
-		val fileSizeMetrics = innsenderMetrics.getFileSize()
+		val pagesSummary = innsenderMetrics.fileNumberOfPagesSummary
+		val pagesSum = pagesSummary.collect().dataPoints[0].sum
+		val pagesCount = pagesSummary.collect().dataPoints[0].count
 
-		Assertions.assertTrue(fileNumberOfPagesMetrics != null)
-		Assertions.assertEquals(pagesAndSizes.map { it.get(0) }.max(), fileNumberOfPagesMetrics.quantiles?.get(maxQuantile))
-		Assertions.assertEquals(
-			pagesAndSizes.map { it.get(0) }.sum() / pagesAndSizes.map { it.get(0) }.size,
-			fileNumberOfPagesMetrics.sum / fileNumberOfPagesMetrics.count
-		)
+		val fileSizeSummary = innsenderMetrics.fileSizeSummary
+		val fileSizeSum = fileSizeSummary.collect().dataPoints[0].sum
+		val fileSizeCount = fileSizeSummary.collect().dataPoints[0].count
 
-		Assertions.assertTrue(fileSizeMetrics != null)
-		Assertions.assertEquals(pagesAndSizes.map { it.get(1) }.max(), fileSizeMetrics.quantiles?.get(maxQuantile))
-		Assertions.assertEquals(
-			pagesAndSizes.map { it.get(1) }.sum() / pagesAndSizes.map { it.get(1) }.size,
-			fileSizeMetrics.sum / fileSizeMetrics.count
-		)
+		assertEquals(pagesAndSizes.sumOf { it[0] }, pagesSum)
+		assertEquals(pagesAndSizes.size.toLong(), pagesCount)
+
+		assertEquals(pagesAndSizes.sumOf { it[1] }, fileSizeSum)
+		assertEquals(pagesAndSizes.size.toLong(), fileSizeCount)
+
 
 	}
 

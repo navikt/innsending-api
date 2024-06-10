@@ -17,6 +17,8 @@ management:
       include: info, health, metrics, refresh, prometheus
     base-path: "/internal"
   metrics:
+    tags:
+      application: innsending-api
     export:
       prometheus:
         enabled: true
