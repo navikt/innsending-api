@@ -77,7 +77,7 @@
 		<jbig2-imageio.version>3.0.4</jbig2-imageio.version>
 		<tika-core.version>2.9.2</tika-core.version>
 		<handlebars.version>4.4.0</handlebars.version>
-		<openhtml.version>1.1.8</openhtml.version>
+		<openhtml.version>1.1.16</openhtml.version>
 
 		<!--Plugins-->
 		<versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>

@@ -353,7 +353,7 @@ class SoknadServiceTest : ApplicationTest() {
 	@Test
 	fun lesOppTeksterTest() {
 		val prop = Properties()
-		val inputStream = SoknadServiceTest::class.java.getResourceAsStream("/innholdstekster.properties")
+		val inputStream = SoknadServiceTest::class.java.getResourceAsStream("/tekster/innholdstekster.properties")
 
 		inputStream.use {
 			prop.load(it)

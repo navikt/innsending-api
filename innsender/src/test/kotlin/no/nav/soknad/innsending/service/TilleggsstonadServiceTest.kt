@@ -12,7 +12,6 @@ import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import kotlin.math.roundToInt
 
 class TilleggsstonadServiceTest : InnsendingServiceTest() {
 
@@ -41,7 +40,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			tittel = "Tilleggssoknad",
 			brukerId = testpersonid,
 			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
-			spraak = "no_NB",
+			spraak = "nb_NO",
 			tema = "TSO"
 		)
 		val skjemaDto =
@@ -85,7 +84,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			tittel = "Tilleggssoknad",
 			brukerId = testpersonid,
 			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
-			spraak = "no_NB",
+			spraak = "nb_NO",
 			tema = "TSO"
 		)
 		val skjemaDto =
@@ -143,7 +142,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			tittel = "Tilleggssoknad",
 			brukerId = testpersonid,
 			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
-			spraak = "no_NB",
+			spraak = "nb_NO",
 			tema = "TSO"
 		)
 		val skjemaDto =
@@ -202,7 +201,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			tittel = "Tilleggssoknad",
 			brukerId = testpersonid,
 			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
-			spraak = "no_NB",
+			spraak = "nb_NO",
 			tema = "TSO"
 		)
 		val skjemaDto =
@@ -259,7 +258,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			tittel = "Kjøreliste",
 			brukerId = testpersonid,
 			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
-			spraak = "no_NB",
+			spraak = "nb_NO",
 			tema = "TSO" // default tema på dette skjema
 		)
 		val skjemaDto =
@@ -317,7 +316,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			tittel = "Kjøreliste",
 			brukerId = testpersonid,
 			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
-			spraak = "no_NB",
+			spraak = "nb_NO",
 			tema = "TSO"
 		)
 		val skjemaDto =
@@ -375,7 +374,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			tittel = "Kjøreliste",
 			brukerId = testpersonid,
 			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
-			spraak = "no_NB",
+			spraak = "nb_NO",
 			tema = "TSO" // default tema
 		)
 		val skjemaDto =
