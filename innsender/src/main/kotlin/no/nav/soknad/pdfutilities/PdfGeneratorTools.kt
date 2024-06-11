@@ -41,7 +41,7 @@ class PdfGenerator {
 		manglendeObligatoriskeVedlegg: List<VedleggDto>
 	): ByteArray {
 		val sprak =
-			if (soknad.spraak == "no") "nb"
+			if ("no".equals(soknad.spraak, true)) "nb"
 			else if (!soknad.spraak.isNullOrEmpty() && soknad.spraak!!.length >= 2)
 				soknad.spraak!!.substring(0, 2).lowercase()
 			else
