@@ -40,13 +40,8 @@ class PdfGenerator {
 		opplastedeVedlegg: List<VedleggDto>,
 		manglendeObligatoriskeVedlegg: List<VedleggDto>
 	): ByteArray {
-		val sprak =
-			if ("no".equals(soknad.spraak, true)) "nb"
-			else if (!soknad.spraak.isNullOrEmpty() && soknad.spraak!!.length >= 2)
-				soknad.spraak!!.substring(0, 2).lowercase()
-			else
-				"nb"
-		val tekster = texts.get(sprak) ?: throw BackendErrorException("Mangler støtte for språk ${soknad.spraak}")
+		val sprak = selectLanguage(soknad.spraak)
+		val tekster = texts.get(sprak) ?: throw BackendErrorException("Mangler støtte for språk $sprak")
 
 		val vedleggOpplastet = opplastedeVedlegg.filter { !it.erHoveddokument }
 		val sendSenere = manglendeObligatoriskeVedlegg
@@ -69,79 +64,49 @@ class PdfGenerator {
 		val oppsummering = mutableListOf<VedleggsKategori>()
 		if (!antallInnsendt.isNullOrEmpty()) {
 			oppsummering.addFirst(
-				VedleggsKategori(
+				mapTilVedleggskategori(
 					kategori = tekster.getString("kvittering.vedlegg.sendt"),
-					vedlegg = vedleggOpplastet.map {
-						VedleggMedKommentar(
-							vedleggsTittel = it.tittel,
-							kommentar = if (it.opplastingsValgKommentarLedetekst == null) null else it.opplastingsValgKommentarLedetekst + ":" + it.opplastingsValgKommentar
-						)
-					}
+					vedlegg = vedleggOpplastet
 				)
 			)
 		}
 		if (sendSenere.isNotEmpty()) {
 			oppsummering.addLast(
-				VedleggsKategori(
+				mapTilVedleggskategori(
 					kategori = tekster.getString("kvittering.vedlegg.ikkesendt"),
-					vedlegg = sendSenere.map {
-						VedleggMedKommentar(
-							vedleggsTittel = it.tittel,
-							kommentar = if (it.opplastingsValgKommentarLedetekst == null) null else it.opplastingsValgKommentarLedetekst + ":" + it.opplastingsValgKommentar
-						)
-					}
+					vedlegg = sendSenere
 				)
 			)
 		}
 		if (soknad.vedleggsListe.skalSendesAvAndre.isNotEmpty()) {
 			oppsummering.addLast(
-				VedleggsKategori(
+				mapTilVedleggskategori(
 					kategori = tekster.getString("kvittering.vedlegg.sendesAvAndre"),
-					vedlegg = soknad.vedleggsListe.skalSendesAvAndre.map {
-						VedleggMedKommentar(
-							vedleggsTittel = it.tittel,
-							kommentar = if (it.opplastingsValgKommentarLedetekst == null) null else it.opplastingsValgKommentarLedetekst + ":" + it.opplastingsValgKommentar
-						)
-					}
+					vedlegg = soknad.vedleggsListe.skalSendesAvAndre
 				)
 			)
 		}
 		if (soknad.vedleggsListe.sendesIkke.isNotEmpty()) {
 			oppsummering.addLast(
-				VedleggsKategori(
+				mapTilVedleggskategori(
 					kategori = tekster.getString("kvittering.vedlegg.sendesIkke"),
-					vedlegg = soknad.vedleggsListe.sendesIkke.map {
-						VedleggMedKommentar(
-							vedleggsTittel = it.tittel,
-							kommentar = if (it.opplastingsValgKommentarLedetekst == null) null else it.opplastingsValgKommentarLedetekst + ":" + it.opplastingsValgKommentar
-						)
-					}
+					vedlegg = soknad.vedleggsListe.sendesIkke
 				)
 			)
 		}
 		if (alleredeInnsendt.isNotEmpty()) {
 			oppsummering.addLast(
-				VedleggsKategori(
+				mapTilVedleggskategori(
 					kategori = tekster.getString("kvittering.vedlegg.tidligereInnsendt"),
-					vedlegg = alleredeInnsendt.map {
-						VedleggMedKommentar(
-							vedleggsTittel = it.tittel,
-							kommentar = if (it.opplastingsValgKommentarLedetekst == null) null else it.opplastingsValgKommentarLedetekst + ":" + it.opplastingsValgKommentar
-						)
-					}
+					vedlegg = alleredeInnsendt
 				)
 			)
 		}
 		if (soknad.vedleggsListe.navKanInnhente.isNotEmpty()) {
 			oppsummering.addLast(
-				VedleggsKategori(
+				mapTilVedleggskategori(
 					kategori = tekster.getString("kvittering.vedlegg.navKanHenteDokumentasjon"),
-					vedlegg = soknad.vedleggsListe.navKanInnhente.map {
-						VedleggMedKommentar(
-							vedleggsTittel = it.tittel,
-							kommentar = if (it.opplastingsValgKommentarLedetekst == null) null else it.opplastingsValgKommentarLedetekst + ":" + it.opplastingsValgKommentar
-						)
-					}
+					vedlegg = soknad.vedleggsListe.navKanInnhente
 				)
 			)
 		}
@@ -149,31 +114,19 @@ class PdfGenerator {
 			KvitteringsPdfModel(
 				kvitteringHeader = tekster.getString("kvittering.tittel"),
 				ettersendelseTittel = if (soknad.erEttersending) tekster.getString("kvittering.ettersendelse.tittel") else null,
+				side = tekster.getString("footer.side"),
+				av = tekster.getString("footer.av"),
 				tittel = soknad.tittel,
 				personInfo = personInfo,
 				antallInnsendt = antallInnsendt,
 				data = oppsummering
 			)
 		)
-
-	}
-
-	private fun formaterKlokke(now: LocalDateTime): String {
-		val formatter = DateTimeFormatter.ofPattern("HH:mm")
-		return now.format(formatter)
-	}
-
-	private fun formaterDato(now: LocalDateTime): String {
-		return now.format(DateTimeFormatter.ISO_LOCAL_DATE)
 	}
 
 	fun lagForsideEttersending(soknad: DokumentSoknadDto, sammensattNavn: String? = null): ByteArray {
 
-		val sprak =
-			if (!soknad.spraak.isNullOrEmpty() && soknad.spraak!!.length >= 2)
-				soknad.spraak!!.substring(0, 2).lowercase()
-			else
-				"nb"
+		val sprak = selectLanguage(soknad.spraak)
 		val tekster = texts.get(sprak) ?: throw BackendErrorException("Mangler støtte for språk ${soknad.spraak}")
 		val fnr = soknad.brukerId
 		val personInfo = if (sammensattNavn == null) fnr else "$sammensattNavn, $fnr"
@@ -185,13 +138,48 @@ class PdfGenerator {
 		)
 		return PdfGeneratorService().genererEttersendingForsidePdf(
 			EttersendingForsidePdfModel(
-				ettersendingHeader = tekster.getString("kvittering.tittel"),
+				ettersendingHeader = tekster.getString("forside.tittel"),
 				ettersendelseTittel = tekster.getString("kvittering.ettersendelse.tittel"),
+				side = tekster.getString("footer.side"),
+				av = tekster.getString("footer.av"),
 				tittel = soknad.tittel,
 				personInfo = personInfo,
 				oppsummering = oppsummering
 			)
 		)
+	}
+
+	private fun mapTilVedleggskategori(kategori: String, vedlegg: List<VedleggDto>): VedleggsKategori {
+		return VedleggsKategori(
+			kategori = kategori,
+			vedlegg = vedlegg.map {
+				VedleggMedKommentar(
+					vedleggsTittel = it.tittel,
+					kommentar = if (it.opplastingsValgKommentarLedetekst == null) null else it.opplastingsValgKommentarLedetekst + ":" + it.opplastingsValgKommentar
+				)
+			}
+		)
+
+	}
+
+	private fun formaterKlokke(now: LocalDateTime): String {
+		val formatter = DateTimeFormatter.ofPattern("HH:mm")
+		return now.format(formatter)
+	}
+
+	private fun formaterDato(now: LocalDateTime): String {
+		return now.format(DateTimeFormatter.ofPattern("dd-MM-YYYY"))
+	}
+
+	private fun selectLanguage(language: String?): String {
+		val defaultLanguage = "nb"
+		if (language.isNullOrEmpty()
+			|| language.length < 2
+			|| !texts.keys.contains(language.substring(0, 2).lowercase())
+		)
+			return defaultLanguage
+		else
+			return language.substring(0, 2).lowercase()
 	}
 
 }

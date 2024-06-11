@@ -53,7 +53,7 @@ class GenererPdfTest {
 	@Test
 	fun verifiserGenereringAvKvitteringsPdf() {
 
-		val soknad = lagSoknadForTesting(tittel)
+		val soknad = lagSoknadForTesting(tittel, "en_UK")
 
 		val sammensattnavn = "Fornavn Elmer"
 		val kvittering = PdfGenerator().lagKvitteringsSide(
@@ -110,7 +110,7 @@ class GenererPdfTest {
 
 	}
 
-	private fun lagSoknadForTesting(tittel: String): DokumentSoknadDto {
+	private fun lagSoknadForTesting(tittel: String, spraak: String? = "nb_NO"): DokumentSoknadDto {
 		val brukerid = "20128012345"
 		val opprettetDato = OffsetDateTime.now()
 		val vedleggDtos = listOf(
@@ -205,7 +205,7 @@ class GenererPdfTest {
 		return DokumentSoknadDto(
 			brukerId = brukerid, skjemanr = skjemanr, tittel = tittel, tema = "TMA",
 			status = SoknadsStatusDto.Innsendt, innsendtDato = OffsetDateTime.now(),
-			spraak = "nb_NO",
+			spraak = spraak,
 			innsendingsId = UUID.randomUUID().toString(), opprettetDato = opprettetDato, vedleggsListe = vedleggDtos
 		)
 	}

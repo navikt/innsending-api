@@ -21,21 +21,12 @@
             @bottom-right {
                 content: element(sidetall);
             }
-            @bottom-left {
-                content: element(dato);
-            }
         }
 
         .sidetall {
             position: running(sidetall);
             text-align: right;
             font-size: 12px;
-        }
-
-        .dato {
-            position: running(dato);
-            font-size: 12px;
-            text-align: left;
         }
 
         .sidetall_antall:before {
@@ -71,6 +62,14 @@
             margin-bottom: 10px;
         }
 
+        .h4 {
+            font-size: 13px;
+            width: 100%;
+            text-align: left;
+            white-space: pre-wrap;
+            margin-bottom: 10px;
+        }
+
         .p {
             font-family: arial, serif;
             word-wrap: break-word;
@@ -78,11 +77,13 @@
         }
 
         .ul {
+          font-size: 13px;
         	text-align: left
         }
 
         .ul2 {
-        	text-align: left
+          font-size: 13px;
+        	text-align: left;
         	margin-left: 20px;
         }
 
@@ -92,21 +93,6 @@
             margin-right: auto;
             width: 100px;
         }
-
-        .tabell {
-            table-layout: fixed;
-            width: 100%;
-        }
-
-        .tabell_key {
-            width: 30%;
-            font-weight: bold;
-        }
-
-        .tabell_value {
-            width: 70%;
-        }
-
 
         @font-face {
             font-family: 'arial';
@@ -120,11 +106,6 @@
             font-style: normal;
             font-weight: 600;
             src: url(fonts/arial/arialbd.ttf);
-        }
-
-        table td, table td * {
-            vertical-align: top;
-            white-space: pre-wrap;
         }
 
     </style>
@@ -141,15 +122,15 @@
 
   <h2 class="subtittel">{{ personInfo }}</h2>
 
-  <p class="p">Innsendte dokumenter: {{ antallInnsendt }}</p>
+  <p class="p">{{ antallInnsendt }}</p>
 
   <ul class="ul">
     {{#each data}}
       <li>
-        <h3>{{ kategori }}</h3>
+        <h4>{{ kategori }}</h4>
         <ul class="ul2">
           {{#each vedlegg}}
-            <li><p class="h3">{{ vedleggsTittel }}</p>
+            <li><p class="h4">{{ vedleggsTittel }}</p>
 							 {{#if kommentar}}
 								 <p class="p">{{ kommentar }}</p>
 							 {{/if}}
@@ -159,8 +140,7 @@
       </li>
     {{/each}}
   </ul>
-<div class="sidetall">Side <span class="sidetall_antall"></span> av <span class="sidetall_total"></span></div>
-<div class="dato">{{dato}}</div>
+<div class="sidetall">{{side}} <span class="sidetall_antall"></span> {{av}} <span class="sidetall_total"></span></div>
 
 </body>
 </html>

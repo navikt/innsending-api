@@ -21,21 +21,12 @@
             @bottom-right {
                 content: element(sidetall);
             }
-            @bottom-left {
-                content: element(dato);
-            }
         }
 
         .sidetall {
             position: running(sidetall);
             text-align: right;
             font-size: 12px;
-        }
-
-        .dato {
-            position: running(dato);
-            font-size: 12px;
-            text-align: left;
         }
 
         .sidetall_antall:before {
@@ -93,21 +84,6 @@
             width: 100px;
         }
 
-        .tabell {
-            table-layout: fixed;
-            width: 100%;
-        }
-
-        .tabell_key {
-            width: 30%;
-            font-weight: bold;
-        }
-
-        .tabell_value {
-            width: 70%;
-        }
-
-
         @font-face {
             font-family: 'arial';
             font-style: normal;
@@ -122,17 +98,12 @@
             src: url(fonts/arial/arialbd.ttf);
         }
 
-        table td, table td * {
-            vertical-align: top;
-            white-space: pre-wrap;
-        }
-
     </style>
 </head>
 <body>
 
 <img class="navlogo" src="icons/navlogo.jpg" alt="navlogo"/>
-  <h1 class="tittel">{{ kvitteringsHeader }}</h1>
+  <h1 class="tittel">{{ ettersendingHeader }}</h1>
 
 	<h2 class="subtittel">{{ ettersendelseTittel }}</h2>
   <h2 class="subtittel">{{ tittel }}</h2>
@@ -141,8 +112,7 @@
 
   <p class="p">{{ oppsummering }}</p>
 
-<div class="sidetall">Side <span class="sidetall_antall"></span> av <span class="sidetall_total"></span></div>
-<div class="dato">{{dato}}</div>
+<div class="sidetall">{{side}} <span class="sidetall_antall"></span> {{av}} <span class="sidetall_total"></span></div>
 
 </body>
 </html>

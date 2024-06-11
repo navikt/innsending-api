@@ -16,7 +16,7 @@ class PdfGeneratorService {
 
 		try {
 			// Generer html string
-			val template = handlebars.compile("/pdf/kvittering").apply(modell)
+			val template = handlebars.compile("/pdf/templates/kvittering").apply(modell)
 			return produserPdf(template)
 		} catch (e: IOException) {
 			logger.error("Feiler ved PDF generering av kvittering: {}", e.message)
@@ -29,7 +29,7 @@ class PdfGeneratorService {
 
 		try {
 			// Generer html string
-			val template = handlebars.compile("/pdf/forside-ettersending").apply(modell)
+			val template = handlebars.compile("/pdf/templates/forside-ettersending").apply(modell)
 			return produserPdf(template)
 		} catch (e: IOException) {
 			logger.error("Feiler ved PDF generering av kvittering: {}", e.message)
