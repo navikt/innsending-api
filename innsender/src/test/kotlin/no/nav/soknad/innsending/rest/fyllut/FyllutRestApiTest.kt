@@ -13,6 +13,7 @@ import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.mapping.mapTilOffsetDateTime
 import no.nav.soknad.innsending.util.models.*
 import no.nav.soknad.innsending.utils.Api
 import no.nav.soknad.innsending.utils.Hjelpemetoder
@@ -31,6 +32,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
+import java.time.LocalDateTime
 import java.util.*
 import kotlin.test.*
 
@@ -676,6 +678,22 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertTrue(response != null)
 		assertEquals(400, response.statusCode.value())
 		assertEquals("'sokerInvalid' not a valid property", response.body?.message)
+	}
+
+	@Test
+	fun `Should save and return skalSlettesDato`() {
+		// Given
+		val skjemaDto =
+			SkjemaDtoTestBuilder(skalslettesdato = mapTilOffsetDateTime(LocalDateTime.now().plusDays(5))!!).build()
+
+		// When
+		val createdSoknad = api?.createSoknad(skjemaDto)
+		val getSoknad = api?.getSoknad(createdSoknad?.body?.innsendingsId!!)
+
+		// Then
+		assertEquals(skjemaDto.skalSlettesDato?.toInstant(), createdSoknad?.body?.skalSlettesDato?.toInstant())
+		assertEquals(skjemaDto.skalSlettesDato?.toInstant(), getSoknad?.body?.skalSlettesDato?.toInstant())
+
 	}
 
 	@Test

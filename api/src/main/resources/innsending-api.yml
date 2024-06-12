@@ -1281,6 +1281,8 @@ components:
           $ref: "#/components/schemas/SkjemaPath"
         applikasjon:
           $ref: "#/components/schemas/Applikasjon"
+        skalSlettesDato:
+          $ref: "#/components/schemas/SkalSlettesDato"
 
     EksternOpprettEttersending:
       type: object
@@ -1696,9 +1698,9 @@ components:
 
     SkalSlettesDato:
       type: string
-      format: date
+      format: date-time
       description: Dato søknaden vil slettes. En skedulert slettejobb kjøres hver kveld.
-      example: 2021-12-03
+      example: 2021-12-03T00:00:00Z
 
     SoknadsStatusDto:
       type: string

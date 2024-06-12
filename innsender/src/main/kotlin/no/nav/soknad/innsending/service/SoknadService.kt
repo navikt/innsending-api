@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 @Service
 class SoknadService(
@@ -74,7 +75,8 @@ class SoknadService(
 					forsteinnsendingsdato = null,
 					ettersendingsfrist = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 					arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
-					applikasjon = applikasjon
+					applikasjon = applikasjon,
+					skalslettesdato = OffsetDateTime.now().plusDays(Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD)
 				)
 			)
 
@@ -133,7 +135,11 @@ class SoknadService(
 	}
 
 	fun hentAktiveSoknader(brukerId: String, skjemanr: String, vararg soknadTyper: SoknadType): List<DokumentSoknadDto> {
-		return hentAktiveSoknader(listOf(brukerId)).filter { it.skjemanr == skjemanr && (soknadTyper.isEmpty() || soknadTyper.contains(it.soknadstype)) && it.visningsType !== VisningsType.dokumentinnsending }
+		return hentAktiveSoknader(listOf(brukerId)).filter {
+			it.skjemanr == skjemanr && (soknadTyper.isEmpty() || soknadTyper.contains(
+				it.soknadstype
+			)) && it.visningsType !== VisningsType.dokumentinnsending
+		}
 	}
 
 

@@ -39,7 +39,8 @@ class SkjemaDokumentSoknadTransformer {
 			arkiveringsStatus = ArkiveringsStatusDto.IkkeSatt,
 			soknadstype = SoknadType.soknad,
 			skjemaPath = input.skjemaPath,
-			applikasjon = applikasjon
+			applikasjon = applikasjon,
+			skalSlettesDato = input.skalSlettesDato
 		)
 
 //	kanLasteOppAnnet = input.vedleggsListe?.any { it.property == "annenDokumentasjon" : it.vedleggsnr == "N6" && it.label == "Annen dokumentasjon" })
