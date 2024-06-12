@@ -17,8 +17,8 @@ class SoknadTest {
 		// Then
 		assertEquals(dokumentSoknadDto.innsendingsId, result.innsendingsId)
 		assertEquals(
-			dokumentSoknadDto.opprettetDato.plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD).toLocalDate().toString(),
-			result.skalSlettesDato?.toString(),
+			dokumentSoknadDto.opprettetDato.plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD).toInstant(),
+			result.skalSlettesDato?.toInstant(),
 		)
 	}
 }

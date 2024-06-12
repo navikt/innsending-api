@@ -67,7 +67,7 @@ class SendTilPublisherRetryTest : ApplicationTest() {
 		val brukernotifikasjonInfo = NotificationInfo(
 			notifikasjonsTittel = dokumentSoknad.tittel,
 			lenke = "http://localhost:3001/fyllut/nav550060/oppsummering?sub=digital&innsendingsId=123456",
-			antallAktiveDager = 56,
+			antallAktiveDager = 28,
 			eksternVarsling = emptyList()
 		)
 		val notificationInfo = AddNotification(soknadRef, brukernotifikasjonInfo)
