@@ -45,7 +45,7 @@ class PdfGeneratorService {
 				val builder = PdfRendererBuilder()
 
 				builder.useFastMode()
-				//builder.usePdfUaAccessbility(true)
+				builder.usePdfUaAccessbility(true)
 				builder.usePdfAConformance(PdfRendererBuilder.PdfAConformance.PDFA_1_A)
 
 				// Fargeprofil, må være byte array

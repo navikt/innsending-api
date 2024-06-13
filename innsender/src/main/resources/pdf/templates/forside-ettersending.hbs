@@ -3,16 +3,31 @@
 <head>
 	<title>Ettersending forside</title>
 	<meta charset="utf-8"/>
-	<meta name="author" content="NAV"/>
-	<meta name="subject" content="Generert forside for ettersending av dokumentasjon"/>
 	<meta name="description" content="{{beskrivelse}}"/>
+	<meta name="subject" content="Generert forside for ettersending av dokumentasjon"/>
+	<meta name="author" content="NAV"/>
 
 	<bookmarks>
-		<bookmark name="Ettersendingsheader" href="#ettersendingHeader"/>
-		<bookmark name="tittel" href="#tittel"/>
-		<bookmark name="personInfo" href="#personInfo"/>
+		<bookmark name="Ettersendingsheader" href="#ettersendingHeader"></bookmark>
+		<bookmark name="tittel" href="#tittel"></bookmark>
+		<bookmark name="personInfo" href="#personInfo"></bookmark>
 	</bookmarks>
 	<style>
+		@page {
+			size: A4;
+			margin: 60px;
+
+			@top-center {
+				font-family: arial, serif;
+			}
+			@bottom-right {
+				content: element(sidetall);
+			}
+			@bottom-left {
+				content: element(dato);
+			}
+		}
+
 		html {
 			font-family: arial, serif;
 		}
@@ -21,18 +36,6 @@
 			font-family: arial, serif;
 			word-wrap: break-word;
 			font-size: 13px;
-		}
-
-		@page {
-			size: A4;
-			margin: 60px;
-
-			@bottom-right {
-				content: element(sidetall);
-			}
-			@bottom-left {
-				content: element(dato);
-			}
 		}
 
 		.dato {
@@ -78,12 +81,6 @@
 			text-align: left;
 			white-space: pre-wrap;
 			margin-bottom: 10px;
-		}
-
-		.p {
-			font-family: arial, serif;
-			word-wrap: break-word;
-			font-size: 13px;
 		}
 
 		.navlogo {
