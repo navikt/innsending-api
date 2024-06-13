@@ -13,7 +13,6 @@ import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.util.Constants
-import no.nav.soknad.innsending.util.mapping.mapTilOffsetDateTime
 import no.nav.soknad.innsending.util.models.*
 import no.nav.soknad.innsending.utils.Api
 import no.nav.soknad.innsending.utils.Hjelpemetoder
@@ -32,8 +31,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
+import java.time.LocalDate
 import java.util.*
 import kotlin.test.*
 
@@ -684,8 +682,10 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should save and return skalSlettesDato`() {
 		// Given
-		val skjemaDto =
-			SkjemaDtoTestBuilder(skalslettesdato = mapTilOffsetDateTime(LocalDateTime.now().plusDays(5))!!).build()
+		val mellomlagringDager = 5
+		val skalSlettesDato = LocalDate.now().plusDays(mellomlagringDager.toLong())
+
+		val skjemaDto = SkjemaDtoTestBuilder(skalslettesdato = null, mellomlagringDager = mellomlagringDager).build()
 
 		// When
 		val createdSoknad = api?.createSoknad(skjemaDto)
@@ -693,14 +693,13 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Then
 		assertEquals(
-			skjemaDto.skalSlettesDato?.truncatedTo(ChronoUnit.MILLIS)?.toInstant(),
-			createdSoknad?.body?.skalSlettesDato?.truncatedTo(ChronoUnit.MILLIS)?.toInstant()
+			skalSlettesDato,
+			createdSoknad?.body?.skalSlettesDato?.toLocalDate()
 		)
 		assertEquals(
-			skjemaDto.skalSlettesDato?.truncatedTo(ChronoUnit.MILLIS)?.toInstant(),
-			getSoknad?.body?.skalSlettesDato?.truncatedTo(ChronoUnit.MILLIS)?.toInstant()
+			skalSlettesDato,
+			getSoknad?.body?.skalSlettesDato?.toLocalDate()
 		)
-
 	}
 
 	@Test

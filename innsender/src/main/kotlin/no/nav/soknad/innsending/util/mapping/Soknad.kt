@@ -8,7 +8,6 @@ import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.util.Constants
-import no.nav.soknad.innsending.util.Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
 import no.nav.soknad.innsending.util.Skjema.createSkjemaPathFromSkjemanr
 import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
@@ -122,7 +121,7 @@ fun mapTilDokumentSoknadDto(
 		soknadstype = if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad,
 		skjemaPath = createSkjemaPathFromSkjemanr(soknadDbData.skjemanr),
 		applikasjon = soknadDbData.applikasjon,
-		skalSlettesDato = soknadDbData.skalslettesdato
+		skalSlettesDato = soknadDbData.skalslettesdato,
 	)
 }
 
@@ -157,6 +156,7 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		skalSlettesDato = deletionDate,
 		skjemaPath = dokumentSoknadDto.skjemaPath,
 		visningsType = dokumentSoknadDto.visningsType,
+		mellomlagringDager = dokumentSoknadDto.mellomlagringDager
 	)
 }
 
@@ -174,7 +174,7 @@ fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>): Sokn
 
 private fun beregnInnsendingsFrist(soknadDbData: SoknadDbData): OffsetDateTime {
 	if (soknadDbData.ettersendingsid == null) {
-		return mapTilOffsetDateTime(soknadDbData.opprettetdato, DEFAULT_LEVETID_OPPRETTET_SOKNAD)
+		return soknadDbData.skalslettesdato
 	}
 	return mapTilOffsetDateTime(
 		soknadDbData.forsteinnsendingsdato ?: soknadDbData.opprettetdato,

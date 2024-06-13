@@ -24,7 +24,8 @@ data class SkjemaDtoTestBuilder(
 	var kanLasteOppAnnet: Boolean? = false,
 	var fristForEttersendelse: Long? = 14L,
 	var skjemaPath: String = Skjema.createSkjemaPathFromSkjemanr(skjemanr),
-	var skalslettesdato: OffsetDateTime = OffsetDateTime.now().plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD)
+	var skalslettesdato: OffsetDateTime? = OffsetDateTime.now().plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD),
+	var mellomlagringDager: Int? = DEFAULT_LEVETID_OPPRETTET_SOKNAD.toInt()
 ) {
 	fun build() = SkjemaDto(
 		brukerId = brukerId,
@@ -40,7 +41,8 @@ data class SkjemaDtoTestBuilder(
 		kanLasteOppAnnet = kanLasteOppAnnet,
 		fristForEttersendelse = fristForEttersendelse,
 		skjemaPath = skjemaPath,
-		skalSlettesDato = skalslettesdato
+		skalSlettesDato = skalslettesdato,
+		mellomlagringDager = mellomlagringDager
 	)
 }
 

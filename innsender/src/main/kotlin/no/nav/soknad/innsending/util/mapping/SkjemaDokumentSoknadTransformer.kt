@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.util.mapping
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.finnSpraakFraInput
+import no.nav.soknad.innsending.util.models.sletteDato
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -40,7 +41,8 @@ class SkjemaDokumentSoknadTransformer {
 			soknadstype = SoknadType.soknad,
 			skjemaPath = input.skjemaPath,
 			applikasjon = applikasjon,
-			skalSlettesDato = input.skalSlettesDato
+			skalSlettesDato = input.sletteDato,
+			mellomlagringDager = input.mellomlagringDager
 		)
 
 //	kanLasteOppAnnet = input.vedleggsListe?.any { it.property == "annenDokumentasjon" : it.vedleggsnr == "N6" && it.label == "Annen dokumentasjon" })
