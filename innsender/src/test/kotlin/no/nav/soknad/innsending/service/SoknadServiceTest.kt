@@ -43,6 +43,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.*
 
 
@@ -539,6 +540,55 @@ class SoknadServiceTest : ApplicationTest() {
 		assertTrue(hendelseDbDatas.size > 1)
 		assertEquals(HendelseType.Opprettet, hendelseDbDatas[0].hendelsetype)
 		assertEquals(HendelseType.SlettetAvSystem, hendelseDbDatas[1].hendelsetype)
+	}
+
+	@Test
+	fun `Should delete soknader with skalSlettesDato in the past`() {
+		// Given
+		val oneDayAgo = DokumentSoknadDtoTestBuilder(skalslettesdato = OffsetDateTime.now().minusDays(1)).build()
+		val tenDaysAgo = DokumentSoknadDtoTestBuilder(skalslettesdato = OffsetDateTime.now().minusDays(10)).build()
+		val now = DokumentSoknadDtoTestBuilder(skalslettesdato = OffsetDateTime.now()).build()
+		val tomorrow =
+			DokumentSoknadDtoTestBuilder(skalslettesdato = OffsetDateTime.now().plusDays(1)).build()
+
+		val soknadOneDayAgo = soknadService.opprettNySoknad(oneDayAgo)
+		val soknadTenDaysAgo = soknadService.opprettNySoknad(tenDaysAgo)
+		val soknadNow = soknadService.opprettNySoknad(now)
+		val soknadTomorrow = soknadService.opprettNySoknad(tomorrow)
+
+		// When
+		soknadService.slettGamleSoknader(datoCutOff = OffsetDateTime.now())
+
+		// Then
+		assertEquals(SoknadsStatusDto.AutomatiskSlettet, soknadService.hentSoknad(soknadOneDayAgo.innsendingsId!!).status)
+		assertEquals(SoknadsStatusDto.AutomatiskSlettet, soknadService.hentSoknad(soknadTenDaysAgo.innsendingsId!!).status)
+		assertEquals(SoknadsStatusDto.AutomatiskSlettet, soknadService.hentSoknad(soknadNow.innsendingsId!!).status)
+		assertEquals(SoknadsStatusDto.Opprettet, soknadService.hentSoknad(soknadTomorrow.innsendingsId!!).status)
+	}
+
+	@Test
+	fun `Should delete soknader with skalSlettesDato in the future`() {
+		// Given
+		val oneDayAgo = DokumentSoknadDtoTestBuilder(skalslettesdato = OffsetDateTime.now().minusDays(1)).build()
+		val now = DokumentSoknadDtoTestBuilder(skalslettesdato = OffsetDateTime.now()).build()
+		val tomorrow =
+			DokumentSoknadDtoTestBuilder(skalslettesdato = OffsetDateTime.now().plusDays(1)).build()
+		val tenDaysFromNow =
+			DokumentSoknadDtoTestBuilder(skalslettesdato = OffsetDateTime.now().plusDays(10)).build()
+
+		val soknadOneDayAgo = soknadService.opprettNySoknad(oneDayAgo)
+		val soknadNow = soknadService.opprettNySoknad(now)
+		val soknadTomorrow = soknadService.opprettNySoknad(tomorrow)
+		val soknadTenDaysFromNow = soknadService.opprettNySoknad(tenDaysFromNow)
+
+		// When
+		soknadService.slettGamleSoknader(datoCutOff = OffsetDateTime.now().plusDays(5))
+
+		// Then
+		assertEquals(SoknadsStatusDto.AutomatiskSlettet, soknadService.hentSoknad(soknadOneDayAgo.innsendingsId!!).status)
+		assertEquals(SoknadsStatusDto.AutomatiskSlettet, soknadService.hentSoknad(soknadNow.innsendingsId!!).status)
+		assertEquals(SoknadsStatusDto.AutomatiskSlettet, soknadService.hentSoknad(soknadTomorrow.innsendingsId!!).status)
+		assertEquals(SoknadsStatusDto.Opprettet, soknadService.hentSoknad(soknadTenDaysFromNow.innsendingsId!!).status)
 	}
 
 

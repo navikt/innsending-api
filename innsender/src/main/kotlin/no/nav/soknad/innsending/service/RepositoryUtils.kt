@@ -58,6 +58,15 @@ class RepositoryUtils(
 		)
 	}
 
+	fun findAllByStatusesAndWithSkalSlettesDatoBefore(statuses: List<String>, dateCutOff: OffsetDateTime) = try {
+		soknadRepository.findAllByStatusesAndWithSkalSlettesDatoBefore(statuses, dateCutOff)
+	} catch (ex: Exception) {
+		throw BackendErrorException(
+			message = "Feil ved henting av alle soknader med status $statuses med skalslettesdato før $dateCutOff",
+			cause = ex
+		)
+	}
+
 	fun findAllByOpprettetdatoBefore(opprettetFor: OffsetDateTime) = try {
 		soknadRepository.findAllByOpprettetdatoBefore(opprettetFor)
 	} catch (ex: Exception) {

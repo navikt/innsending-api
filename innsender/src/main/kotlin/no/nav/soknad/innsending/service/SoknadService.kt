@@ -14,6 +14,7 @@ import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.hovedDokumentVariant
@@ -76,7 +77,7 @@ class SoknadService(
 					ettersendingsfrist = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 					arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
 					applikasjon = applikasjon,
-					skalslettesdato = OffsetDateTime.now().plusDays(Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD)
+					skalslettesdato = OffsetDateTime.now().plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD)
 				)
 			)
 
@@ -269,7 +270,11 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun slettGamleSoknader(dagerGamle: Long, permanent: Boolean = false) {
+	fun slettGamleSoknader(
+		dagerGamle: Long = DEFAULT_LEVETID_OPPRETTET_SOKNAD,
+		permanent: Boolean = false,
+		datoCutOff: OffsetDateTime? = null
+	) {
 		val slettFor = mapTilOffsetDateTime(LocalDateTime.now(), -dagerGamle)
 		logger.info("Finn opprettede søknader opprettet før $slettFor permanent=$permanent")
 		if (permanent) {
@@ -277,12 +282,23 @@ class SoknadService(
 			logger.info("SlettPermanentSoknader: Funnet ${soknadDbDataListe.size} søknader som skal permanent slettes")
 			soknadDbDataListe.forEach { slettSoknadPermanent(it.innsendingsid) }
 		} else {
-			val soknadDbDataListe = repo.findAllByStatusesAndWithOpprettetdatoBefore(
-				listOf(
-					SoknadsStatus.Opprettet.name,
-					SoknadsStatus.Utfylt.name
-				), slettFor
-			)
+			val soknadDbDataListe: List<SoknadDbData> =
+				if (datoCutOff !== null) {
+					repo.findAllByStatusesAndWithSkalSlettesDatoBefore(
+						listOf(
+							SoknadsStatus.Opprettet.name,
+							SoknadsStatus.Utfylt.name
+						), datoCutOff
+					)
+				} else {
+					repo.findAllByStatusesAndWithOpprettetdatoBefore(
+						listOf(
+							SoknadsStatus.Opprettet.name,
+							SoknadsStatus.Utfylt.name
+						), slettFor
+					)
+				}
+
 
 			logger.info("SlettGamleIkkeInnsendteSoknader: Funnet ${soknadDbDataListe.size} søknader som skal slettes")
 			soknadDbDataListe.forEach { slettSoknadAutomatisk(it.innsendingsid) }

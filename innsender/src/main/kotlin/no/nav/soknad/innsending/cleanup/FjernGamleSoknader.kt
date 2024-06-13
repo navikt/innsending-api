@@ -1,11 +1,11 @@
 package no.nav.soknad.innsending.cleanup
 
 import no.nav.soknad.innsending.service.SoknadService
-import no.nav.soknad.innsending.util.Constants
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.time.OffsetDateTime
 
 @Service
 class FjernGamleSoknader(
@@ -19,7 +19,7 @@ class FjernGamleSoknader(
 	fun fjernGamleIkkeInnsendteSoknader() {
 		try {
 			if (leaderSelectionUtility.isLeader()) {
-				soknadService.slettGamleSoknader(Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD)
+				soknadService.slettGamleSoknader(datoCutOff = OffsetDateTime.now())
 			}
 		} catch (ex: Exception) {
 			logger.warn("Fjerning av gamle ikke innsendte søknader feilet med ${ex.message}")
