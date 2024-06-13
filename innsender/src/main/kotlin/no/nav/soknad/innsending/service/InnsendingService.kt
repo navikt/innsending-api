@@ -353,29 +353,32 @@ class InnsendingService(
 		val skalSendesAvAndre = innsendtSoknadDto.vedleggsListe.skalSendesAvAndre
 			.map {
 				InnsendtVedleggDto(
-					it.vedleggsnr ?: "",
-					it.label,
-					it.opplastingsValgKommentarLedetekst,
-					it.opplastingsValgKommentar
+					vedleggsnr = it.vedleggsnr ?: "",
+					tittel = it.label,
+					url = null,
+					opplastingsValgKommentarLedetekst = it.opplastingsValgKommentarLedetekst,
+					opplastingsValgKommentar = it.opplastingsValgKommentar
 				)
 			}
 
 		val skalEtterSendes = manglendePakrevdeVedlegg.map {
 			InnsendtVedleggDto(
-				it.vedleggsnr ?: "",
-				it.label,
-				it.opplastingsValgKommentarLedetekst,
-				it.opplastingsValgKommentar
+				vedleggsnr = it.vedleggsnr ?: "",
+				tittel = it.label,
+				url = null,
+				opplastingsValgKommentarLedetekst = it.opplastingsValgKommentarLedetekst,
+				opplastingsValgKommentar = it.opplastingsValgKommentar
 			)
 		}
 
 		val blirIkkeInnsendt = innsendtSoknadDto.vedleggsListe.sendesIkke
 			.map {
 				InnsendtVedleggDto(
-					it.vedleggsnr ?: "",
-					it.label,
-					it.opplastingsValgKommentarLedetekst,
-					it.opplastingsValgKommentar
+					vedleggsnr = it.vedleggsnr ?: "",
+					tittel = it.label,
+					url = null,
+					opplastingsValgKommentarLedetekst = it.opplastingsValgKommentarLedetekst,
+					opplastingsValgKommentar = it.opplastingsValgKommentar
 				)
 			}
 
@@ -385,20 +388,22 @@ class InnsendingService(
 		))
 			.map {
 				InnsendtVedleggDto(
-					it.vedleggsnr ?: "",
-					it.label,
-					it.opplastingsValgKommentarLedetekst,
-					it.opplastingsValgKommentar
+					vedleggsnr = it.vedleggsnr ?: "",
+					tittel = it.label,
+					url = null,
+					opplastingsValgKommentarLedetekst = it.opplastingsValgKommentarLedetekst,
+					opplastingsValgKommentar = it.opplastingsValgKommentar
 				)
 			}
 
 		val navKanInnhente = innsendtSoknadDto.vedleggsListe.navKanInnhente
 			.map {
 				InnsendtVedleggDto(
-					it.vedleggsnr ?: "",
-					it.label,
-					it.opplastingsValgKommentarLedetekst,
-					it.opplastingsValgKommentar
+					vedleggsnr = it.vedleggsnr ?: "",
+					tittel = it.label,
+					url = null,
+					opplastingsValgKommentarLedetekst = it.opplastingsValgKommentarLedetekst,
+					opplastingsValgKommentar = it.opplastingsValgKommentar
 				)
 			}
 

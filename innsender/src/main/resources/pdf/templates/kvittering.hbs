@@ -1,146 +1,181 @@
 <!DOCTYPE html>
-<html lang="nb-NO">
+<html lang="{{language}}">
 <head>
-    <title>Kvittering PDF</title>
-    <meta charset="utf-8"/>
-    <style>
-        html {
-            font-family: arial, serif;
-        }
+	<title>Kvittering PDF</title>
+	<meta charset="utf-8"/>
+	<meta name="author" content="NAV"/>
+	<meta name="subject" content="Kvittering og oppsummering av vedleggsopplasting"/>
+	<meta name="description" content="{{beskrivelse}}"/>
 
-        body {
-            font-family: arial, serif;
-            word-wrap: break-word;
-            font-size: 13px;
-        }
+	<bookmarks>
+		<bookmark name="kvitteringsHeader" href="#kvitteringsHeader"/>
+		<bookmark name="personInfo" href="#personInfo"/>
+		<bookmark name="vedleggsListe" href="#vedleggsListe"/>
+	</bookmarks>
 
-        @page {
-            size: A4;
-            margin: 60px;
+	<style>
+		html {
+			font-family: arial, serif;
+		}
 
-            @bottom-right {
-                content: element(sidetall);
-            }
-        }
+		body {
+			font-family: arial, serif;
+			word-wrap: break-word;
+			font-size: 13px;
+		}
 
-        .sidetall {
-            position: running(sidetall);
-            text-align: right;
-            font-size: 12px;
-        }
+		@page {
+			size: A4;
+			margin: 60px;
 
-        .sidetall_antall:before {
-            content: counter(page);
-        }
+			@bottom-right {
+				content: element(sidetall);
+			}
+			@bottom-left {
+				content: element(dato);
+			}
+		}
 
-        .sidetall_total:before {
-            content: counter(pages);
-        }
+		.dato {
+			position: running(dato);
+			font-size: 12px;
+			text-align: left;
+		}
 
-        .tittel {
-            margin-top: 50px;
-            width: 100%;
-            text-align: center;
-            white-space: pre-wrap;
-            font-size: 20px;
-            margin-bottom: 40px;
-        }
+		.sidetall {
+			position: running(sidetall);
+			text-align: right;
+			font-size: 12px;
+		}
 
-        .subtittel {
-            font-size: 15px;
-            width: 100%;
-            text-align: center;
-            white-space: pre-wrap;
-            margin-bottom: 20px;
-        }
+		.sidetall_antall:before {
+			content: counter(page);
+		}
 
-        .h3 {
-            font-size: 14px;
-            width: 100%;
-            text-align: left;
-            white-space: pre-wrap;
-            margin-bottom: 10px;
-        }
+		.sidetall_total:before {
+			content: counter(pages);
+		}
 
-        .h4 {
-            font-size: 13px;
-            width: 100%;
-            text-align: left;
-            white-space: pre-wrap;
-            margin-bottom: 10px;
-        }
+		.tittel {
+			margin-top: 50px;
+			width: 100%;
+			text-align: center;
+			white-space: pre-wrap;
+			font-size: 20px;
+			margin-bottom: 40px;
+		}
 
-        .p {
-            font-family: arial, serif;
-            word-wrap: break-word;
-            font-size: 13px;
-        }
+		.subtittel {
+			font-size: 15px;
+			width: 100%;
+			text-align: center;
+			white-space: pre-wrap;
+			margin-bottom: 20px;
+		}
 
-        .ul {
-          font-size: 13px;
-        	text-align: left
-        }
+		.h3 {
+			font-size: 14px;
+			width: 100%;
+			text-align: left;
+			white-space: pre-wrap;
+			margin-bottom: 10px;
+		}
 
-        .ul2 {
-          font-size: 13px;
-        	text-align: left;
-        	margin-left: 20px;
-        }
+		.h4 {
+			font-size: 13px;
+			width: 100%;
+			text-align: left;
+			white-space: pre-wrap;
+			margin-bottom: 10px;
+		}
 
-        .navlogo {
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            width: 100px;
-        }
+		.p {
+			font-family: arial, serif;
+			word-wrap: break-word;
+			font-size: 13px;
+		}
 
-        @font-face {
-            font-family: 'arial';
-            font-style: normal;
-            font-weight: 400;
-            src: url(fonts/arial/arial.ttf);
-        }
+		.kommentarTittel {
+			font-family: arial, serif;
+			word-wrap: break-word;
+			font-size: 13px;
+			font-weight: 600;
+		}
 
-        @font-face {
-            font-family: 'arial';
-            font-style: normal;
-            font-weight: 600;
-            src: url(fonts/arial/arialbd.ttf);
-        }
+		.kommentar {
+			font-family: arial, serif;
+			word-wrap: break-word;
+			font-size: 13px;
+			font-weight: 200;
+		}
 
-    </style>
+		.nobull {
+			font-size: 13px;
+			text-align: left;
+			list-style-type: none;
+		}
+
+		.bull {
+			font-size: 13px;
+			text-align: left;
+			list-style-type: circle;
+		}
+
+		.navlogo {
+			display: block;
+			margin-left: auto;
+			margin-right: auto;
+			width: 100px;
+		}
+
+		@font-face {
+			font-family: 'arial';
+			font-style: normal;
+			font-weight: 400;
+			src: url(fonts/arial/arial.ttf);
+		}
+
+		@font-face {
+			font-family: 'arial';
+			font-style: normal;
+			font-weight: 600;
+			src: url(fonts/arial/arialbd.ttf);
+		}
+
+	</style>
 </head>
 <body>
+<div class="sidetall">{{side}} <span class="sidetall_antall"></span> {{av}} <span class="sidetall_total"></span></div>
+<div class="dato">{{innsendtTidspunkt}}</div>
 
 <img class="navlogo" src="icons/navlogo.jpg" alt="navlogo"/>
-  <h1 class="tittel">{{ kvitteringsHeader }}</h1>
+<h1 class="tittel" id="kvitteringsHeader">{{ kvitteringsHeader }}</h1>
 
-  {{#if ettersendelseTittel}}
-    <h2 class="subtittel">{{ ettersendelseTittel }}</h2>
-  {{/if}}
-  <h2 class="subtittel">{{ tittel }}</h2>
+{{#if ettersendelseTittel}}
+	<h2 class="subtittel">{{ ettersendelseTittel }}</h2>
+{{/if}}
+<h2 class="subtittel">{{ tittel }}</h2>
 
-  <h2 class="subtittel">{{ personInfo }}</h2>
+<h2 class="subtittel" id="personInfo">{{ personInfo }}</h2>
 
-  <p class="p">{{ antallInnsendt }}</p>
-
-  <ul class="ul">
-    {{#each data}}
-      <li>
-        <h4>{{ kategori }}</h4>
-        <ul class="ul2">
-          {{#each vedlegg}}
-            <li><p class="h4">{{ vedleggsTittel }}</p>
-							 {{#if kommentar}}
-								 <p class="p">{{ kommentar }}</p>
-							 {{/if}}
-             </li>
-          {{/each}}
-        </ul>
-      </li>
-    {{/each}}
-  </ul>
-<div class="sidetall">{{side}} <span class="sidetall_antall"></span> {{av}} <span class="sidetall_total"></span></div>
+<ul class="nobull" id="vedleggsListe">
+	{{#each vedleggsListe}}
+		<li class="nobull"><h4>{{ kategori }}</h4>
+			<ul class="bull">
+				{{#each vedlegg}}
+					<li class="bull"><p class="p">{{ vedleggsTittel }}</p>
+						{{#if kommentar}}
+							<p class="p">
+								<span class="kommentarTittel">{{ kommentarTittel }}</span>:<br/>
+								<span class="kommentar">{{ kommentar }}</span>
+							</p>
+						{{/if}}
+					</li>
+				{{/each}}
+			</ul>
+		</li>
+	{{/each}}
+</ul>
 
 </body>
 </html>

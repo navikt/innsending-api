@@ -4,7 +4,6 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
-import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.OffsetDateTime
@@ -22,7 +21,7 @@ class GenererPdfTest {
 
 		val forside = PdfGenerator().lagForsideEttersending(soknad)
 
-		writeBytesToFile(forside, "./forside.pdf")
+		//writeBytesToFile(forside, "./forside.pdf")
 
 		assertEquals(1, AntallSider().finnAntallSider(forside))
 		val erPdfa = Validerer().isPDFa(forside)
@@ -41,8 +40,6 @@ class GenererPdfTest {
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt },
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
 
-		//writeBytesToFile(kvittering, "./delme.pdf")
-
 		assertEquals(2, AntallSider().finnAntallSider(kvittering))
 		val erPdfa = Validerer().isPDFa(kvittering)
 		assertTrue(erPdfa)
@@ -53,7 +50,7 @@ class GenererPdfTest {
 	@Test
 	fun verifiserGenereringAvKvitteringsPdf() {
 
-		val soknad = lagSoknadForTesting(tittel, "en_UK")
+		val soknad = lagSoknadForTesting(tittel, "nb_NO")
 
 		val sammensattnavn = "Fornavn Elmer"
 		val kvittering = PdfGenerator().lagKvitteringsSide(
@@ -61,8 +58,6 @@ class GenererPdfTest {
 			sammensattnavn,
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt },
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
-
-		writeBytesToFile(kvittering, "./soknadskvittering.pdf")
 
 		assertEquals(2, AntallSider().finnAntallSider(kvittering))
 		val erPdfa = Validerer().isPDFa(kvittering)
@@ -82,8 +77,6 @@ class GenererPdfTest {
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt && it.opprettetdato > OffsetDateTime.MIN },
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
 
-		writeBytesToFile(kvittering, "./ettersendingskvittering.pdf")
-
 		assertEquals(1, AntallSider().finnAntallSider(kvittering))
 		val erPdfa = Validerer().isPDFa(kvittering)
 		assertTrue(erPdfa)
@@ -101,8 +94,6 @@ class GenererPdfTest {
 			sammensattnavn,
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt && it.opprettetdato > OffsetDateTime.MIN },
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
-
-		//writeBytesToFile(kvittering, "./ettersendingskvittering2.pdf")
 
 		assertEquals(1, AntallSider().finnAntallSider(kvittering))
 		val erPdfa = Validerer().isPDFa(kvittering)

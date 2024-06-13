@@ -8,21 +8,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-
-private const val FONT_EKSTRA_STOR = 18
-private const val FONT_SUB_HEADER = 16
-private const val FONT_STOR = 14
-private const val FONT_LITEN_HEADER = 13
-private const val FONT_DOCUMENT_HEADER = 11
-private const val FONT_VANLIG = 10
-private const val FONT_LITEN = 9
-private const val FONT_INFORMASJON = 11
-private const val LINJEAVSTAND = 1.4f
-private const val LINJEAVSTAND_HEADER = 1f
-
-const val INNRYKK = 50f
-
-
 class PdfGenerator {
 
 	companion object {
@@ -47,22 +32,18 @@ class PdfGenerator {
 		val sendSenere = manglendeObligatoriskeVedlegg
 		val alleredeInnsendt =
 			innsendteVedlegg(soknad.opprettetDato, soknad.vedleggsListe) + soknad.vedleggsListe.tidligereLevert
-		val sendesAvAndre = soknad.vedleggsListe.skalSendesAvAndre
 
 		val fnr = soknad.brukerId
 		val personInfo = if (sammensattNavn == null) fnr else "$sammensattNavn, $fnr"
 
-		val antallLastetOpp = vedleggOpplastet.size
 		val now = LocalDateTime.now()
-		val antallInnsendt = java.lang.String.format(
+		val innsendtTidspunkt = java.lang.String.format(
 			tekster.getString("kvittering.erSendt"),
-			antallLastetOpp,
-			alleredeInnsendt.size + sendSenere.size + sendesAvAndre.size + antallLastetOpp,
 			formaterDato(now),
 			formaterKlokke(now)
 		)
 		val oppsummering = mutableListOf<VedleggsKategori>()
-		if (!antallInnsendt.isNullOrEmpty()) {
+		if (vedleggOpplastet.isNotEmpty()) {
 			oppsummering.addFirst(
 				mapTilVedleggskategori(
 					kategori = tekster.getString("kvittering.vedlegg.sendt"),
@@ -112,14 +93,16 @@ class PdfGenerator {
 		}
 		return PdfGeneratorService().genererKvitteringPdf(
 			KvitteringsPdfModel(
+				sprak = if (sprak == "en") sprak + "-UK" else sprak + "-NO",
+				beskrivelse = tekster.getString("kvittering.beskrivelse"),
 				kvitteringHeader = tekster.getString("kvittering.tittel"),
 				ettersendelseTittel = if (soknad.erEttersending) tekster.getString("kvittering.ettersendelse.tittel") else null,
 				side = tekster.getString("footer.side"),
 				av = tekster.getString("footer.av"),
 				tittel = soknad.tittel,
 				personInfo = personInfo,
-				antallInnsendt = antallInnsendt,
-				data = oppsummering
+				innsendtTidspunkt = innsendtTidspunkt,
+				vedleggsListe = oppsummering
 			)
 		)
 	}
@@ -131,20 +114,22 @@ class PdfGenerator {
 		val fnr = soknad.brukerId
 		val personInfo = if (sammensattNavn == null) fnr else "$sammensattNavn, $fnr"
 		val now = LocalDateTime.now()
-		val oppsummering = java.lang.String.format(
+		val innsendtTidspunkt = java.lang.String.format(
 			tekster.getString("forside.innsendt"),
 			formaterDato(now),
 			formaterKlokke(now)
 		)
 		return PdfGeneratorService().genererEttersendingForsidePdf(
 			EttersendingForsidePdfModel(
+				sprak = if (sprak == "en") sprak + "-UK" else sprak + "-NO",
+				beskrivelse = tekster.getString("forside.beskrivelse"),
 				ettersendingHeader = tekster.getString("forside.tittel"),
 				ettersendelseTittel = tekster.getString("kvittering.ettersendelse.tittel"),
 				side = tekster.getString("footer.side"),
 				av = tekster.getString("footer.av"),
 				tittel = soknad.tittel,
 				personInfo = personInfo,
-				oppsummering = oppsummering
+				innsendtTidspunkt = innsendtTidspunkt
 			)
 		)
 	}
@@ -155,7 +140,8 @@ class PdfGenerator {
 			vedlegg = vedlegg.map {
 				VedleggMedKommentar(
 					vedleggsTittel = it.tittel,
-					kommentar = if (it.opplastingsValgKommentarLedetekst == null) null else it.opplastingsValgKommentarLedetekst + ":" + it.opplastingsValgKommentar
+					kommentarTittel = if (it.opplastingsValgKommentarLedetekst == null) null else it.opplastingsValgKommentarLedetekst,
+					kommentar = if (it.opplastingsValgKommentarLedetekst == null || it.opplastingsValgKommentar == null) null else it.opplastingsValgKommentar
 				)
 			}
 		)
@@ -191,6 +177,7 @@ data class VedleggsKategori(
 
 data class VedleggMedKommentar(
 	val vedleggsTittel: String,
-	val kommentar: String? // <kommentarTittel>: <kommentar>
+	val kommentarTittel: String?,
+	val kommentar: String?
 )
 
