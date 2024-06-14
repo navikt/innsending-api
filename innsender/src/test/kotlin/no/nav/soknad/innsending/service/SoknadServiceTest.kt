@@ -557,7 +557,7 @@ class SoknadServiceTest : ApplicationTest() {
 		val soknadTomorrow = soknadService.opprettNySoknad(tomorrow)
 
 		// When
-		soknadService.slettGamleSoknader(datoCutOff = OffsetDateTime.now())
+		soknadService.deleteSoknadBeforeCutoffDate(OffsetDateTime.now())
 
 		// Then
 		assertEquals(SoknadsStatusDto.AutomatiskSlettet, soknadService.hentSoknad(soknadOneDayAgo.innsendingsId!!).status)
@@ -582,7 +582,7 @@ class SoknadServiceTest : ApplicationTest() {
 		val soknadTenDaysFromNow = soknadService.opprettNySoknad(tenDaysFromNow)
 
 		// When
-		soknadService.slettGamleSoknader(datoCutOff = OffsetDateTime.now().plusDays(5))
+		soknadService.deleteSoknadBeforeCutoffDate(OffsetDateTime.now().plusDays(5))
 
 		// Then
 		assertEquals(SoknadsStatusDto.AutomatiskSlettet, soknadService.hentSoknad(soknadOneDayAgo.innsendingsId!!).status)

@@ -19,7 +19,7 @@ class FjernGamleSoknader(
 	fun fjernGamleIkkeInnsendteSoknader() {
 		try {
 			if (leaderSelectionUtility.isLeader()) {
-				soknadService.slettGamleSoknader(datoCutOff = OffsetDateTime.now())
+				soknadService.deleteSoknadBeforeCutoffDate(OffsetDateTime.now())
 			}
 		} catch (ex: Exception) {
 			logger.warn("Fjerning av gamle ikke innsendte søknader feilet med ${ex.message}")

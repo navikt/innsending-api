@@ -137,9 +137,7 @@ class SoknadService(
 
 	fun hentAktiveSoknader(brukerId: String, skjemanr: String, vararg soknadTyper: SoknadType): List<DokumentSoknadDto> {
 		return hentAktiveSoknader(listOf(brukerId)).filter {
-			it.skjemanr == skjemanr && (soknadTyper.isEmpty() || soknadTyper.contains(
-				it.soknadstype
-			)) && it.visningsType !== VisningsType.dokumentinnsending
+			it.skjemanr == skjemanr && (soknadTyper.isEmpty() || soknadTyper.contains(it.soknadstype)) && it.visningsType !== VisningsType.dokumentinnsending
 		}
 	}
 
@@ -273,7 +271,6 @@ class SoknadService(
 	fun slettGamleSoknader(
 		dagerGamle: Long = DEFAULT_LEVETID_OPPRETTET_SOKNAD,
 		permanent: Boolean = false,
-		datoCutOff: OffsetDateTime? = null
 	) {
 		val slettFor = mapTilOffsetDateTime(LocalDateTime.now(), -dagerGamle)
 		logger.info("Finn opprettede søknader opprettet før $slettFor permanent=$permanent")
@@ -283,26 +280,35 @@ class SoknadService(
 			soknadDbDataListe.forEach { slettSoknadPermanent(it.innsendingsid) }
 		} else {
 			val soknadDbDataListe: List<SoknadDbData> =
-				if (datoCutOff !== null) {
-					repo.findAllByStatusesAndWithSkalSlettesDatoBefore(
-						listOf(
-							SoknadsStatus.Opprettet.name,
-							SoknadsStatus.Utfylt.name
-						), datoCutOff
-					)
-				} else {
-					repo.findAllByStatusesAndWithOpprettetdatoBefore(
-						listOf(
-							SoknadsStatus.Opprettet.name,
-							SoknadsStatus.Utfylt.name
-						), slettFor
-					)
-				}
-
+				repo.findAllByStatusesAndWithOpprettetdatoBefore(
+					listOf(
+						SoknadsStatus.Opprettet.name,
+						SoknadsStatus.Utfylt.name
+					), slettFor
+				)
 
 			logger.info("SlettGamleIkkeInnsendteSoknader: Funnet ${soknadDbDataListe.size} søknader som skal slettes")
 			soknadDbDataListe.forEach { slettSoknadAutomatisk(it.innsendingsid) }
 		}
+	}
+
+	@Transactional
+	fun deleteSoknadBeforeCutoffDate(
+		cutoffDate: OffsetDateTime
+	) {
+		logger.info("Finner søknader som skal slettes før $cutoffDate")
+
+		val soknaderToDelete =
+			repo.findAllByStatusesAndWithSkalSlettesDatoBefore(
+				listOf(
+					SoknadsStatus.Opprettet.name,
+					SoknadsStatus.Utfylt.name
+				), cutoffDate
+			)
+
+		logger.info("Funnet ${soknaderToDelete.size} søknader som skal slettes")
+		soknaderToDelete.forEach { slettSoknadAutomatisk(it.innsendingsid) }
+
 	}
 
 	@Transactional
