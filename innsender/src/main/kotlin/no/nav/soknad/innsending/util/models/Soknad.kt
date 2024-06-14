@@ -26,7 +26,7 @@ val DokumentSoknadDto.erEttersending: Boolean
 	get() = ettersendingsId != null || visningsType == VisningsType.ettersending
 
 val DokumentSoknadDto.sletteDato: OffsetDateTime?
-	get() = skalSlettesDato ?: opprettetDato.plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD)
+	get() = skalSlettesDato ?: opprettetDato.plusDays(mellomlagringDager?.toLong() ?: DEFAULT_LEVETID_OPPRETTET_SOKNAD)
 
 val SkjemaDto.sletteDato: OffsetDateTime?
 	get() = skalSlettesDato ?: OffsetDateTime.now()
