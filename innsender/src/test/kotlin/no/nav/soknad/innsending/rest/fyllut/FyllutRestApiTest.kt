@@ -516,9 +516,9 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertNotNull(opprettetSoknad.endretDato)
 		assertEquals(SoknadsStatusDto.Opprettet, opprettetSoknad.status, "Status er satt til opprettet")
 		assertEquals(
-			opprettetSoknad.skalSlettesDato?.toInstant(), dokumentSoknadDto.opprettetDato.plusDays(
+			opprettetSoknad.skalSlettesDato?.toLocalDate(), dokumentSoknadDto.opprettetDato.plusDays(
 				Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
-			).toInstant(), "SkalSlettesDato er satt til opprettetDato + 4 uker"
+			).toLocalDate(), "SkalSlettesDato er satt til opprettetDato + 4 uker"
 		)
 	}
 
