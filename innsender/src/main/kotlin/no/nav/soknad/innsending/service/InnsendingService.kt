@@ -383,9 +383,9 @@ class InnsendingService(
 			}
 
 		val levertTidligere = (innsendteVedlegg(
-			innsendtSoknadDto.innsendtDato!!,
-			innsendtSoknadDto.vedleggsListe + innsendtSoknadDto.vedleggsListe.tidligereLevert
-		))
+			innsendtSoknadDto.opprettetDato, innsendtSoknadDto.vedleggsListe
+		) + innsendtSoknadDto.vedleggsListe.tidligereLevert
+			)
 			.map {
 				InnsendtVedleggDto(
 					vedleggsnr = it.vedleggsnr ?: "",
