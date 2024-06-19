@@ -1,115 +1,109 @@
 <!DOCTYPE html>
 <html lang="{{sprak}}">
 <head>
-	<title>Ettersending forside</title>
-	<meta charset="utf-8"/>
-	<meta name="description" content="{{beskrivelse}}"/>
-	<meta name="subject" content="Generert forside for ettersending av dokumentasjon"/>
-	<meta name="author" content="NAV"/>
+    <title>Ettersending forside</title>
+    <meta charset="utf-8"/>
+    <meta name="description" content="{{beskrivelse}}"/>
+    <meta name="subject" content="Generert forside for ettersending av dokumentasjon"/>
+    <meta name="author" content="NAV"/>
 
-	<bookmarks>
-		<bookmark name="Ettersendingsheader" href="#ettersendingHeader"></bookmark>
-		<bookmark name="tittel" href="#tittel"></bookmark>
-		<bookmark name="personInfo" href="#personInfo"></bookmark>
-	</bookmarks>
-	<style>
-		@page {
-			size: A4;
-			margin: 60px;
+    <bookmarks>
+        <bookmark name="Ettersendingsheader" href="#ettersendingHeader"></bookmark>
+        <bookmark name="tittel" href="#tittel"></bookmark>
+        <bookmark name="personInfo" href="#personInfo"></bookmark>
+    </bookmarks>
+    <style>
+        @page {
+            size: A4;
+            margin: 60px;
 
-			@top-center {
-				font-family: arial, serif;
-			}
-			@bottom-right {
-				content: element(sidetall);
-			}
-			@bottom-left {
-				content: element(dato);
-			}
-		}
+            @top-center {
+                font-family: arial, serif;
+            }
+            @bottom-right {
+                content: element(sidetall);
+            }
+            @bottom-left {
+                content: element(dato);
+            }
+        }
 
-		html {
-			font-family: arial, serif;
-		}
+        html {
+            font-family: arial, serif;
+        }
 
-		body {
-			font-family: arial, serif;
-			word-wrap: break-word;
-			font-size: 13px;
-		}
+        body {
+            font-family: arial, serif;
+            word-wrap: break-word;
+            font-size: 13px;
+        }
 
-		.dato {
-			position: running(dato);
-			font-size: 12px;
-			text-align: left;
-		}
+        .dato {
+            position: running(dato);
+            font-size: 12px;
+            text-align: left;
+        }
 
-		.sidetall {
-			position: running(sidetall);
-			text-align: right;
-			font-size: 12px;
-		}
+        .sidetall {
+            position: running(sidetall);
+            text-align: right;
+            font-size: 12px;
+        }
 
-		.sidetall_antall:before {
-			content: counter(page);
-		}
+        .sidetall_antall:before {
+            content: counter(page);
+        }
 
-		.sidetall_total:before {
-			content: counter(pages);
-		}
+        .sidetall_total:before {
+            content: counter(pages);
+        }
 
-		.tittel {
-			margin-top: 50px;
-			width: 100%;
-			text-align: center;
-			white-space: pre-wrap;
-			font-size: 20px;
-			margin-bottom: 40px;
-		}
+        .tittel {
+            margin-top: 50px;
+            width: 100%;
+            text-align: center;
+            white-space: pre-wrap;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 40px;
+        }
 
-		.subtittel {
-			font-size: 15px;
-			width: 100%;
-			text-align: center;
-			white-space: pre-wrap;
-			margin-bottom: 20px;
-		}
+        .subtittel {
+            font-size: 15px;
+            font-weight: 600;
+            width: 100%;
+            text-align: center;
+            white-space: pre-wrap;
+            margin-bottom: 20px;
+        }
 
-		.h3 {
-			font-size: 14px;
-			width: 100%;
-			text-align: left;
-			white-space: pre-wrap;
-			margin-bottom: 10px;
-		}
+        .navlogo {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 100px;
+        }
 
-		.navlogo {
-			display: block;
-			margin-left: auto;
-			margin-right: auto;
-			width: 100px;
-		}
+        @font-face {
+            font-family: 'arial';
+            font-style: normal;
+            font-weight: 400;
+            src: url(fonts/arial/arial.ttf);
+        }
 
-		@font-face {
-			font-family: 'arial';
-			font-style: normal;
-			font-weight: 400;
-			src: url(fonts/arial/arial.ttf);
-		}
+        @font-face {
+            font-family: 'arial';
+            font-style: normal;
+            font-weight: 600;
+            src: url(fonts/arial/arialbd.ttf);
+        }
 
-		@font-face {
-			font-family: 'arial';
-			font-style: normal;
-			font-weight: 600;
-			src: url(fonts/arial/arialbd.ttf);
-		}
-
-	</style>
+    </style>
 </head>
 <body>
 
 <div class="sidetall" id="side">{{ side }} <span class="sidetall_antall"></span> {{ av }} <span
-	class="sidetall_total"></span></div>
+        class="sidetall_total"></span></div>
 <div class="dato" id="innsendtTidspunkt">{{ innsendtTidspunkt }}</div>
 
 <img class="navlogo" src="icons/navlogo.jpg" alt="navlogo"/>
