@@ -33,4 +33,6 @@ object Constants {
 	const val PDL = "pdl"
 	const val ARENA_MAALGRUPPE = "arena_maalgruppe"
 	const val KONTORREGISTER_BORGER = "kontorregister_borger"
+
+	const val LOSPOST_SKJEMANUMMER = "NAV 00-03.00"
 }

@@ -198,6 +198,15 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 	}
 
+	fun createLospost(opprettLospost: OpprettLospost): ResponseEntity<LospostDto> {
+		return restTemplate.exchange(
+			"${baseUrl}/fyllut/v1/lospost",
+			HttpMethod.POST,
+			createHttpEntity(opprettLospost),
+			LospostDto::class.java
+		)
+	}
+
 	fun getSoknaderForSkjemanr(skjemanr: String, soknadstyper: List<SoknadType>? = emptyList()): ResponseEntity<List<DokumentSoknadDto>> {
 		val responseType = object : ParameterizedTypeReference<List<DokumentSoknadDto>>() {}
 		var query = "";
