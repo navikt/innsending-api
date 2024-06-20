@@ -5,7 +5,7 @@ import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 
-fun mapTilLospost (soknad: SoknadDbData, vedlegg: VedleggDbData): LospostDto {
+fun mapTilLospost(soknad: SoknadDbData, vedlegg: VedleggDbData): LospostDto {
 	assert(soknad.visningstype == VisningsType.lospost)
 	return LospostDto(
 		brukerId = soknad.brukerid,

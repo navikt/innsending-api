@@ -1,9 +1,9 @@
-package no.nav.soknad.innsending.service.unittest;
+package no.nav.soknad.innsending.service.unittest
 
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
-import io.mockk.impl.annotations.RelaxedMockK;
-import io.mockk.junit5.MockKExtension;
+import io.mockk.impl.annotations.RelaxedMockK
+import io.mockk.junit5.MockKExtension
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
@@ -12,10 +12,10 @@ import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.LospostService
-import no.nav.soknad.innsending.service.RepositoryUtils;
+import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.util.Constants
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.assertEquals
 
 @ExtendWith(MockKExtension::class)
@@ -62,8 +62,8 @@ class LospostServiceTest {
 		val captorSoknad = slot<SoknadDbData>()
 		val captorVedlegg = slot<VedleggDbData>()
 
-		verify(exactly = 1) { repo.lagreSoknad(capture(captorSoknad))}
-		verify(exactly = 1) { repo.lagreVedlegg(capture(captorVedlegg))}
+		verify(exactly = 1) { repo.lagreSoknad(capture(captorSoknad)) }
+		verify(exactly = 1) { repo.lagreVedlegg(capture(captorVedlegg)) }
 
 		val soknad = captorSoknad.captured
 		assertEquals(VisningsType.lospost, soknad.visningstype)

@@ -34,10 +34,10 @@ class LospostService(
 		tittel: String,
 		dokumentTittel: String,
 		sprak: String,
-	) : LospostDto {
+	): LospostDto {
 		val innsendingsId = Utilities.laginnsendingsId()
 		val applikasjon = subjectHandler.getClientId()
-		val now = LocalDateTime.now();
+		val now = LocalDateTime.now()
 		val soknad = repo.lagreSoknad(
 			SoknadDbData(
 				id = null,
@@ -85,7 +85,10 @@ class LospostService(
 			val dokumentSoknadDto = lagDokumentSoknadDto(soknad, listOf(vedlegg))
 			brukernotifikasjon.soknadStatusChange(dokumentSoknadDto)
 		} catch (e: Exception) {
-			throw BackendErrorException("$innsendingsId: Feil under opprettelse av brukernotifikasjon i forbindelse med løspost", e)
+			throw BackendErrorException(
+				"$innsendingsId: Feil under opprettelse av brukernotifikasjon i forbindelse med løspost",
+				e
+			)
 		}
 		return mapTilLospost(soknad, vedlegg)
 	}
