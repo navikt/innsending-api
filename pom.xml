@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.3.0</version>
+		<version>3.3.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -28,7 +28,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<!--Spring-->
-		<spring-boot.version>3.3.0</spring-boot.version>
+		<spring-boot.version>3.3.1</spring-boot.version>
 		<spring-web.version>6.1.8</spring-web.version>
 		<spring-cloud.version>4.1.3</spring-cloud.version>
 
@@ -41,7 +41,7 @@
 
 		<!--Database-->
 		<otj-pg-embedded.version>1.0.3</otj-pg-embedded.version>
-		<flyway.version>10.14.0</flyway.version>
+		<flyway.version>10.15.0</flyway.version>
 
 		<!--Other-->
 		<kotlin-serialization.version>1.6.3</kotlin-serialization.version>
