@@ -85,7 +85,7 @@ val List<VedleggDto>.skalEttersendes: List<VedleggDto>
 
 fun innsendteVedlegg(soknadOpprettetDato: OffsetDateTime, vedlegg: List<VedleggDto>): List<VedleggDto> {
 	return vedlegg.filter {
-		!it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.Innsendt && (it.innsendtdato
+		!it.erHoveddokument && it.vedleggsnr != KVITTERINGS_NR && it.opplastingsStatus == OpplastingsStatusDto.Innsendt && (it.innsendtdato
 			?: it.opprettetdato).isBefore(soknadOpprettetDato)
 	}
 }
