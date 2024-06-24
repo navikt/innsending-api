@@ -24,21 +24,6 @@ spec:
             special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
             alert_type: custom
             severity: critical
-        - alert: High number of errors
-          expr: sum(increase(log_messages_errors{app="innsending-api",level="Error"}[10m])) > {{ number_of_errors }}
-          for: 1s
-          annotations:
-            title: "High number of errors logged"
-            consequence: "There can be different causes for errors, check logs for cause and evaluation of consequences."
-            action: {{ error_log_url }}
-            summary: "Service has reported more than {{number_of_error}} errors within 5 minutes."
-            sla: "Action should be taken as soon as possible"
-          labels:
-            service: "innsending-api"
-            namespace: fyllut-sendinn
-            special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
-            alert_type: custom
-            severity: critical
         - alert: Not yet archived
           expr: sum(innsendingapi_applications_absent_in_archive{namespace="team-soknad"}) > 0
           for: 1m
@@ -92,21 +77,6 @@ spec:
             consequence: "If this continues it might have consequences for resources used."
             action: {{ application_sent_in_log_url }}
             summary: "Service has reported that the number of sent in applications last {{expected_period}} is unusally high."
-            sla: "Check logs within 3h"
-          labels:
-            service: "innsending-api"
-            namespace: fyllut-sendinn
-            special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
-            alert_type: custom
-            severity: info
-        - alert: High number of functional errors
-          expr: ceil(sum by (operation) (increase(innsendingapi_number_of_errors[ {{expected_period}} ]))) > {{ number_of_errors }}
-          for: 1m
-          annotations:
-            title: "High number of functional errors detected"
-            consequence: "If this continues it might have consequences for users beeing able to send in applications."
-            action: {{ error_log_url }}
-            summary: "Service has reported that the number of errors for an operation for last {{expected_period}} is unusally high."
             sla: "Check logs within 3h"
           labels:
             service: "innsending-api"
