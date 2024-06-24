@@ -1281,6 +1281,10 @@ components:
           $ref: "#/components/schemas/SkjemaPath"
         applikasjon:
           $ref: "#/components/schemas/Applikasjon"
+        skalSlettesDato:
+          $ref: "#/components/schemas/SkalSlettesDato"
+        mellomlagringDager:
+          $ref: "#/components/schemas/MellomlagringDager"
 
     EksternOpprettEttersending:
       type: object
@@ -1451,6 +1455,11 @@ components:
       type: string
       description: Visnings navn for et vedlegg.
       example: Inntektsopplysninger for selvstendig næringsdrivende og frilansere som skal ha foreldrepenger eller svangerskapspenger.
+
+    MellomlagringDager:
+      type: integer
+      description: Antall dager søknaden skal mellomlagres før den slettes
+      example: 30
 
     Mimetype:
       type: string
@@ -1679,6 +1688,8 @@ components:
           $ref: "#/components/schemas/EndretDato"
         skalSlettesDato:
           $ref: "#/components/schemas/SkalSlettesDato"
+        mellomlagringDager:
+          $ref: "#/components/schemas/MellomlagringDager"
         skjemaPath:
           $ref: "#/components/schemas/SkjemaPath"
         visningsType:
@@ -1696,9 +1707,9 @@ components:
 
     SkalSlettesDato:
       type: string
-      format: date
+      format: date-time
       description: Dato søknaden vil slettes. En skedulert slettejobb kjøres hver kveld.
-      example: 2021-12-03
+      example: 2021-12-03T00:00:00Z
 
     SoknadsStatusDto:
       type: string

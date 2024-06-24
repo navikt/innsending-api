@@ -1,9 +1,7 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
-import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType.KODEVERK_NAVSKJEMA
-import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType.KODEVERK_TEMA
-import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType.KODEVERK_VEDLEGGSKODER
+import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType.*
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.*
@@ -20,11 +18,7 @@ import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
-import no.nav.soknad.innsending.util.mapping.lagDokumentSoknadDto
-import no.nav.soknad.innsending.util.mapping.mapTilDbMimetype
-import no.nav.soknad.innsending.util.mapping.mapTilDbOpplastingsStatus
-import no.nav.soknad.innsending.util.mapping.mapTilLocalDateTime
-import no.nav.soknad.innsending.util.mapping.mapToOpprettEttersending
+import no.nav.soknad.innsending.util.mapping.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -85,7 +79,8 @@ class EttersendingService(
 				forsteinnsendingsdato = mapTilLocalDateTime(forsteInnsendingsDato),
 				ettersendingsfrist = fristForEttersendelse,
 				arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
-				applikasjon = applikasjon
+				applikasjon = applikasjon,
+				skalslettesdato = OffsetDateTime.now().plusDays(Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD)
 			)
 		)
 	}

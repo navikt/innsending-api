@@ -4,8 +4,10 @@ import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
+import no.nav.soknad.innsending.util.Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
 import no.nav.soknad.innsending.utils.Skjema.generateSkjemanr
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.*
 
 data class SoknadDbDataTestBuilder(
@@ -28,6 +30,7 @@ data class SoknadDbDataTestBuilder(
 	var ettersendingsFrist: Long = 14,
 	var arkiveringsStatus: ArkiveringsStatus = ArkiveringsStatus.IkkeSatt,
 	var applikasjon: String? = "application",
+	var skalslettesdato: OffsetDateTime = OffsetDateTime.now().plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD)
 ) {
 	fun build() = SoknadDbData(
 		id = id,
@@ -49,5 +52,6 @@ data class SoknadDbDataTestBuilder(
 		ettersendingsfrist = ettersendingsFrist,
 		arkiveringsstatus = arkiveringsStatus,
 		applikasjon = applikasjon,
+		skalslettesdato = skalslettesdato
 	)
 }
