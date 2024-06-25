@@ -344,5 +344,23 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		)
 	}
 
+	@Test
+	fun `Should keep notification active through the lifespan of the soknad`() {
+		// Given
+		val mellomlagringDager = 10
+		val dokumentSoknadDto =
+			DokumentSoknadDtoTestBuilder(skalslettesdato = null, mellomlagringDager = mellomlagringDager).build()
+
+		val message = slot<AddNotification>()
+		every { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) } returns Unit
+
+		// When
+		brukernotifikasjonPublisher?.soknadStatusChange(dokumentSoknadDto)
+
+		// Then
+		assertTrue(message.isCaptured)
+		assertEquals(mellomlagringDager, message.captured.brukernotifikasjonInfo.antallAktiveDager)
+	}
+
 
 }

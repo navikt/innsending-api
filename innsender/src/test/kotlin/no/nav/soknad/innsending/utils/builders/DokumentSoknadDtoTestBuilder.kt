@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.utils.builders
 
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.util.Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
 import no.nav.soknad.innsending.util.Skjema
 import no.nav.soknad.innsending.utils.Skjema.generateSkjemanr
 import java.time.OffsetDateTime
@@ -34,6 +35,8 @@ class DokumentSoknadDtoTestBuilder(
 	var soknadType: SoknadType? = null,
 	var skjemaPath: String = Skjema.createSkjemaPathFromSkjemanr(skjemanr),
 	var applikasjon: String? = "application",
+	var skalslettesdato: OffsetDateTime? = OffsetDateTime.now().plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD),
+	var mellomlagringDager: Int? = DEFAULT_LEVETID_OPPRETTET_SOKNAD.toInt()
 ) {
 
 	val erEttersending = ettersendingsId != null || visningsType == VisningsType.ettersending
@@ -72,5 +75,7 @@ class DokumentSoknadDtoTestBuilder(
 		soknadstype = soknadType ?: (if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad),
 		skjemaPath = skjemaPath,
 		applikasjon = applikasjon,
+		skalSlettesDato = skalslettesdato,
+		mellomlagringDager = mellomlagringDager
 	)
 }

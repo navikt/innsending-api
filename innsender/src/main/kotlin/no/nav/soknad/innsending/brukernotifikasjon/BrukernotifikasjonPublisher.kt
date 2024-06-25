@@ -26,8 +26,6 @@ class BrukernotifikasjonPublisher(
 ) {
 	private val logger = LoggerFactory.getLogger(BrukernotifikasjonPublisher::class.java)
 
-	private val soknadLevetid = Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD.toInt() // Dager
-
 	val tittelPrefixEttersendelse = mapOf(
 		"no" to "Ettersend manglende vedlegg til: ",
 		"nn" to "Ettersend manglande vedlegg til: ",
@@ -106,6 +104,8 @@ class BrukernotifikasjonPublisher(
 	): NotificationInfo {
 		val tittel = tittelPrefixGittSprak(ettersending, dokumentSoknad.spraak ?: "no") + dokumentSoknad.tittel
 		val eksternVarslingList = if (ettersending) mutableListOf(Varsel(Varsel.Kanal.sms)) else mutableListOf()
+
+		val soknadLevetid = dokumentSoknad.mellomlagringDager ?: Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD.toInt()
 
 		return NotificationInfo(tittel, lenke, soknadLevetid, eksternVarslingList)
 	}

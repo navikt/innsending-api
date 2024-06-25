@@ -14,6 +14,7 @@ import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.hovedDokumentVariant
@@ -24,6 +25,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 @Service
 class SoknadService(
@@ -74,7 +76,8 @@ class SoknadService(
 					forsteinnsendingsdato = null,
 					ettersendingsfrist = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 					arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
-					applikasjon = applikasjon
+					applikasjon = applikasjon,
+					skalslettesdato = OffsetDateTime.now().plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD)
 				)
 			)
 
@@ -133,7 +136,9 @@ class SoknadService(
 	}
 
 	fun hentAktiveSoknader(brukerId: String, skjemanr: String, vararg soknadTyper: SoknadType): List<DokumentSoknadDto> {
-		return hentAktiveSoknader(listOf(brukerId)).filter { it.skjemanr == skjemanr && (soknadTyper.isEmpty() || soknadTyper.contains(it.soknadstype)) && it.visningsType !== VisningsType.dokumentinnsending }
+		return hentAktiveSoknader(listOf(brukerId)).filter {
+			it.skjemanr == skjemanr && (soknadTyper.isEmpty() || soknadTyper.contains(it.soknadstype)) && it.visningsType !== VisningsType.dokumentinnsending
+		}
 	}
 
 
@@ -263,7 +268,10 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun slettGamleSoknader(dagerGamle: Long, permanent: Boolean = false) {
+	fun slettGamleSoknader(
+		dagerGamle: Long = DEFAULT_LEVETID_OPPRETTET_SOKNAD,
+		permanent: Boolean = false,
+	) {
 		val slettFor = mapTilOffsetDateTime(LocalDateTime.now(), -dagerGamle)
 		logger.info("Finn opprettede søknader opprettet før $slettFor permanent=$permanent")
 		if (permanent) {
@@ -271,16 +279,36 @@ class SoknadService(
 			logger.info("SlettPermanentSoknader: Funnet ${soknadDbDataListe.size} søknader som skal permanent slettes")
 			soknadDbDataListe.forEach { slettSoknadPermanent(it.innsendingsid) }
 		} else {
-			val soknadDbDataListe = repo.findAllByStatusesAndWithOpprettetdatoBefore(
-				listOf(
-					SoknadsStatus.Opprettet.name,
-					SoknadsStatus.Utfylt.name
-				), slettFor
-			)
+			val soknadDbDataListe: List<SoknadDbData> =
+				repo.findAllByStatusesAndWithOpprettetdatoBefore(
+					listOf(
+						SoknadsStatus.Opprettet.name,
+						SoknadsStatus.Utfylt.name
+					), slettFor
+				)
 
 			logger.info("SlettGamleIkkeInnsendteSoknader: Funnet ${soknadDbDataListe.size} søknader som skal slettes")
 			soknadDbDataListe.forEach { slettSoknadAutomatisk(it.innsendingsid) }
 		}
+	}
+
+	@Transactional
+	fun deleteSoknadBeforeCutoffDate(
+		cutoffDate: OffsetDateTime
+	) {
+		logger.info("Finner søknader som skal slettes før $cutoffDate")
+
+		val soknaderToDelete =
+			repo.findAllByStatusesAndWithSkalSlettesDatoBefore(
+				listOf(
+					SoknadsStatus.Opprettet.name,
+					SoknadsStatus.Utfylt.name
+				), cutoffDate
+			)
+
+		logger.info("Funnet ${soknaderToDelete.size} søknader som skal slettes")
+		soknaderToDelete.forEach { slettSoknadAutomatisk(it.innsendingsid) }
+
 	}
 
 	@Transactional
