@@ -18,6 +18,7 @@ import no.nav.soknad.innsending.util.mapping.mapTilLospost
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
@@ -56,7 +57,8 @@ class LospostService(
 				applikasjon = applikasjon,
 				forsteinnsendingsdato = null,
 				ettersendingsid = null,
-				innsendtdato = null
+				innsendtdato = null,
+				skalslettesdato = OffsetDateTime.now().plusDays(Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD)
 			)
 		)
 		val vedlegg = repo.lagreVedlegg(
