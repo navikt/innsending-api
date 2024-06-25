@@ -53,6 +53,9 @@ fun mapTilOpplastingsStatusDto(opplastingsStatus: OpplastingsStatus): Opplasting
 		OpplastingsStatus.SENDES_AV_ANDRE -> OpplastingsStatusDto.SendesAvAndre
 		OpplastingsStatus.SENDES_IKKE -> OpplastingsStatusDto.SendesIkke
 		OpplastingsStatus.LASTET_OPP_IKKE_RELEVANT_LENGER -> OpplastingsStatusDto.LastetOppIkkeRelevantLenger
+		OpplastingsStatus.NAV_KAN_HENTE_DOKUMENTASJON -> OpplastingsStatusDto.NavKanHenteDokumentasjon
+		OpplastingsStatus.LEVERT_DOKUMENTASJON_TIDLIGERE -> OpplastingsStatusDto.LevertDokumentasjonTidligere
+		OpplastingsStatus.HAR_IKKE_DOKUMENTASJON -> OpplastingsStatusDto.HarIkkeDokumentasjonen
 		else -> OpplastingsStatusDto.IkkeValgt
 	}
 
@@ -65,6 +68,9 @@ fun mapTilDbOpplastingsStatus(opplastingsStatusDto: OpplastingsStatusDto): Oppla
 		OpplastingsStatusDto.SendesAvAndre -> OpplastingsStatus.SENDES_AV_ANDRE
 		OpplastingsStatusDto.SendesIkke -> OpplastingsStatus.SENDES_IKKE
 		OpplastingsStatusDto.LastetOppIkkeRelevantLenger -> OpplastingsStatus.LASTET_OPP_IKKE_RELEVANT_LENGER
+		OpplastingsStatusDto.HarIkkeDokumentasjonen -> OpplastingsStatus.HAR_IKKE_DOKUMENTASJON
+		OpplastingsStatusDto.LevertDokumentasjonTidligere -> OpplastingsStatus.LEVERT_DOKUMENTASJON_TIDLIGERE
+		OpplastingsStatusDto.NavKanHenteDokumentasjon -> OpplastingsStatus.NAV_KAN_HENTE_DOKUMENTASJON
 	}
 
 fun avledOpplastingsstatusVedInnsending(filDto: FilDto?, vedleggDto: VedleggDto): OpplastingsStatusDto {
@@ -78,7 +84,10 @@ fun avledOpplastingsstatusVedInnsending(filDto: FilDto?, vedleggDto: VedleggDto)
 		OpplastingsStatusDto.IkkeValgt -> if (vedleggDto.erPakrevd) OpplastingsStatusDto.SendSenere else OpplastingsStatusDto.SendesIkke
 		OpplastingsStatusDto.SendesAvAndre,
 		OpplastingsStatusDto.SendSenere,
-		OpplastingsStatusDto.Innsendt -> vedleggDto.opplastingsStatus
+		OpplastingsStatusDto.Innsendt,
+		OpplastingsStatusDto.NavKanHenteDokumentasjon,
+		OpplastingsStatusDto.LevertDokumentasjonTidligere,
+		OpplastingsStatusDto.HarIkkeDokumentasjonen -> vedleggDto.opplastingsStatus
 
 		else -> if (vedleggDto.erPakrevd) OpplastingsStatusDto.SendSenere else OpplastingsStatusDto.SendesIkke
 	}
