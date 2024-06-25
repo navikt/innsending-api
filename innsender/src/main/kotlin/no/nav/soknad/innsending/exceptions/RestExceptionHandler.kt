@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.multipart.MultipartException
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import java.time.OffsetDateTime
 
 
@@ -21,14 +22,14 @@ class RestExceptionHandler {
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 
 	// 404
-	@ExceptionHandler
-	fun resourceNotFoundException(exception: ResourceNotFoundException): ResponseEntity<RestErrorResponseDto> {
+	@ExceptionHandler(value = [ResourceNotFoundException::class, NoResourceFoundException::class])
+	fun resourceNotFoundException(exception: Exception): ResponseEntity<RestErrorResponseDto> {
 		logger.warn(exception.message, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
 				message = exception.message,
 				timestamp = OffsetDateTime.now(),
-				errorCode = exception.errorCode.code
+				errorCode = ErrorCode.NOT_FOUND.code,
 			), HttpStatus.NOT_FOUND
 		)
 	}
