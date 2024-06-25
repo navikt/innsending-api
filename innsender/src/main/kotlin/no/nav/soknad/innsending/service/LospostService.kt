@@ -81,6 +81,8 @@ class LospostService(
 				innsendtdato = null,
 				vedleggsurl = null,
 				formioid = null,
+				opplastingsvalgkommentar = null,
+				opplastingsvalgkommentarledetekst = null,
 			)
 		)
 		try {
