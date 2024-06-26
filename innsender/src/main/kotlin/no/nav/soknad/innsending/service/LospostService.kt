@@ -58,7 +58,7 @@ class LospostService(
 				forsteinnsendingsdato = null,
 				ettersendingsid = null,
 				innsendtdato = null,
-				skalslettesdato = OffsetDateTime.now().plusDays(Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD)
+				skalslettesdato = OffsetDateTime.now().plusDays(Constants.DEFAULT_LEVETID_OPPRETTET_LOSPOST)
 			)
 		)
 		val vedlegg = repo.lagreVedlegg(
