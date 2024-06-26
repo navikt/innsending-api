@@ -52,6 +52,7 @@
 		"KONTOREGISTER_TOKEN_X_AUDIENCE": "dev-gcp:okonomi:sokos-kontoregister-person",
 		"KONTOREGISTER_SCOPE": "api://dev-gcp.okonomi.sokos-kontoregister-person/.default",
 		"KONTOREGISTER_URL": "http://sokos-kontoregister-person.okonomi",
+		"AZURE_ALLOW_ALL_USERS": true,
 		"AZURE_ALLOWED_GROUPS": []		
 	}
 }
