@@ -6,6 +6,7 @@ import io.prometheus.metrics.core.metrics.Gauge
 import io.prometheus.metrics.core.metrics.Histogram
 import io.prometheus.metrics.core.metrics.Summary
 import io.prometheus.metrics.model.registry.PrometheusRegistry
+import no.nav.soknad.innsending.supervision.counters.OutgoingRequestsCounter
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
@@ -44,6 +45,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	private var absentInArchiveGauge = registerGauge(absentInArchiveName, absentInArchiveHelp)
 	private var archivingFailedGauge = registerGauge(archivingFailedName, archivingFailedHelp)
 
+	var outgoingRequestsCounter = OutgoingRequestsCounter(soknadNamespace, registry)
 	var fileNumberOfPagesSummary = registerSummary(fileNumberOfPages, fileNumberOfPagesHelp)
 	var fileSizeSummary = registerSummary(fileSize, fileSizeHelp)
 
@@ -55,6 +57,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 		databaseGauge = registerGauge(databaseSizeName, databaseSizeHelp)
 		absentInArchiveGauge = registerGauge(absentInArchiveName, absentInArchiveHelp)
 		archivingFailedGauge = registerGauge(archivingFailedName, archivingFailedHelp)
+		outgoingRequestsCounter = OutgoingRequestsCounter(soknadNamespace, registry)
 		fileNumberOfPagesSummary = registerSummary(fileNumberOfPages, fileNumberOfPagesHelp)
 		fileSizeSummary = registerSummary(fileSize, fileSizeHelp)
 	}
@@ -67,6 +70,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 		registry.unregister(databaseGauge)
 		registry.unregister(absentInArchiveGauge)
 		registry.unregister(archivingFailedGauge)
+		registry.unregister(outgoingRequestsCounter.instance)
 		registry.unregister(fileNumberOfPagesSummary)
 		registry.unregister(fileSizeSummary)
 	}
