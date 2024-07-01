@@ -8,8 +8,8 @@ import no.nav.soknad.innsending.model.AktivitetEndepunkt
 import no.nav.soknad.innsending.model.Maalgruppe
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
-import no.nav.soknad.innsending.supervision.counters.ExternalSystem
-import no.nav.soknad.innsending.supervision.counters.MethodResult
+import no.nav.soknad.innsending.supervision.counters.outgoingrequests.ExternalSystem
+import no.nav.soknad.innsending.supervision.counters.outgoingrequests.MethodResult
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier

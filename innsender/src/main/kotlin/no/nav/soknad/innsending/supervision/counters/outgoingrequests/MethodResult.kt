@@ -1,4 +1,4 @@
-package no.nav.soknad.innsending.supervision.counters
+package no.nav.soknad.innsending.supervision.counters.outgoingrequests
 
 enum class MethodResult(val code: String) {
 	CODE_OK("OK"),

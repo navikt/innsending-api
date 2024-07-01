@@ -6,7 +6,7 @@ import io.prometheus.metrics.core.metrics.Gauge
 import io.prometheus.metrics.core.metrics.Histogram
 import io.prometheus.metrics.core.metrics.Summary
 import io.prometheus.metrics.model.registry.PrometheusRegistry
-import no.nav.soknad.innsending.supervision.counters.OutgoingRequestsCounter
+import no.nav.soknad.innsending.supervision.counters.outgoingrequests.OutgoingRequestsCounter
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component

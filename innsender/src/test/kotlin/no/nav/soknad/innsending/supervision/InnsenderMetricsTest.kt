@@ -1,6 +1,9 @@
 package no.nav.soknad.innsending.supervision
 
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.soknad.innsending.ApplicationTest
+import no.nav.soknad.innsending.supervision.counters.outgoingrequests.ExternalSystem
+import no.nav.soknad.innsending.supervision.counters.outgoingrequests.MethodResult
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -10,6 +13,9 @@ class InnsenderMetricsTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var innsenderMetrics: InnsenderMetrics
+
+	@Autowired
+	lateinit var registry: PrometheusRegistry
 
 	@BeforeEach
 	fun init() {
@@ -77,8 +83,39 @@ class InnsenderMetricsTest : ApplicationTest() {
 
 		assertEquals(pagesAndSizes.sumOf { it[1] }, fileSizeSum)
 		assertEquals(pagesAndSizes.size.toLong(), fileSizeCount)
+	}
 
+	@Test
+	fun `Should initialize all possible label combinations for outgoing requests counter with zero`() {
+		val counter = innsenderMetrics.outgoingRequestsCounter.instance
+		val dataPoints = counter.collect().dataPoints
+		val totalNumberOfMethods = ExternalSystem.entries.fold(0) { acc, system -> acc + system.methods.size }
+		val numberOfMethodResults = MethodResult.entries.size
 
+		assertEquals(totalNumberOfMethods * numberOfMethodResults, dataPoints.size)
+		dataPoints.forEach { assertEquals(0.0, it.value, "Value should be 0.0 for labels ${it.labels}") }
+	}
+
+	@Test
+	fun `Should ignore unknown method for outgoing requests counter`() {
+		innsenderMetrics.outgoingRequestsCounter.inc(ExternalSystem.ARENA, "invalidMethod")
+
+		val counter = innsenderMetrics.outgoingRequestsCounter.instance
+		val dataPoints = counter.collect().dataPoints
+		dataPoints.forEach { assertEquals(0.0, it.value, "Value should be 0.0 for labels ${it.labels}") }
+	}
+
+	@Test
+	fun `Should register outgoing request with result ok by default`() {
+		innsenderMetrics.outgoingRequestsCounter.inc(ExternalSystem.ARENA, "get_maalgrupper")
+
+		val counter = innsenderMetrics.outgoingRequestsCounter.instance
+		val dataPoints = counter.collect().dataPoints
+		val dataPoint = dataPoints.find {
+			it.labels.get("method")?.equals("get_maalgrupper") == true
+				&& it.labels.get("result")?.equals(MethodResult.CODE_OK.code) == true
+		}
+		assertEquals(1.0, dataPoint?.value)
 	}
 
 }
