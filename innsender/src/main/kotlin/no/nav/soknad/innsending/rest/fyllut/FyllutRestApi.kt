@@ -2,9 +2,9 @@ package no.nav.soknad.innsending.rest.fyllut
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.FyllutApi
-import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
+import no.nav.soknad.innsending.location.UrlHandler
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
@@ -29,7 +29,7 @@ import java.net.URI
 @RestController
 @ProtectedWithClaims(issuer = TOKENX, claimMap = [CLAIM_ACR_LEVEL_4, CLAIM_ACR_IDPORTEN_LOA_HIGH], combineWithOr = true)
 class FyllutRestApi(
-	private val restConfig: RestConfig,
+	private val urlHandler: UrlHandler,
 	private val soknadService: SoknadService,
 	private val tilgangskontroll: Tilgangskontroll,
 	private val prefillService: PrefillService,
@@ -55,7 +55,7 @@ class FyllutRestApi(
 		)
 
 		val redirectVedPaabegyntSoknad =
-			redirectVedPaabegyntSoknad(brukerId, skjemaDto, force ?: false)
+			redirectVedPaabegyntSoknad(brukerId, skjemaDto, force == true)
 		if (redirectVedPaabegyntSoknad != null) return redirectVedPaabegyntSoknad
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
@@ -119,7 +119,11 @@ class FyllutRestApi(
 	}
 
 	@Timed(InnsenderOperation.ENDRE)
-	override fun fyllUtUtfyltSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<Unit> {
+	override fun fyllUtUtfyltSoknad(
+		innsendingsId: String,
+		skjemaDto: SkjemaDto,
+		envQualifier: EnvQualifier?
+	): ResponseEntity<Unit> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		val applikasjon = subjectHandler.getClientId()
 
@@ -140,7 +144,8 @@ class FyllutRestApi(
 		combinedLogger.log("$innsendingsId: Utfylt søknad fra Fyllut", brukerId)
 
 		return ResponseEntity
-			.status(HttpStatus.FOUND).location(URI.create(restConfig.sendInnUrl + "/" + innsendingsId))
+			.status(HttpStatus.FOUND)
+			.location(URI.create(urlHandler.getSendInnUrl(envQualifier) + "/" + innsendingsId))
 			.build()
 	}
 

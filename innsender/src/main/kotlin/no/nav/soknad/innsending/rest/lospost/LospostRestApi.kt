@@ -2,7 +2,8 @@ package no.nav.soknad.innsending.rest.lospost
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.LospostApi
-import no.nav.soknad.innsending.config.RestConfig
+import no.nav.soknad.innsending.location.UrlHandler
+import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.LospostDto
 import no.nav.soknad.innsending.model.OpprettLospost
 import no.nav.soknad.innsending.security.Tilgangskontroll
@@ -24,14 +25,15 @@ import java.net.URI
 class LospostRestApi(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val lospostService: LospostService,
-	private val restConfig: RestConfig
+	private val urlHandler: UrlHandler,
 ) : LospostApi {
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val secureLogger = LoggerFactory.getLogger("secureLogger")
 	private val combinedLogger = CombinedLogger(logger, secureLogger)
 
 	override fun opprettLospost(
-		opprettLospost: OpprettLospost
+		opprettLospost: OpprettLospost,
+		envQualifier: EnvQualifier?
 	): ResponseEntity<LospostDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		val (soknadTittel, tema, dokumentTittel, sprak) = opprettLospost
@@ -41,7 +43,7 @@ class LospostRestApi(
 		combinedLogger.log("${dto.innsendingsId}: Har opprettet en innsending for løspost", brukerId)
 		return ResponseEntity
 			.status(HttpStatus.CREATED)
-			.location(URI.create(restConfig.sendInnUrl + "/" + dto.innsendingsId))
+			.location(URI.create(urlHandler.getSendInnUrl(envQualifier) + "/" + dto.innsendingsId))
 			.body(dto)
 	}
 }

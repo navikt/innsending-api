@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.rest.lospost
 
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
+import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.OpprettLospost
 import no.nav.soknad.innsending.utils.Api
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -34,7 +36,7 @@ class LospostRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should create løspost innsending`() {
 		val request = OpprettLospost(
-			soknadTittel = "Send dokumenter til NAV",
+			soknadTittel = "BIL - Førerkort",
 			tema = "BIL",
 			dokumentTittel = "Førerkort",
 			sprak = "nb"
@@ -52,6 +54,22 @@ class LospostRestApiTest : ApplicationTest() {
 		assertEquals("N6", vedlegg.vedleggsnr)
 		assertEquals(request.dokumentTittel, vedlegg.tittel)
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedlegg.opplastingsStatus)
+	}
+
+	@Test
+	fun `Should return location based on env qualifier`() {
+		val request = OpprettLospost(
+			soknadTittel = "PEN - Arbeidskontrakt",
+			tema = "PEN",
+			dokumentTittel = "Arbeidskontrakt",
+			sprak = "nb"
+		)
+
+		val responseAnsatt = api?.createLospost(request, EnvQualifier.preprodAnsatt)
+		assertContains(responseAnsatt?.headers?.location.toString(), "ansatt.dev.nav.no")
+
+		val responseIntern = api?.createLospost(request, EnvQualifier.preprodIntern)
+		assertContains(responseIntern?.headers?.location.toString(), "intern.dev.nav.no")
 	}
 
 }
