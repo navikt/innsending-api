@@ -16,6 +16,7 @@ import org.apache.pdfbox.pdmodel.font.PDType0Font
 import org.apache.pdfbox.pdmodel.graphics.color.PDOutputIntent
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm
+import org.apache.pdfbox.pdmodel.interactive.form.PDField
 import org.apache.xmpbox.XMPMetadata
 import org.apache.xmpbox.schema.DublinCoreSchema
 import org.apache.xmpbox.schema.PDFAIdentificationSchema
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory
 import java.awt.Dimension
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+
 
 class KonverterTilPdf {
 
@@ -58,28 +60,31 @@ class KonverterTilPdf {
 		return pdfDocument.documentCatalog.acroForm
 	}
 
+	private fun setReadOnlyFields(byteArray: ByteArray): ByteArray {
+		Loader.loadPDF(byteArray).use { document ->
+			ByteArrayOutputStream().use { stream ->
+				val acroForm = getAcroForm(document)
+				val fields: MutableList<PDField>? = acroForm?.fields
+
+				if (fields.isNullOrEmpty()) {
+					return byteArray
+				}
+
+				for (field in fields) {
+					field.isReadOnly = true
+				}
+				
+				document.save(stream)
+				document.close()
+				return stream.toByteArray()
+			}
+		}
+	}
+
+
 	fun flatUtPdf(fil: ByteArray, antallSider: Int): ByteArray {
 		logger.info("Antall sider i PDF: {}", antallSider)
-
-		// Konvertere fra PDF til bilde og tilbake til PDF
-		// Max størrelse på vedlegg er 50mb og for å ikke overskride dette så konverterer vi ikke PDF'er på over 50 sider
-		// (PDF'en blir veldig mye større med png av hver side)
-		if (harSkrivbareFelt(fil) && antallSider <= 50) {
-			val start = System.currentTimeMillis()
-
-			val images = KonverterTilPng().konverterTilPng(fil)
-			val pdfList = mutableListOf<ByteArray>()
-			for (element in images) pdfList.add(createPDFFromImage(element).first)
-
-			val end = System.currentTimeMillis()
-			logger.info("Tid brukt for å konvertere PDF til bilde og tilbake til PDF = {}", end - start)
-
-			return PdfMerger().mergePdfer(pdfList)
-		} else if (antallSider > 50) {
-			logger.info("Antall sider = $antallSider er over max grense (50) for utflating av PDF")
-		}
-
-		return fil
+		return setReadOnlyFields(fil)
 	}
 
 	private fun createPDFFromImage(image: ByteArray): Pair<ByteArray, Int> {
