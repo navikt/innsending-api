@@ -32,9 +32,9 @@ class VedleggService(
 		return repo.lagreVedlegg(
 			VedleggDbData(
 				id = null,
-				soknadsid =savedSoknadDbData.id!!,
+				soknadsid = savedSoknadDbData.id!!,
 				status = OpplastingsStatus.IKKE_VALGT,
-				erhoveddokument =true,
+				erhoveddokument = true,
 				ervariant = false,
 				erpdfa = true,
 				erpakrevd = true,
@@ -217,7 +217,7 @@ class VedleggService(
 					erpdfa = false,
 					erpakrevd = it.vedleggsnr != "N6",
 					vedleggsnr = it.vedleggsnr,
-					tittel = it.tittel ?: "",
+					tittel = it.tittel,
 					label = it.tittel,
 					beskrivelse = "",
 					mimetype = it.mimetype?.value,
@@ -249,7 +249,7 @@ class VedleggService(
 			soknadsId = soknadDb.id!!,
 			vedleggsnrListe = listOf("N6"),
 			spraak = soknadDto.spraak!!,
-			tittel =vedleggDto?.tittel
+			tittel = vedleggDto?.tittel
 		)
 
 		// Oppdater soknadens sist endret dato
@@ -311,6 +311,7 @@ class VedleggService(
 		val vedleggDbDataListe = try {
 			repo.hentAlleVedleggGittSoknadsid(soknadDbData.id!!)
 		} catch (e: Exception) {
+			logger.warn("Henting av vedlegg til soknad ${soknadDbData.innsendingsid} feilet med ${e} ")
 			throw ResourceNotFoundException("Fant ingen vedlegg til soknad ${soknadDbData.innsendingsid}. Ved oppretting av søknad skal det minimum være opprettet et vedlegg for selve søknaden")
 		}
 
