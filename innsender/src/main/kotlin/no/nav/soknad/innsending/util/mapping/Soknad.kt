@@ -8,10 +8,10 @@ import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.util.Constants
-import no.nav.soknad.innsending.util.Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
 import no.nav.soknad.innsending.util.Skjema.createSkjemaPathFromSkjemanr
 import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
+import no.nav.soknad.innsending.util.models.sletteDato
 import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -41,7 +41,8 @@ fun mapTilSoknadDb(
 		forsteinnsendingsdato = mapTilLocalDateTime(dokumentSoknadDto.forsteInnsendingsDato),
 		ettersendingsfrist = dokumentSoknadDto.fristForEttersendelse,
 		arkiveringsstatus = mapTilDbArkiveringsStatus(dokumentSoknadDto.arkiveringsStatus ?: ArkiveringsStatusDto.IkkeSatt),
-		applikasjon = dokumentSoknadDto.applikasjon
+		applikasjon = dokumentSoknadDto.applikasjon,
+		skalslettesdato = dokumentSoknadDto.sletteDato!!
 	)
 
 fun lagDokumentSoknadDto(
@@ -75,7 +76,8 @@ fun lagDokumentSoknadDto(
 		erSystemGenerert = erSystemGenerert,
 		soknadstype = if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad,
 		skjemaPath = createSkjemaPathFromSkjemanr(soknadDbData.skjemanr),
-		applikasjon = soknadDbData.applikasjon
+		applikasjon = soknadDbData.applikasjon,
+		skalSlettesDato = soknadDbData.skalslettesdato
 	)
 }
 
@@ -118,7 +120,8 @@ fun mapTilDokumentSoknadDto(
 		erSystemGenerert = false,
 		soknadstype = if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad,
 		skjemaPath = createSkjemaPathFromSkjemanr(soknadDbData.skjemanr),
-		applikasjon = soknadDbData.applikasjon
+		applikasjon = soknadDbData.applikasjon,
+		skalSlettesDato = soknadDbData.skalslettesdato,
 	)
 }
 
@@ -126,7 +129,7 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 	val hovedDokument = dokumentSoknadDto.hoveddokument
 	val hovedDokumentVariant = dokumentSoknadDto.hoveddokumentVariant
 	val vedleggsListe = dokumentSoknadDto.vedleggsListeUtenHoveddokument.map { mapTilSkjemaDokumentDto(it) }
-	val deletionDate = dokumentSoknadDto.opprettetDato.plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD).toLocalDate()
+	val deletionDate = dokumentSoknadDto.sletteDato
 
 	if (hovedDokument == null || hovedDokumentVariant == null) {
 		throw BackendErrorException("Hoveddokument eller variant mangler. Finner ikke hoveddokument i vedleggsliste")
@@ -152,7 +155,8 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		endretDato = dokumentSoknadDto.endretDato,
 		skalSlettesDato = deletionDate,
 		skjemaPath = dokumentSoknadDto.skjemaPath,
-		visningsType = dokumentSoknadDto.visningsType
+		visningsType = dokumentSoknadDto.visningsType,
+		mellomlagringDager = dokumentSoknadDto.mellomlagringDager
 	)
 }
 
@@ -170,7 +174,7 @@ fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>): Sokn
 
 private fun beregnInnsendingsFrist(soknadDbData: SoknadDbData): OffsetDateTime {
 	if (soknadDbData.ettersendingsid == null) {
-		return mapTilOffsetDateTime(soknadDbData.opprettetdato, DEFAULT_LEVETID_OPPRETTET_SOKNAD)
+		return soknadDbData.skalslettesdato
 	}
 	return mapTilOffsetDateTime(
 		soknadDbData.forsteinnsendingsdato ?: soknadDbData.opprettetdato,

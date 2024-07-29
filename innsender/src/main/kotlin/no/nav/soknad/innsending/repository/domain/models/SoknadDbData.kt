@@ -6,6 +6,7 @@ import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.util.Constants
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 @Entity
 @Table(name = "soknad")
@@ -38,4 +39,5 @@ data class SoknadDbData(
 	) val ettersendingsfrist: Long? = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 	@Column(name = "arkiveringsstatus", columnDefinition = "varchar") val arkiveringsstatus: ArkiveringsStatus,
 	@Column(name = "applikasjon", columnDefinition = "varchar") val applikasjon: String?,
+	@Column(name = "skalslettesdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val skalslettesdato: OffsetDateTime,
 )

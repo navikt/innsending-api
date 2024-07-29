@@ -3,8 +3,10 @@ package no.nav.soknad.innsending.utils.builders
 import no.nav.soknad.innsending.model.SkjemaDokumentDto
 import no.nav.soknad.innsending.model.SkjemaDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
+import no.nav.soknad.innsending.util.Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
 import no.nav.soknad.innsending.util.Skjema
 import no.nav.soknad.innsending.utils.Skjema.generateSkjemanr
+import java.time.OffsetDateTime
 import java.util.*
 
 
@@ -21,7 +23,9 @@ data class SkjemaDtoTestBuilder(
 	var vedleggsListe: List<SkjemaDokumentDto>? = emptyList(),
 	var kanLasteOppAnnet: Boolean? = false,
 	var fristForEttersendelse: Long? = 14L,
-	var skjemaPath: String = Skjema.createSkjemaPathFromSkjemanr(skjemanr)
+	var skjemaPath: String = Skjema.createSkjemaPathFromSkjemanr(skjemanr),
+	var skalslettesdato: OffsetDateTime? = OffsetDateTime.now().plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD),
+	var mellomlagringDager: Int? = DEFAULT_LEVETID_OPPRETTET_SOKNAD.toInt()
 ) {
 	fun build() = SkjemaDto(
 		brukerId = brukerId,
@@ -36,7 +40,9 @@ data class SkjemaDtoTestBuilder(
 		vedleggsListe = vedleggsListe,
 		kanLasteOppAnnet = kanLasteOppAnnet,
 		fristForEttersendelse = fristForEttersendelse,
-		skjemaPath = skjemaPath
+		skjemaPath = skjemaPath,
+		skalSlettesDato = skalslettesdato,
+		mellomlagringDager = mellomlagringDager
 	)
 }
 

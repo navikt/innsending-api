@@ -31,6 +31,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
+import java.time.LocalDate
 import java.util.*
 import kotlin.test.*
 
@@ -516,9 +517,9 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertNotNull(opprettetSoknad.endretDato)
 		assertEquals(SoknadsStatusDto.Opprettet, opprettetSoknad.status, "Status er satt til opprettet")
 		assertEquals(
-			opprettetSoknad.skalSlettesDato?.toString(), dokumentSoknadDto.opprettetDato.plusDays(
+			opprettetSoknad.skalSlettesDato?.toLocalDate(), dokumentSoknadDto.opprettetDato.plusDays(
 				Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
-			).toLocalDate().toString(), "SkalSlettesDato er satt til opprettetDato + 8 uker"
+			).toLocalDate(), "SkalSlettesDato er satt til opprettetDato + 4 uker"
 		)
 	}
 
@@ -677,6 +678,29 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertTrue(response != null)
 		assertEquals(400, response.statusCode.value())
 		assertEquals("'sokerInvalid' not a valid property", response.body?.message)
+	}
+
+	@Test
+	fun `Should save and return skalSlettesDato`() {
+		// Given
+		val mellomlagringDager = 5
+		val skalSlettesDato = LocalDate.now().plusDays(mellomlagringDager.toLong())
+
+		val skjemaDto = SkjemaDtoTestBuilder(skalslettesdato = null, mellomlagringDager = mellomlagringDager).build()
+
+		// When
+		val createdSoknad = api?.createSoknad(skjemaDto)
+		val getSoknad = api?.getSoknad(createdSoknad?.body?.innsendingsId!!)
+
+		// Then
+		assertEquals(
+			skalSlettesDato,
+			createdSoknad?.body?.skalSlettesDato?.toLocalDate()
+		)
+		assertEquals(
+			skalSlettesDato,
+			getSoknad?.body?.skalSlettesDato?.toLocalDate()
+		)
 	}
 
 	@Test

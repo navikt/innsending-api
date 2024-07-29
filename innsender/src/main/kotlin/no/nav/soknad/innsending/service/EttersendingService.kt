@@ -1,9 +1,7 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
-import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType.KODEVERK_NAVSKJEMA
-import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType.KODEVERK_TEMA
-import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType.KODEVERK_VEDLEGGSKODER
+import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType.*
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.*
@@ -81,7 +79,8 @@ class EttersendingService(
 				forsteinnsendingsdato = mapTilLocalDateTime(forsteInnsendingsDato),
 				ettersendingsfrist = fristForEttersendelse,
 				arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
-				applikasjon = applikasjon
+				applikasjon = applikasjon,
+				skalslettesdato = OffsetDateTime.now().plusDays(Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD)
 			)
 		)
 	}
