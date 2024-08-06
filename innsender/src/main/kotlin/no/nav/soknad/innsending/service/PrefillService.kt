@@ -115,11 +115,11 @@ class PrefillService(
 		)
 	}
 
-	private fun enrichAddress(address: Adresse): Adresse {
-		if (address.landkode == "NOR" && address.postnummer?.isNotEmpty() == true) {
-			return address.copy(poststed = kodeverkService.getPoststed(address.postnummer!!))
-		}
-		return address
+	private fun enrichAddress(pdlAddress: Adresse): Adresse {
+		val norwegianAddressWithPoststed = pdlAddress
+			.takeIf { it.landkode == "NOR" && it.postnummer?.isNotEmpty() == true }
+			?.run { copy(poststed = kodeverkService.getPoststed(postnummer!!)) }
+		return norwegianAddressWithPoststed ?: pdlAddress
 	}
 
 	suspend fun getArenaMaalgruppe(userId: String, properties: List<String>): PrefillData {
