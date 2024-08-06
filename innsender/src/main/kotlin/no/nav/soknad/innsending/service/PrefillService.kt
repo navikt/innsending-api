@@ -11,6 +11,7 @@ import no.nav.soknad.innsending.consumerapis.pdl.transformers.AddressTransformer
 import no.nav.soknad.innsending.consumerapis.pdl.transformers.NameTransformer.transformName
 import no.nav.soknad.innsending.consumerapis.pdl.transformers.PhoneNumberTransformer.transformPhoneNumbers
 import no.nav.soknad.innsending.exceptions.NonCriticalException
+import no.nav.soknad.innsending.model.Adresse
 import no.nav.soknad.innsending.model.Maalgruppe
 import no.nav.soknad.innsending.model.PrefillData
 import no.nav.soknad.innsending.util.Constants.ARENA_MAALGRUPPE
@@ -27,7 +28,8 @@ import org.springframework.stereotype.Service
 class PrefillService(
 	private val arenaConsumer: ArenaConsumerInterface,
 	private val pdlApi: PdlInterface,
-	private val kontoregisterService: KontoregisterInterface
+	private val kontoregisterService: KontoregisterInterface,
+	private val kodeverkService: KodeverkService
 ) {
 	private val logger: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -92,7 +94,13 @@ class PrefillService(
 			bostedsAdresser = personInfo?.hentPerson?.bostedsadresse,
 			kontaktadresser = personInfo?.hentPerson?.kontaktadresse,
 			oppholdsadresser = personInfo?.hentPerson?.oppholdsadresse
-		)
+		).let { adresser ->
+			adresser.copy(
+				bostedsadresse = adresser.bostedsadresse?.let { enrichAddress(it) },
+				kontaktadresser = adresser.kontaktadresser?.map { enrichAddress(it) },
+				oppholdsadresser = adresser.oppholdsadresser?.map { enrichAddress(it) }
+			)
+		}
 		val phoneNumber = transformPhoneNumbers(personInfo?.hentPerson?.telefonnummer)
 		val gender = personInfo?.hentPerson?.kjoenn?.firstOrNull()?.kjoenn?.name
 
@@ -105,6 +113,13 @@ class PrefillService(
 			sokerTelefonnummer = if (properties.contains("sokerTelefonnummer")) phoneNumber else null,
 			sokerKjonn = if (properties.contains("sokerKjonn")) gender else null
 		)
+	}
+
+	private fun enrichAddress(address: Adresse): Adresse {
+		if (address.landkode == "NOR" && address.postnummer?.isNotEmpty() == true) {
+			return address.copy(poststed = kodeverkService.getPoststed(address.postnummer!!))
+		}
+		return address
 	}
 
 	suspend fun getArenaMaalgruppe(userId: String, properties: List<String>): PrefillData {
