@@ -118,7 +118,7 @@ class PrefillService(
 	private fun enrichAddress(pdlAddress: Adresse): Adresse {
 		val norwegianAddressWithPoststed = pdlAddress
 			.takeIf { it.landkode == "NOR" && it.postnummer?.isNotEmpty() == true }
-			?.run { copy(poststed = kodeverkService.getPoststed(postnummer!!)) }
+			?.run { copy(bySted = kodeverkService.getPoststed(postnummer!!)) }
 		return norwegianAddressWithPoststed ?: pdlAddress
 	}
 

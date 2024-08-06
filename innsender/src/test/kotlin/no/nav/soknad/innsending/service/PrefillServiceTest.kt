@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import kotlin.test.assertNull
 
 class PrefillServiceTest : ApplicationTest() {
 
@@ -95,22 +94,22 @@ class PrefillServiceTest : ApplicationTest() {
 		val result = runBlocking { prefillService.getPrefillData(properties, userId) }
 
 		// Then
-		assertEquals("ABELVÆR", result.sokerAdresser?.bostedsadresse?.poststed)
+		assertEquals("ABELVÆR", result.sokerAdresser?.bostedsadresse?.bySted)
 
 		assertEquals(3, result.sokerAdresser?.kontaktadresser?.size)
 		result.sokerAdresser?.kontaktadresser?.forEach { address ->
 			if (address.landkode == "NOR" && address.postnummer != null) assertEquals(
 				postnummerMap[address.postnummer],
-				address.poststed
-			) else assertNull(address.poststed)
+				address.bySted
+			)
 		}
 
 		assertEquals(2, result.sokerAdresser?.oppholdsadresser?.size)
 		result.sokerAdresser?.oppholdsadresser?.forEach { address ->
 			if (address.landkode == "NOR" && address.postnummer != null) assertEquals(
 				postnummerMap[address.postnummer],
-				address.poststed
-			) else assertNull(address.poststed)
+				address.bySted
+			)
 		}
 	}
 }

@@ -1082,13 +1082,9 @@ components:
           type: string
           description: Postnummer
           example: "SE-12345"
-        poststed:
-          type: string
-          description: Poststed (dette feltet fylles ut basert på postnummer som kommer fra PDL dersom det er en norsk adresse)
-          example: "Olderdalen"
         bySted:
           type: string
-          description: By/Bydel/Bysted (utenlandske adresser har dette feltet i PDL)
+          description: Inneholder poststed for norske adresser, ellers by/bydel/bysted (utenlandske adresser har dette feltet i PDL)
           example: "Roma"
         region:
           type: string
