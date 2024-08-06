@@ -94,11 +94,11 @@ class PrefillService(
 			bostedsAdresser = personInfo?.hentPerson?.bostedsadresse,
 			kontaktadresser = personInfo?.hentPerson?.kontaktadresse,
 			oppholdsadresser = personInfo?.hentPerson?.oppholdsadresse
-		).let { adresser ->
-			adresser.copy(
-				bostedsadresse = adresser.bostedsadresse?.let { enrichAddress(it) },
-				kontaktadresser = adresser.kontaktadresser?.map { enrichAddress(it) },
-				oppholdsadresser = adresser.oppholdsadresser?.map { enrichAddress(it) }
+		).run {
+			copy(
+				bostedsadresse = bostedsadresse?.let(::enrichAddress),
+				kontaktadresser = kontaktadresser?.map(::enrichAddress),
+				oppholdsadresser = oppholdsadresser?.map(::enrichAddress)
 			)
 		}
 		val phoneNumber = transformPhoneNumbers(personInfo?.hentPerson?.telefonnummer)
