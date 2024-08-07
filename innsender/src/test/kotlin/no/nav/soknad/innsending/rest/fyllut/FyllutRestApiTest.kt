@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.service.FilService
+import no.nav.soknad.innsending.service.KodeverkService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.util.Constants
@@ -41,6 +42,9 @@ class FyllutRestApiTest : ApplicationTest() {
 	@MockkBean
 	lateinit var oauth2TokenService: OAuth2AccessTokenService
 
+	@MockkBean
+	lateinit var kodeverkService: KodeverkService
+
 	@Autowired
 	lateinit var restTemplate: TestRestTemplate
 
@@ -56,12 +60,20 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
+	val postnummerMap = mapOf(
+		"7950" to "ABELVÆR",
+		"3812" to "AKKERHAUGEN",
+		"5575" to "AKSDAL",
+		"7318" to "AGDENES",
+	)
+
 	var api: Api? = null
 
 	@BeforeEach
 	fun setup() {
 		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
 		every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
+		every { kodeverkService.getPoststed(any()) } answers { postnummerMap[firstArg()] }
 	}
 
 	@Value("\${server.port}")
