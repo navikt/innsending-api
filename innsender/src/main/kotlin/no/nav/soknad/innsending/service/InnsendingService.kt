@@ -17,9 +17,7 @@ import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.mapping.*
-import no.nav.soknad.innsending.util.models.erEttersending
-import no.nav.soknad.innsending.util.models.hovedDokument
-import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
+import no.nav.soknad.innsending.util.models.*
 import no.nav.soknad.pdfutilities.AntallSider
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.Validerer
@@ -114,7 +112,10 @@ class InnsendingService(
 				errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 			)
 		}
-		vedleggService.deleteVedleggNotRelevantAnymore(existingSoknad.vedleggsListeUtenHoveddokument)
+		vedleggService.deleteVedleggNotRelevantAnymore(
+			existingSoknad.innsendingsId!!,
+			existingSoknad.vedleggsListeUtenHoveddokument
+		)
 
 		// send soknadmetada til soknadsmottaker
 		try {
@@ -183,9 +184,7 @@ class InnsendingService(
 	) {
 		// For å sende inn en ettersendingssøknad må det være lastet opp minst ett vedlegg, eller vært gjort endring på opplastingsstatus på vedlegg
 		if ((opplastedeVedlegg.isEmpty() || opplastedeVedlegg.none { !it.erHoveddokument })) {
-			val allePakrevdeBehandlet = alleVedlegg
-				.filter { !it.erHoveddokument && ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6") }
-				.none { !(it.opplastingsStatus == OpplastingsStatusDto.Innsendt || it.opplastingsStatus == OpplastingsStatusDto.SendesAvAndre || it.opplastingsStatus == OpplastingsStatusDto.LastetOpp) }
+			val allePakrevdeBehandlet = alleVedlegg.ubehandledeVedlegg.isEmpty()
 			if (allePakrevdeBehandlet) {
 				val separator = "\n"
 				logger.warn("Søker har ikke lastet opp filer på ettersendingssøknad ${soknadDto.innsendingsId}, " +
@@ -193,7 +192,7 @@ class InnsendingService(
 					soknadDto.vedleggsListe.joinToString(separator) { it.tittel + ", med status = " + it.opplastingsStatus + "\n" })
 			} else {
 				throw IllegalActionException(
-					message = "Innsending avbrutt da ingen vedlegg er lastet opp. Søker må ha ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
+					message = "Innsending avbrutt da ingen vedlegg er lastet opp. Søker må ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
 					errorCode = ErrorCode.SEND_IN_ERROR_NO_CHANGE
 				)
 			}
@@ -282,7 +281,9 @@ class InnsendingService(
 
 		// Hvis ettersending, så må det genereres et dummy hoveddokument
 		val dummySkjema = try {
-			PdfGenerator().lagForsideEttersending(soknadDto)
+			val person = pdlInterface.hentPersonData(soknadDto.brukerId)
+			val sammensattNavn = listOfNotNull(person?.fornavn, person?.mellomnavn, person?.etternavn).joinToString(" ")
+			PdfGenerator().lagForsideEttersending(soknadDto, sammensattNavn)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			throw BackendErrorException(
@@ -349,11 +350,62 @@ class InnsendingService(
 		val innsendteVedlegg =
 			opplastedeVedlegg.filter { !it.erHoveddokument }.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }
 
-		val skalSendesAvAndre = innsendtSoknadDto.vedleggsListe
-			.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.SendesAvAndre }
-			.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }
+		val skalSendesAvAndre = innsendtSoknadDto.vedleggsListe.skalSendesAvAndre
+			.map {
+				InnsendtVedleggDto(
+					vedleggsnr = it.vedleggsnr ?: "",
+					tittel = it.label,
+					url = null,
+					opplastingsValgKommentarLedetekst = it.opplastingsValgKommentarLedetekst,
+					opplastingsValgKommentar = it.opplastingsValgKommentar
+				)
+			}
 
-		val skalEtterSendes = manglendePakrevdeVedlegg.map { InnsendtVedleggDto(it.vedleggsnr ?: "", it.label) }
+		val skalEtterSendes = manglendePakrevdeVedlegg.map {
+			InnsendtVedleggDto(
+				vedleggsnr = it.vedleggsnr ?: "",
+				tittel = it.label,
+				url = null,
+				opplastingsValgKommentarLedetekst = it.opplastingsValgKommentarLedetekst,
+				opplastingsValgKommentar = it.opplastingsValgKommentar
+			)
+		}
+
+		val blirIkkeInnsendt = innsendtSoknadDto.vedleggsListe.sendesIkke
+			.map {
+				InnsendtVedleggDto(
+					vedleggsnr = it.vedleggsnr ?: "",
+					tittel = it.label,
+					url = null,
+					opplastingsValgKommentarLedetekst = it.opplastingsValgKommentarLedetekst,
+					opplastingsValgKommentar = it.opplastingsValgKommentar
+				)
+			}
+
+		val levertTidligere = (innsendteVedlegg(
+			innsendtSoknadDto.opprettetDato, innsendtSoknadDto.vedleggsListe
+		) + innsendtSoknadDto.vedleggsListe.tidligereLevert
+			)
+			.map {
+				InnsendtVedleggDto(
+					vedleggsnr = it.vedleggsnr ?: "",
+					tittel = it.label,
+					url = null,
+					opplastingsValgKommentarLedetekst = it.opplastingsValgKommentarLedetekst,
+					opplastingsValgKommentar = it.opplastingsValgKommentar
+				)
+			}
+
+		val navKanInnhente = innsendtSoknadDto.vedleggsListe.navKanInnhente
+			.map {
+				InnsendtVedleggDto(
+					vedleggsnr = it.vedleggsnr ?: "",
+					tittel = it.label,
+					url = null,
+					opplastingsValgKommentarLedetekst = it.opplastingsValgKommentarLedetekst,
+					opplastingsValgKommentar = it.opplastingsValgKommentar
+				)
+			}
 
 		return KvitteringsDto(
 			innsendingsId = innsendingsId,
@@ -363,6 +415,9 @@ class InnsendingService(
 			innsendteVedlegg = innsendteVedlegg,
 			skalEttersendes = skalEtterSendes,
 			skalSendesAvAndre = skalSendesAvAndre,
+			levertTidligere = levertTidligere,
+			sendesIkkeInn = blirIkkeInnsendt,
+			navKanInnhente = navKanInnhente,
 			ettersendingsfrist = beregnInnsendingsfrist(innsendtSoknadDto)
 		)
 	}

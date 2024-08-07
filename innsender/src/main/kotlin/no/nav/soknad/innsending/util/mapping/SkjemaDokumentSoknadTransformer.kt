@@ -95,4 +95,5 @@ class SkjemaDokumentSoknadTransformer {
 			innsendtdato = null,
 			formioId = skjemaDokumentDto.formioId,
 		)
+
 }

@@ -109,8 +109,7 @@ class SoknadService(
 		try {
 			val savedSoknadDbData = repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId))
 			val soknadsid = savedSoknadDbData.id
-			val savedVedleggDbData = dokumentSoknadDto.vedleggsListe
-				.map { repo.lagreVedlegg(mapTilVedleggDb(it, soknadsid!!)) }
+			val savedVedleggDbData = vedleggService.saveVedleggFromDto(soknadsid!!, dokumentSoknadDto.vedleggsListe)
 
 			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
 			// lagre mottatte filer i fil tabellen.
