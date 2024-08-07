@@ -1084,7 +1084,7 @@ components:
           example: "SE-12345"
         bySted:
           type: string
-          description: By/Bydel/Bysted (utenlandske adresser har dette feltet i PDL)
+          description: Inneholder poststed for norske adresser, ellers by/bydel/bysted (utenlandske adresser har dette feltet i PDL)
           example: "Roma"
         region:
           type: string
