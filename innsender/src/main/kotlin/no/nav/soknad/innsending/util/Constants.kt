@@ -21,6 +21,7 @@ object Constants {
 	const val MAX_AKTIVE_DAGER = 3 * 365L
 
 	const val DEFAULT_LEVETID_OPPRETTET_SOKNAD = 28L // 4 uker inntil ikke innsendt søknad/ettersendingssøknad slettes
+	const val DEFAULT_LEVETID_OPPRETTET_LOSPOST = 1L // Slettes etter 1 døgn
 	const val DEFAULT_FRIST_FOR_ETTERSENDELSE = 14L // 2 uker på å ettersende manglende vedlegg (NB myk frist)
 
 	const val KVITTERINGS_NR = "L7"
@@ -33,4 +34,6 @@ object Constants {
 	const val PDL = "pdl"
 	const val ARENA_MAALGRUPPE = "arena_maalgruppe"
 	const val KONTORREGISTER_BORGER = "kontorregister_borger"
+
+	const val LOSPOST_SKJEMANUMMER = "NAV 00-03.00"
 }
