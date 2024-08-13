@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 
 @Service
-@Profile("dev | prod")
+@Profile("dev | prod | endtoend")
 @Qualifier("mottaker")
 class MottakerAPI(
 	private val restConfig: RestConfig,

@@ -19,7 +19,7 @@ import org.springframework.kafka.listener.ContainerProperties
 
 @Configuration
 @EnableKafka
-@Profile("prod | dev")
+@Profile("prod | dev | endtoend")
 class KafkaConfiguration(
 	private val kafkaConfig: KafkaConfig,
 ) {

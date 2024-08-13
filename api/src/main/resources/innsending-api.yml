@@ -26,6 +26,8 @@ tags:
     description: API for soknadsveiviser applikasjonen.
   - name: ekstern
     description: API for eksterne applikasjoner.
+  - name: endtoend
+    description: API for endtoend-tester.
 
 paths:
   /fyllUt/v1/soknad/{innsendingsId}:
@@ -953,6 +955,33 @@ paths:
                   $ref: "#/components/schemas/DokumentSoknadDto"
       tags:
         - ekstern
+
+  /endtoend/v1/soknad/{innsendingsId}/arkiveringsstatus:
+    get:
+      summary: Henter arkiveringsstatus for en søknad
+      description: Returnerer arkiveringsstatus
+      operationId: getArkiveringsstatus
+
+      parameters:
+        - name: innsendingsId
+          in: path
+          description: Identifisering av søknad som skal hentes
+          required: true
+          schema:
+            type: string
+          style: simple
+
+      responses:
+        200:
+          description: Returnerer arkiveringsstatus
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArkiveringsStatusDto"
+        404:
+          description: Søknad ikke funnet
+      tags:
+        - endtoend
 
   /health/ping:
     get:

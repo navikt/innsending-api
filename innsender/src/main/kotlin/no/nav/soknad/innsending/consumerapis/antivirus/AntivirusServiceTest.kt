@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 
 @Service
-@Profile("local | docker")
+@Profile("local | docker | endtoend")
 class AntivirusServiceTest : AntivirusInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
