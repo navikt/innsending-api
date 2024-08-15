@@ -21,7 +21,7 @@ class RepositoryUtils(
 	private val vedleggRepository: VedleggRepository,
 	private val filRepository: FilRepository,
 	private val filWithoutDataRepository: FilWithoutDataRepository,
-	private val hendelseRepository: HendelseRepository
+	private val hendelseRepository: HendelseRepository,
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -279,6 +279,7 @@ class RepositoryUtils(
 	} catch (ex: Exception) {
 		throw ResourceNotFoundException("Feil ved henting av filer for  vedlegg $vedleggsId til søknad $innsendingsId", ex)
 	}
+
 
 	private fun mapTilFilDbData(filerUtenFilData: List<FilDbWithoutFileData>): List<FilDbData> {
 		return filerUtenFilData.map {

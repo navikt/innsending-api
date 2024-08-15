@@ -93,7 +93,7 @@ class VedleggServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun oppdaterVedleggEndrerKunTittelOgLabel() {
+	fun oppdaterVedleggEndrerKunTittelOgLabelOgKommentar() {
 		// Når søker har endret label på et vedlegg av type annet (N6), skal tittel settes lik label og vedlegget i databasen oppdateres med disse endringene.
 		val soknadService = lagSoknadService()
 
@@ -102,12 +102,14 @@ class VedleggServiceTest : ApplicationTest() {
 		val lagretVedleggDto = vedleggService.leggTilVedlegg(dokumentSoknadDto, null)
 		assertTrue(lagretVedleggDto.id != null && lagretVedleggDto.tittel == "Annet")
 
-		val patchVedleggDto = PatchVedleggDto("Ny tittel", lagretVedleggDto.opplastingsStatus)
+		val patchVedleggDto = PatchVedleggDto("Ny tittel", lagretVedleggDto.opplastingsStatus, opplastingsValgKommentarLedetekst = "Kommenter valget" , opplastingsValgKommentar = "Kommentar")
 		val oppdatertVedleggDto = vedleggService.endreVedlegg(patchVedleggDto, lagretVedleggDto.id!!, dokumentSoknadDto)
 
 		assertTrue(
 			oppdatertVedleggDto.id == lagretVedleggDto.id && oppdatertVedleggDto.tittel == "Ny tittel" && oppdatertVedleggDto.vedleggsnr == "N6"
 				&& oppdatertVedleggDto.label == oppdatertVedleggDto.tittel
+				&& oppdatertVedleggDto.opplastingsValgKommentarLedetekst == "Kommenter valget"
+				&& oppdatertVedleggDto.opplastingsValgKommentar == "Kommentar"
 		)
 	}
 
@@ -125,5 +127,6 @@ class VedleggServiceTest : ApplicationTest() {
 		assertThrows<Exception> {
 			vedleggService.hentVedleggDto(lagretVedlegg.id!!)
 		}
+
 	}
 }

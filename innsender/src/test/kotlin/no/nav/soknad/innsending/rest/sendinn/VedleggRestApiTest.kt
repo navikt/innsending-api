@@ -84,7 +84,7 @@ class VedleggRestApiTest : ApplicationTest() {
 		assertTrue(opprettetSoknadDto!!.vedleggsListe.isNotEmpty())
 
 		val vedleggDto = opprettetSoknadDto.vedleggsListe.first { !it.erHoveddokument }
-		val patchVedleggDto = PatchVedleggDto("Endret tittel", OpplastingsStatusDto.SendesAvAndre)
+		val patchVedleggDto = PatchVedleggDto("Endret tittel", OpplastingsStatusDto.SendesAvAndre, opplastingsValgKommentarLedetekst = "Hvem sender inn dokumentasjonen", opplastingsValgKommentar = "Sendes av min fastlege")
 		val patchRequestEntity = HttpEntity(patchVedleggDto, Hjelpemetoder.createHeaders(token))
 		val patchResponse = restTemplate.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${opprettetSoknadDto.innsendingsId}/vedlegg/${vedleggDto.id}",
@@ -98,6 +98,8 @@ class VedleggRestApiTest : ApplicationTest() {
 		assertEquals(vedleggDto.id, patchedVedleggDto!!.id)
 		assertEquals("Endret tittel", patchedVedleggDto.tittel)
 		assertEquals(OpplastingsStatusDto.SendesAvAndre, patchedVedleggDto.opplastingsStatus)
+		assertEquals("Hvem sender inn dokumentasjonen", patchedVedleggDto.opplastingsValgKommentarLedetekst)
+		assertEquals("Sendes av min fastlege", patchedVedleggDto.opplastingsValgKommentar)
 	}
 
 

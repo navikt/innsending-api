@@ -40,6 +40,7 @@ data class SkjemaDokumentDtoTestBuilder(
 		return this
 	}
 
+
 	fun build(): SkjemaDokumentDto {
 		return SkjemaDokumentDto(
 			vedleggsnr = vedleggsnr,
@@ -50,7 +51,7 @@ data class SkjemaDokumentDtoTestBuilder(
 			mimetype = mimetype,
 			document = document,
 			propertyNavn = propertyNavn,
-			formioId = formioId
+			formioId = formioId,
 		)
 	}
 }
