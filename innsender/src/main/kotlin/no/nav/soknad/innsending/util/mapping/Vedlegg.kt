@@ -3,11 +3,7 @@ package no.nav.soknad.innsending.util.mapping
 import no.nav.soknad.arkivering.soknadsmottaker.model.DocumentData
 import no.nav.soknad.arkivering.soknadsmottaker.model.Varianter
 import no.nav.soknad.innsending.exceptions.BackendErrorException
-import no.nav.soknad.innsending.model.FilDto
-import no.nav.soknad.innsending.model.OpplastingsStatusDto
-import no.nav.soknad.innsending.model.PatchVedleggDto
-import no.nav.soknad.innsending.model.SkjemaDokumentDto
-import no.nav.soknad.innsending.model.VedleggDto
+import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import java.time.LocalDateTime
@@ -39,7 +35,9 @@ fun mapTilVedleggDb(
 		endretdato = LocalDateTime.now(),
 		innsendtdato = mapTilLocalDateTime(vedleggDto.innsendtdato),
 		vedleggsurl = url ?: vedleggDto.skjemaurl,
-		formioid = vedleggDto.formioId
+		formioid = vedleggDto.formioId,
+		opplastingsvalgkommentarledetekst = vedleggDto.opplastingsValgKommentarLedetekst,
+		opplastingsvalgkommentar = vedleggDto.opplastingsValgKommentar
 	)
 
 fun oppdaterVedleggDb(
@@ -67,7 +65,9 @@ fun oppdaterVedleggDb(
 		endretdato = LocalDateTime.now(),
 		innsendtdato = vedleggDbData.innsendtdato,
 		vedleggsurl = vedleggDbData.vedleggsurl,
-		formioid = vedleggDbData.formioid
+		formioid = vedleggDbData.formioid,
+		opplastingsvalgkommentarledetekst = patchVedleggDto.opplastingsValgKommentarLedetekst,
+		opplastingsvalgkommentar = patchVedleggDto.opplastingsValgKommentar
 	)
 
 fun mapTilSkjemaDokumentDto(vedleggDto: VedleggDto): SkjemaDokumentDto {
@@ -104,7 +104,9 @@ fun lagVedleggDto(vedleggDbData: VedleggDbData, document: ByteArray? = null) =
 		document = document,
 		skjemaurl = vedleggDbData.vedleggsurl,
 		innsendtdato = mapTilOffsetDateTime(vedleggDbData.innsendtdato),
-		formioId = vedleggDbData.formioid
+		formioId = vedleggDbData.formioid,
+		opplastingsValgKommentarLedetekst = vedleggDbData.opplastingsvalgkommentarledetekst,
+		opplastingsValgKommentar = vedleggDbData.opplastingsvalgkommentar
 	)
 
 fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
@@ -124,7 +126,9 @@ fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
 		mimetype = filDto?.mimetype ?: vedleggDto.mimetype,
 		document = null,
 		skjemaurl = vedleggDto.skjemaurl,
-		innsendtdato = OffsetDateTime.now()
+		innsendtdato = OffsetDateTime.now(),
+		opplastingsValgKommentarLedetekst = vedleggDto.opplastingsValgKommentarLedetekst,
+		opplastingsValgKommentar = vedleggDto.opplastingsValgKommentar
 	)
 
 fun translate(vedleggDtos: List<VedleggDto>): List<DocumentData> {
@@ -162,3 +166,4 @@ fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, vedleggsId: Long) =
 		mapTilDbOpplastingsStatus(vedleggDto.opplastingsStatus),
 		vedleggsId
 	)
+

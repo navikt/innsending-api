@@ -120,7 +120,7 @@ class EttersendingService(
 			val vedleggDbDataListe = nyesteSoknad.vedleggsListe
 				.filter { !(it.erHoveddokument || it.vedleggsnr == KVITTERINGS_NR) }
 				.map { v ->
-					repo.lagreVedlegg(
+					val savedVedleggDb = repo.lagreVedlegg(
 						VedleggDbData(
 							id = null,
 							soknadsid = savedEttersendingsSoknad.id!!,
@@ -142,9 +142,13 @@ class EttersendingService(
 								nyesteSoknad.innsendtDato?.toLocalDateTime() else v.innsendtdato?.toLocalDateTime(),
 							vedleggsurl = if (v.vedleggsnr != null)
 								skjemaService.hentSkjema(v.vedleggsnr!!, nyesteSoknad.spraak ?: "nb", false).url else null,
-							formioid = v.formioId
+							formioid = v.formioId,
+							opplastingsvalgkommentarledetekst =  v.opplastingsValgKommentarLedetekst,
+							opplastingsvalgkommentar = null
 						)
 					)
+
+					savedVedleggDb
 				}
 
 			// Publiser brukernotifikasjon
@@ -238,7 +242,6 @@ class EttersendingService(
 					vedleggList = ettersending.vedleggsListe ?: emptyList(),
 					archivedSoknad = archivedSoknad
 				)
-
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
 			return lagDokumentSoknadDto(ettersendingDb, combinedVedleggList)
 		} catch (e: Exception) {

@@ -2,7 +2,6 @@ package no.nav.soknad.innsending.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.LoadingCache
-import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ErrorCode
@@ -23,7 +22,7 @@ class KodeverkService(
 ) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
-	private val kodeverkApi = KodeverkApi( kodeverkApiClient)
+	private val kodeverkApi = KodeverkApi(kodeverkApiClient)
 
 	val cache: LoadingCache<String, GetKodeverkKoderBetydningerResponse> = Caffeine
 		.newBuilder()
@@ -83,6 +82,8 @@ class KodeverkService(
 					ettersending.vedleggsListe?.map { it.vedleggsnr },
 					kodeverkType
 				)
+
+				else -> return
 			}
 		}
 	}
@@ -111,5 +112,12 @@ class KodeverkService(
 				)
 			}
 		}
+	}
+
+	fun getPoststed(postnr: String): String? {
+		val kodeverk = getKodeverk(KodeverkType.KODEVERK_POSTNUMMER) ?: return null
+		return kodeverk
+			.betydninger[postnr]
+			.let { it?.first()?.beskrivelser?.get("nb")?.term }
 	}
 }
