@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.service.FilService
+import no.nav.soknad.innsending.service.KodeverkService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.util.Constants
@@ -41,6 +42,9 @@ class FyllutRestApiTest : ApplicationTest() {
 	@MockkBean
 	lateinit var oauth2TokenService: OAuth2AccessTokenService
 
+	@MockkBean
+	lateinit var kodeverkService: KodeverkService
+
 	@Autowired
 	lateinit var restTemplate: TestRestTemplate
 
@@ -56,12 +60,20 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
+	val postnummerMap = mapOf(
+		"7950" to "ABELVÆR",
+		"3812" to "AKKERHAUGEN",
+		"5575" to "AKSDAL",
+		"7318" to "AGDENES",
+	)
+
 	var api: Api? = null
 
 	@BeforeEach
 	fun setup() {
 		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
 		every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
+		every { kodeverkService.getPoststed(any()) } answers { postnummerMap[firstArg()] }
 	}
 
 	@Value("\${server.port}")
@@ -132,7 +144,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertFalse(getSoknadDto.kanLasteOppAnnet!!)
 
 		val vedleggT7 = getSoknadDto.vedleggsListe.first { it.vedleggsnr == "T7" }
-		val patchVedleggT7 = PatchVedleggDto(null, OpplastingsStatusDto.SendesAvAndre)
+		val patchVedleggT7 = PatchVedleggDto(tittel = null, opplastingsStatus = OpplastingsStatusDto.SendesAvAndre, opplastingsValgKommentar = "Sendes av min fastlege")
 		val patchRequestT7 = HttpEntity(patchVedleggT7, Hjelpemetoder.createHeaders(token))
 		val patchResponseT7 = restTemplate.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggT7.id}", HttpMethod.PATCH,
@@ -141,9 +153,10 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		assertTrue(patchResponseT7.body != null)
 		assertEquals(OpplastingsStatusDto.SendesAvAndre, patchResponseT7.body!!.opplastingsStatus)
+		assertEquals("Sendes av min fastlege", patchResponseT7.body!!.opplastingsValgKommentar)
 
 		val vedleggN6 = getSoknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
-		val patchVedleggN6 = PatchVedleggDto(null, OpplastingsStatusDto.IkkeValgt)
+		val patchVedleggN6 = PatchVedleggDto(tittel = null, opplastingsStatus = OpplastingsStatusDto.IkkeValgt, opplastingsValgKommentar = null)
 		val patchRequestN6 = HttpEntity(patchVedleggN6, Hjelpemetoder.createHeaders(token))
 		val patchResponseN6 = restTemplate.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggN6.id}", HttpMethod.PATCH,
@@ -203,13 +216,13 @@ class FyllutRestApiTest : ApplicationTest() {
 		val newVedleggstittel1 = "Birth certificate"
 		val newVedleggstittel2 = "Marriage certificate"
 
-		val dokumentSoknadDto = opprettSoknad()
+		val dokumentSoknadDto = opprettSoknad() // med vedleggTittel1 og vedleggTittel2, begge med unik formioId satt
 		val skjemanr = dokumentSoknadDto.skjemanr
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
-		val updatedT7 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7", tittel = newVedleggstittel1).build()
-		val updatedN6 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6", tittel = newVedleggstittel2).build()
-		val updatedHovedDokument = SkjemaDokumentDtoTestBuilder(tittel = newTittel).asHovedDokument(skjemanr).build()
+		val updatedT7 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7", tittel = newVedleggstittel1).build() // Unik formioId settes
+		val updatedN6 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6", tittel = newVedleggstittel2).build() // Unik formioId settes
+		val updatedHovedDokument = SkjemaDokumentDtoTestBuilder(tittel = newTittel).asHovedDokument(skjemanr).build() // formioId = null
 		val updatedHovedDokumentVariant =
 			SkjemaDokumentDtoTestBuilder(tittel = newTittel).asHovedDokumentVariant(skjemanr).build()
 
