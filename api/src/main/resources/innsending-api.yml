@@ -1145,7 +1145,7 @@ components:
           example: "SE-12345"
         bySted:
           type: string
-          description: By/Bydel/Bysted (utenlandske adresser har dette feltet i PDL)
+          description: Inneholder poststed for norske adresser, ellers by/bydel/bysted (utenlandske adresser har dette feltet i PDL)
           example: "Roma"
         region:
           type: string
@@ -1528,6 +1528,10 @@ components:
           $ref: "#/components/schemas/Tittel"
         url:
           $ref: "#/components/schemas/Vedleggsurl"
+        opplastingsValgKommentarLedetekst:
+          $ref: "#/components/schemas/OpplastingsvalgKommentarLedetekst"
+        opplastingsValgKommentar:
+          $ref: "#/components/schemas/OpplastingsvalgKommentar"
 
     KanLasteOppAnnet:
       type: boolean
@@ -1565,6 +1569,23 @@ components:
           description: Liste av obligatoriske av ingen, en eller flere vedlegg som søker har sagt skal bli sendt inn av andre.
           items:
             $ref: "#/components/schemas/InnsendtVedleggDto"
+        levertTidligere:
+          type: array
+          description: Liste av obligatoriske av ingen, en eller flere vedlegg som er sendt inn tidligere, enten i sammenheng med denne søknadens innsendinger eller som søker har sagt skal har blitt sendt tidligere.
+          items:
+            $ref: "#/components/schemas/InnsendtVedleggDto"
+        sendesIkkeInn:
+          type: array
+          description: Liste av obligatoriske av ingen, en eller flere vedlegg som søker har sagt ikke vil bli sendt inn enten fordi allerede innsendt eller mangler dokumentasjon.
+          items:
+            $ref: "#/components/schemas/InnsendtVedleggDto"
+
+        navKanInnhente:
+          type: array
+          description: Liste av obligatoriske av ingen, en eller flere vedlegg som søker har gitt NAV tillatelse til å innehente.
+          items:
+            $ref: "#/components/schemas/InnsendtVedleggDto"
+
         mottattdato:
           type: string
           format: date-time
@@ -1594,8 +1615,20 @@ components:
 
     OpplastingsStatusDto:
       type: string
-      enum: [ "IkkeValgt", "LastetOpp", "Innsendt", "SendSenere", "SendesAvAndre", "SendesIkke", "LastetOppIkkeRelevantLenger" ]
+      enum: [ "IkkeValgt", "LastetOpp", "Innsendt", "SendSenere", "SendesAvAndre", "SendesIkke", "LastetOppIkkeRelevantLenger", "LevertDokumentasjonTidligere", "HarIkkeDokumentasjonen", "NavKanHenteDokumentasjon" ]
       description: Status på om et vedlegg til søknad er enda ikke er lastet opp, lastet opp eller innsendt
+
+    OpplastingsvalgKommentar:
+      type: string
+      default: null
+      description: Søkers begrunnelse for opplastingsvalg.
+      example: Dokumentasjonen sendes av min fastlege.
+
+    OpplastingsvalgKommentarLedetekst:
+      type: string
+      default: null
+      description: Ledetekst som indikerer hva det er ønsket at søker skal kommentere (på bokmål).
+      example: Hvem skal sende inn denne dokumentasjonen.
 
     OpprettEttersending:
       type: object
@@ -1679,6 +1712,10 @@ components:
           $ref: "#/components/schemas/Tittel"
         opplastingsStatus:
           $ref: "#/components/schemas/OpplastingsStatusDto"
+        opplastingsValgKommentarLedetekst:
+          $ref: "#/components/schemas/OpplastingsvalgKommentarLedetekst"
+        opplastingsValgKommentar:
+          $ref: "#/components/schemas/OpplastingsvalgKommentar"
 
     PostVedleggDto:
       type: object
@@ -1965,6 +2002,10 @@ components:
           example: 2021-12-03T14:10:00Z
         formioId:
           $ref: "#/components/schemas/FormioId"
+        opplastingsValgKommentarLedetekst:
+          $ref: "#/components/schemas/OpplastingsvalgKommentarLedetekst"
+        opplastingsValgKommentar:
+          $ref: "#/components/schemas/OpplastingsvalgKommentar"
 
     Vedleggsnr:
       type: string

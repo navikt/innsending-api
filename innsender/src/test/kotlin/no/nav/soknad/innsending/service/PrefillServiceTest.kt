@@ -21,12 +21,23 @@ class PrefillServiceTest : ApplicationTest() {
 	@MockkBean
 	lateinit var oauth2TokenService: OAuth2AccessTokenService
 
+	@MockkBean
+	lateinit var kodeverkService: KodeverkService
+
 	@Autowired
 	lateinit var prefillService: PrefillService
+
+	val postnummerMap = mapOf(
+		"7950" to "ABELVÆR",
+		"3812" to "AKKERHAUGEN",
+		"5575" to "AKSDAL",
+		"7318" to "AGDENES",
+	)
 
 	@BeforeEach
 	fun setup() {
 		every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
+		every { kodeverkService.getPoststed(any()) } answers { postnummerMap[firstArg()] }
 	}
 
 	@Test
@@ -57,7 +68,7 @@ class PrefillServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Should get prefill data for Arena (målgrupper)`() {
+	fun `Should get prefill data for Arena (maalgrupper)`() {
 		// Given
 		val properties = listOf("sokerMaalgruppe")
 		val userId = "12128012345"
@@ -73,4 +84,32 @@ class PrefillServiceTest : ApplicationTest() {
 		assertEquals("2023-01-01", result.sokerMaalgruppe?.gyldighetsperiode?.fom.toString())
 	}
 
+	@Test
+	fun `Should get prefill data for addresses and enrich with poststed`() {
+		// Given
+		val properties = listOf("sokerAdresser")
+		val userId = "12128012345"
+
+		// When
+		val result = runBlocking { prefillService.getPrefillData(properties, userId) }
+
+		// Then
+		assertEquals("ABELVÆR", result.sokerAdresser?.bostedsadresse?.bySted)
+
+		assertEquals(3, result.sokerAdresser?.kontaktadresser?.size)
+		result.sokerAdresser?.kontaktadresser?.forEach { address ->
+			if (address.landkode == "NOR" && address.postnummer != null) assertEquals(
+				postnummerMap[address.postnummer],
+				address.bySted
+			)
+		}
+
+		assertEquals(2, result.sokerAdresser?.oppholdsadresser?.size)
+		result.sokerAdresser?.oppholdsadresser?.forEach { address ->
+			if (address.landkode == "NOR" && address.postnummer != null) assertEquals(
+				postnummerMap[address.postnummer],
+				address.bySted
+			)
+		}
+	}
 }
