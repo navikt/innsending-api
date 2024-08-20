@@ -115,17 +115,6 @@ spring:
     activate:
       on-profile: endtoend
 
-  application:
-    name: innsending-api
-
-  codec:
-    max-in-memory-size: 104857600
-
-  servlet:
-    multipart:
-      max-file-size: 100MB
-      max-request-size: 100MB
-
   flyway:
     enabled: true
 
