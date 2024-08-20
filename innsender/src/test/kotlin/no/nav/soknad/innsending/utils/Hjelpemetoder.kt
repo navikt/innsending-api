@@ -129,11 +129,12 @@ class Hjelpemetoder {
 
 		}
 
-		fun createHeaders(token: String): HttpHeaders {
+		fun createHeaders(token: String, map: Map<String, String>? = mapOf()): HttpHeaders {
 			val headers = HttpHeaders()
 			headers.contentType = MediaType.APPLICATION_JSON
 			headers.add(HttpHeaders.AUTHORIZATION, "$BEARER$token")
 			headers.add(Constants.CORRELATION_ID, UUID.randomUUID().toString())
+			map?.forEach { (headerName, headerValue) -> headers.add(headerName, headerValue) }
 			return headers
 		}
 
