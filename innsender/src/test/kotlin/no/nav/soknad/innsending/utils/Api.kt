@@ -198,11 +198,23 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 	}
 
-	fun getSoknaderForSkjemanr(skjemanr: String, soknadstyper: List<SoknadType>? = emptyList()): ResponseEntity<List<DokumentSoknadDto>> {
+	fun createLospost(opprettLospost: OpprettLospost): ResponseEntity<LospostDto> {
+		return restTemplate.exchange(
+			"${baseUrl}/fyllut/v1/lospost",
+			HttpMethod.POST,
+			createHttpEntity(opprettLospost),
+			LospostDto::class.java
+		)
+	}
+
+	fun getSoknaderForSkjemanr(
+		skjemanr: String,
+		soknadstyper: List<SoknadType>? = emptyList()
+	): ResponseEntity<List<DokumentSoknadDto>> {
 		val responseType = object : ParameterizedTypeReference<List<DokumentSoknadDto>>() {}
-		var query = "";
+		var query = ""
 		if (soknadstyper?.isNotEmpty() == true) {
-			query = "?soknadstyper=${soknadstyper.joinToString()}";
+			query = "?soknadstyper=${soknadstyper.joinToString()}"
 		}
 		return restTemplate.exchange(
 			"${baseUrl}/ekstern/v1/skjema/${skjemanr}/soknader${query}",
