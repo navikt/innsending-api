@@ -22,7 +22,7 @@ class FjernGamleSoknader(
 				soknadService.deleteSoknadBeforeCutoffDate(OffsetDateTime.now())
 			}
 		} catch (ex: Exception) {
-			logger.warn("Fjerning av gamle ikke innsendte søknader feilet med ${ex.message} og årsak ${ex.cause}")
+			logger.warn("Fjerning av gamle ikke innsendte søknader feilet med ${ex.message}")
 		}
 	}
 

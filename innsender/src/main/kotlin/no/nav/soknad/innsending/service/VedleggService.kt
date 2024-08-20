@@ -311,7 +311,6 @@ class VedleggService(
 		val vedleggDbDataListe = try {
 			repo.hentAlleVedleggGittSoknadsid(soknadDbData.id!!)
 		} catch (e: Exception) {
-			logger.warn("Henting av vedlegg til soknad ${soknadDbData.innsendingsid} feilet med ${e} ")
 			throw ResourceNotFoundException("Fant ingen vedlegg til soknad ${soknadDbData.innsendingsid}. Ved oppretting av søknad skal det minimum være opprettet et vedlegg for selve søknaden")
 		}
 
