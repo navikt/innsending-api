@@ -42,10 +42,10 @@ class ArenaConsumer(
 			maalgruppeApi.getMaalgrupper(fromDate.toString(), toDate.toString())
 		} catch (e: RestClientResponseException) {
 			if (e.statusCode.is4xxClientError) {
-				logger.warn("Klientfeil ved henting av målgrupper", e)
+				logger.warn("[Arena] Klientfeil ved henting av målgrupper", e)
 				return emptyList()
 			} else {
-				logger.error("Serverfeil ved henting av målgrupper", e)
+				logger.warn("[Arena] Serverfeil ved henting av målgrupper", e)
 				return emptyList()
 			}
 		}
@@ -73,10 +73,10 @@ class ArenaConsumer(
 			}
 		} catch (e: RestClientResponseException) {
 			if (e.statusCode.is4xxClientError) {
-				logger.warn("Klientfeil ved henting av aktiviteter", e)
+				logger.warn("[Arena] Klientfeil ved henting av aktiviteter", e)
 				return emptyList()
 			} else {
-				logger.error("Serverfeil ved henting av aktiviteter", e)
+				logger.warn("[Arena] Serverfeil ved henting av aktiviteter", e)
 				return emptyList()
 			}
 		}
@@ -84,10 +84,12 @@ class ArenaConsumer(
 		secureLogger.info(
 			"[{}] Aktiviteter: {}",
 			userId,
-			aktiviteter.map { "aktivitet="+it.aktivitetstype + ", er stønadsberettiget=" + it.erStoenadsberettigetAktivitet +"," +
-				" tema=" + it.saksinformasjon?.sakstype +
-				", periode="+it.periode.fom.toString() + "-" + it.periode.tom?.toString() +
-				", parkering = " + it.saksinformasjon?.vedtaksinformasjon?.first()?.trengerParkering}
+			aktiviteter.map {
+				"aktivitet=" + it.aktivitetstype + ", er stønadsberettiget=" + it.erStoenadsberettigetAktivitet + "," +
+					" tema=" + it.saksinformasjon?.sakstype +
+					", periode=" + it.periode.fom.toString() + "-" + it.periode.tom?.toString() +
+					", parkering = " + it.saksinformasjon?.vedtaksinformasjon?.first()?.trengerParkering
+			}
 		)
 
 		return aktiviteter

@@ -17,9 +17,9 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 
 	val baseUrl = "http://localhost:${serverPort}"
 
-	private fun <T> createHttpEntity(body: T): HttpEntity<T> {
+	private fun <T> createHttpEntity(body: T, map: Map<String, String>? = mapOf()): HttpEntity<T> {
 		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-		return HttpEntity(body, Hjelpemetoder.createHeaders(token))
+		return HttpEntity(body, Hjelpemetoder.createHeaders(token, map))
 	}
 
 	fun createSoknad(skjemaDto: SkjemaDto, forceCreate: Boolean = true): ResponseEntity<SkjemaDto> {
@@ -198,11 +198,30 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 	}
 
-	fun getSoknaderForSkjemanr(skjemanr: String, soknadstyper: List<SoknadType>? = emptyList()): ResponseEntity<List<DokumentSoknadDto>> {
+	fun createLospost(
+		opprettLospost: OpprettLospost,
+		envQualifier: EnvQualifier? = null
+	): ResponseEntity<LospostDto> {
+		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
+			"Nav-Env-Qualifier" to envQualifier.value
+		) else null
+		val requestEntity = createHttpEntity(opprettLospost, headers)
+		return restTemplate.exchange(
+			"${baseUrl}/fyllut/v1/lospost",
+			HttpMethod.POST,
+			requestEntity,
+			LospostDto::class.java
+		)
+	}
+
+	fun getSoknaderForSkjemanr(
+		skjemanr: String,
+		soknadstyper: List<SoknadType>? = emptyList()
+	): ResponseEntity<List<DokumentSoknadDto>> {
 		val responseType = object : ParameterizedTypeReference<List<DokumentSoknadDto>>() {}
-		var query = "";
+		var query = ""
 		if (soknadstyper?.isNotEmpty() == true) {
-			query = "?soknadstyper=${soknadstyper.joinToString()}";
+			query = "?soknadstyper=${soknadstyper.joinToString()}"
 		}
 		return restTemplate.exchange(
 			"${baseUrl}/ekstern/v1/skjema/${skjemanr}/soknader${query}",
