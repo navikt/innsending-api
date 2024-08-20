@@ -125,6 +125,10 @@ paths:
           schema:
             type: string
           style: simple
+        - in: header
+          name: Nav-Env-Qualifier
+          schema:
+            $ref: "#/components/schemas/EnvQualifier"
 
       requestBody:
         description: Søknaddata for å oppdatere søknaden
@@ -244,6 +248,11 @@ paths:
                 schema:
                   $ref: "#/components/schemas/OpprettEttersending"
             required: true
+          parameters:
+          - in: header
+            name: Nav-Env-Qualifier
+            schema:
+              $ref: "#/components/schemas/EnvQualifier"
 
           responses:
             201:
@@ -266,6 +275,11 @@ paths:
                 schema:
                   $ref: "#/components/schemas/OpprettLospost"
             required: true
+          parameters:
+          - in: header
+            name: Nav-Env-Qualifier
+            schema:
+              $ref: "#/components/schemas/EnvQualifier"
 
           responses:
             201:
@@ -2013,6 +2027,11 @@ components:
       type: string
       enum: [ "fyllUt", "dokumentinnsending", "ettersending", "lospost" ]
       description: Angir visningsmodus gitt opphav til søknaden
+
+    EnvQualifier:
+      type: string
+      enum: [ "preprodIntern", "preprodAltIntern", "preprodAnsatt", "preprodAltAnsatt", "local" ]
+      description: Angir et ønske om miljø
 
 
 security: [ ]
