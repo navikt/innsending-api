@@ -137,6 +137,9 @@ restconfig:
   soknadsMottakerHost: ${SOKNADSMOTTAKER_HOST}
   soknadsMottakerEndpoint: /save
   sendInnUrl: http://localhost:3100/sendinn
+  sendinn:
+    urls:
+      default: http://localhost:3100/sendinn
   fyllUtUrl: http://localhost:3001/fyllut
   clientId: ${AZURE_APP_CLIENT_ID}
   clientSecret: ${AZURE_APP_CLIENT_SECRET}
