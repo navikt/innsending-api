@@ -54,30 +54,13 @@ spec:
   accessPolicy:
     inbound:
       rules:
-        - application: send-inn-frontend
-        - application: send-inn-frontend-alt
-        - application: soknadsarkiverer
-        - application: innsending-admin
-        - application: dokumentinnsending-send-inn
-        - application: skjemautfylling
-          namespace: skjemadigitalisering
-        - application: skjemautfylling-delingslenke
-          namespace: skjemadigitalisering
-        - application: skjemautfylling-experimental
-          namespace: skjemadigitalisering
-        - application: skjemautfylling-preprod
-          namespace: skjemadigitalisering
-        - application: skjemautfylling-preprod-alt
-          namespace: skjemadigitalisering
-        - application: fyllut-ettersending
-          namespace: skjemadigitalisering
-        - application: tokenx-token-generator
-          namespace: aura
-          cluster: dev-gcp
-        - application: statuspoll
-          namespace: navdig
-        - application: sykepengesoknad-backend
-          namespace: flex
+      {{#each accessPolicyInbound.current-namespace}}
+        - application: "{{this}}"
+      {{/each}}
+      {{#each accessPolicyInbound.other-namespace}}
+        - application: "{{this.application}}"
+          namespace: "{{this.namespace}}"
+      {{/each}}
 
     outbound:
       external:
@@ -85,16 +68,13 @@ spec:
         - host: "{{this}}"
       {{/each}}
       rules:
-        - application: soknadsmottaker
-        - application: soknadsveiviser
-          cluster: prod-gcp
-          namespace: skjemadigitalisering
-        - application: clamav
-          namespace: nais-system
-        - application: sokos-kontoregister-person
-          namespace: okonomi
-        - application: kodeverk-api
-          namespace: team-rocket
+      {{#each accessPolicyOutbound.current-namespace}}
+        - application: "{{this}}"
+      {{/each}}
+      {{#each accessPolicyOutbound.other-namespace}}
+        - application: "{{this.application}}"
+          namespace: "{{this.namespace}}"
+      {{/each}}
 
   ingresses:
   {{#each ingresses}}

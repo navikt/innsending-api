@@ -8,6 +8,63 @@
 	"ingresses": [
 		"https://innsending-api-gcp.intern.dev.nav.no"
 	],
+	"accessPolicyInbound": {
+		"current-namespace": [
+			"send-inn-frontend",
+			"send-inn-frontend-alt",
+			"soknadsarkiverer",
+			"innsending-admin"
+		],
+		"other-namespace": [
+			{
+				"application": "skjemautfylling",
+				"namespace": "skjemadigitalisering"
+			},
+			{
+				"application": "skjemautfylling-delingslenke",
+				"namespace": "skjemadigitalisering"
+			},
+			{
+				"application": "skjemautfylling-preprod",
+				"namespace": "skjemadigitalisering"
+			},
+			{
+				"application": "skjemautfylling-preprod-alt",
+				"namespace": "skjemadigitalisering"
+			},
+			{
+				"application": "fyllut-ettersending",
+				"namespace": "skjemadigitalisering"
+			},
+			{
+				"application": "tokenx-token-generator",
+				"namespace": "aura"
+			},
+			{
+				"application": "sykepengesoknad-backend",
+				"namespace": "flex"
+			}
+		]
+	},
+	"accessPolicyOutbound": {
+		"current-namespace": [
+			"soknadsmottaker"
+		],
+		"other-namespace": [
+			{
+				"application": "clamav",
+				"namespace": "nais-system"
+			},
+			{
+				"application": "sokos-kontoregister-person",
+				"namespace": "okonomi"
+			},
+			{
+				"application": "kodeverk-api",
+				"namespace": "team-rocket"
+			}
+		]
+	},
 	"outboundExternalHosts": [
 		"pdl-api.dev-fss-pub.nais.io",
 		"safselvbetjening-q1.dev-fss-pub.nais.io",
