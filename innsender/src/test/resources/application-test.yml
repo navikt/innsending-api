@@ -45,7 +45,7 @@ kafka:
     trustStorePath: dummy
     trustStorePassword: dummy
   topics:
-    arkiveringstilbakemeldingTopic: team-soknad.soknadinnsending-arkiveringstilbakemeldinger-v1-dev
+    arkiveringstilbakemeldingTopic: team-soknad.privat-soknadinnsending-arkiveringstilbakemeldinger-v1-dev
 
 restconfig:
   version: 1.0
