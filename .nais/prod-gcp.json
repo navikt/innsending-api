@@ -84,7 +84,7 @@
 		"SOKNADSMOTTAKER_SCOPE": "api://prod-gcp.team-soknad.soknadsmottaker/.default",
 		"SAF_SCOPE": "api://prod-fss.teamdokumenthandtering.saf/.default",
 		"KAFKA_SECURITY": "TRUE",
-		"KAFKA_MESSAGE_TOPIC": "team-soknad.privat-soknadinnsending-messages-v2",
+		"KAFKA_ARKIVERINGSTILBAKEMELDING_TOPIC": "team-soknad.privat-soknadinnsending-arkiveringstilbakemeldinger-v1",
 		"ANTIVIRUS_URL": "http://clamav.nais-system.svc.cluster.local",
 		"STATUS_LOG_URL": "https://logs.adeo.no/app/discover#/view/170a6860-df4c-11ed-8b42-0b0644af4500",
 		"ARENA_URL": "https://arena-api.prod-fss-pub.nais.io",
