@@ -48,16 +48,16 @@
 				"application": "kodeverk-api",
 				"namespace": "team-rocket"
 			}
+		],
+		"external-hosts": [
+			"pdl-api.prod-fss-pub.nais.io",
+			"safselvbetjening.prod-fss-pub.nais.io",
+			"saf.prod-fss-pub.nais.io",
+			"soknadsmottaker-gcp.intern.nav.no",
+			"www.nav.no",
+			"arena-api.prod-fss-pub.nais.io"
 		]
 	},
-	"outboundExternalHosts": [
-		"pdl-api.prod-fss-pub.nais.io",
-		"safselvbetjening.prod-fss-pub.nais.io",
-		"saf.prod-fss-pub.nais.io",
-		"soknadsmottaker-gcp.intern.nav.no",
-		"www.nav.no",
-		"arena-api.prod-fss-pub.nais.io"
-	],
 	"kafka-pool": "nav-prod",
 	"env": {
 		"DATABASE_NAME": "dokumentinnsending",

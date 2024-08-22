@@ -64,7 +64,7 @@ spec:
 
     outbound:
       external:
-      {{#each outboundExternalHosts}}
+      {{#each accessPolicyOutbound.external-hosts}}
         - host: "{{this}}"
       {{/each}}
       rules:
