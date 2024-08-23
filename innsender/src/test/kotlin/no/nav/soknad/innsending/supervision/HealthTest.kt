@@ -34,7 +34,6 @@ class HealthTest : ApplicationTest() {
 		assertDoesNotThrow {
 			healthCheck.isReady()
 		}
-
 	}
 
 	@Test
@@ -42,13 +41,19 @@ class HealthTest : ApplicationTest() {
 		assertDoesNotThrow {
 			healthCheck.isReady()
 		}
-
 	}
 
 	@Test
 	fun sjekkStatus() {
 		assertDoesNotThrow {
 			healthCheck.getStatus()
+		}
+	}
+
+	@Test
+	fun sjekkBackends() {
+		assertDoesNotThrow {
+			healthCheck.getBackends()
 		}
 	}
 }

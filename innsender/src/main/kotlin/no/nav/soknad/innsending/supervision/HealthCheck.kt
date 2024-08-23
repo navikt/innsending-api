@@ -15,7 +15,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.client.HttpServerErrorException
 
 @RestController
 @RequestMapping(value = ["/health"])
@@ -34,19 +33,23 @@ class HealthCheck(
 	override fun isAlive(): ResponseEntity<String> = ResponseEntity.status(HttpStatus.OK).body("ok")
 
 	@GetMapping("/isReady")
-	override fun isReady(): ResponseEntity<String> = if (applicationIsReady()) {
-		ResponseEntity.status(HttpStatus.OK).body("Ready for action")
-	} else {
-		ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("/isReady called - application is not ready")
-	}
+	override fun isReady(): ResponseEntity<String> = ResponseEntity.status(HttpStatus.OK).body("ok")
 
 	@GetMapping("/ping")
 	override fun ping(): ResponseEntity<String> = ResponseEntity.status(HttpStatus.OK).body("pong")
 
 	@GetMapping("/status")
 	override fun getStatus(): ResponseEntity<ApplicationStatus> {
+		return ResponseEntity(
+			ApplicationStatus(status = ApplicationStatusType.OK, description = "OK", logLink = statusLogUrl),
+			HttpStatus.OK
+		)
+	}
+
+	@GetMapping("/backends")
+	override fun getBackends(): ResponseEntity<ApplicationStatus> {
 		val dependencyStatusList = mutableListOf<ApplicationStatus>()
-		val backends = getBackends()
+		val backends = getBackendDependencies()
 		runBlocking {
 			backends
 				.forEach {
@@ -81,15 +84,7 @@ class HealthCheck(
 		return errorStatus ?: issueStatus ?: ApplicationStatus(ApplicationStatusType.OK, "OK")
 	}
 
-
-	private fun applicationIsReady(): Boolean {
-		val dependencies = getBackends()
-		throwExceptionIfDependenciesAreDown(dependencies)
-
-		return true
-	}
-
-	private fun getBackends(): List<Dependency> {
+	private fun getBackendDependencies(): List<Dependency> {
 		return listOf(
 			Dependency(
 				{ mottakerAPI.isReady() },
@@ -132,24 +127,6 @@ class HealthCheck(
 				logUrl = statusLogUrl
 			)
 		)
-	}
-
-	/**
-	 * Will throw an exception if any of the dependencies are not returning the expected value.
-	 * If all is well, the function will silently exit.
-	 */
-	private fun throwExceptionIfDependenciesAreDown(applications: List<Dependency>) {
-		runBlocking {
-			applications
-				.map { Triple(async { it.dependencyEndpoint.invoke() }, it.expectedResponse, it.dependencyName) }
-				.forEach { if (it.first.await() != it.second) throwException("${it.third} does not seem to be up") }
-		}
-	}
-
-	private fun throwException(message: String? = null): String {
-		logger.warn(message)
-		val status = HttpStatus.INTERNAL_SERVER_ERROR
-		throw HttpServerErrorException(status, message ?: status.name)
 	}
 
 	private data class Dependency(
