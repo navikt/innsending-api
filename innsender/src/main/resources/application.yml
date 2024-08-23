@@ -112,6 +112,57 @@ brukernotifikasjonconfig:
   sendinnUrl: http://localhost:3100/sendinn
   publisereEndringer: true
 
+---
+spring:
+  config:
+    activate:
+      on-profile: endtoend
+
+  flyway:
+    enabled: true
+
+  datasource:
+    url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:postgres}?user=${DATABASE_USERNAME:postgres}&password=${DATABASE_PASSWORD:postgres}
+
+status_log_url: "https://logs.adeo.no"
+
+restconfig:
+  version: 1.0
+  maxFileSize: 50
+  maxFileSizeSum: 150
+  maxNumberOfPages: 200
+  sanityHost: https://www.nav.no
+  sanityEndpoint: /soknader/api/sanity/skjemautlisting
+  filesInOneRequestToFilestorage: 10
+  soknadsMottakerHost: ${SOKNADSMOTTAKER_HOST}
+  soknadsMottakerEndpoint: /save
+  sendInnUrl: http://localhost:3100/sendinn
+  sendinn:
+    urls:
+      default: http://localhost:3100/sendinn
+  fyllUtUrl: http://localhost:3001/fyllut
+  clientId: ${AZURE_APP_CLIENT_ID}
+  clientSecret: ${AZURE_APP_CLIENT_SECRET}
+  pdlScope: api://dev-fss.pdl.pdl-api/.default
+  pdlUrl: http://pdl.no
+  safselvbetjeningUrl: ${SAFSELVBETJENING_URL}
+  safUrl: ${SAF_URL}
+  azureUrl: ${AZURE_OPENID_CONFIG_TOKEN_ENDPOINT}
+  antivirusUrl: http://localhost:9043/antivirus
+  arenaUrl: http://arena.no
+  kodeverkUrl: http://kodeverk.no
+  kontoregisterUrl: http://kontoregister.no
+
+brukernotifikasjonconfig:
+  fyllutUrl: http://localhost:3001/fyllut
+  sendinnUrl: http://localhost:3100/sendinn
+  publisereEndringer: true
+
+kafka:
+  applicationId: innsending-api-end-to-end
+  brokers: ${KAFKA_BROKERS:http://localhost:9092}
+  security:
+    enabled: FALSE
 
 ---
 spring:

@@ -53,7 +53,7 @@
 		</root>
 	</springProfile>
 
-	<springProfile name="docker,local">
+	<springProfile name="docker,local,endtoend">
 		<appender name="STDOUT_JSON" class="ch.qos.logback.core.ConsoleAppender">
 			<layout class="ch.qos.logback.classic.PatternLayout">
 				<pattern>

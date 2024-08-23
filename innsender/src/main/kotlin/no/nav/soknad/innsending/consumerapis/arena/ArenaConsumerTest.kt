@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component
 import java.time.LocalDate
 
 @Component
-@Profile("local | docker")
+@Profile("local | docker | endtoend")
 class ArenaConsumerTest : ArenaConsumerInterface {
 	override fun getMaalgrupper(): List<Maalgruppe> {
 		val maalgruppe =
