@@ -1014,7 +1014,7 @@ paths:
   /health/status:
     get:
       summary: Returns status of the application
-      description: Checks the application's backend dependencies and returns the most critical status
+      description: Returns status of the application
       operationId: getStatus
 
       security: [ ]   # No security
