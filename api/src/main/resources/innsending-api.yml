@@ -1028,6 +1028,23 @@ paths:
       tags:
         - health
 
+  /health/backends:
+    get:
+      summary: Returns status of the application's backend dependencies
+      description: Checks the application's backend dependencies and returns the most critical status
+      operationId: getBackends
+
+      security: [ ]   # No security
+      responses:
+        '200':
+          description: Successful operation; application is responding
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationStatus"
+      tags:
+        - health
+
 
 components:
   schemas:
