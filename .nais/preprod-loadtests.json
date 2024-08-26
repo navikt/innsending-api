@@ -29,7 +29,7 @@
   "kafka-pool": "nav-dev",
   "env": {
     "DATABASE_NAME": "dokumentinnsending-loadtests",
-    "SPRING_PROFILES_ACTIVE": "dev",
+    "SPRING_PROFILES_ACTIVE": "dev,loadtests",
     "APP_VERSION": "0.0.1",
     "MAX_FILE_SIZE": "50",
     "MAX_FILE_SIZE_SUM": "150",
