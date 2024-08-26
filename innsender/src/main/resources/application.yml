@@ -313,7 +313,7 @@ spring:
       on-profile: loadtests
 
   datasource:
-    url: ${DB_JDBC_URL}
+    url: ${DATABASE_JDBC_URL}
 
 ---
 spring:
