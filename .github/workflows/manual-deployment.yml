@@ -71,7 +71,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: nais/deploy/actions/deploy@v2
         env:
-          CLUSTER: dev-gcpz
+          CLUSTER: dev-gcp
           RESOURCE: .nais/nais-gcp.yml
           VARS: .nais/preprod-gcp.json
           VAR: image=${{needs.build-and-push.outputs.image}}
