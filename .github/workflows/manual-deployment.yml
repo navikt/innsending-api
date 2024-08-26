@@ -14,6 +14,7 @@ on:
         type: choice
         options:
           - none
+          - loadtests
           - preprod
           - prod
 
@@ -49,6 +50,19 @@ jobs:
     outputs:
         image: ${{ steps.docker-build-push.outputs.image }}
 
+  deploy-loadtests:
+    needs: build-and-push
+    if: github.event.inputs.environment == 'loadtests'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nais/deploy/actions/deploy@v2
+        env:
+          CLUSTER: dev-gcp
+          RESOURCE: .nais/nais-gcp.yml
+          VARS: .nais/preprod-loadtests.json
+          VAR: image=${{needs.build-and-push.outputs.image}}
+
   deploy-preprod:
     needs: build-and-push
     if: github.event.inputs.environment == 'preprod'
@@ -57,7 +71,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: nais/deploy/actions/deploy@v2
         env:
-          CLUSTER: dev-gcp
+          CLUSTER: dev-gcpz
           RESOURCE: .nais/nais-gcp.yml
           VARS: .nais/preprod-gcp.json
           VAR: image=${{needs.build-and-push.outputs.image}}
