@@ -17,10 +17,10 @@ spec:
   port: 9064
   liveness:
     path: /health/isAlive
-    initialDelay: 20
+    initialDelay: 40
   readiness:
     path: /health/isReady
-    initialDelay: 20
+    initialDelay: 40
   prometheus:
     enabled: true
     path: /internal/prometheus
