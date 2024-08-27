@@ -52,6 +52,8 @@ data class Application(
 	val velgLand1: VelgLand? = null,
 	val adresse1: String? = null,
 	val postnr1: String? = null,
+	val poststed: String? = null,
+	val postkode: String? = null, // Postkode benyttes dersom land != Norge
 	val kanDuReiseKollektivtDagligReise: String? = null, // ja | nei
 	val hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise: Double? = null, // Hvis kanDuReiseKollektivtDagligReise == ja
 	val hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt: String? = null,
@@ -63,6 +65,8 @@ data class Application(
 	val velgLandReiseTilSamling: VelgLand? = null,
 	val adresse2: String? = null,
 	val postnr2: String? = null,
+	//val poststed: String? = null,
+	//val postkode: String? = null, // Postkode benyttes dersom land != Norge
 	val kanDuReiseKollektivtReiseTilSamling: String? = null, // Ja|nei
 	val kanReiseKollektivt: KanReiseKollektivt? = null, // hvis kanDuReiseKollektivtReiseTilSamling == ja
 	val kanIkkeReiseKollektivtReiseTilSamling: KanIkkeReiseKollektivt? = null, // hvis kanDuReiseKollektivtReiseTilSamling == nei
@@ -77,6 +81,8 @@ data class Application(
 	val velgLand3: VelgLand? = null,
 	val adresse3: String? = null,
 	val postnr3: String? = null,
+	//val poststed: String? = null,
+	//val postkode: String? = null, // Postkode benyttes dersom land != Norge
 	val harDuBarnSomSkalFlytteMedDeg: String? = null, // ja|nei
 	val barnSomSkalFlytteMedDeg: List<BarnSomSkalFlytteMedDeg>? = null,  //hvis harDuBarnSomSkalFlytteMedDeg == ja
 	val harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear: String? = null, // ja|nei
@@ -97,6 +103,9 @@ data class Application(
 	val velgLandArbeidssoker: VelgLand? = null,
 	val adresse: String? = null,
 	val postnr: String? = null,
+	//val poststed: String? = null,
+	//val postkode: String? = null, // Postkode benyttes dersom land != Norge
+
 	val kanDuReiseKollektivtArbeidssoker: String? = null, // ja|nei
 	val hvilkeUtgifterHarDuIForbindelseMedReisen3: Double? = null, // hvis kanDuReiseKollektivtArbeidssoker==ja?
 	val kanIkkeReiseKollektivtArbeidssoker: KanIkkeReiseKollektivt? = null,
@@ -109,6 +118,8 @@ data class Application(
 	//val velgLand1: VelgLand?, // Samme som daglig reise
 	//val adresse1: String?, // Samme som daglig reise
 	//val postnr1: String, // Samme som daglig reise
+	//val poststed: String, // Samme som daglig reise
+	//val postkode: String? = null, // Postkode benyttes dersom land != Norge
 	val farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav: String? = null, // Ja | nei
 	val ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra: String? = null, // 	"Jeg flytter selv" | "Jeg vil bruke flyttebyrå" |"Jeg har innhentet tilbud fra minst to flyttebyråer, men velger å flytte selv"
 	val jegFlytterSelv: JegFlytterSelv? = null, // Hvis "Jeg flytter selv"
@@ -188,7 +199,7 @@ data class BostotteIForbindelseMedSamling(
 	val periodeForSamling: List<JsonPeriode>
 )
 
-data class HvilkeAdresserHarDuBoutgifterPa (
+data class HvilkeAdresserHarDuBoutgifterPa(
 	val boutgifterPaAktivitetsadressen: Boolean,
 	val boutgifterPaHjemstedet: Boolean,
 	val boutgifterPaHjemstedetMittSomHarOpphortIForbindelseMedAktiviteten: Boolean

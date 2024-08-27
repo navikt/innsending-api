@@ -5,14 +5,20 @@ package no.nav.soknad.innsending.util.mapping.tilleggsstonad
  * Innholdet i denne klassen er hentet fra sendsoknad. Den er tatt med som kontroll og i tilfelle det er nødvendig å benytte disse verdiene i forbindelse med mapping fra JSON til XML.
  *
  */
-class SammensattAdresse(val land: String?, val adresse: String?, val postnr: String?) {
+class SammensattAdresse(
+	val land: String?,
+	val adresse: String?,
+	val postnr: String?,
+	val poststed: String? = null,
+	val postkode: String? = null
+) {
 	var sammensattAdresse: String = ""
 
 	init {
 		sammensattAdresse = if (land == null || land == NORGE) {
-			String.format("%s, %s", adresse, postnr)
+			String.format("%s, %s", adresse, postnr + (if (poststed != null) " " + poststed else ""))
 		} else {
-			String.format("%s, %s", adresse, land)
+			String.format("%s, %s", adresse + (if (postkode != null) " " + postkode else ""), land)
 		}
 	}
 

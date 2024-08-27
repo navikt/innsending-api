@@ -15,6 +15,8 @@ class JsonFlyttingTestBuilder {
 		velgLand1 = velgLand1,
 		adresse1 = adresse1,
 		postnr1 = postnr1,
+		poststed = poststed,
+		postkode = postkode,
 		farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav = farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav,
 		ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra = ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra,
 		jegFlytterSelv = jegFlytterSelv,
@@ -29,7 +31,9 @@ class JsonFlyttingTestBuilder {
 	private var erBostedEtterFlytting: Boolean = true
 	private var velgLand1: VelgLand = VelgLand(label = "Norge", value = "NO")
 	private var adresse1: String = "Kongensgate 10"
-	private var postnr1: String = "3701"
+	private var postnr1: String? = "3701"
+	private var poststed: String? = "Skien"
+	private var postkode: String? = null
 	private var hvorforFlytterDu: String = "Jeg flytter fordi jeg har fått ny jobb"
 	private var farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav: String = "Nei"
 	private var ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra: String = "jegFlytterSelv"
@@ -70,7 +74,7 @@ class JsonFlyttingTestBuilder {
 
 	fun jegFlytterSelv(jegFlytterSelv: JegFlytterSelv?) = apply { this.jegFlytterSelv = jegFlytterSelv }
 	fun jegVilBrukeFlyttebyra(jegVilBrukeFlyttebyra: JegVilBrukeFlyttebyra?) =
-		apply { this.jegVilBrukeFlyttebyra = jegVilBrukeFlyttebyra  }
+		apply { this.jegVilBrukeFlyttebyra = jegVilBrukeFlyttebyra }
 
 	fun jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv(
 		jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv: JegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv?

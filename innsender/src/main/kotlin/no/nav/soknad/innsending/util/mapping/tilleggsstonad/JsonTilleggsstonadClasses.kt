@@ -58,6 +58,8 @@ data class JsonFlytteutgifter(
 	val velgLand1: VelgLand,
 	val adresse1: String,
 	val postnr1: String?,
+	val poststed: String?,
+	val postkode: String?,
 	val farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav: String, // Ja | nei
 	val ordnerDuFlyttingenSelvEllerKommerDuTilABrukeFlyttebyra: String, // 	"Jeg flytter selv" | "Jeg vil bruke flyttebyrå" |"Jeg har innhentet tilbud fra minst to flyttebyråer, men velger å flytte selv"
 	val jegFlytterSelv: JegFlytterSelv?, // Hvis "Jeg flytter selv"
@@ -124,6 +126,8 @@ data class JsonDagligReise(
 	val velgLand1: VelgLand,
 	val adresse1: String,
 	val postnr1: String?, // Null hvis land != Norge
+	val poststed: String? = null, // null hvis land != Norge
+	val postkode: String? = null, // Postkode benyttes dersom land != Norge
 	val kanDuReiseKollektivtDagligReise: String, // ja | nei
 	val hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise: Double?, // Hvis kanDuReiseKollektivtDagligReise == ja
 	val hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt: String?,
@@ -140,6 +144,8 @@ data class JsonDagligReiseArbeidssoker(
 	val velgLandArbeidssoker: VelgLand,
 	val adresse: String,
 	val postnr: String?, // Null hvis land != Norge
+	val poststed: String? = null, // null hvis land != Norge
+	val postkode: String? = null, // Postkode benyttes dersom land != Norge
 	val kanDuReiseKollektivtArbeidssoker: String, // ja|nei
 	val hvilkeUtgifterHarDuIForbindelseMedReisen3: Double?, // hvis kanDuReiseKollektivtArbeidssoker==ja?
 	val kanIkkeReiseKollektivtArbeidssoker: KanIkkeReiseKollektivt?,
@@ -151,6 +157,8 @@ data class JsonReiseSamling(
 	val velgLandReiseTilSamling: VelgLand,
 	val adresse2: String,
 	val postnr2: String?, // Null hvis land != Norge
+	val poststed: String? = null, // null hvis land != Norge
+	val postkode: String? = null, // Postkode benyttes dersom land != Norge
 	val kanDuReiseKollektivtReiseTilSamling: String, // Ja|nei
 	val kanReiseKollektivt: KanReiseKollektivt?, // hvis kanDuReiseKollektivtReiseTilSamling == ja
 	val kanIkkeReiseKollektivtReiseTilSamling: KanIkkeReiseKollektivt?, // hvis kanDuReiseKollektivtReiseTilSamling == nei
@@ -165,6 +173,8 @@ data class JsonOppstartOgAvsluttetAktivitet(
 	val velgLand3: VelgLand,
 	val adresse3: String,
 	val postnr3: String?,  // Null hvis land != Norge
+	val poststed: String? = null, // null hvis land != Norge
+	val postkode: String? = null, // Postkode benyttes dersom land != Norge
 	val harDuBarnSomSkalFlytteMedDeg: String, // ja|nei
 	val barnSomSkalFlytteMedDeg: List<BarnSomSkalFlytteMedDeg>?,  //hvis harDuBarnSomSkalFlytteMedDeg == ja
 	val harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear: String?, // ja|nei
