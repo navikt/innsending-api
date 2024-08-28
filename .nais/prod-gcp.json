@@ -10,14 +10,54 @@
 		"https://innsending-api-gcp.nav.no",
 		"https://innsending-api-gcp.intern.nav.no"
 	],
-	"outboundExternalHosts": [
-		"pdl-api.prod-fss-pub.nais.io",
-		"safselvbetjening.prod-fss-pub.nais.io",
-		"saf.prod-fss-pub.nais.io",
-		"soknadsmottaker-gcp.intern.nav.no",
-		"www.nav.no",
-		"arena-api.prod-fss-pub.nais.io"
-	],
+	"accessPolicyInbound": {
+		"current-namespace": [
+			"send-inn-frontend",
+			"soknadsarkiverer",
+			"innsending-admin"
+		],
+		"other-namespace": [
+			{
+				"application": "skjemautfylling",
+				"namespace": "skjemadigitalisering"
+			},
+			{
+				"application": "fyllut-ettersending",
+				"namespace": "skjemadigitalisering"
+			},
+			{
+				"application": "sykepengesoknad-backend",
+				"namespace": "flex"
+			}
+		]
+	},
+	"accessPolicyOutbound": {
+		"current-namespace": [
+			"soknadsmottaker"
+		],
+		"other-namespace": [
+			{
+				"application": "clamav",
+				"namespace": "nais-system"
+			},
+			{
+				"application": "sokos-kontoregister-person",
+				"namespace": "okonomi"
+			},
+			{
+				"application": "kodeverk-api",
+				"namespace": "team-rocket"
+			}
+		],
+		"external-hosts": [
+			"pdl-api.prod-fss-pub.nais.io",
+			"safselvbetjening.prod-fss-pub.nais.io",
+			"saf.prod-fss-pub.nais.io",
+			"soknadsmottaker-gcp.intern.nav.no",
+			"www.nav.no",
+			"arena-api.prod-fss-pub.nais.io"
+		]
+	},
 	"kafka-pool": "nav-prod",
 	"env": {
 		"DATABASE_NAME": "dokumentinnsending",
