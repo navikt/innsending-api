@@ -7,6 +7,7 @@ package no.nav.soknad.innsending.util.mapping.tilleggsstonad
  */
 class SammensattAdresse(
 	val land: String?,
+	val landkode: String?,
 	val adresse: String?,
 	val postnr: String?,
 	val poststed: String? = null,
@@ -15,15 +16,23 @@ class SammensattAdresse(
 	var sammensattAdresse: String = ""
 
 	init {
-		sammensattAdresse = if (land == null || land == NORGE) {
-			String.format("%s, %s", adresse, postnr + (if (poststed != null) " " + poststed else ""))
-		} else {
-			String.format("%s, %s", adresse + (if (postkode != null) " " + postkode else ""), land)
-		}
+		sammensattAdresse =
+			if (landkode == null || LANDKODE.equals(landkode, true) || LANDKODE_ALT.equals(landkode, true)) {
+				String.format("%s, %s", adresse, postnr + (if (poststed != null) " " + poststed else ""))
+			} else {
+				String.format(
+					"%s, %s, %s",
+					adresse,
+					(if (postkode != null) postkode else "") + (if (poststed != null) " " + poststed else ""),
+					land
+				)
+			}
 	}
 
 	companion object {
 		private const val NORGE = "Norge"
+		private const val LANDKODE = "NO"
+		private const val LANDKODE_ALT = "NOR"
 	}
 }
 

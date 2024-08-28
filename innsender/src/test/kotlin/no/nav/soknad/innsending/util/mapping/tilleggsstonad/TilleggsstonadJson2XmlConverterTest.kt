@@ -164,6 +164,7 @@ class TilleggsstonadJson2XmlConverterTest {
 				.velgLand1(VelgLand(label = "Norge", value = "NO"))
 				.adresse1("Kongensgate 10")
 				.postnr1("3701")
+				.poststed("Skien")
 				.kanDuReiseKollektivtDagligReise("Nei")
 				.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt("helsemessigeArsaker")
 				.kanBenytteEgenBil(
@@ -191,7 +192,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("<fom>2023-12-01+01:00</fom>")) //##
 		assertTrue(xmlString.contains("<tom>2024-06-20+02:00</tom>"))
 		assertTrue(xmlString.contains("</periode>"))
-		assertTrue(xmlString.contains("<aktivitetsadresse>Kongensgate 10, 3701</aktivitetsadresse>"))
+		assertTrue(xmlString.contains("<aktivitetsadresse>Kongensgate 10, 3701 Skien</aktivitetsadresse>"))
 		assertTrue(xmlString.contains("<dagligReise>"))
 		assertTrue(xmlString.contains("<avstand>130.0</avstand>"))
 		assertTrue(xmlString.contains("<kanOffentligTransportBrukes>false</kanOffentligTransportBrukes>"))
@@ -213,6 +214,7 @@ class TilleggsstonadJson2XmlConverterTest {
 				.velgLand1(VelgLand(label = "Norge", value = "NO"))
 				.adresse1("Kongensgate 10")
 				.postnr1("3701")
+				.poststed(null)
 				.kanDuReiseKollektivtDagligReise("Nei")
 				.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt("annet")
 				.kanBenytteEgenBil(
@@ -243,6 +245,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		assertTrue(xmlString.contains("<aktivitetsadresse>Kongensgate 10, 3701</aktivitetsadresse>"))
 		assertTrue(xmlString.contains("<dagligReise>"))
 		assertTrue(xmlString.contains("<avstand>5.0</avstand>"))
+		assertTrue(xmlString.contains("<aktivitetsadresse>Kongensgate 10, 3701</aktivitetsadresse>"))
 		assertTrue(xmlString.contains("<harMedisinskeAarsakerTilTransport>true</harMedisinskeAarsakerTilTransport>"))
 		assertTrue(xmlString.contains("<kanOffentligTransportBrukes>false</kanOffentligTransportBrukes>"))
 		assertTrue(xmlString.contains("<aarsakTilIkkeOffentligTransport>annet</aarsakTilIkkeOffentligTransport>"))
@@ -255,9 +258,12 @@ class TilleggsstonadJson2XmlConverterTest {
 	fun `Convert to XML of daily travel excpenses - using public transport`() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = reiseDaglig, tema = "TSO").build()
 		val dagligReise = JsonDagligReiseTestBuilder()
-			.velgLand1(VelgLand(label = "Sverige", value = "SE"))
-			.adresse1("Strømstad Systembolag, 452 38")
-			.postnr1(null)
+			.settFullAdresse(
+				VelgLand(label = "Sverige", value = "SE"),
+				adresse = "Systembolaget",
+				postkodeEllerPostnr = "452 38",
+				poststed = "Strømstad"
+			)
 			.kanDuReiseKollektivtDagligReise("Ja")
 			.hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise(2000.0)
 			.kanIkkeReiseKollektivtDagligReise(null)
@@ -274,7 +280,7 @@ class TilleggsstonadJson2XmlConverterTest {
 		val xmlString = xmlFil.decodeToString()
 		assertTrue(xmlString.contains("<dagligReise>"))
 		assertTrue(xmlString.contains("<avstand>10.0</avstand>"))
-		assertTrue(xmlString.contains("<aktivitetsadresse>Strømstad Systembolag, 452 38, Sverige</aktivitetsadresse>"))
+		assertTrue(xmlString.contains("<aktivitetsadresse>Systembolaget, 452 38 Strømstad, Sverige</aktivitetsadresse>"))
 		assertTrue(xmlString.contains("<kanOffentligTransportBrukes>true</kanOffentligTransportBrukes>"))
 		assertTrue(xmlString.contains("<beloepPerMaaned>2000</beloepPerMaaned>"))
 	}

@@ -48,7 +48,7 @@
 			},
 			"fornavnSoker": "Skjønn",
 			"etternavnSoker": "Lampett",
-			"postnr1": "6410",
+			"postnr1": "3701",
 			"harDuNorskFodselsnummerEllerDNummer": "ja",
 			"fodselsnummerDNummerSoker": "28898698736",
 			"soknadsPeriode": {
@@ -59,6 +59,7 @@
 			"harDuEnReiseveiPaSeksKilometerEllerMer": "ja",
 			"hvorLangReiseveiHarDu": "60.0",
 			"adresse1": "Kongensgate. 10",
+			"poststed": "Skien",
 			"kanDuReiseKollektivtDagligReise": "nei",
 			"kanIkkeReiseKollektivtDagligReise": {
 				"hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt": "darligTransporttilbud",

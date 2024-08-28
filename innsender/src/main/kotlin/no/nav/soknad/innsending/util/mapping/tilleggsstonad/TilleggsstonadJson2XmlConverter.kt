@@ -200,6 +200,7 @@ fun convertFlytteutgifter(jsonRettighetstyper: JsonRettighetstyper): Flytteutgif
 			convertToDateStringWithTimeZone(flytteutgifter.oppgiForsteDagINyJobbDdMmAaaa) else null,
 		tilflyttingsadresse = SammensattAdresse(
 			land = flytteutgifter.velgLand1.label,
+			landkode = flytteutgifter.velgLand1.value,
 			adresse = flytteutgifter.adresse1,
 			postnr = flytteutgifter.postnr1,
 			poststed = flytteutgifter.poststed,
@@ -341,6 +342,7 @@ private fun convertDagligReise(jsonRettighetstyper: JsonRettighetstyper, soknadD
 		periode = convertPeriode(jsonDagligReise.startdatoDdMmAaaa, jsonDagligReise.sluttdatoDdMmAaaa),
 		aktivitetsadresse = SammensattAdresse(
 			land = jsonDagligReise.velgLand1.label,
+			landkode = jsonDagligReise.velgLand1.value,
 			adresse = jsonDagligReise.adresse1,
 			postnr = jsonDagligReise.postnr1,
 			poststed = jsonDagligReise.poststed,
@@ -368,6 +370,7 @@ private fun convertReisestoenadForArbeidssoeker(jsonRettighetstyper: JsonRettigh
 		formaal = Formaal(value = convertToFormaal(dagligReise.hvorforReiserDuArbeidssoker)),
 		adresse = SammensattAdresse(
 			land = dagligReise.velgLandArbeidssoker.label,
+			landkode = dagligReise.velgLandArbeidssoker.value,
 			adresse = dagligReise.adresse,
 			postnr = dagligReise.postnr,
 			poststed = dagligReise.poststed,
@@ -412,6 +415,7 @@ private fun convertReiseVedOppstartOgAvsluttetAktivitet(jsonRettighetstyper: Jso
 		periode = convertPeriode(reiseStartSlutt.startdatoDdMmAaaa1, reiseStartSlutt.sluttdatoDdMmAaaa1),
 		aktivitetsstedAdresse = SammensattAdresse(
 			land = reiseStartSlutt.velgLand3.label,
+			landkode = reiseStartSlutt.velgLand3.value,
 			adresse = reiseStartSlutt.adresse3,
 			postnr = reiseStartSlutt.postnr3,
 			poststed = reiseStartSlutt.poststed,
@@ -459,6 +463,7 @@ private fun convertReiseObligatoriskSamling(jsonRettighetstyper: JsonRettighetst
 		),
 		reiseadresser = SammensattAdresse(
 			land = reiseTilSamling.velgLandReiseTilSamling.label,
+			landkode = reiseTilSamling.velgLandReiseTilSamling.value,
 			adresse = reiseTilSamling.adresse2,
 			postnr = reiseTilSamling.postnr2,
 			poststed = reiseTilSamling.poststed,
