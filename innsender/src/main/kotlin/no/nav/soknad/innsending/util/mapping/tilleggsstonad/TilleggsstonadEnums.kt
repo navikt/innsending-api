@@ -17,7 +17,7 @@ class SammensattAdresse(
 
 	init {
 		sammensattAdresse =
-			if (landkode == null || LANDKODE.equals(landkode, true) || LANDKODE_ALT.equals(landkode, true)) {
+			if (landkode == null || LANDKODE_NO.equals(landkode, true) || LANDKODE_NOR.equals(landkode, true)) {
 				String.format("%s, %s", adresse, postnr + (if (poststed != null) " " + poststed else ""))
 			} else {
 				String.format(
@@ -31,8 +31,8 @@ class SammensattAdresse(
 
 	companion object {
 		private const val NORGE = "Norge"
-		private const val LANDKODE = "NO"
-		private const val LANDKODE_ALT = "NOR"
+		private const val LANDKODE_NO = "NO"
+		private const val LANDKODE_NOR = "NOR"
 	}
 }
 
