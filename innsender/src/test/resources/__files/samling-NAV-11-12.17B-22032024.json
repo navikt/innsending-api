@@ -66,11 +66,12 @@
 			},
 			"fornavnSoker": "Treg",
 			"etternavnSoker": "Toppvinkel",
-			"postnr2": "6410",
+			"postnr2": "3701",
 			"harDuNorskFodselsnummerEllerDNummer": "ja",
 			"fodselsnummerDNummerSoker": "23867399240",
 			"hvorLangReiseveiHarDu1": 130,
 			"adresse2": "Kongensgate 10",
+			"poststed": "Skien",
 			"kanDuReiseKollektivtReiseTilSamling": "nei",
 			"kanIkkeReiseKollektivtReiseTilSamling": {
 				"hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt": "darligTransporttilbud",

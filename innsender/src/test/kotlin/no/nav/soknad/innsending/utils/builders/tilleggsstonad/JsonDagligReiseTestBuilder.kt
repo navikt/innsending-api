@@ -26,6 +26,8 @@ class JsonDagligReiseTestBuilder {
 	)
 	private var adresse1: String = "Kongensgate 10"
 	private var postnr1: String? = "3701"
+	private var poststed: String? = "Skien"
+	private var postkode: String? = null
 	private var kanDuReiseKollektivtDagligReise: String = "Nei"
 	private var hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise: Double? = null
 	private var hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt: String? = "hentingEllerLeveringAvBarn"
@@ -68,10 +70,27 @@ class JsonDagligReiseTestBuilder {
 	fun hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt(hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt: String) =
 		apply { this.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt = hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt }
 
-	fun hvorLangReiseveiHarDu(hvorLangReiseveiHarDu: Double) = apply { this.hvorLangReiseveiHarDu = hvorLangReiseveiHarDu }
+	fun hvorLangReiseveiHarDu(hvorLangReiseveiHarDu: Double) =
+		apply { this.hvorLangReiseveiHarDu = hvorLangReiseveiHarDu }
+
 	fun velgLand1(velgLand1: VelgLand) = apply { this.velgLand1 = velgLand1 }
+	fun settFullAdresse(land: VelgLand, adresse: String, postkodeEllerPostnr: String?, poststed: String?) = apply {
+		this.velgLand1 = land
+		this.adresse1 = adresse
+		if (land.value == "NO" || land.value == "NOR") {
+			this.postkode = null
+			this.postnr1 = postkodeEllerPostnr
+		} else {
+			this.postnr1 = null
+			this.postkode = postkodeEllerPostnr
+		}
+		this.poststed = poststed
+	}
+
 	fun adresse1(adresse1: String) = apply { this.adresse1 = adresse1 }
 	fun postnr1(postnr1: String?) = apply { this.postnr1 = postnr1 }
+	fun poststed(poststed: String?) = apply { this.poststed = poststed }
+	fun postkode(postkode: String?) = apply { this.postkode = postkode }
 	fun kanDuReiseKollektivtDagligReise(kanDuReiseKollektivtDagligReise: String) =
 		apply { this.kanDuReiseKollektivtDagligReise = kanDuReiseKollektivtDagligReise }
 
@@ -104,7 +123,8 @@ class JsonDagligReiseTestBuilder {
 					adressenHvorDuHenterEllerLevererBarn = "Damfaret 10",
 					postnr = "0682"
 				),
-				annet = if (hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt?.equals("annet", true)?: false) AndreArsakerIkkeKollektivt(hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt = "Andre årsaker") else  null,
+				annet = if (hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt?.equals("annet", true) == true
+				) AndreArsakerIkkeKollektivt(hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt = "Andre årsaker") else null,
 				kanDuBenytteEgenBil = if (kanBenytteEgenBil != null) "ja" else null,
 				kanBenytteEgenBil = kanBenytteEgenBil,
 				kanIkkeBenytteEgenBil = kanIkkeBenytteEgenBil,
@@ -127,6 +147,8 @@ class JsonDagligReiseTestBuilder {
 		velgLand1 = velgLand1,
 		adresse1 = adresse1,
 		postnr1 = postnr1,
+		poststed = poststed,
+		postkode = postkode,
 		kanDuReiseKollektivtDagligReise = kanDuReiseKollektivtDagligReise,
 		hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise = hvilkeUtgifterHarDuIforbindelseMedReisenDagligReise,
 		hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt = hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt,
