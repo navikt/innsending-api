@@ -94,6 +94,8 @@ class FyllUtJsonTestBuilder {
 	var land: VelgLand? = VelgLand(label = "Norge", value = "NO")
 	var adresse: String? = "Kongensgate 10"
 	var postnr: String? = "3701"
+	var poststed: String? = "Skien"
+	var postkode: String? = if (land != null && !land?.value.equals("NO", true)) "UK-15074 Hampthon Park" else null
 	var hvorMangeReisedagerHarDuPerUke: Double? = 5.0
 	var harDuEnReiseveiPaSeksKilometerEllerMer: String? = "ja"
 	var harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String? = "nei"
@@ -118,11 +120,16 @@ class FyllUtJsonTestBuilder {
 	var kanIkkeReiseKollektivt: KanIkkeReiseKollektivt? = kanReiseMedBil
 	var hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise: Double? = null
 
-	fun reisemal(land: VelgLand, adresse: String, postr: String) =
-		apply { this.land = land; this.adresse = adresse; }
+	fun reisemal(land: VelgLand, adresse: String, postr: String? = "3701", poststed: String? = "Skien") =
+		apply { this.land = land; this.adresse = adresse; this.poststed = poststed }
 
-	fun harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde(harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String?) =
-		apply {this.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde = harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde}
+	fun harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde(
+		harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde: String?
+	) =
+		apply {
+			this.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde =
+				harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde
+		}
 
 	fun reiseAvstandOgFrekvens(hvorLangReiseveiHarDu: Double?, hvorMangeReisedagerHarDuPerUke: Double?) = apply {
 		harDuEnReiseveiPaSeksKilometerEllerMer = if ((hvorLangReiseveiHarDu ?: 0.0) >= 6.0) "ja" else "nei"
@@ -208,7 +215,7 @@ class FyllUtJsonTestBuilder {
 		this.hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise = null
 		this.kanIkkeReiseKollektivt = KanIkkeReiseKollektivt(
 			hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt = "annet",
-			annet = AndreArsakerIkkeKollektivt(hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt= "Bla bla"),
+			annet = AndreArsakerIkkeKollektivt(hvilkeAndreArsakerErDetSomGjorAtDuIkkeKanReiseKollektivt = "Bla bla"),
 			kanDuBenytteEgenBil = "nei",
 			kanBenytteEgenBil = null,
 			beskrivDeSpesielleForholdeneVedReiseveienSomGjorAtDuIkkeKanReiseKollektivt = "bla, bla",
@@ -329,6 +336,8 @@ class FyllUtJsonTestBuilder {
 					velgLand1 = if (skjemanr == reiseDaglig) land else null,
 					adresse1 = if (skjemanr == reiseDaglig) adresse else null,
 					postnr1 = if (skjemanr == reiseDaglig) postnr else null,
+					poststed = poststed,
+					postkode = postkode,
 					kanDuReiseKollektivtDagligReise = if (skjemanr == reiseDaglig) kanDuReiseKollektivtDagligReise else null,
 					//visesHvisBrukerHarEnRegistrertAktivitetsperiode = null, // TODO
 					hvorMangeReisedagerHarDuPerUke = if (skjemanr == reiseDaglig) hvorMangeReisedagerHarDuPerUke else null,

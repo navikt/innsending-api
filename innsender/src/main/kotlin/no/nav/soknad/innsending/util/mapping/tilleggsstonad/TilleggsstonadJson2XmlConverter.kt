@@ -75,7 +75,9 @@ fun convertToMaalgruppeinformasjon(jsonMaalgruppeinformasjon: JsonMaalgruppeinfo
 			)
 				Periode(
 					fom = convertToDateStringWithTimeZone(jsonMaalgruppeinformasjon.periode.startdatoDdMmAaaa),
-					tom = if (jsonMaalgruppeinformasjon.periode.sluttdatoDdMmAaaa != null) convertToDateStringWithTimeZone(jsonMaalgruppeinformasjon.periode.sluttdatoDdMmAaaa) else null
+					tom = if (jsonMaalgruppeinformasjon.periode.sluttdatoDdMmAaaa != null) convertToDateStringWithTimeZone(
+						jsonMaalgruppeinformasjon.periode.sluttdatoDdMmAaaa
+					) else null
 				) else null,
 			kilde = jsonMaalgruppeinformasjon.kilde,
 			maalgruppetype = Maalgruppetyper(
@@ -184,18 +186,25 @@ fun convertFlytteutgifter(jsonRettighetstyper: JsonRettighetstyper): Flytteutgif
 
 	return Flytteutgifter(
 		flyttingPgaAktivitet =
-			flytteutgifter.hvorforFlytterDu.equals("aktivitet", true),
+		flytteutgifter.hvorforFlytterDu.equals("aktivitet", true),
 		erUtgifterTilFlyttingDekketAvAndreEnnNAV = convertToBoolean(flytteutgifter.farDuDekketUtgifteneDineTilFlyttingPaAnnenMateEnnMedStonadFraNav)
 			?: false,
 		flytterSelv = (flytteutgifter.jegFlytterSelv != null || flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv != null).toString(),
 		flyttingPgaNyStilling = flytteutgifter.hvorforFlytterDu.equals("nyJobb", true),
 		flyttedato = convertToDateStringWithTimeZone(flytteutgifter.narFlytterDuDdMmAaaa),
-		tiltredelsesdato = if (!flytteutgifter.hvorforFlytterDu.equals("aktivitet", true) && flytteutgifter.oppgiForsteDagINyJobbDdMmAaaa != null)
+		tiltredelsesdato = if (!flytteutgifter.hvorforFlytterDu.equals(
+				"aktivitet",
+				true
+			) && flytteutgifter.oppgiForsteDagINyJobbDdMmAaaa != null
+		)
 			convertToDateStringWithTimeZone(flytteutgifter.oppgiForsteDagINyJobbDdMmAaaa) else null,
 		tilflyttingsadresse = SammensattAdresse(
 			land = flytteutgifter.velgLand1.label,
+			landkode = flytteutgifter.velgLand1.value,
 			adresse = flytteutgifter.adresse1,
-			postnr = flytteutgifter.postnr1
+			postnr = flytteutgifter.postnr1,
+			poststed = flytteutgifter.poststed,
+			postkode = flytteutgifter.postkode
 		).sammensattAdresse,
 		avstand = convertFlytteAvstand(flytteutgifter),
 		sumTilleggsutgifter = convertFlytteutgifter(flytteutgifter)?.toDouble(),
@@ -208,8 +217,14 @@ fun comvertAnbud(flytteutgifter: JsonFlytteutgifter): List<Anbud>? {
 	if (flytteutgifter.jegVilBrukeFlyttebyra == null) return null
 
 	return listOf(
-		Anbud(firmanavn = flytteutgifter.jegVilBrukeFlyttebyra.navnPaFlyttebyra1, tilbudsbeloep = flytteutgifter.jegVilBrukeFlyttebyra.belop.roundToInt()),
-		Anbud(firmanavn = flytteutgifter.jegVilBrukeFlyttebyra.navnPaFlyttebyra2, tilbudsbeloep = flytteutgifter.jegVilBrukeFlyttebyra.belop1.roundToInt())
+		Anbud(
+			firmanavn = flytteutgifter.jegVilBrukeFlyttebyra.navnPaFlyttebyra1,
+			tilbudsbeloep = flytteutgifter.jegVilBrukeFlyttebyra.belop.roundToInt()
+		),
+		Anbud(
+			firmanavn = flytteutgifter.jegVilBrukeFlyttebyra.navnPaFlyttebyra2,
+			tilbudsbeloep = flytteutgifter.jegVilBrukeFlyttebyra.belop1.roundToInt()
+		)
 	)
 
 }
@@ -230,13 +245,15 @@ fun convertFlytteAvstand(flytteutgifter: JsonFlytteutgifter): Int {
 fun convertFlytteutgifter(flytteutgifter: JsonFlytteutgifter): Double? {
 	if (flytteutgifter.jegFlytterSelv != null) {
 		val flytterSelv = flytteutgifter.jegFlytterSelv
-		return (flytterSelv.bom ?: 0.0) + (flytterSelv.annet ?: 0.0) + (flytterSelv.hengerleie ?: 0.0) + (flytterSelv.parkering
+		return (flytterSelv.bom ?: 0.0) + (flytterSelv.annet ?: 0.0) + (flytterSelv.hengerleie
+			?: 0.0) + (flytterSelv.parkering
 			?: 0.0) + (flytterSelv.ferje ?: 0.0)
 	} else if (flytteutgifter.jegVilBrukeFlyttebyra != null) {
 		return null
 	} else if (flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv != null) {
 		val flytterSelv = flytteutgifter.jegHarInnhentetTilbudFraMinstToFlyttebyraerMenVelgerAFlytteSelv
-		return (flytterSelv.bom ?: 0.0) + (flytterSelv.annet ?: 0.0) + (flytterSelv.hengerleie ?: 0.0) + (flytterSelv.parkering
+		return (flytterSelv.bom ?: 0.0) + (flytterSelv.annet ?: 0.0) + (flytterSelv.hengerleie
+			?: 0.0) + (flytterSelv.parkering
 			?: 0.0) + (flytterSelv.ferje ?: 0.0)
 	} else {
 		return null
@@ -247,7 +264,7 @@ fun convertTilsynsutgifter(jsonRettighetstyper: JsonRettighetstyper): Tilsynsutg
 
 	val utgifterBarn = convertTilsynsutgifterBarn(jsonRettighetstyper)
 
-	if (utgifterBarn == null ) return null
+	if (utgifterBarn == null) return null
 
 	return Tilsynsutgifter(tilsynsutgifterBarn = utgifterBarn, tilynsutgifterFamilie = null)
 }
@@ -325,8 +342,11 @@ private fun convertDagligReise(jsonRettighetstyper: JsonRettighetstyper, soknadD
 		periode = convertPeriode(jsonDagligReise.startdatoDdMmAaaa, jsonDagligReise.sluttdatoDdMmAaaa),
 		aktivitetsadresse = SammensattAdresse(
 			land = jsonDagligReise.velgLand1.label,
+			landkode = jsonDagligReise.velgLand1.value,
 			adresse = jsonDagligReise.adresse1,
-			postnr = jsonDagligReise.postnr1
+			postnr = jsonDagligReise.postnr1,
+			poststed = jsonDagligReise.poststed,
+			postkode = jsonDagligReise.postkode
 		).sammensattAdresse,
 		avstand = jsonDagligReise.hvorLangReiseveiHarDu.toDouble(),
 		harMedisinskeAarsakerTilTransport = convertToBoolean(jsonDagligReise.harDuAvMedisinskeArsakerBehovForTransportUavhengigAvReisensLengde),
@@ -350,8 +370,11 @@ private fun convertReisestoenadForArbeidssoeker(jsonRettighetstyper: JsonRettigh
 		formaal = Formaal(value = convertToFormaal(dagligReise.hvorforReiserDuArbeidssoker)),
 		adresse = SammensattAdresse(
 			land = dagligReise.velgLandArbeidssoker.label,
+			landkode = dagligReise.velgLandArbeidssoker.value,
 			adresse = dagligReise.adresse,
-			postnr = dagligReise.postnr
+			postnr = dagligReise.postnr,
+			poststed = dagligReise.poststed,
+			postkode = dagligReise.postkode
 		).sammensattAdresse,
 		avstand = dagligReise.hvorLangReiseveiHarDu3.roundToInt(),
 		erUtgifterDekketAvAndre = convertToBoolean(dagligReise.dekkerAndreEnnNavEllerDegSelvReisenHeltEllerDelvis) ?: false,
@@ -376,7 +399,7 @@ private fun convertToFormaal(formaalEnumValue: String): String {
 	// FormaalKodeverk
 	when (formaalEnumValue) {
 		"oppfolgingFraNav" -> return FormaalKodeverk.oppfolging.kodeverksverdi
-		"jobbintervju" -> return  FormaalKodeverk.jobbintervju.kodeverksverdi
+		"jobbintervju" -> return FormaalKodeverk.jobbintervju.kodeverksverdi
 		"arbeidPaNyttSted" -> return FormaalKodeverk.tiltraa.kodeverksverdi
 		else -> return FormaalKodeverk.oppfolging.kodeverksverdi
 	}
@@ -392,8 +415,11 @@ private fun convertReiseVedOppstartOgAvsluttetAktivitet(jsonRettighetstyper: Jso
 		periode = convertPeriode(reiseStartSlutt.startdatoDdMmAaaa1, reiseStartSlutt.sluttdatoDdMmAaaa1),
 		aktivitetsstedAdresse = SammensattAdresse(
 			land = reiseStartSlutt.velgLand3.label,
+			landkode = reiseStartSlutt.velgLand3.value,
 			adresse = reiseStartSlutt.adresse3,
-			postnr = reiseStartSlutt.postnr3
+			postnr = reiseStartSlutt.postnr3,
+			poststed = reiseStartSlutt.poststed,
+			postkode = reiseStartSlutt.postkode
 		).sammensattAdresse,
 		avstand = reiseStartSlutt.hvorLangReiseveiHarDu2?.roundToInt() ?: 0,
 		antallReiser = reiseStartSlutt.hvorMangeGangerSkalDuReiseEnVei.roundToInt(),
@@ -425,7 +451,8 @@ private fun convertReiseObligatoriskSamling(jsonRettighetstyper: JsonRettighetst
 	val periodeList = createPeriodeList(reiseTilSamling.startOgSluttdatoForSamlingene)
 
 	val startOfPeriods = periodeList.map { convertDateToTimeInMillis(it.fom) }.min()
-	val endOfPeriods = periodeList.filter{!it.tom.isNullOrEmpty()}.map { convertDateToTimeInMillis(it.tom?: "1990-01-01") }.max()
+	val endOfPeriods =
+		periodeList.filter { !it.tom.isNullOrEmpty() }.map { convertDateToTimeInMillis(it.tom ?: "1990-01-01") }.max()
 	val startDate = convertMillisToDateString(startOfPeriods)
 	val endDate = convertMillisToDateString(endOfPeriods)
 
@@ -436,8 +463,11 @@ private fun convertReiseObligatoriskSamling(jsonRettighetstyper: JsonRettighetst
 		),
 		reiseadresser = SammensattAdresse(
 			land = reiseTilSamling.velgLandReiseTilSamling.label,
+			landkode = reiseTilSamling.velgLandReiseTilSamling.value,
 			adresse = reiseTilSamling.adresse2,
-			postnr = reiseTilSamling.postnr2
+			postnr = reiseTilSamling.postnr2,
+			poststed = reiseTilSamling.poststed,
+			postkode = reiseTilSamling.postkode,
 		).sammensattAdresse,
 		avstand = reiseTilSamling.hvorLangReiseveiHarDu1?.roundToInt() ?: 0,
 		samlingsperiode = periodeList,
@@ -491,7 +521,10 @@ private fun convertAlternativeTransportutgifter_DagligReise(details: JsonDagligR
 		kanEgenBilBrukes = kanBenytteEgenBil,
 		kollektivTransportutgifter = convertKollektivTransportutgifter(details.hvilkeUtgifterHarDuIForbindelseMedReisenDagligReise),
 		drosjeTransportutgifter = convertDrosjeTransportutgifter(details.kanIkkeReiseKollektivtDagligReise?.kanIkkeBenytteEgenBil?.oppgiDenTotaleKostnadenDuHarTilBrukAvDrosjeIperiodenDuSokerOmStonadFor),
-		egenBilTransportutgifter = convertEgenBilTransportutgifter(details.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil, true),
+		egenBilTransportutgifter = convertEgenBilTransportutgifter(
+			details.kanIkkeReiseKollektivtDagligReise?.kanBenytteEgenBil,
+			true
+		),
 		aarsakTilIkkeOffentligTransport = convertAarsakTilIkkeOffentligTransport(details.kanIkkeReiseKollektivtDagligReise?.hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt),
 		aarsakTilIkkeEgenBil = convertAarsakTilIkkeEgenBil(details.kanIkkeReiseKollektivtDagligReise?.kanIkkeBenytteEgenBil?.hvaErArsakenTilAtDuIkkeKanBenytteEgenBil),
 		aarsakTilIkkeDrosje = convertAarsakTilIkkeDrosje(details.kanIkkeReiseKollektivtDagligReise?.kanIkkeBenytteEgenBil?.hvorforKanDuIkkeBenytteDrosje)
@@ -517,10 +550,14 @@ private fun convertInnsendingsintervaller(details: String?): Innsendingsinterval
 	}
 }
 
-private fun convertEgenBilTransportutgifter(utgifter: KanBenytteEgenBil?, isDagligReise: Boolean = false): EgenBilTransportutgifter? {
+private fun convertEgenBilTransportutgifter(
+	utgifter: KanBenytteEgenBil?,
+	isDagligReise: Boolean = false
+): EgenBilTransportutgifter? {
 	if (utgifter == null) return null
 	return EgenBilTransportutgifter(
-		sumAndreUtgifter = ((utgifter.annet ?: 0.0) + (utgifter.bompenger ?: 0.0) + (if (isDagligReise) 0.0 else utgifter.parkering ?: 0.0)
+		sumAndreUtgifter = ((utgifter.annet ?: 0.0) + (utgifter.bompenger
+			?: 0.0) + (if (isDagligReise) 0.0 else utgifter.parkering ?: 0.0)
 			+ (utgifter.ferje ?: 0.0) + (utgifter.piggdekkavgift ?: 0.0))
 	)
 }
