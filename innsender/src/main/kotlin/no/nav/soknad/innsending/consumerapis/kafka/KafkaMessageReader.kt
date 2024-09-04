@@ -15,7 +15,7 @@ import org.springframework.messaging.handler.annotation.Payload
 import org.springframework.stereotype.Service
 
 @Service
-@Profile("prod | dev | endtoend")
+@Profile("prod | dev | endtoend | loadtests")
 class KafkaMessageReader(
 	private val repo: RepositoryUtils
 ) {

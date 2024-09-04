@@ -12,7 +12,7 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
-@Profile("local | docker | endtoend")
+@Profile("local | docker | endtoend | loadtests")
 @Qualifier("saf")
 class SafSelvbetjeningApiTmp : SafSelvbetjeningInterface, HealthRequestInterface {
 

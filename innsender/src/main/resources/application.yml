@@ -168,7 +168,7 @@ kafka:
 spring:
   config:
     activate:
-      on-profile: dev | prod
+      on-profile: dev | prod | gcp
 
   application:
     name: innsending-api
@@ -234,6 +234,12 @@ brukernotifikasjonconfig:
   publisereEndringer: ${PUBLISERE_BRUKERNOTIFIKASJONER}
 
 ettersendingsfrist: ${ETTERSENDINGSFRIST}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev | prod
 
 no.nav.security.jwt:
   issuer:

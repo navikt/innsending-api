@@ -15,7 +15,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
-@Profile("local | docker | endtoend")
+@Profile("local | docker | endtoend | loadtests")
 @Qualifier("pdl")
 class PdlAPITest : PdlInterface, HealthRequestInterface {
 
