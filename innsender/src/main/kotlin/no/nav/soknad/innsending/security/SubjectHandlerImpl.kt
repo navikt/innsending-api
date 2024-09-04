@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 
 @Component
-@Profile("(test | dev | prod) & !loadtests")
+@Profile("test | dev | prod")
 class SubjectHandlerImpl(private val ctxHolder: TokenValidationContextHolder) : SubjectHandlerInterface {
 
 	private val logger: Logger = LoggerFactory.getLogger(javaClass)
