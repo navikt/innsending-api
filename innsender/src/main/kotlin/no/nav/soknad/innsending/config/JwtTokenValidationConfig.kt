@@ -15,6 +15,6 @@ import org.springframework.context.annotation.Profile
 		"org.webjars.swagger-ui"
 	]
 )
-@Profile("test | dev | prod")
+@Profile("(test | dev | prod) & !loadtests")
 @Configuration
 class JwtTokenValidationConfig
