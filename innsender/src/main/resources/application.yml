@@ -235,12 +235,6 @@ brukernotifikasjonconfig:
 
 ettersendingsfrist: ${ETTERSENDINGSFRIST}
 
----
-spring:
-  config:
-    activate:
-      on-profile: dev | prod
-
 no.nav.security.jwt:
   issuer:
     tokenx:
