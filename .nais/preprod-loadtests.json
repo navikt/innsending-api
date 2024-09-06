@@ -47,7 +47,7 @@
 		"PDL_TOKEN_X_AUDIENCE": "dev-gcp:team-soknad:arkiv-mock-gcp",
 		"PDL_SCOPE": "api://dev-gcp:team-soknad:arkiv-mock-gcp/.default",
 		"AZURE_TENANT": "trygdeetaten.no",
-		"SOKNADSMOTTAKER_SCOPE": "api://dev-gcp.team-soknad.soknadsmottaker-gcp-loadtests/.default",
+		"SOKNADSMOTTAKER_SCOPE": "api://dev-gcp.team-soknad.soknadsmottaker-loadtests/.default",
 		"SAF_SCOPE": "api://dev-gcp.team-soknad.arkiv-mock/.default",
 		"KAFKA_SECURITY": "TRUE",
 		"KAFKA_ARKIVERINGSTILBAKEMELDING_TOPIC": "team-soknad.privat-soknadinnsending-arkiveringstilbakemeldinger-v1-loadtests",
