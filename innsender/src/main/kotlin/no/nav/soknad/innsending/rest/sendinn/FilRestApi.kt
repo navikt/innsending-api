@@ -1,15 +1,12 @@
 package no.nav.soknad.innsending.rest.sendinn
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
+import no.nav.security.token.support.core.utils.Cluster
 import no.nav.soknad.innsending.api.SendinnFilApi
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
-import no.nav.soknad.innsending.model.DokumentSoknadDto
-import no.nav.soknad.innsending.model.FilDto
-import no.nav.soknad.innsending.model.Mimetype
-import no.nav.soknad.innsending.model.SoknadsStatusDto
-import no.nav.soknad.innsending.model.VedleggDto
+import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.FilValidatorService
@@ -33,6 +30,7 @@ import java.time.OffsetDateTime
 @RestController
 @CrossOrigin(maxAge = 3600)
 @ProtectedWithClaims(
+	excludedClusters = [Cluster.DEV_GCP],
 	issuer = Constants.TOKENX,
 	claimMap = [Constants.CLAIM_ACR_LEVEL_4, Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH],
 	combineWithOr = true
