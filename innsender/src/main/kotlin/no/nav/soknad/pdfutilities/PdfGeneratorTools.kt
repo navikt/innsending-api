@@ -4,6 +4,7 @@ import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.util.models.*
+import no.nav.soknad.pdfutilities.utils.PdfUtils
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -103,7 +104,7 @@ class PdfGenerator {
 				personInfo = personInfo,
 				innsendtTidspunkt = innsendtTidspunkt,
 				vedleggsListe = oppsummering
-			)
+			).vasket()
 		)
 	}
 
@@ -142,7 +143,7 @@ class PdfGenerator {
 					vedleggsTittel = it.tittel,
 					kommentarTittel = if (it.opplastingsValgKommentarLedetekst == null) null else it.opplastingsValgKommentarLedetekst,
 					kommentar = if (it.opplastingsValgKommentarLedetekst == null || it.opplastingsValgKommentar == null) null else it.opplastingsValgKommentar
-				)
+				).vasket()
 			}
 		)
 
@@ -179,5 +180,13 @@ data class VedleggMedKommentar(
 	val vedleggsTittel: String,
 	val kommentarTittel: String?,
 	val kommentar: String?
-)
+) {
+	fun vasket(): VedleggMedKommentar {
+		return VedleggMedKommentar(
+			vedleggsTittel = PdfUtils.fjernSpesielleKarakterer(this.vedleggsTittel) ?: "",
+			kommentarTittel = this.kommentarTittel,
+			kommentar = PdfUtils.fjernSpesielleKarakterer(this.kommentar)
+		)
+	}
+}
 
