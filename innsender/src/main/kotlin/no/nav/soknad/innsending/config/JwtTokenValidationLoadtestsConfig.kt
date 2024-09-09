@@ -12,9 +12,10 @@ import org.springframework.context.annotation.Profile
 		"no.nav.soknad.innsending.supervision",
 		"io.swagger",
 		"org.springdoc",
-		"org.webjars.swagger-ui"
+		"org.webjars.swagger-ui",
+		"no.nav.soknad.innsending.rest"
 	]
 )
-@Profile("test | dev | prod")
+@Profile("loadtests")
 @Configuration
-class JwtTokenValidationConfig
+class JwtTokenValidationLoadtestsConfig
