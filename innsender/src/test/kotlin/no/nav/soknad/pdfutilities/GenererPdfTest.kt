@@ -9,6 +9,7 @@ import org.junit.Test
 import java.time.OffsetDateTime
 import java.util.*
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class GenererPdfTest {
 
@@ -25,8 +26,7 @@ class GenererPdfTest {
 		//writeBytesToFile(forside, "./forside2.pdf")
 
 		assertEquals(1, AntallSider().finnAntallSider(forside))
-		val erPdfa = Validerer().isPDFa(forside)
-		//assertTrue(erPdfa)
+		isPdfaTest(forside)
 
 	}
 
@@ -42,8 +42,7 @@ class GenererPdfTest {
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
 
 		assertEquals(2, AntallSider().finnAntallSider(kvittering))
-		val erPdfa = Validerer().isPDFa(kvittering)
-		//assertTrue(erPdfa)
+		isPdfaTest(kvittering)
 
 	}
 
@@ -59,7 +58,7 @@ class GenererPdfTest {
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
 
 		assertEquals(2, AntallSider().finnAntallSider(kvittering))
-		val erPdfa = Validerer().isPDFa(kvittering)
+		isPdfaTest(kvittering)
 
 	}
 
@@ -77,8 +76,7 @@ class GenererPdfTest {
 
 		//writeBytesToFile(kvittering, "./kvittering3.pdf")
 		assertEquals(2, AntallSider().finnAntallSider(kvittering))
-		val erPdfa = Validerer().isPDFa(kvittering)
-		//assertTrue(erPdfa)
+		isPdfaTest(kvittering)
 
 	}
 
@@ -96,8 +94,7 @@ class GenererPdfTest {
 
 		//writeBytesToFile(kvittering, "./kvittering3.pdf")
 		assertEquals(2, AntallSider().finnAntallSider(kvittering))
-		val erPdfa = Validerer().isPDFa(kvittering)
-		//assertTrue(erPdfa)
+		isPdfaTest(kvittering)
 
 	}
 
@@ -115,9 +112,11 @@ class GenererPdfTest {
 
 		//writeBytesToFile(kvittering, "./kvittering4.pdf")
 		assertEquals(1, AntallSider().finnAntallSider(kvittering))
-		val erPdfa = Validerer().isPDFa(kvittering)
-		//assertTrue(erPdfa)
+		isPdfaTest(kvittering)
+	}
 
+	private fun isPdfaTest(document: ByteArray) {
+		assertTrue(Validerer().isPDFa(document))
 	}
 
 	@Test
@@ -134,7 +133,7 @@ class GenererPdfTest {
 
 		assertEquals(1, AntallSider().finnAntallSider(kvittering))
 		val erPdfa = Validerer().isPDFa(kvittering)
-		//assertTrue(erPdfa)
+		assertTrue(erPdfa)
 
 	}
 
