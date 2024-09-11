@@ -1,10 +1,10 @@
 package no.nav.soknad.pdfutilities
 
-//import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
+import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
 import org.junit.Test
 import java.time.OffsetDateTime
 import java.util.*
@@ -15,9 +15,14 @@ class GenererPdfTest {
 	private val skjemanr = "NAV 10-07.03"
 	private val tittel = "Søknad om hjelpemidler"
 
+	private val formFeed = "\u000C"
+	private val tab = "\t"
+	private val lineFeed = "\u000a"
+	private val backspace = "\u0008"
+
 	@Test
 	fun verifiserlagForsideEttersending() {
-		val soknad = lagSoknadForTesting(tittel, spraak = "en-UK")
+		val soknad = lagEttersendingsSoknadForTesting(tittel, spraak = "en-UK")
 
 		val sammensattnavn = "Fornavn Mellomnavn Etternavn"
 		val forside = PdfGenerator().lagForsideEttersending(soknad, sammensattnavn)
@@ -45,7 +50,7 @@ class GenererPdfTest {
 
 	@Test
 	fun verifiserGenereringAvKvitteringsPdf_spesialtegnPaVedlegg() {
-		val soknad = lagSoknadForTesting("Jan har en hund🐶 med tre ben og to haler. \u000C\t\n")
+		val soknad = lagSoknadForTesting("Jan har en hund🐶 med tre ben og to haler. $formFeed$tab$lineFeed")
 
 		val sammensattnavn = "asdfasdf"
 		val kvittering = PdfGenerator().lagKvitteringsSide(
@@ -112,7 +117,8 @@ class GenererPdfTest {
 	private fun isPdfaTest(document: ByteArray) {
 		// PDFBox mangler funksjonalitet for å validere versjon PDF/A-2A.
 		// Skriv generert PDF til disk og last opp til en online verifiseringssite, f.eks. https://www.pdf-online.com/osa/validate.aspx
-		//writeBytesToFile(document, "./pdf-til-validering.pdf")
+
+		writeBytesToFile(document, "./pdf-til-validering.pdf")
 		//assertTrue(Validerer().isPDFa(document)) PDFBox mangler funksjonalitet for å validere versjon PDF/A-2A.
 	}
 
@@ -196,11 +202,11 @@ class GenererPdfTest {
 				opplastingsValgKommentar = "Jeg har ikke mottatt denne dokumentasjonen fra min sønns skole"
 			),
 			VedleggDto(
-				tittel = "Vedlegg6", label = "Vedlegg6\\x0C",
+				tittel = "Vedlegg6", label = "Vedlegg6",
 				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = false,
 				opplastingsStatus = OpplastingsStatusDto.LevertDokumentasjonTidligere, opprettetdato = OffsetDateTime.MIN,
 				opplastingsValgKommentarLedetekst = "Forklar i hvilken sammenheng du leverte denne dokumentasjonen til NAV",
-				opplastingsValgKommentar = "Jeg leverte denne for ett år siden i forbindelse med en søknad om støtte til barnepass\\x0C"
+				opplastingsValgKommentar = "Jeg leverte denne for ett år siden i forbindelse med en søknad om støtte til barnepass$formFeed"
 			),
 			VedleggDto(
 				tittel = "Vedlegg7", label = "Vedlegg7",
@@ -214,14 +220,14 @@ class GenererPdfTest {
 				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = false,
 				opplastingsStatus = OpplastingsStatusDto.LevertDokumentasjonTidligere, opprettetdato = OffsetDateTime.MIN,
 				opplastingsValgKommentarLedetekst = "Forklar i hvilken sammenheng du leverte denne dokumentasjonen til NAV",
-				opplastingsValgKommentar = "Jeg leverte denne \u000C\t\\ for ett år siden i forbindelse nmed en søknad om støtte til barnepass"
+				opplastingsValgKommentar = "Jeg leverte denne $formFeed for ett år siden i forbindelse nmed en ${lineFeed}søknad om støtte til barnepass"
 			),
 			VedleggDto(
 				tittel = "Vedlegg10", label = "Vedlegg10",
 				erHoveddokument = false, erVariant = false, erPdfa = true, erPakrevd = false,
 				opplastingsStatus = OpplastingsStatusDto.LevertDokumentasjonTidligere, opprettetdato = OffsetDateTime.MIN,
 				opplastingsValgKommentarLedetekst = "Forklar i hvilken sammenheng du leverte denne dokumentasjonen til NAV",
-				opplastingsValgKommentar = "Jeg leverte denne for ett år siden\t\u000B i forbindelse med en søknad om støtte til barnepass"
+				opplastingsValgKommentar = "Jeg leverte denne for ett år siden$tab$backspace i forbindelse med en søknad om støtte til barnepass.$lineFeed Det er ingen endring i forholdene siden dette ble levert. Den dokumentasjonen er derfor fortsatt relevant."
 			),
 
 			)
@@ -233,7 +239,7 @@ class GenererPdfTest {
 		)
 	}
 
-	private fun lagEttersendingsSoknadForTesting(tittel: String): DokumentSoknadDto {
+	private fun lagEttersendingsSoknadForTesting(tittel: String, spraak: String? = "nb_NO"): DokumentSoknadDto {
 		val brukerid = "20128012345"
 		val opprettetDato = OffsetDateTime.now()
 		val vedleggDtos = listOf(
@@ -283,6 +289,7 @@ class GenererPdfTest {
 		)
 		return DokumentSoknadDto(
 			brukerId = brukerid, skjemanr = skjemanr, tittel = tittel, tema = "TMA",
+			spraak = spraak,
 			status = SoknadsStatusDto.Innsendt, innsendtDato = OffsetDateTime.now(),
 			innsendingsId = UUID.randomUUID().toString(), ettersendingsId = UUID.randomUUID().toString(),
 			opprettetDato = opprettetDato, vedleggsListe = vedleggDtos,
@@ -291,7 +298,7 @@ class GenererPdfTest {
 
 	}
 
-	private fun lagEttersendingsSoknadAltInnsendt(tittel: String): DokumentSoknadDto {
+	private fun lagEttersendingsSoknadAltInnsendt(tittel: String, spraak: String? = "nb_NO"): DokumentSoknadDto {
 		val brukerid = "20128012345"
 		val opprettetDato = OffsetDateTime.now()
 		val vedleggDtos = listOf(
@@ -347,6 +354,7 @@ class GenererPdfTest {
 		)
 		return DokumentSoknadDto(
 			brukerId = brukerid, skjemanr = skjemanr, tittel = tittel, tema = "TMA",
+			spraak = spraak,
 			status = SoknadsStatusDto.Innsendt, innsendtDato = OffsetDateTime.now(),
 			innsendingsId = UUID.randomUUID().toString(), ettersendingsId = UUID.randomUUID().toString(),
 			opprettetDato = opprettetDato, vedleggsListe = vedleggDtos,

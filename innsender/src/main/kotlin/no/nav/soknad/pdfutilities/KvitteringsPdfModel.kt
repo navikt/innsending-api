@@ -19,7 +19,7 @@ data class KvitteringsPdfModel(
 			sprak = this.sprak,
 			beskrivelse = this.beskrivelse,
 			kvitteringHeader = PdfUtils.fjernSpesielleKarakterer(this.kvitteringHeader) ?: "",
-			ettersendelseTittel = PdfUtils.fjernSpesielleKarakterer(this.tittel) ?: "",
+			ettersendelseTittel = PdfUtils.fjernSpesielleKarakterer(this.ettersendelseTittel),
 			side = this.side,
 			av = this.av,
 			tittel = PdfUtils.fjernSpesielleKarakterer(this.tittel) ?: "",
