@@ -187,7 +187,6 @@ spring:
   datasource:
     url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DATABASE}?user=${DATABASE_USERNAME}&password=${DATABASE_PASSWORD}
     hikari:
-      minimum-idle: 1
       maximum-pool-size: 20
       connection-timeout: 50000
       max-lifetime: 50001
