@@ -9,7 +9,6 @@ import org.junit.Test
 import java.time.OffsetDateTime
 import java.util.*
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class GenererPdfTest {
 
@@ -22,8 +21,6 @@ class GenererPdfTest {
 
 		val sammensattnavn = "Fornavn Mellomnavn Etternavn"
 		val forside = PdfGenerator().lagForsideEttersending(soknad, sammensattnavn)
-
-		//writeBytesToFile(forside, "./forside2.pdf")
 
 		assertEquals(1, AntallSider().finnAntallSider(forside))
 		isPdfaTest(forside)
@@ -74,7 +71,6 @@ class GenererPdfTest {
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt },
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
 
-		//writeBytesToFile(kvittering, "./kvittering3.pdf")
 		assertEquals(2, AntallSider().finnAntallSider(kvittering))
 		isPdfaTest(kvittering)
 
@@ -92,7 +88,6 @@ class GenererPdfTest {
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt },
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
 
-		//writeBytesToFile(kvittering, "./kvittering3.pdf")
 		assertEquals(2, AntallSider().finnAntallSider(kvittering))
 		isPdfaTest(kvittering)
 
@@ -110,13 +105,15 @@ class GenererPdfTest {
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt && it.opprettetdato > OffsetDateTime.MIN },
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
 
-		//writeBytesToFile(kvittering, "./kvittering4.pdf")
 		assertEquals(1, AntallSider().finnAntallSider(kvittering))
 		isPdfaTest(kvittering)
 	}
 
 	private fun isPdfaTest(document: ByteArray) {
-		assertTrue(Validerer().isPDFa(document))
+		// PDFBox mangler funksjonalitet for å validere versjon PDF/A-2A.
+		// Skriv generert PDF til disk og last opp til en online verifiseringssite, f.eks. https://www.pdf-online.com/osa/validate.aspx
+		//writeBytesToFile(document, "./pdf-til-validering.pdf")
+		//assertTrue(Validerer().isPDFa(document)) PDFBox mangler funksjonalitet for å validere versjon PDF/A-2A.
 	}
 
 	@Test
@@ -132,8 +129,7 @@ class GenererPdfTest {
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
 
 		assertEquals(1, AntallSider().finnAntallSider(kvittering))
-		val erPdfa = Validerer().isPDFa(kvittering)
-		assertTrue(erPdfa)
+		isPdfaTest(kvittering)
 
 	}
 
