@@ -66,23 +66,20 @@ class RestClientOAuthConfig(
 
 	@Bean
 	@Qualifier("kodeverkApiClient")
-	@Profile("prod | dev")
 	fun kodeverkApiClient(
-		restConfig: RestConfig,
-		clientConfigProperties: ClientConfigurationProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService
-	) = restClientOAuth2Client(
-		restConfig.kodeverkUrl,
-		clientConfigProperties.registration["kodeverk"]!!,
-		oAuth2AccessTokenService
-	)
-
-	@Bean
-	@Profile("!(prod | dev)")
-	@Qualifier("kodeverkApiClient")
-	fun kodeverkClientWithoutAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.kodeverkUrl).build()
-
-
+		restConfig: RestConfig
+	): RestClient {
+		val callId = MDCUtil.callIdOrNew()
+		return RestClient.builder()
+			.baseUrl(restConfig.kodeverkUrl)
+			.requestFactory(timeouts())
+			.defaultHeaders { headers ->
+				headers.set(Constants.NAV_CONSUMER_ID, applicationName)
+				headers.set(Constants.HEADER_CALL_ID, callId)
+			}
+			.build()
+	}
+	
 	@Bean
 	@Profile("prod | dev")
 	@Qualifier("kontoregisterApiRestClient")
