@@ -23,7 +23,7 @@ import java.time.Duration
 @Configuration
 class RestClientOAuthConfig(
 	@Value("\${spring.application.name}") private val applicationName: String,
-	) {
+) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -51,7 +51,12 @@ class RestClientOAuthConfig(
 		clientConfigProperties: ClientConfigurationProperties,
 		oAuth2AccessTokenService: OAuth2AccessTokenService,
 		subjectHandler: SubjectHandlerInterface
-	) = restClientOAuth2Client(restConfig.arenaUrl, clientConfigProperties.registration["arena"]!!, oAuth2AccessTokenService, subjectHandler)
+	) = restClientOAuth2Client(
+		restConfig.arenaUrl,
+		clientConfigProperties.registration["arena"]!!,
+		oAuth2AccessTokenService,
+		subjectHandler
+	)
 
 	@Bean
 	@Profile("!(prod | dev)")
@@ -61,18 +66,22 @@ class RestClientOAuthConfig(
 
 	@Bean
 	@Qualifier("kodeverkApiClient")
-	fun kodeverkApiClient(restConfig: RestConfig): RestClient {
-		val callId = MDCUtil.callIdOrNew()
+	@Profile("prod | dev")
+	fun kodeverkApiClient(
+		restConfig: RestConfig,
+		clientConfigProperties: ClientConfigurationProperties,
+		oAuth2AccessTokenService: OAuth2AccessTokenService
+	) = restClientOAuth2Client(
+		restConfig.kodeverkUrl,
+		clientConfigProperties.registration["kodeverk"]!!,
+		oAuth2AccessTokenService
+	)
 
-		return RestClient.builder()
-			.baseUrl(restConfig.kodeverkUrl)
-			.requestFactory(timeouts())
-			.defaultHeaders { headers ->
-				headers.set(Constants.NAV_CONSUMER_ID, applicationName)
-				headers.set(Constants.HEADER_CALL_ID, callId)
-			}
-			.build()
-	}
+	@Bean
+	@Profile("!(prod | dev)")
+	@Qualifier("kodeverkApiClient")
+	fun kodeverkClientWithoutAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.kodeverkUrl).build()
+
 
 	@Bean
 	@Profile("prod | dev")
@@ -81,12 +90,17 @@ class RestClientOAuthConfig(
 		restConfig: RestConfig,
 		clientConfigProperties: ClientConfigurationProperties,
 		oAuth2AccessTokenService: OAuth2AccessTokenService
-	) = restClientOAuth2Client(restConfig.kontoregisterUrl+"/api/borger", clientConfigProperties.registration["kontoregister"]!!, oAuth2AccessTokenService)
+	) = restClientOAuth2Client(
+		restConfig.kontoregisterUrl + "/api/borger",
+		clientConfigProperties.registration["kontoregister"]!!,
+		oAuth2AccessTokenService
+	)
 
 	@Bean
 	@Profile("!(prod | dev)")
 	@Qualifier("kontoregisterApiRestClient")
-	fun kontoregisterApiClientWithoutAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.kontoregisterUrl+"/api/borger").build()
+	fun kontoregisterApiClientWithoutAuth(restConfig: RestConfig) =
+		RestClient.builder().baseUrl(restConfig.kontoregisterUrl + "/api/borger").build()
 
 
 	@Bean
@@ -96,19 +110,25 @@ class RestClientOAuthConfig(
 		restConfig: RestConfig,
 		clientConfigProperties: ClientConfigurationProperties,
 		oAuth2AccessTokenService: OAuth2AccessTokenService
-	) = restClientOAuth2Client(restConfig.soknadsMottakerHost, clientConfigProperties.registration["soknadsmottaker"]!!, oAuth2AccessTokenService)
+	) = restClientOAuth2Client(
+		restConfig.soknadsMottakerHost,
+		clientConfigProperties.registration["soknadsmottaker"]!!,
+		oAuth2AccessTokenService
+	)
 
 	@Bean
 	@Profile("!(prod | dev)")
 	@Qualifier("soknadsmottakerRestClient")
-	fun soknadsmottakerClientWithoutOAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.soknadsMottakerHost).build()
+	fun soknadsmottakerClientWithoutOAuth(restConfig: RestConfig) =
+		RestClient.builder().baseUrl(restConfig.soknadsMottakerHost).build()
 
 	@Bean
 	@Qualifier("skjemaRestClient")
 	fun skjemaClientWithoutOAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.sanityHost).build()
 
 	private fun timeouts(): ClientHttpRequestFactory {
-		val factory = SimpleClientHttpRequestFactory()  // MERK: støtter ikke http.patch bruk eventuelt JdkClientHttpRequestFactory
+		val factory =
+			SimpleClientHttpRequestFactory()  // MERK: støtter ikke http.patch bruk eventuelt JdkClientHttpRequestFactory
 		factory.setReadTimeout(Duration.ofMinutes(defaultReadTimeout))
 		factory.setConnectTimeout(Duration.ofSeconds(defaultConnectTimeout))
 		//factory.setExchangeTimeout(Duration.ofMinutes(1))
@@ -131,7 +151,8 @@ class RestClientOAuthConfig(
 			.build()
 	}
 
-	class RequestHeaderInterceptor(val tokenService: TokenService, val subjectHandler: SubjectHandlerInterface? = null) : ClientHttpRequestInterceptor {
+	class RequestHeaderInterceptor(val tokenService: TokenService, val subjectHandler: SubjectHandlerInterface? = null) :
+		ClientHttpRequestInterceptor {
 
 		val logger: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -145,12 +166,12 @@ class RestClientOAuthConfig(
 
 			logger.info("Kaller service med callId: $callId")
 
-			request.headers.setBearerAuth(token ?:"")
+			request.headers.setBearerAuth(token ?: "")
 			request.headers.set(Constants.HEADER_CALL_ID, callId)
 			request.headers.set(Constants.HEADER_INNSENDINGSID, MDC.get(Constants.MDC_INNSENDINGS_ID) ?: "")
 
 			if (subjectHandler?.getUserIdFromToken() != null) {
-				request.headers.set(Constants.NAV_PERSON_IDENT, subjectHandler.getUserIdFromToken() )
+				request.headers.set(Constants.NAV_PERSON_IDENT, subjectHandler.getUserIdFromToken())
 			}
 
 			return execution.execute(request, body)

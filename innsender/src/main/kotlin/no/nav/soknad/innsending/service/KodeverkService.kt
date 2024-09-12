@@ -12,13 +12,14 @@ import no.nav.soknad.innsending.model.OpprettEttersending
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 import java.time.Duration
 
 @Service
 class KodeverkService(
-	kodeverkApiClient: RestClient
+	@Qualifier("kodeverkApiClient") kodeverkApiClient: RestClient
 ) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)

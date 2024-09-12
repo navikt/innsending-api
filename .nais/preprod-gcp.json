@@ -106,6 +106,7 @@
 		"ARENA_TOKEN_X_AUDIENCE": "dev-fss:teamarenanais:arena-api-q2",
 		"ARENA_SCOPE": "api://dev-fss.teamarenanais.arena-api-q2/.default",
 		"KODEVERK_URL": "http://kodeverk-api.team-rocket",
+		"KODEVERK_SCOPE": "trygdeeteaten.no: api://dev-gcp.team-rocket.kodeverk-api/.default",
 		"KONTOREGISTER_TOKEN_X_AUDIENCE": "dev-gcp:okonomi:sokos-kontoregister-person",
 		"KONTOREGISTER_SCOPE": "api://dev-gcp.okonomi.sokos-kontoregister-person/.default",
 		"KONTOREGISTER_URL": "http://sokos-kontoregister-person.okonomi"
