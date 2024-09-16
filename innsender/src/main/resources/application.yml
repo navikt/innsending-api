@@ -188,13 +188,16 @@ spring:
     url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DATABASE}?user=${DATABASE_USERNAME}&password=${DATABASE_PASSWORD}
     hikari:
       maximum-pool-size: 20
-      connection-timeout: 60000
-      max-lifetime: 60001
+      connection-timeout: 50000
+      max-lifetime: 50001
       validationTimeout: 20000
-      leak-detection-threshold: 59000
+      leak-detection-threshold: 49000
     dbcp2:
       test-on-borrow: true
       validation-query: "SELECT 1"
+
+  jpa:
+    open-in-view: false
 
 status_log_url: ${STATUS_LOG_URL}
 
