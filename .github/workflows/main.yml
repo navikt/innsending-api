@@ -58,7 +58,6 @@ jobs:
           RESOURCE: .nais/nais-gcp.yml
           VARS: .nais/prod-gcp.json
           VAR: image=${{needs.build-and-push.outputs.image}}
-          DRY_RUN: false
 
   deploy-alerts-prod:
     needs: deploy-prod
@@ -73,3 +72,16 @@ jobs:
           CLUSTER: prod-gcp
           RESOURCE: .nais/alerts.yml
           VARS: .nais/prod-alert.json
+
+  deploy-loadtests:
+    name: Deploy to loadtests
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nais/deploy/actions/deploy@v2
+        env:
+          CLUSTER: dev-gcp
+          RESOURCE: .nais/nais-gcp.yml
+          VARS: .nais/preprod-loadtests.json
+          VAR: image=${{needs.build-and-push.outputs.image}}
