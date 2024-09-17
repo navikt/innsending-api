@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-	<springProfile name="dev,prod">
+	<springProfile name="dev,prod,loadtests">
 		<!-- Secure log config -->
 		<appender name="secureLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
 			<file>/secure-logs/secure.log</file>

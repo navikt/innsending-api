@@ -143,15 +143,15 @@ restconfig:
   fyllUtUrl: http://localhost:3001/fyllut
   clientId: ${AZURE_APP_CLIENT_ID}
   clientSecret: ${AZURE_APP_CLIENT_SECRET}
-  pdlScope: api://dev-fss.pdl.pdl-api/.default
-  pdlUrl: http://pdl.no
+  pdlScope: ${PDL_SCOPE:api://dev-fss.pdl.pdl-api/.default}
+  pdlUrl: ${PDL_URL:http://pdl.no}
   safselvbetjeningUrl: ${SAFSELVBETJENING_URL}
   safUrl: ${SAF_URL}
   azureUrl: ${AZURE_OPENID_CONFIG_TOKEN_ENDPOINT}
   antivirusUrl: http://localhost:9043/antivirus
-  arenaUrl: http://arena.no
-  kodeverkUrl: http://kodeverk.no
-  kontoregisterUrl: http://kontoregister.no
+  arenaUrl: ${ARENA_URL:http://arena.no}
+  kodeverkUrl: ${KODEVERK_URL:http://kodeverk.no}
+  kontoregisterUrl: ${KONTOREGISTER_URL:http://kontoregister.no}
 
 brukernotifikasjonconfig:
   fyllutUrl: http://localhost:3001/fyllut
@@ -168,7 +168,7 @@ kafka:
 spring:
   config:
     activate:
-      on-profile: dev | prod
+      on-profile: dev | prod | gcp
 
   application:
     name: innsending-api
@@ -187,15 +187,17 @@ spring:
   datasource:
     url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DATABASE}?user=${DATABASE_USERNAME}&password=${DATABASE_PASSWORD}
     hikari:
-      minimum-idle: 1
       maximum-pool-size: 20
       connection-timeout: 50000
       max-lifetime: 50001
       validationTimeout: 20000
-      leak-detection-threshold: 60000
+      leak-detection-threshold: 49000
     dbcp2:
       test-on-borrow: true
       validation-query: "SELECT 1"
+
+  jpa:
+    open-in-view: true
 
 status_log_url: ${STATUS_LOG_URL}
 
@@ -315,6 +317,17 @@ no.nav.security.jwt:
         token-exchange:
           audience: ${ARENA_TOKEN_X_AUDIENCE}
 
+---
+spring:
+  config:
+    activate:
+      on-profile: loadtests
+
+  datasource:
+    url: ${DATABASE_JDBC_URL}
+
+  jpa:
+    open-in-view: false
 
 ---
 spring:

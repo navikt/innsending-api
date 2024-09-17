@@ -101,7 +101,7 @@ class RestClientOAuthConfig(
 
 
 	@Bean
-	@Profile("prod | dev")
+	@Profile("prod | dev | loadtests")
 	@Qualifier("soknadsmottakerRestClient")
 	fun soknadsmottakerRestClient(
 		restConfig: RestConfig,
@@ -114,7 +114,7 @@ class RestClientOAuthConfig(
 	)
 
 	@Bean
-	@Profile("!(prod | dev)")
+	@Profile("!(prod | dev | loadtests)")
 	@Qualifier("soknadsmottakerRestClient")
 	fun soknadsmottakerClientWithoutOAuth(restConfig: RestConfig) =
 		RestClient.builder().baseUrl(restConfig.soknadsMottakerHost).build()

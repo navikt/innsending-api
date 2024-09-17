@@ -1,0 +1,64 @@
+{
+	"application-name": "innsending-api-loadtests",
+	"namespace": "team-soknad",
+	"team": "team-soknad",
+	"database-name": "dokumentinnsending-loadtests",
+	"default_database_size": 10,
+	"tier": "db-custom-1-3840",
+	"ingresses": [],
+	"accessPolicyInbound": {
+		"current-namespace": [
+			"innsending-system-tests",
+			"soknadsarkiverer-loadtests"
+		],
+		"other-namespace": []
+	},
+	"accessPolicyOutbound": {
+		"current-namespace": [
+			"soknadsmottaker-loadtests"
+		],
+		"other-namespace": [],
+		"external-hosts": [
+			"arkiv-mock-gcp.intern.dev.nav.no",
+			"soknadsmottaker-gcp-loadtests.intern.dev.nav.no",
+			"www.nav.no"
+		]
+	},
+	"kafka-pool": "nav-dev",
+	"env": {
+		"DATABASE_NAME": "dokumentinnsending-loadtests",
+		"SPRING_PROFILES_ACTIVE": "gcp,loadtests",
+		"APP_VERSION": "0.0.1",
+		"MAX_FILE_SIZE": "50",
+		"MAX_FILE_SIZE_SUM": "150",
+		"MAX_NUMBER_OF_PAGES": "1000",
+		"ETTERSENDINGSFRIST": 14,
+		"PDL_URL": "https://arkiv-mock-gcp.intern.dev.nav.no",
+		"SAFSELVBETJENING_URL": "https://arkiv-mock-gcp.intern.dev.nav.no",
+		"SAF_URL": "https://arkiv-mock-gcp.intern.dev.nav.no",
+		"SANITY_HOST": "https://www.nav.no",
+		"SANITY_ENDPOINT": "/soknader/api/sanity/skjemautlisting",
+		"SOKNADSMOTTAKER_HOST": "https://soknadsmottaker-gcp-loadtests.intern.dev.nav.no",
+		"SOKNADSMOTTAKER_ENDPOINT": "/save",
+		"PUBLISERE_BRUKERNOTIFIKASJONER": "true",
+		"SEND_INN_URL": "https://www.intern.dev.nav.no/sendinn-loadtests",
+		"FYLL_UT_URL": "https://fyllut-loadtests.intern.dev.nav.no/fyllut",
+		"SAFSELVBETJENING_TOKEN_X_AUDIENCE": "dev-gcp:team-soknad:arkiv-mock-gcp",
+		"PDL_TOKEN_X_AUDIENCE": "dev-gcp:team-soknad:arkiv-mock-gcp",
+		"PDL_SCOPE": "api://dev-gcp:team-soknad:arkiv-mock-gcp/.default",
+		"AZURE_TENANT": "trygdeetaten.no",
+		"SOKNADSMOTTAKER_SCOPE": "api://dev-gcp.team-soknad.soknadsmottaker-loadtests/.default",
+		"SAF_SCOPE": "api://dev-gcp.team-soknad.arkiv-mock/.default",
+		"KAFKA_SECURITY": "TRUE",
+		"KAFKA_ARKIVERINGSTILBAKEMELDING_TOPIC": "team-soknad.privat-soknadinnsending-arkiveringstilbakemeldinger-v1-loadtests",
+		"ANTIVIRUS_URL": "http://arkiv-mock-gcp/antivirus",
+		"STATUS_LOG_URL": "https://logs.adeo.no",
+		"ARENA_URL": "https://arkiv-mock-gcp.intern.dev.nav.no",
+		"ARENA_TOKEN_X_AUDIENCE": "dev-gcp:team-soknad:arkiv-mock-gcp",
+		"ARENA_SCOPE": "api://dev-gcp:team-soknad:arkiv-mock-gcp/.default",
+		"KODEVERK_URL": "http://arkiv-mock-gcp/kodeverk",
+		"KONTOREGISTER_TOKEN_X_AUDIENCE": "dev-gcp:team-soknad:arkiv-mock-gcp",
+		"KONTOREGISTER_SCOPE": "api://dev-gcp:team-soknad:arkiv-mock-gcp/.default",
+		"KONTOREGISTER_URL": "https://arkiv-mock-gcp.intern.dev.nav.no"
+	}
+}

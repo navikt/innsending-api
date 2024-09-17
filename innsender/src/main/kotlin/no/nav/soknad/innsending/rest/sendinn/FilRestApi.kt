@@ -5,11 +5,7 @@ import no.nav.soknad.innsending.api.SendinnFilApi
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
-import no.nav.soknad.innsending.model.DokumentSoknadDto
-import no.nav.soknad.innsending.model.FilDto
-import no.nav.soknad.innsending.model.Mimetype
-import no.nav.soknad.innsending.model.SoknadsStatusDto
-import no.nav.soknad.innsending.model.VedleggDto
+import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.FilValidatorService
