@@ -197,7 +197,7 @@ spring:
       validation-query: "SELECT 1"
 
   jpa:
-    open-in-view: true
+    open-in-view: false
 
 status_log_url: ${STATUS_LOG_URL}
 
@@ -325,9 +325,6 @@ spring:
 
   datasource:
     url: ${DATABASE_JDBC_URL}
-
-  jpa:
-    open-in-view: false
 
 ---
 spring:
