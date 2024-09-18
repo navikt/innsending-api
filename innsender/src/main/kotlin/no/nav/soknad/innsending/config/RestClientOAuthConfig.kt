@@ -6,6 +6,7 @@ import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.soknad.arkivering.soknadsarkiverer.service.tokensupport.TokenService
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.Constants.NAV_CONSUMER_ID
 import no.nav.soknad.innsending.util.MDCUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -144,11 +145,15 @@ class RestClientOAuthConfig(
 		return RestClient.builder()
 			.baseUrl(baseUrl)
 			.requestFactory(timeouts())
-			.requestInterceptor(RequestHeaderInterceptor(tokenService, subjectHandler))
+			.requestInterceptor(RequestHeaderInterceptor(tokenService, applicationName, subjectHandler))
 			.build()
 	}
 
-	class RequestHeaderInterceptor(val tokenService: TokenService, val subjectHandler: SubjectHandlerInterface? = null) :
+	class RequestHeaderInterceptor(
+		val tokenService: TokenService,
+		val applicationName: String,
+		val subjectHandler: SubjectHandlerInterface? = null
+	) :
 		ClientHttpRequestInterceptor {
 
 		val logger: Logger = LoggerFactory.getLogger(javaClass)
@@ -165,6 +170,7 @@ class RestClientOAuthConfig(
 
 			request.headers.setBearerAuth(token ?: "")
 			request.headers.set(Constants.HEADER_CALL_ID, callId)
+			request.headers.set(NAV_CONSUMER_ID, applicationName)
 			request.headers.set(Constants.HEADER_INNSENDINGSID, MDC.get(Constants.MDC_INNSENDINGS_ID) ?: "")
 
 			if (subjectHandler?.getUserIdFromToken() != null) {

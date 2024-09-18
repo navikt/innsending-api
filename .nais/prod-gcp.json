@@ -91,7 +91,7 @@
 		"ARENA_TOKEN_X_AUDIENCE": "prod-fss:teamarenanais:arena-api",
 		"ARENA_SCOPE": "api://prod-fss.teamarenanais.arena-api/.default",
 		"KODEVERK_URL": "http://kodeverk-api.team-rocket",
-		"KODEVERK_SCOPE": "nav.no: api://prod-gcp.team-rocket.kodeverk-api/.default",
+		"KODEVERK_SCOPE": "api://prod-gcp.team-rocket.kodeverk-api/.default",
 		"KONTOREGISTER_TOKEN_X_AUDIENCE": "prod-gcp:okonomi:sokos-kontoregister-person",
 		"KONTOREGISTER_SCOPE": "api://prod-gcp.okonomi.sokos-kontoregister-person/.default",
 		"KONTOREGISTER_URL": "http://sokos-kontoregister-person.okonomi"
