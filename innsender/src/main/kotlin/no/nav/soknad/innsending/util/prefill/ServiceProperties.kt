@@ -8,7 +8,14 @@ import no.nav.soknad.innsending.util.Constants.PDL
 object ServiceProperties {
 	// Available external services and their corresponding properties that the frontend can request
 	private val availableServicePropertiesMap = hashMapOf(
-		PDL to listOf("sokerFornavn", "sokerEtternavn", "sokerAdresser", "sokerTelefonnummer", "sokerKjonn"),
+		PDL to listOf(
+			"sokerIdentifikasjonsnummer",
+			"sokerFornavn",
+			"sokerEtternavn",
+			"sokerAdresser",
+			"sokerTelefonnummer",
+			"sokerKjonn"
+		),
 		ARENA_MAALGRUPPE to listOf("sokerMaalgruppe"),
 		KONTORREGISTER_BORGER to listOf("sokerKontonummer")
 	)

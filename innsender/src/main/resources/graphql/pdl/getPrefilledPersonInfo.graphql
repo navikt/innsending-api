@@ -1,5 +1,13 @@
 query PrefillData($ident: ID!, $historikk: Boolean!) {
 	hentPerson(ident: $ident) {
+		folkeregisteridentifikator(historikk: $historikk) {
+		  identifikasjonsnummer
+		  status
+		  type
+			metadata {
+				...metadataDetails
+			}
+		}
 		adressebeskyttelse(historikk: $historikk) {
 			gradering
 			metadata {
