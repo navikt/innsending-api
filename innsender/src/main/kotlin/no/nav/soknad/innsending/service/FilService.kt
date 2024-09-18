@@ -1,24 +1,15 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.config.RestConfig
-import no.nav.soknad.innsending.exceptions.BackendErrorException
-import no.nav.soknad.innsending.exceptions.ErrorCode
-import no.nav.soknad.innsending.exceptions.ExceptionHelper
-import no.nav.soknad.innsending.exceptions.IllegalActionException
-import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
+import no.nav.soknad.innsending.exceptions.*
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
-import no.nav.soknad.innsending.util.mapping.lagFilDto
-import no.nav.soknad.innsending.util.mapping.lagVedleggDto
-import no.nav.soknad.innsending.util.mapping.lagVedleggDtoMedOpplastetFil
-import no.nav.soknad.innsending.util.mapping.mapTilFilDb
-import no.nav.soknad.innsending.util.mapping.mapTilVedleggDb
+import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.pdfutilities.PdfMerger
-import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -110,21 +101,23 @@ class FilService(
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			throw e
 		}
-		logger.debug("${soknadDto.innsendingsId!!}: Valider størrelse av opplastinger på vedlegg ${filDto.vedleggsid} og søknad ${soknadDto.innsendingsId!!}")
-		Validerer().validerStorrelse(
-			soknadDto.innsendingsId!!,
-			finnFilStorrelseSum(soknadDto, filDto.vedleggsid),
-			0,
-			restConfig.maxFileSize.toLong(),
-			ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE,
-		)
-		Validerer().validerStorrelse(
-			soknadDto.innsendingsId!!,
-			finnFilStorrelseSum(soknadDto),
-			0,
-			restConfig.maxFileSizeSum.toLong(),
-			ErrorCode.FILE_SIZE_SUM_TOO_LARGE
-		)
+		/* Skal bare validere størrelse på vedlegg som søker har lastet opp
+				logger.debug("${soknadDto.innsendingsId!!}: Valider størrelse av opplastinger på vedlegg ${filDto.vedleggsid} og søknad ${soknadDto.innsendingsId!!}")
+				Validerer().validerStorrelse(
+					soknadDto.innsendingsId!!,
+					finnFilStorrelseSum(soknadDto, filDto.vedleggsid),
+					0,
+					restConfig.maxFileSize.toLong(),
+					ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE,
+				)
+				Validerer().validerStorrelse(
+					soknadDto.innsendingsId!!,
+					finnFilStorrelseSum(soknadDto),
+					0,
+					restConfig.maxFileSizeSum.toLong(),
+					ErrorCode.FILE_SIZE_SUM_TOO_LARGE
+				)
+		*/
 		repo.updateVedleggStatus(
 			soknadDto.innsendingsId!!,
 			filDto.vedleggsid,
@@ -229,6 +222,7 @@ class FilService(
 
 	fun finnFilStorrelseSum(soknadDto: DokumentSoknadDto, vedleggListe: List<VedleggDto> = soknadDto.vedleggsListe) =
 		vedleggListe
+			.filter { !it.erHoveddokument }
 			.filter { it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt || it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
 			.sumOf { repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, it.id!!) }
 
