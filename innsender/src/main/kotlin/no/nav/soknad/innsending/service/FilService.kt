@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.pdfutilities.PdfMerger
+import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -101,23 +102,24 @@ class FilService(
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			throw e
 		}
-		/* Skal bare validere størrelse på vedlegg som søker har lastet opp
-				logger.debug("${soknadDto.innsendingsId!!}: Valider størrelse av opplastinger på vedlegg ${filDto.vedleggsid} og søknad ${soknadDto.innsendingsId!!}")
-				Validerer().validerStorrelse(
-					soknadDto.innsendingsId!!,
-					finnFilStorrelseSum(soknadDto, filDto.vedleggsid),
-					0,
-					restConfig.maxFileSize.toLong(),
-					ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE,
-				)
-				Validerer().validerStorrelse(
-					soknadDto.innsendingsId!!,
-					finnFilStorrelseSum(soknadDto),
-					0,
-					restConfig.maxFileSizeSum.toLong(),
-					ErrorCode.FILE_SIZE_SUM_TOO_LARGE
-				)
-		*/
+		/* Skal bare validere størrelse på vedlegg som søker har lastet opp */
+		if (soknadDto.vedleggsListe.filter { it.id == filDto.vedleggsid && !it.erHoveddokument }.isNotEmpty()) {
+			logger.debug("${soknadDto.innsendingsId!!}: Valider størrelse av opplastinger på vedlegg ${filDto.vedleggsid} og søknad ${soknadDto.innsendingsId!!}")
+			Validerer().validerStorrelse(
+				soknadDto.innsendingsId!!,
+				finnFilStorrelseSum(soknadDto, filDto.vedleggsid),
+				0,
+				restConfig.maxFileSize.toLong(),
+				ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE,
+			)
+			Validerer().validerStorrelse(
+				soknadDto.innsendingsId!!,
+				finnFilStorrelseSum(soknadDto),
+				0,
+				restConfig.maxFileSizeSum.toLong(),
+				ErrorCode.FILE_SIZE_SUM_TOO_LARGE
+			)
+		}
 		repo.updateVedleggStatus(
 			soknadDto.innsendingsId!!,
 			filDto.vedleggsid,
