@@ -45,13 +45,6 @@ class FilValidatorService(
 			max = restConfig.maxFileSize.toLong(),
 			errorCode = ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE
 		)
-		Validerer().validerStorrelse(
-			innsendingId = innsendingsId,
-			alleredeOpplastet = 0,
-			opplastet = opplastet.size.toLong(),
-			max = restConfig.maxFileSizeSum.toLong(),
-			errorCode = ErrorCode.FILE_SIZE_SUM_TOO_LARGE
-		)
 
 		Validerer().validereFilformat(innsendingsId, opplastet, fileName)
 
