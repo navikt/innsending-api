@@ -197,9 +197,6 @@ spring:
       test-on-borrow: true
       validation-query: "SELECT 1"
 
-  jpa:
-    open-in-view: true
-
 status_log_url: ${STATUS_LOG_URL}
 
 restconfig:
