@@ -2076,7 +2076,7 @@ components:
 
     EnvQualifier:
       type: string
-      enum: [ "preprodIntern", "preprodAltIntern", "preprodAnsatt", "preprodAltAnsatt", "local" ]
+      enum: [ "preprodIntern", "preprodAltIntern", "preprodAnsatt", "preprodAltAnsatt", "delingslenke", "local" ]
       description: Angir et ønske om miljø
 
 
