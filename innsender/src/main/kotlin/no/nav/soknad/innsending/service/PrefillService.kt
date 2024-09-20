@@ -120,15 +120,13 @@ class PrefillService(
 	}
 
 	private fun resolveIdentifikasjonsnummer(
-		folkeregisteridentifikator: List<Folkeregisteridentifikator>?,
-		userId: String
+		pdlIdents: List<Folkeregisteridentifikator>?, userId: String
 	): String {
-		val userIdMatch =
-			folkeregisteridentifikator?.firstOrNull { it.identifikasjonsnummer == userId }?.identifikasjonsnummer
+		val userIdMatch = pdlIdents?.firstOrNull { it.identifikasjonsnummer == userId }?.identifikasjonsnummer
 		if (userIdMatch == null) {
-			secureLogger.warn("Mismatch while resolving identifikasjonsnummer: token=$userId, PDL=$userIdMatch (PDL response $folkeregisteridentifikator)")
+			secureLogger.warn("Mismatch while resolving identifikasjonsnummer: token=$userId, PDL=$userIdMatch (PDL response $pdlIdents)")
 		}
-		return userIdMatch ?: folkeregisteridentifikator?.firstOrNull()?.identifikasjonsnummer ?: userId
+		return userIdMatch ?: pdlIdents?.firstOrNull { !it.metadata.historisk }?.identifikasjonsnummer ?: userId
 	}
 
 	private fun enrichAddress(pdlAddress: Adresse): Adresse {
