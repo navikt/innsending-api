@@ -187,8 +187,8 @@ spring:
   datasource:
     url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DATABASE}?user=${DATABASE_USERNAME}&password=${DATABASE_PASSWORD}
     hikari:
-      minimum-icle: 1
-      maximum-pool-size: 40
+      minimum-idle: 1
+      maximum-pool-size: 20
       connection-timeout: 50000
       max-lifetime: 50001
       validationTimeout: 20000
@@ -340,4 +340,5 @@ restconfig:
       preprodAltIntern: https://www.intern.dev.nav.no/sendinn-alt
       preprodAnsatt: https://www.ansatt.dev.nav.no/sendinn
       preprodAltAnsatt: https://www.ansatt.dev.nav.no/sendinn-alt
+      delingslenke: https://www.ansatt.dev.nav.no/sendinn-delingslenke
       default: ${SEND_INN_URL:http://localhost:3100/sendinn}
