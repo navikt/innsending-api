@@ -7,6 +7,8 @@ spring:
     name: innsending-api
   jackson:
     default-property-inclusion: non_null
+  jpa:
+    open-in-view: false
 
 management:
   endpoint:
@@ -195,9 +197,6 @@ spring:
     dbcp2:
       test-on-borrow: true
       validation-query: "SELECT 1"
-
-  jpa:
-    open-in-view: false
 
 status_log_url: ${STATUS_LOG_URL}
 
