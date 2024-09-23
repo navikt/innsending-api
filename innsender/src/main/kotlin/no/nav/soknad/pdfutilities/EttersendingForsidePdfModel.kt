@@ -9,5 +9,6 @@ data class EttersendingForsidePdfModel(
 	val av: String,
 	val tittel: String,
 	val personInfo: String,
+	val personIdent: String,
 	val innsendtTidspunkt: String
 )

@@ -113,7 +113,7 @@ class PdfGenerator {
 		val sprak = selectLanguage(soknad.spraak)
 		val tekster = texts.get(sprak) ?: throw BackendErrorException("Mangler støtte for språk ${soknad.spraak}")
 		val fnr = soknad.brukerId
-		val personInfo = if (sammensattNavn == null) fnr else "$sammensattNavn, $fnr"
+		val personInfo = sammensattNavn ?: ""
 		val now = LocalDateTime.now()
 		val innsendtTidspunkt = java.lang.String.format(
 			tekster.getString("forside.innsendt"),
@@ -130,6 +130,7 @@ class PdfGenerator {
 				av = tekster.getString("footer.av"),
 				tittel = soknad.tittel,
 				personInfo = personInfo,
+				personIdent = fnr,
 				innsendtTidspunkt = innsendtTidspunkt
 			)
 		)
