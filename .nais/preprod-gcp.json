@@ -12,6 +12,7 @@
 		"current-namespace": [
 			"send-inn-frontend",
 			"send-inn-frontend-alt",
+			"send-inn-frontend-delingslenke",
 			"soknadsarkiverer",
 			"innsending-admin"
 		],
