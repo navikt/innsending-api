@@ -57,7 +57,7 @@ class EksternRestApi(
 		)
 
 		combinedLogger.log(
-			"[${applikasjon}] - ${ettersending.innsendingsId}: **Opprettet ettersending fra ekstern applikasjon på skjema ${ettersending.skjemanr}",
+			"[${applikasjon}] - ${ettersending.innsendingsId}: Opprettet ettersending fra ekstern applikasjon på skjema ${ettersending.skjemanr}",
 			brukerId
 		)
 
