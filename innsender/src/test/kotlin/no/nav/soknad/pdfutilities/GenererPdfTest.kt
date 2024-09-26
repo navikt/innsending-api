@@ -4,6 +4,7 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
+import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
 import org.junit.Test
 import java.time.OffsetDateTime
 import java.util.*
@@ -20,8 +21,24 @@ class GenererPdfTest {
 	private val backspace = "\u0008"
 
 	@Test
-	fun verifiserlagForsideEttersending() {
+	fun verifiserlagForsideEttersending_en() {
 		val soknad = lagEttersendingsSoknadForTesting(tittel, spraak = "en-UK")
+
+		val sammensattnavn = "Fornavn Mellomnavn Etternavn"
+		val forside = PdfGenerator().lagForsideEttersending(soknad, sammensattnavn)
+
+		assertEquals(1, AntallSider().finnAntallSider(forside))
+		isPdfaTest(forside)
+
+	}
+
+	@Test
+	fun verifiserlagForsideEttersending_nb() {
+		verifiserlagForsideEttersending(tittel, "nb-NO")
+	}
+
+	fun verifiserlagForsideEttersending(_tittel: String, spraak: String) {
+		val soknad = lagEttersendingsSoknadForTesting(_tittel, spraak = spraak)
 
 		val sammensattnavn = "Fornavn Mellomnavn Etternavn"
 		val forside = PdfGenerator().lagForsideEttersending(soknad, sammensattnavn)
@@ -117,7 +134,7 @@ class GenererPdfTest {
 		// PDFBox mangler funksjonalitet for å validere versjon PDF/A-2A.
 		// Skriv generert PDF til disk og last opp til en online verifiseringssite, f.eks. https://www.pdf-online.com/osa/validate.aspx
 
-		//writeBytesToFile(document, "./pdf-til-validering.pdf")
+		writeBytesToFile(document, "./pdf-til-validering.pdf")
 		//assertTrue(Validerer().isPDFa(document)) PDFBox mangler funksjonalitet for å validere versjon PDF/A-2A.
 	}
 

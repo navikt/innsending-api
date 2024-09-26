@@ -63,7 +63,7 @@
 			<artifactId>spring-kafka</artifactId>
 			<version>${spring-kafka.version}</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>io.prometheus</groupId>
 			<artifactId>prometheus-metrics-instrumentation-jvm</artifactId>
@@ -244,6 +244,31 @@
 			<groupId>io.github.openhtmltopdf</groupId>
 			<artifactId>openhtmltopdf-slf4j</artifactId>
 			<version>${openhtml.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.openhtmltopdf</groupId>
+			<artifactId>openhtmltopdf-svg-support</artifactId>
+			<version>${openhtml.version}</version>
+			<!--
+						<exclusions>
+							<exclusion>
+								<groupId>org.apache.xmlgraphics</groupId>
+								<artifactId>batik-transcoder</artifactId>
+							</exclusion>
+							<exclusion>
+								<groupId>org.apache.xmlgraphics</groupId>
+								<artifactId>batik-ext</artifactId>
+							</exclusion>
+							<exclusion>
+								<groupId>org.apache.xmlgraphics</groupId>
+								<artifactId>batik-codec</artifactId>
+							</exclusion>
+							<exclusion>
+								<groupId>org.apache.xmlgraphics</groupId>
+								<artifactId>xmlgraphics-commons</artifactId>
+							</exclusion>
+						</exclusions>
+			-->
 		</dependency>
 		<dependency>
 			<groupId>javax.activation</groupId>

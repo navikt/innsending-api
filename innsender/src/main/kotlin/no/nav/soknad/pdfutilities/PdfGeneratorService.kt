@@ -2,6 +2,7 @@ package no.nav.soknad.pdfutilities
 
 import com.github.jknack.handlebars.Handlebars
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
+import com.openhtmltopdf.svgsupport.BatikSVGDrawer
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -46,6 +47,7 @@ class PdfGeneratorService {
 
 				builder.useFastMode()
 				builder.usePdfUaAccessbility(true)
+				builder.useSVGDrawer(BatikSVGDrawer())
 				builder.usePdfAConformance(PdfRendererBuilder.PdfAConformance.PDFA_2_A)
 
 				// Fargeprofil, må være byte array

@@ -125,12 +125,15 @@ class PdfGenerator {
 				sprak = if (sprak == "en") sprak + "-UK" else sprak + "-NO",
 				beskrivelse = tekster.getString("forside.beskrivelse"),
 				ettersendingHeader = tekster.getString("forside.tittel"),
+				navnLabel = tekster.getString("ettersending.forside.navn"),
+				fnrLabel = tekster.getString("ettersending.forside.fnr"),
 				ettersendelseTittel = tekster.getString("kvittering.ettersendelse.tittel"),
 				side = tekster.getString("footer.side"),
 				av = tekster.getString("footer.av"),
 				tittel = soknad.tittel,
 				personInfo = personInfo,
 				personIdent = fnr,
+				dato = formaterDatoMedManed(now),
 				innsendtTidspunkt = innsendtTidspunkt
 			)
 		)
@@ -157,6 +160,10 @@ class PdfGenerator {
 
 	private fun formaterDato(now: LocalDateTime): String {
 		return now.format(DateTimeFormatter.ofPattern("dd-MM-YYYY"))
+	}
+
+	private fun formaterDatoMedManed(now: LocalDateTime): String {
+		return now.format(DateTimeFormatter.ofPattern("dd.MMM YYYY"))
 	}
 
 	private fun selectLanguage(language: String?): String {
