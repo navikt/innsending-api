@@ -57,7 +57,7 @@ class EksternRestApi(
 		)
 
 		combinedLogger.log(
-			"[${applikasjon}] - ${ettersending.innsendingsId}: Opprettet ettersending fra ekstern applikasjon på skjema ${ettersending.skjemanr}",
+			"[${applikasjon}] - ${ettersending.innsendingsId}: **Opprettet ettersending fra ekstern applikasjon på skjema ${ettersending.skjemanr}",
 			brukerId
 		)
 
@@ -106,7 +106,12 @@ class EksternRestApi(
 		}
 
 		val typeFilter = soknadstyper?.toTypedArray() ?: emptyArray()
-		brukerIds.forEach { combinedLogger.log("[${applikasjon}] - Henter søknader med søknadstyper=${soknadstyper ?: "<alle>"} for $skjemanr", it) }
+		brukerIds.forEach {
+			combinedLogger.log(
+				"[${applikasjon}] - Henter søknader med søknadstyper=${soknadstyper ?: "<alle>"} for $skjemanr",
+				it
+			)
+		}
 		val soknader = brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, *typeFilter) }
 
 		return ResponseEntity.status(HttpStatus.OK).body(soknader)
