@@ -1,119 +1,205 @@
 <!DOCTYPE html>
 <html lang="{{sprak}}">
 <head>
-    <title>Ettersending forside</title>
-    <meta charset="utf-8"/>
-    <meta name="description" content="{{beskrivelse}}"/>
-    <meta name="subject" content="Generert forside for ettersending av dokumentasjon"/>
-    <meta name="author" content="NAV"/>
+	<title>Ettersending forside</title>
+	<meta charset="utf-8"/>
+	<meta name="description" content="{{beskrivelse}}"/>
+	<meta name="subject" content="Generert forside for ettersending av dokumentasjon"/>
+	<meta name="author" content="NAV"/>
 
-    <bookmarks>
-        <bookmark name="Ettersendingsheader" href="#ettersendingHeader"></bookmark>
-        <bookmark name="tittel" href="#tittel"></bookmark>
-        <bookmark name="personInfo" href="#personInfo"></bookmark>
-    </bookmarks>
-    <style>
-        @page {
-            size: A4;
-            margin: 60px;
+	<bookmarks>
+		<bookmark name="Ettersendingsheader" href="#ettersendingHeader"></bookmark>
+		<bookmark name="tittel" href="#tittel"></bookmark>
+		<bookmark name="personInfo" href="#personInfo"></bookmark>
+	</bookmarks>
+	<style>
+		@page {
+			size: A4;
+			margin: 64px;
 
-            @top-center {
-                font-family: arial, serif;
-            }
-            @bottom-right {
-                content: element(sidetall);
-            }
-            @bottom-left {
-                content: element(dato);
-            }
-        }
+			@top-center {
+				font-family: arial, serif;
+			}
+			@bottom-right {
+				content: element(sidetall);
+			}
+			@bottom-left {
+				content: element(dato);
+			}
+		}
 
-        html {
-            font-family: arial, serif;
-        }
+		html {
+			font-family: arial, serif;
+		}
 
-        body {
-            font-family: arial, serif;
-            word-wrap: break-word;
-            font-size: 13px;
-        }
+		body {
+			font-family: arial, serif;
+			word-wrap: break-word;
+			font-size: 13px;
+		}
 
-        .dato {
-            position: running(dato);
-            font-size: 12px;
-            text-align: left;
-        }
+		.dato {
+			position: running(dato);
+			font-size: 9px;
+			text-align: left;
+		}
 
-        .sidetall {
-            position: running(sidetall);
-            text-align: right;
-            font-size: 12px;
-        }
+		.sidetall {
+			position: running(sidetall);
+			font-size: 9px;
+			text-align: right;
+		}
 
-        .sidetall_antall:before {
-            content: counter(page);
-        }
+		.sidetall_antall:before {
+			content: counter(page);
+		}
 
-        .sidetall_total:before {
-            content: counter(pages);
-        }
+		.sidetall_total:before {
+			content: counter(pages);
+		}
 
-        .tittel {
-            margin-top: 50px;
-            width: 100%;
-            text-align: center;
-            white-space: pre-wrap;
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 40px;
-        }
+		.tittel {
+			margin-bottom: 26px;
+			width: 100%;
+			height: 20px;
+			font-size: 16px;
+			letter-spacing: 0.3px;
+			font-weight: bold;
+			float: left;
+			text-align: left;
+			white-space: pre-wrap;
+		}
 
-        .subtittel {
-            font-size: 15px;
-            font-weight: 600;
-            width: 100%;
-            text-align: center;
-            white-space: pre-wrap;
-            margin-bottom: 20px;
-        }
+		.subtittel {
+			height: 16px;
+			font-size: 13px;
+			letter-spacing: 0.25px;
+			font-weight: bold;
+			width: 100%;
+			float: left;
+			text-align: left;
+			white-space: pre-wrap;
+			margin-bottom: 6px;
+		}
 
-        .navlogo {
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            width: 100px;
-        }
+		.navlogored {
+			height: 16px;
+			float: left;
+			margin-bottom: 48px;
+		}
 
-        @font-face {
-            font-family: 'arial';
-            font-style: normal;
-            font-weight: 400;
-            src: url(fonts/arial/arial.ttf);
-        }
+		@font-face {
+			font-family: 'arial';
+			font-style: normal;
+			font-weight: 400;
+			src: url(fonts/arial/arial.ttf);
+		}
 
-        @font-face {
-            font-family: 'arial';
-            font-style: normal;
-            font-weight: 600;
-            src: url(fonts/arial/arialbd.ttf);
-        }
+		@font-face {
+			font-family: 'arial';
+			font-style: normal;
+			font-weight: 600;
+			src: url(fonts/arial/arialbd.ttf);
+		}
 
-    </style>
+		.fromBlock {
+			margin-bottom: 48px;
+		}
+
+		.textBlock {
+			margin-bottom: 16px;
+		}
+
+		.rTable {
+			display: table;
+			width: 100%;
+		}
+
+		.rTableRow {
+			display: table-row;
+		}
+
+		.rTableHeading, .rTableBody, .rTableFoot, .rTableRow {
+			clear: both;
+		}
+
+		.rTableHead, .rTableFoot {
+			background-color: #DDD;
+			font-weight: bold;
+		}
+
+		.rTableCell, .rTableHead {
+			border: none;
+			float: left;
+			height: 16px;
+			padding: 2px 1.8%;
+			width: 23%;
+		}
+
+		.rTableCellMiddle, .rTableHead {
+			border: none;
+			float: left;
+			height: 16px;
+			padding: 2px 1.8%;
+			width: 62%;
+		}
+
+		.rTableCellRight, .rTableHead {
+			border: none;
+			float: right;
+			height: 16px;
+			padding: 2px 1.8%;
+			width: 15%;
+		}
+
+		.rTable:after {
+			visibility: hidden;
+			display: block;
+			font-size: 0;
+			content: " ";
+			clear: both;
+		}
+
+		.bunntekst {
+			height: 16px;
+			font-size: 9px;
+			font-weight: normal;
+			margin-bottom: 26px;
+		}
+
+	</style>
 </head>
 <body>
 
-<div class="sidetall" id="side">{{ side }} <span class="sidetall_antall"></span> {{ av }} <span
-        class="sidetall_total"></span></div>
-<div class="dato" id="innsendtTidspunkt">{{ innsendtTidspunkt }}</div>
+<div class="bunntekst">
+	<div class="sidetall" id="side">{{ side }} <span class="sidetall_antall"></span> {{ av }} <span
+		class="sidetall_total"></span></div>
+	<div class="dato" id="innsendtTidspunkt">{{ innsendtTidspunkt }}</div>
+</div>
 
-<img class="navlogo" src="icons/navlogo.jpg" alt="navlogo"/>
-<h1 class="tittel" id="ettersendingHeader">{{ ettersendingHeader }}</h1>
+<div>
+	<img xmlns="http://www.w3.org/2000/svg" src="icons/Nav-logo-Red-uten-tomrom.svg" alt="NAV logo" class="navlogored"
+			 x="0" height="16px"/>
 
-<h2 class="subtittel" id="ettersendelseTittel">{{ ettersendelseTittel }}</h2>
-<h2 class="subtittel" id="tittel">{{ tittel }}</h2>
+	<div class="fromBlock">
+		<div class="rTable">
+			<div class="rTableRow">
+				<div class="rTableCell">{{ navnLabel }}:</div>
+				<div class="rTableCellMiddle" id="personInfo">{{ personInfo }}</div>
+			</div>
+			<div class="rTableRow">
+				<div class="rTableCell">{{ fnrLabel }}:</div>
+				<div class="rTableCell" id="personIdent">{{ personIdent }}</div>
+				<div class="rTableCellRight">{{ dato }}</div>
+			</div>
+		</div>
+	</div>
 
-<h2 class="subtittel" id="personInfo">{{ personInfo }}</h2>
-
+	<div class="textBlock">
+		<h1 class="tittel" id="ettersendingHeader">{{ ettersendelseTittel }}</h1>
+		<h2 class="subtittel" id="tittel">{{ tittel }}</h2>
+	</div>
+</div>
 
 </body>
 </html>
