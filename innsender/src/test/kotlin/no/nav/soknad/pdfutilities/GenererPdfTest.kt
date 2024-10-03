@@ -20,8 +20,24 @@ class GenererPdfTest {
 	private val backspace = "\u0008"
 
 	@Test
-	fun verifiserlagForsideEttersending() {
+	fun verifiserlagForsideEttersending_en() {
 		val soknad = lagEttersendingsSoknadForTesting(tittel, spraak = "en-UK")
+
+		val sammensattnavn = "Fornavn Mellomnavn Etternavn"
+		val forside = PdfGenerator().lagForsideEttersending(soknad, sammensattnavn)
+
+		assertEquals(1, AntallSider().finnAntallSider(forside))
+		isPdfaTest(forside)
+
+	}
+
+	@Test
+	fun verifiserlagForsideEttersending_nb() {
+		verifiserlagForsideEttersending(tittel, "nb-NO")
+	}
+
+	fun verifiserlagForsideEttersending(_tittel: String, spraak: String) {
+		val soknad = lagEttersendingsSoknadForTesting(_tittel, spraak = spraak)
 
 		val sammensattnavn = "Fornavn Mellomnavn Etternavn"
 		val forside = PdfGenerator().lagForsideEttersending(soknad, sammensattnavn)

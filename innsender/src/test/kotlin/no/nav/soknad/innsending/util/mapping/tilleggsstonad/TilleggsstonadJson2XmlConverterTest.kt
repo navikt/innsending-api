@@ -1,9 +1,5 @@
 package no.nav.soknad.innsending.util.mapping.tilleggsstonad
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.dataformat.xml.XmlMapper
-import com.fasterxml.jackson.module.kotlin.KotlinFeature
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import no.nav.soknad.innsending.utils.Date
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
@@ -11,9 +7,7 @@ import no.nav.soknad.innsending.utils.builders.tilleggsstonad.*
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import java.text.SimpleDateFormat
 import java.time.LocalDateTime
-import javax.xml.stream.XMLInputFactory
 import kotlin.math.roundToInt
 
 class TilleggsstonadJson2XmlConverterTest {
@@ -928,19 +922,5 @@ class TilleggsstonadJson2XmlConverterTest {
 
 	}
 
-
-	private fun getXmlMapper(): XmlMapper {
-		val inputFactory = XMLInputFactory.newFactory()
-		inputFactory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, false)
-		val kotlinModule = KotlinModule.Builder()
-			.disable(KotlinFeature.StrictNullChecks)
-			.build()
-		val xmlMapper = XmlMapper(inputFactory)
-		xmlMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-		xmlMapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
-		xmlMapper.setDateFormat(SimpleDateFormat("yyyy-MM-ddXXX"))
-		xmlMapper.registerModule(kotlinModule)
-		return xmlMapper
-	}
 
 }
