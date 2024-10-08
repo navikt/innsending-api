@@ -144,7 +144,11 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertFalse(getSoknadDto.kanLasteOppAnnet!!)
 
 		val vedleggT7 = getSoknadDto.vedleggsListe.first { it.vedleggsnr == "T7" }
-		val patchVedleggT7 = PatchVedleggDto(tittel = null, opplastingsStatus = OpplastingsStatusDto.SendesAvAndre, opplastingsValgKommentar = "Sendes av min fastlege")
+		val patchVedleggT7 = PatchVedleggDto(
+			tittel = null,
+			opplastingsStatus = OpplastingsStatusDto.SendesAvAndre,
+			opplastingsValgKommentar = "Sendes av min fastlege"
+		)
 		val patchRequestT7 = HttpEntity(patchVedleggT7, Hjelpemetoder.createHeaders(token))
 		val patchResponseT7 = restTemplate.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggT7.id}", HttpMethod.PATCH,
@@ -156,7 +160,11 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals("Sendes av min fastlege", patchResponseT7.body!!.opplastingsValgKommentar)
 
 		val vedleggN6 = getSoknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
-		val patchVedleggN6 = PatchVedleggDto(tittel = null, opplastingsStatus = OpplastingsStatusDto.IkkeValgt, opplastingsValgKommentar = null)
+		val patchVedleggN6 = PatchVedleggDto(
+			tittel = null,
+			opplastingsStatus = OpplastingsStatusDto.IkkeValgt,
+			opplastingsValgKommentar = null
+		)
 		val patchRequestN6 = HttpEntity(patchVedleggN6, Hjelpemetoder.createHeaders(token))
 		val patchResponseN6 = restTemplate.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggN6.id}", HttpMethod.PATCH,
@@ -220,9 +228,12 @@ class FyllutRestApiTest : ApplicationTest() {
 		val skjemanr = dokumentSoknadDto.skjemanr
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
-		val updatedT7 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7", tittel = newVedleggstittel1).build() // Unik formioId settes
-		val updatedN6 = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6", tittel = newVedleggstittel2).build() // Unik formioId settes
-		val updatedHovedDokument = SkjemaDokumentDtoTestBuilder(tittel = newTittel).asHovedDokument(skjemanr).build() // formioId = null
+		val updatedT7 =
+			SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7", tittel = newVedleggstittel1).build() // Unik formioId settes
+		val updatedN6 =
+			SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6", tittel = newVedleggstittel2).build() // Unik formioId settes
+		val updatedHovedDokument =
+			SkjemaDokumentDtoTestBuilder(tittel = newTittel).asHovedDokument(skjemanr).build() // formioId = null
 		val updatedHovedDokumentVariant =
 			SkjemaDokumentDtoTestBuilder(tittel = newTittel).asHovedDokumentVariant(skjemanr).build()
 
@@ -793,6 +804,34 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	}
 
+	@Test
+	fun testOpprettSoknaderOgHentingYtelse() {
+		// Gitt
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		val t7Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build()
+		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
+
+		val noOfRepeats: Int = 100
+		val soknader = mutableListOf<ResponseEntity<SkjemaDto>>()
+		repeat(noOfRepeats, {
+			val soknad = SkjemaDtoTestBuilder(vedleggsListe = listOf(t7Vedlegg, n6Vedlegg)).build()
+
+			// Når
+			val opprettetSoknadResponse = api?.createSoknad(soknad)
+
+			assertTrue(opprettetSoknadResponse != null)
+			assertEquals(201, opprettetSoknadResponse.statusCode.value())
+
+			soknader.add(opprettetSoknadResponse)
+
+		})
+
+
+		// Så
+		soknader.forEach { testHentSoknadOgSendInn(it, TokenGenerator(mockOAuth2Server).lagTokenXToken()) }
+
+	}
 
 	// Opprett søknad med et hoveddokument, en hoveddokumentvariant og to vedlegg
 	private fun opprettSoknad(skjemanr: String = "NAV 08-21.05"): DokumentSoknadDto {
