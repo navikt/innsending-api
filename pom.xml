@@ -58,7 +58,7 @@
 		<logstash.version>7.4</logstash.version>
 		<imgscalr-lib.version>4.2</imgscalr-lib.version>
 		<resilience4j.version>2.2.0</resilience4j.version>
-		<graphql-kotlin.version>7.1.4</graphql-kotlin.version>
+		<graphql-kotlin.version>8.1.0</graphql-kotlin.version>
 		<gson.version>2.11.0</gson.version>
 
 		<!--Security issues-->
