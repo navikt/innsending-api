@@ -43,7 +43,7 @@ class PrefillServiceTest : ApplicationTest() {
 	@Test
 	fun `Should get prefill data for PDL`() {
 		// Given
-		val properties = listOf("sokerFornavn", "sokerEtternavn")
+		val properties = listOf("sokerFornavn", "sokerEtternavn", "sokerIdentifikasjonsnummer")
 		val userId = "12128012345"
 
 		// When
@@ -52,6 +52,7 @@ class PrefillServiceTest : ApplicationTest() {
 		// Then
 		assertEquals("Ola", result.sokerFornavn)
 		assertEquals("Nordmann", result.sokerEtternavn)
+		assertEquals(userId, result.sokerIdentifikasjonsnummer)
 	}
 
 	@Test

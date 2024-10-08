@@ -14,6 +14,7 @@ import no.nav.soknad.innsending.exceptions.NonCriticalException
 import no.nav.soknad.innsending.model.Adresse
 import no.nav.soknad.innsending.model.Maalgruppe
 import no.nav.soknad.innsending.model.PrefillData
+import no.nav.soknad.innsending.pdl.generated.prefilldata.Folkeregisteridentifikator
 import no.nav.soknad.innsending.util.Constants.ARENA_MAALGRUPPE
 import no.nav.soknad.innsending.util.Constants.KONTORREGISTER_BORGER
 import no.nav.soknad.innsending.util.Constants.PDL
@@ -32,7 +33,7 @@ class PrefillService(
 	private val kodeverkService: KodeverkService
 ) {
 	private val logger: Logger = LoggerFactory.getLogger(javaClass)
-
+	private val secureLogger = LoggerFactory.getLogger("secureLogger")
 
 	fun getPrefillData(properties: List<String>, userId: String): PrefillData = runBlocking {
 		// Create a new hashmap of which services to call based on the input properties
@@ -59,6 +60,7 @@ class PrefillService(
 	fun combineResults(results: List<PrefillData>): PrefillData {
 		return results.fold(PrefillData()) { acc, obj ->
 			PrefillData(
+				sokerIdentifikasjonsnummer = obj.sokerIdentifikasjonsnummer ?: acc.sokerIdentifikasjonsnummer,
 				sokerFornavn = obj.sokerFornavn ?: acc.sokerFornavn,
 				sokerEtternavn = obj.sokerEtternavn ?: acc.sokerEtternavn,
 				sokerMaalgruppe = obj.sokerMaalgruppe ?: acc.sokerMaalgruppe,
@@ -88,6 +90,7 @@ class PrefillService(
 		logger.info("Henter data fra PDL")
 
 		val personInfo = pdlApi.getPrefillPersonInfo(userId)
+		val identifikasjonsnummer = resolveIdentifikasjonsnummer(personInfo?.hentPerson?.folkeregisteridentifikator, userId)
 		val name = transformName(personInfo?.hentPerson?.navn)
 		val addresses = transformAddresses(
 			adressebeskyttelser = personInfo?.hentPerson?.adressebeskyttelse,
@@ -107,12 +110,23 @@ class PrefillService(
 		logger.info("Hentet data fra PDL")
 
 		return PrefillData(
+			sokerIdentifikasjonsnummer = if (properties.contains("sokerIdentifikasjonsnummer")) identifikasjonsnummer else null,
 			sokerFornavn = if (properties.contains("sokerFornavn")) name?.fornavn else null,
 			sokerEtternavn = if (properties.contains("sokerEtternavn")) name?.etternavn else null,
 			sokerAdresser = if (properties.contains("sokerAdresser")) addresses else null,
 			sokerTelefonnummer = if (properties.contains("sokerTelefonnummer")) phoneNumber else null,
 			sokerKjonn = if (properties.contains("sokerKjonn")) gender else null
 		)
+	}
+
+	private fun resolveIdentifikasjonsnummer(
+		pdlIdents: List<Folkeregisteridentifikator>?, userId: String
+	): String {
+		val userIdMatch = pdlIdents?.firstOrNull { it.identifikasjonsnummer == userId }?.identifikasjonsnummer
+		if (userIdMatch == null) {
+			secureLogger.warn("Mismatch while resolving identifikasjonsnummer: token=$userId, PDL=$userIdMatch (PDL response $pdlIdents)")
+		}
+		return userIdMatch ?: pdlIdents?.firstOrNull { !it.metadata.historisk }?.identifikasjonsnummer ?: userId
 	}
 
 	private fun enrichAddress(pdlAddress: Adresse): Adresse {
