@@ -1,8 +1,8 @@
 package no.nav.soknad.innsending.rest.innsendte
 
 import no.nav.security.mock.oauth2.MockOAuth2Server
+import no.nav.soknad.InnsendingApiApplication
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.InnsendingApiApplication
 import no.nav.soknad.innsending.utils.Api
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith

@@ -27,6 +27,16 @@ class FiltypeSjekker {
 	val IS_IMAGE =
 		Predicate { bytes: ByteArray -> IS_PNG.test(bytes) || IS_JPG.test(bytes) }
 
+	val IS_DOCX =
+		Predicate { bytes: ByteArray ->
+			Tika().detect(bytes).equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document", true)
+		}
+
+	val IS_TEXT =
+		Predicate { bytes: ByteArray ->
+			Tika().detect(bytes).equals("text/plain", true)
+		}
+
 	fun isPng(bytes: ByteArray): Boolean {
 		return IS_PNG.test(bytes)
 	}
@@ -41,6 +51,14 @@ class FiltypeSjekker {
 
 	fun isImage(bytes: ByteArray): Boolean {
 		return IS_IMAGE.test(bytes)
+	}
+
+	fun isDocx(bytes: ByteArray): Boolean {
+		return IS_DOCX.test(bytes)
+	}
+
+	fun isPlainText(bytes: ByteArray): Boolean {
+		return IS_TEXT.test(bytes)
 	}
 
 }

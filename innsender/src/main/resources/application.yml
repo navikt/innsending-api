@@ -54,6 +54,11 @@ kafka:
   topics:
     arkiveringstilbakemeldingTopic: ${KAFKA_ARKIVERINGSTILBAKEMELDING_TOPIC}
 
+aad:
+  clientId: clientId
+  clientSecret: secret
+  tenant: local
+
 ---
 spring:
   config:
@@ -234,6 +239,11 @@ brukernotifikasjonconfig:
   publisereEndringer: ${PUBLISERE_BRUKERNOTIFIKASJONER}
 
 ettersendingsfrist: ${ETTERSENDINGSFRIST}
+
+aad:
+  clientId:  ${AZURE_APP_CLIENT_ID}
+  clientSecret: ${AZURE_APP_CLIENT_SECRET}
+  tenant: ${AZURE_TENANT}
 
 no.nav.security.jwt:
   issuer:

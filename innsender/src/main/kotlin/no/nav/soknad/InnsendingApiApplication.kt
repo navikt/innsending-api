@@ -1,4 +1,4 @@
-package no.nav.soknad.innsending
+package no.nav.soknad
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration

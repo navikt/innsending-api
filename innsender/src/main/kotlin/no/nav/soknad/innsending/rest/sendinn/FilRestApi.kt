@@ -15,7 +15,7 @@ import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
-import no.nav.soknad.pdfutilities.KonverterTilPdf
+import no.nav.soknad.pdfutilities.KonverterTilPdfInterface
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.Resource
@@ -37,7 +37,8 @@ class FilRestApi(
 	private val soknadService: SoknadService,
 	private val tilgangskontroll: Tilgangskontroll,
 	private val filService: FilService,
-	private val filValidatorService: FilValidatorService
+	private val filValidatorService: FilValidatorService,
+	private val konverterTilPdf: KonverterTilPdfInterface
 ) : SendinnFilApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -60,7 +61,7 @@ class FilRestApi(
 		val opplastet = (file as ByteArrayResource).byteArray
 
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
-		val (fil, antallsider) = KonverterTilPdf().tilPdf(opplastet)
+		val (fil, antallsider) = konverterTilPdf.tilPdf(opplastet)
 
 		// Lagre
 		val lagretFilDto = filService.lagreFil(

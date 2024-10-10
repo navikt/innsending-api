@@ -71,6 +71,10 @@ restconfig:
   kodeverkUrl: http://localhost:${wiremock.server.port}/kodeverk-api
   kontoregisterUrl: http://localhost:${wiremock.server.port}/kontoregister-api
 
+aad:
+  clientId:  "clientId"
+  clientSecret:  "secret"
+  tenant: "local"
 
 brukernotifikasjonconfig:
   profiles: test

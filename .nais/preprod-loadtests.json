@@ -47,6 +47,7 @@
 		"PDL_TOKEN_X_AUDIENCE": "dev-gcp:team-soknad:arkiv-mock-gcp",
 		"PDL_SCOPE": "api://dev-gcp:team-soknad:arkiv-mock-gcp/.default",
 		"AZURE_TENANT": "trygdeetaten.no",
+		"AAD_AUTHORITY": "https://login.microsoftonline.com/62366534-1ec3-4962-8869-9b5535279d0b",
 		"SOKNADSMOTTAKER_SCOPE": "api://dev-gcp.team-soknad.soknadsmottaker-loadtests/.default",
 		"SAF_SCOPE": "api://dev-gcp.team-soknad.arkiv-mock/.default",
 		"KAFKA_SECURITY": "TRUE",

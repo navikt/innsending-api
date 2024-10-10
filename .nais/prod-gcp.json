@@ -81,6 +81,7 @@
 		"PDL_TOKEN_X_AUDIENCE": "prod-fss:pdl:pdl-api",
 		"PDL_SCOPE": "api://prod-fss.pdl.pdl-api/.default",
 		"AZURE_TENANT": "nav.no",
+		"AAD_AUTHORITY": "https://login.microsoftonline.com/62366534-1ec3-4962-8869-9b5535279d0b",
 		"SOKNADSMOTTAKER_SCOPE": "api://prod-gcp.team-soknad.soknadsmottaker/.default",
 		"SAF_SCOPE": "api://prod-fss.teamdokumenthandtering.saf/.default",
 		"KAFKA_SECURITY": "TRUE",

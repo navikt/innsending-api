@@ -22,20 +22,28 @@ import org.apache.xmpbox.schema.PDFAIdentificationSchema
 import org.apache.xmpbox.type.BadFieldValueException
 import org.apache.xmpbox.xml.XmpSerializer
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 import java.awt.Dimension
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 
-class KonverterTilPdf {
+@Service
+class KonverterTilPdf(
+	private val docxConverter: DocxToPdfInterface
+) : KonverterTilPdfInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	fun tilPdf(fil: ByteArray): Pair<ByteArray, Int> {
+	override fun tilPdf(fil: ByteArray): Pair<ByteArray, Int> {
 		if (FiltypeSjekker().isPdf(fil)) {
 			val antallSider = AntallSider().finnAntallSider(fil) ?: 0
 			return Pair(flatUtPdf(fil, antallSider), antallSider) // Bare hvis inneholder formfields?
 		} else if (FiltypeSjekker().isImage(fil)) {
 			return createPDFFromImage(fil)
+		} else if (FiltypeSjekker().isDocx(fil)) {
+			val pdf = docxConverter.convertDocxToPdf(fil)
+			val antallSider = AntallSider().finnAntallSider(pdf) ?: 0
+			return Pair(pdf, antallSider)
 		}
 		throw IllegalActionException(
 			message = "Ulovlig filformat. Kan ikke konvertere til PDF",
@@ -43,7 +51,7 @@ class KonverterTilPdf {
 		)
 	}
 
-	fun harSkrivbareFelt(input: ByteArray?): Boolean {
+	override fun harSkrivbareFelt(input: ByteArray?): Boolean {
 		try {
 			Loader.loadPDF(input).use { document ->
 				val acroForm = getAcroForm(document)
@@ -58,7 +66,7 @@ class KonverterTilPdf {
 		return pdfDocument.documentCatalog.acroForm
 	}
 
-	fun flatUtPdf(fil: ByteArray, antallSider: Int): ByteArray {
+	override fun flatUtPdf(fil: ByteArray, antallSider: Int): ByteArray {
 		logger.info("Antall sider i PDF: {}", antallSider)
 
 		// Konvertere fra PDF til bilde og tilbake til PDF
