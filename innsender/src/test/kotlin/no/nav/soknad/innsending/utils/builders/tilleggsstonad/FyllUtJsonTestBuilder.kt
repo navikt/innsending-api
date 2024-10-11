@@ -299,11 +299,7 @@ class FyllUtJsonTestBuilder {
 					// Dersom ikke målgruppe hentet fra Arena, skal søker oppgi livssituasjon
 					flervalg = flervalg,
 
-					// Personalia
-					harDuNorskFodselsnummerEllerDnummer = "ja",
-					fodselsnummerDnummerSoker = "10509519930",
-					fornavnSoker = "Kalle",
-					etternavnSoker = "Kanin",
+					// Dropper Personinfo da dette ikke brukes i konvertering til XML
 
 					tilleggsopplysninger = "bla, bla",
 

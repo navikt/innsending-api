@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.util.mapping.tilleggsstonad
 
 data class JsonApplication<T>(
-	val personInfo: JsonPersonInfo? = null,
 	val language: String? = null,
 	val timezone: String? = null,
 	val applicationDetails: T,
