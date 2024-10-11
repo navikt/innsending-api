@@ -13,13 +13,11 @@ import no.nav.soknad.innsending.util.finnSpraakFraInput
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 import java.time.Duration
 
 @Service
-@Profile("test | dev | prod")
 class KodeverkService(
 	@Qualifier("kodeverkApiClient") kodeverkApiClient: RestClient
 ) {
