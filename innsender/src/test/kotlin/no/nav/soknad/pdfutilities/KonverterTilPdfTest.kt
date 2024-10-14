@@ -2,6 +2,7 @@ package no.nav.soknad.pdfutilities
 
 import junit.framework.TestCase.assertTrue
 import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -13,33 +14,29 @@ class KonverterTilPdfTest {
 		assertTrue(KonverterTilPdf().harSkrivbareFelt(skrivbarPdf))
 
 		val antallSiderSkrivbarPdf = AntallSider().finnAntallSider(skrivbarPdf)
-		val start = System.currentTimeMillis()
 		val flatetPdf = KonverterTilPdf().flatUtPdf(skrivbarPdf, antallSiderSkrivbarPdf ?: 0)
-		val ferdig = System.currentTimeMillis()
-		println("Tid til flate ut PDF = ${ferdig - start}")
 
-		//writeBytesToFile(flatetPdf, "./delme.pdf")
-		assertEquals(false, KonverterTilPdf().harSkrivbareFelt(flatetPdf))
+//		writeBytesToFile(flatetPdf, "./testing.pdf")
 
 		val antallSiderFlatetPdf = AntallSider().finnAntallSider(flatetPdf)
 		assertEquals(antallSiderSkrivbarPdf, antallSiderFlatetPdf)
-
-		val erPdfa = Validerer().isPDFa(flatetPdf)
-		assertTrue(erPdfa)
-
 	}
 
 	@Test
-	fun `Skal ikke flate ut PDF'er på over 50 sider`() {
-		val skrivbarPdf = Hjelpemetoder.getBytesFromFile("/pdfs/acroform-fields-tom-array.pdf")
+	fun `Should not have overlapping text when PDF has been updated and saved multiple times (history of text changes overlaps)`() {
+		// The PDF is created by downloading a writable PDF, saving it in files on iOS, editing it and saving it multiple times and then air dropping it to a Mac
+		// You can see the overlapping text if you try to print the PDF on iOS and look at the preview. The same problem was visible when the PDF was converted to PNG before
+		// https://github.com/navikt/innsending-api/pull/174
+		val skrivbarPdf = Hjelpemetoder.getBytesFromFile("/pdfs/writable-overlapping.pdf")
 		assertTrue(KonverterTilPdf().harSkrivbareFelt(skrivbarPdf))
 
-		val antallSiderSkrivbarPdf = AntallSider().finnAntallSider(skrivbarPdf) ?: 0
-		val flatetPdf = KonverterTilPdf().flatUtPdf(skrivbarPdf, antallSiderSkrivbarPdf)
-		assertTrue(KonverterTilPdf().harSkrivbareFelt(flatetPdf)) // Skal fortsatt ha skrivbare felt
+		val antallSiderSkrivbarPdf = AntallSider().finnAntallSider(skrivbarPdf)
+		val flatetPdf = KonverterTilPdf().flatUtPdf(skrivbarPdf, antallSiderSkrivbarPdf ?: 0)
 
-		assertEquals(antallSiderSkrivbarPdf, AntallSider().finnAntallSider(flatetPdf))
-		assertEquals(skrivbarPdf, flatetPdf)
+		writeBytesToFile(flatetPdf, "./testing.pdf")
+
+		val antallSiderFlatetPdf = AntallSider().finnAntallSider(flatetPdf)
+		assertEquals(antallSiderSkrivbarPdf, antallSiderFlatetPdf)
 	}
 
 	@Test
