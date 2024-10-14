@@ -17,11 +17,6 @@ fun convertToJsonTilleggsstonad(soknadDto: DokumentSoknadDto, json: ByteArray?):
 	return JsonApplication(
 		timezone = json.data.metadata?.timezone,
 		language = json.language,
-		personInfo = JsonPersonInfo(
-			fornavn = json.data.data.fornavnSoker,
-			etternavn = json.data.data.etternavnSoker,
-			ident = PersonIdent(ident = json.data.data.fodselsnummerDnummerSoker, identType = IdentType.PERSONNR)
-		),
 		applicationDetails = convertToJsonTilleggsstonad(json.data.data, soknadDto)
 	)
 }
