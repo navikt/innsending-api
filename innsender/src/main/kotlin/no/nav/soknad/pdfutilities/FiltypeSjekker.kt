@@ -30,6 +30,7 @@ class FiltypeSjekker {
 	val IS_DOCX =
 		Predicate { bytes: ByteArray ->
 			Tika().detect(bytes).equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document", true)
+				|| Tika().detect(bytes).equals("application/x-tika-ooxml", true)
 		}
 
 	val IS_TEXT =
