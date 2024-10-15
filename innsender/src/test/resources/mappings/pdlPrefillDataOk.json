@@ -21,6 +21,7 @@
 		"jsonBody": {
 			"data": {
 				"hentPerson": {
+					"folkeregisteridentifikator": [],
 					"adressebeskyttelse": [],
 					"kontaktadresse": [
 						{

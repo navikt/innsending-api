@@ -63,7 +63,7 @@
 			<artifactId>spring-kafka</artifactId>
 			<version>${spring-kafka.version}</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>io.prometheus</groupId>
 			<artifactId>prometheus-metrics-instrumentation-jvm</artifactId>
@@ -243,6 +243,11 @@
 		<dependency>
 			<groupId>io.github.openhtmltopdf</groupId>
 			<artifactId>openhtmltopdf-slf4j</artifactId>
+			<version>${openhtml.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.openhtmltopdf</groupId>
+			<artifactId>openhtmltopdf-svg-support</artifactId>
 			<version>${openhtml.version}</version>
 		</dependency>
 		<dependency>

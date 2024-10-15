@@ -18,11 +18,6 @@ fun convertToJsonDrivingListJson(
 	return JsonApplication(
 		timezone = json.data.metadata?.timezone,
 		language = json.language,
-		personInfo = JsonPersonInfo(
-			fornavn = json.data.data.fornavnSoker,
-			etternavn = json.data.data.etternavnSoker,
-			ident = PersonIdent(ident = json.data.data.fodselsnummerDnummerSoker, identType = IdentType.PERSONNR)
-		),
 		applicationDetails = convertToJsonDrivingListSubmission(json.data.data, soknadDto)
 	)
 }
@@ -36,10 +31,6 @@ fun convertToJsonDrivingListSubmission(
 		throw BackendErrorException("${soknadDto.innsendingsId}: Søknaden mangler vedtaksId")
 
 	return JsonDrivingListSubmission(
-		fornavnSoker = drivingListSubmission.fornavnSoker,
-		etternavnSoker = drivingListSubmission.etternavnSoker,
-		harDuNorskFodselsnummerEllerDnummer = drivingListSubmission.harDuNorskFodselsnummerEllerDnummer,
-		fodselsnummerDnummerSoker = drivingListSubmission.fodselsnummerDnummerSoker,
 		tilleggsopplysninger = drivingListSubmission.tilleggsopplysninger,
 		maalgruppeinformasjon = convertToJsonMaalgruppeinformasjon(
 			drivingListSubmission.aktiviteterOgMaalgruppe,

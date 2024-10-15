@@ -18,10 +18,6 @@ class Validerer {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	fun validereFilformat(innsendingId: String, files: List<ByteArray>) {
-		files.forEach { kontroller(innsendingId, it) }
-	}
-
 	fun validereFilformat(innsendingId: String, file: ByteArray, fileName: String?) {
 		kontroller(innsendingId, file, fileName)
 	}
@@ -31,7 +27,8 @@ class Validerer {
 			// Kontroller at PDF er lovlig, dvs. ikke encrypted og passordbeskyttet
 			erGyldigPdf(innsendingId, file)
 		} else if (!isImage(file)) {
-			logger.warn("$innsendingId: Fil har ugylding filtype for opplasting. Filstart = ${if (file.size >= 4) (file[0] + file[1] + file[3] + file[4]) else file[0]}")
+			val extention = fileName?.substringAfterLast(".", "<mangler>") ?: "<mangler>"
+			logger.warn("$innsendingId: Ugyldig filtype for opplasting. Filextention: ${extention}, og filstart = ${if (file.size >= 4) (file[0] + file[1] + file[3] + file[4]) else file[0]}\")")
 			throw IllegalActionException(
 				message = "$innsendingId: Ugyldig filtype for opplasting. Kan kun laste opp filer av type PDF, JPEG, PNG og IMG",
 				errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT

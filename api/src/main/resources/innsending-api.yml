@@ -1774,6 +1774,10 @@ components:
     PrefillData:
       type: object
       properties:
+        sokerIdentifikasjonsnummer:
+          type: string
+          nullable: true
+          description: Søkerens fnr eller dnr
         sokerFornavn:
           type: string
           nullable: true

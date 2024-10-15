@@ -1,16 +1,7 @@
 package no.nav.soknad.innsending.util.mapping.tilleggsstonad
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 data class JsonDrivingListSubmission(
-	// Dine opplysninger
-	val fornavnSoker: String,
-	val etternavnSoker: String,
-	@JsonProperty("harDuNorskFodselsnummerEllerDNummer")
-	val harDuNorskFodselsnummerEllerDnummer: String, // ja|nei
-	@JsonProperty("fodselsnummerDNummerSoker")
-	val fodselsnummerDnummerSoker: String? = null,
-
+	// Dine opplysninger blir ikke brukt i forbindelse med mapping til XML, dropper derfor disse
 	// Tilleggsopplysninger
 	val tilleggsopplysninger: String? = null,
 
