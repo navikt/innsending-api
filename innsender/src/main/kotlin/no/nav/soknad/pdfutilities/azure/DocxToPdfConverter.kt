@@ -29,7 +29,7 @@ class DocxToPdfConverter(
 		var driveId: String? = null
 		var docxItemId: String? = null
 		try {
-			driveId = graphClient.me().drive().get().id
+			driveId = graphClient.drives().get().value.get(0).id
 			docxItemId = uploadFile(driveId, fileContent)
 
 			val result = graphClient.drives().byDriveId(driveId).items().byDriveItemId(docxItemId)
