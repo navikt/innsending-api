@@ -4,6 +4,7 @@ import jakarta.persistence.spi.TransformerException
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
+import no.nav.soknad.innsending.model.DokumentSoknadDto
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
@@ -34,7 +35,12 @@ class KonverterTilPdf(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	override fun tilPdf(fil: ByteArray): Pair<ByteArray, Int> {
+	override fun tilPdf(
+		fil: ByteArray,
+		soknad: DokumentSoknadDto,
+		sammensattNavn: String?,
+		veleggsTittel: String?
+	): Pair<ByteArray, Int> {
 		if (FiltypeSjekker().isPdf(fil)) {
 			val antallSider = AntallSider().finnAntallSider(fil) ?: 0
 			return Pair(flatUtPdf(fil, antallSider), antallSider) // Bare hvis inneholder formfields?
@@ -42,6 +48,15 @@ class KonverterTilPdf(
 			return createPDFFromImage(fil)
 		} else if (FiltypeSjekker().isDocx(fil)) {
 			val pdf = docxConverter.convertDocxToPdf(fil)
+			val antallSider = AntallSider().finnAntallSider(pdf) ?: 0
+			return Pair(pdf, antallSider)
+		} else if (FiltypeSjekker().isPlainText(fil)) {
+			val pdf = PdfGenerator().lagPdfFraTekstFil(
+				soknad,
+				sammensattNavn = sammensattNavn,
+				vedleggsTittel = veleggsTittel ?: "Annet",
+				text = fil.decodeToString()
+			)
 			val antallSider = AntallSider().finnAntallSider(pdf) ?: 0
 			return Pair(pdf, antallSider)
 		}
@@ -121,6 +136,7 @@ class KonverterTilPdf(
 			throw BackendErrorException("Feil ved mottak av opplastet fil", t)
 		}
 	}
+
 
 	private fun addFonts(doc: PDDocument) {
 		try {

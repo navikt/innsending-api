@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="{{sprak}}">
+<head>
+	<title>Text-to-PDF</title>
+	<meta charset="utf-8"/>
+	<meta name="description" content="{{beskrivelse}}"/>
+	<meta name="subject" content="Generert PDF for opplastet tekst fil"/>
+	<meta name="author" content="NAV"/>
+
+	<bookmarks>
+		<bookmark name="tittel" href="#tittel"></bookmark>
+		<bookmark name="personInfo" href="#personInfo"></bookmark>
+	</bookmarks>
+	<style>
+		@page {
+			size: A4;
+			margin: 64px;
+
+			@top-center {
+				font-family: arial, serif;
+			}
+			@bottom-right {
+				content: element(sidetall);
+			}
+			@bottom-left {
+				content: element(dato);
+			}
+		}
+
+		html {
+			font-family: arial, serif;
+		}
+
+		body {
+			font-family: arial, serif;
+			word-wrap: break-word;
+			font-size: 13px;
+		}
+
+		.dato {
+			position: running(dato);
+			font-size: 9px;
+			text-align: left;
+		}
+
+		.sidetall {
+			position: running(sidetall);
+			font-size: 9px;
+			text-align: right;
+		}
+
+		.sidetall_antall:before {
+			content: counter(page);
+		}
+
+		.sidetall_total:before {
+			content: counter(pages);
+		}
+
+		.tittel {
+			margin-bottom: 26px;
+			width: 100%;
+			height: 20px;
+			font-size: 16px;
+			letter-spacing: 0.3px;
+			font-weight: bold;
+			float: left;
+			text-align: left;
+			white-space: pre-wrap;
+		}
+
+		.subtittel {
+			height: 16px;
+			font-size: 13px;
+			letter-spacing: 0.25px;
+			font-weight: bold;
+			width: 100%;
+			float: left;
+			text-align: left;
+			white-space: pre-wrap;
+			margin-bottom: 6px;
+		}
+
+		.navlogored {
+			height: 16px;
+			float: left;
+			margin-bottom: 48px;
+		}
+
+		@font-face {
+			font-family: 'arial';
+			font-style: normal;
+			font-weight: 400;
+			src: url(fonts/arial/arial.ttf);
+		}
+
+		@font-face {
+			font-family: 'arial';
+			font-style: normal;
+			font-weight: 600;
+			src: url(fonts/arial/arialbd.ttf);
+		}
+
+		.fromBlock {
+			margin-bottom: 48px;
+		}
+
+		.textBlock {
+			margin-bottom: 16px;
+		}
+
+		.rTable {
+			display: table;
+			width: 100%;
+		}
+
+		.rTableRow {
+			display: table-row;
+		}
+
+		.rTableHeading, .rTableBody, .rTableFoot, .rTableRow {
+			clear: both;
+		}
+
+		.rTableHead, .rTableFoot {
+			background-color: #DDD;
+			font-weight: bold;
+		}
+
+		.rTableCell, .rTableHead {
+			border: none;
+			float: left;
+			height: 16px;
+			padding: 2px 1.8%;
+			width: 23%;
+		}
+
+		.rTableCellMiddle, .rTableHead {
+			border: none;
+			float: left;
+			height: 16px;
+			padding: 2px 1.8%;
+			width: 62%;
+		}
+
+		.rTableCellRight, .rTableHead {
+			border: none;
+			float: right;
+			height: 16px;
+			padding: 2px 1.8%;
+			width: 15%;
+		}
+
+		.rTable:after {
+			visibility: hidden;
+			display: block;
+			font-size: 0;
+			content: " ";
+			clear: both;
+		}
+
+		.bunntekst {
+			height: 16px;
+			font-size: 9px;
+			font-weight: normal;
+			margin-bottom: 26px;
+		}
+
+	</style>
+</head>
+<body>
+
+<div class="bunntekst">
+	<div class="sidetall" id="side">{{ side }} <span class="sidetall_antall"></span> {{ av }} <span
+		class="sidetall_total"></span></div>
+	<div class="dato" id="opplastetTidspunkt">{{ opplastetTidspunkt }}</div>
+</div>
+
+<div>
+	<img xmlns="http://www.w3.org/2000/svg" src="icons/Nav-logo-Red-uten-tomrom.svg" alt="NAV logo" class="navlogored"
+			 x="0" height="16px"/>
+
+	<div class="fromBlock">
+		<div class="rTable">
+			<div class="rTableRow">
+				<div class="rTableCell">{{ navnLabel }}:</div>
+				<div class="rTableCellMiddle" id="personInfo">{{ personInfo }}</div>
+			</div>
+			<div class="rTableRow">
+				<div class="rTableCell">{{ fnrLabel }}:</div>
+				<div class="rTableCell" id="personIdent">{{ personIdent }}</div>
+				<div class="rTableCellRight">{{ dato }}</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="textBlock">
+		<h1 class="tittel" id="tittel">{{ tittel }}</h1>
+		<h2 class="subtittel">{{ opplastetTekst }}</h2>
+	</div>
+
+	<div>
+		{{#each (split textInput "\n") as |line|}}
+			<p>
+				{{{ line }}} <br/>
+			</p>
+		{{/each}}
+	</div>
+</div>
+
+</body>
+</html>

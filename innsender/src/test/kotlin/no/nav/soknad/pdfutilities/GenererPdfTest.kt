@@ -4,6 +4,8 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
+import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
 import org.junit.Test
 import java.time.OffsetDateTime
 import java.util.*
@@ -133,7 +135,7 @@ class GenererPdfTest {
 		// PDFBox mangler funksjonalitet for å validere versjon PDF/A-2A.
 		// Skriv generert PDF til disk og last opp til en online verifiseringssite, f.eks. https://www.pdf-online.com/osa/validate.aspx
 
-		//writeBytesToFile(document, "./pdf-til-validering.pdf")
+		writeBytesToFile(document, "./pdf-til-validering.pdf")
 		//assertTrue(Validerer().isPDFa(document)) PDFBox mangler funksjonalitet for å validere versjon PDF/A-2A.
 	}
 
@@ -153,6 +155,46 @@ class GenererPdfTest {
 		isPdfaTest(kvittering)
 
 	}
+
+
+	@Test
+	fun verifiserGenereringAvPdfFraTekst() {
+
+		val soknad = lagEttersendingsSoknadAltInnsendt(tittel)
+
+		val sammensattnavn = "Fornavn Elmer"
+		val pdf = PdfGenerator().lagPdfFraTekstFil(
+			soknad,
+			sammensattnavn,
+			vedleggsTittel = "Annet vedlegg",
+			text = "Dette er en test av konvertering av en tekstfil til en PDF."
+		)
+
+		assertEquals(1, AntallSider().finnAntallSider(pdf))
+		isPdfaTest(pdf)
+
+	}
+
+	@Test
+	fun verifiserGenereringAvPdfFraTekst_frFil() {
+
+		val soknad = lagEttersendingsSoknadAltInnsendt(tittel)
+
+		val tekstFil = Hjelpemetoder.getBytesFromFile("/__files/tekstfil-ex.txt")
+
+		val sammensattnavn = "Fornavn Elmer"
+		val pdf = PdfGenerator().lagPdfFraTekstFil(
+			soknad,
+			sammensattnavn,
+			vedleggsTittel = "Annet vedlegg",
+			text = tekstFil.decodeToString()
+		)
+
+		assertEquals(1, AntallSider().finnAntallSider(pdf))
+		isPdfaTest(pdf)
+
+	}
+
 
 	private fun lagSoknadForTesting(tittel: String, spraak: String? = "nb_NO"): DokumentSoknadDto {
 		val brukerid = "20128012345"

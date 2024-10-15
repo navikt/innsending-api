@@ -1,6 +1,8 @@
 package no.nav.soknad.pdfutilities
 
 import com.github.jknack.handlebars.Handlebars
+import com.github.jknack.handlebars.Helper
+import com.github.jknack.handlebars.Options
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
 import com.openhtmltopdf.svgsupport.BatikSVGDrawer
 import org.slf4j.LoggerFactory
@@ -34,6 +36,21 @@ class PdfGeneratorService {
 			return produserPdf(template)
 		} catch (e: IOException) {
 			logger.error("Feiler ved PDF generering av kvittering: {}", e.message)
+			throw e
+		}
+
+	}
+
+	fun genererPdfFromText(modell: TextToPdfModel): ByteArray {
+
+		try {
+			//registerSplitTextHelper(handlebars)
+			handlebars.registerHelpers(TextFormattingMethods())
+			// Generer html string
+			val template = handlebars.compile("/pdf/templates/text-to-pdf").apply(modell)
+			return produserPdf(template)
+		} catch (e: IOException) {
+			logger.error("Feiler ved PDF generering fra tekst: {}", e.message)
 			throw e
 		}
 
@@ -83,5 +100,26 @@ class PdfGeneratorService {
 		}
 	}
 
+	fun registerSplitTextHelper(handlebars: Handlebars) {
+		handlebars.registerHelper("split", object : Helper<String> {
+			override fun apply(p0: String?, p1: Options?): Any {
+				if (p0 != null) {
+					return p0.split("\n")
+				}
+				return ""
+			}
+		})
+	}
+
+	fun registerTabHelper(handlebars: Handlebars) {
+		handlebars.registerHelper("tab", object : Helper<String> {
+			override fun apply(p0: String?, p1: Options?): Any {
+				if (p0 != null) {
+					return p0.replace("\t", "&nbsp;&nbsp;")
+				}
+				return ""
+			}
+		})
+	}
 
 }

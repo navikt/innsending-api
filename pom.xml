@@ -64,6 +64,7 @@
 		<microsoft-graph-core.version>3.2.1</microsoft-graph-core.version>
 		<azure.identity.version>1.13.3</azure.identity.version>
 		<ulid4j.version>1.0</ulid4j.version>
+		<common-text.version>1.12.0</common-text.version>
 
 		<!--Security issues-->
 		<wiremock.version>3.9.1</wiremock.version>

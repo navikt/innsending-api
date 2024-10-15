@@ -53,7 +53,8 @@ class FilRestApi(
 		combinedLogger.log("$innsendingsId: Kall for å lagre fil på vedlegg $vedleggsId til søknad", brukerId)
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
-		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
+		val vedleggDto = soknadDto.vedleggsListe.first { it.id == vedleggsId }
+		if (vedleggDto == null)
 			throw ResourceNotFoundException("Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId")
 
 		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
@@ -61,7 +62,12 @@ class FilRestApi(
 		val opplastet = (file as ByteArrayResource).byteArray
 
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
-		val (fil, antallsider) = konverterTilPdf.tilPdf(opplastet)
+		val (fil, antallsider) = konverterTilPdf.tilPdf(
+			opplastet,
+			soknadDto,
+			sammensattNavn = null,
+			veleggsTittel = vedleggDto.tittel
+		)
 
 		// Lagre
 		val lagretFilDto = filService.lagreFil(

@@ -2,6 +2,7 @@ package no.nav.soknad.pdfutilities
 
 import junit.framework.TestCase
 import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.pdfutilities.azure.DocxToPdfConverterTest
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -11,6 +12,7 @@ class PdfMergerTest {
 	private val docToPdfConverter: DocxToPdfInterface = DocxToPdfConverterTest()
 	private val konverterTilPdf = KonverterTilPdf(docToPdfConverter)
 
+	private val soknadDto = DokumentSoknadDtoTestBuilder().build()
 	private val pdfMerger = PdfMerger()
 	private val antallSider = AntallSider()
 	private val validerer = Validerer()
@@ -83,7 +85,7 @@ class PdfMergerTest {
 	private fun konverterTilPdfOgReturner(filPath: String): ByteArray {
 		val jpg = Hjelpemetoder.getBytesFromFile(filPath)
 
-		val (pdf, antallSider) = konverterTilPdf.tilPdf(jpg)
+		val (pdf, antallSider) = konverterTilPdf.tilPdf(jpg, soknad = soknadDto)
 		assertEquals(1, antallSider)
 
 		val erPdfa = Validerer().isPDFa(pdf)
