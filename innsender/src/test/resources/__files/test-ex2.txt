@@ -1,0 +1,516 @@
+kubectl config  get-contexts
+kubectl get pods -l"app=sendsoknad" --all-namespaces
+kubectl get pods -l"app=sendsoknad" --all-namespaces
+kubectl config  get-contexts
+kubectl get pods -l"app=sendsoknad" --all-namespaces
+grep history kubectl
+kubectl get pods-l"app=dialogstyring" --all-namespaces
+kubectl config use-context preprod-sbs
+kubectl get pods-l"app=dialogstyring" --all-namespaces
+kubectl
+kubectl
+kubectl config use-context prod-fss
+kubectl get pods
+kubectl get pods
+kubectl config use-context prod-sbs
+kubectl
+kubectl get pods-l"app=dialogstyring" --all-namespaces
+kubectl config use-context dev-fss
+kubectl get pods-l"app=dialogstyring" --all-namespaces
+kubectl get pods --all-namespaces
+kubectl get pods-l"app=dialogstyring" --all-namespaces
+
+kubectl get pods --all-namespaces
+kubectl get pods --all-namespaces
+kubectl get namespaces
+kubectl get namespaces
+kubectl get namespaces
+kubectl get namespaces
+kubectl config use-context preprod-sbs
+kubectl config use-context dev-sbs
+kubectl config use-context dev-sbs
+kubectl config use-context
+kubectl config use-context preprod-sbs
+kubectl get namespace
+kubectl get namespases
+kubectl get namespase
+kubectl get namespase
+kubectl get namespases
+history | grep kubectl
+history | grep kubectl
+kubectl get pods-l"app=dialogstyring" --all-namespaces
+kubectl get pods
+kubectl config use-context dev-sbs
+kubectl get pods
+kubectl config get-contexts
+kubectl get deployment -n q0 -l "app=soknadaap"
+kubectl get pods -q1 "app=soknadbilstonad"
+kubectl config use-context preprod-sbs
+kubectl get pods -q1 "app=soknadbilstonad"
+kubectl get pods -l "app=bilstonad" --all-namespaces
+kubectl config use-context dev-sbs
+kubectl get pods -l"app=bilstonad" --all-namespaces
+kubectl get pods
+kubectl config use-context preprod-sbs
+kubectl get pods
+kubectl get pods -l"app=soknadbilstonad"
+kubectl get pods -l"app=soknadbilstonad" -allnamespaces
+kubectl get pods -l"app=soknadbilstonad" -all-namespaces
+kubectl get pods -l"app=soknadbilstonad" --all-namespaces
+gh kubectl
+history | grep kubectl
+history | grep kubectl
+kubectl get pods -l"app=soknadbilstonad" -allnamespaces
+history | grep kubectl
+kubectl get pods -l"app=soknadbilstonad" --all-namespaces
+kubectl get deployment -n q0 -l "app=soknadbilstonad"
+kubectl get pods -l"app=soknadbilstonad" --all-namespaces
+kubectl get pods -l"app=sendsoknad" --all-namespaces
+kubectl get pods -l"app=dialogstyring" --all-namespaces
+kubectl get deployment -n t6 -l"app=sendsoknad"
+kubectl delete deployment -n t6 -l"app=sendsoknad"
+kubectl get pods -l"app=sendsoknad" --all-namespaces
+kubectl get pods -l"app=sendsoknad" --all-namespaces
+kubectl delete deployment -n q0 -l"app=sendsoknad"
+kubectl get pods -l"app=sendsoknad" --all-namespaces
+kubectl delete pod sendsoknad-8476bbc9db-6thw8 -n default
+kubectl delete pod sendsoknad-8476bbc9db-dntcs -n default
+kubectl get pods -l"app=sendsoknad" --all-namespaces
+kubectl get deployment -n default -l"app=sendsoknad"
+kubectl delete deployment -n default -l"app=sendsoknad"
+kubectl get deployment -n default -l"app=sendsoknad"
+kubectl get pods -l"app=sendsoknad" --all-namespaces
+kubectl get pods -l"app=sendsoknad" --all-namespaces
+kubectl get pods -l"app=sendsoknad" --all-namespaces
+kubectl get pods -l"app=sendsoknad" --all-namespaces
+kubectl grep | history
+kubectl --help
+kubectl get pods -l"app=soknadsarkiverer" --all-namespaces
+kubectl get pods -l"app=dialogstyring" --all-namespaces
+kubectl config set-context preprod-sbs
+kubectl get pods -l"app=dialogstyring" --all-namespaces
+kubectl config  get-contexts
+kubectl config set-context preprod-fss
+kubectl get pods -l"app=dialogstyring" --all-namespaces
+kubectl get pods -l "app=soknadsmottaker" -n --all-namespaces
+history | grep kubectl
+grep | history kubectl
+history | grep kubectl
+kubectl describe pods soknadsmottaker
+kubectl delete deployment "tilbakemelding" -n default
+kubectl logs -n default -f soknadsarkiverer-775446f74d-fwlch -c vks-init
+kubectl describe pods -n q0 soknadsarkiverer-6679cb8f68-ch6mcn team-soknad
+kubectl describe app soknadsarkiverer -n default
+kubectl scale deployment soknadsarkiverer --replicas=1 -n team-soknad
+kubectl get secret henvendelse-aiven -n team-soknad -o json > henvendelse-secret.json
+kubectl get secret $(kubectl get azureapp "navn-på-app" --template='{{.spec.secretName}}') -o json | jq -r '.data.AZURE_APP_CLIENT_SECRET | @base64d'
+kubectl get secret $(kubectl get azureapp tilbakemeldingsmottak-api-7c7c84bd75-sxqdf --template='{{.spec.secretName}}') -o json | jq -r '.data.AZURE_APP_CLIENT_SECRET | @base64d'
+kubectl get secret -n teamserviceklage $(kubectl get azureapp -n teamserviceklage tilbakemeldingsmottak-api --template='{{.spec.secretName}}') -o json | jq -r '.data.AZURE_APP_CLIENT_SECRET | @base64d'
+kubectl rollout restart deployment -n teamserviceklage tilbakemeldingsmottak-api
+
+kubectl get azureapp tilbakemeldingsmottak-api
+
+kubectl get topic "--namespace=team-soknad" -ocustom-columns=NAME:.metadata.name --no-headers
+kubectl describe topic privat-soknadinnsending-v1 -n team-soknad
+kubectl apply -f soknadinnsending-dev.json
+kubectl apply -f soknadinnsending-messages-v2-prod.json
+kubectl describe topic soknadinnsending-messages-v2 -n team-soknad
+
+gcloud auth application-default login
+gcloud auth login --update-adc
+
+ gcloud auth login
+
+To revert your CLI to the previously installed version, you may run:
+  //$ gcloud components update --version 416.0.0
+  $ gcloud components update --version 469.0.0
+
+-- Opprett topic på broker med en partisjon
+kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic Topic-Name
+
+kubectl get PrometheusRule -n team-soknad
+kubectl delete PrometheusRule -n team-soknad innsending-api-alerts-dev
+
+hentAlleVedlegg: Hentet 7ecdc27d-db4f-4fc2-a487-05021708172d. Med vedleggsstatus [
+L9:innsendt:2023-06-12T12:59:08.647512+02:00,
+H9:innsendt:2023-06-12T12:59:09.260899+02:00,
+Z4:ikkeValgt:null,
+N6:innsendt:2023-05-11T11:51:25.839124+02:00,
+N6:innsendt:2023-05-19T10:38:21.867575+02:00]
+
+Soknad(innsendingId=7ecdc27d-db4f-4fc2-a487-05021708172d, erEttersendelse=true, personId=*****, tema=BIL,
+dokumenter=[DocumentData(skjemanummer=NAV 10-07.40, erHovedskjema=true, tittel=Søknad om stønad til anskaffelse av motorkjøretøy og / eller spesialutstyr og tilpassing til bil,
+	varianter=[Varianter(id=ed0d5a84-aba2-4ec7-a78d-37c6692e8343, mediaType=application/pdf, filnavn=NAV 10-07.40.pdfa, filtype=pdfa)]),
+DocumentData(skjemanummer=L9, erHovedskjema=false, tittel=Legeerklæring for motorkjøretøy,
+	varianter=[Varianter(id=c8e83a23-3413-4661-bab1-84c3443af881, mediaType=application/pdf, filnavn=L9.pdf, filtype=pdf)]),
+DocumentData(skjemanummer=H9, erHovedskjema=false, tittel=Tilleggskjema for bil,
+	varianter=[Varianter(id=81ed8e10-dbcd-4fdb-b8ca-735671b18c14, mediaType=application/pdf, filnavn=H9.pdf, filtype=pdf)]),
+DocumentData(skjemanummer=N6, erHovedskjema=false, tittel=daffa,
+	varianter=[Varianter(id=6320515a-ddae-42d4-962e-d2074b5610f8, mediaType=application/pdf, filnavn=N6.pdf, filtype=pdf)])])
+
+
+Hentet 7ecdc27d-db4f-4fc2-a487-05021708172d. Med vedleggsstatus [
+L9:innsendt:2023-06-13T09:46:22.837807497+02:00,
+H9:innsendt:2023-06-13T09:46:24.962744106+02:00,
+Z4:sendSenere:null, N6:innsendt:2023-06-13T09:46:26.279815460+02:00,
+N6:innsendt:2023-05-19T10:38:21.867575+02:00,
+NAV 10-07.40:innsendt:2023-06-13T09:46:26.290097749+02:00,
+L7:innsendt:2023-06-13T09:46:26.437825024+02:00]
+
+Sendinn: innsendtdato på vedlegg med status innsendt= [
+L9:2023-06-13T09:46:22.837807497,
+H9:2023-06-13T09:46:24.962744106,
+N6:2023-06-13T09:46:26.279815460,
+N6:2023-05-19T10:38:21.867575,
+NAV 10-07.40:2023-06-13T09:46:26.290097749,
+L7:2023-06-13T09:46:26.437825024]
+
+
+Your project default Compute Engine zone has been set to [europe-north1-a].
+You can change it by running [gcloud config set compute/zone NAME].
+
+Your project default Compute Engine region has been set to [europe-north1].
+You can change it by running [gcloud config set compute/region NAME].
+
+Your Google Cloud SDK is configured and ready to use!
+
+* Commands that require authentication will use nils-arne.ringstad@nav.no by default
+* Commands will reference project `team-soknad-dev-ee5e` by default
+* Compute Engine commands will use region `europe-north1` by default
+* Compute Engine commands will use zone `europe-north1-a` by default
+
+Run `gcloud help config` to learn how to change individual settings
+
+This gcloud configuration is called [default]. You can create additional configurations if you work with multiple accounts and/or projects.
+Run `gcloud topic configurations` to learn more.
+
+Some things to try next:
+
+* Run `gcloud --help` to see the Cloud Platform services you can interact with. And run `gcloud help COMMAND` to get help on any gcloud command.
+* Run `gcloud topic --help` to learn about advanced features of the SDK like arg files and output formatting
+* Run `gcloud cheat-sheet` to see a roster of go-to `gcloud` commands.
+
+To revert your CLI to the previously installed version, you may run:
+  $ gcloud components update --version 452.0.1
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+Dette er en test.
+Her er en liste:
+	* Punkt 1
+	* Punkt 2
+	* Punkt 3
+
+

@@ -79,7 +79,7 @@ class KonverterTilPdfTest {
 
 	@Test
 	fun verifiserKonverteringAvTxtFil() {
-		val jpg = Hjelpemetoder.getBytesFromFile("/__files/tekstfil-ex.txt")
+		val jpg = Hjelpemetoder.getBytesFromFile("/__files/test-ex2.txt")
 
 		val start = System.currentTimeMillis()
 		val (pdf, antallSider) = konverterTilPdf.tilPdf(
@@ -90,7 +90,7 @@ class KonverterTilPdfTest {
 		)
 		val ferdig = System.currentTimeMillis()
 		println("Tid til konvertering av txtFil = ${ferdig - start}")
-		assertEquals(1, antallSider)
+		assertEquals(10, antallSider)
 
 		val erPdfa = Validerer().isPDFa(pdf)
 		assertTrue(erPdfa)

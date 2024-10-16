@@ -195,6 +195,46 @@ class GenererPdfTest {
 
 	}
 
+	@Test
+	fun verifiserGenereringAvPdfFMedFlereSider_fraTekst_Fil() {
+
+		val soknad = lagEttersendingsSoknadAltInnsendt(tittel)
+
+		val tekstFil = Hjelpemetoder.getBytesFromFile("/__files/test-ex2.txt")
+
+		val sammensattnavn = "Fornavn Elmer"
+		val pdf = PdfGenerator().lagPdfFraTekstFil(
+			soknad,
+			sammensattnavn,
+			vedleggsTittel = "Annet vedlegg",
+			text = tekstFil.decodeToString()
+		)
+
+		assertEquals(10, AntallSider().finnAntallSider(pdf))
+		isPdfaTest(pdf)
+
+	}
+
+	@Test
+	fun verifiserGenereringAvPdfFMedFlereSider_fraTekst_fra_Nettside() {
+
+		val soknad = lagEttersendingsSoknadAltInnsendt(tittel)
+
+		val tekstFil = Hjelpemetoder.getBytesFromFile("/__files/nrktxt-ex.txt")
+
+		val sammensattnavn = "Fornavn Elmer"
+		val pdf = PdfGenerator().lagPdfFraTekstFil(
+			soknad,
+			sammensattnavn,
+			vedleggsTittel = "Annet vedlegg",
+			text = tekstFil.decodeToString()
+		)
+
+		assertEquals(3, AntallSider().finnAntallSider(pdf))
+		isPdfaTest(pdf)
+
+	}
+
 
 	private fun lagSoknadForTesting(tittel: String, spraak: String? = "nb_NO"): DokumentSoknadDto {
 		val brukerid = "20128012345"

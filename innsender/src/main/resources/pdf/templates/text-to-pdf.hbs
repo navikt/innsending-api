@@ -177,9 +177,6 @@
 </div>
 
 <div>
-	<img xmlns="http://www.w3.org/2000/svg" src="icons/Nav-logo-Red-uten-tomrom.svg" alt="NAV logo" class="navlogored"
-			 x="0" height="16px"/>
-
 	<div class="fromBlock">
 		<div class="rTable">
 			<div class="rTableRow">
@@ -196,16 +193,17 @@
 
 	<div class="textBlock">
 		<h1 class="tittel" id="tittel">{{ tittel }}</h1>
-		<h2 class="subtittel">{{ opplastetTekst }}</h2>
 	</div>
 
-	<div>
-		{{#each (split textInput "\n") as |line|}}
-			<p>
+	<div class="textBlock">
+		<h2 class="subtittel">{{ opplastetTekst }}</h2>
+		<p>
+			{{#each (split textInput "\n") as |line|}}
 				{{{ line }}} <br/>
-			</p>
-		{{/each}}
+			{{/each}}
+		</p>
 	</div>
+
 </div>
 
 </body>
