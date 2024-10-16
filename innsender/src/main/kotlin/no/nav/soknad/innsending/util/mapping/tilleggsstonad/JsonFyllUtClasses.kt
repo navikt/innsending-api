@@ -24,13 +24,7 @@ data class ApplicationInfo(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Application(
 
-	// Dine opplysninger
-	val fornavnSoker: String,
-	val etternavnSoker: String,
-	@JsonProperty("harDuNorskFodselsnummerEllerDNummer")
-	val harDuNorskFodselsnummerEllerDnummer: String, // ja|nei
-	@JsonProperty("fodselsnummerDNummerSoker")
-	val fodselsnummerDnummerSoker: String? = null,
+	// Dine opplysninger blir ikke brukt i forbindelse med konvertering av Json til Xml for tilleggsstønader. Dropper derfor disse propertiene
 
 	// Tilleggsopplysninger
 	val tilleggsopplysninger: String? = null,

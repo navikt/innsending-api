@@ -32,7 +32,6 @@ class JsonApplicationTestBuilder {
 
 	fun build() =
 		JsonApplication(
-			personInfo = JsonPersonInfo(fornavn = "Test", etternavn = "Testesen", PersonIdent(ident = "12345678901")),
 			language = language,
 			timezone = metadata.timezone,
 			applicationDetails = buildJsonTilleggssoknad()

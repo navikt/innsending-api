@@ -142,6 +142,15 @@ no.nav.security.jwt:
         token-exchange:
           audience: dummyAudience
 
+      kodeverk:
+        token-endpoint-url: http://localhost:${mock-oauth2-server.port}/tokenx/token
+        grant-type: client_credentials
+        scope: ${KODEVERK_SCOPE}
+        authentication:
+          client-id: "dev-gcp:team-soknad:innsending-api"
+          client-jwk: src/test/resources/tokenx-jwk.json
+          client-auth-method: private_key_jwt
+
       arena:
         token-endpoint-url: http://localhost:${mock-oauth2-server.port}/tokenx/token
         grant-type: client_credentials
