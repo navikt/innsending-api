@@ -25,7 +25,7 @@ management:
 
 cron:
   startSlettGamleIkkeInnsendteSoknader: 0 0 2 * * *
-  slettEldreEnn: 56 # 8 ukert
+  slettEldreEnn: 56 # 8 uker
   startSlettInnsendteSoknader: 0 0 5 * * *
   slettInnsendtEldreEnn: 21 # 3 uker
   sletteVindu: 100
