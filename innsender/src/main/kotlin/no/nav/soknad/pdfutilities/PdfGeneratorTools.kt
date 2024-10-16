@@ -5,6 +5,7 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.util.models.*
 import no.nav.soknad.pdfutilities.utils.PdfUtils
+import org.apache.commons.text.StringEscapeUtils
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -141,14 +142,11 @@ class PdfGenerator {
 
 	fun lagPdfFraTekstFil(
 		soknad: DokumentSoknadDto,
-		sammensattNavn: String? = null,
 		vedleggsTittel: String,
 		text: String
 	): ByteArray {
 		val sprak = selectLanguage(soknad.spraak)
 		val tekster = texts.get(sprak) ?: throw BackendErrorException("Mangler støtte for språk ${soknad.spraak}")
-		val fnr = soknad.brukerId
-		val personInfo = sammensattNavn ?: ""
 		val now = LocalDateTime.now()
 		val opplastetTidspunkt = java.lang.String.format(
 			tekster.getString("opplastetTidspunkt"),
@@ -158,18 +156,13 @@ class PdfGenerator {
 		return PdfGeneratorService().genererPdfFromText(
 			TextToPdfModel(
 				sprak = if (sprak == "en") sprak + "-UK" else sprak + "-NO",
-				navnLabel = tekster.getString("ettersending.forside.navn"),
-				fnrLabel = tekster.getString("ettersending.forside.fnr"),
-				personInfo = personInfo,
-				personIdent = fnr,
 				dato = formaterDatoMedManed(now),
 				side = tekster.getString("footer.side"),
 				av = tekster.getString("footer.av"),
 				tittel = vedleggsTittel,
-				beskrivelse = "Generert PDF av opplastet tekst fil på vedlegg $vedleggsTittel",
+				beskrivelse = "Generert PDF av opplastet tekstfil på vedlegg $vedleggsTittel",
 				opplastetTidspunkt = opplastetTidspunkt,
-				textInput = text,
-//				textInput = StringEscapeUtils.escapeHtml4(text)
+				textInput = StringEscapeUtils.escapeXml11(text)
 			)
 		)
 

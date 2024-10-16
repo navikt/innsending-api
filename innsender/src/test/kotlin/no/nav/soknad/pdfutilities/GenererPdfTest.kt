@@ -166,7 +166,6 @@ class GenererPdfTest {
 		val pdf = PdfGenerator().lagPdfFraTekstFil(
 			soknad,
 			sammensattnavn,
-			vedleggsTittel = "Annet vedlegg",
 			text = "Dette er en test av konvertering av en tekstfil til en PDF."
 		)
 
@@ -186,7 +185,6 @@ class GenererPdfTest {
 		val pdf = PdfGenerator().lagPdfFraTekstFil(
 			soknad,
 			sammensattnavn,
-			vedleggsTittel = "Annet vedlegg",
 			text = tekstFil.decodeToString()
 		)
 
@@ -206,11 +204,10 @@ class GenererPdfTest {
 		val pdf = PdfGenerator().lagPdfFraTekstFil(
 			soknad,
 			sammensattnavn,
-			vedleggsTittel = "Annet vedlegg",
 			text = tekstFil.decodeToString()
 		)
 
-		assertEquals(10, AntallSider().finnAntallSider(pdf))
+		assertEquals(11, AntallSider().finnAntallSider(pdf))
 		isPdfaTest(pdf)
 
 	}
@@ -226,7 +223,6 @@ class GenererPdfTest {
 		val pdf = PdfGenerator().lagPdfFraTekstFil(
 			soknad,
 			sammensattnavn,
-			vedleggsTittel = "Annet vedlegg",
 			text = tekstFil.decodeToString()
 		)
 

@@ -53,7 +53,6 @@ class KonverterTilPdf(
 		} else if (FiltypeSjekker().isPlainText(fil)) {
 			val pdf = PdfGenerator().lagPdfFraTekstFil(
 				soknad,
-				sammensattNavn = sammensattNavn,
 				vedleggsTittel = veleggsTittel ?: "Annet",
 				text = fil.decodeToString()
 			)
