@@ -85,6 +85,12 @@ brukernotifikasjonconfig:
 ettersendingsfrist: 14
 
 status_log_url: "https://logs.adeo.no"
+fil-konvertering_url: http://localhost:3000
+
+docker:
+  compose:
+    skip:
+      in-tests: false
 
 wiremock:
   reset-mappings-after-each-test: true

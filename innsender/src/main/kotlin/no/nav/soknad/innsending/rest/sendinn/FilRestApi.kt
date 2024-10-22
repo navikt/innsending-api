@@ -66,7 +66,7 @@ class FilRestApi(
 			opplastet,
 			soknadDto,
 			sammensattNavn = null,
-			veleggsTittel = vedleggDto.tittel
+			vedleggsTittel = vedleggDto.tittel
 		)
 
 		// Lagre

@@ -7,7 +7,7 @@ interface KonverterTilPdfInterface {
 		fil: ByteArray,
 		soknad: DokumentSoknadDto,
 		sammensattNavn: String? = null,
-		veleggsTittel: String? = "Annet"
+		vedleggsTittel: String? = "Annet"
 	): Pair<ByteArray, Int>
 
 	fun harSkrivbareFelt(input: ByteArray?): Boolean

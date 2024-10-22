@@ -83,6 +83,7 @@ spring:
     url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:postgres}?user=${DATABASE_USERNAME:postgres}&password=${DATABASE_PASSWORD:postgres}
 
 status_log_url: "https://logs.adeo.no"
+fil-konvertering_url: http://localhost:3000
 
 restconfig:
   version: 1.0
@@ -130,6 +131,7 @@ spring:
     url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:postgres}?user=${DATABASE_USERNAME:postgres}&password=${DATABASE_PASSWORD:postgres}
 
 status_log_url: "https://logs.adeo.no"
+fil-konvertering-url: ${KONVERTERING_TIL_PDF_URL}
 
 restconfig:
   version: 1.0
@@ -203,6 +205,8 @@ spring:
       validation-query: "SELECT 1"
 
 status_log_url: ${STATUS_LOG_URL}
+
+fil-konvertering-url: ${KONVERTERING_TIL_PDF_URL}
 
 restconfig:
   version: ${APP_VERSION}

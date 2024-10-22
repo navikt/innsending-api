@@ -1,4 +1,4 @@
-package no.nav.soknad.pdfutilities.azure
+package no.nav.soknad.pdfutilities.gotenberg
 
 import no.nav.soknad.pdfutilities.DocxToPdfInterface
 import org.apache.pdfbox.pdmodel.PDDocument
@@ -8,9 +8,10 @@ import org.springframework.stereotype.Component
 
 
 @Component
-@Profile("!(prod | dev)")
+@Profile("!(prod | dev | test)")
 class DocxToPdfConverterTest : DocxToPdfInterface {
-	override fun convertDocxToPdf(fileContent: ByteArray): ByteArray {
+
+	override fun toPdf(fileName: String, fileContent: ByteArray): ByteArray {
 		var document: PDDocument? = null
 		try {
 			document = PDDocument()

@@ -39,7 +39,7 @@ class KonverterTilPdf(
 		fil: ByteArray,
 		soknad: DokumentSoknadDto,
 		sammensattNavn: String?,
-		veleggsTittel: String?
+		vedleggsTittel: String?
 	): Pair<ByteArray, Int> {
 		if (FiltypeSjekker().isPdf(fil)) {
 			val antallSider = AntallSider().finnAntallSider(fil) ?: 0
@@ -47,13 +47,13 @@ class KonverterTilPdf(
 		} else if (FiltypeSjekker().isImage(fil)) {
 			return createPDFFromImage(fil)
 		} else if (FiltypeSjekker().isDocx(fil)) {
-			val pdf = docxConverter.convertDocxToPdf(fil)
+			val pdf = docxConverter.toPdf(soknad.innsendingsId + "-" + (vedleggsTittel ?: "annet") + ".docx", fil)
 			val antallSider = AntallSider().finnAntallSider(pdf) ?: 0
 			return Pair(pdf, antallSider)
 		} else if (FiltypeSjekker().isPlainText(fil)) {
 			val pdf = PdfGenerator().lagPdfFraTekstFil(
 				soknad,
-				vedleggsTittel = veleggsTittel ?: "Annet",
+				vedleggsTittel = vedleggsTittel ?: "Annet",
 				text = fil.decodeToString()
 			)
 			val antallSider = AntallSider().finnAntallSider(pdf) ?: 0

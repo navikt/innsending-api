@@ -63,21 +63,10 @@
 			<artifactId>spring-kafka</artifactId>
 			<version>${spring-kafka.version}</version>
 		</dependency>
-
 		<dependency>
-			<groupId>com.microsoft.graph</groupId>
-			<artifactId>microsoft-graph-core</artifactId>
-			<version>${microsoft-graph-core.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.graph</groupId>
-			<artifactId>microsoft-graph</artifactId>
-			<version>${microsoft-graph.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.azure</groupId>
-			<artifactId>azure-identity</artifactId>
-			<version>${azure.identity.version}</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-docker-compose</artifactId>
+			<scope>test</scope>
 		</dependency>
 
 
@@ -196,7 +185,12 @@
 			<groupId>org.apache.tika</groupId>
 			<artifactId>tika-core</artifactId>
 			<version>${tika-core.version}</version>
-			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-parsers-standard-package</artifactId>
+			<version>${tika-core.version}</version>
+			<type>pom</type>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>

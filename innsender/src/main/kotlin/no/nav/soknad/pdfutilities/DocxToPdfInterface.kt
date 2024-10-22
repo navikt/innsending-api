@@ -1,5 +1,5 @@
 package no.nav.soknad.pdfutilities
 
 interface DocxToPdfInterface {
-	fun convertDocxToPdf(fileContent: ByteArray): ByteArray
+	fun toPdf(fileName: String, fileContent: ByteArray): ByteArray
 }

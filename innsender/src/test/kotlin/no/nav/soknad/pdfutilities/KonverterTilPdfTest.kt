@@ -3,7 +3,7 @@ package no.nav.soknad.pdfutilities
 import junit.framework.TestCase.assertTrue
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
-import no.nav.soknad.pdfutilities.azure.DocxToPdfConverterTest
+import no.nav.soknad.pdfutilities.gotenberg.DocxToPdfConverterTest
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -86,7 +86,7 @@ class KonverterTilPdfTest {
 			jpg,
 			soknadDto,
 			sammensattNavn = "Kalle Kanin",
-			veleggsTittel = "Vedleggstittel"
+			vedleggsTittel = "Vedleggstittel"
 		)
 		val ferdig = System.currentTimeMillis()
 		println("Tid til konvertering av txtFil = ${ferdig - start}")

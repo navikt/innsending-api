@@ -36,9 +36,9 @@ class ValiderFilformatTest {
 
 	@Test
 	fun verifiserDocxFilIkkeGirFeilmelding() {
-		val file = Hjelpemetoder.getBytesFromFile("/Docx test dokument.docx")
+		val file = Hjelpemetoder.getBytesFromFile("/Docx-test.docx")
 		assertDoesNotThrow {
-			Validerer().validereFilformat(innsendingId = "123456789", file = file, "Docx test dokument.docx")
+			Validerer().validereFilformat(innsendingId = "123456789", file = file, "Docx-test.docx")
 		}
 	}
 

@@ -19,6 +19,7 @@ class Validerer {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	fun validereFilformat(innsendingId: String, file: ByteArray, fileName: String?) {
+		//val contentType = FiltypeSjekker().detectContentType(file, fileName)
 		kontroller(innsendingId, file, fileName)
 	}
 
