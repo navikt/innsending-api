@@ -83,7 +83,7 @@ spring:
     url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:postgres}?user=${DATABASE_USERNAME:postgres}&password=${DATABASE_PASSWORD:postgres}
 
 status_log_url: "https://logs.adeo.no"
-fil-konvertering_url: http://localhost:3000
+: http://localhost:3000
 
 restconfig:
   version: 1.0
