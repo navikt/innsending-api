@@ -75,7 +75,6 @@ class FiltypeSjekker {
 	}
 
 	fun detectContentType(bytes: ByteArray, fileName: String? = null): String {
-		val tika = Tika()
 		val metadata = Metadata()
 		fileName?.let {
 			metadata.add(Metadata.CONTENT_DISPOSITION, "attachment; filename=$it")
@@ -87,7 +86,7 @@ class FiltypeSjekker {
 		try {
 			TikaInputStream.get(bytes.inputStream()).use { tikaInputStream ->
 				// Create a content handler (no output needed here)
-				val handler = BodyContentHandler()
+				val handler = BodyContentHandler(-1)
 
 				// Parse the input and detect the content type
 				parser.parse(tikaInputStream, handler, metadata)
@@ -96,15 +95,14 @@ class FiltypeSjekker {
 				return metadata.get(Metadata.CONTENT_TYPE) ?: "application/octet-stream"
 			}
 
-			return metadata.get("Content-Type") ?: "unknown"
 		} catch (e: SAXException) {
 			logger.error("Error parsing document", e)
-			throw BackendErrorException("Feil ved konvertering av fil til PDF", e, ErrorCode.GENERAL_ERROR)
+			throw BackendErrorException("Feil ved sjekking av filtype", e, ErrorCode.GENERAL_ERROR)
 		} catch (e: TikaException) {
 			logger.error("Error detecting content type", e)
-			throw BackendErrorException("Feil ved konvertering av fil til PDF", e, ErrorCode.GENERAL_ERROR)
+			throw BackendErrorException("Feil ved sjekking av filtype", e, ErrorCode.GENERAL_ERROR)
 		} catch (e: Exception) {
-			throw BackendErrorException("Feil ved konvertering av fil til PDF", e, ErrorCode.GENERAL_ERROR)
+			throw BackendErrorException("Feil ved sjekking av filtype", e, ErrorCode.GENERAL_ERROR)
 		}
 
 	}

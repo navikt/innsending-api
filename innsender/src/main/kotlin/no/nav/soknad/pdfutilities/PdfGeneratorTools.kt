@@ -155,7 +155,7 @@ class PdfGenerator {
 		)
 		return PdfGeneratorService().genererPdfFromText(
 			TextToPdfModel(
-				sprak = if (sprak == "en") sprak + "-UK" else sprak + "-NO",
+				sprak = if (!(sprak == "nb" || sprak == "nn")) "en" + "-UK" else sprak + "-NO",
 				dato = formaterDatoMedManed(now),
 				side = tekster.getString("footer.side"),
 				av = tekster.getString("footer.av"),
