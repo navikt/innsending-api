@@ -28,8 +28,8 @@ class GotenbergConvertToPdf(
 	companion object GotenbergConsts {
 		private const val LIBRE_OFFICE_ROUTE = "/forms/libreoffice/convert"
 		private const val GOTENBERG_TRACE_HEADER = "gotenberg-trace"
-		private const val pdfa = "--form pdfa=PDF/A-2b"
-		private const val ua = "--form pdfua=true"
+		private const val pdfa = "pdfa=PDF/A-2b"
+		private const val ua = "pdfua=true"
 	}
 
 	private val logger = LoggerFactory.getLogger(GotenbergConvertToPdf::class.java)
@@ -38,8 +38,11 @@ class GotenbergConvertToPdf(
 		fileName: String,
 		fileContent: ByteArray,
 	): ByteArray {
+		//val pageProperties: PageProperties = PageProperties.Builder().build()
 		val multipartBody = MultipartBodyBuilder().run {
 			part("files", ByteArrayMultipartFile(fileName, fileContent).resource)
+			part("form", pdfa)
+			part("form", ua)
 			build()
 		}
 
@@ -51,7 +54,7 @@ class GotenbergConvertToPdf(
 		multipartBody: MultiValueMap<String, HttpEntity<*>>,
 	): ByteArray {
 
-		val uri = LIBRE_OFFICE_ROUTE + pdfa + ua
+		val uri = LIBRE_OFFICE_ROUTE //+ "?format" + pdfa + ua
 		val response = gotenbergClient
 			.post()
 			.uri(LIBRE_OFFICE_ROUTE)
