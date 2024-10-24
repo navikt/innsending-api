@@ -109,7 +109,7 @@ class FilRestApiTest : ApplicationTest() {
 
 
 	@Test
-	//@Disabled // Require running gotenberg docker container locally: docker run --rm -p 3000:3000 gotenberg/gotenberg:8
+	@Disabled // Require running gotenberg docker container locally: docker run --rm -p 3000:3000 gotenberg/gotenberg:8
 	fun sjekkOpplastingsstatusEtterOpplastingAvDocxTest() {
 		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
