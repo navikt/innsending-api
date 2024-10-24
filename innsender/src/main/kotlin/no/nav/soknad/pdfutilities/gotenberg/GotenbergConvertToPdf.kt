@@ -28,8 +28,8 @@ class GotenbergConvertToPdf(
 	companion object GotenbergConsts {
 		private const val LIBRE_OFFICE_ROUTE = "/forms/libreoffice/convert"
 		private const val GOTENBERG_TRACE_HEADER = "gotenberg-trace"
-		private const val pdfa = "--form-pdfa=PDF/A-1b"
-		private const val ua = "--form-ua"
+		private const val pdfa = "--form-pdfa=PDF/A-2b"
+		private const val ua = "--form-pdfua=true"
 	}
 
 	private val logger = LoggerFactory.getLogger(GotenbergConvertToPdf::class.java)
