@@ -20,24 +20,38 @@ class KonverterTilPdf(
 		vedleggsTittel: String?
 	): Pair<ByteArray, Int> {
 
-		val filtype = FiltypeSjekker().detectContentType(fil, null)
-		logger.info("Skal konvertere filtype=$filtype til PDF")
+		val filtype_full = FiltypeSjekker().detectContentType(fil, null)
+		logger.info("Skal konvertere filtype=$filtype_full til PDF")
+		val filtype = filtype_full.substringBefore(";")
 
-		if (FiltypeSjekker().isPdf(fil)) return checkAndFormatPDF(fil)
-		if (FiltypeSjekker().isImage(fil)) return ConvertImageToPdf().pdfFromImage(fil)
-		if (FiltypeSjekker().isPlainText(fil)) return createPDFFromText(soknad, vedleggsTittel ?: "Annet", fil)
-		if (FiltypeSjekker().isDocx(fil)) return createPDFFromWord(soknad, vedleggsTittel, fil)
+		when (filtype) {
+			"application/pdf" -> return checkAndFormatPDF(fil)
+			"image/png", "image/jpeg" -> return ConvertImageToPdf().pdfFromImage(fil)
+			"text/plain" -> return createPDFFromText(soknad, vedleggsTittel ?: "Annet", fil)
+			"application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> return createPDFFromWord(
+				soknad,
+				vedleggsTittel,
+				fil
+			)
+
+			else -> throw IllegalActionException(
+				message = "Ulovlig filformat. Kan ikke konvertere til PDF",
+				errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
+			)
+		}
 		/*
+				if (filtype.equals("application/pdf")) return checkAndFormatPDF(fil)
+				if (filtype.equals("image/png") || filtype.equals("image/jpeg")) return ConvertImageToPdf().pdfFromImage(fil)
 
-				if ("text/plain".equals(filtype, true)) return createPDFFromText(soknad, vedleggsTittel ?: "Annet", fil)
-				if ("application/vnd.openxmlformats-officedocument.wordprocessingml.document".equals(filtype, true))
+				if (filtype.equals("text/plain")) return createPDFFromText(soknad, vedleggsTittel ?: "Annet", fil)
+				if (filtype.equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
 					return createPDFFromWord(soknad, vedleggsTittel, fil)
-		*/
 
-		throw IllegalActionException(
-			message = "Ulovlig filformat. Kan ikke konvertere til PDF",
-			errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
-		)
+				throw IllegalActionException(
+					message = "Ulovlig filformat. Kan ikke konvertere til PDF",
+					errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
+				)
+		*/
 	}
 
 	private fun checkAndFormatPDF(fil: ByteArray): Pair<ByteArray, Int> {
