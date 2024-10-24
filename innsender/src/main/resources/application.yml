@@ -7,6 +7,8 @@ spring:
     name: innsending-api
   jackson:
     default-property-inclusion: non_null
+  jpa:
+    open-in-view: false
 
 management:
   endpoint:
@@ -194,12 +196,11 @@ spring:
   datasource:
     url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DATABASE}?user=${DATABASE_USERNAME}&password=${DATABASE_PASSWORD}
     hikari:
-      minimum-idle: 1
-      maximum-pool-size: 20
+      maximum-pool-size: 12
       connection-timeout: 50000
       max-lifetime: 50001
       validationTimeout: 20000
-      leak-detection-threshold: 60000
+      leak-detection-threshold: 50000
     dbcp2:
       test-on-borrow: true
       validation-query: "SELECT 1"
@@ -338,14 +339,15 @@ spring:
   datasource:
     url: ${DATABASE_JDBC_URL}
 
-  jpa:
-    open-in-view: false
-
 ---
 spring:
   config:
     activate:
       on-profile: test | dev
+
+  datasource:
+    hikari:
+      maximum-pool-size: 3
 
 restconfig:
   sendinn:
