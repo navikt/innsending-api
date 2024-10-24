@@ -3,12 +3,15 @@ package no.nav.soknad.pdfutilities
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class KonverterTilPdf(
 	private val docxConverter: DocxToPdfInterface
 ) : KonverterTilPdfInterface {
+
+	private val logger = LoggerFactory.getLogger(KonverterTilPdf::class.java)
 
 	override fun tilPdf(
 		fil: ByteArray,
@@ -17,13 +20,19 @@ class KonverterTilPdf(
 		vedleggsTittel: String?
 	): Pair<ByteArray, Int> {
 
+		val filtype = FiltypeSjekker().detectContentType(fil, null)
+		logger.info("Skal konvertere filtype=$filtype til PDF")
+
 		if (FiltypeSjekker().isPdf(fil)) return checkAndFormatPDF(fil)
 		if (FiltypeSjekker().isImage(fil)) return ConvertImageToPdf().pdfFromImage(fil)
+		if (FiltypeSjekker().isPlainText(fil)) return createPDFFromText(soknad, vedleggsTittel ?: "Annet", fil)
+		if (FiltypeSjekker().isDocx(fil)) return createPDFFromWord(soknad, vedleggsTittel, fil)
+		/*
 
-		val filtype = FiltypeSjekker().detectContentType(fil, null)
-		if ("text/plain".equals(filtype, true)) return createPDFFromText(soknad, vedleggsTittel ?: "Annet", fil)
-		if ("application/vnd.openxmlformats-officedocument.wordprocessingml.document".equals(filtype, true))
-			return createPDFFromWord(soknad, vedleggsTittel, fil)
+				if ("text/plain".equals(filtype, true)) return createPDFFromText(soknad, vedleggsTittel ?: "Annet", fil)
+				if ("application/vnd.openxmlformats-officedocument.wordprocessingml.document".equals(filtype, true))
+					return createPDFFromWord(soknad, vedleggsTittel, fil)
+		*/
 
 		throw IllegalActionException(
 			message = "Ulovlig filformat. Kan ikke konvertere til PDF",
