@@ -40,11 +40,14 @@ class GotenbergConvertToPdf(
 		fileName: String,
 		fileContent: ByteArray,
 	): ByteArray {
-		//val pageProperties: PageProperties = PageProperties.Builder().build()
+		val pageProperties: PageProperties = PageProperties.Builder().build()
 		val multipartBody = MultipartBodyBuilder().run {
 			part("files", ByteArrayMultipartFile(fileName, fileContent).resource)
+			pageProperties.all().forEach{ part(it.key, it.value) }
+/*
 			part("pdfa", "PDF/A-2b")
-			part("ua", true)
+			part("pdfua", true)
+*/
 			build()
 		}
 
@@ -111,31 +114,4 @@ class GotenbergConvertToPdf(
 		}
 	}
 
-	fun convertDocxToPdfA2b(
-		fileName: String,
-		fileContent: ByteArray,
-	): ByteArray? {
-
-		val docxResource = object : ByteArrayResource(fileContent) {
-			override fun getFilename(): String = fileName  // Name is required for multipart file parts
-		}
-
-		// Build the multipart form data
-		val bodyBuilder = MultipartBodyBuilder().apply {
-			part("files", docxResource)
-			part("pdfa", "true")  // Set PDF/A-2b compliance
-			part("pdfa", "PDF/A-2b")  // Specify PDF/A version
-		}
-
-		// Build the headers for the multipart request
-		val headers = HttpHeaders().apply {
-			contentType = MediaType.MULTIPART_FORM_DATA
-		}
-
-		// Send the POST request to the /convert/office endpoint
-		return gotenbergClient.post()
-			.uri(LIBRE_OFFICE_ROUTE)
-			.body(bodyBuilder.build())
-			.retrieve()
-			.body(ByteArray::class.java)
-	}}
+}

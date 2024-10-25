@@ -118,9 +118,9 @@ class PageProperties(builder: Builder) {
 	 */
 	@Suppress("unused")
 	class Builder {
-		var paperWidth = 8.5f
+		var paperWidth = 8.27f
 			private set
-		var paperHeight = 11f
+		var paperHeight = 11.69f
 			private set
 		var marginTop = 0.39f
 			private set
@@ -142,7 +142,7 @@ class PageProperties(builder: Builder) {
 			private set
 		var pdfFormat = PdfFormat.A_2B
 			private set
-		var pdfUniversalAccess = false
+		var pdfUniversalAccess = true
 			private set
 
 		/**
