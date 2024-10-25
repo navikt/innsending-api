@@ -3,13 +3,13 @@ package no.nav.soknad.pdfutilities
 import junit.framework.TestCase.assertTrue
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
-import no.nav.soknad.pdfutilities.gotenberg.DocxToPdfConverterTest
+import no.nav.soknad.pdfutilities.gotenberg.ToPdfConverterTest
 import org.junit.Test
 import kotlin.test.assertEquals
 
 class KonverterTilPdfTest {
 
-	private val docToPdfConverter: DocxToPdfInterface = DocxToPdfConverterTest()
+	private val docToPdfConverter: DocxToPdfInterface = ToPdfConverterTest()
 
 	private val konverterTilPdf = KonverterTilPdf(docToPdfConverter)
 

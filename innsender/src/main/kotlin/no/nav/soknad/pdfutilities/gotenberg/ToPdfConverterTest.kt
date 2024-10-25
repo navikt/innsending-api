@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 
 @Component
 @Profile("!(prod | dev | test)")
-class DocxToPdfConverterTest : DocxToPdfInterface {
+class ToPdfConverterTest : DocxToPdfInterface {
 
 	override fun toPdf(fileName: String, fileContent: ByteArray): ByteArray {
 		var document: PDDocument? = null
