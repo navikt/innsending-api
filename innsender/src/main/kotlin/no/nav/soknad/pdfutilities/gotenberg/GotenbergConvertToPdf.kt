@@ -8,8 +8,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
+import org.springframework.core.io.ByteArrayResource
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
 import org.springframework.http.client.MultipartBodyBuilder
 import org.springframework.stereotype.Service
 import org.springframework.util.MultiValueMap
@@ -41,8 +43,8 @@ class GotenbergConvertToPdf(
 		//val pageProperties: PageProperties = PageProperties.Builder().build()
 		val multipartBody = MultipartBodyBuilder().run {
 			part("files", ByteArrayMultipartFile(fileName, fileContent).resource)
-			part("form", pdfa)
-			part("form", ua)
+			part("pdfa", "PDF/A-2b")
+			part("ua", true)
 			build()
 		}
 
@@ -109,4 +111,31 @@ class GotenbergConvertToPdf(
 		}
 	}
 
-}
+	fun convertDocxToPdfA2b(
+		fileName: String,
+		fileContent: ByteArray,
+	): ByteArray? {
+
+		val docxResource = object : ByteArrayResource(fileContent) {
+			override fun getFilename(): String = fileName  // Name is required for multipart file parts
+		}
+
+		// Build the multipart form data
+		val bodyBuilder = MultipartBodyBuilder().apply {
+			part("files", docxResource)
+			part("pdfa", "true")  // Set PDF/A-2b compliance
+			part("pdfa", "PDF/A-2b")  // Specify PDF/A version
+		}
+
+		// Build the headers for the multipart request
+		val headers = HttpHeaders().apply {
+			contentType = MediaType.MULTIPART_FORM_DATA
+		}
+
+		// Send the POST request to the /convert/office endpoint
+		return gotenbergClient.post()
+			.uri(LIBRE_OFFICE_ROUTE)
+			.body(bodyBuilder.build())
+			.retrieve()
+			.body(ByteArray::class.java)
+	}}
