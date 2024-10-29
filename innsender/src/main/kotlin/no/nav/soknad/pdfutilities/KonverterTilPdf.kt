@@ -5,6 +5,8 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.nio.CharBuffer
+import java.nio.charset.StandardCharsets
 
 @Service
 class KonverterTilPdf(
@@ -39,19 +41,6 @@ class KonverterTilPdf(
 				errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
 			)
 		}
-		/*
-				if (filtype.equals("application/pdf")) return checkAndFormatPDF(fil)
-				if (filtype.equals("image/png") || filtype.equals("image/jpeg")) return ConvertImageToPdf().pdfFromImage(fil)
-
-				if (filtype.equals("text/plain")) return createPDFFromText(soknad, vedleggsTittel ?: "Annet", fil)
-				if (filtype.equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
-					return createPDFFromWord(soknad, vedleggsTittel, fil)
-
-				throw IllegalActionException(
-					message = "Ulovlig filformat. Kan ikke konvertere til PDF",
-					errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
-				)
-		*/
 	}
 
 	private fun checkAndFormatPDF(fil: ByteArray): Pair<ByteArray, Int> {
@@ -60,10 +49,12 @@ class KonverterTilPdf(
 	}
 
 	private fun createPDFFromText(soknad: DokumentSoknadDto, tittel: String?, text: ByteArray): Pair<ByteArray, Int> {
+		val textString = FiltypeSjekker().charsetDetectAndReturnString(text)
+
 		val pdf = PdfGenerator().lagPdfFraTekstFil(
 			soknad,
 			vedleggsTittel = tittel ?: "Annet",
-			text = text.decodeToString()
+			text = textString
 		)
 		val antallSider = AntallSider().finnAntallSider(pdf) ?: 0
 		return Pair(pdf, antallSider)

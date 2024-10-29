@@ -90,9 +90,31 @@ class KonverterTilPdfTest {
 		)
 		val ferdig = System.currentTimeMillis()
 		println("Tid til konvertering av txtFil = ${ferdig - start}")
-		assertEquals(10, antallSider)
+		assertEquals(11, antallSider)
 
 		val erPdfa = Validerer().isPDFa(pdf)
 		assertTrue(erPdfa)
 	}
+
+
+
+	@Test
+	fun verifiserKonverteringAvNotepadEncodedTxtFil() {
+		val jpg = Hjelpemetoder.getBytesFromFile("/__files/tekst-notepad-encoding.txt")
+
+		val start = System.currentTimeMillis()
+		val (pdf, antallSider) = konverterTilPdf.tilPdf(
+			jpg,
+			soknadDto,
+			sammensattNavn = "Kalle Kanin",
+			vedleggsTittel = "Vedleggstittel"
+		)
+		val ferdig = System.currentTimeMillis()
+		println("Tid til konvertering av txtFil = ${ferdig - start}")
+		assertEquals(2, antallSider)
+
+		val erPdfa = Validerer().isPDFa(pdf)
+		assertTrue(erPdfa)
+	}
+
 }

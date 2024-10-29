@@ -32,7 +32,7 @@ class Validerer {
 			val extention = fileName?.substringAfterLast(".", "<mangler>") ?: "<mangler>"
 			logger.warn("$innsendingId: Ugyldig filtype for opplasting. Filextention: ${extention}, og filstart = ${if (file.size >= 4) (file[0] + file[1] + file[3] + file[4]) else file[0]}\")")
 			throw IllegalActionException(
-				message = "$innsendingId: Ugyldig filtype for opplasting. Kan kun laste opp filer av type PDF, JPEG, PNG og IMG",
+				message = "$innsendingId: Ugyldig filtype for opplasting. Kan kun laste opp filer av type TXT, DOCX, PDF, JPEG, PNG og IMG",
 				errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
 			)
 		}

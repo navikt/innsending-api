@@ -8,9 +8,12 @@ import org.apache.tika.exception.TikaException
 import org.apache.tika.io.TikaInputStream
 import org.apache.tika.metadata.Metadata
 import org.apache.tika.parser.AutoDetectParser
+import org.apache.tika.parser.txt.CharsetDetector
 import org.apache.tika.sax.BodyContentHandler
+import org.openjdk.nashorn.tools.ShellFunctions.input
 import org.slf4j.LoggerFactory
 import org.xml.sax.SAXException
+import java.nio.charset.Charset
 import java.util.function.Predicate
 
 
@@ -105,6 +108,20 @@ class FiltypeSjekker {
 			throw BackendErrorException("Feil ved sjekking av filtype", e, ErrorCode.GENERAL_ERROR)
 		}
 
+	}
+
+
+	fun charsetDetectAndReturnString(bytes: ByteArray): String {
+		val detector = CharsetDetector()
+		detector.setText(bytes)
+		val type = detector.detect()
+		logger.debug("Detected charset: $type")
+		if (!Charset.defaultCharset().name().equals(type.name, true)) {
+			val tmpString = bytes.toString(Charset.forName(type.name))
+			return tmpString.toByteArray(Charset.defaultCharset()).decodeToString()
+		}
+
+		return bytes.decodeToString()
 	}
 
 }
