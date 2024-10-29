@@ -74,7 +74,7 @@ class FilRestApi(
 			vedleggsTittel = vedleggDto.tittel
 		)
 
-		logger.debug("$innsendingsId: opplastet/konvertert fil på vedlegg $vedleggsId med $antallsider sider og ${fil.size} bytes")
+		logger.info("$innsendingsId: opplastet/konvertert fil på vedlegg $vedleggsId med $antallsider sider og ${fil.size} bytes")
 
 		// Kontroller at ingen opplastet/konvertert fil har mer enn maxNumberOfPages
 		Validerer().validereAntallSider(antallsider, restConfig.maxNumberOfPages, fil)
