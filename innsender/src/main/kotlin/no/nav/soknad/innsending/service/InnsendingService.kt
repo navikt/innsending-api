@@ -218,13 +218,13 @@ class InnsendingService(
 			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput)
 
 			val innsendtSoknadDto = kansellerBrukernotifikasjon(soknadDtoInput)
+			innsenderMetrics.incOperationsCounter(operation, innsendtSoknadDto.tema)
 
 			ettersendingService.sjekkOgOpprettEttersendingsSoknad(innsendtSoknadDto, manglende, soknadDtoInput)
 
 			return lagKvittering(innsendtSoknadDto, opplastet, manglende)
 
 		} finally {
-			innsenderMetrics.incOperationsCounter(operation, soknadDtoInput.tema)
 			logger.debug("${soknadDtoInput.innsendingsId}: Tid: sendInnSoknad = ${System.currentTimeMillis() - startSendInn}")
 		}
 	}

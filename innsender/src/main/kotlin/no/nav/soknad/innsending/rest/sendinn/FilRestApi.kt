@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.rest.sendinn
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.SendinnFilApi
+import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
@@ -16,6 +17,7 @@ import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.pdfutilities.KonverterTilPdfInterface
+import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.Resource
@@ -39,11 +41,15 @@ class FilRestApi(
 	private val filService: FilService,
 	private val filValidatorService: FilValidatorService,
 	private val konverterTilPdf: KonverterTilPdfInterface
-) : SendinnFilApi {
+	private val restConfig: RestConfig,
+
+	) : SendinnFilApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val secureLogger = LoggerFactory.getLogger("secureLogger")
 	private val combinedLogger = CombinedLogger(logger, secureLogger)
+
+
 
 	// Søker skal kunne laste opp ett eller flere filer på ett vedlegg. Dette endepunktet tillater opplasting av en fil.
 	@Timed(InnsenderOperation.LAST_OPP)
@@ -68,6 +74,11 @@ class FilRestApi(
 			sammensattNavn = null,
 			vedleggsTittel = vedleggDto.tittel
 		)
+
+		logger.debug("$innsendingsId: opplastet/konvertert fil på vedlegg $vedleggsId med $antallsider sider og ${fil.size} bytes")
+
+		// Kontroller at ingen opplastet/konvertert fil har mer enn maxNumberOfPages
+		Validerer().validereAntallSider(antallsider, restConfig.maxNumberOfPages, fil)
 
 		// Lagre
 		val lagretFilDto = filService.lagreFil(

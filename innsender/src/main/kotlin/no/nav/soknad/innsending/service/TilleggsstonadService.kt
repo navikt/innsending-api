@@ -114,12 +114,13 @@ class TilleggsstonadService(
 	}
 
 	private fun sjekkOgOppdaterTema(soknadDto: DokumentSoknadDto, maalgruppeInformasjon: JsonMaalgruppeinformasjon?) {
+		logger.debug("${soknadDto.innsendingsId}: søkers maalgruppeinformasjon = ${maalgruppeInformasjon?.maalgruppetype}")
 		if (!relevanteMaalgrupperForTsr.contains(maalgruppeInformasjon?.maalgruppetype)) return
 
 		if (!(tilleggsstonadSkjema.containsKey(soknadDto.skjemanr)
 				&& tilleggsstonadSkjema[soknadDto.skjemanr] == TemaValg.TSO_og_TSR)
 		) return
-
+		logger.debug("${soknadDto.innsendingsId}: Endrer tema til TSR")
 		repo.endreTema(soknadDto.id!!, soknadDto.innsendingsId!!, "TSR")
 	}
 
