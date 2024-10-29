@@ -40,9 +40,8 @@ class FilRestApi(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val filService: FilService,
 	private val filValidatorService: FilValidatorService,
-	private val konverterTilPdf: KonverterTilPdfInterface
-	private val restConfig: RestConfig,
-
+	private val konverterTilPdf: KonverterTilPdfInterface,
+	private val restConfig: RestConfig
 	) : SendinnFilApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
