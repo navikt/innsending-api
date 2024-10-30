@@ -48,9 +48,6 @@ class FilValidatorService(
 
 		Validerer().validereFilformat(innsendingsId, opplastet, fileName)
 
-		val antallSider = AntallSider().finnAntallSider(opplastet)
-		Validerer().validereAntallSider(antallSider ?: 0, restConfig.maxNumberOfPages, opplastet)
-
 		// Sjekk om filen inneholder virus
 		// TODO: Fiks dette
 //		if (!antivirus.scan(opplastet)) throw IllegalActionException(
@@ -59,6 +56,9 @@ class FilValidatorService(
 //		)
 
 		innsenderMetrics.setFileSize(opplastet.size.toLong())
-		innsenderMetrics.setFileNumberOfPages(antallSider?.toLong() ?: 0)
+	}
+
+	fun validerAntallSider(antallSider: Int) {
+		Validerer().validereAntallSider(antallSider, restConfig.maxNumberOfPages)
 	}
 }

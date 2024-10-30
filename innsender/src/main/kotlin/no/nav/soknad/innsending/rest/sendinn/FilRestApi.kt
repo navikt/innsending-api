@@ -2,7 +2,6 @@ package no.nav.soknad.innsending.rest.sendinn
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.SendinnFilApi
-import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
@@ -11,13 +10,13 @@ import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.FilValidatorService
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.pdfutilities.KonverterTilPdfInterface
-import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.Resource
@@ -41,7 +40,7 @@ class FilRestApi(
 	private val filService: FilService,
 	private val filValidatorService: FilValidatorService,
 	private val konverterTilPdf: KonverterTilPdfInterface,
-	private val restConfig: RestConfig
+	private val innsenderMetrics: InnsenderMetrics
 	) : SendinnFilApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -77,7 +76,8 @@ class FilRestApi(
 		logger.info("$innsendingsId: opplastet/konvertert fil på vedlegg $vedleggsId med $antallsider sider og ${fil.size} bytes")
 
 		// Kontroller at ingen opplastet/konvertert fil har mer enn maxNumberOfPages
-		Validerer().validereAntallSider(antallsider, restConfig.maxNumberOfPages, fil)
+		filValidatorService.validerAntallSider(antallsider)
+		innsenderMetrics.setFileNumberOfPages(antallsider.toLong())
 
 		// Lagre
 		val lagretFilDto = filService.lagreFil(
