@@ -26,25 +26,25 @@ class Validerer {
 		if (isPDF(file)) {
 			// Kontroller at PDF er lovlig, dvs. ikke encrypted og passordbeskyttet
 			erGyldigPdf(innsendingId, file)
-		} else if (!isImage(file)) {
+
+		} else if (!isImage(file) && !isDocx(file) && !isText(file)) {
 			val extention = fileName?.substringAfterLast(".", "<mangler>") ?: "<mangler>"
 			logger.warn("$innsendingId: Ugyldig filtype for opplasting. Filextention: ${extention}, og filstart = ${if (file.size >= 4) (file[0] + file[1] + file[3] + file[4]) else file[0]}\")")
 			throw IllegalActionException(
-				message = "$innsendingId: Ugyldig filtype for opplasting. Kan kun laste opp filer av type PDF, JPEG, PNG og IMG",
+				message = "$innsendingId: Ugyldig filtype for opplasting. Kan kun laste opp filer av type TXT, DOCX, PDF, JPEG, PNG og IMG",
 				errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
 			)
 		}
 	}
 
-	fun validereAntallSider(antallSider: Int, maxAntallSider: Int = 200, file: ByteArray) {
-		if (isPDF(file)) {
-			if (antallSider > maxAntallSider) {
-				logger.warn("Opplastet fil med $antallSider sider overskrider $maxAntallSider")
-				throw IllegalActionException(
-					message = "For mange sider i fil. Opplastet fil med $antallSider sider som overskrider $maxAntallSider",
-					errorCode = ErrorCode.FILE_WITH_TOO_TO_MANY_PAGES
-				)
-			}
+	fun validereAntallSider(antallSider: Int, maxAntallSider: Int = 200) {
+		logger.info("Sjekke at $antallSider < $maxAntallSider")
+		if (antallSider > maxAntallSider) {
+			logger.warn("Opplastet fil med $antallSider sider overskrider $maxAntallSider")
+			throw IllegalActionException(
+				message = "For mange sider i fil. Opplastet fil med $antallSider sider som overskrider $maxAntallSider",
+				errorCode = ErrorCode.FILE_WITH_TOO_TO_MANY_PAGES
+			)
 		}
 	}
 
@@ -108,6 +108,14 @@ class Validerer {
 
 	private fun isImage(bytes: ByteArray): Boolean {
 		return FiltypeSjekker().isImage(bytes)
+	}
+
+	private fun isDocx(bytes: ByteArray): Boolean {
+		return FiltypeSjekker().isDocx(bytes)
+	}
+
+	private fun isText(bytes: ByteArray): Boolean {
+		return FiltypeSjekker().isPlainText(bytes)
 	}
 
 	fun isPDFa(bytes: ByteArray): Boolean {

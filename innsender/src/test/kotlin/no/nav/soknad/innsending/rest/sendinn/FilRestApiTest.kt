@@ -9,10 +9,12 @@ import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.TokenGenerator
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
@@ -104,6 +106,67 @@ class FilRestApiTest : ApplicationTest() {
 		assertEquals(OpplastingsStatusDto.IkkeValgt, oppdatertEtterSlettetFilVedleggN6!!.opplastingsStatus)
 
 	}
+
+
+	@Test
+	@Disabled // Require running gotenberg docker container locally: docker run --rm -p 3000:3000 gotenberg/gotenberg:8
+	fun sjekkOpplastingsstatusEtterOpplastingAvDocxTest() {
+		val skjemanr = defaultSkjemanr
+		val spraak = "nb_NO"
+		val vedlegg = listOf("N6", "W2")
+		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
+
+		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
+		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
+
+		val multipart = LinkedMultiValueMap<Any, Any>()
+		multipart.add("file", ClassPathResource("/Docx-test.docx"))
+
+		val postFilRequestN6 = HttpEntity(multipart, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
+		val postFilResponseN6 = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil",
+			HttpMethod.POST,
+			postFilRequestN6,
+			FilDto::class.java
+		)
+		val filePages = innsenderMetrics.fileNumberOfPagesSummary
+		val fileSize = innsenderMetrics.fileSizeSummary
+
+		assertEquals(HttpStatus.CREATED, postFilResponseN6.statusCode)
+		assertTrue(postFilResponseN6.body != null)
+		assertEquals(Mimetype.applicationSlashPdf, postFilResponseN6.body!!.mimetype)
+		assertEquals(1.0, filePages.collect().dataPoints[0].sum)
+		assertEquals(13701.0, fileSize.collect().dataPoints[0].sum)
+		val opplastetFilDto = postFilResponseN6.body
+		if (opplastetFilDto != null) {
+			val filN6Request = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
+			val filN6Response = restTemplate.exchange(
+				"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil/${opplastetFilDto.id}",
+				HttpMethod.GET,
+				filN6Request,
+				ByteArrayResource::class.java
+			)
+
+			if (filN6Response.body != null) {
+				//filN6Response.body?.let { writeBytesToFile(it.byteArray, "delme.pdf") }
+			}
+		}
+
+		val vedleggN6Request = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
+		val oppdatertVedleggN6Response = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}",
+			HttpMethod.GET,
+			vedleggN6Request,
+			VedleggDto::class.java
+		)
+
+		assertTrue(oppdatertVedleggN6Response.body != null)
+		val oppdatertVedleggN6 = oppdatertVedleggN6Response.body
+		assertEquals(OpplastingsStatusDto.LastetOpp, oppdatertVedleggN6!!.opplastingsStatus)
+	}
+
 
 	@Test
 	fun sjekkAtOpplastingAvForStorFilGirFeilTest() {

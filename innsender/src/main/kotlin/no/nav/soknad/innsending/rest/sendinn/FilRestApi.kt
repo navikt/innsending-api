@@ -10,12 +10,13 @@ import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.FilValidatorService
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
-import no.nav.soknad.pdfutilities.KonverterTilPdf
+import no.nav.soknad.pdfutilities.KonverterTilPdfInterface
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.Resource
@@ -37,12 +38,16 @@ class FilRestApi(
 	private val soknadService: SoknadService,
 	private val tilgangskontroll: Tilgangskontroll,
 	private val filService: FilService,
-	private val filValidatorService: FilValidatorService
-) : SendinnFilApi {
+	private val filValidatorService: FilValidatorService,
+	private val konverterTilPdf: KonverterTilPdfInterface,
+	private val innsenderMetrics: InnsenderMetrics
+	) : SendinnFilApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val secureLogger = LoggerFactory.getLogger("secureLogger")
 	private val combinedLogger = CombinedLogger(logger, secureLogger)
+
+
 
 	// Søker skal kunne laste opp ett eller flere filer på ett vedlegg. Dette endepunktet tillater opplasting av en fil.
 	@Timed(InnsenderOperation.LAST_OPP)
@@ -52,7 +57,8 @@ class FilRestApi(
 		combinedLogger.log("$innsendingsId: Kall for å lagre fil på vedlegg $vedleggsId til søknad", brukerId)
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
-		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
+		val vedleggDto = soknadDto.vedleggsListe.first { it.id == vedleggsId }
+		if (vedleggDto == null)
 			throw ResourceNotFoundException("Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId")
 
 		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
@@ -60,7 +66,18 @@ class FilRestApi(
 		val opplastet = (file as ByteArrayResource).byteArray
 
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
-		val (fil, antallsider) = KonverterTilPdf().tilPdf(opplastet)
+		val (fil, antallsider) = konverterTilPdf.tilPdf(
+			opplastet,
+			soknadDto,
+			sammensattNavn = null,
+			vedleggsTittel = vedleggDto.tittel
+		)
+
+		logger.info("$innsendingsId: opplastet/konvertert fil på vedlegg $vedleggsId med $antallsider sider og ${fil.size} bytes")
+
+		// Kontroller at ingen opplastet/konvertert fil har mer enn maxNumberOfPages
+		filValidatorService.validerAntallSider(antallsider)
+		innsenderMetrics.setFileNumberOfPages(antallsider.toLong())
 
 		// Lagre
 		val lagretFilDto = filService.lagreFil(

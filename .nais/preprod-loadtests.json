@@ -17,7 +17,12 @@
 		"current-namespace": [
 			"soknadsmottaker-loadtests"
 		],
-		"other-namespace": [],
+		"other-namespace": [
+			{
+				"application": "upload-convert-to-pdf",
+				"namespace": "fyllut-sendinn"
+			}
+		],
 		"external-hosts": [
 			"arkiv-mock-gcp.intern.dev.nav.no",
 			"soknadsmottaker-gcp-loadtests.intern.dev.nav.no",
@@ -59,6 +64,7 @@
 		"KODEVERK_URL": "http://arkiv-mock-gcp/kodeverk",
 		"KONTOREGISTER_TOKEN_X_AUDIENCE": "dev-gcp:team-soknad:arkiv-mock-gcp",
 		"KONTOREGISTER_SCOPE": "api://dev-gcp:team-soknad:arkiv-mock-gcp/.default",
-		"KONTOREGISTER_URL": "https://arkiv-mock-gcp.intern.dev.nav.no"
+		"KONTOREGISTER_URL": "https://arkiv-mock-gcp.intern.dev.nav.no",
+		"KONVERTERING_TIL_PDF_URL": "http://upload-convert-to-pdf.fyllut-sendinn"
 	}
 }

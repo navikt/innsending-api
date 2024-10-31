@@ -2,6 +2,7 @@ package no.nav.soknad.innsending
 
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
+import no.nav.soknad.InnsendingApiApplication
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock

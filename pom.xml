@@ -60,6 +60,7 @@
 		<resilience4j.version>2.2.0</resilience4j.version>
 		<graphql-kotlin.version>8.1.0</graphql-kotlin.version>
 		<gson.version>2.11.0</gson.version>
+		<common-text.version>1.12.0</common-text.version>
 
 		<!--Security issues-->
 		<wiremock.version>3.9.1</wiremock.version>
@@ -75,7 +76,7 @@
 		<javax.xml-bind.version>2.3.1</javax.xml-bind.version>
 		<jai-imageio.version>1.4.0</jai-imageio.version>
 		<jbig2-imageio.version>3.0.4</jbig2-imageio.version>
-		<tika-core.version>2.9.2</tika-core.version>
+		<tika-core.version>3.0.0</tika-core.version>
 		<handlebars.version>4.4.0</handlebars.version>
 		<openhtml.version>1.1.22</openhtml.version>
 

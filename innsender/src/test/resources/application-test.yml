@@ -71,7 +71,6 @@ restconfig:
   kodeverkUrl: http://localhost:${wiremock.server.port}/kodeverk-api
   kontoregisterUrl: http://localhost:${wiremock.server.port}/kontoregister-api
 
-
 brukernotifikasjonconfig:
   profiles: test
   fyllutUrl: http://localhost:3001/fyllut

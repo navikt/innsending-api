@@ -47,6 +47,10 @@
 			{
 				"application": "kodeverk-api",
 				"namespace": "team-rocket"
+			},
+			{
+				"application": "upload-convert-to-pdf",
+				"namespace": "fyllut-sendinn"
 			}
 		],
 		"external-hosts": [
@@ -94,6 +98,7 @@
 		"KODEVERK_SCOPE": "api://prod-gcp.team-rocket.kodeverk-api/.default",
 		"KONTOREGISTER_TOKEN_X_AUDIENCE": "prod-gcp:okonomi:sokos-kontoregister-person",
 		"KONTOREGISTER_SCOPE": "api://prod-gcp.okonomi.sokos-kontoregister-person/.default",
-		"KONTOREGISTER_URL": "http://sokos-kontoregister-person.okonomi"
+		"KONTOREGISTER_URL": "http://sokos-kontoregister-person.okonomi",
+		"KONVERTERING_TIL_PDF_URL": "upload-convert-to-pdf.fyllut-sendinn"
 	}
 }

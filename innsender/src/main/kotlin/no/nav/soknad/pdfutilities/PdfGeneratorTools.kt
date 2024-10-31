@@ -5,6 +5,7 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.util.models.*
 import no.nav.soknad.pdfutilities.utils.PdfUtils
+import org.apache.commons.text.StringEscapeUtils
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -138,6 +139,35 @@ class PdfGenerator {
 			)
 		)
 	}
+
+	fun lagPdfFraTekstFil(
+		soknad: DokumentSoknadDto,
+		vedleggsTittel: String,
+		text: String
+	): ByteArray {
+		val sprak = selectLanguage(soknad.spraak)
+		val tekster = texts.get(sprak) ?: throw BackendErrorException("Mangler støtte for språk ${soknad.spraak}")
+		val now = LocalDateTime.now()
+		val opplastetTidspunkt = java.lang.String.format(
+			tekster.getString("opplastetTidspunkt"),
+			formaterDato(now),
+			formaterKlokke(now)
+		)
+		return PdfGeneratorService().genererPdfFromText(
+			TextToPdfModel(
+				sprak = if (!(sprak == "nb" || sprak == "nn")) "en" + "-UK" else sprak + "-NO",
+				dato = formaterDatoMedManed(now),
+				side = tekster.getString("footer.side"),
+				av = tekster.getString("footer.av"),
+				tittel = vedleggsTittel,
+				beskrivelse = "Generert PDF av opplastet tekstfil på vedlegg $vedleggsTittel",
+				opplastetTidspunkt = opplastetTidspunkt,
+				textInput = StringEscapeUtils.escapeXml11(text)
+			)
+		)
+
+	}
+
 
 	private fun mapTilVedleggskategori(kategori: String, vedlegg: List<VedleggDto>): VedleggsKategori {
 		return VedleggsKategori(

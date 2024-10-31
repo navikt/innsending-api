@@ -35,13 +35,32 @@ class ValiderFilformatTest {
 	}
 
 	@Test
-	fun verifiserDocxJsonFilGirFeilmelding() {
-		val file = Hjelpemetoder.getBytesFromFile("/Docx test dokument.docx")
-		val exception = assertThrows<IllegalActionException> {
-			Validerer().validereFilformat(innsendingId = "123456789", file = file, "Docx test dokument.docx")
+	fun verifiserDocxFilIkkeGirFeilmelding() {
+		val file = Hjelpemetoder.getBytesFromFile("/Docx-test.docx")
+		assertDoesNotThrow {
+			Validerer().validereFilformat(innsendingId = "123456789", file = file, "Docx-test.docx")
 		}
-		assertTrue(exception.message.contains(" Ugyldig filtype for opplasting. Kan kun laste opp filer av type PDF, JPEG, PNG og IMG"))
 	}
+
+	@Test
+	fun verifiserTxtFilIkkeGirFeilmelding() {
+		val file = Hjelpemetoder.getBytesFromFile("/__files/tekstfil-ex.txt")
+		assertDoesNotThrow {
+			Validerer().validereFilformat(innsendingId = "123456789", file = file, "textfil-ex.txt")
+		}
+	}
+
+	/*
+		@Test
+		fun verifiserXSLXFilGirFeilmelding() {
+			val file = Hjelpemetoder.getBytesFromFile("/__files/filopplastingstyper.xlsx")
+			val exception = assertThrows<IllegalActionException> {
+				Validerer().validereFilformat(innsendingId = "123456789", file = file, "sanity.json")
+			}
+			assertTrue(exception.message.contains(" Ugyldig filtype for opplasting. Kan kun laste opp filer av type PDF, JPEG, PNG og IMG"))
+		}
+	*/
+
 
 	@Test
 	fun verifiserJsonFilUtenExtentionGirFeilmelding() {
