@@ -63,6 +63,10 @@
 			{
 				"application": "kodeverk-api",
 				"namespace": "team-rocket"
+			},
+			{
+				"application": "upload-convert-to-pdf",
+				"namespace": "fyllut-sendinn"
 			}
 		],
 		"external-hosts": [
@@ -98,7 +102,6 @@
 		"PDL_TOKEN_X_AUDIENCE": "dev-fss:pdl:pdl-api",
 		"PDL_SCOPE": "api://dev-fss.pdl.pdl-api/.default",
 		"AZURE_TENANT": "trygdeetaten.no",
-		"AAD_AUTHORITY": "https://login.microsoftonline.com/62366534-1ec3-4962-8869-9b5535279d0b",
 		"SOKNADSMOTTAKER_SCOPE": "api://dev-gcp.team-soknad.soknadsmottaker/.default",
 		"SAF_SCOPE": "api://dev-fss.teamdokumenthandtering.saf-q1/.default",
 		"KAFKA_SECURITY": "TRUE",
@@ -113,6 +116,6 @@
 		"KONTOREGISTER_TOKEN_X_AUDIENCE": "dev-gcp:okonomi:sokos-kontoregister-person",
 		"KONTOREGISTER_SCOPE": "api://dev-gcp.okonomi.sokos-kontoregister-person/.default",
 		"KONTOREGISTER_URL": "http://sokos-kontoregister-person.okonomi",
-		"KONVERTERING_TIL_PDF_URL": "https://convert-to-pdf.intern.dev.nav.no/"
+		"KONVERTERING_TIL_PDF_URL": "http://upload-convert-to-pdf.fyllut-sendinn"
 	}
 }

@@ -225,27 +225,6 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-<!--
-		<dependency>
-			<groupId>org.apache.tika</groupId>
-			<artifactId>tika-parser-xmp-module</artifactId>
-			<version>${tika-core.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.apache.pdfbox</groupId>
-					<artifactId>pdfbox</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.apache.pdfbox</groupId>
-					<artifactId>xmpbox</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.apache.pdfbox</groupId>
-					<artifactId>pdfbox-tools</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
--->
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>pdfbox</artifactId>
@@ -426,11 +405,6 @@
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
 			<version>${gson.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>dev.shamil</groupId>
-			<artifactId>ulid4j</artifactId>
-			<version>${ulid4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.jai-imageio</groupId>

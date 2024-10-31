@@ -17,7 +17,12 @@
 		"current-namespace": [
 			"soknadsmottaker-loadtests"
 		],
-		"other-namespace": [],
+		"other-namespace": [
+			{
+				"application": "upload-convert-to-pdf",
+				"namespace": "fyllut-sendinn"
+			}
+		],
 		"external-hosts": [
 			"arkiv-mock-gcp.intern.dev.nav.no",
 			"soknadsmottaker-gcp-loadtests.intern.dev.nav.no",
@@ -47,7 +52,6 @@
 		"PDL_TOKEN_X_AUDIENCE": "dev-gcp:team-soknad:arkiv-mock-gcp",
 		"PDL_SCOPE": "api://dev-gcp:team-soknad:arkiv-mock-gcp/.default",
 		"AZURE_TENANT": "trygdeetaten.no",
-		"AAD_AUTHORITY": "https://login.microsoftonline.com/62366534-1ec3-4962-8869-9b5535279d0b",
 		"SOKNADSMOTTAKER_SCOPE": "api://dev-gcp.team-soknad.soknadsmottaker-loadtests/.default",
 		"SAF_SCOPE": "api://dev-gcp.team-soknad.arkiv-mock/.default",
 		"KAFKA_SECURITY": "TRUE",
@@ -61,6 +65,6 @@
 		"KONTOREGISTER_TOKEN_X_AUDIENCE": "dev-gcp:team-soknad:arkiv-mock-gcp",
 		"KONTOREGISTER_SCOPE": "api://dev-gcp:team-soknad:arkiv-mock-gcp/.default",
 		"KONTOREGISTER_URL": "https://arkiv-mock-gcp.intern.dev.nav.no",
-		"KONVERTERING_TIL_PDF_URL": "https://convert-to-pdf.intern.dev.nav.no/"
+		"KONVERTERING_TIL_PDF_URL": "http://upload-convert-to-pdf.fyllut-sendinn"
 	}
 }

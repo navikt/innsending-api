@@ -71,11 +71,6 @@ restconfig:
   kodeverkUrl: http://localhost:${wiremock.server.port}/kodeverk-api
   kontoregisterUrl: http://localhost:${wiremock.server.port}/kontoregister-api
 
-aad:
-  clientId:  "clientId"
-  clientSecret:  "secret"
-  tenant: "local"
-
 brukernotifikasjonconfig:
   profiles: test
   fyllutUrl: http://localhost:3001/fyllut
@@ -85,12 +80,6 @@ brukernotifikasjonconfig:
 ettersendingsfrist: 14
 
 status_log_url: "https://logs.adeo.no"
-fil-konvertering_url: http://localhost:3000
-
-docker:
-  compose:
-    skip:
-      in-tests: false
 
 wiremock:
   reset-mappings-after-each-test: true

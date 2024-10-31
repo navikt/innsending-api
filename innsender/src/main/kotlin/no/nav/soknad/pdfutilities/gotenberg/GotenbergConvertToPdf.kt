@@ -25,7 +25,6 @@ import java.io.File
 class GotenbergConvertToPdf(
 	@Qualifier("gotenbergClient")
 	private val gotenbergClient: RestClient,
-	@Value("\${fil-konvertering_url}") private val baseUrl: String,
 ) : DocxToPdfInterface {
 	companion object GotenbergConsts {
 		private const val LIBRE_OFFICE_ROUTE = "/forms/libreoffice/convert"
