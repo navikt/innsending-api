@@ -40,7 +40,7 @@ class GotenbergConvertToPdf(
 		val pageProperties: PageProperties = PageProperties.Builder().build()
 		val multipartBody = MultipartBodyBuilder().run {
 			part("files", ByteArrayMultipartFile(fileName, fileContent).resource)
-			pageProperties.all().forEach{ part(it.key, it.value) }
+			pageProperties.all().filter { it.key!="landscape" }.forEach{ part(it.key, it.value) }
 			build()
 		}
 

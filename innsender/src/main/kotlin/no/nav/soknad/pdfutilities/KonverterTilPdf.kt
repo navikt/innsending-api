@@ -61,7 +61,7 @@ class KonverterTilPdf(
 	}
 
 	private fun createPDFFromWord(soknad: DokumentSoknadDto, tittel: String?, fil: ByteArray): Pair<ByteArray, Int> {
-		val pdf = docxConverter.toPdf(soknad.innsendingsId + "-" + (tittel ?: "annet") + ".docx", fil)
+		val pdf = docxConverter.toPdf(soknad.innsendingsId + "-" + "annet" + ".docx", fil)
 		val antallSider = AntallSider().finnAntallSider(pdf) ?: 0
 		return Pair(pdf, antallSider)
 	}
