@@ -62,7 +62,7 @@ class SafSelvbetjeningClientConfig(
 				it.header(NAV_CONSUMER_ID, applicationName)
 				it.header(
 					HttpHeaders.AUTHORIZATION,
-					"Bearer ${oAuth2AccessTokenService.getAccessToken(tokenxSafSelvbetjeningClientProperties).accessToken}",
+					"Bearer ${oAuth2AccessTokenService.getAccessToken(tokenxSafSelvbetjeningClientProperties).access_token}",
 				)
 			}
 	)
