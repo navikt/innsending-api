@@ -56,7 +56,7 @@ class SafClientConfig(
 				it.header(Constants.NAV_CONSUMER_ID, applicationName)
 				it.header(
 					HttpHeaders.AUTHORIZATION,
-					"Bearer ${oAuth2AccessTokenService.getAccessToken(clientProperties).accessToken}",
+					"Bearer ${oAuth2AccessTokenService.getAccessToken(clientProperties).access_token}",
 				)
 			}
 	)

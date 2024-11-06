@@ -49,7 +49,7 @@ class PdlClientConfig(
 			)
 			.defaultRequest {
 				it.header(Constants.HEADER_CALL_ID, MDCUtil.callIdOrNew())
-				it.header(HttpHeaders.AUTHORIZATION, "Bearer ${oAuth2AccessTokenService.getAccessToken(tokenxPDLClientProperties).accessToken}")
+				it.header(HttpHeaders.AUTHORIZATION, "Bearer ${oAuth2AccessTokenService.getAccessToken(tokenxPDLClientProperties).access_token}")
 				it.header("Tema", "AAP")
 				it.header(HEADER_BEHANDLINGSNUMMER, PDL_BEHANDLINGSNUMMER)
 			}
