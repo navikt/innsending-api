@@ -2,6 +2,7 @@ package no.nav.soknad.pdfutilities
 
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ErrorCode
+import no.nav.soknad.innsending.exceptions.IllegalActionException
 import org.apache.commons.lang3.ArrayUtils
 import org.apache.tika.Tika
 import org.apache.tika.exception.TikaException
@@ -94,18 +95,20 @@ class FiltypeSjekker {
 				// Parse the input and detect the content type
 				parser.parse(tikaInputStream, handler, metadata)
 
+				logger.info("DetectContentType: ${metadata.get(Metadata.CONTENT_TYPE)}")
 				// Return the detected content type from the metadata
 				return metadata.get(Metadata.CONTENT_TYPE) ?: "application/octet-stream"
 			}
 
 		} catch (e: SAXException) {
-			logger.error("Error parsing document", e)
-			throw BackendErrorException("Feil ved sjekking av filtype", e, ErrorCode.GENERAL_ERROR)
+			logger.warn("SAX Error parsing document", e)
+			throw IllegalActionException("Feil ved sjekking av filtype", e, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
 		} catch (e: TikaException) {
-			logger.error("Error detecting content type", e)
-			throw BackendErrorException("Feil ved sjekking av filtype", e, ErrorCode.GENERAL_ERROR)
+			logger.warn("Tika Error detecting content type", e)
+			throw IllegalActionException("Feil ved sjekking av filtype", e, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
 		} catch (e: Exception) {
-			throw BackendErrorException("Feil ved sjekking av filtype", e, ErrorCode.GENERAL_ERROR)
+			logger.warn("Error detecting content type", e)
+			throw IllegalActionException("Feil ved sjekking av filtype", e, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
 		}
 
 	}

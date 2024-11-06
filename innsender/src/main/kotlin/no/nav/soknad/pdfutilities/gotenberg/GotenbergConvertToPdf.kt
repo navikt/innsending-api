@@ -1,6 +1,8 @@
 package no.nav.soknad.pdfutilities.gotenberg
 
 import no.nav.soknad.innsending.exceptions.BackendErrorException
+import no.nav.soknad.innsending.exceptions.ErrorCode
+import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.pdfutilities.DocxToPdfInterface
 import no.nav.soknad.pdfutilities.FiltypeSjekker
 import org.apache.commons.io.FileUtils
@@ -62,11 +64,11 @@ class GotenbergConvertToPdf(
 				if (response.statusCode.is2xxSuccessful) {
 					response.body.readAllBytes()
 				} else if (response.statusCode.is4xxClientError) {
-					throw BackendErrorException(errorResponse(response, uri))
+					throw BackendErrorException(errorResponse(response, uri), null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
 				} else if (response.statusCode.is5xxServerError) {
-					throw BackendErrorException(errorResponse(response, uri))
+					throw IllegalActionException(errorResponse(response, uri), null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
 				} else {
-					throw BackendErrorException(errorResponse(response, uri))
+					throw IllegalActionException(errorResponse(response, uri), null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
 				}
 			}
 
@@ -79,9 +81,9 @@ class GotenbergConvertToPdf(
 		uri: String
 	): String {
 		val trace = response.headers.get(GOTENBERG_TRACE_HEADER)?.first()
-		val msg = "Got ${response.statusCode} when requesting post $uri" + " header trace response: ${trace}"
-		logger.error(msg)
-		return msg
+		logger.error("Got ${response.statusCode} when requesting post $uri" + " header trace response: ${trace}")
+
+		return "Got ${response.statusCode} when trying to convert file to PDF"
 	}
 
 	private class ByteArrayMultipartFile(

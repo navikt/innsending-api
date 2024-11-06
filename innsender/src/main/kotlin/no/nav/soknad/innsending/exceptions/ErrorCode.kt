@@ -22,6 +22,7 @@ enum class ErrorCode(val code: String) {
 	TITLE_STRING_TOO_LONG("illegalAction.titleStringTooLong"), // (ikke i bruk)
 	VIRUS_SCAN_FAILED("illegalAction.virusScanFailed"),
 	INVALID_KODEVERK_VALUE("illegalAction.invalidKodeverkValue"),
+	TYPE_DETECTION_OR_CONVERSION_ERROR("illegalAction.typeDetectionOrConversionError"),
 
 	SOKNAD_ALREADY_EXISTS("soknadAlreadyExists"),
 
