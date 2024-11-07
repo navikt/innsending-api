@@ -64,7 +64,7 @@ class GotenbergConvertToPdf(
 				if (response.statusCode.is2xxSuccessful) {
 					response.body.readAllBytes()
 				} else if (response.statusCode.is4xxClientError) {
-					throw BackendErrorException(errorResponse(response, uri), null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
+					throw IllegalActionException(errorResponse(response, uri), null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
 				} else if (response.statusCode.is5xxServerError) {
 					throw IllegalActionException(errorResponse(response, uri), null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
 				} else {
