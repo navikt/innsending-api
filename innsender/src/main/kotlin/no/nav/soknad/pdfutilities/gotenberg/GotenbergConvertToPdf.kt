@@ -1,6 +1,5 @@
 package no.nav.soknad.pdfutilities.gotenberg
 
-import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.pdfutilities.DocxToPdfInterface
@@ -8,12 +7,9 @@ import no.nav.soknad.pdfutilities.FiltypeSjekker
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
-import org.springframework.core.io.ByteArrayResource
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
 import org.springframework.http.client.MultipartBodyBuilder
 import org.springframework.stereotype.Service
 import org.springframework.util.MultiValueMap

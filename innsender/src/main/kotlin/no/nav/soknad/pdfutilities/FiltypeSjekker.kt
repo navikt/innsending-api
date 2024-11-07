@@ -1,6 +1,5 @@
 package no.nav.soknad.pdfutilities
 
-import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import org.apache.commons.lang3.ArrayUtils
@@ -11,7 +10,6 @@ import org.apache.tika.metadata.Metadata
 import org.apache.tika.parser.AutoDetectParser
 import org.apache.tika.parser.txt.CharsetDetector
 import org.apache.tika.sax.BodyContentHandler
-import org.openjdk.nashorn.tools.ShellFunctions.input
 import org.slf4j.LoggerFactory
 import org.xml.sax.SAXException
 import java.nio.charset.Charset
