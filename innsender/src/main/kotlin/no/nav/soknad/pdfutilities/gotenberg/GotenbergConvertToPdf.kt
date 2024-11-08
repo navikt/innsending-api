@@ -77,7 +77,11 @@ class GotenbergConvertToPdf(
 		uri: String
 	): String {
 		val trace = response.headers.get(GOTENBERG_TRACE_HEADER)?.first()
-		logger.error("Got ${response.statusCode} when requesting post $uri" + " header trace response: ${trace}")
+		if (response.statusCode.is4xxClientError) {
+			logger.error("Got ${response.statusCode} when requesting post $uri" + " header trace response: ${trace}")
+		} else {
+			logger.warn("Got ${response.statusCode} when requesting post $uri" + " header trace response: ${trace}")
+		}
 
 		return "Got ${response.statusCode} when trying to convert file to PDF"
 	}
