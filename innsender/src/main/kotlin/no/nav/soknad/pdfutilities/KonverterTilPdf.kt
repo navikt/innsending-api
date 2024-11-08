@@ -59,8 +59,12 @@ class KonverterTilPdf(
 	}
 
 	private fun createPDFFromWord(soknad: DokumentSoknadDto, tittel: String?, fil: ByteArray): Pair<ByteArray, Int> {
-		val pdf = docxConverter.toPdf(soknad.innsendingsId + "-" + (tittel ?: "annet") + ".docx", fil)
+		val generertFilnavn = soknad.innsendingsId + "-" + UUID.randomUUID().toString() + ".docx"
+		logger.info("${soknad.innsendingsId}: Skal konvertere docx til vedlegg ${tittel ?: "annet"}, med filnavn=$generertFilnavn")
+
+		val pdf = docxConverter.toPdf(generertFilnavn, fil)
 		val antallSider = AntallSider().finnAntallSider(pdf) ?: 0
+
 		return Pair(pdf, antallSider)
 	}
 
