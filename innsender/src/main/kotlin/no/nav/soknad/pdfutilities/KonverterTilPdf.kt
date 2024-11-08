@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.nio.CharBuffer
 import java.nio.charset.StandardCharsets
+import java.util.*
 
 @Service
 class KonverterTilPdf(
@@ -61,8 +62,12 @@ class KonverterTilPdf(
 	}
 
 	private fun createPDFFromWord(soknad: DokumentSoknadDto, tittel: String?, fil: ByteArray): Pair<ByteArray, Int> {
-		val pdf = docxConverter.toPdf(soknad.innsendingsId + "-" + (tittel ?: "annet") + ".docx", fil)
+		val generertFilnavn = soknad.innsendingsId + "-" + UUID.randomUUID().toString() + ".docx"
+		logger.info("${soknad.innsendingsId}: Skal konvertere docx til vedlegg ${tittel ?: "annet"}, med filnavn=$generertFilnavn")
+
+		val pdf = docxConverter.toPdf(generertFilnavn, fil)
 		val antallSider = AntallSider().finnAntallSider(pdf) ?: 0
+
 		return Pair(pdf, antallSider)
 	}
 
