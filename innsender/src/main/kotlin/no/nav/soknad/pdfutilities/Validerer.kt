@@ -27,14 +27,19 @@ class Validerer {
 			// Kontroller at PDF er lovlig, dvs. ikke encrypted og passordbeskyttet
 			erGyldigPdf(innsendingId, file)
 
-		} else if (!isImage(file) && !isText(file) && !isDocx(file)) {
-			val extention = fileName?.substringAfterLast(".", "<mangler>") ?: "<mangler>"
-			logger.warn("$innsendingId: Ugyldig filtype for opplasting. Filextention: ${extention}, og filstart = ${if (file.size >= 4) (file[0] + file[1] + file[3] + file[4]) else file[0]}\")")
-			throw IllegalActionException(
-				message = "$innsendingId: Ugyldig filtype for opplasting. Kan kun laste opp filer av type TXT, DOCX, PDF, JPEG, PNG og IMG",
-				errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
-			)
+		} else if (!isImage(file) && !isText(file) && !isDocx(file) ) {
+				ulovligFilFormat(innsendingId, fileName, file)
 		}
+	}
+
+	private fun ulovligFilFormat(innsendingId: String, fileName: String? = "", file: ByteArray) {
+		val extention = fileName?.substringAfterLast(".", "<mangler>") ?: "<mangler>"
+		logger.warn("$innsendingId: Ugyldig filtype for opplasting. Filextention: ${extention}, og filstart = ${if (file.size >= 4) (file[0] + file[1] + file[3] + file[4]) else file[0]}\")")
+		throw IllegalActionException(
+			message = "$innsendingId: Ugyldig filtype for opplasting. Kan kun laste opp filer av type TXT, DOCX, PDF, JPEG, PNG og IMG",
+			errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
+		)
+
 	}
 
 	fun validereAntallSider(antallSider: Int, maxAntallSider: Int = 200) {

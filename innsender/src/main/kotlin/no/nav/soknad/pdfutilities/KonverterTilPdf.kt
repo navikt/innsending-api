@@ -5,8 +5,6 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.nio.CharBuffer
-import java.nio.charset.StandardCharsets
 import java.util.*
 
 @Service
