@@ -111,7 +111,7 @@ class FilRestApiTest : ApplicationTest() {
 
 	@Test
 	@Disabled // Require running gotenberg docker container locally: docker run --rm -p 3000:3000 gotenberg/gotenberg:8
-	fun sjekkOpplastingsstatusEtterOpplastingAvDocxTest() {
+	fun verifiserOpplastingAvUlikeFiltyperTest() {
 		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 		val vedlegg = listOf("N6", "W2")
@@ -129,13 +129,30 @@ class FilRestApiTest : ApplicationTest() {
 
 		testOpplastingAvBildeFormater(token, soknadDto.innsendingsId!!, vedleggN6.id!!)
 
-		/*
 		val filePages = innsenderMetrics.fileNumberOfPagesSummary
 		val fileSize = innsenderMetrics.fileSizeSummary
-		assertEquals(1.0, filePages.collect().dataPoints[0].sum)
-		assertEquals(13701.0, fileSize.collect().dataPoints[0].sum)
-		*/
+		assertTrue(filePages.collect().dataPoints[0].sum > 1.0)
+		assertTrue(fileSize.collect().dataPoints[0].sum > 30000.0)
 
+	}
+
+	@Test
+	fun verifiserAvvisningAvUlovligeFiltyper() {
+		val skjemanr = defaultSkjemanr
+		val spraak = "nb_NO"
+		val vedlegg = listOf("N6", "W2")
+		val bildeNavnPrefix = "bilde"
+		val filPath = "/__files/$bildeNavnPrefix"
+		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
+
+		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
+		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
+
+		org.junit.jupiter.api.assertThrows<Exception> {
+			lastOppFil(token, soknadDto.innsendingsId!!, vedleggN6.id!!, filPath+ ".heic")
+		}
 
 	}
 
@@ -166,7 +183,7 @@ class FilRestApiTest : ApplicationTest() {
 
 		opplastetFil.body?.let { writeBytesToFile(it.byteArray, "delme-$type.pdf") }
 
-		slettOpplastetFil(token, innsendingsId, filDto.body?.vedleggsid!!, filDto.body?.id!! )
+		slettOpplastetFil(token, innsendingsId, filDto.body?.vedleggsid!!, filDto.body?.id!!)
 
 	}
 
