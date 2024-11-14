@@ -9,7 +9,7 @@ import kotlin.test.assertEquals
 
 class KonverterTilPdfTest {
 
-	private val docToPdfConverter: DocxToPdfInterface = ToPdfConverterTest()
+	private val docToPdfConverter: FileToPdfInterface = ToPdfConverterTest()
 
 	private val konverterTilPdf = KonverterTilPdf(docToPdfConverter)
 
@@ -55,7 +55,7 @@ class KonverterTilPdfTest {
 	fun verifiserKonverteringAvJpg() {
 		val jpg = Hjelpemetoder.getBytesFromFile("/2MbJpg.jpg")
 
-		val (pdf, antallSider) = konverterTilPdf.tilPdf(jpg, soknadDto)
+		val (pdf, antallSider) = konverterTilPdf.tilPdf(jpg, soknadDto, ".jpg")
 		assertEquals(1, antallSider)
 
 		val erPdfa = Validerer().isPDFa(pdf)
@@ -67,7 +67,7 @@ class KonverterTilPdfTest {
 		val jpg = Hjelpemetoder.getBytesFromFile("/mellomstorJpg.jpg")
 
 		val start = System.currentTimeMillis()
-		val (pdf, antallSider) = konverterTilPdf.tilPdf(jpg, soknadDto)
+		val (pdf, antallSider) = konverterTilPdf.tilPdf(jpg, soknadDto, ".jpg")
 		val ferdig = System.currentTimeMillis()
 		println("Tid til konvertering av mellomstorJpg = ${ferdig - start}")
 		assertEquals(1, antallSider)
@@ -85,7 +85,7 @@ class KonverterTilPdfTest {
 		val (pdf, antallSider) = konverterTilPdf.tilPdf(
 			jpg,
 			soknadDto,
-			sammensattNavn = "Kalle Kanin",
+			filtype = ".txt",
 			vedleggsTittel = "Vedleggstittel"
 		)
 		val ferdig = System.currentTimeMillis()
@@ -106,7 +106,7 @@ class KonverterTilPdfTest {
 		val (pdf, antallSider) = konverterTilPdf.tilPdf(
 			jpg,
 			soknadDto,
-			sammensattNavn = "Kalle Kanin",
+			filtype = ".txt",
 			vedleggsTittel = "Vedleggstittel"
 		)
 		val ferdig = System.currentTimeMillis()

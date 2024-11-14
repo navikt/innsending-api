@@ -1,8 +1,9 @@
 package no.nav.soknad.pdfutilities.gotenberg
 
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
-import no.nav.soknad.pdfutilities.DocxToPdfInterface
+import no.nav.soknad.pdfutilities.FileToPdfInterface
 import no.nav.soknad.pdfutilities.FiltypeSjekker
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
@@ -23,9 +24,10 @@ import java.io.File
 class GotenbergConvertToPdf(
 	@Qualifier("gotenbergClient")
 	private val gotenbergClient: RestClient,
-) : DocxToPdfInterface {
+) : FileToPdfInterface {
 	companion object GotenbergConsts {
 		private const val LIBRE_OFFICE_ROUTE = "/forms/libreoffice/convert"
+		private const val HTML_ROUTE = "/forms/chromium/convert/html"
 		private const val GOTENBERG_TRACE_HEADER = "gotenberg-trace"
 	}
 
@@ -42,18 +44,47 @@ class GotenbergConvertToPdf(
 			build()
 		}
 
-		return convertFileRequest(fileName, multipartBody)
+		return convertFileRequest(fileName, multipartBody, LIBRE_OFFICE_ROUTE)
+	}
+
+	override fun imageToPdf(fileName: String, fileContent: ByteArray): ByteArray {
+		val htmlString = getHtmlTemplate(fileName)
+		val pageProperties: PageProperties = PageProperties.Builder()
+			.addMarginLeft(0.1f)
+			.addMarginRight(0.1f)
+			.addMarginTop(0.1f)
+			.addMarginBottom(0.1f)
+			.addScale(0.7f)
+			.build()
+		val multipartBody = MultipartBodyBuilder().run {
+			part("files", ByteArrayMultipartFile("index.html", htmlString.toByteArray()).resource)
+			part("files", ByteArrayMultipartFile(fileName, fileContent).resource)
+			pageProperties.all().forEach{ part(it.key, it.value) }
+			build()
+		}
+
+		return convertFileRequest(fileName, multipartBody, HTML_ROUTE)
+
+	}
+
+	private fun getHtmlTemplate(fileName: String): String {
+		val htmlTemplate = this::class.java.getResource("/pdf/templates/image-to-pdf.html")?.readText()
+		if (htmlTemplate.isNullOrEmpty()) {
+			throw BackendErrorException("Fant ikke html template for konvertering av opplastet bilde til PDF", null, ErrorCode.GENERAL_ERROR)
+		}
+		return htmlTemplate.replace("##bilde##", fileName)
 	}
 
 	private fun convertFileRequest(
 		filename: String,
 		multipartBody: MultiValueMap<String, HttpEntity<*>>,
+		route: String
 	): ByteArray {
 
-		val uri = LIBRE_OFFICE_ROUTE
+		val uri = route
 		val response = gotenbergClient
 			.post()
-			.uri(LIBRE_OFFICE_ROUTE)
+			.uri(uri)
 			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"$filename\"")
 			.body(multipartBody)
 			.exchange { request, response ->

@@ -3,13 +3,17 @@ package no.nav.soknad.pdfutilities
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.imageFileTypes
+import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.officeFileTypes
+import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.textTypes
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.*
 
+
 @Service
 class KonverterTilPdf(
-	private val docxConverter: DocxToPdfInterface
+	private val pdfConverter: FileToPdfInterface
 ) : KonverterTilPdfInterface {
 
 	private val logger = LoggerFactory.getLogger(KonverterTilPdf::class.java)
@@ -17,25 +21,24 @@ class KonverterTilPdf(
 	override fun tilPdf(
 		fil: ByteArray,
 		soknad: DokumentSoknadDto,
-		sammensattNavn: String?,
+		filtype: String,
 		vedleggsTittel: String?
 	): Pair<ByteArray, Int> {
 
-		val filtype_full = FiltypeSjekker().detectContentType(fil, null)
-		logger.info("Skal konvertere filtype=$filtype_full til PDF")
-		val filtype = filtype_full.substringBefore(";")
+		logger.info("Skal konvertere filtype=$filtype til PDF")
 
-		when (filtype) {
-			"application/pdf" -> return checkAndFormatPDF(fil)
-			"image/png", "image/jpeg" -> return ConvertImageToPdf().pdfFromImage(fil)
-			"text/plain" -> return createPDFFromText(soknad, vedleggsTittel ?: "Annet", fil)
-			"application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> return createPDFFromWord(
-				soknad,
-				vedleggsTittel,
-				fil
-			)
-
-			else -> throw IllegalActionException(
+		if ("pdf".equals(filtype, ignoreCase = true)) {
+			return checkAndFormatPDF(fil)
+/*
+		} else if (imageFileTypes.keys.contains(filtype)) {
+			return convertImageToPDF(genererFilnavn(soknad, vedleggsTittel ?: "Annet", filtype), fil)
+*/
+		} else if (officeFileTypes.keys.contains(filtype) || imageFileTypes.keys.contains(filtype)) {
+			return createPDFFromOfficeDoc(genererFilnavn(soknad, vedleggsTittel ?: "Annet", filtype), fil)
+		} else if (textTypes.contains(filtype)) {
+			return createPDFFromText(soknad, vedleggsTittel ?: "Annet", fil)
+		}	else {
+				throw IllegalActionException(
 				message = "Ulovlig filformat. Kan ikke konvertere til PDF",
 				errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
 			)
@@ -45,6 +48,19 @@ class KonverterTilPdf(
 	private fun checkAndFormatPDF(fil: ByteArray): Pair<ByteArray, Int> {
 		val antallSider = AntallSider().finnAntallSider(fil) ?: 0
 		return Pair(CheckAndFormatPdf().flatUtPdf(fil, antallSider), antallSider) // Bare hvis inneholder formfields?
+	}
+
+	private fun convertImageToPDF(filNavn: String, fil: ByteArray): Pair<ByteArray, Int> {
+		val pdf = pdfConverter.imageToPdf(filNavn, fil)
+		val antallSider = AntallSider().finnAntallSider(pdf) ?: 0
+
+		return Pair(pdf, antallSider)
+	}
+
+	private fun genererFilnavn(soknad: DokumentSoknadDto, tittel: String, filtype:String): String {
+		val generertFilnavn = soknad.innsendingsId + "-" + UUID.randomUUID().toString() + filtype
+		logger.info("${soknad.innsendingsId}: Skal konvertere $filtype til vedlegg ${tittel ?: "annet"}, med filnavn=$generertFilnavn")
+		return generertFilnavn
 	}
 
 	private fun createPDFFromText(soknad: DokumentSoknadDto, tittel: String?, text: ByteArray): Pair<ByteArray, Int> {
@@ -59,11 +75,8 @@ class KonverterTilPdf(
 		return Pair(pdf, antallSider)
 	}
 
-	private fun createPDFFromWord(soknad: DokumentSoknadDto, tittel: String?, fil: ByteArray): Pair<ByteArray, Int> {
-		val generertFilnavn = soknad.innsendingsId + "-" + UUID.randomUUID().toString() + ".docx"
-		logger.info("${soknad.innsendingsId}: Skal konvertere docx til vedlegg ${tittel ?: "annet"}, med filnavn=$generertFilnavn")
-
-		val pdf = docxConverter.toPdf(generertFilnavn, fil)
+	private fun createPDFFromOfficeDoc(filnavn: String, fil: ByteArray): Pair<ByteArray, Int> {
+		val pdf = pdfConverter.toPdf(filnavn, fil)
 		val antallSider = AntallSider().finnAntallSider(pdf) ?: 0
 
 		return Pair(pdf, antallSider)

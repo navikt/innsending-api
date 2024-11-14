@@ -2,6 +2,7 @@ package no.nav.soknad.pdfutilities
 
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
+import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.supportedFileTypes
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdfwriter.compress.CompressParameters
 import org.apache.pdfbox.pdmodel.PDDocument
@@ -9,6 +10,8 @@ import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException
 import org.apache.pdfbox.preflight.ValidationResult
 import org.apache.pdfbox.preflight.exception.SyntaxValidationException
 import org.apache.pdfbox.preflight.parser.PreflightParser
+import org.apache.tika.mime.MimeType
+import org.apache.tika.mime.MimeTypes
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.*
@@ -18,17 +21,34 @@ class Validerer {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	fun validereFilformat(innsendingId: String, file: ByteArray, fileName: String?) {
-		kontroller(innsendingId, file, fileName)
-	}
-
-	private fun kontroller(innsendingId: String, file: ByteArray, fileName: String? = "") {
+	fun validereFilformat(innsendingId: String, file: ByteArray, fileName: String?): String {
 		if (isPDF(file)) {
 			// Kontroller at PDF er lovlig, dvs. ikke encrypted og passordbeskyttet
 			erGyldigPdf(innsendingId, file)
+			return "pdf"
 
-		} else if (!isImage(file) && !isText(file) && !isDocx(file) ) {
-				ulovligFilFormat(innsendingId, fileName, file)
+		} else {
+			val primaryExtension: String = try {
+					val fileType_full = FiltypeSjekker().detectContentType(file, fileName)
+					val filtype = fileType_full.substringBefore(";")
+					val allTypes = MimeTypes.getDefaultMimeTypes()
+					val type: MimeType = allTypes.forName(filtype)
+					type.getExtension()
+				} catch (e: Exception) {
+					val ext =
+						if (fileName != null) {
+							File(fileName).extension
+						} else {
+							"unknown"
+						}
+					logger.warn("Error checking filecontent for $ext")
+					"." + ext
+				}
+
+				if (!supportedFileTypes.contains(primaryExtension)) {
+					ulovligFilFormat(innsendingId, fileName, file)
+				}
+				return primaryExtension
 		}
 	}
 

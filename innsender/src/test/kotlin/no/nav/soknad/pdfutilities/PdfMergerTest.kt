@@ -9,7 +9,7 @@ import kotlin.test.assertEquals
 
 class PdfMergerTest {
 
-	private val docToPdfConverter: DocxToPdfInterface = ToPdfConverterTest()
+	private val docToPdfConverter: FileToPdfInterface = ToPdfConverterTest()
 	private val konverterTilPdf = KonverterTilPdf(docToPdfConverter)
 
 	private val soknadDto = DokumentSoknadDtoTestBuilder().build()
@@ -85,7 +85,7 @@ class PdfMergerTest {
 	private fun konverterTilPdfOgReturner(filPath: String): ByteArray {
 		val jpg = Hjelpemetoder.getBytesFromFile(filPath)
 
-		val (pdf, antallSider) = konverterTilPdf.tilPdf(jpg, soknad = soknadDto)
+		val (pdf, antallSider) = konverterTilPdf.tilPdf(jpg, soknad = soknadDto, filtype = "jpg")
 		assertEquals(1, antallSider)
 
 		val erPdfa = Validerer().isPDFa(pdf)

@@ -6,7 +6,10 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
 import no.nav.soknad.innsending.utils.TokenGenerator
+import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.imageFileTypes
+import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.officeFileTypes
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
@@ -16,10 +19,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.ClassPathResource
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
+import org.springframework.core.io.Resource
+import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
 
 class FilRestApiTest : ApplicationTest() {
@@ -121,52 +122,92 @@ class FilRestApiTest : ApplicationTest() {
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
 
-		val multipart = LinkedMultiValueMap<Any, Any>()
-		multipart.add("file", ClassPathResource("/Docx-test.docx"))
+		testOpplastingAvOfficeFormater(token, soknadDto.innsendingsId!!, vedleggN6.id!!)
 
-		val postFilRequestN6 = HttpEntity(multipart, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
-		val postFilResponseN6 = restTemplate.exchange(
-			"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil",
-			HttpMethod.POST,
-			postFilRequestN6,
-			FilDto::class.java
-		)
+		val vedleggW2 = soknadDto.vedleggsListe.first { it.vedleggsnr == "W2" }
+		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggW2.opplastingsStatus)
+
+		testOpplastingAvBildeFormater(token, soknadDto.innsendingsId!!, vedleggN6.id!!)
+
+		/*
 		val filePages = innsenderMetrics.fileNumberOfPagesSummary
 		val fileSize = innsenderMetrics.fileSizeSummary
-
-		assertEquals(HttpStatus.CREATED, postFilResponseN6.statusCode)
-		assertTrue(postFilResponseN6.body != null)
-		assertEquals(Mimetype.applicationSlashPdf, postFilResponseN6.body!!.mimetype)
 		assertEquals(1.0, filePages.collect().dataPoints[0].sum)
 		assertEquals(13701.0, fileSize.collect().dataPoints[0].sum)
-		val opplastetFilDto = postFilResponseN6.body
-		if (opplastetFilDto != null) {
-			val filN6Request = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
-			val filN6Response = restTemplate.exchange(
-				"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil/${opplastetFilDto.id}",
-				HttpMethod.GET,
-				filN6Request,
-				ByteArrayResource::class.java
-			)
+		*/
 
-			if (filN6Response.body != null) {
-				//filN6Response.body?.let { writeBytesToFile(it.byteArray, "delme.pdf") }
-			}
-		}
 
-		val vedleggN6Request = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
-		val oppdatertVedleggN6Response = restTemplate.exchange(
-			"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}",
+	}
+
+	private fun testOpplastingAvBildeFormater(token: String, innsendingsId: String, vedleggsId: Long) {
+		val bildeNavnPrefix = "bilde"
+		val filPath = "/__files/$bildeNavnPrefix"
+
+		imageFileTypes.keys.forEach { lastOppOgSjekk(token, innsendingsId, vedleggsId,  filPath, it) }
+	}
+
+	private fun testOpplastingAvOfficeFormater(token: String, innsendingsId: String, vedleggsId: Long) {
+		val officeNavnPrefix = "office"
+		val filPath = "/__files/$officeNavnPrefix"
+
+		officeFileTypes.keys.forEach { lastOppOgSjekk(token, innsendingsId, vedleggsId,  filPath, it) }
+	}
+
+	private fun lastOppOgSjekk(token: String, innsendingsId: String, vedleggsId: Long, filSti: String, type: String) {
+		val filDto = lastOppFil(token, innsendingsId, vedleggsId, filSti+type)
+		assertEquals(HttpStatus.CREATED, filDto.statusCode)
+		assertTrue(filDto.body != null)
+		assertEquals(Mimetype.applicationSlashPdf, filDto.body!!.mimetype)
+		assertNotNull(filDto.body!!.id)
+
+		val opplastetFil = hentOpplastetFil(token, innsendingsId, filDto.body?.vedleggsid!!, filDto.body?.id!!)
+		assertEquals(HttpStatus.OK, opplastetFil.statusCode)
+		assertEquals(filDto.body!!.storrelse, opplastetFil.body!!.byteArray.size)
+
+		opplastetFil.body?.let { writeBytesToFile(it.byteArray, "delme-$type.pdf") }
+
+		slettOpplastetFil(token, innsendingsId, filDto.body?.vedleggsid!!, filDto.body?.id!! )
+
+	}
+
+	private fun lastOppFil(token: String, innsendingsId: String, vedleggsId: Long, filePath: String): ResponseEntity<FilDto> {
+		val multipart = LinkedMultiValueMap<Any, Any>()
+		multipart.add("file", ClassPathResource(filePath))
+
+		val httpEntity = HttpEntity(multipart, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
+		return restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId!!}/vedlegg/${vedleggsId}/fil",
+			HttpMethod.POST,
+			httpEntity,
+			FilDto::class.java
+		)
+
+	}
+
+	private fun hentOpplastetFil(token: String, innsendingsId: String, vedleggsId: Long, filId: Long):ResponseEntity<ByteArrayResource>  {
+		val httpEntity = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
+		return restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad/$innsendingsId/vedlegg/$vedleggsId/fil/$filId",
 			HttpMethod.GET,
-			vedleggN6Request,
+			httpEntity,
+			ByteArrayResource::class.java
+		)
+	}
+
+	private fun slettOpplastetFil(token: String, innsendingsId: String, vedleggsId: Long, filId: Long) {
+		val httpEntity = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
+		val response = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg/$vedleggsId/fil/$filId",
+			HttpMethod.DELETE,
+			httpEntity,
 			VedleggDto::class.java
 		)
 
-		assertTrue(oppdatertVedleggN6Response.body != null)
-		val oppdatertVedleggN6 = oppdatertVedleggN6Response.body
-		assertEquals(OpplastingsStatusDto.LastetOpp, oppdatertVedleggN6!!.opplastingsStatus)
+		assertEquals(HttpStatus.OK, response.statusCode)
+		assertTrue(response.body != null)
+		val oppdatertEtterSlettetFilVedleggN6 = response.body
+		assertEquals(OpplastingsStatusDto.IkkeValgt, oppdatertEtterSlettetFilVedleggN6!!.opplastingsStatus)
 	}
-
 
 	@Test
 	fun sjekkAtOpplastingAvForStorFilGirFeilTest() {
