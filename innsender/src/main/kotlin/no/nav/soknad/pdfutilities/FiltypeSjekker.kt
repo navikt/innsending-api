@@ -34,7 +34,8 @@ class FiltypeSjekker {
 			".tif" to "image/tiff",
 			".gif" to "image/gif"
 		)
-		val textTypes = mapOf("txt" to "text/plain")
+		val textTypes = mapOf(".txt" to "text/plain")
+
 		val supportedFileTypes = officeFileTypes.keys + imageFileTypes.keys + textTypes.keys
 
 	}
