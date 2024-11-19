@@ -113,7 +113,7 @@ class FilRestApiTest : ApplicationTest() {
 	@Disabled // Require running gotenberg docker container locally: docker run --rm -p 3000:3000 gotenberg/gotenberg:8
 	fun verifiserOpplastingAvUlikeFiltyperTest() {
 		val skjemanr = defaultSkjemanr
-		val spraak = "nb_NO"
+		val spraak = "nb-NO"
 		val vedlegg = listOf("N6", "W2")
 		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 

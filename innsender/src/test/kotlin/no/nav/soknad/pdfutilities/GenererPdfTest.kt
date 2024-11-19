@@ -175,7 +175,7 @@ class GenererPdfTest {
 	}
 
 	@Test
-	fun verifiserGenereringAvPdfFraTekst_frFil() {
+	fun verifiserGenereringAvPdfFraTekst_Fil() {
 
 		val soknad = lagEttersendingsSoknadAltInnsendt(tittel)
 

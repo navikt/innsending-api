@@ -6,8 +6,12 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.imageFileTypes
 import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.officeFileTypes
 import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.textTypes
+import org.apache.pdfbox.Loader
+import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.pdmodel.common.PDStream
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.io.ByteArrayOutputStream
 import java.util.*
 
 
@@ -34,7 +38,8 @@ class KonverterTilPdf(
 			return convertImageToPDF(genererFilnavn(soknad, vedleggsTittel ?: "Annet", filtype), fil)
 */
 		} else if (officeFileTypes.keys.contains(filtype) || imageFileTypes.keys.contains(filtype)) {
-			return createPDFFromOfficeDoc(genererFilnavn(soknad, vedleggsTittel ?: "Annet", filtype), fil)
+			val tittel = vedleggsTittel ?: "Annet"
+			return createPDFFromOfficeDoc(genererFilnavn(soknad, tittel, filtype), fil, tittel, soknad.spraak ?: "nb-NO")
 		} else if (textTypes.contains(filtype)) {
 			return createPDFFromText(soknad, vedleggsTittel ?: "Annet", fil)
 		}	else {
@@ -75,11 +80,10 @@ class KonverterTilPdf(
 		return Pair(pdf, antallSider)
 	}
 
-	private fun createPDFFromOfficeDoc(filnavn: String, fil: ByteArray): Pair<ByteArray, Int> {
+	private fun createPDFFromOfficeDoc(filnavn: String, fil: ByteArray, tittel: String = "Annet", spraak: String = "nb-NO"): Pair<ByteArray, Int> {
 		val pdf = pdfConverter.toPdf(filnavn, fil)
 		val antallSider = AntallSider().finnAntallSider(pdf) ?: 0
-
-		return Pair(pdf, antallSider)
+		return Pair(setPdfMetadata(pdf, tittel, spraak), antallSider)
 	}
 
 	override fun flatUtPdf(fil: ByteArray, antallSider: Int): ByteArray {
@@ -90,4 +94,30 @@ class KonverterTilPdf(
 		return CheckAndFormatPdf().harSkrivbareFelt(input)
 	}
 
+	// Using libreOffice route, metadata for language and title is not set
+	private fun setPdfMetadata(file: ByteArray, title: String, language: String): ByteArray {
+		var pdfDocument: PDDocument? = null
+		val out = ByteArrayOutputStream()
+		try {
+			pdfDocument = Loader.loadPDF(file)
+			val docInfo = pdfDocument.documentInformation
+			val docCatalog = pdfDocument.documentCatalog
+			docInfo.title = title
+			docCatalog.language = fixLanguage(language)
+			pdfDocument.save(out)
+			return out.toByteArray()
+		} finally {
+				out.close()
+		    if (pdfDocument != null) {
+					pdfDocument.close()
+				}
+		}
+	}
+
+	private fun fixLanguage(language: String): String {
+		if(language.length > 2) return language
+		else if (language.startsWith("en")) {return language.substring(0,2)+"-UK"}
+		else if (language.startsWith("no") || language.startsWith("nn") || language.startsWith("nb")) {return language.substring(0,2)+"-NO"}
+		else return "en-UK"
+	}
 }
