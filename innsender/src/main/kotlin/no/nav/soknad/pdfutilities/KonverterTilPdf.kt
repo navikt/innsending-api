@@ -8,7 +8,6 @@ import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.officeFileTypes
 import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.textTypes
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocument
-import org.apache.pdfbox.pdmodel.common.PDStream
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.ByteArrayOutputStream
@@ -33,10 +32,6 @@ class KonverterTilPdf(
 
 		if ("pdf".equals(filtype, ignoreCase = true)) {
 			return checkAndFormatPDF(fil)
-/*
-		} else if (imageFileTypes.keys.contains(filtype)) {
-			return convertImageToPDF(genererFilnavn(soknad, vedleggsTittel ?: "Annet", filtype), fil)
-*/
 		} else if (officeFileTypes.keys.contains(filtype) || imageFileTypes.keys.contains(filtype)) {
 			val tittel = vedleggsTittel ?: "Annet"
 			return createPDFFromOfficeDoc(genererFilnavn(soknad, tittel, filtype), fil, tittel, soknad.spraak ?: "nb-NO")
@@ -53,13 +48,6 @@ class KonverterTilPdf(
 	private fun checkAndFormatPDF(fil: ByteArray): Pair<ByteArray, Int> {
 		val antallSider = AntallSider().finnAntallSider(fil) ?: 0
 		return Pair(CheckAndFormatPdf().flatUtPdf(fil, antallSider), antallSider) // Bare hvis inneholder formfields?
-	}
-
-	private fun convertImageToPDF(filNavn: String, fil: ByteArray): Pair<ByteArray, Int> {
-		val pdf = pdfConverter.imageToPdf(filNavn, fil)
-		val antallSider = AntallSider().finnAntallSider(pdf) ?: 0
-
-		return Pair(pdf, antallSider)
 	}
 
 	private fun genererFilnavn(soknad: DokumentSoknadDto, tittel: String, filtype:String): String {
