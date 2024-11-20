@@ -18,6 +18,28 @@ import java.util.function.Predicate
 
 class FiltypeSjekker {
 
+	companion object {
+		val officeFileTypes = mapOf(
+			".docx" to "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+			".doc" to "application/msword",
+			".odt" to "application/vnd.oasis.opendocument.text",
+			".rtf" to "application/rtf"
+		)
+		val imageFileTypes = mapOf(
+			".jpg" to "image/jpeg",
+			".jpeg" to "image/jpeg",
+			".png" to "image/png",
+			".bmp" to "image/bmp",
+			".tiff" to "image/tiff",
+			".tif" to "image/tiff",
+			".gif" to "image/gif"
+		)
+		val textTypes = mapOf(".txt" to "text/plain")
+
+		val supportedFileTypes = officeFileTypes.keys + imageFileTypes.keys + textTypes.keys
+
+	}
+
 	private val logger = LoggerFactory.getLogger(FiltypeSjekker::class.java)
 
 	val IS_PNG =

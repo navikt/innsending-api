@@ -62,14 +62,14 @@ class FilRestApi(
 			throw ResourceNotFoundException("Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId")
 
 		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
-		filValidatorService.validerFil(file, innsendingsId)
+		val filtype = filValidatorService.validerFil(file, innsendingsId)
 		val opplastet = (file as ByteArrayResource).byteArray
 
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
 		val (fil, antallsider) = konverterTilPdf.tilPdf(
 			opplastet,
 			soknadDto,
-			sammensattNavn = null,
+			filtype = filtype,
 			vedleggsTittel = vedleggDto.tittel
 		)
 

@@ -21,7 +21,7 @@ class FilValidatorService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	fun validerFil(fil: Resource, innsendingsId: String) {
+	fun validerFil(fil: Resource, innsendingsId: String): String {
 
 		// Sjekk filnavn
 		val fileName = fil.filename
@@ -46,7 +46,7 @@ class FilValidatorService(
 			errorCode = ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE
 		)
 
-		Validerer().validereFilformat(innsendingsId, opplastet, fileName)
+		val filtype = Validerer().validereFilformat(innsendingsId, opplastet, fileName)
 
 		// Sjekk om filen inneholder virus
 		// TODO: Fiks dette
@@ -56,6 +56,7 @@ class FilValidatorService(
 //		)
 
 		innsenderMetrics.setFileSize(opplastet.size.toLong())
+		return filtype
 	}
 
 	fun validerAntallSider(antallSider: Int) {

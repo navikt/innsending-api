@@ -6,7 +6,7 @@ interface KonverterTilPdfInterface {
 	fun tilPdf(
 		fil: ByteArray,
 		soknad: DokumentSoknadDto,
-		sammensattNavn: String? = null,
+		filtype: String,
 		vedleggsTittel: String? = "Annet"
 	): Pair<ByteArray, Int>
 
