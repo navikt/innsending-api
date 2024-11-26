@@ -23,8 +23,8 @@ class PdfMerger {
 				return (merger.destinationStream as ByteArrayOutputStream).toByteArray()
 			}
 		} catch (e: IOException) {
-			logger.error("Merge av PDF dokumenter feilet")
-			throw RuntimeException("Merge av PDF dokumenter feilet")
+			logger.error("Merge av PDF dokumenter feilet", e)
+			throw RuntimeException("Merge av PDF dokumenter feilet", e)
 		}
 	}
 
