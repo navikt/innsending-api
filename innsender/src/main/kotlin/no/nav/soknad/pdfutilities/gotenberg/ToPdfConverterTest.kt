@@ -25,4 +25,9 @@ class ToPdfConverterTest : FileToPdfInterface {
 	override fun imageToPdf(fileName: String, fileContent: ByteArray): ByteArray {
 		return toPdf(fileName, fileContent)
 	}
+
+	override fun mergePdfs(fileName: String, docs: List<ByteArray>): ByteArray {
+		return toPdf(fileName, docs.first())
+	}
+
 }

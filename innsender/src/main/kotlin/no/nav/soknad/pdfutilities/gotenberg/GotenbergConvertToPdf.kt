@@ -18,6 +18,7 @@ import org.springframework.web.client.RestClient
 import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayInputStream
 import java.io.File
+import java.util.*
 
 @Service
 @Profile("prod | dev | test")
@@ -28,6 +29,7 @@ class GotenbergConvertToPdf(
 	companion object GotenbergConsts {
 		private const val LIBRE_OFFICE_ROUTE = "/forms/libreoffice/convert"
 		private const val HTML_ROUTE = "/forms/chromium/convert/html"
+		private const val PDF_MERGE_ROUTE = "/forms/pdfengines/merge"
 		private const val GOTENBERG_TRACE_HEADER = "gotenberg-trace"
 	}
 
@@ -64,6 +66,20 @@ class GotenbergConvertToPdf(
 		}
 
 		return convertFileRequest(fileName, multipartBody, HTML_ROUTE)
+
+	}
+
+	override fun mergePdfs(fileName: String, docs: List<ByteArray>): ByteArray {
+		val pageProperties: PageProperties = PageProperties.Builder().build()
+		val multipartBody = MultipartBodyBuilder().run {
+			docs.forEach {
+				part("files", ByteArrayMultipartFile("merge-"+ UUID.randomUUID().toString()+".pdf", it).resource)
+			}
+			pageProperties.all().forEach { part(it.key, it.value) }
+			build()
+		}
+
+		return convertFileRequest(fileName, multipartBody, PDF_MERGE_ROUTE)
 
 	}
 

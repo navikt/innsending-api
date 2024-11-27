@@ -16,7 +16,8 @@ import java.util.*
 
 @Service
 class KonverterTilPdf(
-	private val pdfConverter: FileToPdfInterface
+	private val pdfConverter: FileToPdfInterface,
+	private val pdfMerger: PdfMerger
 ) : KonverterTilPdfInterface {
 
 	private val logger = LoggerFactory.getLogger(KonverterTilPdf::class.java)
@@ -47,7 +48,7 @@ class KonverterTilPdf(
 
 	private fun checkAndFormatPDF(fil: ByteArray): Pair<ByteArray, Int> {
 		val antallSider = AntallSider().finnAntallSider(fil) ?: 0
-		return Pair(CheckAndFormatPdf().flatUtPdf(fil, antallSider), antallSider) // Bare hvis inneholder formfields?
+		return Pair(CheckAndFormatPdf().flatUtPdf(pdfMerger, fil, antallSider), antallSider) // Bare hvis inneholder formfields?
 	}
 
 	private fun genererFilnavn(soknad: DokumentSoknadDto, tittel: String, filtype:String): String {
@@ -75,7 +76,7 @@ class KonverterTilPdf(
 	}
 
 	override fun flatUtPdf(fil: ByteArray, antallSider: Int): ByteArray {
-		return CheckAndFormatPdf().flatUtPdf(fil, antallSider)
+		return CheckAndFormatPdf().flatUtPdf(pdfMerger, fil, antallSider)
 	}
 
 	override fun harSkrivbareFelt(input: ByteArray?): Boolean {
