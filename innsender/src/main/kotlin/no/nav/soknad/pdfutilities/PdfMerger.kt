@@ -5,12 +5,15 @@ import org.apache.pdfbox.io.RandomAccessRead
 import org.apache.pdfbox.io.RandomAccessReadBuffer
 import org.apache.pdfbox.multipdf.PDFMergerUtility
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.util.function.Consumer
 
-class PdfMerger {
-
+@Service
+class PdfMerger(
+	private val pdfConverter: FileToPdfInterface
+) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	private fun mergePdfStreams(docs: List<RandomAccessRead>): ByteArray {
@@ -36,6 +39,14 @@ class PdfMerger {
 				randomAccess.add(RandomAccessReadBuffer(bytes))
 			}
 			mergePdfStreams(randomAccess)
+		} catch (e: Exception) {
+			logger.warn("Merging av filer feilet, forsøker Gotenberg")
+			try {
+				pdfConverter.mergePdfs("mergedFile", docs)
+			} catch (ex: Exception) {
+				logger.error("Merge av PDF dokumenter i Gotenberg feilet")
+				throw RuntimeException("Merge av PDF dokumenter i Gotenberg feilet", ex)
+			}
 		} finally {
 			randomAccess.forEach(Consumer { i: RandomAccessRead ->
 				try {

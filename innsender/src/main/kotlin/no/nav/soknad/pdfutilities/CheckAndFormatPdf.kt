@@ -10,7 +10,7 @@ class CheckAndFormatPdf {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	fun flatUtPdf(fil: ByteArray, antallSider: Int): ByteArray {
+	fun flatUtPdf(pdfMerger: PdfMerger, fil: ByteArray, antallSider: Int): ByteArray {
 		logger.info("Antall sider i PDF: {}", antallSider)
 
 		// Konvertere fra PDF til bilde og tilbake til PDF
@@ -26,7 +26,7 @@ class CheckAndFormatPdf {
 			val end = System.currentTimeMillis()
 			logger.info("Tid brukt for å konvertere PDF til bilde og tilbake til PDF = {}", end - start)
 
-			return PdfMerger().mergePdfer(pdfList)
+			return pdfMerger.mergePdfer(pdfList)
 		} else if (antallSider > 50) {
 			logger.info("Antall sider = $antallSider er over max grense (50) for utflating av PDF")
 		}

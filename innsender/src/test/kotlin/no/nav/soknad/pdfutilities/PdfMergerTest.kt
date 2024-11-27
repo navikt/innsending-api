@@ -2,18 +2,21 @@ package no.nav.soknad.pdfutilities
 
 import junit.framework.TestCase
 import no.nav.soknad.innsending.utils.Hjelpemetoder
-import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
+import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
+import no.nav.soknad.pdfutilities.gotenberg.GotenbergClientConfig
+import no.nav.soknad.pdfutilities.gotenberg.GotenbergConvertToPdf
 import no.nav.soknad.pdfutilities.gotenberg.ToPdfConverterTest
 import org.junit.Test
+import org.junit.jupiter.api.Disabled
 import kotlin.test.assertEquals
 
 class PdfMergerTest {
 
 	private val docToPdfConverter: FileToPdfInterface = ToPdfConverterTest()
-	private val konverterTilPdf = KonverterTilPdf(docToPdfConverter)
+	// Require running gotenberg docker container locally: docker run --rm -p 3000:3000 gotenberg/gotenberg:8
+	//private val docToPdfConverter: FileToPdfInterface = GotenbergConvertToPdf(GotenbergClientConfig("http://localhost:3000").getGotenbergClient())
+	private val pdfMerger = PdfMerger(docToPdfConverter)
 
-	private val soknadDto = DokumentSoknadDtoTestBuilder().build()
-	private val pdfMerger = PdfMerger()
 	private val antallSider = AntallSider()
 	private val validerer = Validerer()
 
@@ -23,7 +26,7 @@ class PdfMergerTest {
 		val pdfFiler = mutableListOf<ByteArray>()
 		val antallFiler = 2
 		for (i in 0 until antallFiler) {
-			pdfFiler.add(konverterTilPdfOgReturner("/2MbJpg.jpg"))
+			pdfFiler.add(Hjelpemetoder.getBytesFromFile("/litenPdf.pdf"))
 		}
 
 		val start = System.currentTimeMillis()
@@ -46,7 +49,7 @@ class PdfMergerTest {
 		val antallFiler = 10
 
 		for (i in 0 until antallFiler) {
-			pdfFiler.add(konverterTilPdfOgReturner("/2MbJpg.jpg"))
+			pdfFiler.add(Hjelpemetoder.getBytesFromFile("/litenPdf.pdf"))
 		}
 
 		val start2 = System.currentTimeMillis()
@@ -67,7 +70,7 @@ class PdfMergerTest {
 		val pdfFiler = mutableListOf<ByteArray>()
 		val antallFiler = 2
 		for (i in 0 until antallFiler) {
-			pdfFiler.add(konverterTilPdfOgReturner("/2MbJpg.jpg"))
+			pdfFiler.add(Hjelpemetoder.getBytesFromFile("/litenPdf.pdf"))
 		}
 		val storPdf = Hjelpemetoder.getBytesFromFile("/storPdf.pdf")
 		pdfFiler.add(storPdf)
@@ -81,16 +84,23 @@ class PdfMergerTest {
 
 	}
 
+	@Disabled // Require running gotenberg docker container locally: docker run --rm -p 3000:3000 gotenberg/gotenberg:8
+	@Test
+	fun `sjekk merging av pdfer der backup løsning mot Gotenberg brukes`() {
+		val pdfFiler = mutableListOf<ByteArray>()
+		val antallFiler = 2
+		for (i in 0 until antallFiler) {
+			pdfFiler.add(Hjelpemetoder.getBytesFromFile("/delme-kopi.pdf"))
+		}
 
-	private fun konverterTilPdfOgReturner(filPath: String): ByteArray {
-		val jpg = Hjelpemetoder.getBytesFromFile(filPath)
+		val start = System.currentTimeMillis()
+		val mergedPdf = pdfMerger.mergePdfer(pdfFiler)
+		val ferdig = System.currentTimeMillis()
 
-		val (pdf, antallSider) = konverterTilPdf.tilPdf(jpg, soknad = soknadDto, filtype = "jpg")
-		assertEquals(1, antallSider)
+		println("Tid brukt for å merge ${pdfFiler.size} PDFer der en av PDFene består av mange sider = ${ferdig - start}")
+		// Skriver til fil for manuell verifisering av sammenslåtte PDFer.
+		writeBytesToFile(mergedPdf, "delme-merged.pdf")
 
-		val erPdfa = Validerer().isPDFa(pdf)
-		TestCase.assertTrue(erPdfa)
-		return pdf
 	}
 
 }

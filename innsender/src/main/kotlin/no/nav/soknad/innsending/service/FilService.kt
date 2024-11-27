@@ -22,6 +22,7 @@ class FilService(
 	private val exceptionHelper: ExceptionHelper,
 	private val innsenderMetrics: InnsenderMetrics,
 	private val vedleggService: VedleggService,
+	private val pdfMerger: PdfMerger,
 	private val restConfig: RestConfig,
 ) {
 
@@ -331,7 +332,7 @@ class FilService(
 						logger.warn("$innsendingsId: HentOgMerge vedlegg ${it.uuid} mangler opplastet filer på alle filobjekter, returnerer null")
 						null
 					} else {
-						PdfMerger().mergePdfer(
+						pdfMerger.mergePdfer(
 							filer.filter { fil -> fil.data != null }.map { fil -> fil.data!! })
 					}
 				} else {
