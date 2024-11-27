@@ -41,7 +41,12 @@ class PdfMerger(
 			mergePdfStreams(randomAccess)
 		} catch (e: Exception) {
 			logger.warn("Merging av filer feilet, forsøker Gotenberg")
-			pdfConverter.mergePdfs("mergedFile", docs)
+			try {
+				pdfConverter.mergePdfs("mergedFile", docs)
+			} catch (ex: Exception) {
+				logger.error("Merge av PDF dokumenter i Gotenberg feilet")
+				throw RuntimeException("Merge av PDF dokumenter i Gotenberg feilet", ex)
+			}
 		} finally {
 			randomAccess.forEach(Consumer { i: RandomAccessRead ->
 				try {
