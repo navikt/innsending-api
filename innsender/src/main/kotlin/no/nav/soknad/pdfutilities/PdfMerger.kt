@@ -29,6 +29,7 @@ class PdfMerger {
 	}
 
 	fun mergePdfer(docs: List<ByteArray>): ByteArray {
+		if (docs.size == 1) return docs[0]
 		val randomAccess = mutableListOf<RandomAccessRead>()
 		return try {
 			for (bytes in docs) {
