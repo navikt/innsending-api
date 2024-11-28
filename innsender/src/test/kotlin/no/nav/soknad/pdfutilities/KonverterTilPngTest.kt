@@ -4,7 +4,7 @@ import nl.altindag.log.LogCaptor
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class KonverterTilPngTest {
 

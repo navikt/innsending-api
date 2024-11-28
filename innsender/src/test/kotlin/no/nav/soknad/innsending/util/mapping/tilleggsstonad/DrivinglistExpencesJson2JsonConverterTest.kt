@@ -3,7 +3,7 @@ package no.nav.soknad.innsending.util.mapping.tilleggsstonad
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.tilleggsstonad.FyllUtJsonTestBuilder
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions
 import kotlin.test.assertTrue
 
