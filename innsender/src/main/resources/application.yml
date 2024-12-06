@@ -334,6 +334,8 @@ spring:
   datasource:
     url: ${DATABASE_JDBC_URL}
 
+fil-konvertering_url: ${KONVERTERING_TIL_PDF_URL}
+
 ---
 spring:
   config:
