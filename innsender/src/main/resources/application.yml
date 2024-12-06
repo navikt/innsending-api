@@ -60,7 +60,7 @@ kafka:
   topics:
     arkiveringstilbakemeldingTopic: ${KAFKA_ARKIVERINGSTILBAKEMELDING_TOPIC}
 
-fil-konvertering_url: http://localhost:3000
+fil-konvertering_url: http://localhost:3050
 
 ---
 spring:
