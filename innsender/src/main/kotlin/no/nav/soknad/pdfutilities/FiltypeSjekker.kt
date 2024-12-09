@@ -36,7 +36,7 @@ class FiltypeSjekker {
 		)
 		val textTypes = mapOf(".txt" to "text/plain")
 
-		val supportedFileTypes = officeFileTypes.keys + imageFileTypes.keys + textTypes.keys
+		val supportedFileTypes = officeFileTypes.keys + imageFileTypes.keys + textTypes.keys + ".pdf"
 
 	}
 

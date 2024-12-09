@@ -28,6 +28,14 @@ class Validerer {
 			return "pdf"
 
 		} else {
+			val ext = "." +
+				if (fileName != null) {
+					File(fileName).extension
+				} else {
+					logger.warn("Error getting file extention")
+					"unknown"
+				}
+
 			val primaryExtension: String = try {
 					val fileType_full = FiltypeSjekker().detectContentType(file, fileName)
 					val filtype = fileType_full.substringBefore(";")
@@ -35,14 +43,11 @@ class Validerer {
 					val type: MimeType = allTypes.forName(filtype)
 					type.getExtension()
 				} catch (e: Exception) {
-					val ext =
-						if (fileName != null) {
-							File(fileName).extension
-						} else {
-							"unknown"
-						}
-					logger.warn("Error checking filecontent for $ext")
-					"." + ext
+					logger.warn("Error checking file extention")
+					ext
+				}
+				if (ext != primaryExtension) {
+					ulovligFilFormat(innsendingId, fileName, file)
 				}
 
 				if (!supportedFileTypes.contains(primaryExtension)) {
@@ -56,7 +61,7 @@ class Validerer {
 		val extention = fileName?.substringAfterLast(".", "<mangler>") ?: "<mangler>"
 		logger.warn("$innsendingId: Ugyldig filtype for opplasting. Filextention: ${extention}, og filstart = ${if (file.size >= 4) (file[0] + file[1] + file[3] + file[4]) else file[0]}\")")
 		throw IllegalActionException(
-			message = "$innsendingId: Ugyldig filtype for opplasting. Kan kun laste opp filer av type TXT, DOCX, PDF, JPEG, PNG og IMG",
+			message = "$innsendingId: Ugyldig filtype for opplasting. Kan kun laste opp filer av type ${supportedFileTypes.joinToString ( ", " )}",
 			errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
 		)
 
