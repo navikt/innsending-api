@@ -1,14 +1,9 @@
-package no.nav.soknad.pdfutilities.gotenberg
+package no.nav.soknad.testutils
 
 import no.nav.soknad.pdfutilities.FileToPdfInterface
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.common.PDStream
-import org.springframework.context.annotation.Profile
-import org.springframework.stereotype.Component
 
-
-@Component
-@Profile("!(prod | dev | test)")
 class ToPdfConverterTest : FileToPdfInterface {
 
 	override fun toPdf(fileName: String, fileContent: ByteArray): ByteArray {
@@ -18,7 +13,7 @@ class ToPdfConverterTest : FileToPdfInterface {
 			val pdStream = PDStream(document)
 			return pdStream.toByteArray()
 		} finally {
-			if (document != null) document.close()
+			document?.close()
 		}
 	}
 

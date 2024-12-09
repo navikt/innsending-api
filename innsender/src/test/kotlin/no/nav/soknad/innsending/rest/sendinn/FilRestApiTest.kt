@@ -12,14 +12,12 @@ import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.imageFileTypes
 import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.officeFileTypes
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.ClassPathResource
-import org.springframework.core.io.Resource
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
 
@@ -110,7 +108,6 @@ class FilRestApiTest : ApplicationTest() {
 
 
 	@Test
-	@Disabled // Require running gotenberg docker container locally: docker run --rm -p 3000:3000 gotenberg/gotenberg:8
 	fun verifiserOpplastingAvUlikeFiltyperTest() {
 		val skjemanr = defaultSkjemanr
 		val spraak = "nb-NO"
@@ -181,7 +178,7 @@ class FilRestApiTest : ApplicationTest() {
 		assertEquals(HttpStatus.OK, opplastetFil.statusCode)
 		assertEquals(filDto.body!!.storrelse, opplastetFil.body!!.byteArray.size)
 
-		opplastetFil.body?.let { writeBytesToFile(it.byteArray, "delme-$type.pdf") }
+		opplastetFil.body?.let { writeBytesToFile(it.byteArray, "target/delme-$type.pdf") }
 
 		slettOpplastetFil(token, innsendingsId, filDto.body?.vedleggsid!!, filDto.body?.id!!)
 
