@@ -27,9 +27,11 @@ jobs:
           timezoneLinux: "Europe/Oslo"
       - name: NAIS login
         uses: nais/login@v0
+        id: image-registry
         with:
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
           team: team-soknad
+      - run: gcloud auth configure-docker ${{ steps.image-registry.outputs.registry }}
       - name: Maven clean install
         run: mvn clean install
