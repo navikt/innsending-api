@@ -22,7 +22,7 @@ class Gotenberg {
 	fun embeddedGotenberg(): Container = gotenberg
 
 	class Container(private val gotenbergPort: Int = 3000) : GenericContainer<Container>(
-		DockerImageName.parse("europe-north1-docker.pkg.dev/nais-management-233d/fyllut-sendinn/upload-convert-to-pdf:8.0.0")
+		DockerImageName.parse("gotenberg/gotenberg:8.0.0")
 	) {
 
 		private val logger = LoggerFactory.getLogger(javaClass)
