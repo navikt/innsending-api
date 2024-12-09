@@ -24,7 +24,11 @@ jobs:
         uses: szenius/set-timezone@v2.0
         with:
           timezoneLinux: "Europe/Oslo"
+      - name: NAIS login
+        uses: nais/login@v0
+        with:
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+          team: team-soknad
       - name: Maven clean install
         run: mvn clean install
-
-
