@@ -3,6 +3,7 @@ run-name: Manual ${{ github.event.inputs.environment }} deploy of branch ${{ git
 permissions:
   contents: "read"
   id-token: "write"
+  packages: "read"
 
 on:
   workflow_dispatch:
