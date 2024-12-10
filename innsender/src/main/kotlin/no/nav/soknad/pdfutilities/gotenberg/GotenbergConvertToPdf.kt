@@ -8,7 +8,6 @@ import no.nav.soknad.pdfutilities.FiltypeSjekker
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.client.MultipartBodyBuilder
@@ -21,7 +20,6 @@ import java.io.File
 import java.util.*
 
 @Service
-@Profile("prod | dev | test")
 class GotenbergConvertToPdf(
 	@Qualifier("gotenbergClient")
 	private val gotenbergClient: RestClient,

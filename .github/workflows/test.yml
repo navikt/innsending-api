@@ -1,10 +1,10 @@
 name: Install and test
 on:
   pull_request:
-        paths-ignore:
-          - '**.md'
-          - '**/**.md'
-          - '.github/workflows/**.yml'
+    paths-ignore:
+      - '**.md'
+      - '**/**.md'
+      - '.github/workflows/**.yml'
 
 jobs:
   tests:
@@ -23,5 +23,3 @@ jobs:
           timezoneLinux: "Europe/Oslo"
       - name: Maven clean install
         run: mvn clean install
-
-

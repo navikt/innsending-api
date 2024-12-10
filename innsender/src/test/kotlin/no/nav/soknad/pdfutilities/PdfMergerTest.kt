@@ -3,9 +3,7 @@ package no.nav.soknad.pdfutilities
 import junit.framework.TestCase
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
-import no.nav.soknad.pdfutilities.gotenberg.GotenbergClientConfig
-import no.nav.soknad.pdfutilities.gotenberg.GotenbergConvertToPdf
-import no.nav.soknad.pdfutilities.gotenberg.ToPdfConverterTest
+import no.nav.soknad.testutils.ToPdfConverterTest
 import org.junit.Test
 import org.junit.jupiter.api.Disabled
 import kotlin.test.assertEquals
