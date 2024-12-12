@@ -4,6 +4,8 @@ import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.util.models.*
+import no.nav.soknad.pdfutilities.models.EttersendingForsidePdfModel
+import no.nav.soknad.pdfutilities.models.KvitteringsPdfModel
 import no.nav.soknad.pdfutilities.utils.PdfUtils
 import org.apache.commons.text.StringEscapeUtils
 import java.time.LocalDateTime

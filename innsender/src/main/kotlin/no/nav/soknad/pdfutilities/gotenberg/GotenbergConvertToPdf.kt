@@ -73,7 +73,7 @@ class GotenbergConvertToPdf(
 			docs.forEach {
 				part("files", ByteArrayMultipartFile("merge-"+ UUID.randomUUID().toString()+".pdf", it).resource)
 			}
-			pageProperties.all().forEach { part(it.key, it.value) }
+			pageProperties.all().filter{!(it.key=="pdfua") }.forEach { part(it.key, it.value) }
 			build()
 		}
 

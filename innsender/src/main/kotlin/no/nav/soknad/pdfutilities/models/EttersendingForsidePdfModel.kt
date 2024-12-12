@@ -1,4 +1,4 @@
-package no.nav.soknad.pdfutilities
+package no.nav.soknad.pdfutilities.models
 
 data class EttersendingForsidePdfModel(
 	val sprak: String = "nb-NO",

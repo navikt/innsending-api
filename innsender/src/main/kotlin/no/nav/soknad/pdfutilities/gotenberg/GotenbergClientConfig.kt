@@ -7,10 +7,17 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.http.MediaType
+import org.springframework.http.client.ClientHttpRequestFactory
+import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.web.client.RestClient
+import java.time.Duration
 
 @Configuration
 class GotenbergClientConfig {
+
+	private val defaultReadTimeout = Duration.ofMinutes(2)
+	private val defaultConnectTimeout = Duration.ofSeconds(60)
+
 
 	@Bean
 	@Profile("prod | dev | docker")
@@ -33,10 +40,19 @@ class GotenbergClientConfig {
 		return RestClient
 			.builder()
 			.baseUrl(gotenbergContainer.getUrl())
+			.requestFactory(timeouts())
 			.defaultHeaders({
 				it.contentType = MediaType.MULTIPART_FORM_DATA
 				it.accept = listOf(MediaType.APPLICATION_PDF, MediaType.TEXT_PLAIN)
 			})
 			.build()
 	}
+
+	private fun timeouts(): ClientHttpRequestFactory {
+		val factory =	SimpleClientHttpRequestFactory()
+		factory.setReadTimeout(defaultReadTimeout)
+		factory.setConnectTimeout(defaultConnectTimeout)
+		return factory
+	}
+
 }

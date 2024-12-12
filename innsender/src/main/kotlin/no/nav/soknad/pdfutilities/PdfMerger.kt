@@ -13,10 +13,10 @@ import java.util.function.Consumer
 @Service
 class PdfMerger(
 	private val pdfConverter: FileToPdfInterface
-) {
+) : PdfMergerInterface {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	fun mergePdfer(docs: List<ByteArray>): ByteArray {
+	override fun mergePdfer(docs: List<ByteArray>): ByteArray {
 		if (docs.size == 1) return docs[0]
 		return try {
 			mergeWithGotenberg(docs)

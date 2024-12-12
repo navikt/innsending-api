@@ -1,5 +1,6 @@
-package no.nav.soknad.pdfutilities
+package no.nav.soknad.pdfutilities.models
 
+import no.nav.soknad.pdfutilities.VedleggsKategori
 import no.nav.soknad.pdfutilities.utils.PdfUtils
 
 data class KvitteringsPdfModel(

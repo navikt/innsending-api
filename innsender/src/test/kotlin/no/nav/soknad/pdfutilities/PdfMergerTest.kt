@@ -1,22 +1,21 @@
 package no.nav.soknad.pdfutilities
 
 import junit.framework.TestCase
+import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
-import no.nav.soknad.testutils.ToPdfConverterTest
-import org.junit.Test
-import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import kotlin.test.assertEquals
 
-class PdfMergerTest {
+class PdfMergerTest : ApplicationTest() {
 
-	private val docToPdfConverter: FileToPdfInterface = ToPdfConverterTest()
-	// Require running gotenberg docker container locally: docker run --rm -p 3000:3000 gotenberg/gotenberg:8
-	//private val docToPdfConverter: FileToPdfInterface = GotenbergConvertToPdf(GotenbergClientConfig("http://localhost:3000").getGotenbergClient())
-	private val pdfMerger = PdfMerger(docToPdfConverter)
+	@Autowired
+	private lateinit var pdfMerger: PdfMergerInterface
 
 	private val antallSider = AntallSider()
-	private val validerer = Validerer()
+	private val validerer = VeraPDFValidator()
 
 	@Test
 	fun `sjekk at pdf filer blir merget`() {
@@ -35,11 +34,13 @@ class PdfMergerTest {
 		val antallSider = antallSider.finnAntallSider(mergedPdf)
 		assertEquals(antallFiler, antallSider)
 
-		//val erPdfa = validerer.isPDFa(mergedPdf)
-		//TestCase.assertTrue(erPdfa)
+		val erPdfa = validerer.validatePdf(mergedPdf)
+		if (!erPdfa.isPdfACompliant) {
+			println("Generert pdf er ikke PDF/A, indikerer at Gotenberg har feilet")
+		}
+		//TestCase.assertTrue(erPdfa.isPdfACompliant)
 
 	}
-
 
 	@Test
 	fun `sjekk merging av mange pdf filer`() {
@@ -56,8 +57,8 @@ class PdfMergerTest {
 		println("Tid brukt for å merge ${pdfFiler.size} PDFer = ${ferdig2 - start2}")
 
 		assertEquals(pdfFiler.size, AntallSider().finnAntallSider(mergedPdf2))
-//		val erPdfa2 = validerer.isPDFa(mergedPdf2)
-//		TestCase.assertTrue(erPdfa2)
+		val erPdfa2 = validerer.validatePdf(mergedPdf2)
+		TestCase.assertTrue(erPdfa2.isPdfACompliant)
 
 	}
 
@@ -93,10 +94,10 @@ class PdfMergerTest {
 		val start = System.currentTimeMillis()
 		val mergedPdf = pdfMerger.mergePdfer(pdfFiler)
 		val ferdig = System.currentTimeMillis()
-
 		println("Tid brukt for å merge ${pdfFiler.size} PDFer der en av PDFene består av mange sider = ${ferdig - start}")
+		Assertions.assertTrue(mergedPdf.size > 0)
 		// Skriver til fil for manuell verifisering av sammenslåtte PDFer.
-		writeBytesToFile(mergedPdf, "delme-merged.pdf")
+		//writeBytesToFile(mergedPdf, "/target/delme-merged.pdf")
 
 	}
 
