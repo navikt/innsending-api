@@ -307,6 +307,11 @@ components:
           description: Angir om varsel skal sendes til søker på f.eks. SMS eller epost.
           items:
             $ref: "#/components/schemas/Varsel"
+        utsettSendingTil:
+          type: string
+          format: date-time
+          description: Angir ønsket tidspunkt for ekstern varsling dersom varselet fremdeles er aktivt da.
+          example: 2025-01-06T14:10:00Z
 
     Varsel:
       type: object

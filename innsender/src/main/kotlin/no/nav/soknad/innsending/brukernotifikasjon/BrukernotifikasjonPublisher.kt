@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service
 import org.springframework.web.util.UriComponentsBuilder
+import java.time.OffsetDateTime
 
 @Service
 @EnableConfigurationProperties(BrukerNotifikasjonConfig::class)
@@ -86,7 +87,7 @@ class BrukernotifikasjonPublisher(
 			groupId,
 			dokumentSoknad.brukerId,
 			dokumentSoknad.opprettetDato,
-			erSystemGenerert = dokumentSoknad.erSystemGenerert ?: false
+			erSystemGenerert = dokumentSoknad.erSystemGenerert == true,
 		)
 
 		try {
@@ -106,8 +107,9 @@ class BrukernotifikasjonPublisher(
 		val eksternVarslingList = if (ettersending) mutableListOf(Varsel(Varsel.Kanal.sms)) else mutableListOf()
 
 		val soknadLevetid = dokumentSoknad.mellomlagringDager ?: Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD.toInt()
-
-		return NotificationInfo(tittel, lenke, soknadLevetid, eksternVarslingList)
+		val utsettSendingTil = if (dokumentSoknad.erSystemGenerert == true) OffsetDateTime.now()
+			.plusDays(Constants.DEFAULT_UTSETT_SENDING_VED_SYSTEMGENERERT_DAGER) else null
+		return NotificationInfo(tittel, lenke, soknadLevetid, eksternVarslingList, utsettSendingTil = utsettSendingTil)
 	}
 
 	private fun tittelPrefixGittSprak(ettersendelse: Boolean, sprak: String): String {
