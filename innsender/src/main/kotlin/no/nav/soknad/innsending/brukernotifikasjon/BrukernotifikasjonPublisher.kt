@@ -17,7 +17,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service
 import org.springframework.web.util.UriComponentsBuilder
-import java.time.OffsetDateTime
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 @Service
 @EnableConfigurationProperties(BrukerNotifikasjonConfig::class)
@@ -107,8 +108,9 @@ class BrukernotifikasjonPublisher(
 		val eksternVarslingList = if (ettersending) mutableListOf(Varsel(Varsel.Kanal.sms)) else mutableListOf()
 
 		val soknadLevetid = dokumentSoknad.mellomlagringDager ?: Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD.toInt()
-		val utsettSendingTil = if (dokumentSoknad.erSystemGenerert == true) OffsetDateTime.now()
-			.plusDays(Constants.DEFAULT_UTSETT_SENDING_VED_SYSTEMGENERERT_DAGER) else null
+		val utsettSendingTil = if (dokumentSoknad.erSystemGenerert == true)
+			LocalDateTime.now().plusDays(Constants.DEFAULT_UTSETT_SENDING_VED_SYSTEMGENERERT_DAGER)
+				.withHour(9).withMinute(0).withSecond(0).atOffset(ZoneOffset.UTC) else null
 		return NotificationInfo(tittel, lenke, soknadLevetid, eksternVarslingList, utsettSendingTil = utsettSendingTil)
 	}
 
