@@ -8,7 +8,7 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.DockerImageName
 
-@Profile("!(prod | dev | loadtests | docker)")
+@Profile("!(prod | dev | loadtests | endtoend | docker)")
 @Configuration
 class Gotenberg {
 
