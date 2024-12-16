@@ -44,6 +44,7 @@ class Validerer {
 				}
 
 				if (!primaryExtension.equals(ext, true) ) {
+					logger.warn("Mismatch specified fileextension $ext and detected filecontent $primaryExtension. Rejecting upload")
 					ulovligFilFormat(innsendingId, fileName, file)
 				}
 				return primaryExtension

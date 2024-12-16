@@ -29,6 +29,10 @@ class GotenbergConvertToPdf(
 		private const val HTML_ROUTE = "/forms/chromium/convert/html"
 		private const val PDF_MERGE_ROUTE = "/forms/pdfengines/merge"
 		private const val GOTENBERG_TRACE_HEADER = "gotenberg-trace"
+
+		private const val mergeWithPdfa = false
+		private const val mergeWithPdfua = false
+
 	}
 
 	private val logger = LoggerFactory.getLogger(GotenbergConvertToPdf::class.java)
@@ -73,12 +77,27 @@ class GotenbergConvertToPdf(
 			docs.forEach {
 				part("files", ByteArrayMultipartFile("merge-"+ UUID.randomUUID().toString()+".pdf", it).resource)
 			}
-			pageProperties.all().filter{!(it.key=="pdfua") }.forEach { part(it.key, it.value) }
+			filter_pdfa_and_or_ua(pageProperties.all()).forEach { part(it.key, it.value) }
 			build()
 		}
 
-		return convertFileRequest(fileName, multipartBody, PDF_MERGE_ROUTE)
+		val start = System.currentTimeMillis()
+		val merged =  convertFileRequest(fileName, multipartBody, PDF_MERGE_ROUTE)
+		val tidsbruk = System.currentTimeMillis() - start
+		logger.debug("Tid brukt på å slå sammen filer=$tidsbruk")
 
+		return merged
+	}
+
+	private fun filter_pdfa_and_or_ua(properties: Map<String, String>): Map<String, String> {
+		// pdfa and pdfua is default selected
+		return filter_pdfua(filter_pdfa(properties))
+	}
+	private fun filter_pdfa(properties: Map<String, String>): Map<String, String> {
+		return if(!mergeWithPdfa) properties.filter { it.key != "pdfa" } else properties
+	}
+	private fun filter_pdfua(properties: Map<String, String>): Map<String, String> {
+		return if (!mergeWithPdfua) properties.filter { it.key != "pdfua" } else properties
 	}
 
 	private fun getHtmlTemplate(fileName: String): String {

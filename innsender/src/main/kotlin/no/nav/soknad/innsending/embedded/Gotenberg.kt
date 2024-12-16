@@ -29,8 +29,8 @@ class Gotenberg {
 
 		init {
 			withExposedPorts(gotenbergPort)
-				.waitingFor(Wait.forLogMessage(".*server listening on port 3000.*\\s", 1))
-		}
+				.withCommand("gotenberg", "--api-disable-health-check-logging", "--libreoffice-auto-start", "--webhook-disable", "--api-timeout=240s")
+				.waitingFor(Wait.forLogMessage(".*server listening on port 3000.*\\s", 1))		}
 
 		fun getUrl(): String = "http://$host:${getMappedPort(gotenbergPort)}"
 

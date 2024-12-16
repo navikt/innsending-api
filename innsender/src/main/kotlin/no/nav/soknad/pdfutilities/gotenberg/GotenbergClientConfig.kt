@@ -15,7 +15,7 @@ import java.time.Duration
 @Configuration
 class GotenbergClientConfig {
 
-	private val defaultReadTimeout = Duration.ofMinutes(2)
+	private val defaultReadTimeout = Duration.ofSeconds(180)
 	private val defaultConnectTimeout = Duration.ofSeconds(60)
 
 

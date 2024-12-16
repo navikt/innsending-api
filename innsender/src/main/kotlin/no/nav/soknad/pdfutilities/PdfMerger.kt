@@ -35,7 +35,7 @@ class PdfMerger(
 		try {
 			return pdfConverter.mergePdfs("mergedFile", docs)
 		} catch (ex: Exception) {
-			logger.error("Merge av PDF dokumenter i Gotenberg feilet", ex)
+			logger.warn("Merge av PDF dokumenter i Gotenberg feilet", ex)
 			throw ex
 		}
 	}
@@ -47,15 +47,15 @@ class PdfMerger(
 				randomAccess.add(RandomAccessReadBuffer(bytes))
 			}
 			mergePdfStreams(randomAccess)
-		} catch (e: Exception) {
-			logger.warn("Merging av filer med PDFBox feilet", e)
-			throw e
+		} catch (ex: Exception) {
+			logger.warn("Merging av filer med PDFBox feilet", ex)
+			throw ex
 		} finally {
 			randomAccess.forEach(Consumer { i: RandomAccessRead ->
 				try {
 					i.close()
 				} catch (e: IOException) {
-					logger.error("Opprydding etter merging av PDFer med PDFBox feilet")
+					logger.error("Opprydding etter merging av PDFer med PDFBox feilet", e)
 				}
 			}
 			)
