@@ -20,7 +20,7 @@ class GotenbergClientConfig {
 
 
 	@Bean
-	@Profile("prod | dev | docker")
+	@Profile("prod | dev | loadtests | endtoend | docker")
 	@Qualifier("gotenbergClient")
 	fun getGotenbergClient(@Value("\${fil-konvertering_url}") baseUrl: String): RestClient {
 		return RestClient
@@ -34,7 +34,7 @@ class GotenbergClientConfig {
 	}
 
 	@Bean
-	@Profile("!(prod | dev | docker)")
+	@Profile("!(prod | dev | loadtests | endtoend | docker)")
 	@Qualifier("gotenbergClient")
 	fun getGotenbergClientEmbedded(gotenbergContainer: Gotenberg.Container): RestClient {
 		return RestClient
