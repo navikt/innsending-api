@@ -31,7 +31,7 @@ class DokumentSoknadDtoTestBuilder(
 	var forsteInnsendingsDato: OffsetDateTime? = null,
 	var fristForEttersendelse: Long? = 14L,
 	var arkiveringsStatus: ArkiveringsStatusDto = ArkiveringsStatusDto.IkkeSatt,
-	var erSystemGenerert: Boolean? = true,
+	var erSystemGenerert: Boolean? = false,
 	var soknadType: SoknadType? = null,
 	var skjemaPath: String = Skjema.createSkjemaPathFromSkjemanr(skjemanr),
 	var applikasjon: String? = "application",

@@ -30,6 +30,9 @@ object Constants {
 
 	const val PDL_BEHANDLINGSNUMMER = "B613"
 
+	// Brukernotifikasjoner
+	const val DEFAULT_UTSETT_SENDING_VED_SYSTEMGENERERT_DAGER = 1L // Utsett sending av varsel i antall dager
+
 	// External services for prefill data
 	const val PDL = "pdl"
 	const val ARENA_MAALGRUPPE = "arena_maalgruppe"
