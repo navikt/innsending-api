@@ -13,8 +13,54 @@ import java.util.function.Consumer
 @Service
 class PdfMerger(
 	private val pdfConverter: FileToPdfInterface
-) {
+) : PdfMergerInterface {
 	private val logger = LoggerFactory.getLogger(javaClass)
+
+	override fun mergePdfer(docs: List<ByteArray>): ByteArray {
+		if (docs.size == 1) return docs[0]
+		return try {
+			mergeWithGotenberg(docs)
+		} catch (e: Exception) {
+			try {
+				mergeWithPDFBox(docs)
+			} catch (ex: Exception) {
+				logger.error("Merging av filer feilet")
+				throw ex
+			}
+		}
+	}
+
+	private fun mergeWithGotenberg(docs: List<ByteArray>): ByteArray {
+		logger.info("Merging av filer v.hj.a. Gotenberg")
+		try {
+			return pdfConverter.mergePdfs("mergedFile", docs)
+		} catch (ex: Exception) {
+			logger.warn("Merge av PDF dokumenter i Gotenberg feilet", ex)
+			throw ex
+		}
+	}
+
+	private fun mergeWithPDFBox(docs: List<ByteArray>): ByteArray{
+		val randomAccess = mutableListOf<RandomAccessRead>()
+		return try {
+			for (bytes in docs) {
+				randomAccess.add(RandomAccessReadBuffer(bytes))
+			}
+			mergePdfStreams(randomAccess)
+		} catch (ex: Exception) {
+			logger.warn("Merging av filer med PDFBox feilet", ex)
+			throw ex
+		} finally {
+			randomAccess.forEach(Consumer { i: RandomAccessRead ->
+				try {
+					i.close()
+				} catch (e: IOException) {
+					logger.error("Opprydding etter merging av PDFer med PDFBox feilet", e)
+				}
+			}
+			)
+		}
+	}
 
 	private fun mergePdfStreams(docs: List<RandomAccessRead>): ByteArray {
 		try {
@@ -28,33 +74,6 @@ class PdfMerger(
 		} catch (e: IOException) {
 			logger.error("Merge av PDF dokumenter feilet", e)
 			throw RuntimeException("Merge av PDF dokumenter feilet", e)
-		}
-	}
-
-	fun mergePdfer(docs: List<ByteArray>): ByteArray {
-		if (docs.size == 1) return docs[0]
-		val randomAccess = mutableListOf<RandomAccessRead>()
-		return try {
-			for (bytes in docs) {
-				randomAccess.add(RandomAccessReadBuffer(bytes))
-			}
-			mergePdfStreams(randomAccess)
-		} catch (e: Exception) {
-			logger.warn("Merging av filer feilet, forsøker Gotenberg")
-			try {
-				pdfConverter.mergePdfs("mergedFile", docs)
-			} catch (ex: Exception) {
-				logger.error("Merge av PDF dokumenter i Gotenberg feilet")
-				throw RuntimeException("Merge av PDF dokumenter i Gotenberg feilet", ex)
-			}
-		} finally {
-			randomAccess.forEach(Consumer { i: RandomAccessRead ->
-				try {
-					i.close()
-				} catch (e: IOException) {
-					logger.error("Opprydding etter merging av PDFer feilet")
-				}
-			})
 		}
 	}
 

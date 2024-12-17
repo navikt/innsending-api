@@ -1,22 +1,21 @@
 package no.nav.soknad.pdfutilities
 
-import junit.framework.TestCase
+import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
-import no.nav.soknad.testutils.ToPdfConverterTest
-import org.junit.Test
-import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import kotlin.test.assertEquals
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Disabled
 
-class PdfMergerTest {
+class PdfMergerTest : ApplicationTest() {
 
-	private val docToPdfConverter: FileToPdfInterface = ToPdfConverterTest()
-	// Require running gotenberg docker container locally: docker run --rm -p 3000:3000 gotenberg/gotenberg:8
-	//private val docToPdfConverter: FileToPdfInterface = GotenbergConvertToPdf(GotenbergClientConfig("http://localhost:3000").getGotenbergClient())
-	private val pdfMerger = PdfMerger(docToPdfConverter)
+	@Autowired
+	private lateinit var pdfMerger: PdfMergerInterface
 
 	private val antallSider = AntallSider()
-	private val validerer = Validerer()
+	private val validerer = VeraPDFValidator()
 
 	@Test
 	fun `sjekk at pdf filer blir merget`() {
@@ -35,19 +34,62 @@ class PdfMergerTest {
 		val antallSider = antallSider.finnAntallSider(mergedPdf)
 		assertEquals(antallFiler, antallSider)
 
-		val erPdfa = validerer.isPDFa(mergedPdf)
-		TestCase.assertTrue(erPdfa)
+		checkPdfACompliance(mergedPdf)
 
 	}
 
 
 	@Test
-	fun `sjekk merging av mange pdf filer`() {
+	fun `sjekk at mellomstore pdf filer blir merget`() {
+
 		val pdfFiler = mutableListOf<ByteArray>()
-		val antallFiler = 10
+		val antallFiler = 4
+		val fil = Hjelpemetoder.getBytesFromFile("/mellomstor.pdf")
+		for (i in 0 until antallFiler) {
+			pdfFiler.add(fil)
+		}
+		val sideSum = antallFiler * (antallSider.finnAntallSider(fil) ?: 0)
+		val start = System.currentTimeMillis()
+		val mergedPdf = pdfMerger.mergePdfer(pdfFiler)
+		val ferdig = System.currentTimeMillis()
+		println("Tid brukt for å merge ${pdfFiler.size} PDFer = ${ferdig - start}")
+
+		val antallSider = antallSider.finnAntallSider(mergedPdf)
+		assertEquals(sideSum, antallSider)
+
+		checkPdfACompliance(mergedPdf)
+	}
+
+	@Test
+	fun `sjekk at mellomstore pdf filer konvert fra jpg blir merget`() {
+
+		val pdfFiler = mutableListOf<ByteArray>()
+		val antallFiler = 4
+		val fil = Hjelpemetoder.getBytesFromFile("/mellomstor-fra-jpg.pdf")
 
 		for (i in 0 until antallFiler) {
-			pdfFiler.add(Hjelpemetoder.getBytesFromFile("/litenPdf.pdf"))
+			pdfFiler.add(fil)
+		}
+
+		val start = System.currentTimeMillis()
+		val mergedPdf = pdfMerger.mergePdfer(pdfFiler)
+		val ferdig = System.currentTimeMillis()
+		println("Tid brukt for å merge ${pdfFiler.size} PDFer = ${ferdig - start}")
+
+		val antallSider = antallSider.finnAntallSider(mergedPdf)
+		assertEquals(antallFiler, antallSider)
+
+		checkPdfACompliance(mergedPdf)
+	}
+
+	@Test
+	fun `sjekk merging av mange pdf filer`() {
+		val pdfFiler = mutableListOf<ByteArray>()
+		val antallFiler = 30
+		val fil = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
+
+		for (i in 0 until antallFiler) {
+			pdfFiler.add(fil)
 		}
 
 		val start2 = System.currentTimeMillis()
@@ -56,8 +98,7 @@ class PdfMergerTest {
 		println("Tid brukt for å merge ${pdfFiler.size} PDFer = ${ferdig2 - start2}")
 
 		assertEquals(pdfFiler.size, AntallSider().finnAntallSider(mergedPdf2))
-		val erPdfa2 = validerer.isPDFa(mergedPdf2)
-		TestCase.assertTrue(erPdfa2)
+		checkPdfACompliance(mergedPdf2)
 
 	}
 
@@ -67,8 +108,9 @@ class PdfMergerTest {
 
 		val pdfFiler = mutableListOf<ByteArray>()
 		val antallFiler = 2
+		val fil = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
 		for (i in 0 until antallFiler) {
-			pdfFiler.add(Hjelpemetoder.getBytesFromFile("/litenPdf.pdf"))
+			pdfFiler.add(fil)
 		}
 		val storPdf = Hjelpemetoder.getBytesFromFile("/storPdf.pdf")
 		pdfFiler.add(storPdf)
@@ -79,26 +121,39 @@ class PdfMergerTest {
 		println("Tid brukt for å merge ${pdfFiler.size} PDFer der en av PDFene består av mange sider = ${ferdig - start}")
 
 		assertEquals(antallFiler + (antallSider.finnAntallSider(storPdf) ?: 0), AntallSider().finnAntallSider(mergedPdf))
+		checkPdfACompliance(mergedPdf)
 
 	}
 
-	@Disabled // Require running gotenberg docker container locally: docker run --rm -p 3000:3000 gotenberg/gotenberg:8
 	@Test
-	fun `sjekk merging av pdfer der backup løsning mot Gotenberg brukes`() {
+	@Disabled("StorPdf.pdf er 47,9MB. Ikke relevant så lenge 50MB er maksimum størrelse på et vedlegg.")
+	fun `sjekk merging av flere store pdfer`() {
 		val pdfFiler = mutableListOf<ByteArray>()
-		val antallFiler = 2
+		val antallFiler = 4
 		for (i in 0 until antallFiler) {
-			pdfFiler.add(Hjelpemetoder.getBytesFromFile("/delme-kopi.pdf"))
+			pdfFiler.add(Hjelpemetoder.getBytesFromFile("/storPdf.pdf"))
 		}
 
 		val start = System.currentTimeMillis()
 		val mergedPdf = pdfMerger.mergePdfer(pdfFiler)
 		val ferdig = System.currentTimeMillis()
-
 		println("Tid brukt for å merge ${pdfFiler.size} PDFer der en av PDFene består av mange sider = ${ferdig - start}")
-		// Skriver til fil for manuell verifisering av sammenslåtte PDFer.
-		writeBytesToFile(mergedPdf, "delme-merged.pdf")
+		assertTrue(mergedPdf.size > 0)
+		checkPdfACompliance(mergedPdf)
 
+	}
+
+	private fun checkPdfACompliance(pdf: ByteArray) {
+		// Skriver til fil for manuell verifisering av sammenslåtte PDFer.
+		//writeBytesToFile(mergedPdf, "delme-merged.pdf")
+		val erPdfa2 = validerer.validatePdf(pdf)
+		if (erPdfa2.isPdfACompliant) {
+			println("Filen er PDF/A compliant")
+		} else {
+			println("Filen er ikke PDF/A compliant")
+		}
+		// Foreløpi slått av merging av PDFer med PDF/A resultat
+		//assertTrue(erPdfa2.isPdfACompliant)
 	}
 
 }

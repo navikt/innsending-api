@@ -6,6 +6,7 @@ import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
+import org.junit.Assert.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
 import java.util.*
@@ -132,11 +133,9 @@ class GenererPdfTest {
 	}
 
 	private fun isPdfaTest(document: ByteArray) {
-		// PDFBox mangler funksjonalitet for å validere versjon PDF/A-2A.
-		// Skriv generert PDF til disk og last opp til en online verifiseringssite, f.eks. https://www.pdf-online.com/osa/validate.aspx
-
+		val valideringsResultat = VeraPDFValidator().validatePdf(document)
 		//writeBytesToFile(document, "./pdf-til-validering.pdf")
-		//assertTrue(Validerer().isPDFa(document)) PDFBox mangler funksjonalitet for å validere versjon PDF/A-2A.
+		assertTrue(valideringsResultat.isPdfACompliant)
 	}
 
 	@Test

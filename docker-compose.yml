@@ -2,7 +2,7 @@ services:
   gotenberg:
     image: europe-north1-docker.pkg.dev/nais-management-233d/fyllut-sendinn/upload-convert-to-pdf:8.0.0
     container_name: gotenberg
-    command: gotenberg --api-disable-health-check-logging --libreoffice-auto-start --webhook-disable
+    command: gotenberg --api-disable-health-check-logging --libreoffice-auto-start --webhook-disable --api-timeout 240s
     restart: always
     ports:
       - '3050:3000'

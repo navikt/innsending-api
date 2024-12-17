@@ -5,6 +5,8 @@ import com.github.jknack.handlebars.Helper
 import com.github.jknack.handlebars.Options
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
 import com.openhtmltopdf.svgsupport.BatikSVGDrawer
+import no.nav.soknad.pdfutilities.models.EttersendingForsidePdfModel
+import no.nav.soknad.pdfutilities.models.KvitteringsPdfModel
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.File

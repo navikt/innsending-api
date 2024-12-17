@@ -2,6 +2,7 @@ package no.nav.soknad.pdfutilities
 
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.supportedFileTypes
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Disabled
@@ -10,11 +11,13 @@ import org.junit.jupiter.api.assertThrows
 
 class ValiderFilformatTest {
 
+	val validerer = Validerer()
+
 	@Test
 	fun verifiserPdfFil() {
 		val file = Hjelpemetoder.getBytesFromFile("/NAV 54-editert.pdf")
 		assertDoesNotThrow {
-			Validerer().validereFilformat(innsendingId = "123456789", file = file, "NAV 54-editert.pdf")
+			validerer.validereFilformat(innsendingId = "123456789", file = file, "NAV 54-editert.pdf")
 		}
 	}
 
@@ -22,7 +25,7 @@ class ValiderFilformatTest {
 	fun verifiserImageFil() {
 		val file = Hjelpemetoder.getBytesFromFile("/2MbJpg.jpg")
 		assertDoesNotThrow {
-			Validerer().validereFilformat(innsendingId = "123456789", file = file, "2MbJpg.jpg")
+			validerer.validereFilformat(innsendingId = "123456789", file = file, "2MbJpg.jpg")
 		}
 	}
 
@@ -31,16 +34,16 @@ class ValiderFilformatTest {
 	fun verifiserJsonFilGirFeilmelding() {
 		val file = Hjelpemetoder.getBytesFromFile("/sanity.json")
 		val exception = assertThrows<IllegalActionException> {
-			Validerer().validereFilformat(innsendingId = "123456789", file = file, "sanity.json")
+			validerer.validereFilformat(innsendingId = "123456789", file = file, "sanity.json")
 		}
-		assertTrue(exception.message.contains(" Ugyldig filtype for opplasting. Kan kun laste opp filer av type PDF, JPEG, PNG og IMG"))
+		assertTrue(exception.message.contains(" Ugyldig filtype for opplasting. Kan kun laste opp filer av type ${supportedFileTypes.joinToString(", ")}"))
 	}
 
 	@Test
 	fun verifiserDocxFilIkkeGirFeilmelding() {
 		val file = Hjelpemetoder.getBytesFromFile("/Docx-test.docx")
 		assertDoesNotThrow {
-			Validerer().validereFilformat(innsendingId = "123456789", file = file, "Docx-test.docx")
+			validerer.validereFilformat(innsendingId = "123456789", file = file, "Docx-test.docx")
 		}
 	}
 
@@ -48,30 +51,27 @@ class ValiderFilformatTest {
 	fun verifiserTxtFilIkkeGirFeilmelding() {
 		val file = Hjelpemetoder.getBytesFromFile("/__files/tekstfil-ex.txt")
 		assertDoesNotThrow {
-			Validerer().validereFilformat(innsendingId = "123456789", file = file, "textfil-ex.txt")
+			validerer.validereFilformat(innsendingId = "123456789", file = file, "textfil-ex.txt")
 		}
 	}
 
-	/*
 		@Test
 		fun verifiserXSLXFilGirFeilmelding() {
 			val file = Hjelpemetoder.getBytesFromFile("/__files/filopplastingstyper.xlsx")
 			val exception = assertThrows<IllegalActionException> {
-				Validerer().validereFilformat(innsendingId = "123456789", file = file, "sanity.json")
+				validerer.validereFilformat(innsendingId = "123456789", file = file, "filopplastingstyper.xlsx")
 			}
-			assertTrue(exception.message.contains(" Ugyldig filtype for opplasting. Kan kun laste opp filer av type PDF, JPEG, PNG og IMG"))
+			assertTrue(exception.message.contains(" Ugyldig filtype for opplasting. Kan kun laste opp filer av type ${supportedFileTypes.joinToString(", ")}"))
 		}
-	*/
 
 
 	@Test
-	@Disabled("Gammel JUnit4 som feiler")
 	fun verifiserJsonFilUtenExtentionGirFeilmelding() {
 		val file = Hjelpemetoder.getBytesFromFile("/sanity.json")
 		val exception = assertThrows<IllegalActionException> {
-			Validerer().validereFilformat(innsendingId = "123456789", file = file, "sanity")
+			validerer.validereFilformat(innsendingId = "123456789", file = file, "sanity")
 		}
-		assertTrue(exception.message.contains(" Ugyldig filtype for opplasting. Kan kun laste opp filer av type PDF, JPEG, PNG og IMG"))
+		assertTrue(exception.message.contains(" Ugyldig filtype for opplasting. Kan kun laste opp filer av type ${supportedFileTypes.joinToString(", ")}"))
 	}
 
 }

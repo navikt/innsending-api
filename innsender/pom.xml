@@ -434,6 +434,24 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- VeraPDF related -->
+		<dependency>
+			<groupId>jakarta.xml.bind</groupId>
+			<artifactId>jakarta.xml.bind-api</artifactId>
+			<version>${jakarta-xml.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.verapdf</groupId>
+			<artifactId>core-jakarta</artifactId>
+			<version>${verapdf.core-jakarta.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.verapdf</groupId>
+			<artifactId>validation-model-jakarta</artifactId>
+			<version>${verapdf.core-model-jakarta.version}</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
