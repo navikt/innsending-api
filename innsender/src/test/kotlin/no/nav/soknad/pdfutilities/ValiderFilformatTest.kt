@@ -30,7 +30,6 @@ class ValiderFilformatTest {
 	}
 
 	@Test
-	@Disabled("Gammel JUnit4 som feiler")
 	fun verifiserJsonFilGirFeilmelding() {
 		val file = Hjelpemetoder.getBytesFromFile("/sanity.json")
 		val exception = assertThrows<IllegalActionException> {
