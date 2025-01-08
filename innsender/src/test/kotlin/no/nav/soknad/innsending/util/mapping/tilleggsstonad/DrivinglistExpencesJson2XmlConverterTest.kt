@@ -132,7 +132,9 @@ class DrivinglistExpencesJson2XmlConverterTest {
 			enable(SerializationFeature.INDENT_OUTPUT)
 			disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 		}
-		xmlMapper.setDateFormat(SimpleDateFormat("yyyy-MM-ddXXX", Locale.of("nb", "NO")))
+		val formatter = SimpleDateFormat("yyyy-MM-ddXXX", Locale.of("nb", "NO"))
+		formatter.timeZone = TimeZone.getTimeZone("CET")
+		xmlMapper.setDateFormat(formatter)
 		xmlMapper.registerModule(JaxbAnnotationModule())
 		val xml = xmlMapper.writeValueAsString(convertedDate)
 
