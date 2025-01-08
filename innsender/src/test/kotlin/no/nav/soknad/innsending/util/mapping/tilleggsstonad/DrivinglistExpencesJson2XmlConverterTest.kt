@@ -100,6 +100,7 @@ class DrivinglistExpencesJson2XmlConverterTest {
 		System.out.println(xmlString)
 
 		Assertions.assertNotNull(xmlString)
+		System.out.print(xmlString)
 		Assertions.assertTrue(xmlString.contains("<vedtaksId>$vedtaksId</vedtaksId>"))
 		Assertions.assertTrue(xmlString.contains("<utgiftsperioder>"))
 		Assertions.assertTrue(xmlString.contains("<betalingsplanId>21</betalingsplanId>"))
