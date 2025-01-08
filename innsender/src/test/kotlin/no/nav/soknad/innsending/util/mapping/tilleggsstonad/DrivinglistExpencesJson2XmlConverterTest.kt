@@ -100,6 +100,7 @@ class DrivinglistExpencesJson2XmlConverterTest {
 		System.out.println(xmlString)
 
 		Assertions.assertNotNull(xmlString)
+		System.out.print(xmlString)
 		Assertions.assertTrue(xmlString.contains("<vedtaksId>$vedtaksId</vedtaksId>"))
 		Assertions.assertTrue(xmlString.contains("<utgiftsperioder>"))
 		Assertions.assertTrue(xmlString.contains("<betalingsplanId>21</betalingsplanId>"))
@@ -131,7 +132,9 @@ class DrivinglistExpencesJson2XmlConverterTest {
 			enable(SerializationFeature.INDENT_OUTPUT)
 			disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 		}
-		xmlMapper.setDateFormat(SimpleDateFormat("yyyy-MM-ddXXX", Locale.of("nb", "NO")))
+		val formatter = SimpleDateFormat("yyyy-MM-ddXXX", Locale.of("nb", "NO"))
+		formatter.timeZone = TimeZone.getTimeZone("CET")
+		xmlMapper.setDateFormat(formatter)
 		xmlMapper.registerModule(JaxbAnnotationModule())
 		val xml = xmlMapper.writeValueAsString(convertedDate)
 
