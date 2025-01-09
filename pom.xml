@@ -38,8 +38,10 @@
 		<!--<spring-cloud.version>4.2.0</spring-cloud.version>-->
 
 		<!--OpenAPI-->
-		<springdoc-openapi.version>2.7.0</springdoc-openapi.version>
-		<swagger-annotations.version>2.2.27</swagger-annotations.version>
+		<springdoc-openapi.version>2.6.0</springdoc-openapi.version>
+		<swagger-annotations.version>2.2.25</swagger-annotations.version>
+		<!--<springdoc-openapi.version>2.7.0</springdoc-openapi.version>
+		<swagger-annotations.version>2.2.27</swagger-annotations.version>-->
 
 		<!--Token-->
 		<token-validation.version>5.0.13</token-validation.version>
