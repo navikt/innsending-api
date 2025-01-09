@@ -85,4 +85,27 @@ class KonverterTilPdfTest: ApplicationTest() {
 		assertTrue(validation.isPdfACompliant)
 	}
 
+
+	@Test
+	fun verifiserKonverteringAvDocxFil() {
+		val doc = Hjelpemetoder.getBytesFromFile("/__files/soknadsarkiverer-og-flere-poder.docx")
+
+		val start = System.currentTimeMillis()
+		val (pdf, antallSider) = konverterTilPdf.tilPdf(
+			doc,
+			soknadDto,
+			filtype = ".docx",
+			vedleggsTittel = "Vedleggstittel"
+		)
+		val ferdig = System.currentTimeMillis()
+		println("Tid til konvertering av txtFil = ${ferdig - start}")
+		assertEquals(13, antallSider)
+
+		val validation = VeraPDFValidator().validatePdf(pdf)
+
+		assertTrue(validation.isPdfACompliant)
+	}
+
+
+
 }

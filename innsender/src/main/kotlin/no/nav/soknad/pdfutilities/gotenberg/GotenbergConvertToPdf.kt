@@ -116,6 +116,7 @@ class GotenbergConvertToPdf(
 	): ByteArray {
 
 		val uri = route
+		logger.info( "Calling Gotenberg route=$uri")
 		val response = gotenbergClient
 			.post()
 			.uri(uri)
@@ -136,7 +137,7 @@ class GotenbergConvertToPdf(
 		if (response == null) {
 			throw IllegalActionException("Got empty response when requesting $uri", null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
 		}
-
+		logger.info("Called Gotenberg route=$uri with response.size=${response.size}")
 		return response
 
 	}
