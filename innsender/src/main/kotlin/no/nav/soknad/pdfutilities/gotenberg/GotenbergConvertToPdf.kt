@@ -132,6 +132,10 @@ class GotenbergConvertToPdf(
 				}
 			}
 
+		if (response == null) {
+			throw IllegalActionException("Got empty response when requesting $uri", null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
+		}
+
 		return response
 
 	}
