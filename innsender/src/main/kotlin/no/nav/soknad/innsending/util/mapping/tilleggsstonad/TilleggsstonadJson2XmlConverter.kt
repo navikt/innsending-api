@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import java.text.SimpleDateFormat
+import java.time.ZoneId
 import java.util.*
 import kotlin.math.roundToInt
 
@@ -92,8 +93,10 @@ fun convertToMaalgruppeinformasjon(jsonMaalgruppeinformasjon: JsonMaalgruppeinfo
 
 fun convertToDateStringWithTimeZone(date: String): String {
 	val inputFormat = SimpleDateFormat("yyyy-MM-dd")
+
 	val inputDate = inputFormat.parse(date.substring(0, 10))
 	val outputFormat = SimpleDateFormat("yyyy-MM-ddXXX", Locale.of("no", "NO"))
+	outputFormat.timeZone = TimeZone.getTimeZone("CET")
 	return outputFormat.format(inputDate)
 }
 

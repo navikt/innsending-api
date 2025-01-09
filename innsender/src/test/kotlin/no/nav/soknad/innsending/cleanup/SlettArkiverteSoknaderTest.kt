@@ -112,12 +112,6 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 		val beholdtSoknad = soknadService.hentSoknad(skalSendeInnIkkeArkivereId)
 		Assertions.assertTrue(beholdtSoknad.status == SoknadsStatusDto.Innsendt)
 
-		// Og metrics for antall slettede søknader er økt med 1
-		Assertions.assertEquals(
-			initAntall + 1.0,
-			innsenderMetrics.getOperationsCounter(InnsenderOperation.SLETT.name, tema)
-		)
-
 	}
 
 	private fun sendInnSoknad(

@@ -245,7 +245,6 @@ class SoknadService(
 
 	@Transactional
 	fun slettSoknadPermanent(innsendingsId: String) {
-		val operation = InnsenderOperation.SLETT.name
 
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettFilerForVedlegg(it.id!!) }
@@ -254,7 +253,6 @@ class SoknadService(
 
 		logger.info("$innsendingsId: opprettet:${dokumentSoknadDto.opprettetDato}, status: ${dokumentSoknadDto.status} er permanent slettet")
 
-		innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
 	}
 
 	@Transactional
