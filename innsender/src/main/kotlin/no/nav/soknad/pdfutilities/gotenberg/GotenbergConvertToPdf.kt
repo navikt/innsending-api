@@ -20,6 +20,7 @@ import java.io.File
 import java.util.*
 
 @Service
+@kotlin.ExperimentalStdlibApi
 class GotenbergConvertToPdf(
 	@Qualifier("gotenbergClient")
 	private val gotenbergClient: RestClient,
