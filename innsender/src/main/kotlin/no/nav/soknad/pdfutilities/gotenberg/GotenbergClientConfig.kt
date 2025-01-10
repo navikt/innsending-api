@@ -26,6 +26,7 @@ class GotenbergClientConfig {
 		return RestClient
 			.builder()
 			.baseUrl(baseUrl)
+			.requestFactory(timeouts())
 			.defaultHeaders({
 				it.contentType = MediaType.MULTIPART_FORM_DATA
 				it.accept = listOf(MediaType.APPLICATION_PDF, MediaType.TEXT_PLAIN)

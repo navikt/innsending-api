@@ -123,13 +123,17 @@ class GotenbergConvertToPdf(
 			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"$filename\"")
 			.body(multipartBody)
 			.exchange { request, response ->
+
 				if (response.statusCode.is2xxSuccessful) {
 					response.body.readAllBytes()
 				} else if (response.statusCode.is4xxClientError) {
+					logger.warn("Gotenberg Client side error status = ${response.statusCode}")
 					throw IllegalActionException(errorResponse(response, uri), null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
 				} else if (response.statusCode.is5xxServerError) {
+					logger.warn("Gotenberg Server side error status = ${response.statusCode}")
 					throw IllegalActionException(errorResponse(response, uri), null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
 				} else {
+					logger.warn("Gotenberg call error status = ${response.statusCode}")
 					throw IllegalActionException(errorResponse(response, uri), null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
 				}
 			}

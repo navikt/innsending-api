@@ -6,6 +6,8 @@ import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
+import no.nav.soknad.pdfutilities.gotenberg.GotenbergClientConfig
+import no.nav.soknad.pdfutilities.gotenberg.GotenbergConvertToPdf
 import org.junit.Assert.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
@@ -134,7 +136,7 @@ class GenererPdfTest {
 
 	private fun isPdfaTest(document: ByteArray) {
 		val valideringsResultat = VeraPDFValidator().validatePdf(document)
-		//writeBytesToFile(document, "./pdf-til-validering.pdf")
+		writeBytesToFile(document, "./pdf-til-validering.pdf")
 		assertTrue(valideringsResultat.isPdfACompliant)
 	}
 
@@ -455,5 +457,20 @@ class GenererPdfTest {
 
 	}
 
+/*
+
+	private val client = GotenbergClientConfig().getGotenbergClient("http://localhost:3000")
+	private val toPdfService = GotenbergConvertToPdf(client)
+
+	@Test
+	fun converterTilPDF() {
+		val jpg = Hjelpemetoder.getBytesFromFile("/__files/soknadsarkiverer-og-flere-poder.docx")
+
+		val file = toPdfService.toPdf("test.pdf", jpg)
+
+		isPdfaTest(file)
+
+	}
+*/
 
 }
