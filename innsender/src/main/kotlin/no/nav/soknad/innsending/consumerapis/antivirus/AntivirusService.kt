@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.consumerapis.antivirus
 
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import org.slf4j.LoggerFactory
@@ -42,6 +43,10 @@ class AntivirusService(private val antivirusRestClient: RestClient, private val 
 
 
 			logger.info("Virus scanning brukte ${System.currentTimeMillis() - startTime}ms på å fullføre")
+
+			if (response == null) {
+				throw BackendErrorException("Ingen respons fra antivirus sjekken")
+			}
 
 			if (response.size != 1) {
 				logger.error("Feil størrelse på responsen fra virus scan")

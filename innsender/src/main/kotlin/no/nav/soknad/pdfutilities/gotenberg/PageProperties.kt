@@ -279,8 +279,8 @@ class PageProperties(builder: Builder) {
 			start: Int,
 			end: Int,
 		): Builder {
-			require(start in 1..<end) {
-				PAGE_RANGE_ERROR
+			if (start < 0 || end < 0 || start > end) {
+				throw IllegalArgumentException(PAGE_RANGE_ERROR)
 			}
 			nativePageRanges = "$start-$end"
 			return this

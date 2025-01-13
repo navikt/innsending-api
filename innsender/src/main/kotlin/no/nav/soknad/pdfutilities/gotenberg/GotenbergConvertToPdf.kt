@@ -115,23 +115,32 @@ class GotenbergConvertToPdf(
 	): ByteArray {
 
 		val uri = route
+		logger.info( "Calling Gotenberg route=$uri")
 		val response = gotenbergClient
 			.post()
 			.uri(uri)
 			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"$filename\"")
 			.body(multipartBody)
 			.exchange { request, response ->
+
 				if (response.statusCode.is2xxSuccessful) {
 					response.body.readAllBytes()
 				} else if (response.statusCode.is4xxClientError) {
+					logger.warn("Gotenberg Client side error status = ${response.statusCode}")
 					throw IllegalActionException(errorResponse(response, uri), null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
 				} else if (response.statusCode.is5xxServerError) {
+					logger.warn("Gotenberg Server side error status = ${response.statusCode}")
 					throw IllegalActionException(errorResponse(response, uri), null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
 				} else {
+					logger.warn("Gotenberg call error status = ${response.statusCode}")
 					throw IllegalActionException(errorResponse(response, uri), null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
 				}
 			}
 
+		if (response == null) {
+			throw IllegalActionException("Got empty response when requesting $uri", null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
+		}
+		logger.info("Called Gotenberg route=$uri with response.size=${response.size}")
 		return response
 
 	}
