@@ -1,4 +1,12 @@
 services:
+  gotenberg:
+    image: europe-north1-docker.pkg.dev/nais-management-233d/fyllut-sendinn/upload-convert-to-pdf:8.0.0
+    container_name: gotenberg
+    command: gotenberg --api-disable-health-check-logging --libreoffice-auto-start --webhook-disable --api-timeout 240s
+    restart: always
+    ports:
+      - '3050:3000'
+
   db:
     image: postgres:15-alpine
     container_name: innsending-api-db
@@ -14,6 +22,7 @@ services:
   innsending-api:
     depends_on:
       - db
+      - gotenberg
     container_name: innsending-api
     mem_reservation: 4000M
     build:
@@ -24,6 +33,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       DATABASE_PORT: 5432 # porten i docker, bruk den eksponerte 5450 porten for å koble til utenfra
       DATABASE_HOST: db
+      GOTENBERG_PORT: 3000
+      GOTENBERG_HOST: gotenberg
 
 volumes:
   db:

@@ -23,6 +23,8 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 
@@ -323,6 +325,7 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 			"http://localhost:3100/sendinn/${dokumentSoknadDto.innsendingsId}",
 			message.captured.brukernotifikasjonInfo.lenke
 		)
+		assertNull(message.captured.brukernotifikasjonInfo.utsettSendingTil)
 	}
 
 	@Test
@@ -345,6 +348,25 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 	}
 
 	@Test
+	fun `Should create notification with utsattSending when systemGenerert=true`() {
+		// Given
+		val dokumentSoknadDto = DokumentSoknadDtoTestBuilder(
+			visningsType = VisningsType.ettersending,
+			erSystemGenerert = true
+		).build()
+
+		val message = slot<AddNotification>()
+		every { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) } returns Unit
+
+		// When
+		brukernotifikasjonPublisher?.soknadStatusChange(dokumentSoknadDto)
+
+		// Then
+		assertTrue(message.isCaptured)
+		assertNotNull(message.captured.brukernotifikasjonInfo.utsettSendingTil)
+	}
+
+	@Test
 	fun `Should keep notification active through the lifespan of the soknad`() {
 		// Given
 		val mellomlagringDager = 10
@@ -360,6 +382,7 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		// Then
 		assertTrue(message.isCaptured)
 		assertEquals(mellomlagringDager, message.captured.brukernotifikasjonInfo.antallAktiveDager)
+		assertNull(message.captured.brukernotifikasjonInfo.utsettSendingTil)
 	}
 
 

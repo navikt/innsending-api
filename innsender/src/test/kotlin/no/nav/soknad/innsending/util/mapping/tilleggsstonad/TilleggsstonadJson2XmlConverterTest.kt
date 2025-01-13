@@ -767,6 +767,7 @@ class TilleggsstonadJson2XmlConverterTest {
 
 		assertNotNull(xmlFil)
 		val xmlString = xmlFil.decodeToString()
+		System.out.println(xmlString)
 		assertTrue(xmlString.contains("laeremiddelutgifter"))
 		assertTrue(xmlString.contains("<laeremiddelutgifter>"))
 		assertTrue(xmlString.contains("<periode>"))

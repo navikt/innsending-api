@@ -28,6 +28,10 @@ class Validerer {
 			return "pdf"
 
 		} else {
+			val ext = getFileExtention(fileName)
+			if (!supportedFileTypes.contains(ext)) {
+				ulovligFilFormat(innsendingId, ext, file)
+			}
 			val primaryExtension: String = try {
 					val fileType_full = FiltypeSjekker().detectContentType(file, fileName)
 					val filtype = fileType_full.substringBefore(";")
@@ -35,28 +39,28 @@ class Validerer {
 					val type: MimeType = allTypes.forName(filtype)
 					type.getExtension()
 				} catch (e: Exception) {
-					val ext =
-						if (fileName != null) {
-							File(fileName).extension
-						} else {
-							"unknown"
-						}
-					logger.warn("Error checking filecontent for $ext")
-					"." + ext
+					logger.warn("Error checking filecontent for $ext. Will continue processing file", e)
+					ext
 				}
 
-				if (!supportedFileTypes.contains(primaryExtension)) {
+				if (!primaryExtension.equals(ext, true) ) {
+					logger.warn("Mismatch specified fileextension $ext and detected filecontent $primaryExtension. Rejecting upload")
 					ulovligFilFormat(innsendingId, fileName, file)
 				}
 				return primaryExtension
 		}
 	}
 
-	private fun ulovligFilFormat(innsendingId: String, fileName: String? = "", file: ByteArray) {
-		val extention = fileName?.substringAfterLast(".", "<mangler>") ?: "<mangler>"
+	private fun getFileExtention(fileName: String?): String {
+		if (fileName == null) return "unknown"
+		val tmp = File(fileName).extension.lowercase()
+		return "." + if (tmp == "jpeg") "jpg" else if (tmp == "tif") "tiff" else tmp
+	}
+
+	private fun ulovligFilFormat(innsendingId: String, extention: String? = "", file: ByteArray) {
 		logger.warn("$innsendingId: Ugyldig filtype for opplasting. Filextention: ${extention}, og filstart = ${if (file.size >= 4) (file[0] + file[1] + file[3] + file[4]) else file[0]}\")")
 		throw IllegalActionException(
-			message = "$innsendingId: Ugyldig filtype for opplasting. Kan kun laste opp filer av type TXT, DOCX, PDF, JPEG, PNG og IMG",
+			message = "$innsendingId: Ugyldig filtype for opplasting. Kan kun laste opp filer av type ${supportedFileTypes.joinToString(", ")}",
 			errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
 		)
 

@@ -127,7 +127,7 @@ class EttersendingServiceTest : ApplicationTest() {
 	)
 
 	@Test
-	fun `Skal sende brukernotifikasjon med erSystemGenerert=true hvis det mangler paakrevde vedlegg`() {
+	fun `Skal sende brukernotifikasjon med erSystemGenerert=true og utsatt varsling hvis det mangler paakrevde vedlegg`() {
 		// Gitt
 		val brukerid = testpersonid
 		val skjemanr = "NAV 55-00.60"
@@ -149,6 +149,7 @@ class EttersendingServiceTest : ApplicationTest() {
 		// Så
 		assertNotNull(message.captured)
 		assertTrue(message.captured.soknadRef.erSystemGenerert == true)
+		assertNotNull(message.captured.brukernotifikasjonInfo.utsettSendingTil)
 	}
 
 	@Test

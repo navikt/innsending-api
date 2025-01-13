@@ -8,7 +8,6 @@ import no.nav.soknad.pdfutilities.FiltypeSjekker
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.client.MultipartBodyBuilder
@@ -21,7 +20,6 @@ import java.io.File
 import java.util.*
 
 @Service
-@Profile("prod | dev | test")
 class GotenbergConvertToPdf(
 	@Qualifier("gotenbergClient")
 	private val gotenbergClient: RestClient,
@@ -31,6 +29,10 @@ class GotenbergConvertToPdf(
 		private const val HTML_ROUTE = "/forms/chromium/convert/html"
 		private const val PDF_MERGE_ROUTE = "/forms/pdfengines/merge"
 		private const val GOTENBERG_TRACE_HEADER = "gotenberg-trace"
+
+		private const val mergeWithPdfa = false
+		private const val mergeWithPdfua = false
+
 	}
 
 	private val logger = LoggerFactory.getLogger(GotenbergConvertToPdf::class.java)
@@ -75,12 +77,27 @@ class GotenbergConvertToPdf(
 			docs.forEach {
 				part("files", ByteArrayMultipartFile("merge-"+ UUID.randomUUID().toString()+".pdf", it).resource)
 			}
-			pageProperties.all().forEach { part(it.key, it.value) }
+			filter_pdfa_and_or_ua(pageProperties.all()).forEach { part(it.key, it.value) }
 			build()
 		}
 
-		return convertFileRequest(fileName, multipartBody, PDF_MERGE_ROUTE)
+		val start = System.currentTimeMillis()
+		val merged =  convertFileRequest(fileName, multipartBody, PDF_MERGE_ROUTE)
+		val tidsbruk = System.currentTimeMillis() - start
+		logger.debug("Tid brukt på å slå sammen filer=$tidsbruk")
 
+		return merged
+	}
+
+	private fun filter_pdfa_and_or_ua(properties: Map<String, String>): Map<String, String> {
+		// pdfa and pdfua is default selected
+		return filter_pdfua(filter_pdfa(properties))
+	}
+	private fun filter_pdfa(properties: Map<String, String>): Map<String, String> {
+		return if(!mergeWithPdfa) properties.filter { it.key != "pdfa" } else properties
+	}
+	private fun filter_pdfua(properties: Map<String, String>): Map<String, String> {
+		return if (!mergeWithPdfua) properties.filter { it.key != "pdfua" } else properties
 	}
 
 	private fun getHtmlTemplate(fileName: String): String {
@@ -98,23 +115,32 @@ class GotenbergConvertToPdf(
 	): ByteArray {
 
 		val uri = route
+		logger.info( "Calling Gotenberg route=$uri")
 		val response = gotenbergClient
 			.post()
 			.uri(uri)
 			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"$filename\"")
 			.body(multipartBody)
 			.exchange { request, response ->
+
 				if (response.statusCode.is2xxSuccessful) {
 					response.body.readAllBytes()
 				} else if (response.statusCode.is4xxClientError) {
+					logger.warn("Gotenberg Client side error status = ${response.statusCode}")
 					throw IllegalActionException(errorResponse(response, uri), null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
 				} else if (response.statusCode.is5xxServerError) {
+					logger.warn("Gotenberg Server side error status = ${response.statusCode}")
 					throw IllegalActionException(errorResponse(response, uri), null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
 				} else {
+					logger.warn("Gotenberg call error status = ${response.statusCode}")
 					throw IllegalActionException(errorResponse(response, uri), null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
 				}
 			}
 
+		if (response == null) {
+			throw IllegalActionException("Got empty response when requesting $uri", null, ErrorCode.TYPE_DETECTION_OR_CONVERSION_ERROR)
+		}
+		logger.info("Called Gotenberg route=$uri with response.size=${response.size}")
 		return response
 
 	}
