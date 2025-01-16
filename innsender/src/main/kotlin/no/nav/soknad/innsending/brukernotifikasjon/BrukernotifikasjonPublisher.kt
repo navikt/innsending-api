@@ -108,7 +108,7 @@ class BrukernotifikasjonPublisher(
 		val eksternVarslingList = if (ettersending) mutableListOf(Varsel(Varsel.Kanal.sms)) else mutableListOf()
 
 		val soknadLevetid = dokumentSoknad.mellomlagringDager ?: Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD.toInt()
-		val utsettSendingTil = if (dokumentSoknad.erSystemGenerert == true)
+		val utsettSendingTil = if (dokumentSoknad.erSystemGenerert == true && dokumentSoknad.erNavInitiert != true)
 			LocalDateTime.now().plusDays(Constants.DEFAULT_UTSETT_SENDING_VED_SYSTEMGENERERT_DAGER)
 				.withHour(9).withMinute(0).withSecond(0).atOffset(ZoneOffset.UTC) else null
 		return NotificationInfo(tittel, lenke, soknadLevetid, eksternVarslingList, utsettSendingTil = utsettSendingTil)

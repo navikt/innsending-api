@@ -1017,6 +1017,167 @@ paths:
       tags:
         - ekstern
 
+
+  /ekstern/v1/oppgave/ettersending:
+        post:
+          summary: Kall fra saksbehandler for å opprette en oppgave til en søker for ettersending av dokumentasjon. Skjemanr, tema og vedleggskoder valideres mot kodeverket (se https://kodeverk-web.dev.intern.nav.no/).
+                   Skjemanr og vedleggskoder er valgfrie og vil bli hentet fra kodeverket hvis de ikke er oppgitt. Merk at kodeverket ikke alltid har oversettelser for alle språk og vil bruke norsk som fallback.
+          operationId: EksternEttersendingsOppgave
+          parameters:
+            - name: Nav-Call-Id
+              in: header
+              description: En ID som identifiserer kallkjeden som dette kallet er en del av
+              required: false
+              schema:
+                type: string
+          requestBody:
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/EksternEttersendingsOppgave"
+            required: true
+
+          responses:
+            201:
+              description: Opprettet ettersendings oppgave
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/DokumentSoknadDto"
+            401:
+              description: Uautorisert
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/RestErrorResponseDto"
+                  example:
+                    message: Autentisering feilet
+                    timestamp: 2023-12-21T09:31:40.549032434
+                    errorCode: errorCode.unauthorized
+            500:
+              description: Feil i backend
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/RestErrorResponseDto"
+                  example:
+                    message: Noe gikk galt, prøv igjen senere
+                    timestamp: 2023-12-21T09:31:40.549032434
+                    errorCode: somethingFailedTryLater
+          tags:
+            - eksternoppgave
+
+
+  /ekstern/v1/oppgave/{innsendingsId}:
+        delete:
+            summary: Kall for å slette opprettet søknad eller ettersending gitt innsendingsId.
+            description: Dersom funnet, slettes søknaden/ettersendingen.
+            operationId: eksternOppgaveSlett
+
+            parameters:
+              - name: innsendingsId
+                in: path
+                description: identifisering av søknad/ettersending
+                required: true
+                schema:
+                  type: string
+                style: simple
+              - name: Nav-Call-Id
+                in: header
+                description: En ID som identifiserer kallkjeden som dette kallet er en del av.
+                required: false
+                schema:
+                  type: string
+
+            responses:
+              200:
+                description: Slettet søknad/ettersending
+                content:
+                  application/json:
+                    schema:
+                      $ref: "#/components/schemas/BodyStatusResponseDto"
+              401:
+                description: Uautorisert
+                content:
+                  application/json:
+                    schema:
+                      $ref: "#/components/schemas/RestErrorResponseDto"
+                    example:
+                      message: Autentisering feilet
+                      timestamp: 2023-12-21T09:31:40.549032434
+                      errorCode: errorCode.unauthorized
+              404:
+                description: Ingen ettersending funnet
+                content:
+                  application/json:
+                    schema:
+                      $ref: "#/components/schemas/RestErrorResponseDto"
+                    example:
+                      message: Ingen ettersending funnet
+                      timestamp: 2023-12-21T09:31:40.549032434
+                      errorCode: errorCode.resourceNotFound
+              500:
+                description: Feil i backend
+                content:
+                  application/json:
+                    schema:
+                      $ref: "#/components/schemas/RestErrorResponseDto"
+                    example:
+                      message: Noe gikk galt, prøv igjen senere
+                      timestamp: 2023-12-21T09:31:40.549032434
+                      errorCode: somethingFailedTryLater
+            tags:
+              - eksternoppgave
+
+  /ekstern/v1/oppgave/skjema/{skjemanr}:
+    get:
+      summary: Kall for å hente opprettede søknader/ettersendinger for bruker gitt skjemanummer fra eksterne applikasjoner
+      description: Kan filtrere på 'soknad' | 'ettersendelse'
+      operationId: oppgaveHentSoknaderForSkjemanr
+
+      parameters:
+        - name: skjemanr
+          in: path
+          description: Skjemaet som søknaden er basert på
+          required: true
+          schema:
+            type: string
+          style: simple
+          example: "NAV 55-00.60"
+        - name: soknadstyper
+          in: query
+          description: "Komma-separert liste som filtrerer hvilke type søknader som skal returnes. Feks: 'soknad,ettersendelse'"
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/SoknadType"
+        - name: Nav-Call-Id
+          in: header
+          description: En ID som identifiserer kallkjeden som dette kallet er en del av.
+          required: false
+          schema:
+            type: string
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BrukerId"
+        required: true
+
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DokumentSoknadDto"
+      tags:
+        - eksternoppgave
+
+
   /endtoend/v1/soknad/{innsendingsId}/arkiveringsstatus:
     get:
       summary: Henter arkiveringsstatus for en søknad
@@ -1428,6 +1589,13 @@ components:
             Når systemet ser at det mangler påkrevde vedlegg som skal ettersendes, lages det en *oppgave* i stedet.
           example: true
           default: false
+        erNavInitiert:
+          type: boolean
+          description: >
+            Hvis true markerer dette at det er NAV (ikke brukeren selv) som har tatt initiativ til å lage søknaden/ettersendingssøknaden.
+            Dette innebærer at varsel til bruker skal sendes umiddelbart.
+          example: true
+          default: false
         soknadstype:
           $ref: "#/components/schemas/SoknadType"
         skjemaPath:
@@ -1438,6 +1606,43 @@ components:
           $ref: "#/components/schemas/SkalSlettesDato"
         mellomlagringDager:
           $ref: "#/components/schemas/MellomlagringDager"
+
+
+    EksternEttersendingsOppgave:
+      type: object
+      description: Data for å opprette en oppgave for ettersending av dokumentasjon
+      required:
+        - brukerId
+        - skjemanr
+        - sprak
+        - tema
+        - vedleggsListe
+      properties:
+        brukerId:
+          $ref:  "#/components/schemas/BrukerId"
+        tittel:
+          $ref: "#/components/schemas/Tittel"
+        skjemanr:
+          $ref: "#/components/schemas/Skjemanr"
+        sprak:
+          $ref: "#/components/schemas/Spraak"
+        tema:
+          $ref: "#/components/schemas/Tema"
+        brukernotifikasjonstype:
+          $ref: "#/components/schemas/BrukernotifikasjonsType"
+        koblesTilEksisterendeSoknad:
+          type: boolean
+          description: "Angir om ettersendingen skal kobles til en eksisterende søknad. Hvis denne er satt til true vil filer som tidligere er lastet opp vises i send-inn. Default: false"
+          example: false
+        vedleggsListe:
+          type: array
+          description: Liste av vedlegg som kan lastes opp
+          items:
+            $ref: "#/components/schemas/InnsendtVedleggDto"
+          example:
+            - vedleggsnr: W1
+              tittel: "Dokumentasjon på mottatt bidrag"
+
 
     EksternOpprettEttersending:
       type: object

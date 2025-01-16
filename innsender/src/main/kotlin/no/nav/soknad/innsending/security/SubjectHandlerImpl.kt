@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.security
 import no.nav.security.token.support.core.context.TokenValidationContext
 import no.nav.security.token.support.core.context.TokenValidationContextHolder
 import no.nav.soknad.innsending.exceptions.BackendErrorException
+import no.nav.soknad.innsending.util.Constants.AZURE
 import no.nav.soknad.innsending.util.Constants.SELVBETJENING
 import no.nav.soknad.innsending.util.Constants.TOKENX
 import org.slf4j.Logger
@@ -47,8 +48,13 @@ class SubjectHandlerImpl(private val ctxHolder: TokenValidationContextHolder) : 
 
 	// The MockOAuth2Server sets AZP claim for the client id, while the real tokens uses client_id claim
 	override fun getClientId(): String {
-		return tokenValidationContext.getClaims(TOKENX).getStringClaim(CLIENT_ID)
-			?: tokenValidationContext.getClaims(TOKENX).getStringClaim(AZP)
+		val claims = try {
+			tokenValidationContext.getClaims(TOKENX)
+		} catch (e: Exception) {
+			tokenValidationContext.getClaims(AZURE)
+		}
+		return claims.getStringClaim(CLIENT_ID)
+			?: claims.getStringClaim(AZP)
 	}
 
 	companion object {

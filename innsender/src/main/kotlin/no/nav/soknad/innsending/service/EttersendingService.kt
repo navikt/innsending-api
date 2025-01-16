@@ -179,7 +179,8 @@ class EttersendingService(
 	fun createEttersendingFromInnsendtSoknad(
 		brukerId: String,
 		existingSoknad: DokumentSoknadDto,
-		ettersending: OpprettEttersending
+		ettersending: OpprettEttersending,
+		erNavInitiert: Boolean = false
 	): DokumentSoknadDto {
 		val operation = InnsenderOperation.OPPRETT.name
 		val vedleggsnrList = ettersending.vedleggsListe?.map { it.vedleggsnr } ?: emptyList()
@@ -206,7 +207,7 @@ class EttersendingService(
 				)
 
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
-			return lagDokumentSoknadDto(ettersendingDb, combinedVedleggList)
+			return lagDokumentSoknadDto(ettersendingDb, combinedVedleggList, erNavInitiert = erNavInitiert)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, existingSoknad.tema)
 			throw e
@@ -220,7 +221,8 @@ class EttersendingService(
 		brukerId: String,
 		archivedSoknad: AktivSakDto,
 		ettersending: OpprettEttersending,
-		forsteInnsendingsDato: OffsetDateTime?
+		forsteInnsendingsDato: OffsetDateTime?,
+		erNavInitiert: Boolean = false
 	): DokumentSoknadDto {
 		val operation = InnsenderOperation.OPPRETT.name
 
@@ -243,7 +245,7 @@ class EttersendingService(
 					archivedSoknad = archivedSoknad
 				)
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
-			return lagDokumentSoknadDto(ettersendingDb, combinedVedleggList)
+			return lagDokumentSoknadDto(ettersendingDb, combinedVedleggList, erNavInitiert = erNavInitiert)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, archivedSoknad.tema)
 			throw e
@@ -253,7 +255,7 @@ class EttersendingService(
 	}
 
 	@Transactional
-	fun createEttersending(brukerId: String, ettersending: OpprettEttersending): DokumentSoknadDto {
+	fun createEttersending(brukerId: String, ettersending: OpprettEttersending, erNavInitiert: Boolean = false): DokumentSoknadDto {
 		logger.info("Oppretter ettersending for skjemanr=${ettersending.skjemanr}")
 		val operation = InnsenderOperation.OPPRETT.name
 
@@ -275,7 +277,7 @@ class EttersendingService(
 			)
 
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
-			return lagDokumentSoknadDto(ettersendingsSoknadDb, vedleggDbDataListe)
+			return lagDokumentSoknadDto(ettersendingsSoknadDb, vedleggDbDataListe, false, erNavInitiert)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, ettersending.tema)
 			throw e
@@ -338,6 +340,7 @@ class EttersendingService(
 	fun createEttersendingFromExternalApplication(
 		brukerId: String,
 		eksternOpprettEttersending: EksternOpprettEttersending,
+		erNavInitiert: Boolean = false
 	): DokumentSoknadDto {
 		val mappedEttersending = mapToOpprettEttersending(eksternOpprettEttersending)
 
@@ -351,9 +354,9 @@ class EttersendingService(
 		// Create ettersending based on existing søknad or create a new one
 		val dokumentSoknadDto =
 			if (eksternOpprettEttersending.koblesTilEksisterendeSoknad == true) {
-				createEttersendingFromExistingSoknader(brukerId = brukerId, ettersending = enrichedEttersending)
+				createEttersendingFromExistingSoknader(brukerId = brukerId, ettersending = enrichedEttersending, erNavInitiert)
 			} else {
-				createEttersending(brukerId = brukerId, ettersending = enrichedEttersending)
+				createEttersending(brukerId = brukerId, ettersending = enrichedEttersending, erNavInitiert)
 			}
 
 		publiserBrukernotifikasjon(dokumentSoknadDto, eksternOpprettEttersending.brukernotifikasjonstype)
@@ -377,7 +380,8 @@ class EttersendingService(
 	// Create an ettersending based on previous soknader (from db or JOARK)
 	fun createEttersendingFromExistingSoknader(
 		brukerId: String,
-		ettersending: OpprettEttersending
+		ettersending: OpprettEttersending,
+		erNavInitiert: Boolean = false
 	): DokumentSoknadDto {
 		val innsendteSoknader = getInnsendteSoknader(ettersending.skjemanr)
 		val arkiverteSoknader = getArkiverteEttersendinger(ettersending.skjemanr, brukerId)
@@ -419,11 +423,12 @@ class EttersendingService(
 		innsendteSoknader: List<DokumentSoknadDto>,
 		arkiverteSoknader: List<AktivSakDto>,
 		brukerId: String,
-		ettersending: OpprettEttersending
+		ettersending: OpprettEttersending,
+		erNavInitiert: Boolean = false
 	): DokumentSoknadDto {
 		// Create a new ettersending without connecting it to an existing søknad
 		if (innsendteSoknader.isEmpty() && arkiverteSoknader.isEmpty()) {
-			return createEttersending(brukerId = brukerId, ettersending = ettersending)
+			return createEttersending(brukerId = brukerId, ettersending = ettersending, erNavInitiert = erNavInitiert)
 		}
 
 		// Create a new ettersending based on the latest innsendt søknad
@@ -435,14 +440,16 @@ class EttersendingService(
 				return createEttersendingFromInnsendtSoknad(
 					brukerId = brukerId,
 					existingSoknad = innsendteSoknader[0],
-					ettersending = ettersending
+					ettersending = ettersending,
+					erNavInitiert = erNavInitiert
 				)
 			} else {
 				return createEttersendingFromArchivedSoknad(
 					brukerId = brukerId,
 					archivedSoknad = arkiverteSoknader[0],
 					ettersending = ettersending,
-					forsteInnsendingsDato = innsendteSoknader[0].forsteInnsendingsDato
+					forsteInnsendingsDato = innsendteSoknader[0].forsteInnsendingsDato,
+					erNavInitiert = erNavInitiert
 				)
 			}
 		}
@@ -451,7 +458,8 @@ class EttersendingService(
 			brukerId = brukerId,
 			archivedSoknad = arkiverteSoknader[0],
 			ettersending = ettersending,
-			forsteInnsendingsDato = arkiverteSoknader[0].innsendtDato
+			forsteInnsendingsDato = arkiverteSoknader[0].innsendtDato,
+			erNavInitiert = erNavInitiert
 		)
 	}
 

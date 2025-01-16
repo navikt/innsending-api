@@ -51,6 +51,26 @@
 									}
 								}
 							}
+						],
+						"BID": [
+							{
+								"gyldigFra": "2017-05-01",
+								"gyldigTil": "9999-12-31",
+								"beskrivelser": {
+									"nn": {
+										"term": "Bidrag",
+										"tekst": "Bidrag"
+									},
+									"nb": {
+										"term": "Bidrag",
+										"tekst": "Bidrag"
+									},
+									"en": {
+										"term": "Support",
+										"tekst": "Support"
+									}
+								}
+							}
 						]
 					}
 				}

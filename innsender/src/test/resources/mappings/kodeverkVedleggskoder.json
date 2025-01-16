@@ -51,6 +51,46 @@
 									}
 								}
 							}
+						],
+						"W1": [
+							{
+								"gyldigFra": "2020-02-11",
+								"gyldigTil": "9999-12-31",
+								"beskrivelser": {
+									"nn": {
+										"term": "Dokumentasjon på mottatt bidrag",
+										"tekst": "Dokumentasjon på mottatt bidrag"
+									},
+									"nb": {
+										"term": "Dokumentasjon på mottatt bidrag",
+										"tekst": "Dokumentasjon på mottatt bidrag"
+									},
+									"en": {
+										"term": "Documentation of received alimony",
+										"tekst": "Documentation of received alimony"
+									}
+								}
+							}
+						],
+						"W2": [
+							{
+								"gyldigFra": "2020-02-11",
+								"gyldigTil": "9999-12-31",
+								"beskrivelser": {
+									"nn": {
+										"term": "Vedtak eller avtale om bidrag",
+										"tekst": "Vedtak eller avtale om bidrag"
+									},
+									"nb": {
+										"term": "Vedtak eller avtale om bidrag",
+										"tekst": "Vedtak eller avtale om bidrag"
+									},
+									"en": {
+										"term": "Documentation of received alimony",
+										"tekst": "Documentation of received alimony"
+									}
+								}
+							}
 						]
 					}
 				}
