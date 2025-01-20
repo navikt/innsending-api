@@ -2,6 +2,8 @@ package no.nav.soknad.innsending.rest.ekstern
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.EksternoppgaveApi
+import no.nav.soknad.innsending.exceptions.ErrorCode
+import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
@@ -82,7 +84,12 @@ class InternInitiertOppgaver(
 			"[${applikasjon}] - Kall for å slette søknad/ettersending fra ekstern applikasjon på skjema ${innsendingsId}",
 			soknadDto.brukerId
 		)
-
+		if (applikasjon != soknadDto.applikasjon) {
+			throw IllegalActionException(
+				message = "Søknaden kan ikke slettes. Den eksisterer ikke eller har en annen eier.",
+				errorCode = ErrorCode.ILLEGAL_DELETE_REQUEST
+			)
+		}
 		soknadService.deleteSoknadFromExternalApplication(soknadDto)
 
 		combinedLogger.log("[${applikasjon}] - $innsendingsId: Slettet søknad/ettersending fra ekstern applikasjon", soknadDto.brukerId)
@@ -92,26 +99,23 @@ class InternInitiertOppgaver(
 			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet ettersending med id $innsendingsId"))
 	}
 
-	override fun oppgaveHentSoknaderForSkjemanr(skjemanr: String, body: String, soknadstyper: kotlin.collections.List<SoknadType>?, navCallId: String?)
+	override fun oppgaveHentSoknaderForSkjemanr( brukerSoknadRequest: BrukerSoknadRequest, navCallId: String?)
 	: ResponseEntity<List<DokumentSoknadDto>> {
-		val brukerIds = listOf(body)
+		val brukerId = brukerSoknadRequest.brukerId
+		val skjemanr = brukerSoknadRequest.skjemanr
 		val applikasjon = subjectHandler.getClientId()
 
-		brukerIds.forEach {
-			combinedLogger.log(
-				"[${applikasjon}] - Henter søknader/ettersendinger med $skjemanr for bruker. Soknadstyper=${soknadstyper ?: "ikke spesifisert"}",
-				it
-			)
-		}
+		combinedLogger.log(
+			"[${applikasjon}] - Henter søknader/ettersendinger med $skjemanr for bruker",
+			brukerId = brukerId
+		)
 
-		val typeFilter = soknadstyper?.toTypedArray() ?: emptyArray()
-		brukerIds.forEach {
+		val typeFilter = brukerSoknadRequest.soknadstyper?.toTypedArray() ?: emptyArray()
 			combinedLogger.log(
-				"[${applikasjon}] - Henter søknader med søknadstyper=${soknadstyper ?: "<alle>"} for $skjemanr",
-				it
+				"[${applikasjon}] - Henter søknader med søknadstyper=${typeFilter ?: "<alle>"} for $skjemanr",
+				brukerId
 			)
-		}
-		val soknader = brukerIds.flatMap { soknadService.hentAktiveSoknader(it, skjemanr, *typeFilter) }
+		val soknader = soknadService.hentAktiveSoknader(brukerId, skjemanr, *typeFilter)
 
 		return ResponseEntity.status(HttpStatus.OK).body(soknader)
 	}

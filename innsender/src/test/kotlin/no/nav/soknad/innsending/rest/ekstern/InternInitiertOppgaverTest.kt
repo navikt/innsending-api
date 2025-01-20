@@ -59,7 +59,6 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 
 		assertEquals(brukerId, soknadDto.brukerId)
 		assertEquals(skjemanr, soknadDto.skjemanr)
-		assertEquals(true, soknadDto.erNavInitiert)
 	}
 
 

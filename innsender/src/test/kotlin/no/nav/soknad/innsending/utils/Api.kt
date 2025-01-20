@@ -276,7 +276,7 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 	fun createEttersendingsOppgave(opprettEttersendingsOppgave: EksternEttersendingsOppgave): ResponseEntity<DokumentSoknadDto> {
 		val requestEntity = createHttpEntity(opprettEttersendingsOppgave, null, AZURE)
 		return restTemplate.exchange(
-			"${baseUrl}/ekstern/v1/oppgave/ettersending",
+			"${baseUrl}/ekstern/v1/oppgaver",
 			HttpMethod.POST,
 			requestEntity,
 			DokumentSoknadDto::class.java
@@ -286,7 +286,7 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 	fun eksternOppgaveSlett(innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
 		val requestEntity = createHttpEntity(null, null, AZURE)
 		return restTemplate.exchange(
-			"${baseUrl}/ekstern/v1/oppgave/${innsendingsId}",
+			"${baseUrl}/ekstern/v1/oppgaver/${innsendingsId}",
 			HttpMethod.DELETE,
 			requestEntity,
 			BodyStatusResponseDto::class.java
@@ -296,7 +296,7 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 	fun eksternOppgaveSlettFail(innsendingsId: String): ResponseEntity<RestErrorResponseDto> {
 		val requestEntity = createHttpEntity(null, null, AZURE)
 		return restTemplate.exchange(
-			"${baseUrl}/ekstern/v1/oppgave/${innsendingsId}",
+			"${baseUrl}/ekstern/v1/oppgaver/${innsendingsId}",
 			HttpMethod.DELETE,
 			requestEntity,
 			RestErrorResponseDto::class.java
@@ -304,15 +304,15 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 	}
 
 
-	fun oppgaveHentSoknaderForSkjemanr( skjemanr: String, body: String, soknadstyper: List<SoknadType>?, navCallId: String?): ResponseEntity<List<DokumentSoknadDto>> {
-		val requestEntity = createHttpEntity(body, null, AZURE)
+	fun oppgaveHentSoknaderForSkjemanr( skjemanr: String, brukerId: String, soknadstyper: List<SoknadType>?, navCallId: String?): ResponseEntity<List<DokumentSoknadDto>> {
+		val requestEntity = createHttpEntity(BrukerSoknadRequest(brukerId = brukerId, skjemanr = skjemanr, soknadstyper = soknadstyper), null, AZURE)
 		val responseType = object : ParameterizedTypeReference<List<DokumentSoknadDto>>() {}
 		var query = ""
 		if (soknadstyper?.isNotEmpty() == true) {
 			query = "?soknadstyper=${soknadstyper.joinToString()}"
 		}
 		return restTemplate.exchange(
-			"${baseUrl}/ekstern/v1/oppgave/skjema/${skjemanr}${query}",
+			"${baseUrl}/ekstern/v1/oppgaver",
 			HttpMethod.GET,
 			requestEntity,
 			responseType

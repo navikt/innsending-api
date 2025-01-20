@@ -1018,7 +1018,7 @@ paths:
         - ekstern
 
 
-  /ekstern/v1/oppgave/ettersending:
+  /ekstern/v1/oppgaver:
         post:
           summary: Kall fra saksbehandler for å opprette en oppgave til en søker for ettersending av dokumentasjon. Skjemanr, tema og vedleggskoder valideres mot kodeverket (se https://kodeverk-web.dev.intern.nav.no/).
                    Skjemanr og vedleggskoder er valgfrie og vil bli hentet fra kodeverket hvis de ikke er oppgitt. Merk at kodeverket ikke alltid har oversettelser for alle språk og vil bruke norsk som fallback.
@@ -1067,11 +1067,43 @@ paths:
           tags:
             - eksternoppgave
 
+        get:
+          summary: Kall for å hente opprettede søknader/ettersendinger for bruker gitt skjemanummer fra eksterne applikasjoner
+          description: Kan filtrere på 'soknad' | 'ettersendelse'
+          operationId: oppgaveHentSoknaderForSkjemanr
 
-  /ekstern/v1/oppgave/{innsendingsId}:
+          parameters:
+            - name: Nav-Call-Id
+              in: header
+              description: En ID som identifiserer kallkjeden som dette kallet er en del av.
+              required: false
+              schema:
+                type: string
+
+          requestBody:
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/BrukerSoknadRequest"
+            required: true
+
+          responses:
+            200:
+              description: Successful operation
+              content:
+                application/json:
+                  schema:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DokumentSoknadDto"
+          tags:
+            - eksternoppgave
+
+
+  /ekstern/v1/oppgaver/{innsendingsId}:
         delete:
             summary: Kall for å slette opprettet søknad eller ettersending gitt innsendingsId.
-            description: Dersom funnet, slettes søknaden/ettersendingen.
+            description: Dersom funnet, slettes søknaden/ettersendingen dersom den slettes av samme applikasjon som har opprettet den.
             operationId: eksternOppgaveSlett
 
             parameters:
@@ -1128,54 +1160,6 @@ paths:
                       errorCode: somethingFailedTryLater
             tags:
               - eksternoppgave
-
-  /ekstern/v1/oppgave/skjema/{skjemanr}:
-    get:
-      summary: Kall for å hente opprettede søknader/ettersendinger for bruker gitt skjemanummer fra eksterne applikasjoner
-      description: Kan filtrere på 'soknad' | 'ettersendelse'
-      operationId: oppgaveHentSoknaderForSkjemanr
-
-      parameters:
-        - name: skjemanr
-          in: path
-          description: Skjemaet som søknaden er basert på
-          required: true
-          schema:
-            type: string
-          style: simple
-          example: "NAV 55-00.60"
-        - name: soknadstyper
-          in: query
-          description: "Komma-separert liste som filtrerer hvilke type søknader som skal returnes. Feks: 'soknad,ettersendelse'"
-          schema:
-            type: array
-            items:
-              $ref: "#/components/schemas/SoknadType"
-        - name: Nav-Call-Id
-          in: header
-          description: En ID som identifiserer kallkjeden som dette kallet er en del av.
-          required: false
-          schema:
-            type: string
-
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/BrukerId"
-        required: true
-
-      responses:
-        200:
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/DokumentSoknadDto"
-      tags:
-        - eksternoppgave
 
 
   /endtoend/v1/soknad/{innsendingsId}/arkiveringsstatus:
@@ -1457,6 +1441,22 @@ components:
       enum: [utkast, oppgave]
       example: oppgave
 
+    BrukerSoknadRequest:
+      type: object
+      description: Data for å hente aktive søknader på et skjemanr for en bruker
+      required:
+        - brukerId
+        - skjemanr
+      properties:
+        brukerId:
+          $ref: "#/components/schemas/BrukerId"
+        skjemanr:
+          $ref: "#/components/schemas/Skjemanr"
+        soknadstyper:
+          type: array
+          items:
+            $ref: "#/components/schemas/SoknadType"
+
     Document:
       type: string
       format: byte
@@ -1587,13 +1587,6 @@ components:
             Markerer hvis det er systemet (ikke brukeren selv) som har tatt initiativ til å lage søknaden.
             Når en bruker tar initiativ til å opprette en søknad/ettersending lages det et *utkast*.
             Når systemet ser at det mangler påkrevde vedlegg som skal ettersendes, lages det en *oppgave* i stedet.
-          example: true
-          default: false
-        erNavInitiert:
-          type: boolean
-          description: >
-            Hvis true markerer dette at det er NAV (ikke brukeren selv) som har tatt initiativ til å lage søknaden/ettersendingssøknaden.
-            Dette innebærer at varsel til bruker skal sendes umiddelbart.
           example: true
           default: false
         soknadstype:

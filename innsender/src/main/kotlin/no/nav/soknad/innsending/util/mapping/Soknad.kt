@@ -49,7 +49,6 @@ fun lagDokumentSoknadDto(
 	soknadDbData: SoknadDbData,
 	vedleggDbDataListe: List<VedleggDbData>,
 	erSystemGenerert: Boolean = false,
-	erNavInitiert: Boolean = false
 ): DokumentSoknadDto {
 	val erEttersending = soknadDbData.ettersendingsid != null || soknadDbData.visningstype == VisningsType.ettersending
 	return DokumentSoknadDto(
@@ -79,7 +78,6 @@ fun lagDokumentSoknadDto(
 		skjemaPath = createSkjemaPathFromSkjemanr(soknadDbData.skjemanr),
 		applikasjon = soknadDbData.applikasjon,
 		skalSlettesDato = soknadDbData.skalslettesdato,
-		erNavInitiert = erNavInitiert,
 	)
 }
 
