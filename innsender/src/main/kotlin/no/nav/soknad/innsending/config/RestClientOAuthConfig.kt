@@ -183,8 +183,12 @@ class RestClientOAuthConfig(
 			request.headers.set(NAV_CONSUMER_ID, applicationName)
 			request.headers.set(Constants.HEADER_INNSENDINGSID, MDC.get(Constants.MDC_INNSENDINGS_ID) ?: "")
 
-			if (subjectHandler?.getUserIdFromToken() != null) {
-				request.headers.set(Constants.NAV_PERSON_IDENT, subjectHandler.getUserIdFromToken())
+			try {
+				if (subjectHandler?.getUserIdFromToken() != null) {
+					request.headers.set(Constants.NAV_PERSON_IDENT, subjectHandler.getUserIdFromToken())
+				}
+			} catch (ex: Exception) {
+				logger.info("Ingen user funnet i token for callId $callId: $ex")
 			}
 
 			return execution.execute(request, body)
