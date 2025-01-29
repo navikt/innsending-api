@@ -1635,6 +1635,10 @@ components:
           example:
             - vedleggsnr: W1
               tittel: "Dokumentasjon på mottatt bidrag"
+        innsendingsFristDager:
+            $ref: "#/components/schemas/FristForEttersendelse"
+        mellomlagringDager:
+          $ref: "#/components/schemas/MellomlagringDager"
 
 
     EksternOpprettEttersending:
@@ -1668,6 +1672,10 @@ components:
           example:
             - vedleggsnr: W1
               tittel: "Dokumentasjon på mottatt bidrag"
+        innsendinsfristDager:
+          $ref: "#/components/schemas/FristForEttersendelse"
+        mellomlagringDager:
+          $ref: "#/components/schemas/MellomlagringDager"
 
     OpprettLospost:
       type: object
@@ -1848,7 +1856,7 @@ components:
 
     MellomlagringDager:
       type: integer
-      description: Antall dager søknaden skal mellomlagres før den slettes
+      description: Antall dager søknaden skal mellomlagres før den automatisk slettes
       example: 30
 
     Mimetype:
@@ -1895,6 +1903,10 @@ components:
           description: Liste av vedlegg som kan lastes opp
           items:
             $ref: "#/components/schemas/InnsendtVedleggDto"
+        innsendingsfristDager:
+          $ref: "#/components/schemas/FristForEttersendelse"
+        mellomlagringDager:
+          $ref: "#/components/schemas/MellomlagringDager"
 
     OpprettEttersendingGittSkjemaNr:
       type: object

@@ -108,11 +108,11 @@ class BrukernotifikasjonPublisher(
 		val tittel = tittelPrefixGittSprak(ettersending, dokumentSoknad.spraak ?: "no") + dokumentSoknad.tittel
 		val eksternVarslingList = if (ettersending) mutableListOf(Varsel(Varsel.Kanal.sms)) else mutableListOf()
 
-		val soknadLevetid = dokumentSoknad.mellomlagringDager ?: Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD.toInt()
+		val soknadLevetid = dokumentSoknad.mellomlagringDager ?: Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
 		val utsettSendingTil = if (dokumentSoknad.erSystemGenerert == true && erNavInitiert != true)
 			LocalDateTime.now().plusDays(Constants.DEFAULT_UTSETT_SENDING_VED_SYSTEMGENERERT_DAGER)
 				.withHour(9).withMinute(0).withSecond(0).atOffset(ZoneOffset.UTC) else null
-		return NotificationInfo(tittel, lenke, soknadLevetid, eksternVarslingList, utsettSendingTil = utsettSendingTil)
+		return NotificationInfo(tittel, lenke, soknadLevetid.toInt(), eksternVarslingList, utsettSendingTil = utsettSendingTil)
 	}
 
 	private fun tittelPrefixGittSprak(ettersendelse: Boolean, sprak: String): String {

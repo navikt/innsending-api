@@ -56,7 +56,9 @@ class InternInitiertOppgaver(
 			vedleggsListe = eksternEttersendingsOppgave.vedleggsListe,
 			tittel = eksternEttersendingsOppgave.tittel,
 			brukernotifikasjonstype = eksternEttersendingsOppgave.brukernotifikasjonstype,
-			koblesTilEksisterendeSoknad = eksternEttersendingsOppgave.koblesTilEksisterendeSoknad
+			koblesTilEksisterendeSoknad = eksternEttersendingsOppgave.koblesTilEksisterendeSoknad,
+			innsendinsfristDager = eksternEttersendingsOppgave.innsendingsFristDager,
+			mellomlagringDager = eksternEttersendingsOppgave.mellomlagringDager,
 		)
 
 		val ettersending = ettersendingService.createEttersendingFromExternalApplication(

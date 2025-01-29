@@ -53,11 +53,14 @@ class EttersendingService(
 		tema: String,
 		sprak: String,
 		forsteInnsendingsDato: OffsetDateTime,
-		fristForEttersendelse: Long? = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
+		fristForEttersendelse: Long = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
+		mellomlagringDager: Long = Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
 	)
 		: SoknadDbData {
 		val innsendingsId = Utilities.laginnsendingsId()
 		val applikasjon = subjectHandler.getClientId()
+
+		val skalslettesdato = OffsetDateTime.now().plusDays(if (mellomlagringDager > fristForEttersendelse) mellomlagringDager else fristForEttersendelse)
 
 		// lagre soknad
 		return repo.lagreSoknad(
@@ -80,7 +83,7 @@ class EttersendingService(
 				ettersendingsfrist = fristForEttersendelse,
 				arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
 				applikasjon = applikasjon,
-				skalslettesdato = OffsetDateTime.now().plusDays(Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD)
+				skalslettesdato = skalslettesdato
 			)
 		)
 	}
@@ -113,7 +116,7 @@ class EttersendingService(
 				sprak = nyesteSoknad.spraak!!,
 				forsteInnsendingsDato = nyesteSoknad.forsteInnsendingsDato ?: nyesteSoknad.innsendtDato
 				?: nyesteSoknad.endretDato ?: nyesteSoknad.opprettetDato,
-				nyesteSoknad.fristForEttersendelse
+				fristForEttersendelse = nyesteSoknad.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
 			)
 
 			// Lagre vedlegg i DB
@@ -195,7 +198,7 @@ class EttersendingService(
 				sprak = ettersending.sprak,
 				forsteInnsendingsDato = existingSoknad.forsteInnsendingsDato ?: existingSoknad.innsendtDato
 				?: existingSoknad.endretDato ?: existingSoknad.opprettetDato,
-				fristForEttersendelse = existingSoknad.fristForEttersendelse
+				fristForEttersendelse = existingSoknad.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
 			)
 
 			val combinedVedleggList =
@@ -266,7 +269,9 @@ class EttersendingService(
 				skjemanr = ettersending.skjemanr,
 				tema = ettersending.tema,
 				sprak = ettersending.sprak,
-				forsteInnsendingsDato = OffsetDateTime.now()
+				forsteInnsendingsDato = OffsetDateTime.now(),
+				fristForEttersendelse = ettersending.innsendingsfristDager ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
+				mellomlagringDager = (ettersending.mellomlagringDager ?: Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD).toLong()
 			)
 
 			val vedleggDbDataListe = vedleggService.saveVedlegg(
