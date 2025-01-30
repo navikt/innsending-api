@@ -32,10 +32,13 @@
 			{
 				"application": "bidrag-dokument-forsendelse",
 				"namespace": "bidrag"
-			},
+			}
+		],
+		"other-cluster": [
 			{
-				"application": "bidrag-dokument-arkiv ",
-				"namespace": "bidrag"
+				"application": "bidrag-dokument-arkiv",
+				"namespace": "bidrag",
+				"cluster": "prod-fss"
 			}
 		]
 	},

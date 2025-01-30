@@ -61,6 +61,11 @@ spec:
         - application: "{{this.application}}"
           namespace: "{{this.namespace}}"
       {{/each}}
+      {{#each accessPolicyInbound.other-cluster}}
+        - application: "{{this.application}}"
+          namespace: "{{this.namespace}}"
+          cluster: "{{this.cluster}}"
+      {{/each}}
 
     outbound:
       external:

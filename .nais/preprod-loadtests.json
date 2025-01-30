@@ -11,7 +11,8 @@
 			"innsending-system-tests",
 			"soknadsarkiverer-loadtests"
 		],
-		"other-namespace": []
+		"other-namespace": [],
+		"other-cluster": []
 	},
 	"accessPolicyOutbound": {
 		"current-namespace": [
