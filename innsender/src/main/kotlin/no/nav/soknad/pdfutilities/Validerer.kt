@@ -58,7 +58,7 @@ class Validerer {
 	}
 
 	private fun ulovligFilFormat(innsendingId: String, extention: String? = "", file: ByteArray) {
-		logger.warn("$innsendingId: Ugyldig filtype for opplasting. Filextention: ${extention}, og filstart = ${if (file.size >= 4) (file[0] + file[1] + file[3] + file[4]) else file[0]}\")")
+		logger.warn("$innsendingId: Ugyldig filtype for opplasting. Filextention: ${extention}, og filstart = ${if (file.size >= 4) (file[0] + file[1] + file[2] + file[3]) else file[0]}\")")
 		throw IllegalActionException(
 			message = "$innsendingId: Ugyldig filtype for opplasting. Kan kun laste opp filer av type ${supportedFileTypes.joinToString(", ")}",
 			errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
