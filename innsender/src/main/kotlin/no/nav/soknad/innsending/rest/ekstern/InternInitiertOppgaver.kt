@@ -57,7 +57,7 @@ class InternInitiertOppgaver(
 			tittel = eksternEttersendingsOppgave.tittel,
 			brukernotifikasjonstype = eksternEttersendingsOppgave.brukernotifikasjonstype,
 			koblesTilEksisterendeSoknad = eksternEttersendingsOppgave.koblesTilEksisterendeSoknad,
-			innsendinsfristDager = eksternEttersendingsOppgave.innsendingsFristDager,
+			innsendingsfristDager = eksternEttersendingsOppgave.innsendingsFristDager,
 			mellomlagringDager = eksternEttersendingsOppgave.mellomlagringDager,
 		)
 

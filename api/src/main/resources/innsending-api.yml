@@ -1672,7 +1672,7 @@ components:
           example:
             - vedleggsnr: W1
               tittel: "Dokumentasjon på mottatt bidrag"
-        innsendinsfristDager:
+        innsendingsfristDager:
           $ref: "#/components/schemas/FristForEttersendelse"
         mellomlagringDager:
           $ref: "#/components/schemas/MellomlagringDager"
@@ -1857,7 +1857,7 @@ components:
     MellomlagringDager:
       type: integer
       description: Antall dager søknaden skal mellomlagres før den automatisk slettes
-      example: 30
+      example: 28
 
     Mimetype:
       type: string

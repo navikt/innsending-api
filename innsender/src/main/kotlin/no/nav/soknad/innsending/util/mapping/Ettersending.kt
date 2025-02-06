@@ -10,7 +10,7 @@ fun mapToOpprettEttersending(eksternOpprettEttersending: EksternOpprettEttersend
 		sprak = eksternOpprettEttersending.sprak,
 		tema = eksternOpprettEttersending.tema,
 		vedleggsListe = eksternOpprettEttersending.vedleggsListe,
-		innsendingsfristDager = eksternOpprettEttersending.innsendinsfristDager,
+		innsendingsfristDager = eksternOpprettEttersending.innsendingsfristDager,
 		mellomlagringDager = eksternOpprettEttersending.mellomlagringDager,
 	)
 }
