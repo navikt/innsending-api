@@ -8,6 +8,8 @@ import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
 import no.nav.soknad.pdfutilities.gotenberg.GotenbergClientConfig
 import no.nav.soknad.pdfutilities.gotenberg.GotenbergConvertToPdf
+import org.apache.pdfbox.Loader
+import org.apache.pdfbox.text.PDFTextStripper
 import org.junit.Assert.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
@@ -48,9 +50,23 @@ class GenererPdfTest {
 		val forside = PdfGenerator().lagForsideEttersending(soknad, sammensattnavn)
 
 		assertEquals(1, AntallSider().finnAntallSider(forside))
+		sjekkOmPdfInneholderTekst(forside, sammensattnavn)
 		isPdfaTest(forside)
 
 	}
+
+	private fun sjekkOmPdfInneholderTekst(pdf: ByteArray, text: String) {
+		val content = getStringFromByteArrayPdf(pdf)
+		assertTrue(content.contains(text))
+	}
+
+
+	fun getStringFromByteArrayPdf(bytes: ByteArray?): String {
+		val document = Loader.loadPDF(bytes)
+		val stripper = PDFTextStripper()
+		return stripper.getText(document)
+	}
+
 
 	@Test
 	fun verifiserGenereringAvKvitteringsPdf_medSpesialtegn() {
@@ -80,6 +96,9 @@ class GenererPdfTest {
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
 
 		assertEquals(2, AntallSider().finnAntallSider(kvittering))
+		sjekkOmPdfInneholderTekst(kvittering, sammensattnavn)
+		// Verifiser at spesialtegn er strippet vekk i generert PDF
+		sjekkOmPdfInneholderTekst(kvittering, "Jan har en hund med tre ben og to haler.")
 		isPdfaTest(kvittering)
 
 	}
@@ -171,6 +190,8 @@ class GenererPdfTest {
 		)
 
 		assertEquals(1, AntallSider().finnAntallSider(pdf))
+		sjekkOmPdfInneholderTekst(pdf, "Dette er en test av konvertering av en tekstfil til en PDF.")
+
 		isPdfaTest(pdf)
 
 	}
@@ -182,14 +203,17 @@ class GenererPdfTest {
 
 		val tekstFil = Hjelpemetoder.getBytesFromFile("/__files/tekstfil-ex.txt")
 
+		val text = tekstFil.decodeToString()
 		val sammensattnavn = "Fornavn Elmer"
 		val pdf = PdfGenerator().lagPdfFraTekstFil(
 			soknad,
 			sammensattnavn,
-			text = tekstFil.decodeToString()
+			text = text
 		)
 
 		assertEquals(1, AntallSider().finnAntallSider(pdf))
+		sjekkOmPdfInneholderTekst(pdf, text.substring(0,  text.indexOf( "\n")))
+
 		isPdfaTest(pdf)
 
 	}

@@ -51,6 +51,26 @@
 									}
 								}
 							}
+						],
+						"NAV 55-00.60": [
+							{
+								"gyldigFra": "2008-03-19",
+								"gyldigTil": "9999-12-31",
+								"beskrivelser": {
+									"nn": {
+										"term": "Avtale om barnebidrag",
+										"tekst": "SAvtale om barnebidrag"
+									},
+									"nb": {
+										"term": "Avtale om barnebidrag",
+										"tekst": "Avtale om barnebidrag"
+									},
+									"en": {
+										"term": "Child support agreement",
+										"tekst": "Child support agreement"
+									}
+								}
+							}
 						]
 					}
 				}

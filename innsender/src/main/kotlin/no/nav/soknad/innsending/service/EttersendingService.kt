@@ -53,11 +53,14 @@ class EttersendingService(
 		tema: String,
 		sprak: String,
 		forsteInnsendingsDato: OffsetDateTime,
-		fristForEttersendelse: Long? = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
+		fristForEttersendelse: Long = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
+		mellomlagringDager: Long = Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
 	)
 		: SoknadDbData {
 		val innsendingsId = Utilities.laginnsendingsId()
 		val applikasjon = subjectHandler.getClientId()
+
+		val skalslettesdato = OffsetDateTime.now().plusDays(if (mellomlagringDager > fristForEttersendelse) mellomlagringDager else fristForEttersendelse)
 
 		// lagre soknad
 		return repo.lagreSoknad(
@@ -80,7 +83,7 @@ class EttersendingService(
 				ettersendingsfrist = fristForEttersendelse,
 				arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
 				applikasjon = applikasjon,
-				skalslettesdato = OffsetDateTime.now().plusDays(Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD)
+				skalslettesdato = skalslettesdato
 			)
 		)
 	}
@@ -113,7 +116,7 @@ class EttersendingService(
 				sprak = nyesteSoknad.spraak!!,
 				forsteInnsendingsDato = nyesteSoknad.forsteInnsendingsDato ?: nyesteSoknad.innsendtDato
 				?: nyesteSoknad.endretDato ?: nyesteSoknad.opprettetDato,
-				nyesteSoknad.fristForEttersendelse
+				fristForEttersendelse = nyesteSoknad.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
 			)
 
 			// Lagre vedlegg i DB
@@ -179,7 +182,7 @@ class EttersendingService(
 	fun createEttersendingFromInnsendtSoknad(
 		brukerId: String,
 		existingSoknad: DokumentSoknadDto,
-		ettersending: OpprettEttersending
+		ettersending: OpprettEttersending,
 	): DokumentSoknadDto {
 		val operation = InnsenderOperation.OPPRETT.name
 		val vedleggsnrList = ettersending.vedleggsListe?.map { it.vedleggsnr } ?: emptyList()
@@ -195,7 +198,7 @@ class EttersendingService(
 				sprak = ettersending.sprak,
 				forsteInnsendingsDato = existingSoknad.forsteInnsendingsDato ?: existingSoknad.innsendtDato
 				?: existingSoknad.endretDato ?: existingSoknad.opprettetDato,
-				fristForEttersendelse = existingSoknad.fristForEttersendelse
+				fristForEttersendelse = existingSoknad.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
 			)
 
 			val combinedVedleggList =
@@ -220,7 +223,7 @@ class EttersendingService(
 		brukerId: String,
 		archivedSoknad: AktivSakDto,
 		ettersending: OpprettEttersending,
-		forsteInnsendingsDato: OffsetDateTime?
+		forsteInnsendingsDato: OffsetDateTime?,
 	): DokumentSoknadDto {
 		val operation = InnsenderOperation.OPPRETT.name
 
@@ -266,7 +269,9 @@ class EttersendingService(
 				skjemanr = ettersending.skjemanr,
 				tema = ettersending.tema,
 				sprak = ettersending.sprak,
-				forsteInnsendingsDato = OffsetDateTime.now()
+				forsteInnsendingsDato = OffsetDateTime.now(),
+				fristForEttersendelse = ettersending.innsendingsfristDager ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
+				mellomlagringDager = (ettersending.mellomlagringDager ?: Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD).toLong()
 			)
 
 			val vedleggDbDataListe = vedleggService.saveVedlegg(
@@ -275,7 +280,7 @@ class EttersendingService(
 			)
 
 			// antatt at frontend har ansvar for å hente skjema gitt url på vegne av søker.
-			return lagDokumentSoknadDto(ettersendingsSoknadDb, vedleggDbDataListe)
+			return lagDokumentSoknadDto(ettersendingsSoknadDb, vedleggDbDataListe, false)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, ettersending.tema)
 			throw e
@@ -338,6 +343,7 @@ class EttersendingService(
 	fun createEttersendingFromExternalApplication(
 		brukerId: String,
 		eksternOpprettEttersending: EksternOpprettEttersending,
+		erNavInitiert: Boolean = false
 	): DokumentSoknadDto {
 		val mappedEttersending = mapToOpprettEttersending(eksternOpprettEttersending)
 
@@ -356,7 +362,7 @@ class EttersendingService(
 				createEttersending(brukerId = brukerId, ettersending = enrichedEttersending)
 			}
 
-		publiserBrukernotifikasjon(dokumentSoknadDto, eksternOpprettEttersending.brukernotifikasjonstype)
+		publiserBrukernotifikasjon(dokumentSoknadDto, eksternOpprettEttersending.brukernotifikasjonstype, erNavInitiert)
 
 		return dokumentSoknadDto
 
@@ -377,7 +383,7 @@ class EttersendingService(
 	// Create an ettersending based on previous soknader (from db or JOARK)
 	fun createEttersendingFromExistingSoknader(
 		brukerId: String,
-		ettersending: OpprettEttersending
+		ettersending: OpprettEttersending,
 	): DokumentSoknadDto {
 		val innsendteSoknader = getInnsendteSoknader(ettersending.skjemanr)
 		val arkiverteSoknader = getArkiverteEttersendinger(ettersending.skjemanr, brukerId)
@@ -419,7 +425,7 @@ class EttersendingService(
 		innsendteSoknader: List<DokumentSoknadDto>,
 		arkiverteSoknader: List<AktivSakDto>,
 		brukerId: String,
-		ettersending: OpprettEttersending
+		ettersending: OpprettEttersending,
 	): DokumentSoknadDto {
 		// Create a new ettersending without connecting it to an existing søknad
 		if (innsendteSoknader.isEmpty() && arkiverteSoknader.isEmpty()) {
@@ -435,14 +441,14 @@ class EttersendingService(
 				return createEttersendingFromInnsendtSoknad(
 					brukerId = brukerId,
 					existingSoknad = innsendteSoknader[0],
-					ettersending = ettersending
+					ettersending = ettersending,
 				)
 			} else {
 				return createEttersendingFromArchivedSoknad(
 					brukerId = brukerId,
 					archivedSoknad = arkiverteSoknader[0],
 					ettersending = ettersending,
-					forsteInnsendingsDato = innsendteSoknader[0].forsteInnsendingsDato
+					forsteInnsendingsDato = innsendteSoknader[0].forsteInnsendingsDato,
 				)
 			}
 		}
@@ -451,7 +457,7 @@ class EttersendingService(
 			brukerId = brukerId,
 			archivedSoknad = arkiverteSoknader[0],
 			ettersending = ettersending,
-			forsteInnsendingsDato = arkiverteSoknader[0].innsendtDato
+			forsteInnsendingsDato = arkiverteSoknader[0].innsendtDato,
 		)
 	}
 
@@ -465,12 +471,13 @@ class EttersendingService(
 
 	private fun publiserBrukernotifikasjon(
 		dokumentSoknadDto: DokumentSoknadDto,
-		brukernotifikasjonstype: BrukernotifikasjonsType? = BrukernotifikasjonsType.utkast
+		brukernotifikasjonstype: BrukernotifikasjonsType? = BrukernotifikasjonsType.utkast,
+		erNavInitiert: Boolean = false
 	): Boolean = try {
 		if (brukernotifikasjonstype == BrukernotifikasjonsType.oppgave) {
-			brukerNotifikasjon.soknadStatusChange(dokumentSoknadDto.copy(erSystemGenerert = true))
+			brukerNotifikasjon.soknadStatusChange(dokumentSoknadDto.copy(erSystemGenerert = true), erNavInitiert)
 		} else {
-			brukerNotifikasjon.soknadStatusChange(dokumentSoknadDto)
+			brukerNotifikasjon.soknadStatusChange(dokumentSoknadDto, erNavInitiert)
 		}
 	} catch (e: Exception) {
 		throw BackendErrorException("Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}", e)

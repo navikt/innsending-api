@@ -44,6 +44,17 @@
 			{
 				"application": "sykepengesoknad-backend",
 				"namespace": "flex"
+			},
+			{
+				"application": "bidrag-dokument-forsendelse",
+				"namespace": "bidrag"
+			}
+		],
+		"other-cluster": [
+			{
+				"application": "bidrag-dokument-arkiv",
+				"namespace": "bidrag",
+				"cluster": "dev-fss"
 			}
 		]
 	},

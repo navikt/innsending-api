@@ -43,7 +43,7 @@ class BrukernotifikasjonPublisher(
 		dokumentSoknad.ettersendingsId.takeIf { it != null && it != ukjentEttersendingsId }
 			?: dokumentSoknad.innsendingsId
 
-	fun soknadStatusChange(dokumentSoknad: DokumentSoknadDto): Boolean {
+	fun soknadStatusChange(dokumentSoknad: DokumentSoknadDto, erNavInitiert: Boolean = false): Boolean {
 		logger.debug("${dokumentSoknad.innsendingsId}: Skal publisere Brukernotifikasjon")
 
 		if (notifikasjonConfig.publisereEndringer) {
@@ -58,7 +58,7 @@ class BrukernotifikasjonPublisher(
 
 			try {
 				when (dokumentSoknad.status) {
-					SoknadsStatusDto.Opprettet -> handleNewApplication(dokumentSoknad, groupId!!)
+					SoknadsStatusDto.Opprettet -> handleNewApplication(dokumentSoknad, groupId!!, erNavInitiert)
 					SoknadsStatusDto.Innsendt -> handleSentInApplication(dokumentSoknad, groupId!!)
 					SoknadsStatusDto.SlettetAvBruker, SoknadsStatusDto.AutomatiskSlettet -> handleDeletedApplication(
 						dokumentSoknad,
@@ -75,12 +75,12 @@ class BrukernotifikasjonPublisher(
 		return true
 	}
 
-	private fun handleNewApplication(dokumentSoknad: DokumentSoknadDto, groupId: String) {
+	private fun handleNewApplication(dokumentSoknad: DokumentSoknadDto, groupId: String, erNavInitiert: Boolean) {
 		// Ny søknad opprettet publiser data slik at søker kan plukke den opp fra Ditt Nav på et senere tidspunkt
 		// i tilfelle han/hun ikke ferdigstiller og sender inn
 		val ettersending = dokumentSoknad.erEttersending
 		val lenke = createLink(dokumentSoknad)
-		val notificationInfo = createNotificationInfo(dokumentSoknad, ettersending, lenke)
+		val notificationInfo = createNotificationInfo(dokumentSoknad, ettersending, lenke, erNavInitiert)
 
 		val soknadRef = SoknadRef(
 			dokumentSoknad.innsendingsId!!,
@@ -102,16 +102,17 @@ class BrukernotifikasjonPublisher(
 	private fun createNotificationInfo(
 		dokumentSoknad: DokumentSoknadDto,
 		ettersending: Boolean,
-		lenke: String
+		lenke: String,
+		erNavInitiert: Boolean
 	): NotificationInfo {
 		val tittel = tittelPrefixGittSprak(ettersending, dokumentSoknad.spraak ?: "no") + dokumentSoknad.tittel
 		val eksternVarslingList = if (ettersending) mutableListOf(Varsel(Varsel.Kanal.sms)) else mutableListOf()
 
-		val soknadLevetid = dokumentSoknad.mellomlagringDager ?: Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD.toInt()
-		val utsettSendingTil = if (dokumentSoknad.erSystemGenerert == true)
+		val soknadLevetid = dokumentSoknad.mellomlagringDager ?: Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
+		val utsettSendingTil = if (dokumentSoknad.erSystemGenerert == true && erNavInitiert != true)
 			LocalDateTime.now().plusDays(Constants.DEFAULT_UTSETT_SENDING_VED_SYSTEMGENERERT_DAGER)
 				.withHour(9).withMinute(0).withSecond(0).atOffset(ZoneOffset.UTC) else null
-		return NotificationInfo(tittel, lenke, soknadLevetid, eksternVarslingList, utsettSendingTil = utsettSendingTil)
+		return NotificationInfo(tittel, lenke, soknadLevetid.toInt(), eksternVarslingList, utsettSendingTil = utsettSendingTil)
 	}
 
 	private fun tittelPrefixGittSprak(ettersendelse: Boolean, sprak: String): String {

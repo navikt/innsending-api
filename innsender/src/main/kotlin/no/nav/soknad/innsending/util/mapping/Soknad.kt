@@ -48,7 +48,7 @@ fun mapTilSoknadDb(
 fun lagDokumentSoknadDto(
 	soknadDbData: SoknadDbData,
 	vedleggDbDataListe: List<VedleggDbData>,
-	erSystemGenerert: Boolean = false
+	erSystemGenerert: Boolean = false,
 ): DokumentSoknadDto {
 	val erEttersending = soknadDbData.ettersendingsid != null || soknadDbData.visningstype == VisningsType.ettersending
 	return DokumentSoknadDto(
@@ -77,7 +77,7 @@ fun lagDokumentSoknadDto(
 		soknadstype = if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad,
 		skjemaPath = createSkjemaPathFromSkjemanr(soknadDbData.skjemanr),
 		applikasjon = soknadDbData.applikasjon,
-		skalSlettesDato = soknadDbData.skalslettesdato
+		skalSlettesDato = soknadDbData.skalslettesdato,
 	)
 }
 

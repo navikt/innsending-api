@@ -94,6 +94,9 @@ no.nav.security.jwt:
     tokenx:
       discoveryurl: http://localhost:${mock-oauth2-server.port}/tokenx/.well-known/openid-configuration
       accepted_audience: aud-localhost
+    azuread:
+      discoveryurl: http://localhost:${mock-oauth2-server.port}/azuread/.well-known/openid-configuration
+      accepted_audience: aud-localhost
 
   client:
     registration:
