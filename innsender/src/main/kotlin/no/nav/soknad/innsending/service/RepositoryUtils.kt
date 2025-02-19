@@ -177,6 +177,7 @@ class RepositoryUtils(
 
 	fun hentAlleVedleggGittSoknadsid(soknadsId: Long): List<VedleggDbData> = try {
 		vedleggRepository.findAllBySoknadsid(soknadsId)
+			.filter {it.vedleggsnr != "N6" || (it.vedleggsnr=="N6" && !(it.label.equals("Annen dokumentasjon") || it.label.equals("Annan dokumentasjon") || it.label.equals("Other documentation")))}
 	} catch (ex: Exception) {
 		throw BackendErrorException("Feil ved forsøk på henting av alle vedlegg til søknad med id $soknadsId", ex)
 	}

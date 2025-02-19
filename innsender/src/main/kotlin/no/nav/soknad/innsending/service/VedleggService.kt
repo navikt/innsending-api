@@ -340,11 +340,17 @@ class VedleggService(
 			?: throw ResourceNotFoundException("Angitt vedlegg $vedleggsId eksisterer ikke for søknad ${soknadDto.innsendingsId}")
 
 		if (vedleggDto.erHoveddokument) throw IllegalActionException("Kan ikke slette hovedskjema på en søknad. Søknaden må alltid ha sitt hovedskjema")
-		if (!vedleggDto.vedleggsnr.equals("N6") || (vedleggDto.vedleggsnr.equals("N6") && vedleggDto.erPakrevd)) throw IllegalActionException(
+		if (!vedleggDto.vedleggsnr.equals("N6") || !kanSletteAnnetVedlegg(vedleggDto)) throw IllegalActionException(
 			"Kan ikke slette påkrevd vedlegg. Vedlegg som er obligatorisk for søknaden kan ikke slettes av søker"
 		)
 
 		slettVedleggOgDensFiler(vedleggDto, soknadDto.id!!)
+	}
+
+	private fun kanSletteAnnetVedlegg(vedleggDto: VedleggDto): Boolean {
+		return vedleggDto.vedleggsnr == "N6" &&
+			((vedleggDto.label == "Annen dokumentasjon" || vedleggDto.label == "Annan dokumentasjon" || vedleggDto.label == "Other documentation")
+				|| !vedleggDto.erPakrevd)
 	}
 
 	private fun slettVedleggOgDensFiler(vedleggDto: VedleggDto, soknadsId: Long) {

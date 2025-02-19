@@ -78,7 +78,7 @@ class InnsendingService(
 
 		val missingRequiredVedlegg = alleVedlegg.filter {
 			val isNotHoveddokument = !it.erHoveddokument
-			val isRequiredN6Vedlegg = it.erPakrevd && it.vedleggsnr == "N6"
+			val isRequiredN6Vedlegg = it.erPakrevd && it.vedleggsnr == "N6" && !(it.label=="Annen dokumentasjon" || it.label=="Annan dokumentasjon" || it.label=="Other documentation")
 			val isNotN6Vedlegg = it.vedleggsnr != "N6"
 			val hasStatusSendSenereEllerIkkevalgt =
 				it.opplastingsStatus == OpplastingsStatusDto.SendSenere || it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt
