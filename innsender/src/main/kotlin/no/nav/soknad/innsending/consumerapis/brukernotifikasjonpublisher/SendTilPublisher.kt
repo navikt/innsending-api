@@ -21,22 +21,23 @@ import org.springframework.web.client.RestClient
 class SendTilPublisher(
 	private val restConfig: RestConfig,
 	@Qualifier("soknadsmottakerRestClient") soknadsmottakerRestClient: RestClient,
-	private val notificationPublisherApi: NewNotificationApi,
-	private val cancelNotificationPublisherApi: CancelNotificationApi,
-	private val healthApi: HealthApi
+	//private val notificationPublisherApi: NewNotificationApi,
+	//private val cancelNotificationPublisherApi: CancelNotificationApi,
+	//private val healthApi: HealthApi
 
 ) : PublisherInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
+	private lateinit var notificationPublisherApi: NewNotificationApi
+	private lateinit var cancelNotificationPublisherApi: CancelNotificationApi
+	private lateinit var healthApi: HealthApi
 
 	init {
 		jacksonObjectMapper.registerModule(JavaTimeModule())
-/*
 		notificationPublisherApi = NewNotificationApi(soknadsmottakerRestClient)
 		cancelNotificationPublisherApi = CancelNotificationApi(soknadsmottakerRestClient)
 		healthApi = HealthApi(restConfig.soknadsMottakerHost)
-*/
 	}
 
 	override fun avsluttBrukernotifikasjon(soknadRef: SoknadRef) {
