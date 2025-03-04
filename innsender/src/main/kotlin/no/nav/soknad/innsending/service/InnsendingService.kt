@@ -189,20 +189,13 @@ class InnsendingService(
 		return SoknadEventBuilder.opprettet {
 			this.soknadsId = soknadDto.innsendingsId
 			this.ident = soknadDto.brukerId
-			this.tittel = soknadDto.tittel
+			this.tittel = (if (!kvitteringsPdfModel.ettersendelseTittel.isNullOrEmpty()) kvitteringsPdfModel.ettersendelseTittel + " " else "") + soknadDto.tittel
 			this.skjemanummer = soknadDto.skjemanr
 			this.fristEttersending = ((soknadDto.forsteInnsendingsDato ?: OffsetDateTime.now()).plusDays(
 				soknadDto.fristForEttersendelse ?: 14L
 			)).toLocalDate()
 			this.temakode = soknadDto.tema
 			this.tidspunktMottatt = (soknadDto.innsendtDato ?: OffsetDateTime.now()).toZonedDateTime()
-
-			// Legg til hoveddokument
-			this.mottattVedlegg {
-				tittel = soknadDto.tittel
-				vedleggsId = soknadDto.skjemanr
-				linkVedlegg = dokumentLenke(soknadDto.innsendingsId!!, hoveddokument.uuid!!)
-			}
 
 			if (kvitteringsPdfModel.vedleggsListe.filter { it.type.equals(OpplastingsStatusDto.LastetOpp) }.isNotEmpty()) {
 				kvitteringsPdfModel.vedleggsListe.filter { it.type.equals(OpplastingsStatusDto.LastetOpp) }.forEach {
@@ -225,7 +218,7 @@ class InnsendingService(
 							brukerErAvsender = !it.type.equals(OpplastingsStatusDto.SendesAvAndre)
 							beskrivelse = it.kategori + (if (!v.kommentar.isNullOrEmpty()) ":  " + v.kommentar else "")
 							// if ( !it.type.equals(OpplastingsStatusDto.SendesAvAndre))
-							// linkEttersending =  Tanken har vært at det skal være lenke til side for oppretting av ettersending av manglende dokumentasjon
+							// linkEttersending =  Tanken ert at det skal være lenke til side for oppretting eventuelt til oppgave for ettersending av manglende dokumentasjon
 						}
 					}
 				}

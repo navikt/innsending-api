@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.consumerapis.kafka
 
 import no.nav.soknad.innsending.config.KafkaConfig
+import no.nav.soknad.innsending.util.logging.CombinedLogger
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.header.internals.RecordHeaders
 import org.slf4j.LoggerFactory
@@ -15,12 +16,15 @@ class KafkaPublisher(
 	private val kvitteringsSideTemplate: KafkaTemplate<String, String>
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
+	private val secureLogger = LoggerFactory.getLogger("secureLogger")
+	private val combinedLogger = CombinedLogger(logger, secureLogger)
+
 
 	private val MESSAGE_ID = "MESSAGE_ID"
 
 	fun publishToKvitteringsSide(key: String, value: String) {
 		val topic = kafkaConfig.topics.kvitteringsSideTopic
-		logger.info("$key: shall publish to kvitteringsside via topic $topic")
+		combinedLogger.log("$key: shall publish $value to kvitteringsside via topic $topic", "xx")
 		publish(topic, key, value, kvitteringsSideTemplate)
 		logger.info("$key: published to topic $topic")
 	}
