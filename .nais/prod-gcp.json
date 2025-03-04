@@ -100,6 +100,7 @@
 		"SAF_SCOPE": "api://prod-fss.teamdokumenthandtering.saf/.default",
 		"KAFKA_SECURITY": "TRUE",
 		"KAFKA_ARKIVERINGSTILBAKEMELDING_TOPIC": "team-soknad.privat-soknadinnsending-arkiveringstilbakemeldinger-v1",
+		"KAFKA_KVITTERINGSSIDE_TOPIC": "min-side.aapen-soknadskvittering-v1",
 		"ANTIVIRUS_URL": "http://clamav.nais-system.svc.cluster.local",
 		"STATUS_LOG_URL": "https://logs.adeo.no/app/discover#/view/170a6860-df4c-11ed-8b42-0b0644af4500",
 		"ARENA_URL": "https://arena-api.prod-fss-pub.nais.io",
@@ -110,6 +111,7 @@
 		"KONTOREGISTER_TOKEN_X_AUDIENCE": "prod-gcp:okonomi:sokos-kontoregister-person",
 		"KONTOREGISTER_SCOPE": "api://prod-gcp.okonomi.sokos-kontoregister-person/.default",
 		"KONTOREGISTER_URL": "http://sokos-kontoregister-person.okonomi",
-		"KONVERTERING_TIL_PDF_URL": "http://upload-convert-to-pdf.fyllut-sendinn"
+		"KONVERTERING_TIL_PDF_URL": "http://upload-convert-to-pdf.fyllut-sendinn",
+		"CLUSTER": "prod-gcp"
 	}
 }

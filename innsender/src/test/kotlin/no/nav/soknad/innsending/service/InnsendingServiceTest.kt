@@ -5,7 +5,9 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
+import no.nav.soknad.innsending.config.PublisherConfig
 import no.nav.soknad.innsending.config.RestConfig
+import no.nav.soknad.innsending.consumerapis.kafka.KafkaPublisher
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
@@ -66,6 +68,13 @@ class InnsendingServiceTest : ApplicationTest() {
 	@MockkBean
 	private lateinit var subjectHandler: SubjectHandlerInterface
 
+	@MockkBean
+	private lateinit var kafkaPublisher: KafkaPublisher
+
+	@Autowired
+	private lateinit var publisherConfig: PublisherConfig
+
+
 	fun lagInnsendingService(soknadService: SoknadService): InnsendingService = InnsendingService(
 		soknadService = soknadService,
 		repo = repo,
@@ -79,6 +88,8 @@ class InnsendingServiceTest : ApplicationTest() {
 		soknadsmottakerAPI = soknadsmottakerAPI,
 		restConfig = restConfig,
 		pdlInterface = pdlInterface,
+		kafkaPublisher = kafkaPublisher,
+		publisherConfig = publisherConfig
 	)
 
 	@BeforeEach
@@ -86,6 +97,7 @@ class InnsendingServiceTest : ApplicationTest() {
 		every { brukernotifikasjonPublisher.soknadStatusChange(any()) } returns true
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("1234567890", "Kan", null, "Søke")
 		every { subjectHandler.getClientId() } returns "application"
+		every { kafkaPublisher.publishToKvitteringsSide(any(), any())} returns Unit
 	}
 
 
@@ -232,7 +244,7 @@ class InnsendingServiceTest : ApplicationTest() {
 		// Test generering av kvittering for innsendt soknad.
 		// Merk det er besluttet og ikke sende kvittering med innsendingen av søknaden. Det innebærer at denne koden pt er redundant
 		val innsendtSoknad = soknadService.hentSoknad(dokumentSoknadDto.innsendingsId!!)
-		val kvitteringsDokument = PdfGenerator().lagKvitteringsSide(innsendtSoknad, "Per Person",
+		val kvitteringsDokument = PdfGenerator().lagKvitteringsSidePdf(innsendtSoknad, "Per Person",
 			innsendtSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt },
 			innsendtSoknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.SendSenere })
 		assertNotNull(kvitteringsDokument)

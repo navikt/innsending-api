@@ -6,8 +6,10 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.config.BrukerNotifikasjonConfig
+import no.nav.soknad.innsending.config.PublisherConfig
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
+import no.nav.soknad.innsending.consumerapis.kafka.KafkaPublisher
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
@@ -90,11 +92,18 @@ class EttersendingServiceTest : ApplicationTest() {
 	@MockkBean
 	private lateinit var subjectHandler: SubjectHandlerInterface
 
+	@MockkBean
+	private lateinit var kafkaPublisher: KafkaPublisher
+
+	@Autowired
+	private lateinit var publisherConfig: PublisherConfig
+
 	@BeforeEach
 	fun setUp() {
 		brukernotifikasjonPublisher = spyk(BrukernotifikasjonPublisher(notifikasjonConfig, sendTilPublisher))
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("1234567890", "Kan", null, "Søke")
 		every { subjectHandler.getClientId() } returns "application"
+		every { kafkaPublisher.publishToKvitteringsSide(any(), any()) } returns Unit
 	}
 
 	private fun lagEttersendingService(): EttersendingService = EttersendingService(
@@ -124,6 +133,8 @@ class EttersendingServiceTest : ApplicationTest() {
 		soknadsmottakerAPI = soknadsmottakerAPI,
 		restConfig = restConfig,
 		pdlInterface = pdlInterface,
+		kafkaPublisher = kafkaPublisher,
+		publisherConfig = publisherConfig,
 	)
 
 	@Test

@@ -1,7 +1,9 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
+import no.nav.soknad.innsending.config.PublisherConfig
 import no.nav.soknad.innsending.config.RestConfig
+import no.nav.soknad.innsending.consumerapis.kafka.KafkaPublisher
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.skjema.KodeverkSkjema
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
@@ -21,12 +23,15 @@ import no.nav.soknad.innsending.util.models.*
 import no.nav.soknad.pdfutilities.AntallSider
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.Validerer
+import no.nav.soknad.pdfutilities.models.KvitteringsPdfModel
+import no.nav.tms.soknad.event.SoknadEvent
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
 import java.util.*
+import no.nav.tms.soknadskvittering.builder.SoknadEventBuilder
 
 @Service
 class InnsendingService(
@@ -42,6 +47,8 @@ class InnsendingService(
 	private val brukernotifikasjonPublisher: BrukernotifikasjonPublisher,
 	private val innsenderMetrics: InnsenderMetrics,
 	private val pdlInterface: PdlInterface,
+	private val kafkaPublisher: KafkaPublisher,
+	private val publisherConfig: PublisherConfig
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -100,8 +107,8 @@ class InnsendingService(
 		logger.info("${soknadDtoInput.innsendingsId}: Opplastede vedlegg = ${opplastedeVedlegg.map { it.vedleggsnr + ':' + it.uuid + ':' + it.opprettetdato + ':' + it.document?.size }}")
 		logger.info("${soknadDtoInput.innsendingsId}: Ikke opplastede påkrevde vedlegg = ${missingRequiredVedlegg.map { it.vedleggsnr + ':' + it.opprettetdato }}")
 
-		val kvitteringForArkivering =
-			lagInnsendingsKvitteringOgLagre(soknadDto, opplastedeVedlegg, missingRequiredVedlegg)
+		val kvitteringsPdfModel = lagInnsendingsKvittering(soknadDto, opplastedeVedlegg, missingRequiredVedlegg)
+		val kvitteringForArkivering = lagreKvitteringsVedlegg(soknadDto, kvitteringsPdfModel)
 
 		// Ekstra sjekk på at søker ikke allerede har sendt inn søknaden. Dette fordi det har vært tilfeller der søker har klart å trigge innsending request av søknaden flere ganger på rappen
 		val existingSoknad = soknadService.hentSoknad(soknadDto.innsendingsId!!)
@@ -161,9 +168,75 @@ class InnsendingService(
 			throw BackendErrorException(message = "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV")
 		}
 
+		try {
+			kafkaPublisher.publishToKvitteringsSide(soknadDto.innsendingsId!!, mapToInnsendtApplicationEvent(soknadDto, kvitteringsPdfModel))
+		} catch (e: Exception) {
+			exceptionHelper.reportException(e, operation, soknadDto.tema)
+			// Når koden er kommet hit så har søknaden blitt sendt inn vellykket og databasen blitt oppdatert. Kaster vi feil vil databaseendringene bli rullet tilbake.
+			// Bruker vil da kunne editere søknad og endre opplasting av dokumentasjon og forsøke å sende inn på nytt. Denne nye innsendingen vil bli ignorert av soknadsarkiverer
+			throw BackendErrorException(message = "Feil ved publisering av innsendingskvittering for søknad ${soknadDto.innsendingsId} til NAV")
+		}
+
 		return Pair(opplastedeVedlegg, missingRequiredVedlegg)
 	}
 
+	private fun dokumentLenke(innsendingId: String, uuid: String): String {
+		return "http://innsending-api" + "/innsendte/v1/soknad/$innsendingId/$uuid" // TODO implementere nytt endepunkt slik at soknadskvitteringsside kan kalle innsending-api med brukertoken for henting av vedlegg til en soknad?
+	}
+
+	private fun mapToInnsendtApplicationEvent(soknadDto: DokumentSoknadDto, kvitteringsPdfModel: KvitteringsPdfModel): String {
+		val hoveddokument = soknadDto.vedleggsListe.filter { it.erHoveddokument && !it.erVariant }.first()
+		return SoknadEventBuilder.opprettet {
+			this.soknadsId = soknadDto.innsendingsId
+			this.ident = soknadDto.brukerId
+			this.tittel = soknadDto.tittel
+			this.skjemanummer = soknadDto.skjemanr
+			this.fristEttersending = ((soknadDto.forsteInnsendingsDato ?: OffsetDateTime.now()).plusDays(
+				soknadDto.fristForEttersendelse ?: 14L
+			)).toLocalDate()
+			this.temakode = soknadDto.tema
+			this.tidspunktMottatt = (soknadDto.innsendtDato ?: OffsetDateTime.now()).toZonedDateTime()
+
+			// Legg til hoveddokument
+			this.mottattVedlegg {
+				tittel = soknadDto.tittel
+				vedleggsId = soknadDto.skjemanr
+				linkVedlegg = dokumentLenke(soknadDto.innsendingsId!!, hoveddokument.uuid!!)
+			}
+
+			if (kvitteringsPdfModel.vedleggsListe.filter { it.type.equals(OpplastingsStatusDto.LastetOpp) }.isNotEmpty()) {
+				kvitteringsPdfModel.vedleggsListe.filter { it.type.equals(OpplastingsStatusDto.LastetOpp) }.forEach {
+					it.vedlegg.forEach { v ->
+						this.mottattVedlegg {
+							tittel = v.vedleggsTittel
+							vedleggsId = v.vedleggsNr
+							//linkVedlegg = dokumentLenke(soknadDto.innsendingsId, v.uuid) // Skal vi levere lenke for oppslag i innsending-api database?
+						}
+					}
+				}
+			}
+
+			if (kvitteringsPdfModel.vedleggsListe.filter { !it.type.equals(OpplastingsStatusDto.LastetOpp) }.isNotEmpty()) {
+				kvitteringsPdfModel.vedleggsListe.filter { !it.type.equals(OpplastingsStatusDto.LastetOpp) }.forEach {
+					it.vedlegg.forEach { v ->
+						this.etterspurtVedlegg {
+							tittel = v.vedleggsTittel
+							vedleggsId = v.vedleggsNr
+							brukerErAvsender = !it.type.equals(OpplastingsStatusDto.SendesAvAndre)
+							beskrivelse = it.kategori + (if (!v.kommentar.isNullOrEmpty()) ":  " + v.kommentar else "")
+							// if ( !it.type.equals(OpplastingsStatusDto.SendesAvAndre))
+							// linkEttersending =  Tanken har vært at det skal være lenke til side for oppretting av ettersending av manglende dokumentasjon
+						}
+					}
+				}
+			}
+			this.produsent = SoknadEvent.Dto.Produsent(
+				cluster = publisherConfig.cluster,
+				namespace = publisherConfig.team,
+				appnavn = publisherConfig.application
+			)
+		}
+	}
 
 	private fun validerAtSoknadHarEndringSomKanSendesInn(
 		soknadDto: DokumentSoknadDto,
@@ -229,16 +302,22 @@ class InnsendingService(
 		}
 	}
 
-	private fun lagInnsendingsKvitteringOgLagre(
+	private fun lagInnsendingsKvittering(
 		soknadDto: DokumentSoknadDto,
 		opplastedeVedlegg: List<VedleggDto>,
 		manglendeVedlegg: List<VedleggDto>
-	): VedleggDto {
+	): KvitteringsPdfModel {
 		val person = pdlInterface.hentPersonData(soknadDto.brukerId)
 		val sammensattNavn = listOfNotNull(person?.fornavn, person?.mellomnavn, person?.etternavn).joinToString(" ")
 
-		val kvittering =
-			PdfGenerator().lagKvitteringsSide(soknadDto, sammensattNavn.ifBlank { "NN" }, opplastedeVedlegg, manglendeVedlegg)
+		return PdfGenerator().genererSoknadsModel(soknadDto, sammensattNavn.ifBlank { "NN" }, opplastedeVedlegg, manglendeVedlegg)
+	}
+
+	private fun lagreKvitteringsVedlegg(
+		soknadDto: DokumentSoknadDto,
+		kvitteringsPdfModel: KvitteringsPdfModel
+	): VedleggDto {
+		val kvitteringPdf = PdfGenerator().lagKvitteringsSidePdf(kvitteringsPdfModel)
 
 		val kvitteringsVedleggDto = VedleggDto(
 			id = null,
@@ -267,14 +346,16 @@ class InnsendingService(
 			FilDbData(
 				id = null, vedleggsid = kvitteringsVedlegg.id!!,
 				filnavn = "kvittering.pdf", mimetype = Mimetype.applicationSlashPdf.value,
-				storrelse = kvittering.size, antallsider = AntallSider().finnAntallSider(kvittering),
-				data = kvittering, opprettetdato = kvitteringsVedlegg.opprettetdato
+				storrelse = kvitteringPdf.size, antallsider = AntallSider().finnAntallSider(kvitteringPdf),
+				data = kvitteringPdf, opprettetdato = kvitteringsVedlegg.opprettetdato
 			)
 		)
 
 		// Oppdaterer kvitteringsvedlegget med ny id fra database
 		return kvitteringsVedleggDto.copy(id = kvitteringsVedlegg.id)
+
 	}
+
 
 	private fun addDummyHovedDokumentToSoknad(soknadDto: DokumentSoknadDto): DokumentSoknadDto {
 		val operation = InnsenderOperation.SEND_INN.name

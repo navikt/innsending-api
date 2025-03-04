@@ -46,6 +46,7 @@ kafka:
     trustStorePassword: dummy
   topics:
     arkiveringstilbakemeldingTopic: team-soknad.privat-soknadinnsending-arkiveringstilbakemeldinger-v1-dev
+    kvitteringsSideTopic: min-side.aapen-soknadskvittering-v1
 
 restconfig:
   version: 1.0
@@ -85,6 +86,12 @@ wiremock:
   reset-mappings-after-each-test: true
   server:
     port: 0 # random port
+
+
+producerconfig:
+  cluster: "test"
+  team: "team-soknad"
+  application: "innsending-api"
 
 
 no.nav.security.jwt:

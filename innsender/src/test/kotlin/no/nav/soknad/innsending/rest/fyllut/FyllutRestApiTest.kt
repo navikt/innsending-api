@@ -2,10 +2,13 @@ package no.nav.soknad.innsending.rest.fyllut
 
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
+import io.mockk.slot
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenResponse
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.soknad.innsending.ApplicationTest
+import no.nav.soknad.innsending.config.PublisherConfig
+import no.nav.soknad.innsending.consumerapis.kafka.KafkaPublisher
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
@@ -60,6 +63,13 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
+	@MockkBean
+	lateinit var kafkaPublisher: KafkaPublisher
+
+	@Autowired
+	private lateinit var publisherConfig: PublisherConfig
+
+
 	val postnummerMap = mapOf(
 		"7950" to "ABELVÆR",
 		"3812" to "AKKERHAUGEN",
@@ -110,6 +120,10 @@ class FyllutRestApiTest : ApplicationTest() {
 		val innsendingsId = opprettetSoknadResponse?.body?.innsendingsId!!
 
 		api?.utfyltSoknad(innsendingsId, skjemaDto)
+
+		val key = slot<String>()
+		val publishedMessage = slot<String>()
+		every { kafkaPublisher.publishToKvitteringsSide(capture(key), capture(publishedMessage)) } returns Unit
 		api?.sendInnSoknad(innsendingsId)
 
 		val soknad = soknadService.hentSoknad(opprettetSoknadResponse.body!!.innsendingsId!!)
@@ -125,6 +139,9 @@ class FyllutRestApiTest : ApplicationTest() {
 		response: ResponseEntity<SkjemaDto>,
 		token: String
 	) {
+		val key = slot<String>()
+		val publishedMessage = slot<String>()
+		every { kafkaPublisher.publishToKvitteringsSide(capture(key), capture(publishedMessage)) } returns Unit
 
 		// Hent søknaden opprettet fra FyllUt og kjør gjennom løp for opplasting av vedlegg og innsending av søknad
 		val innsendingsId = response.body!!.innsendingsId
@@ -205,6 +222,11 @@ class FyllutRestApiTest : ApplicationTest() {
 				HttpEntity<Unit>(Hjelpemetoder.createHeaders(token)), DokumentSoknadDto::class.java
 			)
 		}
+
+		assertTrue(key.isCaptured)
+		assertEquals(innsendingsId,key.captured)
+		assertTrue(publishedMessage.isCaptured )
+		assertTrue(publishedMessage.captured.contains(innsendingsId))
 
 		val hentFilURL = "http://localhost:${serverPort}/${kvitteringsDto.hoveddokumentRef}"
 		val filRespons = restTemplate.exchange(
@@ -568,6 +590,9 @@ class FyllutRestApiTest : ApplicationTest() {
 	fun `Should return error code with status 400 if user tries to update søknad that is sent in`() {
 		// Given
 		val skjemaDto = SkjemaDtoTestBuilder().build()
+		val key = slot<String>()
+		val publishedMessage = slot<String>()
+		every { kafkaPublisher.publishToKvitteringsSide(capture(key), capture(publishedMessage)) } returns Unit
 
 		// When
 		val createdSoknad = api?.createSoknad(skjemaDto)
@@ -578,7 +603,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertTrue(response != null)
 		assertEquals(400, response.statusCode.value())
 		assertEquals(ErrorCode.APPLICATION_SENT_IN_OR_DELETED.code, response.body?.errorCode)
-
+		assertTrue(publishedMessage.isCaptured)
 	}
 
 
@@ -598,6 +623,9 @@ class FyllutRestApiTest : ApplicationTest() {
 		api?.utfyltSoknad(innsendingsId, skjemaDto)
 		val soknadAfterUtfylt = soknadService.hentSoknad(innsendingsId)
 
+		val key = slot<String>()
+		val publishedMessage = slot<String>()
+		every { kafkaPublisher.publishToKvitteringsSide(capture(key), capture(publishedMessage)) } returns Unit
 		api?.sendInnSoknad(innsendingsId)
 		val soknadAfterInnsending = soknadService.hentSoknad(innsendingsId)
 
@@ -605,6 +633,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals(soknadBeforeUpdate.opprettetDato, soknadAfterUpdate.opprettetDato)
 		assertEquals(soknadBeforeUpdate.opprettetDato, soknadAfterUtfylt.opprettetDato)
 		assertEquals(soknadBeforeUpdate.opprettetDato, soknadAfterInnsending.opprettetDato)
+		assertTrue(key.isCaptured)
 	}
 
 	@Test

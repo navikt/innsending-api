@@ -1,5 +1,7 @@
 package no.nav.soknad.innsending.utils
 
+import io.mockk.every
+import io.mockk.slot
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import jakarta.validation.Valid

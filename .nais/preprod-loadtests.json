@@ -57,6 +57,7 @@
 		"SAF_SCOPE": "api://dev-gcp.team-soknad.arkiv-mock/.default",
 		"KAFKA_SECURITY": "TRUE",
 		"KAFKA_ARKIVERINGSTILBAKEMELDING_TOPIC": "team-soknad.privat-soknadinnsending-arkiveringstilbakemeldinger-v1-loadtests",
+		"KAFKA_KVITTERINGSSIDE_TOPIC": "min-side.aapen-soknadskvittering-v1",
 		"ANTIVIRUS_URL": "http://arkiv-mock-gcp/antivirus",
 		"STATUS_LOG_URL": "https://logs.adeo.no",
 		"ARENA_URL": "https://arkiv-mock-gcp.intern.dev.nav.no",
@@ -66,6 +67,7 @@
 		"KONTOREGISTER_TOKEN_X_AUDIENCE": "dev-gcp:team-soknad:arkiv-mock-gcp",
 		"KONTOREGISTER_SCOPE": "api://dev-gcp:team-soknad:arkiv-mock-gcp/.default",
 		"KONTOREGISTER_URL": "https://arkiv-mock-gcp.intern.dev.nav.no",
-		"KONVERTERING_TIL_PDF_URL": "http://upload-convert-to-pdf.fyllut-sendinn"
+		"KONVERTERING_TIL_PDF_URL": "http://upload-convert-to-pdf.fyllut-sendinn",
+		"CLUSTER": "dev"
 	}
 }

@@ -6,7 +6,9 @@ import io.mockk.mockk
 import io.mockk.slot
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
+import no.nav.soknad.innsending.config.PublisherConfig
 import no.nav.soknad.innsending.config.RestConfig
+import no.nav.soknad.innsending.consumerapis.kafka.KafkaPublisher
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
@@ -102,6 +104,12 @@ class SoknadServiceTest : ApplicationTest() {
 	@MockkBean
 	private lateinit var subjectHandler: SubjectHandlerInterface
 
+	@MockkBean
+	private lateinit var kafkaPublisher: KafkaPublisher
+
+	@Autowired
+	private lateinit var publisherConfig: PublisherConfig
+
 	private val defaultSkjemanr = "NAV 55-00.60"
 
 	@BeforeEach
@@ -110,6 +118,7 @@ class SoknadServiceTest : ApplicationTest() {
 		every { brukernotifikasjonPublisher.soknadStatusChange(any()) } returns true
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("1234567890", "Kan", null, "Søke")
 		every { subjectHandler.getClientId() } returns "application"
+		every { kafkaPublisher.publishToKvitteringsSide(any(), any())} returns Unit
 	}
 
 
@@ -135,6 +144,8 @@ class SoknadServiceTest : ApplicationTest() {
 		soknadsmottakerAPI = soknadsmottakerAPI,
 		restConfig = restConfig,
 		pdlInterface = pdlInterface,
+		kafkaPublisher = kafkaPublisher,
+		publisherConfig = publisherConfig
 	)
 
 	@Test

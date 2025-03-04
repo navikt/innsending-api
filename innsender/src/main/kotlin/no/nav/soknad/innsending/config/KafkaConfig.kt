@@ -12,14 +12,15 @@ data class KafkaConfig(
 
 data class SecurityConfig(
 	val enabled: String,
-	val protocol: String,
-	val keyStoreType: String,
-	val keyStorePath: String,
-	val keyStorePassword: String,
-	val trustStorePath: String,
-	val trustStorePassword: String
+	val protocol: String?,
+	val keyStoreType: String?,
+	val keyStorePath: String?,
+	val keyStorePassword: String?,
+	val trustStorePath: String?,
+	val trustStorePassword: String?
 )
 
 data class Topics(
 	val arkiveringstilbakemeldingTopic: String,
+	val kvitteringsSideTopic: String
 )

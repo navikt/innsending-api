@@ -6,8 +6,6 @@ import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
-import no.nav.soknad.pdfutilities.gotenberg.GotenbergClientConfig
-import no.nav.soknad.pdfutilities.gotenberg.GotenbergConvertToPdf
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.text.PDFTextStripper
 import org.junit.Assert.assertTrue
@@ -73,7 +71,7 @@ class GenererPdfTest {
 		val soknad = lagSoknadForTesting(tittel)
 
 		val sammensattnavn = "śander Ełmer"
-		val kvittering = PdfGenerator().lagKvitteringsSide(
+		val kvittering = PdfGenerator().lagKvitteringsSidePdf(
 			soknad,
 			sammensattnavn,
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt },
@@ -89,7 +87,7 @@ class GenererPdfTest {
 		val soknad = lagSoknadForTesting("Jan har en hund🐶 med tre ben og to haler. $formFeed$tab$lineFeed")
 
 		val sammensattnavn = "asdfasdf"
-		val kvittering = PdfGenerator().lagKvitteringsSide(
+		val kvittering = PdfGenerator().lagKvitteringsSidePdf(
 			soknad,
 			sammensattnavn,
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt },
@@ -109,7 +107,7 @@ class GenererPdfTest {
 		val soknad = lagSoknadForTesting(tittel, "nb_NO")
 
 		val sammensattnavn = "Fornavn Elmer"
-		val kvittering = PdfGenerator().lagKvitteringsSide(
+		val kvittering = PdfGenerator().lagKvitteringsSidePdf(
 			soknad,
 			sammensattnavn,
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt },
@@ -126,7 +124,7 @@ class GenererPdfTest {
 		val soknad = lagSoknadForTesting(tittel, "nn-NO")
 
 		val sammensattnavn = "Fornavn Mellomnavn Etternavn"
-		val kvittering = PdfGenerator().lagKvitteringsSide(
+		val kvittering = PdfGenerator().lagKvitteringsSidePdf(
 			soknad,
 			sammensattnavn,
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt },
@@ -143,7 +141,7 @@ class GenererPdfTest {
 		val soknad = lagEttersendingsSoknadForTesting(tittel)
 
 		val sammensattnavn = "Fornavn Elmer"
-		val kvittering = PdfGenerator().lagKvitteringsSide(
+		val kvittering = PdfGenerator().lagKvitteringsSidePdf(
 			soknad,
 			sammensattnavn,
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt && it.opprettetdato > OffsetDateTime.MIN },
@@ -165,7 +163,7 @@ class GenererPdfTest {
 		val soknad = lagEttersendingsSoknadAltInnsendt(tittel)
 
 		val sammensattnavn = "Fornavn Elmer"
-		val kvittering = PdfGenerator().lagKvitteringsSide(
+		val kvittering = PdfGenerator().lagKvitteringsSidePdf(
 			soknad,
 			sammensattnavn,
 			soknad.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt && it.opprettetdato > OffsetDateTime.MIN },

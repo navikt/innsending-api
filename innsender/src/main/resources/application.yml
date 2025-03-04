@@ -46,6 +46,11 @@ ettersendingsfrist: 14
 verifyArchivedApplications:
   offsetMinutes: 95
 
+publisherconfig:
+  cluster: "test"
+  team: "team-soknad"
+  application: "innsending-api"
+
 kafka:
   applicationId: ${KAFKA_STREAMS_APPLICATION_ID}
   brokers: ${KAFKA_BROKERS}
@@ -59,6 +64,7 @@ kafka:
     trustStorePassword: ${KAFKA_CREDSTORE_PASSWORD}
   topics:
     arkiveringstilbakemeldingTopic: ${KAFKA_ARKIVERINGSTILBAKEMELDING_TOPIC}
+    kvitteringsSideTopic: ${KAFKA_KVITTERINGSSIDE_TOPIC}
 
 fil-konvertering_url: http://${GOTENBERG_HOST:localhost}:${GOTENBERG_PORT:3000}
 
@@ -172,6 +178,14 @@ kafka:
   brokers: ${KAFKA_BROKERS:http://localhost:9092}
   security:
     enabled: FALSE
+  topics:
+    arkiveringstilbakemeldingTopic: ${KAFKA_ARKIVERINGSTILBAKEMELDING_TOPIC}
+    kvitteringsSideTopic: ${KAFKA_KVITTERINGSSIDE_TOPIC}
+
+publisherconfig:
+  cluster: ${CLUSTER}
+  team: "team-soknad"
+  application: "innsending-api-loadtests"
 
 ---
 spring:
@@ -244,6 +258,11 @@ brukernotifikasjonconfig:
   publisereEndringer: ${PUBLISERE_BRUKERNOTIFIKASJONER}
 
 ettersendingsfrist: ${ETTERSENDINGSFRIST}
+
+publisherconfig:
+  cluster: ${CLUSTER}
+  team: "team-soknad"
+  application: "innsending-api"
 
 no.nav.security.jwt:
   issuer:
@@ -334,6 +353,12 @@ spring:
   datasource:
     url: ${DATABASE_JDBC_URL}
 
+publisherconfig:
+  cluster: ${CLUSTER}
+  team: "team-soknad"
+  application: "innsending-api-loadtests"
+
+
 ---
 spring:
   config:
@@ -353,3 +378,4 @@ restconfig:
       preprodAltAnsatt: https://www.ansatt.dev.nav.no/sendinn-alt
       delingslenke: https://www.ansatt.dev.nav.no/sendinn-delingslenke
       default: ${SEND_INN_URL:http://localhost:3100/sendinn}
+

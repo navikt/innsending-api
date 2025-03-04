@@ -2,6 +2,7 @@ package no.nav.soknad.pdfutilities
 
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.util.models.*
 import no.nav.soknad.pdfutilities.models.EttersendingForsidePdfModel
@@ -22,13 +23,28 @@ class PdfGenerator {
 		)
 	}
 
-
-	fun lagKvitteringsSide(
+	fun lagKvitteringsSidePdf(
 		soknad: DokumentSoknadDto,
 		sammensattNavn: String?,
 		opplastedeVedlegg: List<VedleggDto>,
 		manglendeObligatoriskeVedlegg: List<VedleggDto>
 	): ByteArray {
+		val kvitteringsPdfModel = genererSoknadsModel(soknad, sammensattNavn, opplastedeVedlegg, manglendeObligatoriskeVedlegg)
+		return PdfGeneratorService().genererKvitteringPdf(kvitteringsPdfModel)
+	}
+
+	fun lagKvitteringsSidePdf(
+		model: KvitteringsPdfModel
+	): ByteArray {
+		return PdfGeneratorService().genererKvitteringPdf(model)
+	}
+
+	fun genererSoknadsModel(
+		soknad: DokumentSoknadDto,
+		sammensattNavn: String?,
+		opplastedeVedlegg: List<VedleggDto>,
+		manglendeObligatoriskeVedlegg: List<VedleggDto>
+	): KvitteringsPdfModel {
 		val sprak = selectLanguage(soknad.spraak)
 		val tekster = texts.get(sprak) ?: throw BackendErrorException("Mangler støtte for språk $sprak")
 
@@ -50,6 +66,7 @@ class PdfGenerator {
 		if (vedleggOpplastet.isNotEmpty()) {
 			oppsummering.addFirst(
 				mapTilVedleggskategori(
+					type = OpplastingsStatusDto.LastetOpp,
 					kategori = tekster.getString("kvittering.vedlegg.sendt"),
 					vedlegg = vedleggOpplastet
 				)
@@ -58,6 +75,7 @@ class PdfGenerator {
 		if (sendSenere.isNotEmpty()) {
 			oppsummering.addLast(
 				mapTilVedleggskategori(
+					type = OpplastingsStatusDto.SendSenere,
 					kategori = tekster.getString("kvittering.vedlegg.ikkesendt"),
 					vedlegg = sendSenere
 				)
@@ -66,6 +84,7 @@ class PdfGenerator {
 		if (soknad.vedleggsListe.skalSendesAvAndre.isNotEmpty()) {
 			oppsummering.addLast(
 				mapTilVedleggskategori(
+					type = OpplastingsStatusDto.SendesAvAndre,
 					kategori = tekster.getString("kvittering.vedlegg.sendesAvAndre"),
 					vedlegg = soknad.vedleggsListe.skalSendesAvAndre
 				)
@@ -74,6 +93,7 @@ class PdfGenerator {
 		if (soknad.vedleggsListe.sendesIkke.isNotEmpty()) {
 			oppsummering.addLast(
 				mapTilVedleggskategori(
+					type = OpplastingsStatusDto.SendesIkke,
 					kategori = tekster.getString("kvittering.vedlegg.sendesIkke"),
 					vedlegg = soknad.vedleggsListe.sendesIkke
 				)
@@ -82,6 +102,7 @@ class PdfGenerator {
 		if (alleredeInnsendt.isNotEmpty()) {
 			oppsummering.addLast(
 				mapTilVedleggskategori(
+					type = OpplastingsStatusDto.LevertDokumentasjonTidligere,
 					kategori = tekster.getString("kvittering.vedlegg.tidligereInnsendt"),
 					vedlegg = alleredeInnsendt
 				)
@@ -90,13 +111,13 @@ class PdfGenerator {
 		if (soknad.vedleggsListe.navKanInnhente.isNotEmpty()) {
 			oppsummering.addLast(
 				mapTilVedleggskategori(
+					type = OpplastingsStatusDto.NavKanHenteDokumentasjon,
 					kategori = tekster.getString("kvittering.vedlegg.navKanHenteDokumentasjon"),
 					vedlegg = soknad.vedleggsListe.navKanInnhente
 				)
 			)
 		}
-		return PdfGeneratorService().genererKvitteringPdf(
-			KvitteringsPdfModel(
+		return KvitteringsPdfModel(
 				sprak = if (sprak == "en") sprak + "-UK" else sprak + "-NO",
 				beskrivelse = tekster.getString("kvittering.beskrivelse"),
 				kvitteringHeader = tekster.getString("kvittering.tittel"),
@@ -108,8 +129,10 @@ class PdfGenerator {
 				innsendtTidspunkt = innsendtTidspunkt,
 				vedleggsListe = oppsummering
 			).vasket()
-		)
+
 	}
+
+
 
 	fun lagForsideEttersending(soknad: DokumentSoknadDto, sammensattNavn: String? = null): ByteArray {
 
@@ -171,12 +194,14 @@ class PdfGenerator {
 	}
 
 
-	private fun mapTilVedleggskategori(kategori: String, vedlegg: List<VedleggDto>): VedleggsKategori {
+	private fun mapTilVedleggskategori(type: OpplastingsStatusDto, kategori: String, vedlegg: List<VedleggDto>): VedleggsKategori {
 		return VedleggsKategori(
+			type = type,
 			kategori = kategori,
 			vedlegg = vedlegg.map {
 				VedleggMedKommentar(
 					vedleggsTittel = it.tittel,
+					vedleggsNr = it.vedleggsnr ?: "N6",
 					kommentarTittel = if (it.opplastingsValgKommentarLedetekst == null) null else it.opplastingsValgKommentarLedetekst,
 					kommentar = if (it.opplastingsValgKommentarLedetekst == null || it.opplastingsValgKommentar == null) null else it.opplastingsValgKommentar
 				).vasket()
@@ -212,18 +237,21 @@ class PdfGenerator {
 }
 
 data class VedleggsKategori(
+	val type: OpplastingsStatusDto,
 	val kategori: String,
 	val vedlegg: List<VedleggMedKommentar>
 )
 
 data class VedleggMedKommentar(
 	val vedleggsTittel: String,
+	val vedleggsNr: String,
 	val kommentarTittel: String?,
 	val kommentar: String?
 ) {
 	fun vasket(): VedleggMedKommentar {
 		return VedleggMedKommentar(
 			vedleggsTittel = PdfUtils.fjernSpesielleKarakterer(this.vedleggsTittel) ?: "",
+			vedleggsNr = vedleggsNr,
 			kommentarTittel = this.kommentarTittel,
 			kommentar = PdfUtils.fjernSpesielleKarakterer(this.kommentar)
 		)

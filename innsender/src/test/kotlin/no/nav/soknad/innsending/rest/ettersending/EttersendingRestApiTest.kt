@@ -1,7 +1,10 @@
 package no.nav.soknad.innsending.rest.ettersending
 
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.every
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
+import no.nav.soknad.innsending.consumerapis.kafka.KafkaPublisher
 import no.nav.soknad.innsending.utils.Api
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
@@ -22,6 +25,9 @@ class EttersendingRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var restTemplate: TestRestTemplate
 
+	@MockkBean
+	private lateinit var kafkaPublisher: KafkaPublisher
+
 	@Value("\${server.port}")
 	var serverPort: Int? = 9064
 
@@ -30,6 +36,8 @@ class EttersendingRestApiTest : ApplicationTest() {
 	@BeforeEach
 	fun setup() {
 		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
+
+		every { kafkaPublisher.publishToKvitteringsSide(any(), any()) } returns Unit
 	}
 
 	@Test

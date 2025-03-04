@@ -20,20 +20,23 @@ import org.springframework.web.client.RestClient
 @Qualifier("notifikasjon")
 class SendTilPublisher(
 	private val restConfig: RestConfig,
-	@Qualifier("soknadsmottakerRestClient") soknadsmottakerRestClient: RestClient
+	@Qualifier("soknadsmottakerRestClient") soknadsmottakerRestClient: RestClient,
+	private val notificationPublisherApi: NewNotificationApi,
+	private val cancelNotificationPublisherApi: CancelNotificationApi,
+	private val healthApi: HealthApi
+
 ) : PublisherInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	private val notificationPublisherApi: NewNotificationApi
-	private val cancelNotificationPublisherApi: CancelNotificationApi
-	private val healthApi: HealthApi
 
 	init {
 		jacksonObjectMapper.registerModule(JavaTimeModule())
+/*
 		notificationPublisherApi = NewNotificationApi(soknadsmottakerRestClient)
 		cancelNotificationPublisherApi = CancelNotificationApi(soknadsmottakerRestClient)
 		healthApi = HealthApi(restConfig.soknadsMottakerHost)
+*/
 	}
 
 	override fun avsluttBrukernotifikasjon(soknadRef: SoknadRef) {

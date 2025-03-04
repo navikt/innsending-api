@@ -343,6 +343,11 @@
 			<artifactId>token-client-spring</artifactId>
 			<version>${token-validation.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>no.nav.tms.soknadskvittering</groupId>
+			<artifactId>kotlin-builder</artifactId>
+			<version>${soknadskvittering-builder.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -586,6 +591,11 @@
 			<id>confluent</id>
 			<url>https://packages.confluent.io/maven</url>
 		</repository>
+		<repository>
+			<id>github</id>
+			<url>https://github-package-registry-mirror.gc.nav.no/cached/maven-release</url>
+		</repository>
+
 	</repositories>
 
 </project>

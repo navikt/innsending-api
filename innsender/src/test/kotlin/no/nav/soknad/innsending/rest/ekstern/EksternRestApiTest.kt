@@ -6,6 +6,7 @@ import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
+import no.nav.soknad.innsending.consumerapis.kafka.KafkaPublisher
 import no.nav.soknad.innsending.model.BrukernotifikasjonsType
 import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.utils.Api
@@ -22,6 +23,8 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.every
 import org.springframework.boot.test.web.client.TestRestTemplate
 import kotlin.test.assertNotEquals
 
@@ -35,6 +38,9 @@ class EksternRestApiTest : ApplicationTest() {
 	@SpykBean()
 	lateinit var publisherInterface: PublisherInterface
 
+	@MockkBean
+	private lateinit var kafkaPublisher: KafkaPublisher
+
 	@Value("\${server.port}")
 	var serverPort: Int? = 9064
 
@@ -43,6 +49,7 @@ class EksternRestApiTest : ApplicationTest() {
 	@BeforeEach
 	fun setup() {
 		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
+		every { kafkaPublisher.publishToKvitteringsSide(any(), any())} returns Unit
 	}
 
 	val defaultSkjemanr = "NAV 02-07.05"

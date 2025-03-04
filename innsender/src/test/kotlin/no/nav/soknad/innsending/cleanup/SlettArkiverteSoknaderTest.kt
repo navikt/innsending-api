@@ -4,6 +4,7 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
+import no.nav.soknad.innsending.consumerapis.kafka.KafkaPublisher
 import no.nav.soknad.innsending.consumerapis.pdl.PdlAPI
 import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
@@ -59,6 +60,9 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 	@MockkBean
 	private lateinit var subjectHandler: SubjectHandlerInterface
 
+	@MockkBean
+	private lateinit var kafkaPublisher: KafkaPublisher
+
 	private val defaultSkjemanr = "NAV 55-00.60"
 
 	@Test
@@ -72,6 +76,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 		every { pdlInterface.hentPersonIdents(any()) } returns listOf(IdentDto("123456789", "FOLKEREGISTERIDENT", false))
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("123456789", "Fornavn", null, "Etternavn")
 		every { subjectHandler.getClientId() } returns "application"
+		every { kafkaPublisher.publishToKvitteringsSide(any(), any())} returns Unit
 
 		val spraak = "no"
 		val tema = "BID"
