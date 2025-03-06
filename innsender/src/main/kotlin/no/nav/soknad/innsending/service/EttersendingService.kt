@@ -1,6 +1,9 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
+import no.nav.soknad.innsending.config.BrukerNotifikasjonConfig
+import no.nav.soknad.innsending.config.PublisherConfig
+import no.nav.soknad.innsending.consumerapis.kafka.KafkaPublisher
 import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType.*
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
@@ -19,14 +22,19 @@ import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.innsending.util.mapping.*
+import no.nav.tms.soknad.event.SoknadEvent
+import no.nav.tms.soknadskvittering.builder.SoknadEventBuilder
 import org.slf4j.LoggerFactory
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.util.UriComponentsBuilder
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.*
 
 @Service
+@EnableConfigurationProperties(BrukerNotifikasjonConfig::class)
 class EttersendingService(
 	private val repo: RepositoryUtils,
 	private val innsenderMetrics: InnsenderMetrics,
@@ -38,7 +46,10 @@ class EttersendingService(
 	private val safService: SafService,
 	private val tilgangskontroll: Tilgangskontroll,
 	private val kodeverkService: KodeverkService,
-	private val subjectHandler: SubjectHandlerInterface
+	private val subjectHandler: SubjectHandlerInterface,
+	private val kafkaPublisher: KafkaPublisher,
+	private val publisherConfig: PublisherConfig,
+	private val brukerNotifikasjonConfig: BrukerNotifikasjonConfig
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -304,12 +315,24 @@ class EttersendingService(
 		// Dagpenger (DAG) har sin egen løsning for å opprette ettersendingssøknader
 		if (manglende.isNotEmpty() && !"DAG".equals(innsendtSoknadDto.tema, true)) {
 			logger.info("${soknadDtoInput.innsendingsId}: Skal opprette ettersendingssoknad")
-			saveEttersending(
+			val ettersending = saveEttersending(
 				nyesteSoknad = innsendtSoknadDto,
 				ettersendingsId = innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!,
 				erSystemGenerert = true
 			)
+			publiserOppdateringPaSoknad(ettersending)
 		}
+	}
+
+	private fun publiserOppdateringPaSoknad(ettersending: DokumentSoknadDto) {
+		val innsendtOppdatering = SoknadEventBuilder.oppdatert {
+			this.soknadsId = ettersending.ettersendingsId ?: ettersending.innsendingsId
+			// this.ettersendingsId = soknad.innsendingsid
+			this.linkSoknad = createLink(ettersending)
+			this.produsent = SoknadEvent.Dto.Produsent(cluster = publisherConfig.cluster, namespace = publisherConfig.team, appnavn = publisherConfig.application)
+		}
+		logger.info("${ettersending.innsendingsId}: Skal oppdatere ${ettersending.ettersendingsId} med lenke til ettersendingssoknad")
+		kafkaPublisher.publishToKvitteringsSide(ettersending.ettersendingsId ?: ettersending.innsendingsId!!, innsendtOppdatering)
 	}
 
 	fun getArkiverteEttersendinger(
@@ -363,6 +386,10 @@ class EttersendingService(
 			}
 
 		publiserBrukernotifikasjon(dokumentSoknadDto, eksternOpprettEttersending.brukernotifikasjonstype, erNavInitiert)
+
+		if (erNavInitiert) {
+
+		}
 
 		return dokumentSoknadDto
 
@@ -482,4 +509,20 @@ class EttersendingService(
 	} catch (e: Exception) {
 		throw BackendErrorException("Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}", e)
 	}
+
+
+	private fun createLink(dokumentSoknad: DokumentSoknadDto): String {
+		if (dokumentSoknad.soknadstype == SoknadType.soknad && dokumentSoknad.visningsType == VisningsType.fyllUt) {
+			val baseUrl = "${brukerNotifikasjonConfig.fyllutUrl}/${dokumentSoknad.skjemaPath}/oppsummering"
+
+			val uriBuilder = UriComponentsBuilder.fromUriString(baseUrl)
+			uriBuilder.queryParam("sub", "digital")
+			uriBuilder.queryParam("innsendingsId", dokumentSoknad.innsendingsId)
+
+			return uriBuilder.toUriString()
+		}
+
+		return "${brukerNotifikasjonConfig.sendinnUrl}/${dokumentSoknad.innsendingsId}"
+	}
+
 }

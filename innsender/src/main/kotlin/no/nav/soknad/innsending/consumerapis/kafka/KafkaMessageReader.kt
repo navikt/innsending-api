@@ -79,7 +79,8 @@ class KafkaMessageReader(
 	private fun publiserInnsendtSoknadOppdatering(soknad: SoknadDbData, message: String) {
 		val journalpostId = message.substringAfter("journalpostId=")
 		val innsendtOppdatering = SoknadEventBuilder.oppdatert {
-			this.soknadsId = soknad.innsendingsid
+			this.soknadsId = soknad.ettersendingsid ?: soknad.innsendingsid
+			// this.innsendingsId = soknad.innsendingsid
 			this.journalpostId = journalpostId
 			this.produsent = SoknadEvent.Dto.Produsent(cluster = publisherConfig.cluster, namespace = publisherConfig.team, appnavn = publisherConfig.application)
 		}

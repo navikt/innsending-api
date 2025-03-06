@@ -92,7 +92,7 @@ class KonverterTilPdf(
 			val docInfo = pdfDocument.documentInformation
 			val docCatalog = pdfDocument.documentCatalog
 			docInfo.title = title
-			docCatalog.language = fixLanguage(language)
+			docCatalog.language = fixLanguage(if (language == "en-UK") "English" else "Norwegian")
 			pdfDocument.save(out)
 			return out.toByteArray()
 		} finally {

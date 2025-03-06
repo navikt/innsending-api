@@ -118,6 +118,9 @@ class EttersendingServiceTest : ApplicationTest() {
 		tilgangskontroll = tilgangskontroll,
 		kodeverkService = kodeverkService,
 		subjectHandler = subjectHandler,
+		kafkaPublisher = kafkaPublisher,
+		publisherConfig = publisherConfig,
+		brukerNotifikasjonConfig = notifikasjonConfig
 	)
 
 	private fun lagInnsendingService(): InnsendingService = InnsendingService(

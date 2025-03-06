@@ -18,13 +18,16 @@ class KonverterTilPdfTest: ApplicationTest() {
 	@Test
 	fun verifiserKonverteringAvJpg() {
 		val jpg = Hjelpemetoder.getBytesFromFile("/2MbJpg.jpg")
+		val language = "en-UK"
 
-		val (pdf, antallSider) = konverterTilPdf.tilPdf(jpg, soknadDto, ".jpg")
+		val (pdf, antallSider) = konverterTilPdf.tilPdf(jpg, DokumentSoknadDtoTestBuilder(spraak = language).build(), ".jpg")
 		assertEquals(1, antallSider)
 
 		val validation = VeraPDFValidator().validatePdf(pdf)
 
 		assertTrue(validation.isPdfACompliant)
+
+		Hjelpemetoder.writeBytesToFile(pdf, "ex-$language.pdf")
 	}
 
 	@Test
@@ -89,11 +92,12 @@ class KonverterTilPdfTest: ApplicationTest() {
 	@Test
 	fun verifiserKonverteringAvDocxFil() {
 		val doc = Hjelpemetoder.getBytesFromFile("/__files/soknadsarkiverer-og-flere-poder.docx")
+		val language = "nb-NO"
 
 		val start = System.currentTimeMillis()
 		val (pdf, antallSider) = konverterTilPdf.tilPdf(
 			doc,
-			soknadDto,
+			DokumentSoknadDtoTestBuilder(spraak = language).build(),
 			filtype = ".docx",
 			vedleggsTittel = "Vedleggstittel"
 		)
@@ -104,6 +108,9 @@ class KonverterTilPdfTest: ApplicationTest() {
 		val validation = VeraPDFValidator().validatePdf(pdf)
 
 		assertTrue(validation.isPdfACompliant)
+
+		Hjelpemetoder.writeBytesToFile(pdf, "ex-$language.pdf")
+
 	}
 
 

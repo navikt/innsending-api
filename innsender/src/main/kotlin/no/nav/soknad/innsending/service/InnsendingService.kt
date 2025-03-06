@@ -169,7 +169,8 @@ class InnsendingService(
 		}
 
 		try {
-			kafkaPublisher.publishToKvitteringsSide(soknadDto.innsendingsId!!, mapToInnsendtApplicationEvent(soknadDto, kvitteringsPdfModel))
+			val publishKvitteringssideEvents = mapToInnsendtApplicationEvent(soknadDto, kvitteringsPdfModel)
+			publishKvitteringssideEvents.forEach { kafkaPublisher.publishToKvitteringsSide(soknadDto.innsendingsId!!, it) }
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			// Når koden er kommet hit så har søknaden blitt sendt inn vellykket og databasen blitt oppdatert. Kaster vi feil vil databaseendringene bli rullet tilbake.
@@ -184,50 +185,94 @@ class InnsendingService(
 		return "http://innsending-api" + "/innsendte/v1/soknad/$innsendingId/$uuid" // TODO implementere nytt endepunkt slik at soknadskvitteringsside kan kalle innsending-api med brukertoken for henting av vedlegg til en soknad?
 	}
 
-	private fun mapToInnsendtApplicationEvent(soknadDto: DokumentSoknadDto, kvitteringsPdfModel: KvitteringsPdfModel): String {
-		val hoveddokument = soknadDto.vedleggsListe.filter { it.erHoveddokument && !it.erVariant }.first()
-		return SoknadEventBuilder.opprettet {
-			this.soknadsId = soknadDto.innsendingsId
-			this.ident = soknadDto.brukerId
-			this.tittel = (if (!kvitteringsPdfModel.ettersendelseTittel.isNullOrEmpty()) kvitteringsPdfModel.ettersendelseTittel + " " else "") + soknadDto.tittel
-			this.skjemanummer = soknadDto.skjemanr
-			this.fristEttersending = ((soknadDto.forsteInnsendingsDato ?: OffsetDateTime.now()).plusDays(
-				soknadDto.fristForEttersendelse ?: 14L
-			)).toLocalDate()
-			this.temakode = soknadDto.tema
-			this.tidspunktMottatt = (soknadDto.innsendtDato ?: OffsetDateTime.now()).toZonedDateTime()
+	private fun mapToInnsendtApplicationEvent(soknadDto: DokumentSoknadDto, kvitteringsPdfModel: KvitteringsPdfModel): List<String> {
+		if (!soknadDto.ettersendingsId.isNullOrEmpty() && soknadDto.ettersendingsId != soknadDto.innsendingsId) {
+			val opplastet = kvitteringsPdfModel.vedleggsListe.filter { it.type == OpplastingsStatusDto.LastetOpp}.flatMap { it.vedlegg }
+			val vedleggOppdatering = mutableListOf<String>()
+			// Bør kunne publisere en liste av vedlegg som er oppdatert knyttet til en innsendingId (ettersendingsid)
+			opplastet.forEach {
+					vedleggOppdatering.add(
+						SoknadEventBuilder.vedleggMottatt {
+						this.soknadsId = soknadDto.ettersendingsId // opprinnelig søknadsid
+						this.tidspunktMottatt = (soknadDto.innsendtDato ?: OffsetDateTime.now()).toZonedDateTime()
+						this.vedleggsId = it.vedleggsNr
+						this.tittel = it.vedleggsTittel
+						this.brukerErAvsender = true
+						this.produsent = SoknadEvent.Dto.Produsent(
+							cluster = publisherConfig.cluster,
+							namespace = publisherConfig.team,
+							appnavn = publisherConfig.application
+						)
+					}
+				)
+			}
+			if (opplastet.isEmpty()) {
+				val ikkeInnsendte =
+					kvitteringsPdfModel.vedleggsListe.filter { it.type != OpplastingsStatusDto.LastetOpp && it.type != OpplastingsStatusDto.Innsendt && it.type != OpplastingsStatusDto.IkkeValgt }
+						.flatMap { it.vedlegg }
+				ikkeInnsendte.forEach {
+					vedleggOppdatering.add(
+						SoknadEventBuilder.vedleggMottatt {
+							this.soknadsId = soknadDto.ettersendingsId // opprinnelig søknadsid
+							this.tidspunktMottatt = null
+							this.vedleggsId = it.vedleggsNr
+							this.tittel = it.vedleggsTittel
+							this.brukerErAvsender = false
+							this.produsent = SoknadEvent.Dto.Produsent(
+								cluster = publisherConfig.cluster,
+								namespace = publisherConfig.team,
+								appnavn = publisherConfig.application
+							)
+						}
+					)
+				}
+			}
+			return vedleggOppdatering
+		} else {
+			return listOf(SoknadEventBuilder.opprettet {
+				this.soknadsId = soknadDto.innsendingsId
+				this.ident = soknadDto.brukerId
+				this.tittel =
+					(if (!kvitteringsPdfModel.ettersendelseTittel.isNullOrEmpty()) kvitteringsPdfModel.ettersendelseTittel + " " else "") + soknadDto.tittel
+				this.skjemanummer = soknadDto.skjemanr
+				this.fristEttersending = ((soknadDto.forsteInnsendingsDato ?: OffsetDateTime.now()).plusDays(
+					soknadDto.fristForEttersendelse ?: 14L
+				)).toLocalDate()
+				this.temakode = soknadDto.tema
+				this.tidspunktMottatt = (soknadDto.innsendtDato ?: OffsetDateTime.now()).toZonedDateTime()
 
-			if (kvitteringsPdfModel.vedleggsListe.filter { it.type.equals(OpplastingsStatusDto.LastetOpp) }.isNotEmpty()) {
-				kvitteringsPdfModel.vedleggsListe.filter { it.type.equals(OpplastingsStatusDto.LastetOpp) }.forEach {
-					it.vedlegg.forEach { v ->
-						this.mottattVedlegg {
-							tittel = v.vedleggsTittel
-							vedleggsId = v.vedleggsNr
-							//linkVedlegg = dokumentLenke(soknadDto.innsendingsId, v.uuid) // Skal vi levere lenke for oppslag i innsending-api database?
+				if (kvitteringsPdfModel.vedleggsListe.filter { it.type.equals(OpplastingsStatusDto.LastetOpp) }.isNotEmpty()) {
+					kvitteringsPdfModel.vedleggsListe.filter { it.type.equals(OpplastingsStatusDto.LastetOpp) }.forEach {
+						it.vedlegg.forEach { v ->
+							this.mottattVedlegg {
+								tittel = v.vedleggsTittel
+								vedleggsId = v.vedleggsNr
+								//linkVedlegg = dokumentLenke(soknadDto.innsendingsId, v.uuid) // Skal vi levere lenke for oppslag i innsending-api database?
+							}
 						}
 					}
 				}
-			}
 
-			if (kvitteringsPdfModel.vedleggsListe.filter { !it.type.equals(OpplastingsStatusDto.LastetOpp) }.isNotEmpty()) {
-				kvitteringsPdfModel.vedleggsListe.filter { !it.type.equals(OpplastingsStatusDto.LastetOpp) }.forEach {
-					it.vedlegg.forEach { v ->
-						this.etterspurtVedlegg {
-							tittel = v.vedleggsTittel
-							vedleggsId = v.vedleggsNr
-							brukerErAvsender = !it.type.equals(OpplastingsStatusDto.SendesAvAndre)
-							beskrivelse = it.kategori + (if (!v.kommentar.isNullOrEmpty()) ":  " + v.kommentar else "")
-							// if ( !it.type.equals(OpplastingsStatusDto.SendesAvAndre))
-							// linkEttersending =  Tanken ert at det skal være lenke til side for oppretting eventuelt til oppgave for ettersending av manglende dokumentasjon
+				if (kvitteringsPdfModel.vedleggsListe.filter { !it.type.equals(OpplastingsStatusDto.LastetOpp) }.isNotEmpty()) {
+					kvitteringsPdfModel.vedleggsListe.filter { !it.type.equals(OpplastingsStatusDto.LastetOpp) }.forEach {
+						it.vedlegg.forEach { v ->
+							this.etterspurtVedlegg {
+								tittel = v.vedleggsTittel
+								vedleggsId = v.vedleggsNr
+								brukerErAvsender = !it.type.equals(OpplastingsStatusDto.SendesAvAndre)
+								beskrivelse = it.kategori + (if (!v.kommentar.isNullOrEmpty()) ":  " + v.kommentar else "")
+								// if ( !it.type.equals(OpplastingsStatusDto.SendesAvAndre))
+								// linkEttersending =  Tanken ert at det skal være lenke til side for oppretting eventuelt til oppgave for ettersending av manglende dokumentasjon
+							}
 						}
 					}
 				}
-			}
-			this.produsent = SoknadEvent.Dto.Produsent(
-				cluster = publisherConfig.cluster,
-				namespace = publisherConfig.team,
-				appnavn = publisherConfig.application
-			)
+				this.produsent = SoknadEvent.Dto.Produsent(
+					cluster = publisherConfig.cluster,
+					namespace = publisherConfig.team,
+					appnavn = publisherConfig.application
+				)
+			})
 		}
 	}
 
