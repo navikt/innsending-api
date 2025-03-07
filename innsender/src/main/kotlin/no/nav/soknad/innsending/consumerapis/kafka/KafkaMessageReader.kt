@@ -54,7 +54,6 @@ class KafkaMessageReader(
 			ack.acknowledge()
 		} catch (ex: Exception) {
 			logger.warn("Kafka exception: ${ex.message}", ex)
-			ack.acknowledge()
 		}
 	}
 
