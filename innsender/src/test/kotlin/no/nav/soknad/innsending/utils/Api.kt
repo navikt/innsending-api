@@ -1,26 +1,26 @@
 package no.nav.soknad.innsending.utils
 
-import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.enums.ParameterIn
-import jakarta.validation.Valid
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.security.mock.oauth2.MockOAuth2Server
+import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.util.Constants.AZURE
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.util.MultiValueMap
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.util.UriComponentsBuilder
+import kotlin.test.assertEquals
 
 
 class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth2Server: MockOAuth2Server) {
 
 	val baseUrl = "http://localhost:${serverPort}"
+	val objectMapper: ObjectMapper = jacksonObjectMapper().findAndRegisterModules()
 
 	private fun <T> createHttpEntity(body: T, map: Map<String, String>? = mapOf()): HttpEntity<T> {
 		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
@@ -144,20 +144,22 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 	}
 
-	fun addVedlegg(innsendingsId: String, postVedleggDto: PostVedleggDto): ResponseEntity<VedleggDto>? {
-		return restTemplate.exchange(
+	fun addVedlegg(innsendingsId: String, postVedleggDto: PostVedleggDto): InnsendingApiResponse<VedleggDto> {
+		val response = restTemplate.exchange(
 			"${baseUrl}/frontend/v1/soknad/${innsendingsId}/vedlegg",
 			HttpMethod.POST,
 			createHttpEntity(postVedleggDto),
-			VedleggDto::class.java
+			String::class.java
 		)
+		val body = readBody(response, VedleggDto::class.java)
+		return InnsendingApiResponse(response.statusCode, body)
 	}
 
 	fun uploadFile(
 		innsendingsId: String,
 		vedleggsId: Long,
 		file: ByteArray = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
-	): ResponseEntity<FilDto> {
+	): InnsendingApiResponse<FilDto> {
 		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
 		val requestBody: MultiValueMap<String, ByteArray> = LinkedMultiValueMap()
@@ -165,12 +167,27 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 
 		val httpEntity = HttpEntity(requestBody, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
 
-		return restTemplate.exchange(
+		val response = restTemplate.exchange(
 			"${baseUrl}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggsId}/fil",
 			HttpMethod.POST,
 			httpEntity,
-			FilDto::class.java
+			String::class.java
 		)
+
+		val body = readBody(response, FilDto::class.java)
+		return InnsendingApiResponse(response.statusCode, body)
+	}
+
+	fun <T> readBody(response: ResponseEntity<String>, clazz: Class<T>): Pair<T?, RestErrorResponseDto?> {
+		if (response.statusCode.is2xxSuccessful) {
+			val body = objectMapper.readValue(
+				response.body,
+				clazz
+			)
+			return Pair(body, null)
+		}
+		val errorBody = objectMapper.readValue(response.body, RestErrorResponseDto::class.java)
+		return Pair(null, errorBody)
 	}
 
 	fun createEttersending(opprettEttersending: OpprettEttersending): ResponseEntity<DokumentSoknadDto> {
@@ -317,6 +334,43 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 			requestEntity,
 			responseType
 		)
+	}
+
+	data class InnsendingApiResponse<T>(
+		val statusCode: HttpStatusCode,
+		private val response: Pair<T?, RestErrorResponseDto?>,
+	) {
+		val body: T
+			get() {
+				assertTrue(statusCode.is2xxSuccessful, "Expected success")
+				return response.first!!
+			}
+
+		val errorBody: RestErrorResponseDto
+			get() {
+				assertFalse(statusCode.is2xxSuccessful, "Expected failure")
+				return response.second!!
+			}
+
+		fun assertSuccess(): InnsendingApiResponse<T> {
+			assertTrue(statusCode.is2xxSuccessful, "Expected successful response code")
+			return this
+		}
+
+		fun assertClientError(): InnsendingApiResponse<T> {
+			assertTrue(statusCode.is4xxClientError, "Expected client error")
+			return this
+		}
+
+		fun assertHttpStatus(status: HttpStatus): InnsendingApiResponse<T> {
+			assertEquals(status.value(), statusCode.value())
+			return this
+		}
+
+		fun assertErrorCode(errorCode: ErrorCode): InnsendingApiResponse<T> {
+			assertEquals(errorCode.code, errorBody.errorCode)
+			return this
+		}
 	}
 
 }

@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
+import no.nav.soknad.innsending.util.dokumentsoknad.isLospost
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.pdfutilities.PdfMerger
@@ -104,7 +105,7 @@ class FilService(
 			throw e
 		}
 		/* Skal bare validere størrelse på vedlegg som søker har lastet opp */
-		if (soknadDto.vedleggsListe.filter { it.id == filDto.vedleggsid && !it.erHoveddokument }.isNotEmpty()) {
+		if (soknadDto.vedleggsListe.any { it.id == filDto.vedleggsid && (soknadDto.isLospost() || !it.erHoveddokument) }) {
 			logger.debug("${soknadDto.innsendingsId!!}: Valider størrelse av opplastinger på vedlegg ${filDto.vedleggsid} og søknad ${soknadDto.innsendingsId!!}")
 			Validerer().validerStorrelse(
 				soknadDto.innsendingsId!!,
@@ -225,7 +226,7 @@ class FilService(
 
 	fun finnFilStorrelseSum(soknadDto: DokumentSoknadDto, vedleggListe: List<VedleggDto> = soknadDto.vedleggsListe) =
 		vedleggListe
-			.filter { !it.erHoveddokument }
+			.filter { soknadDto.isLospost() || !it.erHoveddokument }
 			.filter { it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt || it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
 			.sumOf { repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, it.id!!) }
 

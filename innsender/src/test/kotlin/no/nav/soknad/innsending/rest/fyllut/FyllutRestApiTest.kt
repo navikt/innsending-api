@@ -312,7 +312,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		val vedleggsId = savedSoknad.vedleggsListe.first { it.vedleggsnr == vedleggsnr }.id!!
 
 		// Upload vedlegg in send-inn
-		val uploadFileResponse = api?.uploadFile(innsendingsId = innsendingsId, vedleggsId = vedleggsId)
+		api!!.uploadFile(innsendingsId = innsendingsId, vedleggsId = vedleggsId)
+			.assertHttpStatus(HttpStatus.CREATED)
 		// Go back and remove vedlegg in fyllUt
 		val utfyltResponse = api?.utfyltSoknad(innsendingsId, skjemaDto)
 
@@ -320,7 +321,6 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Then
 		assertEquals(302, utfyltResponse!!.statusCode.value())
-		assertEquals(201, uploadFileResponse!!.statusCode.value())
 		assertEquals(
 			"http://localhost:3100/sendinn/${innsendingsId}",
 			utfyltResponse.headers.location!!.toString()
@@ -367,7 +367,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		val utfyltResponse = api?.utfyltSoknad(innsendingsId, fromFyllUt)
 
 		// Add N6 vedlegg i send-inn
-		val leggTilVedleggResponse = api?.addVedlegg(innsendingsId, fromSendInn)
+		api!!.addVedlegg(innsendingsId, fromSendInn)
+			.assertHttpStatus(HttpStatus.CREATED)
 
 		// Go back to fyllUt and remove the T1 vedlegg. Keep N6 from send-inn, but also add one from fyllUt with different title
 		val updatedUtfyltResponse = api?.utfyltSoknad(innsendingsId, updatedFyllUt)
@@ -375,11 +376,9 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Then
 		assertTrue(utfyltResponse != null)
-		assertTrue(leggTilVedleggResponse != null)
 		assertTrue(updatedUtfyltResponse != null)
 
 		assertEquals(302, utfyltResponse.statusCode.value())
-		assertEquals(201, leggTilVedleggResponse.statusCode.value())
 		assertEquals(302, updatedUtfyltResponse.statusCode.value())
 		assertEquals(
 			"http://localhost:3100/sendinn/${innsendingsId}",

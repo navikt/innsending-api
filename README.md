@@ -65,6 +65,12 @@ Som Intellij settings velg:
 Aksesslogger finnes i [Kibana](https://logs.adeo.no) under `Applikasjonslogger`.
 Det er også satt opp secure logs under `Securelogs` for å kunne sikkert logge fødselsnummer og andre sensitiv data.
 
+---
+
+# Kode generert av GitHub Copilot
+
+Dette repoet bruker GitHub Copilot til å generere kode.
+
 ## Henvendelser
 
 Spørsmål knyttet til koden eller prosjektet kan stilles som issues her på GitHub.
