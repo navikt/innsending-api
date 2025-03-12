@@ -157,8 +157,7 @@ class Hjelpemetoder {
 			return outputStream.toByteArray()
 		}
 
-		fun lagFilDtoMedFil(vedleggDto: VedleggDto): FilDto {
-			val fil = getBytesFromFile("/litenPdf.pdf")
+		fun lagFilDtoMedFil(vedleggDto: VedleggDto, fil: ByteArray = getBytesFromFile("/litenPdf.pdf")): FilDto {
 			return FilDto(
 				vedleggDto.id!!,
 				id = null,

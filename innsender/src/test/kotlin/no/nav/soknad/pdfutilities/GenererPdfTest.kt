@@ -155,7 +155,7 @@ class GenererPdfTest {
 
 	private fun isPdfaTest(document: ByteArray) {
 		val valideringsResultat = VeraPDFValidator().validatePdf(document)
-		writeBytesToFile(document, "./pdf-til-validering.pdf")
+		writeBytesToFile(document, "./target/pdf-til-validering.pdf")
 		assertTrue(valideringsResultat.isPdfACompliant)
 	}
 
