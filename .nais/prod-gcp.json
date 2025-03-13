@@ -112,6 +112,7 @@
 		"KONTOREGISTER_SCOPE": "api://prod-gcp.okonomi.sokos-kontoregister-person/.default",
 		"KONTOREGISTER_URL": "http://sokos-kontoregister-person.okonomi",
 		"KONVERTERING_TIL_PDF_URL": "http://upload-convert-to-pdf.fyllut-sendinn",
+		"ETTERSENDING_URL": "https://www.nav.no/fyllut-ettersending",
 		"CLUSTER": "prod-gcp"
 	}
 }

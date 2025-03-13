@@ -24,7 +24,7 @@ class KafkaPublisher(
 
 	fun publishToKvitteringsSide(key: String, value: String) {
 		val topic = kafkaConfig.topics.kvitteringsSideTopic
-		combinedLogger.log("$key: shall publish $value to kvitteringsside via topic $topic", "xx")
+		secureLogger.info("$key: shall publish $value to kvitteringsside via topic $topic", "xx")
 		publish(topic, key, value, kvitteringsSideTemplate)
 		logger.info("$key: published to topic $topic")
 	}

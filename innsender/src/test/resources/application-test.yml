@@ -71,6 +71,8 @@ restconfig:
   arenaUrl: http://localhost:${wiremock.server.port}/arena-api
   kodeverkUrl: http://localhost:${wiremock.server.port}/kodeverk-api
   kontoregisterUrl: http://localhost:${wiremock.server.port}/kontoregister-api
+  ettersendingsUrl: http://localhost:3001/fyllut-ettersending
+
 
 brukernotifikasjonconfig:
   profiles: test

@@ -48,7 +48,9 @@ class KonverterTilPdf(
 
 	private fun checkAndFormatPDF(fil: ByteArray): Pair<ByteArray, Int> {
 		val antallSider = AntallSider().finnAntallSider(fil) ?: 0
-		return Pair(CheckAndFormatPdf().flatUtPdf(pdfMerger, fil, antallSider), antallSider) // Bare hvis inneholder formfields?
+		if (antallSider <= 0) return Pair(ByteArray(0), 0)
+		if (antallSider > 50) return Pair(fil, antallSider)
+		return Pair(pdfConverter.flattenPdfs("flatten", pdfConverter.buildMetadata(), listOf(fil)), antallSider) // Bare hvis inneholder formfields?
 	}
 
 	private fun genererFilnavn(soknad: DokumentSoknadDto, tittel: String, filtype:String): String {

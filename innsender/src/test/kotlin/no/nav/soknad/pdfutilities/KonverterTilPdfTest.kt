@@ -102,12 +102,38 @@ class KonverterTilPdfTest: ApplicationTest() {
 			vedleggsTittel = "Vedleggstittel"
 		)
 		val ferdig = System.currentTimeMillis()
-		println("Tid til konvertering av txtFil = ${ferdig - start}")
+		println("Tid til konvertering av docxFil = ${ferdig - start}")
 		assertEquals(13, antallSider)
 
 		val validation = VeraPDFValidator().validatePdf(pdf)
 
 		assertTrue(validation.isPdfACompliant)
+
+		Hjelpemetoder.writeBytesToFile(pdf, "ex-$language.pdf")
+
+	}
+
+
+	@Test
+	fun verifiserFlatingAvPdfFil() {
+		val doc = Hjelpemetoder.getBytesFromFile("/__files/Form-field.pdf")
+		val language = "en-UK"
+
+		val start = System.currentTimeMillis()
+		val (pdf, antallSider) = konverterTilPdf.tilPdf(
+			doc,
+			DokumentSoknadDtoTestBuilder(spraak = language).build(),
+			filtype = "pdf",
+			vedleggsTittel = "Vedleggstittel"
+		)
+		val ferdig = System.currentTimeMillis()
+		println("Tid til konvertering av pdf = ${ferdig - start}")
+		assertEquals(1, antallSider)
+
+		val validation = VeraPDFValidator().validatePdf(pdf)
+
+		assertEquals(validation.pdfAFlavour, "PDFA_2_B")
+		assertTrue(!CheckAndFormatPdf().harSkrivbareFelt(pdf))
 
 		Hjelpemetoder.writeBytesToFile(pdf, "ex-$language.pdf")
 

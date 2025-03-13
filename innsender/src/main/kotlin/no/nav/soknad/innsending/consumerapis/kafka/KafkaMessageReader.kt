@@ -78,14 +78,23 @@ class KafkaMessageReader(
 
 	private fun publiserInnsendtSoknadOppdatering(soknad: SoknadDbData, message: String) {
 		val journalpostId = message.substringAfter("journalpostId=")
-		val innsendtOppdatering = SoknadEventBuilder.oppdatert {
-			this.soknadsId = soknad.ettersendingsid ?: soknad.innsendingsid
-			// this.innsendingsId = soknad.innsendingsid
-			this.journalpostId = journalpostId
-			this.produsent = SoknadEvent.Dto.Produsent(cluster = publisherConfig.cluster, namespace = publisherConfig.team, appnavn = publisherConfig.application)
-		}
+		val innsendtOppdatering =
+			when (soknad.ettersendingsid == null || soknad.innsendingsid == soknad.ettersendingsid) {
+				true -> SoknadEventBuilder.oppdatert {
+						this.soknadsId = soknad.innsendingsid
+						// this.innsendingsId = soknad.innsendingsid
+						this.journalpostId = journalpostId
+						this.produsent = SoknadEvent.Dto.Produsent(cluster = publisherConfig.cluster, namespace = publisherConfig.team, appnavn = publisherConfig.application)
+					}
+				else -> SoknadEventBuilder.vedleggOppdatert {
+						this.soknadsId = soknad.ettersendingsid
+						//this.eventId = soknad.innsendingsId
+						this.journalpostId = journalpostId
+
+						this.produsent = SoknadEvent.Dto.Produsent(cluster = publisherConfig.cluster, namespace = publisherConfig.team, appnavn = publisherConfig.application)
+				}
+			}
 		kafkaPublisher.publishToKvitteringsSide(soknad.innsendingsid, innsendtOppdatering)
 	}
-
 }
 

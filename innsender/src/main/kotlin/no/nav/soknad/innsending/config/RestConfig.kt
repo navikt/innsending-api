@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.config
 
+import no.nav.soknad.innsending.location.UrlHandler
 import org.springframework.boot.context.properties.ConfigurationProperties
 import kotlin.properties.Delegates
 
@@ -25,6 +26,7 @@ class RestConfig {
 	lateinit var arenaUrl: String
 	lateinit var kodeverkUrl: String
 	lateinit var kontoregisterUrl: String
+	lateinit var ettersendingsUrl: String
 
 	class SendInnConfig {
 		lateinit var urls: Map<String, String>

@@ -68,6 +68,7 @@
 		"KONTOREGISTER_SCOPE": "api://dev-gcp:team-soknad:arkiv-mock-gcp/.default",
 		"KONTOREGISTER_URL": "https://arkiv-mock-gcp.intern.dev.nav.no",
 		"KONVERTERING_TIL_PDF_URL": "http://upload-convert-to-pdf.fyllut-sendinn",
+		"ETTERSENDING_URL": "https://fyllut-ettersending.ansatt.dev.nav.no/fyllut-ettersending",
 		"CLUSTER": "dev"
 	}
 }

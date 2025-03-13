@@ -119,6 +119,7 @@ restconfig:
   arenaUrl: http://localhost:9043/arena-api
   kodeverkUrl: https://kodeverk-api.nav.no
   kontoregisterUrl: http://localhost:9043/kontoregister-api
+  ettersendingsUrl: http://localhost:3200/fyllut-ettersending
 
 brukernotifikasjonconfig:
   profiles: test
@@ -167,6 +168,7 @@ restconfig:
   arenaUrl: ${ARENA_URL:http://arena.no}
   kodeverkUrl: ${KODEVERK_URL:http://kodeverk.no}
   kontoregisterUrl: ${KONTOREGISTER_URL:http://kontoregister.no}
+  ettersendingsUrl: ${ETTERSENDING_URL}
 
 brukernotifikasjonconfig:
   fyllutUrl: http://localhost:3001/fyllut
@@ -249,6 +251,7 @@ restconfig:
   arenaUrl: ${ARENA_URL}
   kodeverkUrl: ${KODEVERK_URL}
   kontoregisterUrl: ${KONTOREGISTER_URL}
+  ettersendingsUrl: ${ETTERSENDING_URL}
 
 
 brukernotifikasjonconfig:

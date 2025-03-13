@@ -24,3 +24,9 @@ enum class PdfFormat(val format: String) {
 	@Suppress("unused")
 	A_3B("PDF/A-3b"),
 }
+
+
+data class PdfMetadata (
+	val key: String,
+	val value: Any
+)

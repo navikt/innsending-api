@@ -25,4 +25,12 @@ class ToPdfConverterTest : FileToPdfInterface {
 		return toPdf(fileName, docs.first())
 	}
 
+	override fun flattenPdfs(fileName: String, metadata: String, docs: List<ByteArray>): ByteArray {
+		return toPdf(fileName, docs.first())
+	}
+
+	override fun buildMetadata(title: String?, subject: String?, author: String?, keywords: List<String>?): String {
+		return listOf("title" to title, "subject" to subject, "author" to author, "keywords" to keywords).toString()
+	}
 }
+

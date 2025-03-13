@@ -193,7 +193,8 @@ class InnsendingService(
 			opplastet.forEach {
 					vedleggOppdatering.add(
 						SoknadEventBuilder.vedleggMottatt {
-						this.soknadsId = soknadDto.ettersendingsId // opprinnelig søknadsid
+						this.soknadsId = soknadDto.ettersendingsId 	// id til opprinnelig søknad
+						//this.eventId = soknad.innsendingsId 			// id til ettersendingen
 						this.tidspunktMottatt = (soknadDto.innsendtDato ?: OffsetDateTime.now()).toZonedDateTime()
 						this.vedleggsId = it.vedleggsNr
 						this.tittel = it.vedleggsTittel
@@ -229,7 +230,7 @@ class InnsendingService(
 			}
 			return vedleggOppdatering
 		} else {
-			return listOf(SoknadEventBuilder.opprettet {
+			return listOf(SoknadEventBuilder.innsendt {
 				this.soknadsId = soknadDto.innsendingsId
 				this.ident = soknadDto.brukerId
 				this.tittel =
@@ -240,6 +241,7 @@ class InnsendingService(
 				)).toLocalDate()
 				this.temakode = soknadDto.tema
 				this.tidspunktMottatt = (soknadDto.innsendtDato ?: OffsetDateTime.now()).toZonedDateTime()
+				this.linkEttersending = lagGenerellEttersendingsLenke(soknadDto.skjemanr)
 
 				if (kvitteringsPdfModel.vedleggsListe.filter { it.type.equals(OpplastingsStatusDto.LastetOpp) }.isNotEmpty()) {
 					kvitteringsPdfModel.vedleggsListe.filter { it.type.equals(OpplastingsStatusDto.LastetOpp) }.forEach {
@@ -274,6 +276,15 @@ class InnsendingService(
 				)
 			})
 		}
+	}
+
+	private fun lagGenerellEttersendingsLenke(skjemanr: String): String {
+		return restConfig.ettersendingsUrl+"/"+stripSkjemanrString(skjemanr)+"?sub=digital"
+	}
+
+	fun stripSkjemanrString(skjemanr: String): String {
+		return skjemanr.replace(Regex("[ .-]"), "")
+			.lowercase()
 	}
 
 	private fun validerAtSoknadHarEndringSomKanSendesInn(

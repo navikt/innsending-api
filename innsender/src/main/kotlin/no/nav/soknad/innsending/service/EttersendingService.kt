@@ -320,19 +320,8 @@ class EttersendingService(
 				ettersendingsId = innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!,
 				erSystemGenerert = true
 			)
-			publiserOppdateringPaSoknad(ettersending)
+			logger.info("${ettersending.innsendingsId}: opprettet ny ettersending til ${ettersending.ettersendingsId}")
 		}
-	}
-
-	private fun publiserOppdateringPaSoknad(ettersending: DokumentSoknadDto) {
-		val innsendtOppdatering = SoknadEventBuilder.oppdatert {
-			this.soknadsId = ettersending.ettersendingsId ?: ettersending.innsendingsId
-			// this.ettersendingsId = soknad.innsendingsid
-			this.linkSoknad = createLink(ettersending)
-			this.produsent = SoknadEvent.Dto.Produsent(cluster = publisherConfig.cluster, namespace = publisherConfig.team, appnavn = publisherConfig.application)
-		}
-		logger.info("${ettersending.innsendingsId}: Skal oppdatere ${ettersending.ettersendingsId} med lenke til ettersendingssoknad")
-		kafkaPublisher.publishToKvitteringsSide(ettersending.ettersendingsId ?: ettersending.innsendingsId!!, innsendtOppdatering)
 	}
 
 	fun getArkiverteEttersendinger(
@@ -386,10 +375,6 @@ class EttersendingService(
 			}
 
 		publiserBrukernotifikasjon(dokumentSoknadDto, eksternOpprettEttersending.brukernotifikasjonstype, erNavInitiert)
-
-		if (erNavInitiert) {
-
-		}
 
 		return dokumentSoknadDto
 
