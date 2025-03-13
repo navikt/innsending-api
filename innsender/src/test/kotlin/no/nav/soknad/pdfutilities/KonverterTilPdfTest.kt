@@ -116,7 +116,7 @@ class KonverterTilPdfTest: ApplicationTest() {
 
 	@Test
 	fun verifiserFlatingAvPdfFil() {
-		val doc = Hjelpemetoder.getBytesFromFile("/__files/Form-field.pdf")
+		val doc = Hjelpemetoder.getBytesFromFile("/__files/NAV-skrivbar-ex.pdf")
 		val language = "en-UK"
 
 		val start = System.currentTimeMillis()
@@ -128,7 +128,7 @@ class KonverterTilPdfTest: ApplicationTest() {
 		)
 		val ferdig = System.currentTimeMillis()
 		println("Tid til konvertering av pdf = ${ferdig - start}")
-		assertEquals(1, antallSider)
+		assertEquals(3, antallSider)
 
 		val validation = VeraPDFValidator().validatePdf(pdf)
 
