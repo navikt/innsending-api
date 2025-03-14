@@ -196,7 +196,8 @@ class InnsendingService(
 						this.soknadsId = soknadDto.ettersendingsId 	// id til opprinnelig søknad
 						//this.eventId = soknad.innsendingsId 			// id til ettersendingen
 						this.tidspunktMottatt = (soknadDto.innsendtDato ?: OffsetDateTime.now()).toZonedDateTime()
-						this.vedleggsId = it.vedleggsNr
+						this.vedleggsId = it.vedleggsId
+						//this.vedleggsNr = it.vedleggsNr
 						this.tittel = it.vedleggsTittel
 						this.brukerErAvsender = true
 						this.produsent = SoknadEvent.Dto.Produsent(
@@ -216,7 +217,8 @@ class InnsendingService(
 						SoknadEventBuilder.vedleggMottatt {
 							this.soknadsId = soknadDto.ettersendingsId // opprinnelig søknadsid
 							this.tidspunktMottatt = null
-							this.vedleggsId = it.vedleggsNr
+							this.vedleggsId = it.vedleggsId
+							//this.vedleggsNr = it.vedleggsNr
 							this.tittel = it.vedleggsTittel
 							this.brukerErAvsender = false
 							this.produsent = SoknadEvent.Dto.Produsent(
@@ -248,8 +250,8 @@ class InnsendingService(
 						it.vedlegg.forEach { v ->
 							this.mottattVedlegg {
 								tittel = v.vedleggsTittel
-								vedleggsId = v.vedleggsNr
-								//linkVedlegg = dokumentLenke(soknadDto.innsendingsId, v.uuid) // Skal vi levere lenke for oppslag i innsending-api database?
+								this.vedleggsId = v.vedleggsId
+								//this.vedleggsNr = v.vedleggsNr
 							}
 						}
 					}
@@ -260,7 +262,8 @@ class InnsendingService(
 						it.vedlegg.forEach { v ->
 							this.etterspurtVedlegg {
 								tittel = v.vedleggsTittel
-								vedleggsId = v.vedleggsNr
+								this.vedleggsId = v.vedleggsId
+								//this.vedleggsNr = v.vedleggsNr
 								brukerErAvsender = !it.type.equals(OpplastingsStatusDto.SendesAvAndre)
 								beskrivelse = it.kategori + (if (!v.kommentar.isNullOrEmpty()) ":  " + v.kommentar else "")
 								// if ( !it.type.equals(OpplastingsStatusDto.SendesAvAndre))

@@ -202,6 +202,7 @@ class PdfGenerator {
 				VedleggMedKommentar(
 					vedleggsTittel = it.tittel,
 					vedleggsNr = it.vedleggsnr ?: "N6",
+					vedleggsId = it.uuid ?: UUID.randomUUID().toString(),
 					kommentarTittel = if (it.opplastingsValgKommentarLedetekst == null) null else it.opplastingsValgKommentarLedetekst,
 					kommentar = if (it.opplastingsValgKommentarLedetekst == null || it.opplastingsValgKommentar == null) null else it.opplastingsValgKommentar
 				).vasket()
@@ -245,6 +246,7 @@ data class VedleggsKategori(
 data class VedleggMedKommentar(
 	val vedleggsTittel: String,
 	val vedleggsNr: String,
+	val vedleggsId: String,
 	val kommentarTittel: String?,
 	val kommentar: String?
 ) {
@@ -252,6 +254,7 @@ data class VedleggMedKommentar(
 		return VedleggMedKommentar(
 			vedleggsTittel = PdfUtils.fjernSpesielleKarakterer(this.vedleggsTittel) ?: "",
 			vedleggsNr = vedleggsNr,
+			vedleggsId = vedleggsId,
 			kommentarTittel = this.kommentarTittel,
 			kommentar = PdfUtils.fjernSpesielleKarakterer(this.kommentar)
 		)
