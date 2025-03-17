@@ -54,7 +54,7 @@ class InnsendingService(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Transactional
-	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto): Pair<List<VedleggDto>, List<VedleggDto>> {
+	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto): Triple<List<VedleggDto>, List<VedleggDto>, KvitteringsPdfModel > {
 		val operation = InnsenderOperation.SEND_INN.name
 
 		// Anta at filene til et vedlegg allerede er konvertert til PDF ved lagring.
@@ -168,17 +168,20 @@ class InnsendingService(
 			throw BackendErrorException(message = "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV")
 		}
 
+		return Triple(opplastedeVedlegg, missingRequiredVedlegg, kvitteringsPdfModel)
+	}
+
+	fun publishToKvitteringsside(soknadDto: DokumentSoknadDto, kvitteringsPdfModel: KvitteringsPdfModel) {
 		try {
 			val publishKvitteringssideEvents = mapToInnsendtApplicationEvent(soknadDto, kvitteringsPdfModel)
 			publishKvitteringssideEvents.forEach { kafkaPublisher.publishToKvitteringsSide(soknadDto.innsendingsId!!, it) }
 		} catch (e: Exception) {
-			exceptionHelper.reportException(e, operation, soknadDto.tema)
+			exceptionHelper.reportException(e, InnsenderOperation.SEND_INN.name, soknadDto.tema)
 			// Når koden er kommet hit så har søknaden blitt sendt inn vellykket og databasen blitt oppdatert. Kaster vi feil vil databaseendringene bli rullet tilbake.
 			// Bruker vil da kunne editere søknad og endre opplasting av dokumentasjon og forsøke å sende inn på nytt. Denne nye innsendingen vil bli ignorert av soknadsarkiverer
 			throw BackendErrorException(message = "Feil ved publisering av innsendingskvittering for søknad ${soknadDto.innsendingsId} til NAV")
 		}
 
-		return Pair(opplastedeVedlegg, missingRequiredVedlegg)
 	}
 
 	private fun dokumentLenke(innsendingId: String, uuid: String): String {
@@ -334,20 +337,34 @@ class InnsendingService(
 		}
 	}
 
-	@Transactional(isolation = Isolation.READ_UNCOMMITTED)
 	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): KvitteringsDto {
 		val operation = InnsenderOperation.SEND_INN.name
 		val startSendInn = System.currentTimeMillis()
 
 		try {
-			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput)
+			val (opplastet, manglende, kvitteringsPdfModel) = sendInnSoknadStart(soknadDtoInput)
 
 			val innsendtSoknadDto = kansellerBrukernotifikasjon(soknadDtoInput)
 			innsenderMetrics.incOperationsCounter(operation, innsendtSoknadDto.tema)
 
 			ettersendingService.sjekkOgOpprettEttersendingsSoknad(innsendtSoknadDto, manglende, soknadDtoInput)
 
-			return lagKvittering(innsendtSoknadDto, opplastet, manglende)
+			val publisertKvittering = try {
+				publishToKvitteringsside(innsendtSoknadDto, kvitteringsPdfModel)
+				true
+			} catch (e: Exception) {
+
+				// Søknaden er sendt inn og rulles ikke tilbake.
+				// Publisering til kvitteringssiden feilet. det innebærer at vi må vise kvitteringsmelding til bruker i sendinn-frontend istedenfor.
+				logger.warn("${innsendtSoknadDto.innsendingsId}: publisering til kvitteringsside feiler, returnerer kvittering til sendinn-frontend")
+				false
+			}
+			if (publisertKvittering) {
+				// TODO signaliser re-direct
+				return lagKvittering(innsendtSoknadDto, opplastet, manglende)
+			} else {
+				return lagKvittering(innsendtSoknadDto, opplastet, manglende)
+			}
 
 		} finally {
 			logger.debug("${soknadDtoInput.innsendingsId}: Tid: sendInnSoknad = ${System.currentTimeMillis() - startSendInn}")

@@ -27,6 +27,7 @@ import no.nav.tms.soknadskvittering.builder.SoknadEventBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.util.UriComponentsBuilder
 import java.time.LocalDateTime
@@ -301,6 +302,7 @@ class EttersendingService(
 	}
 
 	// Creates ettersending if required documents are missing
+	@Transactional(isolation = Isolation.READ_UNCOMMITTED)
 	fun sjekkOgOpprettEttersendingsSoknad(
 		innsendtSoknadDto: DokumentSoknadDto,
 		manglende: List<VedleggDto>,
