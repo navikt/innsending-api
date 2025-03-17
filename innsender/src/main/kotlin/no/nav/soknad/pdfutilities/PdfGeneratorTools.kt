@@ -200,7 +200,7 @@ class PdfGenerator {
 			kategori = kategori,
 			vedlegg = vedlegg.map {
 				VedleggMedKommentar(
-					vedleggsTittel = it.tittel,
+					vedleggsTittel = it.label,
 					vedleggsNr = it.vedleggsnr ?: "N6",
 					vedleggsId = it.uuid ?: UUID.randomUUID().toString(),
 					kommentarTittel = if (it.opplastingsValgKommentarLedetekst == null) null else it.opplastingsValgKommentarLedetekst,
