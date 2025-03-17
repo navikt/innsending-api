@@ -15,7 +15,7 @@ class DatabaseSupervision(
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	@Scheduled(cron = everyFiveMinutes)
+	@Scheduled(cron = everyHour)
 	fun databaseSupervisionStart() {
 		try {
 			if (LeaderSelectionUtility().isLeader()) {
@@ -34,4 +34,4 @@ class DatabaseSupervision(
 	}
 }
 
-private const val everyFiveMinutes = "0 */5 * * * *"
+private const val everyHour = "0 0 * * * *"
