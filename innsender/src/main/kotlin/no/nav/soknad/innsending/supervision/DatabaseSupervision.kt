@@ -27,9 +27,6 @@ class DatabaseSupervision(
 	}
 
 	private fun collectDbStat() {
-		val count = filRepository.count()
-		logger.info("Number of rows in the database: $count")
-
 		val databaseSize = filRepository.totalDbSize()
 		logger.info("Total database size: $databaseSize")
 
