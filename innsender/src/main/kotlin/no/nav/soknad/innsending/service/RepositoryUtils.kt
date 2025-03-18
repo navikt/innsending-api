@@ -187,7 +187,7 @@ class RepositoryUtils(
 			vedleggRepository.findAllBySoknadsidAndStatusAndAfterInnsendtdato(
 				soknadsId,
 				OpplastingsStatus.INNSENDT,
-				innsendtDato
+				innsendtDato.minusDays(1)
 			)
 		} catch (ex: Exception) {
 			throw BackendErrorException("Feil ved forsøk på henting av innsendte vedlegg til soknadsId $soknadsId", ex)
