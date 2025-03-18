@@ -258,26 +258,6 @@ class FilService(
 		return vedleggDto
 	}
 
-	fun slettfilerTilInnsendteSoknader(dagerGamle: Int) {
-		logger.info("Slett alle opplastede filer for innsendte søknader mellom ${100 + dagerGamle} til $dagerGamle dager siden")
-		repo.deleteAllBySoknadStatusAndInnsendtdato(dagerGamle)
-	}
-
-	// Beholder inntil avklaring rundt om vi automatisk skal slette eventuelle opplastede filer på vedlegg hvis søker spesifiserer send-senere eller sendes-av-andre
-	private fun slettFilerDersomStatusUlikLastetOpp(
-		patchVedleggDto: PatchVedleggDto,
-		soknadDto: DokumentSoknadDto,
-		vedleggsId: Long
-	) {
-		if (patchVedleggDto.opplastingsStatus != null && patchVedleggDto.opplastingsStatus != OpplastingsStatusDto.LastetOpp
-			&& repo.findAllByVedleggsid(soknadDto.innsendingsId!!, vedleggsId).isNotEmpty()
-		) {
-			repo.slettFilerForVedlegg(vedleggsId)
-			logger.info("Slettet filer til vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} da status er endret til ${patchVedleggDto.opplastingsStatus}")
-		}
-	}
-
-
 	// For alle vedlegg til søknaden:
 	// Hoveddokument kan ha ulike varianter. Hver enkelt av disse sendes inn som ulike vedlegg.
 	// Bruker kan ha lastet opp flere filer for øvrige vedlegg. Disse må merges og sendes som en fil.
