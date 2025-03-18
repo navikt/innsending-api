@@ -181,6 +181,17 @@ class RepositoryUtils(
 		throw BackendErrorException("Feil ved forsøk på henting av alle vedlegg til søknad med id $soknadsId", ex)
 	}
 
+	fun hentInnsendteVedleggTilSoknad(soknadsId: Long, innsendtDato: LocalDateTime) = try {
+			vedleggRepository.findAllBySoknadsidAndStatusAndBetweenEndretdato(
+				soknadsId,
+				OpplastingsStatus.INNSENDT,
+				innsendtDato,
+				innsendtDato.plusSeconds(10)
+			)
+		} catch (ex: Exception) {
+			throw BackendErrorException("Feil ved forsøk på henting av innsendte vedlegg til soknadsId $soknadsId", ex)
+		}
+
 	fun lagreVedlegg(vedleggDbData: VedleggDbData): VedleggDbData {
 		try {
 			val savedVedlegg = vedleggRepository.save(vedleggDbData)

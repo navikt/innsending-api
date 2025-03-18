@@ -5,6 +5,9 @@ import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.HendelseType
+import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.tms.soknad.event.SoknadEvent
 import no.nav.tms.soknadskvittering.builder.SoknadEventBuilder
@@ -78,23 +81,37 @@ class KafkaMessageReader(
 
 	private fun publiserInnsendtSoknadOppdatering(soknad: SoknadDbData, message: String) {
 		val journalpostId = message.substringAfter("journalpostId=")
-		val innsendtOppdatering =
-			when (soknad.ettersendingsid == null || soknad.innsendingsid == soknad.ettersendingsid) {
-				true -> SoknadEventBuilder.oppdatert {
-						this.soknadsId = soknad.innsendingsid
-						// this.innsendingsId = soknad.innsendingsid
-						this.journalpostId = journalpostId
-						this.produsent = SoknadEvent.Dto.Produsent(cluster = publisherConfig.cluster, namespace = publisherConfig.team, appnavn = publisherConfig.application)
-					}
-				else -> SoknadEventBuilder.vedleggOppdatert {
-						this.soknadsId = soknad.ettersendingsid
-						//this.eventId = soknad.innsendingsId
-						this.journalpostId = journalpostId
+		when (soknad.ettersendingsid == null || soknad.innsendingsid == soknad.ettersendingsid) {
+			true -> kafkaPublisher.publishToKvitteringsSide(
+				soknad.innsendingsid,
+				SoknadEventBuilder.oppdatert {
+					this.soknadsId = soknad.innsendingsid
+					// this.innsendingsId = soknad.innsendingsid
+					this.journalpostId = journalpostId
+					this.produsent = SoknadEvent.Dto.Produsent(cluster = publisherConfig.cluster, namespace = publisherConfig.team, appnavn = publisherConfig.application)
+				})
+			else -> {
+				val innsendteVedlegg = repo.hentInnsendteVedleggTilSoknad(soknad.id!!, soknad.innsendtdato!!)
+				innsendteVedlegg.forEach {
+					logger.info("Skal publisere oppdatere vedlegg tittel=${it.label}, vedleggId= ${it.uuid} med journalpost=$journalpostId")
+					kafkaPublisher.publishToKvitteringsSide(
+						soknad.innsendingsid,
+						SoknadEventBuilder.vedleggOppdatert {
+							this.soknadsId = soknad.ettersendingsid
+							this.vedleggsId = it.uuid
+							//this.eventId = soknad.innsendingsId
+							this.journalpostId = journalpostId
 
-						this.produsent = SoknadEvent.Dto.Produsent(cluster = publisherConfig.cluster, namespace = publisherConfig.team, appnavn = publisherConfig.application)
+							this.produsent = SoknadEvent.Dto.Produsent(
+								cluster = publisherConfig.cluster,
+								namespace = publisherConfig.team,
+								appnavn = publisherConfig.application
+							)
+						}
+					)
 				}
 			}
-		kafkaPublisher.publishToKvitteringsSide(soknad.innsendingsid, innsendtOppdatering)
+		}
 	}
 }
 
