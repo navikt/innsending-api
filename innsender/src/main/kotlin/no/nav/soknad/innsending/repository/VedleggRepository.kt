@@ -61,7 +61,7 @@ interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
 		@Param("endretdato") endretdato: LocalDateTime
 	)
 
-	@Query(value = "FROM VedleggDbData WHERE soknadsid = :soknadsid and status = :status and endretdato between :fromDate and :toDate and not (vedleggsnr='L7' or erhoveddokument) order by id")
+	@Query(value = "FROM VedleggDbData WHERE soknadsid = :soknadsid and status = :status and endretdato >= :fromDate and endretdato < :toDate and not (vedleggsnr='L7' or erhoveddokument=true) order by id")
 	@Modifying(clearAutomatically = true)
 	fun findAllBySoknadsidAndStatusAndBetweenEndretdato(@Param("soknadsid") soknadsid: Long, @Param("status") status: OpplastingsStatus, @Param ("fromDate") fromDate: LocalDateTime, @Param ("toDate") toDate: LocalDateTime ): List<VedleggDbData>
 

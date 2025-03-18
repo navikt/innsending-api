@@ -92,6 +92,7 @@ class KafkaMessageReader(
 				})
 			else -> {
 				val innsendteVedlegg = repo.hentInnsendteVedleggTilSoknad(soknad.id!!, soknad.innsendtdato!!)
+				logger.info("${soknad.innsendingsid}: ettersending til ${soknad.ettersendingsid}. Antall vedlegg ettersendt: ${innsendteVedlegg.size} ")
 				innsendteVedlegg.forEach {
 					logger.info("Skal publisere oppdatere vedlegg tittel=${it.label}, vedleggId= ${it.uuid} med journalpost=$journalpostId")
 					kafkaPublisher.publishToKvitteringsSide(
