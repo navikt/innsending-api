@@ -22,6 +22,15 @@ fun mapTilSoknadDb(
 	status: SoknadsStatus = SoknadsStatus.Opprettet,
 	id: Long? = null
 ) =
+	mapTilSoknadDb(dokumentSoknadDto = dokumentSoknadDto, innsendingsId = innsendingsId, status = status, innsendtDato = null, id = id)
+
+fun mapTilSoknadDb(
+	dokumentSoknadDto: DokumentSoknadDto,
+	innsendingsId: String,
+	status: SoknadsStatus = SoknadsStatus.Opprettet,
+	innsendtDato: LocalDateTime? = null,
+	id: Long? = null
+) =
 	SoknadDbData(
 		id = id ?: dokumentSoknadDto.id,
 		innsendingsid = innsendingsId,
@@ -34,7 +43,7 @@ fun mapTilSoknadDb(
 		ettersendingsid = dokumentSoknadDto.ettersendingsId,
 		opprettetdato = mapTilLocalDateTime(dokumentSoknadDto.opprettetDato)!!,
 		endretdato = LocalDateTime.now(),
-		innsendtdato = if (status == SoknadsStatus.Innsendt) LocalDateTime.now() else mapTilLocalDateTime(dokumentSoknadDto.innsendtDato),
+		innsendtdato = if (status == SoknadsStatus.Innsendt) innsendtDato ?: LocalDateTime.now() else mapTilLocalDateTime(dokumentSoknadDto.innsendtDato),
 		visningssteg = dokumentSoknadDto.visningsSteg,
 		visningstype = dokumentSoknadDto.visningsType,
 		kanlasteoppannet = dokumentSoknadDto.kanLasteOppAnnet ?: true,

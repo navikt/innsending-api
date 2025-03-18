@@ -96,7 +96,7 @@ class KafkaMessageReader(
 			else -> {
 				logger.info("${soknad.innsendingsid}: skal finne vedlegg sendt inn ${convertToZonedString(soknad.innsendtdato!!, "+1")}")
 				val innsendteVedlegg = repo.hentInnsendteVedleggTilSoknad(soknad.id!!, soknad.innsendtdato)
-				val filtrert = innsendteVedlegg.filter { it.innsendtdato!!.isAfter(soknad.innsendtdato) }
+				val filtrert = innsendteVedlegg.filter { it.innsendtdato!!.isAfter(soknad.innsendtdato.minusSeconds(20)) }
 				logger.info("${soknad.innsendingsid}: ettersending til ${soknad.ettersendingsid}. Antall vedlegg ettersendt: ${filtrert.size}, (innsendteVedlegg size: ${innsendteVedlegg.size}) ")
 				filtrert.forEach {
 					logger.info("Skal publisere oppdatere vedlegg tittel=${it.label}, vedleggId= ${it.uuid} med journalpost=$journalpostId")

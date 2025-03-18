@@ -16,6 +16,15 @@ fun mapTilVedleggDb(
 	url: String?,
 	opplastingsStatus: OpplastingsStatus,
 	vedleggsId: Long? = null
+) = mapTilVedleggDb(vedleggDto = vedleggDto, soknadsId = soknadsId, url = url, opplastingsStatus = opplastingsStatus, innsendingsDato = null, vedleggsId = vedleggsId )
+
+fun mapTilVedleggDb(
+	vedleggDto: VedleggDto,
+	soknadsId: Long,
+	url: String?,
+	opplastingsStatus: OpplastingsStatus,
+	innsendingsDato: OffsetDateTime? = null,
+	vedleggsId: Long? = null
 ) =
 	VedleggDbData(
 		id = vedleggsId ?: vedleggDto.id,
@@ -33,7 +42,7 @@ fun mapTilVedleggDb(
 		uuid = vedleggDto.uuid ?: UUID.randomUUID().toString(),
 		opprettetdato = mapTilLocalDateTime(vedleggDto.opprettetdato)!!,
 		endretdato = LocalDateTime.now(),
-		innsendtdato = mapTilLocalDateTime(vedleggDto.innsendtdato),
+		innsendtdato = mapTilLocalDateTime(innsendingsDato ?: vedleggDto.innsendtdato),
 		vedleggsurl = url ?: vedleggDto.skjemaurl,
 		formioid = vedleggDto.formioId,
 		opplastingsvalgkommentarledetekst = vedleggDto.opplastingsValgKommentarLedetekst,

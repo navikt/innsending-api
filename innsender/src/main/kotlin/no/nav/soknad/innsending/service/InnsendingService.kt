@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
 import java.util.*
 import no.nav.tms.soknadskvittering.builder.SoknadEventBuilder
+import java.time.LocalDateTime
 
 @Service
 class InnsendingService(
@@ -107,6 +108,7 @@ class InnsendingService(
 		logger.info("${soknadDtoInput.innsendingsId}: Opplastede vedlegg = ${opplastedeVedlegg.map { it.vedleggsnr + ':' + it.uuid + ':' + it.opprettetdato + ':' + it.document?.size }}")
 		logger.info("${soknadDtoInput.innsendingsId}: Ikke opplastede påkrevde vedlegg = ${missingRequiredVedlegg.map { it.vedleggsnr + ':' + it.opprettetdato }}")
 
+		val innsendtDato = OffsetDateTime.now()
 		val kvitteringsPdfModel = lagInnsendingsKvittering(soknadDto, opplastedeVedlegg, missingRequiredVedlegg)
 		val kvitteringForArkivering = lagreKvitteringsVedlegg(soknadDto, kvitteringsPdfModel)
 
@@ -140,6 +142,7 @@ class InnsendingService(
 					vedleggDto = it,
 					soknadsId = soknadDto.id!!,
 					url = it.skjemaurl,
+					innsendingsDato = innsendtDato,
 					opplastingsStatus = OpplastingsStatus.INNSENDT
 				)
 			)
@@ -149,6 +152,7 @@ class InnsendingService(
 				vedleggDto = kvitteringForArkivering,
 				soknadsId = soknadDto.id!!,
 				url = kvitteringForArkivering.skjemaurl,
+				innsendingsDato = innsendtDato,
 				opplastingsStatus = OpplastingsStatus.INNSENDT
 			)
 		)
@@ -162,7 +166,7 @@ class InnsendingService(
 		}
 
 		try {
-			repo.lagreSoknad(mapTilSoknadDb(soknadDto, soknadDto.innsendingsId!!, SoknadsStatus.Innsendt))
+			repo.lagreSoknad(mapTilSoknadDb(soknadDto, soknadDto.innsendingsId!!, SoknadsStatus.Innsendt, innsendtDato.toLocalDateTime() ))
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			throw BackendErrorException(message = "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV")
