@@ -3,10 +3,8 @@ CREATE FUNCTION prevent_illegal_status_change_for_soknad()
 	LANGUAGE PLPGSQL
 AS $$
 BEGIN
-IF OLD.status = 'Innsendt' AND NEW.status IN ('Utfylt', 'SlettetAvBruker') THEN
-	RAISE EXCEPTION 'Cannot change status from Innsendt to %', NEW.status;
-ELSIF OLD.status = 'SlettetAvBruker' AND NEW.status IN ('Utfylt', 'Innsendt') THEN
-	RAISE EXCEPTION 'Cannot change status from SlettetAvBruker to %', NEW.status;
+IF OLD.status = 'Innsendt' AND NEW.status = 'Utfylt' THEN
+	RAISE EXCEPTION 'Cannot change status from Innsendt to Utfylt';
 END IF;
 RETURN NEW;
 END;

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
+import kotlin.test.assertEquals
 
 class RepositoryUtilsTest : ApplicationTest() {
 
@@ -32,45 +33,15 @@ class RepositoryUtilsTest : ApplicationTest() {
 	}
 
 	@Test
-	fun testFailureWhenStatusUpdatedFromInnsendtToSlettetAvBruker() {
+	fun testSuccessWhenStatusUpdatedFromInnsendtToAutomatiskSlettet() {
 		val dokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad()
 		val soknad = soknadService.opprettNySoknad(dokumentSoknadDto)
 		val innsendingsId = soknad.innsendingsId!!
 		val dbData = repo.hentSoknadDb(innsendingsId)
 		repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId, SoknadsStatus.Innsendt, dbData.id))
 
-		val exception = assertThrows<Exception> {
-			repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId, SoknadsStatus.SlettetAvBruker, dbData.id))
-		}
-		assertTrue { exception.message!!.contains("Feil i lagring av søknad") }
-	}
-
-	@Test
-	fun testFailureWhenStatusUpdatedFromSlettetAvBrukerToInnsendt() {
-		val dokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad()
-		val soknad = soknadService.opprettNySoknad(dokumentSoknadDto)
-		val innsendingsId = soknad.innsendingsId!!
-		val dbData = repo.hentSoknadDb(innsendingsId)
-		repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId, SoknadsStatus.SlettetAvBruker, dbData.id))
-
-		val exception = assertThrows<Exception> {
-			repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId, SoknadsStatus.Innsendt, dbData.id))
-		}
-		assertTrue { exception.message!!.contains("Feil i lagring av søknad") }
-	}
-
-	@Test
-	fun testFailureWhenStatusUpdatedFromSlettetAvBrukerToUtfylt() {
-		val dokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad()
-		val soknad = soknadService.opprettNySoknad(dokumentSoknadDto)
-		val innsendingsId = soknad.innsendingsId!!
-		val dbData = repo.hentSoknadDb(innsendingsId)
-		repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId, SoknadsStatus.SlettetAvBruker, dbData.id))
-
-		val exception = assertThrows<Exception> {
-			repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId, SoknadsStatus.Utfylt, dbData.id))
-		}
-		assertTrue { exception.message!!.contains("Feil i lagring av søknad") }
+		repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId, SoknadsStatus.AutomatiskSlettet, dbData.id))
+		assertEquals(SoknadsStatus.AutomatiskSlettet, repo.hentSoknadDb(innsendingsId).status)
 	}
 
 }
