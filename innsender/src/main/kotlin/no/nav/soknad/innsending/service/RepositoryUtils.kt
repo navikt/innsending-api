@@ -14,6 +14,8 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Service
 class RepositoryUtils(
@@ -182,11 +184,10 @@ class RepositoryUtils(
 	}
 
 	fun hentInnsendteVedleggTilSoknad(soknadsId: Long, innsendtDato: LocalDateTime) = try {
-			vedleggRepository.findAllBySoknadsidAndStatusAndBetweenEndretdato(
+			vedleggRepository.findAllBySoknadsidAndStatusAndAfterInnsendtdato(
 				soknadsId,
 				OpplastingsStatus.INNSENDT,
-				innsendtDato,
-				innsendtDato.plusSeconds(10)
+				innsendtDato
 			)
 		} catch (ex: Exception) {
 			throw BackendErrorException("Feil ved forsøk på henting av innsendte vedlegg til soknadsId $soknadsId", ex)

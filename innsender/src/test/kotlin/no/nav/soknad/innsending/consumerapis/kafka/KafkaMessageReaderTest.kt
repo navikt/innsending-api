@@ -11,6 +11,7 @@ import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.HendelseDbData
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
+import no.nav.soknad.innsending.service.InnsendingService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -25,8 +26,12 @@ class KafkaMessageReaderTest: ApplicationTest() {
 	@MockkBean
 	private lateinit var kafkaPublisher: KafkaPublisher
 
+	@Autowired
+	private lateinit var repo: RepositoryUtils
+/*
 	@MockkBean
 	private lateinit var repo: RepositoryUtils
+*/
 
 	@Autowired
 	private lateinit var kafkaMessageReader: KafkaMessageReader
@@ -38,31 +43,25 @@ class KafkaMessageReaderTest: ApplicationTest() {
 		val innsendingsId = UUID.randomUUID().toString()
 		val journalpostId = 9997
 		val message = "**Archiving: OK.  journalpostId=$journalpostId"
-		val soknad = SoknadDbData(
-			id = 1, innsendingsid = innsendingsId , tittel = "Tittel", skjemanr = "NAV 11-12.15B", tema = "TSO", status = SoknadsStatus.Innsendt, ettersendingsid = null,
+		val soknadDb = SoknadDbData(
+			id = null, innsendingsid = innsendingsId , tittel = "Tittel", skjemanr = "NAV 11-12.15B", tema = "TSO", status = SoknadsStatus.Innsendt, ettersendingsid = null,
 			brukerid = "12345678901", spraak = "nb_NO",
 			opprettetdato = LocalDateTime.now(), innsendtdato = LocalDateTime.now(), endretdato = LocalDateTime.now(), forsteinnsendingsdato = LocalDateTime.now(),
 			arkiveringsstatus = ArkiveringsStatus.IkkeSatt, skalslettesdato = (OffsetDateTime.now()).plusDays(28), applikasjon = "applikasjon"  )
 
+		val soknad = repo.lagreSoknad(soknadDb)
+
 		val sentInId = slot<String>()
-		val archivState = slot<ArkiveringsStatus>()
 		val publishedMessage = slot<String>()
 
-		every { repo.hentSoknadDb(innsendingsId) } returns soknad
-		every { repo.oppdaterArkiveringsstatus(soknad, capture(archivState)) } returns
-			HendelseDbData(
-				id = 1, innsendingsid = innsendingsId , skjemanr = "NAV 11-12.15B", tema = "TSO", erettersending = false, hendelsetype = HendelseType.Arkivert,
-				tidspunkt = LocalDateTime.now() )
 		every { kafkaPublisher.publishToKvitteringsSide(capture(sentInId), capture(publishedMessage)) } returns Unit
 
 			// When
 		kafkaMessageReader.handleArchivingEvents(message, innsendingsId)
 
 		// Then
-		assertTrue(archivState.isCaptured)
-		assertEquals(ArkiveringsStatus.Arkivert, archivState.captured)
-		assertTrue(sentInId.isCaptured)
-		assertEquals(innsendingsId, sentInId.captured)
+		val arkivertSoknad = repo.hentSoknadDb(soknad.id!!)
+		assertTrue(arkivertSoknad.arkiveringsstatus == ArkiveringsStatus.Arkivert)
 		assertTrue(publishedMessage.isCaptured)
 		assertTrue(publishedMessage.captured.contains(journalpostId.toString()))
 
@@ -78,44 +77,46 @@ class KafkaMessageReaderTest: ApplicationTest() {
 		val vedlegg_1_uuid = UUID.randomUUID().toString()
 		val vedlegg_2_uuid = UUID.randomUUID().toString()
 		val journalpostId = 9998
+		val soknadInnsendtDato = LocalDateTime.now().minusSeconds(50)
+		val vadleggInnsendtDato = LocalDateTime.now().minusSeconds(49)
+
+
 		val message = "**Archiving: OK.  journalpostId=$journalpostId"
 		val soknad = SoknadDbData(
-			id = 1, innsendingsid = innsendingsId , tittel = "Tittel", skjemanr = "NAV 11-12.15B", tema = "TSO", status = SoknadsStatus.Innsendt, ettersendingsid = ettersendingsId,
+			id = null, innsendingsid = innsendingsId , tittel = "Tittel", skjemanr = "NAV 11-12.15B", tema = "TSO", status = SoknadsStatus.Innsendt, ettersendingsid = ettersendingsId,
 			brukerid = "12345678901", spraak = "nb_NO",
-			opprettetdato = LocalDateTime.now(), innsendtdato = LocalDateTime.now(), endretdato = LocalDateTime.now(), forsteinnsendingsdato = LocalDateTime.now(),
+			opprettetdato = LocalDateTime.now(), innsendtdato = soknadInnsendtDato, endretdato = LocalDateTime.now(), forsteinnsendingsdato = soknadInnsendtDato.minusDays(2),
 			arkiveringsstatus = ArkiveringsStatus.IkkeSatt, skalslettesdato = (OffsetDateTime.now()).plusDays(28), applikasjon = "applikasjon"  )
 
-		val sentInId = slot<String>()
-		val archivState = slot<ArkiveringsStatus>()
-		val publishedMessages = mutableListOf<String>()
+		val lagretSoknad = repo.lagreSoknad(soknad)
 
-		every { repo.hentSoknadDb(innsendingsId) } returns soknad
-		every { repo.hentInnsendteVedleggTilSoknad(any(), any())} returns listOf(
-			VedleggDbData(id = 1, soknadsid = 1, status = OpplastingsStatus.INNSENDT,
+		val vedleggsListe = listOf(
+			VedleggDbData(id = null, soknadsid = lagretSoknad.id!!, status = OpplastingsStatus.INNSENDT,
 				erhoveddokument = false, ervariant = false, erpakrevd = true, erpdfa = true,
 				vedleggsnr = "W1", tittel = "W1-tittel", label = "W1-label", mimetype = "application/pdf", uuid = vedlegg_1_uuid ,
-				opprettetdato = LocalDateTime.now(), endretdato = LocalDateTime.now(),  innsendtdato = LocalDateTime.now(), beskrivelse = "W1-beskrivelse",
+				opprettetdato = soknadInnsendtDato.minusDays(2), endretdato = vadleggInnsendtDato,  innsendtdato = vadleggInnsendtDato, beskrivelse = "W1-beskrivelse",
 				vedleggsurl = null, formioid = null, opplastingsvalgkommentarledetekst = null, opplastingsvalgkommentar = null ),
-			VedleggDbData(id = 2, soknadsid = 1, status = OpplastingsStatus.INNSENDT,
+			VedleggDbData(id = null, soknadsid = lagretSoknad.id!!, status = OpplastingsStatus.INNSENDT,
 				erhoveddokument = false, ervariant = false, erpakrevd = true, erpdfa = true,
 				vedleggsnr = "W1", tittel = "W1-tittel", label = "W1-label2", mimetype = "application/pdf", uuid = vedlegg_2_uuid,
-				opprettetdato = LocalDateTime.now(), endretdato = LocalDateTime.now(),  innsendtdato = LocalDateTime.now(), beskrivelse = "W1-beskrivelse",
+				opprettetdato = soknadInnsendtDato.minusDays(2), endretdato = vadleggInnsendtDato,  innsendtdato =vadleggInnsendtDato, beskrivelse = "W1-beskrivelse",
 				vedleggsurl = null, formioid = null, opplastingsvalgkommentarledetekst = null, opplastingsvalgkommentar = null ),
-			)
-		every { repo.oppdaterArkiveringsstatus(soknad, capture(archivState)) } returns
-			HendelseDbData(
-				id = 1, innsendingsid = innsendingsId , skjemanr = "NAV 11-12.15B", tema = "TSO", erettersending = true, hendelsetype = HendelseType.Arkivert,
-				tidspunkt = LocalDateTime.now() )
+		)
+		vedleggsListe.forEach {
+			repo.lagreVedlegg(it)
+		}
+
+		val sentInId = slot<String>()
+		val publishedMessages = mutableListOf<String>()
 		every { kafkaPublisher.publishToKvitteringsSide(capture(sentInId), capture(publishedMessages)) } returns Unit
 
 		// When
 		kafkaMessageReader.handleArchivingEvents(message, innsendingsId)
 
 		// Then
-		assertTrue(archivState.isCaptured)
-		assertEquals(ArkiveringsStatus.Arkivert, archivState.captured)
-		assertTrue(sentInId.isCaptured)
 		assertEquals(innsendingsId, sentInId.captured)
+		val arkivertSoknad = repo.hentSoknadDb(soknad.id!!)
+		assertTrue(arkivertSoknad.arkiveringsstatus == ArkiveringsStatus.Arkivert)
 		assertTrue(publishedMessages.isNotEmpty())
 		assertTrue(publishedMessages[0].contains(journalpostId.toString()))
 		assertTrue(publishedMessages[0].contains(vedlegg_1_uuid))
@@ -128,29 +129,23 @@ class KafkaMessageReaderTest: ApplicationTest() {
 		// Given
 		val innsendingsId = UUID.randomUUID().toString()
 		val message = "**Archiving: FAILED"
-		val soknad = SoknadDbData(
-			id = 1, innsendingsid = innsendingsId , tittel = "Tittel", skjemanr = "NAV 11-12.15B", tema = "TSO", status = SoknadsStatus.Innsendt, ettersendingsid = null,
+		val soknadDb = SoknadDbData(
+			id = null, innsendingsid = innsendingsId , tittel = "Tittel", skjemanr = "NAV 11-12.15B", tema = "TSO", status = SoknadsStatus.Innsendt, ettersendingsid = null,
 			brukerid = "12345678901", spraak = "nb_NO",
 			opprettetdato = LocalDateTime.now(), innsendtdato = LocalDateTime.now(), endretdato = LocalDateTime.now(), forsteinnsendingsdato = LocalDateTime.now(),
 			arkiveringsstatus = ArkiveringsStatus.IkkeSatt, skalslettesdato = (OffsetDateTime.now()).plusDays(28), applikasjon = "applikasjon"  )
 
-		val sentInId = slot<String>()
-		val archivState = slot<ArkiveringsStatus>()
-		val publishedMessage = slot<String>()
+		val soknad = repo.lagreSoknad(soknadDb)
 
-		every { repo.hentSoknadDb(innsendingsId) } returns soknad
-		every { repo.oppdaterArkiveringsstatus(soknad, capture(archivState)) } returns
-			HendelseDbData(
-				id = 1, innsendingsid = innsendingsId , skjemanr = "NAV 11-12.15B", tema = "TSO", erettersending = false, hendelsetype = HendelseType.ArkiveringFeilet,
-				tidspunkt = LocalDateTime.now() )
-		every { kafkaPublisher.publishToKvitteringsSide(capture(sentInId), capture(publishedMessage)) } returns Unit
+		val sentInId = slot<String>()
+		val publishedMessage = slot<String>()
 
 		// When
 		kafkaMessageReader.handleArchivingEvents(message, innsendingsId)
 
 		// Then
-		assertTrue(archivState.isCaptured)
-		assertEquals(ArkiveringsStatus.ArkiveringFeilet, archivState.captured)
+		val arkivertSoknad = repo.hentSoknadDb(soknad.id!!)
+		assertTrue(arkivertSoknad.arkiveringsstatus == ArkiveringsStatus.ArkiveringFeilet)
 		assertTrue(!sentInId.isCaptured)
 		assertTrue(!publishedMessage.isCaptured)
 

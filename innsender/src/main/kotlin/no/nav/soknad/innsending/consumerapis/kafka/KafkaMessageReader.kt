@@ -19,6 +19,9 @@ import org.springframework.kafka.support.KafkaHeaders
 import org.springframework.messaging.handler.annotation.Header
 import org.springframework.messaging.handler.annotation.Payload
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Service
 @Profile("prod | dev | endtoend | loadtests  | test")
@@ -58,11 +61,11 @@ class KafkaMessageReader(
 				logger.info("$messageKey: er arkivert")
 				repo.oppdaterArkiveringsstatus(soknad, ArkiveringsStatus.Arkivert)
 				publiserInnsendtSoknadOppdatering(soknad, message)
-				loggAntallAvHendelsetype(HendelseType.Arkivert)
+				//loggAntallAvHendelsetype(HendelseType.Arkivert)
 			} else if (message.startsWith("**Archiving: FAILED")) {
 				logger.error("$messageKey: arkivering feilet")
 				repo.oppdaterArkiveringsstatus(soknad, ArkiveringsStatus.ArkiveringFeilet)
-				loggAntallAvHendelsetype(HendelseType.ArkiveringFeilet)
+				//loggAntallAvHendelsetype(HendelseType.ArkiveringFeilet)
 			}
 
 			logger.info("Kafka: Ferdig behandlet mottatt melding med key $messageKey")
@@ -91,6 +94,7 @@ class KafkaMessageReader(
 					this.produsent = SoknadEvent.Dto.Produsent(cluster = publisherConfig.cluster, namespace = publisherConfig.team, appnavn = publisherConfig.application)
 				})
 			else -> {
+				logger.info("${soknad.innsendingsid}: skal finne vedlegg sendt inn ${convertToZonedString(soknad.innsendtdato!!, "+1")}")
 				val innsendteVedlegg = repo.hentInnsendteVedleggTilSoknad(soknad.id!!, soknad.innsendtdato!!)
 				logger.info("${soknad.innsendingsid}: ettersending til ${soknad.ettersendingsid}. Antall vedlegg ettersendt: ${innsendteVedlegg.size} ")
 				innsendteVedlegg.forEach {
@@ -114,5 +118,13 @@ class KafkaMessageReader(
 			}
 		}
 	}
+
+
+	private fun convertToZonedString(localDateTime: LocalDateTime, zoneId: String): String {
+		val zonedDateTime = localDateTime.atZone(ZoneId.of(zoneId)) // Attach time zone
+		val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z") // Format with time zone
+		return zonedDateTime.format(formatter)
+	}
+
 }
 
