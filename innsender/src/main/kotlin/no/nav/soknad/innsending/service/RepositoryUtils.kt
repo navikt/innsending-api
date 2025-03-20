@@ -308,12 +308,6 @@ class RepositoryUtils(
 		throw BackendErrorException("Feil ved henting av filer til vedlegg $vedleggsId for søknad $innsendingsId", ex)
 	}
 
-	fun deleteAllBySoknadStatusAndInnsendtdato(eldreEnn: Int) = try {
-		filRepository.deleteAllBySoknadStatusAndInnsendtdato(eldreEnn)
-	} catch (ex: Exception) {
-		throw BackendErrorException("Feil ved sletting av filer til vedlegg på søknader eldre enn $eldreEnn dager", ex)
-	}
-
 	fun lagreHendelse(soknadDbData: SoknadDbData) {
 		val hendelseType =
 			if (soknadDbData.id == null) {
