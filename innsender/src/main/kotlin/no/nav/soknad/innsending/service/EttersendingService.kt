@@ -496,20 +496,4 @@ class EttersendingService(
 	} catch (e: Exception) {
 		throw BackendErrorException("Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}", e)
 	}
-
-
-	private fun createLink(dokumentSoknad: DokumentSoknadDto): String {
-		if (dokumentSoknad.soknadstype == SoknadType.soknad && dokumentSoknad.visningsType == VisningsType.fyllUt) {
-			val baseUrl = "${brukerNotifikasjonConfig.fyllutUrl}/${dokumentSoknad.skjemaPath}/oppsummering"
-
-			val uriBuilder = UriComponentsBuilder.fromUriString(baseUrl)
-			uriBuilder.queryParam("sub", "digital")
-			uriBuilder.queryParam("innsendingsId", dokumentSoknad.innsendingsId)
-
-			return uriBuilder.toUriString()
-		}
-
-		return "${brukerNotifikasjonConfig.sendinnUrl}/${dokumentSoknad.innsendingsId}"
-	}
-
 }

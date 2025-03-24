@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.config
 
-import no.nav.soknad.innsending.location.UrlHandler
 import org.springframework.boot.context.properties.ConfigurationProperties
 import kotlin.properties.Delegates
 

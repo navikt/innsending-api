@@ -24,15 +24,15 @@ import no.nav.soknad.pdfutilities.AntallSider
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.Validerer
 import no.nav.soknad.pdfutilities.models.KvitteringsPdfModel
-import no.nav.tms.soknad.event.SoknadEvent
+//import no.nav.tms.soknad.event.SoknadEvent
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Isolation
+//import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
 import java.util.*
-import no.nav.tms.soknadskvittering.builder.SoknadEventBuilder
-import java.time.LocalDateTime
+//import no.nav.tms.soknadskvittering.builder.SoknadEventBuilder
+//import java.time.LocalDateTime
 
 @Service
 class InnsendingService(
@@ -175,6 +175,7 @@ class InnsendingService(
 		return Triple(opplastedeVedlegg, missingRequiredVedlegg, kvitteringsPdfModel)
 	}
 
+/*
 	fun publishToKvitteringsside(soknadDto: DokumentSoknadDto, kvitteringsPdfModel: KvitteringsPdfModel) {
 		try {
 			val publishKvitteringssideEvents = mapToInnsendtApplicationEvent(soknadDto, kvitteringsPdfModel)
@@ -185,13 +186,10 @@ class InnsendingService(
 			// Bruker vil da kunne editere søknad og endre opplasting av dokumentasjon og forsøke å sende inn på nytt. Denne nye innsendingen vil bli ignorert av soknadsarkiverer
 			throw BackendErrorException(message = "Feil ved publisering av innsendingskvittering for søknad ${soknadDto.innsendingsId} til NAV")
 		}
-
 	}
+*/
 
-	private fun dokumentLenke(innsendingId: String, uuid: String): String {
-		return "http://innsending-api" + "/innsendte/v1/soknad/$innsendingId/$uuid" // TODO implementere nytt endepunkt slik at soknadskvitteringsside kan kalle innsending-api med brukertoken for henting av vedlegg til en soknad?
-	}
-
+	/*
 	private fun mapToInnsendtApplicationEvent(soknadDto: DokumentSoknadDto, kvitteringsPdfModel: KvitteringsPdfModel): List<String> {
 		if (!soknadDto.ettersendingsId.isNullOrEmpty() && soknadDto.ettersendingsId != soknadDto.innsendingsId) {
 			val opplastet = kvitteringsPdfModel.vedleggsListe.filter { it.type == OpplastingsStatusDto.LastetOpp}.flatMap { it.vedlegg }
@@ -287,6 +285,7 @@ class InnsendingService(
 			})
 		}
 	}
+*/
 
 	private fun lagGenerellEttersendingsLenke(skjemanr: String): String {
 		return restConfig.ettersendingsUrl+"/"+stripSkjemanrString(skjemanr)+"?sub=digital"
@@ -341,6 +340,7 @@ class InnsendingService(
 		}
 	}
 
+	@Transactional
 	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): KvitteringsDto {
 		val operation = InnsenderOperation.SEND_INN.name
 		val startSendInn = System.currentTimeMillis()
@@ -353,6 +353,7 @@ class InnsendingService(
 
 			ettersendingService.sjekkOgOpprettEttersendingsSoknad(innsendtSoknadDto, manglende, soknadDtoInput)
 
+/*
 			val publisertKvittering = try {
 				publishToKvitteringsside(innsendtSoknadDto, kvitteringsPdfModel)
 				true
@@ -364,11 +365,14 @@ class InnsendingService(
 				false
 			}
 			if (publisertKvittering) {
-				// TODO signaliser re-direct
+				 // legg til re-direct
 				return lagKvittering(innsendtSoknadDto, opplastet, manglende)
 			} else {
 				return lagKvittering(innsendtSoknadDto, opplastet, manglende)
 			}
+			TODO alternativ løsning publiser beskjed med kvitteringsmelding?
+*/
+			return lagKvittering(innsendtSoknadDto, opplastet, manglende)
 
 		} finally {
 			logger.debug("${soknadDtoInput.innsendingsId}: Tid: sendInnSoknad = ${System.currentTimeMillis() - startSendInn}")

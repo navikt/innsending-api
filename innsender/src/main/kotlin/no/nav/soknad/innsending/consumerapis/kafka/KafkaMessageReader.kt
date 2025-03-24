@@ -60,7 +60,7 @@ class KafkaMessageReader(
 			if (message.startsWith("**Archiving: OK")) {
 				logger.info("$messageKey: er arkivert")
 				repo.oppdaterArkiveringsstatus(soknad, ArkiveringsStatus.Arkivert)
-				publiserInnsendtSoknadOppdatering(soknad, message)
+				//publiserInnsendtSoknadOppdatering(soknad, message)
 				//loggAntallAvHendelsetype(HendelseType.Arkivert)
 			} else if (message.startsWith("**Archiving: FAILED")) {
 				logger.error("$messageKey: arkivering feilet")
