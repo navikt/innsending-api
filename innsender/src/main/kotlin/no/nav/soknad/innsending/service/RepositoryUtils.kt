@@ -161,13 +161,6 @@ class RepositoryUtils(
 		}
 	}
 
-	fun findNumberOfEventsByType(hendelseType: HendelseType): Long? = try {
-		hendelseRepository.countByHendelsetype(hendelseType)
-	} catch (ex: Exception) {
-		throw BackendErrorException("Feil ved henting av antall hendelser gitt hendelsetype $hendelseType", ex)
-	}
-
-
 	fun hentVedlegg(vedleggsId: Long): VedleggDbData = try {
 		vedleggRepository.findByVedleggsid(vedleggsId)
 			?: throw ResourceNotFoundException("Fant ikke vedlegg med id $vedleggsId")
