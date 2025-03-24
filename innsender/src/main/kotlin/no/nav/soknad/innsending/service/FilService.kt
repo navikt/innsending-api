@@ -238,8 +238,9 @@ class FilService(
 			throw ResourceNotFoundException("Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
 		repo.slettFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
+		logger.info("${soknadDto.innsendingsId}: Slettet fil på vedlegg $vedleggsId")
 
-		if (repo.hentFilerTilVedlegg(soknadDto.innsendingsId!!, vedleggsId).isEmpty()) {
+		if (repo.countFiles(soknadDto.innsendingsId!!, vedleggsId) == 0) {
 			val vedleggDto = soknadDto.vedleggsListe.first { it.id == vedleggsId }
 			val nyOpplastingsStatus =
 				if (vedleggDto.innsendtdato != null) OpplastingsStatus.INNSENDT else OpplastingsStatus.IKKE_VALGT
