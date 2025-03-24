@@ -15,12 +15,17 @@ metadata:
 spec:
   image: {{image}}
   port: 9064
+  startup:
+    path: /health/isReady
+    initialDelay: 30
+    failureThreshold: 30
+    periodSeconds: 5
   liveness:
     path: /health/isAlive
-    initialDelay: 40
+    initialDelay: 30
   readiness:
     path: /health/isReady
-    initialDelay: 40
+    initialDelay: 30
   prometheus:
     enabled: true
     path: /internal/prometheus

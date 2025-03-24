@@ -40,7 +40,6 @@ class KafkaMessageReaderTest {
 		every { repo.hentSoknadDb(messageKey) } returns soknad
 		every { soknad.innsendingsid } returns "testId"
 		every { repo.oppdaterArkiveringsstatus(soknad, ArkiveringsStatus.Arkivert) } returns hendelse
-		every { repo.findNumberOfEventsByType(HendelseType.Arkivert) } returns 1
 
 		kafkaMessageReader?.listen(message, messageKey, ack)
 
@@ -61,7 +60,6 @@ class KafkaMessageReaderTest {
 		every { repo.hentSoknadDb(messageKey) } returns soknad
 		every { soknad.innsendingsid } returns "testId"
 		every { repo.oppdaterArkiveringsstatus(soknad, ArkiveringsStatus.ArkiveringFeilet) } returns hendelse
-		every { repo.findNumberOfEventsByType(HendelseType.ArkiveringFeilet) } returns 1
 
 		kafkaMessageReader?.listen(message, messageKey, ack)
 
