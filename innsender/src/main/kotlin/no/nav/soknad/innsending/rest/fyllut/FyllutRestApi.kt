@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.rest.fyllut
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.FyllutApi
+import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.location.UrlHandler
@@ -46,7 +47,8 @@ class FyllutRestApi(
 	@Timed(InnsenderOperation.OPPRETT)
 	override fun fyllUtOpprettSoknad(
 		skjemaDto: SkjemaDto,
-		force: Boolean?
+		force: Boolean?,
+		envQualifier: EnvQualifier?,
 	): ResponseEntity<Any> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		val applikasjon = subjectHandler.getClientId()
@@ -72,8 +74,7 @@ class FyllutRestApi(
 			"${opprettetSoknad.innsendingsId}: Soknad fra FyllUt opprettet",
 			brukerId
 		)
-		// TODO envQualifier
-		notificationService.create(opprettetSoknad.innsendingsId!!)
+		notificationService.create(opprettetSoknad.innsendingsId!!, NotificationOptions(envQualifier = envQualifier))
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(opprettetSoknad)
 	}

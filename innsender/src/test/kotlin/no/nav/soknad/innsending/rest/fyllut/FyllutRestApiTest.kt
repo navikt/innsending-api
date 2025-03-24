@@ -115,7 +115,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val skjemaDto = SkjemaDtoTestBuilder(vedleggsListe = listOf(vedlegg)).build()
 
 		// Når
-		val responseBody = api!!.createSoknad(skjemaDto)
+		val responseBody = api!!.createSoknad(skjemaDto, envQualifier = EnvQualifier.preprodAltAnsatt)
 			.assertSuccess()
 			.body
 
@@ -131,7 +131,14 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals(false, notification.soknadRef.erEttersendelse)
 		assertEquals(responseBody.tittel, notification.brukernotifikasjonInfo.notifikasjonsTittel)
 		assertEquals(28, notification.brukernotifikasjonInfo.antallAktiveDager)
-		assertTrue(notification.brukernotifikasjonInfo.lenke.contains("/oppsummering?"), "Unexpected link: ${notification.brukernotifikasjonInfo.lenke}")
+		assertTrue(
+			notification.brukernotifikasjonInfo.lenke.contains("/oppsummering?"),
+			"Link should point to summary page: ${notification.brukernotifikasjonInfo.lenke}"
+		)
+		assertTrue(
+			notification.brukernotifikasjonInfo.lenke.contains("fyllut-preprod-alt.ansatt.dev.nav.no"),
+			"Incorrect domain in link: ${notification.brukernotifikasjonInfo.lenke}"
+		)
 		assertEquals(0, notification.brukernotifikasjonInfo.eksternVarsling.size)
 		assertNull(notification.brukernotifikasjonInfo.utsettSendingTil)
 	}

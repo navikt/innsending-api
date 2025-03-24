@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.model.BodyStatusResponseDto
 import no.nav.soknad.innsending.model.BrukernotifikasjonsType
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.EksternOpprettEttersending
+import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
@@ -41,6 +42,7 @@ class EksternRestApi(
 	override fun eksternOpprettEttersending(
 		eksternOpprettEttersending: EksternOpprettEttersending,
 		navCallId: String?,
+		envQualifier: EnvQualifier?,
 	): ResponseEntity<DokumentSoknadDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		val applikasjon = subjectHandler.getClientId()
@@ -61,8 +63,8 @@ class EksternRestApi(
 		)
 
 		val notificationOpts = NotificationOptions(
-			erSystemGenerert = eksternOpprettEttersending.brukernotifikasjonstype == BrukernotifikasjonsType.oppgave
-			// TODO envQualifier
+			erSystemGenerert = eksternOpprettEttersending.brukernotifikasjonstype == BrukernotifikasjonsType.oppgave,
+			envQualifier = envQualifier
 		)
 		notificationService.create(ettersending.innsendingsId!!, notificationOpts)
 

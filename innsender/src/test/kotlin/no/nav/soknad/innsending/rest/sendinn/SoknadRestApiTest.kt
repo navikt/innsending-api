@@ -7,6 +7,7 @@ import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
+import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.utils.Api
@@ -136,7 +137,7 @@ class SoknadRestApiTest : ApplicationTest() {
 			SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build(),
 			SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
 		)).build()
-		val innsendingsId = api!!.createSoknad(createSoknadRequest)
+		val innsendingsId = api!!.createSoknad(createSoknadRequest, envQualifier = EnvQualifier.preprodAnsatt)
 			.assertSuccess().body.innsendingsId!!
 		val soknad = api!!.getSoknadSendinn(innsendingsId)
 			.assertSuccess().body
@@ -145,7 +146,7 @@ class SoknadRestApiTest : ApplicationTest() {
 		val fil = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
 		api!!.uploadFile(innsendingsId, vedleggsId!!, fil)
 
-		val innsendingskvittering = api!!.sendInnSoknad(innsendingsId)
+		val innsendingskvittering = api!!.sendInnSoknad(innsendingsId, EnvQualifier.preprodAnsatt)
 			.assertSuccess().body
 		assertEquals(1, innsendingskvittering.skalEttersendes?.size)
 
@@ -159,6 +160,10 @@ class SoknadRestApiTest : ApplicationTest() {
 		assertEquals(innsendingsId, notificationForInitialSoknad.soknadRef.innsendingId)
 		assertEquals(innsendingsId, notificationForInitialSoknad.soknadRef.groupId)
 		assertNull(notificationForInitialSoknad.brukernotifikasjonInfo.utsettSendingTil)
+		assertTrue(
+			notificationForInitialSoknad.brukernotifikasjonInfo.lenke.contains("ansatt.dev.nav.no"),
+			"Unexpected link: ${notificationForInitialSoknad.brukernotifikasjonInfo.lenke}"
+		)
 
 		val notificationForEttersending = notifications.last()
 		assertTrue(notificationForEttersending.soknadRef.erEttersendelse)
@@ -167,6 +172,10 @@ class SoknadRestApiTest : ApplicationTest() {
 		assertNotEquals(innsendingsId, notificationForEttersending.soknadRef.innsendingId)
 		assertEquals(innsendingsId, notificationForEttersending.soknadRef.groupId)
 		assertNotNull(notificationForEttersending.brukernotifikasjonInfo.utsettSendingTil)
+		assertTrue(
+			notificationForEttersending.brukernotifikasjonInfo.lenke.contains("ansatt.dev.nav.no"),
+			"Unexpected link: ${notificationForEttersending.brukernotifikasjonInfo.lenke}"
+		)
 	}
 
 }

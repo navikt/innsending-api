@@ -170,6 +170,10 @@ paths:
               required: false
               schema:
                 type: boolean
+            - in: header
+              name: Nav-Env-Qualifier
+              schema:
+                $ref: "#/components/schemas/EnvQualifier"
 
       responses:
         200:
@@ -826,6 +830,10 @@ paths:
           schema:
             type: string
           style: simple
+        - in: header
+          name: Nav-Env-Qualifier
+          schema:
+            $ref: "#/components/schemas/EnvQualifier"
 
       responses:
         200:
@@ -883,6 +891,10 @@ paths:
               required: false
               schema:
                 type: string
+            - in: header
+              name: Nav-Env-Qualifier
+              schema:
+                $ref: "#/components/schemas/EnvQualifier"
           requestBody:
             content:
               application/json:

@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.BodyStatusResponseDto
 import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.KvitteringsDto
 import no.nav.soknad.innsending.model.PatchSoknadDto
 import no.nav.soknad.innsending.security.Tilgangskontroll
@@ -87,7 +88,10 @@ class SoknadRestApi(
 	}
 
 	@Timed(InnsenderOperation.SEND_INN)
-	override fun sendInnSoknad(innsendingsId: String): ResponseEntity<KvitteringsDto> {
+	override fun sendInnSoknad(
+		innsendingsId: String,
+		envQualifier: EnvQualifier?,
+	): ResponseEntity<KvitteringsDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
 		combinedLogger.log("$innsendingsId: Kall for å sende inn soknad", brukerId)
@@ -104,8 +108,10 @@ class SoknadRestApi(
 		)
 
 		if (ettersending != null) {
-			// TODO envQualifier
-			notificationService.create(ettersending.innsendingsId!!, NotificationOptions(erSystemGenerert = true))
+			notificationService.create(
+				ettersending.innsendingsId!!,
+				NotificationOptions(erSystemGenerert = true, envQualifier = envQualifier)
+			)
 		}
 
 		return ResponseEntity

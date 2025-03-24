@@ -33,13 +33,16 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		return HttpEntity(body, Hjelpemetoder.createHeaders(token, map))
 	}
 
-	fun createSoknad(skjemaDto: SkjemaDto, forceCreate: Boolean = true): InnsendingApiResponse<SkjemaDto> {
+	fun createSoknad(skjemaDto: SkjemaDto, forceCreate: Boolean = true, envQualifier: EnvQualifier? = null): InnsendingApiResponse<SkjemaDto> {
+		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
+			"Nav-Env-Qualifier" to envQualifier.value
+		) else null
 		val uri = UriComponentsBuilder.fromHttpUrl("${baseUrl}/fyllUt/v1/soknad")
 			.queryParam("force", forceCreate)
 			.build()
 			.toUri()
 
-		val response = restTemplate.exchange(uri, HttpMethod.POST, createHttpEntity(skjemaDto), String::class.java)
+		val response = restTemplate.exchange(uri, HttpMethod.POST, createHttpEntity(skjemaDto, headers), String::class.java)
 
 		val body = readBody(response, SkjemaDto::class.java)
 		return InnsendingApiResponse(response.statusCode, body, response.headers)
@@ -141,11 +144,14 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 	}
 
-	fun sendInnSoknad(innsendingsId: String): InnsendingApiResponse<KvitteringsDto> {
+	fun sendInnSoknad(innsendingsId: String, envQualifier: EnvQualifier? = null): InnsendingApiResponse<KvitteringsDto> {
+		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
+			"Nav-Env-Qualifier" to envQualifier.value
+		) else null
 		val response = restTemplate.exchange(
 			"${baseUrl}/frontend/v1/sendInn/${innsendingsId}",
 			HttpMethod.POST,
-			createHttpEntity(null),
+			createHttpEntity(null, headers),
 			String::class.java
 		)
 
@@ -199,11 +205,14 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		return Pair(null, errorBody)
 	}
 
-	fun createEttersending(opprettEttersending: OpprettEttersending): InnsendingApiResponse<DokumentSoknadDto> {
+	fun createEttersending(opprettEttersending: OpprettEttersending, envQualifier: EnvQualifier? = null): InnsendingApiResponse<DokumentSoknadDto> {
+		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
+			"Nav-Env-Qualifier" to envQualifier.value
+		) else null
 		val response = restTemplate.exchange(
 			"${baseUrl}/fyllut/v1/ettersending",
 			HttpMethod.POST,
-			createHttpEntity(opprettEttersending),
+			createHttpEntity(opprettEttersending, headers),
 			String::class.java
 		)
 
@@ -211,11 +220,14 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		return InnsendingApiResponse(response.statusCode, body, response.headers)
 	}
 
-	fun createEksternEttersending(eksternOpprettEttersending: EksternOpprettEttersending): InnsendingApiResponse<DokumentSoknadDto> {
+	fun createEksternEttersending(eksternOpprettEttersending: EksternOpprettEttersending, envQualifier: EnvQualifier? = null): InnsendingApiResponse<DokumentSoknadDto> {
+		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
+			"Nav-Env-Qualifier" to envQualifier.value
+		) else null
 		val response = restTemplate.exchange(
 			"${baseUrl}/ekstern/v1/ettersending",
 			HttpMethod.POST,
-			createHttpEntity(eksternOpprettEttersending),
+			createHttpEntity(eksternOpprettEttersending, headers),
 			String::class.java
 		)
 

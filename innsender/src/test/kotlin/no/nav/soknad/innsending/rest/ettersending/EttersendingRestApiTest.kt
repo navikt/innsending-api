@@ -9,6 +9,7 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.Varsel
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
+import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.utils.Api
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
@@ -131,6 +132,24 @@ class EttersendingRestApiTest : ApplicationTest() {
 		assertEquals(1, lastNotification.brukernotifikasjonInfo.eksternVarsling.size)
 		assertTrue(lastNotification.brukernotifikasjonInfo.eksternVarsling.any { it.kanal === Varsel.Kanal.sms })
 		assertNull(lastNotification.brukernotifikasjonInfo.utsettSendingTil)
+	}
+
+	@Test
+	fun `Should send notification with correct link`() {
+		val opprettEttersendingRequest = OpprettEttersendingTestBuilder().build()
+		val ettersending = api!!.createEttersending(opprettEttersendingRequest, EnvQualifier.delingslenke)
+			.assertSuccess()
+			.body
+
+		val notificationSlot = slot<AddNotification>()
+		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(notificationSlot)) }
+		val notification = notificationSlot.captured
+
+		assertEquals(ettersending.innsendingsId, notification.soknadRef.innsendingId)
+		assertTrue(
+			notification.brukernotifikasjonInfo.lenke.contains("/sendinn-delingslenke"),
+			"Incorrect link: ${notification.brukernotifikasjonInfo.lenke}"
+		)
 	}
 
 }
