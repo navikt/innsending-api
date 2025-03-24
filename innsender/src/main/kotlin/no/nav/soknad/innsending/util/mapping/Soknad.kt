@@ -8,11 +8,11 @@ import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.util.Constants
-import no.nav.soknad.innsending.util.Skjema.createSkjemaPathFromSkjemanr
 import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
 import no.nav.soknad.innsending.util.models.sletteDato
 import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
+import no.nav.soknad.innsending.util.soknaddbdata.getSkjemaPath
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 
@@ -75,7 +75,7 @@ fun lagDokumentSoknadDto(
 		arkiveringsStatus = mapTilArkiveringsStatusDto(soknadDbData.arkiveringsstatus),
 		erSystemGenerert = erSystemGenerert,
 		soknadstype = if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad,
-		skjemaPath = createSkjemaPathFromSkjemanr(soknadDbData.skjemanr),
+		skjemaPath = soknadDbData.getSkjemaPath(),
 		applikasjon = soknadDbData.applikasjon,
 		skalSlettesDato = soknadDbData.skalslettesdato,
 	)
@@ -119,7 +119,7 @@ fun mapTilDokumentSoknadDto(
 		arkiveringsStatus = mapTilArkiveringsStatusDto(soknadDbData.arkiveringsstatus),
 		erSystemGenerert = false,
 		soknadstype = if (erEttersending) SoknadType.ettersendelse else SoknadType.soknad,
-		skjemaPath = createSkjemaPathFromSkjemanr(soknadDbData.skjemanr),
+		skjemaPath = soknadDbData.getSkjemaPath(),
 		applikasjon = soknadDbData.applikasjon,
 		skalSlettesDato = soknadDbData.skalslettesdato,
 	)

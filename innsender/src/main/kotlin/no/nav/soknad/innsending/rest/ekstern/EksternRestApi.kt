@@ -2,13 +2,16 @@ package no.nav.soknad.innsending.rest.ekstern
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.EksternApi
+import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.model.BodyStatusResponseDto
+import no.nav.soknad.innsending.model.BrukernotifikasjonsType
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.EksternOpprettEttersending
 import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.EttersendingService
+import no.nav.soknad.innsending.service.NotificationService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
@@ -27,6 +30,7 @@ class EksternRestApi(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val ettersendingService: EttersendingService,
 	private val soknadService: SoknadService,
+	private val notificationService: NotificationService,
 	private var subjectHandler: SubjectHandlerInterface
 ) : EksternApi {
 
@@ -56,6 +60,12 @@ class EksternRestApi(
 			brukerId = brukerId,
 		)
 
+		val notificationOpts = NotificationOptions(
+			erSystemGenerert = eksternOpprettEttersending.brukernotifikasjonstype == BrukernotifikasjonsType.oppgave
+			// TODO envQualifier
+		)
+		notificationService.create(ettersending.innsendingsId!!, notificationOpts)
+
 		combinedLogger.log(
 			"[${applikasjon}] - ${ettersending.innsendingsId}: Opprettet ettersending fra ekstern applikasjon på skjema ${ettersending.skjemanr}",
 			brukerId
@@ -81,6 +91,7 @@ class EksternRestApi(
 		val ettersending = soknadService.hentSoknad(innsendingsId)
 		tilgangskontroll.validateSoknadAccess(ettersending)
 
+		notificationService.close(innsendingsId)
 		soknadService.deleteSoknadFromExternalApplication(ettersending)
 
 		combinedLogger.log("[${applikasjon}] - $innsendingsId: Slettet ettersending fra ekstern applikasjon", brukerId)

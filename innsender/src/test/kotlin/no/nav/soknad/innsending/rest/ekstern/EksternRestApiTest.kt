@@ -1,6 +1,8 @@
 package no.nav.soknad.innsending.rest.ekstern
 
 import com.ninjasquad.springmockk.SpykBean
+import io.mockk.clearAllMocks
+import io.mockk.slot
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
@@ -24,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
 
 class EksternRestApiTest : ApplicationTest() {
 	@Autowired
@@ -43,6 +46,7 @@ class EksternRestApiTest : ApplicationTest() {
 	@BeforeEach
 	fun setup() {
 		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
+		clearAllMocks()
 	}
 
 	val defaultSkjemanr = "NAV 02-07.05"
@@ -52,44 +56,49 @@ class EksternRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should create ettersending with correct data`() {
 		// Given
-		val ettersending = EksternOpprettEttersendingTestBuilder()
+		val createEttersendingRequest = EksternOpprettEttersendingTestBuilder()
 			.skjemanr(defaultSkjemanr)
 			.tema(defaultTema)
 			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(defaultVedleggsnr).build()))
 			.build()
 
 		// When
-		val response = api?.createEksternEttersending(ettersending)
+		val ettersending = api!!.createEksternEttersending(createEttersendingRequest)
+			.assertSuccess()
+			.body
 
-		// Then
-		assertNotNull(response?.body)
-
-		val body = response!!.body!!
-		assertEquals(defaultSkjemanr, body.skjemanr)
-		assertEquals(defaultTema, body.tema)
-		assertEquals(1, body.vedleggsListe.size)
-		assertEquals(defaultVedleggsnr, body.vedleggsListe[0].vedleggsnr)
+		assertEquals(defaultSkjemanr, ettersending.skjemanr)
+		assertEquals(defaultTema, ettersending.tema)
+		assertEquals(1, ettersending.vedleggsListe.size)
+		assertEquals(defaultVedleggsnr, ettersending.vedleggsListe[0].vedleggsnr)
 
 	}
 
 	@Test
 	fun `Should create ettersending with utkast brukernotifikasjon (default)`() {
 		// Given
-		val ettersending = EksternOpprettEttersendingTestBuilder()
+		val createEttersendingRequest = EksternOpprettEttersendingTestBuilder()
 			.skjemanr(defaultSkjemanr)
 			.tema(defaultTema)
 			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(defaultVedleggsnr).build()))
 			.build()
 
 		// When
-		api?.createEksternEttersending(ettersending)
+		val ettersending = api!!.createEksternEttersending(createEttersendingRequest)
+			.assertSuccess()
+			.body
 
-		val message = mutableListOf<AddNotification>()
-		verify { publisherInterface.opprettBrukernotifikasjon(capture(message)) }
+		val noticationSlot = slot<AddNotification>()
+		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlot)) }
 
 		// Then
 		// The notification is an utkast if erSystemGenerert is false
-		assertEquals(false, message.last().soknadRef.erSystemGenerert)
+		val notication = noticationSlot.captured
+		assertEquals(false, notication.soknadRef.erSystemGenerert)
+		assertEquals(true, notication.soknadRef.erEttersendelse)
+		assertEquals(ettersending.innsendingsId, notication.soknadRef.innsendingId)
+		assertEquals(ettersending.innsendingsId, notication.soknadRef.groupId)
+		assertNull(notication.brukernotifikasjonInfo.utsettSendingTil)
 	}
 
 	@Test
@@ -105,12 +114,15 @@ class EksternRestApiTest : ApplicationTest() {
 		// When
 		api?.createEksternEttersending(ettersending)
 
-		val message = mutableListOf<AddNotification>()
-		verify { publisherInterface.opprettBrukernotifikasjon(capture(message)) }
+		val noticationSlot = slot<AddNotification>()
+		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlot)) }
 
 		// Then
 		// The notification is an oppgave if erSystemGenerert is true
-		assertEquals(true, message.last().soknadRef.erSystemGenerert)
+		val notication = noticationSlot.captured
+		assertEquals(true, notication.soknadRef.erEttersendelse)
+		assertEquals(true, notication.soknadRef.erSystemGenerert)
+		assertNotNull(notication.brukernotifikasjonInfo.utsettSendingTil)
 	}
 
 	@Test
@@ -118,8 +130,8 @@ class EksternRestApiTest : ApplicationTest() {
 		// Given
 		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = defaultSkjemanr, tema = defaultTema).build()
 
-		val opprettetSoknadResponse = api?.createSoknad(skjemaDto)
-		val innsendingsId = opprettetSoknadResponse?.body?.innsendingsId!!
+		val opprettetSoknadResponse = api!!.createSoknad(skjemaDto).assertSuccess()
+		val innsendingsId = opprettetSoknadResponse.body.innsendingsId!!
 
 		api?.utfyltSoknad(innsendingsId, skjemaDto)
 		api?.sendInnSoknad(innsendingsId)
@@ -148,8 +160,8 @@ class EksternRestApiTest : ApplicationTest() {
 		// Given
 		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = defaultSkjemanr, tema = defaultTema).build()
 
-		val opprettetSoknadResponse = api?.createSoknad(skjemaDto)
-		val innsendingsId = opprettetSoknadResponse?.body?.innsendingsId!!
+		val opprettetSoknadResponse = api!!.createSoknad(skjemaDto).assertSuccess()
+		val innsendingsId = opprettetSoknadResponse.body.innsendingsId!!
 
 		api?.utfyltSoknad(innsendingsId, skjemaDto)
 		api?.sendInnSoknad(innsendingsId)

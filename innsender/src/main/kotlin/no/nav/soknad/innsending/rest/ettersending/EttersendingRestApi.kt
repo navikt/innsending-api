@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.OpprettEttersending
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.EttersendingService
+import no.nav.soknad.innsending.service.NotificationService
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import org.slf4j.LoggerFactory
@@ -26,6 +27,7 @@ import java.net.URI
 class EttersendingRestApi(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val ettersendingService: EttersendingService,
+	private val notificationService: NotificationService,
 	private val urlHandler: UrlHandler,
 ) : EttersendingApi {
 
@@ -57,6 +59,9 @@ class EttersendingRestApi(
 			"${ettersending.innsendingsId}: Opprettet ettersending fra fyllut-ettersending på skjema ${ettersending.skjemanr}",
 			brukerId
 		)
+
+		// TODO envQualifier
+		notificationService.create(ettersending.innsendingsId!!)
 
 		return ResponseEntity
 			.status(HttpStatus.CREATED)

@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.model.OpprettEttersendingGittSkjemaNr
 import no.nav.soknad.innsending.model.OpprettSoknadBody
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.EttersendingService
+import no.nav.soknad.innsending.service.NotificationService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
@@ -33,6 +34,7 @@ class SoknadsveiviserRestApi(
 	private val soknadService: SoknadService,
 	private val tilgangskontroll: Tilgangskontroll,
 	private val ettersendingService: EttersendingService,
+	private val notificationService: NotificationService,
 ) : SoknadsveiviserApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -58,6 +60,8 @@ class SoknadsveiviserRestApi(
 			"${dokumentSoknadDto.innsendingsId}: Opprettet søknad på skjema ${opprettSoknadBody.skjemanr}",
 			brukerId
 		)
+
+		notificationService.create(dokumentSoknadDto.innsendingsId!!)
 
 		return ResponseEntity
 			.status(HttpStatus.CREATED)
@@ -86,6 +90,7 @@ class SoknadsveiviserRestApi(
 			"${ettersending.innsendingsId}: Opprettet ettersending fra soknadsveiviser (via sendinn) på skjema ${ettersending.skjemanr}",
 			brukerId
 		)
+		notificationService.create(ettersending.innsendingsId!!)
 
 		return ResponseEntity
 			.status(HttpStatus.CREATED)

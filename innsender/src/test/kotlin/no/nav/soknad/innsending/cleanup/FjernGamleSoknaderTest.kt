@@ -4,10 +4,8 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
-import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.*
@@ -36,15 +34,10 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 	private lateinit var vedleggService: VedleggService
 
 	@Autowired
-	private lateinit var ettersendingService: EttersendingService
-
-	@Autowired
 	private lateinit var filService: FilService
 
 	@Autowired
 	private lateinit var exceptionHelper: ExceptionHelper
-
-	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
 
 	private val leaderSelectionUtility = mockk<LeaderSelectionUtility>()
 
@@ -58,7 +51,6 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 		repo = repo,
 		vedleggService = vedleggService,
 		filService = filService,
-		brukernotifikasjonPublisher = brukernotifikasjonPublisher,
 		innsenderMetrics = innsenderMetrics,
 		exceptionHelper = exceptionHelper,
 		subjectHandler = subjectHandler,
@@ -70,8 +62,6 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 	fun testSlettingAvGammelIkkeInnsendtSoknad() {
 		val soknadService = lagSoknadService()
 
-		val soknader = mutableListOf<DokumentSoknadDto>()
-		every { brukernotifikasjonPublisher.soknadStatusChange(capture(soknader)) } returns true
 		every { leaderSelectionUtility.isLeader() } returns true
 		every { soknadsmottakerAPI.sendInnSoknad(any(), any()) } returns Unit
 		every { subjectHandler.getClientId() } returns "application"
@@ -95,7 +85,6 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 			)
 		).innsendingsId!!
 
-
 		val initAntall = innsenderMetrics.getOperationsCounter(InnsenderOperation.SLETT.name, tema)
 		val fjernGamleSoknader = FjernGamleSoknader(soknadService, leaderSelectionUtility)
 
@@ -103,13 +92,10 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 
 		val slettetSoknad = soknadService.hentSoknad(gammelSoknadId)
 		assertTrue(slettetSoknad.status == SoknadsStatusDto.AutomatiskSlettet)
-		assertTrue(soknader.any { it.innsendingsId == gammelSoknadId && it.status == SoknadsStatusDto.AutomatiskSlettet })
 		assertEquals(1.0 + (initAntall ?: 0.0), innsenderMetrics.getOperationsCounter(InnsenderOperation.SLETT.name, tema))
 
 		val beholdtSoknad = soknadService.hentSoknad(nyereSoknadId)
 		assertTrue(beholdtSoknad.status == SoknadsStatusDto.Opprettet)
-		assertTrue(soknader.none { it.innsendingsId == nyereSoknadId && it.status == SoknadsStatusDto.AutomatiskSlettet })
-
 	}
 
 }

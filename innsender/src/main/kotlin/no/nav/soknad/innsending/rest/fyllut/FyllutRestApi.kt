@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.ArenaService
+import no.nav.soknad.innsending.service.NotificationService
 import no.nav.soknad.innsending.service.PrefillService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
@@ -34,7 +35,8 @@ class FyllutRestApi(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val prefillService: PrefillService,
 	private val subjectHandler: SubjectHandlerInterface,
-	private val arenaService: ArenaService
+	private val arenaService: ArenaService,
+	private val notificationService: NotificationService,
 ) : FyllutApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -70,6 +72,8 @@ class FyllutRestApi(
 			"${opprettetSoknad.innsendingsId}: Soknad fra FyllUt opprettet",
 			brukerId
 		)
+		// TODO envQualifier
+		notificationService.create(opprettetSoknad.innsendingsId!!)
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(opprettetSoknad)
 	}
@@ -172,6 +176,7 @@ class FyllutRestApi(
 		val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
 		validerSoknadsTilgang(dokumentSoknadDto)
 
+		notificationService.close(innsendingsId)
 		soknadService.slettSoknadAvBruker(dokumentSoknadDto)
 		combinedLogger.log("$innsendingsId: Slettet søknad", brukerId)
 
