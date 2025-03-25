@@ -94,17 +94,19 @@ class FilService(
 			}
 		}
 
-		if (soknadDto.vedleggsListe.none { it.id == filDto.vedleggsid })
+		val vedleggdto = soknadDto.vedleggsListe.filter { it.id == filDto.vedleggsid }.getOrNull(0)
+		if (vedleggdto == null)
 			throw ResourceNotFoundException("Vedlegg ${filDto.vedleggsid} til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
-		logger.debug("${soknadDto.innsendingsId!!}: Skal lagre fil med størrelse ${filDto.data!!.size} på vedlegg ${filDto.vedleggsid}")
+		val start = System.currentTimeMillis()
+		logger.info("${soknadDto.innsendingsId!!}: Skal lagre fil med størrelse ${filDto.data!!.size} på vedlegg ${filDto.vedleggsid}")
 		val savedFilDbData = try {
 			repo.saveFilDbData(soknadDto.innsendingsId!!, mapTilFilDb(filDto))
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			throw e
 		}
-		logger.info("${soknadDto.innsendingsId!!}: Lagret fil med størrelse ${filDto.data!!.size} på vedlegg ${filDto.vedleggsid}")
+		logger.info("${soknadDto.innsendingsId!!}: Lagret fil med størrelse ${filDto.data!!.size} på vedlegg ${filDto.vedleggsid} på ${System.currentTimeMillis()-start} ms")
 
 		/* Skal bare validere størrelse på vedlegg som søker har lastet opp */
 		if (soknadDto.vedleggsListe.any { it.id == filDto.vedleggsid && (soknadDto.isLospost() || !it.erHoveddokument) }) {
@@ -124,11 +126,13 @@ class FilService(
 				ErrorCode.FILE_SIZE_SUM_TOO_LARGE
 			)
 		}
-		repo.updateVedleggStatus(
-			soknadDto.innsendingsId!!,
-			filDto.vedleggsid,
-			OpplastingsStatus.LASTET_OPP
-		)
+		if (!vedleggdto.opplastingsStatus.equals(OpplastingsStatusDto.LastetOpp)) {
+			repo.updateVedleggStatus(
+				soknadDto.innsendingsId!!,
+				filDto.vedleggsid,
+				OpplastingsStatus.LASTET_OPP
+			)
+		}
 		innsenderMetrics.incOperationsCounter(operation, soknadDto.tema)
 		return lagFilDto(savedFilDbData, false)
 	}
@@ -241,7 +245,7 @@ class FilService(
 			throw ResourceNotFoundException("Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
 		repo.slettFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
-		logger.info("${soknadDto.innsendingsId}: Slettet fil på vedlegg $vedleggsId")
+		logger.info("${soknadDto.innsendingsId}: Slettet fil $filId på vedlegg $vedleggsId")
 
 		if (repo.countFiles(soknadDto.innsendingsId!!, vedleggsId) == 0) {
 			val vedleggDto = soknadDto.vedleggsListe.first { it.id == vedleggsId }
