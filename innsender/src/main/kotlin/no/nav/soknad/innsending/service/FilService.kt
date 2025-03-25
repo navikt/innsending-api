@@ -71,7 +71,7 @@ class FilService(
 		opprettetdato = OffsetDateTime.now()
 	)
 
-	@Transactional
+	@Transactional(timeout=90)
 	fun lagreFil(soknadDto: DokumentSoknadDto, filDto: FilDto): FilDto {
 		val operation = InnsenderOperation.LAST_OPP.name
 
@@ -103,6 +103,8 @@ class FilService(
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			throw e
 		}
+		logger.info("${soknadDto.innsendingsId!!}: Lagret fil med størrelse ${filDto.data!!.size} på vedlegg ${filDto.vedleggsid}")
+
 		/* Skal bare validere størrelse på vedlegg som søker har lastet opp */
 		if (soknadDto.vedleggsListe.filter { it.id == filDto.vedleggsid && !it.erHoveddokument }.isNotEmpty()) {
 			logger.debug("${soknadDto.innsendingsId!!}: Valider størrelse av opplastinger på vedlegg ${filDto.vedleggsid} og søknad ${soknadDto.innsendingsId!!}")
@@ -244,6 +246,7 @@ class FilService(
 			val vedleggDto = soknadDto.vedleggsListe.first { it.id == vedleggsId }
 			val nyOpplastingsStatus =
 				if (vedleggDto.innsendtdato != null) OpplastingsStatus.INNSENDT else OpplastingsStatus.IKKE_VALGT
+			logger.info("${soknadDto.innsendingsId}: Skal oppdatere vedleggsstatus $nyOpplastingsStatus til vedlegg ${vedleggsId}")
 			repo.lagreVedlegg(
 				mapTilVedleggDb(
 					vedleggDto,
@@ -253,6 +256,7 @@ class FilService(
 				)
 			)
 		}
+		logger.info("${soknadDto.innsendingsId}: Skal hente vedlegg $vedleggsId med oppdatert status")
 		val vedleggDto = vedleggService.hentVedleggDto(vedleggsId)
 		innsenderMetrics.incOperationsCounter(operation, soknadDto.tema)
 		return vedleggDto
