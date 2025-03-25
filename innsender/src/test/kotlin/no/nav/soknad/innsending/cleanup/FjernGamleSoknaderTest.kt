@@ -1,11 +1,14 @@
 package no.nav.soknad.innsending.cleanup
 
 import com.ninjasquad.springmockk.MockkBean
+import com.ninjasquad.springmockk.SpykBean
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
+import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
 import no.nav.soknad.innsending.ApplicationTest
+import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
-import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.*
@@ -22,22 +25,13 @@ import kotlin.test.assertEquals
 class FjernGamleSoknaderTest : ApplicationTest() {
 
 	@Autowired
-	private lateinit var repo: RepositoryUtils
-
-	@Autowired
-	private lateinit var skjemaService: SkjemaService
-
-	@Autowired
 	private lateinit var innsenderMetrics: InnsenderMetrics
 
 	@Autowired
-	private lateinit var vedleggService: VedleggService
+	private lateinit var notificationService: NotificationService
 
 	@Autowired
-	private lateinit var filService: FilService
-
-	@Autowired
-	private lateinit var exceptionHelper: ExceptionHelper
+	private lateinit var soknadService: SoknadService
 
 	private val leaderSelectionUtility = mockk<LeaderSelectionUtility>()
 
@@ -46,22 +40,13 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 	@MockkBean
 	private lateinit var subjectHandler: SubjectHandlerInterface
 
-	private fun lagSoknadService(): SoknadService = SoknadService(
-		skjemaService = skjemaService,
-		repo = repo,
-		vedleggService = vedleggService,
-		filService = filService,
-		innsenderMetrics = innsenderMetrics,
-		exceptionHelper = exceptionHelper,
-		subjectHandler = subjectHandler,
-	)
+	@SpykBean
+	lateinit var notificationPublisher: PublisherInterface
 
 	private val defaultSkjemanr = "NAV 55-00.60"
 
 	@Test
 	fun testSlettingAvGammelIkkeInnsendtSoknad() {
-		val soknadService = lagSoknadService()
-
 		every { leaderSelectionUtility.isLeader() } returns true
 		every { soknadsmottakerAPI.sendInnSoknad(any(), any()) } returns Unit
 		every { subjectHandler.getClientId() } returns "application"
@@ -86,16 +71,22 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 		).innsendingsId!!
 
 		val initAntall = innsenderMetrics.getOperationsCounter(InnsenderOperation.SLETT.name, tema)
-		val fjernGamleSoknader = FjernGamleSoknader(soknadService, leaderSelectionUtility)
+		val fjernGamleSoknader = FjernGamleSoknader(soknadService, notificationService, leaderSelectionUtility)
 
 		fjernGamleSoknader.fjernGamleIkkeInnsendteSoknader()
 
+		val notificationsClosed = mutableListOf<SoknadRef>()
+		verify(exactly = 1) { notificationPublisher.avsluttBrukernotifikasjon(capture(notificationsClosed)) }
+		assertEquals(1, notificationsClosed.size)
+
 		val slettetSoknad = soknadService.hentSoknad(gammelSoknadId)
 		assertTrue(slettetSoknad.status == SoknadsStatusDto.AutomatiskSlettet)
+		assertTrue(notificationsClosed.any { it.innsendingId == gammelSoknadId })
 		assertEquals(1.0 + (initAntall ?: 0.0), innsenderMetrics.getOperationsCounter(InnsenderOperation.SLETT.name, tema))
 
 		val beholdtSoknad = soknadService.hentSoknad(nyereSoknadId)
 		assertTrue(beholdtSoknad.status == SoknadsStatusDto.Opprettet)
+		assertTrue(notificationsClosed.none { it.innsendingId == nyereSoknadId })
 	}
 
 }

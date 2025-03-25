@@ -273,7 +273,7 @@ class SoknadService(
 	@Transactional
 	fun deleteSoknadBeforeCutoffDate(
 		cutoffDate: OffsetDateTime
-	) {
+	): List<String> {
 		logger.info("Finner søknader som skal slettes før $cutoffDate")
 
 		val soknaderToDelete =
@@ -285,8 +285,7 @@ class SoknadService(
 			)
 
 		logger.info("Funnet ${soknaderToDelete.size} søknader som skal slettes")
-		soknaderToDelete.forEach { slettSoknadAutomatisk(it.innsendingsid) }
-
+		return soknaderToDelete.map { it.innsendingsid }.onEach { slettSoknadAutomatisk(it) }
 	}
 
 	@Transactional
