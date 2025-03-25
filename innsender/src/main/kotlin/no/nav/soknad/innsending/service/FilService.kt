@@ -29,7 +29,7 @@ class FilService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	@Transactional
+	@Transactional(timeout=90)
 	fun lagreFil(
 		savedDokumentSoknadDto: DokumentSoknadDto,
 		lagretVedleggDto: VedleggDto,
@@ -72,7 +72,7 @@ class FilService(
 		opprettetdato = OffsetDateTime.now()
 	)
 
-	@Transactional
+	@Transactional(timeout=90)
 	fun lagreFil(soknadDto: DokumentSoknadDto, filDto: FilDto): FilDto {
 		val operation = InnsenderOperation.LAST_OPP.name
 
@@ -104,6 +104,8 @@ class FilService(
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			throw e
 		}
+		logger.info("${soknadDto.innsendingsId!!}: Lagret fil med størrelse ${filDto.data!!.size} på vedlegg ${filDto.vedleggsid}")
+
 		/* Skal bare validere størrelse på vedlegg som søker har lastet opp */
 		if (soknadDto.vedleggsListe.any { it.id == filDto.vedleggsid && (soknadDto.isLospost() || !it.erHoveddokument) }) {
 			logger.debug("${soknadDto.innsendingsId!!}: Valider størrelse av opplastinger på vedlegg ${filDto.vedleggsid} og søknad ${soknadDto.innsendingsId!!}")
@@ -239,11 +241,13 @@ class FilService(
 			throw ResourceNotFoundException("Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
 		repo.slettFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
+		logger.info("${soknadDto.innsendingsId}: Slettet fil på vedlegg $vedleggsId")
 
-		if (repo.hentFilerTilVedlegg(soknadDto.innsendingsId!!, vedleggsId).isEmpty()) {
+		if (repo.countFiles(soknadDto.innsendingsId!!, vedleggsId) == 0) {
 			val vedleggDto = soknadDto.vedleggsListe.first { it.id == vedleggsId }
 			val nyOpplastingsStatus =
 				if (vedleggDto.innsendtdato != null) OpplastingsStatus.INNSENDT else OpplastingsStatus.IKKE_VALGT
+			logger.info("${soknadDto.innsendingsId}: Skal oppdatere vedleggsstatus $nyOpplastingsStatus til vedlegg ${vedleggsId}")
 			repo.lagreVedlegg(
 				mapTilVedleggDb(
 					vedleggDto,
@@ -253,6 +257,7 @@ class FilService(
 				)
 			)
 		}
+		logger.info("${soknadDto.innsendingsId}: Skal hente vedlegg $vedleggsId med oppdatert status")
 		val vedleggDto = vedleggService.hentVedleggDto(vedleggsId)
 		innsenderMetrics.incOperationsCounter(operation, soknadDto.tema)
 		return vedleggDto
