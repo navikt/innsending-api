@@ -17,18 +17,19 @@ import java.util.*
 class Hjelpemetoder {
 	companion object {
 		fun lagDokumentSoknad(
-			brukerId: String,
-			skjemanr: String,
-			spraak: String,
-			tittel: String,
-			tema: String,
+			brukerId: String = "12345678901",
+			skjemanr: String = "NAV 55-00.60",
+			spraak: String = "no",
+			tittel: String = "Testskjema",
+			tema: String = "BID",
 			id: Long? = null,
 			innsendingsid: String? = null,
 			soknadsStatus: SoknadsStatusDto? = SoknadsStatusDto.Opprettet,
 			vedleggsListe: List<VedleggDto>? = null,
 			ettersendingsId: String? = null,
 			opprettetDato: OffsetDateTime? = OffsetDateTime.now(),
-			soknadstype: SoknadType = SoknadType.soknad
+			soknadstype: SoknadType = SoknadType.soknad,
+			innsendtDato: OffsetDateTime? = if (soknadsStatus == SoknadsStatusDto.Innsendt) OffsetDateTime.now() else null
 		): DokumentSoknadDto {
 			val vedleggDtoPdf = lagVedleggDto(
 				vedleggsnr = skjemanr,
@@ -61,7 +62,7 @@ class Hjelpemetoder {
 				ettersendingsId = ettersendingsId,
 				spraak = spraak,
 				endretDato = OffsetDateTime.now(),
-				innsendtDato = null,
+				innsendtDato = innsendtDato,
 				soknadstype = soknadstype,
 				skjemaPath = Skjema.createSkjemaPathFromSkjemanr(skjemanr),
 				visningsType = VisningsType.fyllUt,
