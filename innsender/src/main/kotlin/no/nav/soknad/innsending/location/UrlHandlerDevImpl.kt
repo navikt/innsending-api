@@ -18,4 +18,13 @@ class UrlHandlerDevImpl(
 			else -> defaultUrl
 		}
 	}
+
+	override fun getFyllutUrl(envQualifier: EnvQualifier?): String {
+		val urls = urlConfig.fyllut.urls
+		val defaultUrl = urls["default"].orEmpty()
+		return when {
+			envQualifier != null -> urls[envQualifier.value] ?: defaultUrl
+			else -> defaultUrl
+		}
+	}
 }

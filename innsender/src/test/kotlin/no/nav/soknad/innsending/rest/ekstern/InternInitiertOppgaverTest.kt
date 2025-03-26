@@ -1,16 +1,26 @@
 package no.nav.soknad.innsending.rest.ekstern
 
+import com.ninjasquad.springmockk.SpykBean
+import io.mockk.clearAllMocks
+import io.mockk.slot
+import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.InnsendingApiApplication
+import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
+import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
 import no.nav.soknad.innsending.ApplicationTest
+import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.EksternEttersendingsOppgave
 import no.nav.soknad.innsending.model.InnsendtVedleggDto
 import no.nav.soknad.innsending.model.SoknadType
+import no.nav.soknad.innsending.repository.SoknadRepository
+import no.nav.soknad.innsending.repository.VedleggRepository
 import no.nav.soknad.innsending.service.VedleggService
 import no.nav.soknad.innsending.utils.Api
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,6 +30,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.junit.jupiter.api.Test
 import org.springframework.http.*
+import kotlin.test.assertNull
 
 
 @SpringBootTest(
@@ -31,13 +42,19 @@ import org.springframework.http.*
 class InternInitiertOppgaverTest: ApplicationTest() {
 
 	@Autowired
-	private lateinit var vedleggService: VedleggService
-
-	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
 	@Autowired
 	lateinit var restTemplate: TestRestTemplate
+
+	@SpykBean()
+	lateinit var publisherInterface: PublisherInterface
+
+	@Autowired
+	private lateinit var soknadRepository: SoknadRepository
+
+	@Autowired
+	private lateinit var vedleggRepository: VedleggRepository
 
 
 	@Value("\${server.port}")
@@ -48,6 +65,9 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 	@BeforeEach
 	fun setup() {
 		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
+		clearAllMocks()
+		vedleggRepository.deleteAll()
+		soknadRepository.deleteAll()
 	}
 
 	@Test
@@ -59,6 +79,23 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 
 		assertEquals(brukerId, soknadDto.brukerId)
 		assertEquals(skjemanr, soknadDto.skjemanr)
+	}
+
+	@Test
+	fun `happy case also creates notification`() {
+		val brukerId = "12345678901"
+		val vedlegg = listOf("W1", "W2")
+		val skjemanr = "NAV 55-00.60"
+		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr)
+
+		val noticationSlot = slot<AddNotification>()
+		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlot)) }
+		val notication = noticationSlot.captured
+		assertEquals(false, notication.soknadRef.erSystemGenerert)
+		assertTrue(notication.soknadRef.erEttersendelse)
+		assertEquals(soknadDto.innsendingsId, notication.soknadRef.innsendingId)
+		assertEquals(soknadDto.innsendingsId, notication.soknadRef.groupId)
+		assertNull(notication.brukernotifikasjonInfo.utsettSendingTil)
 	}
 
 
@@ -73,6 +110,10 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 
 		assertNotNull(response)
 		assertEquals(HttpStatus.OK, response?.statusCode)
+
+		val noticationSlot = slot<SoknadRef>()
+		verify(exactly = 1) { publisherInterface.avsluttBrukernotifikasjon(capture(noticationSlot)) }
+		assertEquals(soknadDto.innsendingsId, noticationSlot.captured.innsendingId)
 	}
 
 	@Test

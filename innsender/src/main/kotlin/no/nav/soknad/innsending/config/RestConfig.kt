@@ -16,6 +16,7 @@ class RestConfig {
 	lateinit var soknadsMottakerHost: String
 	lateinit var sendInnUrl: String
 	lateinit var sendinn: SendInnConfig
+	lateinit var fyllut: FyllutConfig
 	lateinit var fyllUtUrl: String
 	lateinit var pdlScope: String
 	lateinit var pdlUrl: String
@@ -27,6 +28,10 @@ class RestConfig {
 	lateinit var kontoregisterUrl: String
 
 	class SendInnConfig {
+		lateinit var urls: Map<String, String>
+	}
+
+	class FyllutConfig {
 		lateinit var urls: Map<String, String>
 	}
 }

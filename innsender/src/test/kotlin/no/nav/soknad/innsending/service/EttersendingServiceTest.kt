@@ -1,13 +1,12 @@
 package no.nav.soknad.innsending.service
 
 import com.ninjasquad.springmockk.MockkBean
-import io.mockk.*
-import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.spyk
+import io.mockk.verify
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
-import no.nav.soknad.innsending.config.BrukerNotifikasjonConfig
 import no.nav.soknad.innsending.config.RestConfig
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
@@ -27,18 +26,13 @@ import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.OffsetDateTime
 
 class EttersendingServiceTest : ApplicationTest() {
-
-	@Autowired
-	private val notifikasjonConfig: BrukerNotifikasjonConfig = BrukerNotifikasjonConfig()
 
 	@Autowired
 	private lateinit var repo: RepositoryUtils
@@ -81,18 +75,13 @@ class EttersendingServiceTest : ApplicationTest() {
 
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
 
-	private val sendTilPublisher = mockk<PublisherInterface>()
-
 	private val pdlInterface = mockk<PdlInterface>()
-
-	private var brukernotifikasjonPublisher: BrukernotifikasjonPublisher? = null
 
 	@MockkBean
 	private lateinit var subjectHandler: SubjectHandlerInterface
 
 	@BeforeEach
 	fun setUp() {
-		brukernotifikasjonPublisher = spyk(BrukernotifikasjonPublisher(notifikasjonConfig, sendTilPublisher))
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("1234567890", "Kan", null, "Søke")
 		every { subjectHandler.getClientId() } returns "application"
 	}
@@ -101,7 +90,6 @@ class EttersendingServiceTest : ApplicationTest() {
 		repo = repo,
 		skjemaService = skjemaService,
 		exceptionHelper = exceptionHelper,
-		brukerNotifikasjon = brukernotifikasjonPublisher!!,
 		innsenderMetrics = innsenderMetrics,
 		soknadService = soknadService,
 		vedleggService = vedleggService,
@@ -118,7 +106,6 @@ class EttersendingServiceTest : ApplicationTest() {
 		tilleggstonadService = tilleggstonadService,
 		ettersendingService = lagEttersendingService(),
 		filService = filService,
-		brukernotifikasjonPublisher = brukernotifikasjonPublisher!!,
 		innsenderMetrics = innsenderMetrics,
 		exceptionHelper = exceptionHelper,
 		soknadsmottakerAPI = soknadsmottakerAPI,
@@ -127,7 +114,7 @@ class EttersendingServiceTest : ApplicationTest() {
 	)
 
 	@Test
-	fun `Skal sende brukernotifikasjon med erSystemGenerert=true og utsatt varsling hvis det mangler paakrevde vedlegg`() {
+	fun `Skal opprette ettersending hvis det mangler paakrevde vedlegg`() {
 		// Gitt
 		val brukerid = testpersonid
 		val skjemanr = "NAV 55-00.60"
@@ -136,20 +123,15 @@ class EttersendingServiceTest : ApplicationTest() {
 
 		val ettersendingService = lagEttersendingService()
 
-		val message = slot<AddNotification>()
-		every { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) } returns Unit
-
 		// Når
-		ettersendingService.sjekkOgOpprettEttersendingsSoknad(
+		val ettersending = ettersendingService.sjekkOgOpprettEttersendingsSoknad(
 			innsendtSoknadDto = dokumentSoknadDto,
 			manglende = dokumentSoknadDto.vedleggsListe,
 			soknadDtoInput = dokumentSoknadDto
 		)
 
 		// Så
-		assertNotNull(message.captured)
-		assertTrue(message.captured.soknadRef.erSystemGenerert == true)
-		assertNotNull(message.captured.brukernotifikasjonInfo.utsettSendingTil)
+		assertNotNull(ettersending)
 	}
 
 	@Test

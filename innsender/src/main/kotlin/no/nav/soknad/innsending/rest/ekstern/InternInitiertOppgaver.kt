@@ -2,12 +2,14 @@ package no.nav.soknad.innsending.rest.ekstern
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.EksternoppgaveApi
+import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.EttersendingService
+import no.nav.soknad.innsending.service.NotificationService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
@@ -25,7 +27,8 @@ class InternInitiertOppgaver(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val ettersendingService: EttersendingService,
 	private val soknadService: SoknadService,
-	private var subjectHandler: SubjectHandlerInterface
+	private var subjectHandler: SubjectHandlerInterface,
+	private val notificationService: NotificationService,
 ): EksternoppgaveApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -72,6 +75,8 @@ class InternInitiertOppgaver(
 			brukerId
 		)
 
+		notificationService.create(ettersending.innsendingsId!!, NotificationOptions(erNavInitiert = true))
+
 		return ResponseEntity
 			.status(HttpStatus.CREATED)
 			.body(ettersending)
@@ -92,6 +97,7 @@ class InternInitiertOppgaver(
 				errorCode = ErrorCode.ILLEGAL_DELETE_REQUEST
 			)
 		}
+		notificationService.close(innsendingsId)
 		soknadService.deleteSoknadFromExternalApplication(soknadDto)
 
 		combinedLogger.log("[${applikasjon}] - $innsendingsId: Slettet søknad/ettersending fra ekstern applikasjon", soknadDto.brukerId)

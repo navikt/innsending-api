@@ -6,7 +6,6 @@ import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.slot
 import io.mockk.verify
-import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
@@ -29,15 +28,11 @@ class LospostServiceTest {
 	@RelaxedMockK
 	lateinit var subjectHandler: SubjectHandlerInterface
 
-	@RelaxedMockK
-	lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher
-
 	@InjectMockKs
 	lateinit var lospostService: LospostService
 
 	@Test
 	fun `Should create one soknad and one vedlegg`() {
-
 		every { repo.lagreSoknad(any()) } answers {
 			val dto = firstArg<SoknadDbData>().copy(id = 1)
 			dto
@@ -46,8 +41,6 @@ class LospostServiceTest {
 			val dto = firstArg<VedleggDbData>().copy(id = 2)
 			dto
 		}
-
-		every { brukernotifikasjonPublisher.soknadStatusChange(any()) } returns true
 
 		val lospost = lospostService.saveLospostInnsending(
 			defaultUser,

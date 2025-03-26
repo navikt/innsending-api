@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.service
 
-import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
@@ -33,7 +32,6 @@ class SoknadService(
 	private val repo: RepositoryUtils,
 	private val vedleggService: VedleggService,
 	private val filService: FilService,
-	private val brukernotifikasjonPublisher: BrukernotifikasjonPublisher,
 	private val innsenderMetrics: InnsenderMetrics,
 	private val exceptionHelper: ExceptionHelper,
 	private val subjectHandler: SubjectHandlerInterface
@@ -90,8 +88,6 @@ class SoknadService(
 
 			val dokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbDataListe)
 
-			publiserBrukernotifikasjon(dokumentSoknadDto)
-
 			return dokumentSoknadDto
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, kodeverkSkjema.tema ?: "Ukjent")
@@ -114,7 +110,6 @@ class SoknadService(
 			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
 			// lagre mottatte filer i fil tabellen.
 			lagreFiler(savedDokumentSoknadDto, dokumentSoknadDto)
-			publiserBrukernotifikasjon(savedDokumentSoknadDto)
 
 			innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
 			return mapTilSkjemaDto(savedDokumentSoknadDto)
@@ -202,15 +197,7 @@ class SoknadService(
 			throw IllegalActionException("Det kan ikke gjøres endring på en slettet eller innsendt søknad. Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den er innsendt eller slettet")
 
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { vedleggService.slettVedleggOgDensFiler(it) }
-		//fillagerAPI.slettFiler(innsendingsId, dokumentSoknadDto.vedleggsListe)
 		repo.slettSoknad(dokumentSoknadDto, HendelseType.SlettetPermanentAvBruker)
-
-		val soknadDbData =
-			mapTilSoknadDb(dokumentSoknadDto, dokumentSoknadDto.innsendingsId!!, SoknadsStatus.SlettetAvBruker)
-		val slettetSoknad = lagDokumentSoknadDto(
-			soknadDbData,
-			dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id!!) })
-		publiserBrukernotifikasjon(slettetSoknad)
 		innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
 	}
 
@@ -230,14 +217,9 @@ class SoknadService(
 		if (!dokumentSoknadDto.kanGjoreEndringer)
 			throw IllegalActionException("Det kan ikke gjøres endring på en slettet eller innsendt søknad. Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den allerede er innsendt")
 
-		//fillagerAPI.slettFiler(innsendingsId, dokumentSoknadDto.vedleggsListe)
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettFilerForVedlegg(it.id!!) }
-		val slettetSoknadDb =
-			repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId, SoknadsStatus.AutomatiskSlettet))
+		repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId, SoknadsStatus.AutomatiskSlettet))
 
-		val slettetSoknadDto = lagDokumentSoknadDto(slettetSoknadDb,
-			dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id!!) })
-		publiserBrukernotifikasjon(slettetSoknadDto)
 		logger.info("slettSoknadAutomatisk: Status for søknad $innsendingsId er satt til ${SoknadsStatus.AutomatiskSlettet}")
 
 		innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
@@ -252,7 +234,6 @@ class SoknadService(
 		repo.slettSoknad(dokumentSoknadDto, HendelseType.SlettetPermanentAvSystem)
 
 		logger.info("$innsendingsId: opprettet:${dokumentSoknadDto.opprettetDato}, status: ${dokumentSoknadDto.status} er permanent slettet")
-
 	}
 
 	@Transactional
@@ -292,7 +273,7 @@ class SoknadService(
 	@Transactional
 	fun deleteSoknadBeforeCutoffDate(
 		cutoffDate: OffsetDateTime
-	) {
+	): List<String> {
 		logger.info("Finner søknader som skal slettes før $cutoffDate")
 
 		val soknaderToDelete =
@@ -304,8 +285,7 @@ class SoknadService(
 			)
 
 		logger.info("Funnet ${soknaderToDelete.size} søknader som skal slettes")
-		soknaderToDelete.forEach { slettSoknadAutomatisk(it.innsendingsid) }
-
+		return soknaderToDelete.map { it.innsendingsid }.onEach { slettSoknadAutomatisk(it) }
 	}
 
 	@Transactional
@@ -391,13 +371,6 @@ class SoknadService(
 	fun validerInnsendtSoknadMotEksisterende(innsendtSoknad: DokumentSoknadDto, eksisterendeSoknad: DokumentSoknadDto) {
 		innsendtSoknad.validerSoknadVedOppdatering(eksisterendeSoknad)
 		innsendtSoknad.validerVedleggsListeVedOppdatering(eksisterendeSoknad)
-	}
-
-
-	private fun publiserBrukernotifikasjon(dokumentSoknadDto: DokumentSoknadDto): Boolean = try {
-		brukernotifikasjonPublisher.soknadStatusChange(dokumentSoknadDto)
-	} catch (e: Exception) {
-		throw BackendErrorException("Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}", e)
 	}
 
 }

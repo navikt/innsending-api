@@ -39,7 +39,6 @@ class InnsendingService(
 	private val restConfig: RestConfig,
 	private val exceptionHelper: ExceptionHelper,
 	private val ettersendingService: EttersendingService,
-	private val brukernotifikasjonPublisher: BrukernotifikasjonPublisher,
 	private val innsenderMetrics: InnsenderMetrics,
 	private val pdlInterface: PdlInterface,
 ) {
@@ -210,19 +209,20 @@ class InnsendingService(
 	}
 
 	@Transactional(isolation = Isolation.READ_UNCOMMITTED)
-	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): KvitteringsDto {
+	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): Pair<KvitteringsDto, DokumentSoknadDto?> {
 		val operation = InnsenderOperation.SEND_INN.name
 		val startSendInn = System.currentTimeMillis()
 
 		try {
 			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput)
 
-			val innsendtSoknadDto = kansellerBrukernotifikasjon(soknadDtoInput)
+			val innsendtSoknadDto = soknadService.hentSoknad(soknadDtoInput.innsendingsId!!)
 			innsenderMetrics.incOperationsCounter(operation, innsendtSoknadDto.tema)
 
-			ettersendingService.sjekkOgOpprettEttersendingsSoknad(innsendtSoknadDto, manglende, soknadDtoInput)
+			val ettersending = ettersendingService.sjekkOgOpprettEttersendingsSoknad(innsendtSoknadDto, manglende, soknadDtoInput)
 
-			return lagKvittering(innsendtSoknadDto, opplastet, manglende)
+			val kvittering = lagKvittering(innsendtSoknadDto, opplastet, manglende)
+			return Pair(kvittering, ettersending)
 
 		} finally {
 			logger.debug("${soknadDtoInput.innsendingsId}: Tid: sendInnSoknad = ${System.currentTimeMillis() - startSendInn}")
@@ -436,24 +436,6 @@ class InnsendingService(
 
 	private fun lenkeTilDokument(innsendingsId: String, vedleggsId: Long?, filId: Long?) =
 		if (filId == null) null else "frontend/v1/soknad/$innsendingsId/vedlegg/$vedleggsId/fil/$filId"
-
-	private fun kansellerBrukernotifikasjon(soknadDtoInput: DokumentSoknadDto): DokumentSoknadDto {
-		// send brukernotifikasjon ved endring av søknadsstatus til innsendt
-		val innsendtSoknadDto = soknadService.hentSoknad(soknadDtoInput.innsendingsId!!)
-		logger.info("${innsendtSoknadDto.innsendingsId}: Sendinn: innsendtdato på vedlegg med status innsendt= " +
-			innsendtSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.Innsendt }
-				.map { it.vedleggsnr + ":" + mapTilLocalDateTime(it.innsendtdato) }
-		)
-		publiserBrukernotifikasjon(innsendtSoknadDto)
-		return innsendtSoknadDto
-	}
-
-	private fun publiserBrukernotifikasjon(dokumentSoknadDto: DokumentSoknadDto): Boolean = try {
-		brukernotifikasjonPublisher.soknadStatusChange(dokumentSoknadDto)
-	} catch (e: Exception) {
-		throw BackendErrorException("Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}", e)
-	}
-
 
 	fun getFiles(innsendingId: String, uuids: List<String>): List<SoknadFile> {
 		logger.info("$innsendingId: Skal hente ${uuids.joinToString(",")}")

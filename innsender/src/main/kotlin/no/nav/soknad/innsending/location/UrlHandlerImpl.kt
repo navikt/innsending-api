@@ -12,4 +12,7 @@ class UrlHandlerImpl(
 ) : UrlHandler {
 	override fun getSendInnUrl(@Suppress("UNUSED_PARAMETER") envQualifier: EnvQualifier?): String =
 		urlConfig.sendinn.urls["default"].orEmpty()
+
+	override fun getFyllutUrl(@Suppress("UNUSED_PARAMETER") envQualifier: EnvQualifier?): String =
+		urlConfig.fyllUtUrl
 }

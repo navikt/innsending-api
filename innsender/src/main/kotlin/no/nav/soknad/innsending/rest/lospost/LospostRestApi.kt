@@ -2,12 +2,14 @@ package no.nav.soknad.innsending.rest.lospost
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.LospostApi
+import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.location.UrlHandler
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.LospostDto
 import no.nav.soknad.innsending.model.OpprettLospost
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.LospostService
+import no.nav.soknad.innsending.service.NotificationService
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import org.slf4j.LoggerFactory
@@ -26,6 +28,7 @@ class LospostRestApi(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val lospostService: LospostService,
 	private val urlHandler: UrlHandler,
+	private val notificationService: NotificationService,
 ) : LospostApi {
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val secureLogger = LoggerFactory.getLogger("secureLogger")
@@ -39,11 +42,12 @@ class LospostRestApi(
 		val (soknadTittel, tema, dokumentTittel, sprak) = opprettLospost
 		combinedLogger.log("Skal opprette en innsending for løspost (tema $tema)", brukerId)
 
-		val dto = lospostService.saveLospostInnsending(brukerId, tema, soknadTittel, dokumentTittel, sprak)
-		combinedLogger.log("${dto.innsendingsId}: Har opprettet en innsending for løspost", brukerId)
+		val lospost = lospostService.saveLospostInnsending(brukerId, tema, soknadTittel, dokumentTittel, sprak)
+		combinedLogger.log("${lospost.innsendingsId}: Har opprettet en innsending for løspost", brukerId)
+		notificationService.create(lospost.innsendingsId!!, NotificationOptions(envQualifier = envQualifier))
 		return ResponseEntity
 			.status(HttpStatus.CREATED)
-			.location(URI.create(urlHandler.getSendInnUrl(envQualifier) + "/" + dto.innsendingsId))
-			.body(dto)
+			.location(URI.create(urlHandler.getSendInnUrl(envQualifier) + "/" + lospost.innsendingsId))
+			.body(lospost)
 	}
 }

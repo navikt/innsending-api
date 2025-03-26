@@ -3,11 +3,14 @@ package no.nav.soknad.innsending.rest.soknadsveiviser
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.SoknadsveiviserApi
+import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.OpprettEttersendingGittSkjemaNr
 import no.nav.soknad.innsending.model.OpprettSoknadBody
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.EttersendingService
+import no.nav.soknad.innsending.service.NotificationService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
@@ -33,6 +36,7 @@ class SoknadsveiviserRestApi(
 	private val soknadService: SoknadService,
 	private val tilgangskontroll: Tilgangskontroll,
 	private val ettersendingService: EttersendingService,
+	private val notificationService: NotificationService,
 ) : SoknadsveiviserApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -40,10 +44,13 @@ class SoknadsveiviserRestApi(
 	private val combinedLogger = CombinedLogger(logger, secureLogger)
 
 	@Timed(InnsenderOperation.OPPRETT)
-	override fun opprettSoknad(opprettSoknadBody: OpprettSoknadBody): ResponseEntity<DokumentSoknadDto> {
+	override fun opprettSoknad(
+		opprettSoknadBody: OpprettSoknadBody,
+		envQualifier: EnvQualifier?,
+	): ResponseEntity<DokumentSoknadDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
-		combinedLogger.log("Skal opprette søknad for ${opprettSoknadBody.skjemanr}", brukerId)
+		combinedLogger.log("Skal opprette søknad for ${opprettSoknadBody.skjemanr} ($envQualifier)", brukerId)
 
 		soknadService.loggWarningVedEksisterendeSoknad(brukerId, opprettSoknadBody.skjemanr)
 
@@ -59,16 +66,21 @@ class SoknadsveiviserRestApi(
 			brukerId
 		)
 
+		notificationService.create(dokumentSoknadDto.innsendingsId!!, NotificationOptions(envQualifier = envQualifier))
+
 		return ResponseEntity
 			.status(HttpStatus.CREATED)
 			.body(dokumentSoknadDto)
 	}
 
 	@Timed(InnsenderOperation.OPPRETT)
-	override fun opprettEttersendingGittSkjemanr(opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr): ResponseEntity<DokumentSoknadDto> {
+	override fun opprettEttersendingGittSkjemanr(
+		opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr,
+		envQualifier: EnvQualifier?,
+	): ResponseEntity<DokumentSoknadDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		combinedLogger.log(
-			"Kall for å opprette ettersending fra soknadsveiviser (via sendinn) på skjema ${opprettEttersendingGittSkjemaNr.skjemanr}",
+			"Kall for å opprette ettersending fra soknadsveiviser (via sendinn) på skjema ${opprettEttersendingGittSkjemaNr.skjemanr} ($envQualifier)",
 			brukerId
 		)
 
@@ -86,6 +98,7 @@ class SoknadsveiviserRestApi(
 			"${ettersending.innsendingsId}: Opprettet ettersending fra soknadsveiviser (via sendinn) på skjema ${ettersending.skjemanr}",
 			brukerId
 		)
+		notificationService.create(ettersending.innsendingsId!!, NotificationOptions(envQualifier = envQualifier))
 
 		return ResponseEntity
 			.status(HttpStatus.CREATED)
