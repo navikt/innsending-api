@@ -17,6 +17,9 @@ interface FilRepository : JpaRepository<FilDbData, Long> {
 	@Query(value = "FROM FilDbData WHERE vedleggsid = :vedleggsid order by id")
 	fun findAllByVedleggsid(@Param("vedleggsid") vedleggsid: Long): List<FilDbData>
 
+	@Query(value = "SELECT count(*) FROM fil WHERE vedleggsid = :vedleggsid", nativeQuery = true)
+	fun countFiles(@Param("vedleggsid") vedleggsid: Long): Int
+
 	@Query(value = "FROM FilDbData WHERE vedleggsid = :vedleggsid and id = :id")
 	fun findByVedleggsidAndId(@Param("vedleggsid") vedleggsid: Long, @Param("id") id: Long): FilDbData?
 
@@ -24,12 +27,12 @@ interface FilRepository : JpaRepository<FilDbData, Long> {
 	fun findSumByVedleggsid(@Param("vedleggsid") vedleggsid: Long): Long?
 
 	@Transactional
-	@Modifying
+	@Modifying(flushAutomatically = true)
 	@Query(value = "DELETE FROM fil WHERE vedleggsid = :vedleggsid and id = :id", nativeQuery = true)
 	fun deleteByVedleggsidAndId(@Param("vedleggsid") vedleggsid: Long, @Param("id") id: Long)
 
 	@Transactional
-	@Modifying
+	@Modifying(flushAutomatically = true)
 	@Query(value = "DELETE FROM fil WHERE vedleggsid = :vedleggsid", nativeQuery = true)
 	fun deleteAllByVedleggsid(@Param("vedleggsid") vedleggsid: Long)
 

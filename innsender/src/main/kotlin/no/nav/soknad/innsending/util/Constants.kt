@@ -7,6 +7,8 @@ object Constants {
 	const val TOKENX = "tokenx"
 	const val AZURE = "azuread"
 
+	const val TRANSACTION_TIMEOUT = 90
+
 	const val NAV_CONSUMER_ID = "Nav-Consumer-Id"
 	const val HEADER_CALL_ID = "Nav-Call-Id"
 	const val HEADER_INNSENDINGSID = "x-innsendingsId"
