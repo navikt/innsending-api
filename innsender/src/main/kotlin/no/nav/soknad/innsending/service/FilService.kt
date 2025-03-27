@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
+import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.dokumentsoknad.isLospost
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
@@ -236,7 +237,7 @@ class FilService(
 			.filter { it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt || it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
 			.sumOf { repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, it.id!!) }
 
-	@Transactional
+	@Transactional(timeout=90)
 	fun slettFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long): VedleggDto {
 		val operation = InnsenderOperation.SLETT_FIL.name
 

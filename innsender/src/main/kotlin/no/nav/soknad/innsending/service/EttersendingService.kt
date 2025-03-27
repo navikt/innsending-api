@@ -41,7 +41,7 @@ class EttersendingService(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	// Lagre ettersendingssøknad i DB
-	@Transactional
+	@Transactional(timeout = 90)
 	fun saveEttersending(
 		brukerId: String,
 		ettersendingsId: String?,
@@ -85,7 +85,7 @@ class EttersendingService(
 		)
 	}
 
-	@Transactional
+	@Transactional(timeout = 90)
 	fun saveEttersending(
 		nyesteSoknad: DokumentSoknadDto,
 		ettersendingsId: String,
@@ -174,7 +174,7 @@ class EttersendingService(
 		}
 	}
 
-	@Transactional
+	@Transactional(timeout = 90)
 	fun createEttersendingFromInnsendtSoknad(
 		brukerId: String,
 		existingSoknad: DokumentSoknadDto,
@@ -214,7 +214,7 @@ class EttersendingService(
 		}
 	}
 
-	@Transactional
+	@Transactional(timeout = 90)
 	fun createEttersendingFromArchivedSoknad(
 		brukerId: String,
 		archivedSoknad: AktivSakDto,
@@ -251,7 +251,7 @@ class EttersendingService(
 		}
 	}
 
-	@Transactional
+	@Transactional(timeout = 90)
 	fun createEttersending(brukerId: String, ettersending: OpprettEttersending): DokumentSoknadDto {
 		logger.info("Oppretter ettersending for skjemanr=${ettersending.skjemanr}")
 		val operation = InnsenderOperation.OPPRETT.name
@@ -336,7 +336,7 @@ class EttersendingService(
 		}
 	}
 
-	@Transactional
+	@Transactional(timeout= 90)
 	fun createEttersendingFromExternalApplication(
 		brukerId: String,
 		eksternOpprettEttersending: EksternOpprettEttersending,

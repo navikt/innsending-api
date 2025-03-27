@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
+import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
@@ -236,7 +237,7 @@ class VedleggService(
 		}
 	}
 
-	@Transactional
+	@Transactional(timeout=90)
 	fun leggTilVedlegg(soknadDto: DokumentSoknadDto, vedleggDto: PostVedleggDto?): VedleggDto {
 
 		val soknadDb = repo.hentSoknadDb(soknadDto.innsendingsId!!)
@@ -259,7 +260,7 @@ class VedleggService(
 	}
 
 
-	@Transactional
+	@Transactional(timeout=90)
 	fun lagreNyHoveddokumentVariant(soknadDto: DokumentSoknadDto, mimetype: Mimetype): VedleggDto {
 
 		// Lagre vedlegget i databasen
@@ -332,7 +333,7 @@ class VedleggService(
 		repo.slettVedlegg(vedleggDto.id!!)
 	}
 
-	@Transactional
+	@Transactional(timeout=90)
 	fun slettVedlegg(soknadDto: DokumentSoknadDto, vedleggsId: Long) {
 		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException("Søknad ${soknadDto.innsendingsId} kan ikke endres da den allerede er innsendt. Det kan ikke gjøres endring på en slettet eller innsendt søknad.")
 
@@ -354,7 +355,7 @@ class VedleggService(
 		repo.oppdaterEndretDato(soknadsId)
 	}
 
-	@Transactional
+	@Transactional(timeout=90)
 	fun endreVedleggStatus(
 		soknadDto: DokumentSoknadDto,
 		vedleggsId: Long,
@@ -376,7 +377,7 @@ class VedleggService(
 	}
 
 
-	@Transactional
+	@Transactional(timeout=90)
 	fun endreVedlegg(
 		patchVedleggDto: PatchVedleggDto,
 		vedleggsId: Long,

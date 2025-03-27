@@ -39,7 +39,7 @@ class SoknadService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	@Transactional
+	@Transactional(timeout=90)
 	fun opprettSoknad(
 		brukerId: String,
 		skjemanr: String,
@@ -97,7 +97,7 @@ class SoknadService(
 		}
 	}
 
-	@Transactional
+	@Transactional(timeout=90)
 	fun opprettNySoknad(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		val operation = InnsenderOperation.OPPRETT.name
 
@@ -188,7 +188,7 @@ class SoknadService(
 	}
 
 	// Slett opprettet soknad gitt innsendingsId
-	@Transactional
+	@Transactional(timeout=90)
 	fun slettSoknadAvBruker(dokumentSoknadDto: DokumentSoknadDto) {
 		val operation = InnsenderOperation.SLETT.name
 
@@ -201,13 +201,13 @@ class SoknadService(
 		innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
 	}
 
-	@Transactional
+	@Transactional(timeout=90)
 	fun deleteSoknadFromExternalApplication(dokumentSoknadDto: DokumentSoknadDto) {
 		return slettSoknadAvBruker(dokumentSoknadDto)
 	}
 
 	// Slett opprettet soknad gitt innsendingsId
-	@Transactional
+	@Transactional(timeout=90)
 	fun slettSoknadAutomatisk(innsendingsId: String) {
 		val operation = InnsenderOperation.SLETT.name
 
@@ -225,7 +225,7 @@ class SoknadService(
 		innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
 	}
 
-	@Transactional
+	@Transactional(timeout=90)
 	fun slettSoknadPermanent(innsendingsId: String) {
 
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
@@ -236,7 +236,7 @@ class SoknadService(
 		logger.info("$innsendingsId: opprettet:${dokumentSoknadDto.opprettetDato}, status: ${dokumentSoknadDto.status} er permanent slettet")
 	}
 
-	@Transactional
+	@Transactional(timeout=90)
 	fun finnOgSlettArkiverteSoknader(dagerGamle: Long, vindu: Long) {
 		val arkiverteSoknader =
 			repo.findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(dagerGamle, vindu)
@@ -245,7 +245,7 @@ class SoknadService(
 
 	}
 
-	@Transactional
+	@Transactional(timeout=90)
 	fun slettGamleSoknader(
 		dagerGamle: Long = DEFAULT_LEVETID_OPPRETTET_SOKNAD,
 		permanent: Boolean = false,
@@ -270,7 +270,7 @@ class SoknadService(
 		}
 	}
 
-	@Transactional
+	@Transactional(timeout=90)
 	fun deleteSoknadBeforeCutoffDate(
 		cutoffDate: OffsetDateTime
 	): List<String> {
@@ -288,7 +288,7 @@ class SoknadService(
 		return soknaderToDelete.map { it.innsendingsid }.onEach { slettSoknadAutomatisk(it) }
 	}
 
-	@Transactional
+	@Transactional(timeout=90)
 	fun updateSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		if (dokumentSoknadDto.vedleggsListe.size != 2) {
 			throw BackendErrorException("Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant. Innsendt vedleggsliste skal være tom")

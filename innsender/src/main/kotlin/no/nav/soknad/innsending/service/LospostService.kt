@@ -24,7 +24,7 @@ class LospostService(
 	private val subjectHandler: SubjectHandlerInterface,
 ) {
 
-	@Transactional
+	@Transactional(timeout = 90)
 	fun saveLospostInnsending(
 		brukerId: String,
 		tema: String,
