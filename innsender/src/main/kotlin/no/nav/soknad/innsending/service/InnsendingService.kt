@@ -16,6 +16,7 @@ import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
+import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.*
 import no.nav.soknad.pdfutilities.AntallSider
@@ -208,7 +209,7 @@ class InnsendingService(
 		}
 	}
 
-	@Transactional(isolation = Isolation.READ_UNCOMMITTED, timeout = 90)
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): Pair<KvitteringsDto, DokumentSoknadDto?> {
 		val operation = InnsenderOperation.SEND_INN.name
 		val startSendInn = System.currentTimeMillis()

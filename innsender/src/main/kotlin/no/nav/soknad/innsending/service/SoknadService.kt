@@ -14,6 +14,7 @@ import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
+import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.hovedDokumentVariant
@@ -39,7 +40,7 @@ class SoknadService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	@Transactional(timeout=90)
+	@Transactional(timeout= TRANSACTION_TIMEOUT)
 	fun opprettSoknad(
 		brukerId: String,
 		skjemanr: String,
@@ -97,7 +98,7 @@ class SoknadService(
 		}
 	}
 
-	@Transactional(timeout=90)
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun opprettNySoknad(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		val operation = InnsenderOperation.OPPRETT.name
 
@@ -188,7 +189,7 @@ class SoknadService(
 	}
 
 	// Slett opprettet soknad gitt innsendingsId
-	@Transactional(timeout=90)
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun slettSoknadAvBruker(dokumentSoknadDto: DokumentSoknadDto) {
 		val operation = InnsenderOperation.SLETT.name
 
@@ -201,13 +202,13 @@ class SoknadService(
 		innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
 	}
 
-	@Transactional(timeout=90)
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun deleteSoknadFromExternalApplication(dokumentSoknadDto: DokumentSoknadDto) {
 		return slettSoknadAvBruker(dokumentSoknadDto)
 	}
 
 	// Slett opprettet soknad gitt innsendingsId
-	@Transactional(timeout=90)
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun slettSoknadAutomatisk(innsendingsId: String) {
 		val operation = InnsenderOperation.SLETT.name
 
@@ -225,7 +226,7 @@ class SoknadService(
 		innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
 	}
 
-	@Transactional(timeout=90)
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun slettSoknadPermanent(innsendingsId: String) {
 
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
@@ -236,7 +237,7 @@ class SoknadService(
 		logger.info("$innsendingsId: opprettet:${dokumentSoknadDto.opprettetDato}, status: ${dokumentSoknadDto.status} er permanent slettet")
 	}
 
-	@Transactional(timeout=90)
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun finnOgSlettArkiverteSoknader(dagerGamle: Long, vindu: Long) {
 		val arkiverteSoknader =
 			repo.findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(dagerGamle, vindu)
@@ -245,7 +246,7 @@ class SoknadService(
 
 	}
 
-	@Transactional(timeout=90)
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun slettGamleSoknader(
 		dagerGamle: Long = DEFAULT_LEVETID_OPPRETTET_SOKNAD,
 		permanent: Boolean = false,
@@ -270,7 +271,7 @@ class SoknadService(
 		}
 	}
 
-	@Transactional(timeout=90)
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun deleteSoknadBeforeCutoffDate(
 		cutoffDate: OffsetDateTime
 	): List<String> {
@@ -288,7 +289,7 @@ class SoknadService(
 		return soknaderToDelete.map { it.innsendingsid }.onEach { slettSoknadAutomatisk(it) }
 	}
 
-	@Transactional(timeout=90)
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun updateSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		if (dokumentSoknadDto.vedleggsListe.size != 2) {
 			throw BackendErrorException("Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant. Innsendt vedleggsliste skal være tom")
