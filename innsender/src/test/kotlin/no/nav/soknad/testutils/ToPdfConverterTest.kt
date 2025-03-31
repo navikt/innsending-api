@@ -21,8 +21,16 @@ class ToPdfConverterTest : FileToPdfInterface {
 		return toPdf(fileName, fileContent)
 	}
 
-	override fun mergePdfs(fileName: String, docs: List<ByteArray>): ByteArray {
+	override fun mergePdfs(fileName: String, metadata: String, docs: List<ByteArray>): ByteArray {
 		return toPdf(fileName, docs.first())
+	}
+
+	override fun flattenPdfs(fileName: String, metadata: String, docs: List<ByteArray>): ByteArray {
+		return toPdf(fileName,  docs.first())
+	}
+
+	override fun buildMetadata(title: String?, subject: String?, author: String?, keywords: List<String>?): String {
+		return "{\"title\":\"$title\", \"subject\":\"$subject\", \"author\":\"$author\"}"
 	}
 
 }

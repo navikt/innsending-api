@@ -17,7 +17,8 @@ import java.util.*
 @Service
 class KonverterTilPdf(
 	private val pdfConverter: FileToPdfInterface,
-	private val pdfMerger: PdfMerger
+	private val pdfMerger: PdfMerger,
+	private val checkAndFormatPdf: CheckAndFormatPdf
 ) : KonverterTilPdfInterface {
 
 	private val logger = LoggerFactory.getLogger(KonverterTilPdf::class.java)
@@ -26,13 +27,14 @@ class KonverterTilPdf(
 		fil: ByteArray,
 		soknad: DokumentSoknadDto,
 		filtype: String,
-		vedleggsTittel: String?
+		vedleggsTittel: String?,
+		vedleggsNr: String?
 	): Pair<ByteArray, Int> {
 
 		logger.info("Skal konvertere filtype=$filtype til PDF")
 
 		if ("pdf".equals(filtype, ignoreCase = true)) {
-			return checkAndFormatPDF(fil)
+			return flattenPDF(title = vedleggsTittel, subject = vedleggsNr,  fil)
 		} else if (officeFileTypes.keys.contains(filtype) || imageFileTypes.keys.contains(filtype)) {
 			val tittel = vedleggsTittel ?: "Annet"
 			return createPDFFromOfficeDoc(genererFilnavn(soknad, tittel, filtype), fil, tittel, soknad.spraak ?: "nb-NO")
@@ -46,9 +48,9 @@ class KonverterTilPdf(
 		}
 	}
 
-	private fun checkAndFormatPDF(fil: ByteArray): Pair<ByteArray, Int> {
+	private fun flattenPDF(title: String?, subject: String?, fil: ByteArray): Pair<ByteArray, Int> {
 		val antallSider = AntallSider().finnAntallSider(fil) ?: 0
-		return Pair(CheckAndFormatPdf().flatUtPdf(pdfMerger, fil, antallSider), antallSider) // Bare hvis inneholder formfields?
+		return Pair(checkAndFormatPdf.flatUtPdf(pdfMerger, title = title, subject = subject, fil = fil, antallSider = antallSider), antallSider)
 	}
 
 	private fun genererFilnavn(soknad: DokumentSoknadDto, tittel: String, filtype:String): String {
@@ -76,11 +78,11 @@ class KonverterTilPdf(
 	}
 
 	override fun flatUtPdf(fil: ByteArray, antallSider: Int): ByteArray {
-		return CheckAndFormatPdf().flatUtPdf(pdfMerger, fil, antallSider)
+		return checkAndFormatPdf.flatUtPdf(pdfMerger, title = null, subject = null, fil = fil, antallSider = antallSider)
 	}
 
 	override fun harSkrivbareFelt(input: ByteArray?): Boolean {
-		return CheckAndFormatPdf().harSkrivbareFelt(input)
+		return checkAndFormatPdf.harSkrivbareFelt(input)
 	}
 
 	// Using libreOffice route, metadata for language and title is not set

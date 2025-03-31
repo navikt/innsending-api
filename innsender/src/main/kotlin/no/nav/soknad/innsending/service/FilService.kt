@@ -127,11 +127,12 @@ class FilService(
 				ErrorCode.FILE_SIZE_SUM_TOO_LARGE
 			)
 		}
-		if (!vedleggdto.opplastingsStatus.equals(OpplastingsStatusDto.LastetOpp)) {
+
+		if (repo.hentVedlegg(filDto.vedleggsid).status != OpplastingsStatus.LASTET_OPP) {
 			repo.updateVedleggStatus(
-				soknadDto.innsendingsId!!,
-				filDto.vedleggsid,
-				OpplastingsStatus.LASTET_OPP
+				innsendingsId = soknadDto.innsendingsId!!,
+				vedleggsId = filDto.vedleggsid,
+				opplastingsStatus = OpplastingsStatus.LASTET_OPP
 			)
 		}
 		innsenderMetrics.incOperationsCounter(operation, soknadDto.tema)
@@ -343,7 +344,7 @@ class FilService(
 						logger.warn("$innsendingsId: HentOgMerge vedlegg ${it.uuid} mangler opplastet filer på alle filobjekter, returnerer null")
 						null
 					} else {
-						pdfMerger.mergePdfer(
+						pdfMerger.mergePdfer(it.tittel, it.vedleggsnr,
 							filer.filter { fil -> fil.data != null }.map { fil -> fil.data!! })
 					}
 				} else {

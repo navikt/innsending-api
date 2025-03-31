@@ -16,10 +16,10 @@ class PdfMerger(
 ) : PdfMergerInterface {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	override fun mergePdfer(docs: List<ByteArray>): ByteArray {
+	override fun mergePdfer(title: String?, subject: String?, docs: List<ByteArray>): ByteArray {
 		if (docs.size == 1) return docs[0]
 		return try {
-			mergeWithGotenberg(docs)
+			mergeWithGotenberg(title, subject, docs)
 		} catch (e: Exception) {
 			try {
 				mergeWithPDFBox(docs)
@@ -30,10 +30,11 @@ class PdfMerger(
 		}
 	}
 
-	private fun mergeWithGotenberg(docs: List<ByteArray>): ByteArray {
+	private fun mergeWithGotenberg(title: String?, subject: String?, docs: List<ByteArray>): ByteArray {
 		logger.info("Merging av filer v.hj.a. Gotenberg")
 		try {
-			return pdfConverter.mergePdfs("mergedFile", docs)
+			val metadata = pdfConverter.buildMetadata(title, subject)
+			return pdfConverter.mergePdfs("mergedFile", metadata, docs )
 		} catch (ex: Exception) {
 			logger.warn("Merge av PDF dokumenter i Gotenberg feilet", ex)
 			throw ex

@@ -1,10 +1,14 @@
 package no.nav.soknad.innsending.rest.innsendte
 
+import io.mockk.clearAllMocks
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.InnsendingApiApplication
 import no.nav.soknad.innsending.ApplicationTest
+import no.nav.soknad.innsending.repository.SoknadRepository
+import no.nav.soknad.innsending.repository.VedleggRepository
 import no.nav.soknad.innsending.utils.Api
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -37,6 +41,5 @@ internal class InnsendtListeApiTest : ApplicationTest() {
 	fun setup() {
 		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
 	}
-
 
 }

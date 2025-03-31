@@ -13,8 +13,9 @@ class CheckAndFormatPdfTest {
 
 	private val docToPdfConverter: FileToPdfInterface = ToPdfConverterTest()
 	private val pdfMerger = PdfMerger(docToPdfConverter)
+	private val checkAndFormatPdf = CheckAndFormatPdf(docToPdfConverter)
 
-	private val konverterTilPdf = KonverterTilPdf(docToPdfConverter, pdfMerger)
+	private val konverterTilPdf = KonverterTilPdf(docToPdfConverter, pdfMerger, checkAndFormatPdf)
 
 	private val soknadDto = DokumentSoknadDtoTestBuilder().build()
 

@@ -16,6 +16,8 @@ import no.nav.soknad.innsending.model.SoknadFile
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.getBytesFromFile
+import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
 import no.nav.soknad.innsending.utils.SoknadAssertions
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
@@ -426,5 +428,45 @@ class InnsendingServiceTest : ApplicationTest() {
 
 	}
 
+	@Test
+	fun `test sammenslåing og retur av fil på innsendt søknad`() {
+		val innsendingService = lagInnsendingService(soknadService)
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
+
+		filService.lagreFil(
+			dokumentSoknadDto,
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
+		)
+
+		val vedlegg = dokumentSoknadDto.vedleggsListe.first { !it.erHoveddokument }
+		repeat(2) {
+			filService.lagreFil(
+				dokumentSoknadDto,
+				Hjelpemetoder.lagFilDtoMedFil(vedlegg, getBytesFromFile("/PDF_1MB.pdf"))
+			)
+		}
+
+		val kvitteringsDto =
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				soknadsmottakerAPI,
+				dokumentSoknadDto,
+				innsendingService
+			)
+
+		assertTrue(kvitteringsDto.hoveddokumentRef != null)
+
+		val start = System.currentTimeMillis()
+		val files = innsendingService.getFiles(
+			dokumentSoknadDto.innsendingsId!!,
+			listOf(vedlegg.uuid!!)
+		)
+		System.out.println("Tid brukt på sammenslåing av pdfer ${System.currentTimeMillis()-start}ms")
+		// Så skal
+		assertEquals(1, files.size)
+		assertTrue(files.all { it.fileStatus == SoknadFile.FileStatus.ok })
+
+		writeBytesToFile(files.first().content!!, "./target/merged-s-l.pdf")
+
+	}
 
 }

@@ -27,7 +27,7 @@ class PdfMergerTest : ApplicationTest() {
 		}
 
 		val start = System.currentTimeMillis()
-		val mergedPdf = pdfMerger.mergePdfer(pdfFiler)
+		val mergedPdf = pdfMerger.mergePdfer(title = null, subject = null, pdfFiler)
 		val ferdig = System.currentTimeMillis()
 		println("Tid brukt for å merge ${pdfFiler.size} PDFer = ${ferdig - start}")
 
@@ -50,7 +50,7 @@ class PdfMergerTest : ApplicationTest() {
 		}
 		val sideSum = antallFiler * (antallSider.finnAntallSider(fil) ?: 0)
 		val start = System.currentTimeMillis()
-		val mergedPdf = pdfMerger.mergePdfer(pdfFiler)
+		val mergedPdf = pdfMerger.mergePdfer(title = null, subject = null, pdfFiler)
 		val ferdig = System.currentTimeMillis()
 		println("Tid brukt for å merge ${pdfFiler.size} PDFer = ${ferdig - start}")
 
@@ -72,7 +72,7 @@ class PdfMergerTest : ApplicationTest() {
 		}
 
 		val start = System.currentTimeMillis()
-		val mergedPdf = pdfMerger.mergePdfer(pdfFiler)
+		val mergedPdf = pdfMerger.mergePdfer(title = null, subject = null, pdfFiler)
 		val ferdig = System.currentTimeMillis()
 		println("Tid brukt for å merge ${pdfFiler.size} PDFer = ${ferdig - start}")
 
@@ -93,7 +93,7 @@ class PdfMergerTest : ApplicationTest() {
 		}
 
 		val start2 = System.currentTimeMillis()
-		val mergedPdf2 = pdfMerger.mergePdfer(pdfFiler)
+		val mergedPdf2 = pdfMerger.mergePdfer(title = null, subject = null, pdfFiler)
 		val ferdig2 = System.currentTimeMillis()
 		println("Tid brukt for å merge ${pdfFiler.size} PDFer = ${ferdig2 - start2}")
 
@@ -116,7 +116,7 @@ class PdfMergerTest : ApplicationTest() {
 		pdfFiler.add(storPdf)
 
 		val start = System.currentTimeMillis()
-		val mergedPdf = pdfMerger.mergePdfer(pdfFiler)
+		val mergedPdf = pdfMerger.mergePdfer(title = null, subject = null, pdfFiler)
 		val ferdig = System.currentTimeMillis()
 		println("Tid brukt for å merge ${pdfFiler.size} PDFer der en av PDFene består av mange sider = ${ferdig - start}")
 
@@ -135,7 +135,7 @@ class PdfMergerTest : ApplicationTest() {
 		}
 
 		val start = System.currentTimeMillis()
-		val mergedPdf = pdfMerger.mergePdfer(pdfFiler)
+		val mergedPdf = pdfMerger.mergePdfer(title = null, subject = null, pdfFiler)
 		val ferdig = System.currentTimeMillis()
 		println("Tid brukt for å merge ${pdfFiler.size} PDFer der en av PDFene består av mange sider = ${ferdig - start}")
 		assertTrue(mergedPdf.size > 0)

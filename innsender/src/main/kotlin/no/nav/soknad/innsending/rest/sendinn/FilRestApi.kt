@@ -70,7 +70,8 @@ class FilRestApi(
 			opplastet,
 			soknadDto,
 			filtype = filtype,
-			vedleggsTittel = vedleggDto.tittel
+			vedleggsTittel = vedleggDto.tittel,
+			vedleggsNr = vedleggDto.vedleggsnr
 		)
 
 		logger.info("$innsendingsId: opplastet/konvertert fil på vedlegg $vedleggsId med $antallsider sider og ${fil.size} bytes")

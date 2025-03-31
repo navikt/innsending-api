@@ -1,5 +1,6 @@
 package no.nav.soknad.pdfutilities.gotenberg
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
@@ -17,6 +18,8 @@ import org.springframework.web.client.RestClient
 import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayInputStream
 import java.io.File
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 @Service
@@ -26,8 +29,9 @@ class GotenbergConvertToPdf(
 ) : FileToPdfInterface {
 	companion object GotenbergConsts {
 		private const val LIBRE_OFFICE_ROUTE = "/forms/libreoffice/convert"
+		private const val FLATTEN_ROUTE = "/forms/libreoffice/convert"
 		private const val HTML_ROUTE = "/forms/chromium/convert/html"
-		private const val PDF_MERGE_ROUTE = "/forms/pdfengines/merge"
+		private const val PDF_MERGE_ROUTE = "/forms/libreoffice/convert"
 		private const val GOTENBERG_TRACE_HEADER = "gotenberg-trace"
 
 		private const val mergeWithPdfa = false
@@ -71,13 +75,15 @@ class GotenbergConvertToPdf(
 
 	}
 
-	override fun mergePdfs(fileName: String, docs: List<ByteArray>): ByteArray {
+	override fun mergePdfs(fileName: String, metadata: String, docs: List<ByteArray>): ByteArray {
 		val pageProperties: PageProperties = PageProperties.Builder().build()
 		val multipartBody = MultipartBodyBuilder().run {
 			docs.forEach {
 				part("files", ByteArrayMultipartFile("merge-"+ UUID.randomUUID().toString()+".pdf", it).resource)
 			}
 			filter_pdfa_and_or_ua(pageProperties.all()).forEach { part(it.key, it.value) }
+			//part("metadata", metadata )
+			part("merge", true)
 			build()
 		}
 
@@ -86,8 +92,40 @@ class GotenbergConvertToPdf(
 		val tidsbruk = System.currentTimeMillis() - start
 		logger.debug("Tid brukt på å slå sammen filer=$tidsbruk")
 
-		return merged
+		return writeMetadata(fileName, metadata, fileContent = merged)
 	}
+
+	private fun writeMetadata(fileName: String, metadata: String, fileContent: ByteArray): ByteArray {
+		val fileId = fileName + UUID.randomUUID().toString()+".pdf"
+		val multipartBody = MultipartBodyBuilder().run {
+			part("files", ByteArrayMultipartFile(fileId, fileContent).resource)
+			part("metadata", metadata )
+			build()
+		}
+		return convertFileRequest(filename = fileId, multipartBody, "/forms/chromium/convert") //"/forms/pdfengines/metadata/write"
+	}
+
+
+	override fun flattenPdfs(fileName: String, metadata: String, docs: List<ByteArray>): ByteArray {
+		val pageProperties: PageProperties = PageProperties.Builder().build()
+		val multipartBody = MultipartBodyBuilder().run {
+			docs.forEach {
+				part("files", ByteArrayMultipartFile("flatten-"+ UUID.randomUUID().toString()+".pdf", it).resource)
+			}
+			filter_pdfa_and_or_ua(pageProperties.all()).forEach { part(it.key, it.value) }
+			part("flatten", true)
+			part("metadata", metadata )
+			build()
+		}
+
+		val start = System.currentTimeMillis()
+		val flatten =  convertFileRequest(fileName, multipartBody, FLATTEN_ROUTE)
+		val tidsbruk = System.currentTimeMillis() - start
+		logger.debug("Tid brukt på å slå sammen filer=$tidsbruk")
+
+		return flatten
+	}
+
 
 	private fun filter_pdfa_and_or_ua(properties: Map<String, String>): Map<String, String> {
 		// pdfa and pdfua is default selected
@@ -106,6 +144,21 @@ class GotenbergConvertToPdf(
 			throw BackendErrorException("Fant ikke html template for konvertering av opplastet bilde til PDF", null, ErrorCode.GENERAL_ERROR)
 		}
 		return htmlTemplate.replace("##bilde##", fileName)
+	}
+
+
+	override fun buildMetadata(title: String?, subject: String?, author: String?, keywords: List<String>?): String {
+		val now = LocalDateTime.now()
+		val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+		val nowString = now.format(formatter)
+		val metaDatas = mutableListOf( PdfMetadata("creationDate", nowString), PdfMetadata("modDate", nowString), PdfMetadata("producer", "Gotenberg"))
+		if (title != null) metaDatas.add(PdfMetadata("title", title))
+		if (subject != null) metaDatas.add(PdfMetadata("subject", subject))
+		if (author != null) metaDatas.add(PdfMetadata("author", author))
+		if (keywords != null) metaDatas.add(PdfMetadata("keywords", keywords))
+		val mapper = jacksonObjectMapper().findAndRegisterModules()
+
+		return mapper.writeValueAsString(metaDatas.map{it.key to it.value}.toMap())
 	}
 
 	private fun convertFileRequest(
