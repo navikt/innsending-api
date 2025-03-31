@@ -3,13 +3,11 @@ package no.nav.soknad.innsending.cleanup
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.consumerapis.pdl.PdlAPI
 import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
-import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
@@ -45,9 +43,6 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 	private lateinit var innsendingService: InnsendingService
 
 	@MockkBean
-	private lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher
-
-	@MockkBean
 	private lateinit var leaderSelectionUtility: LeaderSelectionUtility
 
 	@MockkBean
@@ -65,8 +60,6 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 	fun testSlettingAvInnsendteSoknader() {
 		SlettArkiverteSoknader(leaderSelectionUtility, soknadService)
 
-		val soknader = mutableListOf<DokumentSoknadDto>()
-		every { brukernotifikasjonPublisher.soknadStatusChange(capture(soknader)) } returns true
 		every { leaderSelectionUtility.isLeader() } returns true
 		every { soknadsmottakerAPI.sendInnSoknad(any(), any()) } returns Unit
 		every { pdlInterface.hentPersonIdents(any()) } returns listOf(IdentDto("123456789", "FOLKEREGISTERIDENT", false))

@@ -2,14 +2,17 @@ package no.nav.soknad.innsending.rest.sendinn
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.SendinnSoknadApi
+import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.BodyStatusResponseDto
 import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.KvitteringsDto
 import no.nav.soknad.innsending.model.PatchSoknadDto
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.InnsendingService
+import no.nav.soknad.innsending.service.NotificationService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
@@ -33,6 +36,7 @@ class SoknadRestApi(
 	private val soknadService: SoknadService,
 	private val tilgangskontroll: Tilgangskontroll,
 	private val innsendingService: InnsendingService,
+	private val notificationService: NotificationService,
 ) : SendinnSoknadApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -73,6 +77,7 @@ class SoknadRestApi(
 		combinedLogger.log("$innsendingsId: Kall for å slette søknad", brukerId)
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
+		notificationService.close(innsendingsId)
 		soknadService.slettSoknadAvBruker(soknadDto)
 
 		combinedLogger.log("$innsendingsId: Slettet søknad", brukerId)
@@ -83,13 +88,17 @@ class SoknadRestApi(
 	}
 
 	@Timed(InnsenderOperation.SEND_INN)
-	override fun sendInnSoknad(innsendingsId: String): ResponseEntity<KvitteringsDto> {
+	override fun sendInnSoknad(
+		innsendingsId: String,
+		envQualifier: EnvQualifier?,
+	): ResponseEntity<KvitteringsDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
 		combinedLogger.log("$innsendingsId: Kall for å sende inn soknad", brukerId)
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
-		val kvitteringsDto = innsendingService.sendInnSoknad(soknadDto)
+		val (kvitteringsDto, ettersending) = innsendingService.sendInnSoknad(soknadDto)
+		notificationService.close(innsendingsId)
 
 		combinedLogger.log(
 			"$innsendingsId: Sendt inn soknad.\n" +
@@ -97,6 +106,13 @@ class SoknadRestApi(
 				"SkalEttersendes=${kvitteringsDto.skalEttersendes?.size}, ettersendelsesfrist=${kvitteringsDto.ettersendingsfrist}",
 			brukerId
 		)
+
+		if (ettersending != null) {
+			notificationService.create(
+				ettersending.innsendingsId!!,
+				NotificationOptions(erSystemGenerert = true, envQualifier = envQualifier)
+			)
+		}
 
 		return ResponseEntity
 			.status(HttpStatus.OK)

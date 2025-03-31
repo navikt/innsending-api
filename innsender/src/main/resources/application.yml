@@ -102,6 +102,9 @@ restconfig:
     urls:
       default: http://localhost:3100/sendinn
   fyllUtUrl: http://localhost:3001/fyllut
+  fyllut:
+    urls:
+      default: http://localhost:3001/fyllut
   clientId: clientId
   clientSecret: clientSecret
   pdlScope: api://dev-fss.pdl.pdl-api/.default
@@ -115,9 +118,6 @@ restconfig:
   kontoregisterUrl: http://localhost:9043/kontoregister-api
 
 brukernotifikasjonconfig:
-  profiles: test
-  fyllutUrl: http://localhost:3001/fyllut
-  sendinnUrl: http://localhost:3100/sendinn
   publisereEndringer: true
 
 ---
@@ -150,6 +150,9 @@ restconfig:
     urls:
       default: http://localhost:3100/sendinn
   fyllUtUrl: http://localhost:3001/fyllut
+  fyllut:
+    urls:
+      default: http://localhost:3001/fyllut
   clientId: ${AZURE_APP_CLIENT_ID}
   clientSecret: ${AZURE_APP_CLIENT_SECRET}
   pdlScope: ${PDL_SCOPE:api://dev-fss.pdl.pdl-api/.default}
@@ -163,8 +166,6 @@ restconfig:
   kontoregisterUrl: ${KONTOREGISTER_URL:http://kontoregister.no}
 
 brukernotifikasjonconfig:
-  fyllutUrl: http://localhost:3001/fyllut
-  sendinnUrl: http://localhost:3100/sendinn
   publisereEndringer: true
 
 kafka:
@@ -224,6 +225,9 @@ restconfig:
     urls:
       default: ${SEND_INN_URL}
   fyllUtUrl: ${FYLL_UT_URL}
+  fyllut:
+    urls:
+      default: ${FYLL_UT_URL}
   clientId: ${AZURE_APP_CLIENT_ID}
   clientSecret: ${AZURE_APP_CLIENT_SECRET}
   pdlScope: ${PDL_SCOPE}
@@ -238,9 +242,6 @@ restconfig:
 
 
 brukernotifikasjonconfig:
-  profiles: ${SPRING_PROFILES_ACTIVE}
-  fyllutUrl: ${FYLL_UT_URL}
-  sendinnUrl: ${SEND_INN_URL}
   publisereEndringer: ${PUBLISERE_BRUKERNOTIFIKASJONER}
 
 ettersendingsfrist: ${ETTERSENDINGSFRIST}
@@ -353,3 +354,11 @@ restconfig:
       preprodAltAnsatt: https://www.ansatt.dev.nav.no/sendinn-alt
       delingslenke: https://www.ansatt.dev.nav.no/sendinn-delingslenke
       default: ${SEND_INN_URL:http://localhost:3100/sendinn}
+  fyllut:
+    urls:
+      preprodIntern: https://fyllut-preprod.intern.dev.nav.no/fyllut
+      preprodAltIntern: https://fyllut-preprod-alt.intern.dev.nav.no/fyllut
+      preprodAnsatt: https://fyllut-preprod.ansatt.dev.nav.no/fyllut
+      preprodAltAnsatt: https://fyllut-preprod-alt.ansatt.dev.nav.no/fyllut
+      delingslenke: https://skjemadelingslenke.ekstern.dev.nav.no/fyllut
+      default: ${FYLL_UT_URL:http://localhost:3001/fyllut}

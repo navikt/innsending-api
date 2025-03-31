@@ -4,7 +4,6 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
@@ -60,7 +59,6 @@ class InnsendingServiceTest : ApplicationTest() {
 	private lateinit var exceptionHelper: ExceptionHelper
 
 	val soknadsmottakerAPI = mockk<MottakerInterface>()
-	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
 	private val pdlInterface = mockk<PdlInterface>()
 
 	@MockkBean
@@ -73,7 +71,6 @@ class InnsendingServiceTest : ApplicationTest() {
 		tilleggstonadService = tilleggstonadService,
 		ettersendingService = ettersendingService,
 		filService = filService,
-		brukernotifikasjonPublisher = brukernotifikasjonPublisher,
 		innsenderMetrics = innsenderMetrics,
 		exceptionHelper = exceptionHelper,
 		soknadsmottakerAPI = soknadsmottakerAPI,
@@ -83,7 +80,6 @@ class InnsendingServiceTest : ApplicationTest() {
 
 	@BeforeEach
 	fun setup() {
-		every { brukernotifikasjonPublisher.soknadStatusChange(any()) } returns true
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("1234567890", "Kan", null, "Søke")
 		every { subjectHandler.getClientId() } returns "application"
 	}

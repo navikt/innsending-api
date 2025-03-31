@@ -6,25 +6,29 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
 import no.nav.soknad.arkivering.soknadsmottaker.model.Varsel
 import no.nav.soknad.innsending.config.BrukerNotifikasjonConfig
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
-import no.nav.soknad.innsending.model.DokumentSoknadDto
-import no.nav.soknad.innsending.model.SoknadType
-import no.nav.soknad.innsending.model.SoknadsStatusDto
+import no.nav.soknad.innsending.location.UrlHandler
+import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.VisningsType
+import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.util.Constants
-import no.nav.soknad.innsending.util.Constants.ukjentEttersendingsId
-import no.nav.soknad.innsending.util.models.erEttersending
+import no.nav.soknad.innsending.util.mapping.toOffsetDateTime
+import no.nav.soknad.innsending.util.soknaddbdata.getSkjemaPath
+import no.nav.soknad.innsending.util.soknaddbdata.isEttersending
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service
 import org.springframework.web.util.UriComponentsBuilder
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 
 @Service
 @EnableConfigurationProperties(BrukerNotifikasjonConfig::class)
 class BrukernotifikasjonPublisher(
 	private val notifikasjonConfig: BrukerNotifikasjonConfig,
-	private val sendTilKafkaPublisher: PublisherInterface
+	private val sendTilKafkaPublisher: PublisherInterface,
+	private val urlHandler: UrlHandler,
 ) {
 	private val logger = LoggerFactory.getLogger(BrukernotifikasjonPublisher::class.java)
 
@@ -39,130 +43,87 @@ class BrukernotifikasjonPublisher(
 		"en" to ""
 	)
 
-	private fun computeGroupId(dokumentSoknad: DokumentSoknadDto) =
-		dokumentSoknad.ettersendingsId.takeIf { it != null && it != ukjentEttersendingsId }
-			?: dokumentSoknad.innsendingsId
-
-	fun soknadStatusChange(dokumentSoknad: DokumentSoknadDto, erNavInitiert: Boolean = false): Boolean {
-		logger.debug("${dokumentSoknad.innsendingsId}: Skal publisere Brukernotifikasjon")
-
-		if (notifikasjonConfig.publisereEndringer) {
-			val groupId = computeGroupId(dokumentSoknad)
-
-			logger.info(
-				"${dokumentSoknad.innsendingsId}: Publiser statusendring på søknad" +
-					": innsendingsId=${dokumentSoknad.innsendingsId}, status=${dokumentSoknad.status}, groupId=$groupId" +
-					", isDokumentInnsending=true, isEttersendelse=${dokumentSoknad.erEttersending}" +
-					", tema=${dokumentSoknad.tema}"
+	fun createNotification(soknad: SoknadDbData, opts: NotificationOptions = NotificationOptions()): Boolean {
+		logger.debug("${soknad.innsendingsid}: Skal publisere Brukernotifikasjon")
+		if (!notifikasjonConfig.publisereEndringer) {
+			return true
+		}
+		try {
+			val tittel = if (soknad.isEttersending()) "${getEttersendingPrefix(soknad)}${soknad.tittel}" else soknad.tittel
+			val lenke = createLink(soknad, opts.envQualifier)
+			val info = NotificationInfo(
+				tittel,
+				lenke,
+				daysUntil(soknad.skalslettesdato),
+				if (soknad.isEttersending()) listOf(Varsel(Varsel.Kanal.sms)) else emptyList(),
+				if (opts.erSystemGenerert && !opts.erNavInitiert) getUtsattTidspunkt() else null
 			)
-
-			try {
-				when (dokumentSoknad.status) {
-					SoknadsStatusDto.Opprettet -> handleNewApplication(dokumentSoknad, groupId!!, erNavInitiert)
-					SoknadsStatusDto.Innsendt -> handleSentInApplication(dokumentSoknad, groupId!!)
-					SoknadsStatusDto.SlettetAvBruker, SoknadsStatusDto.AutomatiskSlettet -> handleDeletedApplication(
-						dokumentSoknad,
-						groupId!!
-					)
-					// Ingen brukernotifikasjon for utfylt søknad
-					SoknadsStatusDto.Utfylt -> {}
-				}
-			} catch (e: Exception) {
-				logger.info("${dokumentSoknad.innsendingsId}: Publisering av brukernotifikasjon feilet", e)
-				return false
-			}
-		}
-		return true
-	}
-
-	private fun handleNewApplication(dokumentSoknad: DokumentSoknadDto, groupId: String, erNavInitiert: Boolean) {
-		// Ny søknad opprettet publiser data slik at søker kan plukke den opp fra Ditt Nav på et senere tidspunkt
-		// i tilfelle han/hun ikke ferdigstiller og sender inn
-		val ettersending = dokumentSoknad.erEttersending
-		val lenke = createLink(dokumentSoknad)
-		val notificationInfo = createNotificationInfo(dokumentSoknad, ettersending, lenke, erNavInitiert)
-
-		val soknadRef = SoknadRef(
-			dokumentSoknad.innsendingsId!!,
-			ettersending,
-			groupId,
-			dokumentSoknad.brukerId,
-			dokumentSoknad.opprettetDato,
-			erSystemGenerert = dokumentSoknad.erSystemGenerert == true,
-		)
-
-		try {
-			sendTilKafkaPublisher.opprettBrukernotifikasjon(AddNotification(soknadRef, notificationInfo))
-			logger.info("${dokumentSoknad.innsendingsId}: Har sendt melding om ny brukernotifikasjon med lenke $lenke")
+			val groupId = soknad.ettersendingsid ?: soknad.innsendingsid
+			val soknadRef = SoknadRef(
+				soknad.innsendingsid,
+				soknad.isEttersending(),
+				groupId,
+				soknad.brukerid,
+				soknad.opprettetdato.toOffsetDateTime(),
+				opts.erSystemGenerert
+			)
+			sendTilKafkaPublisher.opprettBrukernotifikasjon(AddNotification(soknadRef, info))
+			logger.info("${soknad.innsendingsid}: Har sendt melding om ny brukernotifikasjon med lenke $lenke")
+			return true
 		} catch (e: Exception) {
-			logger.error("${dokumentSoknad.innsendingsId}: Sending av melding om ny brukernotifikasjon feilet", e)
+			logger.warn("${soknad.innsendingsid}: Publisering av brukernotifikasjon feilet", e)
+			return false
 		}
 	}
 
-	private fun createNotificationInfo(
-		dokumentSoknad: DokumentSoknadDto,
-		ettersending: Boolean,
-		lenke: String,
-		erNavInitiert: Boolean
-	): NotificationInfo {
-		val tittel = tittelPrefixGittSprak(ettersending, dokumentSoknad.spraak ?: "no") + dokumentSoknad.tittel
-		val eksternVarslingList = if (ettersending) mutableListOf(Varsel(Varsel.Kanal.sms)) else mutableListOf()
-
-		val soknadLevetid = dokumentSoknad.mellomlagringDager ?: Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
-		val utsettSendingTil = if (dokumentSoknad.erSystemGenerert == true && erNavInitiert != true)
-			LocalDateTime.now().plusDays(Constants.DEFAULT_UTSETT_SENDING_VED_SYSTEMGENERERT_DAGER)
-				.withHour(9).withMinute(0).withSecond(0).atOffset(ZoneOffset.UTC) else null
-		return NotificationInfo(tittel, lenke, soknadLevetid.toInt(), eksternVarslingList, utsettSendingTil = utsettSendingTil)
-	}
-
-	private fun tittelPrefixGittSprak(ettersendelse: Boolean, sprak: String): String {
-		return if (ettersendelse)
-			tittelPrefixEttersendelse[sprak] ?: tittelPrefixEttersendelse["no"]!!
-		else tittelPrefixNySoknad[sprak] ?: tittelPrefixNySoknad["no"]!!
-	}
-
-	private fun erEttersending(dokumentSoknad: DokumentSoknadDto): Boolean =
-		(dokumentSoknad.ettersendingsId != null) || (dokumentSoknad.visningsType == VisningsType.ettersending)
-
-	private fun handleSentInApplication(dokumentSoknad: DokumentSoknadDto, groupId: String) {
-		// Søknad innsendt, fjern beskjed, og opprett eventuelle oppgaver for hvert vedlegg som skal ettersendes
-		publishDoneEvent(dokumentSoknad, groupId)
-	}
-
-	private fun publishDoneEvent(dokumentSoknad: DokumentSoknadDto, groupId: String) {
-		val ettersending = erEttersending(dokumentSoknad)
-		val soknadRef = SoknadRef(
-			dokumentSoknad.innsendingsId!!,
-			ettersending,
-			groupId,
-			dokumentSoknad.brukerId,
-			dokumentSoknad.opprettetDato
-		)
-
+	fun closeNotification(soknad: SoknadDbData): Boolean {
+		logger.debug("${soknad.innsendingsid}: Skal avslutte Brukernotifikasjon")
+		if (!notifikasjonConfig.publisereEndringer) {
+			return true
+		}
 		try {
+			val soknadRef = SoknadRef(
+				soknad.innsendingsid,
+				soknad.isEttersending(),
+				soknad.ettersendingsid ?: soknad.innsendingsid,
+				soknad.brukerid,
+				soknad.opprettetdato.toOffsetDateTime(),
+			)
 			sendTilKafkaPublisher.avsluttBrukernotifikasjon(soknadRef)
-			logger.info("${dokumentSoknad.innsendingsId}: Har sendt melding om avslutning av brukernotifikasjon")
+			logger.info("${soknad.innsendingsid}: Har sendt melding om avslutning av brukernotifikasjon")
+			return true
 		} catch (e: Exception) {
-			logger.error("${dokumentSoknad.innsendingsId}: Sending av melding om avslutning av brukernotifikasjon feilet", e)
+			logger.warn("${soknad.innsendingsid}: Sending av melding om avslutning av brukernotifikasjon feilet", e)
+			return false
 		}
 	}
 
-	private fun handleDeletedApplication(dokumentSoknad: DokumentSoknadDto, groupId: String) {
-		// Søknad slettet, fjern beskjed
-		publishDoneEvent(dokumentSoknad, groupId)
-	}
+	private fun createLink(soknad: SoknadDbData, envQualifier: EnvQualifier?): String {
+		if (soknad.visningstype == VisningsType.fyllUt && !soknad.isEttersending()) {
+			val baseUrl = "${urlHandler.getFyllutUrl(envQualifier)}/${soknad.getSkjemaPath()}/oppsummering"
 
-	private fun createLink(dokumentSoknad: DokumentSoknadDto): String {
-		if (dokumentSoknad.soknadstype == SoknadType.soknad && dokumentSoknad.visningsType == VisningsType.fyllUt) {
-			val baseUrl = "${notifikasjonConfig.fyllutUrl}/${dokumentSoknad.skjemaPath}/oppsummering"
-
-			val uriBuilder = UriComponentsBuilder.fromUriString(baseUrl)
-			uriBuilder.queryParam("sub", "digital")
-			uriBuilder.queryParam("innsendingsId", dokumentSoknad.innsendingsId)
-
-			return uriBuilder.toUriString()
+			return UriComponentsBuilder.fromUriString(baseUrl)
+				.queryParam("sub", "digital")
+				.queryParam("innsendingsId", soknad.innsendingsid)
+				.toUriString()
 		}
 
-		return "${notifikasjonConfig.sendinnUrl}/${dokumentSoknad.innsendingsId}"
+		return "${urlHandler.getSendInnUrl(envQualifier)}/${soknad.innsendingsid}"
 	}
+
+	fun getUtsattTidspunkt(): OffsetDateTime =
+		LocalDateTime.now().plusDays(Constants.DEFAULT_UTSETT_SENDING_VED_SYSTEMGENERERT_DAGER)
+			.withHour(9).withMinute(0).withSecond(0).atOffset(ZoneOffset.UTC)
+
+	fun getEttersendingPrefix(soknad: SoknadDbData): String =
+		tittelPrefixEttersendelse[soknad.spraak] ?: tittelPrefixEttersendelse["no"]!!
+
+	fun daysUntil(dateTime: OffsetDateTime) =
+		ChronoUnit.DAYS.between(LocalDateTime.now(), dateTime.toLocalDateTime()).toInt() + 1
 }
+
+data class NotificationOptions(
+	val erSystemGenerert: Boolean = false,
+	val erNavInitiert: Boolean = false,
+	val envQualifier: EnvQualifier? = null,
+)

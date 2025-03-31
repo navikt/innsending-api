@@ -4,7 +4,6 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.PatchVedleggDto
 import no.nav.soknad.innsending.model.PostVedleggDto
@@ -32,9 +31,6 @@ class VedleggServiceTest : ApplicationTest() {
 	private lateinit var vedleggService: VedleggService
 
 	@Autowired
-	private lateinit var ettersendingService: EttersendingService
-
-	@Autowired
 	private lateinit var filService: FilService
 
 	@Autowired
@@ -43,14 +39,11 @@ class VedleggServiceTest : ApplicationTest() {
 	@MockkBean
 	private lateinit var subjectHandler: SubjectHandlerInterface
 
-	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
-
 	private fun lagSoknadService(): SoknadService = SoknadService(
 		skjemaService = skjemaService,
 		repo = repo,
 		vedleggService = vedleggService,
 		filService = filService,
-		brukernotifikasjonPublisher = brukernotifikasjonPublisher,
 		innsenderMetrics = innsenderMetrics,
 		exceptionHelper = exceptionHelper,
 		subjectHandler = subjectHandler,
@@ -58,7 +51,6 @@ class VedleggServiceTest : ApplicationTest() {
 
 	@BeforeEach
 	fun setup() {
-		every { brukernotifikasjonPublisher.soknadStatusChange(any()) } returns true
 		every { subjectHandler.getClientId() } returns "application"
 	}
 

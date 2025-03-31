@@ -5,7 +5,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
@@ -91,8 +90,6 @@ class SoknadServiceTest : ApplicationTest() {
 	@Autowired
 	private lateinit var restConfig: RestConfig
 
-	private val brukernotifikasjonPublisher = mockk<BrukernotifikasjonPublisher>()
-
 	private val hentSkjemaData = mockk<SkjemaClient>()
 
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
@@ -107,7 +104,6 @@ class SoknadServiceTest : ApplicationTest() {
 	@BeforeEach
 	fun setup() {
 		every { hentSkjemaData.hent() } returns hentSkjemaDataConsumer.initSkjemaDataFromDisk()
-		every { brukernotifikasjonPublisher.soknadStatusChange(any()) } returns true
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("1234567890", "Kan", null, "Søke")
 		every { subjectHandler.getClientId() } returns "application"
 	}
@@ -129,7 +125,6 @@ class SoknadServiceTest : ApplicationTest() {
 		tilleggstonadService = tilleggstonadService,
 		ettersendingService = ettersendingService,
 		filService = filService,
-		brukernotifikasjonPublisher = brukernotifikasjonPublisher,
 		innsenderMetrics = innsenderMetrics,
 		exceptionHelper = exceptionHelper,
 		soknadsmottakerAPI = soknadsmottakerAPI,
@@ -626,7 +621,7 @@ class SoknadServiceTest : ApplicationTest() {
 		val innsendingService = lagInnsendingService(soknadService)
 		// Check that reciept is returned for each sent in application
 		val kvitteringsDtoList = mutableListOf<KvitteringsDto>()
-		dokumentSoknadDtoList.forEach { kvitteringsDtoList.add(innsendingService.sendInnSoknad(it)) }
+		dokumentSoknadDtoList.forEach { kvitteringsDtoList.add(innsendingService.sendInnSoknad(it).first) }
 		assertTrue(kvitteringsDtoList.size == dokumentSoknadDtoList.size)
 
 		// Check that the applications attachments are kept after the applications are sent in
