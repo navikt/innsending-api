@@ -7,7 +7,6 @@ import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
-import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
 import no.nav.soknad.innsending.util.dokumentsoknad.isLospost
 import no.nav.soknad.innsending.util.mapping.*
@@ -96,12 +95,11 @@ class FilService(
 			}
 		}
 
-		val vedleggdto = soknadDto.vedleggsListe.filter { it.id == filDto.vedleggsid }.getOrNull(0)
-		if (vedleggdto == null)
-			throw ResourceNotFoundException("Vedlegg ${filDto.vedleggsid} til søknad ${soknadDto.innsendingsId} eksisterer ikke")
+		val vedleggdto = soknadDto.vedleggsListe.firstOrNull { it.id == filDto.vedleggsid }
+			?: throw ResourceNotFoundException("Vedlegg ${filDto.vedleggsid} til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
 		val start = System.currentTimeMillis()
-		logger.info("${soknadDto.innsendingsId!!}: Skal lagre fil med størrelse ${filDto.data!!.size} på vedlegg ${filDto.vedleggsid}")
+		logger.info("${soknadDto.innsendingsId!!}: Skal lagre fil med størrelse ${filDto.data?.size ?: 0} på vedlegg ${filDto.vedleggsid}")
 		val savedFilDbData = try {
 			repo.saveFilDbData(soknadDto.innsendingsId!!, mapTilFilDb(filDto))
 		} catch (e: Exception) {
@@ -128,11 +126,11 @@ class FilService(
 				ErrorCode.FILE_SIZE_SUM_TOO_LARGE
 			)
 		}
-		if (!vedleggdto.opplastingsStatus.equals(OpplastingsStatusDto.LastetOpp)) {
+		if (repo.hentVedlegg(filDto.vedleggsid).status != OpplastingsStatus.LASTET_OPP) {
 			repo.updateVedleggStatus(
-				soknadDto.innsendingsId!!,
-				filDto.vedleggsid,
-				OpplastingsStatus.LASTET_OPP
+				innsendingsId = soknadDto.innsendingsId!!,
+				vedleggsId = filDto.vedleggsid,
+				opplastingsStatus = OpplastingsStatus.LASTET_OPP
 			)
 		}
 		innsenderMetrics.incOperationsCounter(operation, soknadDto.tema)
