@@ -16,6 +16,7 @@ import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
+import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.*
 import no.nav.soknad.pdfutilities.AntallSider
@@ -23,7 +24,6 @@ import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
 import java.util.*
@@ -45,7 +45,7 @@ class InnsendingService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	@Transactional
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto): Pair<List<VedleggDto>, List<VedleggDto>> {
 		val operation = InnsenderOperation.SEND_INN.name
 
@@ -208,7 +208,7 @@ class InnsendingService(
 		}
 	}
 
-	@Transactional(isolation = Isolation.READ_UNCOMMITTED)
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): Pair<KvitteringsDto, DokumentSoknadDto?> {
 		val operation = InnsenderOperation.SEND_INN.name
 		val startSendInn = System.currentTimeMillis()
