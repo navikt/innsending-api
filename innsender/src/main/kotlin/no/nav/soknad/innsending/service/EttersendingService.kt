@@ -14,6 +14,7 @@ import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
+import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.innsending.util.mapping.*
@@ -41,7 +42,7 @@ class EttersendingService(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	// Lagre ettersendingssøknad i DB
-	@Transactional
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun saveEttersending(
 		brukerId: String,
 		ettersendingsId: String?,
@@ -85,7 +86,7 @@ class EttersendingService(
 		)
 	}
 
-	@Transactional
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun saveEttersending(
 		nyesteSoknad: DokumentSoknadDto,
 		ettersendingsId: String,
@@ -174,7 +175,7 @@ class EttersendingService(
 		}
 	}
 
-	@Transactional
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun createEttersendingFromInnsendtSoknad(
 		brukerId: String,
 		existingSoknad: DokumentSoknadDto,
@@ -214,7 +215,7 @@ class EttersendingService(
 		}
 	}
 
-	@Transactional
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun createEttersendingFromArchivedSoknad(
 		brukerId: String,
 		archivedSoknad: AktivSakDto,
@@ -251,7 +252,7 @@ class EttersendingService(
 		}
 	}
 
-	@Transactional
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun createEttersending(brukerId: String, ettersending: OpprettEttersending): DokumentSoknadDto {
 		logger.info("Oppretter ettersending for skjemanr=${ettersending.skjemanr}")
 		val operation = InnsenderOperation.OPPRETT.name
@@ -336,7 +337,7 @@ class EttersendingService(
 		}
 	}
 
-	@Transactional
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun createEttersendingFromExternalApplication(
 		brukerId: String,
 		eksternOpprettEttersending: EksternOpprettEttersending,

@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.innsending.util.mapping.mapTilLospost
@@ -24,7 +25,7 @@ class LospostService(
 	private val subjectHandler: SubjectHandlerInterface,
 ) {
 
-	@Transactional
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun saveLospostInnsending(
 		brukerId: String,
 		tema: String,
