@@ -115,7 +115,8 @@ class RepositoryUtils(
 				tidspunkt = LocalDateTime.now(),
 				skjemanr = dokumentSoknadDto.skjemanr,
 				tema = dokumentSoknadDto.tema,
-				erettersending = dokumentSoknadDto.ettersendingsId != null
+				erettersending = dokumentSoknadDto.ettersendingsId != null,
+				applikasjon = dokumentSoknadDto.applikasjon,
 			)
 		)
 	} catch (ex: Exception) {
@@ -139,7 +140,8 @@ class RepositoryUtils(
 					tidspunkt = LocalDateTime.now(),
 					soknadDbData.skjemanr,
 					soknadDbData.tema,
-					erettersending = soknadDbData.ettersendingsid != null
+					erettersending = soknadDbData.ettersendingsid != null,
+					applikasjon = soknadDbData.applikasjon,
 				)
 			)
 		} catch (ex: Exception) {
@@ -346,7 +348,8 @@ class RepositoryUtils(
 				tidspunkt = LocalDateTime.now(),
 				skjemanr = soknadDbData.skjemanr,
 				tema = soknadDbData.tema,
-				erettersending = soknadDbData.ettersendingsid != null
+				erettersending = soknadDbData.ettersendingsid != null,
+				applikasjon = soknadDbData.applikasjon,
 			)
 		)
 

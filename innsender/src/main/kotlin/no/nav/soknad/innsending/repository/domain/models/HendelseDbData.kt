@@ -13,5 +13,6 @@ data class HendelseDbData(
 	@Column(name = "tidspunkt", columnDefinition = "TIMESTAMP WITH TIME ZONE") val tidspunkt: LocalDateTime,
 	@Column(name = "skjemanr", columnDefinition = "varchar") val skjemanr: String?,
 	@Column(name = "tema", columnDefinition = "varchar") val tema: String?,
-	@Column(name = "erettersending", columnDefinition = "varchar") val erettersending: Boolean?
+	@Column(name = "erettersending", columnDefinition = "varchar") val erettersending: Boolean?,
+	@Column(name = "applikasjon", columnDefinition = "varchar") val applikasjon: String?
 )
