@@ -6,7 +6,7 @@ import java.time.ZoneId
 import kotlin.math.absoluteValue
 
 fun mapTilOffsetDateTime(localDateTime: LocalDateTime?): OffsetDateTime? =
-	if (localDateTime == null) null else localDateTime.atOffset(ZoneId.of("CET").rules.getOffset(localDateTime))
+	localDateTime?.atOffset(ZoneId.of("CET").rules.getOffset(localDateTime))
 
 fun mapTilOffsetDateTime(localDateTime: LocalDateTime, offset: Long): OffsetDateTime {
 	if (offset < 0) {
@@ -18,3 +18,4 @@ fun mapTilOffsetDateTime(localDateTime: LocalDateTime, offset: Long): OffsetDate
 fun mapTilLocalDateTime(offsetDateTime: OffsetDateTime?): LocalDateTime? =
 	offsetDateTime?.toLocalDateTime()
 
+fun LocalDateTime.toOffsetDateTime(): OffsetDateTime = this.atOffset(ZoneId.of("CET").rules.getOffset(this))

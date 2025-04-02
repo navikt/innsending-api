@@ -3,12 +3,14 @@ package no.nav.soknad.innsending.rest.ettersending
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.EttersendingApi
+import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.location.UrlHandler
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.OpprettEttersending
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.EttersendingService
+import no.nav.soknad.innsending.service.NotificationService
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import org.slf4j.LoggerFactory
@@ -26,6 +28,7 @@ import java.net.URI
 class EttersendingRestApi(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val ettersendingService: EttersendingService,
+	private val notificationService: NotificationService,
 	private val urlHandler: UrlHandler,
 ) : EttersendingApi {
 
@@ -57,6 +60,8 @@ class EttersendingRestApi(
 			"${ettersending.innsendingsId}: Opprettet ettersending fra fyllut-ettersending på skjema ${ettersending.skjemanr}",
 			brukerId
 		)
+
+		notificationService.create(ettersending.innsendingsId!!, NotificationOptions(envQualifier = envQualifier))
 
 		return ResponseEntity
 			.status(HttpStatus.CREATED)

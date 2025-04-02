@@ -1,18 +1,23 @@
 server:
   port: 9064
-
-  servlet:
-    multipart:
-      max-file-size: 100MB
-      max-request-size: 100MB
+  max-http-request-header-size: 32KB
+  tomcat:
+    max-http-form-post-size: 50MB
 
 spring:
   config:
     activate:
       on-profile: test
-
   application:
     name: innsending-api
+  jackson:
+    default-property-inclusion: non_null
+  jpa:
+    open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
   flyway:
     enabled: true
@@ -49,8 +54,8 @@ kafka:
 
 restconfig:
   version: 1.0
-  maxFileSize: 50
-  maxFileSizeSum: 150
+  maxFileSize: 15
+  maxFileSizeSum: 45
   maxNumberOfPages: 200
   sanityHost: http://localhost:${wiremock.server.port}
   sanityEndpoint: /soknader/api/sanity/skjemautlisting
@@ -72,9 +77,6 @@ restconfig:
   kontoregisterUrl: http://localhost:${wiremock.server.port}/kontoregister-api
 
 brukernotifikasjonconfig:
-  profiles: test
-  fyllutUrl: http://localhost:3001/fyllut
-  sendinnUrl: http://localhost:3100/sendinn
   publisereEndringer: true
 
 ettersendingsfrist: 14

@@ -1,11 +1,17 @@
 package no.nav.soknad.innsending.rest.fyllut
 
 import com.ninjasquad.springmockk.MockkBean
+import com.ninjasquad.springmockk.SpykBean
+import io.mockk.clearAllMocks
 import io.mockk.every
+import io.mockk.slot
+import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenResponse
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
+import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
+import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
@@ -45,6 +51,9 @@ class FyllutRestApiTest : ApplicationTest() {
 	@MockkBean
 	lateinit var kodeverkService: KodeverkService
 
+	@SpykBean
+	lateinit var notificationPublisher: PublisherInterface
+
 	@Autowired
 	lateinit var restTemplate: TestRestTemplate
 
@@ -71,6 +80,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	@BeforeEach
 	fun setup() {
+		clearAllMocks()
 		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
 		every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
 		every { kodeverkService.getPoststed(any()) } answers { postnummerMap[firstArg()] }
@@ -91,13 +101,67 @@ class FyllutRestApiTest : ApplicationTest() {
 		val skjemaDto = SkjemaDtoTestBuilder(vedleggsListe = listOf(t7Vedlegg, n6Vedlegg)).build()
 
 		// Når
-		val opprettetSoknadResponse = api?.createSoknad(skjemaDto)
+		val opprettetSoknadResponse = api!!.createSoknad(skjemaDto)
+			.assertSuccess()
 
 		// Så
-		assertTrue(opprettetSoknadResponse != null)
-		assertEquals(201, opprettetSoknadResponse.statusCode.value())
-		testHentSoknadOgSendInn(opprettetSoknadResponse, token)
+		testHentSoknadOgSendInn(opprettetSoknadResponse.body, token)
+	}
 
+	@Test
+	fun testUserNotificationOnSoknadCreation() {
+		// Gitt
+		val vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build()
+		val skjemaDto = SkjemaDtoTestBuilder(vedleggsListe = listOf(vedlegg)).build()
+
+		// Når
+		val responseBody = api!!.createSoknad(skjemaDto, envQualifier = EnvQualifier.preprodAltAnsatt)
+			.assertSuccess()
+			.body
+
+		// Så
+		val parameterSlot = slot<AddNotification>()
+		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
+		val notification = parameterSlot.captured
+
+		assertEquals(responseBody.innsendingsId, notification.soknadRef.innsendingId)
+		assertEquals(responseBody.innsendingsId, notification.soknadRef.groupId)
+		assertEquals(responseBody.brukerId, notification.soknadRef.personId)
+		assertEquals(false, notification.soknadRef.erSystemGenerert)
+		assertEquals(false, notification.soknadRef.erEttersendelse)
+		assertEquals(responseBody.tittel, notification.brukernotifikasjonInfo.notifikasjonsTittel)
+		assertEquals(28, notification.brukernotifikasjonInfo.antallAktiveDager)
+		assertTrue(
+			notification.brukernotifikasjonInfo.lenke.contains("/oppsummering?"),
+			"Link should point to summary page: ${notification.brukernotifikasjonInfo.lenke}"
+		)
+		assertTrue(
+			notification.brukernotifikasjonInfo.lenke.contains("fyllut-preprod-alt.ansatt.dev.nav.no"),
+			"Incorrect domain in link: ${notification.brukernotifikasjonInfo.lenke}"
+		)
+		assertEquals(0, notification.brukernotifikasjonInfo.eksternVarsling.size)
+		assertNull(notification.brukernotifikasjonInfo.utsettSendingTil)
+	}
+
+	@Test
+	fun testUserNotificationWithShorterMellomlagringOnSoknadCreation() {
+		// Gitt
+		val mellomlagringDager = 10
+		val vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build()
+		val skjemaDto = SkjemaDtoTestBuilder(vedleggsListe = listOf(vedlegg), mellomlagringDager = mellomlagringDager, skalslettesdato = null).build()
+
+		// Når
+		val responseBody = api!!.createSoknad(skjemaDto)
+			.assertSuccess()
+			.body
+
+		// Så
+		val parameterSlot = slot<AddNotification>()
+		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
+		val notification = parameterSlot.captured
+
+		assertEquals(responseBody.innsendingsId, notification.soknadRef.innsendingId)
+		assertEquals(mellomlagringDager, notification.brukernotifikasjonInfo.antallAktiveDager)
 	}
 
 	@Test
@@ -122,12 +186,12 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	private fun testHentSoknadOgSendInn(
-		response: ResponseEntity<SkjemaDto>,
+		skjema: SkjemaDto,
 		token: String
 	) {
 
 		// Hent søknaden opprettet fra FyllUt og kjør gjennom løp for opplasting av vedlegg og innsending av søknad
-		val innsendingsId = response.body!!.innsendingsId
+		val innsendingsId = skjema.innsendingsId
 		assertNotNull(innsendingsId)
 
 		val getRequestEntity = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
@@ -312,7 +376,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		val vedleggsId = savedSoknad.vedleggsListe.first { it.vedleggsnr == vedleggsnr }.id!!
 
 		// Upload vedlegg in send-inn
-		val uploadFileResponse = api?.uploadFile(innsendingsId = innsendingsId, vedleggsId = vedleggsId)
+		api!!.uploadFile(innsendingsId = innsendingsId, vedleggsId = vedleggsId)
+			.assertHttpStatus(HttpStatus.CREATED)
 		// Go back and remove vedlegg in fyllUt
 		val utfyltResponse = api?.utfyltSoknad(innsendingsId, skjemaDto)
 
@@ -320,7 +385,6 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Then
 		assertEquals(302, utfyltResponse!!.statusCode.value())
-		assertEquals(201, uploadFileResponse!!.statusCode.value())
 		assertEquals(
 			"http://localhost:3100/sendinn/${innsendingsId}",
 			utfyltResponse.headers.location!!.toString()
@@ -367,7 +431,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		val utfyltResponse = api?.utfyltSoknad(innsendingsId, fromFyllUt)
 
 		// Add N6 vedlegg i send-inn
-		val leggTilVedleggResponse = api?.addVedlegg(innsendingsId, fromSendInn)
+		api!!.addVedlegg(innsendingsId, fromSendInn)
+			.assertHttpStatus(HttpStatus.CREATED)
 
 		// Go back to fyllUt and remove the T1 vedlegg. Keep N6 from send-inn, but also add one from fyllUt with different title
 		val updatedUtfyltResponse = api?.utfyltSoknad(innsendingsId, updatedFyllUt)
@@ -375,11 +440,9 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Then
 		assertTrue(utfyltResponse != null)
-		assertTrue(leggTilVedleggResponse != null)
 		assertTrue(updatedUtfyltResponse != null)
 
 		assertEquals(302, utfyltResponse.statusCode.value())
-		assertEquals(201, leggTilVedleggResponse.statusCode.value())
 		assertEquals(302, updatedUtfyltResponse.statusCode.value())
 		assertEquals(
 			"http://localhost:3100/sendinn/${innsendingsId}",
@@ -632,12 +695,11 @@ class FyllutRestApiTest : ApplicationTest() {
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		// Når
-		val response = api?.createSoknad(fraFyllUt, true)
+		val response = api!!.createSoknad(fraFyllUt, true)
+			.assertSuccess()
 
 		// Så
-		assertTrue(response != null)
-		assertEquals(201, response.statusCode.value())
-		assertNotEquals(response.body?.innsendingsId, innsendingsId, "Forventer ny innsendingsId")
+		assertNotEquals(response.body.innsendingsId, innsendingsId, "Forventer ny innsendingsId")
 	}
 
 	@Test
@@ -720,17 +782,13 @@ class FyllutRestApiTest : ApplicationTest() {
 		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
 
 		val noOfRepeats: Int = 100
-		val soknader = mutableListOf<ResponseEntity<SkjemaDto>>()
+		val soknader = mutableListOf<SkjemaDto>()
 		repeat(noOfRepeats, {
 			val soknad = SkjemaDtoTestBuilder(vedleggsListe = listOf(t7Vedlegg, n6Vedlegg)).build()
 
 			// Når
-			val opprettetSoknadResponse = api?.createSoknad(soknad)
-
-			assertTrue(opprettetSoknadResponse != null)
-			assertEquals(201, opprettetSoknadResponse.statusCode.value())
-
-			soknader.add(opprettetSoknadResponse)
+			val opprettetSoknadResponse = api!!.createSoknad(soknad).assertSuccess()
+			soknader.add(opprettetSoknadResponse.body)
 
 		})
 

@@ -7,6 +7,8 @@ import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
+import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
+import no.nav.soknad.innsending.util.dokumentsoknad.isLospost
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.pdfutilities.PdfMerger
@@ -28,7 +30,7 @@ class FilService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	@Transactional
+	@Transactional(timeout= TRANSACTION_TIMEOUT)
 	fun lagreFil(
 		savedDokumentSoknadDto: DokumentSoknadDto,
 		lagretVedleggDto: VedleggDto,
@@ -71,7 +73,7 @@ class FilService(
 		opprettetdato = OffsetDateTime.now()
 	)
 
-	@Transactional
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun lagreFil(soknadDto: DokumentSoknadDto, filDto: FilDto): FilDto {
 		val operation = InnsenderOperation.LAST_OPP.name
 
@@ -93,18 +95,21 @@ class FilService(
 			}
 		}
 
-		if (soknadDto.vedleggsListe.none { it.id == filDto.vedleggsid })
-			throw ResourceNotFoundException("Vedlegg ${filDto.vedleggsid} til søknad ${soknadDto.innsendingsId} eksisterer ikke")
+		val vedleggdto = soknadDto.vedleggsListe.firstOrNull { it.id == filDto.vedleggsid }
+			?: throw ResourceNotFoundException("Vedlegg ${filDto.vedleggsid} til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
-		logger.debug("${soknadDto.innsendingsId!!}: Skal lagre fil med størrelse ${filDto.data!!.size} på vedlegg ${filDto.vedleggsid}")
+		val start = System.currentTimeMillis()
+		logger.info("${soknadDto.innsendingsId!!}: Skal lagre fil med størrelse ${filDto.data?.size ?: 0} på vedlegg ${filDto.vedleggsid}")
 		val savedFilDbData = try {
 			repo.saveFilDbData(soknadDto.innsendingsId!!, mapTilFilDb(filDto))
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			throw e
 		}
+		logger.info("${soknadDto.innsendingsId!!}: Lagret fil med størrelse ${filDto.data!!.size} på vedlegg ${filDto.vedleggsid} på ${System.currentTimeMillis()-start} ms")
+
 		/* Skal bare validere størrelse på vedlegg som søker har lastet opp */
-		if (soknadDto.vedleggsListe.filter { it.id == filDto.vedleggsid && !it.erHoveddokument }.isNotEmpty()) {
+		if (soknadDto.vedleggsListe.any { it.id == filDto.vedleggsid && (soknadDto.isLospost() || !it.erHoveddokument) }) {
 			logger.debug("${soknadDto.innsendingsId!!}: Valider størrelse av opplastinger på vedlegg ${filDto.vedleggsid} og søknad ${soknadDto.innsendingsId!!}")
 			Validerer().validerStorrelse(
 				soknadDto.innsendingsId!!,
@@ -121,11 +126,13 @@ class FilService(
 				ErrorCode.FILE_SIZE_SUM_TOO_LARGE
 			)
 		}
-		repo.updateVedleggStatus(
-			soknadDto.innsendingsId!!,
-			filDto.vedleggsid,
-			OpplastingsStatus.LASTET_OPP
-		)
+		if (repo.hentVedlegg(filDto.vedleggsid).status != OpplastingsStatus.LASTET_OPP) {
+			repo.updateVedleggStatus(
+				innsendingsId = soknadDto.innsendingsId!!,
+				vedleggsId = filDto.vedleggsid,
+				opplastingsStatus = OpplastingsStatus.LASTET_OPP
+			)
+		}
 		innsenderMetrics.incOperationsCounter(operation, soknadDto.tema)
 		return lagFilDto(savedFilDbData, false)
 	}
@@ -225,11 +232,11 @@ class FilService(
 
 	fun finnFilStorrelseSum(soknadDto: DokumentSoknadDto, vedleggListe: List<VedleggDto> = soknadDto.vedleggsListe) =
 		vedleggListe
-			.filter { !it.erHoveddokument }
+			.filter { soknadDto.isLospost() || !it.erHoveddokument }
 			.filter { it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt || it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
 			.sumOf { repo.hentSumFilstorrelseTilVedlegg(soknadDto.innsendingsId!!, it.id!!) }
 
-	@Transactional
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun slettFil(soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long): VedleggDto {
 		val operation = InnsenderOperation.SLETT_FIL.name
 
@@ -238,11 +245,13 @@ class FilService(
 			throw ResourceNotFoundException("Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
 		repo.slettFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
+		logger.info("${soknadDto.innsendingsId}: Slettet fil $filId på vedlegg $vedleggsId")
 
-		if (repo.hentFilerTilVedlegg(soknadDto.innsendingsId!!, vedleggsId).isEmpty()) {
+		if (repo.countFiles(soknadDto.innsendingsId!!, vedleggsId) == 0) {
 			val vedleggDto = soknadDto.vedleggsListe.first { it.id == vedleggsId }
 			val nyOpplastingsStatus =
 				if (vedleggDto.innsendtdato != null) OpplastingsStatus.INNSENDT else OpplastingsStatus.IKKE_VALGT
+			logger.info("${soknadDto.innsendingsId}: Skal oppdatere vedleggsstatus $nyOpplastingsStatus til vedlegg ${vedleggsId}")
 			repo.lagreVedlegg(
 				mapTilVedleggDb(
 					vedleggDto,
@@ -252,6 +261,7 @@ class FilService(
 				)
 			)
 		}
+		logger.info("${soknadDto.innsendingsId}: Skal hente vedlegg $vedleggsId med oppdatert status")
 		val vedleggDto = vedleggService.hentVedleggDto(vedleggsId)
 		innsenderMetrics.incOperationsCounter(operation, soknadDto.tema)
 		return vedleggDto

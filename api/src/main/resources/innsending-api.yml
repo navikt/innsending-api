@@ -170,6 +170,10 @@ paths:
               required: false
               schema:
                 type: boolean
+            - in: header
+              name: Nav-Env-Qualifier
+              schema:
+                $ref: "#/components/schemas/EnvQualifier"
 
       responses:
         200:
@@ -363,6 +367,12 @@ paths:
       description: På basis av oppgitt skjemanummer og eventuelle vedlegg, blir det opprettet en søknad som inviterer søker til å laste ned skjema for utfylling og opplasting av dette og eventuelle vedlegg.
       operationId: opprettSoknad
 
+      parameters:
+        - in: header
+          name: Nav-Env-Qualifier
+          schema:
+            $ref: "#/components/schemas/EnvQualifier"
+
       requestBody:
         description: Data neccessary in order to publish a new task or message user notification.
         content:
@@ -387,6 +397,12 @@ paths:
       summary: Kall for å opprette en ettersendingssøknad basert på et skjemanummer.
       description: På basis av oppgitt skjemanummer, blir det opprettet en ettersendingssøknad som inviterer søker til å laste opp vedlegg.
       operationId: opprettEttersendingGittSkjemanr
+
+      parameters:
+        - in: header
+          name: Nav-Env-Qualifier
+          schema:
+            $ref: "#/components/schemas/EnvQualifier"
 
       requestBody:
         description: Data neccessary in order to publish a new task or message user notification.
@@ -826,6 +842,10 @@ paths:
           schema:
             type: string
           style: simple
+        - in: header
+          name: Nav-Env-Qualifier
+          schema:
+            $ref: "#/components/schemas/EnvQualifier"
 
       responses:
         200:
@@ -883,6 +903,10 @@ paths:
               required: false
               schema:
                 type: string
+            - in: header
+              name: Nav-Env-Qualifier
+              schema:
+                $ref: "#/components/schemas/EnvQualifier"
           requestBody:
             content:
               application/json:

@@ -1,8 +1,6 @@
 package no.nav.soknad.innsending.service
 
-import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType.*
-import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
@@ -16,6 +14,7 @@ import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
+import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.innsending.util.mapping.*
@@ -31,7 +30,6 @@ class EttersendingService(
 	private val repo: RepositoryUtils,
 	private val innsenderMetrics: InnsenderMetrics,
 	private val skjemaService: SkjemaService,
-	private val brukerNotifikasjon: BrukernotifikasjonPublisher,
 	private val exceptionHelper: ExceptionHelper,
 	private val vedleggService: VedleggService,
 	private val soknadService: SoknadService,
@@ -44,7 +42,7 @@ class EttersendingService(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	// Lagre ettersendingssøknad i DB
-	@Transactional
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun saveEttersending(
 		brukerId: String,
 		ettersendingsId: String?,
@@ -88,7 +86,7 @@ class EttersendingService(
 		)
 	}
 
-	@Transactional
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun saveEttersending(
 		nyesteSoknad: DokumentSoknadDto,
 		ettersendingsId: String,
@@ -156,7 +154,6 @@ class EttersendingService(
 
 			// Publiser brukernotifikasjon
 			val dokumentSoknadDto = lagDokumentSoknadDto(savedEttersendingsSoknad, vedleggDbDataListe, erSystemGenerert)
-			publiserBrukernotifikasjon(dokumentSoknadDto)
 
 			// Logg og metrics
 			innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
@@ -178,7 +175,7 @@ class EttersendingService(
 		}
 	}
 
-	@Transactional
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun createEttersendingFromInnsendtSoknad(
 		brukerId: String,
 		existingSoknad: DokumentSoknadDto,
@@ -218,7 +215,7 @@ class EttersendingService(
 		}
 	}
 
-	@Transactional
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun createEttersendingFromArchivedSoknad(
 		brukerId: String,
 		archivedSoknad: AktivSakDto,
@@ -255,7 +252,7 @@ class EttersendingService(
 		}
 	}
 
-	@Transactional
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun createEttersending(brukerId: String, ettersending: OpprettEttersending): DokumentSoknadDto {
 		logger.info("Oppretter ettersending for skjemanr=${ettersending.skjemanr}")
 		val operation = InnsenderOperation.OPPRETT.name
@@ -294,7 +291,7 @@ class EttersendingService(
 		innsendtSoknadDto: DokumentSoknadDto,
 		manglende: List<VedleggDto>,
 		soknadDtoInput: DokumentSoknadDto
-	) {
+	): DokumentSoknadDto? {
 		logger.info(
 			"${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes " +
 				"${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.SendSenere }.size}"
@@ -304,12 +301,13 @@ class EttersendingService(
 		// Dagpenger (DAG) har sin egen løsning for å opprette ettersendingssøknader
 		if (manglende.isNotEmpty() && !"DAG".equals(innsendtSoknadDto.tema, true)) {
 			logger.info("${soknadDtoInput.innsendingsId}: Skal opprette ettersendingssoknad")
-			saveEttersending(
+			return saveEttersending(
 				nyesteSoknad = innsendtSoknadDto,
 				ettersendingsId = innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!,
 				erSystemGenerert = true
 			)
 		}
+		return null
 	}
 
 	fun getArkiverteEttersendinger(
@@ -339,7 +337,7 @@ class EttersendingService(
 		}
 	}
 
-	@Transactional
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun createEttersendingFromExternalApplication(
 		brukerId: String,
 		eksternOpprettEttersending: EksternOpprettEttersending,
@@ -362,10 +360,7 @@ class EttersendingService(
 				createEttersending(brukerId = brukerId, ettersending = enrichedEttersending)
 			}
 
-		publiserBrukernotifikasjon(dokumentSoknadDto, eksternOpprettEttersending.brukernotifikasjonstype, erNavInitiert)
-
 		return dokumentSoknadDto
-
 	}
 
 	fun createEttersendingFromFyllutEttersending(
@@ -376,7 +371,6 @@ class EttersendingService(
 			brukerId = brukerId,
 			ettersending = ettersending
 		)
-		publiserBrukernotifikasjon(dokumentSoknadDto)
 		return dokumentSoknadDto
 	}
 
@@ -415,10 +409,7 @@ class EttersendingService(
 			vedleggsListe = vedleggService.enrichVedleggListFromSanity(vedleggList, sprak)
 		)
 
-		val dokumentSoknadDto = createEttersendingFromExistingSoknader(brukerId, ettersending)
-		publiserBrukernotifikasjon(dokumentSoknadDto)
-
-		return dokumentSoknadDto
+		return createEttersendingFromExistingSoknader(brukerId, ettersending)
 	}
 
 	private fun createEttersendingFromExistingSoknader(
@@ -469,17 +460,4 @@ class EttersendingService(
 		}
 	}
 
-	private fun publiserBrukernotifikasjon(
-		dokumentSoknadDto: DokumentSoknadDto,
-		brukernotifikasjonstype: BrukernotifikasjonsType? = BrukernotifikasjonsType.utkast,
-		erNavInitiert: Boolean = false
-	): Boolean = try {
-		if (brukernotifikasjonstype == BrukernotifikasjonsType.oppgave) {
-			brukerNotifikasjon.soknadStatusChange(dokumentSoknadDto.copy(erSystemGenerert = true), erNavInitiert)
-		} else {
-			brukerNotifikasjon.soknadStatusChange(dokumentSoknadDto, erNavInitiert)
-		}
-	} catch (e: Exception) {
-		throw BackendErrorException("Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}", e)
-	}
 }

@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.service
 
-import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
@@ -15,6 +14,7 @@ import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
+import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.hovedDokumentVariant
@@ -33,7 +33,6 @@ class SoknadService(
 	private val repo: RepositoryUtils,
 	private val vedleggService: VedleggService,
 	private val filService: FilService,
-	private val brukernotifikasjonPublisher: BrukernotifikasjonPublisher,
 	private val innsenderMetrics: InnsenderMetrics,
 	private val exceptionHelper: ExceptionHelper,
 	private val subjectHandler: SubjectHandlerInterface
@@ -41,7 +40,7 @@ class SoknadService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	@Transactional
+	@Transactional(timeout= TRANSACTION_TIMEOUT)
 	fun opprettSoknad(
 		brukerId: String,
 		skjemanr: String,
@@ -90,8 +89,6 @@ class SoknadService(
 
 			val dokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbDataListe)
 
-			publiserBrukernotifikasjon(dokumentSoknadDto)
-
 			return dokumentSoknadDto
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, kodeverkSkjema.tema ?: "Ukjent")
@@ -101,7 +98,7 @@ class SoknadService(
 		}
 	}
 
-	@Transactional
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun opprettNySoknad(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		val operation = InnsenderOperation.OPPRETT.name
 
@@ -114,7 +111,6 @@ class SoknadService(
 			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
 			// lagre mottatte filer i fil tabellen.
 			lagreFiler(savedDokumentSoknadDto, dokumentSoknadDto)
-			publiserBrukernotifikasjon(savedDokumentSoknadDto)
 
 			innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
 			return mapTilSkjemaDto(savedDokumentSoknadDto)
@@ -193,7 +189,7 @@ class SoknadService(
 	}
 
 	// Slett opprettet soknad gitt innsendingsId
-	@Transactional
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun slettSoknadAvBruker(dokumentSoknadDto: DokumentSoknadDto) {
 		val operation = InnsenderOperation.SLETT.name
 
@@ -202,25 +198,17 @@ class SoknadService(
 			throw IllegalActionException("Det kan ikke gjøres endring på en slettet eller innsendt søknad. Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den er innsendt eller slettet")
 
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { vedleggService.slettVedleggOgDensFiler(it) }
-		//fillagerAPI.slettFiler(innsendingsId, dokumentSoknadDto.vedleggsListe)
 		repo.slettSoknad(dokumentSoknadDto, HendelseType.SlettetPermanentAvBruker)
-
-		val soknadDbData =
-			mapTilSoknadDb(dokumentSoknadDto, dokumentSoknadDto.innsendingsId!!, SoknadsStatus.SlettetAvBruker)
-		val slettetSoknad = lagDokumentSoknadDto(
-			soknadDbData,
-			dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id!!) })
-		publiserBrukernotifikasjon(slettetSoknad)
 		innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
 	}
 
-	@Transactional
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun deleteSoknadFromExternalApplication(dokumentSoknadDto: DokumentSoknadDto) {
 		return slettSoknadAvBruker(dokumentSoknadDto)
 	}
 
 	// Slett opprettet soknad gitt innsendingsId
-	@Transactional
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun slettSoknadAutomatisk(innsendingsId: String) {
 		val operation = InnsenderOperation.SLETT.name
 
@@ -230,20 +218,15 @@ class SoknadService(
 		if (!dokumentSoknadDto.kanGjoreEndringer)
 			throw IllegalActionException("Det kan ikke gjøres endring på en slettet eller innsendt søknad. Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den allerede er innsendt")
 
-		//fillagerAPI.slettFiler(innsendingsId, dokumentSoknadDto.vedleggsListe)
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettFilerForVedlegg(it.id!!) }
-		val slettetSoknadDb =
-			repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId, SoknadsStatus.AutomatiskSlettet))
+		repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId, SoknadsStatus.AutomatiskSlettet))
 
-		val slettetSoknadDto = lagDokumentSoknadDto(slettetSoknadDb,
-			dokumentSoknadDto.vedleggsListe.map { mapTilVedleggDb(it, dokumentSoknadDto.id!!) })
-		publiserBrukernotifikasjon(slettetSoknadDto)
 		logger.info("slettSoknadAutomatisk: Status for søknad $innsendingsId er satt til ${SoknadsStatus.AutomatiskSlettet}")
 
 		innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
 	}
 
-	@Transactional
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun slettSoknadPermanent(innsendingsId: String) {
 
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
@@ -252,10 +235,9 @@ class SoknadService(
 		repo.slettSoknad(dokumentSoknadDto, HendelseType.SlettetPermanentAvSystem)
 
 		logger.info("$innsendingsId: opprettet:${dokumentSoknadDto.opprettetDato}, status: ${dokumentSoknadDto.status} er permanent slettet")
-
 	}
 
-	@Transactional
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun finnOgSlettArkiverteSoknader(dagerGamle: Long, vindu: Long) {
 		val arkiverteSoknader =
 			repo.findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(dagerGamle, vindu)
@@ -264,7 +246,7 @@ class SoknadService(
 
 	}
 
-	@Transactional
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun slettGamleSoknader(
 		dagerGamle: Long = DEFAULT_LEVETID_OPPRETTET_SOKNAD,
 		permanent: Boolean = false,
@@ -289,10 +271,10 @@ class SoknadService(
 		}
 	}
 
-	@Transactional
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun deleteSoknadBeforeCutoffDate(
 		cutoffDate: OffsetDateTime
-	) {
+	): List<String> {
 		logger.info("Finner søknader som skal slettes før $cutoffDate")
 
 		val soknaderToDelete =
@@ -304,11 +286,10 @@ class SoknadService(
 			)
 
 		logger.info("Funnet ${soknaderToDelete.size} søknader som skal slettes")
-		soknaderToDelete.forEach { slettSoknadAutomatisk(it.innsendingsid) }
-
+		return soknaderToDelete.map { it.innsendingsid }.onEach { slettSoknadAutomatisk(it) }
 	}
 
-	@Transactional
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun updateSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 		if (dokumentSoknadDto.vedleggsListe.size != 2) {
 			throw BackendErrorException("Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant. Innsendt vedleggsliste skal være tom")
@@ -391,13 +372,6 @@ class SoknadService(
 	fun validerInnsendtSoknadMotEksisterende(innsendtSoknad: DokumentSoknadDto, eksisterendeSoknad: DokumentSoknadDto) {
 		innsendtSoknad.validerSoknadVedOppdatering(eksisterendeSoknad)
 		innsendtSoknad.validerVedleggsListeVedOppdatering(eksisterendeSoknad)
-	}
-
-
-	private fun publiserBrukernotifikasjon(dokumentSoknadDto: DokumentSoknadDto): Boolean = try {
-		brukernotifikasjonPublisher.soknadStatusChange(dokumentSoknadDto)
-	} catch (e: Exception) {
-		throw BackendErrorException("Feil i ved avslutning av brukernotifikasjon for søknad ${dokumentSoknadDto.tittel}", e)
 	}
 
 }

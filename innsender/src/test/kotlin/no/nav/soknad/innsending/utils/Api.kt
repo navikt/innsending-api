@@ -1,26 +1,26 @@
 package no.nav.soknad.innsending.utils
 
-import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.enums.ParameterIn
-import jakarta.validation.Valid
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.security.mock.oauth2.MockOAuth2Server
+import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.util.Constants.AZURE
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.util.MultiValueMap
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.util.UriComponentsBuilder
+import kotlin.test.assertEquals
 
 
 class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth2Server: MockOAuth2Server) {
 
 	val baseUrl = "http://localhost:${serverPort}"
+	val objectMapper: ObjectMapper = jacksonObjectMapper().findAndRegisterModules()
 
 	private fun <T> createHttpEntity(body: T, map: Map<String, String>? = mapOf()): HttpEntity<T> {
 		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
@@ -33,13 +33,19 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		return HttpEntity(body, Hjelpemetoder.createHeaders(token, map))
 	}
 
-	fun createSoknad(skjemaDto: SkjemaDto, forceCreate: Boolean = true): ResponseEntity<SkjemaDto> {
+	fun createSoknad(skjemaDto: SkjemaDto, forceCreate: Boolean = true, envQualifier: EnvQualifier? = null): InnsendingApiResponse<SkjemaDto> {
+		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
+			"Nav-Env-Qualifier" to envQualifier.value
+		) else null
 		val uri = UriComponentsBuilder.fromHttpUrl("${baseUrl}/fyllUt/v1/soknad")
 			.queryParam("force", forceCreate)
 			.build()
 			.toUri()
 
-		return restTemplate.exchange(uri, HttpMethod.POST, createHttpEntity(skjemaDto), SkjemaDto::class.java)
+		val response = restTemplate.exchange(uri, HttpMethod.POST, createHttpEntity(skjemaDto, headers), String::class.java)
+
+		val body = readBody(response, SkjemaDto::class.java)
+		return InnsendingApiResponse(response.statusCode, body, response.headers)
 	}
 
 	fun createSoknadForSkjemanr(skjemanr: String, spraak: String = "nb_NO"): ResponseEntity<DokumentSoknadDto> {
@@ -100,13 +106,16 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 	}
 
-	fun getSoknadSendinn(innsendingsId: String): ResponseEntity<DokumentSoknadDto>? {
-		return restTemplate.exchange(
+	fun getSoknadSendinn(innsendingsId: String): InnsendingApiResponse<DokumentSoknadDto> {
+		val response = restTemplate.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}",
 			HttpMethod.GET,
 			createHttpEntity(null),
-			DokumentSoknadDto::class.java
+			String::class.java
 		)
+
+		val body = readBody(response, DokumentSoknadDto::class.java)
+		return InnsendingApiResponse(response.statusCode, body, response.headers)
 	}
 
 	// Query param ex: "soknad,ettersendelse"
@@ -135,29 +144,37 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 	}
 
-	fun sendInnSoknad(innsendingsId: String): ResponseEntity<KvitteringsDto> {
-		return restTemplate.exchange(
+	fun sendInnSoknad(innsendingsId: String, envQualifier: EnvQualifier? = null): InnsendingApiResponse<KvitteringsDto> {
+		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
+			"Nav-Env-Qualifier" to envQualifier.value
+		) else null
+		val response = restTemplate.exchange(
 			"${baseUrl}/frontend/v1/sendInn/${innsendingsId}",
 			HttpMethod.POST,
-			createHttpEntity(null),
-			KvitteringsDto::class.java
+			createHttpEntity(null, headers),
+			String::class.java
 		)
+
+		val body = readBody(response, KvitteringsDto::class.java)
+		return InnsendingApiResponse(response.statusCode, body, response.headers)
 	}
 
-	fun addVedlegg(innsendingsId: String, postVedleggDto: PostVedleggDto): ResponseEntity<VedleggDto>? {
-		return restTemplate.exchange(
+	fun addVedlegg(innsendingsId: String, postVedleggDto: PostVedleggDto): InnsendingApiResponse<VedleggDto> {
+		val response = restTemplate.exchange(
 			"${baseUrl}/frontend/v1/soknad/${innsendingsId}/vedlegg",
 			HttpMethod.POST,
 			createHttpEntity(postVedleggDto),
-			VedleggDto::class.java
+			String::class.java
 		)
+		val body = readBody(response, VedleggDto::class.java)
+		return InnsendingApiResponse(response.statusCode, body)
 	}
 
 	fun uploadFile(
 		innsendingsId: String,
 		vedleggsId: Long,
 		file: ByteArray = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
-	): ResponseEntity<FilDto> {
+	): InnsendingApiResponse<FilDto> {
 		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
 		val requestBody: MultiValueMap<String, ByteArray> = LinkedMultiValueMap()
@@ -165,30 +182,57 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 
 		val httpEntity = HttpEntity(requestBody, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
 
-		return restTemplate.exchange(
+		val response = restTemplate.exchange(
 			"${baseUrl}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggsId}/fil",
 			HttpMethod.POST,
 			httpEntity,
-			FilDto::class.java
+			String::class.java
 		)
+
+		val body = readBody(response, FilDto::class.java)
+		return InnsendingApiResponse(response.statusCode, body)
 	}
 
-	fun createEttersending(opprettEttersending: OpprettEttersending): ResponseEntity<DokumentSoknadDto> {
-		return restTemplate.exchange(
+	fun <T> readBody(response: ResponseEntity<String>, clazz: Class<T>): Pair<T?, RestErrorResponseDto?> {
+		if (response.statusCode.is2xxSuccessful) {
+			val body = objectMapper.readValue(
+				response.body,
+				clazz
+			)
+			return Pair(body, null)
+		}
+		val errorBody = objectMapper.readValue(response.body, RestErrorResponseDto::class.java)
+		return Pair(null, errorBody)
+	}
+
+	fun createEttersending(opprettEttersending: OpprettEttersending, envQualifier: EnvQualifier? = null): InnsendingApiResponse<DokumentSoknadDto> {
+		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
+			"Nav-Env-Qualifier" to envQualifier.value
+		) else null
+		val response = restTemplate.exchange(
 			"${baseUrl}/fyllut/v1/ettersending",
 			HttpMethod.POST,
-			createHttpEntity(opprettEttersending),
-			DokumentSoknadDto::class.java
+			createHttpEntity(opprettEttersending, headers),
+			String::class.java
 		)
+
+		val body = readBody(response, DokumentSoknadDto::class.java)
+		return InnsendingApiResponse(response.statusCode, body, response.headers)
 	}
 
-	fun createEksternEttersending(eksternOpprettEttersending: EksternOpprettEttersending): ResponseEntity<DokumentSoknadDto> {
-		return restTemplate.exchange(
+	fun createEksternEttersending(eksternOpprettEttersending: EksternOpprettEttersending, envQualifier: EnvQualifier? = null): InnsendingApiResponse<DokumentSoknadDto> {
+		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
+			"Nav-Env-Qualifier" to envQualifier.value
+		) else null
+		val response = restTemplate.exchange(
 			"${baseUrl}/ekstern/v1/ettersending",
 			HttpMethod.POST,
-			createHttpEntity(eksternOpprettEttersending),
-			DokumentSoknadDto::class.java
+			createHttpEntity(eksternOpprettEttersending, headers),
+			String::class.java
 		)
+
+		val body = readBody(response, DokumentSoknadDto::class.java)
+		return InnsendingApiResponse(response.statusCode, body, response.headers)
 	}
 
 	fun deleteEksternEttersending(innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
@@ -212,17 +256,20 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 	fun createLospost(
 		opprettLospost: OpprettLospost,
 		envQualifier: EnvQualifier? = null
-	): ResponseEntity<LospostDto> {
+	): InnsendingApiResponse<LospostDto> {
 		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
 			"Nav-Env-Qualifier" to envQualifier.value
 		) else null
 		val requestEntity = createHttpEntity(opprettLospost, headers)
-		return restTemplate.exchange(
+		val response = restTemplate.exchange(
 			"${baseUrl}/fyllut/v1/lospost",
 			HttpMethod.POST,
 			requestEntity,
-			LospostDto::class.java
+			String::class.java
 		)
+
+		val body = readBody(response, LospostDto::class.java)
+		return InnsendingApiResponse(response.statusCode, body, response.headers)
 	}
 
 	fun getSoknaderForSkjemanr(
@@ -317,6 +364,44 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 			requestEntity,
 			responseType
 		)
+	}
+
+	data class InnsendingApiResponse<T>(
+		val statusCode: HttpStatusCode,
+		private val response: Pair<T?, RestErrorResponseDto?>,
+		val headers: HttpHeaders? = null,
+	) {
+		val body: T
+			get() {
+				assertTrue(statusCode.is2xxSuccessful, "Expected success")
+				return response.first!!
+			}
+
+		val errorBody: RestErrorResponseDto
+			get() {
+				assertFalse(statusCode.is2xxSuccessful, "Expected failure")
+				return response.second!!
+			}
+
+		fun assertSuccess(): InnsendingApiResponse<T> {
+			assertTrue(statusCode.is2xxSuccessful, "Expected successful response code")
+			return this
+		}
+
+		fun assertClientError(): InnsendingApiResponse<T> {
+			assertTrue(statusCode.is4xxClientError, "Expected client error")
+			return this
+		}
+
+		fun assertHttpStatus(status: HttpStatus): InnsendingApiResponse<T> {
+			assertEquals(status.value(), statusCode.value())
+			return this
+		}
+
+		fun assertErrorCode(errorCode: ErrorCode): InnsendingApiResponse<T> {
+			assertEquals(errorCode.code, errorBody.errorCode)
+			return this
+		}
 	}
 
 }

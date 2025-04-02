@@ -161,13 +161,6 @@ class RepositoryUtils(
 		}
 	}
 
-	fun findNumberOfEventsByType(hendelseType: HendelseType): Long? = try {
-		hendelseRepository.countByHendelsetype(hendelseType)
-	} catch (ex: Exception) {
-		throw BackendErrorException("Feil ved henting av antall hendelser gitt hendelsetype $hendelseType", ex)
-	}
-
-
 	fun hentVedlegg(vedleggsId: Long): VedleggDbData = try {
 		vedleggRepository.findByVedleggsid(vedleggsId)
 			?: throw ResourceNotFoundException("Fant ikke vedlegg med id $vedleggsId")
@@ -274,6 +267,12 @@ class RepositoryUtils(
 		throw ResourceNotFoundException("Feil ved henting av filer for  vedlegg $vedleggsId til søknad $innsendingsId", ex)
 	}
 
+	fun countFiles(innsendingsId: String, vedleggsId: Long): Int = try {
+		filRepository.countFiles(vedleggsId)
+	} catch (ex: Exception) {
+		throw ResourceNotFoundException("Feil ved henting av antall filer for  vedlegg $vedleggsId til søknad $innsendingsId", ex)
+	}
+
 	fun hentFilerTilVedleggUtenFilData(innsendingsId: String, vedleggsId: Long): List<FilDbData> = try {
 		mapTilFilDbData(filWithoutDataRepository.findFilDbWIthoutFileDataByVedleggsid(vedleggsId))
 	} catch (ex: Exception) {
@@ -306,7 +305,7 @@ class RepositoryUtils(
 	fun slettFilDb(innsendingsId: String, vedleggsId: Long, filId: Long) = try {
 		filRepository.deleteByVedleggsidAndId(vedleggsId, filId)
 	} catch (ex: Exception) {
-		throw BackendErrorException("Feil ved sletting av fil til vedlegg $vedleggsId til søknad $innsendingsId", ex)
+		throw BackendErrorException("Feil ved sletting av fil $filId til vedlegg $vedleggsId til søknad $innsendingsId", ex)
 	}
 
 	fun findAllByVedleggsid(innsendingsId: String, vedleggsId: Long): List<FilDbData> = try {

@@ -1,7 +1,5 @@
 package no.nav.soknad.innsending.service
 
-import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
-import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.LospostDto
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
@@ -11,9 +9,9 @@ import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.finnSpraakFraInput
-import no.nav.soknad.innsending.util.mapping.lagDokumentSoknadDto
 import no.nav.soknad.innsending.util.mapping.mapTilLospost
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -25,10 +23,9 @@ import java.util.*
 class LospostService(
 	private val repo: RepositoryUtils,
 	private val subjectHandler: SubjectHandlerInterface,
-	private val brukernotifikasjon: BrukernotifikasjonPublisher
 ) {
 
-	@Transactional
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun saveLospostInnsending(
 		brukerId: String,
 		tema: String,
@@ -85,15 +82,6 @@ class LospostService(
 				opplastingsvalgkommentarledetekst = null,
 			)
 		)
-		try {
-			val dokumentSoknadDto = lagDokumentSoknadDto(soknad, listOf(vedlegg))
-			brukernotifikasjon.soknadStatusChange(dokumentSoknadDto)
-		} catch (e: Exception) {
-			throw BackendErrorException(
-				"$innsendingsId: Feil under opprettelse av brukernotifikasjon i forbindelse med løspost",
-				e
-			)
-		}
 		return mapTilLospost(soknad, vedlegg)
 	}
 
