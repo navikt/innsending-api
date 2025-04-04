@@ -10,10 +10,7 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
-import no.nav.soknad.innsending.model.DokumentSoknadDto
-import no.nav.soknad.innsending.model.EksternEttersendingsOppgave
-import no.nav.soknad.innsending.model.InnsendtVedleggDto
-import no.nav.soknad.innsending.model.SoknadType
+import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.repository.VedleggRepository
 import no.nav.soknad.innsending.service.VedleggService
@@ -82,11 +79,29 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 	}
 
 	@Test
-	fun `happy case also creates notification`() {
+	fun `happy case also creates oppgave  notification`() {
 		val brukerId = "12345678901"
 		val vedlegg = listOf("W1", "W2")
 		val skjemanr = "NAV 55-00.60"
 		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr)
+
+		val noticationSlot = slot<AddNotification>()
+		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlot)) }
+		val notication = noticationSlot.captured
+		assertEquals(true, notication.soknadRef.erSystemGenerert)
+		assertTrue(notication.soknadRef.erEttersendelse)
+		assertEquals(soknadDto.innsendingsId, notication.soknadRef.innsendingId)
+		assertEquals(soknadDto.innsendingsId, notication.soknadRef.groupId)
+		assertNull(notication.brukernotifikasjonInfo.utsettSendingTil)
+	}
+
+
+	@Test
+	fun `happy case also creates utkast notification`() {
+		val brukerId = "12345678901"
+		val vedlegg = listOf("W1", "W2")
+		val skjemanr = "NAV 55-00.60"
+		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr, brukernotifikasjonstype = BrukernotifikasjonsType.utkast )
 
 		val noticationSlot = slot<AddNotification>()
 		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlot)) }
@@ -155,7 +170,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		assertEquals(brukerId, list?.get(0)?.brukerId)
 	}
 
-	private fun opprettSoknad(brukerId: String, vedlegg: List<String>, skjemanr: String): DokumentSoknadDto {
+	private fun opprettSoknad(brukerId: String, vedlegg: List<String>, skjemanr: String, brukernotifikasjonstype: BrukernotifikasjonsType? = null): DokumentSoknadDto {
 		val vedleggsListe = mutableListOf<InnsendtVedleggDto>()
 		vedlegg.forEach { vedleggsListe.add(InnsendtVedleggDto(vedleggsnr = it, tittel = "Tittel"+it, url = null)) }
 		val oppgave = EksternEttersendingsOppgave(
@@ -164,7 +179,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 			sprak = "nb_NO",
 			tema = "BID",
 			tittel = "Avtale om barnebidrag",
-			brukernotifikasjonstype = null,
+			brukernotifikasjonstype = brukernotifikasjonstype,
 			koblesTilEksisterendeSoknad = false,
 			vedleggsListe = vedleggsListe
 		)
