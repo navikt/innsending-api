@@ -18,4 +18,6 @@ interface HendelseRepository : JpaRepository<HendelseDbData, Long> {
 	): List<HendelseDbData>
 
 	fun countByHendelsetype(hendelseType: HendelseType): Long?
+
+	fun findByApplikasjonAndHendelseTypeOrderByTidspunktDesc(applikasjon: String, hendelseType: HendelseType): List<HendelseDbData>
 }

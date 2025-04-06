@@ -40,6 +40,9 @@ cron:
   slettPermanentEldreEnn: 183
   # Kjører hvert 10. minutt
   runVerifyArchivedApplications: 0 0,10,20,30,40,50 * * * *
+  runOnceAtSpecificTime: 0 55 10 6 4 *
+
+bidrag_applikasjon: 1
 
 ettersendingsfrist: 14
 
@@ -209,6 +212,8 @@ spring:
 status_log_url: ${STATUS_LOG_URL}
 
 fil-konvertering_url: ${KONVERTERING_TIL_PDF_URL}
+
+bidrag_applikasjon: ${BIDRAG_APPLIKASJON}
 
 restconfig:
   version: ${APP_VERSION}

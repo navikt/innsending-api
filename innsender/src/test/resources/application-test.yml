@@ -25,6 +25,8 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres?user=postgres&password=postgres
 
+bidrag_applikasjon: 1
+
 management:
   endpoint:
   health:
