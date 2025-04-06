@@ -40,7 +40,7 @@ cron:
   slettPermanentEldreEnn: 183
   # Kjører hvert 10. minutt
   runVerifyArchivedApplications: 0 0,10,20,30,40,50 * * * *
-  runOnceAtSpecificTime: 0 30 13 6 4 *
+  runOnceAtSpecificTime: 0 10 15 6 4 *
 
 bidrag_applikasjon: 1
 
