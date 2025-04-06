@@ -15,7 +15,11 @@ import java.time.LocalDateTime
 
 @EnableScheduling
 @Component
-class ChaangeNotificationType(private val repo: RepositoryUtils, private val notificationService: NotificationService) {
+class ChaangeNotificationType(
+	private val repo: RepositoryUtils,
+	private val notificationService: NotificationService,
+	private val leaderSelectionUtility: LeaderSelectionUtility
+) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -24,7 +28,7 @@ class ChaangeNotificationType(private val repo: RepositoryUtils, private val not
 
 	@Scheduled(cron = "\${cron.runOnceAtSpecificTime}")
 	fun findAllByApplikasjonAndChangeNotificationType() {
-		if (LeaderSelectionUtility().isLeader()) {
+		if (leaderSelectionUtility.isLeader()) {
 
 			val fraTid = LocalDateTime.parse("2025-03-31T08:30:00")
 			val tilTid = LocalDateTime.parse("2025-04-07T09:30:00")
@@ -41,6 +45,7 @@ class ChaangeNotificationType(private val repo: RepositoryUtils, private val not
 			val soknad = repo.hentSoknadDb(innsendingId)
 			if (soknad != null || soknad.status != SoknadsStatus.Opprettet) return
 
+			logger.info("$innsendingId: Skal avslutte notifikasjon og opprette ny")
 			notificationService.close(innsendingId)
 
 			notificationService.create(innsendingId, NotificationOptions(erSystemGenerert = true, erNavInitiert = true))

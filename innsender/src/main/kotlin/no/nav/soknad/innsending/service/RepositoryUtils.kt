@@ -379,7 +379,7 @@ class RepositoryUtils(
 
 	fun hentHendelseGittApplikasjon(applikasjon: String, hendelseType: HendelseType):List<HendelseDbData> {
 		try {
-			return hendelseRepository.findByApplikasjonAndHendelseTypeOrderByTidspunktDesc(applikasjon, hendelseType)
+			return hendelseRepository.findAllByApplikasjonAndHendelsetypeOrderByTidspunktDesc(applikasjon, hendelseType)
 		} catch (ex: Exception) {
 			throw BackendErrorException("Feil i henting av hendelser til applikasjon $applikasjon", ex)
 		}
