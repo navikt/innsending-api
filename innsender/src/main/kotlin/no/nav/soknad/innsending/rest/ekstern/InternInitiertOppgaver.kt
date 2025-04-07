@@ -58,7 +58,7 @@ class InternInitiertOppgaver(
 			tema = eksternEttersendingsOppgave.tema,
 			vedleggsListe = eksternEttersendingsOppgave.vedleggsListe,
 			tittel = eksternEttersendingsOppgave.tittel,
-			brukernotifikasjonstype = eksternEttersendingsOppgave.brukernotifikasjonstype,
+			brukernotifikasjonstype = eksternEttersendingsOppgave.brukernotifikasjonstype ?: BrukernotifikasjonsType.oppgave,
 			koblesTilEksisterendeSoknad = eksternEttersendingsOppgave.koblesTilEksisterendeSoknad,
 			innsendingsfristDager = eksternEttersendingsOppgave.innsendingsFristDager,
 			mellomlagringDager = eksternEttersendingsOppgave.mellomlagringDager,
@@ -75,7 +75,13 @@ class InternInitiertOppgaver(
 			brukerId
 		)
 
-		notificationService.create(ettersending.innsendingsId!!, NotificationOptions(erNavInitiert = true))
+		notificationService.create(
+			ettersending.innsendingsId!!,
+			NotificationOptions(
+				erNavInitiert = true,
+				erSystemGenerert = (eksternOpprettEttersending.brukernotifikasjonstype?.equals(BrukernotifikasjonsType.oppgave) ?: false)
+			)
+		)
 
 		return ResponseEntity
 			.status(HttpStatus.CREATED)

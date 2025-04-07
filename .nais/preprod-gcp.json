@@ -127,6 +127,7 @@
 		"KONTOREGISTER_TOKEN_X_AUDIENCE": "dev-gcp:okonomi:sokos-kontoregister-person",
 		"KONTOREGISTER_SCOPE": "api://dev-gcp.okonomi.sokos-kontoregister-person/.default",
 		"KONTOREGISTER_URL": "http://sokos-kontoregister-person.okonomi",
-		"KONVERTERING_TIL_PDF_URL": "http://upload-convert-to-pdf.fyllut-sendinn"
+		"KONVERTERING_TIL_PDF_URL": "http://upload-convert-to-pdf.fyllut-sendinn",
+		"BIDRAG_APPLIKASJON": "953868a0-1767-4569-ab69-86b03ec81ec2"
 	}
 }
