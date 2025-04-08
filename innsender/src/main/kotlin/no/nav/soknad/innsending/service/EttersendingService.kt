@@ -116,7 +116,8 @@ class EttersendingService(
 				sprak = nyesteSoknad.spraak!!,
 				forsteInnsendingsDato = nyesteSoknad.forsteInnsendingsDato ?: nyesteSoknad.innsendtDato
 				?: nyesteSoknad.endretDato ?: nyesteSoknad.opprettetDato,
-				fristForEttersendelse = nyesteSoknad.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE
+				fristForEttersendelse = nyesteSoknad.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
+				ernavopprettet = nyesteSoknad.erNavOpprettet ?: false
 			)
 
 			// Lagre vedlegg i DB
