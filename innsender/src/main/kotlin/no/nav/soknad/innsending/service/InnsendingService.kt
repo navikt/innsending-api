@@ -181,9 +181,15 @@ class InnsendingService(
 		opplastedeVedlegg: List<VedleggDto>,
 		alleVedlegg: List<VedleggDto>
 	) {
+		if (alleVedlegg.ikkeBesvarteVedlegg.isNotEmpty()) {
+			throw IllegalActionException(
+				message = "Innsending avbrutt da ikke alle vedlegg er ferdig behandlet",
+				errorCode = ErrorCode.GENERAL_ERROR
+			)
+		}
 		// For å sende inn en ettersendingssøknad må det være lastet opp minst ett vedlegg, eller vært gjort endring på opplastingsstatus på vedlegg
 		if ((opplastedeVedlegg.isEmpty() || opplastedeVedlegg.none { !it.erHoveddokument })) {
-			val allePakrevdeBehandlet = alleVedlegg.ubehandledeVedlegg.isEmpty()
+			val allePakrevdeBehandlet = alleVedlegg.ubehandledeVedlegg.isEmpty() || alleVedlegg.skalEttersendes.isNotEmpty()
 			if (allePakrevdeBehandlet) {
 				val separator = "\n"
 				logger.warn("Søker har ikke lastet opp filer på ettersendingssøknad ${soknadDto.innsendingsId}, " +
