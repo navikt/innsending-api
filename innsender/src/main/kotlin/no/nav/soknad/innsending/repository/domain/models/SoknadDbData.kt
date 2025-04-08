@@ -40,4 +40,6 @@ data class SoknadDbData(
 	@Column(name = "arkiveringsstatus", columnDefinition = "varchar") val arkiveringsstatus: ArkiveringsStatus,
 	@Column(name = "applikasjon", columnDefinition = "varchar") val applikasjon: String?,
 	@Column(name = "skalslettesdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val skalslettesdato: OffsetDateTime,
-)
+	@Column(name = "ernavopprettet", columnDefinition = "boolean") val ernavopprettet: Boolean? = false,
+
+	)

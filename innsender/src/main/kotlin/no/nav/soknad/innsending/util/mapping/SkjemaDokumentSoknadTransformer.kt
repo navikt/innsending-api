@@ -42,7 +42,8 @@ class SkjemaDokumentSoknadTransformer {
 			skjemaPath = input.skjemaPath,
 			applikasjon = applikasjon,
 			skalSlettesDato = input.sletteDato,
-			mellomlagringDager = input.mellomlagringDager
+			mellomlagringDager = input.mellomlagringDager,
+			erNavOpprettet = false
 		)
 
 //	kanLasteOppAnnet = input.vedleggsListe?.any { it.property == "annenDokumentasjon" : it.vedleggsnr == "N6" && it.label == "Annen dokumentasjon" })

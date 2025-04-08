@@ -42,7 +42,8 @@ fun mapTilSoknadDb(
 		ettersendingsfrist = dokumentSoknadDto.fristForEttersendelse,
 		arkiveringsstatus = mapTilDbArkiveringsStatus(dokumentSoknadDto.arkiveringsStatus ?: ArkiveringsStatusDto.IkkeSatt),
 		applikasjon = dokumentSoknadDto.applikasjon,
-		skalslettesdato = dokumentSoknadDto.sletteDato!!
+		skalslettesdato = dokumentSoknadDto.sletteDato!!,
+		ernavopprettet = dokumentSoknadDto.erNavOpprettet
 	)
 
 fun lagDokumentSoknadDto(
@@ -78,6 +79,7 @@ fun lagDokumentSoknadDto(
 		skjemaPath = soknadDbData.getSkjemaPath(),
 		applikasjon = soknadDbData.applikasjon,
 		skalSlettesDato = soknadDbData.skalslettesdato,
+		erNavOpprettet = soknadDbData.ernavopprettet
 	)
 }
 
@@ -122,6 +124,7 @@ fun mapTilDokumentSoknadDto(
 		skjemaPath = soknadDbData.getSkjemaPath(),
 		applikasjon = soknadDbData.applikasjon,
 		skalSlettesDato = soknadDbData.skalslettesdato,
+		erNavOpprettet = soknadDbData.ernavopprettet,
 	)
 }
 

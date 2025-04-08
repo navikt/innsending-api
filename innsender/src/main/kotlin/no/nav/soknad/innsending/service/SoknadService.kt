@@ -76,7 +76,8 @@ class SoknadService(
 					ettersendingsfrist = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 					arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
 					applikasjon = applikasjon,
-					skalslettesdato = OffsetDateTime.now().plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD)
+					skalslettesdato = OffsetDateTime.now().plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD),
+					ernavopprettet = false
 				)
 			)
 

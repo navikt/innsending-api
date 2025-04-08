@@ -188,6 +188,8 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 
 		assertNotNull(response)
 		assertEquals(HttpStatus.CREATED, response?.statusCode)
+		val opprettetSoknaddto = response?.body
+		assertEquals(true, opprettetSoknaddto?.erNavOpprettet)
 		return response?.body!!
 
 	}
