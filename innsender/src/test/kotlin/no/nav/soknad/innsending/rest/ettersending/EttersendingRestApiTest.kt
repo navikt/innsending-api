@@ -69,6 +69,7 @@ class EttersendingRestApiTest : ApplicationTest() {
 		assertEquals(tema, ettersending.tema)
 		assertEquals(1, ettersending.vedleggsListe.size)
 		assertEquals(vedleggsnr, ettersending.vedleggsListe[0].vedleggsnr)
+		assertEquals(false, ettersending.erNavOpprettet)
 
 		val notificationSlot = slot<AddNotification>()
 		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(notificationSlot)) }

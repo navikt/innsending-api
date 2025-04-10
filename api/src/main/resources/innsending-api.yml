@@ -1623,6 +1623,12 @@ components:
           $ref: "#/components/schemas/SkalSlettesDato"
         mellomlagringDager:
           $ref: "#/components/schemas/MellomlagringDager"
+        erNavOpprettet:
+          type: boolean
+          description: >
+            Markerer om oppretting av denne søknaden er blitt gjort fra en av Navs saksbehandler applikasjoner.
+          example: true
+          default: false
 
 
     EksternEttersendingsOppgave:

@@ -206,6 +206,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertNotNull(getSoknadDto)
 		assertEquals(4, getSoknadDto.vedleggsListe.size)
 		assertFalse(getSoknadDto.kanLasteOppAnnet!!)
+		assertFalse(getSoknadDto.erNavOpprettet!!)
 
 		val vedleggT7 = getSoknadDto.vedleggsListe.first { it.vedleggsnr == "T7" }
 		val patchVedleggT7 = PatchVedleggDto(
