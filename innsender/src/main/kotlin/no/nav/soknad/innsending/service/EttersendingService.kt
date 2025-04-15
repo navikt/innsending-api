@@ -1,7 +1,9 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.consumerapis.kodeverk.KodeverkType.*
+import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
+import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
@@ -361,6 +363,11 @@ class EttersendingService(
 			kodeverkTypes = listOf(KODEVERK_NAVSKJEMA, KODEVERK_TEMA, KODEVERK_VEDLEGGSKODER)
 		)
 
+		if (mappedEttersending.vedleggsListe != null) {
+			val vedleggsListe = mappedEttersending.vedleggsListe ?: emptyList()
+			vedleggsListe.forEach { vedlegg -> validateVedlegg(vedlegg) }
+		}
+
 		val enrichedEttersending = kodeverkService.enrichEttersendingWithKodeverkInfo(mappedEttersending)
 
 		// Create ettersending based on existing søknad or create a new one
@@ -373,6 +380,17 @@ class EttersendingService(
 
 		return dokumentSoknadDto
 	}
+
+	private fun validateVedlegg(vedlegg: InnsendtVedleggDto) {
+		val tittel = vedlegg.tittel ?: ""
+		if (tittel.length > 250) {
+			throw IllegalActionException(
+				message = "$tittel er større enn maksimum tillatt vedleggslengde på 250}",
+				errorCode = ErrorCode.TITLE_STRING_TOO_LONG
+			)
+		}
+	}
+
 
 	fun createEttersendingFromFyllutEttersending(
 		brukerId: String,
