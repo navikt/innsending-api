@@ -1,12 +1,13 @@
 package no.nav.soknad.pdfutilities
 
-import junit.framework.TestCase.assertTrue
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import kotlin.test.assertEquals
+import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
+import org.junit.jupiter.api.Assertions.assertTrue
 
 class KonverterTilPdfTest: ApplicationTest() {
 
@@ -42,6 +43,17 @@ class KonverterTilPdfTest: ApplicationTest() {
 		assertTrue(validation.isPdfACompliant)
 	}
 
+
+	@Test
+	fun verifiserKonverteringPdfTilBildeOgTilPdf() {
+		val orig = Hjelpemetoder.getBytesFromFile("/__files/forside-nav.pdf")
+
+		val start = System.currentTimeMillis()
+		val png = KonverterTilPng().konverterTilPng(orig)
+		val ferdig = System.currentTimeMillis()
+		println("Tid til konvertering av forside-nav = ${ferdig - start}")
+		writeBytesToFile(png[0], "../target/forside-nav.png")
+0	}
 
 	@Test
 	fun verifiserKonverteringAvTxtFil() {
