@@ -322,6 +322,32 @@ paths:
           tags:
             - lospost
 
+
+  /fyllUt/v1/merge-filer:
+    post:
+      summary: Merge en liste av PDFer til en PDF
+      description: Gitt en liste av PDFer, returneres en sammenslått PDF.
+      operationId: fyllUtMergeFiler
+
+      requestBody:
+        description: Tittel, språk og liste av filer som skal slås sammen til en PDF
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MergeFilerDto"
+        required: true
+
+      responses:
+        200:
+          description: Sammenslått PDF
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+      tags:
+        - fyllutMerge
+
+
   /innsendte/v1/files/{uuids}:
     get:
       summary: Finds files with given uuids.
@@ -1888,6 +1914,24 @@ components:
       type: integer
       description: Antall dager søknaden skal mellomlagres før den automatisk slettes
       example: 28
+
+    MergeFilerDto:
+      type: object
+      description: Data for merging av filer
+      required:
+        - tittel
+        - filer
+      properties:
+        tittel:
+          $ref: "#/components/schemas/Tittel"
+        sprak:
+          $ref: "#/components/schemas/Spraak"
+        filer:
+          type: array
+          description: Liste av filer som skal merges. Filene merges i samme rekkefølge som de ligger i listen.
+          items:
+            $ref: "#/components/schemas/Document"
+
 
     Mimetype:
       type: string

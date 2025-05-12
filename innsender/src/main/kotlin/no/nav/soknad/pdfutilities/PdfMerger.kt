@@ -1,9 +1,11 @@
 package no.nav.soknad.pdfutilities
 
+import org.apache.pdfbox.Loader
 import org.apache.pdfbox.io.MemoryUsageSetting
 import org.apache.pdfbox.io.RandomAccessRead
 import org.apache.pdfbox.io.RandomAccessReadBuffer
 import org.apache.pdfbox.multipdf.PDFMergerUtility
+import org.apache.pdfbox.pdmodel.PDDocument
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.ByteArrayOutputStream
@@ -40,7 +42,7 @@ class PdfMerger(
 		}
 	}
 
-	private fun mergeWithPDFBox(docs: List<ByteArray>): ByteArray{
+	override fun mergeWithPDFBox(docs: List<ByteArray>): ByteArray{
 		val randomAccess = mutableListOf<RandomAccessRead>()
 		return try {
 			for (bytes in docs) {
@@ -60,6 +62,35 @@ class PdfMerger(
 			}
 			)
 		}
+	}
+
+
+	override fun setPdfMetadata(file: ByteArray, title: String, language: String?): ByteArray {
+		var pdfDocument: PDDocument? = null
+		val out = ByteArrayOutputStream()
+		try {
+			pdfDocument = Loader.loadPDF(file)
+			val docInfo = pdfDocument.documentInformation
+			val docCatalog = pdfDocument.documentCatalog
+			docInfo.title = title
+			if (language != null) {
+				docCatalog.language = fixLanguage(language)
+			}
+			pdfDocument.save(out)
+			return out.toByteArray()
+		} finally {
+			out.close()
+			if (pdfDocument != null) {
+				pdfDocument.close()
+			}
+		}
+	}
+
+	private fun fixLanguage(language: String): String {
+		if(language.length > 2) return language
+		else if (language.startsWith("en")) {return "English"}
+		else if (language.startsWith("no") || language.startsWith("nn") || language.startsWith("nb")) {return "Norwegian"}
+		else return "Norwegian"
 	}
 
 	private fun mergePdfStreams(docs: List<RandomAccessRead>): ByteArray {
