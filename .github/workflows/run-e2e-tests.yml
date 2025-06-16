@@ -1,0 +1,43 @@
+name: Run e2e tests
+
+on:
+  pull_request:
+
+jobs:
+  run-e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 21
+
+      - name: 'Build arkiv-mock'
+        uses: navikt/archiving-infrastructure/.github/checkout-and-build@main
+        with:
+          component_name: arkiv-mock
+
+      - name: 'Build soknadsmottaker'
+        uses: navikt/archiving-infrastructure/.github/checkout-and-build@main
+        with:
+          component_name: soknadsmottaker
+
+      - name: 'Build soknadsarkiverer'
+        uses: navikt/archiving-infrastructure/.github/checkout-and-build@main
+        with:
+          component_name: soknadsarkiverer
+
+      - name: 'Build innsending-api (this PR)'
+        uses: navikt/archiving-infrastructure/.github/checkout-and-build@main
+        with:
+          component_name: innsending-api
+          branch: ${{ github.head_ref }} # Branch of current PR
+
+      - name: 'Run e2e tests'
+        uses: navikt/archiving-infrastructure/.github/checkout-and-build@main
+        with:
+          component_name: archiving-infrastructure
+          sub_directory: system-tests
+          skip_tests: false
+          run_docker_build: false
