@@ -1,4 +1,4 @@
-name: Run e2e tests on pull requests
+name: Run e2e tests
 
 on:
   pull_request:
@@ -27,7 +27,6 @@ jobs:
         uses: navikt/archiving-infrastructure/.github/checkout-and-build@main
         with:
           component_name: soknadsarkiverer
-          branch: tech/endtoend-timeouts # Remove this line when the PR is merged
 
       - name: 'Build innsending-api (this PR)'
         uses: navikt/archiving-infrastructure/.github/checkout-and-build@main
@@ -42,4 +41,3 @@ jobs:
           sub_directory: system-tests
           skip_tests: false
           run_docker_build: false
-          branch: tech/enable-dependabot-version-updates # Remove this line when the PR is merged
