@@ -12,7 +12,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 21
-          cache: 'maven'
 
       - name: 'Build arkiv-mock'
         uses: navikt/archiving-infrastructure/.github/checkout-and-build@main
