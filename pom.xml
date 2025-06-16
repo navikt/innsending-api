@@ -29,7 +29,7 @@
 
 		<!--Spring-->
 		<spring-boot.version>3.4.3</spring-boot.version>
-		<spring-web.version>6.2.3</spring-web.version>
+		<spring-web.version>6.2.8</spring-web.version>
 		<spring-cloud.version>4.2.0</spring-cloud.version>
 
 		<!--OpenAPI-->
