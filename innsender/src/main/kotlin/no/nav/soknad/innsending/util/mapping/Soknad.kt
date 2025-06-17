@@ -52,6 +52,9 @@ fun lagDokumentSoknadDto(
 	erSystemGenerert: Boolean = false,
 ): DokumentSoknadDto {
 	val erEttersending = soknadDbData.ettersendingsid != null || soknadDbData.visningstype == VisningsType.ettersending
+	if (soknadDbData.visningstype == null) {
+		throw IllegalStateException("Visningstype er null for soknad med id ${soknadDbData.id}")
+	}
 	return DokumentSoknadDto(
 		brukerId = soknadDbData.brukerid,
 		skjemanr = soknadDbData.skjemanr,
@@ -67,8 +70,7 @@ fun lagDokumentSoknadDto(
 		endretDato = mapTilOffsetDateTime(soknadDbData.endretdato),
 		innsendtDato = mapTilOffsetDateTime(soknadDbData.innsendtdato),
 		visningsSteg = soknadDbData.visningssteg ?: 0,
-		visningsType = soknadDbData.visningstype
-			?: if (soknadDbData.ettersendingsid != null) VisningsType.ettersending else VisningsType.dokumentinnsending,
+		visningsType = soknadDbData.visningstype,
 		kanLasteOppAnnet = soknadDbData.kanlasteoppannet ?: true,
 		innsendingsFristDato = beregnInnsendingsFrist(soknadDbData),
 		forsteInnsendingsDato = mapTilOffsetDateTime(soknadDbData.forsteinnsendingsdato),
@@ -96,6 +98,9 @@ fun mapTilDokumentSoknadDto(
 		lagVedleggDto(vedleggDbData, filer.firstOrNull()?.data)
 	}
 	val erEttersending = soknadDbData.ettersendingsid != null || soknadDbData.visningstype == VisningsType.ettersending
+	if (soknadDbData.visningstype == null) {
+		throw IllegalStateException("Visningstype er null for soknad med id ${soknadDbData.id}")
+	}
 
 	return DokumentSoknadDto(
 		brukerId = soknadDbData.brukerid,
@@ -112,8 +117,7 @@ fun mapTilDokumentSoknadDto(
 		endretDato = mapTilOffsetDateTime(soknadDbData.endretdato),
 		innsendtDato = mapTilOffsetDateTime(soknadDbData.innsendtdato),
 		visningsSteg = soknadDbData.visningssteg ?: 0,
-		visningsType = soknadDbData.visningstype
-			?: if (soknadDbData.ettersendingsid != null) VisningsType.ettersending else VisningsType.dokumentinnsending,
+		visningsType = soknadDbData.visningstype,
 		kanLasteOppAnnet = soknadDbData.kanlasteoppannet ?: true,
 		innsendingsFristDato = beregnInnsendingsFrist(soknadDbData),
 		forsteInnsendingsDato = mapTilOffsetDateTime(soknadDbData.forsteinnsendingsdato),

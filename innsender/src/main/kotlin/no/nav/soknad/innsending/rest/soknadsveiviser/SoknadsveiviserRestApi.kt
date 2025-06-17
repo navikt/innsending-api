@@ -11,11 +11,9 @@ import no.nav.soknad.innsending.model.OpprettSoknadBody
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.EttersendingService
 import no.nav.soknad.innsending.service.NotificationService
-import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
-import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -33,7 +31,6 @@ import org.springframework.web.bind.annotation.RestController
 	combineWithOr = true
 )
 class SoknadsveiviserRestApi(
-	private val soknadService: SoknadService,
 	private val tilgangskontroll: Tilgangskontroll,
 	private val ettersendingService: EttersendingService,
 	private val notificationService: NotificationService,
@@ -43,44 +40,21 @@ class SoknadsveiviserRestApi(
 	private val secureLogger = LoggerFactory.getLogger("secureLogger")
 	private val combinedLogger = CombinedLogger(logger, secureLogger)
 
-	@Timed(InnsenderOperation.OPPRETT)
 	override fun opprettSoknad(
 		opprettSoknadBody: OpprettSoknadBody,
-		envQualifier: EnvQualifier?,
+		navEnvQualifier: EnvQualifier?,
 	): ResponseEntity<DokumentSoknadDto> {
-		val brukerId = tilgangskontroll.hentBrukerFraToken()
-
-		combinedLogger.log("Skal opprette søknad for ${opprettSoknadBody.skjemanr} ($envQualifier)", brukerId)
-
-		soknadService.loggWarningVedEksisterendeSoknad(brukerId, opprettSoknadBody.skjemanr)
-
-		val dokumentSoknadDto = soknadService.opprettSoknad(
-			brukerId,
-			opprettSoknadBody.skjemanr,
-			finnSpraakFraInput(opprettSoknadBody.sprak),
-			opprettSoknadBody.vedleggsListe ?: emptyList()
-		)
-
-		combinedLogger.log(
-			"${dokumentSoknadDto.innsendingsId}: Opprettet søknad på skjema ${opprettSoknadBody.skjemanr}",
-			brukerId
-		)
-
-		notificationService.create(dokumentSoknadDto.innsendingsId!!, NotificationOptions(envQualifier = envQualifier))
-
-		return ResponseEntity
-			.status(HttpStatus.CREATED)
-			.body(dokumentSoknadDto)
+		throw UnsupportedOperationException("Opprettelse av søknad med visningstype dokumentinnsending er ikke støttet lenger.")
 	}
 
 	@Timed(InnsenderOperation.OPPRETT)
 	override fun opprettEttersendingGittSkjemanr(
 		opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr,
-		envQualifier: EnvQualifier?,
+		navEnvQualifier: EnvQualifier?,
 	): ResponseEntity<DokumentSoknadDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		combinedLogger.log(
-			"Kall for å opprette ettersending fra soknadsveiviser (via sendinn) på skjema ${opprettEttersendingGittSkjemaNr.skjemanr} ($envQualifier)",
+			"Kall for å opprette ettersending fra soknadsveiviser (via sendinn) på skjema ${opprettEttersendingGittSkjemaNr.skjemanr} ($navEnvQualifier)",
 			brukerId
 		)
 
@@ -98,7 +72,7 @@ class SoknadsveiviserRestApi(
 			"${ettersending.innsendingsId}: Opprettet ettersending fra soknadsveiviser (via sendinn) på skjema ${ettersending.skjemanr}",
 			brukerId
 		)
-		notificationService.create(ettersending.innsendingsId!!, NotificationOptions(envQualifier = envQualifier))
+		notificationService.create(ettersending.innsendingsId!!, NotificationOptions(envQualifier = navEnvQualifier))
 
 		return ResponseEntity
 			.status(HttpStatus.CREATED)

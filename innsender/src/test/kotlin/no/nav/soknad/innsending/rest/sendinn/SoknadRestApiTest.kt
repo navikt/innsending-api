@@ -12,7 +12,6 @@ import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.utils.Api
 import no.nav.soknad.innsending.utils.Hjelpemetoder
-import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
@@ -30,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
 import kotlin.test.assertNotEquals
 
 class SoknadRestApiTest : ApplicationTest() {
@@ -60,28 +60,14 @@ class SoknadRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Should create soknad and get a response`() {
-		// When
-		val response = api?.createSoknadForSkjemanr(defaultSkjemanr)
-
-		// Then
-		assertTrue(response?.body != null)
-	}
-
-	@Test
-	fun `Should create soknad and retrieve it`() {
-		// Given
-		val postResponse = api?.createSoknadForSkjemanr(defaultSkjemanr)
-
-		// When
-		val getResponse = api?.getSoknadSendinn(postResponse?.body?.innsendingsId!!)
-
-		// Then
-		val getSoknadDto = getResponse?.body
-		assertTrue(postResponse?.body != null)
-		assertTrue(getResponse?.body != null)
-		assertEquals(postResponse?.body?.innsendingsId, getSoknadDto!!.innsendingsId)
-		assertEquals("application", getResponse.body.applikasjon)
+	fun `Should fail creating soknad (old visningstype dokumentinnsending)`() {
+		val errorBody = api!!.createSoknadForSkjemanr(defaultSkjemanr)
+			.assertHttpStatus(HttpStatus.NOT_IMPLEMENTED)
+			.errorBody
+		assertEquals(
+			"Operasjonen er ikke støttet",
+			errorBody.message
+		)
 	}
 
 	companion object {
@@ -104,8 +90,6 @@ class SoknadRestApiTest : ApplicationTest() {
 	) {
 		// Given
 		// 1 søknad and 2 ettersendingssøknader
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken(defaultUser)
-
 		val soknad = DokumentSoknadDtoTestBuilder(brukerId = defaultUser).build()
 		val opprettetSoknad = soknadService.opprettNySoknad(soknad)
 
