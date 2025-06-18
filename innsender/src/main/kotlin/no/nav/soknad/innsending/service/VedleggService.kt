@@ -496,22 +496,6 @@ class VedleggService(
 			}
 	}
 
-
-	fun vedleggHarFiler(innsendingsId: String, vedleggsId: Long): Boolean {
-		return repo.findAllByVedleggsid(innsendingsId, vedleggsId).any { it.data != null }
-	}
-
-	fun enrichVedleggListFromSanity(vedleggsnrList: List<String>, sprak: String): List<InnsendtVedleggDto> {
-		return vedleggsnrList.map { vedleggsnr ->
-			val kodeverkSkjema = skjemaService.hentSkjema(vedleggsnr, sprak)
-			InnsendtVedleggDto(
-				tittel = kodeverkSkjema.tittel ?: "",
-				vedleggsnr = vedleggsnr,
-				url = kodeverkSkjema.url
-			)
-		}
-	}
-
 	private fun reportException(e: Exception, operation: String, tema: String) {
 		logger.error("Feil ved operasjon $operation", e)
 		innsenderMetrics.incOperationsErrorCounter(operation, tema)

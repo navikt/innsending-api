@@ -23,7 +23,7 @@ tags:
   - name: sendinn-fil
     description: API for sendinn-frontend applikasjonen for å håndtere filer.
   - name: soknadsveiviser
-    description: API for soknadsveiviser applikasjonen.
+    description: API for soknadsveiviser applikasjonen (deprecated).
   - name: ekstern
     description: API for eksterne applikasjoner.
   - name: endtoend
@@ -392,6 +392,7 @@ paths:
       summary: Kall for å opprette en søknad basert på skjemanummer og med en eventuell liste av vedlegg.
       description: På basis av oppgitt skjemanummer og eventuelle vedlegg, blir det opprettet en søknad som inviterer søker til å laste ned skjema for utfylling og opplasting av dette og eventuelle vedlegg.
       operationId: opprettSoknad
+      deprecated: true
 
       parameters:
         - in: header
@@ -423,6 +424,7 @@ paths:
       summary: Kall for å opprette en ettersendingssøknad basert på et skjemanummer.
       description: På basis av oppgitt skjemanummer, blir det opprettet en ettersendingssøknad som inviterer søker til å laste opp vedlegg.
       operationId: opprettEttersendingGittSkjemanr
+      deprecated: true
 
       parameters:
         - in: header
