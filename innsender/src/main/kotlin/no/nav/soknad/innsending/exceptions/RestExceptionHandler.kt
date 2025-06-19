@@ -76,6 +76,22 @@ class RestExceptionHandler {
 		)
 	}
 
+	@ExceptionHandler(value = [UnsupportedOperationException::class])
+	fun unsupportedOperationException(
+		request: HttpServletRequest,
+		exception: UnsupportedOperationException
+	): ResponseEntity<RestErrorResponseDto?>? {
+		logger.warn("Kall til ${request.requestURI} ikke støttet: ${exception.message}", exception)
+
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = "Operasjonen er ikke støttet",
+				timestamp = OffsetDateTime.now(),
+				errorCode = "errorCode.unsupportedOperation"
+			), HttpStatus.NOT_IMPLEMENTED
+		)
+	}
+
 	// 500
 	@ExceptionHandler
 	fun generalException(exception: Exception): ResponseEntity<RestErrorResponseDto> {

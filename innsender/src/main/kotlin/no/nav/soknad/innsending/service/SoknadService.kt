@@ -40,6 +40,7 @@ class SoknadService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
+	@Deprecated("Is currently only used in tests, will be removed in the future")
 	@Transactional(timeout= TRANSACTION_TIMEOUT)
 	fun opprettSoknad(
 		brukerId: String,
@@ -70,7 +71,7 @@ class SoknadService(
 					endretdato = LocalDateTime.now(),
 					innsendtdato = null,
 					visningssteg = 0,
-					visningstype = VisningsType.dokumentinnsending,
+					visningstype = VisningsType.fyllUt,
 					kanlasteoppannet = true,
 					forsteinnsendingsdato = null,
 					ettersendingsfrist = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
@@ -134,14 +135,6 @@ class SoknadService(
 	fun hentAktiveSoknader(brukerId: String, skjemanr: String, vararg soknadTyper: SoknadType): List<DokumentSoknadDto> {
 		return hentAktiveSoknader(listOf(brukerId)).filter {
 			it.skjemanr == skjemanr && (soknadTyper.isEmpty() || soknadTyper.contains(it.soknadstype)) && it.visningsType !== VisningsType.dokumentinnsending
-		}
-	}
-
-
-	fun loggWarningVedEksisterendeSoknad(brukerId: String, skjemanr: String) {
-		val aktiveSoknaderGittSkjemanr = hentAktiveSoknader(brukerId, skjemanr, SoknadType.soknad)
-		if (aktiveSoknaderGittSkjemanr.isNotEmpty()) {
-			logger.warn("Dupliserer søknad på skjemanr=$skjemanr, søker har allerede ${aktiveSoknaderGittSkjemanr.size} under arbeid")
 		}
 	}
 

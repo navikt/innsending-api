@@ -48,14 +48,16 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		return InnsendingApiResponse(response.statusCode, body, response.headers)
 	}
 
-	fun createSoknadForSkjemanr(skjemanr: String, spraak: String = "nb_NO"): ResponseEntity<DokumentSoknadDto> {
+	fun createSoknadForSkjemanr(skjemanr: String, spraak: String = "nb_NO"): InnsendingApiResponse<DokumentSoknadDto> {
 		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak)
-		return restTemplate.exchange(
+		val response = restTemplate.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad",
 			HttpMethod.POST,
 			createHttpEntity(opprettSoknadBody),
-			DokumentSoknadDto::class.java
+			String::class.java
 		)
+		val body = readBody(response, DokumentSoknadDto::class.java)
+		return InnsendingApiResponse(response.statusCode, body, response.headers)
 	}
 
 	fun createSoknadRedirect(

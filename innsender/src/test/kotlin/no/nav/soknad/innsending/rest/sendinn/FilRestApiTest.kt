@@ -1,18 +1,22 @@
 package no.nav.soknad.innsending.rest.sendinn
 
+import io.mockk.clearAllMocks
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
+import no.nav.soknad.innsending.utils.Api
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
 import no.nav.soknad.innsending.utils.TokenGenerator
+import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.imageFileTypes
 import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.officeFileTypes
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -30,14 +34,21 @@ class FilRestApiTest : ApplicationTest() {
 	lateinit var restTemplate: TestRestTemplate
 
 	@Autowired
-	lateinit var soknadService: SoknadService
-
-	@Autowired
 	private lateinit var innsenderMetrics: InnsenderMetrics
 
 
 	@Value("\${server.port}")
 	var serverPort: Int? = 9064
+
+	var testApi: Api? = null
+	val api: Api
+		get() = testApi!!
+
+	@BeforeEach
+	fun setup() {
+		testApi = Api(restTemplate, serverPort!!, mockOAuth2Server)
+		clearAllMocks()
+	}
 
 	@BeforeEach
 	fun init() {
@@ -54,7 +65,7 @@ class FilRestApiTest : ApplicationTest() {
 		val vedlegg = listOf("N6", "W2")
 		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
+		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
 
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
@@ -128,7 +139,7 @@ class FilRestApiTest : ApplicationTest() {
 		val vedlegg = listOf("N6", "W2")
 		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
+		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
 
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
@@ -156,12 +167,12 @@ class FilRestApiTest : ApplicationTest() {
 		val filPath = "/__files/$bildeNavnPrefix"
 		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
+		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
 
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
 
-		org.junit.jupiter.api.assertThrows<Exception> {
+		assertThrows<Exception> {
 			lastOppFil(token, soknadDto.innsendingsId!!, vedleggN6.id!!, filPath+ ".heic")
 		}
 
@@ -244,7 +255,7 @@ class FilRestApiTest : ApplicationTest() {
 		val vedlegg = listOf("N6", "W2")
 		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
+		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
 
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
@@ -279,7 +290,7 @@ class FilRestApiTest : ApplicationTest() {
 		val vedlegg = listOf("N6", "W2")
 		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
+		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
 
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
@@ -309,7 +320,7 @@ class FilRestApiTest : ApplicationTest() {
 		val vedlegg = listOf("N6", "W2")
 		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val soknadDto = opprettEnSoknad(token, skjemanr, spraak, vedlegg)
+		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
 
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
@@ -336,24 +347,18 @@ class FilRestApiTest : ApplicationTest() {
 	}
 
 	private fun opprettEnSoknad(
-		token: String,
 		skjemanr: String,
 		spraak: String,
 		vedlegg: List<String>
 	): DokumentSoknadDto {
-
-		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak, vedlegg)
-		val postRequestEntity = HttpEntity(opprettSoknadBody, Hjelpemetoder.createHeaders(token))
-
-		val postResponse = restTemplate.exchange(
-			"http://localhost:${serverPort}/frontend/v1/soknad", HttpMethod.POST,
-			postRequestEntity, DokumentSoknadDto::class.java
-		)
-
-		assertTrue(postResponse.body != null)
-		val opprettetSoknadDto = postResponse.body
-		assertTrue(opprettetSoknadDto!!.vedleggsListe.isNotEmpty())
-
-		return opprettetSoknadDto
+		val requestBody = SkjemaDtoTestBuilder(
+			skjemanr = skjemanr,
+			spraak = spraak,
+			vedleggsListe = vedlegg.map { SkjemaDokumentDtoTestBuilder(vedleggsnr = it).build() }
+		).build()
+		val dokumentSoknadDto = api.createSoknad(requestBody)
+			.assertSuccess()
+			.body
+		return api.getSoknadSendinn(dokumentSoknadDto.innsendingsId!!).assertSuccess().body
 	}
 }

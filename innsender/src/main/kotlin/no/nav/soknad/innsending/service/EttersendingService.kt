@@ -404,28 +404,6 @@ class EttersendingService(
 		)
 	}
 
-	// Get info from Sanity before creating an ettersending
-	fun createEttersendingFromExistingSoknaderUsingSanity(
-		brukerId: String,
-		opprettEttersendingGittSkjemaNr: OpprettEttersendingGittSkjemaNr
-	): DokumentSoknadDto {
-		val vedleggList = opprettEttersendingGittSkjemaNr.vedleggsListe ?: emptyList()
-		val skjemanr = opprettEttersendingGittSkjemaNr.skjemanr
-		val sprak = finnSpraakFraInput(opprettEttersendingGittSkjemaNr.sprak)
-
-		val kodeverkSkjema = skjemaService.hentSkjema(skjemanr, sprak)
-
-		val ettersending = OpprettEttersending(
-			tittel = kodeverkSkjema.tittel ?: "",
-			skjemanr = skjemanr,
-			sprak = sprak,
-			tema = kodeverkSkjema.tema ?: "",
-			vedleggsListe = vedleggService.enrichVedleggListFromSanity(vedleggList, sprak)
-		)
-
-		return createEttersendingFromExistingSoknader(brukerId, ettersending, erNavInitiert = false)
-	}
-
 	private fun createEttersendingWithExistingSoknader(
 		innsendteSoknader: List<DokumentSoknadDto>,
 		arkiverteSoknader: List<AktivSakDto>,
