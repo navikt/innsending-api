@@ -44,7 +44,11 @@
 			},
 			{
 				"application": "tokenx-token-generator",
-				"namespace": "aura"
+				"namespace": "nais"
+			},
+			{
+				"application": "azure-token-generator",
+				"namespace": "nais"
 			},
 			{
 				"application": "sykepengesoknad-backend",
