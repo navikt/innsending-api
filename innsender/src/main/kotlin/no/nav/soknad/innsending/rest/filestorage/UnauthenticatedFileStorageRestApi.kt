@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.rest.filestorage
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
+import no.nav.security.token.support.core.utils.Cluster
 import no.nav.soknad.innsending.api.UnauthenticatedFileStorageApi
 import no.nav.soknad.innsending.model.FileUploadResponse
 import no.nav.soknad.innsending.service.filestorage.FileStorageService
@@ -14,7 +15,11 @@ import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
 @RestController
-@ProtectedWithClaims(issuer = Constants.AZURE, claimMap = [ "roles=unauthenticated-file-storage-access" ])
+@ProtectedWithClaims(
+	issuer = Constants.AZURE,
+	claimMap = ["roles=unauthenticated-file-storage-access"],
+	excludedClusters = [Cluster.DEV_GCP]
+)
 class UnauthenticatedFileStorageRestApi(
 	val fileStorageService: FileStorageService,
 ) : UnauthenticatedFileStorageApi {
