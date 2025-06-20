@@ -1,0 +1,23 @@
+components:
+  schemas:
+    UUID:
+      type: string
+      description: A Universally Unique Identifier
+      example: 92ee15dd-dc49-4c95-b9b6-6224bae088bb
+    RestErrorResponseDto:
+      type: object
+      description: Feilrespons
+      properties:
+        message:
+          type: string
+          description: Feilmelding
+        timestamp:
+          type: string
+          format: date-time
+        errorCode:
+          type: string
+          description: Feilkode
+      example:
+        message: Noe gikk galt, prøv igjen senere
+        timestamp: 2023-12-21T09:31:40.549032434
+        errorCode: somethingFailedTryLater

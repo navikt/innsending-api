@@ -5,6 +5,7 @@
 	"database-name": "dokumentinnsending",
 	"default_database_size": 20,
 	"tier": "db-custom-1-3840",
+	"bucket-name-file-storage": "innsending-api-file-storage-prod",
 	"ingresses": [
 		"https://www.nav.no/innsending-api-gcp",
 		"https://innsending-api-gcp.nav.no",
@@ -19,7 +20,8 @@
 		"other-namespace": [
 			{
 				"application": "skjemautfylling",
-				"namespace": "skjemadigitalisering"
+				"namespace": "skjemadigitalisering",
+				"roles": ["unauthenticated-file-storage-access"]
 			},
 			{
 				"application": "fyllut-ettersending",

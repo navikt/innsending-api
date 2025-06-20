@@ -20,7 +20,7 @@ class FilValidatorService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	fun validerFil(fil: Resource, innsendingsId: String): String {
+	fun validerFil(fil: Resource, innsendingsId: String, antivirusEnabled: Boolean = false): String {
 
 		// Sjekk filnavn
 		val fileName = fil.filename
@@ -47,12 +47,10 @@ class FilValidatorService(
 
 		val filtype = Validerer().validereFilformat(innsendingsId, opplastet, fileName)
 
-		// Sjekk om filen inneholder virus
-		// TODO: Fiks dette
-//		if (!antivirus.scan(opplastet)) throw IllegalActionException(
-//			message = "Opplasting feilet. Filen inneholder virus",
-//			errorCode = ErrorCode.VIRUS_SCAN_FAILED
-//		)
+		if (antivirusEnabled && !antivirus.scan(opplastet)) throw IllegalActionException(
+			message = "Opplasting feilet. Filen inneholder virus",
+			errorCode = ErrorCode.VIRUS_SCAN_FAILED
+		)
 
 		innsenderMetrics.setFileSize(opplastet.size.toLong())
 		return filtype

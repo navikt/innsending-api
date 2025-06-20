@@ -19,10 +19,18 @@ services:
     volumes:
       - db:/var/lib/postgresql/data
 
+  cloud-storage:
+    image: fsouza/fake-gcs-server
+    restart: always
+    entrypoint: [ "/bin/fake-gcs-server", "-data", "/data", "-scheme", "http" ]
+    ports:
+      - "4443:4443"
+
   innsending-api:
     depends_on:
       - db
       - gotenberg
+      - cloud-storage
     container_name: innsending-api
     mem_reservation: 4000M
     build:

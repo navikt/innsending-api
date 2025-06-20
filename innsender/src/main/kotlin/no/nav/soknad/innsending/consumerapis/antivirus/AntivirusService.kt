@@ -32,8 +32,8 @@ class AntivirusService(private val antivirusRestClient: RestClient, private val 
 					.body(file)
 					.exchange { request, response ->
 						run {
-							if (response.getStatusCode().isError()) {
-								logger.error("Feil ved scanning for virus av dokument", response.getStatusCode())
+							if (response.statusCode.isError) {
+								logger.error("Feil ved scanning for virus av dokument ({})", response.statusCode)
 								listOf(ScanResult("Unknown", ClamAvResult.ERROR))
 							} else {
 								response.bodyTo(responseType) ?: listOf(ScanResult("Unknown", ClamAvResult.ERROR))

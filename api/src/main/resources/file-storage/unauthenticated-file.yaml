@@ -1,0 +1,29 @@
+delete:
+  summary: Sletter en fil
+  operationId: deleteFile
+  parameters:
+    - name: fileId
+      in: path
+      required: true
+      description: Id for filen som skal slettes
+      schema:
+        type: string
+        format: uuid
+    - name: groupId
+      in: query
+      required: true
+      description: Gruppe-id for filen som skal slettes
+      schema:
+        type: string
+        format: uuid
+  responses:
+    204:
+      description: Filen ble slettet
+    500:
+      description: Noe gikk galt under sletting av filen
+      content:
+        application/json:
+          schema:
+            $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
+  tags:
+    - unauthenticated-file-storage

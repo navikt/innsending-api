@@ -1,0 +1,47 @@
+post:
+  summary: Laster opp en fil
+  operationId: uploadFile
+  requestBody:
+   content:
+     multipart/form-data:
+       schema:
+         $ref: "./components.yaml#/components/schemas/FileUploadRequest"
+   required: true
+  responses:
+    201:
+      description: Id for den opplastede filen
+      content:
+        application/json:
+          schema:
+            $ref: "./components.yaml#/components/schemas/FileUploadResponse"
+    500:
+      description: Noe gikk galt under opplastingen
+      content:
+        application/json:
+          schema:
+            $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
+  tags:
+    - unauthenticated-file-storage
+
+delete:
+  summary: Sletter filer
+  operationId: deleteFiles
+  parameters:
+    - name: groupId
+      in: query
+      required: true
+      description: Gruppe-id for filene som skal slettes
+      schema:
+        type: string
+        format: uuid
+  responses:
+    204:
+      description: Filene ble slettet
+    500:
+      description: Noe gikk galt under sletting av filene
+      content:
+        application/json:
+          schema:
+            $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
+  tags:
+    - unauthenticated-file-storage
