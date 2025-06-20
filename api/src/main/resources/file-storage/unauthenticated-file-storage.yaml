@@ -32,8 +32,7 @@ delete:
       required: true
       description: Gruppe-id for filene som skal slettes
       schema:
-        type: string
-        format: uuid
+        $ref: "../common/components.yaml#/components/schemas/UUID"
   responses:
     204:
       description: Filene ble slettet

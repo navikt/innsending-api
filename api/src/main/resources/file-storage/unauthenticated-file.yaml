@@ -7,15 +7,13 @@ delete:
       required: true
       description: Id for filen som skal slettes
       schema:
-        type: string
-        format: uuid
+        $ref: "../common/components.yaml#/components/schemas/UUID"
     - name: groupId
       in: query
       required: true
       description: Gruppe-id for filen som skal slettes
       schema:
-        type: string
-        format: uuid
+        $ref: "../common/components.yaml#/components/schemas/UUID"
   responses:
     204:
       description: Filen ble slettet
