@@ -22,7 +22,7 @@ class FillagerService(
 
 	private val bucket = cloudStorageConfig.fillagerBucketNavn
 
-	fun lagreFil(fil: Resource, vedleggId: String, innsendingId: String, namespace: FillagerNamespace): String {
+	fun lagreFil(fil: Resource, vedleggId: String, innsendingId: String, namespace: FillagerNamespace): FilMetadata {
 		val filId = UUID.randomUUID().toString()
 		val filtype = filValidatorService.validerFil(
 			fil = fil,
@@ -50,7 +50,14 @@ class FillagerService(
 			it.write(ByteBuffer.wrap(filinnholdBytes, 0, filinnholdBytes.size))
 		}
 		logger.info("$innsendingId: Fil lagret til bucket $bucket ($blobNavn)")
-		return filId
+		return FilMetadata(
+			filId = filId,
+			vedleggId = vedleggId,
+			innsendingId = innsendingId,
+			filnavn = fil.filename ?: "ukjent",
+			storrelse = filinnholdBytes.size,
+			filtype = filtype,
+		)
 	}
 
 	fun slettFil(filId: String, innsendingId: String, namespace: FillagerNamespace): Boolean {

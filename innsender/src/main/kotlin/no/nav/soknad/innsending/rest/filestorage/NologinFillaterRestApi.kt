@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.service.filestorage.FillagerNamespace
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.stringextensions.toUUID
 import org.springframework.core.io.Resource
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -32,7 +33,7 @@ class NologinFillaterRestApi(
 		innsendingId: UUID?
 	): ResponseEntity<LastOppFilResponse> {
 		val innsendingIdString = innsendingId?.toString() ?: UUID.randomUUID().toString()
-		val filId = fillagerService.lagreFil(
+		val metadata = fillagerService.lagreFil(
 			fil = filinnhold,
 			vedleggId = vedleggId,
 			innsendingId = innsendingIdString,
@@ -42,9 +43,11 @@ class NologinFillaterRestApi(
 			.status(HttpStatus.CREATED)
 			.body(
 				LastOppFilResponse(
-					filId = UUID.fromString(filId),
-					vedleggId = vedleggId,
-					innsendingId = UUID.fromString(innsendingIdString)
+					filId = metadata.filId.toUUID(),
+					vedleggId = metadata.vedleggId,
+					innsendingId = metadata.innsendingId.toUUID(),
+					filnavn = metadata.filnavn,
+					storrelse = metadata.storrelse,
 				)
 			)
 	}

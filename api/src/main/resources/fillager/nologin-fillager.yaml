@@ -9,7 +9,7 @@ post:
    required: true
   responses:
     201:
-      description: Id for den opplastede filen
+      description: Metadata for den opplastede filen
       content:
         application/json:
           schema:
