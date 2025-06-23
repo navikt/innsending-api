@@ -48,7 +48,8 @@
 			},
 			{
 				"application": "azure-token-generator",
-				"namespace": "nais"
+				"namespace": "nais",
+				"roles": ["unauthenticated-file-storage-access"]
 			},
 			{
 				"application": "sykepengesoknad-backend",

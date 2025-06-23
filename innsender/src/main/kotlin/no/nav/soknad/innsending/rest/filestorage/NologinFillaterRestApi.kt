@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.rest.filestorage
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
-import no.nav.security.token.support.core.utils.Cluster
 import no.nav.soknad.innsending.api.NologinFillagerApi
 import no.nav.soknad.innsending.model.LastOppFilResponse
 import no.nav.soknad.innsending.service.filestorage.FillagerService
@@ -20,7 +19,6 @@ import java.util.UUID
 @ProtectedWithClaims(
 	issuer = Constants.AZURE,
 	claimMap = ["roles=unauthenticated-file-storage-access"],
-	excludedClusters = [Cluster.DEV_GCP]
 )
 class NologinFillaterRestApi(
 	val fillagerService: FillagerService,
