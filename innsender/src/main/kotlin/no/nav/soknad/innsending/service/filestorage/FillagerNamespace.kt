@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.service.filestorage
 
-enum class StorageNamespace(
+enum class FillagerNamespace(
 	val value: String
 ) {
-	UNAUTHENTICATED("unauthenticated"),
+	NOLOGIN("nologin"),
 }

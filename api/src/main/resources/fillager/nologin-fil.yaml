@@ -1,17 +1,17 @@
 delete:
   summary: Sletter en fil
-  operationId: deleteFile
+  operationId: slettFilV2
   parameters:
-    - name: fileId
+    - name: filId
       in: path
       required: true
       description: Id for filen som skal slettes
       schema:
         $ref: "../common/components.yaml#/components/schemas/UUID"
-    - name: groupId
+    - name: innsendingId
       in: query
       required: true
-      description: Gruppe-id for filen som skal slettes
+      description: Innsendingsid for filen som skal slettes
       schema:
         $ref: "../common/components.yaml#/components/schemas/UUID"
   responses:
@@ -24,4 +24,4 @@ delete:
           schema:
             $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
   tags:
-    - unauthenticated-file-storage
+    - nologin-fillager

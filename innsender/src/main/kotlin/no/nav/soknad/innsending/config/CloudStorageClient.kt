@@ -36,8 +36,8 @@ class CloudStorageClient(
 			.build()
 			.service
 			.also { it ->
-				if (it.get(cloudStorageConfig.fileStorageBucketName) == null) {
-					it.create(BucketInfo.of(cloudStorageConfig.fileStorageBucketName))
+				if (it.get(cloudStorageConfig.fillagerBucketNavn) == null) {
+					it.create(BucketInfo.of(cloudStorageConfig.fillagerBucketNavn))
 				}
 			}
 	}

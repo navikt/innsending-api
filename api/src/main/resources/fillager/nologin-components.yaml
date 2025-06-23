@@ -1,27 +1,32 @@
 components:
   schemas:
-    FileUploadRequest:
+    LastOppFilRequest:
       type: object
       description: Forespørsel om å laste opp en fil. Filen vil bli konvertert til pdf før den lagres.
       required:
-      - fileContent
+      - vedleggId
+      - filinnhold
       properties:
-        groupId:
+        innsendingId:
           $ref: "../common/components.yaml#/components/schemas/UUID"
-        fileContent:
-          $ref: "#/components/schemas/FileContent"
-    FileUploadResponse:
+        vedleggId:
+          type: string
+        filinnhold:
+          $ref: "#/components/schemas/Filinnhold"
+    LastOppFilResponse:
       type: object
       description: Svar på forespørsel om å laste opp en fil
       required:
-      - id
-      - groupId
+      - filId
+      - vedleggId
+      - innsendingId
       properties:
-        id:
+        filId:
           $ref: "../common/components.yaml#/components/schemas/UUID"
-        groupId:
+        vedleggId:
+          type: string
+        innsendingId:
           $ref: "../common/components.yaml#/components/schemas/UUID"
-    FileContent:
+    Filinnhold:
       type: string
       format: binary
-      nullable: false

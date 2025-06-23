@@ -68,7 +68,7 @@ fil-konvertering_url: http://${GOTENBERG_HOST:localhost}:${GOTENBERG_PORT:3000}
 
 gcp:
   buckets:
-    fileStorageBucketName: ${FILE_STORAGE_BUCKET_NAME:innsending-api-file-storage-local}
+    fillagerBucketNavn: ${FILE_STORAGE_BUCKET_NAME:innsending-api-file-storage-local}
 
 ---
 spring:
