@@ -53,26 +53,32 @@ class FillagerService(
 		return filId
 	}
 
-	fun slettFil(filId: String, innsendingId: String, namespace: FillagerNamespace) {
+	fun slettFil(filId: String, innsendingId: String, namespace: FillagerNamespace): Boolean {
 		val prefix = "${namespace.value}/$innsendingId/"
 		val blobs = storage.list(bucket, Storage.BlobListOption.prefix(prefix))
 		val blob = blobs.iterateAll().firstOrNull { it.metadata?.get("filId") == filId }
-		blob?.let {
-			if (storage.delete(it.blobId)) {
+		return if (blob != null) {
+			if (storage.delete(blob.blobId)) {
 				logger.info("$innsendingId: Slettet fil med id $filId i bucket $bucket")
+				true
 			} else {
 				logger.warn("$innsendingId: Kunne ikke slette fil med id $filId i bucket $bucket")
+				false
 			}
-		} ?: logger.warn("$innsendingId: Fant ingen fil med id $filId i bucket $bucket som kunne slettes")
+		} else {
+			logger.warn("$innsendingId: Fant ingen fil med id $filId i bucket $bucket som kunne slettes")
+			false
+		}
 	}
 
-	fun slettFiler(innsendingId: String, vedleggId: String?, namespace: FillagerNamespace) {
+	fun slettFiler(innsendingId: String, vedleggId: String?, namespace: FillagerNamespace): Boolean {
 		val prefix = "${namespace.value}/$innsendingId/" + (vedleggId?.let { "$it/" } ?: "")
 		val blobs = storage.list(bucket, Storage.BlobListOption.prefix(prefix))
 		val successfulDeletions = blobs.iterateAll()
 			.map { blob -> storage.delete(blob.blobId) }
 			.filter { it }
 		logger.info("$innsendingId: Slettet ${successfulDeletions.size} filer i bucket $bucket")
+		return successfulDeletions.isNotEmpty()
 	}
 
 }

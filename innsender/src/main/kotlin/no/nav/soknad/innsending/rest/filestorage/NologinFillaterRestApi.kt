@@ -51,23 +51,30 @@ class NologinFillaterRestApi(
 
 	@Timed(InnsenderOperation.SLETT_FIL_BUCKET)
 	override fun slettFilV2(filId: UUID, innsendingId: UUID): ResponseEntity<Unit> {
-		fillagerService.slettFil(
+		val deleted = fillagerService.slettFil(
 			filId = filId.toString(),
 			innsendingId = innsendingId.toString(),
 			namespace = FillagerNamespace.NOLOGIN,
 		)
-		return ResponseEntity.noContent().build()
-
+		return if (deleted) {
+			ResponseEntity.noContent().build()
+		} else {
+			ResponseEntity.notFound().build()
+		}
 	}
 
 	@Timed(InnsenderOperation.SLETT_FILER_BUCKET)
 	override fun slettFiler(innsendingId: UUID, vedleggId: String?): ResponseEntity<Unit> {
-		fillagerService.slettFiler(
+		val deleted = fillagerService.slettFiler(
 			innsendingId = innsendingId.toString(),
 			vedleggId = vedleggId,
 			namespace = FillagerNamespace.NOLOGIN,
 		)
-		return ResponseEntity.noContent().build()
+		return if (deleted) {
+			ResponseEntity.noContent().build()
+		} else {
+			ResponseEntity.notFound().build()
+		}
 	}
 
 }

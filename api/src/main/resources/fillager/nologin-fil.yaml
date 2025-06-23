@@ -17,6 +17,8 @@ delete:
   responses:
     204:
       description: Filen ble slettet
+    404:
+      description: Fant ikke filen som skulle slettes
     500:
       description: Noe gikk galt under sletting av filen
       content:
