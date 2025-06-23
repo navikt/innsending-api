@@ -20,7 +20,7 @@ import java.util.UUID
 	issuer = Constants.AZURE,
 	claimMap = ["roles=unauthenticated-file-storage-access"],
 )
-class NologinFillaterRestApi(
+class NologinFillagerRestApi(
 	val fillagerService: FillagerService,
 ) : NologinFillagerApi {
 
