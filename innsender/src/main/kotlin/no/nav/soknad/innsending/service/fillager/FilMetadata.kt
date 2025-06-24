@@ -1,4 +1,4 @@
-package no.nav.soknad.innsending.service.filestorage
+package no.nav.soknad.innsending.service.fillager
 
 data class FilMetadata(
 	val filId: String,

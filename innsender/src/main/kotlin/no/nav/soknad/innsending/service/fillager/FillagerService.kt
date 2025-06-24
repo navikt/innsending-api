@@ -1,4 +1,4 @@
-package no.nav.soknad.innsending.service.filestorage
+package no.nav.soknad.innsending.service.fillager
 
 import com.google.cloud.storage.BlobId
 import com.google.cloud.storage.BlobInfo

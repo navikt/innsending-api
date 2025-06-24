@@ -1,10 +1,10 @@
-package no.nav.soknad.innsending.rest.filestorage
+package no.nav.soknad.innsending.rest.fillager
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.NologinFillagerApi
 import no.nav.soknad.innsending.model.LastOppFilResponse
-import no.nav.soknad.innsending.service.filestorage.FillagerService
-import no.nav.soknad.innsending.service.filestorage.FillagerNamespace
+import no.nav.soknad.innsending.service.fillager.FillagerService
+import no.nav.soknad.innsending.service.fillager.FillagerNamespace
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
