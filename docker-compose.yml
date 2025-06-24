@@ -21,6 +21,7 @@ services:
 
   cloud-storage:
     image: fsouza/fake-gcs-server
+    container_name: innsending-api-gcs
     restart: always
     entrypoint: [ "/bin/fake-gcs-server", "-data", "/data", "-scheme", "http" ]
     ports:
