@@ -10,7 +10,7 @@ import org.springframework.web.client.RestClient
 import org.springframework.core.ParameterizedTypeReference
 
 @Service
-@Profile("test | dev | prod")
+@Profile("dev | prod")
 class AntivirusService(private val antivirusRestClient: RestClient, private val innsenderMetrics: InnsenderMetrics) :
 	AntivirusInterface {
 
