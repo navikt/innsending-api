@@ -26,7 +26,7 @@ class GoogleStorage {
 	}
 
 	@Bean(destroyMethod = "stop")
-	fun embeddedGcs(): GoogleStorage.Container = gcsServer
+	fun embeddedGcs(): Container = gcsServer
 
 	class Container(private val gcsPort: Int = 4443) : GenericContainer<Container>(
 		DockerImageName.parse("fsouza/fake-gcs-server")
@@ -61,28 +61,29 @@ class GoogleStorage {
 		}
 
 		private fun updateExternalUrl() {
-			val url = getUrl()
-			val modifyExternalUrlRequestUri = "$url/_internal/config"
-			val updateExternalUrlJson = ("{\"externalUrl\": \"$url\"}")
+		    val url = getUrl()
+		    val modifyExternalUrlRequestUri = "$url/_internal/config"
+		    val updateExternalUrlJson = """{"externalUrl": "$url"}"""
 
-			val req: HttpRequest? = HttpRequest.newBuilder()
-				.uri(URI.create(modifyExternalUrlRequestUri))
-				.header("Content-Type", "application/json")
-				.PUT(HttpRequest.BodyPublishers.ofString(updateExternalUrlJson))
-				.build()
-			val response: HttpResponse<Void?>
-			try {
-				response = HttpClient.newBuilder().build()
-					.send(req, HttpResponse.BodyHandlers.discarding())
-			} catch (e: InterruptedException) {
-				throw RuntimeException(e)
-			} catch (e: IOException) {
-				throw RuntimeException(e)
-			}
+		    val req = HttpRequest.newBuilder()
+		        .uri(URI.create(modifyExternalUrlRequestUri))
+		        .header("Content-Type", "application/json")
+		        .PUT(HttpRequest.BodyPublishers.ofString(updateExternalUrlJson))
+		        .build()
 
-			if (response.statusCode() != 200) {
-				throw RuntimeException("error updating fake-gcs-server with external url, response status code ${response.statusCode()} != 200")
-			}
+		    val response = try {
+		        HttpClient.newBuilder().build()
+		            .send(req, HttpResponse.BodyHandlers.discarding())
+		    } catch (e: IOException) {
+		        throw RuntimeException("Failed to update fake-gcs-server external URL", e)
+		    } catch (e: InterruptedException) {
+		        Thread.currentThread().interrupt()
+		        throw RuntimeException("Thread interrupted while updating fake-gcs-server external URL", e)
+		    }
+
+		    if (response.statusCode() != 200) {
+		        throw RuntimeException("Error updating fake-gcs-server with external url, response status code ${response.statusCode()} != 200")
+		    }
 		}
 
 	}
