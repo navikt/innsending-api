@@ -24,6 +24,8 @@ tags:
     description: API for sendinn-frontend applikasjonen for å håndtere filer.
   - name: unauthenticated-file-storage
     description: API for filopplasting av uautentiserte brukere.
+  - name: u-innlogget-soknad
+    description: API for uinnlogget soknad. Endepunkt for å opprette og sende inn søknad gitt utfylt skjema og allerede opplastede filer på vedlegg.
   - name: soknadsveiviser
     description: API for soknadsveiviser applikasjonen (deprecated).
   - name: ekstern
@@ -926,6 +928,36 @@ paths:
 
   /v1/unauthenticated-file-storage/{fileId}:
     $ref: "./file-storage/unauthenticated-file.yaml"
+
+  /v1/uinnlogget-soknad:
+    post:
+      summary: Kall for å opprette en uinnlogget søknad basert på skjemanummer og med en eventuell liste av vedlegg.
+      description: På basis av oppgitt skjemanummer og eventuelle vedlegg, blir det opprettet en uinnlogget søknad som inviterer søker til å laste ned skjema for utfylling og opplasting av dette og eventuelle vedlegg.
+      operationId: opprettUinnloggetSoknad
+
+      parameters:
+        - in: header
+          name: Nav-Env-Qualifier
+          schema:
+            $ref: "#/components/schemas/EnvQualifier"
+
+      requestBody:
+        description: Data neccessary in order to store and send in an application.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UinnloggetSoknadDto"
+        required: true
+
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KvitteringsDto"
+      tags:
+        - fyllut-uinnlogget
 
   /ekstern/v1/ettersending:
         post:
@@ -2258,6 +2290,37 @@ components:
       type: string
       description: NAVs offisielle tittel til søknad eller dokument.
       example: Forsikring mot ansvar for sykepenger i arbeidsgiverperioden for små bedrifter.
+
+    UinnloggetFilDto:
+      type: object
+      description: Complete application data for an un-inlogged user
+      required:
+        - vedleggRef
+        - fileId
+
+      properties:
+        vedleggRef:
+          type: string
+          description: Reference to an attachment in an application
+        fileId:
+          type: string
+          description: Id of an uploaded file
+
+    UinnloggetSoknadDto:
+      type: object
+      description: Complete application data for an un-inlogged user
+      required:
+        - soknadDto
+        - fileList
+
+      properties:
+        soknadDto:
+          $ref: "#/components/schemas/DokumentSoknadDto"
+        fileList:
+          type: array
+          description: List of uploaded files with reference to the application'a attachments
+          items:
+            $ref: "#/components/schemas/UinnloggetFilDto"
 
     VedleggDto:
       type: object
