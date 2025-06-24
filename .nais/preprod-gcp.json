@@ -21,22 +21,22 @@
 			{
 				"application": "skjemautfylling",
 				"namespace": "skjemadigitalisering",
-				"roles": ["unauthenticated-file-storage-access"]
+				"roles": ["nologin-file-storage-access"]
 			},
 			{
 				"application": "skjemautfylling-delingslenke",
 				"namespace": "skjemadigitalisering",
-				"roles": ["unauthenticated-file-storage-access"]
+				"roles": ["nologin-file-storage-access"]
 			},
 			{
 				"application": "skjemautfylling-preprod",
 				"namespace": "skjemadigitalisering",
-				"roles": ["unauthenticated-file-storage-access"]
+				"roles": ["nologin-file-storage-access"]
 			},
 			{
 				"application": "skjemautfylling-preprod-alt",
 				"namespace": "skjemadigitalisering",
-				"roles": ["unauthenticated-file-storage-access"]
+				"roles": ["nologin-file-storage-access"]
 			},
 			{
 				"application": "fyllut-ettersending",
@@ -49,7 +49,7 @@
 			{
 				"application": "azure-token-generator",
 				"namespace": "nais",
-				"roles": ["unauthenticated-file-storage-access"]
+				"roles": ["nologin-file-storage-access"]
 			},
 			{
 				"application": "sykepengesoknad-backend",
