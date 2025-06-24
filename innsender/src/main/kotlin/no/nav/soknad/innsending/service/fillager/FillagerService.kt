@@ -7,6 +7,7 @@ import com.google.cloud.storage.Storage
 import no.nav.soknad.innsending.config.CloudStorageConfig
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.service.FilValidatorService
+import no.nav.soknad.pdfutilities.KonverterTilPdfInterface
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.core.io.Resource
@@ -17,6 +18,7 @@ import java.util.UUID
 @Service
 class FillagerService(
 	private val filValidatorService: FilValidatorService,
+	private val konverterTilPdf: KonverterTilPdfInterface,
 	cloudStorageConfig: CloudStorageConfig,
 	@Qualifier("cloudStorageClient") private val storage: Storage,
 ) {
@@ -24,19 +26,28 @@ class FillagerService(
 
 	private val bucket = cloudStorageConfig.fillagerBucketNavn
 
-	fun lagreFil(fil: Resource, vedleggId: String, innsendingId: String, namespace: FillagerNamespace): FilMetadata {
-		val filId = UUID.randomUUID().toString()
+	// TODO Legg til språk i nologin api
+	fun lagreFil(fil: Resource, vedleggId: String, innsendingId: String, namespace: FillagerNamespace, spraak: String? = "nb"): FilMetadata {
 		val filtype = filValidatorService.validerFil(
 			fil = fil,
 			innsendingsId = innsendingId,
 			antivirusEnabled = true,
 		)
 		val filinnholdBytes = fil.contentAsByteArray
+		val filId = UUID.randomUUID().toString()
 		val blobNavn = "${namespace.value}/$innsendingId/$vedleggId/$filId"
 
-		// TODO konverter til PDF
+		val (filSomPdf, antallSider) = konverterTilPdf.tilPdf(
+			filinnholdBytes,
+			innsendingId,
+			filtype,
+			fil.filename ?: "ukjent",
+			spraak
+		)
 
-		logger.info("$innsendingId: Fil validert ok - $blobNavn (filtype: $filtype)")
+		logger.info("$innsendingId: Fil validert ok og konvertert til pdf - $blobNavn (filtype: $filtype, antall sider: $antallSider)")
+		filValidatorService.validerAntallSider(antallSider)
+
 		val fileStatus = FilStatus.LASTET_OPP
 		val blobInfo = BlobInfo
 			.newBuilder(BlobId.of(bucket, blobNavn))
@@ -48,11 +59,12 @@ class FillagerService(
 					"filtype" to filtype,
 					"filnavn" to fil.filename,
 					"status" to fileStatus.value,
+					"antallSider" to antallSider.toString(),
 				)
 			)
 			.build()
 		storage.writer(blobInfo).use {
-			it.write(ByteBuffer.wrap(filinnholdBytes, 0, filinnholdBytes.size))
+			it.write(ByteBuffer.wrap(filSomPdf, 0, filSomPdf.size))
 		}
 		logger.info("$innsendingId: Fil lagret til bucket $bucket ($blobNavn)")
 		return FilMetadata(
@@ -60,7 +72,7 @@ class FillagerService(
 			vedleggId = vedleggId,
 			innsendingId = innsendingId,
 			filnavn = fil.filename ?: "ukjent",
-			storrelse = filinnholdBytes.size,
+			storrelse = filSomPdf.size,
 			filtype = filtype,
 			status = fileStatus,
 		)
