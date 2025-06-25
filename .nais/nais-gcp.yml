@@ -116,6 +116,8 @@ spec:
             envVarPrefix: DATABASE
     buckets:
       - name: "{{ bucket-name-file-storage }}"
+        lifecycleCondition:
+          age: 1
 
   env:
     - name: FILE_STORAGE_BUCKET_NAME
