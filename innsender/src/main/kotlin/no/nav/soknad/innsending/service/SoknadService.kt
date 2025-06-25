@@ -122,6 +122,31 @@ class SoknadService(
 		}
 	}
 
+
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
+	fun lagreUinnloggetSoknad(uinnloggetSoknadDto: UinnloggetSoknadDto): DokumentSoknadDto {
+		val operation = InnsenderOperation.OPPRETT.name
+
+		val dokumentSoknadDto = uinnloggetSoknadDto.soknadDto
+		val innsendingsId = dokumentSoknadDto.innsendingsId!!
+		try {
+			val savedSoknadDbData = repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId))
+			val soknadsid = savedSoknadDbData.id
+			val savedVedleggDbData = vedleggService.saveVedleggFromDto(soknadsid!!, dokumentSoknadDto.vedleggsListe)
+
+			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
+
+			// flytte filer til fil tabellen.
+			lagreFiler(savedDokumentSoknadDto, uinnloggetSoknadDto)
+
+			innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
+			return savedDokumentSoknadDto
+		} catch (e: Exception) {
+			exceptionHelper.reportException(e, operation, dokumentSoknadDto.tema)
+			throw e
+		}
+	}
+
 	fun hentAktiveSoknader(brukerIds: List<String>): List<DokumentSoknadDto> {
 		return brukerIds.flatMap {
 			hentSoknadGittBrukerId(it, SoknadsStatus.Opprettet) + hentSoknadGittBrukerId(it, SoknadsStatus.Utfylt)
@@ -302,6 +327,21 @@ class SoknadService(
 		oppdatertDokumentSoknadDto.vedleggsListe
 			.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
 			.forEach { filService.lagreFil(oppdatertDokumentSoknadDto, it, dokumentSoknadDto.vedleggsListe) }
+	}
+
+
+	fun lagreFiler(
+		oppdatertDokumentSoknadDto: DokumentSoknadDto,
+		uinnloggetSoknadDto: UinnloggetSoknadDto
+	) {
+		oppdatertDokumentSoknadDto.vedleggsListe.forEach {
+			soknadsVedlegg -> kopierFilerForVedlegg(soknadsVedlegg.id!!, uinnloggetSoknadDto.fileList.filter { opplastet -> opplastet.vedleggRef == soknadsVedlegg.uuid })
+		}
+	}
+
+	fun kopierFilerForVedlegg(vedleggsId: Long, opplastedeFiler: List<UinnloggetFilDto> ){
+		// for hver fil hent og opprett nytt innslag i fil tabellen
+
 	}
 
 	fun saveHoveddokumentFiler(

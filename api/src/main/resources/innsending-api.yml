@@ -1504,6 +1504,22 @@ components:
       description: Status for om innsendt søknad er blitt arkivert. Ikke innsendte søknader skal ha arkiveringsStatus IkkeSatt.
       example: Arkivert
 
+    AvsenderDto:
+      type: object
+      description: Identifikasjon av hvem som sender inn søknaden
+
+      properties:
+        id:
+          type: string
+        idType:
+          type: string
+          enum: [ "FNR", "ORGNR", "HPRNR", "UTL_ORG" ]
+          description: Obligatorisk dersom id er satt. Angir hvilken type id som er brukt. Merk at FNR kan også være et D-NR
+        navn:
+          type: string
+          description: Navn på avsender, ikke nødvendig dersom id er spesifisert
+          example: Ola Nordmann
+
     Beskrivelse:
       type: string
       description: Utdypende forklaring til et vedlegg.
@@ -1522,6 +1538,18 @@ components:
           type: string
         info:
           type: string
+
+    BrukerDto:
+      type: object
+      description: Identifikasjon av hvem (person eller organisasjon) som søknaden gjelder
+
+      properties:
+        id:
+          type: string
+        idType:
+          type: string
+          enum: [ "FNR","ORGNR" ]
+          description: Angivelse av om id inneholder FNR eller D-NR til person eller Organisasjonsnummer til virksomhet søknaden gjelder. Merk at FNR kan også være et D-NR
 
     BrukerId:
       type: string
@@ -2301,7 +2329,7 @@ components:
       properties:
         vedleggRef:
           type: string
-          description: Reference to an attachment in an application
+          description: Uuid reference to an attachment in an application
         fileId:
           type: string
           description: Id of an uploaded file
@@ -2311,11 +2339,14 @@ components:
       description: Complete application data for an un-inlogged user
       required:
         - soknadDto
+        - avsenderDto
         - fileList
 
       properties:
         soknadDto:
           $ref: "#/components/schemas/DokumentSoknadDto"
+        avsenderDto:
+          $ref: "#/components/schemas/AvsenderDto"
         fileList:
           type: array
           description: List of uploaded files with reference to the application'a attachments
@@ -2414,7 +2445,7 @@ components:
 
     VisningsType:
       type: string
-      enum: [ "fyllUt", "dokumentinnsending", "ettersending", "lospost" ]
+      enum: [ "fyllUt", "dokumentinnsending", "ettersending", "lospost", "nologin" ]
       description: Angir visningsmodus gitt opphav til søknaden
 
     EnvQualifier:

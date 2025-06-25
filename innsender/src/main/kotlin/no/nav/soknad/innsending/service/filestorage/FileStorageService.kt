@@ -67,4 +67,22 @@ class FileStorageService(
 	}
 
 
+	fun filEksisterer(fileId: String, vedleggsRef: String, innsendingsId: String, namespace: StorageNamespace): Boolean {
+		val blobId = BlobId.of(bucketName, "${namespace.value}/$innsendingsId/$vedleggsRef/$fileId")
+		val blob = storage.get(blobId)
+		return blob != null && blob.getContent() != null
+	}
+
+	fun hentFil(fileId: String, vedleggsRef: String, innsendingsId: String, namespace: StorageNamespace): ByteArray? {
+		val blobId = BlobId.of(bucketName, "${namespace.value}/$innsendingsId/$vedleggsRef/$fileId")
+		val blob = storage.get(blobId)
+		if (blob != null && blob.getContent() != null) {
+			logger.info("$innsendingsId: Hentet fil med id $fileId i bucket $bucketName")
+			return blob.getContent()
+		} else {
+			logger.warn("$innsendingsId: Fant ingen fil med id $fileId i bucket $bucketName")
+			throw IllegalArgumentException("Fant ingen fil med id $fileId i bucket $bucketName")
+		}
+	}
+
 }

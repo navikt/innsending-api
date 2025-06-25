@@ -235,6 +235,28 @@ class InnsendingService(
 		}
 	}
 
+
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
+	fun sendInnUinLoggetSoknad(soknadDtoInput: DokumentSoknadDto): KvitteringsDto {
+		val operation = InnsenderOperation.SEND_INN.name
+		val startSendInn = System.currentTimeMillis()
+
+		try {
+			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput)
+
+			val innsendtSoknadDto = soknadService.hentSoknad(soknadDtoInput.innsendingsId!!)
+			innsenderMetrics.incOperationsCounter(operation, innsendtSoknadDto.tema)
+
+			// For uinnlogget søknad, så skal det ikke opprettes ettersending, men vi skal rapportere i kvittering hvilke vedlegg som mangler
+
+			val kvittering = lagKvittering(innsendtSoknadDto, opplastet, manglende)
+			return kvittering
+
+		} finally {
+			logger.debug("${soknadDtoInput.innsendingsId}: Tid: sendInnSoknad = ${System.currentTimeMillis() - startSendInn}")
+		}
+	}
+
 	private fun lagInnsendingsKvitteringOgLagre(
 		soknadDto: DokumentSoknadDto,
 		opplastedeVedlegg: List<VedleggDto>,
