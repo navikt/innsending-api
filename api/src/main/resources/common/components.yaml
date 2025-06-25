@@ -2,6 +2,7 @@ components:
   schemas:
     UUID:
       type: string
+      format: uuid
       description: A Universally Unique Identifier
       example: 92ee15dd-dc49-4c95-b9b6-6224bae088bb
     RestErrorResponseDto:

@@ -32,15 +32,12 @@ class RestClientOAuthConfig(
 	private val defaultConnectTimeout: Long = 20 // seconds
 	private val defaultExchangeTimeout: Long = 2 // minutes
 
-
-	@Value("\${restconfig.antivirusUrl}")
-	private lateinit var antiVirusUrl: String
-
 	@Bean
 	@Qualifier("antivirusRestClient")
-	fun antivirusRestClient(): RestClient {
+	fun antivirusRestClient(restConfig: RestConfig): RestClient {
 		return RestClient.builder()
-			.baseUrl(antiVirusUrl)
+			.baseUrl(restConfig.antivirusUrl)
+			.requestFactory(timeouts())
 			.build()
 	}
 

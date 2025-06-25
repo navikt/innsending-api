@@ -4,5 +4,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 
 @ConfigurationProperties("gcp.buckets")
 class CloudStorageConfig {
-	lateinit var fileStorageBucketName: String
+	lateinit var fillagerBucketNavn: String
 }

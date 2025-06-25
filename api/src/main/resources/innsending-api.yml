@@ -923,11 +923,11 @@ paths:
       tags:
         - fyllut
 
-  /v1/unauthenticated-file-storage:
-    $ref: "./file-storage/unauthenticated-file-storage.yaml"
+  /v1/nologin-fillager:
+    $ref: "./fillager/nologin-fillager.yaml"
 
-  /v1/unauthenticated-file-storage/{fileId}:
-    $ref: "./file-storage/unauthenticated-file.yaml"
+  /v1/nologin-fillager/{filId}:
+    $ref: "./fillager/nologin-fil.yaml"
 
   /v1/uinnlogget-soknad:
     post:

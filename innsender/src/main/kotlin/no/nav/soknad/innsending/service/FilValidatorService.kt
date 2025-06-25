@@ -37,6 +37,11 @@ class FilValidatorService(
 
 		// Sjekk filstørrelse og filformat
 		val opplastet = (fil as ByteArrayResource).byteArray
+		if (opplastet.isEmpty()) throw IllegalActionException(
+			message = "Opplasting feilet. Filen er tom",
+			errorCode = ErrorCode.FILE_CANNOT_BE_READ
+		)
+
 		Validerer().validerStorrelse(
 			innsendingId = innsendingsId,
 			alleredeOpplastet = 0,

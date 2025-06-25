@@ -24,22 +24,22 @@ class KonverterTilPdf(
 
 	override fun tilPdf(
 		fil: ByteArray,
-		soknad: DokumentSoknadDto,
+		innsendingId: String,
 		filtype: String,
-		vedleggsTittel: String?
+		tittel: String,
+		spraak: String?,
 	): Pair<ByteArray, Int> {
 
-		logger.info("Skal konvertere filtype=$filtype til PDF")
+		logger.info("$innsendingId: Skal konvertere filtype=$filtype til PDF")
 
-		if ("pdf".equals(filtype, ignoreCase = true)) {
-			return checkAndFormatPDF(fil)
+		return if ("pdf".equals(filtype, ignoreCase = true)) {
+			checkAndFormatPDF(fil)
 		} else if (officeFileTypes.keys.contains(filtype) || imageFileTypes.keys.contains(filtype)) {
-			val tittel = vedleggsTittel ?: "Annet"
-			return createPDFFromOfficeDoc(genererFilnavn(soknad, tittel, filtype), fil, tittel, soknad.spraak ?: "nb-NO")
+			createPDFFromOfficeDoc(genererFilnavn(innsendingId, filtype), fil, tittel, spraak ?: "nb-NO")
 		} else if (textTypes.contains(filtype)) {
-			return createPDFFromText(soknad, vedleggsTittel ?: "Annet", fil)
+			createPDFFromText(tittel, fil, spraak)
 		}	else {
-				throw IllegalActionException(
+			throw IllegalActionException(
 				message = "Ulovlig filformat. Kan ikke konvertere til PDF",
 				errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
 			)
@@ -51,17 +51,17 @@ class KonverterTilPdf(
 		return Pair(CheckAndFormatPdf().flatUtPdf(pdfMerger, fil, antallSider), antallSider) // Bare hvis inneholder formfields?
 	}
 
-	private fun genererFilnavn(soknad: DokumentSoknadDto, tittel: String, filtype:String): String {
-		val generertFilnavn = soknad.innsendingsId + "-" + UUID.randomUUID().toString() + filtype
-		logger.info("${soknad.innsendingsId}: Skal konvertere $filtype til vedlegg ${tittel ?: "annet"}, med filnavn=$generertFilnavn")
+	private fun genererFilnavn(innsendingId: String, filtype:String): String {
+		val generertFilnavn = innsendingId + "-" + UUID.randomUUID().toString() + filtype
+		logger.info("${innsendingId}: Skal konvertere $filtype til vedlegg med filnavn=$generertFilnavn")
 		return generertFilnavn
 	}
 
-	private fun createPDFFromText(soknad: DokumentSoknadDto, tittel: String?, text: ByteArray): Pair<ByteArray, Int> {
+	private fun createPDFFromText(tittel: String?, text: ByteArray, spraak: String?): Pair<ByteArray, Int> {
 		val textString = FiltypeSjekker().charsetDetectAndReturnString(text)
 
 		val pdf = PdfGenerator().lagPdfFraTekstFil(
-			soknad,
+			spraak = spraak,
 			vedleggsTittel = tittel ?: "Annet",
 			text = textString
 		)
@@ -96,10 +96,8 @@ class KonverterTilPdf(
 			pdfDocument.save(out)
 			return out.toByteArray()
 		} finally {
-				out.close()
-		    if (pdfDocument != null) {
-					pdfDocument.close()
-				}
+			out.close()
+			pdfDocument?.close()
 		}
 	}
 

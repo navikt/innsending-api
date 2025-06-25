@@ -5,9 +5,10 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 interface KonverterTilPdfInterface {
 	fun tilPdf(
 		fil: ByteArray,
-		soknad: DokumentSoknadDto,
+		innsendingId: String,
 		filtype: String,
-		vedleggsTittel: String? = "Annet"
+		tittel: String,
+		spraak: String?,
 	): Pair<ByteArray, Int>
 
 	fun harSkrivbareFelt(input: ByteArray?): Boolean
