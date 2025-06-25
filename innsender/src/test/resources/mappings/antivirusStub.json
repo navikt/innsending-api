@@ -37,6 +37,26 @@
 					}
 				]
 			}
+		},
+		{
+			"scenarioName": "antivirus",
+			"requiredScenarioState": "virus-error",
+			"request": {
+				"urlPattern": "/antivirus/scan",
+				"method": "PUT"
+			},
+			"response": {
+				"status": 200,
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"jsonBody": [
+					{
+						"Filename": "testfile",
+						"Result": "ERROR"
+					}
+				]
+			}
 		}
 	]
 }

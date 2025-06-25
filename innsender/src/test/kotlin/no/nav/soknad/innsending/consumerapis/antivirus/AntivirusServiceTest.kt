@@ -35,7 +35,7 @@ class AntivirusServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Skal gi OK naar fil ikke har virus`() {
+	fun `Skal gi true naar virusscan returnerer OK`() {
 		// Gitt
 		val fil = "testfil".toByteArray()
 
@@ -47,10 +47,23 @@ class AntivirusServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Skal gi FOUND naar fil har virus`() {
+	fun `Skal gi false naar virusscan returnerer FOUND`() {
 		// Gitt
 		val fil = "testfil".toByteArray()
 		WireMock.setScenarioState("antivirus", "virus-found")
+
+		// Når
+		val result = antivirusService.scan(fil)
+
+		// Så
+		assertEquals(false, result)
+	}
+
+	@Test
+	fun `Skal gi false naar virusscan returnerer ERROR`() {
+		// Gitt
+		val fil = "testfil".toByteArray()
+		WireMock.setScenarioState("antivirus", "virus-error")
 
 		// Når
 		val result = antivirusService.scan(fil)
