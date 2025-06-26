@@ -20,7 +20,7 @@ class KonverterTilPdfTest: ApplicationTest() {
 	fun verifiserKonverteringAvJpg() {
 		val jpg = Hjelpemetoder.getBytesFromFile("/2MbJpg.jpg")
 
-		val (pdf, antallSider) = konverterTilPdf.tilPdf(jpg, soknadDto, ".jpg")
+		val (pdf, antallSider) = konverterTilPdf.tilPdf(jpg, soknadDto.innsendingsId!!, ".jpg", "Annet", "nb-NO")
 		assertEquals(1, antallSider)
 
 		val validation = VeraPDFValidator().validatePdf(pdf)
@@ -33,7 +33,7 @@ class KonverterTilPdfTest: ApplicationTest() {
 		val jpg = Hjelpemetoder.getBytesFromFile("/mellomstorJpg.jpg")
 
 		val start = System.currentTimeMillis()
-		val (pdf, antallSider) = konverterTilPdf.tilPdf(jpg, soknadDto, ".jpg")
+		val (pdf, antallSider) = konverterTilPdf.tilPdf(jpg, soknadDto.innsendingsId!!, ".jpg", "Annet", "nb-NO")
 		val ferdig = System.currentTimeMillis()
 		println("Tid til konvertering av mellomstorJpg = ${ferdig - start}")
 		assertEquals(1, antallSider)
@@ -62,9 +62,10 @@ class KonverterTilPdfTest: ApplicationTest() {
 		val start = System.currentTimeMillis()
 		val (pdf, antallSider) = konverterTilPdf.tilPdf(
 			jpg,
-			soknadDto,
+			soknadDto.innsendingsId!!,
 			filtype = ".txt",
-			vedleggsTittel = "Vedleggstittel"
+			tittel = "Vedleggstittel",
+			spraak = "nb-NO",
 		)
 		val ferdig = System.currentTimeMillis()
 		println("Tid til konvertering av txtFil = ${ferdig - start}")
@@ -84,9 +85,10 @@ class KonverterTilPdfTest: ApplicationTest() {
 		val start = System.currentTimeMillis()
 		val (pdf, antallSider) = konverterTilPdf.tilPdf(
 			jpg,
-			soknadDto,
+			soknadDto.innsendingsId!!,
 			filtype = ".txt",
-			vedleggsTittel = "Vedleggstittel"
+			tittel = "Vedleggstittel",
+			spraak = "nb-NO",
 		)
 		val ferdig = System.currentTimeMillis()
 		println("Tid til konvertering av txtFil = ${ferdig - start}")
@@ -105,9 +107,10 @@ class KonverterTilPdfTest: ApplicationTest() {
 		val start = System.currentTimeMillis()
 		val (pdf, antallSider) = konverterTilPdf.tilPdf(
 			doc,
-			soknadDto,
+			soknadDto.innsendingsId!!,
 			filtype = ".docx",
-			vedleggsTittel = "Vedleggstittel"
+			tittel = "Vedleggstittel",
+			spraak = "nb-NO"
 		)
 		val ferdig = System.currentTimeMillis()
 		println("Tid til konvertering av txtFil = ${ferdig - start}")

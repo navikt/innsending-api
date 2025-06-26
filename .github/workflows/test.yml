@@ -5,6 +5,12 @@ on:
       - '**.md'
       - '**/**.md'
       - '.github/workflows/**.yml'
+  push:
+    branches-ignore:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '**/**.md'
 
 jobs:
   tests:

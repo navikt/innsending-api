@@ -5,6 +5,7 @@
 	"database-name": "dokumentinnsending-loadtests",
 	"default_database_size": 10,
 	"tier": "db-custom-1-3840",
+	"bucket-name-file-storage": "innsending-api-file-storage-loadtests",
 	"ingresses": [],
 	"accessPolicyInbound": {
 		"current-namespace": [

@@ -57,7 +57,7 @@ class FilRestApi(
 		combinedLogger.log("$innsendingsId: Kall for å lagre fil på vedlegg $vedleggsId til søknad", brukerId)
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
-		val vedleggDto = soknadDto.vedleggsListe.first { it.id == vedleggsId }
+		val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
 		if (vedleggDto == null)
 			throw ResourceNotFoundException("Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId")
 
@@ -68,9 +68,10 @@ class FilRestApi(
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
 		val (fil, antallsider) = konverterTilPdf.tilPdf(
 			opplastet,
-			soknadDto,
+			soknadDto.innsendingsId!!,
 			filtype = filtype,
-			vedleggsTittel = vedleggDto.tittel
+			tittel = vedleggDto.tittel,
+			spraak = soknadDto.spraak ?: "nb-NO"
 		)
 
 		logger.info("$innsendingsId: opplastet/konvertert fil på vedlegg $vedleggsId med $antallsider sider og ${fil.size} bytes")
