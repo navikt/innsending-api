@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.service.fillager.FillagerNamespace
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.stringextensions.toUUID
 import org.springframework.core.io.Resource
 import org.springframework.http.HttpStatus
@@ -30,7 +31,7 @@ class NologinFillagerRestApi(
 		filinnhold: Resource,
 		innsendingId: UUID?
 	): ResponseEntity<LastOppFilResponse> {
-		val innsendingIdString = innsendingId?.toString() ?: UUID.randomUUID().toString()
+		val innsendingIdString = innsendingId?.toString() ?: Utilities.laginnsendingsId()
 		val metadata = fillagerService.lagreFil(
 			fil = filinnhold,
 			vedleggId = vedleggId,
