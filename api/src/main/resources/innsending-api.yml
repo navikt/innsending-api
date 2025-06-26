@@ -22,8 +22,8 @@ tags:
     description: API for sendinn-frontend applikasjonen for å håndtere vedlegg.
   - name: sendinn-fil
     description: API for sendinn-frontend applikasjonen for å håndtere filer.
-  - name: unauthenticated-file-storage
-    description: API for filopplasting av uautentiserte brukere.
+  - name: nologin
+    description: API for søknader fra brukere som ikke er logget inn.
   - name: soknadsveiviser
     description: API for soknadsveiviser applikasjonen (deprecated).
   - name: ekstern
@@ -922,10 +922,10 @@ paths:
         - fyllut
 
   /v1/nologin-fillager:
-    $ref: "./fillager/nologin-fillager.yaml"
+    $ref: "./nologin/fillager.yaml"
 
   /v1/nologin-fillager/{filId}:
-    $ref: "./fillager/nologin-fil.yaml"
+    $ref: "./nologin/fil.yaml"
 
   /ekstern/v1/ettersending:
         post:

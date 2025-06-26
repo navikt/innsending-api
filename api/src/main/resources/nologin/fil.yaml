@@ -26,4 +26,4 @@ delete:
           schema:
             $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
   tags:
-    - nologin-fillager
+    - nologin

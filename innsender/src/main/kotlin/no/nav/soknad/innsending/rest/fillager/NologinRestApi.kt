@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.rest.fillager
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
-import no.nav.soknad.innsending.api.NologinFillagerApi
+import no.nav.soknad.innsending.api.NologinApi
 import no.nav.soknad.innsending.model.LastOppFilResponse
 import no.nav.soknad.innsending.service.fillager.FillagerService
 import no.nav.soknad.innsending.service.fillager.FillagerNamespace
@@ -21,9 +21,9 @@ import java.util.UUID
 	issuer = Constants.AZURE,
 	claimMap = ["roles=nologin-file-storage-access"],
 )
-class NologinFillagerRestApi(
+class NologinRestApi(
 	val fillagerService: FillagerService,
-) : NologinFillagerApi {
+) : NologinApi {
 
 	@Timed(InnsenderOperation.LAST_OPP_BUCKET)
 	override fun lastOppFil(
