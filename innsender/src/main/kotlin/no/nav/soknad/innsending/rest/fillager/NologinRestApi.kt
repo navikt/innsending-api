@@ -19,7 +19,7 @@ import java.util.UUID
 @RestController
 @ProtectedWithClaims(
 	issuer = Constants.AZURE,
-	claimMap = ["roles=nologin-file-storage-access"],
+	claimMap = ["roles=nologin-access"],
 )
 class NologinRestApi(
 	val fillagerService: FillagerService,

@@ -21,7 +21,7 @@
 			{
 				"application": "skjemautfylling",
 				"namespace": "skjemadigitalisering",
-				"roles": ["nologin-file-storage-access"]
+				"roles": ["nologin-access"]
 			},
 			{
 				"application": "fyllut-ettersending",
