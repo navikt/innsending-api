@@ -24,8 +24,8 @@ tags:
     description: API for sendinn-frontend applikasjonen for å håndtere filer.
   - name: unauthenticated-file-storage
     description: API for filopplasting av uautentiserte brukere.
-  - name: u-innlogget-soknad
-    description: API for uinnlogget soknad. Endepunkt for å opprette og sende inn søknad gitt utfylt skjema og allerede opplastede filer på vedlegg.
+  - name: nologin-soknad
+    description: API for soknad fra søker som ikke er logget inn. Endepunkt for å opprette og sende inn søknad gitt utfylt skjema og allerede opplastede filer på vedlegg.
   - name: soknadsveiviser
     description: API for soknadsveiviser applikasjonen (deprecated).
   - name: ekstern
@@ -929,11 +929,11 @@ paths:
   /v1/nologin-fillager/{filId}:
     $ref: "./fillager/nologin-fil.yaml"
 
-  /v1/uinnlogget-soknad:
+  /v1/nologin-soknad:
     post:
-      summary: Kall for å opprette en uinnlogget søknad basert på skjemanummer og med en eventuell liste av vedlegg.
-      description: På basis av oppgitt skjemanummer og eventuelle vedlegg, blir det opprettet en uinnlogget søknad som inviterer søker til å laste ned skjema for utfylling og opplasting av dette og eventuelle vedlegg.
-      operationId: opprettUinnloggetSoknad
+      summary: Kall for å opprette og sende inn en søknad for en ikke innlogget søker.
+      description: Søknaden lagres i databasen sammen med alle filene til søknadens vedlegg, og sendes deretter inn.
+      operationId: opprettNologinSoknad
 
       parameters:
         - in: header
@@ -946,7 +946,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UinnloggetSoknadDto"
+              $ref: "#/components/schemas/NologinSoknadDto"
         required: true
 
       responses:
@@ -957,7 +957,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/KvitteringsDto"
       tags:
-        - fyllut-uinnlogget
+        - nologin-soknad
 
   /ekstern/v1/ettersending:
         post:
@@ -1543,13 +1543,30 @@ components:
       type: object
       description: Identifikasjon av hvem (person eller organisasjon) som søknaden gjelder
 
+      required:
+        - id
+        - idType
+
       properties:
         id:
           type: string
         idType:
           type: string
           enum: [ "FNR","ORGNR" ]
-          description: Angivelse av om id inneholder FNR eller D-NR til person eller Organisasjonsnummer til virksomhet søknaden gjelder. Merk at FNR kan også være et D-NR
+          description: Angivelse av om id inneholder FNR til person eller Organisasjonsnummer til virksomhet søknaden gjelder. Merk at FNR kan også være et D-NR
+
+    BrukerOgAvsenderDto:
+      type: object
+      description: Identifikasjon av hvem (person eller organisasjon) som søknaden gjelder og hvem som sender inn søknaden
+
+      required:
+        - avsenderDto
+
+      properties:
+        brukerDto:
+          $ref: "#/components/schemas/BrukerDto"
+        avsenderDto:
+          $ref: "#/components/schemas/AvsenderDto"
 
     BrukerId:
       type: string
@@ -2319,9 +2336,9 @@ components:
       description: NAVs offisielle tittel til søknad eller dokument.
       example: Forsikring mot ansvar for sykepenger i arbeidsgiverperioden for små bedrifter.
 
-    UinnloggetFilDto:
+    NologinFilDto:
       type: object
-      description: Complete application data for an un-inlogged user
+      description: Ved innsending av søknad av ikke innlogget søker, skal det sendes med en liste med opplastede vedleggsfiler som skal sendes inn med søknaden
       required:
         - vedleggRef
         - fileId
@@ -2334,24 +2351,24 @@ components:
           type: string
           description: Id of an uploaded file
 
-    UinnloggetSoknadDto:
+    NologinSoknadDto:
       type: object
-      description: Complete application data for an un-inlogged user
+      description: Complete application data from a not logged in user
       required:
         - soknadDto
-        - avsenderDto
+        - brukerOgAvsenderDto
         - fileList
 
       properties:
         soknadDto:
           $ref: "#/components/schemas/DokumentSoknadDto"
-        avsenderDto:
-          $ref: "#/components/schemas/AvsenderDto"
+        brukerOgAvsenderDto:
+          $ref: "#/components/schemas/BrukerOgAvsenderDto"
         fileList:
           type: array
-          description: List of uploaded files with reference to the application'a attachments
+          description: List of uploaded files with reference to the application'a attachments that shall be sent in with the application
           items:
-            $ref: "#/components/schemas/UinnloggetFilDto"
+            $ref: "#/components/schemas/NologinFilDto"
 
     VedleggDto:
       type: object

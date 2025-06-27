@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.util.mapping
 
+import no.nav.soknad.arkivering.soknadsmottaker.model.Innsending
 import no.nav.soknad.arkivering.soknadsmottaker.model.Soknad
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.*
@@ -177,6 +178,20 @@ fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>): Sokn
 	)
 }
 
+
+fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>, avsenderDto: AvsenderDto, brukerDto: BrukerDto?): Innsending {
+	return Innsending(
+		innsendingsId = soknadDto.innsendingsId!!,
+		ettersendelseTilId = soknadDto.ettersendingsId,
+		kanal = if (soknadDto.visningsType == VisningsType.nologin) "NAV_NO_UINNLOGGET" else "NAV_NO",
+		avsenderDto = translate(avsenderDto),
+		brukerDto = translate(brukerDto),
+		tema = soknadDto.tema,
+		skjemanr = vedleggDtos.first{it.erHoveddokument}.vedleggsnr!!,
+		tittel = vedleggDtos.first{it.erHoveddokument}.tittel,
+		dokumenter = translate(vedleggDtos)
+	)
+}
 // Hjelpefunksjoner
 
 private fun beregnInnsendingsFrist(soknadDbData: SoknadDbData): OffsetDateTime {

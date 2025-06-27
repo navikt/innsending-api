@@ -616,7 +616,7 @@ class SoknadServiceTest : ApplicationTest() {
 
 		val soknad = slot<DokumentSoknadDto>()
 		val vedleggDtos2 = slot<List<VedleggDto>>()
-		every { soknadsmottakerAPI.sendInnSoknad(capture(soknad), capture(vedleggDtos2)) } returns Unit
+		every { soknadsmottakerAPI.sendInnSoknad(capture(soknad), capture(vedleggDtos2), any(), any()) } returns Unit
 
 		val innsendingService = lagInnsendingService(soknadService)
 		// Check that reciept is returned for each sent in application

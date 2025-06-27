@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.service
 
-import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.skjema.KodeverkSkjema
@@ -12,6 +11,7 @@ import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
+import no.nav.soknad.innsending.saf.generated.enums.BrukerIdType
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
@@ -46,7 +46,7 @@ class InnsendingService(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
-	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto): Pair<List<VedleggDto>, List<VedleggDto>> {
+	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto, avsenderDto: AvsenderDto, brukerDto: BrukerDto?): Pair<List<VedleggDto>, List<VedleggDto>> {
 		val operation = InnsenderOperation.SEND_INN.name
 
 		// Anta at filene til et vedlegg allerede er konvertert til PDF ved lagring.
@@ -118,7 +118,7 @@ class InnsendingService(
 
 		// send soknadmetada til soknadsmottaker
 		try {
-			soknadsmottakerAPI.sendInnSoknad(soknadDto, (listOf(kvitteringForArkivering) + opplastedeVedlegg))
+			soknadsmottakerAPI.sendInnSoknad(soknadDto, (listOf(kvitteringForArkivering) + opplastedeVedlegg), avsenderDto, brukerDto)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			logger.error("${soknadDto.innsendingsId}: Feil ved sending av søknad til soknadsmottaker ${e.message}")
@@ -220,7 +220,9 @@ class InnsendingService(
 		val startSendInn = System.currentTimeMillis()
 
 		try {
-			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput)
+			val avsenderDto = AvsenderDto(id= soknadDtoInput.brukerId, idType = AvsenderDto.IdType.FNR)
+			val brukerDto = BrukerDto(id= soknadDtoInput.brukerId, idType = BrukerDto.IdType.FNR)
+			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput, avsenderDto = avsenderDto, brukerDto = brukerDto)
 
 			val innsendtSoknadDto = soknadService.hentSoknad(soknadDtoInput.innsendingsId!!)
 			innsenderMetrics.incOperationsCounter(operation, innsendtSoknadDto.tema)
@@ -237,17 +239,17 @@ class InnsendingService(
 
 
 	@Transactional(timeout = TRANSACTION_TIMEOUT)
-	fun sendInnUinLoggetSoknad(soknadDtoInput: DokumentSoknadDto): KvitteringsDto {
+	fun sendInnNoLoginSoknad(soknadDtoInput: DokumentSoknadDto, avsenderDto: AvsenderDto, brukerDto: BrukerDto?): KvitteringsDto {
 		val operation = InnsenderOperation.SEND_INN.name
 		val startSendInn = System.currentTimeMillis()
 
 		try {
-			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput)
+			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput, avsenderDto, brukerDto)
 
 			val innsendtSoknadDto = soknadService.hentSoknad(soknadDtoInput.innsendingsId!!)
 			innsenderMetrics.incOperationsCounter(operation, innsendtSoknadDto.tema)
 
-			// For uinnlogget søknad, så skal det ikke opprettes ettersending, men vi skal rapportere i kvittering hvilke vedlegg som mangler
+			// For uinnlogget søknad skal det ikke opprettes ettersending, men vi skal rapportere i kvittering hvilke vedlegg som mangler
 
 			val kvittering = lagKvittering(innsendtSoknadDto, opplastet, manglende)
 			return kvittering

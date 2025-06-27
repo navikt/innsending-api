@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.exceptions.BackendErrorException
+import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.*
@@ -10,6 +11,8 @@ import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
+import no.nav.soknad.innsending.service.fillager.FillagerNamespace
+import no.nav.soknad.innsending.service.fillager.FillagerService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
@@ -33,6 +36,7 @@ class SoknadService(
 	private val repo: RepositoryUtils,
 	private val vedleggService: VedleggService,
 	private val filService: FilService,
+	private val fillagerService: FillagerService,
 	private val innsenderMetrics: InnsenderMetrics,
 	private val exceptionHelper: ExceptionHelper,
 	private val subjectHandler: SubjectHandlerInterface
@@ -124,7 +128,7 @@ class SoknadService(
 
 
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
-	fun lagreUinnloggetSoknad(uinnloggetSoknadDto: UinnloggetSoknadDto): DokumentSoknadDto {
+	fun lagreUinnloggetSoknad(uinnloggetSoknadDto: NologinSoknadDto): DokumentSoknadDto {
 		val operation = InnsenderOperation.OPPRETT.name
 
 		val dokumentSoknadDto = uinnloggetSoknadDto.soknadDto
@@ -332,15 +336,36 @@ class SoknadService(
 
 	fun lagreFiler(
 		oppdatertDokumentSoknadDto: DokumentSoknadDto,
-		uinnloggetSoknadDto: UinnloggetSoknadDto
+		noLoginSoknadDto: NologinSoknadDto
 	) {
-		oppdatertDokumentSoknadDto.vedleggsListe.forEach {
-			soknadsVedlegg -> kopierFilerForVedlegg(soknadsVedlegg.id!!, uinnloggetSoknadDto.fileList.filter { opplastet -> opplastet.vedleggRef == soknadsVedlegg.uuid })
-		}
+		oppdatertDokumentSoknadDto.vedleggsListe
+			.filter{it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
+			.forEach {
+				soknadsVedlegg -> kopierFilerForVedlegg(
+				soknadDto = oppdatertDokumentSoknadDto,
+				vedleggsId = soknadsVedlegg.id!!,
+				noLoginSoknadDto.fileList.filter { opplastet -> opplastet.vedleggRef == soknadsVedlegg.uuid })
+			}
 	}
 
-	fun kopierFilerForVedlegg(vedleggsId: Long, opplastedeFiler: List<UinnloggetFilDto> ){
+	fun kopierFilerForVedlegg(soknadDto: DokumentSoknadDto, vedleggsId: Long, opplastedeFiler: List<NologinFilDto> ){
 		// for hver fil hent og opprett nytt innslag i fil tabellen
+		opplastedeFiler.forEach { fil ->
+			val filSomSkalKopieres = fillagerService.hentFil(filId = fil.fileId, soknadDto.innsendingsId!!, namespace= FillagerNamespace.NOLOGIN)
+			if (filSomSkalKopieres == null || filSomSkalKopieres.innhold == null || filSomSkalKopieres.innhold.size == 0) {
+				throw IllegalActionException("Fant ikke fil med id=${fil.fileId} for vedlegg med id=$vedleggsId", errorCode = ErrorCode.NOT_FOUND)
+			}
+			val filDto = FilDto(
+				id = null,
+				vedleggsid = vedleggsId,
+				filnavn = filSomSkalKopieres.metadata.filnavn,
+				storrelse = filSomSkalKopieres.metadata.storrelse,
+				data = filSomSkalKopieres.innhold,
+				mimetype = mapTilMimetype(filSomSkalKopieres.metadata.filtype),
+				opprettetdato = OffsetDateTime.now(),
+			)
+			filService.lagreFil(soknadDto, filDto)
+		}
 
 	}
 

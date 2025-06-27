@@ -155,6 +155,42 @@ fun translate(vedleggDtos: List<VedleggDto>): List<DocumentData> {
 	return listOf(hovedDokument) + vedlegg
 }
 
+fun translate(avsenderDto: AvsenderDto): no.nav.soknad.arkivering.soknadsmottaker.model.AvsenderDto {
+	return no.nav.soknad.arkivering.soknadsmottaker.model.AvsenderDto(
+		id = avsenderDto.id,
+		idType = translate(avsenderDto.idType),
+		navn = avsenderDto.navn,
+	)
+}
+
+fun translate(idType: AvsenderDto.IdType?): no.nav.soknad.arkivering.soknadsmottaker.model.AvsenderDto.IdType? {
+	return when (idType) {
+		AvsenderDto.IdType.FNR -> no.nav.soknad.arkivering.soknadsmottaker.model.AvsenderDto.IdType.FNR
+		AvsenderDto.IdType.ORGNR -> no.nav.soknad.arkivering.soknadsmottaker.model.AvsenderDto.IdType.ORGNR
+		AvsenderDto.IdType.HPRNR -> no.nav.soknad.arkivering.soknadsmottaker.model.AvsenderDto.IdType.HPRNR
+		AvsenderDto.IdType.UTL_ORG -> no.nav.soknad.arkivering.soknadsmottaker.model.AvsenderDto.IdType.UTL_ORG
+		else -> null
+	}
+}
+
+fun translate(brukerDto: BrukerDto?): no.nav.soknad.arkivering.soknadsmottaker.model.BrukerDto? {
+	if (brukerDto == null) {
+		return null
+	}
+	return no.nav.soknad.arkivering.soknadsmottaker.model.BrukerDto(
+		id = brukerDto.id,
+		idType = translate(brukerDto.idType),
+	)
+}
+
+fun translate(idType: BrukerDto.IdType?): no.nav.soknad.arkivering.soknadsmottaker.model.BrukerDto.IdType {
+	return when (idType) {
+		BrukerDto.IdType.FNR -> no.nav.soknad.arkivering.soknadsmottaker.model.BrukerDto.IdType.FNR
+		BrukerDto.IdType.ORGNR -> no.nav.soknad.arkivering.soknadsmottaker.model.BrukerDto.IdType.ORGNR
+		else -> no.nav.soknad.arkivering.soknadsmottaker.model.BrukerDto.IdType.FNR
+	}
+}
+
 fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long) =
 	mapTilVedleggDb(vedleggDto, soknadsId, vedleggDto.skjemaurl, mapTilDbOpplastingsStatus(vedleggDto.opplastingsStatus))
 

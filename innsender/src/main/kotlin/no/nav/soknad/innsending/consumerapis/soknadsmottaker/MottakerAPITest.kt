@@ -1,6 +1,8 @@
 package no.nav.soknad.innsending.consumerapis.soknadsmottaker
 
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
+import no.nav.soknad.innsending.model.AvsenderDto
+import no.nav.soknad.innsending.model.BrukerDto
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.util.mapping.translate
@@ -29,7 +31,7 @@ class MottakerAPITest : MottakerInterface, HealthRequestInterface {
 		return "ok"
 	}
 
-	override fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggsListe: List<VedleggDto>) {
+	override fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggsListe: List<VedleggDto>, avsenderDto: AvsenderDto, brukerDto: BrukerDto?) {
 		val soknad = translate(soknadDto, vedleggsListe)
 		logger.info("${soknadDto.innsendingsId}: klar til å sende inn\n${maskerFnr(soknad)}")
 	}
