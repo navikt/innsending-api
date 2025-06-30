@@ -5,7 +5,7 @@ post:
    content:
      multipart/form-data:
        schema:
-         $ref: "./nologin-components.yaml#/components/schemas/LastOppFilRequest"
+         $ref: "./components.yaml#/components/schemas/LastOppFilRequest"
    required: true
   responses:
     201:
@@ -13,7 +13,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "./nologin-components.yaml#/components/schemas/LastOppFilResponse"
+            $ref: "./components.yaml#/components/schemas/LastOppFilResponse"
     500:
       description: Noe gikk galt under opplastingen
       content:
@@ -21,7 +21,7 @@ post:
           schema:
             $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
   tags:
-    - nologin-fillager
+    - nologin
 
 delete:
   summary: Sletter filer som tilhører en innsending, eventuelt spesifikke vedlegg på innsendingen
@@ -51,4 +51,4 @@ delete:
           schema:
             $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
   tags:
-    - nologin-fillager
+    - nologin

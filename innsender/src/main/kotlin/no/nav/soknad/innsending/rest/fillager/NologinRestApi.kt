@@ -1,13 +1,14 @@
 package no.nav.soknad.innsending.rest.fillager
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
-import no.nav.soknad.innsending.api.NologinFillagerApi
+import no.nav.soknad.innsending.api.NologinApi
 import no.nav.soknad.innsending.model.LastOppFilResponse
 import no.nav.soknad.innsending.service.fillager.FillagerService
 import no.nav.soknad.innsending.service.fillager.FillagerNamespace
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.stringextensions.toUUID
 import org.springframework.core.io.Resource
 import org.springframework.http.HttpStatus
@@ -18,11 +19,11 @@ import java.util.UUID
 @RestController
 @ProtectedWithClaims(
 	issuer = Constants.AZURE,
-	claimMap = ["roles=nologin-file-storage-access"],
+	claimMap = ["roles=nologin-access"],
 )
-class NologinFillagerRestApi(
+class NologinRestApi(
 	val fillagerService: FillagerService,
-) : NologinFillagerApi {
+) : NologinApi {
 
 	@Timed(InnsenderOperation.LAST_OPP_BUCKET)
 	override fun lastOppFil(
@@ -30,7 +31,7 @@ class NologinFillagerRestApi(
 		filinnhold: Resource,
 		innsendingId: UUID?
 	): ResponseEntity<LastOppFilResponse> {
-		val innsendingIdString = innsendingId?.toString() ?: UUID.randomUUID().toString()
+		val innsendingIdString = innsendingId?.toString() ?: Utilities.laginnsendingsId()
 		val metadata = fillagerService.lagreFil(
 			fil = filinnhold,
 			vedleggId = vedleggId,

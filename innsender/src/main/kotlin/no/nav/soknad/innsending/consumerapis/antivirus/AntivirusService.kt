@@ -53,14 +53,16 @@ class AntivirusService(private val antivirusRestClient: RestClient, private val 
 				return false
 			}
 
-			logger.info("Antivirus respons: $response, ${response.first()}")
+			logger.info("Antivirus respons: $response")
 
 			val (filename, result) = response.first()
 
 			return when (result) {
 				ClamAvResult.OK -> true
-				ClamAvResult.ERROR -> true
-
+				ClamAvResult.ERROR -> {
+					logger.warn("$filename kunne ikke skannes for virus")
+					false
+				}
 				ClamAvResult.FOUND -> {
 					logger.warn("$filename har virus")
 					false

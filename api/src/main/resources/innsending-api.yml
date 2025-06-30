@@ -22,8 +22,6 @@ tags:
     description: API for sendinn-frontend applikasjonen for å håndtere vedlegg.
   - name: sendinn-fil
     description: API for sendinn-frontend applikasjonen for å håndtere filer.
-  - name: unauthenticated-file-storage
-    description: API for filopplasting av uautentiserte brukere.
   - name: nologin-soknad
     description: API for soknad fra søker som ikke er logget inn. Endepunkt for å opprette og sende inn søknad gitt utfylt skjema og allerede opplastede filer på vedlegg.
   - name: soknadsveiviser
@@ -929,36 +927,6 @@ paths:
   /v1/nologin-fillager/{filId}:
     $ref: "./fillager/nologin-fil.yaml"
 
-  /v1/nologin-soknad:
-    post:
-      summary: Kall for å opprette og sende inn en søknad for en ikke innlogget søker.
-      description: Søknaden lagres i databasen sammen med alle filene til søknadens vedlegg, og sendes deretter inn.
-      operationId: opprettNologinSoknad
-
-      parameters:
-        - in: header
-          name: Nav-Env-Qualifier
-          schema:
-            $ref: "#/components/schemas/EnvQualifier"
-
-      requestBody:
-        description: Data neccessary in order to store and send in an application.
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/NologinSoknadDto"
-        required: true
-
-      responses:
-        200:
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/KvitteringsDto"
-      tags:
-        - nologin-soknad
-
   /ekstern/v1/ettersending:
         post:
           summary: Kall for å opprette en ettersending fra eksterne applikasjoner. Skjemanr, tema og vedleggskoder valideres mot kodeverket (se https://kodeverk-web.dev.intern.nav.no/).
@@ -1504,22 +1472,6 @@ components:
       description: Status for om innsendt søknad er blitt arkivert. Ikke innsendte søknader skal ha arkiveringsStatus IkkeSatt.
       example: Arkivert
 
-    AvsenderDto:
-      type: object
-      description: Identifikasjon av hvem som sender inn søknaden
-
-      properties:
-        id:
-          type: string
-        idType:
-          type: string
-          enum: [ "FNR", "ORGNR", "HPRNR", "UTL_ORG" ]
-          description: Obligatorisk dersom id er satt. Angir hvilken type id som er brukt. Merk at FNR kan også være et D-NR
-        navn:
-          type: string
-          description: Navn på avsender, ikke nødvendig dersom id er spesifisert
-          example: Ola Nordmann
-
     Beskrivelse:
       type: string
       description: Utdypende forklaring til et vedlegg.
@@ -1538,35 +1490,6 @@ components:
           type: string
         info:
           type: string
-
-    BrukerDto:
-      type: object
-      description: Identifikasjon av hvem (person eller organisasjon) som søknaden gjelder
-
-      required:
-        - id
-        - idType
-
-      properties:
-        id:
-          type: string
-        idType:
-          type: string
-          enum: [ "FNR","ORGNR" ]
-          description: Angivelse av om id inneholder FNR til person eller Organisasjonsnummer til virksomhet søknaden gjelder. Merk at FNR kan også være et D-NR
-
-    BrukerOgAvsenderDto:
-      type: object
-      description: Identifikasjon av hvem (person eller organisasjon) som søknaden gjelder og hvem som sender inn søknaden
-
-      required:
-        - avsenderDto
-
-      properties:
-        brukerDto:
-          $ref: "#/components/schemas/BrukerDto"
-        avsenderDto:
-          $ref: "#/components/schemas/AvsenderDto"
 
     BrukerId:
       type: string
@@ -2336,40 +2259,6 @@ components:
       description: NAVs offisielle tittel til søknad eller dokument.
       example: Forsikring mot ansvar for sykepenger i arbeidsgiverperioden for små bedrifter.
 
-    NologinFilDto:
-      type: object
-      description: Ved innsending av søknad av ikke innlogget søker, skal det sendes med en liste med opplastede vedleggsfiler som skal sendes inn med søknaden
-      required:
-        - vedleggRef
-        - fileId
-
-      properties:
-        vedleggRef:
-          type: string
-          description: Uuid reference to an attachment in an application
-        fileId:
-          type: string
-          description: Id of an uploaded file
-
-    NologinSoknadDto:
-      type: object
-      description: Complete application data from a not logged in user
-      required:
-        - soknadDto
-        - brukerOgAvsenderDto
-        - fileList
-
-      properties:
-        soknadDto:
-          $ref: "#/components/schemas/DokumentSoknadDto"
-        brukerOgAvsenderDto:
-          $ref: "#/components/schemas/BrukerOgAvsenderDto"
-        fileList:
-          type: array
-          description: List of uploaded files with reference to the application'a attachments that shall be sent in with the application
-          items:
-            $ref: "#/components/schemas/NologinFilDto"
-
     VedleggDto:
       type: object
       description: Data som beskriver vedlegg/dokument til søknaden
@@ -2462,7 +2351,7 @@ components:
 
     VisningsType:
       type: string
-      enum: [ "fyllUt", "dokumentinnsending", "ettersending", "lospost", "nologin" ]
+      enum: [ "fyllUt", "dokumentinnsending", "ettersending", "lospost" ]
       description: Angir visningsmodus gitt opphav til søknaden
 
     EnvQualifier:
