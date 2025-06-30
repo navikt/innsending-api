@@ -189,7 +189,7 @@ fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>, avsen
 		tema = soknadDto.tema,
 		skjemanr = vedleggDtos.first{it.erHoveddokument}.vedleggsnr!!,
 		tittel = vedleggDtos.first{it.erHoveddokument}.tittel,
-		dokumenter = translate(vedleggDtos)
+		dokumenter = translate(vedleggDtos, true)
 	)
 }
 // Hjelpefunksjoner

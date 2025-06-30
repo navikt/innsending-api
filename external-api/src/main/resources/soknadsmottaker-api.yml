@@ -17,7 +17,9 @@ info:
     url: https://github.com/navikt/soknadsmottaker/blob/main/LICENSE
 tags:
   - name: nologin-soknad
-    description: Receives data for a new submission that shall be submitted to NAV
+    description: Receives data from a not-logged in user for submission to NAV of an application or documents
+  - name: loggedin-soknad
+    description: Receives data from a logged in user for submission to NAV of an application or documents
   - name: receive
     description: Receives benefit applications
   - name: health
@@ -81,6 +83,36 @@ paths:
           description: Successful operation
       tags:
         - nologin-soknad
+
+
+  /loggedin-soknad:
+    post:
+      summary: Submission of benefit application
+      description: Receives a benefit application from a logged-in user, the application will be put on a Kafka topic and archived.
+      operationId: logged-in-submission
+
+      parameters:
+        - in: header
+          name: X-innsendingId
+          description: Tracing id that will be used in logging statements.
+          example: 92ee15dd-dc49-4c95-b9b6-6224bae088a0
+          required: false
+          schema:
+            type: string
+
+      requestBody:
+        description: Metadata about the benefit application being sent in.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Innsending"
+        required: true
+
+      responses:
+        200:
+          description: Successful operation
+      tags:
+        - logged-in-soknad
 
   /notify/new:
     post:
@@ -303,7 +335,7 @@ components:
         dokumenter:
           type: array
           items:
-            $ref: "#/components/schemas/DocumentData"
+            $ref: "#/components/schemas/DokumentData"
           description: Hver Soknad kan ha flere vedlegg. Denne listen beskriver metadata om disse dokumentene.
 
     InnsendingTopicMsg:
@@ -361,7 +393,7 @@ components:
         dokumenter:
           type: array
           items:
-            $ref: "#/components/schemas/DocumentData"
+            $ref: "#/components/schemas/DokumentData"
           description: Hver innsending kan bestå av flere dokumenter. Denne listen beskriver metadata om disse dokumentene.
 
     InnsendingTopicMsgVersjon:
@@ -451,6 +483,66 @@ components:
             og en json variant av søknaden.
             Denne lista inneholder metadata, der hver variant representerer en fysisk fil.
 
+    DokumentData:
+      type: object
+      required:
+        - skjemanummer
+        - erHovedskjema
+        - tittel
+        - varianter
+      properties:
+        skjemanummer:
+          type: string
+          description: Skjemanummer/vedleggsnummer som dokumentet gjelder.
+          example: NAV 11-12.12
+        erHovedskjema:
+          type: boolean
+          description: >
+            Markerer hvis dette er hovedskjemaet for innsendingen. Kun ett dokument kan være markert med
+            `erHovedskjema = true`.
+          example: true
+        tittel:
+          type: string
+          description: Tittel på dokumentet.
+          example: Søknad om tilleggsstønader
+        varianter:
+          type: array
+          items:
+            $ref: "#/components/schemas/Variant"
+          description: >
+            Det kan sendes inn flere varianter av samme dokument; for eksempel kan én søknaden sendes inn med en PDF/A
+            og en json variant av søknaden.
+            Denne lista inneholder metadata, der hver variant representerer en fysisk fil.
+
+    Variant:
+      type: object
+      required:
+        - uuid
+        - mediaType
+        - filnavn
+        - filtype
+      properties:
+        uuid:
+          type: string
+          description: Unik id på dokumentet.
+          example: 18777177-eba3-4f58-b9b9-694e7171a030
+        mediaType:
+          type: string
+          description: Hva for [Media type](https://en.wikipedia.org/wiki/Media_type) fila har.
+          example: application/pdf, application/json, application/xml
+        filnavn:
+          type: string
+          description: Navn for systemdefinerte filer, eller navn spesifisert av bruker.
+          example: tilleggsstonader.xml
+        filtype:
+          type: string
+          description: Metadata about attached documents
+          example: XML, JSON, PDF, PDFA
+        variantFormat:
+          type: string
+          description: Beskriver type variant av dokumentet som skalarkiveres. Arkivet godtar kun en versjon per variantFormat
+          example: ORIGINAL, ARKIV, FULLVERSJON
+
     Varianter:
       type: object
       required:
@@ -474,7 +566,7 @@ components:
         filtype:
           type: string
           description: Metadata about attached documents
-          example: XML
+          example: XML, JSON, PDF, PDFA
 
     AddNotification:
       type: object

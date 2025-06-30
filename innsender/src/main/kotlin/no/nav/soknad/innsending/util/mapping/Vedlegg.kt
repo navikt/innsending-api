@@ -1,6 +1,8 @@
 package no.nav.soknad.innsending.util.mapping
 
 import no.nav.soknad.arkivering.soknadsmottaker.model.DocumentData
+import no.nav.soknad.arkivering.soknadsmottaker.model.DokumentData
+import no.nav.soknad.arkivering.soknadsmottaker.model.Variant
 import no.nav.soknad.arkivering.soknadsmottaker.model.Varianter
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.*
@@ -137,7 +139,7 @@ fun translate(vedleggDtos: List<VedleggDto>): List<DocumentData> {
 	Det er antatt at det kun er hoveddokumentet som vil ha varianter.
 	Vedleggdto inneholder både dokument- og vedlegginfo
 	 */
-	// Lag documentdata for hoveddokumentet (finn alle vedleggdto markert som hoveddokument)
+	// Lag DokumentData for hoveddokumentet (finn alle vedleggdto markert som hoveddokument)
 	val hoveddokumentVedlegg: List<Varianter> = vedleggDtos
 		.filter { it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
 		.map { translate(it) }
@@ -151,6 +153,30 @@ fun translate(vedleggDtos: List<VedleggDto>): List<DocumentData> {
 	val vedlegg: List<DocumentData> = vedleggDtos
 		.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
 		.map { DocumentData(it.vedleggsnr!!, it.erHoveddokument, it.tittel, listOf(translate(it))) }
+
+	return listOf(hovedDokument) + vedlegg
+}
+
+fun translate(vedleggDtos: List<VedleggDto>, newFormat: Boolean): List<DokumentData> {
+	/*
+	Mappe fra liste av vedleggdto til en liste av dokument inneholdene liste av varianter.
+	Det er antatt at det kun er hoveddokumentet som vil ha varianter.
+	Vedleggdto inneholder både dokument- og vedlegginfo
+	 */
+	// Lag DokumentData for hoveddokumentet (finn alle vedleggdto markert som hoveddokument)
+	val hoveddokumentVedlegg: List<Variant> = vedleggDtos
+		.filter { it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
+		.map { translate(it, true) }
+
+	val hovedDokument: DokumentData = vedleggDtos
+		.filter { it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp && !it.erVariant }
+		.map { DokumentData(it.vedleggsnr!!, it.erHoveddokument, it.tittel, hoveddokumentVedlegg) }
+		.first()
+
+	// Merk: at det  er antatt at vedlegg ikke har varianter. Hvis vi skal støtte dette må varianter av samme vedlegg linkes sammen
+	val vedlegg: List<DokumentData> = vedleggDtos
+		.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
+		.map { DokumentData(it.vedleggsnr!!, it.erHoveddokument, it.tittel, listOf(translate(it, true))) }
 
 	return listOf(hovedDokument) + vedlegg
 }
