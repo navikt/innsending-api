@@ -220,12 +220,4 @@ fun translate(idType: BrukerDto.IdType?): no.nav.soknad.arkivering.soknadsmottak
 fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long) =
 	mapTilVedleggDb(vedleggDto, soknadsId, vedleggDto.skjemaurl, mapTilDbOpplastingsStatus(vedleggDto.opplastingsStatus))
 
-fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long, vedleggsId: Long) =
-	mapTilVedleggDb(
-		vedleggDto,
-		soknadsId,
-		vedleggDto.skjemaurl,
-		mapTilDbOpplastingsStatus(vedleggDto.opplastingsStatus),
-		vedleggsId
-	)
 

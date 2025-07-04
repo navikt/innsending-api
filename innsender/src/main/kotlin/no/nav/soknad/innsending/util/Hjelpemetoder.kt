@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.util
 import no.nav.soknad.arkivering.soknadsmottaker.model.AvsenderDto
 import no.nav.soknad.arkivering.soknadsmottaker.model.BrukerDto
 import no.nav.soknad.arkivering.soknadsmottaker.model.DocumentData
+import no.nav.soknad.arkivering.soknadsmottaker.model.DokumentData
 import no.nav.soknad.arkivering.soknadsmottaker.model.Innsending
 import no.nav.soknad.arkivering.soknadsmottaker.model.Soknad
 
@@ -55,13 +56,24 @@ fun maskerFnr(innsending: Innsending): Innsending {
 		tema = innsending.tema,
 		skjemanr = innsending.skjemanr,
 		tittel = innsending.tittel,
-		dokumenter = maskerVedleggsTittel(innsending.dokumenter),
+		dokumenter = maskerDokumentTitler(innsending.dokumenter),
 	)
 }
 
 fun maskerVedleggsTittel(dokumenter: List<DocumentData>): List<DocumentData> {
 	return dokumenter.map {
 		DocumentData(
+			skjemanummer = it.skjemanummer,
+			erHovedskjema = it.erHovedskjema,
+			if (it.skjemanummer == "N6") "**Maskert**" else it.tittel,
+			it.varianter
+		)
+	}
+}
+
+fun maskerDokumentTitler(dokumenter: List<DokumentData>): List<DokumentData> {
+	return dokumenter.map {
+		DokumentData(
 			skjemanummer = it.skjemanummer,
 			erHovedskjema = it.erHovedskjema,
 			if (it.skjemanummer == "N6") "**Maskert**" else it.tittel,

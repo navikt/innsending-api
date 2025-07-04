@@ -453,7 +453,12 @@ class VedleggService(
 		soknadsId: Long
 	) {
 		eksisterendeVedleggsListe.forEach {
-			val vedleggDbData = mapTilVedleggDb(vedleggDto = nyttVedlegg, soknadsId = soknadsId, vedleggsId = it.id!!)
+			val vedleggDbData = mapTilVedleggDb(
+				vedleggDto = nyttVedlegg,
+				soknadsId = soknadsId,
+				url = it.skjemaurl,
+				opplastingsStatus = mapTilDbOpplastingsStatus(it.opplastingsStatus),
+				vedleggsId = it.id)
 			repo.lagreVedlegg(vedleggDbData)
 		}
 	}
