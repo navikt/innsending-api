@@ -237,6 +237,43 @@ class VedleggService(
 		}
 	}
 
+
+	fun saveVedleggFromDto(
+		soknadsId: Long,
+		vedleggList: List<VedleggDto>,
+		useStatus: Boolean
+	): List<VedleggDbData> {
+		return vedleggList.map {
+
+			val vedleggDbDatas = repo.lagreVedlegg(
+				VedleggDbData(
+					id = null,
+					soknadsid = soknadsId,
+					status = if (useStatus) mapTilDbOpplastingsStatus(it.opplastingsStatus) else if (it.document != null) OpplastingsStatus.LASTET_OPP else OpplastingsStatus.IKKE_VALGT,
+					erhoveddokument = it.erHoveddokument,
+					ervariant = it.erVariant,
+					erpdfa = false,
+					erpakrevd = it.vedleggsnr != "N6",
+					vedleggsnr = it.vedleggsnr,
+					tittel = it.tittel,
+					label = it.tittel,
+					beskrivelse = "",
+					mimetype = it.mimetype?.value,
+					uuid = if (useStatus) it.uuid?:UUID.randomUUID().toString() else UUID.randomUUID().toString(),
+					opprettetdato = LocalDateTime.now(),
+					endretdato = LocalDateTime.now(),
+					innsendtdato = null,
+					vedleggsurl = it.skjemaurl,
+					formioid = it.formioId,
+					opplastingsvalgkommentarledetekst = it.opplastingsValgKommentarLedetekst,
+					opplastingsvalgkommentar = it.opplastingsValgKommentar
+				)
+			)
+
+			vedleggDbDatas
+		}
+	}
+
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun leggTilVedlegg(soknadDto: DokumentSoknadDto, vedleggDto: PostVedleggDto?): VedleggDto {
 

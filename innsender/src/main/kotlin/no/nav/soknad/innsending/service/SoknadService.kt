@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.HendelseType
+import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
@@ -136,15 +137,24 @@ class SoknadService(
 		try {
 			val savedSoknadDbData = repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId))
 			val soknadsid = savedSoknadDbData.id
-			val savedVedleggDbData = vedleggService.saveVedleggFromDto(soknadsid!!, dokumentSoknadDto.vedleggsListe)
+			val savedVedleggDbData = vedleggService.saveVedleggFromDto(soknadsid!!, dokumentSoknadDto.vedleggsListe, true)
 
 			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
 
-			// flytte filer til fil tabellen.
+			// lagre hovedkdokument PDF og hoveddokumentvariant JSON
+			val filDtos = savedDokumentSoknadDto.vedleggsListe
+				.filter {it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp}
+				.forEach { filService.lagreFil(soknadDto = savedDokumentSoknadDto,
+					FilDto(vedleggsid = it.id!!, id = null, filnavn = it.vedleggsnr, mimetype = it.mimetype,
+						storrelse = it.document?.size, antallsider = null,
+						data = dokumentSoknadDto.vedleggsListe.first{ orig -> orig.erHoveddokument && orig.erVariant == it.erVariant }.document,  opprettetdato = it.opprettetdato)
+				) }
+
+			// flytte opplastede vedleggsfiler i fillager til fil tabellen.
 			lagreFiler(savedDokumentSoknadDto, uinnloggetSoknadDto)
 
 			innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
-			return savedDokumentSoknadDto
+			return hentSoknad(innsendingsId)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, dokumentSoknadDto.tema)
 			throw e
@@ -352,7 +362,7 @@ class SoknadService(
 		// for hver fil hent og opprett nytt innslag i fil tabellen
 		opplastedeFiler.forEach { fil ->
 			val filSomSkalKopieres = fillagerService.hentFil(filId = fil.fileId, soknadDto.innsendingsId!!, namespace= FillagerNamespace.NOLOGIN)
-			if (filSomSkalKopieres == null || filSomSkalKopieres.innhold == null || filSomSkalKopieres.innhold.size == 0) {
+			if (filSomSkalKopieres == null || filSomSkalKopieres.innhold.size == 0) {
 				throw IllegalActionException("Fant ikke fil med id=${fil.fileId} for vedlegg med id=$vedleggsId", errorCode = ErrorCode.NOT_FOUND)
 			}
 			val filDto = FilDto(

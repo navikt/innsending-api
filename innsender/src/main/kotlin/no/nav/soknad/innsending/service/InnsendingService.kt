@@ -364,7 +364,7 @@ class InnsendingService(
 		val hoveddokumentVedleggsId = innsendtSoknadDto.vedleggsListe.hovedDokument?.id
 		val innsendingsId = innsendtSoknadDto.innsendingsId!!
 
-		val hoveddokumentFilId = if (hoveddokumentVedleggsId != null && !innsendtSoknadDto.erEttersending) {
+		val hoveddokumentFilId = if (hoveddokumentVedleggsId != null && !innsendtSoknadDto.erEttersending && innsendtSoknadDto.visningsType != VisningsType.nologin) {
 			repo.findAllByVedleggsid(innsendingsId, hoveddokumentVedleggsId).firstOrNull()?.id
 		} else {
 			null

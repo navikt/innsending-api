@@ -56,7 +56,7 @@ class NologinSoknadRestApi(
 
 		val sendtInnSoknad = innsendingService.sendInnNoLoginSoknad(lagretSoknad, nologinSoknadDto.brukerOgAvsenderDto.avsenderDto, nologinSoknadDto.brukerOgAvsenderDto.brukerDto)
 
-		// Publiserer bruker-notifikasjon (type beskjed for varsling om innsendt søknad til bruker/avsender) for uinnlogget søknad kommer senere
+		// Publiserer bruker-notifikasjon (type beskjed for varsling om innsendt søknad til bruker/avsender) for uinnlogget v kommer senere
 	/*
 		publiserBrukerNotifikasjonsVarselOmUinnloggetSoknad(
 			uinnloggetSoknadDto = uinnloggetSoknadDto
