@@ -29,7 +29,7 @@ class SlettArkiverteSoknader(
 				soknadService.finnOgSlettArkiverteSoknader(slettArkiverteSoknaderEldreEnn.toLong(), vindu.toLong())
 			}
 		} catch (ex: Exception) {
-			logger.warn("Fjerning av arkiverte søknader feilet med $ex")
+			logger.error("Fjerning av arkiverte søknader feilet med $ex", ex)
 		}
 	}
 
