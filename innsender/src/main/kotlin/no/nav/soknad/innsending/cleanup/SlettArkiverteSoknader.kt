@@ -26,7 +26,10 @@ class SlettArkiverteSoknader(
 	fun fjernArkiverteSoknader() {
 		try {
 			if (leaderSelectionUtility.isLeader()) {
+				val startTime = System.currentTimeMillis()
 				soknadService.finnOgSlettArkiverteSoknader(slettArkiverteSoknaderEldreEnn.toLong(), vindu.toLong())
+				val executionTime = System.currentTimeMillis() - startTime
+				logger.info("Fjerning av arkiverte søknader fullført på $executionTime ms")
 			}
 		} catch (ex: Exception) {
 			logger.error("Fjerning av arkiverte søknader feilet med $ex", ex)
