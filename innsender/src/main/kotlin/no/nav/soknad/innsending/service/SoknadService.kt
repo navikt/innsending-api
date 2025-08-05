@@ -202,7 +202,7 @@ class SoknadService(
 	}
 
 	// Slett opprettet soknad gitt innsendingsId
-	@Transactional(timeout=TRANSACTION_TIMEOUT)
+	@Transactional
 	fun slettSoknadAutomatisk(innsendingsId: String) {
 		val operation = InnsenderOperation.SLETT.name
 
@@ -240,7 +240,7 @@ class SoknadService(
 		arkiverteSoknader.forEach { slettSoknadPermanent(it.innsendingsid) }
 	}
 
-	@Transactional(timeout=TRANSACTION_TIMEOUT)
+	@Transactional
 	fun slettGamleSoknader(
 		dagerGamle: Long = DEFAULT_LEVETID_OPPRETTET_SOKNAD,
 		permanent: Boolean = false,
@@ -265,7 +265,7 @@ class SoknadService(
 		}
 	}
 
-	@Transactional(timeout=TRANSACTION_TIMEOUT)
+	@Transactional
 	fun deleteSoknadBeforeCutoffDate(
 		cutoffDate: OffsetDateTime
 	): List<String> {
