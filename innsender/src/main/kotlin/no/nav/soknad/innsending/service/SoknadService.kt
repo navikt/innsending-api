@@ -220,7 +220,7 @@ class SoknadService(
 		innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
 	}
 
-	@Transactional(timeout=TRANSACTION_TIMEOUT)
+	@Transactional
 	fun slettSoknadPermanent(innsendingsId: String) {
 
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
@@ -231,13 +231,13 @@ class SoknadService(
 		logger.info("$innsendingsId: opprettet:${dokumentSoknadDto.opprettetDato}, status: ${dokumentSoknadDto.status} er permanent slettet")
 	}
 
-	@Transactional(timeout=TRANSACTION_TIMEOUT)
+	@Transactional
 	fun finnOgSlettArkiverteSoknader(dagerGamle: Long, vindu: Long) {
 		val arkiverteSoknader =
 			repo.findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(dagerGamle, vindu)
+		logger.info("SlettArkiverteSoknader: Funnet ${arkiverteSoknader.size} arkiverte søknader som skal slettes")
 
 		arkiverteSoknader.forEach { slettSoknadPermanent(it.innsendingsid) }
-
 	}
 
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
