@@ -232,12 +232,12 @@ class SoknadService(
 	}
 
 	@Transactional
-	fun finnOgSlettArkiverteSoknader(dagerGamle: Long, vindu: Long) {
-		val arkiverteSoknader =
-			repo.findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(dagerGamle, vindu)
-		logger.info("SlettArkiverteSoknader: Funnet ${arkiverteSoknader.size} arkiverte søknader som skal slettes")
+	fun slettSoknaderPermanent(innsendingsIds: List<String>) {
+		innsendingsIds.forEach { slettSoknadPermanent(it) }
+	}
 
-		arkiverteSoknader.forEach { slettSoknadPermanent(it.innsendingsid) }
+	fun finnArkiverteSoknader(dagerGamle: Long, vindu: Long): List<SoknadDbData> {
+		return repo.findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(dagerGamle, vindu)
 	}
 
 	@Transactional
