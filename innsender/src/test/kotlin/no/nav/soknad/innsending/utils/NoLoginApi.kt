@@ -32,7 +32,7 @@ class NoLoginApi(val restTemplate: TestRestTemplate, val serverPort: Int, val mo
 		return HttpEntity(body, Hjelpemetoder.createHeaders(token, map))
 	}
 
-	fun createAndSendInSoknad(dokumentDto: DokumentSoknadDto, avsenderDto: AvsenderDto, brukerDto: BrukerDto?, filDtos: List<NologinFilDto>, envQualifier: EnvQualifier? = null): InnsendingApiResponse<KvitteringsDto> {
+	fun createAndSendInSoknad(dokumentDto: SkjemaDto, avsenderDto: AvsenderDto, brukerDto: BrukerDto?, nologinVedleggDto: List<NologinVedleggDto>, envQualifier: EnvQualifier? = null): InnsendingApiResponse<KvitteringsDto> {
 		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
 			"Nav-Env-Qualifier" to envQualifier.value
 		) else null
@@ -46,7 +46,7 @@ class NoLoginApi(val restTemplate: TestRestTemplate, val serverPort: Int, val mo
 				avsenderDto = avsenderDto,
 				brukerDto = brukerDto
 			),
-			fileList = filDtos
+			nologinVedleggList = nologinVedleggDto
 		)
 		val response = restTemplate.exchange(uri, HttpMethod.POST, createHttpEntity(body, headers), String::class.java)
 

@@ -132,23 +132,32 @@ class SoknadService(
 	fun lagreUinnloggetSoknad(uinnloggetSoknadDto: NologinSoknadDto): DokumentSoknadDto {
 		val operation = InnsenderOperation.OPPRETT.name
 
-		val dokumentSoknadDto = uinnloggetSoknadDto.soknadDto
+		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
+			input = uinnloggetSoknadDto.soknadDto,
+			existingSoknad = null,
+			brukerId = uinnloggetSoknadDto.soknadDto.brukerId,
+			applikasjon =  subjectHandler.getClientId(),
+			visningsType = VisningsType.nologin
+		)
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 		try {
 			val savedSoknadDbData = repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId))
 			val soknadsid = savedSoknadDbData.id
-			val savedVedleggDbData = vedleggService.saveVedleggFromDto(soknadsid!!, dokumentSoknadDto.vedleggsListe, true)
+			val savedVedleggDbData = vedleggService.saveVedleggFromDto(soknadsid!!, dokumentSoknadDto.vedleggsListe, uinnloggetSoknadDto.nologinVedleggList)
 
 			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
 
-			// lagre hovedkdokument PDF og hoveddokumentvariant JSON
+			// lagre hovedkdokument (PDF) og hoveddokumentvariant (JSON)
 			val filDtos = savedDokumentSoknadDto.vedleggsListe
-				.filter {it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp}
-				.forEach { filService.lagreFil(soknadDto = savedDokumentSoknadDto,
+				.filter {it.erHoveddokument}
+				.forEach { filService.lagreFil(
+					soknadDto = savedDokumentSoknadDto,
 					FilDto(vedleggsid = it.id!!, id = null, filnavn = it.vedleggsnr, mimetype = it.mimetype,
 						storrelse = it.document?.size, antallsider = null,
-						data = dokumentSoknadDto.vedleggsListe.first{ orig -> orig.erHoveddokument && orig.erVariant == it.erVariant }.document,  opprettetdato = it.opprettetdato)
-				) }
+						data = if (!it.erVariant) uinnloggetSoknadDto.soknadDto.hoveddokument.document else uinnloggetSoknadDto.soknadDto.hoveddokumentVariant.document,
+						opprettetdato = it.opprettetdato)
+				)
+				}
 
 			// flytte opplastede vedleggsfiler i fillager til fil tabellen.
 			lagreFiler(savedDokumentSoknadDto, uinnloggetSoknadDto)
@@ -344,30 +353,43 @@ class SoknadService(
 	}
 
 
+	/*
+	Skal flytte filene fra fillager til fil tabellen for de filene som er lastet opp og som skal være med i innsendingen av søknaden.
+	Status for alle vedleggene som har filer som er lastet opp og som skal være med i innsendinge skal settes til LastetOpp.
+	 */
 	fun lagreFiler(
 		oppdatertDokumentSoknadDto: DokumentSoknadDto,
 		noLoginSoknadDto: NologinSoknadDto
 	) {
-		oppdatertDokumentSoknadDto.vedleggsListe
-			.filter{it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
+		val vedleggsStatusMap = mutableMapOf<String, OpplastingsStatusDto>()
+		noLoginSoknadDto.nologinVedleggList
+			.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
 			.forEach {
-				soknadsVedlegg -> kopierFilerForVedlegg(
+				if (it.fileIdList.isNullOrEmpty()) throw IllegalActionException(
+					"Vedlegg med id=${it.vedleggRef} har ingen filer som skal lagres i fil tabellen",
+					errorCode = ErrorCode.NOT_FOUND
+				)
+				kopierFilerForVedlegg(
 				soknadDto = oppdatertDokumentSoknadDto,
-				vedleggsId = soknadsVedlegg.id!!,
-				noLoginSoknadDto.fileList.filter { opplastet -> opplastet.vedleggRef == soknadsVedlegg.uuid })
+				vedleggsRef = it.vedleggRef,
+				it.fileIdList!!)
 			}
 	}
 
-	fun kopierFilerForVedlegg(soknadDto: DokumentSoknadDto, vedleggsId: Long, opplastedeFiler: List<NologinFilDto> ){
+	fun kopierFilerForVedlegg(soknadDto: DokumentSoknadDto, vedleggsRef: String, opplastedeFiler: List<String> ){
+		val vedleggDto = soknadDto.vedleggsListe.find { it.formioId == vedleggsRef }
+		if (vedleggDto == null) throw IllegalActionException("Fant ikke vedlegg med id=$vedleggsRef", errorCode = ErrorCode.NOT_FOUND)
+
 		// for hver fil hent og opprett nytt innslag i fil tabellen
-		opplastedeFiler.forEach { fil ->
-			val filSomSkalKopieres = fillagerService.hentFil(filId = fil.fileId, soknadDto.innsendingsId!!, namespace= FillagerNamespace.NOLOGIN)
+		opplastedeFiler.forEach { fileId ->
+			val filSomSkalKopieres = fillagerService.hentFil(filId = fileId, soknadDto.innsendingsId!!, namespace= FillagerNamespace.NOLOGIN)
 			if (filSomSkalKopieres == null || filSomSkalKopieres.innhold.size == 0) {
-				throw IllegalActionException("Fant ikke fil med id=${fil.fileId} for vedlegg med id=$vedleggsId", errorCode = ErrorCode.NOT_FOUND)
+				throw IllegalActionException("Fant ikke fil med id=${fileId} for vedlegg med id=$vedleggsRef", errorCode = ErrorCode.NOT_FOUND)
 			}
+
 			val filDto = FilDto(
 				id = null,
-				vedleggsid = vedleggsId,
+				vedleggsid = vedleggDto.id!!,
 				filnavn = filSomSkalKopieres.metadata.filnavn,
 				storrelse = filSomSkalKopieres.metadata.storrelse,
 				data = filSomSkalKopieres.innhold,

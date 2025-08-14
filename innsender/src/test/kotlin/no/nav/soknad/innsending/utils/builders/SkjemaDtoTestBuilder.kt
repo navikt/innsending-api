@@ -27,6 +27,17 @@ data class SkjemaDtoTestBuilder(
 	var skalslettesdato: OffsetDateTime? = OffsetDateTime.now().plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD),
 	var mellomlagringDager: Int? = DEFAULT_LEVETID_OPPRETTET_SOKNAD.toInt()
 ) {
+
+	fun medBrukerId(brukerId: String) = apply { this.brukerId = brukerId }
+	fun medVedlegg(vedlegg: SkjemaDokumentDto) = apply { vedleggsListe = (vedleggsListe ?: emptyList()) + listOf(vedlegg) }
+	fun medVedlegg(vedlegg: List<SkjemaDokumentDto>) = apply { vedleggsListe = vedlegg }
+	fun medStatus(status: SoknadsStatusDto) = apply { this.status = status }
+	fun medInnsendingsId(innsendingsId: String) = apply { this.innsendingsId = innsendingsId }
+	fun medFristForEttersendelse(fristForEttersendelse: Long) = apply { this.fristForEttersendelse = fristForEttersendelse }
+	fun medSkjemaPath(skjemaPath: String) = apply { this.skjemaPath = skjemaPath }
+	fun medSkalSlettesDato(skalslettesdato: OffsetDateTime) = apply { this.skalslettesdato = skalslettesdato }
+	fun medMellomlagringDager(mellomlagringDager: Int?) = apply { this.mellomlagringDager = mellomlagringDager }
+
 	fun build() = SkjemaDto(
 		brukerId = brukerId,
 		skjemanr = skjemanr,

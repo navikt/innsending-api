@@ -11,6 +11,7 @@ import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.KodeverkService
 import no.nav.soknad.innsending.service.RepositoryUtils
@@ -22,6 +23,7 @@ import no.nav.soknad.innsending.service.fillager.FillagerService
 import no.nav.soknad.innsending.utils.NoLoginApi
 import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -84,137 +86,67 @@ class NoLoginSoknadRestApiTest: ApplicationTest()  {
 
 
 	@Test
-	fun `test opprett og sendinn soknad uten vedlegg for uinnlogget bruker`() {
-		// Gitt
-		val token: String = TokenGenerator(mockOAuth2Server).lagAzureToken()
-
-		val dokumentSoknadDto = DokumentSoknadDtoTestBuilder().withVisningsType(VisningsType.nologin).build()
-		val hovedVedlegg = dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument && !it.erVariant }
-		val hovedVedleggVariant = dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument && it.erVariant }
-		val soknadPdfId = UUID.randomUUID().toString()
-		val soknadJsonId = UUID.randomUUID().toString()
-
-		every { fillagerService.lagreFil(any(), hovedVedlegg.uuid ?: UUID.randomUUID().toString(),dokumentSoknadDto.innsendingsId!!, any(),any() ) }	returns fillagerResponse(
-				filId = soknadPdfId,
-				vedleggId = hovedVedlegg.uuid ?: UUID.randomUUID().toString(),
-				innsendingsId = dokumentSoknadDto.innsendingsId!!,
-				filtype = "application/pdf",
-				status = FilStatus.LASTET_OPP
-			)
-		every { fillagerService.lagreFil(any(), hovedVedleggVariant.uuid ?: UUID.randomUUID().toString(),dokumentSoknadDto.innsendingsId!!, any(),any() ) } returns FilMetadata(
-				filId = soknadJsonId,
-				vedleggId = hovedVedleggVariant.uuid ?: UUID.randomUUID().toString(),
-				innsendingId = dokumentSoknadDto.innsendingsId!!,
-				filtype = "application/json",
-				filnavn = hovedVedleggVariant.tittel,
-				storrelse = 1000,
-				status = FilStatus.LASTET_OPP
-			)
-
-		// Når
-		val innsendtSoknadResponse = api!!.createAndSendInSoknad(
-			dokumentDto = dokumentSoknadDto,
-			AvsenderDto(id = dokumentSoknadDto.brukerId, idType = AvsenderDto.IdType.FNR),
-			BrukerDto(id = dokumentSoknadDto.brukerId, idType = BrukerDto.IdType.FNR),
-			filDtos = emptyList(),
-			envQualifier = EnvQualifier.preprodAltAnsatt
-			)
-			.assertSuccess()
-
-		// Så
-		assertTrue(innsendtSoknadResponse.statusCode == HttpStatus.OK )
-		val kvitteringsDto = innsendtSoknadResponse.body
-		assertEquals(0, kvitteringsDto.skalSendesAvAndre!!.size)
-		assertTrue(kvitteringsDto.hoveddokumentRef == null)
-	}
-
-
-
-	@Test
 	fun `test opprett og sendinn soknad med vedlegg for uinnlogget bruker`() {
 		// Gitt
-		val dokumentSoknadDto = DokumentSoknadDtoTestBuilder()
-			.withVisningsType(VisningsType.nologin)
-			.withVedlegg(VedleggDtoTestBuilder().asDefaultVedlegg().build()).build()
-		val hovedVedlegg = dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument && !it.erVariant }
-		val hovedVedleggVariant = dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument && it.erVariant }
-		val vedlegg = dokumentSoknadDto.vedleggsListe.first { !it.erHoveddokument && !it.erVariant }
-		val soknadPdfId = UUID.randomUUID().toString()
-		val soknadJsonId = UUID.randomUUID().toString()
-		val vedleggPdfId = UUID.randomUUID().toString()
+		val token: String = TokenGenerator(mockOAuth2Server).lagAzureToken()
+		val formioId = UUID.randomUUID().toString()
+		val skjemaDokumentDto = SkjemaDokumentDto (
+			tittel = "Skjema for test av innsending",
+			label = "Skjema for test av innsending",
+			vedleggsnr = "W2",
+			pakrevd = true,
+			beskrivelse = "Skjema for test av innsending",
+			mimetype = Mimetype.applicationSlashPdf,
+			document = null,
+			formioId = formioId,
+			vedleggsurl = null,
+			propertyNavn = null
+		)
+		val skjemaDto = SkjemaDtoTestBuilder()
+			.medBrukerId("12345678901")
+			.medInnsendingsId(UUID.randomUUID().toString())
+			.medVedlegg(skjemaDokumentDto)
+			.medMellomlagringDager(1)
+			.build()
 
-		every { fillagerService.lagreFil(any(), hovedVedlegg.uuid ?: UUID.randomUUID().toString(),dokumentSoknadDto.innsendingsId!!, any(),any() ) }	returns fillagerResponse(
-			filId = soknadPdfId,
-			vedleggId = hovedVedlegg.uuid ?: UUID.randomUUID().toString(),
-			innsendingsId = dokumentSoknadDto.innsendingsId!!,
-			filtype = "application/pdf",
-			status = FilStatus.LASTET_OPP
-		)
-		every { fillagerService.lagreFil(any(), hovedVedleggVariant.uuid ?: UUID.randomUUID().toString(),dokumentSoknadDto.innsendingsId!!, any(),any() ) } returns FilMetadata(
-			filId = soknadJsonId,
-			vedleggId = hovedVedleggVariant.uuid ?: UUID.randomUUID().toString(),
-			innsendingId = dokumentSoknadDto.innsendingsId!!,
-			filtype = "application/json",
-			filnavn = hovedVedleggVariant.tittel,
-			storrelse = 1000,
-			status = FilStatus.LASTET_OPP
-		)
-		every { fillagerService.lagreFil(any(), vedlegg.uuid ?: UUID.randomUUID().toString(),dokumentSoknadDto.innsendingsId!!, any(),any() ) }	returns fillagerResponse(
-			filId = vedleggPdfId,
-			vedleggId = vedlegg.uuid ?: UUID.randomUUID().toString(),
-			innsendingsId = dokumentSoknadDto.innsendingsId!!,
-			filtype = "application/pdf",
-			status = FilStatus.LASTET_OPP
-		)
-		every { fillagerService.hentFil(vedleggPdfId, dokumentSoknadDto.innsendingsId!!,any() ) }	returns hentfillageFilResponse(
-			filId = vedleggPdfId,
-			vedleggId = vedlegg.uuid!!,
-			innsendingsId = dokumentSoknadDto.innsendingsId!!,
-			filtype = "application/pdf",
+		val fileId = UUID.randomUUID().toString()
+		val nologinVedleggDto = NologinVedleggDto(
+			vedleggRef = skjemaDokumentDto.formioId!!,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
+			fileIdList = listOf(fileId),
+			opplasingsValgKommentarLedetekst = "Kommenter opplastingsvalget ditt",
+			opplasingsValgKommentar = "Dette er min kommentar"
 		)
 
-		// Når
-		val innsendtSoknadResponse = api!!.createAndSendInSoknad(
-			dokumentDto = dokumentSoknadDto,
-			AvsenderDto(id = dokumentSoknadDto.brukerId, idType = AvsenderDto.IdType.FNR),
-			BrukerDto(id = dokumentSoknadDto.brukerId, idType = BrukerDto.IdType.FNR),
-			filDtos = listOf(NologinFilDto(vedleggRef = vedlegg.uuid!!, fileId = vedleggPdfId)),
-			envQualifier = EnvQualifier.preprodAltAnsatt
-		)
-			.assertSuccess()
-
-		// Så
-		assertTrue(innsendtSoknadResponse.statusCode == HttpStatus.OK )
-		val kvitteringsDto = innsendtSoknadResponse.body
-		assertEquals(0, kvitteringsDto.skalSendesAvAndre!!.size)
-		assertEquals(vedlegg.vedleggsnr, kvitteringsDto.innsendteVedlegg!!.first{it.vedleggsnr == vedlegg.vedleggsnr}.vedleggsnr)
-		assertTrue(kvitteringsDto.hoveddokumentRef == null)
-	}
-
-
-	private fun fillagerResponse(filId: String, vedleggId: String, innsendingsId: String, filtype: String = "application/pdf", status: FilStatus = FilStatus.LASTET_OPP) = FilMetadata (
-		filId = filId,
-		vedleggId = vedleggId,
-		innsendingId = innsendingsId,
-		filnavn = "filnavn",
-		storrelse = 1000,
-		filtype = filtype,
-		status = status
-	)
-
-	private fun hentfillageFilResponse(filId: String, vedleggId: String, innsendingsId: String, filtype: String) =
-		Fil(
+		every { fillagerService.hentFil(filId= fileId, innsendingId = skjemaDto.innsendingsId!!, namespace = any() ) }	returns Fil(
 			innhold = byteArrayOf(1, 2, 3),
-			metadata = FilMetadata (
-				filId = filId,
-				vedleggId = vedleggId,
-				innsendingId = innsendingsId,
+			metadata	= FilMetadata(
+				filId = fileId,
+				vedleggId	= formioId,
+				innsendingId = skjemaDto.innsendingsId!!,
 				filnavn = "filnavn",
 				storrelse = 1000,
-				filtype = filtype,
+				filtype = "application/pdf",
 				status = FilStatus.LASTET_OPP,
 			)
 		)
+
+		// Når
+		val innsendtSoknadResponse = api!!.createAndSendInSoknad(
+			dokumentDto = skjemaDto,
+			AvsenderDto(id = skjemaDto.brukerId, idType = AvsenderDto.IdType.FNR),
+			BrukerDto(id = skjemaDto.brukerId, idType = BrukerDto.IdType.FNR),
+			nologinVedleggDto = listOf(nologinVedleggDto),
+			envQualifier = EnvQualifier.preprodAltAnsatt
+			)
+			.assertSuccess()
+
+		// Så
+		assertTrue(innsendtSoknadResponse.statusCode == HttpStatus.OK )
+		val kvitteringsDto = innsendtSoknadResponse.body
+		assertEquals(0, kvitteringsDto.skalSendesAvAndre!!.size)
+		assertTrue(kvitteringsDto.hoveddokumentRef == null)
+	}
 
 
 }

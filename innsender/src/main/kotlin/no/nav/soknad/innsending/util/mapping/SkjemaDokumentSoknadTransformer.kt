@@ -15,7 +15,8 @@ class SkjemaDokumentSoknadTransformer {
 		input: SkjemaDto,
 		existingSoknad: DokumentSoknadDto?,
 		brukerId: String,
-		applikasjon: String
+		applikasjon: String,
+		visningsType: VisningsType? = VisningsType.fyllUt,
 	): DokumentSoknadDto =
 		DokumentSoknadDto(
 			brukerId = brukerId,
@@ -32,7 +33,7 @@ class SkjemaDokumentSoknadTransformer {
 			spraak = finnSpraakFraInput(input.spraak),
 			innsendtDato = null,
 			visningsSteg = 0,
-			visningsType = VisningsType.fyllUt,
+			visningsType = visningsType,
 			kanLasteOppAnnet = input.kanLasteOppAnnet
 				?: input.vedleggsListe?.any { it.propertyNavn != null && it.propertyNavn == "annenDokumentasjon" },
 			forsteInnsendingsDato = null,

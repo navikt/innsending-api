@@ -2040,6 +2040,8 @@ components:
         fileId:
           type: string
           description: Id of an uploaded file
+        opplastingsStatus:
+          $ref: "#/components/schemas/OpplastingsStatusDto"
 
     NologinSoknadDto:
       type: object
@@ -2047,18 +2049,42 @@ components:
       required:
         - soknadDto
         - brukerOgAvsenderDto
-        - fileList
+        - nologinVedleggList
 
       properties:
         soknadDto:
-          $ref: "#/components/schemas/DokumentSoknadDto"
+          $ref: "#/components/schemas/SkjemaDto"
         brukerOgAvsenderDto:
           $ref: "#/components/schemas/BrukerOgAvsenderDto"
-        fileList:
+        nologinVedleggList:
           type: array
           description: List of uploaded files with reference to the application'a attachments that shall be sent in with the application
           items:
-            $ref: "#/components/schemas/NologinFilDto"
+            $ref: "#/components/schemas/NologinVedleggDto"
+
+    NologinVedleggDto:
+      type: object
+      description: Ved innsending av søknad av ikke innlogget søker, skal det sendes med en liste med opplastede vedleggsfiler som skal sendes inn med søknaden
+      required:
+        - vedleggRef
+        - opplastingsStatus
+
+      properties:
+        vedleggRef:
+          type: string
+          description: Unic reference to an attachment in an application
+        fileIdList:
+          type: array
+          description: List of Ids to uploaded files in Bucket
+          items:
+            type: string
+            description: Id of an uploaded file
+        opplastingsStatus:
+          $ref: "#/components/schemas/OpplastingsStatusDto"
+        opplasingsValgKommentarLedetekst:
+          $ref: "#/components/schemas/OpplastingsvalgKommentarLedetekst"
+        opplasingsValgKommentar:
+          $ref: "#/components/schemas/OpplastingsvalgKommentar"
 
     OpplastingsStatusDto:
       type: string
