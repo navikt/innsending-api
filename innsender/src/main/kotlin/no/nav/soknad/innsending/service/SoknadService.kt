@@ -128,48 +128,6 @@ class SoknadService(
 	}
 
 
-	@Transactional(timeout=TRANSACTION_TIMEOUT)
-	fun lagreUinnloggetSoknad(uinnloggetSoknadDto: NologinSoknadDto): DokumentSoknadDto {
-		val operation = InnsenderOperation.OPPRETT.name
-
-		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
-			input = uinnloggetSoknadDto.soknadDto,
-			existingSoknad = null,
-			brukerId = uinnloggetSoknadDto.soknadDto.brukerId,
-			applikasjon =  subjectHandler.getClientId(),
-			visningsType = VisningsType.nologin
-		)
-		val innsendingsId = dokumentSoknadDto.innsendingsId!!
-		try {
-			val savedSoknadDbData = repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId))
-			val soknadsid = savedSoknadDbData.id
-			val savedVedleggDbData = vedleggService.saveVedleggFromDto(soknadsid!!, dokumentSoknadDto.vedleggsListe, uinnloggetSoknadDto.nologinVedleggList)
-
-			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
-
-			// lagre hovedkdokument (PDF) og hoveddokumentvariant (JSON)
-			val filDtos = savedDokumentSoknadDto.vedleggsListe
-				.filter {it.erHoveddokument}
-				.forEach { filService.lagreFil(
-					soknadDto = savedDokumentSoknadDto,
-					FilDto(vedleggsid = it.id!!, id = null, filnavn = it.vedleggsnr, mimetype = it.mimetype,
-						storrelse = it.document?.size, antallsider = null,
-						data = if (!it.erVariant) uinnloggetSoknadDto.soknadDto.hoveddokument.document else uinnloggetSoknadDto.soknadDto.hoveddokumentVariant.document,
-						opprettetdato = it.opprettetdato)
-				)
-				}
-
-			// flytte opplastede vedleggsfiler i fillager til fil tabellen.
-			lagreFiler(savedDokumentSoknadDto, uinnloggetSoknadDto)
-
-			innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
-			return hentSoknad(innsendingsId)
-		} catch (e: Exception) {
-			exceptionHelper.reportException(e, operation, dokumentSoknadDto.tema)
-			throw e
-		}
-	}
-
 	fun hentAktiveSoknader(brukerIds: List<String>): List<DokumentSoknadDto> {
 		return brukerIds.flatMap {
 			hentSoknadGittBrukerId(it, SoknadsStatus.Opprettet) + hentSoknadGittBrukerId(it, SoknadsStatus.Utfylt)

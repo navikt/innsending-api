@@ -63,7 +63,7 @@ class MottakerAPI(
 
 	override fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggsListe: List<VedleggDto>, avsenderDto: AvsenderDto, brukerDto: BrukerDto?) {
 		if (soknadDto.visningsType == VisningsType.nologin) {
-			val innsending = translate(soknadDto, vedleggsListe, avsenderDto, brukerDto)
+			val innsending = translate(soknadDto, vedleggsListe, avsenderDto, brukerDto ?: BrukerDto(id = avsenderDto.id!!, idType = BrukerDto.IdType.FNR))
 			logger.info("${soknadDto.innsendingsId}: for uinnlogget bruker. klar til å sende inn\n${maskerFnr(innsending)}\ntil ${restConfig.soknadsMottakerHost}")
 			innsendingMottakerApi.nologinSubmission(innsending, innsending.innsendingsId)
 			logger.info("${soknadDto.innsendingsId}: for uinnlogget bruker sendt inn")

@@ -6,6 +6,7 @@ import no.nav.soknad.innsending.consumerapis.skjema.KodeverkSkjema
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.*
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.model.AvsenderDto.IdType
 import no.nav.soknad.innsending.repository.domain.enums.HendelseType
 import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
@@ -45,7 +46,7 @@ class InnsendingService(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
-	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto, avsenderDto: AvsenderDto, brukerDto: BrukerDto?): Pair<List<VedleggDto>, List<VedleggDto>> {
+	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto, avsenderDto: AvsenderDto?, brukerDto: BrukerDto?): Pair<List<VedleggDto>, List<VedleggDto>> {
 		val operation = InnsenderOperation.SEND_INN.name
 
 		// Anta at filene til et vedlegg allerede er konvertert til PDF ved lagring.
@@ -117,7 +118,7 @@ class InnsendingService(
 
 		// send soknadmetada til soknadsmottaker
 		try {
-			soknadsmottakerAPI.sendInnSoknad(soknadDto, (listOf(kvitteringForArkivering) + opplastedeVedlegg), avsenderDto, brukerDto)
+			soknadsmottakerAPI.sendInnSoknad(soknadDto, (listOf(kvitteringForArkivering) + opplastedeVedlegg), avsenderDto?: AvsenderDto(id = soknadDto.brukerId, idType = IdType.FNR), brukerDto)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			logger.error("${soknadDto.innsendingsId}: Feil ved sending av søknad til soknadsmottaker ${e.message}")
@@ -238,7 +239,7 @@ class InnsendingService(
 
 
 	@Transactional(timeout = TRANSACTION_TIMEOUT)
-	fun sendInnNoLoginSoknad(soknadDtoInput: DokumentSoknadDto, avsenderDto: AvsenderDto, brukerDto: BrukerDto?): KvitteringsDto {
+	fun sendInnNoLoginSoknad(soknadDtoInput: DokumentSoknadDto, avsenderDto: AvsenderDto, brukerDto: BrukerDto): KvitteringsDto {
 		val operation = InnsenderOperation.SEND_INN.name
 		val startSendInn = System.currentTimeMillis()
 

@@ -275,43 +275,6 @@ class VedleggService(
 	}
 
 
-	fun saveVedleggFromDto(
-		soknadsId: Long,
-		vedleggList: List<VedleggDto>,
-		nologinVedleggDtos: List<NologinVedleggDto>,
-	): List<VedleggDbData> {
-		return vedleggList.map {
-			val nologinEl = nologinVedleggDtos.firstOrNull { nologinVedlegg -> nologinVedlegg.vedleggRef == it.formioId }
-			val vedleggDbDatas = repo.lagreVedlegg(
-				VedleggDbData(
-					id = null,
-					soknadsid = soknadsId,
-					status = mapTilDbOpplastingsStatus(nologinEl?.opplastingsStatus ?: it.opplastingsStatus),
-					erhoveddokument = it.erHoveddokument,
-					ervariant = it.erVariant,
-					erpdfa = false,
-					erpakrevd = it.vedleggsnr != "N6",
-					vedleggsnr = it.vedleggsnr,
-					tittel = it.tittel,
-					label = it.tittel,
-					beskrivelse = "",
-					mimetype = it.mimetype?.value,
-					uuid = it.uuid?:UUID.randomUUID().toString(),
-					opprettetdato = LocalDateTime.now(),
-					endretdato = LocalDateTime.now(),
-					innsendtdato = null,
-					vedleggsurl = it.skjemaurl,
-					formioid = it.formioId,
-					opplastingsvalgkommentarledetekst = nologinEl?.opplasingsValgKommentarLedetekst,
-					opplastingsvalgkommentar = nologinEl?.opplasingsValgKommentar
-				)
-			)
-
-			vedleggDbDatas
-		}
-	}
-
-
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun leggTilVedlegg(soknadDto: DokumentSoknadDto, vedleggDto: PostVedleggDto?): VedleggDto {
 

@@ -63,7 +63,7 @@ class FyllutRestApi(
 		if (redirectVedPaabegyntSoknad != null) return redirectVedPaabegyntSoknad
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
-			input = skjemaDto,
+			input = SkjemaDokumentSoknadTransformer().konverterSkjemaDtoTilV2(skjemaDto),
 			existingSoknad = null,
 			brukerId = brukerId,
 			applikasjon = applikasjon
@@ -110,7 +110,7 @@ class FyllutRestApi(
 		validerSoknadsTilgang(existingSoknad)
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
-			input = skjemaDto,
+			input = SkjemaDokumentSoknadTransformer().konverterSkjemaDtoTilV2(skjemaDto),
 			existingSoknad = existingSoknad,
 			brukerId = brukerId,
 			applikasjon = applikasjon
@@ -138,7 +138,7 @@ class FyllutRestApi(
 		validerSoknadsTilgang(existingSoknad)
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
-			input = skjemaDto,
+			input = SkjemaDokumentSoknadTransformer().konverterSkjemaDtoTilV2(skjemaDto),
 			existingSoknad = existingSoknad,
 			brukerId = brukerId,
 			applikasjon = applikasjon

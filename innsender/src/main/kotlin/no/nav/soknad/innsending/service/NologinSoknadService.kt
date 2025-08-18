@@ -3,11 +3,13 @@ package no.nav.soknad.innsending.service
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
+import no.nav.soknad.innsending.model.AvsenderDto
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.FilDto
 import no.nav.soknad.innsending.model.KvitteringsDto
 import no.nav.soknad.innsending.model.NologinSoknadDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
+import no.nav.soknad.innsending.model.SkjemaDtoV2
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.fillager.FillagerNamespace
@@ -41,7 +43,7 @@ class NologinSoknadService(
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
 			input = uinnloggetSoknadDto.soknadDto,
 			existingSoknad = null,
-			brukerId = uinnloggetSoknadDto.soknadDto.brukerId,
+			brukerId = uinnloggetSoknadDto.soknadDto.brukerDto.id,
 			applikasjon =  applikasjon,
 			visningsType = VisningsType.nologin
 		)
@@ -49,7 +51,7 @@ class NologinSoknadService(
 		try {
 			val savedSoknadDbData = repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId))
 			val soknadsid = savedSoknadDbData.id
-			val savedVedleggDbData = vedleggService.saveVedleggFromDto(soknadsid!!, dokumentSoknadDto.vedleggsListe, uinnloggetSoknadDto.nologinVedleggList)
+			val savedVedleggDbData = vedleggService.saveVedleggFromDto(soknadsid!!, dokumentSoknadDto.vedleggsListe)
 
 			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
 
@@ -69,7 +71,8 @@ class NologinSoknadService(
 			lagreFiler(savedDokumentSoknadDto, uinnloggetSoknadDto)
 
 			innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
-			return innsendingService.sendInnNoLoginSoknad(savedDokumentSoknadDto, uinnloggetSoknadDto.brukerOgAvsenderDto.avsenderDto, uinnloggetSoknadDto.brukerOgAvsenderDto.brukerDto)
+			return innsendingService.sendInnNoLoginSoknad(savedDokumentSoknadDto, uinnloggetSoknadDto.soknadDto.avsenderId?: AvsenderDto(uinnloggetSoknadDto.soknadDto.brukerDto.id,
+				AvsenderDto.IdType.FNR), uinnloggetSoknadDto.soknadDto.brukerDto)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, dokumentSoknadDto.tema)
 			throw e
@@ -84,9 +87,13 @@ class NologinSoknadService(
 		oppdatertDokumentSoknadDto: DokumentSoknadDto,
 		noLoginSoknadDto: NologinSoknadDto
 	) {
-		val vedleggsStatusMap = mutableMapOf<String, OpplastingsStatusDto>()
-		noLoginSoknadDto.nologinVedleggList
+		if (oppdatertDokumentSoknadDto.vedleggsListe.filter { !it.erHoveddokument } == null) return
+
+		val vedleggsListe = noLoginSoknadDto.nologinVedleggList
 			.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
+			.map { it.copy(opplastingsStatus = OpplastingsStatusDto.LastetOpp) }
+		noLoginSoknadDto.nologinVedleggList
+			//.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
 			.forEach {
 				if (it.fileIdList.isNullOrEmpty()) throw IllegalActionException(
 					"Vedlegg med id=${it.vedleggRef} har ingen filer som skal lagres i fil tabellen",
@@ -124,49 +131,18 @@ class NologinSoknadService(
 
 	}
 
-fun brukerAvsenderValidering(nologinSoknadDto: NologinSoknadDto): String? {
-		var brukerId: String? = null
-		if (nologinSoknadDto.brukerOgAvsenderDto.brukerDto != null) {
-			val brukerDto = nologinSoknadDto.brukerOgAvsenderDto.brukerDto
-			if (nologinSoknadDto.soknadDto.brukerId != brukerDto!!.id) {
-				throw IllegalActionException("BrukerId i søknaden må være lik brukerId i brukerDto", errorCode = ErrorCode.PROPERTY_NOT_SET) // TODO fiks feilmelding
-			}
-			brukerId = brukerDto.id
-		}
-
-		if (nologinSoknadDto.brukerOgAvsenderDto.avsenderDto.id == null && nologinSoknadDto.brukerOgAvsenderDto.avsenderDto.navn == null) {
-			throw IllegalActionException(
-				message = "Mangler avsender informasjon, verken id eller navn satt",
-				errorCode = ErrorCode.PROPERTY_NOT_SET,
-			)
-		}
-		if (nologinSoknadDto.brukerOgAvsenderDto.avsenderDto.id != null && nologinSoknadDto.brukerOgAvsenderDto.avsenderDto.idType == null) {
-			throw IllegalActionException(
-				message = "Avsender idType må være satt når avsender id er satt",
-				errorCode = ErrorCode.PROPERTY_NOT_SET,
-			)
-		}
-		return brukerId
+fun brukerAvsenderValidering(nologinSoknadDto: SkjemaDtoV2): String {
+		return nologinSoknadDto.brukerDto.id
 	}
 
-	fun verifiserInput(uinnloggetSoknadDto: NologinSoknadDto) {
+	fun verifiserInput(uinnloggetSoknadDto: SkjemaDtoV2) {
 		// InnsendingsId skal være satt av FyllUt
-		if (uinnloggetSoknadDto.soknadDto.innsendingsId == null) {
+		if (uinnloggetSoknadDto.innsendingsId == null) {
 			throw IllegalActionException(
 				message = "InnsendingId er ikke satt",
 				errorCode = ErrorCode.PROPERTY_NOT_SET,
 			)
 		}
-		// I første omgang forventer vi at brukerId og avsender skal være den samme da vi ikke (enda) støtter innsending på vegne av organisasjon eller annen person.
-		// Det innebærer at brukerId kun kan være fnr eller d-nr i vår løsning.
-		// Arkiver støtter spesifisering av Avsender enten med: orgnr, fnr, d-nr, eller navn i arkivet. I første omgang setter vi avsender= brukerId.
-		if (uinnloggetSoknadDto.soknadDto.brukerId.isNullOrBlank()) {
-			throw IllegalActionException(
-				message = "BrukerId er ikke satt i søknaden",
-				errorCode = ErrorCode.PROPERTY_NOT_SET,
-			)
-		}
-
 	}
 
 }

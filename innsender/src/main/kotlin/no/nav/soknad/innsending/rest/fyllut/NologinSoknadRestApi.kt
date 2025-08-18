@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.KvitteringsDto
 import no.nav.soknad.innsending.model.NologinSoknadDto
+import no.nav.soknad.innsending.model.SkjemaDtoV2
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.InnsendingService
@@ -43,14 +44,13 @@ class NologinSoknadRestApi(
 
 		// Verifiser at det kun er FyllUt som kaller dette API-et
 		val applikasjon = subjectHandler.getClientId()
-		val brukerId = nologinSoknadService.brukerAvsenderValidering(nologinSoknadDto)
-		val avsenderId = nologinSoknadDto.brukerOgAvsenderDto.avsenderDto
+		val brukerId = nologinSoknadService.brukerAvsenderValidering(nologinSoknadDto.soknadDto)
 		combinedLogger.log(
 			"[${applikasjon}] - Kall for å opprette og sende inn søknad av uinlogget bruker fra applikasjon ${applikasjon} på skjema ${nologinSoknadDto.soknadDto.skjemanr}",
-			brukerId ?: avsenderId.id ?: avsenderId.navn ?: "ukjent bruker/avsender"
+			brukerId
 		)
 
-		nologinSoknadService.verifiserInput(nologinSoknadDto)
+		nologinSoknadService.verifiserInput(nologinSoknadDto.soknadDto)
 
 		val innsendtSoknad = nologinSoknadService.lagreOgSendInnUinnloggetSoknad(nologinSoknadDto, applikasjon)
 

@@ -179,7 +179,7 @@ fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>): Sokn
 }
 
 
-fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>, avsenderDto: AvsenderDto, brukerDto: BrukerDto?): Innsending {
+fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>, avsenderDto: AvsenderDto, brukerDto: BrukerDto): Innsending {
 	return Innsending(
 		innsendingsId = soknadDto.innsendingsId!!,
 		ettersendelseTilId = soknadDto.ettersendingsId,

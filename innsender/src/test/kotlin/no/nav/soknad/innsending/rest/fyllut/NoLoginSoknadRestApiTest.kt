@@ -11,7 +11,6 @@ import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.KodeverkService
 import no.nav.soknad.innsending.service.RepositoryUtils
@@ -22,9 +21,7 @@ import no.nav.soknad.innsending.service.fillager.FilStatus
 import no.nav.soknad.innsending.service.fillager.FillagerService
 import no.nav.soknad.innsending.utils.NoLoginApi
 import no.nav.soknad.innsending.utils.TokenGenerator
-import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
-import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
-import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.SkjemaDtoV2TestBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -90,7 +87,7 @@ class NoLoginSoknadRestApiTest: ApplicationTest()  {
 		// Gitt
 		val token: String = TokenGenerator(mockOAuth2Server).lagAzureToken()
 		val formioId = UUID.randomUUID().toString()
-		val skjemaDokumentDto = SkjemaDokumentDto (
+		val skjemaDokumentDto = SkjemaDokumentDtoV2 (
 			tittel = "Skjema for test av innsending",
 			label = "Skjema for test av innsending",
 			vedleggsnr = "W2",
@@ -98,11 +95,12 @@ class NoLoginSoknadRestApiTest: ApplicationTest()  {
 			beskrivelse = "Skjema for test av innsending",
 			mimetype = Mimetype.applicationSlashPdf,
 			document = null,
-			formioId = formioId,
+			fyllutId = formioId,
 			vedleggsurl = null,
-			propertyNavn = null
+			propertyNavn = null,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp
 		)
-		val skjemaDto = SkjemaDtoTestBuilder()
+		val skjemaDto = SkjemaDtoV2TestBuilder()
 			.medBrukerId("12345678901")
 			.medInnsendingsId(UUID.randomUUID().toString())
 			.medVedlegg(skjemaDokumentDto)
@@ -111,11 +109,9 @@ class NoLoginSoknadRestApiTest: ApplicationTest()  {
 
 		val fileId = UUID.randomUUID().toString()
 		val nologinVedleggDto = NologinVedleggDto(
-			vedleggRef = skjemaDokumentDto.formioId!!,
+			vedleggRef = skjemaDokumentDto.fyllutId!!,
 			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			fileIdList = listOf(fileId),
-			opplasingsValgKommentarLedetekst = "Kommenter opplastingsvalget ditt",
-			opplasingsValgKommentar = "Dette er min kommentar"
 		)
 
 		every { fillagerService.hentFil(filId= fileId, innsendingId = skjemaDto.innsendingsId!!, namespace = any() ) }	returns Fil(
@@ -134,8 +130,6 @@ class NoLoginSoknadRestApiTest: ApplicationTest()  {
 		// Når
 		val innsendtSoknadResponse = api!!.createAndSendInSoknad(
 			dokumentDto = skjemaDto,
-			AvsenderDto(id = skjemaDto.brukerId, idType = AvsenderDto.IdType.FNR),
-			BrukerDto(id = skjemaDto.brukerId, idType = BrukerDto.IdType.FNR),
 			nologinVedleggDto = listOf(nologinVedleggDto),
 			envQualifier = EnvQualifier.preprodAltAnsatt
 			)

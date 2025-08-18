@@ -3,7 +3,6 @@ package no.nav.soknad.innsending.util.mapping
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.finnSpraakFraInput
-import no.nav.soknad.innsending.util.models.sletteDato
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -12,7 +11,7 @@ class SkjemaDokumentSoknadTransformer {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	fun konverterTilDokumentSoknadDto(
-		input: SkjemaDto,
+		input: SkjemaDtoV2,
 		existingSoknad: DokumentSoknadDto?,
 		brukerId: String,
 		applikasjon: String,
@@ -42,10 +41,46 @@ class SkjemaDokumentSoknadTransformer {
 			soknadstype = SoknadType.soknad,
 			skjemaPath = input.skjemaPath,
 			applikasjon = applikasjon,
-			skalSlettesDato = input.sletteDato,
+			skalSlettesDato = input.skalSlettesDato,
 			mellomlagringDager = input.mellomlagringDager,
 			erNavOpprettet = false
 		)
+
+	fun konverterSkjemaDtoTilV2(skjemaDto: SkjemaDto): SkjemaDtoV2 = SkjemaDtoV2(
+		brukerDto = BrukerDto(id = skjemaDto.brukerId, idType= BrukerDto.IdType.FNR),
+		skjemanr = skjemaDto.skjemanr,
+		tittel = skjemaDto.tittel,
+		tema = skjemaDto.tema,
+		spraak = skjemaDto.spraak,
+		innsendingsId = skjemaDto.innsendingsId,
+		avsenderId = AvsenderDto(skjemaDto.brukerId, AvsenderDto.IdType.FNR),
+		status = skjemaDto.status,
+		kanLasteOppAnnet = skjemaDto.kanLasteOppAnnet,
+		fristForEttersendelse = skjemaDto.fristForEttersendelse,
+		endretDato = skjemaDto.endretDato,
+		skalSlettesDato = skjemaDto.skalSlettesDato,
+		mellomlagringDager = skjemaDto.mellomlagringDager,
+		skjemaPath = skjemaDto.skjemaPath,
+		visningsType = skjemaDto.visningsType,
+		hoveddokument = konverterTilSkjemaDokumentDtoV2(skjemaDto.hoveddokument),
+		hoveddokumentVariant = konverterTilSkjemaDokumentDtoV2(skjemaDto.hoveddokumentVariant),
+		vedleggsListe = skjemaDto.vedleggsListe?.map{ konverterTilSkjemaDokumentDtoV2(it) }
+
+	)
+
+	fun konverterTilSkjemaDokumentDtoV2(skjemaDokumentDto: SkjemaDokumentDto): SkjemaDokumentDtoV2 = SkjemaDokumentDtoV2(
+		fyllutId = skjemaDokumentDto.formioId,
+		vedleggsnr = skjemaDokumentDto.vedleggsnr,
+		tittel = skjemaDokumentDto.tittel,
+		label = skjemaDokumentDto.label,
+		pakrevd = skjemaDokumentDto.pakrevd,
+		opplastingsStatus = if (skjemaDokumentDto.document != null) OpplastingsStatusDto.LastetOpp else OpplastingsStatusDto.IkkeValgt,
+		beskrivelse = skjemaDokumentDto.beskrivelse,
+		mimetype = skjemaDokumentDto.mimetype,
+		document = skjemaDokumentDto.document,
+		propertyNavn = skjemaDokumentDto.propertyNavn,
+		vedleggsurl = skjemaDokumentDto.vedleggsurl,
+	)
 
 //	kanLasteOppAnnet = input.vedleggsListe?.any { it.property == "annenDokumentasjon" : it.vedleggsnr == "N6" && it.label == "Annen dokumentasjon" })
 
@@ -57,7 +92,7 @@ class SkjemaDokumentSoknadTransformer {
 	 * På DokumentSoknadDto settes kanLasteOppAnnet=true dersom FyllUt legger ved vedlegg av type Annet. => Frontend legger på knapp for å legge til Annet vedlegg.
 	 * FyllUt spesifiserer pr vedlegg om pakrevd. Dersom pakrevd=false OG skjemanr=N6, så skal søker kunne slette vedlegget.
 	 */
-	private fun lagVedleggsListe(skjemaDto: SkjemaDto): List<VedleggDto> {
+	private fun lagVedleggsListe(skjemaDto: SkjemaDtoV2): List<VedleggDto> {
 		val hoveddok = konverterTilVedleggDto(skjemaDto.hoveddokument, erHoveddokument = true, erVariant = false)
 		val variant = konverterTilVedleggDto(skjemaDto.hoveddokumentVariant, erHoveddokument = true, erVariant = true)
 		val vedleggListe: List<VedleggDto> =
@@ -74,7 +109,7 @@ class SkjemaDokumentSoknadTransformer {
 	}
 
 	private fun konverterTilVedleggDto(
-		skjemaDokumentDto: SkjemaDokumentDto,
+		skjemaDokumentDto: SkjemaDokumentDtoV2,
 		erHoveddokument: Boolean,
 		erVariant: Boolean
 	): VedleggDto =
@@ -85,7 +120,7 @@ class SkjemaDokumentSoknadTransformer {
 			erVariant = erVariant,
 			erPdfa = skjemaDokumentDto.mimetype?.equals(Mimetype.applicationSlashPdf) ?: false,
 			erPakrevd = skjemaDokumentDto.pakrevd,
-			opplastingsStatus = if (skjemaDokumentDto.document != null) OpplastingsStatusDto.LastetOpp else OpplastingsStatusDto.IkkeValgt,
+			opplastingsStatus = if (skjemaDokumentDto.document != null) OpplastingsStatusDto.LastetOpp else skjemaDokumentDto.opplastingsStatus,
 			opprettetdato = mapTilOffsetDateTime(LocalDateTime.now())!!,
 			id = null,
 			vedleggsnr = skjemaDokumentDto.vedleggsnr,
@@ -95,7 +130,9 @@ class SkjemaDokumentSoknadTransformer {
 			document = skjemaDokumentDto.document,
 			skjemaurl = skjemaDokumentDto.vedleggsurl,
 			innsendtdato = null,
-			formioId = skjemaDokumentDto.formioId,
+			formioId = skjemaDokumentDto.fyllutId,
+			opplastingsValgKommentarLedetekst = skjemaDokumentDto.opplastingsValgKommentarLedetekst,
+			opplastingsValgKommentar = skjemaDokumentDto.opplastingsValgKommentar
 		)
 
 }
