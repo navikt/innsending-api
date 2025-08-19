@@ -25,6 +25,7 @@ import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
 import java.time.OffsetDateTime
 
 @RestController
@@ -51,19 +52,19 @@ class FilRestApi(
 
 	// Søker skal kunne laste opp ett eller flere filer på ett vedlegg. Dette endepunktet tillater opplasting av en fil.
 	@Timed(InnsenderOperation.LAST_OPP)
-	override fun lagreFil(innsendingsId: String, vedleggsId: Long, file: Resource): ResponseEntity<FilDto> {
+	override fun lagreFil(innsendingsId: String, vedleggsId: Long, file: MultipartFile): ResponseEntity<FilDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 
 		combinedLogger.log("$innsendingsId: Kall for å lagre fil på vedlegg $vedleggsId til søknad", brukerId)
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
-		val vedleggDto = soknadDto.vedleggsListe.first { it.id == vedleggsId }
+		val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
 		if (vedleggDto == null)
 			throw ResourceNotFoundException("Vedlegg $vedleggsId eksisterer ikke for søknad $innsendingsId")
 
 		// Ved opplasting av fil skal den valideres (f.eks. lovlig format, summen av størrelsen på filene på et vedlegg må være innenfor max størrelse).
-		val filtype = filValidatorService.validerFil(file, innsendingsId)
-		val opplastet = (file as ByteArrayResource).byteArray
+		val filtype = filValidatorService.validerFil(file.resource, innsendingsId)
+		val opplastet = file.resource.contentAsByteArray
 
 		// Alle opplastede filer skal lagres som flatede (dvs. ikke skrivbar PDF) PDFer.
 		val (fil, antallsider) = konverterTilPdf.tilPdf(
@@ -85,7 +86,7 @@ class FilRestApi(
 			FilDto(
 				vedleggsid = vedleggsId,
 				id = null,
-				filnavn = file.filename ?: "",
+				filnavn = file.resource.filename ?: "",
 				mimetype = Mimetype.applicationSlashPdf,
 				storrelse = fil.size,
 				antallsider = antallsider,

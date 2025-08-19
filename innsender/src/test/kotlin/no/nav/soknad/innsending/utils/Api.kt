@@ -179,10 +179,19 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 	): InnsendingApiResponse<FilDto> {
 		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val requestBody: MultiValueMap<String, ByteArray> = LinkedMultiValueMap()
-		requestBody.add("file", file)
+		val headers = Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA)
 
-		val httpEntity = HttpEntity(requestBody, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
+		// Per-part headers: content-disposition with filename
+		val partHeaders = HttpHeaders()
+		partHeaders.contentType = MediaType.APPLICATION_PDF
+		partHeaders.setContentDispositionFormData("file", "litenPdf.pdf")
+
+		val filePart: HttpEntity<ByteArray> = HttpEntity(file, partHeaders)
+
+		val requestBody: MultiValueMap<String, Any> = LinkedMultiValueMap()
+		requestBody.add("file", filePart)
+
+		val httpEntity = HttpEntity(requestBody, headers)
 
 		val response = restTemplate.exchange(
 			"${baseUrl}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggsId}/fil",

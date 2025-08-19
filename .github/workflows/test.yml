@@ -22,4 +22,4 @@ jobs:
         with:
           timezoneLinux: "Europe/Oslo"
       - name: Maven clean install
-        run: mvn clean install
+        run: mvn clean install --settings maven-settings.xml

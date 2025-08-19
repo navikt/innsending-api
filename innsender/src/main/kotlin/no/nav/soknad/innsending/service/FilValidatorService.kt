@@ -36,7 +36,7 @@ class FilValidatorService(
 		)
 
 		// Sjekk filstørrelse og filformat
-		val opplastet = (fil as ByteArrayResource).byteArray
+		val opplastet = fil.contentAsByteArray
 		Validerer().validerStorrelse(
 			innsendingId = innsendingsId,
 			alleredeOpplastet = 0,
