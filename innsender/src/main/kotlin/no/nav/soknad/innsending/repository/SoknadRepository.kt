@@ -109,7 +109,7 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 			"  innsendtdato between :fra and :til",
 		nativeQuery = true
 	)
-	fun finnAlleSoknaderBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(
+	fun finnAlleSoknaderBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatosOrderByInnsendtdato(
 		@Param("fra") fra: LocalDateTime,
 		@Param("til") til: LocalDateTime,
 		@Param("status") status: String = SoknadsStatus.Innsendt.name,

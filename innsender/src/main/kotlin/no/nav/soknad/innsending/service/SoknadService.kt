@@ -202,7 +202,7 @@ class SoknadService(
 	}
 
 	// Slett opprettet soknad gitt innsendingsId
-	@Transactional(timeout=TRANSACTION_TIMEOUT)
+	@Transactional
 	fun slettSoknadAutomatisk(innsendingsId: String) {
 		val operation = InnsenderOperation.SLETT.name
 
@@ -220,7 +220,7 @@ class SoknadService(
 		innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
 	}
 
-	@Transactional(timeout=TRANSACTION_TIMEOUT)
+	@Transactional
 	fun slettSoknadPermanent(innsendingsId: String) {
 
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
@@ -231,16 +231,16 @@ class SoknadService(
 		logger.info("$innsendingsId: opprettet:${dokumentSoknadDto.opprettetDato}, status: ${dokumentSoknadDto.status} er permanent slettet")
 	}
 
-	@Transactional(timeout=TRANSACTION_TIMEOUT)
-	fun finnOgSlettArkiverteSoknader(dagerGamle: Long, vindu: Long) {
-		val arkiverteSoknader =
-			repo.findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(dagerGamle, vindu)
-
-		arkiverteSoknader.forEach { slettSoknadPermanent(it.innsendingsid) }
-
+	@Transactional
+	fun slettSoknaderPermanent(innsendingsIds: List<String>) {
+		innsendingsIds.forEach { slettSoknadPermanent(it) }
 	}
 
-	@Transactional(timeout=TRANSACTION_TIMEOUT)
+	fun finnArkiverteSoknader(dagerGamle: Long, vindu: Long): List<SoknadDbData> {
+		return repo.findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(dagerGamle, vindu)
+	}
+
+	@Transactional
 	fun slettGamleSoknader(
 		dagerGamle: Long = DEFAULT_LEVETID_OPPRETTET_SOKNAD,
 		permanent: Boolean = false,
@@ -265,7 +265,7 @@ class SoknadService(
 		}
 	}
 
-	@Transactional(timeout=TRANSACTION_TIMEOUT)
+	@Transactional
 	fun deleteSoknadBeforeCutoffDate(
 		cutoffDate: OffsetDateTime
 	): List<String> {
