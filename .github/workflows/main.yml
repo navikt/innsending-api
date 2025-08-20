@@ -29,6 +29,9 @@ jobs:
         with:
           timezoneLinux: "Europe/Oslo"
       - name: Build with maven
+        env:
+          GITHUB_NAV_TOKEN: ${{ secrets.READER_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
         run: mvn install --settings maven-settings.xml --file pom.xml
 
       - name: Dependency submission (for dependabot)
