@@ -3,19 +3,12 @@ package no.nav.soknad.innsending.rest.fyllut
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.security.token.support.core.utils.Cluster
 import no.nav.soknad.innsending.api.NologinSoknadApi
-import no.nav.soknad.innsending.exceptions.ErrorCode
-import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.KvitteringsDto
-import no.nav.soknad.innsending.model.NologinSoknadDto
 import no.nav.soknad.innsending.model.SkjemaDtoV2
-import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
-import no.nav.soknad.innsending.service.InnsendingService
 import no.nav.soknad.innsending.service.NologinSoknadService
 import no.nav.soknad.innsending.service.SoknadService
-import no.nav.soknad.innsending.service.fillager.FillagerNamespace
-import no.nav.soknad.innsending.service.fillager.FillagerService
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import org.slf4j.LoggerFactory
@@ -40,17 +33,17 @@ class NologinSoknadRestApi(
 	private val combinedLogger = CombinedLogger(logger, secureLogger)
 
 
-	override fun opprettNologinSoknad(nologinSoknadDto: NologinSoknadDto, envQualifier: EnvQualifier?): ResponseEntity<KvitteringsDto> {
+	override fun opprettNologinSoknad(nologinSoknadDto: SkjemaDtoV2, envQualifier: EnvQualifier?): ResponseEntity<KvitteringsDto> {
 
 		// Verifiser at det kun er FyllUt som kaller dette API-et
 		val applikasjon = subjectHandler.getClientId()
-		val brukerId = nologinSoknadService.brukerAvsenderValidering(nologinSoknadDto.soknadDto)
+		val brukerId = nologinSoknadService.brukerAvsenderValidering(nologinSoknadDto)
 		combinedLogger.log(
-			"[${applikasjon}] - Kall for å opprette og sende inn søknad av uinlogget bruker fra applikasjon ${applikasjon} på skjema ${nologinSoknadDto.soknadDto.skjemanr}",
+			"[${applikasjon}] - Kall for å opprette og sende inn søknad av uinlogget bruker fra applikasjon ${applikasjon} på skjema ${nologinSoknadDto.skjemanr}",
 			brukerId
 		)
 
-		nologinSoknadService.verifiserInput(nologinSoknadDto.soknadDto)
+		nologinSoknadService.verifiserInput(nologinSoknadDto)
 
 		val innsendtSoknad = nologinSoknadService.lagreOgSendInnUinnloggetSoknad(nologinSoknadDto, applikasjon)
 

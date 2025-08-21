@@ -7,11 +7,9 @@ import no.nav.soknad.innsending.model.AvsenderDto
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.FilDto
 import no.nav.soknad.innsending.model.KvitteringsDto
-import no.nav.soknad.innsending.model.NologinSoknadDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SkjemaDtoV2
 import no.nav.soknad.innsending.model.VisningsType
-import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.fillager.FillagerNamespace
 import no.nav.soknad.innsending.service.fillager.FillagerService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
@@ -37,13 +35,13 @@ class NologinSoknadService(
 ) {
 
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
-	fun lagreOgSendInnUinnloggetSoknad(uinnloggetSoknadDto: NologinSoknadDto, applikasjon: String): KvitteringsDto {
+	fun lagreOgSendInnUinnloggetSoknad(uinnloggetSoknadDto: SkjemaDtoV2, applikasjon: String): KvitteringsDto {
 		val operation = InnsenderOperation.OPPRETT.name
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
-			input = uinnloggetSoknadDto.soknadDto,
+			input = uinnloggetSoknadDto,
 			existingSoknad = null,
-			brukerId = uinnloggetSoknadDto.soknadDto.brukerDto.id,
+			brukerId = uinnloggetSoknadDto.brukerDto.id,
 			applikasjon =  applikasjon,
 			visningsType = VisningsType.nologin
 		)
@@ -62,7 +60,7 @@ class NologinSoknadService(
 					soknadDto = savedDokumentSoknadDto,
 					FilDto(vedleggsid = it.id!!, id = null, filnavn = it.vedleggsnr, mimetype = it.mimetype,
 						storrelse = it.document?.size, antallsider = null,
-						data = if (!it.erVariant) uinnloggetSoknadDto.soknadDto.hoveddokument.document else uinnloggetSoknadDto.soknadDto.hoveddokumentVariant.document,
+						data = if (!it.erVariant) uinnloggetSoknadDto.hoveddokument.document else uinnloggetSoknadDto.hoveddokumentVariant.document,
 						opprettetdato = it.opprettetdato)
 				)
 				}
@@ -71,8 +69,8 @@ class NologinSoknadService(
 			lagreFiler(savedDokumentSoknadDto, uinnloggetSoknadDto)
 
 			innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
-			return innsendingService.sendInnNoLoginSoknad(savedDokumentSoknadDto, uinnloggetSoknadDto.soknadDto.avsenderId?: AvsenderDto(uinnloggetSoknadDto.soknadDto.brukerDto.id,
-				AvsenderDto.IdType.FNR), uinnloggetSoknadDto.soknadDto.brukerDto)
+			return innsendingService.sendInnNoLoginSoknad(savedDokumentSoknadDto, uinnloggetSoknadDto.avsenderId?: AvsenderDto(uinnloggetSoknadDto.brukerDto.id,
+				AvsenderDto.IdType.FNR), uinnloggetSoknadDto.brukerDto)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, dokumentSoknadDto.tema)
 			throw e
@@ -85,24 +83,27 @@ class NologinSoknadService(
 	 */
 	fun lagreFiler(
 		oppdatertDokumentSoknadDto: DokumentSoknadDto,
-		noLoginSoknadDto: NologinSoknadDto
+		noLoginSoknadDto: SkjemaDtoV2
 	) {
-		if (oppdatertDokumentSoknadDto.vedleggsListe.filter { !it.erHoveddokument } == null) return
+		if (noLoginSoknadDto.vedleggsListe == null || noLoginSoknadDto.vedleggsListe?.filter{it.opplastingsStatus == OpplastingsStatusDto.LastetOpp}.isNullOrEmpty()) return
 
-		val vedleggsListe = noLoginSoknadDto.nologinVedleggList
+		val vedleggsListe = (noLoginSoknadDto.vedleggsListe ?: emptyList())
 			.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
-			.map { it.copy(opplastingsStatus = OpplastingsStatusDto.LastetOpp) }
-		noLoginSoknadDto.nologinVedleggList
-			//.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
+
+		vedleggsListe
 			.forEach {
-				if (it.fileIdList.isNullOrEmpty()) throw IllegalActionException(
-					"Vedlegg med id=${it.vedleggRef} har ingen filer som skal lagres i fil tabellen",
+				if (it.fyllutId == null) throw IllegalActionException(
+					message = "Vedlegg med id=${it.vedleggsnr} har ikke fyllutId satt",
+					errorCode = ErrorCode.NOT_FOUND
+				)
+				if (it.filIdListe.isNullOrEmpty()) throw IllegalActionException(
+					"Vedlegg med id=${it.fyllutId} har ingen filer som skal lagres i fil tabellen",
 					errorCode = ErrorCode.NOT_FOUND
 				)
 				kopierFilerForVedlegg(
 					soknadDto = oppdatertDokumentSoknadDto,
-					vedleggsRef = it.vedleggRef,
-					it.fileIdList!!)
+					vedleggsRef = it.fyllutId!!,
+					it.filIdListe!!)
 			}
 	}
 

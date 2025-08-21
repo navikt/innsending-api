@@ -16,14 +16,21 @@ var beskrivelse: String = "Dette er opplysninger som er nødvendig for beregning
 var mimetype: Mimetype? = null,
 var document: ByteArray? = null,
 var propertyNavn: String? = null,
-var formioId: String = UUID.randomUUID().toString()
+var formioId: String = UUID.randomUUID().toString(),
+var opplastingsStatus: OpplastingsStatusDto = OpplastingsStatusDto.IkkeValgt,
+var filIdListe: List<String>? = null
+
 ) {
+
+	var opplastingsValgKommentarLedetekst: String? = null
+	var opplastingsValgKommentar: String? = null
 
 	// Hoveddokument uses skjemanr as vedleggsnr
 	fun asHovedDokument(skjemanr: String, withFile: Boolean = true): SkjemaDokumentDtoV2TestBuilder {
 		if (withFile) {
 			document = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
 			mimetype = Mimetype.applicationSlashPdf
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp
 		}
 		formioId = "1"
 		vedleggsnr = skjemanr
@@ -35,12 +42,14 @@ var formioId: String = UUID.randomUUID().toString()
 		if (withFile) {
 			document = Hjelpemetoder.getBytesFromFile("/__files/sanity.json")
 			mimetype = Mimetype.applicationSlashJson
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp
 		}
 		formioId = "2"
 		vedleggsnr = skjemanr
 		return this
 	}
-
+	fun withOpplastingsValgKommentar(kommentar: String?) = apply { this.opplastingsValgKommentar = kommentar}
+	fun withOpplastingsValgKommentarLedetekst(ledetekst: String?) = apply { this.opplastingsValgKommentarLedetekst = ledetekst}
 
 	fun build(): SkjemaDokumentDtoV2 {
 		return SkjemaDokumentDtoV2(
@@ -53,9 +62,10 @@ var formioId: String = UUID.randomUUID().toString()
 			document = document,
 			propertyNavn = propertyNavn,
 			fyllutId = formioId,
-			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
-			opplastingsValgKommentarLedetekst = "Ledetekst for opplastingsvalg",
-			opplastingsValgKommentar = "Kommentar for opplastingsvalg",
+			opplastingsStatus = opplastingsStatus,
+			filIdListe = filIdListe,
+			opplastingsValgKommentarLedetekst = opplastingsValgKommentarLedetekst,
+			opplastingsValgKommentar = opplastingsValgKommentar,
 		)
 	}
 }

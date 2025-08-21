@@ -21,6 +21,7 @@ import no.nav.soknad.innsending.service.fillager.FilStatus
 import no.nav.soknad.innsending.service.fillager.FillagerService
 import no.nav.soknad.innsending.utils.NoLoginApi
 import no.nav.soknad.innsending.utils.TokenGenerator
+import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoV2TestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoV2TestBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -87,32 +88,25 @@ class NoLoginSoknadRestApiTest: ApplicationTest()  {
 		// Gitt
 		val token: String = TokenGenerator(mockOAuth2Server).lagAzureToken()
 		val formioId = UUID.randomUUID().toString()
-		val skjemaDokumentDto = SkjemaDokumentDtoV2 (
+		val fileId = UUID.randomUUID().toString()
+
+		val skjemaDokumentDto = SkjemaDokumentDtoV2TestBuilder(
+			vedleggsnr = "W2",
+			formioId = formioId,
 			tittel = "Skjema for test av innsending",
 			label = "Skjema for test av innsending",
-			vedleggsnr = "W2",
-			pakrevd = true,
 			beskrivelse = "Skjema for test av innsending",
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			mimetype = Mimetype.applicationSlashPdf,
-			document = null,
-			fyllutId = formioId,
-			vedleggsurl = null,
-			propertyNavn = null,
-			opplastingsStatus = OpplastingsStatusDto.LastetOpp
-		)
+			filIdListe = listOf(fileId)
+		).build()
+
 		val skjemaDto = SkjemaDtoV2TestBuilder()
 			.medBrukerId("12345678901")
 			.medInnsendingsId(UUID.randomUUID().toString())
 			.medVedlegg(skjemaDokumentDto)
 			.medMellomlagringDager(1)
 			.build()
-
-		val fileId = UUID.randomUUID().toString()
-		val nologinVedleggDto = NologinVedleggDto(
-			vedleggRef = skjemaDokumentDto.fyllutId!!,
-			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
-			fileIdList = listOf(fileId),
-		)
 
 		every { fillagerService.hentFil(filId= fileId, innsendingId = skjemaDto.innsendingsId!!, namespace = any() ) }	returns Fil(
 			innhold = byteArrayOf(1, 2, 3),
@@ -130,7 +124,6 @@ class NoLoginSoknadRestApiTest: ApplicationTest()  {
 		// Når
 		val innsendtSoknadResponse = api!!.createAndSendInSoknad(
 			dokumentDto = skjemaDto,
-			nologinVedleggDto = listOf(nologinVedleggDto),
 			envQualifier = EnvQualifier.preprodAltAnsatt
 			)
 			.assertSuccess()

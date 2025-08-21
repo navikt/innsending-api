@@ -1105,7 +1105,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/NologinSoknadDto"
+              $ref: "#/components/schemas/SkjemaDtoV2"
         required: true
 
       responses:
@@ -2450,6 +2450,12 @@ components:
           $ref: "#/components/schemas/OpplastingsvalgKommentarLedetekst"
         opplastingsValgKommentar:
           $ref: "#/components/schemas/OpplastingsvalgKommentar"
+        filIdListe:
+          description: Liste av Ider som identifiserer hvilke opplastede filer på dette vedlegget som skal sendes inn
+          type: array
+          items:
+            type: string
+            description: Id til opplastet fil
 
     SkjemaDto:
       type: object
