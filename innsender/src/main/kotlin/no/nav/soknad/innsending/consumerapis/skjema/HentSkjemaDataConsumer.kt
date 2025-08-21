@@ -21,14 +21,14 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 
 	val cache: LoadingCache<String, List<SkjemaOgVedleggsdata>> = Caffeine
 		.newBuilder().refreshAfterWrite(Duration.ofHours(1))
-		.build { hentSkjemaData.hent() }
+		.build { hentSkjemaData.hent() ?: emptyList()}
 
 	// TODO implementere språk avhengig oppslag?
 	fun hentSkjemaEllerVedlegg(id: String, spraak: String = "no"): KodeverkSkjema {
 
 		val sanityList = try {
 			// Hent fra cache, Cache Loader funksjonen (hentSkjemaData.hent()) blir kalt hvis cache er tom for "sanityList"
-			cache.get("sanityList") { hentSkjemaData.hent() } ?: emptyList()
+			cache.get("sanityList") { hentSkjemaData.hent() ?: emptyList() }
 		} catch (e: Exception) {
 			logger.warn("Sanity cache er tom, forsøker å lese fra disk")
 			initSkjemaDataFromDisk()
