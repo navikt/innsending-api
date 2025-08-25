@@ -107,7 +107,7 @@ class FyllutRestApi(
 
 		combinedLogger.log("$innsendingsId: Skal oppdatere søknad fra FyllUt", brukerId)
 
-		logger.debug("Hoveddokument er lastet opp ${skjemaDto.hoveddokument.document != null}")
+		logger.info("Hoveddokument er lastet opp ${skjemaDto.hoveddokument.document != null}")
 
 		val existingSoknad = soknadService.hentSoknad(innsendingsId)
 		validerSoknadsTilgang(existingSoknad)
@@ -119,7 +119,7 @@ class FyllutRestApi(
 			applikasjon = applikasjon
 		)
 
-		logger.debug("Skal oppdatere oppdatert søknad med hoveddokument er lastet opp ${dokumentSoknadDto.hoveddokument?.document != null}")
+		logger.info("Skal oppdatere oppdatert søknad med hoveddokument er lastet opp ${dokumentSoknadDto.hoveddokument?.document != null}")
 		val updatedSoknad = soknadService.updateSoknad(innsendingsId, dokumentSoknadDto)
 
 		combinedLogger.log("$innsendingsId: Soknad fra FyllUt oppdatert", brukerId)
@@ -137,7 +137,7 @@ class FyllutRestApi(
 		val applikasjon = subjectHandler.getClientId()
 
 		combinedLogger.log("$innsendingsId: Skal fullføre søknad fra FyllUt", brukerId)
-		logger.debug("Hoveddokument er lastet opp ${skjemaDto.hoveddokument.document != null}")
+		logger.info("Hoveddokument er lastet opp ${skjemaDto.hoveddokument.document != null}")
 
 		val existingSoknad = soknadService.hentSoknad(innsendingsId)
 		validerSoknadsTilgang(existingSoknad)
@@ -149,7 +149,7 @@ class FyllutRestApi(
 			applikasjon = applikasjon
 		)
 
-		logger.debug("Skal oppdatere utfylt søknad med hoveddokument er lastet opp ${dokumentSoknadDto.hoveddokument?.document != null}")
+		logger.info("Skal oppdatere utfylt søknad med hoveddokument er lastet opp ${dokumentSoknadDto.hoveddokument?.document != null}")
 		soknadService.updateUtfyltSoknad(innsendingsId, dokumentSoknadDto)
 
 		combinedLogger.log("$innsendingsId: Utfylt søknad fra Fyllut", brukerId)
