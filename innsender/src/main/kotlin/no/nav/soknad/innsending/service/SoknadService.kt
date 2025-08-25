@@ -364,7 +364,7 @@ class SoknadService(
 		dokumentSoknadDto: DokumentSoknadDto
 	) {
 		oppdatertDokumentSoknadDto.vedleggsListe
-			.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp && it.erHoveddokument }
+			.filter { it.erHoveddokument  }
 			.forEach {
 				filService.lagreFil(
 					savedDokumentSoknadDto = oppdatertDokumentSoknadDto,
