@@ -363,8 +363,9 @@ class SoknadService(
 		oppdatertDokumentSoknadDto: DokumentSoknadDto,
 		dokumentSoknadDto: DokumentSoknadDto
 	) {
+		logger.info("saveHoveddokumentfiler: Opplastede hoveddokument vedlegg = ${oppdatertDokumentSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp && it.erHoveddokument}.size}" )
 		oppdatertDokumentSoknadDto.vedleggsListe
-			.filter { it.erHoveddokument  }
+			.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp && it.erHoveddokument  }
 			.forEach {
 				filService.lagreFil(
 					savedDokumentSoknadDto = oppdatertDokumentSoknadDto,
