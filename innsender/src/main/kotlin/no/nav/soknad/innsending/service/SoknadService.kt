@@ -21,6 +21,7 @@ import no.nav.soknad.innsending.util.Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
 import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.mapping.*
+import no.nav.soknad.innsending.util.models.hovedDokument
 import no.nav.soknad.innsending.util.models.hovedDokumentVariant
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.innsending.util.validators.validerSoknadVedOppdatering
@@ -365,12 +366,12 @@ class SoknadService(
 	) {
 		logger.info("saveHoveddokumentfiler: Opplastede hoveddokument vedlegg = ${oppdatertDokumentSoknadDto.vedleggsListe.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp && it.erHoveddokument}.size}" )
 		oppdatertDokumentSoknadDto.vedleggsListe
-			.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp && it.erHoveddokument  }
+			.filter { it.erHoveddokument  }
 			.forEach {
-				filService.lagreFil(
+				filService.lagreHoveddokumentFil(
 					savedDokumentSoknadDto = oppdatertDokumentSoknadDto,
 					lagretVedleggDto = it,
-					innsendtVedleggDtos = dokumentSoknadDto.vedleggsListe
+					innsendtVedleggDto = if (it.erVariant) {dokumentSoknadDto.vedleggsListe.hovedDokumentVariant} else {dokumentSoknadDto.vedleggsListe.hovedDokument}
 				)
 			}
 	}

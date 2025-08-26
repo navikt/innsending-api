@@ -48,7 +48,7 @@ class FilService(
 			throw BackendErrorException("Feil ved lagring av dokument ${lagretVedleggDto.tittel}. Fant ikke matchende lagret vedlegg ${lagretVedleggDto.tittel} med innsendt vedlegg, er variant = ${lagretVedleggDto.erVariant}")
 		}
 
-		// Finn eksisterende filer
+		// ******************Finn eksisterende filer*******************************
 		val eksisterendeVedleggsFiler =
 			hentFiler(savedDokumentSoknadDto, savedDokumentSoknadDto.innsendingsId!!, lagretVedleggDto.id!!)
 		val eksisterendeFil = eksisterendeVedleggsFiler.find { it.vedleggsid == lagretVedleggDto.id }
@@ -57,6 +57,20 @@ class FilService(
 		val filDto = lagFilDto(eksisterendeFil, matchInnsendtVedleggDto, lagretVedleggDto)
 		lagreFil(savedDokumentSoknadDto, filDto)
 
+	}
+
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
+	fun lagreHoveddokumentFil(
+		savedDokumentSoknadDto: DokumentSoknadDto,
+		lagretVedleggDto: VedleggDto,
+		innsendtVedleggDto: VedleggDto?
+	) {
+		if (innsendtVedleggDto == null || innsendtVedleggDto.document?.isNotEmpty() == false ) { return }
+
+		val eksisterendeFiler = hentFiler(savedDokumentSoknadDto, savedDokumentSoknadDto.innsendingsId!!, lagretVedleggDto.id!!)
+		val filDto = lagFilDto(if (eksisterendeFiler.isEmpty()) null else eksisterendeFiler.first() , innsendtVedleggDto, lagretVedleggDto)
+
+		lagreFil(savedDokumentSoknadDto, filDto)
 	}
 
 	private fun lagFilDto(
@@ -244,10 +258,11 @@ class FilService(
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
 			throw ResourceNotFoundException("Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
+		val antallFilerPaVedlegg = repo.countFiles(soknadDto.innsendingsId!!, vedleggsId)
 		repo.slettFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
 		logger.info("${soknadDto.innsendingsId}: Slettet fil $filId på vedlegg $vedleggsId")
 
-		if (repo.countFiles(soknadDto.innsendingsId!!, vedleggsId) == 0) {
+		if (antallFilerPaVedlegg <= 1) {
 			val vedleggDto = soknadDto.vedleggsListe.first { it.id == vedleggsId }
 			val nyOpplastingsStatus =
 				if (vedleggDto.innsendtdato != null) OpplastingsStatus.INNSENDT else OpplastingsStatus.IKKE_VALGT

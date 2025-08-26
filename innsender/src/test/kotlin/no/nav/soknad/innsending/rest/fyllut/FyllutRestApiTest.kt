@@ -97,12 +97,24 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		val t7Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build()
 		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
+		val hoveddokument = SkjemaDokumentDtoTestBuilder( tittel = "Application for one-time grant at birth").asHovedDokument("NAV 10-07.41", withFile = false).build()
+		val hoveddokumentVariant = SkjemaDokumentDtoTestBuilder( tittel = "Application for one-time grant at birth").asHovedDokumentVariant("NAV 10-07.41", withFile = true).build()
 
-		val skjemaDto = SkjemaDtoTestBuilder(vedleggsListe = listOf(t7Vedlegg, n6Vedlegg)).build()
+		val skjemaDto = SkjemaDtoTestBuilder( skjemanr="NAV 10-07.41", tittel = "Application for one-time grant at birth", vedleggsListe = listOf(t7Vedlegg, n6Vedlegg))
+			.medHoveddokument(hoveddokument)
+			.medHoveddokumentVariant(hoveddokumentVariant)
+			.build()
 
 		// Når
 		val opprettetSoknadResponse = api!!.createSoknad(skjemaDto)
 			.assertSuccess()
+
+		val hoveddokumentMedFil = SkjemaDokumentDtoTestBuilder(tittel = "Application for one-time grant at birth").asHovedDokument("NAV 10-07.41", withFile = true).build()
+		val utFyltSkjemaDto = SkjemaDtoTestBuilder( skjemanr="NAV 10-07.41", tittel = "Application for one-time grant at birth", vedleggsListe = listOf(t7Vedlegg, n6Vedlegg))
+			.medHoveddokument(hoveddokumentMedFil)
+			.medHoveddokumentVariant(hoveddokumentVariant)
+			.build()
+		api?.utfyltSoknad(opprettetSoknadResponse.body.innsendingsId!!, utFyltSkjemaDto)
 
 		// Så
 		testHentSoknadOgSendInn(opprettetSoknadResponse.body, token)

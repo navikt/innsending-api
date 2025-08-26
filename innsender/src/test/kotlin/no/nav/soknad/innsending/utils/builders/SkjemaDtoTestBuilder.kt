@@ -37,6 +37,8 @@ data class SkjemaDtoTestBuilder(
 	fun medSkjemaPath(skjemaPath: String) = apply { this.skjemaPath = skjemaPath }
 	fun medSkalSlettesDato(skalslettesdato: OffsetDateTime) = apply { this.skalslettesdato = skalslettesdato }
 	fun medMellomlagringDager(mellomlagringDager: Int?) = apply { this.mellomlagringDager = mellomlagringDager }
+	fun medHoveddokument(hoveddokument: SkjemaDokumentDto) = apply { this.hoveddokument = hoveddokument }
+	fun medHoveddokumentVariant(hoveddokumentVariant: SkjemaDokumentDto) = apply { this.hoveddokumentVariant = hoveddokumentVariant }
 
 	fun build() = SkjemaDto(
 		brukerId = brukerId,

@@ -22,7 +22,7 @@ fun mapTilVedleggDb(
 	VedleggDbData(
 		id = vedleggsId ?: vedleggDto.id,
 		soknadsid = soknadsId,
-		status = mapTilDbOpplastingsStatus(vedleggDto.opplastingsStatus),
+		status = opplastingsStatus,
 		erhoveddokument = vedleggDto.erHoveddokument,
 		ervariant = vedleggDto.erVariant,
 		erpdfa = vedleggDto.erPdfa,
