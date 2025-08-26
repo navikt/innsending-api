@@ -149,7 +149,7 @@ class FyllutRestApi(
 			applikasjon = applikasjon
 		)
 
-		logger.info("fyllUtUtfyltSoknad: Skal oppdatere søknad med hoveddokument er lastet opp ${dokumentSoknadDto.hoveddokument?.document != null}")
+		logger.info("fyllUtUtfyltSoknad: Skal oppdatere søknad med hoveddokument er lastet opp = ${dokumentSoknadDto.hoveddokument?.document != null}, status = ${dokumentSoknadDto.hoveddokument?.opplastingsStatus}")
 		soknadService.updateUtfyltSoknad(innsendingsId, dokumentSoknadDto)
 
 		combinedLogger.log("$innsendingsId: Utfylt søknad fra Fyllut", brukerId)

@@ -458,7 +458,7 @@ class VedleggService(
 
 		if (eksisterendeVedleggsListe.isNotEmpty()) {
 			oppdaterEksisterendeVedlegg(eksisterendeVedleggsListe, nyttVedlegg, soknadsId)
-			logger.info("Oppdatert eksisterende vedlegg ${eksisterendeVedleggsListe.map { it.vedleggsnr }}, opplastingsStatus: ${eksisterendeVedleggsListe.map { it.opplastingsStatus }}")
+			logger.info("Oppdatert eksisterende vedlegg ${eksisterendeVedleggsListe.map { it.vedleggsnr }}, opplastingsStatus: ${eksisterendeVedleggsListe.map { it.opplastingsStatus }}, variant: ${eksisterendeVedleggsListe.map { it.erVariant }}")
 		} else {
 			// Lag nytt vedlegg
 			repo.lagreVedlegg(mapTilVedleggDb(nyttVedlegg, soknadsId))
