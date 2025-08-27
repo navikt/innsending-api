@@ -48,7 +48,7 @@ class FilService(
 			throw BackendErrorException("Feil ved lagring av dokument ${lagretVedleggDto.tittel}. Fant ikke matchende lagret vedlegg ${lagretVedleggDto.tittel} med innsendt vedlegg, er variant = ${lagretVedleggDto.erVariant}")
 		}
 
-		// ******************Finn eksisterende filer*******************************
+		// Finn eksisterende filer
 		val eksisterendeVedleggsFiler =
 			hentFiler(savedDokumentSoknadDto, savedDokumentSoknadDto.innsendingsId!!, lagretVedleggDto.id!!)
 		val eksisterendeFil = eksisterendeVedleggsFiler.find { it.vedleggsid == lagretVedleggDto.id }
@@ -258,11 +258,10 @@ class FilService(
 		if (soknadDto.vedleggsListe.none { it.id == vedleggsId })
 			throw ResourceNotFoundException("Vedlegg $vedleggsId til søknad ${soknadDto.innsendingsId} eksisterer ikke")
 
-		val antallFilerPaVedlegg = repo.countFiles(soknadDto.innsendingsId!!, vedleggsId)
 		repo.slettFilDb(soknadDto.innsendingsId!!, vedleggsId, filId)
 		logger.info("${soknadDto.innsendingsId}: Slettet fil $filId på vedlegg $vedleggsId")
 
-		if (antallFilerPaVedlegg <= 1) {
+		if (repo.countFiles(soknadDto.innsendingsId!!, vedleggsId) == 0) {
 			val vedleggDto = soknadDto.vedleggsListe.first { it.id == vedleggsId }
 			val nyOpplastingsStatus =
 				if (vedleggDto.innsendtdato != null) OpplastingsStatus.INNSENDT else OpplastingsStatus.IKKE_VALGT
