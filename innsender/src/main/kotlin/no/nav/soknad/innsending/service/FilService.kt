@@ -65,7 +65,7 @@ class FilService(
 		lagretVedleggDto: VedleggDto,
 		innsendtVedleggDto: VedleggDto?
 	) {
-		if (innsendtVedleggDto == null || innsendtVedleggDto.document?.isNotEmpty() == false ) { return }
+		if (innsendtVedleggDto == null || innsendtVedleggDto.document?.isEmpty() == true ) { return }
 
 		val eksisterendeFiler = hentFiler(savedDokumentSoknadDto, savedDokumentSoknadDto.innsendingsId!!, lagretVedleggDto.id!!)
 		val filDto = lagFilDto(if (eksisterendeFiler.isEmpty()) null else eksisterendeFiler.first() , innsendtVedleggDto, lagretVedleggDto)
@@ -120,7 +120,7 @@ class FilService(
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			throw e
 		}
-		logger.info("${soknadDto.innsendingsId!!}: Lagret fil med størrelse ${filDto.data!!.size} på vedlegg ${filDto.vedleggsid} på ${System.currentTimeMillis()-start} ms")
+		logger.info("${soknadDto.innsendingsId!!}: Lagret fil med størrelse ${filDto.data?.size ?: 0} på vedlegg ${filDto.vedleggsid} på ${System.currentTimeMillis()-start} ms")
 
 		/* Skal bare validere størrelse på vedlegg som søker har lastet opp */
 		if (soknadDto.vedleggsListe.any { it.id == filDto.vedleggsid && (soknadDto.isLospost() || !it.erHoveddokument) }) {
