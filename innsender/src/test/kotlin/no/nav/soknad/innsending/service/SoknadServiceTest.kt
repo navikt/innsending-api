@@ -459,9 +459,12 @@ class SoknadServiceTest : ApplicationTest() {
 
 		// Then
 		assertEquals(
-			4,
-			updatedSoknad.vedleggsListe.size,
-			"Skal ha to vedlegg i den oppdaterte søknaden + hoveddokument og variant"
+			2,
+			updatedSoknad.vedleggsListe.filter{it.erHoveddokument}.size, "Skal ha 2 hoveddokument vedlegg"
+		)
+		assertEquals(
+			2,
+			updatedSoknad.vedleggsListe.filter{!it.erHoveddokument}.size, "Skal ha 2 vedlegg"
 		)
 
 		assertEquals(2, files.size, "Skal ha 2 filer lagret i databasen")
