@@ -1,0 +1,29 @@
+components:
+  schemas:
+    ConfigTypeDto:
+      type: string
+      description: Type of configuration value
+      enum:
+        - SWITCH
+        - INTEGER
+      example: INTEGER
+    ConfigValueDto:
+      type: object
+      description: Config key and value
+      required:
+        - key
+        - type
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+        label:
+          type: string
+        description:
+          type: string
+        type:
+          $ref: "#/components/schemas/ConfigTypeDto"
+      example:
+        key: some_config_key
+        value: off

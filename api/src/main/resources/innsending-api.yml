@@ -26,6 +26,8 @@ tags:
     description: API for søknader fra brukere som ikke er logget inn.
   - name: nologin-soknad
     description: API for soknad fra søker som ikke er logget inn. Endepunkt for å opprette og sende inn søknad gitt utfylt skjema og allerede opplastede filer på vedlegg.
+  - name: config
+    description: API for konfigurasjon av applikasjonen.
   - name: soknadsveiviser
     description: API for soknadsveiviser applikasjonen (deprecated).
   - name: ekstern
@@ -1118,6 +1120,11 @@ paths:
       tags:
         - nologin-soknad
 
+  /v1/config:
+    $ref: "./config/all.yaml"
+
+  /v1/config/{key}:
+    $ref: "./config/config.yaml"
 
   /ekstern/v1/ettersending:
         post:

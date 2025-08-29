@@ -8,12 +8,10 @@
 	"bucket-name-file-storage": "innsending-api-file-storage-loadtests",
 	"ingresses": [],
 	"accessPolicyInbound": {
-		"current-namespace": [
-			"innsending-system-tests",
-			"soknadsarkiverer-loadtests"
-		],
-		"other-namespace": [],
-		"other-cluster": []
+		"applications": [
+			{	"name": "innsending-system-tests"	},
+			{ "name": "soknadsarkiverer-loadtests" }
+		]
 	},
 	"accessPolicyOutbound": {
 		"current-namespace": [

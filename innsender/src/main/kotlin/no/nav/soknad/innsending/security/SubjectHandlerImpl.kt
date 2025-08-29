@@ -57,6 +57,13 @@ class SubjectHandlerImpl(private val ctxHolder: TokenValidationContextHolder) : 
 			?: claims.getStringClaim(AZP)
 	}
 
+	override fun getNavIdent(): String {
+		tokenValidationContext.getClaims(AZURE).let { claims ->
+			return claims.getStringClaim("NAVident")
+				?: throw RuntimeException("Could not find NAVident claim in token")
+		}
+	}
+
 	companion object {
 		private const val CLAIM_PID = "pid"
 		private const val CLIENT_ID = "client_id"

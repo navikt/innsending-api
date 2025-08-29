@@ -59,28 +59,36 @@ spec:
     application:
       enabled: true
       tenant: {{AZURE_TENANT}}
+      claims:
+        extra:
+          - NAVident
 
   accessPolicy:
     inbound:
       rules:
-      {{#each accessPolicyInbound.current-namespace}}
-        - application: "{{this}}"
-      {{/each}}
-      {{#each accessPolicyInbound.other-namespace}}
-        - application: "{{this.application}}"
+      {{#each accessPolicyInbound.applications}}
+        - application: "{{this.name}}"
+          {{#if this.namespace}}
           namespace: "{{this.namespace}}"
-          {{#if this.roles}}
+          {{/if}}
+          {{#if this.cluster}}
+          cluster: "{{this.cluster}}"
+          {{/if}}
+          {{#if (or this.roles this.scopes)}}
           permissions:
+            {{#if this.roles}}
             roles:
             {{#each this.roles as |role|}}
               - "{{role}}"
             {{/each}}
+            {{/if}}
+            {{#if this.scopes}}
+            scopes:
+            {{#each this.scopes as |scope|}}
+              - "{{scope}}"
+            {{/each}}
+            {{/if}}
           {{/if}}
-      {{/each}}
-      {{#each accessPolicyInbound.other-cluster}}
-        - application: "{{this.application}}"
-          namespace: "{{this.namespace}}"
-          cluster: "{{this.cluster}}"
       {{/each}}
 
     outbound:

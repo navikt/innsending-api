@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.util.Constants.AZURE
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -22,14 +23,14 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 	val baseUrl = "http://localhost:${serverPort}"
 	val objectMapper: ObjectMapper = jacksonObjectMapper().findAndRegisterModules()
 
-	private fun <T> createHttpEntity(body: T, map: Map<String, String>? = mapOf()): HttpEntity<T> {
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+	private fun <T> createHttpEntity(body: T, map: Map<String, String>? = mapOf(), authToken: String? = null): HttpEntity<T> {
+		val token: String = authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken()
 		return HttpEntity(body, Hjelpemetoder.createHeaders(token, map))
 	}
 
-	private fun <T> createHttpEntity(body: T, map: Map<String, String>? = mapOf(), issuer: String): HttpEntity<T> {
-		if (issuer != AZURE)	return createHttpEntity(body, map)
-		val token: String = TokenGenerator(mockOAuth2Server).lagAzureToken()
+	private fun <T> createHttpEntity(body: T, map: Map<String, String>? = mapOf(), issuer: String, authToken: String? = null): HttpEntity<T> {
+		if (issuer != AZURE) return createHttpEntity(body, map)
+		val token: String = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureToken()
 		return HttpEntity(body, Hjelpemetoder.createHeaders(token, map))
 	}
 
@@ -375,6 +376,65 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 			requestEntity,
 			responseType
 		)
+	}
+
+    fun getConfig(config: ConfigDefinition, authToken: String? = null): InnsendingApiResponse<ConfigValueDto> {
+			val token = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureOBOToken(scopes = "config-admin-access", navIdent = "Z123456")
+				val response = restTemplate.exchange(
+						"${baseUrl}/v1/config/${config.key}",
+						HttpMethod.GET,
+						createHttpEntity(null, null, AZURE, token),
+						String::class.java
+				)
+				val body = readBody(response, ConfigValueDto::class.java)
+				return InnsendingApiResponse(response.statusCode, body, response.headers)
+		}
+
+	fun setConfig(config: ConfigDefinition, string: String?, authToken: String? = null): InnsendingApiResponse<ConfigValueDto> {
+		val token = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureOBOToken(scopes = "config-admin-access", navIdent = "Z123456")
+		val response = restTemplate.exchange(
+				"${baseUrl}/v1/config/${config.key}",
+				HttpMethod.PUT,
+				createHttpEntity(SetConfigRequest(string), null, AZURE, token),
+				String::class.java
+		)
+		val body = readBody(response, ConfigValueDto::class.java)
+		return InnsendingApiResponse(response.statusCode, body, response.headers)
+	}
+
+	fun uploadNologinFile(
+		innsendingId: String? = null,
+		vedleggId: String,
+		filePath: String = "/litenPdf.pdf",
+		authToken: String? = null,
+	): InnsendingApiResponse<LastOppFilResponse> {
+		val token: String = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("nologin-access"))
+		val headers = Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA)
+
+		val partHeaders = HttpHeaders()
+		partHeaders.contentType = MediaType.APPLICATION_PDF
+		partHeaders.setContentDispositionFormData("filinnhold", filePath.replace("/", ""))
+		val fileByteArray: ByteArray =  Hjelpemetoder.getBytesFromFile(filePath)
+		val filePart: HttpEntity<ByteArray> = HttpEntity(fileByteArray, partHeaders)
+
+		val requestBody: MultiValueMap<String, Any> = LinkedMultiValueMap()
+		requestBody.add("filinnhold", filePart)
+		requestBody.add("vedleggId", vedleggId)
+		innsendingId?.let {
+			requestBody.add("innsendingId", it)
+		}
+
+		val httpEntity = HttpEntity(requestBody, headers)
+
+		val response = restTemplate.exchange(
+			"${baseUrl}/v1/nologin-fillager",
+			HttpMethod.POST,
+			httpEntity,
+			String::class.java
+		)
+
+		val body = readBody(response, LastOppFilResponse::class.java)
+		return InnsendingApiResponse(response.statusCode, body)
 	}
 
 	data class InnsendingApiResponse<T>(

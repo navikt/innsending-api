@@ -47,6 +47,19 @@ class RestExceptionHandler {
 		)
 	}
 
+	// 503
+	@ExceptionHandler
+	fun serviceUnavailableException(exception: ServiceUnavailableException): ResponseEntity<RestErrorResponseDto> {
+		logger.error(exception.message, exception)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = exception.message,
+				timestamp = OffsetDateTime.now(),
+				errorCode = exception.errorCode.code
+			), HttpStatus.SERVICE_UNAVAILABLE
+		)
+	}
+
 	// 400
 	@ExceptionHandler
 	fun illegalActionException(exception: IllegalActionException): ResponseEntity<RestErrorResponseDto> {
@@ -60,11 +73,24 @@ class RestExceptionHandler {
 		)
 	}
 
+	// 400
+	@ExceptionHandler
+	fun illegalArgumentException(exception: IllegalArgumentException): ResponseEntity<RestErrorResponseDto> {
+		logger.warn(exception.message, exception)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = exception.message,
+				timestamp = OffsetDateTime.now(),
+				errorCode = ErrorCode.ILLEGAL_ARGUMENT.code
+			), HttpStatus.BAD_REQUEST
+		)
+	}
+
 	// 401
-	@ExceptionHandler(value = [JwtTokenMissingException::class, JwtTokenUnauthorizedException::class])
-	fun unauthorizedExceptionHandler(
+	@ExceptionHandler
+	fun unauthenticatedHandler(
 		request: HttpServletRequest,
-		exception: Exception
+		exception: JwtTokenMissingException
 	): ResponseEntity<RestErrorResponseDto?>? {
 		logger.warn("Autentisering feilet ved kall til " + request.requestURI + ": " + exception.message, exception)
 
@@ -74,6 +100,23 @@ class RestExceptionHandler {
 				timestamp = OffsetDateTime.now(),
 				errorCode = "errorCode.unauthorized"
 			), HttpStatus.UNAUTHORIZED
+		)
+	}
+
+	// 403
+	@ExceptionHandler
+	fun unauthorizedExceptionHandler(
+		request: HttpServletRequest,
+		exception: JwtTokenUnauthorizedException
+	): ResponseEntity<RestErrorResponseDto?>? {
+		logger.warn("Autorisering feilet ved kall til " + request.requestURI + ": " + exception.message, exception)
+
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = "Autorisering feilet",
+				timestamp = OffsetDateTime.now(),
+				errorCode = "errorCode.forbidden"
+			), HttpStatus.FORBIDDEN
 		)
 	}
 
