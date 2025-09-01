@@ -9,6 +9,7 @@
 	"ingresses": [
 		"https://innsending-api-gcp.intern.dev.nav.no"
 	],
+	"adGroups": ["48aec4cb-937b-4462-963e-4deb81db533f"],
 	"accessPolicyInbound": {
 		"applications": [
 			{	"name": "send-inn-frontend"	},

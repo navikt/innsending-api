@@ -58,8 +58,11 @@ spec:
   azure:
     application:
       enabled: true
-      tenant: {{AZURE_TENANT}}
       claims:
+        groups:
+        {{#each adGroups as |id|}}
+           - id: {{id}}
+        {{/each}}
         extra:
           - NAVident
 
