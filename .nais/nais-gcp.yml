@@ -74,20 +74,19 @@ spec:
           {{#if this.cluster}}
           cluster: "{{this.cluster}}"
           {{/if}}
-          {{#if (or this.roles this.scopes)}}
+          {{#if (this.roles)}}
           permissions:
-            {{#if this.roles}}
             roles:
             {{#each this.roles as |role|}}
               - "{{role}}"
             {{/each}}
-            {{/if}}
-            {{#if this.scopes}}
+          {{/if}}
+          {{#if (this.scopes)}}
+          permissions:
             scopes:
             {{#each this.scopes as |scope|}}
               - "{{scope}}"
             {{/each}}
-            {{/if}}
           {{/if}}
       {{/each}}
 
