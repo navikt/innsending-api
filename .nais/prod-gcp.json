@@ -14,7 +14,7 @@
 	"adGroups": ["6d98053f-362d-447e-a272-8132f278f42b", "921c9d19-7b11-442b-ae11-ea383790227f"],
 	"accessPolicyInbound": {
 		"applications": [
-			{	"name": "send-inn-frontend"	},
+			{ "name": "send-inn-frontend"	},
 			{ "name": "soknadsarkiverer" },
 			{
 				"name": "innsending-admin",

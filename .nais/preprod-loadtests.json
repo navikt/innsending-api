@@ -10,7 +10,7 @@
 	"adGroups": ["48aec4cb-937b-4462-963e-4deb81db533f"],
 	"accessPolicyInbound": {
 		"applications": [
-			{	"name": "innsending-system-tests"	},
+			{ "name": "innsending-system-tests"	},
 			{ "name": "soknadsarkiverer-loadtests" }
 		]
 	},

@@ -12,7 +12,7 @@
 	"adGroups": ["48aec4cb-937b-4462-963e-4deb81db533f"],
 	"accessPolicyInbound": {
 		"applications": [
-			{	"name": "send-inn-frontend"	},
+			{ "name": "send-inn-frontend"	},
 			{ "name": "send-inn-frontend-alt" },
 			{ "name": "send-inn-frontend-delingslenke" },
 			{ "name": "soknadsarkiverer" },
