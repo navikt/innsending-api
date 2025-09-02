@@ -437,6 +437,19 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		return InnsendingApiResponse(response.statusCode, body)
 	}
 
+	fun sendInnNologinSoknad(skjemaDto: SkjemaDtoV2): InnsendingApiResponse<KvitteringsDto> {
+		val token = TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("nologin-access"))
+		val response = restTemplate.exchange(
+			"${baseUrl}/v1/nologin-soknad",
+			HttpMethod.POST,
+			createHttpEntity(skjemaDto, authToken = token),
+			String::class.java
+		)
+
+		val body = readBody(response, KvitteringsDto::class.java)
+		return InnsendingApiResponse(response.statusCode, body, response.headers)
+	}
+
 	data class InnsendingApiResponse<T>(
 		val statusCode: HttpStatusCode,
 		private val response: Pair<T?, RestErrorResponseDto?>,

@@ -21,8 +21,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @ProtectedWithClaims(
 	issuer = Constants.AZURE,
-	claimMap = ["roles=unauthenticated-file-storage-access"],
-	excludedClusters = [Cluster.DEV_GCP]
+	claimMap = ["roles=nologin-access"],
 )
 class NologinSoknadRestApi(
 	private var subjectHandler: SubjectHandlerInterface,

@@ -71,15 +71,3 @@ class SwitchValidator(private val allowedValues: Set<String>) : ConfigValidator 
 fun ConfigDefinition.validate(value: String?): Boolean {
 	return this.validators.all { it.isValid(value) }
 }
-
-fun ConfigValueDto?.verifyValue(
-	value: String?,
-	exceptionType: (() -> Throwable)? = null
-) {
-	if (this == null) {
-		throw exceptionType?.invoke() ?: IllegalStateException("Config not found")
-	}
-	if (this.value != value) {
-		throw exceptionType?.invoke() ?: IllegalStateException("[${this.key}] Config value does not match expected value")
-	}
-}

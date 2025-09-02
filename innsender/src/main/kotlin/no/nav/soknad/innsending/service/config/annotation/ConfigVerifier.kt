@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.service.config.annotation
 
 import no.nav.soknad.innsending.service.config.ConfigService
-import no.nav.soknad.innsending.service.config.verifyValue
+import no.nav.soknad.innsending.service.config.utils.dto.verifyValue
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Before
 import org.springframework.core.annotation.Order

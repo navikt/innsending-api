@@ -18,18 +18,19 @@ class ConfigService(
 		return configRepository.findAllByOrderByKey().map { it.toDto() }
 	}
 
-	fun getConfig(config: ConfigDefinition): ConfigValueDto? {
+	fun getConfig(config: ConfigDefinition): ConfigValueDto {
 		return configRepository.findByKey(config.key)?.toDto()
+			?: throw ResourceNotFoundException("Config with key ${config.key} not found")
 	}
 
 	fun setConfig(config: ConfigDefinition, value: String?, userId: String): ConfigValueDto {
 		val existing = configRepository.findByKey(config.key)
-			?: throw ResourceNotFoundException("Config with key $config not found")
+			?: throw ResourceNotFoundException("Config with key ${config.key} not found")
 		val valid = config.validate(value)
 		if (!valid) {
-			throw IllegalArgumentException("Invalid value for config $config: $value")
+			throw IllegalArgumentException("Invalid value for config ${config.key}: $value")
 		}
-		logger.info("Updating config with key $config (user $userId), new value: $value")
+		logger.info("Updating config with key ${config.key} (user $userId), new value: $value")
 		val updated = existing.copy(
 			value = value,
 			modifiedBy = userId,

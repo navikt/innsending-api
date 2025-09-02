@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 @Table(name = "config")
 data class ConfigDbData(
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY) @Column(name = "id")
-	val id: Long?,
+	val id: Long? = null,
 
 	@Column(name = "key", columnDefinition = "varchar")
 	val key: String,
@@ -19,8 +19,8 @@ data class ConfigDbData(
 	val createdAt: LocalDateTime,
 
 	@Column(name = "modified_at", columnDefinition = "TIMESTAMP WITH TIME ZONE", nullable = true)
-	val modifiedAt: LocalDateTime?,
+	val modifiedAt: LocalDateTime? = null,
 
 	@Column(name = "modified_by", columnDefinition = "varchar", nullable = true)
-	val modifiedBy: String?,
+	val modifiedBy: String? = null,
 )

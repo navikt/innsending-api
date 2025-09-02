@@ -12,7 +12,7 @@ import java.time.OffsetDateTime
 class FjernGamleSoknader(
 	private val soknadService: SoknadService,
 	private val notificationService: NotificationService,
-	private val leaderSelectionUtility: LeaderSelectionUtility
+	private val leaderSelectionUtility: LeaderSelection
 ) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
