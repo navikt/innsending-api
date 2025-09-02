@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest
 import no.nav.security.token.support.core.exceptions.JwtTokenMissingException
 import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
 import no.nav.soknad.innsending.model.RestErrorResponseDto
+import no.nav.soknad.innsending.service.config.annotation.ConfigVerificationException
 import org.apache.catalina.connector.ClientAbortException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -44,19 +45,6 @@ class RestExceptionHandler {
 				timestamp = OffsetDateTime.now(),
 				errorCode = exception.errorCode.code
 			), HttpStatus.INTERNAL_SERVER_ERROR
-		)
-	}
-
-	// 503
-	@ExceptionHandler
-	fun serviceUnavailableException(exception: ServiceUnavailableException): ResponseEntity<RestErrorResponseDto> {
-		logger.error(exception.message, exception)
-		return ResponseEntity(
-			RestErrorResponseDto(
-				message = exception.message,
-				timestamp = OffsetDateTime.now(),
-				errorCode = exception.errorCode.code
-			), HttpStatus.SERVICE_UNAVAILABLE
 		)
 	}
 
@@ -117,6 +105,22 @@ class RestExceptionHandler {
 				timestamp = OffsetDateTime.now(),
 				errorCode = "errorCode.forbidden"
 			), HttpStatus.FORBIDDEN
+		)
+	}
+
+	@ExceptionHandler
+	fun handleConfigVerificationException(
+		request: HttpServletRequest,
+		exception: ConfigVerificationException,
+	): ResponseEntity<RestErrorResponseDto?>? {
+		logger.warn("Kall til ${request.requestURI} avvist (${exception.configuration.key}): ${exception.message}", exception)
+
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = exception.message,
+				timestamp = OffsetDateTime.now(),
+				errorCode = exception.errorCode.code
+			), exception.httpStatus
 		)
 	}
 
