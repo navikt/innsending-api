@@ -12,6 +12,7 @@ enum class InnsenderOperation(name: String) {
 	SLETT_FILER_BUCKET("BucketSlettFiler"),
 	LAST_NED("LastNedFil"),
 	SEND_INN("SendInn"),
+	SEND_INN_NOLOGIN("SendInnNologin"),
 	ENDRE("Endre"),
 	VIRUS_SCAN("VirusScan"),
 }

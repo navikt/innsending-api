@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.rest.fyllut
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
-import no.nav.security.token.support.core.utils.Cluster
 import no.nav.soknad.innsending.api.NologinSoknadApi
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.KvitteringsDto
@@ -11,6 +10,8 @@ import no.nav.soknad.innsending.service.NologinSoknadService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.service.config.annotation.VerifyConfigValue
+import no.nav.soknad.innsending.supervision.InnsenderOperation
+import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import org.slf4j.LoggerFactory
@@ -39,6 +40,7 @@ class NologinSoknadRestApi(
 		httpStatus = HttpStatus.SERVICE_UNAVAILABLE,
 		message = "NOLOGIN is not available"
 	)
+	@Timed(InnsenderOperation.SEND_INN_NOLOGIN)
 	override fun opprettNologinSoknad(nologinSoknadDto: SkjemaDtoV2, envQualifier: EnvQualifier?): ResponseEntity<KvitteringsDto> {
 		// Verifiser at det kun er FyllUt som kaller dette API-et
 		val applikasjon = subjectHandler.getClientId()

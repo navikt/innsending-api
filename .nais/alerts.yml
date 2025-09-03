@@ -24,6 +24,7 @@ spec:
             special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
             alert_type: custom
             severity: critical
+
         - alert: Not yet archived
           expr: sum(innsendingapi_applications_absent_in_archive{namespace="team-soknad"}) > 0
           for: 1m
@@ -39,6 +40,7 @@ spec:
             special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
             alert_type: custom
             severity: warning
+
         - alert: Consistent high number of created applications
           expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT"}[ {{continued_expected_period}} ])) by (operation)) > 3*{{ max_created_expected }}
           for: 1m
@@ -54,6 +56,7 @@ spec:
             special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
             alert_type: custom
             severity: warning
+
         - alert: High number of created applications
           expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT"}[ {{expected_period}} ])) by (operation)) > {{ max_created_expected }}
           for: 1m
@@ -69,6 +72,7 @@ spec:
             special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
             alert_type: custom
             severity: info
+
         - alert: High number of sent in applications
           expr: ceil(sum by (operation) (increase(innsendingapi_number_of_operations_total{operation="SEND_INN"}[ {{expected_period}} ]))) > {{ max_innsendt_expected }}
           for: 1m
@@ -84,6 +88,7 @@ spec:
             special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
             alert_type: custom
             severity: info
+
         - alert: JVM heap size alert level exceeded
           expr: ceil( sum(jvm_memory_used_bytes{app="innsending-api",area="heap"}) by (instance)) > {{ heap_jvm_memory_threshold }}
           for: 1m
@@ -99,3 +104,19 @@ spec:
             special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
             alert_type: custom
             severity: info
+
+        - alert: High number of nologin submissions
+          expr: sum(increase(innsendingapi_innsending_latency_count{operation="NOLOGIN_SEND_INN"}[ {{ max_nologin_submissions_period }} ])) > {{ max_nologin_submissions_count }}
+          for: 1m
+          annotations:
+            title: "High number of nologin submissions"
+            consequence: "The number of submissions has exceeded the threshold ({{ max_nologin_submissions_period }}/{{ max_nologin_submissions_count }}), and this might in time lead to automatic rejection of all subsequent nologin submissions."
+            action: {{ grafana_board_url }}
+            summary: "This may indicate abnormal activity or misuse of the nologin submission feature."
+            sla: "Check grafana board within 1h"
+          labels:
+            service: "innsending-api"
+            namespace: fyllut-sendinn
+            special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
+            alert_type: custom
+            severity: warning
