@@ -120,3 +120,20 @@ spec:
             special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
             alert_type: custom
             severity: warning
+
+        - alert: Nologin main switch is off
+          expr: max by(app) (max_over_time(innsendingapi_nologin_main_switch[3m])) == 0
+          for: 5m
+          annotations:
+            title: "Nologin main switch is off"
+            consequence: "All nologin submissions will be rejected."
+            action: {{ grafana_board_url }}
+            summary: "This could have happened from a manual action or automatic disabling due to unusual high number of nologin submissions."
+            sla: "Check grafana board within 1h"
+          labels:
+            service: "innsending-api"
+            namespace: fyllut-sendinn
+            special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
+            alert_type: custom
+            severity: warning
+            repeat_interval: 24h
