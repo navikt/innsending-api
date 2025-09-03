@@ -136,4 +136,4 @@ spec:
             special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
             alert_type: custom
             severity: warning
-            repeat_interval: 24h
+            repeat_interval: 6h
