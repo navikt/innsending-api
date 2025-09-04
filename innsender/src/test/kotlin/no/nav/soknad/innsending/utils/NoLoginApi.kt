@@ -5,14 +5,19 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.util.Constants.AZURE
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.core.io.ByteArrayResource
+import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
+import org.springframework.http.client.MultipartBodyBuilder
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.util.MultiValueMap
 import org.springframework.web.util.UriComponentsBuilder
+import java.util.UUID
 import kotlin.test.assertEquals
 
 
@@ -50,24 +55,37 @@ class NoLoginApi(val restTemplate: TestRestTemplate, val serverPort: Int, val mo
 
 
 	fun uploadFile(
-		innsendingsId: String,
-		vedleggsId: Long,
-		file: ByteArray = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
+		innsendingsId: UUID,
+		vedleggId: String,
+		file: ByteArray = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf"),
+		filename: String = "litenPdf.pdf", // It's good practice to include the filename
+		envQualifier: EnvQualifier? = null
 	): InnsendingApiResponse<LastOppFilResponse> {
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val requestBody: MultiValueMap<String, ByteArray> = LinkedMultiValueMap()
-		requestBody.add("file", file)
-		requestBody.add("vedleggsId", vedleggsId.toString().toByteArray())
-		requestBody.add("innsendingsId", innsendingsId.toByteArray())
+		val headers = HttpHeaders()
+		headers.contentType = MediaType.MULTIPART_FORM_DATA
+		if (envQualifier != null) {
+			headers.set("Nav-Env-Qualifier", envQualifier.value)
+		}
 
-		val httpEntity = HttpEntity(requestBody, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
+		val body: MultiValueMap<String, Any> = LinkedMultiValueMap()
 
+		body.add("vedleggId", vedleggId)
+		body.add("innsendingId", innsendingsId.toString())
 
-			val response = restTemplate.exchange(
+		val fileResource = object : ByteArrayResource(file) {
+			override fun getFilename(): String = filename
+		}
+		body.add("filinnhold", fileResource)
+
+		val requestEntity = createHttpEntity(body, headers.asSingleValueMap() )
+
+		val innsendingsIdString = innsendingsId.toString()
+
+		val response = restTemplate.exchange(
 			"${baseUrl}/v1/nologin-fillager",
 			HttpMethod.POST,
-			httpEntity,
+			requestEntity, // Use the correctly constructed entity
 			String::class.java
 		)
 

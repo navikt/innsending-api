@@ -18,7 +18,9 @@ import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.service.fillager.Fil
 import no.nav.soknad.innsending.service.fillager.FilMetadata
 import no.nav.soknad.innsending.service.fillager.FilStatus
+import no.nav.soknad.innsending.service.fillager.FillagerInterface
 import no.nav.soknad.innsending.service.fillager.FillagerService
+import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.NoLoginApi
 import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoV2TestBuilder
@@ -56,8 +58,9 @@ class NoLoginSoknadRestApiTest: ApplicationTest()  {
 	@Autowired
 	lateinit var filService: FilService
 
-	@MockkBean
-	lateinit var fillagerService: FillagerService
+	@Autowired
+	private lateinit var fillagerService: FillagerService
+
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
@@ -86,40 +89,33 @@ class NoLoginSoknadRestApiTest: ApplicationTest()  {
 	@Test
 	fun `test opprett og sendinn soknad med vedlegg for uinnlogget bruker`() {
 		// Gitt
-		val token: String = TokenGenerator(mockOAuth2Server).lagAzureToken()
-		val formioId = UUID.randomUUID().toString()
-		val fileId = UUID.randomUUID().toString()
+		val formioId = UUID.randomUUID()
+		val innsendingsIdUUID = UUID.randomUUID()
+
+		val uploaded = api!!.uploadFile(
+			innsendingsId = innsendingsIdUUID,
+			vedleggId = formioId.toString(),
+			file = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf"),
+			filename = "litenPdf.pdf",
+			envQualifier = null)
 
 		val skjemaDokumentDto = SkjemaDokumentDtoV2TestBuilder(
 			vedleggsnr = "W2",
-			formioId = formioId,
+			formioId = formioId.toString(),
 			tittel = "Skjema for test av innsending",
 			label = "Skjema for test av innsending",
 			beskrivelse = "Skjema for test av innsending",
 			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(fileId)
+			filIdListe = listOf(uploaded.body.filId.toString())
 		).build()
 
 		val skjemaDto = SkjemaDtoV2TestBuilder()
 			.medBrukerId("12345678901")
-			.medInnsendingsId(UUID.randomUUID().toString())
+			.medInnsendingsId(innsendingsIdUUID.toString())
 			.medVedlegg(skjemaDokumentDto)
 			.medMellomlagringDager(1)
 			.build()
-
-		every { fillagerService.hentFil(filId= fileId, innsendingId = skjemaDto.innsendingsId!!, namespace = any() ) }	returns Fil(
-			innhold = byteArrayOf(1, 2, 3),
-			metadata	= FilMetadata(
-				filId = fileId,
-				vedleggId	= formioId,
-				innsendingId = skjemaDto.innsendingsId!!,
-				filnavn = "filnavn",
-				storrelse = 1000,
-				filtype = "application/pdf",
-				status = FilStatus.LASTET_OPP,
-			)
-		)
 
 		// Når
 		val innsendtSoknadResponse = api!!.createAndSendInSoknad(
