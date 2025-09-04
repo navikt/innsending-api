@@ -11,8 +11,12 @@
 	"grafana_board_url": "https://grafana.nav.cloud.nais.io/d/fFJmoONVz/innsending-api?orgId=1&from=now-3h&to=now&var-environment=000000020&var-interval=1m",
 	"expected_period": "1h",
 	"continued_expected_period": "3h",
-	"max_nologin_submissions_count": "20",
-	"max_nologin_submissions_period": "1h",
+	"nologin": {
+		"max_submissions_count": "10",
+		"max_submissions_period": "1h",
+		"max_file_uploads_count": "30",
+		"max_file_uploads_period": "1h",
+	},
 	"common-labels": {
 		"service": "innsending-api",
 		"namespace": "fyllut-sendinn",

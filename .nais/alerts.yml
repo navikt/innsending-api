@@ -106,11 +106,27 @@ spec:
             severity: info
 
         - alert: High number of nologin submissions
-          expr: sum(increase(innsendingapi_innsending_latency_count{operation="NOLOGIN_SEND_INN"}[ {{ max_nologin_submissions_period }} ])) > {{ max_nologin_submissions_count }}
+          expr: sum(increase(innsendingapi_innsending_latency_count{operation="SEND_INN_NOLOGIN"}[ {{ nologin.max_submissions_period }} ])) > {{ nologin.max_submissions_count }}
           for: 1m
           annotations:
             title: "High number of nologin submissions"
-            consequence: "The number of submissions has exceeded the threshold ({{ max_nologin_submissions_period }}/{{ max_nologin_submissions_count }}), and this might in time lead to automatic rejection of all subsequent nologin submissions."
+            consequence: "The number of submissions has exceeded the threshold ({{ nologin.max_submissions_count }}/{{ nologin.max_submissions_period }}), and this might in time lead to automatic rejection of all subsequent nologin submissions."
+            action: {{ grafana_board_url }}
+            summary: "This may indicate abnormal activity or misuse of the nologin submission feature."
+            sla: "Check grafana board within 1h"
+          labels:
+            service: "innsending-api"
+            namespace: fyllut-sendinn
+            special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
+            alert_type: custom
+            severity: warning
+
+        - alert: High number of nologin file uploads
+          expr: sum(increase(innsendingapi_innsending_latency_count{operation="LAST_OPP_NOLOGIN"}[ {{ nologin.max_file_uploads_period }} ])) > {{ nologin.max_file_uploads_count }}
+          for: 1m
+          annotations:
+            title: "High number of nologin file uploads"
+            consequence: "The number of file uploads has exceeded the threshold ({{ nologin.max_file_uploads_count }}/{{ nologin.max_file_uploads_period }})."
             action: {{ grafana_board_url }}
             summary: "This may indicate abnormal activity or misuse of the nologin submission feature."
             sla: "Check grafana board within 1h"
