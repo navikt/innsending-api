@@ -96,6 +96,7 @@ spec:
             title: "JVM heap size alert level exceeded"
             consequence: "If this continues the POD might throw Out-OF-Memory exception and will restart."
             action: {{ grafana_board_url }}
+            actionLinkText: "Check dashboard"
             summary: "If JVM heap size alert level exceeded might eventually lead to Out-Of-Memory exception"
             sla: "Check grafana board within 1h"
           labels:
@@ -112,6 +113,7 @@ spec:
             title: "High number of nologin submissions"
             consequence: "The number of submissions has exceeded the threshold ({{ nologin.max_submissions_count }}/{{ nologin.max_submissions_period }}), and this might in time lead to automatic rejection of all subsequent nologin submissions."
             action: {{ grafana_board_url }}
+            actionLinkText: "Check dashboard"
             summary: "This may indicate abnormal activity or misuse of the nologin submission feature."
             sla: "Check grafana board within 1h"
           labels:
@@ -128,6 +130,7 @@ spec:
             title: "High number of nologin file uploads"
             consequence: "The number of file uploads has exceeded the threshold ({{ nologin.max_file_uploads_count }}/{{ nologin.max_file_uploads_period }})."
             action: {{ grafana_board_url }}
+            actionLinkText: "Check dashboard"
             summary: "This may indicate abnormal activity or misuse of the nologin submission feature."
             sla: "Check grafana board within 1h"
           labels:
@@ -144,6 +147,7 @@ spec:
             title: "Nologin main switch is off"
             consequence: "All nologin submissions will be rejected."
             action: {{ grafana_board_url }}
+            actionLinkText: "Check dashboard"
             summary: "This could have happened from a manual action or automatic disabling due to unusual high number of nologin submissions."
             sla: "Check grafana board within 1h"
           labels:
