@@ -143,12 +143,12 @@ class PdfGenerator {
 	}
 
 	fun lagPdfFraTekstFil(
-		soknad: DokumentSoknadDto,
+		spraak: String?,
 		vedleggsTittel: String,
 		text: String
 	): ByteArray {
-		val sprak = selectLanguage(soknad.spraak)
-		val tekster = texts.get(sprak) ?: throw BackendErrorException("Mangler støtte for språk ${soknad.spraak}")
+		val sprak = selectLanguage(spraak)
+		val tekster = texts.get(sprak) ?: throw BackendErrorException("Mangler støtte for språk ${spraak}")
 		val now = LocalDateTime.now()
 		val opplastetTidspunkt = java.lang.String.format(
 			tekster.getString("opplastetTidspunkt"),

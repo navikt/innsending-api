@@ -4,9 +4,9 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.soknad.InnsendingApiApplication
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.transaction.annotation.EnableTransactionManagement
 
 
@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @EnableMockOAuth2Server(port = 1888)
 @AutoConfigureWireMock(port = 5490)
 class ApplicationTest {
-	@MockBean
+	@MockitoBean
 	lateinit var prometheusRegistry: PrometheusRegistry
 
 }

@@ -12,6 +12,18 @@
 	<artifactId>innsender</artifactId>
 	<name>innsender</name>
 
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.google.cloud</groupId>
+				<artifactId>libraries-bom</artifactId>
+				<version>26.62.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -445,6 +457,16 @@
 			<groupId>org.verapdf</groupId>
 			<artifactId>validation-model-jakarta</artifactId>
 			<version>${verapdf.core-model-jakarta.version}</version>
+		</dependency>
+
+		<!-- Google cloud storage -->
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-storage</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-storage-control</artifactId>
 		</dependency>
 
 	</dependencies>
