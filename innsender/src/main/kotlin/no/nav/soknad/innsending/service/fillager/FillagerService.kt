@@ -10,24 +10,26 @@ import no.nav.soknad.innsending.service.FilValidatorService
 import no.nav.soknad.pdfutilities.KonverterTilPdfInterface
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.context.annotation.Profile
 import org.springframework.core.io.Resource
 import org.springframework.stereotype.Service
 import java.nio.ByteBuffer
 import java.util.UUID
 
+@Profile("!endtoend")
 @Service
 class FillagerService(
 	private val filValidatorService: FilValidatorService,
 	private val konverterTilPdf: KonverterTilPdfInterface,
 	cloudStorageConfig: CloudStorageConfig,
 	@Qualifier("cloudStorageClient") private val storage: Storage,
-) {
+)  :FillagerInterface {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	private val bucket = cloudStorageConfig.fillagerBucketNavn
 
 	// TODO Legg til språk i nologin api
-	fun lagreFil(fil: Resource, vedleggId: String, innsendingId: String, namespace: FillagerNamespace, spraak: String? = "nb"): FilMetadata {
+	override fun lagreFil(fil: Resource, vedleggId: String, innsendingId: String, namespace: FillagerNamespace, spraak: String?): FilMetadata {
 		val filtype = filValidatorService.validerFil(
 			fil = fil,
 			innsendingsId = innsendingId,
@@ -45,7 +47,7 @@ class FillagerService(
 			spraak
 		)
 
-		logger.info("$innsendingId: Fil validert ok og konvertert til pdf - $blobNavn (filtype: $filtype, antall sider: $antallSider)")
+		logger.info("$innsendingId: Fil validert ok og konvertert til pdf - $bucket,  $blobNavn (filtype: $filtype, antall sider: $antallSider)")
 		filValidatorService.validerAntallSider(antallSider)
 
 		val fileStatus = FilStatus.LASTET_OPP
@@ -78,7 +80,7 @@ class FillagerService(
 		)
 	}
 
-	fun hentFil(filId: String, innsendingId: String, namespace: FillagerNamespace): Fil? {
+	override fun hentFil(filId: String, innsendingId: String, namespace: FillagerNamespace): Fil? {
 		val blob = hentFilBlob(namespace, innsendingId, filId)
 		return if (blob != null) {
 			val innhold = storage.readAllBytes(blob.blobId)
@@ -95,11 +97,11 @@ class FillagerService(
 		}
 	}
 
-	fun hentFilinnhold(filId: String, innsendingId: String, namespace: FillagerNamespace): ByteArray? {
+	override fun hentFilinnhold(filId: String, innsendingId: String, namespace: FillagerNamespace): ByteArray? {
 		return hentFil(filId, innsendingId, namespace)?.innhold
 	}
 
-	fun oppdaterStatusForInnsending(innsendingId: String, namespace: FillagerNamespace, status: FilStatus) {
+	override fun oppdaterStatusForInnsending(innsendingId: String, namespace: FillagerNamespace, status: FilStatus) {
 		val prefix = "${namespace.value}/$innsendingId/"
 		val blobs = storage.list(bucket, Storage.BlobListOption.prefix(prefix))
 		blobs.iterateAll().forEach { blob ->
@@ -109,7 +111,7 @@ class FillagerService(
 		}
 	}
 
-	fun slettFil(filId: String, innsendingId: String, namespace: FillagerNamespace): Boolean {
+	override fun slettFil(filId: String, innsendingId: String, namespace: FillagerNamespace): Boolean {
 		val blob = hentFilBlob(namespace, innsendingId, filId)
 		return if (blob != null) {
 			if (blob.metadata?.get("status") == FilStatus.INNSENDT.value) {
@@ -128,7 +130,7 @@ class FillagerService(
 		}
 	}
 
-	fun slettFiler(innsendingId: String, vedleggId: String?, namespace: FillagerNamespace): Boolean {
+	override fun slettFiler(innsendingId: String, vedleggId: String?, namespace: FillagerNamespace): Boolean {
 		val prefix = "${namespace.value}/$innsendingId/" + (vedleggId?.let { "$it/" } ?: "")
 		val blobs = storage.list(bucket, Storage.BlobListOption.prefix(prefix))
 		val blobList = blobs.iterateAll().toList()

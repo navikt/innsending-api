@@ -34,7 +34,8 @@ cron:
   slettEldreEnn: 56 # 8 uker
   startSlettInnsendteSoknader: 0 0 5 * * *
   slettInnsendtEldreEnn: 21 # 3 uker
-  sletteVindu: 100
+  sletteVindu: 200
+  maxAntallSoknader: 10000
   startSlettPermanentIkkeInnsendteSoknader: 0 0 3 * * *
   # Slett permanent alle søknader opprettet for mer enn 6 måneder siden ( som er ca 366/2=183 dager )
   slettPermanentEldreEnn: 183
@@ -69,12 +70,13 @@ fil-konvertering_url: http://${GOTENBERG_HOST:localhost}:${GOTENBERG_PORT:3050}
 gcp:
   buckets:
     fillagerBucketNavn: ${FILE_STORAGE_BUCKET_NAME:innsending-api-file-storage-local}
+    host: ${FILE_STORAGE_HOST}
 
 ---
 spring:
   config:
     activate:
-      on-profile: local | docker
+      on-profile: local |
 
   application:
     name: innsending-api
