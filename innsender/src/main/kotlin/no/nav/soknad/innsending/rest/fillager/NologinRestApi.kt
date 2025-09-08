@@ -14,6 +14,7 @@ import org.springframework.core.io.Resource
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
 import java.util.UUID
 
 @RestController
@@ -28,12 +29,12 @@ class NologinRestApi(
 	@Timed(InnsenderOperation.LAST_OPP_BUCKET)
 	override fun lastOppFil(
 		vedleggId: String,
-		filinnhold: Resource,
+		filinnhold: MultipartFile,
 		innsendingId: UUID?
 	): ResponseEntity<LastOppFilResponse> {
 		val innsendingIdString = innsendingId?.toString() ?: Utilities.laginnsendingsId()
 		val metadata = fillagerService.lagreFil(
-			fil = filinnhold,
+			fil = filinnhold.resource,
 			vedleggId = vedleggId,
 			innsendingId = innsendingIdString,
 			namespace = FillagerNamespace.NOLOGIN,
