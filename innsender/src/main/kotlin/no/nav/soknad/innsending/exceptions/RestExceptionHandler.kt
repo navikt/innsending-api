@@ -13,6 +13,11 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.multipart.MultipartException
+import org.springframework.web.servlet.resource.NoResourceFoundException
+import java.nio.charset.IllegalCharsetNameException
+import java.nio.charset.MalformedInputException
+import java.nio.charset.UnmappableCharacterException
+import java.nio.charset.UnsupportedCharsetException
 import java.time.OffsetDateTime
 
 
@@ -31,6 +36,38 @@ class RestExceptionHandler {
 				timestamp = OffsetDateTime.now(),
 				errorCode = exception.errorCode.code
 			), HttpStatus.NOT_FOUND
+		)
+	}
+
+	@ExceptionHandler
+	fun noResourceFoundException(exception: NoResourceFoundException): ResponseEntity<RestErrorResponseDto> {
+		logger.warn(exception.message, exception)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = exception.message,
+				timestamp = OffsetDateTime.now(),
+				errorCode = ErrorCode.NOT_FOUND.code
+			), HttpStatus.NOT_FOUND
+		)
+	}
+
+	@ExceptionHandler(
+		value = [
+			UnsupportedCharsetException::class,
+			MalformedInputException::class,
+			UnmappableCharacterException::class,
+			CharacterCodingException::class,
+			IllegalCharsetNameException::class
+		]
+	)
+	fun charsetExceptions(exception: Exception): ResponseEntity<RestErrorResponseDto> {
+		logger.warn(exception.message, exception)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = "${exception::class.simpleName} - ${exception.message}",
+				timestamp = OffsetDateTime.now(),
+				errorCode = ErrorCode.GENERAL_ERROR.code
+			), HttpStatus.BAD_REQUEST
 		)
 	}
 

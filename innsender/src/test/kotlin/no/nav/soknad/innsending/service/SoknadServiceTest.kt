@@ -641,7 +641,9 @@ class SoknadServiceTest : ApplicationTest() {
 		simulateKafkaPolling(false, dokumentSoknadDtoList[1].innsendingsId!!)
 
 		// Delete attachment files for all sent in and archived applications
-		soknadService.finnOgSlettArkiverteSoknader(-1, 100)
+		soknadService.finnArkiverteSoknader(-1, 100).also {
+			soknader -> soknadService.slettSoknaderPermanent(soknader.map { it.innsendingsid })
+		}
 
 		assertThrows<Exception> {
 			soknadService.hentSoknad(dokumentSoknadDtoList[0].innsendingsId!!)
