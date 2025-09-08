@@ -84,7 +84,7 @@ class RepositoryUtils(
 		vindu: Long
 	): List<SoknadDbData> =
 		try {
-			soknadRepository.finnAlleSoknaderBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(
+			soknadRepository.finnAlleSoknaderBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatosOrderByInnsendtdato(
 				LocalDateTime.now().minusDays(eldreEnn + vindu), LocalDateTime.now().minusDays(eldreEnn)
 			)
 		} catch (ex: Exception) {

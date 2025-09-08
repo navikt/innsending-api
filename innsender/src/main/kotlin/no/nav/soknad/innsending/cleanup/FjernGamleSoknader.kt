@@ -27,7 +27,7 @@ class FjernGamleSoknader(
 				}
 			}
 		} catch (ex: Exception) {
-			logger.warn("Fjerning av gamle ikke innsendte søknader feilet med ${ex.message}")
+			logger.error("Fjerning av gamle ikke innsendte søknader feilet med ${ex.message}", ex)
 		}
 	}
 

@@ -27,5 +27,10 @@ jobs:
         uses: szenius/set-timezone@v2.0
         with:
           timezoneLinux: "Europe/Oslo"
-      - name: Maven clean install
-        run: mvn clean install
+
+      - name: Maven build
+        env:
+          GITHUB_NAV_TOKEN: ${{ secrets.READER_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
+        run: |
+          mvn clean install --settings maven-settings.xml
