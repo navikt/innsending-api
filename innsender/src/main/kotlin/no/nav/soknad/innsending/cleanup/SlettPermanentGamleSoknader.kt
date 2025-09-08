@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service
 @Service
 class SlettPermanentGamleSoknader(
 	private val soknadService: SoknadService,
-	private val leaderSelectionUtility: LeaderSelectionUtility
+	private val leaderSelectionUtility: LeaderSelection
 ) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)

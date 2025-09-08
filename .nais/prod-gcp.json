@@ -11,34 +11,34 @@
 		"https://innsending-api-gcp.nav.no",
 		"https://innsending-api-gcp.intern.nav.no"
 	],
+	"adGroups": ["6d98053f-362d-447e-a272-8132f278f42b", "921c9d19-7b11-442b-ae11-ea383790227f"],
 	"accessPolicyInbound": {
-		"current-namespace": [
-			"send-inn-frontend",
-			"soknadsarkiverer",
-			"innsending-admin"
-		],
-		"other-namespace": [
+		"applications": [
+			{ "name": "send-inn-frontend"	},
+			{ "name": "soknadsarkiverer" },
 			{
-				"application": "skjemautfylling",
+				"name": "innsending-admin",
+				"scopes": ["config-admin-access"]
+			},
+			{
+				"name": "skjemautfylling",
 				"namespace": "skjemadigitalisering",
 				"roles": ["nologin-access"]
 			},
 			{
-				"application": "fyllut-ettersending",
+				"name": "fyllut-ettersending",
 				"namespace": "skjemadigitalisering"
 			},
 			{
-				"application": "sykepengesoknad-backend",
+				"name": "sykepengesoknad-backend",
 				"namespace": "flex"
 			},
 			{
-				"application": "bidrag-dokument-forsendelse",
+				"name": "bidrag-dokument-forsendelse",
 				"namespace": "bidrag"
-			}
-		],
-		"other-cluster": [
+			},
 			{
-				"application": "bidrag-dokument-arkiv",
+				"name": "bidrag-dokument-arkiv",
 				"namespace": "bidrag",
 				"cluster": "prod-fss"
 			}

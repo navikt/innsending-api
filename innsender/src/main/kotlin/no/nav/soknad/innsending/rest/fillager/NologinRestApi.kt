@@ -3,6 +3,8 @@ package no.nav.soknad.innsending.rest.fillager
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.NologinApi
 import no.nav.soknad.innsending.model.LastOppFilResponse
+import no.nav.soknad.innsending.service.config.ConfigDefinition
+import no.nav.soknad.innsending.service.config.annotation.VerifyConfigValue
 import no.nav.soknad.innsending.service.fillager.FillagerInterface
 import no.nav.soknad.innsending.service.fillager.FillagerNamespace
 import no.nav.soknad.innsending.supervision.InnsenderOperation
@@ -19,12 +21,18 @@ import java.util.UUID
 @RestController
 @ProtectedWithClaims(
 	issuer = Constants.AZURE,
-	//claimMap = ["roles=nologin-access"],
+	claimMap = ["roles=nologin-access"],
 )
 class NologinRestApi(
-	val fillagerService: FillagerInterface,
+	private val fillagerService: FillagerInterface,
 ) : NologinApi {
 
+	@VerifyConfigValue(
+		config = ConfigDefinition.NOLOGIN_MAIN_SWITCH,
+		value = "on",
+		httpStatus = HttpStatus.SERVICE_UNAVAILABLE,
+		message = "NOLOGIN is not available"
+	)
 	@Timed(InnsenderOperation.LAST_OPP_BUCKET)
 	override fun lastOppFil(
 		vedleggId: String,

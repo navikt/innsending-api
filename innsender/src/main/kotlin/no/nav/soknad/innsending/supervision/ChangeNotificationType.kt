@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.supervision
 
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
-import no.nav.soknad.innsending.cleanup.LeaderSelectionUtility
+import no.nav.soknad.innsending.cleanup.LeaderSelection
 import no.nav.soknad.innsending.repository.domain.enums.HendelseType
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.service.NotificationService
@@ -18,7 +18,7 @@ import java.time.LocalDateTime
 class ChangeNotificationType(
 	private val repo: RepositoryUtils,
 	private val notificationService: NotificationService,
-	private val leaderSelectionUtility: LeaderSelectionUtility
+	private val leaderSelectionUtility: LeaderSelection
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)

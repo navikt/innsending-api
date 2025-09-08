@@ -49,6 +49,49 @@ class TokenGenerator(
 			clientId = MockLoginController::class.java.simpleName,
 			tokenCallback = oAuth2TokenCallback
 		).serialize()
+	}
+
+	fun lagAzureM2MToken(roles: List<String> = emptyList()): String {
+		val issuerId = AZURE
+		val oAuth2TokenCallback = DefaultOAuth2TokenCallback(
+			issuerId = issuerId,
+			typeHeader = JOSEObjectType.JWT.type,
+			audience = listOf(audience),
+			claims = buildMap {
+				put("roles", listOf("access_as_application").plus(roles))
+			},
+			expiry = expiry
+		)
+		return mockOAuth2Server.issueToken(
+			issuerId = issuerId,
+			clientId = MockLoginController::class.java.simpleName,
+			tokenCallback = oAuth2TokenCallback
+		).serialize()
+	}
+
+	fun lagAzureOBOToken(scopes: String? = null, navIdent: String? = null): String {
+		val issuerId = AZURE
+		val oAuth2TokenCallback = DefaultOAuth2TokenCallback(
+			issuerId = issuerId,
+			typeHeader = JOSEObjectType.JWT.type,
+			audience = listOf(audience),
+			claims = buildMap {
+				put("name", "Ola Nordmann")
+				put("preferred_username", "Ola.Nordmann@test.no")
+				put("azp", "consumer-app-id")
+				put("azp_name", "dev-gcp.namespace.consumer-app-name")
+				put("scp", "${scopes?.let { "$it " } ?: ""}defaultaccess")
+				if (navIdent != null) {
+					put("NAVident", navIdent)
+				}
+			},
+			expiry = expiry
+		)
+		return mockOAuth2Server.issueToken(
+			issuerId = issuerId,
+			clientId = MockLoginController::class.java.simpleName,
+			tokenCallback = oAuth2TokenCallback
+		).serialize()
 
 	}
 

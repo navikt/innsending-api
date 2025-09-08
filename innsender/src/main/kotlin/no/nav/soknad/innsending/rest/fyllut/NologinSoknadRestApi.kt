@@ -9,6 +9,8 @@ import no.nav.soknad.innsending.model.SkjemaDtoV2
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.NologinSoknadService
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.service.config.ConfigDefinition
+import no.nav.soknad.innsending.service.config.annotation.VerifyConfigValue
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import org.slf4j.LoggerFactory
@@ -19,8 +21,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @ProtectedWithClaims(
 	issuer = Constants.AZURE,
-	claimMap = ["roles=unauthenticated-file-storage-access"],
-	excludedClusters = [Cluster.DEV_GCP]
+	claimMap = ["roles=nologin-access"],
 )
 class NologinSoknadRestApi(
 	private var subjectHandler: SubjectHandlerInterface,
@@ -32,9 +33,13 @@ class NologinSoknadRestApi(
 	private val secureLogger = LoggerFactory.getLogger("secureLogger")
 	private val combinedLogger = CombinedLogger(logger, secureLogger)
 
-
+	@VerifyConfigValue(
+		config = ConfigDefinition.NOLOGIN_MAIN_SWITCH,
+		value = "on",
+		httpStatus = HttpStatus.SERVICE_UNAVAILABLE,
+		message = "NOLOGIN is not available"
+	)
 	override fun opprettNologinSoknad(nologinSoknadDto: SkjemaDtoV2, envQualifier: EnvQualifier?): ResponseEntity<KvitteringsDto> {
-
 		// Verifiser at det kun er FyllUt som kaller dette API-et
 		val applikasjon = subjectHandler.getClientId()
 		val brukerId = nologinSoknadService.brukerAvsenderValidering(nologinSoknadDto)
