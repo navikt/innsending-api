@@ -10,8 +10,8 @@ import no.nav.soknad.innsending.model.KvitteringsDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SkjemaDtoV2
 import no.nav.soknad.innsending.model.VisningsType
+import no.nav.soknad.innsending.service.fillager.FillagerInterface
 import no.nav.soknad.innsending.service.fillager.FillagerNamespace
-import no.nav.soknad.innsending.service.fillager.FillagerService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
@@ -29,7 +29,7 @@ class NologinSoknadService(
 	private val repo: RepositoryUtils,
 	private val vedleggService: VedleggService,
 	private val filService: FilService,
-	private val fillagerService: FillagerService,
+	private val fillagerService: FillagerInterface,
 	private val innsenderMetrics: InnsenderMetrics,
 	private val exceptionHelper: ExceptionHelper,
 ) {

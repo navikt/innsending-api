@@ -19,6 +19,7 @@ import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,10 +57,27 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 
 	private val defaultSkjemanr = "NAV 55-00.60"
 
+	private lateinit var job: SlettArkiverteSoknader
+
+	@BeforeEach
+	fun setup() {
+		job = SlettArkiverteSoknader(leaderSelectionUtility, soknadService)
+			.apply {
+				// Use reflection to set the private field if necessary
+				val fieldSlettArkiverteSoknaderEldreEnn = this::class.java.getDeclaredField("slettArkiverteSoknaderEldreEnn")
+				fieldSlettArkiverteSoknaderEldreEnn.isAccessible = true
+				fieldSlettArkiverteSoknaderEldreEnn.set(this, "-1") // Set to desired value in days
+				val fieldVindu = this::class.java.getDeclaredField("vindu")
+				fieldVindu.isAccessible = true
+				fieldVindu.set(this, "200") // Set to desired value in days
+				val fieldMaxAntallSoknader = this::class.java.getDeclaredField("maxAntallSoknader")
+				fieldMaxAntallSoknader.isAccessible = true
+				fieldMaxAntallSoknader.set(this, "1000") // Set to desired value in days
+			}
+	}
+
 	@Test
 	fun testSlettingAvInnsendteSoknader() {
-		SlettArkiverteSoknader(leaderSelectionUtility, soknadService)
-
 		every { leaderSelectionUtility.isLeader() } returns true
 		every { soknadsmottakerAPI.sendInnSoknad(any(), any(), any(), any()) } returns Unit
 		every { pdlInterface.hentPersonIdents(any()) } returns listOf(IdentDto("123456789", "FOLKEREGISTERIDENT", false))
@@ -94,7 +112,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 		simulerArkiveringsRespons(skalSendeInnIkkeArkivereId, ArkiveringsStatus.ArkiveringFeilet)
 
 		// Hvis kall for å slette innsendte og arkivertesøknader kalles
-		soknadService.finnOgSlettArkiverteSoknader(-1, 100)
+		job.fjernArkiverteSoknader();
 
 		// Så skal innsendt og arkivert søknad være slettet
 		assertThrows<ResourceNotFoundException> {
