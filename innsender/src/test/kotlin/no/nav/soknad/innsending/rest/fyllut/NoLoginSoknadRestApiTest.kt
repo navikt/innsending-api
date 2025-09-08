@@ -49,7 +49,7 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `should run nologin supervision`() {
+	fun `test opprett og sendinn soknad med vedlegg for uinnlogget bruker`() {
 		val file1 = api.uploadNologinFile(vedleggId = "abcdef")
 			.assertSuccess()
 			.body
