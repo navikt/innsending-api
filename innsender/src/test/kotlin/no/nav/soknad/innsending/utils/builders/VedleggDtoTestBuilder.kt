@@ -48,6 +48,16 @@ data class VedleggDtoTestBuilder(
 		return this
 	}
 
+	fun asDefaultVedlegg(document_path: String = "/litenPdf.pdf"): VedleggDtoTestBuilder {
+		erHoveddokument = false
+		erVariant = false
+		document = Hjelpemetoder.getBytesFromFile(document_path)
+		mimetype = Mimetype.applicationSlashPdf
+		formioId = null
+		opplastingsStatus = OpplastingsStatusDto.LastetOpp
+		return this
+	}
+
 	fun build(): VedleggDto {
 		return VedleggDto(
 			tittel,

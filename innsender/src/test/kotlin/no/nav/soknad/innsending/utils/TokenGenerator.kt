@@ -41,7 +41,7 @@ class TokenGenerator(
 			subject = pid,
 			typeHeader = JOSEObjectType.JWT.type,
 			audience =listOf(audience),
-			claims = mapOf("scp=defaultaccess" to "oppgave-initiering"),
+			claims = mapOf("scp=defaultaccess" to "oppgave-initiering", "roles" to "unauthenticated-file-storage-access"),
 			expiry = expiry
 		)
 		return mockOAuth2Server.issueToken(
