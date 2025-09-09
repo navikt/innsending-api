@@ -33,6 +33,8 @@ jobs:
         with:
           component_name: innsending-api
           branch: ${{ github.head_ref }} # Branch of current PR
+        env:
+          GITHUB_NAV_TOKEN: ${{ secrets.READER_TOKEN }}
 
       - name: 'Run e2e tests'
         uses: navikt/archiving-infrastructure/.github/checkout-and-build@main
