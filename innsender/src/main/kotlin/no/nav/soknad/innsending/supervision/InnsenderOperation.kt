@@ -11,4 +11,7 @@ enum class InnsenderOperation(name: String) {
 	SEND_INN("SendInn"),
 	ENDRE("Endre"),
 	VIRUS_SCAN("VirusScan"),
+	PDL_HENT_PREFILL_PERSON("PdlHentPrefillPerson"),
+	PDL_HENT_PERSON_IDENTS("PdlHentPersonIdents"),
+	PDL_HENT_PERSON_DATA("PdlHentPersonData"),
 }
