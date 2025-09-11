@@ -70,13 +70,12 @@ fil-konvertering_url: http://${GOTENBERG_HOST:localhost}:${GOTENBERG_PORT:3050}
 gcp:
   buckets:
     fillagerBucketNavn: ${FILE_STORAGE_BUCKET_NAME:innsending-api-file-storage-local}
-    host: ${FILE_STORAGE_HOST}
 
 ---
 spring:
   config:
     activate:
-      on-profile: local |
+      on-profile: local | docker
 
   application:
     name: innsending-api
