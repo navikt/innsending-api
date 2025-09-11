@@ -17,6 +17,7 @@ import java.time.OffsetDateTime
 interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 
 	fun findByInnsendingsid(innsendingsid: String): SoknadDbData?
+	fun existsByInnsendingsid(innsendingsid: String): Boolean
 	fun findByBrukeridAndStatus(brukerid: String, status: SoknadsStatus): List<SoknadDbData>
 
 	@Transactional

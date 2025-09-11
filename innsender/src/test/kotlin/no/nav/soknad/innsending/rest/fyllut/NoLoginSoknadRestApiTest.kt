@@ -75,6 +75,34 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 		assertEquals(kvitteringsDto.hoveddokumentRef, null)
 	}
 
+	@Test
+	fun `skal avvise innsending dersom soknad allerede er sendt inn`() {
+		val file1 = api.uploadNologinFile(vedleggId = "abcdef")
+			.assertSuccess()
+			.body
+		val innsendingId = file1.innsendingId.toString()
+
+		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
+			mimetype = Mimetype.applicationSlashPdf,
+			filIdListe = listOf(file1.filId.toString())
+		).build()
+
+		val skjemaDto = SkjemaDtoV2TestBuilder()
+			.medBrukerId("12345678901")
+			.medInnsendingsId(innsendingId)
+			.medVedlegg(listOf(vedlegg1))
+			.build()
+
+		api.sendInnNologinSoknad(skjemaDto)
+			.assertSuccess()
+
+		api.sendInnNologinSoknad(skjemaDto)
+			.assertClientError()
+			.errorBody.let {
+				assertEquals("Søknad med innsendingsId ${skjemaDto.innsendingsId} finnes allerede", it.message)
+			}
+	}
 
 	@Test
 	fun `skal avvise innsending dersom nologin main switch er av`() {
