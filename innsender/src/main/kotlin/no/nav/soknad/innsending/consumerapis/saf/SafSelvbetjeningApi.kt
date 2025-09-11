@@ -26,31 +26,56 @@ class SafSelvbetjeningApi(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	// Følgende liste er generert på basis av ulike temaer på dokumentinnsending søknader funnet i henvendelsesbasen for 2021/2022
+	// Følgende liste er generert på basis av ulike temaer på søknader funnet i innsending-api sin database september 2025
 	private val relevanteTema = listOf(
 		"AAP",
+		"AAR",
+		"AGR",
 		"BAR",
 		"BID",
 		"BIL",
 		"DAG",
 		"ENF",
+		"ERS",
+		"EYB",
+		"EYO",
+		"FAR",
+		"FEI",
+		"FOR",
 		"FOS",
+		"FRI",
+		"FUL",
 		"GEN",
 		"GRA",
+		"GRU",
+		"HEL",
 		"HJE",
 		"IND",
+		"KLL",
 		"KON",
 		"MED",
+		"MOB",
 		"OMS",
 		"OPP",
 		"PEN",
+		"REH",
+		"RPO",
+		"SAK",
+		"SER",
+		"STO",
+		"SUP",
 		"SYK",
+		"SYM",
+		"TIL",
+		"TRK",
+		"TRY",
 		"TSO",
 		"TSR",
+		"UFM",
 		"UFO",
 		"VEN",
-		"YRK"
-	)
+		"YRA",
+		"YRK"	)
 
 	override fun ping(): String {
 //		healthApi.ping()
