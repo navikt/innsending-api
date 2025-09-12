@@ -23,7 +23,7 @@ class SafService(val safSelvbetjeningApi: SafSelvbetjeningInterface, val safClie
 			try {
 				safSelvbetjeningApi.hentBrukersSakerIArkivet(brukerId)
 			} catch (ex: Exception) {
-				logger.info("Oppslag mot SAF gav ingen resultat pga feilen ${ex.message}")
+				logger.info("Oppslag mot SAF gav ingen resultat pga ${ex.message}")
 				emptyList()
 			}
 

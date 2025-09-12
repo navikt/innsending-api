@@ -17,22 +17,30 @@ jobs:
         uses: navikt/archiving-infrastructure/.github/checkout-and-build@main
         with:
           component_name: arkiv-mock
+        env:
+          GITHUB_NAV_TOKEN: ${{ secrets.READER_TOKEN }}
 
       - name: 'Build soknadsmottaker'
         uses: navikt/archiving-infrastructure/.github/checkout-and-build@main
         with:
           component_name: soknadsmottaker
+        env:
+          GITHUB_NAV_TOKEN: ${{ secrets.READER_TOKEN }}
 
       - name: 'Build soknadsarkiverer'
         uses: navikt/archiving-infrastructure/.github/checkout-and-build@main
         with:
           component_name: soknadsarkiverer
+        env:
+          GITHUB_NAV_TOKEN: ${{ secrets.READER_TOKEN }}
 
       - name: 'Build innsending-api (this PR)'
         uses: navikt/archiving-infrastructure/.github/checkout-and-build@main
         with:
           component_name: innsending-api
           branch: ${{ github.head_ref }} # Branch of current PR
+        env:
+          GITHUB_NAV_TOKEN: ${{ secrets.READER_TOKEN }}
 
       - name: 'Run e2e tests'
         uses: navikt/archiving-infrastructure/.github/checkout-and-build@main

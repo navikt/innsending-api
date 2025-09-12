@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.utils.builders
 
+import no.nav.soknad.innsending.safselvbetjening.generated.enums.AvsenderMottakerIdType
 import no.nav.soknad.innsending.safselvbetjening.generated.enums.Datotype
 import no.nav.soknad.innsending.safselvbetjening.generated.enums.Journalposttype
 import no.nav.soknad.innsending.safselvbetjening.generated.enums.Journalstatus
@@ -19,7 +20,7 @@ data class JournalPostTestBuilder(
 	var tema: String? = "AAP",
 	var kanal: Kanal? = Kanal.NAV_NO,
 	var relevanteDatoer: List<RelevantDato?> = listOf(RelevantDato("2022-05-24T11:02:30", Datotype.DATO_OPPRETTET)),
-	var avsender: AvsenderMottaker? = AvsenderMottaker("12345678901"),
+	var avsender: AvsenderMottaker? = AvsenderMottaker("12345678901", type = AvsenderMottakerIdType.FNR, navn = "Test Bruker"),
 	var dokumenter: List<DokumentInfo?>? = listOf(
 		DokumentInfo("NAV 08-09.06", "NAV 08-09.06"),
 		DokumentInfo("N6", "Et vedleggEgenerklæring og sykmelding")
