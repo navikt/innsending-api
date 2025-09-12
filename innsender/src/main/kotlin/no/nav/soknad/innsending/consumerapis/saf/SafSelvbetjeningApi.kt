@@ -152,8 +152,8 @@ class SafSelvbetjeningApi(
 			checkForErrors(response.errors)
 			return response.data?.dokumentoversiktSelvbetjening
 		} else {
-			logger.error("Oppslag mot søknadsarkivet feilet, ingen data returnert.")
-			throw BackendErrorException("Oppslag mot søknadsarkivet feilet. Fikk feil i kallet til søknadsarkivet")
+			logger.info("Oppslag mot søknadsarkivet returnerte ingen data.")
+			return null
 		}
 	}
 
