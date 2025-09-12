@@ -98,7 +98,7 @@ class SafSelvbetjeningApi(
 			try {
 				val hentetDokumentoversikt = getSoknadsDataForPerson(brukerId)
 				if (hentetDokumentoversikt == null || hentetDokumentoversikt.journalposter.isEmpty()) {
-					throw BackendErrorException("Ingen søknader funnet. Fant ingen relevante søknader i søknadsarkivet")
+					throw BackendErrorException("Fant ingen relevante søknader i søknadsarkivet")
 				} else {
 					val dokumentoversikt = filtrerPaJournalposttypeAndTema(
 						hentetDokumentoversikt,
