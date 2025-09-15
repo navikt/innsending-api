@@ -2,22 +2,28 @@ package no.nav.soknad.innsending.rest.fyllut
 
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearAllMocks
+import io.mockk.slot
+import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.model.Mimetype
-import no.nav.soknad.innsending.model.OpplastingsStatusDto
+import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
+import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.service.config.ConfigService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
+import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.utils.Api
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoV2TestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoV2TestBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNotNull
+import org.junit.jupiter.api.assertNull
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpStatus
+import java.util.*
 import kotlin.test.assertEquals
 
 class NoLoginSoknadRestApiTest : ApplicationTest() {
@@ -32,6 +38,9 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 
 	@SpykBean
 	lateinit var metrics: InnsenderMetrics
+
+	@SpykBean
+	lateinit var soknadsmottaker: MottakerAPITest
 
 	@Value("\${server.port}")
 	var serverPort: Int? = 9064
@@ -49,30 +58,104 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `test opprett og sendinn soknad med vedlegg for uinnlogget bruker`() {
-		val file1 = api.uploadNologinFile(vedleggId = "abcdef")
+	fun `skal sende inn soknad og handtere vedlegg med ulike statuser`() {
+		val innsendingId = UUID.randomUUID().toString()
+
+		val navId1 = "personal-id"
+		val file1 = api.uploadNologinFile(vedleggId = navId1, innsendingId = innsendingId)
 			.assertSuccess()
 			.body
-		val innsendingId = file1.innsendingId.toString()
 
-		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
+		val navId2 = "e9logo"
+		api.uploadNologinFile(vedleggId = navId2, innsendingId = innsendingId)
+			.assertSuccess()
+			.body.let {
+				assertNotNull(it.filId)
+			}
+
+		val navId3 = "dj5jkj"
+		val file3 = api.uploadNologinFile(vedleggId = navId3, innsendingId = innsendingId)
+			.assertSuccess()
+			.body
+
+		val vedleggLegitimasjon = SkjemaDokumentDtoV2TestBuilder(
+			vedleggsnr = "K2",
+			tittel = "Norsk pass",
+			label = "Norsk pass",
+			pakrevd = true,
+			formioId = navId1,
 			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(file1.filId.toString())
+			filIdListe = listOf(file1.filId.toString()),
+		).build()
+
+		val vedleggSomSendesSenere = SkjemaDokumentDtoV2TestBuilder(
+			vedleggsnr = "T4",
+			tittel = "Kursbevis",
+			label = "Kursbevis",
+			pakrevd = true,
+			formioId = navId2,
+			opplastingsStatus = OpplastingsStatusDto.SendSenere,
+			filIdListe = null,
+		).build()
+
+		val vedleggAnnenDokumentasjon = SkjemaDokumentDtoV2TestBuilder(
+			vedleggsnr = "N6",
+			tittel = "Annet",
+			label = "Annen dokumentasjon",
+			// propertyNavn = "annenDokumentasjon", <-- brukes ikke ved nologin
+			pakrevd = false,
+			formioId = navId3,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
+			mimetype = Mimetype.applicationSlashPdf,
+			filIdListe = listOf(file3.filId.toString()),
 		).build()
 
 		val skjemaDto = SkjemaDtoV2TestBuilder()
 			.medBrukerId("12345678901")
 			.medInnsendingsId(innsendingId)
-			.medVedlegg(listOf(vedlegg1))
+			.medVedlegg(listOf(vedleggLegitimasjon, vedleggSomSendesSenere, vedleggAnnenDokumentasjon))
 			.build()
 
-		val kvitteringsDto = api.sendInnNologinSoknad(skjemaDto)
+		val kvittering = api.sendInnNologinSoknad(skjemaDto)
 			.assertSuccess()
 			.body
+		assertEquals(kvittering.hoveddokumentRef, null, "Skal ikke returnere hoveddokumentRef ved nologin")
+		assertEquals(1, kvittering.skalEttersendes!!.size)
+		assertEquals(2, kvittering.innsendteVedlegg!!.size)
+		assertEquals(0, kvittering.skalSendesAvAndre!!.size)
 
-		assertEquals(0, kvitteringsDto.skalSendesAvAndre!!.size)
-		assertEquals(kvitteringsDto.hoveddokumentRef, null)
+		val slotSoknad = slot<DokumentSoknadDto>()
+		val slotVedleggsliste = slot<List<VedleggDto>>()
+		val slotAvsender = slot<AvsenderDto>()
+		val slotBruker = slot<BrukerDto?>()
+		verify(exactly = 1) {
+			soknadsmottaker.sendInnSoknad(
+				capture(slotSoknad),
+				capture(slotVedleggsliste),
+				capture(slotAvsender),
+				captureNullable(slotBruker)
+			)
+		}
+
+		assertEquals(innsendingId, slotSoknad.captured.innsendingsId)
+		val innsendteDokumenter = slotVedleggsliste.captured
+		assertEquals(5, innsendteDokumenter.size)
+
+		val innsendtK2 = innsendteDokumenter.firstOrNull { it.vedleggsnr == vedleggLegitimasjon.vedleggsnr }
+		assertNotNull(innsendtK2)
+
+		val vedleggT4 = innsendteDokumenter.firstOrNull { it.vedleggsnr == vedleggSomSendesSenere.vedleggsnr }
+		assertNull(vedleggT4)
+
+		val innsendtN6 = innsendteDokumenter.firstOrNull { it.vedleggsnr == vedleggAnnenDokumentasjon.vedleggsnr }
+		assertNotNull(innsendtN6)
+
+		val innsendingskvittering = innsendteDokumenter.firstOrNull { it.vedleggsnr == Constants.KVITTERINGS_NR }
+		assertNotNull(innsendingskvittering)
+
+		val hoveddokumentListe = innsendteDokumenter.filter { it.erHoveddokument }
+		assertEquals(2, hoveddokumentListe.size)
 	}
 
 	@Test
