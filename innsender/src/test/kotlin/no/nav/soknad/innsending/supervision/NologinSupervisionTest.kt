@@ -55,7 +55,7 @@ class NologinSupervisionTest {
 	}
 
 	@Test
-	fun `should skip run nologin supervision when main switch off`() {
+	fun `should not count recently submitted nologin application when main switch off`() {
 		every { configService.getConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH) } returns mainSwitchOff
 		nologinSupervision.supervise()
 
@@ -64,7 +64,7 @@ class NologinSupervisionTest {
 	}
 
 	@Test
-	fun `should run nologin supervision when main switch on`() {
+	fun `should count recently submitted nologin applications when main switch on`() {
 		every { configService.getConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH) } returns mainSwitchOn
 		every { soknadRepository.countRecentlySubmitted(any(), any()) } returns (maxNumberOfSubmissions - 10)
 		nologinSupervision.supervise()
@@ -75,7 +75,7 @@ class NologinSupervisionTest {
 	}
 
 	@Test
-	fun `should automatically disable nologin main switch`() {
+	fun `should automatically disable nologin main switch when threshold is exceeded`() {
 		every { configService.getConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH) } returns mainSwitchOn
 		every { soknadRepository.countRecentlySubmitted(any(), any()) } returns (maxNumberOfSubmissions + 10)
 		nologinSupervision.supervise()
