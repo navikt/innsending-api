@@ -1,6 +1,9 @@
 package no.nav.soknad.innsending.config
 
 import com.expediagroup.graphql.client.spring.GraphQLWebClient
+import io.netty.channel.ChannelOption
+import io.netty.handler.timeout.ReadTimeoutHandler
+import io.netty.handler.timeout.WriteTimeoutHandler
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.soknad.innsending.util.Constants
@@ -14,6 +17,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.netty.http.client.*
+import java.util.concurrent.TimeUnit
 
 
 @Configuration
@@ -26,6 +30,10 @@ class PdlClientConfig(
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
+	private val connectionTimeoutSeconds = 10
+	private val readTimeoutSeconds = 30
+	private val writeTimeoutSeconds = 30
+
 	@Bean("pdlGraphQLClient")
 	fun graphQLClient() = GraphQLWebClient(
 		url = "${restConfig.pdlUrl}/graphql",
@@ -33,6 +41,11 @@ class PdlClientConfig(
 			.clientConnector(
 				ReactorClientHttpConnector(
 					HttpClient.create()
+						.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (connectionTimeoutSeconds * 1000))
+						.doOnConnected { conn ->
+							conn.addHandlerLast(ReadTimeoutHandler(readTimeoutSeconds.toLong(), TimeUnit.SECONDS))
+							conn.addHandlerLast(WriteTimeoutHandler(writeTimeoutSeconds.toLong(), TimeUnit.SECONDS))
+						}
 						.doOnRequest { request: HttpClientRequest, _ ->
 							logger.info("OnRequest: {} {} {}", request.version(), request.method(), request.resourceUrl())
 						}
