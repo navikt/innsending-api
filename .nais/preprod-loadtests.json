@@ -7,13 +7,12 @@
 	"tier": "db-custom-1-3840",
 	"bucket-name-file-storage": "innsending-api-file-storage-loadtests",
 	"ingresses": [],
+	"adGroups": ["48aec4cb-937b-4462-963e-4deb81db533f"],
 	"accessPolicyInbound": {
-		"current-namespace": [
-			"innsending-system-tests",
-			"soknadsarkiverer-loadtests"
-		],
-		"other-namespace": [],
-		"other-cluster": []
+		"applications": [
+			{ "name": "innsending-system-tests"	},
+			{ "name": "soknadsarkiverer-loadtests" }
+		]
 	},
 	"accessPolicyOutbound": {
 		"current-namespace": [

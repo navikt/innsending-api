@@ -1,0 +1,16 @@
+get:
+  summary: Hent alle konfigurasjonsverdier
+  description: Hent alle konfigurasjonsverdier
+  operationId: getAllConfig
+
+  responses:
+    200:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "./components.yaml#/components/schemas/ConfigValueDto"
+  tags:
+    - config

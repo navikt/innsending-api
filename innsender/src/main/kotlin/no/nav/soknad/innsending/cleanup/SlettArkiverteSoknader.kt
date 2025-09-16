@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class SlettArkiverteSoknader(
-	private val leaderSelectionUtility: LeaderSelectionUtility,
+	private val leaderSelectionUtility: LeaderSelection,
 	private val soknadService: SoknadService
 ) {
 

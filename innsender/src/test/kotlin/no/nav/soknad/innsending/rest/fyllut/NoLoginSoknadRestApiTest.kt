@@ -1,28 +1,15 @@
 package no.nav.soknad.innsending.rest.fyllut
 
-
-import com.ninjasquad.springmockk.MockkBean
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearAllMocks
-import io.mockk.every
 import no.nav.security.mock.oauth2.MockOAuth2Server
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenResponse
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
-import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.service.FilService
-import no.nav.soknad.innsending.service.KodeverkService
-import no.nav.soknad.innsending.service.RepositoryUtils
-import no.nav.soknad.innsending.service.SoknadService
-import no.nav.soknad.innsending.service.fillager.Fil
-import no.nav.soknad.innsending.service.fillager.FilMetadata
-import no.nav.soknad.innsending.service.fillager.FilStatus
-import no.nav.soknad.innsending.service.fillager.FillagerInterface
-import no.nav.soknad.innsending.service.fillager.FillagerService
-import no.nav.soknad.innsending.utils.Hjelpemetoder
-import no.nav.soknad.innsending.utils.NoLoginApi
-import no.nav.soknad.innsending.utils.TokenGenerator
+import no.nav.soknad.innsending.model.Mimetype
+import no.nav.soknad.innsending.model.OpplastingsStatusDto
+import no.nav.soknad.innsending.service.config.ConfigDefinition
+import no.nav.soknad.innsending.service.config.ConfigService
+import no.nav.soknad.innsending.supervision.InnsenderMetrics
+import no.nav.soknad.innsending.utils.Api
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoV2TestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoV2TestBuilder
 import org.junit.jupiter.api.BeforeEach
@@ -30,105 +17,87 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.http.*
-import java.util.*
-import kotlin.test.*
+import org.springframework.http.HttpStatus
+import kotlin.test.assertEquals
 
-
-class NoLoginSoknadRestApiTest: ApplicationTest()  {
-
-	@MockkBean
-	lateinit var oauth2TokenService: OAuth2AccessTokenService
-
-	@MockkBean
-	lateinit var kodeverkService: KodeverkService
-
-	@SpykBean
-	lateinit var notificationPublisher: PublisherInterface
-
+class NoLoginSoknadRestApiTest : ApplicationTest() {
 	@Autowired
-	lateinit var restTemplate: TestRestTemplate
-
-	@Autowired
-	lateinit var soknadService: SoknadService
-
-	@Autowired
-	lateinit var repo: RepositoryUtils
-
-	@Autowired
-	lateinit var filService: FilService
-
-	@Autowired
-	private lateinit var fillagerService: FillagerService
-
+	lateinit var configService: ConfigService
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
-	val postnummerMap = mapOf(
-		"7950" to "ABELVÆR",
-		"3812" to "AKKERHAUGEN",
-		"5575" to "AKSDAL",
-		"7318" to "AGDENES",
-	)
+	@Autowired
+	lateinit var restTemplate: TestRestTemplate
 
-	var api: NoLoginApi? = null
-
-	@BeforeEach
-	fun setup() {
-		clearAllMocks()
-		api = NoLoginApi(restTemplate, serverPort!!, mockOAuth2Server)
-		every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
-		every { kodeverkService.getPoststed(any()) } answers { postnummerMap[firstArg()] }
-	}
+	@SpykBean
+	lateinit var metrics: InnsenderMetrics
 
 	@Value("\${server.port}")
 	var serverPort: Int? = 9064
 
+	var testApi: Api? = null
+	val api: Api
+		get() = testApi!!
+
+	@BeforeEach
+	fun setup() {
+		testApi = Api(restTemplate, serverPort!!, mockOAuth2Server)
+		clearAllMocks()
+		api.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on")
+			.assertSuccess()
+	}
 
 	@Test
 	fun `test opprett og sendinn soknad med vedlegg for uinnlogget bruker`() {
-		// Gitt
-		val formioId = UUID.randomUUID()
-		val innsendingsIdUUID = UUID.randomUUID()
+		val file1 = api.uploadNologinFile(vedleggId = "abcdef")
+			.assertSuccess()
+			.body
+		val innsendingId = file1.innsendingId.toString()
 
-		val uploaded = api!!.uploadFile(
-			innsendingsId = innsendingsIdUUID,
-			vedleggId = formioId.toString(),
-			file = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf"),
-			filename = "litenPdf.pdf",
-			envQualifier = null)
-
-		val skjemaDokumentDto = SkjemaDokumentDtoV2TestBuilder(
-			vedleggsnr = "W2",
-			formioId = formioId.toString(),
-			tittel = "Skjema for test av innsending",
-			label = "Skjema for test av innsending",
-			beskrivelse = "Skjema for test av innsending",
+		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
 			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(uploaded.body.filId.toString())
+			filIdListe = listOf(file1.filId.toString())
 		).build()
 
 		val skjemaDto = SkjemaDtoV2TestBuilder()
 			.medBrukerId("12345678901")
-			.medInnsendingsId(innsendingsIdUUID.toString())
-			.medVedlegg(skjemaDokumentDto)
-			.medMellomlagringDager(1)
+			.medInnsendingsId(innsendingId)
+			.medVedlegg(listOf(vedlegg1))
 			.build()
 
-		// Når
-		val innsendtSoknadResponse = api!!.createAndSendInSoknad(
-			dokumentDto = skjemaDto,
-			envQualifier = EnvQualifier.preprodAltAnsatt
-			)
+		val kvitteringsDto = api.sendInnNologinSoknad(skjemaDto)
 			.assertSuccess()
+			.body
 
-		// Så
-		assertTrue(innsendtSoknadResponse.statusCode == HttpStatus.OK )
-		val kvitteringsDto = innsendtSoknadResponse.body
 		assertEquals(0, kvitteringsDto.skalSendesAvAndre!!.size)
-		assertTrue(kvitteringsDto.hoveddokumentRef == null)
+		assertEquals(kvitteringsDto.hoveddokumentRef, null)
+	}
+
+
+	@Test
+	fun `skal avvise innsending dersom nologin main switch er av`() {
+		val file1 = api.uploadNologinFile(vedleggId = "abcdef")
+			.assertSuccess()
+			.body
+		val innsendingId = file1.innsendingId.toString()
+
+		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
+			mimetype = Mimetype.applicationSlashPdf,
+			filIdListe = listOf(file1.filId.toString())
+		).build()
+
+		val skjemaDto = SkjemaDtoV2TestBuilder()
+			.medBrukerId("12345678901")
+			.medInnsendingsId(innsendingId)
+			.medVedlegg(listOf(vedlegg1))
+			.build()
+
+		configService.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "off", "test")
+		api.sendInnNologinSoknad(skjemaDto)
+			.assertHttpStatus(HttpStatus.SERVICE_UNAVAILABLE)
 	}
 
 
