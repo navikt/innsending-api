@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.exceptions.BackendErrorException
-import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.*
@@ -11,8 +10,6 @@ import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
-import no.nav.soknad.innsending.service.fillager.FillagerNamespace
-import no.nav.soknad.innsending.service.fillager.FillagerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
@@ -37,7 +34,6 @@ class SoknadService(
 	private val repo: RepositoryUtils,
 	private val vedleggService: VedleggService,
 	private val filService: FilService,
-	private val fillagerService: FillagerInterface,
 	private val innsenderMetrics: InnsenderMetrics,
 	private val exceptionHelper: ExceptionHelper,
 	private val subjectHandler: SubjectHandlerInterface
@@ -308,55 +304,6 @@ class SoknadService(
 		oppdatertDokumentSoknadDto.vedleggsListe
 			.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
 			.forEach { filService.lagreFil(oppdatertDokumentSoknadDto, it, dokumentSoknadDto.vedleggsListe) }
-	}
-
-
-	/*
-	Skal flytte filene fra fillager til fil tabellen for de filene som er lastet opp og som skal være med i innsendingen av søknaden.
-	Status for alle vedleggene som har filer som er lastet opp og som skal være med i innsendinge skal settes til LastetOpp.
-	 */
-	fun lagreFiler(
-		oppdatertDokumentSoknadDto: DokumentSoknadDto,
-		noLoginSoknadDto: NologinSoknadDto
-	) {
-		val vedleggsStatusMap = mutableMapOf<String, OpplastingsStatusDto>()
-		noLoginSoknadDto.nologinVedleggList
-			.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
-			.forEach {
-				if (it.fileIdList.isNullOrEmpty()) throw IllegalActionException(
-					"Vedlegg med id=${it.vedleggRef} har ingen filer som skal lagres i fil tabellen",
-					errorCode = ErrorCode.NOT_FOUND
-				)
-				kopierFilerForVedlegg(
-				soknadDto = oppdatertDokumentSoknadDto,
-				vedleggsRef = it.vedleggRef,
-				it.fileIdList!!)
-			}
-	}
-
-	fun kopierFilerForVedlegg(soknadDto: DokumentSoknadDto, vedleggsRef: String, opplastedeFiler: List<String> ){
-		val vedleggDto = soknadDto.vedleggsListe.find { it.formioId == vedleggsRef }
-		if (vedleggDto == null) throw IllegalActionException("Fant ikke vedlegg med id=$vedleggsRef", errorCode = ErrorCode.NOT_FOUND)
-
-		// for hver fil hent og opprett nytt innslag i fil tabellen
-		opplastedeFiler.forEach { fileId ->
-			val filSomSkalKopieres = fillagerService.hentFil(filId = fileId, soknadDto.innsendingsId!!, namespace= FillagerNamespace.NOLOGIN)
-			if (filSomSkalKopieres == null || filSomSkalKopieres.innhold.size == 0) {
-				throw IllegalActionException("Fant ikke fil med id=${fileId} for vedlegg med id=$vedleggsRef", errorCode = ErrorCode.NOT_FOUND)
-			}
-
-			val filDto = FilDto(
-				id = null,
-				vedleggsid = vedleggDto.id!!,
-				filnavn = filSomSkalKopieres.metadata.filnavn,
-				storrelse = filSomSkalKopieres.metadata.storrelse,
-				data = filSomSkalKopieres.innhold,
-				mimetype = mapTilMimetype(filSomSkalKopieres.metadata.filtype),
-				opprettetdato = OffsetDateTime.now(),
-			)
-			filService.lagreFil(soknadDto, filDto)
-		}
-
 	}
 
 	fun saveHoveddokumentFiler(
