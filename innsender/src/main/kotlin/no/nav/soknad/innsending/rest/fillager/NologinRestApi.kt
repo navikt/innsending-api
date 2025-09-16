@@ -3,14 +3,13 @@ package no.nav.soknad.innsending.rest.fillager
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.NologinApi
 import no.nav.soknad.innsending.model.LastOppFilResponse
-import no.nav.soknad.innsending.service.fillager.FillagerService
+import no.nav.soknad.innsending.service.fillager.FillagerInterface
 import no.nav.soknad.innsending.service.fillager.FillagerNamespace
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.stringextensions.toUUID
-import org.springframework.core.io.Resource
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
@@ -20,10 +19,10 @@ import java.util.UUID
 @RestController
 @ProtectedWithClaims(
 	issuer = Constants.AZURE,
-	claimMap = ["roles=nologin-access"],
+	//claimMap = ["roles=nologin-access"],
 )
 class NologinRestApi(
-	val fillagerService: FillagerService,
+	val fillagerService: FillagerInterface,
 ) : NologinApi {
 
 	@Timed(InnsenderOperation.LAST_OPP_BUCKET)

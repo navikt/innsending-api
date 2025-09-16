@@ -24,6 +24,7 @@ enum class ErrorCode(val code: String) {
 	INVALID_KODEVERK_VALUE("illegalAction.invalidKodeverkValue"),
 	TYPE_DETECTION_OR_CONVERSION_ERROR("illegalAction.typeDetectionOrConversionError"),
 	ILLEGAL_DELETE_REQUEST("illegalAction.illegalDeleteRequest"),
+	PROPERTY_NOT_SET(code = "illegalAction.propertyNotSet"),
 
 	SOKNAD_ALREADY_EXISTS("soknadAlreadyExists"),
 
