@@ -33,7 +33,7 @@ class NologinRestApi(
 		httpStatus = HttpStatus.SERVICE_UNAVAILABLE,
 		message = "NOLOGIN is not available"
 	)
-	@Timed(InnsenderOperation.LAST_OPP_BUCKET)
+	@Timed(InnsenderOperation.LAST_OPP_NOLOGIN)
 	override fun lastOppFil(
 		vedleggId: String,
 		filinnhold: MultipartFile,
@@ -59,7 +59,7 @@ class NologinRestApi(
 			)
 	}
 
-	@Timed(InnsenderOperation.SLETT_FIL_BUCKET)
+	@Timed(InnsenderOperation.SLETT_FIL_NOLOGIN)
 	override fun slettFilV2(filId: UUID, innsendingId: UUID): ResponseEntity<Unit> {
 		val deleted = fillagerService.slettFil(
 			filId = filId.toString(),
@@ -73,7 +73,7 @@ class NologinRestApi(
 		}
 	}
 
-	@Timed(InnsenderOperation.SLETT_FILER_BUCKET)
+	@Timed(InnsenderOperation.SLETT_FILER_NOLOGIN)
 	override fun slettFiler(innsendingId: UUID, vedleggId: String?): ResponseEntity<Unit> {
 		val deleted = fillagerService.slettFiler(
 			innsendingId = innsendingId.toString(),
