@@ -11,6 +11,8 @@ import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.pdl.generated.HentIdenter
 import no.nav.soknad.innsending.pdl.generated.HentPerson
 import no.nav.soknad.innsending.pdl.generated.PrefillData
+import no.nav.soknad.innsending.supervision.InnsenderOperation
+import no.nav.soknad.innsending.supervision.timer.Timed
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cache.annotation.Cacheable
@@ -39,6 +41,8 @@ class PdlAPI(
 		return "ok"
 	}
 
+	@Timed(operation = InnsenderOperation.PDL_HENT_PERSON_IDENTS)
+	@Cacheable("hentPersonIdents")
 	override fun hentPersonIdents(brukerId: String): List<IdentDto> = runBlocking {
 		logger.info("Skal hente en personsidenter fra PDL")
 		try {
@@ -50,6 +54,7 @@ class PdlAPI(
 		}
 	}
 
+	@Timed(operation = InnsenderOperation.PDL_HENT_PERSON_DATA)
 	override fun hentPersonData(brukerId: String): PersonDto? = runBlocking {
 		try {
 			hentPerson(brukerId)?.hentPerson?.navn?.map { PersonDto(brukerId, it.fornavn, it.mellomnavn, it.etternavn) }
@@ -77,6 +82,7 @@ class PdlAPI(
 		}
 	}
 
+	@Timed(operation = InnsenderOperation.PDL_HENT_PREFILL_PERSON)
 	@Cacheable("getPrefillPersonInfo")
 	override suspend fun getPrefillPersonInfo(ident: String): PrefillData.Result? {
 		logger.info("Skal hente en preutfyllingsinfo fra PDL")

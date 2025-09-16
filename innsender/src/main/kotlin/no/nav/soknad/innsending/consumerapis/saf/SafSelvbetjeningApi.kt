@@ -26,31 +26,56 @@ class SafSelvbetjeningApi(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	// Følgende liste er generert på basis av ulike temaer på dokumentinnsending søknader funnet i henvendelsesbasen for 2021/2022
+	// Følgende liste er generert på basis av ulike temaer på søknader funnet i innsending-api sin database september 2025
 	private val relevanteTema = listOf(
 		"AAP",
+		"AAR",
+		"AGR",
 		"BAR",
 		"BID",
 		"BIL",
 		"DAG",
 		"ENF",
+		"ERS",
+		"EYB",
+		"EYO",
+		"FAR",
+		"FEI",
+		"FOR",
 		"FOS",
+		"FRI",
+		"FUL",
 		"GEN",
 		"GRA",
+		"GRU",
+		"HEL",
 		"HJE",
 		"IND",
+		"KLL",
 		"KON",
 		"MED",
+		"MOB",
 		"OMS",
 		"OPP",
 		"PEN",
+		"REH",
+		"RPO",
+		"SAK",
+		"SER",
+		"STO",
+		"SUP",
 		"SYK",
+		"SYM",
+		"TIL",
+		"TRK",
+		"TRY",
 		"TSO",
 		"TSR",
+		"UFM",
 		"UFO",
 		"VEN",
-		"YRK"
-	)
+		"YRA",
+		"YRK"	)
 
 	override fun ping(): String {
 //		healthApi.ping()
@@ -73,7 +98,7 @@ class SafSelvbetjeningApi(
 			try {
 				val hentetDokumentoversikt = getSoknadsDataForPerson(brukerId)
 				if (hentetDokumentoversikt == null || hentetDokumentoversikt.journalposter.isEmpty()) {
-					throw BackendErrorException("Ingen søknader funnet. Fant ingen relevante søknader i søknadsarkivet")
+					throw BackendErrorException("Fant ingen relevante søknader i søknadsarkivet")
 				} else {
 					val dokumentoversikt = filtrerPaJournalposttypeAndTema(
 						hentetDokumentoversikt,
@@ -127,8 +152,8 @@ class SafSelvbetjeningApi(
 			checkForErrors(response.errors)
 			return response.data?.dokumentoversiktSelvbetjening
 		} else {
-			logger.error("Oppslag mot søknadsarkivet feilet, ingen data returnert.")
-			throw BackendErrorException("Oppslag mot søknadsarkivet feilet. Fikk feil i kallet til søknadsarkivet")
+			logger.info("Oppslag mot søknadsarkivet returnerte ingen data.")
+			return null
 		}
 	}
 
