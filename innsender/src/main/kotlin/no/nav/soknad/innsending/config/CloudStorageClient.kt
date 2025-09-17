@@ -1,13 +1,10 @@
 package no.nav.soknad.innsending.config
 
 import com.google.cloud.NoCredentials
-import com.google.cloud.storage.Blob
 import com.google.cloud.storage.BucketInfo
 import com.google.cloud.storage.Storage
 import com.google.cloud.storage.StorageOptions
 import no.nav.soknad.innsending.embedded.GoogleStorage
-import no.nav.soknad.innsending.service.fillager.FillagerNamespace
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -19,10 +16,8 @@ import org.springframework.context.annotation.Scope
 @EnableConfigurationProperties(CloudStorageConfig::class)
 class CloudStorageClient {
 
-	private val logger = LoggerFactory.getLogger(javaClass)
-
 	@Bean
-	@Profile("!(local | docker | test | endtoend  )")
+	@Profile("!(local | docker | test | endtoend)")
 	@Qualifier("cloudStorageClient")
 	@Scope("prototype")
 	fun gcpClient(): Storage = StorageOptions.getDefaultInstance().service
@@ -32,8 +27,7 @@ class CloudStorageClient {
 	@Qualifier("cloudStorageClient")
 	@Scope("prototype")
 	fun dockerClient(cloudStorageConfig: CloudStorageConfig): Storage {
-		val host = cloudStorageConfig.host ?: "http://localhost:4443" // From docker-compose
-		logger.info("Cloud storage docker client: $host, bucket: ${cloudStorageConfig.fillagerBucketNavn}")
+		val host = "http://localhost:4443" // From docker-compose
 		return buildStorageForTest(host, cloudStorageConfig.fillagerBucketNavn)
 	}
 
@@ -57,23 +51,8 @@ class CloudStorageClient {
 			.also { it ->
 				if (it.get(bucket) == null) {
 					it.create(BucketInfo.of(bucket))
-					val files = hentFilBlob(it, bucket, FillagerNamespace.NOLOGIN, "1234", "1234" )
-					logger.info("Created bucket '$bucket' in Google Cloud Storage. Files in the bucket ${files?.size ?: 0}")
 				}
 			}
-	}
-
-
-	private fun hentFilBlob(
-		storage: Storage,
-		bucket: String,
-		namespace: FillagerNamespace,
-		innsendingId: String,
-		filId: String
-	): Blob? {
-		val prefix = "${namespace.value}/$innsendingId/"
-		val blobs = storage.list(bucket, Storage.BlobListOption.prefix(prefix))
-		return blobs.iterateAll().firstOrNull { it.metadata?.get("filId") == filId }
 	}
 
 }

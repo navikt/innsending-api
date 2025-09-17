@@ -10,7 +10,7 @@ spec:
     - name: {{ env-name }}
       rules:
         - alert: Archiving failed
-          expr: sum(innsendingapi_archiving_of_applications_failed{namespace="team-soknad"}) > 0
+          expr: sum(innsendingapi_archiving_of_applications_failed{namespace="team-soknad", app="innsending-api"}) > 0
           for: 1m
           annotations:
             title: "Archiving service has reported failure when archiving one or more applications"
@@ -26,7 +26,7 @@ spec:
             severity: critical
 
         - alert: Not yet archived
-          expr: sum(innsendingapi_applications_absent_in_archive{namespace="team-soknad"}) > 0
+          expr: sum(innsendingapi_applications_absent_in_archive{namespace="team-soknad", app="innsending-api"}) > 0
           for: 1m
           annotations:
             title: "Missing response from archiving service for one or more sent in applications"
@@ -42,7 +42,7 @@ spec:
             severity: warning
 
         - alert: Consistent high number of created applications
-          expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT"}[ {{continued_expected_period}} ])) by (operation)) > 3*{{ max_created_expected }}
+          expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT", app="innsending-api"}[ {{continued_expected_period}} ])) by (operation)) > 3*{{ max_created_expected }}
           for: 1m
           annotations:
             title: "Consistent high number of applications have been created"
@@ -58,7 +58,7 @@ spec:
             severity: warning
 
         - alert: High number of created applications
-          expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT"}[ {{expected_period}} ])) by (operation)) > {{ max_created_expected }}
+          expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT", app="innsending-api"}[ {{expected_period}} ])) by (operation)) > {{ max_created_expected }}
           for: 1m
           annotations:
             title: "Unusual number of applications have been created"
@@ -74,7 +74,7 @@ spec:
             severity: info
 
         - alert: High number of sent in applications
-          expr: ceil(sum by (operation) (increase(innsendingapi_number_of_operations_total{operation="SEND_INN"}[ {{expected_period}} ]))) > {{ max_innsendt_expected }}
+          expr: ceil(sum by (operation) (increase(innsendingapi_number_of_operations_total{operation="SEND_INN", app="innsending-api"}[ {{expected_period}} ]))) > {{ max_innsendt_expected }}
           for: 1m
           annotations:
             title: "Unusual number of applications have been sent in"
@@ -107,7 +107,7 @@ spec:
             severity: info
 
         - alert: High number of nologin submissions
-          expr: sum(increase(innsendingapi_innsending_latency_count{operation="SEND_INN_NOLOGIN"}[ {{ nologin.max_submissions_period }} ])) > {{ nologin.max_submissions_count }}
+          expr: sum(increase(innsendingapi_innsending_latency_count{operation="SEND_INN_NOLOGIN", app="innsending-api"}[ {{ nologin.max_submissions_period }} ])) > {{ nologin.max_submissions_count }}
           for: 1m
           annotations:
             title: "High number of nologin submissions"
@@ -124,7 +124,7 @@ spec:
             severity: warning
 
         - alert: High number of nologin file uploads
-          expr: sum(increase(innsendingapi_innsending_latency_count{operation="LAST_OPP_NOLOGIN"}[ {{ nologin.max_file_uploads_period }} ])) > {{ nologin.max_file_uploads_count }}
+          expr: sum(increase(innsendingapi_innsending_latency_count{operation="LAST_OPP_NOLOGIN", app="innsending-api"}[ {{ nologin.max_file_uploads_period }} ])) > {{ nologin.max_file_uploads_count }}
           for: 1m
           annotations:
             title: "High number of nologin file uploads"
@@ -141,7 +141,7 @@ spec:
             severity: warning
 
         - alert: Nologin main switch is off
-          expr: max by(app) (max_over_time(innsendingapi_nologin_main_switch[3m])) == 0
+          expr: max by(app) (max_over_time(innsendingapi_nologin_main_switch{app="innsending-api"}[3m])) == 0
           for: 5m
           annotations:
             title: "Nologin main switch is off"
