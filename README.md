@@ -10,6 +10,31 @@ fungerer.
 
 ## Utvikling
 
+### Bygge lokalt
+
+Følgende må være installert:
+
+- Java 21
+- Maven 3.9+
+- Docker (pga. at testene bruker [testcontainers](https://testcontainers.com/))
+
+Du må konfigurere maven med GitHub access token for å kunne laste ned Nav-artifakter fra GitHub Packages,
+f.eks. i `.m2/settings.xml`:
+
+```
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+	<servers>
+		<server>
+			<id>github</id>
+			<username>${DITT_GITHUB_BRUKERNAVN}</username>
+			<password>${DITT_TOKEN}</password>
+		</server>
+	</servers>
+</settings>
+```
+
+Kjør `mvn clean install` for å bygge prosjektet og kjøre tester.
+
 ### Kjøre lokalt
 
 Sett Spring profilen til `local` og kjør `InnsendingApiApplication`. En embedded Postgres
