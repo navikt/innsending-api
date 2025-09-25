@@ -138,10 +138,14 @@ fun brukerAvsenderValidering(nologinSoknadDto: SkjemaDtoV2): String {
 
 	fun verifiserInput(uinnloggetSoknadDto: SkjemaDtoV2) {
 		// InnsendingsId skal være satt av FyllUt
-		if (uinnloggetSoknadDto.innsendingsId == null) {
+		val innsendingsId = uinnloggetSoknadDto.innsendingsId ?: throw IllegalActionException(
+			message = "InnsendingId er ikke satt",
+			errorCode = ErrorCode.PROPERTY_NOT_SET,
+		)
+		if (repo.existsByInnsendingsId(innsendingsId)) {
 			throw IllegalActionException(
-				message = "InnsendingId er ikke satt",
-				errorCode = ErrorCode.PROPERTY_NOT_SET,
+				message = "Søknad med innsendingsId $innsendingsId finnes allerede",
+				errorCode = ErrorCode.SOKNAD_ALREADY_EXISTS
 			)
 		}
 	}
