@@ -11,6 +11,8 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
 
+private const val missingVisningstype = "-"
+
 @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 @Component
 class InnsenderMetrics(private val registry: PrometheusRegistry) {
@@ -48,7 +50,10 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	private var submissionsCounter = registerCounter(
 		"submissions_total", "Number of submitted applications",
 		listOf("visningstype")
-	)
+	).also { counter ->
+		val possibleLabelValues = VisningsType.entries.map { it.value }.toTypedArray() + missingVisningstype
+		possibleLabelValues.forEach { counter.initLabelValues(it) }
+	}
 
 	var fileNumberOfPagesSummary = registerSummary(fileNumberOfPages, fileNumberOfPagesHelp)
 	var fileSizeSummary = registerSummary(fileSize, fileSizeHelp)
@@ -129,7 +134,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 		operationsErrorCounter.labelValues(operation, tema, appName).inc()
 
 	fun incSubmissionsCounter(visningstype: VisningsType?) =
-		submissionsCounter.labelValues(visningstype?.value ?: "-").inc()
+		submissionsCounter.labelValues(visningstype?.value ?: missingVisningstype).inc()
 
 	fun startOperationHistogramLatency(operation: String): Timer? =
 		operationLatencyHistogram.labelValues(operation, appName).startTimer()
