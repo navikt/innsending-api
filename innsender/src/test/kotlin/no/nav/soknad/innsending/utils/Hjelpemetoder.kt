@@ -4,6 +4,7 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.service.SoknadServiceTest
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.BEARER
+import no.nav.soknad.innsending.util.MDCUtil
 import no.nav.soknad.innsending.util.Skjema
 import no.nav.soknad.innsending.util.mapping.mapTilMimetype
 import no.nav.soknad.pdfutilities.AntallSider
@@ -134,7 +135,7 @@ class Hjelpemetoder {
 			val headers = HttpHeaders()
 			headers.contentType = MediaType.APPLICATION_JSON
 			headers.add(HttpHeaders.AUTHORIZATION, "$BEARER$token")
-			headers.add(Constants.CORRELATION_ID, UUID.randomUUID().toString())
+			headers.add(Constants.CORRELATION_ID, MDCUtil.callIdOrNew())
 			map?.forEach { (headerName, headerValue) -> headers.add(headerName, headerValue) }
 			return headers
 		}
@@ -143,7 +144,7 @@ class Hjelpemetoder {
 			val headers = HttpHeaders()
 			headers.contentType = contentType
 			headers.add(HttpHeaders.AUTHORIZATION, "$BEARER$token")
-			headers.add(Constants.CORRELATION_ID, UUID.randomUUID().toString())
+			headers.add(Constants.CORRELATION_ID, MDCUtil.callIdOrNew())
 			return headers
 		}
 

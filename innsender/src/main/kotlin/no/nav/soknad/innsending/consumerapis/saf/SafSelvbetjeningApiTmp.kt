@@ -3,13 +3,13 @@ package no.nav.soknad.innsending.consumerapis.saf
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.consumerapis.saf.dto.ArkiverteSaker
 import no.nav.soknad.innsending.consumerapis.saf.dto.Dokument
-import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.testpersonid
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 @Service
 @Profile("local | docker | endtoend | loadtests")
@@ -37,7 +37,7 @@ class SafSelvbetjeningApiTmp : SafSelvbetjeningInterface, HealthRequestInterface
 	private val dummyArkiverteSoknader = mapOf(
 		testpersonid to listOf(
 			ArkiverteSaker(
-				Utilities.laginnsendingsId(),
+				UUID.randomUUID().toString(),
 				"Test søknad",
 				"BID",
 				DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(OffsetDateTime.now().minusDays(7)),
@@ -48,7 +48,7 @@ class SafSelvbetjeningApiTmp : SafSelvbetjeningInterface, HealthRequestInterface
 				)
 			),
 			ArkiverteSaker(
-				Utilities.laginnsendingsId(),
+				UUID.randomUUID().toString(),
 				"Ettersending til test søknad",
 				"BID",
 				DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(OffsetDateTime.now().minusDays(2)),
@@ -60,7 +60,7 @@ class SafSelvbetjeningApiTmp : SafSelvbetjeningInterface, HealthRequestInterface
 				)
 			),
 			ArkiverteSaker(
-				Utilities.laginnsendingsId(),
+				UUID.randomUUID().toString(),
 				"Test søknad",
 				"PEN",
 				DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(OffsetDateTime.now().minusDays(14)),
@@ -71,7 +71,7 @@ class SafSelvbetjeningApiTmp : SafSelvbetjeningInterface, HealthRequestInterface
 				)
 			),
 			ArkiverteSaker(
-				Utilities.laginnsendingsId(),
+				UUID.randomUUID().toString(),
 				"Test søknad",
 				"PEN",
 				DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(OffsetDateTime.now().minusDays(14)),
@@ -81,7 +81,7 @@ class SafSelvbetjeningApiTmp : SafSelvbetjeningInterface, HealthRequestInterface
 				)
 			),
 			ArkiverteSaker(
-				Utilities.laginnsendingsId(),
+				UUID.randomUUID().toString(),
 				"Ettersending til test søknad",
 				"BID",
 				DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(OffsetDateTime.now().minusDays(5)),
@@ -93,7 +93,7 @@ class SafSelvbetjeningApiTmp : SafSelvbetjeningInterface, HealthRequestInterface
 				)
 			),
 			ArkiverteSaker(
-				Utilities.laginnsendingsId(),
+				UUID.randomUUID().toString(),
 				"Ettersending til test søknad",
 				"BID",
 				DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(OffsetDateTime.now().minusDays(20)),
@@ -105,7 +105,7 @@ class SafSelvbetjeningApiTmp : SafSelvbetjeningInterface, HealthRequestInterface
 				)
 			),
 			ArkiverteSaker(
-				Utilities.laginnsendingsId(),
+				UUID.randomUUID().toString(),
 				"Ettersending til test søknad",
 				"BID",
 				DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(OffsetDateTime.now().minusDays(25)),
@@ -119,7 +119,7 @@ class SafSelvbetjeningApiTmp : SafSelvbetjeningInterface, HealthRequestInterface
 		),
 		"12345678902" to listOf(
 			ArkiverteSaker(
-				Utilities.laginnsendingsId(), "Test søknad", "BID", date, listOf(
+				UUID.randomUUID().toString(), "Test søknad", "BID", date, listOf(
 					Dokument("NAV 08-09.06", "Egenerklæring og sykmelding", "HOVEDDOKUMENT"),
 					Dokument("L7", "Kvittering", "VEDLEGG"),
 					Dokument("N6", "Et vedleggEgenerklæring og sykmelding", "VEDLEGG")
@@ -128,7 +128,7 @@ class SafSelvbetjeningApiTmp : SafSelvbetjeningInterface, HealthRequestInterface
 		),
 		"12345678903" to listOf(
 			ArkiverteSaker(
-				Utilities.laginnsendingsId(), "Test søknad", "BID", date, listOf(
+				UUID.randomUUID().toString(), "Test søknad", "BID", date, listOf(
 					Dokument("NAV 08-09.06", "Egenerklæring og sykmelding", "HOVEDDOKUMENT"),
 					Dokument("N6", "Et vedleggEgenerklæring og sykmelding", "VEDLEGG")
 				)
