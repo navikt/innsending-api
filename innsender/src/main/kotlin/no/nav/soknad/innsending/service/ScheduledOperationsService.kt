@@ -18,7 +18,7 @@ class ScheduledOperationsService(
 		val soknaderAbsentInArchive =
 			soknadRepository.countInnsendtIkkeBehandlet(LocalDateTime.now().minusMinutes(offsetMinutes))
 		if (soknaderAbsentInArchive > 0) {
-			logger.error("Total number of applications not yet processed for archiving by soknadsarkiverer: $soknaderAbsentInArchive")
+			logger.warn("Total number of applications not yet processed for archiving by soknadsarkiverer: $soknaderAbsentInArchive")
 			val notProcessedForArchiving =
 				soknadRepository.findInnsendtAndArkiveringsStatusIkkeSatt(LocalDateTime.now().minusMinutes(offsetMinutes))
 			logger.info("Applications not yet picked up and processed by soknadsarkiverer: $notProcessedForArchiving")

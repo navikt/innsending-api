@@ -28,7 +28,7 @@ class RestExceptionHandler {
 	// 404
 	@ExceptionHandler
 	fun resourceNotFoundException(exception: ResourceNotFoundException): ResponseEntity<RestErrorResponseDto> {
-		logger.warn(exception.message, exception)
+		logger.warn(exception.messageForLog, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
 				message = exception.message,
@@ -40,7 +40,7 @@ class RestExceptionHandler {
 
 	@ExceptionHandler
 	fun noResourceFoundException(exception: NoResourceFoundException): ResponseEntity<RestErrorResponseDto> {
-		logger.warn(exception.message, exception)
+		logger.warn(exception.messageForLog, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
 				message = exception.message,
@@ -60,7 +60,7 @@ class RestExceptionHandler {
 		]
 	)
 	fun charsetExceptions(exception: Exception): ResponseEntity<RestErrorResponseDto> {
-		logger.warn(exception.message, exception)
+		logger.warn(exception.messageForLog, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
 				message = "${exception::class.simpleName} - ${exception.message}",
@@ -73,7 +73,7 @@ class RestExceptionHandler {
 	// 500
 	@ExceptionHandler
 	fun backendErrorException(exception: BackendErrorException): ResponseEntity<RestErrorResponseDto> {
-		logger.error(exception.message, exception)
+		logger.error(exception.messageForLog, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
 				message = exception.message,
@@ -86,7 +86,7 @@ class RestExceptionHandler {
 	// 400
 	@ExceptionHandler
 	fun illegalActionException(exception: IllegalActionException): ResponseEntity<RestErrorResponseDto> {
-		logger.warn(exception.message, exception)
+		logger.warn(exception.messageForLog, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
 				message = exception.message,
@@ -102,7 +102,7 @@ class RestExceptionHandler {
 		request: HttpServletRequest,
 		exception: Exception
 	): ResponseEntity<RestErrorResponseDto?>? {
-		logger.warn("Autentisering feilet ved kall til " + request.requestURI + ": " + exception.message, exception)
+		logger.warn("Autentisering feilet ved kall til " + request.requestURI + ": " + exception.messageForLog, exception)
 
 		return ResponseEntity(
 			RestErrorResponseDto(
@@ -118,7 +118,7 @@ class RestExceptionHandler {
 		request: HttpServletRequest,
 		exception: UnsupportedOperationException
 	): ResponseEntity<RestErrorResponseDto?>? {
-		logger.warn("Kall til ${request.requestURI} ikke støttet: ${exception.message}", exception)
+		logger.warn("Kall til ${request.requestURI} ikke støttet: ${exception.messageForLog}", exception)
 
 		return ResponseEntity(
 			RestErrorResponseDto(
@@ -132,7 +132,7 @@ class RestExceptionHandler {
 	// 500
 	@ExceptionHandler
 	fun generalException(exception: Exception): ResponseEntity<RestErrorResponseDto> {
-		logger.error(exception.message, exception)
+		logger.error(exception.messageForLog, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
 				message = exception.message ?: "Noe gikk galt, prøv igjen senere",
@@ -145,7 +145,7 @@ class RestExceptionHandler {
 	// If client aborts we don't want to log this as an error
 	@ExceptionHandler
 	fun clientAbortException(exception: ClientAbortException): ResponseEntity<RestErrorResponseDto> {
-		logger.warn(exception.message, exception)
+		logger.warn(exception.messageForLog, exception)
 		return ResponseEntity(
 			RestErrorResponseDto(
 				message = exception.message ?: "Noe gikk galt, prøv igjen senere",
@@ -159,7 +159,7 @@ class RestExceptionHandler {
 	// Causes could be that the user closes the browser, loses internet connection or that the upload times out.
 	@ExceptionHandler
 	fun multipartException(exception: MultipartException): ResponseEntity<RestErrorResponseDto> {
-		logger.warn(exception.message, exception)
+		logger.warn(exception.messageForLog, exception)
 
 		return ResponseEntity(
 			RestErrorResponseDto(
@@ -170,3 +170,6 @@ class RestExceptionHandler {
 		)
 	}
 }
+
+val Exception.messageForLog: String
+	get() = this.message ?: this.cause?.message ?: this.suppressed.firstOrNull()?.message ?: this.javaClass.simpleName
