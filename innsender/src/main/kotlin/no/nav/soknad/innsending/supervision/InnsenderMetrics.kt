@@ -6,9 +6,12 @@ import io.prometheus.metrics.core.metrics.Gauge
 import io.prometheus.metrics.core.metrics.Histogram
 import io.prometheus.metrics.core.metrics.Summary
 import io.prometheus.metrics.model.registry.PrometheusRegistry
+import no.nav.soknad.innsending.model.VisningsType
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
+
+private const val missingVisningstype = "-"
 
 @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 @Component
@@ -39,21 +42,29 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	private val nologinMainSwitchName = "nologin_main_switch"
 	private val nologinMainSwitchHelp = "Nologin main switch (on=1/off=0)"
 
-	private var operationsCounter = registerCounter(name, help, operationLabel)
-	private var operationsErrorCounter = registerCounter(errorName, helpError, operationLabel)
+	private var operationsCounter = registerOperationCounter(name, help)
+	private var operationsErrorCounter = registerOperationCounter(errorName, helpError)
 	private var operationLatencyHistogram = registerLatencyHistogram(latency, latencyHelp, operationLabel)
 	private var databaseGauge = registerGauge(databaseSizeName, databaseSizeHelp)
 	private var absentInArchiveGauge = registerGauge(absentInArchiveName, absentInArchiveHelp)
 	private var archivingFailedGauge = registerGauge(archivingFailedName, archivingFailedHelp)
 	private var nologinGauge = registerGauge(nologinMainSwitchName, nologinMainSwitchHelp)
 
+	private var submissionsCounter = registerCounter(
+		"submissions_total", "Number of submitted applications",
+		listOf("visningstype")
+	).also { counter ->
+		val possibleLabelValues = VisningsType.entries.map { it.value }.toTypedArray() + missingVisningstype
+		possibleLabelValues.forEach { counter.initLabelValues(it) }
+	}
+
 	var fileNumberOfPagesSummary = registerSummary(fileNumberOfPages, fileNumberOfPagesHelp)
 	var fileSizeSummary = registerSummary(fileSize, fileSizeHelp)
 
 	// Used in tests
 	fun registerMetrics() {
-		operationsCounter = registerCounter(name, help, operationLabel)
-		operationsErrorCounter = registerCounter(errorName, helpError, operationLabel)
+		operationsCounter = registerOperationCounter(name, help)
+		operationsErrorCounter = registerOperationCounter(errorName, helpError)
 		operationLatencyHistogram = registerLatencyHistogram(latency, latencyHelp, operationLabel)
 		databaseGauge = registerGauge(databaseSizeName, databaseSizeHelp)
 		absentInArchiveGauge = registerGauge(absentInArchiveName, absentInArchiveHelp)
@@ -76,12 +87,15 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 		registry.unregister(fileSizeSummary)
 	}
 
-	private fun registerCounter(name: String, help: String, label: String): Counter =
+	private fun registerOperationCounter(name: String, help: String): Counter =
+		registerCounter(name, help, listOf(operationLabel, temaLabel, appLabel))
+
+	private fun registerCounter(name: String, help: String, labels: List<String>): Counter =
 		Counter
 			.builder()
 			.name("${soknadNamespace}_${name}")
 			.help(help)
-			.labelNames(label, temaLabel, appLabel)
+			.labelNames(*labels.toTypedArray())
 			.register(registry)
 
 	private fun registerLatencyHistogram(name: String, help: String, label: String): Histogram =
@@ -123,6 +137,9 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 
 	fun incOperationsErrorCounter(operation: String, tema: String) =
 		operationsErrorCounter.labelValues(operation, tema, appName).inc()
+
+	fun incSubmissionsCounter(visningstype: VisningsType?) =
+		submissionsCounter.labelValues(visningstype?.value ?: missingVisningstype).inc()
 
 	fun startOperationHistogramLatency(operation: String): Timer? =
 		operationLatencyHistogram.labelValues(operation, appName).startTimer()
