@@ -119,6 +119,7 @@ class InnsendingService(
 		// send soknadmetada til soknadsmottaker
 		try {
 			soknadsmottakerAPI.sendInnSoknad(soknadDto, (listOf(kvitteringForArkivering) + opplastedeVedlegg), avsenderDto?: AvsenderDto(id = soknadDto.brukerId, idType = IdType.FNR), brukerDto)
+			innsenderMetrics.incSubmissionsCounter(soknadDto.visningsType)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			logger.error("${soknadDto.innsendingsId}: Feil ved sending av søknad til soknadsmottaker ${e.message}")
