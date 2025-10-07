@@ -14,7 +14,7 @@ import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
-import no.nav.soknad.innsending.util.models.skjemadto.getBrukerOrAvsender
+import no.nav.soknad.innsending.util.models.skjemadto.getBrukerOrAvsenderForSecureLog
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -45,7 +45,7 @@ class NologinSoknadRestApi(
 	override fun opprettNologinSoknad(nologinSoknadDto: SkjemaDtoV2, envQualifier: EnvQualifier?): ResponseEntity<KvitteringsDto> {
 		// Verifiser at det kun er FyllUt som kaller dette API-et
 		val applikasjon = subjectHandler.getClientId()
-		val brukerAvsender = nologinSoknadDto.getBrukerOrAvsender()
+		val brukerAvsender = nologinSoknadDto.getBrukerOrAvsenderForSecureLog()
 		combinedLogger.log(
 			"[${applikasjon}] - Kall for å opprette og sende inn søknad av uinnlogget bruker fra applikasjon ${applikasjon} på skjema ${nologinSoknadDto.skjemanr}",
 			brukerAvsender
