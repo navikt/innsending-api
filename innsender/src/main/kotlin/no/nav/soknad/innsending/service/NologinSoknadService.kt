@@ -41,7 +41,7 @@ class NologinSoknadService(
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
 			input = uinnloggetSoknadDto,
 			existingSoknad = null,
-			brukerId = uinnloggetSoknadDto.brukerDto.id,
+			brukerId = uinnloggetSoknadDto.brukerDto?.id,
 			applikasjon =  applikasjon,
 			visningsType = VisningsType.nologin
 		)
@@ -55,22 +55,29 @@ class NologinSoknadService(
 
 			// lagre hovedkdokument (PDF) og hoveddokumentvariant (JSON)
 			savedDokumentSoknadDto.vedleggsListe
-				.filter {it.erHoveddokument}
-				.forEach { filService.lagreFil(
-					soknadDto = savedDokumentSoknadDto,
-					FilDto(vedleggsid = it.id!!, id = null, filnavn = it.vedleggsnr, mimetype = it.mimetype,
-						storrelse = it.document?.size, antallsider = null,
-						data = if (!it.erVariant) uinnloggetSoknadDto.hoveddokument.document else uinnloggetSoknadDto.hoveddokumentVariant.document,
-						opprettetdato = it.opprettetdato)
-				)
+				.filter { it.erHoveddokument }
+				.forEach {
+					filService.lagreFil(
+						soknadDto = savedDokumentSoknadDto,
+						FilDto(
+							vedleggsid = it.id!!, id = null, filnavn = it.vedleggsnr, mimetype = it.mimetype,
+							storrelse = it.document?.size, antallsider = null,
+							data = if (!it.erVariant) uinnloggetSoknadDto.hoveddokument.document else uinnloggetSoknadDto.hoveddokumentVariant.document,
+							opprettetdato = it.opprettetdato
+						)
+					)
 				}
 
 			// flytte opplastede vedleggsfiler i fillager til fil tabellen.
 			lagreFiler(savedDokumentSoknadDto, uinnloggetSoknadDto)
 
 			innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
-			return innsendingService.sendInnNoLoginSoknad(savedDokumentSoknadDto, uinnloggetSoknadDto.avsenderId?: AvsenderDto(uinnloggetSoknadDto.brukerDto.id,
-				AvsenderDto.IdType.FNR), uinnloggetSoknadDto.brukerDto)
+			val bruker = uinnloggetSoknadDto.brukerDto
+			val avsender = uinnloggetSoknadDto.avsenderId ?: if (bruker != null) AvsenderDto(bruker.id, AvsenderDto.IdType.FNR) else throw IllegalActionException(
+				message = "Hverken bruker eller avsender er satt",
+				errorCode = ErrorCode.PROPERTY_NOT_SET
+			)
+			return innsendingService.sendInnNoLoginSoknad(savedDokumentSoknadDto, avsender, bruker)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, dokumentSoknadDto.tema)
 			throw e
@@ -114,7 +121,7 @@ class NologinSoknadService(
 		// for hver fil hent og opprett nytt innslag i fil tabellen
 		opplastedeFiler.forEach { fileId ->
 			val filSomSkalKopieres = fillagerService.hentFil(filId = fileId, soknadDto.innsendingsId!!, namespace= FillagerNamespace.NOLOGIN)
-			if (filSomSkalKopieres == null || filSomSkalKopieres.innhold.size == 0) {
+			if (filSomSkalKopieres == null || filSomSkalKopieres.innhold.isEmpty()) {
 				throw IllegalActionException("Fant ikke fil med id=${fileId} for vedlegg med id=$vedleggsRef", errorCode = ErrorCode.NOT_FOUND)
 			}
 
@@ -130,10 +137,6 @@ class NologinSoknadService(
 			filService.lagreFil(soknadDto, filDto)
 		}
 
-	}
-
-fun brukerAvsenderValidering(nologinSoknadDto: SkjemaDtoV2): String {
-		return nologinSoknadDto.brukerDto.id
 	}
 
 	fun verifiserInput(uinnloggetSoknadDto: SkjemaDtoV2) {

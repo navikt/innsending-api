@@ -37,7 +37,7 @@ class PdfGenerator {
 		val alleredeInnsendt =
 			innsendteVedlegg(soknad.opprettetDato, soknad.vedleggsListe) + soknad.vedleggsListe.tidligereLevert
 
-		val fnr = soknad.brukerId
+		val fnr = soknad.brukerId ?: "-"
 		val personInfo = if (sammensattNavn == null) fnr else "$sammensattNavn, $fnr"
 
 		val now = LocalDateTime.now()
@@ -115,7 +115,7 @@ class PdfGenerator {
 
 		val sprak = selectLanguage(soknad.spraak)
 		val tekster = texts.get(sprak) ?: throw BackendErrorException("Mangler støtte for språk ${soknad.spraak}")
-		val fnr = soknad.brukerId
+		val fnr = soknad.brukerId ?: "-"
 		val personInfo = sammensattNavn ?: ""
 		val now = LocalDateTime.now()
 		val innsendtTidspunkt = java.lang.String.format(

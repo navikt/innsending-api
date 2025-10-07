@@ -1772,7 +1772,6 @@ components:
       type: object
       description: Data om en opprettet innsending av løspost.
       required:
-        - brukerId
         - tittel
         - tema
         - status
@@ -1818,7 +1817,6 @@ components:
       type: object
       description: Data om en opprettet søknad.
       required:
-        - brukerId
         - skjemanr
         - tittel
         - tema
@@ -2468,7 +2466,6 @@ components:
       type: object
       description: Data for å mellomlagre en søknad slik at eventuelle vedlegg kan legges til
       required:
-        - brukerId
         - skjemanr
         - tittel
         - tema
@@ -2522,7 +2519,6 @@ components:
       type: object
       description: Data for å mellomlagre en søknad slik at eventuelle vedlegg kan legges til
       required:
-        - brukerDto
         - skjemanr
         - tittel
         - tema

@@ -14,6 +14,7 @@ import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
+import no.nav.soknad.innsending.util.models.skjemadto.getBrukerOrAvsender
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -44,23 +45,15 @@ class NologinSoknadRestApi(
 	override fun opprettNologinSoknad(nologinSoknadDto: SkjemaDtoV2, envQualifier: EnvQualifier?): ResponseEntity<KvitteringsDto> {
 		// Verifiser at det kun er FyllUt som kaller dette API-et
 		val applikasjon = subjectHandler.getClientId()
-		val brukerId = nologinSoknadService.brukerAvsenderValidering(nologinSoknadDto)
+		val brukerAvsender = nologinSoknadDto.getBrukerOrAvsender()
 		combinedLogger.log(
-			"[${applikasjon}] - Kall for å opprette og sende inn søknad av uinlogget bruker fra applikasjon ${applikasjon} på skjema ${nologinSoknadDto.skjemanr}",
-			brukerId
+			"[${applikasjon}] - Kall for å opprette og sende inn søknad av uinnlogget bruker fra applikasjon ${applikasjon} på skjema ${nologinSoknadDto.skjemanr}",
+			brukerAvsender
 		)
 
 		nologinSoknadService.verifiserInput(nologinSoknadDto)
 
 		val innsendtSoknad = nologinSoknadService.lagreOgSendInnUinnloggetSoknad(nologinSoknadDto, applikasjon)
-
-
-		// Publiserer bruker-notifikasjon (type beskjed for varsling om innsendt søknad til bruker/avsender) for uinnlogget v kommer senere
-	/*
-		publiserBrukerNotifikasjonsVarselOmUinnloggetSoknad(
-			uinnloggetSoknadDto = uinnloggetSoknadDto
-		)
-	*/
 
 		return ResponseEntity
 			.status(HttpStatus.OK)

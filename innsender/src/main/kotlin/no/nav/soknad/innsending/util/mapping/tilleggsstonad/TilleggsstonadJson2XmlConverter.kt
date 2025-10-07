@@ -54,9 +54,10 @@ fun convertToTilleggsstonadsskjema(
 	soknadDto: DokumentSoknadDto,
 	tilleggstonadJsonObj: JsonApplication<JsonTilleggsstonad>
 ): Tilleggsstoenadsskjema {
+	val personidentifikator = soknadDto.brukerId ?: throw IllegalStateException("Mangler brukerId i søknaden")
 	return Tilleggsstoenadsskjema(
 		aktivitetsinformasjon = convertToAktivitetsinformasjon(tilleggstonadJsonObj.applicationDetails.aktivitetsinformasjon),
-		personidentifikator = soknadDto.brukerId,
+		personidentifikator = personidentifikator,
 		maalgruppeinformasjon = convertToMaalgruppeinformasjon(tilleggstonadJsonObj.applicationDetails.maalgruppeinformasjon),
 		rettighetstype = convertToRettighetstype(soknadDto, tilleggstonadJsonObj.applicationDetails.rettighetstype)
 	)

@@ -13,7 +13,7 @@ class SkjemaDokumentSoknadTransformer {
 	fun konverterTilDokumentSoknadDto(
 		input: SkjemaDtoV2,
 		existingSoknad: DokumentSoknadDto?,
-		brukerId: String,
+		brukerId: String?,
 		applikasjon: String,
 		visningsType: VisningsType? = VisningsType.fyllUt,
 	): DokumentSoknadDto =
@@ -47,7 +47,7 @@ class SkjemaDokumentSoknadTransformer {
 		)
 
 	fun konverterSkjemaDtoTilV2(skjemaDto: SkjemaDto): SkjemaDtoV2 = SkjemaDtoV2(
-		brukerDto = BrukerDto(id = skjemaDto.brukerId, idType= BrukerDto.IdType.FNR),
+		brukerDto = if (skjemaDto.brukerId != null) BrukerDto(id = skjemaDto.brukerId!!, idType= BrukerDto.IdType.FNR) else null,
 		skjemanr = skjemaDto.skjemanr,
 		tittel = skjemaDto.tittel,
 		tema = skjemaDto.tema,

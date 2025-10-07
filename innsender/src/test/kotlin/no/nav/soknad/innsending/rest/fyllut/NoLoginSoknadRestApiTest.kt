@@ -211,5 +211,72 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 			.assertHttpStatus(HttpStatus.SERVICE_UNAVAILABLE)
 	}
 
+	@Test
+	fun `skal sende inn søknad uten brukerId`() {
+		val file1 = api.uploadNologinFile(vedleggId = "abcdef")
+			.assertSuccess()
+			.body
+		val innsendingId = file1.innsendingId.toString()
+
+		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
+			mimetype = Mimetype.applicationSlashPdf,
+			filIdListe = listOf(file1.filId.toString())
+		).build()
+
+		val skjemaDto = SkjemaDtoV2TestBuilder()
+			.utenBrukerId()
+			.medAvsender("Are Avsender")
+			.medInnsendingsId(innsendingId)
+			.medVedlegg(listOf(vedlegg1))
+			.build()
+
+		api.sendInnNologinSoknad(skjemaDto)
+			.assertSuccess()
+
+		val slotSoknad = slot<DokumentSoknadDto>()
+		val slotVedleggsliste = slot<List<VedleggDto>>()
+		val slotAvsender = slot<AvsenderDto>()
+		val slotBruker = slot<BrukerDto?>()
+		verify(exactly = 1) {
+			soknadsmottaker.sendInnSoknad(
+				capture(slotSoknad),
+				capture(slotVedleggsliste),
+				capture(slotAvsender),
+				captureNullable(slotBruker)
+			)
+		}
+		assertNull(slotBruker.captured)
+		val actualAvsender = slotAvsender.captured
+		assertNotNull(actualAvsender)
+		assertEquals("Are Avsender", actualAvsender.navn)
+	}
+
+	@Test
+	fun `innsending skal feile dersom hverken avsender eller bruker er satt`() {
+		val file1 = api.uploadNologinFile(vedleggId = "abcdef")
+			.assertSuccess()
+			.body
+		val innsendingId = file1.innsendingId.toString()
+
+		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
+			mimetype = Mimetype.applicationSlashPdf,
+			filIdListe = listOf(file1.filId.toString())
+		).build()
+
+		val skjemaDto = SkjemaDtoV2TestBuilder()
+			.utenBrukerId()
+			.utenAvsender()
+			.medInnsendingsId(innsendingId)
+			.medVedlegg(listOf(vedlegg1))
+			.build()
+
+		api.sendInnNologinSoknad(skjemaDto)
+			.assertClientError()
+			.errorBody.let {
+				assertEquals("Hverken bruker eller avsender er satt", it.message)
+			}
+	}
 
 }

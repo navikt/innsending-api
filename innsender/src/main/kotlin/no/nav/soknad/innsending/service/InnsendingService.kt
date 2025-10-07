@@ -118,7 +118,9 @@ class InnsendingService(
 
 		// send soknadmetada til soknadsmottaker
 		try {
-			soknadsmottakerAPI.sendInnSoknad(soknadDto, (listOf(kvitteringForArkivering) + opplastedeVedlegg), avsenderDto?: AvsenderDto(id = soknadDto.brukerId, idType = IdType.FNR), brukerDto)
+			val avsender = avsenderDto ?: AvsenderDto(id = soknadDto.brukerId, idType = IdType.FNR)
+			val vedleggsListe = listOf(kvitteringForArkivering) + opplastedeVedlegg
+			soknadsmottakerAPI.sendInnSoknad(soknadDto, vedleggsListe, avsender, brukerDto)
 			innsenderMetrics.incSubmissionsCounter(soknadDto.visningsType)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
@@ -217,12 +219,19 @@ class InnsendingService(
 
 	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): Pair<KvitteringsDto, DokumentSoknadDto?> {
+		val brukerId = soknadDtoInput.brukerId
+		if (brukerId.isNullOrEmpty()) {
+			throw IllegalActionException(
+				message = "BrukerId er ikke satt, kan ikke sende inn",
+				errorCode = ErrorCode.PROPERTY_NOT_SET
+			)
+		}
 		val operation = InnsenderOperation.SEND_INN.name
 		val startSendInn = System.currentTimeMillis()
 
 		try {
-			val avsenderDto = AvsenderDto(id= soknadDtoInput.brukerId, idType = AvsenderDto.IdType.FNR)
-			val brukerDto = BrukerDto(id= soknadDtoInput.brukerId, idType = BrukerDto.IdType.FNR)
+			val avsenderDto = AvsenderDto(id= brukerId, idType = AvsenderDto.IdType.FNR)
+			val brukerDto = BrukerDto(id= brukerId, idType = BrukerDto.IdType.FNR)
 			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput, avsenderDto = avsenderDto, brukerDto = brukerDto)
 
 			val innsendtSoknadDto = soknadService.hentSoknad(soknadDtoInput.innsendingsId!!)
@@ -240,7 +249,7 @@ class InnsendingService(
 
 
 	@Transactional(timeout = TRANSACTION_TIMEOUT)
-	fun sendInnNoLoginSoknad(soknadDtoInput: DokumentSoknadDto, avsenderDto: AvsenderDto, brukerDto: BrukerDto): KvitteringsDto {
+	fun sendInnNoLoginSoknad(soknadDtoInput: DokumentSoknadDto, avsenderDto: AvsenderDto, brukerDto: BrukerDto?): KvitteringsDto {
 		val operation = InnsenderOperation.SEND_INN.name
 		val startSendInn = System.currentTimeMillis()
 
@@ -265,7 +274,7 @@ class InnsendingService(
 		opplastedeVedlegg: List<VedleggDto>,
 		manglendeVedlegg: List<VedleggDto>
 	): VedleggDto {
-		val person = pdlInterface.hentPersonData(soknadDto.brukerId)
+		val person = soknadDto.brukerId?.let { if (it.isNotEmpty()) pdlInterface.hentPersonData(it) else null }
 		val sammensattNavn = listOfNotNull(person?.fornavn, person?.mellomnavn, person?.etternavn).joinToString(" ")
 
 		val kvittering =
@@ -312,7 +321,7 @@ class InnsendingService(
 
 		// Hvis ettersending, så må det genereres et dummy hoveddokument
 		val dummySkjema = try {
-			val person = pdlInterface.hentPersonData(soknadDto.brukerId)
+			val person = soknadDto.brukerId?.let { if (it.isNotEmpty()) pdlInterface.hentPersonData(it) else null }
 			val sammensattNavn = listOfNotNull(person?.fornavn, person?.mellomnavn, person?.etternavn).joinToString(" ")
 			PdfGenerator().lagForsideEttersending(soknadDto, sammensattNavn)
 		} catch (e: Exception) {
