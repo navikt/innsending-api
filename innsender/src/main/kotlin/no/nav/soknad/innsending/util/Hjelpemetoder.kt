@@ -49,10 +49,13 @@ fun maskerFnr(innsending: Innsending): Innsending {
 		innsendingsId = innsending.innsendingsId,
 		ettersendelseTilId = innsending.ettersendelseTilId,
 		kanal = innsending.kanal,
-		avsenderDto = AvsenderDto(id = if (innsending.avsenderDto.id != null) "*****" else null, idType = innsending.avsenderDto.idType, navn = if (innsending.avsenderDto.navn != null) "*****" else null),
-		brukerDto = if (innsending.brukerDto != null) {
-			BrukerDto(id = "*****", idType = innsending.brukerDto!!.idType)
-		} else null,
+		avsenderDto = innsending.avsenderDto.copy(
+			id = innsending.avsenderDto.id?.let { "*****" },
+			navn = innsending.avsenderDto.navn?.let { "*****" }
+		),
+		brukerDto = innsending.brukerDto?.copy(
+			id = "*****",
+		),
 		tema = innsending.tema,
 		skjemanr = innsending.skjemanr,
 		tittel = innsending.tittel,

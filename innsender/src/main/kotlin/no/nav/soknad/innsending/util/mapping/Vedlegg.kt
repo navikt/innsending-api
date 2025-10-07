@@ -184,33 +184,16 @@ fun translate(vedleggDtos: List<VedleggDto>, newFormat: Boolean): List<DokumentD
 fun translate(avsenderDto: AvsenderDto): no.nav.soknad.arkivering.soknadsmottaker.model.AvsenderDto {
 	return no.nav.soknad.arkivering.soknadsmottaker.model.AvsenderDto(
 		id = avsenderDto.id,
-		idType = translate(avsenderDto.idType)
+		idType = if (!avsenderDto.id.isNullOrEmpty()) no.nav.soknad.arkivering.soknadsmottaker.model.AvsenderDto.IdType.FNR else null,
+		navn = avsenderDto.navn,
 	)
 }
 
-fun translate(idType: AvsenderDto.IdType?): no.nav.soknad.arkivering.soknadsmottaker.model.AvsenderDto.IdType? {
-	return when (idType) {
-		AvsenderDto.IdType.FNR -> no.nav.soknad.arkivering.soknadsmottaker.model.AvsenderDto.IdType.FNR
-		else -> no.nav.soknad.arkivering.soknadsmottaker.model.AvsenderDto.IdType.FNR
-	}
-}
-
-fun translate(brukerDto: BrukerDto): no.nav.soknad.arkivering.soknadsmottaker.model.BrukerDto? {
-	if (brukerDto == null) {
-		return null
-	}
+fun translate(brukerDto: BrukerDto): no.nav.soknad.arkivering.soknadsmottaker.model.BrukerDto {
 	return no.nav.soknad.arkivering.soknadsmottaker.model.BrukerDto(
 		id = brukerDto.id,
-		idType = translate(brukerDto.idType),
+		idType = no.nav.soknad.arkivering.soknadsmottaker.model.BrukerDto.IdType.FNR,
 	)
-}
-
-fun translate(idType: BrukerDto.IdType?): no.nav.soknad.arkivering.soknadsmottaker.model.BrukerDto.IdType {
-	return when (idType) {
-		BrukerDto.IdType.FNR -> no.nav.soknad.arkivering.soknadsmottaker.model.BrukerDto.IdType.FNR
-		//BrukerDto.IdType.ORGNR -> no.nav.soknad.arkivering.soknadsmottaker.model.BrukerDto.IdType.ORGNR
-		else -> no.nav.soknad.arkivering.soknadsmottaker.model.BrukerDto.IdType.FNR
-	}
 }
 
 fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long) =

@@ -64,9 +64,9 @@ class MottakerAPI(
 	override fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggsListe: List<VedleggDto>, avsenderDto: AvsenderDto, brukerDto: BrukerDto?) {
 		if (soknadDto.visningsType == VisningsType.nologin) {
 			val innsending = translate(soknadDto, vedleggsListe, avsenderDto, brukerDto)
-			logger.info("${soknadDto.innsendingsId}: for uinnlogget bruker. klar til å sende inn\n${maskerFnr(innsending)}\ntil ${restConfig.soknadsMottakerHost}")
+			logger.info("${soknadDto.innsendingsId}: klar til å sende inn (nologin)\n${maskerFnr(innsending)}\ntil ${restConfig.soknadsMottakerHost}")
 			innsendingMottakerApi.nologinSubmission(innsending, innsending.innsendingsId)
-			logger.info("${soknadDto.innsendingsId}: for uinnlogget bruker sendt inn")
+			logger.info("${soknadDto.innsendingsId}: sendt inn (nologin)")
 		} else {
 			val personId = soknadDto.brukerId ?: throw IllegalStateException("Kan ikke sende inn søknad uten brukerId")
 			val soknad = translate(soknadDto, vedleggsListe, personId)
