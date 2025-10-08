@@ -2,10 +2,12 @@ package no.nav.soknad.innsending.config
 
 import com.expediagroup.graphql.client.spring.GraphQLWebClient
 import io.netty.channel.ChannelOption
+import io.netty.handler.timeout.ReadTimeoutException
 import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.handler.timeout.WriteTimeoutHandler
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
+import no.nav.soknad.innsending.exceptions.utils.messageForLog
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.HEADER_BEHANDLINGSNUMMER
 import no.nav.soknad.innsending.util.Constants.PDL_BEHANDLINGSNUMMER
@@ -16,7 +18,9 @@ import org.springframework.context.annotation.*
 import org.springframework.http.HttpHeaders
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.WebClientRequestException
 import reactor.netty.http.client.*
+import reactor.util.retry.Retry
 import java.util.concurrent.TimeUnit
 
 
@@ -31,8 +35,9 @@ class PdlClientConfig(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	private val connectionTimeoutSeconds = 10
-	private val readTimeoutSeconds = 30
+	private val readTimeoutSeconds = 15
 	private val writeTimeoutSeconds = 30
+	private val maxRetries = 3L
 
 	@Bean("pdlGraphQLClient")
 	fun graphQLClient() = GraphQLWebClient(
@@ -66,12 +71,18 @@ class PdlClientConfig(
 				it.header("Tema", "AAP")
 				it.header(HEADER_BEHANDLINGSNUMMER, PDL_BEHANDLINGSNUMMER)
 			}
+			.filter { request, next ->
+				next.exchange(request)
+					.retryWhen(
+						Retry.max(maxRetries)
+							.filter { throwable -> throwable is WebClientRequestException && throwable.cause is ReadTimeoutException }
+						.doBeforeRetry { logger.info("Retrying due to read timeout (attempt ${it.totalRetries() + 1}/${maxRetries}), error: ${it.failure().messageForLog}") }
+					).doOnError { error -> logger.error("Error in call to PDL - ${error.messageForLog}", error) }
+			}
 	)
 
 	private val tokenxPDLClientProperties =
 		oauth2Config.registration["tokenx-pdl"]
 			?: throw RuntimeException("could not find oauth2 client config for tokenx-pdl")
 
-
 }
-
