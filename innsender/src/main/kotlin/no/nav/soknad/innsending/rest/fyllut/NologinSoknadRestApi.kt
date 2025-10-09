@@ -43,11 +43,10 @@ class NologinSoknadRestApi(
 	)
 	@Timed(InnsenderOperation.SEND_INN_NOLOGIN)
 	override fun opprettNologinSoknad(nologinSoknadDto: SkjemaDtoV2, envQualifier: EnvQualifier?): ResponseEntity<KvitteringsDto> {
-		// Verifiser at det kun er FyllUt som kaller dette API-et
 		val applikasjon = subjectHandler.getClientId()
 		val brukerAvsender = nologinSoknadDto.getBrukerOrAvsenderForSecureLog()
 		combinedLogger.log(
-			"[${applikasjon}] - Kall for å opprette og sende inn søknad av uinnlogget bruker fra applikasjon ${applikasjon} på skjema ${nologinSoknadDto.skjemanr}",
+			"${nologinSoknadDto.innsendingsId}: Kall for å opprette og sende inn ${nologinSoknadDto.skjemanr} av uinnlogget bruker (applikasjon $applikasjon)",
 			brukerAvsender
 		)
 

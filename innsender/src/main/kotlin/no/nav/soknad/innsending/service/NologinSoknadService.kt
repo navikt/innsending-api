@@ -19,6 +19,7 @@ import no.nav.soknad.innsending.util.mapping.SkjemaDokumentSoknadTransformer
 import no.nav.soknad.innsending.util.mapping.lagDokumentSoknadDto
 import no.nav.soknad.innsending.util.mapping.mapTilMimetype
 import no.nav.soknad.innsending.util.mapping.mapTilSoknadDb
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
@@ -33,10 +34,16 @@ class NologinSoknadService(
 	private val innsenderMetrics: InnsenderMetrics,
 	private val exceptionHelper: ExceptionHelper,
 ) {
+	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun lagreOgSendInnUinnloggetSoknad(uinnloggetSoknadDto: SkjemaDtoV2, applikasjon: String): KvitteringsDto {
 		val operation = InnsenderOperation.OPPRETT.name
+		val bruker = uinnloggetSoknadDto.brukerDto
+		val avsender = uinnloggetSoknadDto.avsenderId ?: if (bruker != null) AvsenderDto(bruker.id, AvsenderDto.IdType.FNR) else throw IllegalActionException(
+			message = "Hverken bruker eller avsender er satt",
+			errorCode = ErrorCode.PROPERTY_NOT_SET
+		)
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
 			input = uinnloggetSoknadDto,
@@ -53,7 +60,7 @@ class NologinSoknadService(
 
 			val savedDokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbData)
 
-			// lagre hovedkdokument (PDF) og hoveddokumentvariant (JSON)
+			logger.info("$innsendingsId: Lagrer hoveddokument og hoveddokumentvariant for nologin søknad")
 			savedDokumentSoknadDto.vedleggsListe
 				.filter { it.erHoveddokument }
 				.forEach {
@@ -69,14 +76,10 @@ class NologinSoknadService(
 				}
 
 			// flytte opplastede vedleggsfiler i fillager til fil tabellen.
+			logger.info("$innsendingsId: Flytter filer fra fillager til database for nologin søknad")
 			lagreFiler(savedDokumentSoknadDto, uinnloggetSoknadDto)
 
 			innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
-			val bruker = uinnloggetSoknadDto.brukerDto
-			val avsender = uinnloggetSoknadDto.avsenderId ?: if (bruker != null) AvsenderDto(bruker.id, AvsenderDto.IdType.FNR) else throw IllegalActionException(
-				message = "Hverken bruker eller avsender er satt",
-				errorCode = ErrorCode.PROPERTY_NOT_SET
-			)
 			return innsendingService.sendInnNoLoginSoknad(savedDokumentSoknadDto, avsender, bruker)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, dokumentSoknadDto.tema)
