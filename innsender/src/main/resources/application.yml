@@ -11,8 +11,8 @@ spring:
     open-in-view: false
   servlet:
     multipart:
-      max-file-size: 50MB
-      max-request-size: 50MB
+      max-file-size: 150MB
+      max-request-size: 300MB
 
 management:
   endpoint:
@@ -81,8 +81,8 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 100MB
-      max-request-size: 100MB
+      max-file-size: 150MB
+      max-request-size: 300MB
 
   flyway:
     enabled: true
@@ -191,7 +191,7 @@ spring:
   servlet:
     multipart:
       max-file-size: ${MAX_FILE_SIZE}MB
-      max-request-size: ${MAX_FILE_SIZE}MB
+      max-request-size: ${MAX_FILE_SIZE_SUM}MB
 
   flyway:
     enabled: true
