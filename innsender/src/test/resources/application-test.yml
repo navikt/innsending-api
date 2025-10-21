@@ -17,7 +17,7 @@ spring:
   servlet:
     multipart:
       max-file-size: 150MB
-      max-request-size: 151MB
+      max-request-size: 300MB
 
   flyway:
     enabled: true

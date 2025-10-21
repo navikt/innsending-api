@@ -1,6 +1,9 @@
 server:
   port: 9064
   max-http-request-header-size: 32KB
+  tomcat:
+    max-http-form-post-size: 300MB
+    max-swallow-size=300MB:
 
 spring:
   application:
@@ -70,6 +73,9 @@ fil-konvertering_url: http://${GOTENBERG_HOST:localhost}:${GOTENBERG_PORT:3050}
 gcp:
   buckets:
     fillagerBucketNavn: ${FILE_STORAGE_BUCKET_NAME:innsending-api-file-storage-local}
+
+multipart-file-size: 151
+multipart-request-size: 301
 
 ---
 spring:
