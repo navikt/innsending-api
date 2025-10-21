@@ -94,8 +94,8 @@ status_log_url: "https://logs.adeo.no"
 
 restconfig:
   version: 1.0
-  maxFileSize: 50
-  maxFileSizeSum: 150
+  maxFileSize: 150
+  maxFileSizeSum: 300
   maxNumberOfPages: 200
   sanityHost: https://www.nav.no
   sanityEndpoint: /soknader/api/sanity/skjemautlisting
@@ -142,8 +142,8 @@ fil-konvertering_url: ${KONVERTERING_TIL_PDF_URL}
 
 restconfig:
   version: 1.0
-  maxFileSize: 50
-  maxFileSizeSum: 150
+  maxFileSize: 150
+  maxFileSizeSum: 300
   maxNumberOfPages: 200
   sanityHost: https://www.nav.no
   sanityEndpoint: /soknader/api/sanity/skjemautlisting
