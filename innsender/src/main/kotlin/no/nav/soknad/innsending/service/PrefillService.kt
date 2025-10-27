@@ -22,6 +22,8 @@ import no.nav.soknad.innsending.util.prefill.MaalgruppeUtils
 import no.nav.soknad.innsending.util.prefill.ServiceProperties.createServicePropertiesMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.slf4j.Marker
+import org.slf4j.MarkerFactory
 import org.springframework.stereotype.Service
 
 // Gets data from external services which will be used in the Fyllut application to prefill values in the form-fields and to validate that the application is correct for the user
@@ -34,6 +36,8 @@ class PrefillService(
 ) {
 	private val logger: Logger = LoggerFactory.getLogger(javaClass)
 	private val secureLogger = LoggerFactory.getLogger("secureLogger")
+	private val secureLogsMarker: Marker = MarkerFactory.getMarker("TEAM_LOGS")
+
 
 	fun getPrefillData(properties: List<String>, userId: String): PrefillData = runBlocking {
 		// Create a new hashmap of which services to call based on the input properties
@@ -125,6 +129,7 @@ class PrefillService(
 		val userIdMatch = pdlIdents?.firstOrNull { it.identifikasjonsnummer == userId }?.identifikasjonsnummer
 		if (userIdMatch == null) {
 			secureLogger.warn("Mismatch while resolving identifikasjonsnummer: token=$userId, PDL=$userIdMatch (PDL response $pdlIdents)")
+			logger.warn(secureLogsMarker, "Mismatch while resolving identifikasjonsnummer: token=$userId, PDL=$userIdMatch")
 		}
 		return userIdMatch ?: pdlIdents?.firstOrNull { !it.metadata.historisk }?.identifikasjonsnummer ?: userId
 	}
