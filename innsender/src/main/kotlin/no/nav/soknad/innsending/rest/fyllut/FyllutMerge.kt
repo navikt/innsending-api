@@ -23,7 +23,7 @@ class FyllutMerge(private val pdfMerger: PdfMergerInterface): FyllutMergeApi {
 
 		val mergedFile = pdfMerger.mergeWithPDFBox(mergeFilerDto.filer)
 		val mergedFileMedMetadata = pdfMerger.setPdfMetadata(mergedFile, mergeFilerDto.tittel, mergeFilerDto.sprak)
-		logger.info("FyllutMerge: Returnerer fil ${mergedFileMedMetadata.size}")
+		logger.info("FyllutMerge: Merge fil til ${mergeFilerDto.tittel}, Språk = ${mergeFilerDto.sprak?: "nb-NO"}, Returnerer fil ${mergedFileMedMetadata.size}")
 
 		return ResponseEntity.status(HttpStatus.OK).body(mergedFileMedMetadata)
 	}
