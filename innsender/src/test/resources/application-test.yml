@@ -14,10 +14,6 @@ spring:
     default-property-inclusion: non_null
   jpa:
     open-in-view: false
-  servlet:
-    multipart:
-      max-file-size: 50MB
-      max-request-size: 50MB
 
   flyway:
     enabled: true
