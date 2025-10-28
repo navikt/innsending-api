@@ -11,4 +11,9 @@ const val reiseOppstartSlutt = "NAV 11-12.18B"
 const val reiseArbeid = "NAV 11-12.22B"
 const val kjoreliste = "NAV 11-12.24B"
 
-val reisestotteskjemaer = listOf(reiseDaglig, reiseSamling, reiseOppstartSlutt, reiseArbeid)
+const val ungdomsprogram_reiseDaglig = "NAV 75-05.01"
+const val ungdomsprogram_reiseSamling = "NAV 75-05.02"
+const val ungdomsprogram_reiseOppstartSlutt = "NAV 75-05.03"
+
+val reisestotteskjemaer = listOf(reiseDaglig, reiseSamling, reiseOppstartSlutt, reiseArbeid,
+	ungdomsprogram_reiseDaglig, ungdomsprogram_reiseSamling, ungdomsprogram_reiseOppstartSlutt)

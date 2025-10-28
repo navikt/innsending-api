@@ -160,8 +160,12 @@ fun getMaalgruppeinformasjonFromLivssituasjon(
 			kilde = "BRUKERREGISTRERT",
 			maalgruppetype = "ANNET"
 		)
-
-	return null
+	/* Setter default målgruppe for å kunne sende inn ungdomsprogrammer */
+	return JsonMaalgruppeinformasjon(
+		periode = null,
+		kilde = "BRUKERREGISTRERT",
+		maalgruppetype = "ANNET"
+	)
 }
 
 private fun convertToJsonRettighetstyper(
@@ -311,13 +315,13 @@ private fun convertToReisestottesoknad(
 ): JsonReisestottesoknad? {
 	if (!erReisestottesoknad(soknadDto.skjemanr)) return null
 	return JsonReisestottesoknad(
-		dagligReise = if (soknadDto.skjemanr.startsWith(reiseDaglig))
+		dagligReise = if (soknadDto.skjemanr.startsWith(reiseDaglig) || soknadDto.skjemanr.startsWith(ungdomsprogram_reiseDaglig))
 			convertToJsonDagligReise(tilleggsstonad) else null,
-		reiseSamling = if (soknadDto.skjemanr.startsWith(reiseSamling))
+		reiseSamling = if (soknadDto.skjemanr.startsWith(reiseSamling) || soknadDto.skjemanr.startsWith(ungdomsprogram_reiseSamling))
 			convertToJsonReiseSamling(tilleggsstonad) else null,
 		dagligReiseArbeidssoker = if (soknadDto.skjemanr.startsWith(reiseArbeid))
 			convertToJsonReiseArbeidssoker(tilleggsstonad) else null,
-		oppstartOgAvsluttetAktivitet = if (soknadDto.skjemanr.startsWith(reiseOppstartSlutt))
+		oppstartOgAvsluttetAktivitet = if (soknadDto.skjemanr.startsWith(reiseOppstartSlutt) ||  soknadDto.skjemanr.startsWith(ungdomsprogram_reiseOppstartSlutt))
 			convertToJsonOppstartOgAvsluttetAktivitet(tilleggsstonad) else null
 	)
 }

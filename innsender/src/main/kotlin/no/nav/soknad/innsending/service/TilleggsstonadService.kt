@@ -35,6 +35,9 @@ class TilleggsstonadService(
 			reiseArbeid to TemaValg.kun_TSR, // Støtte til reise for å komme i arbeid
 			stotteTilFlytting to TemaValg.TSO_og_TSR, // Støtte til flytting
 			kjoreliste to TemaValg.TSO_og_TSR, // Kjøreliste
+			ungdomsprogram_reiseDaglig to TemaValg.kun_TSR,
+			ungdomsprogram_reiseSamling to TemaValg.kun_TSR,
+			ungdomsprogram_reiseOppstartSlutt to TemaValg.kun_TSR,
 		)
 
 	private val relevanteMaalgrupperForTsr = listOf(
