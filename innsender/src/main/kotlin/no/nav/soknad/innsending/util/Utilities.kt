@@ -10,7 +10,7 @@ class Utilities {
 	companion object {
 		fun laginnsendingsId(): String {
 			val innsendingsId = UUID.randomUUID().toString()
-			MDCUtil.toMDC(CORRELATION_ID, innsendingsId)
+			MDCUtil.toMDC(CORRELATION_ID, innsendingsId, overwrite = false)
 			MDCUtil.toMDC(MDC_INNSENDINGS_ID, innsendingsId)
 			return innsendingsId
 		}

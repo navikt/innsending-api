@@ -184,8 +184,8 @@ class GenererPdfTest {
 
 		val sammensattnavn = "Fornavn Elmer"
 		val pdf = PdfGenerator().lagPdfFraTekstFil(
-			soknad,
-			sammensattnavn,
+			spraak = soknad.spraak,
+			vedleggsTittel = sammensattnavn,
 			text = "Dette er en test av konvertering av en tekstfil til en PDF."
 		)
 
@@ -206,8 +206,8 @@ class GenererPdfTest {
 		val text = tekstFil.decodeToString()
 		val sammensattnavn = "Fornavn Elmer"
 		val pdf = PdfGenerator().lagPdfFraTekstFil(
-			soknad,
-			sammensattnavn,
+			spraak = soknad.spraak,
+			vedleggsTittel = sammensattnavn,
 			text = text
 		)
 
@@ -227,8 +227,8 @@ class GenererPdfTest {
 
 		val sammensattnavn = "Fornavn Elmer"
 		val pdf = PdfGenerator().lagPdfFraTekstFil(
-			soknad,
-			sammensattnavn,
+			spraak = soknad.spraak,
+			vedleggsTittel = sammensattnavn,
 			text = tekstFil.decodeToString()
 		)
 
@@ -246,8 +246,8 @@ class GenererPdfTest {
 
 		val sammensattnavn = "Fornavn Elmer"
 		val pdf = PdfGenerator().lagPdfFraTekstFil(
-			soknad,
-			sammensattnavn,
+			spraak = soknad.spraak,
+			vedleggsTittel = sammensattnavn,
 			text = tekstFil.decodeToString()
 		)
 

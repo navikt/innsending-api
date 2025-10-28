@@ -43,7 +43,11 @@ container og kjører Flyway migrasjonene.
 
 ### Docker Compose
 
-Applikasjonen (sammen med en Postgres database) kan også kjøres lokalt med Docker Compose:
+En effektiv måte å jobbe lokalt på er å kjøre opp Postgres og Google Storage lokalt med Docker Compose
+(`docker compose up -d db cloud-storage`), og så kjøre innsending-api i Intellij med Spring profilen
+satt til `docker` og miljøvariabel `DATABASE_PORT=5450`.
+
+Selve applikasjonen innsending-api kan også kjøres lokalt med Docker Compose:
 
 ```
 docker compose up --build

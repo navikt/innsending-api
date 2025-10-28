@@ -5,6 +5,7 @@
 	"database-name": "dokumentinnsending-loadtests",
 	"default_database_size": 10,
 	"tier": "db-custom-1-3840",
+	"bucket-name-file-storage": "innsending-api-file-storage-loadtests",
 	"ingresses": [],
 	"accessPolicyInbound": {
 		"current-namespace": [
@@ -35,8 +36,8 @@
 		"DATABASE_NAME": "dokumentinnsending-loadtests",
 		"SPRING_PROFILES_ACTIVE": "gcp,loadtests",
 		"APP_VERSION": "0.0.1",
-		"MAX_FILE_SIZE": "50",
-		"MAX_FILE_SIZE_SUM": "150",
+		"MAX_FILE_SIZE": "150",
+		"MAX_FILE_SIZE_SUM": "300",
 		"MAX_NUMBER_OF_PAGES": "1000",
 		"ETTERSENDINGSFRIST": 14,
 		"PDL_URL": "https://arkiv-mock-gcp.intern.dev.nav.no",

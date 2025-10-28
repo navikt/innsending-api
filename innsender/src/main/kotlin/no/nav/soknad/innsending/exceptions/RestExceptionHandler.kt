@@ -1,8 +1,10 @@
 package no.nav.soknad.innsending.exceptions
 
+import com.google.cloud.storage.StorageException
 import jakarta.servlet.http.HttpServletRequest
 import no.nav.security.token.support.core.exceptions.JwtTokenMissingException
 import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
+import no.nav.soknad.innsending.exceptions.utils.messageForLog
 import no.nav.soknad.innsending.model.RestErrorResponseDto
 import org.apache.catalina.connector.ClientAbortException
 import org.slf4j.Logger
@@ -129,6 +131,22 @@ class RestExceptionHandler {
 		)
 	}
 
+	@ExceptionHandler(value = [StorageException::class])
+	fun storageExceptionHandler(
+		request: HttpServletRequest,
+		exception: StorageException
+	): ResponseEntity<RestErrorResponseDto?>? {
+		logger.error("Feil ved kall til ${request.requestURI}: ${exception.message}", exception)
+
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = "Feil under interaksjon med lagringstjenesten for filer",
+				timestamp = OffsetDateTime.now(),
+				errorCode = "errorCode.storageError"
+			), HttpStatus.INTERNAL_SERVER_ERROR
+		)
+	}
+
 	// 500
 	@ExceptionHandler
 	fun generalException(exception: Exception): ResponseEntity<RestErrorResponseDto> {
@@ -170,6 +188,3 @@ class RestExceptionHandler {
 		)
 	}
 }
-
-val Exception.messageForLog: String
-	get() = this.message ?: this.cause?.message ?: this.suppressed.firstOrNull()?.message ?: this.javaClass.simpleName
