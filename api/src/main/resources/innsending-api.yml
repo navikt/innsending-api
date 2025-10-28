@@ -22,6 +22,8 @@ tags:
     description: API for sendinn-frontend applikasjonen for å håndtere vedlegg.
   - name: sendinn-fil
     description: API for sendinn-frontend applikasjonen for å håndtere filer.
+  - name: nologin
+    description: API for søknader fra brukere som ikke er logget inn.
   - name: soknadsveiviser
     description: API for soknadsveiviser applikasjonen (deprecated).
   - name: ekstern
@@ -304,7 +306,7 @@ paths:
               content:
                 application/json:
                   schema:
-                    $ref: "#/components/schemas/RestErrorResponseDto"
+                    $ref: "./common/components.yaml#/components/schemas/RestErrorResponseDto"
                   example:
                     message: Autentisering feilet
                     timestamp: 2023-12-21T09:31:40.549032434
@@ -314,7 +316,7 @@ paths:
               content:
                 application/json:
                   schema:
-                    $ref: "#/components/schemas/RestErrorResponseDto"
+                    $ref: "./common/components.yaml#/components/schemas/RestErrorResponseDto"
                   example:
                     message: Noe gikk galt, prøv igjen senere
                     timestamp: 2023-12-21T09:31:40.549032434
@@ -919,6 +921,12 @@ paths:
       tags:
         - fyllut
 
+  /v1/nologin-fillager:
+    $ref: "./nologin/fillager.yaml"
+
+  /v1/nologin-fillager/{filId}:
+    $ref: "./nologin/fil.yaml"
+
   /ekstern/v1/ettersending:
         post:
           summary: Kall for å opprette en ettersending fra eksterne applikasjoner. Skjemanr, tema og vedleggskoder valideres mot kodeverket (se https://kodeverk-web.dev.intern.nav.no/).
@@ -954,7 +962,7 @@ paths:
               content:
                 application/json:
                   schema:
-                    $ref: "#/components/schemas/RestErrorResponseDto"
+                    $ref: "./common/components.yaml#/components/schemas/RestErrorResponseDto"
                   example:
                     message: Autentisering feilet
                     timestamp: 2023-12-21T09:31:40.549032434
@@ -964,7 +972,7 @@ paths:
               content:
                 application/json:
                   schema:
-                    $ref: "#/components/schemas/RestErrorResponseDto"
+                    $ref: "./common/components.yaml#/components/schemas/RestErrorResponseDto"
                   example:
                     message: Noe gikk galt, prøv igjen senere
                     timestamp: 2023-12-21T09:31:40.549032434
@@ -1006,7 +1014,7 @@ paths:
                 content:
                   application/json:
                     schema:
-                      $ref: "#/components/schemas/RestErrorResponseDto"
+                      $ref: "./common/components.yaml#/components/schemas/RestErrorResponseDto"
                     example:
                       message: Autentisering feilet
                       timestamp: 2023-12-21T09:31:40.549032434
@@ -1016,7 +1024,7 @@ paths:
                 content:
                   application/json:
                     schema:
-                      $ref: "#/components/schemas/RestErrorResponseDto"
+                      $ref: "./common/components.yaml#/components/schemas/RestErrorResponseDto"
                     example:
                       message: Ingen ettersending funnet
                       timestamp: 2023-12-21T09:31:40.549032434
@@ -1026,7 +1034,7 @@ paths:
                 content:
                   application/json:
                     schema:
-                      $ref: "#/components/schemas/RestErrorResponseDto"
+                      $ref: "./common/components.yaml#/components/schemas/RestErrorResponseDto"
                     example:
                       message: Noe gikk galt, prøv igjen senere
                       timestamp: 2023-12-21T09:31:40.549032434
@@ -1101,7 +1109,7 @@ paths:
               content:
                 application/json:
                   schema:
-                    $ref: "#/components/schemas/RestErrorResponseDto"
+                    $ref: "./common/components.yaml#/components/schemas/RestErrorResponseDto"
                   example:
                     message: Autentisering feilet
                     timestamp: 2023-12-21T09:31:40.549032434
@@ -1111,7 +1119,7 @@ paths:
               content:
                 application/json:
                   schema:
-                    $ref: "#/components/schemas/RestErrorResponseDto"
+                    $ref: "./common/components.yaml#/components/schemas/RestErrorResponseDto"
                   example:
                     message: Noe gikk galt, prøv igjen senere
                     timestamp: 2023-12-21T09:31:40.549032434
@@ -1185,7 +1193,7 @@ paths:
                 content:
                   application/json:
                     schema:
-                      $ref: "#/components/schemas/RestErrorResponseDto"
+                      $ref: "./common/components.yaml#/components/schemas/RestErrorResponseDto"
                     example:
                       message: Autentisering feilet
                       timestamp: 2023-12-21T09:31:40.549032434
@@ -1195,7 +1203,7 @@ paths:
                 content:
                   application/json:
                     schema:
-                      $ref: "#/components/schemas/RestErrorResponseDto"
+                      $ref: "./common/components.yaml#/components/schemas/RestErrorResponseDto"
                     example:
                       message: Ingen ettersending funnet
                       timestamp: 2023-12-21T09:31:40.549032434
@@ -1205,7 +1213,7 @@ paths:
                 content:
                   application/json:
                     schema:
-                      $ref: "#/components/schemas/RestErrorResponseDto"
+                      $ref: "./common/components.yaml#/components/schemas/RestErrorResponseDto"
                     example:
                       message: Noe gikk galt, prøv igjen senere
                       timestamp: 2023-12-21T09:31:40.549032434
@@ -2094,24 +2102,6 @@ components:
       type: string
       description: Nøkkelnavn på property. Brukt på vedlegg av type Annet (skjemanr=N6), for å sjekke om dette er default Annet vedlegg eller ikke
       example: annenDokumentasjon,  tilleggsVedleggForSkjemaXX.
-
-    RestErrorResponseDto:
-      type: object
-      description: Feilrespons
-      properties:
-        message:
-          type: string
-          description: Feilmelding
-        timestamp:
-          type: string
-          format: date-time
-        errorCode:
-          type: string
-          description: Feilkode
-      example:
-        message: Noe gikk galt, prøv igjen senere
-        timestamp: 2023-12-21T09:31:40.549032434
-        errorCode: somethingFailedTryLater
 
     SkjemaDokumentDto:
       type: object

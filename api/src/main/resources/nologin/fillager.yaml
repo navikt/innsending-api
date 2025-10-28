@@ -1,0 +1,54 @@
+post:
+  summary: Laster opp en fil
+  operationId: lastOppFil
+  requestBody:
+   content:
+     multipart/form-data:
+       schema:
+         $ref: "./components.yaml#/components/schemas/LastOppFilRequest"
+   required: true
+  responses:
+    201:
+      description: Metadata for den opplastede filen
+      content:
+        application/json:
+          schema:
+            $ref: "./components.yaml#/components/schemas/LastOppFilResponse"
+    500:
+      description: Noe gikk galt under opplastingen
+      content:
+        application/json:
+          schema:
+            $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
+  tags:
+    - nologin
+
+delete:
+  summary: Sletter filer som tilhører en innsending, eventuelt spesifikke vedlegg på innsendingen
+  operationId: slettFiler
+  parameters:
+    - name: innsendingId
+      in: query
+      required: true
+      description: Innsendingsid for filene som skal slettes
+      schema:
+        $ref: "../common/components.yaml#/components/schemas/UUID"
+    - name: vedleggId
+      in: query
+      required: false
+      description: Vedleggsid for filene som skal slettes
+      schema:
+        type: string
+  responses:
+    204:
+      description: Filene ble slettet
+    404:
+      description: Fant ingen av filene som skulle slettes
+    500:
+      description: Noe gikk galt under sletting av filene
+      content:
+        application/json:
+          schema:
+            $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
+  tags:
+    - nologin

@@ -21,11 +21,13 @@ object MDCUtil {
 	}
 
 	@JvmOverloads
-	fun toMDC(key: String?, value: String?, defaultValue: String? = "null") {
-		MDC.put(
-			key, Optional.ofNullable(value)
-				.orElse(defaultValue)
-		)
+	fun toMDC(key: String?, value: String?, defaultValue: String? = "null", overwrite: Boolean? = true) {
+		if (overwrite == true || MDC.get(key) == null) {
+			MDC.put(
+				key, Optional.ofNullable(value)
+					.orElse(defaultValue)
+			)
+		}
 	}
 
 	fun clear() {

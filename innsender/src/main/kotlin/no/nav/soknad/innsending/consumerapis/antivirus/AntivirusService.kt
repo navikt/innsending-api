@@ -10,7 +10,7 @@ import org.springframework.web.client.RestClient
 import org.springframework.core.ParameterizedTypeReference
 
 @Service
-@Profile("test | dev | prod")
+@Profile("dev | prod")
 class AntivirusService(private val antivirusRestClient: RestClient, private val innsenderMetrics: InnsenderMetrics) :
 	AntivirusInterface {
 
@@ -32,8 +32,8 @@ class AntivirusService(private val antivirusRestClient: RestClient, private val 
 					.body(file)
 					.exchange { request, response ->
 						run {
-							if (response.getStatusCode().isError()) {
-								logger.error("Feil ved scanning for virus av dokument", response.getStatusCode())
+							if (response.statusCode.isError) {
+								logger.error("Feil ved scanning for virus av dokument ({})", response.statusCode)
 								listOf(ScanResult("Unknown", ClamAvResult.ERROR))
 							} else {
 								response.bodyTo(responseType) ?: listOf(ScanResult("Unknown", ClamAvResult.ERROR))
@@ -53,14 +53,16 @@ class AntivirusService(private val antivirusRestClient: RestClient, private val 
 				return false
 			}
 
-			logger.info("Antivirus respons: $response, ${response.first()}")
+			logger.info("Antivirus respons: $response")
 
 			val (filename, result) = response.first()
 
 			return when (result) {
 				ClamAvResult.OK -> true
-				ClamAvResult.ERROR -> true
-
+				ClamAvResult.ERROR -> {
+					logger.warn("$filename kunne ikke skannes for virus")
+					false
+				}
 				ClamAvResult.FOUND -> {
 					logger.warn("$filename har virus")
 					false
