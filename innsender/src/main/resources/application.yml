@@ -2,6 +2,9 @@ server:
   port: 9064
   max-http-request-header-size: 32KB
 
+defaultMaxFileSize: 150
+defaultMaxFileSizeSum: 300
+
 spring:
   application:
     name: innsending-api
@@ -9,10 +12,6 @@ spring:
     default-property-inclusion: non_null
   jpa:
     open-in-view: false
-  servlet:
-    multipart:
-      max-file-size: 50MB
-      max-request-size: 50MB
 
 management:
   endpoint:
@@ -83,11 +82,6 @@ spring:
   codec:
     max-in-memory-size: 104857600
 
-  servlet:
-    multipart:
-      max-file-size: 100MB
-      max-request-size: 100MB
-
   flyway:
     enabled: true
 
@@ -98,8 +92,8 @@ status_log_url: "https://logs.adeo.no"
 
 restconfig:
   version: 1.0
-  maxFileSize: 50
-  maxFileSizeSum: 150
+  maxFileSize: ${defaultMaxFileSize}
+  maxFileSizeSum: ${defaultMaxFileSizeSum}
   maxNumberOfPages: 200
   sanityHost: https://www.nav.no
   sanityEndpoint: /soknader/api/sanity/skjemautlisting
@@ -146,8 +140,8 @@ fil-konvertering_url: ${KONVERTERING_TIL_PDF_URL}
 
 restconfig:
   version: 1.0
-  maxFileSize: 50
-  maxFileSizeSum: 150
+  maxFileSize: ${defaultMaxFileSize}
+  maxFileSizeSum: ${defaultMaxFileSizeSum}
   maxNumberOfPages: 200
   sanityHost: https://www.nav.no
   sanityEndpoint: /soknader/api/sanity/skjemautlisting
@@ -191,11 +185,6 @@ spring:
 
   application:
     name: innsending-api
-
-  servlet:
-    multipart:
-      max-file-size: ${MAX_FILE_SIZE}MB
-      max-request-size: ${MAX_FILE_SIZE}MB
 
   flyway:
     enabled: true

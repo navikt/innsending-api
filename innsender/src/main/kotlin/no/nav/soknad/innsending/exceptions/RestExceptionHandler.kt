@@ -4,6 +4,7 @@ import com.google.cloud.storage.StorageException
 import jakarta.servlet.http.HttpServletRequest
 import no.nav.security.token.support.core.exceptions.JwtTokenMissingException
 import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
+import no.nav.soknad.innsending.exceptions.utils.messageForLog
 import no.nav.soknad.innsending.model.RestErrorResponseDto
 import org.apache.catalina.connector.ClientAbortException
 import org.slf4j.Logger
@@ -187,6 +188,3 @@ class RestExceptionHandler {
 		)
 	}
 }
-
-val Exception.messageForLog: String
-	get() = this.message ?: this.cause?.message ?: this.suppressed.firstOrNull()?.message ?: this.javaClass.simpleName
