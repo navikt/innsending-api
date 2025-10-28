@@ -85,7 +85,14 @@ fun getMaalgruppeinformasjonFromLivssituasjon(
 ): JsonMaalgruppeinformasjon? {
 	// Bruk maalgruppeinformasjon hvis dette er hentet fra Arena og lagt inn på søknaden
 
-	if (livssituasjon == null) return null
+	if (livssituasjon == null)  {
+		/* Setter default målgruppe for å kunne sende inn ungdomsprogrammer */
+		return JsonMaalgruppeinformasjon(
+			periode = null,
+			kilde = "BRUKERREGISTRERT",
+			maalgruppetype = "ANNET"
+		)
+	}
 
 	// Basert på søker sin spesifisering av livssituasjon, avled prioritert målgruppe
 	// Pri 1
@@ -160,12 +167,8 @@ fun getMaalgruppeinformasjonFromLivssituasjon(
 			kilde = "BRUKERREGISTRERT",
 			maalgruppetype = "ANNET"
 		)
-	/* Setter default målgruppe for å kunne sende inn ungdomsprogrammer */
-	return JsonMaalgruppeinformasjon(
-		periode = null,
-		kilde = "BRUKERREGISTRERT",
-		maalgruppetype = "ANNET"
-	)
+
+	return null
 }
 
 private fun convertToJsonRettighetstyper(
@@ -305,7 +308,7 @@ private fun convertToTilsynsutgifter(tilleggsstonad: Application, soknadDto: Dok
 }
 
 private fun erReisestottesoknad(skjemanr: String): Boolean {
-	return reisestotteskjemaer.contains(skjemanr.substring(0, reisestotteskjemaer[0].length))
+	return reisestotteskjemaer.contains(skjemanr.trim())
 }
 
 

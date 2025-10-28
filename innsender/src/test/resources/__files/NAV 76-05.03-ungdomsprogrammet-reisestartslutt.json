@@ -1,0 +1,61 @@
+{
+	"language": "nb-NO",
+	"data": {
+		"data": {
+			"jegBekrefterAtJegVilSvareSaRiktigSomJegKan": true,
+			"dineOpplysninger": {
+				"fornavn": "LEKKER",
+				"etternavn": "GRAV",
+				"identitet": {
+					"identitetsnummer": "24480081745"
+				},
+				"adresse": {
+					"gyldigFraOgMed": "2000-08-24",
+					"adresse": "Ensjøsvingen 6A",
+					"postnummer": "0661",
+					"bySted": "OSLO",
+					"landkode": "NOR",
+					"land": {
+						"label": "Norge",
+						"value": "NO"
+					}
+				}
+			},
+			"soknadsPeriode": {
+				"startdato": "2025-10-01",
+				"sluttdato": "2025-12-31"
+			},
+			"velgLand3": {
+				"label": "Norge",
+				"value": "NO"
+			},
+			"hvorLangReiseveiHarDu2": 15,
+			"hvorMangeGangerSkalDuReiseEnVei": 5,
+			"adresse3": "Fyrstikkalleen 1",
+			"postnr3": "0661",
+			"poststed": "Oslo",
+			"harDuBarnSomSkalFlytteMedDeg": "ja",
+			"barnSomSkalFlytteMedDeg": [
+				{
+					"fornavn": "M",
+					"etternavn": "N",
+					"fodselsdatoDdMmAaaa": "2025-07-01"
+				}
+			],
+			"harDuBarnSomBorHjemmeOgSomIkkeErFerdigMedFjerdeSkolear": "ja",
+			"harDuSaerligBehovForFlereHjemreiserEnnNevntOvenfor": "ja",
+			"kanDuReiseKollektivtOppstartAvslutningHjemreise": "nei",
+			"kanIkkeReiseKollektivtOppstartAvslutningHjemreise": {
+				"hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt": "helsemessigeArsaker",
+				"kanDuBenytteEgenBil": "ja",
+				"kanBenytteEgenBil": {
+					"bompenger": 50,
+					"parkering": "",
+					"piggdekkavgift": "",
+					"ferje": "",
+					"annet": ""
+				}
+			}
+		}
+	}
+}

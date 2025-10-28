@@ -7,6 +7,9 @@ import no.nav.soknad.innsending.util.mapping.tilleggsstonad.kjoreliste
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.reiseDaglig
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.stotteTilBolig
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.stotteTilFlytting
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.ungdomsprogram_reiseDaglig
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.ungdomsprogram_reiseOppstartSlutt
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.ungdomsprogram_reiseSamling
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
@@ -58,6 +61,133 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
 	}
 
+	@Test
+	fun sendInnTilleggssoknad_dagligreise_ungdomsprogrammet() {
+		val innsendingService = lagInnsendingService(soknadService)
+		val hoveddokDto = Hjelpemetoder.lagVedlegg(
+			vedleggsnr = ungdomsprogram_reiseDaglig,
+			tittel = "Tilleggssoknad Ungdomsprogram daglig reise",
+			erHoveddokument = true,
+			erVariant = false,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
+			vedleggsNavn = "/litenPdf.pdf"
+		)
+		val hoveddokVariantDto = Hjelpemetoder.lagVedlegg(
+			vedleggsnr = ungdomsprogram_reiseDaglig,
+			tittel = "Tilleggssoknad Ungdomsprogram daglig reise",
+			erHoveddokument = true,
+			erVariant = true,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
+			vedleggsNavn = "/__files/NAV 76-05.01-ungdomsprogrammet-reisedaglig.json"
+		)
+		val inputDokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad(
+			skjemanr = ungdomsprogram_reiseDaglig,
+			tittel = "Tilleggssoknad Ungdomsprogram daglig reise",
+			brukerId = testpersonid,
+			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
+			spraak = "nb_NO",
+			tema = "TSR"
+		)
+		val skjemaDto =
+			SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService = soknadService, inputDokumentSoknadDto)
+
+		val opprettetSoknad = soknadService.hentSoknad(skjemaDto.innsendingsId!!)
+		val kvitteringsDto =
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				soknadsmottakerAPI,
+				opprettetSoknad,
+				innsendingService
+			)
+		Assertions.assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
+		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+	}
+
+
+	@Test
+	fun sendInnTilleggssoknad_reisesamling_ungdomsprogrammet() {
+		val innsendingService = lagInnsendingService(soknadService)
+		val hoveddokDto = Hjelpemetoder.lagVedlegg(
+			vedleggsnr = ungdomsprogram_reiseSamling,
+			tittel = "Tilleggssoknad Ungdomsprogram reise til samling",
+			erHoveddokument = true,
+			erVariant = false,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
+			vedleggsNavn = "/litenPdf.pdf"
+		)
+		val hoveddokVariantDto = Hjelpemetoder.lagVedlegg(
+			vedleggsnr = ungdomsprogram_reiseSamling,
+			tittel = "Tilleggssoknad Ungdomsprogram reise til samling",
+			erHoveddokument = true,
+			erVariant = true,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
+			vedleggsNavn = "/__files/NAV 76-05.02-ungdomsprogrammet-reisesamling.json"
+		)
+		val inputDokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad(
+			skjemanr = ungdomsprogram_reiseSamling,
+			tittel = "Tilleggssoknad Ungdomsprogram reise til samling",
+			brukerId = testpersonid,
+			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
+			spraak = "nb_NO",
+			tema = "TSR"
+		)
+		val skjemaDto =
+			SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService = soknadService, inputDokumentSoknadDto)
+
+		val opprettetSoknad = soknadService.hentSoknad(skjemaDto.innsendingsId!!)
+		val kvitteringsDto =
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				soknadsmottakerAPI,
+				opprettetSoknad,
+				innsendingService
+			)
+		Assertions.assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
+		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+	}
+
+
+	@Test
+	fun sendInnTilleggssoknad_reisestartslutt_ungdomsprogrammet() {
+		val innsendingService = lagInnsendingService(soknadService)
+		val hoveddokDto = Hjelpemetoder.lagVedlegg(
+			vedleggsnr = ungdomsprogram_reiseOppstartSlutt,
+			tittel = "Tilleggssoknad Ungdomsprogram reise til samling",
+			erHoveddokument = true,
+			erVariant = false,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
+			vedleggsNavn = "/litenPdf.pdf"
+		)
+		val hoveddokVariantDto = Hjelpemetoder.lagVedlegg(
+			vedleggsnr = ungdomsprogram_reiseOppstartSlutt,
+			tittel = "Tilleggssoknad Ungdomsprogram reise til samling",
+			erHoveddokument = true,
+			erVariant = true,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
+			vedleggsNavn = "/__files/NAV 76-05.03-ungdomsprogrammet-reisestartslutt.json"
+		)
+		val inputDokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad(
+			skjemanr = ungdomsprogram_reiseOppstartSlutt,
+			tittel = "Tilleggssoknad Ungdomsprogram reise til samling",
+			brukerId = testpersonid,
+			vedleggsListe = listOf(hoveddokDto, hoveddokVariantDto),
+			spraak = "nb_NO",
+			tema = "TSR"
+		)
+		val skjemaDto =
+			SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService = soknadService, inputDokumentSoknadDto)
+
+		val opprettetSoknad = soknadService.hentSoknad(skjemaDto.innsendingsId!!)
+		val kvitteringsDto =
+			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+				soknadsmottakerAPI,
+				opprettetSoknad,
+				innsendingService
+			)
+		Assertions.assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		Assertions.assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
+		Assertions.assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+	}
 
 	@Test
 	fun sendInnTilleggssoknad_bostotte() {
