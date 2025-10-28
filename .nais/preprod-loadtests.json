@@ -22,6 +22,10 @@
 			{
 				"application": "upload-convert-to-pdf",
 				"namespace": "fyllut-sendinn"
+			},
+			{
+				"application": "logging",
+				"namespace": "nais-system"
 			}
 		],
 		"external-hosts": [
