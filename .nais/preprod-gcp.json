@@ -5,6 +5,7 @@
 	"database-name": "dokumentinnsending-dev",
 	"default_database_size": 10,
 	"tier": "db-f1-micro",
+	"bucket-name-file-storage": "innsending-api-file-storage-dev",
 	"ingresses": [
 		"https://innsending-api-gcp.intern.dev.nav.no"
 	],
@@ -19,19 +20,23 @@
 		"other-namespace": [
 			{
 				"application": "skjemautfylling",
-				"namespace": "skjemadigitalisering"
+				"namespace": "skjemadigitalisering",
+				"roles": ["nologin-access"]
 			},
 			{
 				"application": "skjemautfylling-delingslenke",
-				"namespace": "skjemadigitalisering"
+				"namespace": "skjemadigitalisering",
+				"roles": ["nologin-access"]
 			},
 			{
 				"application": "skjemautfylling-preprod",
-				"namespace": "skjemadigitalisering"
+				"namespace": "skjemadigitalisering",
+				"roles": ["nologin-access"]
 			},
 			{
 				"application": "skjemautfylling-preprod-alt",
-				"namespace": "skjemadigitalisering"
+				"namespace": "skjemadigitalisering",
+				"roles": ["nologin-access"]
 			},
 			{
 				"application": "fyllut-ettersending",
@@ -39,7 +44,12 @@
 			},
 			{
 				"application": "tokenx-token-generator",
-				"namespace": "aura"
+				"namespace": "nais"
+			},
+			{
+				"application": "azure-token-generator",
+				"namespace": "nais",
+				"roles": ["nologin-access"]
 			},
 			{
 				"application": "sykepengesoknad-backend",

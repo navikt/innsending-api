@@ -69,6 +69,13 @@ spec:
       {{#each accessPolicyInbound.other-namespace}}
         - application: "{{this.application}}"
           namespace: "{{this.namespace}}"
+          {{#if this.roles}}
+          permissions:
+            roles:
+            {{#each this.roles as |role|}}
+              - "{{role}}"
+            {{/each}}
+          {{/if}}
       {{/each}}
       {{#each accessPolicyInbound.other-cluster}}
         - application: "{{this.application}}"
@@ -107,8 +114,14 @@ spec:
         databases:
           - name: {{ database-name }}
             envVarPrefix: DATABASE
+    buckets:
+      - name: "{{ bucket-name-file-storage }}"
+        lifecycleCondition:
+          age: 1
 
   env:
+    - name: FILE_STORAGE_BUCKET_NAME
+      value: "{{ bucket-name-file-storage }}"
   {{#each env}}
     - name: {{@key}}
       value: "{{this}}"

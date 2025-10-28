@@ -1,0 +1,29 @@
+delete:
+  summary: Sletter en fil
+  operationId: slettFilV2
+  parameters:
+    - name: filId
+      in: path
+      required: true
+      description: Id for filen som skal slettes
+      schema:
+        $ref: "../common/components.yaml#/components/schemas/UUID"
+    - name: innsendingId
+      in: query
+      required: true
+      description: Innsendingsid for filen som skal slettes
+      schema:
+        $ref: "../common/components.yaml#/components/schemas/UUID"
+  responses:
+    204:
+      description: Filen ble slettet
+    404:
+      description: Fant ikke filen som skulle slettes
+    500:
+      description: Noe gikk galt under sletting av filen
+      content:
+        application/json:
+          schema:
+            $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
+  tags:
+    - nologin
