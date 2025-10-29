@@ -30,9 +30,9 @@ data class SkjemaDokumentDtoTestBuilder(
 	}
 
 	// Hoveddokument uses skjemanr as vedleggsnr
-	fun asHovedDokumentVariant(skjemanr: String, withFile: Boolean = true): SkjemaDokumentDtoTestBuilder {
-		if (withFile) {
-			document = Hjelpemetoder.getBytesFromFile("/__files/sanity.json")
+	fun asHovedDokumentVariant(skjemanr: String, withFile: Boolean = true, file: String = "/__files/sanity.json"): SkjemaDokumentDtoTestBuilder {
+		if (withFile ) {
+			document = Hjelpemetoder.getBytesFromFile(file)
 			mimetype = Mimetype.applicationSlashJson
 		}
 		formioId = null
