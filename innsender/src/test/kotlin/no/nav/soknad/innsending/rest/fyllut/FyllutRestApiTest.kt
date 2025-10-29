@@ -20,6 +20,7 @@ import no.nav.soknad.innsending.service.KodeverkService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.ungdomsprogram_reiseDaglig
 import no.nav.soknad.innsending.util.models.*
 import no.nav.soknad.innsending.utils.Api
 import no.nav.soknad.innsending.utils.Hjelpemetoder
@@ -119,6 +120,40 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Så
 		testHentSoknadOgSendInn(opprettetSoknadResponse.body, token)
 	}
+
+
+	@Test
+	fun testOpprettSoknadPaFyllUtApi_Ungdomsprogram() {
+		// Gitt
+		val skjemanr = ungdomsprogram_reiseDaglig
+		val tittel = "Ungdomsprogrammet - daglig reise"
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		val hoveddokument = SkjemaDokumentDtoTestBuilder( tittel = tittel).asHovedDokument(skjemanr, withFile = true).build()
+		val hoveddokumentVariant = SkjemaDokumentDtoTestBuilder( tittel = tittel).asHovedDokumentVariant(skjemanr,
+			withFile = true, file = "/__files/$ungdomsprogram_reiseDaglig-ungdomsprogrammet-reisedaglig.json").build()
+
+		val skjemaDto = SkjemaDtoTestBuilder( skjemanr=skjemanr, tittel = tittel, tema = "TSR",
+			hoveddokument	= hoveddokument, hoveddokumentVariant = hoveddokumentVariant, vedleggsListe = listOf())
+			.build()
+
+		// Når
+		val opprettetSoknadResponse = api!!.createSoknad(skjemaDto)
+			.assertSuccess()
+
+		// Så
+		///frontend/v1/sendInn/{innsendingsId}
+		val sendInnRespons = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/sendInn/${opprettetSoknadResponse.body.innsendingsId}", HttpMethod.POST,
+			HttpEntity<Unit>(Hjelpemetoder.createHeaders(token)), KvitteringsDto::class.java
+		)
+
+		assertTrue(sendInnRespons.statusCode == HttpStatus.OK && sendInnRespons.body != null)
+		val kvitteringsDto = sendInnRespons.body
+		assertEquals(0, kvitteringsDto!!.skalSendesAvAndre!!.size)
+		assertTrue(kvitteringsDto.hoveddokumentRef != null)
+	}
+
 
 	@Test
 	fun testUserNotificationOnSoknadCreation() {
