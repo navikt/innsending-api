@@ -69,7 +69,6 @@ class PrefillService(
 				sokerEtternavn = obj.sokerEtternavn ?: acc.sokerEtternavn,
 				sokerMaalgruppe = obj.sokerMaalgruppe ?: acc.sokerMaalgruppe,
 				sokerAdresser = obj.sokerAdresser ?: acc.sokerAdresser,
-				sokerKjonn = obj.sokerKjonn ?: acc.sokerKjonn,
 				sokerTelefonnummer = obj.sokerTelefonnummer ?: acc.sokerTelefonnummer,
 				sokerKontonummer = obj.sokerKontonummer ?: acc.sokerKontonummer,
 			)
