@@ -16,7 +16,7 @@ var beskrivelse: String = "Dette er opplysninger som er nødvendig for beregning
 var mimetype: Mimetype? = null,
 var document: ByteArray? = null,
 var propertyNavn: String? = null,
-var formioId: String = UUID.randomUUID().toString(),
+var formioId: String? = UUID.randomUUID().toString(),
 var opplastingsStatus: OpplastingsStatusDto = OpplastingsStatusDto.IkkeValgt,
 var filIdListe: List<String>? = null
 

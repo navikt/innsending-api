@@ -78,6 +78,11 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 			.assertSuccess()
 			.body
 
+		val navId4 = "dj5jkj-1"
+		val file4 = api.uploadNologinFile(vedleggId = navId4, innsendingId = innsendingId)
+			.assertSuccess()
+			.body
+
 		val vedleggLegitimasjon = SkjemaDokumentDtoV2TestBuilder(
 			vedleggsnr = "K2",
 			tittel = "Norsk pass",
@@ -99,10 +104,10 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 			filIdListe = null,
 		).build()
 
-		val vedleggAnnenDokumentasjon = SkjemaDokumentDtoV2TestBuilder(
+		val vedleggAnnenDokumentasjon1 = SkjemaDokumentDtoV2TestBuilder(
 			vedleggsnr = "N6",
-			tittel = "Annet",
 			label = "Annen dokumentasjon",
+			tittel = "Kvittering fra apotek",
 			// propertyNavn = "annenDokumentasjon", <-- brukes ikke ved nologin
 			pakrevd = false,
 			formioId = navId3,
@@ -111,10 +116,29 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 			filIdListe = listOf(file3.filId.toString()),
 		).build()
 
+		val vedleggAnnenDokumentasjon2 = SkjemaDokumentDtoV2TestBuilder(
+			vedleggsnr = "N6",
+			tittel = "Førerkort",
+			label = "Annen dokumentasjon",
+			// propertyNavn = "annenDokumentasjon", <-- brukes ikke ved nologin
+			pakrevd = false,
+			formioId = navId4,
+			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
+			mimetype = Mimetype.applicationSlashPdf,
+			filIdListe = listOf(file4.filId.toString()),
+		).build()
+
 		val skjemaDto = SkjemaDtoV2TestBuilder()
 			.medBrukerId("12345678901")
 			.medInnsendingsId(innsendingId)
-			.medVedlegg(listOf(vedleggLegitimasjon, vedleggSomSendesSenere, vedleggAnnenDokumentasjon))
+			.medVedlegg(
+				listOf(
+					vedleggLegitimasjon,
+					vedleggSomSendesSenere,
+					vedleggAnnenDokumentasjon1,
+					vedleggAnnenDokumentasjon2
+				)
+			)
 			.build()
 
 		val kvittering = api.sendInnNologinSoknad(skjemaDto)
@@ -122,7 +146,7 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 			.body
 		assertEquals(kvittering.hoveddokumentRef, null, "Skal ikke returnere hoveddokumentRef ved nologin")
 		assertEquals(1, kvittering.skalEttersendes!!.size)
-		assertEquals(2, kvittering.innsendteVedlegg!!.size)
+		assertEquals(3, kvittering.innsendteVedlegg!!.size)
 		assertEquals(0, kvittering.skalSendesAvAndre!!.size)
 
 		val slotSoknad = slot<DokumentSoknadDto>()
@@ -140,7 +164,7 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 
 		assertEquals(innsendingId, slotSoknad.captured.innsendingsId)
 		val innsendteDokumenter = slotVedleggsliste.captured
-		assertEquals(5, innsendteDokumenter.size)
+		assertEquals(6, innsendteDokumenter.size)
 
 		val innsendtK2 = innsendteDokumenter.firstOrNull { it.vedleggsnr == vedleggLegitimasjon.vedleggsnr }
 		assertNotNull(innsendtK2)
@@ -148,14 +172,72 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 		val vedleggT4 = innsendteDokumenter.firstOrNull { it.vedleggsnr == vedleggSomSendesSenere.vedleggsnr }
 		assertNull(vedleggT4)
 
-		val innsendtN6 = innsendteDokumenter.firstOrNull { it.vedleggsnr == vedleggAnnenDokumentasjon.vedleggsnr }
-		assertNotNull(innsendtN6)
+		val innsendtN6_1 =
+			innsendteDokumenter.firstOrNull { it.vedleggsnr == vedleggAnnenDokumentasjon1.vedleggsnr && it.tittel == vedleggAnnenDokumentasjon1.tittel }
+		assertNotNull(innsendtN6_1)
+
+		val innsendtN6_2 =
+			innsendteDokumenter.firstOrNull { it.vedleggsnr == vedleggAnnenDokumentasjon2.vedleggsnr && it.tittel == vedleggAnnenDokumentasjon2.tittel }
+		assertNotNull(innsendtN6_2)
 
 		val innsendingskvittering = innsendteDokumenter.firstOrNull { it.vedleggsnr == Constants.KVITTERINGS_NR }
 		assertNotNull(innsendingskvittering)
 
 		val hoveddokumentListe = innsendteDokumenter.filter { it.erHoveddokument }
 		assertEquals(2, hoveddokumentListe.size)
+	}
+
+	@Test
+	fun `skal feile dersom vedleggene ikke har unike id'er`() {
+		val innsendingId = UUID.randomUUID().toString()
+		val vedleggId = "dj5jkj"
+
+		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
+			vedleggsnr = "N6",
+			tittel = "Kvittering fra apotek",
+			formioId = vedleggId,
+		).build()
+
+		val vedlegg2 = SkjemaDokumentDtoV2TestBuilder(
+			vedleggsnr = "N6",
+			tittel = "Førerkort",
+			formioId = vedleggId,
+		).build()
+
+		val skjemaDto = SkjemaDtoV2TestBuilder()
+			.medBrukerId("12345678901")
+			.medInnsendingsId(innsendingId)
+			.medVedlegg(listOf(vedlegg1, vedlegg2))
+			.build()
+
+		api.sendInnNologinSoknad(skjemaDto)
+			.assertClientError()
+			.errorBody.let {
+				assertEquals("Vedleggsliste inneholder vedlegg med duplikate id'er (fyllutId)", it.message)
+			}
+	}
+
+	@Test
+	fun `skal feile dersom vedlegg mangler id`() {
+		val innsendingId = UUID.randomUUID().toString()
+
+		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
+			vedleggsnr = "N6",
+			tittel = "Kvittering fra apotek",
+			formioId = null,
+		).build()
+
+		val skjemaDto = SkjemaDtoV2TestBuilder()
+			.medBrukerId("12345678901")
+			.medInnsendingsId(innsendingId)
+			.medVedlegg(listOf(vedlegg1))
+			.build()
+
+		api.sendInnNologinSoknad(skjemaDto)
+			.assertClientError()
+			.errorBody.let {
+				assertEquals("Vedleggsliste inneholder vedlegg uten id (fyllutId)", it.message)
+			}
 	}
 
 	@Test

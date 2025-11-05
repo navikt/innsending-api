@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.service
 
+import kotlinx.coroutines.runInterruptible
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
@@ -153,6 +154,16 @@ class NologinSoknadService(
 				message = "Søknad med innsendingsId $innsendingsId finnes allerede",
 				errorCode = ErrorCode.SOKNAD_ALREADY_EXISTS
 			)
+		}
+		if (uinnloggetSoknadDto.vedleggsListe?.any { it.fyllutId == null } == true) {
+			throw IllegalActionException(
+				message = "Vedleggsliste inneholder vedlegg uten id (fyllutId)",
+				errorCode = ErrorCode.PROPERTY_NOT_SET
+			)
+		}
+		val fyllutIds = uinnloggetSoknadDto.vedleggsListe?.map { it.fyllutId } ?: emptyList()
+		if (fyllutIds.size != fyllutIds.distinct().size) {
+			throw IllegalActionException( message = "Vedleggsliste inneholder vedlegg med duplikate id'er (fyllutId)", errorCode = ErrorCode.ILLEGAL_ARGUMENT )
 		}
 	}
 
