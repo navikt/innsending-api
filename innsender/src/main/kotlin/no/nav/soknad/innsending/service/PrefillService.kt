@@ -109,7 +109,6 @@ class PrefillService(
 			)
 		}
 		val phoneNumber = transformPhoneNumbers(personInfo?.hentPerson?.telefonnummer)
-		val gender = personInfo?.hentPerson?.kjoenn?.firstOrNull()?.kjoenn?.name
 
 		logger.info("Hentet data fra PDL")
 
@@ -119,7 +118,6 @@ class PrefillService(
 			sokerEtternavn = if (properties.contains("sokerEtternavn")) name?.etternavn else null,
 			sokerAdresser = if (properties.contains("sokerAdresser")) addresses else null,
 			sokerTelefonnummer = if (properties.contains("sokerTelefonnummer")) phoneNumber else null,
-			sokerKjonn = if (properties.contains("sokerKjonn")) gender else null
 		)
 	}
 

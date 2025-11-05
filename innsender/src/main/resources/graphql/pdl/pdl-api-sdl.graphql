@@ -99,7 +99,6 @@ type FalskIdentitet {
 
 type FalskIdentitetIdentifiserendeInformasjon {
 	foedselsdato: Date
-	kjoenn: KjoennType
 	personnavn: Personnavn!
 	statsborgerskap: [String!]!
 }
@@ -285,12 +284,6 @@ type KartverketVegadresse {
 	veg: KartverketVeg
 }
 
-type Kjoenn {
-	folkeregistermetadata: Folkeregistermetadata
-	kjoenn: KjoennType
-	metadata: Metadata!
-}
-
 type Kontaktadresse {
 	coAdressenavn: String
 	folkeregistermetadata: Folkeregistermetadata
@@ -446,7 +439,6 @@ type Person {
 	fullmakt(historikk: Boolean = false): [Fullmakt!]!
 	identitetsgrunnlag(historikk: Boolean = false): [Identitetsgrunnlag!]!
 	innflyttingTilNorge: [InnflyttingTilNorge!]!
-	kjoenn(historikk: Boolean = false): [Kjoenn!]!
 	kontaktadresse(historikk: Boolean = false): [Kontaktadresse!]!
 	kontaktinformasjonForDoedsbo(historikk: Boolean = false): [KontaktinformasjonForDoedsbo!]!
 	navn(historikk: Boolean = false): [Navn!]!
@@ -540,7 +532,6 @@ type Query {
 
 type RelatertBiPerson {
 	foedselsdato: Date
-	kjoenn: KjoennType
 	navn: Personnavn
 	statsborgerskap: String
 }
@@ -740,12 +731,6 @@ enum Identitetsgrunnlagsstatus {
 	IKKE_KONTROLLERT
 	INGEN_STATUS
 	KONTROLLERT
-}
-
-enum KjoennType {
-	KVINNE
-	MANN
-	UKJENT
 }
 
 enum KontaktadresseType {
