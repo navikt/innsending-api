@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.model.Aktivitet
 import no.nav.soknad.innsending.model.AktivitetEndepunkt
 import no.nav.soknad.innsending.model.Maalgruppe
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
+import no.nav.soknad.innsending.util.logging.CombinedLogger
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -28,6 +29,7 @@ class ArenaConsumer(
 
 	private val logger: Logger = LoggerFactory.getLogger(javaClass)
 	private val secureLogger = LoggerFactory.getLogger("secureLogger")
+	private val combinedLogger = CombinedLogger(logger, secureLogger)
 
 	private val fromDate = LocalDate.now().minusMonths(6)
 	private val toDate = LocalDate.now().plusMonths(2)
@@ -35,8 +37,7 @@ class ArenaConsumer(
 	override fun getMaalgrupper(): List<Maalgruppe> {
 		val userId = subjectHandler.getUserIdFromToken()
 
-		logger.info("Henter målgrupper")
-		secureLogger.info("[{}] Henter målgrupper", userId)
+		combinedLogger.log("Henter målgrupper", userId)
 
 		val maalgrupper = try {
 			maalgruppeApi.getMaalgrupper(fromDate.toString(), toDate.toString())
@@ -50,7 +51,7 @@ class ArenaConsumer(
 			}
 		}
 
-		secureLogger.info("[{}] Målgrupper: {}", userId, maalgrupper.map { it.maalgruppetype })
+		combinedLogger.log("Målgrupper hentet: ${maalgrupper.map { it.maalgruppetype } }", userId)
 
 		return maalgrupper
 	}
@@ -58,8 +59,7 @@ class ArenaConsumer(
 	override fun getAktiviteter(aktivitetEndepunkt: AktivitetEndepunkt): List<Aktivitet> {
 		val userId = subjectHandler.getUserIdFromToken()
 
-		logger.info("Henter aktiviteter")
-		secureLogger.info("[{}] Henter aktiviteter", userId)
+		combinedLogger.log("Henter aktiviteter", userId)
 
 		val aktiviteter = try {
 			when (aktivitetEndepunkt) {
@@ -81,16 +81,13 @@ class ArenaConsumer(
 			}
 		}
 
-		secureLogger.info(
-			"[{}] Aktiviteter: {}",
-			userId,
-			aktiviteter.map {
-				"aktivitet=" + it.aktivitetstype + ", er stønadsberettiget=" + it.erStoenadsberettigetAktivitet + "," +
-					" tema=" + it.saksinformasjon?.sakstype +
-					", periode=" + it.periode.fom.toString() + "-" + it.periode.tom?.toString() +
-					", parkering = " + it.saksinformasjon?.vedtaksinformasjon?.first()?.trengerParkering
-			}
-		)
+		val logMelding = "Aktiviteter hentet: ${aktiviteter.map {
+			"aktivitet=" + it.aktivitetstype + ", er stønadsberettiget=" + it.erStoenadsberettigetAktivitet + "," +
+				" tema=" + it.saksinformasjon?.sakstype +
+				", periode=" + it.periode.fom.toString() + "-" + it.periode.tom?.toString() +
+				", parkering = " + it.saksinformasjon?.vedtaksinformasjon?.first()?.trengerParkering
+		}}"
+		combinedLogger.log(logMelding, userId)
 
 		return aktiviteter
 	}
