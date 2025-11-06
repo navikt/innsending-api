@@ -5,7 +5,6 @@ import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.pdl.generated.PrefillData
-import no.nav.soknad.innsending.pdl.generated.enums.KjoennType
 import no.nav.soknad.innsending.pdl.generated.prefilldata.*
 import no.nav.soknad.innsending.util.testpersonid
 import org.springframework.beans.factory.annotation.Qualifier
@@ -71,7 +70,6 @@ class PdlAPITest : PdlInterface, HealthRequestInterface {
 			Person(
 				navn = listOf(Navn(fornavn = "Ola", mellomnavn = null, etternavn = "Nordmann", metadata = metadata)),
 				bostedsadresse = listOf(bostedsadresse),
-				kjoenn = listOf(Kjoenn(kjoenn = KjoennType.MANN, metadata = metadata)),
 				telefonnummer = listOf(
 					Telefonnummer(
 						landskode = "+47",

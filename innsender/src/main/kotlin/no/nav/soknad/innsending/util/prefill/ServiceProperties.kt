@@ -14,7 +14,6 @@ object ServiceProperties {
 			"sokerEtternavn",
 			"sokerAdresser",
 			"sokerTelefonnummer",
-			"sokerKjonn"
 		),
 		ARENA_MAALGRUPPE to listOf("sokerMaalgruppe"),
 		KONTORREGISTER_BORGER to listOf("sokerKontonummer")

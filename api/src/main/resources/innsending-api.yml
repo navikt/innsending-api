@@ -2371,10 +2371,6 @@ components:
           example: Nordmann
         sokerAdresser:
           $ref: "#/components/schemas/Adresser"
-        sokerKjonn:
-          type: string
-          description: Søkerens kjønn
-          example: MANN
         sokerTelefonnummer:
           $ref: "#/components/schemas/Telefonnummer"
         sokerKontonummer:

@@ -64,12 +64,6 @@ query PrefillData($ident: ID!, $historikk: Boolean!) {
 				...metadataDetails
 			}
 		}
-		kjoenn(historikk: $historikk) {
-			kjoenn
-			metadata {
-				...metadataDetails
-			}
-		}
 		navn(historikk: $historikk) {
 			fornavn
 			mellomnavn
