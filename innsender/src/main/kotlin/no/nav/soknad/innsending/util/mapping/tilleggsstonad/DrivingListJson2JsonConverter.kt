@@ -35,7 +35,8 @@ fun convertToJsonDrivingListSubmission(
 		maalgruppeinformasjon = convertToJsonMaalgruppeinformasjon(
 			drivingListSubmission.aktiviteterOgMaalgruppe,
 			flervalg = null,
-			regArbSoker = null
+			regArbSoker = null,
+			soknadDto = soknadDto
 		),
 		expensePeriodes = JsonDrivingListExpences(
 			selectedVedtaksId = drivingListSubmission.drivinglist.selectedVedtaksId,

@@ -4,19 +4,21 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.net.InetAddress
 import java.net.URL
 
+@Profile("!(local | docker)")
 @Component
-class LeaderSelectionUtility {
+class LeaderSelectionUtility : LeaderSelection {
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 
 	@OptIn(ExperimentalSerializationApi::class)
 	val format = Json { explicitNulls = false; ignoreUnknownKeys = true }
 
 
-	fun isLeader(): Boolean {
+	override fun isLeader(): Boolean {
 		val hostname = InetAddress.getLocalHost().hostName
 		val jsonString = fetchLeaderSelection()
 		val leader = format.decodeFromString<LeaderElection>(jsonString).name

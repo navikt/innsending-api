@@ -1,0 +1,52 @@
+{
+	"language": "nb-NO",
+	"data": {
+		"data": {
+			"jegBekrefterAtJegVilSvareSaRiktigSomJegKan": true,
+			"dineOpplysninger": {
+				"fornavn": "LEKKER",
+				"etternavn": "GRAV",
+				"identitet": {
+					"identitetsnummer": "24480081745"
+				},
+				"adresse": {
+					"gyldigFraOgMed": "2000-08-24",
+					"adresse": "Ensjøsvingen 6A",
+					"postnummer": "0661",
+					"bySted": "OSLO",
+					"landkode": "NOR",
+					"land": {
+						"label": "Norge",
+						"value": "NO"
+					}
+				}
+			},
+			"startOgSluttdatoForSamlingene": [
+				{
+					"startdatoDdMmAaaa": "2025-10-01",
+					"sluttdatoDdMmAaaa": "2025-12-31"
+				}
+			],
+			"velgLandReiseTilSamling": {
+				"label": "Norge",
+				"value": "NO"
+			},
+			"hvorLangReiseveiHarDu1": 15,
+			"adresse2": "Fyrstikkalleen 1",
+			"postnr2": "0661",
+			"poststed": "Oslo",
+			"kanDuReiseKollektivtReiseTilSamling": "nei",
+			"kanIkkeReiseKollektivtReiseTilSamling": {
+				"hvaErHovedarsakenTilAtDuIkkeKanReiseKollektivt": "helsemessigeArsaker",
+				"kanDuBenytteEgenBil": "ja",
+				"kanBenytteEgenBil": {
+					"bompenger": 50,
+					"parkering": "",
+					"piggdekkavgift": "",
+					"ferje": "",
+					"annet": ""
+				}
+			}
+		}
+	}
+}

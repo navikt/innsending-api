@@ -21,6 +21,7 @@ import no.nav.soknad.innsending.util.Constants.TOKENX
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.mapping.SkjemaDokumentSoknadTransformer
 import no.nav.soknad.innsending.util.mapping.mapTilSkjemaDto
+import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -63,7 +64,7 @@ class FyllutRestApi(
 		if (redirectVedPaabegyntSoknad != null) return redirectVedPaabegyntSoknad
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
-			input = skjemaDto,
+			input = SkjemaDokumentSoknadTransformer().konverterSkjemaDtoTilV2(skjemaDto),
 			existingSoknad = null,
 			brukerId = brukerId,
 			applikasjon = applikasjon
@@ -106,16 +107,19 @@ class FyllutRestApi(
 
 		combinedLogger.log("$innsendingsId: Skal oppdatere søknad fra FyllUt", brukerId)
 
+		logger.info("fyllUtOppdaterSoknad: Hoveddokument er lastet opp ${skjemaDto.hoveddokument.document != null}")
+
 		val existingSoknad = soknadService.hentSoknad(innsendingsId)
 		validerSoknadsTilgang(existingSoknad)
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
-			input = skjemaDto,
+			input = SkjemaDokumentSoknadTransformer().konverterSkjemaDtoTilV2(skjemaDto),
 			existingSoknad = existingSoknad,
 			brukerId = brukerId,
 			applikasjon = applikasjon
 		)
 
+		logger.info("fyllUtOppdaterSoknad: Skal oppdatere søknad med hoveddokument er lastet opp ${dokumentSoknadDto.hoveddokument?.document != null}")
 		val updatedSoknad = soknadService.updateSoknad(innsendingsId, dokumentSoknadDto)
 
 		combinedLogger.log("$innsendingsId: Soknad fra FyllUt oppdatert", brukerId)
@@ -133,17 +137,19 @@ class FyllutRestApi(
 		val applikasjon = subjectHandler.getClientId()
 
 		combinedLogger.log("$innsendingsId: Skal fullføre søknad fra FyllUt", brukerId)
+		logger.info("fyllUtUtfyltSoknad: Hoveddokument er lastet opp ${skjemaDto.hoveddokument.document != null}")
 
 		val existingSoknad = soknadService.hentSoknad(innsendingsId)
 		validerSoknadsTilgang(existingSoknad)
 
 		val dokumentSoknadDto = SkjemaDokumentSoknadTransformer().konverterTilDokumentSoknadDto(
-			input = skjemaDto,
+			input = SkjemaDokumentSoknadTransformer().konverterSkjemaDtoTilV2(skjemaDto),
 			existingSoknad = existingSoknad,
 			brukerId = brukerId,
 			applikasjon = applikasjon
 		)
 
+		logger.info("fyllUtUtfyltSoknad: Skal oppdatere søknad med hoveddokument er lastet opp = ${dokumentSoknadDto.hoveddokument?.document != null}, status = ${dokumentSoknadDto.hoveddokument?.opplastingsStatus}")
 		soknadService.updateUtfyltSoknad(innsendingsId, dokumentSoknadDto)
 
 		combinedLogger.log("$innsendingsId: Utfylt søknad fra Fyllut", brukerId)

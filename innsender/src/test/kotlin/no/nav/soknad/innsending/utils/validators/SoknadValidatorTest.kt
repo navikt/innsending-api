@@ -38,7 +38,7 @@ class SoknadValidatorTest {
 		// Gitt
 		val eksisterendeSoknad = lagEksisterendeSoknad()
 		val soknad = DokumentSoknadDtoTestBuilder(
-			brukerId = eksisterendeSoknad.brukerId,
+			brukerId = eksisterendeSoknad.brukerId!!,
 			skjemanr = eksisterendeSoknad.skjemanr,
 		).build()
 

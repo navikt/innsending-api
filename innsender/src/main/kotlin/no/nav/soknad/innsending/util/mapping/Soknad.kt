@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.util.mapping
 
+import no.nav.soknad.arkivering.soknadsmottaker.model.Innsending
 import no.nav.soknad.arkivering.soknadsmottaker.model.Soknad
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.*
@@ -167,16 +168,30 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 	)
 }
 
-fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>): Soknad {
+fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>, personId: String): Soknad {
 	return Soknad(
 		soknadDto.innsendingsId!!,
 		soknadDto.ettersendingsId != null,
-		soknadDto.brukerId,
+		personId,
 		soknadDto.tema,
 		translate(vedleggDtos)
 	)
 }
 
+
+fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>, avsenderDto: AvsenderDto, brukerDto: BrukerDto?): Innsending {
+	return Innsending(
+		innsendingsId = soknadDto.innsendingsId!!,
+		ettersendelseTilId = soknadDto.ettersendingsId,
+		kanal = if (soknadDto.visningsType == VisningsType.nologin) "NAV_NO_UINNLOGGET" else "NAV_NO",
+		avsenderDto = translate(avsenderDto),
+		brukerDto = brukerDto?.let { translate(it) },
+		tema = soknadDto.tema,
+		skjemanr = vedleggDtos.first{it.erHoveddokument}.vedleggsnr!!,
+		tittel = vedleggDtos.first{it.erHoveddokument}.tittel,
+		dokumenter = translate(vedleggDtos, true)
+	)
+}
 // Hjelpefunksjoner
 
 private fun beregnInnsendingsFrist(soknadDbData: SoknadDbData): OffsetDateTime {

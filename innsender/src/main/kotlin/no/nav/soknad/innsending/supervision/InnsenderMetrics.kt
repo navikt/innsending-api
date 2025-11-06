@@ -39,6 +39,8 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	private val absentInArchiveHelp = "Number of sent in applications that not yet have been archived"
 	private val archivingFailedName = "archiving_of_applications_failed"
 	private val archivingFailedHelp = "Number of applications for which archiving failed"
+	private val nologinMainSwitchName = "nologin_main_switch"
+	private val nologinMainSwitchHelp = "Nologin main switch (on=1/off=0)"
 
 	private var operationsCounter = registerOperationCounter(name, help)
 	private var operationsErrorCounter = registerOperationCounter(errorName, helpError)
@@ -46,6 +48,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	private var databaseGauge = registerGauge(databaseSizeName, databaseSizeHelp)
 	private var absentInArchiveGauge = registerGauge(absentInArchiveName, absentInArchiveHelp)
 	private var archivingFailedGauge = registerGauge(archivingFailedName, archivingFailedHelp)
+	private var nologinGauge = registerGauge(nologinMainSwitchName, nologinMainSwitchHelp)
 
 	private var submissionsCounter = registerCounter(
 		"submissions_total", "Number of submitted applications",
@@ -66,6 +69,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 		databaseGauge = registerGauge(databaseSizeName, databaseSizeHelp)
 		absentInArchiveGauge = registerGauge(absentInArchiveName, absentInArchiveHelp)
 		archivingFailedGauge = registerGauge(archivingFailedName, archivingFailedHelp)
+		nologinGauge = registerGauge(nologinMainSwitchName, nologinMainSwitchHelp)
 		fileNumberOfPagesSummary = registerSummary(fileNumberOfPages, fileNumberOfPagesHelp)
 		fileSizeSummary = registerSummary(fileSize, fileSizeHelp)
 	}
@@ -78,6 +82,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 		registry.unregister(databaseGauge)
 		registry.unregister(absentInArchiveGauge)
 		registry.unregister(archivingFailedGauge)
+		registry.unregister(nologinGauge)
 		registry.unregister(fileNumberOfPagesSummary)
 		registry.unregister(fileSizeSummary)
 	}
@@ -148,6 +153,8 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	fun setAbsentInArchive(number: Long) = absentInArchiveGauge.set(number.toDouble())
 
 	fun setArchivingFailed(number: Long) = archivingFailedGauge.set(number.toDouble())
+
+	fun setNologinMainSwitch(number: Long) = nologinGauge.set(number.toDouble())
 
 	fun setFileNumberOfPages(pages: Long) = fileNumberOfPagesSummary.observe(pages.toDouble())
 	fun clearFileNumberOfPages() = fileNumberOfPagesSummary.clear()

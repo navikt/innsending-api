@@ -18,7 +18,7 @@ data class SoknadDbData(
 	@Column(name = "tema", columnDefinition = "varchar") val tema: String,
 	@Column(name = "spraak", columnDefinition = "varchar") val spraak: String?,
 	@Column(name = "status", columnDefinition = "varchar") val status: SoknadsStatus,
-	@Column(name = "brukerid", columnDefinition = "varchar") val brukerid: String,
+	@Column(name = "brukerid", columnDefinition = "varchar") val brukerid: String?,
 	@Column(name = "ettersendingsid", columnDefinition = "varchar") val ettersendingsid: String?,
 	@Column(name = "opprettetdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val opprettetdato: LocalDateTime,
 	@Column(name = "endretdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val endretdato: LocalDateTime?,

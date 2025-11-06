@@ -1,10 +1,11 @@
 package no.nav.soknad.innsending.util.mapping
 
+import no.nav.soknad.arkivering.soknadsmottaker.model.Variant
 import no.nav.soknad.arkivering.soknadsmottaker.model.Varianter
 import no.nav.soknad.innsending.model.FilDto
-import no.nav.soknad.innsending.model.Mimetype
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.repository.domain.models.FilDbData
+import no.nav.soknad.innsending.model.Mimetype
 import java.time.LocalDateTime
 
 fun mapTilFilDb(filDto: FilDto) = FilDbData(
@@ -36,8 +37,26 @@ fun filExtention(dokumentDto: VedleggDto): String =
 
 fun translate(dokumentDto: VedleggDto): Varianter {
 	return Varianter(
-		dokumentDto.uuid!!, dokumentDto.mimetype?.value ?: "application/pdf",
-		(dokumentDto.vedleggsnr ?: "N6") + "." + filExtention(dokumentDto),
-		filExtention(dokumentDto)
+		id =	dokumentDto.uuid!!,
+		mediaType = dokumentDto.mimetype?.value ?: "application/pdf",
+		filnavn = (dokumentDto.vedleggsnr ?: "N6") + "." + filExtention(dokumentDto),
+		filtype = filExtention(dokumentDto)
 	)
 }
+
+fun translate(dokumentDto: VedleggDto, new: Boolean): Variant {
+	return Variant(
+		mediaType = dokumentDto.mimetype?.value ?: "application/pdf",
+		filnavn = dokumentDto.label,
+		filtype = filExtention(dokumentDto),
+		uuid = dokumentDto.uuid!!,
+		variantFormat = translateVariantFormat(dokumentDto.mimetype),
+	)
+}
+
+fun translateVariantFormat(mimeType: Mimetype?): String  =
+	when (mimeType) {
+		Mimetype.applicationSlashJson -> "ORIGINAL"
+		Mimetype.applicationSlashXml -> "ORIGINAL"
+		else -> "ARKIV"
+	}

@@ -43,6 +43,8 @@ class DokumentSoknadDtoTestBuilder(
 
 	fun withVedlegg(vedlegg: VedleggDto) = apply { vedleggsListe += listOf(vedlegg) }
 
+	fun withVisningsType(visningsType: VisningsType) = apply { this.visningsType = visningsType }
+
 	fun asEttersending(): DokumentSoknadDtoTestBuilder {
 		soknadType = SoknadType.ettersendelse
 		visningsType = VisningsType.ettersending

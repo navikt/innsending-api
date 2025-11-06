@@ -28,7 +28,8 @@ fun convertToJsonTilleggsstonad(tilleggsstonad: Application, soknadDto: Dokument
 			convertToJsonMaalgruppeinformasjon(
 				tilleggsstonad.aktiviteterOgMaalgruppe,
 				tilleggsstonad.flervalg,
-				tilleggsstonad.regArbSoker
+				tilleggsstonad.regArbSoker,
+				soknadDto
 			), "Mangler: 'Målgruppde informasjon'"
 		),
 		rettighetstype = convertToJsonRettighetstyper(tilleggsstonad, soknadDto)
@@ -72,11 +73,24 @@ fun getSelectedMaalgruppe(aktiviteterOgMaalgruppe: AktiviteterOgMaalgruppe): Maa
 fun convertToJsonMaalgruppeinformasjon(
 	aktiviteterOgMaalgruppe: AktiviteterOgMaalgruppe?,
 	flervalg: Flervalg?,
-	regArbSoker: String?
+	regArbSoker: String?,
+	soknadDto: DokumentSoknadDto
 ): JsonMaalgruppeinformasjon? {
 
 	return getMaalgruppeInformasjonFromAktiviteterOgMaalgruppe(aktiviteterOgMaalgruppe)
 		?: getMaalgruppeinformasjonFromLivssituasjon(flervalg, regArbSoker)
+		?: getMaalgruppeinformasjonFromSkjemanr(soknadDto.skjemanr)
+}
+
+fun getMaalgruppeinformasjonFromSkjemanr(skjemanr: String): JsonMaalgruppeinformasjon? {
+	if (skjemanr == ungdomsprogram_reiseDaglig || skjemanr == ungdomsprogram_reiseSamling || skjemanr == ungdomsprogram_reiseOppstartSlutt) {
+		return JsonMaalgruppeinformasjon(
+			periode = null,
+			kilde = "BRUKERREGISTRERT",
+			maalgruppetype = "UNGDOMPROG"
+		)
+	}
+	return null
 }
 
 fun getMaalgruppeinformasjonFromLivssituasjon(
@@ -84,8 +98,9 @@ fun getMaalgruppeinformasjonFromLivssituasjon(
 	regArbSoker: String?
 ): JsonMaalgruppeinformasjon? {
 	// Bruk maalgruppeinformasjon hvis dette er hentet fra Arena og lagt inn på søknaden
-
-	if (livssituasjon == null) return null
+	if (livssituasjon == null)  {
+		return null
+	}
 
 	// Basert på søker sin spesifisering av livssituasjon, avled prioritert målgruppe
 	// Pri 1
@@ -301,7 +316,7 @@ private fun convertToTilsynsutgifter(tilleggsstonad: Application, soknadDto: Dok
 }
 
 private fun erReisestottesoknad(skjemanr: String): Boolean {
-	return reisestotteskjemaer.contains(skjemanr.substring(0, reisestotteskjemaer[0].length))
+	return reisestotteskjemaer.contains(skjemanr.trim())
 }
 
 
@@ -311,13 +326,13 @@ private fun convertToReisestottesoknad(
 ): JsonReisestottesoknad? {
 	if (!erReisestottesoknad(soknadDto.skjemanr)) return null
 	return JsonReisestottesoknad(
-		dagligReise = if (soknadDto.skjemanr.startsWith(reiseDaglig))
+		dagligReise = if (soknadDto.skjemanr.startsWith(reiseDaglig) || soknadDto.skjemanr.startsWith(ungdomsprogram_reiseDaglig))
 			convertToJsonDagligReise(tilleggsstonad) else null,
-		reiseSamling = if (soknadDto.skjemanr.startsWith(reiseSamling))
+		reiseSamling = if (soknadDto.skjemanr.startsWith(reiseSamling) || soknadDto.skjemanr.startsWith(ungdomsprogram_reiseSamling))
 			convertToJsonReiseSamling(tilleggsstonad) else null,
 		dagligReiseArbeidssoker = if (soknadDto.skjemanr.startsWith(reiseArbeid))
 			convertToJsonReiseArbeidssoker(tilleggsstonad) else null,
-		oppstartOgAvsluttetAktivitet = if (soknadDto.skjemanr.startsWith(reiseOppstartSlutt))
+		oppstartOgAvsluttetAktivitet = if (soknadDto.skjemanr.startsWith(reiseOppstartSlutt) ||  soknadDto.skjemanr.startsWith(ungdomsprogram_reiseOppstartSlutt))
 			convertToJsonOppstartOgAvsluttetAktivitet(tilleggsstonad) else null
 	)
 }

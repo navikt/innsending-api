@@ -114,7 +114,7 @@ class ScheduledOperationsServiceTest : ApplicationTest() {
 		val innsendtdatoB = LocalDateTime.now().minusMinutes(OFFSET_MINUTES + 2)
 		val soknadB = SoknadDbDataTestBuilder(
 			innsendtdato = innsendtdatoB,
-			brukerId = soknadA.brukerid,
+			brukerId = soknadA.brukerid!!,
 			status = SoknadsStatus.Innsendt
 		).build()
 		soknadRepository.save(soknadB)

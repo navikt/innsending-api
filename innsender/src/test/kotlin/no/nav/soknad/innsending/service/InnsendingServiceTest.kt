@@ -167,7 +167,7 @@ class InnsendingServiceTest : ApplicationTest() {
 			.build()
 
 		val ettersendingsSoknadDto =
-			ettersendingService.createEttersendingFromExistingSoknader(dokumentSoknadDto.brukerId, ettersending)
+			ettersendingService.createEttersendingFromExistingSoknader(dokumentSoknadDto.brukerId!!, ettersending)
 
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
@@ -273,7 +273,7 @@ class InnsendingServiceTest : ApplicationTest() {
 
 		// Opprett ettersendingssoknad
 		val ettersendingsSoknadDto =
-			ettersendingService.createEttersendingFromExistingSoknader(dokumentSoknadDto.brukerId, ettersending)
+			ettersendingService.createEttersendingFromExistingSoknader(dokumentSoknadDto.brukerId!!, ettersending)
 
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
 		assertEquals(1, ettersendingsSoknadDto.vedleggsListe.size)
