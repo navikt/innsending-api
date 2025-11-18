@@ -18,8 +18,34 @@
 			<appender-ref ref="secureLog"/>
 		</logger>
 
+
+		<appender name="team-logs" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+			<destination>team-logs.nais-system:5170</destination>
+			<encoder class="net.logstash.logback.encoder.LogstashEncoder">
+				<customFields>{"google_cloud_project":"${GOOGLE_CLOUD_PROJECT}","nais_namespace_name":"${NAIS_NAMESPACE}","nais_pod_name":"${NAIS_POD_NAME}","nais_container_name":"${NAIS_APP_NAME}"}</customFields>
+				<includeContext>false</includeContext>
+			</encoder>
+			<filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+				<evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
+					<marker>TEAM_LOGS</marker>
+				</evaluator>
+				<OnMatch>ACCEPT</OnMatch>
+				<OnMismatch>DENY</OnMismatch>
+			</filter>
+		</appender>
+		<logger name="team-logs-logger" level="INFO" additivity="false">
+			<appender-ref ref="team-logs" />
+		</logger>
+
 		<appender name="STDOUT_JSON" class="ch.qos.logback.core.ConsoleAppender">
 			<encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+			<filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+				<evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
+					<marker>TEAM_LOGS</marker>
+				</evaluator>
+				<OnMatch>DENY</OnMatch>
+				<OnMismatch>ACCEPT</OnMismatch>
+			</filter>
 		</appender>
 
 		<logger name="jdbc.sql" level="${log.level.jdbc.sql:-INFO}"/>
@@ -47,9 +73,11 @@
 		<logger name="org.apache.pdfbox.pdmodel.graphics.image.SampledImageReader" level="off"/>
 		<logger name="org.apache.pdfbox.pdmodel.graphics.shading.AxialShadingPaint" level="off"/>
 		<logger name="org.apache.pdfbox.contentstream.operator.state.SetGraphicsStateParameters" level="off"/>
+		<logger name="org.apache.poi" level="off"/>
 
 		<root level="INFO">
 			<appender-ref ref="STDOUT_JSON"/>
+			<appender-ref ref="team-logs" />
 		</root>
 	</springProfile>
 
