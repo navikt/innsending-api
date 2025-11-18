@@ -6,8 +6,6 @@ import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
-import no.nav.soknad.pdfutilities.gotenberg.GotenbergClientConfig
-import no.nav.soknad.pdfutilities.gotenberg.GotenbergConvertToPdf
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.text.PDFTextStripper
 import org.junit.Assert.assertTrue
