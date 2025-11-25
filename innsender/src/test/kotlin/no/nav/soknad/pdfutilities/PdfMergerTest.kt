@@ -102,7 +102,6 @@ class PdfMergerTest : ApplicationTest() {
 
 	}
 
-
 	@Test
 	fun `sjekk merging av flere pdfer der en inneholder mange sider`() {
 
@@ -121,7 +120,8 @@ class PdfMergerTest : ApplicationTest() {
 		println("Tid brukt for å merge ${pdfFiler.size} PDFer der en av PDFene består av mange sider = ${ferdig - start}")
 
 		assertEquals(antallFiler + (antallSider.finnAntallSider(storPdf) ?: 0), AntallSider().finnAntallSider(mergedPdf))
-		checkPdfACompliance(mergedPdf)
+		// Dropper PDF/A validering da dette er gjort i andre tester og denne testen tar veldig lang tid når vi generert PDF inneholder over 1000 sider.
+		//checkPdfACompliance(mergedPdf)
 
 	}
 
@@ -173,10 +173,10 @@ class PdfMergerTest : ApplicationTest() {
 	}
 
 	@Test
-	@Disabled("StorPdf.pdf er 47,9MB. Ikke relevant så lenge 50MB er maksimum størrelse på et vedlegg.")
+	@Disabled("StorPdf.pdf er 47,9MB. Max vedleggsstørrelse er 150MB. Opplasting av 3 slike er relevant, men tar mer enn 1 minutt. Disabler testen, men lar den liggee så den kan kjøres ved behov.")
 	fun `sjekk merging av flere store pdfer`() {
 		val pdfFiler = mutableListOf<ByteArray>()
-		val antallFiler = 4
+		val antallFiler = 3
 		for (i in 0 until antallFiler) {
 			pdfFiler.add(Hjelpemetoder.getBytesFromFile("/storPdf.pdf"))
 		}
