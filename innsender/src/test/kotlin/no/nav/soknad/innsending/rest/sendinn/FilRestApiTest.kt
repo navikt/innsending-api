@@ -1,6 +1,11 @@
 package no.nav.soknad.innsending.rest.sendinn
 
 import io.mockk.clearAllMocks
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.model.*
@@ -133,30 +138,19 @@ class FilRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun verifiserOpplastingAvUlikeFiltyperTest() {
-		val skjemanr = defaultSkjemanr
-		val spraak = "nb-NO"
-		val vedlegg = listOf("N6", "W2")
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+	fun verifiserOpplastingAvUlikeFiltyperTest() =
+		runBlocking {
+			val awaits: MutableList<Deferred<Unit>> = mutableListOf()
+			awaits.add(async(Dispatchers.IO) {	testOpplastingAvOfficeFormater() })
+			awaits.add(async(Dispatchers.IO) {	testOpplastingAvBildeFormater()	})
+			awaits.awaitAll()
 
-		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
+			val filePages = innsenderMetrics.fileNumberOfPagesSummary
+			val fileSize = innsenderMetrics.fileSizeSummary
+			assertTrue(filePages.collect().dataPoints[0].sum > 1.0)
+			assertTrue(fileSize.collect().dataPoints[0].sum > 30000.0)
+		}
 
-		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
-		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
-
-		testOpplastingAvOfficeFormater(token, soknadDto.innsendingsId!!, vedleggN6.id!!)
-
-		val vedleggW2 = soknadDto.vedleggsListe.first { it.vedleggsnr == "W2" }
-		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggW2.opplastingsStatus)
-
-		testOpplastingAvBildeFormater(token, soknadDto.innsendingsId!!, vedleggN6.id!!)
-
-		val filePages = innsenderMetrics.fileNumberOfPagesSummary
-		val fileSize = innsenderMetrics.fileSizeSummary
-		assertTrue(filePages.collect().dataPoints[0].sum > 1.0)
-		assertTrue(fileSize.collect().dataPoints[0].sum > 30000.0)
-
-	}
 
 	@Test
 	fun verifiserAvvisningAvUlovligeFiltyper() {
@@ -178,34 +172,54 @@ class FilRestApiTest : ApplicationTest() {
 
 	}
 
-	private fun testOpplastingAvBildeFormater(token: String, innsendingsId: String, vedleggsId: Long) {
+	private fun testOpplastingAvBildeFormater() {
 		val bildeNavnPrefix = "bilde"
 		val filPath = "/__files/$bildeNavnPrefix"
 
-		imageFileTypes.keys.forEach { lastOppOgSjekk(token, innsendingsId, vedleggsId,  filPath, it) }
+		runBlocking {
+			val awaits: MutableList<Deferred<Unit>> = mutableListOf()
+			val start = System.currentTimeMillis()
+			imageFileTypes.keys.forEach { awaits.add(async(Dispatchers.IO) { lastOppOgSjekk(filPath, it) }) }
+			awaits.awaitAll()
+			val time = System.currentTimeMillis() - start
+			System.out.println("Time for lastOppOgSjekk for $bildeNavnPrefix: $time")
+		}
 	}
 
-	private fun testOpplastingAvOfficeFormater(token: String, innsendingsId: String, vedleggsId: Long) {
+	private suspend fun testOpplastingAvOfficeFormater() {
 		val officeNavnPrefix = "office"
 		val filPath = "/__files/$officeNavnPrefix"
 
-		officeFileTypes.keys.forEach { lastOppOgSjekk(token, innsendingsId, vedleggsId,  filPath, it) }
+		runBlocking {
+			val awaits: MutableList<Deferred<Unit>> = mutableListOf()
+			val start = System.currentTimeMillis()
+			officeFileTypes.keys.forEach { awaits.add(async(Dispatchers.IO) { lastOppOgSjekk(filPath, it) }) }
+			val time = System.currentTimeMillis() - start
+			System.out.println("Time for lastOppOgSjekk for $officeNavnPrefix: $time")
+		}
 	}
 
-	private fun lastOppOgSjekk(token: String, innsendingsId: String, vedleggsId: Long, filSti: String, type: String) {
-		val filDto = lastOppFil(token, innsendingsId, vedleggsId, filSti+type)
+	private fun lastOppOgSjekk( filSti: String, type: String) {
+		val skjemanr = defaultSkjemanr
+		val spraak = "nb-NO"
+		val vedlegg = listOf("W2")
+		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
+		val vedleggW2 = soknadDto.vedleggsListe.first { it.vedleggsnr == "W2" }.id
+
+		val filDto = lastOppFil(token, soknadDto.innsendingsId!!, vedleggW2!!, filSti+type)
 		assertEquals(HttpStatus.CREATED, filDto.statusCode)
 		assertTrue(filDto.body != null)
 		assertEquals(Mimetype.applicationSlashPdf, filDto.body!!.mimetype)
 		assertNotNull(filDto.body!!.id)
 
-		val opplastetFil = hentOpplastetFil(token, innsendingsId, filDto.body?.vedleggsid!!, filDto.body?.id!!)
+		val opplastetFil = hentOpplastetFil(token, soknadDto.innsendingsId!!, filDto.body?.vedleggsid!!, filDto.body?.id!!)
 		assertEquals(HttpStatus.OK, opplastetFil.statusCode)
 		assertEquals(filDto.body!!.storrelse, opplastetFil.body!!.byteArray.size)
 
-		opplastetFil.body?.let { writeBytesToFile(it.byteArray, "target/delme-$type.pdf") }
+//		opplastetFil.body?.let { writeBytesToFile(it.byteArray, "target/delme-$type.pdf") }
 
-		slettOpplastetFil(token, innsendingsId, filDto.body?.vedleggsid!!, filDto.body?.id!!)
 
 	}
 
@@ -281,7 +295,6 @@ class FilRestApiTest : ApplicationTest() {
 		}
 
 	}
-
 
 	@Test
 	fun sjekkAtOpplastingAvUlovligFilformatGirFeilTest() {

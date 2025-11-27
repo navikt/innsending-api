@@ -31,6 +31,7 @@ import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
@@ -90,7 +91,6 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Value("\${server.port}")
 	var serverPort: Int? = 9064
 
-
 	@Test
 	fun testOpprettSoknadPaFyllUtApi() {
 		// Gitt
@@ -108,7 +108,6 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Så
 		testHentSoknadOgSendInn(opprettetSoknadResponse.body, token)
 	}
-
 
 	@Test
 	fun testOpprettSoknadPaFyllUtApi_Ungdomsprogram() {
@@ -141,7 +140,6 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals(0, kvitteringsDto!!.skalSendesAvAndre!!.size)
 		assertTrue(kvitteringsDto.hoveddokumentRef != null)
 	}
-
 
 	@Test
 	fun testUserNotificationOnSoknadCreation() {
@@ -436,7 +434,6 @@ class FyllutRestApiTest : ApplicationTest() {
 		)
 	}
 
-
 	@Test
 	fun `Should keep vedlegg from send-inn, even after updating from fyllUt and should delete old vedlegg not relevant anymore`() {
 		// Given
@@ -680,7 +677,6 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	}
 
-
 	@Test
 	fun `Should not update opprettetDato when updating soknad`() {
 		// Given
@@ -809,14 +805,13 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	@Test
+	@Disabled("Ytelse på oppretting av flere søknader samtidig blir gjort i testen FilRestApiTest.verifiserOpplastingAvUlikeFiltyperTest")
 	fun testOpprettSoknaderOgHentingYtelse() {
 		// Gitt
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-
 		val t7Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build()
 		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
 
-		val noOfRepeats: Int = 100
+		val noOfRepeats = 100
 		val soknader = mutableListOf<SkjemaDto>()
 		repeat(noOfRepeats, {
 			val soknad = SkjemaDtoTestBuilder(vedleggsListe = listOf(t7Vedlegg, n6Vedlegg)).build()
