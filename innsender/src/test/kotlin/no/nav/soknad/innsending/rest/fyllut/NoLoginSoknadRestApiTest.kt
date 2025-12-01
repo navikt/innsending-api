@@ -97,7 +97,7 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 		val vedleggSomSendesSenere = SkjemaDokumentDtoV2TestBuilder(
 			vedleggsnr = "T4",
 			tittel = "Kursbevis",
-			label = "Kursbevis",
+			label = "Kursbevis for førstehjelpskurs",
 			pakrevd = true,
 			formioId = navId2,
 			opplastingsStatus = OpplastingsStatusDto.SendSenere,
@@ -106,8 +106,8 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 
 		val vedleggAnnenDokumentasjon1 = SkjemaDokumentDtoV2TestBuilder(
 			vedleggsnr = "N6",
-			label = "Annen dokumentasjon",
-			tittel = "Kvittering fra apotek",
+			tittel = "Annen dokumentasjon",
+			label = "Kvittering fra apotek",
 			// propertyNavn = "annenDokumentasjon", <-- brukes ikke ved nologin
 			pakrevd = false,
 			formioId = navId3,
@@ -118,8 +118,8 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 
 		val vedleggAnnenDokumentasjon2 = SkjemaDokumentDtoV2TestBuilder(
 			vedleggsnr = "N6",
-			tittel = "Førerkort",
-			label = "Annen dokumentasjon",
+			tittel = "Annen dokumentasjon",
+			label = "Førerkort",
 			// propertyNavn = "annenDokumentasjon", <-- brukes ikke ved nologin
 			pakrevd = false,
 			formioId = navId4,
@@ -148,6 +148,12 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 		assertEquals(1, kvittering.skalEttersendes!!.size)
 		assertEquals(3, kvittering.innsendteVedlegg!!.size)
 		assertEquals(0, kvittering.skalSendesAvAndre!!.size)
+
+		val vedleggT4Ettersending = kvittering.skalEttersendes!!.first()
+		assertEquals("Kursbevis for førstehjelpskurs", vedleggT4Ettersending.tittel)
+
+		assertNotNull(kvittering.innsendteVedlegg!!.firstOrNull { it.tittel == "Førerkort" })
+		assertNotNull(kvittering.innsendteVedlegg!!.firstOrNull { it.tittel == "Kvittering fra apotek" })
 
 		val slotSoknad = slot<DokumentSoknadDto>()
 		val slotVedleggsliste = slot<List<VedleggDto>>()
@@ -194,13 +200,15 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 
 		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
 			vedleggsnr = "N6",
-			tittel = "Kvittering fra apotek",
+			tittel = "Annen dokumentasjon",
+			label = "Kvittering fra apotek",
 			formioId = vedleggId,
 		).build()
 
 		val vedlegg2 = SkjemaDokumentDtoV2TestBuilder(
 			vedleggsnr = "N6",
-			tittel = "Førerkort",
+			tittel = "Annen dokumentasjon",
+			label = "Førerkort",
 			formioId = vedleggId,
 		).build()
 
@@ -223,7 +231,8 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 
 		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
 			vedleggsnr = "N6",
-			tittel = "Kvittering fra apotek",
+			tittel = "Annen dokumentasjon",
+			label = "Kvittering fra apotek",
 			formioId = null,
 		).build()
 

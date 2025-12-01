@@ -219,7 +219,7 @@ class VedleggService(
 					erpakrevd = it.vedleggsnr != "N6",
 					vedleggsnr = it.vedleggsnr,
 					tittel = it.tittel,
-					label = it.tittel,
+					label = it.label,
 					beskrivelse = "",
 					mimetype = it.mimetype?.value,
 					uuid = UUID.randomUUID().toString(),
