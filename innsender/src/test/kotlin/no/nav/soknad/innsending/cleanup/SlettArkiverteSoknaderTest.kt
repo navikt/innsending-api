@@ -79,7 +79,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 	@Test
 	fun testSlettingAvInnsendteSoknader() {
 		every { leaderSelectionUtility.isLeader() } returns true
-		every { soknadsmottakerAPI.sendInnSoknad(any(), any()) } returns Unit
+		every { soknadsmottakerAPI.sendInnSoknad(any(), any(), any(), any()) } returns Unit
 		every { pdlInterface.hentPersonIdents(any()) } returns listOf(IdentDto("123456789", "FOLKEREGISTERIDENT", false))
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("123456789", "Fornavn", null, "Etternavn")
 		every { subjectHandler.getClientId() } returns "application"

@@ -98,12 +98,24 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		val t7Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build()
 		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
+		val hoveddokument = SkjemaDokumentDtoTestBuilder( tittel = "Application for one-time grant at birth").asHovedDokument("NAV 10-07.41", withFile = false).build()
+		val hoveddokumentVariant = SkjemaDokumentDtoTestBuilder( tittel = "Application for one-time grant at birth").asHovedDokumentVariant("NAV 10-07.41", withFile = true).build()
 
-		val skjemaDto = SkjemaDtoTestBuilder(vedleggsListe = listOf(t7Vedlegg, n6Vedlegg)).build()
+		val skjemaDto = SkjemaDtoTestBuilder( skjemanr="NAV 10-07.41", tittel = "Application for one-time grant at birth", vedleggsListe = listOf(t7Vedlegg, n6Vedlegg))
+			.medHoveddokument(hoveddokument)
+			.medHoveddokumentVariant(hoveddokumentVariant)
+			.build()
 
 		// Når
 		val opprettetSoknadResponse = api!!.createSoknad(skjemaDto)
 			.assertSuccess()
+
+		val hoveddokumentMedFil = SkjemaDokumentDtoTestBuilder(tittel = "Application for one-time grant at birth").asHovedDokument("NAV 10-07.41", withFile = true).build()
+		val utFyltSkjemaDto = SkjemaDtoTestBuilder( skjemanr="NAV 10-07.41", tittel = "Application for one-time grant at birth", vedleggsListe = listOf(t7Vedlegg, n6Vedlegg))
+			.medHoveddokument(hoveddokumentMedFil)
+			.medHoveddokumentVariant(hoveddokumentVariant)
+			.build()
+		api?.utfyltSoknad(opprettetSoknadResponse.body.innsendingsId!!, utFyltSkjemaDto)
 
 		// Så
 		testHentSoknadOgSendInn(opprettetSoknadResponse.body, token)
@@ -437,30 +449,37 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should keep vedlegg from send-inn, even after updating from fyllUt and should delete old vedlegg not relevant anymore`() {
 		// Given
-		val dokumentSoknadDto = opprettSoknad() // med vedlegg vedleggsnr1 og vedleggsnr2
+		// Opprett søknaden i innsending-api med hoveddokument (inkludert variant) og vedleggsnr1 og vedleggsnr2
+		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
-		val fyllUtVedleggstittel = "N6-ny-vedleggstittel"
+		val t1Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T1", tittel = "T1-vedleggstittel").build()
 
-		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
+		// Bygg fyllut skjemaDto med hoveddokument (inkludert variant) og T1Vedlegg
 		val fromFyllUt =
-			SkjemaDtoTestBuilder(vedleggsListe = listOf(n6Vedlegg), skjemanr = dokumentSoknadDto.skjemanr).build()
+			SkjemaDtoTestBuilder(
+				innsendingsId = innsendingsId, tittel = dokumentSoknadDto.tittel,
+				skjemanr = dokumentSoknadDto.skjemanr).medVedlegg(t1Vedlegg).build()
 
-		val formioId = fromFyllUt.vedleggsListe?.find { it.vedleggsnr == "N6" }!!.formioId!!
+		// N6 vedleggs fyllutId (aka formioId)
+		val formioId = UUID.randomUUID().toString()
 
+		// Legg til N6 vedlegg til fyllUt skjema, og fjern T1
+		val fyllUtVedleggstittel = "N6-ny-vedleggstittel"
 		val updatedN6Vedlegg = SkjemaDokumentDtoTestBuilder(
 			vedleggsnr = "N6",
 			tittel = fyllUtVedleggstittel,
 			formioId = formioId
 		).build()
 		val updatedFyllUt =
-			SkjemaDtoTestBuilder(vedleggsListe = listOf(updatedN6Vedlegg), skjemanr = dokumentSoknadDto.skjemanr).build()
+			SkjemaDtoTestBuilder(innsendingsId = innsendingsId, tittel = dokumentSoknadDto.tittel, vedleggsListe = listOf(updatedN6Vedlegg), skjemanr = dokumentSoknadDto.skjemanr).build()
 
+		// Oppdater søknaden i innsending-api med bruker opprettet N6 vedlegg
 		val sendInnVedleggsTittel = "N6-fra-send-inn"
 		val fromSendInn = PostVedleggDto(tittel = sendInnVedleggsTittel)
 
 		// When
-		// Complete søknad in fyllUt with N6 and T1 vedlegg
+		// Complete søknad in fyllUt with N6 and T1 vedlegg. Vedlegg1 og vedlegg2 blir fjernet
 		val utfyltResponse = api?.utfyltSoknad(innsendingsId, fromFyllUt)
 
 		// Add N6 vedlegg i send-inn

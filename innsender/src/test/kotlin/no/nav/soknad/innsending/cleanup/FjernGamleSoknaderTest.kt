@@ -48,7 +48,7 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 	@Test
 	fun testSlettingAvGammelIkkeInnsendtSoknad() {
 		every { leaderSelectionUtility.isLeader() } returns true
-		every { soknadsmottakerAPI.sendInnSoknad(any(), any()) } returns Unit
+		every { soknadsmottakerAPI.sendInnSoknad(any(), any(), any(), any()) } returns Unit
 		every { subjectHandler.getClientId() } returns "application"
 
 		val spraak = "no"

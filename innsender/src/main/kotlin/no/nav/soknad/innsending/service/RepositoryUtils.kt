@@ -43,6 +43,14 @@ class RepositoryUtils(
 		throw BackendErrorException("Henting av søknad $innsendingsId fra databasen feilet", ex)
 	}
 
+	fun existsByInnsendingsId(innsendingsId: String): Boolean {
+		return try {
+			soknadRepository.existsByInnsendingsid(innsendingsId)
+		} catch (ex: Exception) {
+			throw BackendErrorException("Sjekk av eksistens for søknad $innsendingsId i databasen feilet", ex)
+		}
+	}
+
 	fun endreSoknadDb(id: Long, visningsSteg: Long) = try {
 		soknadRepository.updateVisningsStegAndEndretDato(id, visningsSteg, LocalDateTime.now())
 	} catch (ex: Exception) {

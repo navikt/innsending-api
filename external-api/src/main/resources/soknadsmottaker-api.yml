@@ -3,8 +3,9 @@ info:
   description: >
     When a user applies for a benefit (_sender inn en søknad_), one or more documents are
     sent in to NAV. This component acts as a REST-endpoint to which the systems that the user uses can send
-    metadata about the benefit. The documents themselves will be stored in the database until SoknadsArkiverer
-    requests them. The metadata is sent to Soknadsmottaker which receives the data, converts it, serializes it as an Avro message and puts it on a
+    metadata about the benefit. The documents themselves **must** be sent to a different system,
+    [Soknadsfillager](https://www.github.com/navikt/soknadsfillager), before calling Soknadsmottaker.
+    When Soknadsmottaker receives data, it will be converted, serialized as an Avro message and put on a
     Kafka topic.
   version: 2.0.0
   title: Soknadsmottaker
@@ -15,6 +16,10 @@ info:
     name: MIT License
     url: https://github.com/navikt/soknadsmottaker/blob/main/LICENSE
 tags:
+  - name: nologin-soknad
+    description: Receives data from a not-logged in user for submission to NAV of an application or documents
+  - name: loggedin-soknad
+    description: Receives data from a logged in user for submission to NAV of an application or documents
   - name: receive
     description: Receives benefit applications
   - name: health
@@ -26,6 +31,15 @@ paths:
       summary: Receives benefit application
       description: Receives a benefit application, which will lead to it being put on a Kafka topic and archived.
       operationId: receive
+
+      parameters:
+        - in: header
+          name: X-innsendingId
+          description: Tracing id that will be used in logging statements.
+          example: 92ee15dd-dc49-4c95-b9b6-6224bae088a0
+          required: false
+          schema:
+            type: string
 
       requestBody:
         description: Metadata about the benefit application being sent in.
@@ -41,11 +55,79 @@ paths:
       tags:
         - soknad
 
+  /nologin-soknad:
+    post:
+      summary: Submission of benefit application
+      description: Receives a benefit application from a not-logged-in user, the application will be put on a Kafka topic and archived.
+      operationId: nologin-submission
+
+      parameters:
+        - in: header
+          name: X-innsendingId
+          description: Tracing id that will be used in logging statements.
+          example: 92ee15dd-dc49-4c95-b9b6-6224bae088a0
+          required: false
+          schema:
+            type: string
+
+      requestBody:
+        description: Metadata about the benefit application being sent in.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Innsending"
+        required: true
+
+      responses:
+        200:
+          description: Successful operation
+      tags:
+        - nologin-soknad
+
+
+  /loggedin-soknad:
+    post:
+      summary: Submission of benefit application
+      description: Receives a benefit application from a logged-in user, the application will be put on a Kafka topic and archived.
+      operationId: logged-in-submission
+
+      parameters:
+        - in: header
+          name: X-innsendingId
+          description: Tracing id that will be used in logging statements.
+          example: 92ee15dd-dc49-4c95-b9b6-6224bae088a0
+          required: false
+          schema:
+            type: string
+
+      requestBody:
+        description: Metadata about the benefit application being sent in.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Innsending"
+        required: true
+
+      responses:
+        200:
+          description: Successful operation
+      tags:
+        - logged-in-soknad
+
   /notify/new:
     post:
       summary: Message in order to publish to Kafka hosted on Aiven user notification - Beskjed or Oppgave
       description: Depending on input, a message or a task user notification with a link to continue work is to be published
       operationId: newNotification
+
+      parameters:
+        - in: header
+          name: X-innsendingId
+          description: Tracing id that will be used in logging statements.
+          example: 92ee15dd-dc49-4c95-b9b6-6224bae088a0
+          required: false
+          schema:
+            type: string
 
       requestBody:
         description: Data neccessary in order to publish a new task or message user notification.
@@ -66,6 +148,15 @@ paths:
       summary: Message in order to publish message in order to cancel an user notification
       description: After an application is sent in or deleted previous added user notification shall be canceled
       operationId: cancelNotification
+
+      parameters:
+        - in: header
+          name: X-innsendingId
+          description: Tracing id that will be used in logging statements.
+          example: 92ee15dd-dc49-4c95-b9b6-6224bae088a0
+          required: false
+          schema:
+            type: string
 
       requestBody:
         description: Data neccessary to identify user notification to be closed.
@@ -125,9 +216,206 @@ paths:
       tags:
         - health
 
+  /health/status:
+    get:
+      summary: Returnerer operativ status på applikasjonen
+      description: Sjekker om applikasjonen er oppe og kjører som forventet
+      operationId: getStatus
+
+      security: [ ]
+      responses:
+        '200':
+          description: Status på applikasjonen er OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationStatus"
+      tags:
+        - health
+
 
 components:
   schemas:
+    ApplicationStatus:
+      type: object
+      description: Operativ status på applikasjonen
+      required:
+        - status
+
+      properties:
+        status:
+          $ref: "#/components/schemas/ApplicationStatusType"
+        description:
+          type: string
+          description: Beskrivelse av feilsituasjon
+          example: "Databasen i innsending-api er nede"
+        logLink:
+          type: string
+          description: Link til Kibana logs for mer info om feilen
+          example: https://logs.adeo.no/app/discover#/view/170a6860-df4c-11ed-8b42-0b0644af4500
+
+    ApplicationStatusType:
+      type: string
+      enum: [ "OK", "ISSUE", "DOWN" ]
+      x-enum-varnames: [ "OK", "ISSUE", "DOWN" ]
+      description: Operativ status på applikasjonen. (OK=Tjeneste er tilgjengelig og fungerer normalt, ISSUE=Tjeneste er tilgjengelig, men med begrenset funksjonalitet/kapasitet, DOWN=Tjeneste er utilgjengelig)
+      example: OK
+
+    AvsenderDto:
+      type: object
+      description: Identifikasjon av hvem som sender inn søknaden
+
+      properties:
+        id:
+          type: string
+        idType:
+          type: string
+          enum: [ "FNR", "ORGNR", "HPRNR", "UTL_ORG" ]
+          description: Obligatorisk dersom id er satt. Angir hvilken type id som er brukt. Merk at FNR kan også være et D-NR
+        navn:
+          type: string
+          description: Navn på avsender, ikke nødvendig dersom id er spesifisert
+          example: Ola Nordmann
+
+    BrukerDto:
+      type: object
+      description: Identifikasjon av hvem (person eller organisasjon) som søknaden gjelder
+
+      required:
+        - id
+        - idType
+
+      properties:
+        id:
+          type: string
+        idType:
+          type: string
+          enum: [ "FNR","ORGNR" ]
+          description: Angivelse av om id inneholder FNR til person eller Organisasjonsnummer til virksomhet søknaden gjelder. Merk at FNR kan også være et D-NR
+
+
+    Innsending:
+      type: object
+      required:
+        - innsendingsId
+        - kanal
+        - avsenderDto
+        - tema
+        - skjemanr
+        - tittel
+        - dokumenter
+      properties:
+        innsendingsId:
+          type: string
+          description: >
+            Unik id for forsendelsen. Denne **må** være unik. Id brukes på flere måter;
+            dels for sporing gjennom verdikjeden, dels som key på Kafka-topicen som Soknadsarkiverer leser. I tillegg
+            blir id sendt inn til Joark. Id blir lagret i joark sin journalpost i kolonnen `eksternReferanseId`. Hvis id
+            ikke er unik vil Joark svare med, `HttpStatus=Conflict`. Dette for å hindre at samme forsendelse arkiveres
+            flere ganger.
+          example: 2f9b8d25-1056-4827-8ddd-cedab7fafaaf
+        ettersendelseTilId:
+          type: string
+          description: Referanse til tidligere innsending denne er relatert til.
+          example: 2f9b8d25-1056-4827-8ddd-cedab7fafaa1
+        kanal:
+          $ref: "#/components/schemas/Kanal"
+        avsenderDto:
+          $ref: "#/components/schemas/AvsenderDto"
+        brukerDto:
+          $ref: "#/components/schemas/BrukerDto"
+        tema:
+          type: string
+          description: Temaet som forsendelsen tilhører.
+          example: AAP
+        skjemanr:
+          $ref: "#/components/schemas/Skjemanr"
+        tittel:
+          $ref: "#/components/schemas/Tittel"
+        dokumenter:
+          type: array
+          items:
+            $ref: "#/components/schemas/DokumentData"
+          description: Hver Soknad kan ha flere vedlegg. Denne listen beskriver metadata om disse dokumentene.
+
+    InnsendingTopicMsg:
+      type: object
+      required:
+        - versjon
+        - innsendtDato
+        - innlogget
+        - innsendingsId
+        - avsenderDto
+        - kanal
+        - skjemanr
+        - tittel
+        - dokumenter
+        - arkivtema
+      properties:
+        versjon:
+          $ref: "#/components/schemas/InnsendingTopicMsgVersjon"
+        innsendtDato:
+          type: string
+          format: date-time
+          description: >
+            Dato og tid for når innsendingen ble gjort. Dette er tidspunktet for når innsendingen ble mottatt av Soknadsmottaker.
+          example: 2022-04-06T14:10:00Z
+        innlogget:
+          type: boolean
+          default: false
+          description: >
+            Angir om innsendingen er gjort av en innlogget bruker eller ikke. Dette brukes for å skille mellom innsendinger
+            gjort av brukere som er logget inn og de som ikke er det.
+          example: false, dvs innsender er ikke innlogget
+        innsendingsId:
+          type: string
+          description: >
+            Unik id for forsendelsen. Denne **må** være unik. Id brukes på flere måter;
+            dels for sporing gjennom verdikjeden, dels som key på Kafka
+        ettersendelseTilId:
+          type: string
+          description: Dersom denne søknaden er en ettersending skal denne propertien være satt. Referanse til tidligere innsending denne er relatert til, lik innsendingsId dersom referanse til tidligere innsending mangler.
+          example: 2f9b8d25-1056-4827-8ddd-cedab7fafaa1
+        avsenderDto:
+          $ref: "#/components/schemas/AvsenderDto"
+        brukerDto:
+          $ref: "#/components/schemas/BrukerDto"
+        kanal:
+          $ref: "#/components/schemas/Kanal"
+        skjemanr:
+          $ref: "#/components/schemas/Skjemanr"
+        tittel:
+          $ref: "#/components/schemas/Tittel"
+        arkivtema:
+          type: string
+          description: Temaet som forsendelsen tilhører.
+          example: AAP
+        dokumenter:
+          type: array
+          items:
+            $ref: "#/components/schemas/DokumentData"
+          description: Hver innsending kan bestå av flere dokumenter. Denne listen beskriver metadata om disse dokumentene.
+
+    InnsendingTopicMsgVersjon:
+      type: string
+      description: Gjeldende versjon av InnsendingTopicMsg. Denne brukes for å kunne håndtere endringer i innsendingen. Er på formen X.Y.Z
+      default: 1.0.0
+
+    Kanal:
+      type: string
+      description: Angir hvilken kanal som brukes for innsendingen. Dette brukes for å skille mellom innsendinger gjort via ulike kanaler.
+      example: NAV_NO,  NAV_NO_UINNLOGGET
+
+    Skjemanr:
+      type: string
+      description: Skjemanummer som dokumentet gjelder. Dette brukes for å identifisere hvilket skjema som er brukt for innsendingen.
+      example: NAV 11-12.12
+
+    Tittel:
+      type: string
+      description: Tittel på innsendingen. Dette brukes for å gi en beskrivelse av hva innsendingen gjelder.
+      example: Søknad om tilleggsstønader
+
     Soknad:
       type: object
       required:
@@ -195,6 +483,66 @@ components:
             og en json variant av søknaden.
             Denne lista inneholder metadata, der hver variant representerer en fysisk fil.
 
+    DokumentData:
+      type: object
+      required:
+        - skjemanummer
+        - erHovedskjema
+        - tittel
+        - varianter
+      properties:
+        skjemanummer:
+          type: string
+          description: Skjemanummer/vedleggsnummer som dokumentet gjelder.
+          example: NAV 11-12.12
+        erHovedskjema:
+          type: boolean
+          description: >
+            Markerer hvis dette er hovedskjemaet for innsendingen. Kun ett dokument kan være markert med
+            `erHovedskjema = true`.
+          example: true
+        tittel:
+          type: string
+          description: Tittel på dokumentet.
+          example: Søknad om tilleggsstønader
+        varianter:
+          type: array
+          items:
+            $ref: "#/components/schemas/Variant"
+          description: >
+            Det kan sendes inn flere varianter av samme dokument; for eksempel kan én søknaden sendes inn med en PDF/A
+            og en json variant av søknaden.
+            Denne lista inneholder metadata, der hver variant representerer en fysisk fil.
+
+    Variant:
+      type: object
+      required:
+        - uuid
+        - mediaType
+        - filnavn
+        - filtype
+      properties:
+        uuid:
+          type: string
+          description: Unik id på dokumentet.
+          example: 18777177-eba3-4f58-b9b9-694e7171a030
+        mediaType:
+          type: string
+          description: Hva for [Media type](https://en.wikipedia.org/wiki/Media_type) fila har.
+          example: application/pdf, application/json, application/xml
+        filnavn:
+          type: string
+          description: Navn for systemdefinerte filer, eller navn spesifisert av bruker.
+          example: tilleggsstonader.xml
+        filtype:
+          type: string
+          description: Metadata about attached documents
+          example: XML, JSON, PDF, PDFA
+        variantFormat:
+          type: string
+          description: Beskriver type variant av dokumentet som skalarkiveres. Arkivet godtar kun en versjon per variantFormat
+          example: ORIGINAL, ARKIV, FULLVERSJON
+
     Varianter:
       type: object
       required:
@@ -205,12 +553,12 @@ components:
       properties:
         id:
           type: string
-          description: Unikt id på fila
+          description: Unik id på dokumentet.
           example: 18777177-eba3-4f58-b9b9-694e7171a030
         mediaType:
           type: string
           description: Hva for [Media type](https://en.wikipedia.org/wiki/Media_type) fila har.
-          example: application/pdf
+          example: aktuelle typer application/pdf, application/json, application/xml
         filnavn:
           type: string
           description: Navn for systemdefinerte filer, eller navn spesifisert av bruker.
@@ -218,7 +566,7 @@ components:
         filtype:
           type: string
           description: Metadata about attached documents
-          example: XML
+          example: XML, JSON, PDF, PDFA
 
     AddNotification:
       type: object
@@ -256,9 +604,9 @@ components:
         erSystemGenerert:
           type: boolean
           description: >
-            Markerer hvis det er systemet, ikke brukeren selv, som har tatt initiativ til å lage søknaden.
-            Når en bruker tar initiativ til å opprette en søknad/ettersending lages det et utkast.
-            Når systemet ser at det mangler påkrevde vedlegg som skal ettersendes, lages det en oppgave på min side.
+            Markerer hvis det er systemet (ikke brukeren selv) som har tatt initiativ til å lage søknaden.
+            Når en bruker tar initiativ til å opprette en søknad/ettersending lages det et *utkast*.
+            Når systemet ser at det mangler påkrevde vedlegg som skal ettersendes, lages det en *oppgave* i stedet.
           example: true
           default: false
         groupId:

@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.repository
 
+import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
@@ -16,6 +17,7 @@ import java.time.OffsetDateTime
 interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 
 	fun findByInnsendingsid(innsendingsid: String): SoknadDbData?
+	fun existsByInnsendingsid(innsendingsid: String): Boolean
 	fun findByBrukeridAndStatus(brukerid: String, status: SoknadsStatus): List<SoknadDbData>
 
 	@Transactional
@@ -115,5 +117,12 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 		@Param("status") status: String = SoknadsStatus.Innsendt.name,
 		@Param("arkiveringsstatus") arkiveringsstatus: String = ArkiveringsStatus.Arkivert.name
 	): List<SoknadDbData>
+
+
+	@Query(
+		value = "SELECT COUNT(*) FROM soknad WHERE innsendtdato > :since AND visningstype = CAST(:visningsType AS VARCHAR)",
+		nativeQuery = true
+	)
+	fun countRecentlySubmitted(visningsType: VisningsType, since: LocalDateTime): Long
 
 }

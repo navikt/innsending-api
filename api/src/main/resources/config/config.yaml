@@ -1,0 +1,82 @@
+get:
+  summary: Hent konfigurasjonsverdi for gitt nøkkel
+  description: Hent konfigurasjonsverdi for gitt nøkkel
+  operationId: getConfig
+
+  parameters:
+    - name: key
+      in: path
+      description: Nøkkel for konfigurasjonsverdi
+      required: true
+      schema:
+        type: string
+      style: simple
+
+  responses:
+    200:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            $ref: "./components.yaml#/components/schemas/ConfigValueDto"
+    404:
+      description: Konfigurasjonsnøkkel ikke funnet
+      content:
+        application/json:
+          schema:
+            $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
+  tags:
+    - config
+
+put:
+  summary: Sett konfigurasjonsverdi for gitt nøkkel
+  description: Sett konfigurasjonsverdi for gitt nøkkel
+  operationId: setConfig
+
+  parameters:
+    - name: key
+      in: path
+      description: Nøkkel for konfigurasjonsverdi
+      required: true
+      schema:
+        type: string
+      style: simple
+
+  requestBody:
+    description: Verdi for konfigurasjonsnøkkel
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            value:
+              type: string
+    required: true
+
+  responses:
+    200:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            $ref: "./components.yaml#/components/schemas/ConfigValueDto"
+    401:
+      description: Uautentisert
+      content:
+        application/json:
+          schema:
+            $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
+    403:
+      description: Uautorisert
+      content:
+        application/json:
+          schema:
+            $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
+    404:
+      description: Konfigurasjonsnøkkel ikke funnet
+      content:
+        application/json:
+          schema:
+            $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
+  tags:
+    - config

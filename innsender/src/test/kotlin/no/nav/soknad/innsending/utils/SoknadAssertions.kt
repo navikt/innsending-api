@@ -67,7 +67,7 @@ class SoknadAssertions {
 
 			val soknad = slot<DokumentSoknadDto>()
 			val vedleggDtos2 = slot<List<VedleggDto>>()
-			every { soknadsmottakerAPI.sendInnSoknad(capture(soknad), capture(vedleggDtos2)) } returns Unit
+			every { soknadsmottakerAPI.sendInnSoknad(capture(soknad), capture(vedleggDtos2), any(), any()) } returns Unit
 
 			val (kvitteringsDto) = innsendingService.sendInnSoknad(dokumentSoknadDto)
 

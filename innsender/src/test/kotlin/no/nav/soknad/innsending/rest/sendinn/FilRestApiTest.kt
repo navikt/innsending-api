@@ -89,10 +89,10 @@ class FilRestApiTest : ApplicationTest() {
 
 	}
 
-	private fun lastoppOgvalider(token: String, soknadDto: DokumentSoknadDto, vedleggsId: Long): FilDto? {
+	private fun lastoppOgvalider(token: String, soknadDto: DokumentSoknadDto, vedleggsId: Long, filPath: String = "/litenPdf.pdf" ): FilDto? {
 
 		val multipart = LinkedMultiValueMap<Any, Any>()
-		multipart.add("file", ClassPathResource("/litenPdf.pdf"))
+		multipart.add("file", ClassPathResource(filPath))
 
 		val postFilRequest = HttpEntity(multipart, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
 		val postFilResponse = restTemplate.exchange(

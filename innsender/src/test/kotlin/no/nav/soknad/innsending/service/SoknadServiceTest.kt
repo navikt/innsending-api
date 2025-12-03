@@ -459,9 +459,12 @@ class SoknadServiceTest : ApplicationTest() {
 
 		// Then
 		assertEquals(
-			4,
-			updatedSoknad.vedleggsListe.size,
-			"Skal ha to vedlegg i den oppdaterte søknaden + hoveddokument og variant"
+			2,
+			updatedSoknad.vedleggsListe.filter{it.erHoveddokument}.size, "Skal ha 2 hoveddokument vedlegg"
+		)
+		assertEquals(
+			2,
+			updatedSoknad.vedleggsListe.filter{!it.erHoveddokument}.size, "Skal ha 2 vedlegg"
 		)
 
 		assertEquals(2, files.size, "Skal ha 2 filer lagret i databasen")
@@ -616,7 +619,7 @@ class SoknadServiceTest : ApplicationTest() {
 
 		val soknad = slot<DokumentSoknadDto>()
 		val vedleggDtos2 = slot<List<VedleggDto>>()
-		every { soknadsmottakerAPI.sendInnSoknad(capture(soknad), capture(vedleggDtos2)) } returns Unit
+		every { soknadsmottakerAPI.sendInnSoknad(capture(soknad), capture(vedleggDtos2), any(), any()) } returns Unit
 
 		val innsendingService = lagInnsendingService(soknadService)
 		// Check that reciept is returned for each sent in application

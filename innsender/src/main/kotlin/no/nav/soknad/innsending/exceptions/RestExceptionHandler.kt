@@ -6,6 +6,7 @@ import no.nav.security.token.support.core.exceptions.JwtTokenMissingException
 import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
 import no.nav.soknad.innsending.exceptions.utils.messageForLog
 import no.nav.soknad.innsending.model.RestErrorResponseDto
+import no.nav.soknad.innsending.service.config.annotation.ConfigVerificationException
 import org.apache.catalina.connector.ClientAbortException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -98,11 +99,24 @@ class RestExceptionHandler {
 		)
 	}
 
+	// 400
+	@ExceptionHandler
+	fun illegalArgumentException(exception: IllegalArgumentException): ResponseEntity<RestErrorResponseDto> {
+		logger.warn(exception.message, exception)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = exception.message,
+				timestamp = OffsetDateTime.now(),
+				errorCode = ErrorCode.ILLEGAL_ARGUMENT.code
+			), HttpStatus.BAD_REQUEST
+		)
+	}
+
 	// 401
-	@ExceptionHandler(value = [JwtTokenMissingException::class, JwtTokenUnauthorizedException::class])
-	fun unauthorizedExceptionHandler(
+	@ExceptionHandler
+	fun unauthenticatedHandler(
 		request: HttpServletRequest,
-		exception: Exception
+		exception: JwtTokenMissingException
 	): ResponseEntity<RestErrorResponseDto?>? {
 		logger.warn("Autentisering feilet ved kall til " + request.requestURI + ": " + exception.messageForLog, exception)
 
@@ -112,6 +126,39 @@ class RestExceptionHandler {
 				timestamp = OffsetDateTime.now(),
 				errorCode = "errorCode.unauthorized"
 			), HttpStatus.UNAUTHORIZED
+		)
+	}
+
+	// 403
+	@ExceptionHandler
+	fun unauthorizedExceptionHandler(
+		request: HttpServletRequest,
+		exception: JwtTokenUnauthorizedException
+	): ResponseEntity<RestErrorResponseDto?>? {
+		logger.warn("Autorisering feilet ved kall til " + request.requestURI + ": " + exception.message, exception)
+
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = "Autorisering feilet",
+				timestamp = OffsetDateTime.now(),
+				errorCode = "errorCode.forbidden"
+			), HttpStatus.FORBIDDEN
+		)
+	}
+
+	@ExceptionHandler
+	fun handleConfigVerificationException(
+		request: HttpServletRequest,
+		exception: ConfigVerificationException,
+	): ResponseEntity<RestErrorResponseDto?>? {
+		logger.warn("Kall til ${request.requestURI} avvist (${exception.configuration.key}): ${exception.message}", exception)
+
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = exception.message,
+				timestamp = OffsetDateTime.now(),
+				errorCode = exception.errorCode.code
+			), exception.httpStatus
 		)
 	}
 

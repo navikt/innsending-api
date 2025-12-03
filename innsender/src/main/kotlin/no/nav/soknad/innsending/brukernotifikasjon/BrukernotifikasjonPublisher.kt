@@ -44,6 +44,10 @@ class BrukernotifikasjonPublisher(
 	)
 
 	fun createNotification(soknad: SoknadDbData, opts: NotificationOptions = NotificationOptions()): Boolean {
+		if (soknad.brukerid.isNullOrEmpty()) {
+			logger.info("${soknad.innsendingsid}: Brukerid mangler, kan ikke publisere brukernotifikasjon")
+			return false
+		}
 		logger.debug("${soknad.innsendingsid}: Skal publisere Brukernotifikasjon")
 		if (!notifikasjonConfig.publisereEndringer) {
 			return true
@@ -77,6 +81,10 @@ class BrukernotifikasjonPublisher(
 	}
 
 	fun closeNotification(soknad: SoknadDbData): Boolean {
+		if (soknad.brukerid.isNullOrEmpty()) {
+			logger.info("${soknad.innsendingsid}: Brukerid mangler, kan ikke avslutte brukernotifikasjon")
+			return false
+		}
 		logger.debug("${soknad.innsendingsid}: Skal avslutte Brukernotifikasjon")
 		if (!notifikasjonConfig.publisereEndringer) {
 			return true

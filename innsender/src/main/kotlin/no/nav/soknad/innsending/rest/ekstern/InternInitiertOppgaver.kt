@@ -95,7 +95,7 @@ class InternInitiertOppgaver(
 
 		combinedLogger.log(
 			"[${applikasjon}] - Kall for å slette søknad/ettersending fra ekstern applikasjon på skjema ${innsendingsId}",
-			soknadDto.brukerId
+			soknadDto.brukerId ?: "Ukjent bruker"
 		)
 		if (applikasjon != soknadDto.applikasjon) {
 			throw IllegalActionException(
@@ -106,7 +106,10 @@ class InternInitiertOppgaver(
 		notificationService.close(innsendingsId)
 		soknadService.deleteSoknadFromExternalApplication(soknadDto)
 
-		combinedLogger.log("[${applikasjon}] - $innsendingsId: Slettet søknad/ettersending fra ekstern applikasjon", soknadDto.brukerId)
+		combinedLogger.log(
+			"[${applikasjon}] - $innsendingsId: Slettet søknad/ettersending fra ekstern applikasjon",
+			soknadDto.brukerId ?: "Ukjent bruker"
+		)
 
 		return ResponseEntity
 			.status(HttpStatus.OK)

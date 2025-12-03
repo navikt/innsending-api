@@ -219,7 +219,7 @@ class VedleggService(
 					erpakrevd = it.vedleggsnr != "N6",
 					vedleggsnr = it.vedleggsnr,
 					tittel = it.tittel,
-					label = it.tittel,
+					label = it.label,
 					beskrivelse = "",
 					mimetype = it.mimetype?.value,
 					uuid = UUID.randomUUID().toString(),
@@ -236,6 +236,44 @@ class VedleggService(
 			vedleggDbDatas
 		}
 	}
+
+
+	fun saveVedleggFromDto(
+		soknadsId: Long,
+		vedleggList: List<VedleggDto>,
+		useStatus: Boolean
+	): List<VedleggDbData> {
+		return vedleggList.map {
+
+			val vedleggDbDatas = repo.lagreVedlegg(
+				VedleggDbData(
+					id = null,
+					soknadsid = soknadsId,
+					status = if (useStatus) mapTilDbOpplastingsStatus(it.opplastingsStatus) else if (it.document != null) OpplastingsStatus.LASTET_OPP else OpplastingsStatus.IKKE_VALGT,
+					erhoveddokument = it.erHoveddokument,
+					ervariant = it.erVariant,
+					erpdfa = false,
+					erpakrevd = it.vedleggsnr != "N6",
+					vedleggsnr = it.vedleggsnr,
+					tittel = it.tittel,
+					label = it.tittel,
+					beskrivelse = "",
+					mimetype = it.mimetype?.value,
+					uuid = if (useStatus) it.uuid?:UUID.randomUUID().toString() else UUID.randomUUID().toString(),
+					opprettetdato = LocalDateTime.now(),
+					endretdato = LocalDateTime.now(),
+					innsendtdato = null,
+					vedleggsurl = it.skjemaurl,
+					formioid = it.formioId,
+					opplastingsvalgkommentarledetekst = it.opplastingsValgKommentarLedetekst,
+					opplastingsvalgkommentar = it.opplastingsValgKommentar
+				)
+			)
+
+			vedleggDbDatas
+		}
+	}
+
 
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun leggTilVedlegg(soknadDto: DokumentSoknadDto, vedleggDto: PostVedleggDto?): VedleggDto {
@@ -420,7 +458,7 @@ class VedleggService(
 
 		if (eksisterendeVedleggsListe.isNotEmpty()) {
 			oppdaterEksisterendeVedlegg(eksisterendeVedleggsListe, nyttVedlegg, soknadsId)
-			logger.info("Oppdatert eksisterende vedlegg ${eksisterendeVedleggsListe.map { it.vedleggsnr }}, opplastingsStatus: ${eksisterendeVedleggsListe.map { it.opplastingsStatus }}")
+			logger.info("Oppdatert eksisterende vedlegg ${eksisterendeVedleggsListe.map { it.vedleggsnr }}, opplastingsStatus: ${eksisterendeVedleggsListe.map { it.opplastingsStatus }}, variant: ${eksisterendeVedleggsListe.map { it.erVariant }}")
 		} else {
 			// Lag nytt vedlegg
 			repo.lagreVedlegg(mapTilVedleggDb(nyttVedlegg, soknadsId))
@@ -453,7 +491,12 @@ class VedleggService(
 		soknadsId: Long
 	) {
 		eksisterendeVedleggsListe.forEach {
-			val vedleggDbData = mapTilVedleggDb(vedleggDto = nyttVedlegg, soknadsId = soknadsId, vedleggsId = it.id!!)
+			val vedleggDbData = mapTilVedleggDb(
+				vedleggDto = nyttVedlegg,
+				soknadsId = soknadsId,
+				url = it.skjemaurl,
+				opplastingsStatus = mapTilDbOpplastingsStatus(it.opplastingsStatus),
+				vedleggsId = it.id)
 			repo.lagreVedlegg(vedleggDbData)
 		}
 	}

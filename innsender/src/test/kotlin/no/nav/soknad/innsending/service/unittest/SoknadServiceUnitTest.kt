@@ -6,12 +6,14 @@ import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.verify
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
+import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.*
+import no.nav.soknad.innsending.service.fillager.FillagerService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
@@ -25,6 +27,9 @@ class SoknadServiceUnitTest {
 	private val defaultUser = "12345678901"
 
 	@RelaxedMockK
+	lateinit var hentSkjemaDataConsumer: HentSkjemaDataConsumer
+
+	@RelaxedMockK
 	lateinit var skjemaService: SkjemaService
 
 	@RelaxedMockK
@@ -35,6 +40,9 @@ class SoknadServiceUnitTest {
 
 	@RelaxedMockK
 	lateinit var filService: FilService
+
+	@RelaxedMockK
+	lateinit var fillagerService: FillagerService
 
 	@RelaxedMockK
 	lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher

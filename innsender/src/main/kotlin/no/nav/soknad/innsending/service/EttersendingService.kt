@@ -94,6 +94,10 @@ class EttersendingService(
 		ettersendingsId: String,
 		erSystemGenerert: Boolean = false
 	): DokumentSoknadDto {
+		val brukerId = nyesteSoknad.brukerId
+		if (brukerId.isNullOrEmpty()) {
+			throw IllegalStateException("Brukerid mangler, kan ikke opprette ettersending")
+		}
 		val operation = InnsenderOperation.OPPRETT.name
 		try {
 			logger.debug("Skal opprette ettersendingssøknad basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
@@ -108,7 +112,7 @@ class EttersendingService(
 			)
 			// Lagre ettersendingssøknad i DB
 			val savedEttersendingsSoknad = saveEttersending(
-				brukerId = nyesteSoknad.brukerId,
+				brukerId = brukerId,
 				ettersendingsId = ettersendingsId,
 				tittel = nyesteSoknad.tittel,
 				skjemanr = nyesteSoknad.skjemanr,

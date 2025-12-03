@@ -10,7 +10,7 @@ spec:
     - name: {{ env-name }}
       rules:
         - alert: Archiving failed
-          expr: sum(innsendingapi_archiving_of_applications_failed{namespace="team-soknad"}) > 0
+          expr: sum(innsendingapi_archiving_of_applications_failed{namespace="team-soknad", app="innsending-api"}) > 0
           for: 1m
           annotations:
             title: "Archiving service has reported failure when archiving one or more applications"
@@ -24,8 +24,9 @@ spec:
             special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
             alert_type: custom
             severity: critical
+
         - alert: Not yet archived
-          expr: sum(innsendingapi_applications_absent_in_archive{namespace="team-soknad"}) > 0
+          expr: sum(innsendingapi_applications_absent_in_archive{namespace="team-soknad", app="innsending-api"}) > 0
           for: 1m
           annotations:
             title: "Missing response from archiving service for one or more sent in applications"
@@ -39,8 +40,9 @@ spec:
             special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
             alert_type: custom
             severity: warning
+
         - alert: Consistent high number of created applications
-          expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT"}[ {{continued_expected_period}} ])) by (operation)) > 3*{{ max_created_expected }}
+          expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT", app="innsending-api"}[ {{continued_expected_period}} ])) by (operation)) > 3*{{ max_created_expected }}
           for: 1m
           annotations:
             title: "Consistent high number of applications have been created"
@@ -54,8 +56,9 @@ spec:
             special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
             alert_type: custom
             severity: warning
+
         - alert: High number of created applications
-          expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT"}[ {{expected_period}} ])) by (operation)) > {{ max_created_expected }}
+          expr: ceil(sum(increase(innsendingapi_number_of_operations_total{operation="OPPRETT", app="innsending-api"}[ {{expected_period}} ])) by (operation)) > {{ max_created_expected }}
           for: 1m
           annotations:
             title: "Unusual number of applications have been created"
@@ -69,8 +72,9 @@ spec:
             special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
             alert_type: custom
             severity: info
+
         - alert: High number of sent in applications
-          expr: ceil(sum by (operation) (increase(innsendingapi_number_of_operations_total{operation="SEND_INN"}[ {{expected_period}} ]))) > {{ max_innsendt_expected }}
+          expr: ceil(sum by (operation) (increase(innsendingapi_number_of_operations_total{operation="SEND_INN", app="innsending-api"}[ {{expected_period}} ]))) > {{ max_innsendt_expected }}
           for: 1m
           annotations:
             title: "Unusual number of applications have been sent in"
@@ -84,6 +88,7 @@ spec:
             special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
             alert_type: custom
             severity: info
+
         - alert: JVM heap size alert level exceeded
           expr: ceil( sum(jvm_memory_used_bytes{app="innsending-api",area="heap"}) by (instance)) > {{ heap_jvm_memory_threshold }}
           for: 1m
@@ -91,6 +96,7 @@ spec:
             title: "JVM heap size alert level exceeded"
             consequence: "If this continues the POD might throw Out-OF-Memory exception and will restart."
             action: {{ grafana_board_url }}
+            actionLinkText: "Check dashboard"
             summary: "If JVM heap size alert level exceeded might eventually lead to Out-Of-Memory exception"
             sla: "Check grafana board within 1h"
           labels:
@@ -99,3 +105,55 @@ spec:
             special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
             alert_type: custom
             severity: info
+
+        - alert: High number of nologin submissions
+          expr: sum(increase(innsendingapi_innsending_latency_count{operation="SEND_INN_NOLOGIN", app="innsending-api"}[ {{ nologin.max_submissions_period }} ])) > {{ nologin.max_submissions_count }}
+          for: 1m
+          annotations:
+            title: "High number of nologin submissions"
+            consequence: "The number of submissions has exceeded the threshold ({{ nologin.max_submissions_count }}/{{ nologin.max_submissions_period }}), and this might in time lead to automatic rejection of all subsequent nologin submissions."
+            action: {{ grafana_board_url }}
+            actionLinkText: "Check dashboard"
+            summary: "This may indicate abnormal activity or misuse of the nologin submission feature."
+            sla: "Check grafana board within 1h"
+          labels:
+            service: "innsending-api"
+            namespace: fyllut-sendinn
+            special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
+            alert_type: custom
+            severity: warning
+
+        - alert: High number of nologin file uploads
+          expr: sum(increase(innsendingapi_innsending_latency_count{operation="LAST_OPP_NOLOGIN", app="innsending-api"}[ {{ nologin.max_file_uploads_period }} ])) > {{ nologin.max_file_uploads_count }}
+          for: 1m
+          annotations:
+            title: "High number of nologin file uploads"
+            consequence: "The number of file uploads has exceeded the threshold ({{ nologin.max_file_uploads_count }}/{{ nologin.max_file_uploads_period }})."
+            action: {{ grafana_board_url }}
+            actionLinkText: "Check dashboard"
+            summary: "This may indicate abnormal activity or misuse of the nologin submission feature."
+            sla: "Check grafana board within 1h"
+          labels:
+            service: "innsending-api"
+            namespace: fyllut-sendinn
+            special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
+            alert_type: custom
+            severity: warning
+
+        - alert: Nologin main switch is off
+          expr: max by(app) (max_over_time(innsendingapi_nologin_main_switch{app="innsending-api"}[3m])) == 0
+          for: 5m
+          annotations:
+            title: "Nologin main switch is off"
+            consequence: "All nologin submissions will be rejected."
+            action: {{ grafana_board_url }}
+            actionLinkText: "Check dashboard"
+            summary: "This could have happened from a manual action or automatic disabling due to unusual high number of nologin submissions."
+            sla: "Check grafana board within 1h"
+          labels:
+            service: "innsending-api"
+            namespace: fyllut-sendinn
+            special_type_to_use_in_alertmanager_config: {{common-labels.special_type_to_use_in_alertmanager_config}}
+            alert_type: custom
+            severity: warning
+            repeat_interval: 6h

@@ -5,4 +5,5 @@ interface SubjectHandlerInterface {
 	fun getUserIdFromToken(): String
 	fun getToken(): String
 	fun getClientId(): String
+	fun getNavIdent(): String
 }

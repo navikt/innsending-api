@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Scope
 class CloudStorageClient {
 
 	@Bean
-	@Profile("!(local | docker | test)")
+	@Profile("!(local | docker | test | endtoend)")
 	@Qualifier("cloudStorageClient")
 	@Scope("prototype")
 	fun gcpClient(): Storage = StorageOptions.getDefaultInstance().service

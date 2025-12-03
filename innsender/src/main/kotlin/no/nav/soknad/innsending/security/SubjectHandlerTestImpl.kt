@@ -24,4 +24,8 @@ class SubjectHandlerTestImpl : SubjectHandlerInterface {
 	override fun getClientId(): String {
 		return "StaticClientId"
 	}
+
+	override fun getNavIdent(): String {
+		return "Z123456"
+	}
 }

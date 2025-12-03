@@ -3,14 +3,15 @@ package no.nav.soknad.innsending.rest.fillager
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.NologinApi
 import no.nav.soknad.innsending.model.LastOppFilResponse
-import no.nav.soknad.innsending.service.fillager.FillagerService
+import no.nav.soknad.innsending.service.config.ConfigDefinition
+import no.nav.soknad.innsending.service.config.annotation.VerifyConfigValue
+import no.nav.soknad.innsending.service.fillager.FillagerInterface
 import no.nav.soknad.innsending.service.fillager.FillagerNamespace
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.stringextensions.toUUID
-import org.springframework.core.io.Resource
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
@@ -23,10 +24,16 @@ import java.util.UUID
 	claimMap = ["roles=nologin-access"],
 )
 class NologinRestApi(
-	val fillagerService: FillagerService,
+	private val fillagerService: FillagerInterface,
 ) : NologinApi {
 
-	@Timed(InnsenderOperation.LAST_OPP_BUCKET)
+	@VerifyConfigValue(
+		config = ConfigDefinition.NOLOGIN_MAIN_SWITCH,
+		value = "on",
+		httpStatus = HttpStatus.SERVICE_UNAVAILABLE,
+		message = "NOLOGIN is not available"
+	)
+	@Timed(InnsenderOperation.LAST_OPP_NOLOGIN)
 	override fun lastOppFil(
 		vedleggId: String,
 		filinnhold: MultipartFile,
@@ -52,7 +59,7 @@ class NologinRestApi(
 			)
 	}
 
-	@Timed(InnsenderOperation.SLETT_FIL_BUCKET)
+	@Timed(InnsenderOperation.SLETT_FIL_NOLOGIN)
 	override fun slettFilV2(filId: UUID, innsendingId: UUID): ResponseEntity<Unit> {
 		val deleted = fillagerService.slettFil(
 			filId = filId.toString(),
@@ -66,7 +73,7 @@ class NologinRestApi(
 		}
 	}
 
-	@Timed(InnsenderOperation.SLETT_FILER_BUCKET)
+	@Timed(InnsenderOperation.SLETT_FILER_NOLOGIN)
 	override fun slettFiler(innsendingId: UUID, vedleggId: String?): ResponseEntity<Unit> {
 		val deleted = fillagerService.slettFiler(
 			innsendingId = innsendingId.toString(),

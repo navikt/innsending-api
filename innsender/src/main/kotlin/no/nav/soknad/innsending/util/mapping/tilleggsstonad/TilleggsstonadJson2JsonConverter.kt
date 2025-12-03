@@ -28,7 +28,8 @@ fun convertToJsonTilleggsstonad(tilleggsstonad: Application, soknadDto: Dokument
 			convertToJsonMaalgruppeinformasjon(
 				tilleggsstonad.aktiviteterOgMaalgruppe,
 				tilleggsstonad.flervalg,
-				tilleggsstonad.regArbSoker
+				tilleggsstonad.regArbSoker,
+				soknadDto
 			), "Mangler: 'Målgruppde informasjon'"
 		),
 		rettighetstype = convertToJsonRettighetstyper(tilleggsstonad, soknadDto)
@@ -72,11 +73,24 @@ fun getSelectedMaalgruppe(aktiviteterOgMaalgruppe: AktiviteterOgMaalgruppe): Maa
 fun convertToJsonMaalgruppeinformasjon(
 	aktiviteterOgMaalgruppe: AktiviteterOgMaalgruppe?,
 	flervalg: Flervalg?,
-	regArbSoker: String?
+	regArbSoker: String?,
+	soknadDto: DokumentSoknadDto
 ): JsonMaalgruppeinformasjon? {
 
 	return getMaalgruppeInformasjonFromAktiviteterOgMaalgruppe(aktiviteterOgMaalgruppe)
 		?: getMaalgruppeinformasjonFromLivssituasjon(flervalg, regArbSoker)
+		?: getMaalgruppeinformasjonFromSkjemanr(soknadDto.skjemanr)
+}
+
+fun getMaalgruppeinformasjonFromSkjemanr(skjemanr: String): JsonMaalgruppeinformasjon? {
+	if (skjemanr == ungdomsprogram_reiseDaglig || skjemanr == ungdomsprogram_reiseSamling || skjemanr == ungdomsprogram_reiseOppstartSlutt) {
+		return JsonMaalgruppeinformasjon(
+			periode = null,
+			kilde = "BRUKERREGISTRERT",
+			maalgruppetype = "UNGDOMPROG"
+		)
+	}
+	return null
 }
 
 fun getMaalgruppeinformasjonFromLivssituasjon(
@@ -84,14 +98,8 @@ fun getMaalgruppeinformasjonFromLivssituasjon(
 	regArbSoker: String?
 ): JsonMaalgruppeinformasjon? {
 	// Bruk maalgruppeinformasjon hvis dette er hentet fra Arena og lagt inn på søknaden
-
 	if (livssituasjon == null)  {
-		/* Setter default målgruppe for å kunne sende inn ungdomsprogrammer */
-		return JsonMaalgruppeinformasjon(
-			periode = null,
-			kilde = "BRUKERREGISTRERT",
-			maalgruppetype = "ANNET"
-		)
+		return null
 	}
 
 	// Basert på søker sin spesifisering av livssituasjon, avled prioritert målgruppe

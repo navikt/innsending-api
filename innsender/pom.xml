@@ -78,7 +78,9 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-docker-compose</artifactId>
+<!--
 			<scope>test</scope>
+-->
 		</dependency>
 
 
@@ -602,6 +604,11 @@
 	</build>
 
 	<repositories>
+		<repository>
+			<id>github</id>
+			<name>GitHub felles Maven Packagesfor Navikt</name>
+			<url>https://maven.pkg.github.com/navikt/maven-release</url>
+		</repository>
 		<repository>
 			<id>jitpack.io</id>
 			<url>https://jitpack.io</url>
