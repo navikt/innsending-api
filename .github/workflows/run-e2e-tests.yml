@@ -17,7 +17,6 @@ jobs:
         uses: navikt/archiving-infrastructure/.github/checkout-and-build@main
         with:
           component_name: arkiv-mock
-          branch: feature/no-login
         env:
           GITHUB_NAV_TOKEN: ${{ secrets.READER_TOKEN }}
 
@@ -47,7 +46,6 @@ jobs:
         uses: navikt/archiving-infrastructure/.github/checkout-and-build@main
         with:
           component_name: archiving-infrastructure
-          branch: feature/nologin
           sub_directory: system-tests
           skip_tests: false
           run_docker_build: false
