@@ -448,7 +448,11 @@
 			<version>${kotlin-serialization.version}</version>
 			<scope>test</scope>
 		</dependency>
-
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers</artifactId>
+			<version>1.21.4</version>
+		</dependency>
 		<!-- VeraPDF related -->
 		<dependency>
 			<groupId>jakarta.xml.bind</groupId>
