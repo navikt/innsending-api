@@ -1,8 +1,6 @@
 package no.nav.soknad.pdfutilities
 
 import com.github.jknack.handlebars.Handlebars
-import com.github.jknack.handlebars.Helper
-import com.github.jknack.handlebars.Options
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
 import com.openhtmltopdf.svgsupport.BatikSVGDrawer
 import no.nav.soknad.pdfutilities.models.EttersendingForsidePdfModel
@@ -12,47 +10,45 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 
-
 class PdfGeneratorService {
-	private var handlebars: Handlebars = Handlebars()
+	private val handlebars: Handlebars = Handlebars()
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	fun genererKvitteringPdf(modell: KvitteringsPdfModel): ByteArray {
+	init {
+		handlebars.registerHelpers(TextFormattingMethods())
+	}
 
+	fun genererKvitteringPdf(modell: KvitteringsPdfModel): ByteArray {
 		try {
 			// Generer html string
 			val template = handlebars.compile("/pdf/templates/kvittering").apply(modell)
 			return produserPdf(template)
 		} catch (e: IOException) {
-			logger.error("Feiler ved PDF generering av kvittering: {}", e.message)
+			logger.warn("Feiler ved PDF generering av kvittering: {}", e.message)
 			throw e
 		}
 
 	}
 
 	fun genererEttersendingForsidePdf(modell: EttersendingForsidePdfModel): ByteArray {
-
 		try {
 			// Generer html string
 			val template = handlebars.compile("/pdf/templates/forside-ettersending").apply(modell)
 			return produserPdf(template)
 		} catch (e: IOException) {
-			logger.error("Feiler ved PDF generering av kvittering: {}", e.message)
+			logger.warn("Feiler ved PDF generering av ettersending forside: {}", e.message)
 			throw e
 		}
 
 	}
 
 	fun genererPdfFromText(modell: TextToPdfModel): ByteArray {
-
 		try {
-			//registerSplitTextHelper(handlebars)
-			handlebars.registerHelpers(TextFormattingMethods())
 			// Generer html string
 			val template = handlebars.compile("/pdf/templates/text-to-pdf").apply(modell)
 			return produserPdf(template)
 		} catch (e: IOException) {
-			logger.error("Feiler ved PDF generering fra tekst: {}", e.message)
+			logger.warn("Feiler ved PDF generering fra tekst: {}", e.message)
 			throw e
 		}
 
@@ -97,31 +93,9 @@ class PdfGeneratorService {
 				return os.toByteArray()
 			}
 		} catch (e: Exception) {
-			logger.error("Feiler i pdf-fil-generering", e)
+			logger.warn("Feiler i pdf-fil-generering", e)
 			throw e
 		}
-	}
-
-	fun registerSplitTextHelper(handlebars: Handlebars) {
-		handlebars.registerHelper("split", object : Helper<String> {
-			override fun apply(p0: String?, p1: Options?): Any {
-				if (p0 != null) {
-					return p0.split("\n")
-				}
-				return ""
-			}
-		})
-	}
-
-	fun registerTabHelper(handlebars: Handlebars) {
-		handlebars.registerHelper("tab", object : Helper<String> {
-			override fun apply(p0: String?, p1: Options?): Any {
-				if (p0 != null) {
-					return p0.replace("\t", "&nbsp;&nbsp;")
-				}
-				return ""
-			}
-		})
 	}
 
 }
