@@ -28,8 +28,7 @@ class ArenaConsumer(
 	private val tilleggsstonaderApi = TilleggsstonaderApi(arenaApiClient)
 
 	private val logger: Logger = LoggerFactory.getLogger(javaClass)
-	private val secureLogger = LoggerFactory.getLogger("secureLogger")
-	private val combinedLogger = CombinedLogger(logger, secureLogger)
+	private val combinedLogger = CombinedLogger(logger)
 
 	private val fromDate = LocalDate.now().minusMonths(6)
 	private val toDate = LocalDate.now().plusMonths(2)

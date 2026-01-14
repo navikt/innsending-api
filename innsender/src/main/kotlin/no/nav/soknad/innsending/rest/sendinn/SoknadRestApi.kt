@@ -40,8 +40,7 @@ class SoknadRestApi(
 ) : SendinnSoknadApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
-	private val secureLogger = LoggerFactory.getLogger("secureLogger")
-	private val combinedLogger = CombinedLogger(logger, secureLogger)
+	private val combinedLogger = CombinedLogger(logger)
 
 	@Timed(InnsenderOperation.HENT)
 	override fun hentSoknad(innsendingsId: String): ResponseEntity<DokumentSoknadDto> {
