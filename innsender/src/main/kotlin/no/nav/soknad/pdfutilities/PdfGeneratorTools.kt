@@ -164,7 +164,7 @@ class PdfGenerator {
 				tittel = vedleggsTittel,
 				beskrivelse = "Generert PDF av opplastet tekstfil på vedlegg $vedleggsTittel",
 				opplastetTidspunkt = opplastetTidspunkt,
-				textInput = StringEscapeUtils.escapeXml11(text)
+				textInput = StringEscapeUtils.escapeXml11(text).replace("\u000C", "\n").replace("&#12","\n")
 			)
 		)
 
