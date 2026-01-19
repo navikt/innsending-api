@@ -35,7 +35,6 @@ class PrefillService(
 	private val kodeverkService: KodeverkService
 ) {
 	private val logger: Logger = LoggerFactory.getLogger(javaClass)
-	private val secureLogger = LoggerFactory.getLogger("secureLogger")
 	private val secureLogsMarker: Marker = MarkerFactory.getMarker("TEAM_LOGS")
 
 
@@ -125,7 +124,6 @@ class PrefillService(
 	): String {
 		val userIdMatch = pdlIdents?.firstOrNull { it.identifikasjonsnummer == userId }?.identifikasjonsnummer
 		if (userIdMatch == null) {
-			secureLogger.warn("Mismatch while resolving identifikasjonsnummer: token=$userId, PDL=$userIdMatch (PDL response $pdlIdents)")
 			logger.warn(secureLogsMarker, "Mismatch while resolving identifikasjonsnummer: token=$userId, PDL=$userIdMatch")
 		}
 		return userIdMatch ?: pdlIdents?.firstOrNull { !it.metadata.historisk }?.identifikasjonsnummer ?: userId

@@ -40,8 +40,6 @@ spec:
       cpu: 200m
       memory: 1Gi
   leaderElection: true
-  secureLogs:
-    enabled: true
   kafka:
     pool: {{kafka-pool}}
     streams: true
@@ -51,7 +49,6 @@ spec:
       runtime: java
     logging:
       destinations:
-        - id: elastic
         - id: loki
   tokenx:
     enabled: true

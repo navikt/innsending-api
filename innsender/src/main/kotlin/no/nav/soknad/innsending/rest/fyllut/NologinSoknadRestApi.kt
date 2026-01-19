@@ -32,8 +32,7 @@ class NologinSoknadRestApi(
 	): NologinSoknadApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
-	private val secureLogger = LoggerFactory.getLogger("secureLogger")
-	private val combinedLogger = CombinedLogger(logger, secureLogger)
+	private val combinedLogger = CombinedLogger(logger)
 
 	@VerifyConfigValue(
 		config = ConfigDefinition.NOLOGIN_MAIN_SWITCH,

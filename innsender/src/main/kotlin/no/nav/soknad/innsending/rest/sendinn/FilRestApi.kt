@@ -45,9 +45,7 @@ class FilRestApi(
 	) : SendinnFilApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
-	private val secureLogger = LoggerFactory.getLogger("secureLogger")
-	private val combinedLogger = CombinedLogger(logger, secureLogger)
-
+	private val combinedLogger = CombinedLogger(logger)
 
 
 	// Søker skal kunne laste opp ett eller flere filer på ett vedlegg. Dette endepunktet tillater opplasting av en fil.
