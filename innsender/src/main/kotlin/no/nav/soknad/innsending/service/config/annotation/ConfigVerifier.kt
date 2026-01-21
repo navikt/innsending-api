@@ -17,6 +17,13 @@ class ConfigVerifier(
 	@Throws(Throwable::class)
 	fun verify(verify: VerifyConfigValue) {
 		configService.getConfig(verify.config)
-			.verifyValue(verify.value) { ConfigVerificationException(verify.message, verify.config, httpStatus = verify.httpStatus) }
+			.verifyValue(verify.value) {
+				ConfigVerificationException(
+					verify.message,
+					verify.config,
+					httpStatus = verify.httpStatus,
+					errorCode = verify.errorCode
+				)
+			}
 	}
 }

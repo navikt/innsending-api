@@ -7,6 +7,7 @@ enum class ErrorCode(val code: String) {
 	NOT_FOUND("resourceNotFound"),
 	NON_CRITICAL("nonCriticalError"),
 	ILLEGAL_ARGUMENT("illegalArgument"),
+	TEMPORARILY_UNAVAILABLE("temporarilyUnavailable"),
 
 	ARENA_ERROR("arenaError"),
 	KODEVERK_ERROR("kodeverkError"),

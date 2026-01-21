@@ -38,6 +38,7 @@ class NologinSoknadRestApi(
 		config = ConfigDefinition.NOLOGIN_MAIN_SWITCH,
 		value = "on",
 		httpStatus = HttpStatus.SERVICE_UNAVAILABLE,
+		errorCode = no.nav.soknad.innsending.exceptions.ErrorCode.TEMPORARILY_UNAVAILABLE,
 		message = "NOLOGIN is not available"
 	)
 	@Timed(InnsenderOperation.SEND_INN_NOLOGIN)
