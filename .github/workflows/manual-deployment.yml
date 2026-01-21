@@ -93,33 +93,3 @@ jobs:
           VARS: .nais/prod-gcp.json
           VAR: image=${{needs.build-and-push.outputs.image}}
           DRY_RUN: false
-
-  deploy-alerts-preprod:
-    if: github.event.inputs.environment == 'preprod'
-    needs: deploy-preprod
-    name: Deploy alerts to dev
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Deploy to dev
-        uses: nais/deploy/actions/deploy@v2
-        env:
-          CLUSTER: dev-gcp
-          RESOURCE: .nais/alerts.yml
-          VARS: .nais/preprod-alert.json
-
-  deploy-alerts-prod:
-    if: github.event.inputs.environment == 'prod'
-    needs: deploy-prod
-    name: Deploy alerts to prod
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Deploy to dev
-        uses: nais/deploy/actions/deploy@v2
-        env:
-          CLUSTER: prod-gcp
-          RESOURCE: .nais/alerts.yml
-          VARS: .nais/prod-alert.json
