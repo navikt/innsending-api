@@ -55,6 +55,7 @@
 		<logger name="org.apache.pdfbox.pdmodel.graphics.image.SampledImageReader" level="off"/>
 		<logger name="org.apache.pdfbox.pdmodel.graphics.shading.AxialShadingPaint" level="off"/>
 		<logger name="org.apache.pdfbox.contentstream.operator.state.SetGraphicsStateParameters" level="off"/>
+		<logger name="org.apache.pdfbox.contentstream.PDFStreamEngine" level="off"/>
 		<logger name="org.apache.poi" level="off"/>
 
 		<root level="INFO">
