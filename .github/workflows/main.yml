@@ -62,20 +62,6 @@ jobs:
           VARS: .nais/prod-gcp.json
           VAR: image=${{needs.build-and-push.outputs.image}}
 
-  deploy-alerts-prod:
-    needs: deploy-prod
-    name: Deploy alerts to prod
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Deploy to prod
-        uses: nais/deploy/actions/deploy@v2
-        env:
-          CLUSTER: prod-gcp
-          RESOURCE: .nais/alerts.yml
-          VARS: .nais/prod-alert.json
-
   deploy-loadtests:
     name: Deploy to loadtests
     needs: build-and-push
