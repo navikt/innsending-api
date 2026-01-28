@@ -300,6 +300,9 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 		configService.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "off", "test")
 		api.sendInnNologinSoknad(skjemaDto)
 			.assertHttpStatus(HttpStatus.SERVICE_UNAVAILABLE)
+			.errorBody.let { body ->
+				assertEquals("temporarilyUnavailable", body.errorCode)
+			}
 	}
 
 	@Test

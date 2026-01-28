@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpStatus
+import kotlin.test.assertEquals
 
 class NologinRestApiTest: ApplicationTest() {
 
@@ -56,6 +57,9 @@ class NologinRestApiTest: ApplicationTest() {
 
 		api.uploadNologinFile(vedleggId = "abcdef")
 			.assertHttpStatus(HttpStatus.SERVICE_UNAVAILABLE)
+			.errorBody.let { body ->
+				assertEquals("temporarilyUnavailable", body.errorCode)
+			}
 	}
 
 }
