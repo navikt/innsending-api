@@ -58,6 +58,7 @@
 							<configOptions>
 								<serializationLibrary>jackson</serializationLibrary>
 								<omitGradlePluginVersions>true</omitGradlePluginVersions>
+								<useSpringBoot3>true</useSpringBoot3>
 								<groupId>no.nav.soknad.innsending</groupId>
 								<artifactId>kodeverk-client</artifactId>
 								<packageName>no.nav.soknad.innsending.kodeverk</packageName>
@@ -80,6 +81,7 @@
 							<configOptions>
 								<serializationLibrary>jackson</serializationLibrary>
 								<omitGradlePluginVersions>true</omitGradlePluginVersions>
+								<useSpringBoot3>true</useSpringBoot3>
 								<groupId>no.nav.soknad.innsending</groupId>
 								<artifactId>kontoregister-borger-client</artifactId>
 								<packageName>no.nav.soknad.innsending.kontoregisterborger</packageName>
@@ -102,6 +104,7 @@
 							<configOptions>
 								<serializationLibrary>jackson</serializationLibrary>
 								<omitGradlePluginVersions>true</omitGradlePluginVersions>
+								<useSpringBoot3>true</useSpringBoot3>
 								<groupId>no.nav.soknad.innsending</groupId>
 								<artifactId>arena-client</artifactId>
 							</configOptions>
@@ -123,6 +126,7 @@
 							<configOptions>
 								<serializationLibrary>jackson</serializationLibrary>
 								<omitGradlePluginVersions>true</omitGradlePluginVersions>
+								<useSpringBoot3>true</useSpringBoot3>
 								<groupId>no.nav.soknad.arkivering</groupId>
 								<artifactId>soknadsmottaker-client</artifactId>
 								<packageName>no.nav.soknad.arkivering.soknadsmottaker</packageName>
