@@ -7,14 +7,17 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.Tilgangskontroll
+import no.nav.soknad.innsending.service.DocumentService
 import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.FilValidatorService
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
+import no.nav.soknad.innsending.util.mapping.filmetadata.toDto
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import no.nav.soknad.pdfutilities.KonverterTilPdfInterface
 import org.slf4j.LoggerFactory
@@ -27,6 +30,7 @@ import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 import java.time.OffsetDateTime
+import java.util.UUID
 
 @RestController
 @CrossOrigin(maxAge = 3600)
@@ -41,7 +45,8 @@ class FilRestApi(
 	private val filService: FilService,
 	private val filValidatorService: FilValidatorService,
 	private val konverterTilPdf: KonverterTilPdfInterface,
-	private val innsenderMetrics: InnsenderMetrics
+	private val innsenderMetrics: InnsenderMetrics,
+	private val documentService: DocumentService,
 	) : SendinnFilApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -172,6 +177,77 @@ class FilRestApi(
 			.body(vedleggDto)
 	}
 
+	override fun uploadAttachmentFile(
+		innsendingsId: UUID,
+		attachmentId: String,
+		file: MultipartFile
+	): ResponseEntity<FileDto> {
+		val brukerId = tilgangskontroll.hentBrukerFraToken()
+		val innsendingsIdStr = innsendingsId.toString()
+
+		combinedLogger.log("$innsendingsId: Kall for å lagre fil på vedlegg $attachmentId til søknad", brukerId)
+		val soknadDto = hentOgValiderSoknad(innsendingsIdStr)
+
+		val filMetadata = documentService.saveAttachment(
+			FileStorageNamespace.DIGITAL,
+			file.resource,
+			attachmentId,
+			innsendingsId,
+			soknadDto.spraak
+		)
+
+		combinedLogger.log("$innsendingsId: Lagret fil ${filMetadata.filId} på vedlegg ${attachmentId} til søknad", brukerId)
+
+		return ResponseEntity
+			.status(HttpStatus.CREATED)
+			.body(filMetadata.toDto())
+	}
+
+	override fun deleteAttachment(innsendingsId: UUID, attachmentId: String): ResponseEntity<Unit> {
+		val brukerId = tilgangskontroll.hentBrukerFraToken()
+		val innsendingsIdStr = innsendingsId.toString()
+
+		combinedLogger.log("$innsendingsIdStr: Kall for å slette vedlegg $attachmentId", brukerId)
+		hentOgValiderSoknad(innsendingsIdStr)
+
+		documentService.deleteAttachment(FileStorageNamespace.DIGITAL, innsendingsId, attachmentId)
+
+		combinedLogger.log("$innsendingsIdStr: Slettet vedlegg $attachmentId", brukerId)
+
+		return ResponseEntity.noContent().build()
+	}
+
+	override fun getAttachmentFile(innsendingsId: UUID, attachmentId: String, fileId: UUID): ResponseEntity<Resource> {
+		val brukerId = tilgangskontroll.hentBrukerFraToken()
+		val innsendingsIdStr = innsendingsId.toString()
+
+		combinedLogger.log("$innsendingsIdStr: Kall for å hente fil $fileId på vedlegg $attachmentId", brukerId)
+		hentOgValiderSoknad(innsendingsIdStr)
+
+		val file = documentService.getFile(FileStorageNamespace.DIGITAL, innsendingsId, fileId)
+		if (file?.innhold == null) {
+			return ResponseEntity.notFound().build()
+		}
+		val body = ByteArrayResource(file.innhold)
+		return ResponseEntity.ok()
+			.contentType(MediaType.APPLICATION_OCTET_STREAM)
+			.contentLength(body.contentLength())
+			.body(body)
+	}
+
+	override fun deleteAttachmentFile(innsendingsId: UUID, attachmentId: String, fileId: UUID): ResponseEntity<Unit> {
+		val brukerId = tilgangskontroll.hentBrukerFraToken()
+		val innsendingsIdStr = innsendingsId.toString()
+
+		combinedLogger.log("$innsendingsIdStr: Kall for å slette fil $fileId på vedlegg $attachmentId", brukerId)
+		hentOgValiderSoknad(innsendingsIdStr)
+
+		documentService.deleteAttachment(FileStorageNamespace.DIGITAL, innsendingsId, attachmentId, fileId)
+
+		combinedLogger.log("$innsendingsIdStr: Slettet fil $fileId på vedlegg $attachmentId", brukerId)
+
+		return ResponseEntity.noContent().build()
+	}
 
 	private fun hentOgValiderSoknad(innsendingsId: String): DokumentSoknadDto {
 		val soknadDto = soknadService.hentSoknad(innsendingsId)

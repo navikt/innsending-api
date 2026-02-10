@@ -3,17 +3,20 @@ package no.nav.soknad.innsending.service
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.model.Mimetype
 import no.nav.soknad.innsending.repository.*
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.HendelseType
 import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.*
+import no.nav.soknad.innsending.util.mapping.mapTilDbMimetype
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.util.UUID
 
 @Service
 class RepositoryUtils(
@@ -230,6 +233,27 @@ class RepositoryUtils(
 		throw BackendErrorException("Feil ved oppdatering av status for vedlegg $vedleggsId for søknad $innsendingsId", ex)
 	}
 
+	fun submitVedlegg(soknadId: Long, vedleggIds: List<Long>, innsendtDato: LocalDateTime) {
+		val alleVedlegg = vedleggRepository.findAllById(vedleggIds).also {
+			if (it.size != vedleggIds.size) {
+				throw IllegalStateException("Fant ikke alle vedlegg for innsending (soknad dbId=$soknadId). Forventet ${vedleggIds.size}, fant ${it.size}.")
+			}
+			if (it.any { vedlegg -> vedlegg.soknadsid != soknadId }) {
+				throw IllegalStateException("Noen av vedleggene hører ikke til søknaden (soknad dbId=$soknadId)")
+			}
+			if (it.any { vedlegg -> vedlegg.status != OpplastingsStatus.LASTET_OPP }) {
+				throw IllegalStateException("Noen av vedleggene er ikke i status LASTET_OPP (soknad dbId=$soknadId)")
+			}
+		}
+		vedleggRepository.saveAll(alleVedlegg.map {
+			it.copy(
+				status = OpplastingsStatus.INNSENDT,
+				innsendtdato = innsendtDato,
+				endretdato = innsendtDato
+			)
+		})
+	}
+
 	fun updateVedleggErPakrevd(
 		vedleggsId: Long,
 		erPakrevd: Boolean
@@ -237,6 +261,40 @@ class RepositoryUtils(
 		vedleggRepository.updateErPakrevd(id = vedleggsId, erpakrevd = erPakrevd, endretdato = LocalDateTime.now())
 	} catch (ex: Exception) {
 		throw BackendErrorException("Feil ved oppdatering av status for vedlegg $vedleggsId", ex)
+	}
+
+	fun oppdaterHoveddokument(
+		soknadsId: Long,
+		variant: Boolean,
+		mimetype: Mimetype,
+		fileId: UUID,
+		status: OpplastingsStatus,
+		fileContent: ByteArray?,
+	): VedleggDbData {
+		val vedlegg = vedleggRepository.findBySoknadsidAndErhoveddokumentIsTrueAndErvariant(soknadsId, variant)
+			?: throw ResourceNotFoundException("Fant ikke hoveddokument (variant=$variant) for søknad med id $soknadsId")
+
+		val dbMimetype = mapTilDbMimetype(mimetype)
+		fileContent?.let { data ->
+			val validMimetype = dbMimetype ?: throw IllegalArgumentException("Ugyldig mimetype: $mimetype")
+			val filDbData = filRepository.findAllByVedleggsid(vedlegg.id!!).firstOrNull() ?: FilDbData(
+				id = null,
+				vedleggsid = vedlegg.id,
+				filnavn = "hoveddokument",
+				mimetype = validMimetype,
+				storrelse = fileContent.size,
+				data = fileContent,
+				opprettetdato = LocalDateTime.now()
+			)
+			filRepository.save(filDbData.copy(data = data, storrelse = data.size))
+		}
+		return vedleggRepository.save(
+			vedlegg.copy(
+				status = status,
+				mimetype = dbMimetype,
+				fileIds = listOf(fileId)
+			)
+		)
 	}
 
 	fun slettVedlegg(vedleggsId: Long) {

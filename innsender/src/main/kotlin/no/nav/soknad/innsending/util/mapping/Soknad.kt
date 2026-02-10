@@ -4,6 +4,8 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.Innsending
 import no.nav.soknad.arkivering.soknadsmottaker.model.Soknad
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
+import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
@@ -16,6 +18,7 @@ import no.nav.soknad.innsending.util.models.vedleggsListeUtenHoveddokument
 import no.nav.soknad.innsending.util.soknaddbdata.getSkjemaPath
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.util.UUID
 
 fun mapTilSoknadDb(
 	dokumentSoknadDto: DokumentSoknadDto,
@@ -178,6 +181,58 @@ fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>, perso
 	)
 }
 
+fun SubmitApplicationRequest.toDokumentSoknadDto(innsendingsId: UUID, clientId: String): SoknadDbData {
+	val now = LocalDateTime.now()
+	return SoknadDbData(
+		id = null,
+		innsendingsid = innsendingsId.toString(),
+		tittel = this.title,
+		skjemanr = this.formNumber,
+		tema = this.tema,
+		spraak = this.language,
+		status = SoknadsStatus.Opprettet,
+		brukerid = this.bruker,
+		opprettetdato = now,
+		endretdato = now,
+		applikasjon = clientId,
+		ettersendingsid = null,
+		innsendtdato = null,
+		visningssteg = null,
+		visningstype = VisningsType.nologin,
+		kanlasteoppannet = this.otherUploadAvailable,
+		forsteinnsendingsdato = null,
+		ettersendingsfrist = null,
+		arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
+		skalslettesdato = now.plusDays(Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD).toOffsetDateTime(),
+		ernavopprettet = false,
+	)
+}
+
+fun SoknadDbData.createMainDocument(variant: Boolean = false): VedleggDbData {
+	return VedleggDbData(
+		id = null,
+		soknadsid = this.id!!,
+		vedleggsnr = this.skjemanr,
+		status = OpplastingsStatus.IKKE_VALGT,
+		erhoveddokument = true,
+		ervariant = variant,
+		erpdfa = !variant,
+		erpakrevd = true,
+		tittel = this.tittel,
+		label = this.tittel,
+		beskrivelse = null,
+		mimetype = mapTilDbMimetype(if (variant) Mimetype.applicationSlashJson else Mimetype.applicationSlashPdf),
+		uuid = UUID.randomUUID().toString(),
+		opprettetdato = this.opprettetdato,
+		endretdato = this.opprettetdato,
+		innsendtdato = null,
+		vedleggsurl = null,
+		formioid = null,
+		opplastingsvalgkommentarledetekst = null,
+		opplastingsvalgkommentar = null,
+		fileIds = null,
+	)
+}
 
 fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>, avsenderDto: AvsenderDto, brukerDto: BrukerDto?): Innsending {
 	return Innsending(

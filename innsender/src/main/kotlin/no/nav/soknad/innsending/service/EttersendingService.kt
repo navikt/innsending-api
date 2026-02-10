@@ -16,6 +16,7 @@ import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
 import no.nav.soknad.innsending.util.Utilities
+import no.nav.soknad.innsending.util.dokumentsoknad.getMissingRequiredAttachments
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.innsending.util.mapping.*
 import org.slf4j.LoggerFactory
@@ -152,7 +153,8 @@ class EttersendingService(
 								skjemaService.hentSkjema(v.vedleggsnr!!, nyesteSoknad.spraak ?: "nb", false).url else null,
 							formioid = v.formioId,
 							opplastingsvalgkommentarledetekst =  v.opplastingsValgKommentarLedetekst,
-							opplastingsvalgkommentar = null
+							opplastingsvalgkommentar = null,
+							fileIds = null,
 						)
 					)
 
@@ -302,23 +304,18 @@ class EttersendingService(
 	}
 
 	// Creates ettersending if required documents are missing
-	fun sjekkOgOpprettEttersendingsSoknad(
-		innsendtSoknadDto: DokumentSoknadDto,
-		manglende: List<VedleggDto>,
-		soknadDtoInput: DokumentSoknadDto
-	): DokumentSoknadDto? {
-		logger.info(
-			"${innsendtSoknadDto.innsendingsId}: antall vedlegg som skal ettersendes " +
-				"${innsendtSoknadDto.vedleggsListe.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.SendSenere }.size}"
-		)
+	fun sjekkOgOpprettEttersendingsSoknad(innsendtSoknadDto: DokumentSoknadDto): DokumentSoknadDto? {
+		val innsendingsId = innsendtSoknadDto.innsendingsId!!
+		val manglende = innsendtSoknadDto.getMissingRequiredAttachments()
+		logger.info("$innsendingsId: antall vedlegg som skal ettersendes ${manglende.size}")
 
 		// Det mangler vedlegg så det opprettes en ettersendingssøknad av systemet
 		// Dagpenger (DAG) har sin egen løsning for å opprette ettersendingssøknader
 		if (manglende.isNotEmpty() && !"DAG".equals(innsendtSoknadDto.tema, true)) {
-			logger.info("${soknadDtoInput.innsendingsId}: Skal opprette ettersendingssoknad")
+			logger.info("$innsendingsId: Skal opprette ettersendingssoknad")
 			return saveEttersending(
 				nyesteSoknad = innsendtSoknadDto,
-				ettersendingsId = innsendtSoknadDto.ettersendingsId ?: innsendtSoknadDto.innsendingsId!!,
+				ettersendingsId = innsendtSoknadDto.ettersendingsId ?: innsendingsId,
 				erSystemGenerert = true
 			)
 		}

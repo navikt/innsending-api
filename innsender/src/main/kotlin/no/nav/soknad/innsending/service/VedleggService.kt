@@ -334,6 +334,48 @@ class VedleggService(
 		return lagVedleggDto(vedleggDbData)
 	}
 
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
+	fun oppdaterHoveddokument(
+		soknadId: Long,
+		variant: Boolean,
+		mimetype: Mimetype,
+		fileId: UUID,
+		status: OpplastingsStatus = OpplastingsStatus.LASTET_OPP,
+		fileContent: ByteArray? = null,
+	): VedleggDto {
+		return repo.oppdaterHoveddokument(soknadId, variant, mimetype, fileId, status, fileContent).toDto()
+	}
+
+	fun insertAllAttachments(soknadId: Long, attachments: List<AttachmentDto>): List<VedleggDto> {
+		return attachments.map { attachment ->
+			repo.lagreVedlegg(
+				VedleggDbData(
+					id = null,
+					soknadsid = soknadId,
+					status = mapTilDbOpplastingsStatus(attachment.uploadStatus),
+					erhoveddokument = false,
+					ervariant = false,
+					erpdfa = false,
+					erpakrevd = attachment.attachmentCode != "N6",
+					vedleggsnr = attachment.attachmentCode,
+					tittel = attachment.title ?: attachment.label,
+					label = attachment.label,
+					beskrivelse = attachment.description,
+					mimetype = Mimetype.applicationSlashPdf.toString(),
+					uuid = UUID.randomUUID().toString(),
+					opprettetdato = LocalDateTime.now(),
+					endretdato = LocalDateTime.now(),
+					innsendtdato = null,
+					vedleggsurl = attachment.formNumberPath,
+					formioid = null,
+					opplastingsvalgkommentarledetekst = null,
+					opplastingsvalgkommentar = null,
+					fileIds = attachment.fileIds ?: emptyList(),
+				)
+			).toDto()
+		}
+	}
+
 	fun hentAlleVedlegg(soknadDbDataOpt: SoknadDbData, ident: String): DokumentSoknadDto {
 		val operation = InnsenderOperation.HENT.name
 

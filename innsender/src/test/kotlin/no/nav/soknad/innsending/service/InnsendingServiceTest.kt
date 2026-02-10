@@ -56,6 +56,9 @@ class InnsendingServiceTest : ApplicationTest() {
 	private lateinit var ettersendingService: EttersendingService
 
 	@Autowired
+	private lateinit var documentService: DocumentService
+
+	@Autowired
 	private lateinit var exceptionHelper: ExceptionHelper
 
 	val soknadsmottakerAPI = mockk<MottakerInterface>()
@@ -76,6 +79,7 @@ class InnsendingServiceTest : ApplicationTest() {
 		soknadsmottakerAPI = soknadsmottakerAPI,
 		restConfig = restConfig,
 		pdlInterface = pdlInterface,
+		documentService = documentService,
 	)
 
 	@BeforeEach

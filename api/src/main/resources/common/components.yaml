@@ -5,6 +5,18 @@ components:
       format: uuid
       description: A Universally Unique Identifier
       example: 92ee15dd-dc49-4c95-b9b6-6224bae088bb
+
+    BrukerId:
+      type: string
+      description: Ident til søker som har opprettet søknad i fyllUt tjenesten.
+      example: 12128012345
+
+    Mimetype:
+      type: string
+      enum: [ "application/pdf", "application/json", "image/png", "image/jpeg", "application/xml" ]
+      description: Angivelse av formatet på opplastet vedlegg.
+      example: application/pdf or image/jpeg.
+
     RestErrorResponseDto:
       type: object
       description: Feilrespons
@@ -22,3 +34,80 @@ components:
         message: Noe gikk galt, prøv igjen senere
         timestamp: 2023-12-21T09:31:40.549032434
         errorCode: somethingFailedTryLater
+
+    AttachmentId:
+      type: string
+      description: Unique identifier of the attachment, could be an uuid or some other id, eg. 'nav12345-1'
+      example: 92ee15dd-dc49-4c95-b9b6-6224bae088bb
+
+    OpplastingsStatusDto:
+      type: string
+      enum: [ "IkkeValgt", "LastetOpp", "Innsendt", "SendSenere", "SendesAvAndre", "SendesIkke", "LastetOppIkkeRelevantLenger", "LevertDokumentasjonTidligere", "HarIkkeDokumentasjonen", "NavKanHenteDokumentasjon" ]
+      description: Status på om et vedlegg til søknad er enda ikke er lastet opp, lastet opp eller innsendt
+
+    AvsenderDto:
+      type: object
+      description: Identifikasjon av hvem som sender inn søknaden
+
+      properties:
+        id:
+          type: string
+        idType:
+          type: string
+          enum: [ "FNR" ]
+          description: Obligatorisk dersom id er satt. Angir hvilken type id som er brukt. Merk at FNR kan også være et D-NR. Merk at arkivet også aksepterer idType verdiene "ORGNR", "HPRNR", "UTL_ORG"
+        navn:
+          type: string
+          description: Navn på avsender, ikke nødvendig dersom id er spesifisert
+          example: Ola Nordmann
+
+    EnvQualifier:
+      type: string
+      enum: [ "preprodIntern", "preprodAltIntern", "preprodAnsatt", "preprodAltAnsatt", "delingslenke", "local" ]
+      description: Angir et ønske om miljø
+
+  parameters:
+    InnsendingsId:
+      name: innsendingsId
+      in: path
+      description: unique id for the application
+      required: true
+      schema:
+        $ref: "#/components/schemas/UUID"
+
+    AttachmentId:
+      name: attachmentId
+      in: path
+      description: unique id for an attachment to this application
+      required: true
+      schema:
+        $ref: "#/components/schemas/AttachmentId"
+
+    FileId:
+      name: fileId
+      in: path
+      description: unique id for a file
+      required: true
+      schema:
+        $ref: "#/components/schemas/UUID"
+
+    EnvQualifier:
+      name: Nav-Env-Qualifier
+      in: header
+      description: Angir et ønske om miljø
+      schema:
+        $ref: "#/components/schemas/EnvQualifier"
+
+  responses:
+    InteralServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RestErrorResponseDto"
+    AuthError:
+      description: Authentication or authorization error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RestErrorResponseDto"

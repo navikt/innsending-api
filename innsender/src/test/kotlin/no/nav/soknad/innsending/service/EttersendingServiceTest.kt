@@ -71,6 +71,9 @@ class EttersendingServiceTest : ApplicationTest() {
 	private lateinit var safService: SafService
 
 	@Autowired
+	private lateinit var documentService: DocumentService
+
+	@Autowired
 	private lateinit var tilgangskontroll: Tilgangskontroll
 
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
@@ -111,52 +114,8 @@ class EttersendingServiceTest : ApplicationTest() {
 		soknadsmottakerAPI = soknadsmottakerAPI,
 		restConfig = restConfig,
 		pdlInterface = pdlInterface,
+		documentService = documentService,
 	)
-
-	@Test
-	fun `Skal opprette ettersending hvis det mangler paakrevde vedlegg`() {
-		// Gitt
-		val brukerid = testpersonid
-		val skjemanr = "NAV 55-00.60"
-		val spraak = "nb_NO"
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
-
-		val ettersendingService = lagEttersendingService()
-
-		// Når
-		val ettersending = ettersendingService.sjekkOgOpprettEttersendingsSoknad(
-			innsendtSoknadDto = dokumentSoknadDto,
-			manglende = dokumentSoknadDto.vedleggsListe,
-			soknadDtoInput = dokumentSoknadDto
-		)
-
-		// Så
-		assertNotNull(ettersending)
-	}
-
-	@Test
-	fun `Skal ikke opprette ettersendingssoknad hvis det ikke mangler paakrevde vedlegg`() {
-		// Gitt
-		val brukerid = testpersonid
-		val skjemanr = "NAV 55-00.60"
-		val spraak = "nb_NO"
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
-
-		val ettersendingService = lagEttersendingService()
-		val ettersendingServiceMock = spyk(ettersendingService)
-
-		every { ettersendingServiceMock.saveEttersending(any(), any()) } answers { callOriginal() }
-
-		// Når
-		ettersendingServiceMock.sjekkOgOpprettEttersendingsSoknad(
-			innsendtSoknadDto = dokumentSoknadDto,
-			manglende = emptyList(),
-			soknadDtoInput = dokumentSoknadDto
-		)
-
-		// Så
-		verify(exactly = 0) { ettersendingServiceMock.saveEttersending(any(), any()) }
-	}
 
 	@Test
 	fun opprettEttersendingGittArkivertSoknadTest() {

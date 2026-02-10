@@ -184,6 +184,22 @@ class SoknadService(
 		repo.endreSoknadDb(id, visningsSteg)
 	}
 
+	fun submit(innsendingsId: String, innsendteVedlegg: List<VedleggDto>): DokumentSoknadDto {
+		val soknadDbData = repo.hentSoknadDb(innsendingsId)
+		if (soknadDbData.status == SoknadsStatus.Innsendt) {
+			throw IllegalActionException("$innsendingsId: Søknad er allerede sendt inn")
+		}
+		val innsendtdato = LocalDateTime.now()
+		repo.submitVedlegg(soknadDbData.id!!, innsendteVedlegg.map { it.id!! }, innsendtdato)
+		val submittedSoknad = repo.lagreSoknad(
+			soknadDbData.copy(
+				status = SoknadsStatus.Innsendt,
+				innsendtdato = innsendtdato,
+			)
+		)
+		return vedleggService.hentAlleVedlegg(submittedSoknad, innsendingsId)
+	}
+
 	// Slett opprettet soknad gitt innsendingsId
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun slettSoknadAvBruker(dokumentSoknadDto: DokumentSoknadDto) {

@@ -1,0 +1,1 @@
+ALTER TABLE vedlegg	ADD COLUMN file_ids JSONB;

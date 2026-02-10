@@ -12,18 +12,23 @@ import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
+import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
+import no.nav.soknad.innsending.util.dokumentsoknad.isMissingAndRequired
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.*
+import no.nav.soknad.innsending.util.stringextensions.toUUID
 import no.nav.soknad.pdfutilities.AntallSider
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
+import org.springframework.core.io.ByteArrayResource
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
 import java.util.*
@@ -41,6 +46,7 @@ class InnsendingService(
 	private val ettersendingService: EttersendingService,
 	private val innsenderMetrics: InnsenderMetrics,
 	private val pdlInterface: PdlInterface,
+	private val documentService: DocumentService,
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -75,15 +81,7 @@ class InnsendingService(
 
 		val opplastedeVedlegg = alleVedlegg.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
 
-		val missingRequiredVedlegg = alleVedlegg.filter {
-			val isNotHoveddokument = !it.erHoveddokument
-			val isRequiredN6Vedlegg = it.erPakrevd && it.vedleggsnr == "N6"
-			val isNotN6Vedlegg = it.vedleggsnr != "N6"
-			val hasStatusSendSenereEllerIkkevalgt =
-				it.opplastingsStatus == OpplastingsStatusDto.SendSenere || it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt
-
-			isNotHoveddokument && (isRequiredN6Vedlegg || isNotN6Vedlegg) && hasStatusSendSenereEllerIkkevalgt
-		}
+		val missingRequiredVedlegg = alleVedlegg.filter { it.isMissingAndRequired() }
 
 		validerAtSoknadHarEndringSomKanSendesInn(soknadDto, opplastedeVedlegg, alleVedlegg)
 
@@ -218,6 +216,183 @@ class InnsendingService(
 	}
 
 	@Transactional(timeout = TRANSACTION_TIMEOUT)
+	fun submitApplication(
+		soknad: DokumentSoknadDto,
+		mainDocumentContent: ByteArray,
+		mainDocumentAltContent: ByteArray,
+		attachments: List<AttachmentDto>?,
+		avsender: AvsenderDto?,
+	): Pair<ApplicationSubmissionResponse, EttersendingsId?> {
+		val brukerDto = if (soknad.brukerId.isNullOrEmpty()) null else BrukerDto(id = soknad.brukerId!!, idType = BrukerDto.IdType.FNR)
+		if (brukerDto == null && avsender == null) {
+			throw IllegalActionException(
+				message = "Hverken bruker eller avsender er satt",
+				errorCode = ErrorCode.PROPERTY_NOT_SET
+			)
+		}
+		val avsenderDto = avsender ?: AvsenderDto(id = soknad.brukerId!!, idType = IdType.FNR)
+		if (soknad.erEttersending) {
+			throw IllegalActionException(
+				message = "Kan ikke sende inn ettersendingssøknad via denne funksjonen",
+				errorCode = ErrorCode.ILLEGAL_ARGUMENT
+			)
+		}
+
+		val innsendingsId = soknad.innsendingsId!!
+		val allAttachments = attachments ?: emptyList()
+
+		// validate attachments in request
+		val (attachmentsWithUploads, attachmentsWithoutUploads) = allAttachments.partition { it.uploadStatus == OpplastingsStatusDto.LastetOpp }
+		if (attachmentsWithUploads.any { attachment -> attachment.fileIds.isNullOrEmpty() }) {
+			throw IllegalActionException(
+				message = "$innsendingsId: Attachments with status '${OpplastingsStatusDto.LastetOpp}' should provide at least one file id",
+				errorCode = ErrorCode.ILLEGAL_ARGUMENT
+			)
+		}
+		if (attachmentsWithoutUploads.any { attachment -> !attachment.fileIds.isNullOrEmpty() }) {
+			throw IllegalActionException(
+				message = "$innsendingsId: Attachments with status other that '${OpplastingsStatusDto.LastetOpp}' should not provide file ids",
+				errorCode = ErrorCode.ILLEGAL_ARGUMENT
+			)
+		}
+
+		val fileStorageNamespace = when (soknad.visningsType) {
+			VisningsType.nologin -> FileStorageNamespace.NOLOGIN
+			else -> FileStorageNamespace.DIGITAL
+		}
+		val mainDocument = mainDocumentContent.let {
+			val fileMetadata = documentService.saveMainDocument(
+				fileStorageNamespace,
+				innsendingsId.toUUID(),
+				ByteArrayResource(it),
+				soknad.skjemanr,
+				Mimetype.applicationSlashPdf,
+				soknad.spraak
+			)
+			vedleggService.oppdaterHoveddokument(
+				soknad.id!!,
+				false,
+				Mimetype.applicationSlashPdf,
+				fileMetadata.filId.toUUID(),
+				OpplastingsStatus.LASTET_OPP,
+				it
+			)
+		}
+
+		val tilleggsstonad = tilleggstonadService.isTilleggsstonad(soknad)
+		val mainDocumentAlt = if (tilleggsstonad) {
+			// Bytt ut hoveddokument variant med XML variant for tilleggstønadssøknad
+			mainDocumentAltContent.let {
+				val (jsonObj, xml) = tilleggstonadService.convert(soknad, mainDocumentAltContent)
+				val xmlFileMetadata = documentService.saveMainDocument(
+					fileStorageNamespace,
+					innsendingsId.toUUID(),
+					ByteArrayResource(it),
+					soknad.skjemanr,
+					Mimetype.applicationSlashXml,
+					soknad.spraak
+				)
+
+				// Oppdater tema hvis aktuelt
+				tilleggstonadService.sjekkOgOppdaterTema(jsonObj, soknad)
+
+				vedleggService.oppdaterHoveddokument(
+					soknad.id!!,
+					true,
+					Mimetype.applicationSlashXml,
+					xmlFileMetadata.filId.toUUID(),
+					OpplastingsStatus.LASTET_OPP,
+					xml,
+				)
+			}
+		} else {
+			val jsonFileMetadata = documentService.saveMainDocument(
+				fileStorageNamespace,
+				innsendingsId.toUUID(),
+				ByteArrayResource(mainDocumentAltContent),
+				soknad.skjemanr,
+				Mimetype.applicationSlashJson,
+				soknad.spraak
+			)
+			vedleggService.oppdaterHoveddokument(
+				soknad.id!!,
+				true,
+				Mimetype.applicationSlashJson,
+				jsonFileMetadata.filId.toUUID(),
+				OpplastingsStatus.LASTET_OPP,
+				mainDocumentAltContent,
+			)
+		}
+
+		// verify that all files exists in bucket and validate total size
+		if (attachmentsWithUploads.isNotEmpty()) {
+			val fileIds = attachmentsWithUploads.flatMap { it.fileIds ?: emptyList() }.distinct()
+			val filesMetadata = documentService.getFileMetadata(fileStorageNamespace, innsendingsId.toUUID(), fileIds)
+			if (fileIds.size != filesMetadata.size) {
+				val missingFileIds = fileIds.toSet() - filesMetadata.map { it.filId }.toSet()
+					.joinToString(", ")
+					.ifEmpty { "unknown" }
+				throw IllegalActionException(
+					"$innsendingsId: Expected to find metadata for all uploaded files, but these were missing: $missingFileIds",
+					errorCode = ErrorCode.NOT_FOUND
+				)
+			}
+			val totalBytes = filesMetadata.sumOf { it.storrelse }
+			if (totalBytes > (restConfig.maxFileSizeSum * 1024 * 1024)) {
+				throw IllegalActionException(
+					message = "$innsendingsId: Total size of uploaded files exceeds the limit of ${restConfig.maxFileSizeSum}MB",
+					errorCode = ErrorCode.FILE_SIZE_SUM_TOO_LARGE
+				)
+			}
+			// validate total file size grouped by attachmentCode
+			val filesGroupedByAttachmentCode = filesMetadata.groupBy { it.vedleggId }
+			filesGroupedByAttachmentCode.forEach { (attachmentCode, files) ->
+				val totalSize = files.sumOf { it.storrelse }
+				if (totalSize > (restConfig.maxFileSize * 1024 * 1024)) {
+					throw IllegalActionException(
+						message = "$innsendingsId: Total size for attachment '$attachmentCode' exceeds the limit of ${restConfig.maxFileSize}MB",
+						errorCode = ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE
+					)
+				}
+			}
+		}
+
+		val savedAttachments = vedleggService.insertAllAttachments(soknad.id!!, allAttachments)
+
+		val uploadedAttachments = savedAttachments.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
+		val filesForSubmission = uploadedAttachments + mainDocument + mainDocumentAlt
+		soknadsmottakerAPI.sendInnSoknad(soknad, filesForSubmission, avsenderDto, brukerDto)
+
+		val submittedSoknad = soknadService.submit(innsendingsId, filesForSubmission)
+
+		val nologin = soknad.visningsType == VisningsType.nologin
+		val ettersending = if (!nologin && attachmentsWithoutUploads.any { it.uploadStatus == OpplastingsStatusDto.SendSenere }) {
+			ettersendingService.sjekkOgOpprettEttersendingsSoknad(submittedSoknad)
+		} else null
+
+		val summary = ApplicationSubmissionResponse(
+			innsendingsId = innsendingsId.toUUID(),
+			title = submittedSoknad.tittel,
+			mainDocumentFileId = if (nologin) null else mainDocument.fileIds?.firstOrNull(),
+			submittedAt = submittedSoknad.innsendtDato!!,
+			subsequentSubmissionDeadline = beregnInnsendingsfrist(submittedSoknad),
+			attachments = submittedSoknad.vedleggsListeUtenHoveddokument.map {
+				AttachmentDto1(
+					attachmentCode = it.vedleggsnr!!,
+					uploadStatus = it.opplastingsStatus,
+					label = it.label,
+				 	fileIds = if (nologin) null else it.fileIds,
+				)
+			},
+			ettersendingsId = ettersending?.innsendingsId?.toUUID()
+		)
+		return Pair(
+			summary,
+			ettersending?.innsendingsId?.toUUID(),
+		)
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED, timeout = TRANSACTION_TIMEOUT)
 	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): Pair<KvitteringsDto, DokumentSoknadDto?> {
 		val brukerId = soknadDtoInput.brukerId
 		if (brukerId.isNullOrEmpty()) {
@@ -237,7 +412,9 @@ class InnsendingService(
 			val innsendtSoknadDto = soknadService.hentSoknad(soknadDtoInput.innsendingsId!!)
 			innsenderMetrics.incOperationsCounter(operation, innsendtSoknadDto.tema)
 
-			val ettersending = ettersendingService.sjekkOgOpprettEttersendingsSoknad(innsendtSoknadDto, manglende, soknadDtoInput)
+			val ettersending = if (manglende.isNotEmpty())
+				ettersendingService.sjekkOgOpprettEttersendingsSoknad(innsendtSoknadDto)
+			else null
 
 			val kvittering = lagKvittering(innsendtSoknadDto, opplastet, manglende)
 			return Pair(kvittering, ettersending)
@@ -491,7 +668,6 @@ class InnsendingService(
 		val erArkivert = hendelseDbData.any { it.hendelsetype == HendelseType.Arkivert }
 		if (erArkivert) {
 			logger.info("$innsendingId: søknaden er allerede arkivert")
-			emptySoknadFilesWithStatus(uuids, SoknadFile.FileStatus.deleted)
 		}
 
 		return fetchSoknadFiles(innsendingId, uuids, erArkivert)
@@ -510,7 +686,7 @@ class InnsendingService(
 			}
 
 			// Sjekk om alle vedlegg er lastet opp
-			val mergedVedlegg = mergeOgReturnerVedlegg(innsendingId, uuids, vedleggDbDatas)
+			val mergedVedlegg = mergeOgReturnerVedlegg(innsendingId, uuids, vedleggDbDatas, soknadDbData.visningstype!!)
 			if (mergedVedlegg.any { it.document == null }) {
 				logger.warn(
 					"$innsendingId: Følgende vedlegg mangler opplastet fil: ${
@@ -549,12 +725,12 @@ class InnsendingService(
 	}
 
 	private fun mapToSoknadFiles(
-		vedleggUrls: List<String>,
+		vedleggUuids: List<String>,
 		mergedVedlegg: List<VedleggDto>,
 		erArkivert: Boolean,
 		innsendingId: String
 	): List<SoknadFile> {
-		val idResult = vedleggUrls
+		val idResult = vedleggUuids
 			.map { uuid ->
 				mergedVedlegg.firstOrNull { it.uuid == uuid } ?: VedleggDto(
 					tittel = "",
@@ -588,13 +764,31 @@ class InnsendingService(
 	private fun mergeOgReturnerVedlegg(
 		innsendingId: String,
 		vedleggsUuids: List<String>,
-		soknadVedlegg: List<VedleggDbData>
+		soknadVedlegg: List<VedleggDbData>,
+		visningsType: VisningsType,
 	): List<VedleggDto> {
-		return filService.hentOgMergeVedleggsFiler(
-			innsendingId,
-			soknadVedlegg.filter { vedleggsUuids.contains(it.uuid) }.toList()
-		)
-
+		val fetchFromBucket = soknadVedlegg.any { it.fileIds?.isNotEmpty() == true }
+		return if (fetchFromBucket) {
+			vedleggsUuids.map { vedleggUuid ->
+				val vedleggDto = soknadVedlegg.first { it.uuid == vedleggUuid }
+				val document = if (vedleggDto.fileIds.isNullOrEmpty()) null else {
+					logger.info("$innsendingId: Henter filer for vedlegg med uuid $vedleggUuid, filIds: ${vedleggDto.fileIds}")
+					val namespace = when (visningsType) {
+						VisningsType.nologin -> FileStorageNamespace.NOLOGIN
+						else -> FileStorageNamespace.DIGITAL
+					}
+					documentService.mergeFiles(namespace, innsendingId.toUUID(), vedleggDto.fileIds)
+				}
+				vedleggDto.toDto(document)
+			}
+		} else {
+			filService.hentOgMergeVedleggsFiler(
+				innsendingId,
+				soknadVedlegg.filter { vedleggsUuids.contains(it.uuid) }
+			)
+		}
 	}
 
 }
+
+typealias EttersendingsId = UUID

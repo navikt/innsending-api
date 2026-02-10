@@ -124,7 +124,7 @@ spec:
     buckets:
       - name: "{{ bucket-name-file-storage }}"
         lifecycleCondition:
-          age: 1
+          age: 100
 
   env:
     - name: FILE_STORAGE_BUCKET_NAME

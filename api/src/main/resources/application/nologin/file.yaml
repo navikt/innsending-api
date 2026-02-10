@@ -1,0 +1,18 @@
+delete:
+  summary: Delete file
+  operationId: deleteNologinAttachmentFile
+  security:
+  - azureM2M: []
+
+  parameters:
+    - $ref: "../../common/components.yaml#/components/parameters/InnsendingsId"
+    - $ref: "../../common/components.yaml#/components/parameters/AttachmentId"
+    - $ref: "../../common/components.yaml#/components/parameters/FileId"
+
+  responses:
+    204:
+      description: No Content
+    500:
+      $ref: "../../common/components.yaml#/components/responses/InteralServerError"
+  tags:
+    - nologin-application

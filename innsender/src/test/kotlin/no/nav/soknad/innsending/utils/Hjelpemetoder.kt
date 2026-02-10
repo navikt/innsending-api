@@ -142,10 +142,12 @@ class Hjelpemetoder {
 			return headers
 		}
 
-		fun createHeaders(token: String, contentType: MediaType): HttpHeaders {
+		fun createHeaders(token: String?, contentType: MediaType): HttpHeaders {
 			val headers = HttpHeaders()
 			headers.contentType = contentType
-			headers.add(HttpHeaders.AUTHORIZATION, "$BEARER$token")
+			if (token != null) {
+				headers.add(HttpHeaders.AUTHORIZATION, "$BEARER$token")
+			}
 			headers.add(Constants.CORRELATION_ID, MDCUtil.callIdOrNew())
 			return headers
 		}

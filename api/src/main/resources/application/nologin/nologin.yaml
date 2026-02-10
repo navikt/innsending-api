@@ -1,0 +1,28 @@
+post:
+  summary: Submit nologin application
+  operationId: submitNologinApplication
+  security:
+  - azureM2M: []
+
+  parameters:
+    - $ref: "../../common/components.yaml#/components/parameters/InnsendingsId"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../common.yaml#/components/schemas/SubmitApplicationRequest"
+
+  responses:
+    201:
+      $ref: "../common.yaml#/components/responses/ApplicationSubmissionSuccess"
+    401:
+      $ref: "../../common/components.yaml#/components/responses/AuthError"
+    403:
+      $ref: "../../common/components.yaml#/components/responses/AuthError"
+    500:
+      $ref: "../../common/components.yaml#/components/responses/InteralServerError"
+    503:
+      $ref: "../common.yaml#/components/responses/ServiceUnavailable"
+  tags:
+    - nologin-application

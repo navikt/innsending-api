@@ -3,10 +3,10 @@ package no.nav.soknad.innsending.rest.fillager
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.NologinApi
 import no.nav.soknad.innsending.model.LastOppFilResponse
+import no.nav.soknad.innsending.service.DocumentService
 import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.service.config.annotation.VerifyConfigValue
-import no.nav.soknad.innsending.service.fillager.FillagerInterface
-import no.nav.soknad.innsending.service.fillager.FillagerNamespace
+import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
@@ -24,7 +24,7 @@ import java.util.UUID
 	claimMap = ["roles=nologin-access"],
 )
 class NologinRestApi(
-	private val fillagerService: FillagerInterface,
+	private val documentService: DocumentService,
 ) : NologinApi {
 
 	@VerifyConfigValue(
@@ -41,11 +41,11 @@ class NologinRestApi(
 		innsendingId: UUID?
 	): ResponseEntity<LastOppFilResponse> {
 		val innsendingIdString = innsendingId?.toString() ?: Utilities.laginnsendingsId()
-		val metadata = fillagerService.lagreFil(
+		val metadata = documentService.saveAttachment(
+			namespace = FileStorageNamespace.NOLOGIN,
 			fil = filinnhold.resource,
 			vedleggId = vedleggId,
-			innsendingId = innsendingIdString,
-			namespace = FillagerNamespace.NOLOGIN,
+			innsendingsId = innsendingIdString.toUUID(),
 		)
 		return ResponseEntity
 			.status(HttpStatus.CREATED)
@@ -62,10 +62,10 @@ class NologinRestApi(
 
 	@Timed(InnsenderOperation.SLETT_FIL_NOLOGIN)
 	override fun slettFilV2(filId: UUID, innsendingId: UUID): ResponseEntity<Unit> {
-		val deleted = fillagerService.slettFil(
-			filId = filId.toString(),
-			innsendingId = innsendingId.toString(),
-			namespace = FillagerNamespace.NOLOGIN,
+		val deleted = documentService.deleteAttachment(
+			namespace = FileStorageNamespace.NOLOGIN,
+			fileId = filId,
+			innsendingsId = innsendingId,
 		)
 		return if (deleted) {
 			ResponseEntity.noContent().build()
@@ -76,10 +76,10 @@ class NologinRestApi(
 
 	@Timed(InnsenderOperation.SLETT_FILER_NOLOGIN)
 	override fun slettFiler(innsendingId: UUID, vedleggId: String?): ResponseEntity<Unit> {
-		val deleted = fillagerService.slettFiler(
-			innsendingId = innsendingId.toString(),
-			vedleggId = vedleggId,
-			namespace = FillagerNamespace.NOLOGIN,
+		val deleted = documentService.deleteAttachment(
+			innsendingsId = innsendingId,
+			attachmentId = vedleggId,
+			namespace = FileStorageNamespace.NOLOGIN,
 		)
 		return if (deleted) {
 			ResponseEntity.noContent().build()

@@ -62,24 +62,24 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 		val innsendingId = UUID.randomUUID().toString()
 
 		val navId1 = "personal-id"
-		val file1 = api.uploadNologinFile(vedleggId = navId1, innsendingId = innsendingId)
+		val file1 = api.uploadNologinFileV2(vedleggId = navId1, innsendingId = innsendingId)
 			.assertSuccess()
 			.body
 
 		val navId2 = "e9logo"
-		api.uploadNologinFile(vedleggId = navId2, innsendingId = innsendingId)
+		api.uploadNologinFileV2(vedleggId = navId2, innsendingId = innsendingId)
 			.assertSuccess()
 			.body.let {
-				assertNotNull(it.filId)
+				assertNotNull(it.id)
 			}
 
 		val navId3 = "dj5jkj"
-		val file3 = api.uploadNologinFile(vedleggId = navId3, innsendingId = innsendingId)
+		val file3 = api.uploadNologinFileV2(vedleggId = navId3, innsendingId = innsendingId)
 			.assertSuccess()
 			.body
 
 		val navId4 = "dj5jkj-1"
-		val file4 = api.uploadNologinFile(vedleggId = navId4, innsendingId = innsendingId)
+		val file4 = api.uploadNologinFileV2(vedleggId = navId4, innsendingId = innsendingId)
 			.assertSuccess()
 			.body
 
@@ -91,7 +91,7 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 			formioId = navId1,
 			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(file1.filId.toString()),
+			filIdListe = listOf(file1.id.toString()),
 		).build()
 
 		val vedleggSomSendesSenere = SkjemaDokumentDtoV2TestBuilder(
@@ -113,7 +113,7 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 			formioId = navId3,
 			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(file3.filId.toString()),
+			filIdListe = listOf(file3.id.toString()),
 		).build()
 
 		val vedleggAnnenDokumentasjon2 = SkjemaDokumentDtoV2TestBuilder(
@@ -125,7 +125,7 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 			formioId = navId4,
 			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(file4.filId.toString()),
+			filIdListe = listOf(file4.id.toString()),
 		).build()
 
 		val skjemaDto = SkjemaDtoV2TestBuilder()
@@ -259,7 +259,8 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
 			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(file1.filId.toString())
+			filIdListe = listOf(file1.filId.toString()),
+			vedleggsnr = "abcdef",
 		).build()
 
 		val skjemaDto = SkjemaDtoV2TestBuilder()
@@ -288,7 +289,8 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
 			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(file1.filId.toString())
+			filIdListe = listOf(file1.filId.toString()),
+			vedleggsnr = "abcdef",
 		).build()
 
 		val skjemaDto = SkjemaDtoV2TestBuilder()
@@ -315,7 +317,8 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
 			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(file1.filId.toString())
+			filIdListe = listOf(file1.filId.toString()),
+			vedleggsnr = "abcdef",
 		).build()
 
 		val skjemaDto = SkjemaDtoV2TestBuilder()
@@ -348,15 +351,16 @@ class NoLoginSoknadRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `innsending skal feile dersom hverken avsender eller bruker er satt`() {
-		val file1 = api.uploadNologinFile(vedleggId = "abcdef")
+		val innsendingId = UUID.randomUUID().toString()
+		val file1 = api.uploadNologinFileV2(innsendingId = innsendingId, vedleggId = "abcdef")
 			.assertSuccess()
 			.body
-		val innsendingId = file1.innsendingId.toString()
 
 		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
 			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
 			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(file1.filId.toString())
+			filIdListe = listOf(file1.id.toString()),
+			vedleggsnr = "abcdef",
 		).build()
 
 		val skjemaDto = SkjemaDtoV2TestBuilder()
