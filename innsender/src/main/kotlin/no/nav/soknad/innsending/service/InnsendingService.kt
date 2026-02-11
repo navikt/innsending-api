@@ -279,29 +279,27 @@ class InnsendingService(
 		val tilleggsstonad = tilleggstonadService.isTilleggsstonad(soknad)
 		val mainDocumentAlt = if (tilleggsstonad) {
 			// Bytt ut hoveddokument variant med XML variant for tilleggstønadssøknad
-			mainDocumentAltContent.let {
-				val (jsonObj, xml) = tilleggstonadService.convert(soknad, mainDocumentAltContent)
-				val xmlFileMetadata = documentService.saveMainDocument(
-					fileStorageNamespace,
-					innsendingsId.toUUID(),
-					ByteArrayResource(it),
-					soknad.skjemanr,
-					Mimetype.applicationSlashXml,
-					soknad.spraak
-				)
+			val (jsonObj, xml) = tilleggstonadService.convert(soknad, mainDocumentAltContent)
+			val xmlFileMetadata = documentService.saveMainDocument(
+				fileStorageNamespace,
+				innsendingsId.toUUID(),
+				ByteArrayResource(xml),
+				soknad.skjemanr,
+				Mimetype.applicationSlashXml,
+				soknad.spraak
+			)
 
-				// Oppdater tema hvis aktuelt
-				tilleggstonadService.sjekkOgOppdaterTema(jsonObj, soknad)
+			// Oppdater tema hvis aktuelt
+			tilleggstonadService.sjekkOgOppdaterTema(jsonObj, soknad)
 
-				vedleggService.oppdaterHoveddokument(
-					soknad.id!!,
-					true,
-					Mimetype.applicationSlashXml,
-					xmlFileMetadata.filId.toUUID(),
-					OpplastingsStatus.LASTET_OPP,
-					xml,
-				)
-			}
+			vedleggService.oppdaterHoveddokument(
+				soknad.id!!,
+				true,
+				Mimetype.applicationSlashXml,
+				xmlFileMetadata.filId.toUUID(),
+				OpplastingsStatus.LASTET_OPP,
+				xml,
+			)
 		} else {
 			val jsonFileMetadata = documentService.saveMainDocument(
 				fileStorageNamespace,
