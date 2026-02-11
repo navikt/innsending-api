@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
+import no.nav.soknad.innsending.service.fillager.FileStorage
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
@@ -20,6 +21,7 @@ import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.hovedDokument
 import no.nav.soknad.innsending.util.models.hovedDokumentVariant
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
+import no.nav.soknad.innsending.util.stringextensions.toUUID
 import no.nav.soknad.innsending.util.validators.validerSoknadVedOppdatering
 import no.nav.soknad.innsending.util.validators.validerVedleggsListeVedOppdatering
 import org.slf4j.LoggerFactory
@@ -36,7 +38,8 @@ class SoknadService(
 	private val filService: FilService,
 	private val innsenderMetrics: InnsenderMetrics,
 	private val exceptionHelper: ExceptionHelper,
-	private val subjectHandler: SubjectHandlerInterface
+	private val subjectHandler: SubjectHandlerInterface,
+	private val fileStorage: FileStorage
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -231,6 +234,11 @@ class SoknadService(
 			throw IllegalActionException("Det kan ikke gjøres endring på en slettet eller innsendt søknad. Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den allerede er innsendt")
 
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettFilerForVedlegg(it.id!!) }
+		fileStorage.delete(
+			dokumentSoknadDto.getFileStorageNamespace(),
+			innsendingsId.toUUID(),
+			permanent = true
+		)
 		repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId, SoknadsStatus.AutomatiskSlettet))
 
 		logger.info("slettSoknadAutomatisk: Status for søknad $innsendingsId er satt til ${SoknadsStatus.AutomatiskSlettet}")
@@ -243,6 +251,11 @@ class SoknadService(
 
 		val dokumentSoknadDto = hentSoknad(innsendingsId)
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettFilerForVedlegg(it.id!!) }
+		fileStorage.delete(
+			dokumentSoknadDto.getFileStorageNamespace(),
+			innsendingsId.toUUID(),
+			permanent = true
+		)
 		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { repo.slettVedlegg(it.id!!) }
 		repo.slettSoknad(dokumentSoknadDto, HendelseType.SlettetPermanentAvSystem)
 

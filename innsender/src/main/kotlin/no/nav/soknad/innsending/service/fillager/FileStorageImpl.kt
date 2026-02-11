@@ -85,11 +85,15 @@ class FileStorageImpl(
 		fileId: UUID?,
 		permanent: Boolean
 	): Boolean {
-		return getBlobs(namespace, innsendingsId)
+		val (deleteCount, failedCount) = getBlobs(namespace, innsendingsId)
 			.filter { attachmentId == null || it.metadata?.get("vedleggId") == attachmentId }
 			.filter { fileId == null || it.metadata?.get("filId") == fileId.toString() }
 			.map { blob -> delete(innsendingsId, blob, permanent) }
-			.any { it }
+			.partition { it }
+		if (fileId == null && (deleteCount.isNotEmpty() || failedCount.isNotEmpty())) {
+			logger.info("$innsendingsId: Sletting av ${deleteCount.size} filer fullført, ${failedCount.size} feilet (permanent=$permanent)")
+		}
+		return deleteCount.isNotEmpty()
 	}
 
 	private fun delete(innsendingsId: UUID, blob: Blob, permanent: Boolean): Boolean {

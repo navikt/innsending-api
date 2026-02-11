@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
+import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
@@ -232,6 +233,15 @@ fun SoknadDbData.createMainDocument(variant: Boolean = false): VedleggDbData {
 		opplastingsvalgkommentar = null,
 		fileIds = null,
 	)
+}
+
+fun DokumentSoknadDto.getFileStorageNamespace(): FileStorageNamespace = this.visningsType.getFileStorageNamespace()
+
+fun VisningsType?.getFileStorageNamespace(): FileStorageNamespace {
+	return when (this) {
+		VisningsType.nologin -> FileStorageNamespace.NOLOGIN
+		else -> FileStorageNamespace.DIGITAL
+	}
 }
 
 fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>, avsenderDto: AvsenderDto, brukerDto: BrukerDto?): Innsending {

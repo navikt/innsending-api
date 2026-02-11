@@ -256,10 +256,7 @@ class InnsendingService(
 			)
 		}
 
-		val fileStorageNamespace = when (soknad.visningsType) {
-			VisningsType.nologin -> FileStorageNamespace.NOLOGIN
-			else -> FileStorageNamespace.DIGITAL
-		}
+		val fileStorageNamespace = soknad.getFileStorageNamespace()
 		val mainDocument = mainDocumentContent.let {
 			val fileMetadata = documentService.saveMainDocument(
 				fileStorageNamespace,
@@ -773,10 +770,7 @@ class InnsendingService(
 				val vedleggDto = soknadVedlegg.first { it.uuid == vedleggUuid }
 				val document = if (vedleggDto.fileIds.isNullOrEmpty()) null else {
 					logger.info("$innsendingId: Henter filer for vedlegg med uuid $vedleggUuid, filIds: ${vedleggDto.fileIds}")
-					val namespace = when (visningsType) {
-						VisningsType.nologin -> FileStorageNamespace.NOLOGIN
-						else -> FileStorageNamespace.DIGITAL
-					}
+					val namespace = visningsType.getFileStorageNamespace()
 					documentService.mergeFiles(namespace, innsendingId.toUUID(), vedleggDto.fileIds)
 				}
 				vedleggDto.toDto(document)
