@@ -35,7 +35,7 @@ class NologinSoknadService(
 	private val repo: RepositoryUtils,
 	private val vedleggService: VedleggService,
 	private val filService: FilService,
-	private val fillagerService: DocumentService,
+	private val documentService: DocumentService,
 	private val innsenderMetrics: InnsenderMetrics,
 	private val exceptionHelper: ExceptionHelper,
 	private val soknadService: SoknadService,
@@ -159,8 +159,11 @@ class NologinSoknadService(
 		// for hver fil hent og opprett nytt innslag i fil tabellen
 		val innsendingsId = soknadDto.innsendingsId!!.toUUID()
 		opplastedeFiler.forEach { fileId ->
-			val filSomSkalKopieres =
-				fillagerService.getFile(FileStorageNamespace.NOLOGIN, innsendingsId, fileId = fileId.toUUID())
+			val filSomSkalKopieres = documentService.getFile(
+				FileStorageNamespace.NOLOGIN,
+				innsendingsId,
+				fileId = fileId.toUUID()
+			)
 			if (filSomSkalKopieres?.innhold == null || filSomSkalKopieres.innhold.isEmpty()) {
 				throw IllegalActionException(
 					"Fant ikke fil med id=${fileId} for vedlegg med id=$vedleggsRef",
