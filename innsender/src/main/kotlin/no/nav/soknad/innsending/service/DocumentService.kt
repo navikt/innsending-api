@@ -83,7 +83,7 @@ class DocumentService(
 	}
 
 	fun deleteAttachment(namespace: FileStorageNamespace, innsendingsId: UUID, attachmentId: String? = null, fileId: UUID? = null): Boolean {
-		return fileStorage.delete(namespace, innsendingsId, attachmentId, fileId)
+		return fileStorage.delete(namespace, innsendingsId, attachmentId, fileId) > 0
 	}
 
 	fun mergeFiles(namespace: FileStorageNamespace, innsendingsId: UUID, fileIds: List<UUID>): ByteArray? {

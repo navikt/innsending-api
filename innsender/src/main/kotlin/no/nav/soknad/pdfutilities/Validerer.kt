@@ -67,7 +67,6 @@ class Validerer {
 	}
 
 	fun validereAntallSider(antallSider: Int, maxAntallSider: Int = 200) {
-		logger.info("Sjekke at $antallSider < $maxAntallSider")
 		if (antallSider > maxAntallSider) {
 			logger.warn("Opplastet fil med $antallSider sider overskrider $maxAntallSider")
 			throw IllegalActionException(

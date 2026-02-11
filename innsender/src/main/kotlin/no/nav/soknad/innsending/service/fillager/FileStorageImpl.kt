@@ -84,7 +84,7 @@ class FileStorageImpl(
 		attachmentId: String?,
 		fileId: UUID?,
 		permanent: Boolean
-	): Boolean {
+	): Int {
 		val (deleteCount, failedCount) = getBlobs(namespace, innsendingsId)
 			.filter { attachmentId == null || it.metadata?.get("vedleggId") == attachmentId }
 			.filter { fileId == null || it.metadata?.get("filId") == fileId.toString() }
@@ -93,7 +93,7 @@ class FileStorageImpl(
 		if (fileId == null && (deleteCount.isNotEmpty() || failedCount.isNotEmpty())) {
 			logger.info("$innsendingsId: Sletting av ${deleteCount.size} filer fullført, ${failedCount.size} feilet (permanent=$permanent)")
 		}
-		return deleteCount.isNotEmpty()
+		return deleteCount.size
 	}
 
 	private fun delete(innsendingsId: UUID, blob: Blob, permanent: Boolean): Boolean {
@@ -126,12 +126,22 @@ class FileStorageImpl(
 		return blobs.map { File(if (skipContent) null else storage.readAllBytes(it.blobId), it.toMetadataDto()) }
 	}
 
+	override fun getFilesCreatedBefore(namespace: FileStorageNamespace, dt: OffsetDateTime): List<FileMetadata> {
+		logger.info("Henter filer i namespace ${namespace.value} opprettet tidligere enn $dt")
+		return getBlobs(namespace.value)
+			.filter { it.createTimeOffsetDateTime.isBefore(dt) }
+			.map { it.toMetadataDto() }
+	}
+
 	private fun getBlobs(namespace: FileStorageNamespace, innsendingsId: UUID, includeDeleted: Boolean = false): List<Blob> {
-		val prefix = "${namespace.value}/$innsendingsId/"
-		val blobs = storage.list(bucket, Storage.BlobListOption.prefix(prefix))
-		return blobs.iterateAll()
+		return getBlobs("${namespace.value}/$innsendingsId/")
 			.toList()
-			.filter { includeDeleted || it.metadata?.get("status") != FilStatus.SLETTET.value}
+			.filter { includeDeleted || it.metadata?.get("status") != FilStatus.SLETTET.value }
+	}
+
+	private fun getBlobs(prefix: String): List<Blob> {
+		val blobs = storage.list(bucket, Storage.BlobListOption.prefix(prefix))
+		return blobs.iterateAll().toList()
 	}
 }
 

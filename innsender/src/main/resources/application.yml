@@ -43,8 +43,9 @@ cron:
   slettPermanentEldreEnn: 183
   # Kjører hvert 10. minutt
   runVerifyArchivedApplications: 0 0,10,20,30,40,50 * * * *
-
   runOnceAtSpecificTime: 0 0 11 7 4 *
+  nologinDeleteUnsubmittedCron: 0 30 1 * * *
+  nologinDeleteUnsubmittedOlderThanDays: 2
 
 bidrag_applikasjon: 1
 

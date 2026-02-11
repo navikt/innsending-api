@@ -185,3 +185,6 @@ class Hjelpemetoder {
 	}
 }
 
+fun ByteArray.asResource(): org.springframework.core.io.Resource {
+	return org.springframework.core.io.ByteArrayResource(this)
+}

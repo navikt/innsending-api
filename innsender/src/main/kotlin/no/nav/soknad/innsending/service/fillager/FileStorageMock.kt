@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.service.fillager
 
-import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
@@ -61,16 +60,19 @@ class FileStorageMock : FileStorage {
 		attachmentId: String?,
 		fileId: UUID?,
 		permanent: Boolean
-	): Boolean {
+	): Int {
 		val keyPrefix = "${namespace.value}/$innsendingsId"
 		val removedKeys = mockBucket.keys.filter { it.startsWith(keyPrefix) }
 			.filter { blobName -> attachmentId == null || mockBucket[blobName]?.first?.vedleggId == attachmentId }
 			.filter { blobName -> fileId == null || mockBucket[blobName]?.first?.filId == fileId.toString() }
 			.also { logger.info("$innsendingsId: Sletter ${it.size} filer for vedlegg $attachmentId") }
 			.mapNotNull { mockBucket.remove(it) }
-		return removedKeys.isNotEmpty()
+		return removedKeys.size
 	}
 
+	override fun getFilesCreatedBefore(namespace: FileStorageNamespace, dt: OffsetDateTime): List<FileMetadata> {
+		return mockBucket.values.map { it.first }.filter { it.createdAt.isBefore(dt) }
+	}
 
 	override fun getAllFiles(
 		namespace: FileStorageNamespace,

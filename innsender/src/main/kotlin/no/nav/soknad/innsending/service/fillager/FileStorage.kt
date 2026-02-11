@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.service.fillager
 
 import no.nav.soknad.innsending.model.Mimetype
+import java.time.OffsetDateTime
 import java.util.UUID
 
 interface FileStorage {
@@ -9,9 +10,11 @@ interface FileStorage {
 
 	fun getFile(namespace: FileStorageNamespace, innsendingsId: UUID, fileId: UUID): File?
 
-	fun delete(namespace: FileStorageNamespace, innsendingsId: UUID, attachmentId: String? = null, fileId: UUID? = null, permanent: Boolean = false): Boolean
+	fun delete(namespace: FileStorageNamespace, innsendingsId: UUID, attachmentId: String? = null, fileId: UUID? = null, permanent: Boolean = false): Int
 
 	fun getAllFiles(namespace: FileStorageNamespace, innsendingsId: UUID, fileIds: List<UUID>, skipContent: Boolean = false): List<File>
+
+	fun getFilesCreatedBefore(namespace: FileStorageNamespace, dt: OffsetDateTime): List<FileMetadata>
 
 }
 
