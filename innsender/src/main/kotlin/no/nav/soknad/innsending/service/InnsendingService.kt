@@ -389,7 +389,7 @@ class InnsendingService(
 		)
 	}
 
-	@Transactional(propagation = Propagation.REQUIRED, timeout = TRANSACTION_TIMEOUT)
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): Pair<KvitteringsDto, DokumentSoknadDto?> {
 		val brukerId = soknadDtoInput.brukerId
 		if (brukerId.isNullOrEmpty()) {
