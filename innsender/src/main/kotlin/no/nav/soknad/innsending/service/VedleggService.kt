@@ -361,7 +361,7 @@ class VedleggService(
 					tittel = attachment.title ?: attachment.label,
 					label = attachment.label,
 					beskrivelse = attachment.description,
-					mimetype = Mimetype.applicationSlashPdf.toString(),
+					mimetype = mapTilDbMimetype(Mimetype.applicationSlashPdf),
 					uuid = UUID.randomUUID().toString(),
 					opprettetdato = LocalDateTime.now(),
 					endretdato = LocalDateTime.now(),

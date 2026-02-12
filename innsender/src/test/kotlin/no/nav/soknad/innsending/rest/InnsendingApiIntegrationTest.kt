@@ -145,6 +145,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertEquals(innsendingsId, slotSoknad.captured.innsendingsId)
 		val innsendteDokumenter = slotVedleggsliste.captured
 		assertEquals(4, innsendteDokumenter.size)
+		assertTrue(innsendteDokumenter.all { it.mimetype != null })
 
 		val innsendingskvittering = innsendteDokumenter.firstOrNull { it.vedleggsnr == Constants.KVITTERINGS_NR }
 		assertNotNull(innsendingskvittering)
@@ -284,6 +285,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertEquals(innsendingsId, slotSoknad.captured.innsendingsId)
 		val innsendteDokumenter = slotVedleggsliste.captured
 		assertEquals(4, innsendteDokumenter.size)
+		assertTrue(innsendteDokumenter.all { it.mimetype != null })
 
 		val innsendtM2 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "M2" }
 		assertNotNull(innsendtM2)
@@ -395,6 +397,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertEquals(innsendingsId, slotSoknad.captured.innsendingsId)
 		val innsendteDokumenter = slotVedleggsliste.captured
 		assertEquals(5, innsendteDokumenter.size)
+		assertTrue(innsendteDokumenter.all { it.mimetype != null })
 
 		val innsendtM2 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "M2" }
 		assertNotNull(innsendtM2)
@@ -526,6 +529,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertEquals(innsendingsId, slotSoknad.captured.innsendingsId)
 		val innsendteDokumenter = slotVedleggsliste.captured
 		assertEquals(4, innsendteDokumenter.size)
+		assertTrue(innsendteDokumenter.all { it.mimetype != null })
 
 		val innsendtM2 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "M2" }
 		assertNotNull(innsendtM2)
