@@ -48,6 +48,13 @@ class NologinSoknadService(
 		submitApplicationRequest: SubmitApplicationRequest,
 		applikasjon: String
 	): ApplicationSubmissionResponse {
+		if (repo.existsByInnsendingsId(innsendingsId.toString())) {
+			throw IllegalActionException(
+				message = "Søknad med innsendingsId $innsendingsId finnes allerede",
+				errorCode = ErrorCode.SOKNAD_ALREADY_EXISTS
+			)
+		}
+
 		val dbSoknad = repo.lagreSoknad(submitApplicationRequest.toDokumentSoknadDto(innsendingsId, applikasjon))
 		repo.lagreVedlegg(dbSoknad.createMainDocument())
 		repo.lagreVedlegg(dbSoknad.createMainDocument(true))

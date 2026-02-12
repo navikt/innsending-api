@@ -543,12 +543,13 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		formNumber: String = "NAV 11-12.15B",
 		title: String = "Søknad om testing",
 		tema: String = "BIL",
-		brukerId: String = TokenGenerator.subject,
+		brukerId: String? = TokenGenerator.subject,
 		attachments: List<AttachmentDto>? = null,
 		language: String = "nb",
 		mainDocumentPath: String = "/litenPdf.pdf",
 		mainDocumentAltPath: String = "/__files/barnepass-NAV-11-12.15B.json",
 		authToken: String? = null,
+		avsender: AvsenderDto? = null
 	): InnsendingApiResponse<ApplicationSubmissionResponse> {
 		val token: String = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("nologin-access"))
 		val headers = Hjelpemetoder.createHeaders(token, MediaType.APPLICATION_JSON)
@@ -564,7 +565,7 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 			mainDocumentAlt = mainDocumentAltByteArray,
 			attachments = attachments,
 			bruker = brukerId,
-			avsender = AvsenderDto(navn = "Test Navn"),
+			avsender = avsender,
 		)
 		val httpEntity = HttpEntity(request, headers)
 
@@ -579,6 +580,7 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		return InnsendingApiResponse(response.statusCode, body, response.headers)
 	}
 
+	@Deprecated("Is replaced by submitNologinApplication")
 	fun sendInnNologinSoknad(skjemaDto: SkjemaDtoV2): InnsendingApiResponse<KvitteringsDto> {
 		val token = TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("nologin-access"))
 		val response = restTemplate.exchange(

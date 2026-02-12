@@ -1,16 +1,14 @@
-package no.nav.soknad.innsending.rest.application
+package no.nav.soknad.innsending.rest.fyllut
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.NologinApplicationApi
+import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.ApplicationSubmissionResponse
 import no.nav.soknad.innsending.model.FileDto
 import no.nav.soknad.innsending.model.SubmitApplicationRequest
-import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.DocumentService
-import no.nav.soknad.innsending.service.InnsendingService
 import no.nav.soknad.innsending.service.NologinSoknadService
-import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.service.config.annotation.VerifyConfigValue
 import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
@@ -23,7 +21,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
-import java.util.*
+import java.util.UUID
 
 @RestController
 @ProtectedWithClaims(
@@ -31,10 +29,9 @@ import java.util.*
 	claimMap = ["roles=nologin-access"],
 )
 class NologinApplicationRestApi(
-	private val documentService: DocumentService,
-	private val innsendingService: InnsendingService,
-	private val subjectHandler: SubjectHandlerInterface,
-	private val nologinSoknadService: NologinSoknadService,
+    private val documentService: DocumentService,
+    private val subjectHandler: SubjectHandlerInterface,
+    private val nologinSoknadService: NologinSoknadService,
 ) : NologinApplicationApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -43,14 +40,14 @@ class NologinApplicationRestApi(
 		config = ConfigDefinition.NOLOGIN_MAIN_SWITCH,
 		value = "on",
 		httpStatus = HttpStatus.SERVICE_UNAVAILABLE,
-		errorCode = no.nav.soknad.innsending.exceptions.ErrorCode.TEMPORARILY_UNAVAILABLE,
+		errorCode = ErrorCode.TEMPORARILY_UNAVAILABLE,
 		message = "NOLOGIN is not available"
 	)
 	@Timed(InnsenderOperation.LAST_OPP_NOLOGIN)
 	override fun uploadNologinAttachmentFile(
-		innsendingsId: UUID,
-		attachmentId: String,
-		file: MultipartFile
+        innsendingsId: UUID,
+        attachmentId: String,
+        file: MultipartFile
 	): ResponseEntity<FileDto> {
 		val metadata = documentService.saveAttachment(
 			namespace = FileStorageNamespace.NOLOGIN,
@@ -65,9 +62,9 @@ class NologinApplicationRestApi(
 
 	@Timed(InnsenderOperation.SLETT_FIL_NOLOGIN)
 	override fun deleteNologinAttachmentFile(
-		innsendingsId: UUID,
-		attachmentId: String,
-		fileId: UUID
+        innsendingsId: UUID,
+        attachmentId: String,
+        fileId: UUID
 	): ResponseEntity<Unit> {
 		documentService.deleteAttachment(
 			namespace = FileStorageNamespace.NOLOGIN,
@@ -92,13 +89,13 @@ class NologinApplicationRestApi(
 		config = ConfigDefinition.NOLOGIN_MAIN_SWITCH,
 		value = "on",
 		httpStatus = HttpStatus.SERVICE_UNAVAILABLE,
-		errorCode = no.nav.soknad.innsending.exceptions.ErrorCode.TEMPORARILY_UNAVAILABLE,
+		errorCode = ErrorCode.TEMPORARILY_UNAVAILABLE,
 		message = "NOLOGIN is not available"
 	)
 	@Timed(InnsenderOperation.SEND_INN_NOLOGIN)
 	override fun submitNologinApplication(
-		innsendingsId: UUID,
-		submitApplicationRequest: SubmitApplicationRequest
+        innsendingsId: UUID,
+        submitApplicationRequest: SubmitApplicationRequest
 	): ResponseEntity<ApplicationSubmissionResponse> {
 		val clientId = subjectHandler.getClientId()
 		logger.info("$innsendingsId: Kall for å sende inn søknad av uinnlogget bruker (applikasjon $clientId)")
