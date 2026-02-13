@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.rest.validering.removeInvalidControlCharacters
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.SoknadService
@@ -90,8 +91,11 @@ class VedleggRestApi(
 		)
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
-		if ((patchVedleggDto.opplastingsStatus == OpplastingsStatusDto.IkkeValgt || patchVedleggDto.opplastingsStatus == OpplastingsStatusDto.LastetOpp)
-			&& soknadDto.vedleggsListe.first { it.id == vedleggsId }.opplastingsStatus != patchVedleggDto.opplastingsStatus
+
+		val validatedInput = patchVedleggDto.copy(tittel = removeInvalidControlCharacters("tittel", patchVedleggDto.tittel))
+
+		if ((validatedInput.opplastingsStatus == OpplastingsStatusDto.IkkeValgt || validatedInput.opplastingsStatus == OpplastingsStatusDto.LastetOpp)
+			&& soknadDto.vedleggsListe.first { it.id == vedleggsId }.opplastingsStatus != validatedInput.opplastingsStatus
 		) {
 
 			val opplastetPaVedlegg: Long = filService.finnFilStorrelseSum(soknadDto, vedleggsId)
@@ -105,7 +109,7 @@ class VedleggRestApi(
 				ErrorCode.FILE_SIZE_SUM_TOO_LARGE
 			)
 		}
-		if (!patchVedleggDto.tittel.isNullOrEmpty()) {
+		if (!validatedInput.tittel.isNullOrEmpty()) {
 			Validerer().validerStorrelse(
 				innsendingsId,
 				0L,
@@ -114,7 +118,7 @@ class VedleggRestApi(
 				ErrorCode.TITLE_STRING_TOO_LONG
 			)
 		}
-		val vedleggDto = vedleggService.endreVedlegg(patchVedleggDto, vedleggsId, soknadDto)
+		val vedleggDto = vedleggService.endreVedlegg(validatedInput, vedleggsId, soknadDto)
 		combinedLogger.log("$innsendingsId: Lagret vedlegg ${vedleggDto.id} til søknad", brukerId)
 
 		return ResponseEntity
@@ -130,7 +134,12 @@ class VedleggRestApi(
 		combinedLogger.log("$innsendingsId: Kall for å lagre vedlegg til søknad", brukerId)
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
-		val vedleggDto = vedleggService.leggTilVedlegg(soknadDto, postVedleggDto)
+		val validatedInput = if (postVedleggDto != null)
+			postVedleggDto.copy(tittel = removeInvalidControlCharacters("tittel", postVedleggDto.tittel))
+		else
+			postVedleggDto
+
+		val vedleggDto = vedleggService.leggTilVedlegg(soknadDto, validatedInput)
 
 		combinedLogger.log("$innsendingsId: Lagret vedlegg ${vedleggDto.id} til søknad", brukerId)
 

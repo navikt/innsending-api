@@ -93,6 +93,34 @@ class VedleggRestApiTest : ApplicationTest() {
 		assertEquals("Sendes av min fastlege", patchedVedleggDto.opplastingsValgKommentar)
 	}
 
+
+	@Test
+	fun `Validerer tekst input`() {
+		val skjemanr = defaultSkjemanr
+		val spraak = "nb_NO"
+		val vedlegg = emptyList<String>()
+
+		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		val opprettetSoknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
+		assertTrue(opprettetSoknadDto.vedleggsListe.isNotEmpty())
+
+		val vedleggsTittel = "Nytt vedlegg"+"\u0000"
+		val postVedleggDto = PostVedleggDto(vedleggsTittel)
+		val postVedleggRequestEntity = HttpEntity(postVedleggDto, Hjelpemetoder.createHeaders(token))
+		val postVedleggResponse = restTemplate.exchange(
+			"http://localhost:${serverPort}/frontend/v1/soknad/${opprettetSoknadDto.innsendingsId}/vedlegg", HttpMethod.POST,
+			postVedleggRequestEntity, VedleggDto::class.java
+		)
+
+		assertTrue(postVedleggResponse.statusCode.is2xxSuccessful )
+		val vedleggDto = postVedleggResponse.body
+		assertTrue { vedleggDto != null }
+		assertEquals(vedleggsTittel.substring(0,vedleggsTittel.length-1), vedleggDto!!.tittel)
+
+	}
+
+
 	private fun opprettEnSoknad(
 		skjemanr: String,
 		spraak: String,
