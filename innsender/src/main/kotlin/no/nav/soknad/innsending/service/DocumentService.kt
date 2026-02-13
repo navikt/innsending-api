@@ -33,9 +33,9 @@ class DocumentService(
 			antivirusEnabled = true,
 		)
 		val fileName = fil.filename ?: "$innsendingsId-$vedleggId$filtype"
-		val filinnholdBytes = fil.contentAsByteArray
-		val (filinnhold, antallSider) = konverterTilPdf.tilPdf(
-			filinnholdBytes,
+		val originalFileContent = fil.contentAsByteArray
+		val (fileContentAsPdf, antallSider) = konverterTilPdf.tilPdf(
+			originalFileContent,
 			innsendingsIdString,
 			filtype,
 			fileName,
@@ -45,7 +45,7 @@ class DocumentService(
 		innsenderMetrics.setFileNumberOfPages(antallSider.toLong())
 
 		logger.info("$innsendingsId: Fil validert ok og konvertert til pdf (filtype: $filtype, antall sider: $antallSider)")
-		return fileStorage.save(namespace, filinnhold, BlobMetadata(
+		return fileStorage.save(namespace, fileContentAsPdf, BlobMetadata(
 			fileName = fileName,
 			attachmentId = vedleggId,
 			innsendingsId = innsendingsId,
@@ -62,10 +62,10 @@ class DocumentService(
 			Mimetype.applicationSlashXml -> ".xml"
 			else -> throw IllegalArgumentException("Ugyldig mimetype for hoveddokument: $mimetype")
 		}
-		val fileName = "hoveddokument-$skjemanr-$innsendingsId$fileType"
-		logger.info("$innsendingsId: Lagrer hoveddokument med filnavn=$fileName og mimetype=$mimetype")
+		val generatedFileName = "hoveddokument-$skjemanr-$innsendingsId$fileType"
+		logger.info("$innsendingsId: Lagrer hoveddokument med filnavn=$generatedFileName og mimetype=$mimetype")
 		return fileStorage.save(namespace, fil.contentAsByteArray, BlobMetadata(
-			fileName = fileName,
+			fileName = generatedFileName,
 			attachmentId = skjemanr,
 			innsendingsId = innsendingsId,
 			fileType = fileType,
