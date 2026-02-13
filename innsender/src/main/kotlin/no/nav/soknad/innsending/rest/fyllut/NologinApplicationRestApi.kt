@@ -49,6 +49,7 @@ class NologinApplicationRestApi(
         attachmentId: String,
         file: MultipartFile
 	): ResponseEntity<FileDto> {
+		logger.info("$innsendingsId: Kall for legge til fil for vedlegg $attachmentId")
 		val metadata = documentService.saveAttachment(
 			namespace = FileStorageNamespace.NOLOGIN,
 			fil = file.resource,
@@ -66,6 +67,7 @@ class NologinApplicationRestApi(
         attachmentId: String,
         fileId: UUID
 	): ResponseEntity<Unit> {
+		logger.info("$innsendingsId: Kall for å slette fil $fileId for vedlegg $attachmentId")
 		documentService.deleteAttachment(
 			namespace = FileStorageNamespace.NOLOGIN,
 			innsendingsId = innsendingsId,
@@ -77,6 +79,7 @@ class NologinApplicationRestApi(
 
 	@Timed(InnsenderOperation.SLETT_FILER_NOLOGIN)
 	override fun deleteNologinAttachment(innsendingsId: UUID, attachmentId: String): ResponseEntity<Unit> {
+		logger.info("$innsendingsId: Kall for å slette alle filer for vedlegg $attachmentId")
 		documentService.deleteAttachment(
 			namespace = FileStorageNamespace.NOLOGIN,
 			innsendingsId = innsendingsId,
