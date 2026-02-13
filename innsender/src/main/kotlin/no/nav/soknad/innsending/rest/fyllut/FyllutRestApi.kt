@@ -243,6 +243,7 @@ class FyllutRestApi(
 		return ResponseEntity.status(HttpStatus.OK).body(aktiviteter)
 	}
 
+	@Timed(InnsenderOperation.SEND_INN)
 	override fun submitDigitalApplication(
 		innsendingsId: UUID,
 		submitApplicationRequest: SubmitApplicationRequest,

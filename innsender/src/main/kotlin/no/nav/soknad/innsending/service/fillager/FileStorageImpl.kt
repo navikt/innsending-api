@@ -90,8 +90,10 @@ class FileStorageImpl(
 			.filter { fileId == null || it.metadata?.get("filId") == fileId.toString() }
 			.map { blob -> delete(innsendingsId, blob, permanent) }
 			.partition { it }
-		if (fileId == null && (deleteCount.isNotEmpty() || failedCount.isNotEmpty())) {
-			logger.info("$innsendingsId: Sletting av ${deleteCount.size} filer fullført, ${failedCount.size} feilet (permanent=$permanent)")
+		if (deleteCount.isEmpty() && failedCount.isEmpty()) {
+			logger.info("$innsendingsId: Ingen filer funnet for sletting (attachmentId=$attachmentId, fileId=$fileId, permanent=$permanent)")
+		} else if (fileId == null) {
+			logger.info("$innsendingsId: Sletting av ${deleteCount.size} filer fullført, ${failedCount.size} feilet (attachmentId=$attachmentId, permanent=$permanent)")
 		}
 		return deleteCount.size
 	}

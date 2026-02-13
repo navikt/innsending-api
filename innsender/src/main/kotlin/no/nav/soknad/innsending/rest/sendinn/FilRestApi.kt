@@ -177,6 +177,7 @@ class FilRestApi(
 			.body(vedleggDto)
 	}
 
+	@Timed(InnsenderOperation.LAST_OPP)
 	override fun uploadAttachmentFile(
 		innsendingsId: UUID,
 		attachmentId: String,
@@ -203,6 +204,7 @@ class FilRestApi(
 			.body(filMetadata.toDto())
 	}
 
+	@Timed(InnsenderOperation.SLETT_FILER)
 	override fun deleteAttachment(innsendingsId: UUID, attachmentId: String): ResponseEntity<Unit> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		val innsendingsIdStr = innsendingsId.toString()
@@ -211,12 +213,10 @@ class FilRestApi(
 		hentOgValiderSoknad(innsendingsIdStr)
 
 		documentService.deleteAttachment(FileStorageNamespace.DIGITAL, innsendingsId, attachmentId)
-
-		combinedLogger.log("$innsendingsIdStr: Slettet vedlegg $attachmentId", brukerId)
-
 		return ResponseEntity.noContent().build()
 	}
 
+	@Timed(InnsenderOperation.LAST_NED)
 	override fun getAttachmentFile(innsendingsId: UUID, attachmentId: String, fileId: UUID): ResponseEntity<Resource> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		val innsendingsIdStr = innsendingsId.toString()
@@ -226,6 +226,7 @@ class FilRestApi(
 
 		val file = documentService.getFile(FileStorageNamespace.DIGITAL, innsendingsId, fileId)
 		if (file?.innhold == null) {
+			combinedLogger.log("$innsendingsIdStr: Fant ikke $fileId på vedlegg $attachmentId", brukerId)
 			return ResponseEntity.notFound().build()
 		}
 		val body = ByteArrayResource(file.innhold)
@@ -235,6 +236,7 @@ class FilRestApi(
 			.body(body)
 	}
 
+	@Timed(InnsenderOperation.SLETT_FIL)
 	override fun deleteAttachmentFile(innsendingsId: UUID, attachmentId: String, fileId: UUID): ResponseEntity<Unit> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		val innsendingsIdStr = innsendingsId.toString()
@@ -243,9 +245,6 @@ class FilRestApi(
 		hentOgValiderSoknad(innsendingsIdStr)
 
 		documentService.deleteAttachment(FileStorageNamespace.DIGITAL, innsendingsId, attachmentId, fileId)
-
-		combinedLogger.log("$innsendingsIdStr: Slettet fil $fileId på vedlegg $attachmentId", brukerId)
-
 		return ResponseEntity.noContent().build()
 	}
 
