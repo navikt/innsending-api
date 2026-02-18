@@ -7,6 +7,6 @@ private val logger = Logger.getLogger("no.nav.soknad.innsending.rest.validering.
 fun removeInvalidControlCharacters(key: String, input: String?): String? {
 	if (input == null) return null
 	val output = input.filterNot { ch -> ch == '\u0000' || (ch.isISOControl() && ch != '\n' && ch != '\r' && ch != '\t') }
-	if (output.length != input.length) logger.warn("Removed invalid control characters from input: $key")
+	if (output.length != input.length) logger.info("Removed invalid control characters from input")
 	return output
 }
