@@ -148,11 +148,11 @@ components:
         attachmentCode:
           $ref: "#/components/schemas/AttachmentCode"
         label:
-          description: Label of attachment
+          description: Label of attachment, which is visible to the user
           type: string
           example: Medisinsk dokumentasjon
         title:
-          description: Title of attachment
+          description: Title of attachment, which Nav has defined for this attachment code
           type: string
           example: Medisinsk dokumentasjon
         description:
