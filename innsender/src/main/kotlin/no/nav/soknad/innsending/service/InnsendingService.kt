@@ -223,6 +223,10 @@ class InnsendingService(
 		attachments: List<AttachmentDto>?,
 		avsender: AvsenderDto?,
 	): Pair<ApplicationSubmissionResponse, EttersendingsId?> {
+		val innsendingsId = soknad.innsendingsId!!
+		val allAttachments = attachments ?: emptyList()
+		logger.info("$innsendingsId: Starter innsending av skjema ${soknad.skjemanr}")
+
 		val brukerDto = if (soknad.brukerId.isNullOrEmpty()) null else BrukerDto(id = soknad.brukerId!!, idType = BrukerDto.IdType.FNR)
 		if (brukerDto == null && avsender == null) {
 			throw IllegalActionException(
@@ -238,9 +242,6 @@ class InnsendingService(
 			)
 		}
 
-		val innsendingsId = soknad.innsendingsId!!
-		val allAttachments = attachments ?: emptyList()
-
 		// validate attachments in request
 		val (attachmentsWithUploads, attachmentsWithoutUploads) = allAttachments.partition { it.uploadStatus == OpplastingsStatusDto.LastetOpp }
 		if (attachmentsWithUploads.any { attachment -> attachment.fileIds.isNullOrEmpty() }) {
@@ -255,7 +256,9 @@ class InnsendingService(
 				errorCode = ErrorCode.ILLEGAL_ARGUMENT
 			)
 		}
+		logger.info("$innsendingsId: ${attachmentsWithUploads.size} vedlegg har opplastede filer, ${attachmentsWithoutUploads.size} har ingen filer")
 
+		logger.info("$innsendingsId: Skal lagre hoveddokument")
 		val fileStorageNamespace = soknad.getFileStorageNamespace()
 		val mainDocument = mainDocumentContent.let {
 			val fileMetadata = documentService.saveMainDocument(
@@ -279,6 +282,7 @@ class InnsendingService(
 		val tilleggsstonad = tilleggstonadService.isTilleggsstonad(soknad)
 		val mainDocumentAlt = if (tilleggsstonad) {
 			// Bytt ut hoveddokument variant med XML variant for tilleggstønadssøknad
+			logger.info("$innsendingsId: Skal konvertere hoveddokument-variant til XML")
 			val (jsonObj, xml) = tilleggstonadService.convert(soknad, mainDocumentAltContent)
 			val xmlFileMetadata = documentService.saveMainDocument(
 				fileStorageNamespace,
@@ -288,6 +292,7 @@ class InnsendingService(
 				Mimetype.applicationSlashXml,
 				soknad.spraak
 			)
+			logger.info("$innsendingsId: Hovedokument-variant (xml) lagret med filId ${xmlFileMetadata.filId}")
 
 			// Oppdater tema hvis aktuelt
 			tilleggstonadService.sjekkOgOppdaterTema(jsonObj, soknad)
@@ -309,6 +314,7 @@ class InnsendingService(
 				Mimetype.applicationSlashJson,
 				soknad.spraak
 			)
+			logger.info("$innsendingsId: Hoveddokument-variant (json) lagret med filId ${jsonFileMetadata.filId}")
 			vedleggService.oppdaterHoveddokument(
 				soknad.id!!,
 				true,
@@ -322,6 +328,7 @@ class InnsendingService(
 		// verify that all files exists in bucket and validate total size
 		if (attachmentsWithUploads.isNotEmpty()) {
 			val fileIds = attachmentsWithUploads.flatMap { it.fileIds ?: emptyList() }.distinct()
+			logger.info("$innsendingsId: Skal validere ${attachmentsWithUploads.size} vedlegg som skal sendes inn, og henter metadata for totalt ${fileIds.size} fil(er)")
 			val filesMetadata = documentService.getFileMetadata(fileStorageNamespace, innsendingsId.toUUID(), fileIds)
 			if (fileIds.size != filesMetadata.size) {
 				val missingFileIds = fileIds.toSet() - filesMetadata.map { it.filId }.toSet()
@@ -352,6 +359,7 @@ class InnsendingService(
 			}
 		}
 
+		logger.info("$innsendingsId: Skal lagre ${allAttachments.size} vedlegg til db")
 		val savedAttachments = vedleggService.insertAllAttachments(soknad.id!!, allAttachments)
 
 		val uploadedAttachments = savedAttachments.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
