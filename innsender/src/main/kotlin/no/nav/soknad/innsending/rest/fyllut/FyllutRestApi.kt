@@ -257,7 +257,9 @@ class FyllutRestApi(
 		validerSoknadsTilgang(soknad)
 
 		if (soknad.erEttersending) {
-			// Støtter ikke innsending av ettersendinger fra FyllUt enda, må gå via SendInn
+			// Denne funksjonen støtter ikke innsending av ettersendinger fra FyllUt pga logikk rundt dummy-hoveddokument
+			// og at det må sjekkes om ettersendingssøknaden har endringer som kan sendes inn.
+			// Derfor må ettersendingssøknader fremdeles sendes inn fra SendInnFrontend.
 			return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
 		}
 
