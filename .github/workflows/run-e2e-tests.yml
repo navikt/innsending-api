@@ -49,3 +49,5 @@ jobs:
           sub_directory: system-tests
           skip_tests: false
           run_docker_build: false
+        env:
+          GITHUB_NAV_TOKEN: ${{ secrets.READER_TOKEN }}
