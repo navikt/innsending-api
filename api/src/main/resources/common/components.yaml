@@ -8,7 +8,7 @@ components:
 
     BrukerId:
       type: string
-      description: Ident til søker som har opprettet søknad i fyllUt tjenesten.
+      description: Fnr for bruker som har opprettet søknaden digitalt (hentet fra idporten-token), evt. fnr oppgitt manuelt i nologin-søknad.
       example: 12128012345
 
     Mimetype:
