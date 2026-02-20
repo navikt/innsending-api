@@ -17,9 +17,10 @@ import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
-import no.nav.soknad.innsending.util.dokumentsoknad.isMissingAndRequired
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.models.*
+import no.nav.soknad.innsending.util.models.vedleggdto.isMissingAndRequired
+import no.nav.soknad.innsending.util.models.vedleggdto.plus
 import no.nav.soknad.innsending.util.stringextensions.toUUID
 import no.nav.soknad.pdfutilities.AntallSider
 import no.nav.soknad.pdfutilities.PdfGenerator
@@ -390,7 +391,7 @@ class InnsendingService(
 		val savedAttachments = vedleggService.insertAllAttachments(soknad.id!!, allAttachments)
 
 		val uploadedAttachments = savedAttachments.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
-		val filesForSubmission = uploadedAttachments + mainDocument + mainDocumentAlt
+		val filesForSubmission = mainDocument + mainDocumentAlt + uploadedAttachments
 		soknadsmottakerAPI.sendInnSoknad(soknad, filesForSubmission, avsenderDto, brukerDto)
 
 		val submittedSoknad = soknadService.submit(innsendingsId, filesForSubmission)
