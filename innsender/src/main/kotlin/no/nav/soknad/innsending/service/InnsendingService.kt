@@ -12,7 +12,6 @@ import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
-import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants
@@ -28,7 +27,6 @@ import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
 import java.util.*
@@ -297,7 +295,7 @@ class InnsendingService(
 			// Oppdater tema hvis aktuelt
 			tilleggstonadService.sjekkOgOppdaterTema(jsonObj, soknad)
 
-			vedleggService.oppdaterHoveddokument(
+			val vedleggDtoXml = vedleggService.oppdaterHoveddokument(
 				soknad.id!!,
 				true,
 				Mimetype.applicationSlashXml,
@@ -305,6 +303,35 @@ class InnsendingService(
 				OpplastingsStatus.LASTET_OPP,
 				xml,
 			)
+
+			// Lagre json-variant av hoveddokumentet som backup
+			val jsonFileMetadata = documentService.saveMainDocument(
+				fileStorageNamespace,
+				innsendingsId.toUUID(),
+				ByteArrayResource(mainDocumentAltContent),
+				soknad.skjemanr,
+				Mimetype.applicationSlashJson,
+				soknad.spraak
+			)
+			logger.info("$innsendingsId: Tar vare på JSON-variant av hoveddokument (filId ${jsonFileMetadata.filId}) for tilleggstønadssøknad")
+			repo.hentSoknadDb(soknad.id!!).let { soknadDb ->
+				repo.lagreVedlegg(soknadDb.createMainDocument(true, OpplastingsStatus.SENDES_IKKE)).let { vedleggDb ->
+					repo.saveFilDbData(
+						innsendingsId, FilDbData(
+							id = null,
+							vedleggsid = vedleggDb.id!!,
+							storrelse = mainDocumentAltContent.size,
+							filnavn = jsonFileMetadata.filnavn,
+							mimetype = Mimetype.applicationSlashJson.value,
+							data = mainDocumentAltContent,
+							opprettetdato = vedleggDb.opprettetdato,
+							antallsider = 0,
+						)
+					)
+				}
+			}
+
+			vedleggDtoXml
 		} else {
 			val jsonFileMetadata = documentService.saveMainDocument(
 				fileStorageNamespace,
@@ -408,7 +435,7 @@ class InnsendingService(
 		val startSendInn = System.currentTimeMillis()
 
 		try {
-			val avsenderDto = AvsenderDto(id= brukerId, idType = AvsenderDto.IdType.FNR)
+			val avsenderDto = AvsenderDto(id= brukerId, idType = IdType.FNR)
 			val brukerDto = BrukerDto(id= brukerId, idType = BrukerDto.IdType.FNR)
 			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput, avsenderDto = avsenderDto, brukerDto = brukerDto)
 

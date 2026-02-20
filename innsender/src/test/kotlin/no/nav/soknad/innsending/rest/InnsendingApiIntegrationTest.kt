@@ -10,9 +10,9 @@ import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.service.NotificationService
-import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.mapping.tilleggsstonad.stotteTilBolig
 import no.nav.soknad.innsending.utils.Api
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoV2TestBuilder
@@ -40,9 +40,6 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 
 	@SpykBean
 	private lateinit var soknadsmottakerApi: MottakerAPITest
-
-	@Autowired
-	lateinit var soknadService: SoknadService
 
 	@SpykBean
 	private lateinit var notificationService: NotificationService
@@ -95,8 +92,9 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		)
 		api.utfyltSoknad(innsendingsId, updatedSoknad)
 
-		val savedSoknad = soknadService.hentSoknad(innsendingsId)
-		val vedleggsIdM2 = savedSoknad.vedleggsListe.first { it.vedleggsnr == vedleggsnrM2 }.id!!
+		val vedleggsIdM2 = api.getSoknadSendinn(innsendingsId)
+			.assertSuccess()
+			.body.vedleggsListe.first { it.vedleggsnr == vedleggsnrM2 }.id!!
 
 		// Last opp to filer til vedlegg M2
 		api.uploadFile(innsendingsId, vedleggsIdM2)
@@ -158,6 +156,91 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		val hoveddokumentListe = innsendteDokumenter.filter { it.erHoveddokument }
 		assertEquals(2, hoveddokumentListe.size)
 		assertTrue { hoveddokumentListe.all { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp } }
+
+		// verify fetching of files from soknadsarkiverer
+		innsendteDokumenter.forEach { submittedAttachment ->
+			val attachmentUuid = submittedAttachment.uuid!!
+			val files = api.hentInnsendteFiler(innsendingsId, listOf(attachmentUuid))
+				.assertSuccess()
+				.body
+			assertEquals(
+				1,
+				files.size,
+				"For attachment ${submittedAttachment.vedleggsnr}, expected to find exactly 1 file"
+			)
+			assertEquals(
+				SoknadFile.FileStatus.ok,
+				files[0].fileStatus,
+				"For attachment ${submittedAttachment.vedleggsnr}, expected file status to be ok"
+			)
+			assertNotNull(
+				files[0].content,
+				"For attachment ${submittedAttachment.vedleggsnr}, expected file content to be not null"
+			)
+		}
+	}
+
+	@Test
+	fun testTilleggstotteApplicationWithAttachmentFilesInDb() {
+		val skjemanr = stotteTilBolig
+		val skjematittel = "Tilleggsstønad - støtte til bolig og overnatting"
+		val hoveddokument =
+			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokument(skjemanr, withFile = true).build()
+		val mainDocumentAltPath = "/__files/TSR-NAV111219B-submission.json"
+		val hoveddokumentVariant =
+			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokumentVariant(
+				skjemanr,
+				withFile = true,
+				file = mainDocumentAltPath
+			).build()
+
+		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = skjemanr, tema = "TSR", tittel = skjematittel)
+			.medHoveddokument(hoveddokument)
+			.medHoveddokumentVariant(hoveddokumentVariant)
+			.build()
+
+		val soknad = api.createSoknad(skjemaDto)
+			.assertSuccess()
+			.body
+		val innsendingsId = soknad.innsendingsId!!
+
+		api.utfyltSoknad(innsendingsId, skjemaDto)
+		val kvittering = api.sendInnSoknad(innsendingsId)
+			.assertSuccess()
+			.body
+
+		assertNotNull(kvittering.hoveddokumentRef)
+
+		// verify invocation of soknadsmottaker
+		val slotSoknad = slot<DokumentSoknadDto>()
+		val slotVedleggsliste = slot<List<VedleggDto>>()
+		val slotAvsender = slot<AvsenderDto>()
+		val slotBruker = slot<BrukerDto?>()
+		verify(exactly = 1) {
+			soknadsmottakerApi.sendInnSoknad(
+				capture(slotSoknad),
+				capture(slotVedleggsliste),
+				capture(slotAvsender),
+				captureNullable(slotBruker)
+			)
+		}
+
+		assertEquals(innsendingsId, slotSoknad.captured.innsendingsId)
+		val innsendteDokumenter = slotVedleggsliste.captured
+		assertEquals(3, innsendteDokumenter.size)
+		assertTrue(innsendteDokumenter.all { it.mimetype != null })
+
+		val innsendingskvittering = innsendteDokumenter.firstOrNull { it.vedleggsnr == Constants.KVITTERINGS_NR }
+		assertNotNull(innsendingskvittering)
+
+		val hoveddokumentListe = innsendteDokumenter.filter { it.erHoveddokument }
+		assertEquals(2, hoveddokumentListe.size)
+		assertTrue { hoveddokumentListe.all { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp } }
+
+		val soknadspdf = hoveddokumentListe.first { !it.erVariant }
+		assertEquals(Mimetype.applicationSlashPdf, soknadspdf.mimetype)
+		val variant = hoveddokumentListe.first { it.erVariant }
+		assertEquals(Mimetype.applicationSlashXml, variant.mimetype)
 
 		// verify fetching of files from soknadsarkiverer
 		innsendteDokumenter.forEach { submittedAttachment ->
@@ -330,6 +413,126 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			.body
 		assertEquals(1, filesUnknownAttachment.size)
 		assertEquals(SoknadFile.FileStatus.notfound, filesUnknownAttachment[0].fileStatus)
+	}
+
+	@Test
+	fun testTilleggstonadApplicationWithAttachmentFilesInBucket() {
+		val skjemanr = stotteTilBolig
+		val skjematittel = "Tilleggsstønad - støtte til bolig og overnatting"
+		val hoveddokument =
+			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokument(skjemanr, withFile = false).build()
+		val mainDocumentAltPath = "/__files/TSR-NAV111219B-submission.json"
+		val hoveddokumentVariant =
+			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokumentVariant(
+				skjemanr,
+				withFile = true,
+				file = mainDocumentAltPath
+			).build()
+
+		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = skjemanr, tema = "TSR", tittel = skjematittel)
+			.medHoveddokument(hoveddokument)
+			.medHoveddokumentVariant(hoveddokumentVariant)
+			.build()
+
+		val soknad = api.createSoknad(skjemaDto)
+			.assertSuccess()
+			.body
+		val innsendingsId = soknad.innsendingsId!!
+
+		val fileM2 = api.uploadAttachmentFile(innsendingsId, "M2")
+			.assertSuccess()
+			.body
+
+		val attachments = listOf(
+			AttachmentDto(
+				attachmentCode = "M2",
+				"Medisinske utgifter",
+				OpplastingsStatusDto.LastetOpp,
+				fileIds = listOf(fileM2.id)
+			),
+		)
+		val submissionResponse = api.submitDigitalApplication(
+			soknad,
+			attachments,
+			mainDocumentAltPath = mainDocumentAltPath
+		)
+			.assertSuccess()
+			.body
+
+		// verify response
+		assertEquals(1, submissionResponse.attachments?.size)
+		assertEquals(
+			OpplastingsStatusDto.Innsendt,
+			submissionResponse.attachments?.first { it.attachmentCode == "M2" }?.uploadStatus
+		)
+		assertNull(submissionResponse.ettersendingsId)
+
+		// verify notifications
+		val slotEttersendingsId = mutableListOf<String>()
+		val slotNotificationOpts = mutableListOf<NotificationOptions>()
+		verify(exactly = 1) {
+			notificationService.create(
+				capture(slotEttersendingsId),
+				capture(slotNotificationOpts)
+			)
+		}
+		assertEquals(innsendingsId, slotEttersendingsId.firstOrNull())
+
+		verify(exactly = 1) { notificationService.close(innsendingsId) }
+
+		// verify invocation of soknadsmottaker
+		val slotSoknad = slot<DokumentSoknadDto>()
+		val slotVedleggsliste = slot<List<VedleggDto>>()
+		val slotAvsender = slot<AvsenderDto>()
+		val slotBruker = slot<BrukerDto?>()
+		verify(exactly = 1) {
+			soknadsmottakerApi.sendInnSoknad(
+				capture(slotSoknad),
+				capture(slotVedleggsliste),
+				capture(slotAvsender),
+				captureNullable(slotBruker)
+			)
+		}
+
+		assertEquals(innsendingsId, slotSoknad.captured.innsendingsId)
+		val innsendteDokumenter = slotVedleggsliste.captured
+		assertEquals(3, innsendteDokumenter.size)
+		assertTrue(innsendteDokumenter.all { it.mimetype != null })
+
+		val innsendtM2 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "M2" }
+		assertNotNull(innsendtM2)
+		assertEquals(OpplastingsStatusDto.LastetOpp, innsendtM2.opplastingsStatus)
+
+		val hoveddokumentListe = innsendteDokumenter.filter { it.erHoveddokument }
+		assertEquals(2, hoveddokumentListe.size)
+		assertTrue { hoveddokumentListe.all { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp } }
+
+		val soknadspdf = hoveddokumentListe.first { !it.erVariant }
+		assertEquals(Mimetype.applicationSlashPdf, soknadspdf.mimetype)
+		val variant = hoveddokumentListe.first { it.erVariant }
+		assertEquals(Mimetype.applicationSlashXml, variant.mimetype)
+
+		// verify fetching of files from soknadsarkiverer
+		innsendteDokumenter.forEach { submittedAttachment ->
+			val attachmentUuid = submittedAttachment.uuid!!
+			val files = api.hentInnsendteFiler(innsendingsId, listOf(attachmentUuid))
+				.assertSuccess()
+				.body
+			assertEquals(
+				1,
+				files.size,
+				"For attachment ${submittedAttachment.vedleggsnr}, expected to find exactly 1 file"
+			)
+			assertEquals(
+				SoknadFile.FileStatus.ok,
+				files[0].fileStatus,
+				"For attachment ${submittedAttachment.vedleggsnr}, expected file status to be ok"
+			)
+			assertNotNull(
+				files[0].content,
+				"For attachment ${submittedAttachment.vedleggsnr}, expected file content to be not null"
+			)
+		}
 	}
 
 	@Test

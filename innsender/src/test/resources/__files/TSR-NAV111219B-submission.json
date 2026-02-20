@@ -1,0 +1,55 @@
+{
+	"language": "nb-NO",
+	"data": {
+		"data": {
+			"dineOpplysninger": {
+				"fornavn": "Tørst",
+				"etternavn": "Mast",
+				"identitet": {
+					"identitetsnummer": "12345678901"
+				},
+				"adresse": {
+					"gyldigFraOgMed": "2022-02-16",
+					"adresse": "Storveien 1",
+					"postnummer": "2827",
+					"bySted": "HUNNDALEN",
+					"landkode": "NOR",
+					"land": {
+						"label": "Norge",
+						"value": "NO"
+					}
+				}
+			},
+			"aktiviteterOgMaalgruppe": {
+				"maalgruppe": {
+					"calculated": {
+						"maalgruppetype": "ANNET"
+					}
+				},
+				"aktivitet": {
+					"aktivitetId": "ingenAktivitet",
+					"text": "Ingen relevant aktivitet registrert på meg"
+				}
+			},
+			"hvilkeAdresserHarDuBoutgifterPa": {
+				"boutgifterPaAktivitetsadressen": true,
+				"boutgifterPaHjemstedet": false,
+				"boutgifterPaHjemstedetMittSomHarOpphortIForbindelseMedAktiviteten": false
+			},
+			"hvilkeBoutgifterSokerDuOmAFaDekket": "fasteBoutgifter",
+			"flervalg": {
+				"aapUforeNedsattArbEvne": false,
+				"ensligUtdanning": false,
+				"gjenlevendeUtdanning": false,
+				"tidligereFamiliepleier": false,
+				"annet": true
+			},
+			"startdatoDdMmAaaa": "2026-01-01",
+			"sluttdatoDdMmAaaa": "2026-01-31",
+			"mottarDuBostotteFraKommunen": "nei",
+			"boutgifterPaAktivitetsadressen": 5000,
+			"erDetMedisinskeForholdSomPavirkerUtgifteneDinePaAktivitetsstedet": "ja",
+			"tilleggsopplysninger1": "asdf"
+		}
+	}
+}

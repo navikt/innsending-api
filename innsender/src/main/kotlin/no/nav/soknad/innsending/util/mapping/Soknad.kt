@@ -209,12 +209,12 @@ fun SubmitApplicationRequest.toDokumentSoknadDto(innsendingsId: UUID, clientId: 
 	)
 }
 
-fun SoknadDbData.createMainDocument(variant: Boolean = false): VedleggDbData {
+fun SoknadDbData.createMainDocument(variant: Boolean = false, status: OpplastingsStatus = OpplastingsStatus.IKKE_VALGT): VedleggDbData {
 	return VedleggDbData(
 		id = null,
 		soknadsid = this.id!!,
 		vedleggsnr = this.skjemanr,
-		status = OpplastingsStatus.IKKE_VALGT,
+		status = status,
 		erhoveddokument = true,
 		ervariant = variant,
 		erpdfa = !variant,
