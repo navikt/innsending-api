@@ -15,6 +15,7 @@ import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.mapping.filmetadata.toDto
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -35,6 +36,7 @@ class NologinApplicationRestApi(
 ) : NologinApplicationApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
+	private val combinedLogger = CombinedLogger(logger)
 
 	@VerifyConfigValue(
 		config = ConfigDefinition.NOLOGIN_MAIN_SWITCH,
@@ -101,7 +103,11 @@ class NologinApplicationRestApi(
         submitApplicationRequest: SubmitApplicationRequest
 	): ResponseEntity<ApplicationSubmissionResponse> {
 		val clientId = subjectHandler.getClientId()
-		logger.info("$innsendingsId: Kall for å sende inn søknad av uinnlogget bruker (applikasjon $clientId)")
+		val brukerId = submitApplicationRequest.bruker
+			?: submitApplicationRequest.avsender?.id?.let { "$it (avsender)" }
+		  ?: submitApplicationRequest.avsender?.navn?.let { "$it (avsender)" }
+			?: "ukjent"
+		combinedLogger.log("$innsendingsId: Kall for å sende inn søknad av uinnlogget bruker (applikasjon $clientId)", brukerId)
 
 		val result = nologinSoknadService.lagreOgSendInnUinnloggetSoknad(innsendingsId, submitApplicationRequest, clientId)
 
