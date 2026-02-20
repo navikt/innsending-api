@@ -148,7 +148,7 @@ class DocumentServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `should handle deleting non-existent attachment`() {
+	fun `should save alternative main document`() {
 		val innsendingId = UUID.randomUUID()
 		val resource1 = loadResource("/sanity.json")
 
