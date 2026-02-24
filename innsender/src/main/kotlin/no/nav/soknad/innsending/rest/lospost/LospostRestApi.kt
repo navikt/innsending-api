@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.location.UrlHandler
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.LospostDto
 import no.nav.soknad.innsending.model.OpprettLospost
+import no.nav.soknad.innsending.rest.validering.removeInvalidControlCharacters
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.LospostService
 import no.nav.soknad.innsending.service.NotificationService
@@ -38,7 +39,11 @@ class LospostRestApi(
 		envQualifier: EnvQualifier?
 	): ResponseEntity<LospostDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
-		val (soknadTittel, tema, dokumentTittel, sprak) = opprettLospost
+		val validatedInput = opprettLospost.copy(
+			soknadTittel = removeInvalidControlCharacters("soknadTittel", opprettLospost.soknadTittel)!!,
+			dokumentTittel = removeInvalidControlCharacters("dokumentTittel", opprettLospost.dokumentTittel)!!
+		)
+		val (soknadTittel, tema, dokumentTittel, sprak) = validatedInput
 		combinedLogger.log("Skal opprette en innsending for løspost (tema $tema)", brukerId)
 
 		val lospost = lospostService.saveLospostInnsending(brukerId, tema, soknadTittel, dokumentTittel, sprak)

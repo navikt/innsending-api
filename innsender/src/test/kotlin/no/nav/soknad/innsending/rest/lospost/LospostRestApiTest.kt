@@ -240,6 +240,27 @@ class LospostRestApiTest : ApplicationTest() {
 		assertNull(notification.brukernotifikasjonInfo.utsettSendingTil)
 	}
 
+	@Test
+	fun `Should filter lospost input with illegal characters`() {
+		val tittel = "BIL - Førerkort" +"\u0000"
+		val dokumentTittel = "Førerkort" +"\u0000"
+		val request = OpprettLospost(
+			soknadTittel = tittel,
+			tema = "BIL",
+			dokumentTittel = dokumentTittel,
+			sprak = "nb"
+		)
+		val lospostDto = api.createLospost(request)
+			.assertSuccess()
+			.body
+
+		assertNotNull(lospostDto.innsendingsId)
+		assertEquals(request.soknadTittel.substring(0, tittel.length-1 ), lospostDto.tittel )
+		assertEquals(request.dokumentTittel.substring(0, dokumentTittel.length-1 ), lospostDto.vedleggsListe?.first()?.tittel )
+
+	}
+
+
 	fun loadFile10MB() = Hjelpemetoder.getBytesFromFile("/mellomstor-fra-jpg.pdf")
 
 	fun loadFile35MB() = Hjelpemetoder.getBytesFromFile("/mellomstorJpg.jpg")
