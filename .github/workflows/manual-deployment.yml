@@ -19,6 +19,12 @@ on:
           - prod
 
 jobs:
+  assemble-openapi-spec:
+    uses: ./.github/workflows/assemble-openapi-spec.yml
+    secrets: inherit
+    with:
+      force: true
+
   build-and-push:
     name: Build and push Docker container preprod
     runs-on: ubuntu-latest-8-cores
