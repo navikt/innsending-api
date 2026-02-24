@@ -1,8 +1,12 @@
 package no.nav.soknad.innsending.service
 
 import com.ninjasquad.springmockk.MockkBean
+import com.ninjasquad.springmockk.SpykBean
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
@@ -10,9 +14,11 @@ import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
+import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.PatchVedleggDto
 import no.nav.soknad.innsending.model.SoknadFile
+import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.Hjelpemetoder
@@ -52,8 +58,11 @@ class InnsendingServiceTest : ApplicationTest() {
 	@Autowired
 	private lateinit var tilleggstonadService: TilleggsstonadService
 
-	@Autowired
+	@SpykBean
 	private lateinit var ettersendingService: EttersendingService
+
+	@Autowired
+	private lateinit var documentService: DocumentService
 
 	@Autowired
 	private lateinit var exceptionHelper: ExceptionHelper
@@ -76,10 +85,12 @@ class InnsendingServiceTest : ApplicationTest() {
 		soknadsmottakerAPI = soknadsmottakerAPI,
 		restConfig = restConfig,
 		pdlInterface = pdlInterface,
+		documentService = documentService,
 	)
 
 	@BeforeEach
 	fun setup() {
+		clearAllMocks()
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("1234567890", "Kan", null, "Søke")
 		every { subjectHandler.getClientId() } returns "application"
 	}
@@ -106,6 +117,19 @@ class InnsendingServiceTest : ApplicationTest() {
 		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
 		assertTrue(kvitteringsDto.skalEttersendes!!.isNotEmpty())
 
+		val slotSoknad = slot<DokumentSoknadDto>()
+		val slotEttersendingsId = slot<String>()
+		val slotErSystemgenerert = slot<Boolean>()
+		verify(exactly = 1) {
+			ettersendingService.saveEttersending(
+				capture(slotSoknad),
+				capture(slotEttersendingsId),
+				capture(slotErSystemgenerert),
+			)
+		}
+		assertEquals(dokumentSoknadDto.innsendingsId, slotEttersendingsId.captured)
+		assertTrue(slotErSystemgenerert.captured)
+
 		assertThrows<IllegalActionException> {
 			vedleggService.leggTilVedlegg(dokumentSoknadDto, null)
 		}
@@ -120,7 +144,29 @@ class InnsendingServiceTest : ApplicationTest() {
 		// Så skal
 		assertEquals(1, hoveddok.size)
 		assertTrue(hoveddok.all { it.fileStatus == SoknadFile.FileStatus.ok })
+	}
 
+	@Test
+	fun testAtDetIkkeOpprettesEttersendingDersomIngenVedleggMangler() {
+		val innsendingService = lagInnsendingService(soknadService)
+		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, emptyList())
+
+		filService.lagreFil(
+			dokumentSoknadDto,
+			Hjelpemetoder.lagFilDtoMedFil(dokumentSoknadDto.vedleggsListe.first { it.erHoveddokument })
+		)
+
+		val kvitteringsDto = SoknadAssertions.testOgSjekkInnsendingAvSoknad(
+			soknadsmottakerAPI,
+			dokumentSoknadDto,
+			innsendingService
+		)
+
+		assertTrue(kvitteringsDto.hoveddokumentRef != null)
+		assertTrue(kvitteringsDto.innsendteVedlegg!!.isEmpty())
+		assertTrue(kvitteringsDto.skalEttersendes!!.isEmpty())
+
+		verify(exactly = 0) { ettersendingService.saveEttersending(any(), any(), any()) }
 	}
 
 	@Test

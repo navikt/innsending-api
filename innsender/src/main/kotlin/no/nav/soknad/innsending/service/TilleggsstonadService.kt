@@ -74,15 +74,7 @@ class TilleggsstonadService(
 				medFil = true
 			).first().data
 
-			val jsonObj: JsonApplication<*>
-			val xmlFile: ByteArray
-			if (soknadDto.skjemanr == kjoreliste) {
-				jsonObj = convertToJsonDrivingListJson(soknadDto = soknadDto, jsonFil)
-				xmlFile = json2Xml(jsonObj, soknadDto)
-			} else {
-				jsonObj = convertToJsonTilleggsstonad(soknadDto = soknadDto, jsonFil)
-				xmlFile = json2Xml(soknadDto = soknadDto, tilleggstonadJsonObj = jsonObj)
-			}
+			val (jsonObj: JsonApplication<*>, xmlFile: ByteArray) = convert(soknadDto, jsonFil)
 
 			// Persist created xml file
 			filService.lagreFil(
@@ -103,17 +95,40 @@ class TilleggsstonadService(
 				OpplastingsStatusDto.SendesIkke
 			)
 
-			// Based on skjemanumber and maalgruppe, it might be neccessary to change the application's tema from TSO to TSR
-			if (jsonObj.applicationDetails is JsonTilleggsstonad)
-				sjekkOgOppdaterTema(soknadDto, jsonObj.applicationDetails.maalgruppeinformasjon)
-			else if (jsonObj.applicationDetails is JsonDrivingListSubmission)
-				sjekkOgOppdaterTema(soknadDto,
-					jsonObj.applicationDetails.expensePeriodes?.tema, jsonObj.applicationDetails.maalgruppeinformasjon)
+			sjekkOgOppdaterTema(jsonObj, soknadDto)
 
 			return soknadService.hentSoknad(soknadDto.innsendingsId!!)
 		} catch (ex: Exception) {
 			throw BackendErrorException("${soknadDto.innsendingsId}: Konvertering av JSON til XML feilet", ex)
 		}
+	}
+
+	fun convert(
+		soknadDto: DokumentSoknadDto,
+		jsonFil: ByteArray?
+	): Pair<JsonApplication<*>, ByteArray> {
+		val jsonObj: JsonApplication<*>
+		val xmlFile: ByteArray
+		if (soknadDto.skjemanr == kjoreliste) {
+			jsonObj = convertToJsonDrivingListJson(soknadDto = soknadDto, jsonFil)
+			xmlFile = json2Xml(jsonObj, soknadDto)
+		} else {
+			jsonObj = convertToJsonTilleggsstonad(soknadDto = soknadDto, jsonFil)
+			xmlFile = json2Xml(soknadDto = soknadDto, tilleggstonadJsonObj = jsonObj)
+		}
+		return Pair(jsonObj, xmlFile)
+	}
+
+	// Based on skjemanumber and maalgruppe, it might be neccessary to change the application's tema from TSO to TSR
+	fun sjekkOgOppdaterTema(jsonObj: JsonApplication<*>, soknadDto: DokumentSoknadDto) {
+		val applicationDetails = jsonObj.applicationDetails
+		if (applicationDetails is JsonTilleggsstonad)
+			sjekkOgOppdaterTema(soknadDto, applicationDetails.maalgruppeinformasjon)
+		else if (applicationDetails is JsonDrivingListSubmission)
+			sjekkOgOppdaterTema(
+				soknadDto,
+				applicationDetails.expensePeriodes?.tema, applicationDetails.maalgruppeinformasjon
+			)
 	}
 
 	private fun sjekkOgOppdaterTema(soknadDto: DokumentSoknadDto, maalgruppeInformasjon: JsonMaalgruppeinformasjon?) {

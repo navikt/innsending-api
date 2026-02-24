@@ -1,29 +1,33 @@
 package no.nav.soknad.innsending.service
 
-import kotlinx.coroutines.runInterruptible
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
+import no.nav.soknad.innsending.model.ApplicationSubmissionResponse
 import no.nav.soknad.innsending.model.AvsenderDto
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.FilDto
 import no.nav.soknad.innsending.model.KvitteringsDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.SkjemaDtoV2
+import no.nav.soknad.innsending.model.SubmitApplicationRequest
 import no.nav.soknad.innsending.model.VisningsType
-import no.nav.soknad.innsending.service.fillager.FillagerInterface
-import no.nav.soknad.innsending.service.fillager.FillagerNamespace
+import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
 import no.nav.soknad.innsending.util.mapping.SkjemaDokumentSoknadTransformer
+import no.nav.soknad.innsending.util.mapping.createMainDocument
 import no.nav.soknad.innsending.util.mapping.lagDokumentSoknadDto
 import no.nav.soknad.innsending.util.mapping.mapTilMimetype
 import no.nav.soknad.innsending.util.mapping.mapTilSoknadDb
+import no.nav.soknad.innsending.util.mapping.toDokumentSoknadDto
+import no.nav.soknad.innsending.util.stringextensions.toUUID
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
+import java.util.UUID
 
 @Service
 class NologinSoknadService(
@@ -31,17 +35,49 @@ class NologinSoknadService(
 	private val repo: RepositoryUtils,
 	private val vedleggService: VedleggService,
 	private val filService: FilService,
-	private val fillagerService: FillagerInterface,
+	private val documentService: DocumentService,
 	private val innsenderMetrics: InnsenderMetrics,
 	private val exceptionHelper: ExceptionHelper,
+	private val soknadService: SoknadService,
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	@Transactional(timeout=TRANSACTION_TIMEOUT)
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
+	fun lagreOgSendInnUinnloggetSoknad(
+		innsendingsId: UUID,
+		submitApplicationRequest: SubmitApplicationRequest,
+		applikasjon: String
+	): ApplicationSubmissionResponse {
+		if (repo.existsByInnsendingsId(innsendingsId.toString())) {
+			throw IllegalActionException(
+				message = "Søknad med innsendingsId $innsendingsId finnes allerede",
+				errorCode = ErrorCode.SOKNAD_ALREADY_EXISTS
+			)
+		}
+
+		val dbSoknad = repo.lagreSoknad(submitApplicationRequest.toDokumentSoknadDto(innsendingsId, applikasjon))
+		repo.lagreVedlegg(dbSoknad.createMainDocument())
+		repo.lagreVedlegg(dbSoknad.createMainDocument(true))
+
+		val result = innsendingService.submitApplication(
+			soknadService.hentSoknad(dbSoknad.id!!),
+			submitApplicationRequest.mainDocument,
+			submitApplicationRequest.mainDocumentAlt,
+			submitApplicationRequest.attachments,
+			submitApplicationRequest.avsender,
+		)
+
+		return result.first
+	}
+
+	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun lagreOgSendInnUinnloggetSoknad(uinnloggetSoknadDto: SkjemaDtoV2, applikasjon: String): KvitteringsDto {
 		val operation = InnsenderOperation.OPPRETT.name
 		val bruker = uinnloggetSoknadDto.brukerDto
-		val avsender = uinnloggetSoknadDto.avsenderId ?: if (bruker != null) AvsenderDto(bruker.id, AvsenderDto.IdType.FNR) else throw IllegalActionException(
+		val avsender = uinnloggetSoknadDto.avsenderId ?: if (bruker != null) AvsenderDto(
+			bruker.id,
+			AvsenderDto.IdType.FNR
+		) else throw IllegalActionException(
 			message = "Hverken bruker eller avsender er satt",
 			errorCode = ErrorCode.PROPERTY_NOT_SET
 		)
@@ -50,7 +86,7 @@ class NologinSoknadService(
 			input = uinnloggetSoknadDto,
 			existingSoknad = null,
 			brukerId = uinnloggetSoknadDto.brukerDto?.id,
-			applikasjon =  applikasjon,
+			applikasjon = applikasjon,
 			visningsType = VisningsType.nologin
 		)
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
@@ -96,7 +132,8 @@ class NologinSoknadService(
 		oppdatertDokumentSoknadDto: DokumentSoknadDto,
 		noLoginSoknadDto: SkjemaDtoV2
 	) {
-		if (noLoginSoknadDto.vedleggsListe == null || noLoginSoknadDto.vedleggsListe?.filter{it.opplastingsStatus == OpplastingsStatusDto.LastetOpp}.isNullOrEmpty()) return
+		if (noLoginSoknadDto.vedleggsListe == null || noLoginSoknadDto.vedleggsListe?.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
+				.isNullOrEmpty()) return
 
 		val vedleggsListe = (noLoginSoknadDto.vedleggsListe ?: emptyList())
 			.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
@@ -114,19 +151,31 @@ class NologinSoknadService(
 				kopierFilerForVedlegg(
 					soknadDto = oppdatertDokumentSoknadDto,
 					vedleggsRef = it.fyllutId!!,
-					it.filIdListe!!)
+					it.filIdListe!!
+				)
 			}
 	}
 
-	fun kopierFilerForVedlegg(soknadDto: DokumentSoknadDto, vedleggsRef: String, opplastedeFiler: List<String> ){
+	fun kopierFilerForVedlegg(soknadDto: DokumentSoknadDto, vedleggsRef: String, opplastedeFiler: List<String>) {
 		val vedleggDto = soknadDto.vedleggsListe.find { it.formioId == vedleggsRef }
-		if (vedleggDto == null) throw IllegalActionException("Fant ikke vedlegg med id=$vedleggsRef", errorCode = ErrorCode.NOT_FOUND)
+		if (vedleggDto == null) throw IllegalActionException(
+			"Fant ikke vedlegg med id=$vedleggsRef",
+			errorCode = ErrorCode.NOT_FOUND
+		)
 
 		// for hver fil hent og opprett nytt innslag i fil tabellen
+		val innsendingsId = soknadDto.innsendingsId!!.toUUID()
 		opplastedeFiler.forEach { fileId ->
-			val filSomSkalKopieres = fillagerService.hentFil(filId = fileId, soknadDto.innsendingsId!!, namespace= FillagerNamespace.NOLOGIN)
-			if (filSomSkalKopieres == null || filSomSkalKopieres.innhold.isEmpty()) {
-				throw IllegalActionException("Fant ikke fil med id=${fileId} for vedlegg med id=$vedleggsRef", errorCode = ErrorCode.NOT_FOUND)
+			val filSomSkalKopieres = documentService.getFile(
+				FileStorageNamespace.NOLOGIN,
+				innsendingsId,
+				fileId = fileId.toUUID()
+			)
+			if (filSomSkalKopieres?.innhold == null || filSomSkalKopieres.innhold.isEmpty()) {
+				throw IllegalActionException(
+					"Fant ikke fil med id=${fileId} for vedlegg med id=$vedleggsRef",
+					errorCode = ErrorCode.NOT_FOUND
+				)
 			}
 
 			val filDto = FilDto(
@@ -163,7 +212,10 @@ class NologinSoknadService(
 		}
 		val fyllutIds = uinnloggetSoknadDto.vedleggsListe?.map { it.fyllutId } ?: emptyList()
 		if (fyllutIds.size != fyllutIds.distinct().size) {
-			throw IllegalActionException( message = "Vedleggsliste inneholder vedlegg med duplikate id'er (fyllutId)", errorCode = ErrorCode.ILLEGAL_ARGUMENT )
+			throw IllegalActionException(
+				message = "Vedleggsliste inneholder vedlegg med duplikate id'er (fyllutId)",
+				errorCode = ErrorCode.ILLEGAL_ARGUMENT
+			)
 		}
 	}
 

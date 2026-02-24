@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.PatchVedleggDto
 import no.nav.soknad.innsending.model.PostVedleggDto
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
+import no.nav.soknad.innsending.service.fillager.FileStorage
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.SoknadAssertions
 import org.junit.jupiter.api.Assertions.*
@@ -35,17 +36,21 @@ class VedleggServiceTest : ApplicationTest() {
 	@Autowired
 	private lateinit var exceptionHelper: ExceptionHelper
 
+	@Autowired
+	private lateinit var fileStorage: FileStorage
+
 	@MockkBean
 	private lateinit var subjectHandler: SubjectHandlerInterface
 
 	private fun lagSoknadService(): SoknadService = SoknadService(
-		skjemaService = skjemaService,
-		repo = repo,
-		vedleggService = vedleggService,
-		filService = filService,
-		innsenderMetrics = innsenderMetrics,
-		exceptionHelper = exceptionHelper,
-		subjectHandler = subjectHandler,
+        skjemaService = skjemaService,
+        repo = repo,
+        vedleggService = vedleggService,
+        filService = filService,
+        innsenderMetrics = innsenderMetrics,
+        exceptionHelper = exceptionHelper,
+        subjectHandler = subjectHandler,
+        fileStorage = fileStorage,
 	)
 
 	@BeforeEach

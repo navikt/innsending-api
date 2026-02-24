@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.ArenaService
+import no.nav.soknad.innsending.service.InnsendingService
 import no.nav.soknad.innsending.service.NotificationService
 import no.nav.soknad.innsending.service.PrefillService
 import no.nav.soknad.innsending.service.SoknadService
@@ -21,6 +22,7 @@ import no.nav.soknad.innsending.util.Constants.TOKENX
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.mapping.SkjemaDokumentSoknadTransformer
 import no.nav.soknad.innsending.util.mapping.mapTilSkjemaDto
+import no.nav.soknad.innsending.util.models.erEttersending
 import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import org.slf4j.LoggerFactory
@@ -28,6 +30,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
 import java.net.URI
+import java.util.UUID
 
 @RestController
 @ProtectedWithClaims(issuer = TOKENX, claimMap = [CLAIM_ACR_LEVEL_4, CLAIM_ACR_IDPORTEN_LOA_HIGH], combineWithOr = true)
@@ -39,6 +42,7 @@ class FyllutRestApi(
 	private val subjectHandler: SubjectHandlerInterface,
 	private val arenaService: ArenaService,
 	private val notificationService: NotificationService,
+	private val innsendingService: InnsendingService,
 ) : FyllutApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -239,6 +243,45 @@ class FyllutRestApi(
 		return ResponseEntity.status(HttpStatus.OK).body(aktiviteter)
 	}
 
+	@Timed(InnsenderOperation.SEND_INN)
+	override fun submitDigitalApplication(
+		innsendingsId: UUID,
+		submitApplicationRequest: SubmitApplicationRequest,
+		navEnvQualifier: EnvQualifier?
+	): ResponseEntity<ApplicationSubmissionResponse> {
+		val innsendingsIdStr = innsendingsId.toString()
+		val brukerId = tilgangskontroll.hentBrukerFraToken()
+		combinedLogger.log("$innsendingsIdStr: Kall fra FyllUt for sende inn søknad", brukerId)
+
+		val soknad = soknadService.hentSoknad(innsendingsIdStr)
+		validerSoknadsTilgang(soknad)
+
+		if (soknad.erEttersending) {
+			// Denne funksjonen støtter ikke innsending av ettersendinger fra FyllUt pga logikk rundt dummy-hoveddokument
+			// og at det må sjekkes om ettersendingssøknaden har endringer som kan sendes inn.
+			// Derfor må ettersendingssøknader fremdeles sendes inn fra SendInnFrontend.
+			return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
+		}
+
+		val (submissionSummary, ettersendingsId) = innsendingService.submitApplication(
+			soknad,
+			submitApplicationRequest.mainDocument,
+			submitApplicationRequest.mainDocumentAlt,
+			submitApplicationRequest.attachments,
+			submitApplicationRequest.avsender,
+		)
+
+		notificationService.close(innsendingsIdStr)
+		if (ettersendingsId != null) {
+			notificationService.create(
+				ettersendingsId.toString(),
+				NotificationOptions(erSystemGenerert = true, envQualifier = navEnvQualifier)
+			)
+		}
+
+		return ResponseEntity.ok(submissionSummary)
+	}
+
 	private fun validerSoknadsTilgang(dokumentSoknadDto: DokumentSoknadDto) {
 		tilgangskontroll.harTilgang(dokumentSoknadDto)
 		if (!dokumentSoknadDto.kanGjoreEndringer) {
@@ -248,6 +291,5 @@ class FyllutRestApi(
 			)
 		}
 	}
-
 
 }

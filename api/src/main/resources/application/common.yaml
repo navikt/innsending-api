@@ -1,0 +1,193 @@
+components:
+  schemas:
+    FileId:
+      $ref: "../common/components.yaml#/components/schemas/UUID"
+
+    FileContent:
+      type: string
+      format: binary
+
+    AttachmentCode:
+      description: Attachment number as defined by the application form
+      type: string
+      example: M8
+
+    UploadFileRequest:
+      type: object
+      description: Request to upload a file for given attachment
+      required:
+        - file
+      properties:
+        file:
+          $ref: "#/components/schemas/FileContent"
+
+    FileDto:
+      type: object
+      description: Uploaded file
+      required:
+        - id
+        - name
+      properties:
+        id:
+          $ref: "#/components/schemas/FileId"
+        name:
+          type: string
+          nullable: true
+          description: Name of uploaded file
+          example: mitt-sertifikat.png
+        mimetype:
+          $ref: "../common/components.yaml#/components/schemas/Mimetype"
+        size:
+          type: integer
+          description: Size of contents (bytes)
+          example: 12345678
+        numberOfPages:
+           type: integer
+           description: Number of pages
+           example: 10
+        createdAt:
+          type: string
+          format: date-time
+          description: When the file was uploaded
+          example: 2022-04-01T15:10:00Z
+        data:
+          $ref: "#/components/schemas/FileContent"
+
+    SubmitApplicationRequest:
+      type: object
+      description: Request to submit an application
+      required:
+        - formNumber
+        - title
+        - tema
+        - language
+        - mainDocument
+        - mainDocumentAlt
+      properties:
+        formNumber:
+          type: string
+          description: Application form number
+          example: NAV 11-12.64
+        title:
+          type: string
+          description: Title of application
+          example: Søknad om servicehund
+        tema:
+          type: string
+          description: Tema for søknaden
+          example: BIL
+        language:
+          type: string
+          description: Språk for søknaden
+          example: nb
+        mainDocument:
+          type: string
+          format: byte
+          description: Dokument innhold som en Byte array
+          example: Byte array med fil innhold
+        mainDocumentAlt:
+          type: string
+          format: byte
+          description: Dokument innhold som en Byte array
+          example: Byte array med fil innhold
+        attachments:
+          type: array
+          description: Liste av ingen, en eller flere vedlegg som skal sendes inn sammen med
+          items:
+            $ref: "#/components/schemas/AttachmentDto"
+        otherUploadAvailable:
+          type: boolean
+          default: false
+          description: Angir om det er mulig å laste opp annet-vedlegg sammen med søknaden
+        bruker:
+          $ref: "../common/components.yaml#/components/schemas/BrukerId"
+        avsender:
+          $ref: "../common/components.yaml#/components/schemas/AvsenderDto"
+
+    ApplicationSubmissionResponse:
+      type: object
+      description: Summary after successful submission of an application
+      required:
+        - innsendingsId
+        - label
+        - submittedAt
+      properties:
+        innsendingsId:
+          $ref: "../common/components.yaml#/components/schemas/UUID"
+        title:
+          type: string
+          description: Title of application
+          example: Søknad om servicehund
+        mainDocumentFileId:
+          $ref: "#/components/schemas/FileId"
+        attachments:
+          description: Liste av alle vedlegg som er knyttet til søknaden uavhengig av status.
+          type: array
+          items:
+            $ref: "#/components/schemas/AttachmentDto"
+        subsequentSubmissionDeadline:
+          type: string
+          format: date-time
+          description: Deadline for submission of missing documents
+          example: 2025-05-13T15:10:00Z
+        ettersendingsId:
+          $ref: "../common/components.yaml#/components/schemas/UUID"
+        submittedAt:
+          type: string
+          format: date-time
+          example: 2025-04-01T15:10:00Z
+
+    AttachmentDto:
+      type: object
+      description: Data om et dokument på en søknad.
+      required:
+        - attachmentCode
+        - label
+        - uploadStatus
+      properties:
+        attachmentCode:
+          $ref: "#/components/schemas/AttachmentCode"
+        label:
+          description: Label of attachment, which is visible to the user
+          type: string
+          example: Medisinsk dokumentasjon
+        title:
+          description: Title of attachment, which Nav has defined for this attachment code
+          type: string
+          example: Medisinsk dokumentasjon
+        description:
+          description: Description of attachment
+          type: string
+          example: Legg ved dette vedlegget dersom du har medisinsk dokumentasjon som er relevant for søknaden din
+        formNumberPath:
+          type: string
+          description: Application form number path for this attachment
+          example: nav111232
+        uploadStatus:
+          $ref: "../common/components.yaml#/components/schemas/OpplastingsStatusDto"
+        fileIds:
+          description: Files that are uploaded for this attachment
+          type: array
+          items:
+            $ref: "#/components/schemas/FileId"
+
+  responses:
+    FileCreated:
+      description: Created
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FileDto'
+    ApplicationSubmissionSuccess:
+      description: Submitted
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApplicationSubmissionResponse"
+
+    ServiceUnavailable:
+      description: Tjenesten er utilgjengelig
+      content:
+        application/json:
+          schema:
+            $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"

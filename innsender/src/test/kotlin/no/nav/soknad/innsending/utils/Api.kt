@@ -402,6 +402,7 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		return InnsendingApiResponse(response.statusCode, body, response.headers)
 	}
 
+	@Deprecated("Replace with uploadNologinFileV2")
 	fun uploadNologinFile(
 		innsendingId: String? = null,
 		vedleggId: String,
@@ -437,6 +438,149 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		return InnsendingApiResponse(response.statusCode, body)
 	}
 
+	fun uploadNologinFileV2(
+		innsendingId: String,
+		vedleggId: String,
+		filePath: String = "/litenPdf.pdf",
+		authToken: String? = null,
+	): InnsendingApiResponse<FileDto> {
+		val token: String = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("nologin-access"))
+		return uploadFile(
+			innsendingId = innsendingId,
+			vedleggId = vedleggId,
+			filePath = filePath,
+			authToken = token,
+			applicationPath = "application-nologin"
+		)
+	}
+
+	fun uploadAttachmentFile(
+		innsendingId: String,
+		vedleggId: String,
+		filePath: String = "/litenPdf.pdf",
+		authToken: String? = null,
+	): InnsendingApiResponse<FileDto> {
+		val token: String = authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken()
+		return uploadFile(
+			innsendingId = innsendingId,
+			vedleggId = vedleggId,
+			filePath = filePath,
+			authToken = token,
+			applicationPath = "application-digital"
+		)
+	}
+
+	private fun uploadFile(
+		innsendingId: String,
+		vedleggId: String,
+		filePath: String = "/litenPdf.pdf",
+		authToken: String? = null,
+		applicationPath: String,
+	) : InnsendingApiResponse<FileDto> {
+		val headers = Hjelpemetoder.createHeaders(authToken, MediaType.MULTIPART_FORM_DATA)
+
+		val partHeaders = HttpHeaders()
+		partHeaders.contentType = MediaType.APPLICATION_PDF
+		partHeaders.setContentDispositionFormData("file", filePath.replace("/", ""))
+		val fileByteArray: ByteArray =  Hjelpemetoder.getBytesFromFile(filePath)
+		val filePart: HttpEntity<ByteArray> = HttpEntity(fileByteArray, partHeaders)
+
+		val requestBody: MultiValueMap<String, Any> = LinkedMultiValueMap()
+		requestBody.add("file", filePart)
+
+		val httpEntity = HttpEntity(requestBody, headers)
+
+		val response = restTemplate.exchange(
+			"${baseUrl}/v1/$applicationPath/$innsendingId/attachments/$vedleggId",
+			HttpMethod.POST,
+			httpEntity,
+			String::class.java
+		)
+
+		val body = readBody(response, FileDto::class.java)
+		return InnsendingApiResponse(response.statusCode, body)
+	}
+
+	fun submitDigitalApplication(
+		soknad: SkjemaDto,
+		attachments: List<AttachmentDto>? = null,
+		language: String = "nb",
+		mainDocumentPath: String = "/litenPdf.pdf",
+		mainDocumentAltPath: String = "/__files/barnepass-NAV-11-12.15B.json",
+		authToken: String? = null,
+	): InnsendingApiResponse<ApplicationSubmissionResponse> {
+		val token: String = authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken()
+		val headers = Hjelpemetoder.createHeaders(token, MediaType.APPLICATION_JSON)
+		val mainDocumentByteArray: ByteArray =  Hjelpemetoder.getBytesFromFile(mainDocumentPath)
+		val mainDocumentAltByteArray: ByteArray =  Hjelpemetoder.getBytesFromFile(mainDocumentAltPath)
+
+		val request = SubmitApplicationRequest(
+			formNumber = soknad.skjemanr,
+			title = soknad.tittel,
+			tema = soknad.tema,
+			language = language,
+			mainDocument = mainDocumentByteArray,
+			mainDocumentAlt = mainDocumentAltByteArray,
+			attachments = attachments,
+			bruker = soknad.brukerId,
+			avsender = AvsenderDto(navn = "Test Navn"),
+		)
+		val httpEntity = HttpEntity(request, headers)
+
+		val response = restTemplate.exchange(
+			"${baseUrl}/v1/application-digital/${soknad.innsendingsId!!}",
+			HttpMethod.POST,
+			httpEntity,
+			String::class.java
+		)
+
+		val body = readBody(response, ApplicationSubmissionResponse::class.java)
+		return InnsendingApiResponse(response.statusCode, body, response.headers)
+	}
+
+	fun submitNologinApplication(
+		innsendingsId: String,
+		formNumber: String = "NAV 11-12.15B",
+		title: String = "Søknad om testing",
+		tema: String = "BIL",
+		brukerId: String? = TokenGenerator.subject,
+		attachments: List<AttachmentDto>? = null,
+		language: String = "nb",
+		mainDocumentPath: String = "/litenPdf.pdf",
+		mainDocumentAltPath: String = "/__files/barnepass-NAV-11-12.15B.json",
+		authToken: String? = null,
+		avsender: AvsenderDto? = null
+	): InnsendingApiResponse<ApplicationSubmissionResponse> {
+		val token: String = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("nologin-access"))
+		val headers = Hjelpemetoder.createHeaders(token, MediaType.APPLICATION_JSON)
+		val mainDocumentByteArray: ByteArray =  Hjelpemetoder.getBytesFromFile(mainDocumentPath)
+		val mainDocumentAltByteArray: ByteArray =  Hjelpemetoder.getBytesFromFile(mainDocumentAltPath)
+
+		val request = SubmitApplicationRequest(
+			formNumber = formNumber,
+			title = title,
+			tema = tema,
+			language = language,
+			mainDocument = mainDocumentByteArray,
+			mainDocumentAlt = mainDocumentAltByteArray,
+			attachments = attachments,
+			bruker = brukerId,
+			avsender = avsender,
+		)
+		val httpEntity = HttpEntity(request, headers)
+
+		val response = restTemplate.exchange(
+			"${baseUrl}/v1/application-nologin/${innsendingsId}",
+			HttpMethod.POST,
+			httpEntity,
+			String::class.java
+		)
+
+		val body = readBody(response, ApplicationSubmissionResponse::class.java)
+		return InnsendingApiResponse(response.statusCode, body, response.headers)
+	}
+
+	@Deprecated("Is replaced by submitNologinApplication")
 	fun sendInnNologinSoknad(skjemaDto: SkjemaDtoV2): InnsendingApiResponse<KvitteringsDto> {
 		val token = TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("nologin-access"))
 		val response = restTemplate.exchange(
@@ -447,6 +591,19 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 
 		val body = readBody(response, KvitteringsDto::class.java)
+		return InnsendingApiResponse(response.statusCode, body, response.headers)
+	}
+
+	fun hentInnsendteFiler(innsendingsId: String, uuids: List<String>): InnsendingApiResponse<List<SoknadFile>> {
+		val authToken = TokenGenerator(mockOAuth2Server).lagAzureM2MToken()
+		val response = restTemplate.exchange(
+			"${baseUrl}/innsendte/v1/files/${uuids.joinToString(",")}",
+			HttpMethod.GET,
+			createHttpEntity(null, mapOf("x-innsendingId" to innsendingsId), authToken = authToken),
+			String::class.java
+		)
+
+		val body = parseListResponse(response, SoknadFile::class.java)
 		return InnsendingApiResponse(response.statusCode, body, response.headers)
 	}
 
@@ -487,5 +644,26 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 			return this
 		}
 	}
+
+	private fun <T> parseListResponse(
+		response: ResponseEntity<String>,
+		clazz: Class<T>
+	): Pair<List<T>?, RestErrorResponseDto?> =
+		when {
+			response.statusCode.is2xxSuccessful -> Pair(
+				objectMapper.readValue(
+					response.body,
+					objectMapper.typeFactory.constructCollectionType(List::class.java, clazz)
+				), null
+			)
+
+			else -> Pair(null, objectMapper.readValue(response.body, RestErrorResponseDto::class.java))
+		}
+
+	private fun <T> parseSingleResponse(response: ResponseEntity<String>, clazz: Class<T>): Pair<T?, RestErrorResponseDto?> =
+		when {
+			response.statusCode.is2xxSuccessful -> Pair(objectMapper.readValue(response.body, clazz), null)
+			else -> Pair(null, objectMapper.readValue(response.body, RestErrorResponseDto::class.java))
+		}
 
 }

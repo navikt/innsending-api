@@ -39,7 +39,8 @@ fun mapTilVedleggDb(
 		vedleggsurl = url ?: vedleggDto.skjemaurl,
 		formioid = vedleggDto.formioId,
 		opplastingsvalgkommentarledetekst = vedleggDto.opplastingsValgKommentarLedetekst,
-		opplastingsvalgkommentar = vedleggDto.opplastingsValgKommentar
+		opplastingsvalgkommentar = vedleggDto.opplastingsValgKommentar,
+		fileIds = vedleggDto.fileIds,
 	)
 
 fun oppdaterVedleggDb(
@@ -69,7 +70,8 @@ fun oppdaterVedleggDb(
 		vedleggsurl = vedleggDbData.vedleggsurl,
 		formioid = vedleggDbData.formioid,
 		opplastingsvalgkommentarledetekst = patchVedleggDto.opplastingsValgKommentarLedetekst,
-		opplastingsvalgkommentar = patchVedleggDto.opplastingsValgKommentar
+		opplastingsvalgkommentar = patchVedleggDto.opplastingsValgKommentar,
+		fileIds = vedleggDbData.fileIds,
 	)
 
 fun mapTilSkjemaDokumentDto(vedleggDto: VedleggDto): SkjemaDokumentDto {
@@ -108,8 +110,11 @@ fun lagVedleggDto(vedleggDbData: VedleggDbData, document: ByteArray? = null) =
 		innsendtdato = mapTilOffsetDateTime(vedleggDbData.innsendtdato),
 		formioId = vedleggDbData.formioid,
 		opplastingsValgKommentarLedetekst = vedleggDbData.opplastingsvalgkommentarledetekst,
-		opplastingsValgKommentar = vedleggDbData.opplastingsvalgkommentar
+		opplastingsValgKommentar = vedleggDbData.opplastingsvalgkommentar,
+		fileIds = vedleggDbData.fileIds,
 	)
+
+fun VedleggDbData.toDto(document: ByteArray? = null): VedleggDto = lagVedleggDto(this, document)
 
 fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
 	VedleggDto(
@@ -130,7 +135,8 @@ fun lagVedleggDtoMedOpplastetFil(filDto: FilDto?, vedleggDto: VedleggDto) =
 		skjemaurl = vedleggDto.skjemaurl,
 		innsendtdato = OffsetDateTime.now(),
 		opplastingsValgKommentarLedetekst = vedleggDto.opplastingsValgKommentarLedetekst,
-		opplastingsValgKommentar = vedleggDto.opplastingsValgKommentar
+		opplastingsValgKommentar = vedleggDto.opplastingsValgKommentar,
+		fileIds = vedleggDto.fileIds,
 	)
 
 fun translate(vedleggDtos: List<VedleggDto>): List<DocumentData> {

@@ -1,0 +1,42 @@
+post:
+  summary: Upload file for given attachment
+  operationId: uploadNologinAttachmentFile
+  security:
+  - azureM2M: []
+
+  parameters:
+    - $ref: "../../common/components.yaml#/components/parameters/InnsendingsId"
+    - $ref: "../../common/components.yaml#/components/parameters/AttachmentId"
+  requestBody:
+    content:
+      multipart/form-data:
+        schema:
+         $ref: "../common.yaml#/components/schemas/UploadFileRequest"
+
+  responses:
+    201:
+      $ref: "../common.yaml#/components/responses/FileCreated"
+    500:
+      $ref: "../../common/components.yaml#/components/responses/InteralServerError"
+    503:
+      $ref: "../common.yaml#/components/responses/ServiceUnavailable"
+  tags:
+    - nologin-application
+
+delete:
+  summary: Delete attachment including files
+  operationId: deleteNologinAttachment
+  security:
+  - azureM2M: []
+
+  parameters:
+    - $ref: "../../common/components.yaml#/components/parameters/InnsendingsId"
+    - $ref: "../../common/components.yaml#/components/parameters/AttachmentId"
+
+  responses:
+    204:
+      description: No Content
+    500:
+      $ref: "../../common/components.yaml#/components/responses/InteralServerError"
+  tags:
+    - nologin-application

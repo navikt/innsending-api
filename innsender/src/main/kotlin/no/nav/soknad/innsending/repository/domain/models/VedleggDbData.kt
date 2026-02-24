@@ -2,7 +2,11 @@ package no.nav.soknad.innsending.repository.domain.models
 
 import jakarta.persistence.*
 import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
+import no.nav.soknad.innsending.repository.domain.utils.UuidListConverter
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
+import java.util.UUID
 
 @Entity
 @Table(name = "vedlegg")
@@ -27,6 +31,10 @@ data class VedleggDbData(
 	@Column(name = "formioid", columnDefinition = "varchar") val formioid: String?,
 	@Column(name = "opplastingsvalgkommentarledetekst", columnDefinition = "opplastingsvalgkommentarledetekst") val opplastingsvalgkommentarledetekst: String?,
 	@Column(name = "opplastingsvalgkommentar", columnDefinition = "opplastingsvalgkommentar") val opplastingsvalgkommentar: String?,
+
+	@Convert(converter = UuidListConverter::class)
+	@JdbcTypeCode(SqlTypes.JSON)
+	@Column(name = "file_ids", columnDefinition = "jsonb") val fileIds: List<UUID>? = null,
 ) {
 
 	override fun equals(other: Any?): Boolean {

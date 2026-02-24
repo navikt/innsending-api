@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.service.fillager
 
 data class Fil(
-	val innhold: ByteArray,
+	val innhold: ByteArray?,
 	val metadata: FilMetadata,
 ) {
 	override fun equals(other: Any?): Boolean {
@@ -22,3 +22,5 @@ data class Fil(
 		return result
 	}
 }
+
+typealias File = Fil

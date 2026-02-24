@@ -85,6 +85,9 @@ class SoknadServiceTest : ApplicationTest() {
 	private lateinit var filService: FilService
 
 	@Autowired
+	private lateinit var documentService: DocumentService
+
+	@Autowired
 	private lateinit var exceptionHelper: ExceptionHelper
 
 	@Autowired
@@ -130,6 +133,7 @@ class SoknadServiceTest : ApplicationTest() {
 		soknadsmottakerAPI = soknadsmottakerAPI,
 		restConfig = restConfig,
 		pdlInterface = pdlInterface,
+		documentService = documentService,
 	)
 
 	@Test

@@ -13,7 +13,7 @@ import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.*
-import no.nav.soknad.innsending.service.fillager.FillagerService
+import no.nav.soknad.innsending.service.fillager.FileStorage
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
@@ -42,7 +42,7 @@ class SoknadServiceUnitTest {
 	lateinit var filService: FilService
 
 	@RelaxedMockK
-	lateinit var fillagerService: FillagerService
+	lateinit var fileStorage: FileStorage
 
 	@RelaxedMockK
 	lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher

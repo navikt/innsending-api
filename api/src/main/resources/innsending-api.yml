@@ -34,6 +34,8 @@ tags:
     description: API for eksterne applikasjoner.
   - name: endtoend
     description: API for endtoend-tester.
+  - name: nologin-application
+    description: API for søknader fra brukere som ikke er logget inn.
 
 paths:
   /fyllUt/v1/soknad/{innsendingsId}:
@@ -133,10 +135,7 @@ paths:
           schema:
             type: string
           style: simple
-        - in: header
-          name: Nav-Env-Qualifier
-          schema:
-            $ref: "#/components/schemas/EnvQualifier"
+        - $ref: "./common/components.yaml#/components/parameters/EnvQualifier"
 
       requestBody:
         description: Søknaddata for å oppdatere søknaden
@@ -169,17 +168,14 @@ paths:
         required: true
 
       parameters:
-            - name: force
-              in: query
-              description: Hvis bruker allerede har en aktiv søknad på samme skjemanr vil hen få valg om å fortsette på den eller starte en ny.
-                           Denne parameteren brukes for å indikere om en bruker ønsker å starte en ny søknad uavhengig av om det allerede er en aktiv søknad på gang.
-              required: false
-              schema:
-                type: boolean
-            - in: header
-              name: Nav-Env-Qualifier
-              schema:
-                $ref: "#/components/schemas/EnvQualifier"
+        - name: force
+          in: query
+          description: Hvis bruker allerede har en aktiv søknad på samme skjemanr vil hen få valg om å fortsette på den eller starte en ny.
+                       Denne parameteren brukes for å indikere om en bruker ønsker å starte en ny søknad uavhengig av om det allerede er en aktiv søknad på gang.
+          required: false
+          schema:
+            type: boolean
+        - $ref: "./common/components.yaml#/components/parameters/EnvQualifier"
 
       responses:
         200:
@@ -294,10 +290,7 @@ paths:
           schema:
             type: string
           style: simple
-        - in: header
-          name: Nav-Env-Qualifier
-          schema:
-            $ref: "#/components/schemas/EnvQualifier"
+        - $ref: "./common/components.yaml#/components/parameters/EnvQualifier"
 
       requestBody:
         description: Søknaddata for å oppdatere søknaden
@@ -330,17 +323,14 @@ paths:
         required: true
 
       parameters:
-            - name: force
-              in: query
-              description: Hvis bruker allerede har en aktiv søknad på samme skjemanr vil hen få valg om å fortsette på den eller starte en ny.
-                           Denne parameteren brukes for å indikere om en bruker ønsker å starte en ny søknad uavhengig av om det allerede er en aktiv søknad på gang.
-              required: false
-              schema:
-                type: boolean
-            - in: header
-              name: Nav-Env-Qualifier
-              schema:
-                $ref: "#/components/schemas/EnvQualifier"
+        - name: force
+          in: query
+          description: Hvis bruker allerede har en aktiv søknad på samme skjemanr vil hen få valg om å fortsette på den eller starte en ny.
+                       Denne parameteren brukes for å indikere om en bruker ønsker å starte en ny søknad uavhengig av om det allerede er en aktiv søknad på gang.
+          required: false
+          schema:
+            type: boolean
+        - $ref: "./common/components.yaml#/components/parameters/EnvQualifier"
 
       responses:
         200:
@@ -422,10 +412,7 @@ paths:
                   $ref: "#/components/schemas/OpprettEttersending"
             required: true
           parameters:
-          - in: header
-            name: Nav-Env-Qualifier
-            schema:
-              $ref: "#/components/schemas/EnvQualifier"
+            - $ref: "./common/components.yaml#/components/parameters/EnvQualifier"
 
           responses:
             201:
@@ -449,10 +436,7 @@ paths:
                   $ref: "#/components/schemas/OpprettLospost"
             required: true
           parameters:
-          - in: header
-            name: Nav-Env-Qualifier
-            schema:
-              $ref: "#/components/schemas/EnvQualifier"
+            - $ref: "./common/components.yaml#/components/parameters/EnvQualifier"
 
           responses:
             201:
@@ -560,10 +544,7 @@ paths:
       deprecated: true
 
       parameters:
-        - in: header
-          name: Nav-Env-Qualifier
-          schema:
-            $ref: "#/components/schemas/EnvQualifier"
+        - $ref: "./common/components.yaml#/components/parameters/EnvQualifier"
 
       requestBody:
         description: Data neccessary in order to publish a new task or message user notification.
@@ -592,10 +573,7 @@ paths:
       deprecated: true
 
       parameters:
-        - in: header
-          name: Nav-Env-Qualifier
-          schema:
-            $ref: "#/components/schemas/EnvQualifier"
+        - $ref: "./common/components.yaml#/components/parameters/EnvQualifier"
 
       requestBody:
         description: Data neccessary in order to publish a new task or message user notification.
@@ -1035,10 +1013,7 @@ paths:
           schema:
             type: string
           style: simple
-        - in: header
-          name: Nav-Env-Qualifier
-          schema:
-            $ref: "#/components/schemas/EnvQualifier"
+        - $ref: "./common/components.yaml#/components/parameters/EnvQualifier"
 
       responses:
         200:
@@ -1084,12 +1059,15 @@ paths:
       tags:
         - fyllut
 
+  # Deprecated, see /v1/application-nologin
   /v1/nologin-fillager:
     $ref: "./nologin/fillager.yaml"
 
+  # Deprecated, see /v1/application-nologin
   /v1/nologin-fillager/{filId}:
     $ref: "./nologin/fil.yaml"
 
+  # Deprecated, see /v1/application-nologin
   /v1/nologin-soknad:
     post:
       summary: Kall for å opprette og sende inn en søknad for en ikke innlogget søker.
@@ -1097,10 +1075,7 @@ paths:
       operationId: opprettNologinSoknad
 
       parameters:
-        - in: header
-          name: Nav-Env-Qualifier
-          schema:
-            $ref: "#/components/schemas/EnvQualifier"
+        - $ref: "./common/components.yaml#/components/parameters/EnvQualifier"
 
       requestBody:
         description: Data neccessary in order to store and send in an application.
@@ -1120,6 +1095,24 @@ paths:
       tags:
         - nologin-soknad
 
+  /v1/application-nologin/{innsendingsId}:
+     $ref: "./application/nologin/nologin.yaml"
+
+  /v1/application-nologin/{innsendingsId}/attachments/{attachmentId}:
+     $ref: "./application/nologin/attachments.yaml"
+
+  /v1/application-nologin/{innsendingsId}/attachments/{attachmentId}/{fileId}:
+     $ref: "./application/nologin/file.yaml"
+
+  /v1/application-digital/{innsendingsId}:
+     $ref: "./application/digital/digital.yaml"
+
+  /v1/application-digital/{innsendingsId}/attachments/{attachmentId}:
+     $ref: "./application/digital/attachments.yaml"
+
+  /v1/application-digital/{innsendingsId}/attachments/{attachmentId}/{fileId}:
+     $ref: "./application/digital/file.yaml"
+
   /v1/config:
     $ref: "./config/all.yaml"
 
@@ -1138,10 +1131,7 @@ paths:
               required: false
               schema:
                 type: string
-            - in: header
-              name: Nav-Env-Qualifier
-              schema:
-                $ref: "#/components/schemas/EnvQualifier"
+            - $ref: "./common/components.yaml#/components/parameters/EnvQualifier"
           requestBody:
             content:
               application/json:
@@ -1541,6 +1531,22 @@ paths:
 
 
 components:
+  securitySchemes:
+    azureM2M:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Maskin-til-maskin token fra Azure AD
+    azureOBO:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Saksbehandler token fra Azure AD
+    idporten:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: ID-porten token for innlogget bruker
   schemas:
     Adresser:
       type: object
@@ -1671,22 +1677,6 @@ components:
       description: Status for om innsendt søknad er blitt arkivert. Ikke innsendte søknader skal ha arkiveringsStatus IkkeSatt.
       example: Arkivert
 
-    AvsenderDto:
-      type: object
-      description: Identifikasjon av hvem som sender inn søknaden
-
-      properties:
-        id:
-          type: string
-        idType:
-          type: string
-          enum: [ "FNR" ]
-          description: Obligatorisk dersom id er satt. Angir hvilken type id som er brukt. Merk at FNR kan også være et D-NR. Merk at arkivet også aksepterer idType verdiene "ORGNR", "HPRNR", "UTL_ORG"
-        navn:
-          type: string
-          description: Navn på avsender, ikke nødvendig dersom id er spesifisert
-          example: Ola Nordmann
-
     Beskrivelse:
       type: string
       description: Utdypende forklaring til et vedlegg.
@@ -1722,24 +1712,6 @@ components:
           enum: [ "FNR" ]
           description: Angivelse av om id inneholder FNR til person. Merk at FNR kan også være et D-NR. Merk at arkivet også aksepterer idType ="ORGNR" (Organisasjonsnummer) til virksomhet søknaden gjelder
 
-    BrukerOgAvsenderDto:
-      type: object
-      description: Identifikasjon av hvem (person eller organisasjon) som søknaden gjelder og hvem som sender inn søknaden
-
-      required:
-        - avsenderDto
-
-      properties:
-        brukerDto:
-          $ref: "#/components/schemas/BrukerDto"
-        avsenderDto:
-          $ref: "#/components/schemas/AvsenderDto"
-
-    BrukerId:
-      type: string
-      description: Ident til søker som har opprettet søknad i fyllUt tjenesten.
-      example: 12128012345
-
     BrukernotifikasjonsType:
       type: string
       enum: [utkast, oppgave]
@@ -1753,7 +1725,7 @@ components:
         - skjemanr
       properties:
         brukerId:
-          $ref: "#/components/schemas/BrukerId"
+          $ref: "./common/components.yaml#/components/schemas/BrukerId"
         skjemanr:
           $ref: "#/components/schemas/Skjemanr"
         soknadstyper:
@@ -1786,7 +1758,7 @@ components:
         innsendingsId:
           $ref: "#/components/schemas/InnsendingsId"
         brukerId:
-          $ref: "#/components/schemas/BrukerId"
+          $ref: "./common/components.yaml#/components/schemas/BrukerId"
         tittel:
           $ref: "#/components/schemas/Tittel"
         tema:
@@ -1835,7 +1807,7 @@ components:
         ettersendingsId:
           $ref: "#/components/schemas/InnsendingsId"
         brukerId:
-          $ref: "#/components/schemas/BrukerId"
+          $ref: "./common/components.yaml#/components/schemas/BrukerId"
         skjemanr:
           $ref: "#/components/schemas/Skjemanr"
         tittel:
@@ -1920,7 +1892,7 @@ components:
         - vedleggsListe
       properties:
         brukerId:
-          $ref:  "#/components/schemas/BrukerId"
+          $ref:  "./common/components.yaml#/components/schemas/BrukerId"
         tittel:
           $ref: "#/components/schemas/Tittel"
         skjemanr:
@@ -2026,7 +1998,7 @@ components:
           description: Opplastet filnavn
           example: mitt-sertifikat.png
         mimetype:
-          $ref: "#/components/schemas/Mimetype"
+          $ref: "./common/components.yaml#/components/schemas/Mimetype"
         storrelse:
           type: integer
           description: Størrelsen på filen
@@ -2184,63 +2156,6 @@ components:
           items:
             $ref: "#/components/schemas/Document"
 
-    Mimetype:
-      type: string
-      enum: [ "application/pdf", "application/json", "image/png", "image/jpeg", "application/xml" ]
-      description: Angivelse av formatet på opplastet vedlegg.
-      example: application/pdf or image/jpeg.
-
-      properties:
-        vedleggRef:
-          type: string
-          description: Uuid reference to an attachment in an application
-        fileId:
-          type: string
-          description: Id of an uploaded file
-        opplastingsStatus:
-          $ref: "#/components/schemas/OpplastingsStatusDto"
-
-    NologinSoknadDto:
-      type: object
-      description: Complete application data from a not logged in user
-      required:
-        - soknadDto
-        - brukerOgAvsenderDto
-        - nologinVedleggList
-
-      properties:
-        soknadDto:
-          $ref: "#/components/schemas/SkjemaDtoV2"
-        nologinVedleggList:
-          type: array
-          description: List of uploaded files with reference to the application'a attachments that shall be sent in with the application
-          items:
-            $ref: "#/components/schemas/NologinVedleggDto"
-
-    NologinVedleggDto:
-      type: object
-      description: Ved innsending av søknad av ikke innlogget søker, skal det sendes med en liste med opplastede vedleggsfiler som skal sendes inn med søknaden
-      required:
-        - vedleggRef
-
-      properties:
-        vedleggRef:
-          type: string
-          description: Unic reference to an attachment in an application
-        fileIdList:
-          type: array
-          description: List of Ids to uploaded files in Bucket
-          items:
-            type: string
-            description: Id of an uploaded file
-        opplastingsStatus:
-          $ref: "#/components/schemas/OpplastingsStatusDto"
-
-    OpplastingsStatusDto:
-      type: string
-      enum: [ "IkkeValgt", "LastetOpp", "Innsendt", "SendSenere", "SendesAvAndre", "SendesIkke", "LastetOppIkkeRelevantLenger", "LevertDokumentasjonTidligere", "HarIkkeDokumentasjonen", "NavKanHenteDokumentasjon" ]
-      description: Status på om et vedlegg til søknad er enda ikke er lastet opp, lastet opp eller innsendt
-
     OpplastingsvalgKommentar:
       type: string
       default: null
@@ -2338,7 +2253,7 @@ components:
         tittel:
           $ref: "#/components/schemas/Tittel"
         opplastingsStatus:
-          $ref: "#/components/schemas/OpplastingsStatusDto"
+          $ref: "./common/components.yaml#/components/schemas/OpplastingsStatusDto"
         opplastingsValgKommentarLedetekst:
           $ref: "#/components/schemas/OpplastingsvalgKommentarLedetekst"
         opplastingsValgKommentar:
@@ -2403,7 +2318,7 @@ components:
         beskrivelse:
           $ref: "#/components/schemas/Beskrivelse"
         mimetype:
-          $ref: "#/components/schemas/Mimetype"
+          $ref: "./common/components.yaml#/components/schemas/Mimetype"
         pakrevd:
           $ref: "#/components/schemas/Pakrevd"
         document:
@@ -2436,7 +2351,7 @@ components:
         beskrivelse:
           $ref: "#/components/schemas/Beskrivelse"
         mimetype:
-          $ref: "#/components/schemas/Mimetype"
+          $ref: "./common/components.yaml#/components/schemas/Mimetype"
         pakrevd:
           $ref: "#/components/schemas/Pakrevd"
         document:
@@ -2446,7 +2361,7 @@ components:
         vedleggsurl:
           $ref: "#/components/schemas/Vedleggsurl"
         opplastingsStatus:
-          $ref: "#/components/schemas/OpplastingsStatusDto"
+          $ref: "./common/components.yaml#/components/schemas/OpplastingsStatusDto"
         opplastingsValgKommentarLedetekst:
           $ref: "#/components/schemas/OpplastingsvalgKommentarLedetekst"
         opplastingsValgKommentar:
@@ -2473,9 +2388,9 @@ components:
         innsendingsId:
           $ref: "#/components/schemas/InnsendingsId"
         brukerId:
-          $ref: "#/components/schemas/BrukerId"
+          $ref: "./common/components.yaml#/components/schemas/BrukerId"
         avsenderId:
-          $ref: "#/components/schemas/AvsenderDto"
+          $ref: "./common/components.yaml#/components/schemas/AvsenderDto"
         skjemanr:
           $ref: "#/components/schemas/Skjemanr"
         tittel:
@@ -2528,7 +2443,7 @@ components:
         brukerDto:
           $ref: "#/components/schemas/BrukerDto"
         avsenderId:
-          $ref: "#/components/schemas/AvsenderDto"
+          $ref: "./common/components.yaml#/components/schemas/AvsenderDto"
         skjemanr:
           $ref: "#/components/schemas/Skjemanr"
         tittel:
@@ -2671,7 +2586,7 @@ components:
           description: Unik identifikasjon
           example: 2f9b8d25-1056-4827-8ddd-cedab7fafacc
         mimetype:
-          $ref: "#/components/schemas/Mimetype"
+          $ref: "./common/components.yaml#/components/schemas/Mimetype"
         document:
           $ref: "#/components/schemas/Document"
         erHoveddokument:
@@ -2695,7 +2610,7 @@ components:
           description: Lenke til skjema som kan lastes ned for å fylles ut
           example: https://cdn.sanity.io/files/gx9wf39f/soknadsveiviser-p/c95447be624fb0ea7c27e1ff7518604bb7aacd71.pdf
         opplastingsStatus:
-          $ref: "#/components/schemas/OpplastingsStatusDto"
+          $ref: "./common/components.yaml#/components/schemas/OpplastingsStatusDto"
         opprettetdato:
           type: string
           format: date-time
@@ -2712,6 +2627,11 @@ components:
           $ref: "#/components/schemas/OpplastingsvalgKommentarLedetekst"
         opplastingsValgKommentar:
           $ref: "#/components/schemas/OpplastingsvalgKommentar"
+        fileIds:
+          type: array
+          description: Liste av Ider som identifiserer hvilke opplastede filer på dette vedlegget som skal sendes inn
+          items:
+            $ref: "./common/components.yaml#/components/schemas/UUID"
 
     Vedleggsnr:
       type: string
@@ -2733,11 +2653,6 @@ components:
       type: string
       enum: [ "fyllUt", "dokumentinnsending", "ettersending", "lospost", "nologin" ]
       description: Angir visningsmodus gitt opphav til søknaden
-
-    EnvQualifier:
-      type: string
-      enum: [ "preprodIntern", "preprodAltIntern", "preprodAnsatt", "preprodAltAnsatt", "delingslenke", "local" ]
-      description: Angir et ønske om miljø
 
 
 security: [ ]

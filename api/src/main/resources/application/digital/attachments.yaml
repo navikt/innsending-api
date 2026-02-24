@@ -1,0 +1,40 @@
+post:
+  summary: Upload file for given attachment
+  operationId: uploadAttachmentFile
+  security:
+  - idporten: []
+
+  parameters:
+    - $ref: "../../common/components.yaml#/components/parameters/InnsendingsId"
+    - $ref: "../../common/components.yaml#/components/parameters/AttachmentId"
+  requestBody:
+    content:
+      multipart/form-data:
+        schema:
+         $ref: "../common.yaml#/components/schemas/UploadFileRequest"
+
+  responses:
+    201:
+      $ref: "../common.yaml#/components/responses/FileCreated"
+    500:
+      $ref: "../../common/components.yaml#/components/responses/InteralServerError"
+  tags:
+    - sendinn-fil
+
+delete:
+  summary: Delete attachment including files
+  operationId: deleteAttachment
+  security:
+  - idporten: []
+
+  parameters:
+    - $ref: "../../common/components.yaml#/components/parameters/InnsendingsId"
+    - $ref: "../../common/components.yaml#/components/parameters/AttachmentId"
+
+  responses:
+    204:
+      description: No Content
+    500:
+      $ref: "../../common/components.yaml#/components/responses/InteralServerError"
+  tags:
+    - sendinn-fil
