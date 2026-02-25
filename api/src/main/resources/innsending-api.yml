@@ -396,7 +396,7 @@ paths:
                 schema:
                   type: array
                   items:
-                    $ref: "./../../../../external-api/src/main/resources/arena-api.yml#/components/schemas/Aktivitet"
+                    $ref: "./common/arena.yaml#/components/schemas/Aktivitet"
         tags:
           - fyllut
 
@@ -2294,7 +2294,7 @@ components:
           description: Søkerens kontonummer
           example: 8361347234732292
         sokerMaalgruppe:
-          $ref: "./../../../../external-api/src/main/resources/arena-api.yml#/components/schemas/Maalgruppe"
+          $ref: "./common/arena.yaml#/components/schemas/Maalgruppe"
 
     PropertyNavn:
       type: string

@@ -3,6 +3,7 @@ run-name: Manual ${{ github.event.inputs.environment }} deploy of branch ${{ git
 permissions:
   contents: "read"
   id-token: "write"
+  packages: "write"
 
 on:
   workflow_dispatch:
@@ -19,6 +20,12 @@ on:
           - prod
 
 jobs:
+  assemble-openapi-spec:
+    uses: ./.github/workflows/assemble-openapi-spec.yml
+    secrets: inherit
+    with:
+      force: true
+
   build-and-push:
     name: Build and push Docker container preprod
     runs-on: ubuntu-latest-8-cores

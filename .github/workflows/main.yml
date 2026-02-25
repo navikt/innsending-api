@@ -11,8 +11,13 @@ on:
 permissions:
   contents: "write"
   id-token: "write"
+  packages: "write"
 
 jobs:
+  assemble-openapi-spec:
+    uses: ./.github/workflows/assemble-openapi-spec.yml
+    secrets: inherit
+
   build-and-push:
     name: Build and push Docker container prod
     runs-on: ubuntu-latest-8-cores

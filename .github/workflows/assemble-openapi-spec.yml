@@ -1,0 +1,77 @@
+name: Assemble and publish OpenAPI spec
+
+on:
+  workflow_call:
+    inputs:
+      force:
+        description: 'Publish regardless of whether api/src/main/resources changed'
+        type: boolean
+        default: false
+
+jobs:
+  assemble-openapi-spec:
+    name: Assemble and publish OpenAPI spec
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check for changes in api/src/main/resources
+        id: filter
+        if: ${{ !inputs.force }}
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            resources:
+              - 'api/src/main/resources/**'
+
+      - name: Compute artifact version
+        id: version
+        run: |
+          POSTFIX=$([[ "${{ github.ref_name }}" == "main" ]] && echo "prod" || echo "dev")
+          echo "value=$(git rev-parse --short HEAD)-${POSTFIX}" >> $GITHUB_OUTPUT
+
+      - name: Check if artifact already exists in GitHub Packages
+        id: check
+        if: inputs.force || steps.filter.outputs.resources == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ steps.version.outputs.value }}
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "https://maven.pkg.github.com/navikt/innsending-api/no/nav/soknad/innsending/innsending-api/${VERSION}/innsending-api-${VERSION}-openapi-spec.zip")
+          echo "exists=$([ "$STATUS" = "200" ] && echo true || echo false)" >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-java@v4
+        if: (inputs.force || steps.filter.outputs.resources == 'true') && steps.check.outputs.exists != 'true'
+        with:
+          distribution: 'temurin'
+          java-version: 21
+
+      - name: Create ZIP of OpenAPI spec
+        if: (inputs.force || steps.filter.outputs.resources == 'true') && steps.check.outputs.exists != 'true'
+        run: |
+          cd api/src/main/resources
+          zip -r ${{ github.workspace }}/openapi-spec.zip . --include "*.yml" --include "*.yaml"
+
+      - name: Publish to GitHub Packages
+        if: (inputs.force || steps.filter.outputs.resources == 'true') && steps.check.outputs.exists != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mvn deploy:deploy-file \
+            --settings maven-settings.xml \
+            -DrepositoryId=github-packages \
+            -Durl=https://maven.pkg.github.com/navikt/innsending-api \
+            -DgroupId=no.nav.soknad.innsending \
+            -DartifactId=innsending-api \
+            -Dversion=${{ steps.version.outputs.value }} \
+            -Dclassifier=openapi-spec \
+            -Dpackaging=zip \
+            -Dfile=openapi-spec.zip \
+            -DgeneratePom=true

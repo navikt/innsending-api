@@ -8,5 +8,10 @@
 			<username>token</username>
 			<password>${env.GITHUB_NAV_TOKEN}</password>
 		</server>
+		<server>
+			<id>github-packages</id>
+			<username>token</username>
+			<password>${env.GITHUB_TOKEN}</password>
+		</server>
 	</servers>
 </settings>
