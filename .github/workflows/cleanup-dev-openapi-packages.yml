@@ -1,0 +1,45 @@
+name: Cleanup old dev OpenAPI spec packages
+
+on:
+  schedule:
+    - cron: '0 6 1 * *'  # First day of each month at 06:00
+  workflow_dispatch:
+    inputs:
+      older-than:
+        description: 'Delete dev versions older than'
+        required: true
+        default: '3 months ago'
+        type: choice
+        options:
+          - '3 months ago'
+          - '1 month ago'
+          - '1 week ago'
+          - '1 day ago'
+
+permissions:
+  packages: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find dev package versions older than 3 months
+        id: find
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CUTOFF=$(date -d "${{ inputs.older-than || '3 months ago' }}" --iso-8601=seconds)
+          IDS=$(gh api \
+            --paginate \
+            "/orgs/navikt/packages/maven/no.nav.soknad.innsending.innsending-api/versions" \
+            --jq ".[] | select(.name | endswith(\"-dev\")) | select(.updated_at < \"$CUTOFF\") | .id" \
+            | tr '\n' ',' | sed 's/,$//')
+          echo "ids=$IDS" >> $GITHUB_OUTPUT
+
+      - name: Delete old dev package versions
+        if: steps.find.outputs.ids != ''
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: 'no.nav.soknad.innsending.innsending-api'
+          package-type: 'maven'
+          package-version-ids: ${{ steps.find.outputs.ids }}
