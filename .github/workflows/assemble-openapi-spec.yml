@@ -32,8 +32,8 @@ jobs:
       - name: Compute artifact version
         id: version
         run: |
-          POM_VERSION=$(grep -m1 '<version>' pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/')
-          echo "value=${POM_VERSION}-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          POSTFIX=$([[ "${{ github.ref_name }}" == "main" ]] && echo "prod" || echo "dev")
+          echo "value=$(git rev-parse --short HEAD)-${POSTFIX}" >> $GITHUB_OUTPUT
 
       - name: Check if artifact already exists in GitHub Packages
         id: check
