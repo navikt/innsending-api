@@ -25,6 +25,7 @@ import no.nav.soknad.innsending.util.mapping.mapTilSkjemaDto
 import no.nav.soknad.innsending.util.models.erEttersending
 import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
+import no.nav.soknad.innsending.util.stringextensions.removeInvalidControlCharacters
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -267,7 +268,7 @@ class FyllutRestApi(
 			soknad,
 			submitApplicationRequest.mainDocument,
 			submitApplicationRequest.mainDocumentAlt,
-			submitApplicationRequest.attachments,
+			submitApplicationRequest.attachments.sanitize(),
 			submitApplicationRequest.avsender,
 		)
 
@@ -292,4 +293,13 @@ class FyllutRestApi(
 		}
 	}
 
+}
+
+fun List<AttachmentDto>?.sanitize(): List<AttachmentDto>? {
+	return this?.map {
+		it.copy(
+			title = it.title?.removeInvalidControlCharacters(),
+			label = it.label.removeInvalidControlCharacters(),
+		)
+	}
 }
