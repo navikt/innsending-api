@@ -37,7 +37,7 @@
 		<swagger-annotations.version>2.2.42</swagger-annotations.version>
 
 		<!--Token-->
-		<token-validation.version>5.0.40</token-validation.version>
+		<token-validation.version>6.0.3</token-validation.version>
 
 		<!--Database-->
 		<otj-pg-embedded.version>1.1.1</otj-pg-embedded.version>
