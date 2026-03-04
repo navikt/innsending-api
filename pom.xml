@@ -20,7 +20,7 @@
 
 	<properties>
 		<java.version>21</java.version>
-		<kotlin.version>2.2.21</kotlin.version>
+		<kotlin.version>2.3.10</kotlin.version>
 		<maven.version>3.9.0</maven.version>
 
 		<maven.compiler.source>${java.version}</maven.compiler.source>
@@ -34,7 +34,7 @@
 
 		<!--OpenAPI-->
 		<springdoc-openapi.version>2.8.9</springdoc-openapi.version>
-		<swagger-annotations.version>2.2.42</swagger-annotations.version>
+		<swagger-annotations.version>2.2.43</swagger-annotations.version>
 
 		<!--Token-->
 		<token-validation.version>5.0.40</token-validation.version>
@@ -44,18 +44,18 @@
 		<flyway.version>11.20.3</flyway.version>
 
 		<!--Other-->
-		<kotlin-serialization.version>1.9.0</kotlin-serialization.version>
+		<kotlin-serialization.version>1.10.0</kotlin-serialization.version>
 		<kafka.version>3.9.1</kafka.version>
-		<micrometer.version>1.16.2</micrometer.version>
-		<prometheus.version>1.4.3</prometheus.version>
+		<micrometer.version>1.16.3</micrometer.version>
+		<prometheus.version>1.5.0</prometheus.version>
 		<jakarta-servlet-api.version>6.1.0</jakarta-servlet-api.version>
 		<jakarta-validation-api.version>3.1.1</jakarta-validation-api.version>
 		<jakarta-annotation.version>3.0.0</jakarta-annotation.version>
-		<jakarta-xml.version>4.0.4</jakarta-xml.version>
+		<jakarta-xml.version>4.0.5</jakarta-xml.version>
 		<verapdf.core-jakarta.version>1.28.2</verapdf.core-jakarta.version>
 		<verapdf.core-model-jakarta.version>1.28.2</verapdf.core-model-jakarta.version>
-		<jackson-databind-nullable.version>0.2.8</jackson-databind-nullable.version>
-		<jackson.version>2.19.2</jackson.version>
+		<jackson-databind-nullable.version>0.2.9</jackson-databind-nullable.version>
+		<jackson.version>2.21</jackson.version>
 		<coroutines.version>1.10.2</coroutines.version>
 		<logstash.version>9.0</logstash.version>
 		<imgscalr-lib.version>4.2</imgscalr-lib.version>
@@ -68,7 +68,7 @@
 		<wiremock.version>3.13.2</wiremock.version>
 
 		<!--Testing-->
-		<logcaptor.version>2.12.2</logcaptor.version>
+		<logcaptor.version>2.12.5</logcaptor.version>
 		<mockk.version>1.14.9</mockk.version>
 		<springmockk.version>4.0.2</springmockk.version>
 		<testcontainers.version>1.21.4</testcontainers.version>
@@ -86,9 +86,9 @@
 
 		<!--Plugins-->
 		<versions-maven-plugin.version>2.21.0</versions-maven-plugin.version>
-		<maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
+		<maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
 
-		<openapi-generator-maven-plugin.version>7.19.0</openapi-generator-maven-plugin.version>
+		<openapi-generator-maven-plugin.version>7.20.0</openapi-generator-maven-plugin.version>
 
 		<cyclonedx-maven-plugin.version>2.9.1</cyclonedx-maven-plugin.version>
 		<maven-enforcer.version>3.6.2</maven-enforcer.version>
