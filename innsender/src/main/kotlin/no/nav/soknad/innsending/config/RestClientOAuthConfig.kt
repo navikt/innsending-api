@@ -37,7 +37,7 @@ class RestClientOAuthConfig(
 	fun antivirusRestClient(restConfig: RestConfig): RestClient {
 		return RestClient.builder()
 			.baseUrl(restConfig.antivirusUrl)
-			.requestFactory(timeouts())
+			.requestFactory(timeouts(readTimeoutMinutes = 2))
 			.build()
 	}
 
@@ -131,12 +131,14 @@ class RestClientOAuthConfig(
 	@Qualifier("skjemaRestClient")
 	fun skjemaClientWithoutOAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.sanityHost).build()
 
-	private fun timeouts(): ClientHttpRequestFactory {
+	private fun timeouts(
+		readTimeoutMinutes: Long = defaultReadTimeout,
+		connectTimeoutSeconds: Long = defaultConnectTimeout
+	): ClientHttpRequestFactory {
 		val factory =
 			SimpleClientHttpRequestFactory()  // MERK: støtter ikke http.patch bruk eventuelt JdkClientHttpRequestFactory
-		factory.setReadTimeout(Duration.ofMinutes(defaultReadTimeout))
-		factory.setConnectTimeout(Duration.ofSeconds(defaultConnectTimeout))
-		//factory.setExchangeTimeout(Duration.ofMinutes(1))
+		factory.setReadTimeout(Duration.ofMinutes(readTimeoutMinutes))
+		factory.setConnectTimeout(Duration.ofSeconds(connectTimeoutSeconds))
 		return factory
 	}
 
