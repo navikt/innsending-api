@@ -315,6 +315,62 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 	}
 
 	@Test
+	fun `skal sanitere vedleggstittel og -label`() {
+		val innsendingId = UUID.randomUUID().toString()
+
+		val navId3 = "dj5jkj"
+		val file3 = api.uploadNologinFileV2(vedleggId = navId3, innsendingId = innsendingId)
+			.assertSuccess()
+			.body
+
+		val attachmentAnnenDokumentasjon = AttachmentDto(
+			attachmentCode = "N6",
+			title = '\u007F' + "Annen dokumentasjon" + '\u0000',
+			label = '\u007F' + "Kvittering fra apotek" + '\u0000',
+			uploadStatus = OpplastingsStatusDto.LastetOpp,
+			fileIds = listOf(file3.id),
+		)
+
+		val submitResponse = api.submitNologinApplication(
+			innsendingId,
+			attachments = listOf(attachmentAnnenDokumentasjon)
+		)
+			.assertSuccess()
+			.body
+
+		val vedleggKvittering = submitResponse.attachments?.firstOrNull { it.attachmentCode == attachmentAnnenDokumentasjon.attachmentCode }
+		assertNotNull(vedleggKvittering)
+		assertEquals(OpplastingsStatusDto.Innsendt, vedleggKvittering.uploadStatus)
+		assertEquals("Kvittering fra apotek", vedleggKvittering.label)
+
+		val slotSoknad = slot<DokumentSoknadDto>()
+		val slotVedleggsliste = slot<List<VedleggDto>>()
+		val slotAvsender = slot<AvsenderDto>()
+		val slotBruker = slot<BrukerDto?>()
+		verify(exactly = 1) {
+			soknadsmottaker.sendInnSoknad(
+				capture(slotSoknad),
+				capture(slotVedleggsliste),
+				capture(slotAvsender),
+				captureNullable(slotBruker)
+			)
+		}
+
+		assertEquals(innsendingId, slotSoknad.captured.innsendingsId)
+		val innsendteDokumenter = slotVedleggsliste.captured
+		assertEquals(3, innsendteDokumenter.size)
+
+		val innsendtN6 =
+			innsendteDokumenter.firstOrNull { it.vedleggsnr == attachmentAnnenDokumentasjon.attachmentCode }
+		assertNotNull(innsendtN6)
+		assertEquals("Annen dokumentasjon", innsendtN6.tittel)
+		assertEquals("Kvittering fra apotek", innsendtN6.label)
+
+		val hoveddokumentListe = innsendteDokumenter.filter { it.erHoveddokument }
+		assertEquals(2, hoveddokumentListe.size)
+	}
+
+	@Test
 	fun `skal feile dersom vedleggene ikke har unike id'er (old)`() {
 		val innsendingId = UUID.randomUUID().toString()
 		val vedleggId = "dj5jkj"

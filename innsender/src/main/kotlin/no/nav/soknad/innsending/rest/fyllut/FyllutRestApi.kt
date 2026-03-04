@@ -22,6 +22,7 @@ import no.nav.soknad.innsending.util.Constants.TOKENX
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.mapping.SkjemaDokumentSoknadTransformer
 import no.nav.soknad.innsending.util.mapping.mapTilSkjemaDto
+import no.nav.soknad.innsending.util.models.attachmentdto.sanitize
 import no.nav.soknad.innsending.util.models.erEttersending
 import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
@@ -267,7 +268,7 @@ class FyllutRestApi(
 			soknad,
 			submitApplicationRequest.mainDocument,
 			submitApplicationRequest.mainDocumentAlt,
-			submitApplicationRequest.attachments,
+			submitApplicationRequest.attachments.sanitize(),
 			submitApplicationRequest.avsender,
 		)
 

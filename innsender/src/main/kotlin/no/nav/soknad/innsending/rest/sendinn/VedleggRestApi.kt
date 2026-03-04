@@ -7,7 +7,6 @@ import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.rest.validering.removeInvalidControlCharacters
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.SoknadService
@@ -17,6 +16,7 @@ import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
+import no.nav.soknad.innsending.util.stringextensions.removeInvalidControlCharacters
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -92,7 +92,7 @@ class VedleggRestApi(
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
 
-		val validatedInput = patchVedleggDto.copy(tittel = removeInvalidControlCharacters("tittel", patchVedleggDto.tittel))
+		val validatedInput = patchVedleggDto.copy(tittel = patchVedleggDto.tittel?.removeInvalidControlCharacters())
 
 		if ((validatedInput.opplastingsStatus == OpplastingsStatusDto.IkkeValgt || validatedInput.opplastingsStatus == OpplastingsStatusDto.LastetOpp)
 			&& soknadDto.vedleggsListe.first { it.id == vedleggsId }.opplastingsStatus != validatedInput.opplastingsStatus
@@ -134,8 +134,8 @@ class VedleggRestApi(
 		combinedLogger.log("$innsendingsId: Kall for å lagre vedlegg til søknad", brukerId)
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
-		val validatedInput = if (postVedleggDto != null)
-			postVedleggDto.copy(tittel = removeInvalidControlCharacters("tittel", postVedleggDto.tittel))
+		val validatedInput = if (postVedleggDto != null && postVedleggDto.tittel != null)
+			postVedleggDto.copy(tittel = postVedleggDto.tittel?.removeInvalidControlCharacters())
 		else
 			postVedleggDto
 

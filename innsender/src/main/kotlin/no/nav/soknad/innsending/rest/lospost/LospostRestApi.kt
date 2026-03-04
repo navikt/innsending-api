@@ -7,12 +7,12 @@ import no.nav.soknad.innsending.location.UrlHandler
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.LospostDto
 import no.nav.soknad.innsending.model.OpprettLospost
-import no.nav.soknad.innsending.rest.validering.removeInvalidControlCharacters
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.LospostService
 import no.nav.soknad.innsending.service.NotificationService
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
+import no.nav.soknad.innsending.util.stringextensions.removeInvalidControlCharacters
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -40,8 +40,8 @@ class LospostRestApi(
 	): ResponseEntity<LospostDto> {
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		val validatedInput = opprettLospost.copy(
-			soknadTittel = removeInvalidControlCharacters("soknadTittel", opprettLospost.soknadTittel)!!,
-			dokumentTittel = removeInvalidControlCharacters("dokumentTittel", opprettLospost.dokumentTittel)!!
+			soknadTittel = opprettLospost.soknadTittel.removeInvalidControlCharacters(),
+			dokumentTittel = opprettLospost.dokumentTittel.removeInvalidControlCharacters(),
 		)
 		val (soknadTittel, tema, dokumentTittel, sprak) = validatedInput
 		combinedLogger.log("Skal opprette en innsending for løspost (tema $tema)", brukerId)

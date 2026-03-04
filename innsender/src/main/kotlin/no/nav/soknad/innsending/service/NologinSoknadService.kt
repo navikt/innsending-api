@@ -22,6 +22,7 @@ import no.nav.soknad.innsending.util.mapping.lagDokumentSoknadDto
 import no.nav.soknad.innsending.util.mapping.mapTilMimetype
 import no.nav.soknad.innsending.util.mapping.mapTilSoknadDb
 import no.nav.soknad.innsending.util.mapping.toDokumentSoknadDto
+import no.nav.soknad.innsending.util.models.attachmentdto.sanitize
 import no.nav.soknad.innsending.util.stringextensions.toUUID
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -63,7 +64,7 @@ class NologinSoknadService(
 			soknadService.hentSoknad(dbSoknad.id!!),
 			submitApplicationRequest.mainDocument,
 			submitApplicationRequest.mainDocumentAlt,
-			submitApplicationRequest.attachments,
+			submitApplicationRequest.attachments.sanitize(),
 			submitApplicationRequest.avsender,
 		)
 
