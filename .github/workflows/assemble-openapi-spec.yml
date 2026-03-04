@@ -7,6 +7,12 @@ on:
         description: 'Publish regardless of whether api/src/main/resources changed'
         type: boolean
         default: false
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Publish regardless of whether api/src/main/resources changed'
+        type: boolean
+        default: false
 
 jobs:
   assemble-openapi-spec:
