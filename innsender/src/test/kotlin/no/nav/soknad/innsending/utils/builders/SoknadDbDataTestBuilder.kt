@@ -1,5 +1,7 @@
 package no.nav.soknad.innsending.utils.builders
 
+import no.nav.soknad.innsending.model.AvsenderDto
+import no.nav.soknad.innsending.model.BrukerDto
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
@@ -30,7 +32,11 @@ data class SoknadDbDataTestBuilder(
 	var ettersendingsFrist: Long = 14,
 	var arkiveringsStatus: ArkiveringsStatus = ArkiveringsStatus.IkkeSatt,
 	var applikasjon: String? = "application",
-	var skalslettesdato: OffsetDateTime = OffsetDateTime.now().plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD)
+	var skalslettesdato: OffsetDateTime = OffsetDateTime.now().plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD),
+	var brukerType: BrukerDto.IdType? = BrukerDto.IdType.FNR,
+	var avsenderId: String? = null,
+	var avsenderType: AvsenderDto.IdType? = null,
+	var avsenderNavn: String? = null
 ) {
 	fun build() = SoknadDbData(
 		id = id,
@@ -52,6 +58,10 @@ data class SoknadDbDataTestBuilder(
 		ettersendingsfrist = ettersendingsFrist,
 		arkiveringsstatus = arkiveringsStatus,
 		applikasjon = applikasjon,
-		skalslettesdato = skalslettesdato
+		skalslettesdato = skalslettesdato,
+		brukertype = BrukerDto.IdType.FNR,
+		avsenderid = avsenderId ?: brukerId,
+		avsendertype = if (avsenderType != null) avsenderType else AvsenderDto.IdType.FNR,
+		avsendernavn = null,
 	)
 }

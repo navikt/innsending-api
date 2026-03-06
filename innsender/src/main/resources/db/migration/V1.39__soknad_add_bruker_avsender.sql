@@ -1,0 +1,5 @@
+ALTER TABLE soknad ADD COLUMN brukertype VARCHAR(255);
+ALTER TABLE soknad ADD COLUMN avsenderid VARCHAR(255);
+ALTER TABLE soknad ADD COLUMN avsendertype VARCHAR(255);
+ALTER TABLE soknad ADD COLUMN avsendernavn VARCHAR(255);
+

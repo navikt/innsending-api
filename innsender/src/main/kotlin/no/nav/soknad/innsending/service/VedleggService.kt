@@ -307,7 +307,7 @@ class VedleggService(
 				VedleggDbData(
 					id = null,
 					soknadDto.id!!,
-					status = OpplastingsStatus.IKKE_VALGT,
+					status = OpplastingsStatus.KLAR_FOR_INNSENDING,
 					erhoveddokument = true,
 					ervariant = true,
 					erpdfa = false,

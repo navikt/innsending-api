@@ -18,7 +18,6 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.PatchVedleggDto
 import no.nav.soknad.innsending.model.SoknadFile
-import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.Hjelpemetoder
@@ -97,7 +96,7 @@ class InnsendingServiceTest : ApplicationTest() {
 
 
 	@Test
-	fun sendInnSoknad() {
+	fun forberedSoknadInnsending() {
 		val innsendingService = lagInnsendingService(soknadService)
 		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
@@ -170,13 +169,13 @@ class InnsendingServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun sendInnSoknadFeilerUtenOpplastetHoveddokument() {
+	fun forberedSoknadInnsendingFeilerUtenOpplastetHoveddokument() {
 		val innsendingService = lagInnsendingService(soknadService)
 
 		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
 		assertThrows<IllegalActionException> {
-			innsendingService.sendInnSoknad(dokumentSoknadDto)
+			innsendingService.forberedSoknadInnsending(dokumentSoknadDto)
 		}
 		soknadService.hentSoknad(dokumentSoknadDto.innsendingsId!!)
 	}
@@ -219,7 +218,7 @@ class InnsendingServiceTest : ApplicationTest() {
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
 		assertEquals(1, ettersendingsSoknadDto.vedleggsListe.size)
 
-		val (ettersendingKvittering, nyEttersending) = innsendingService.sendInnSoknad(ettersendingsSoknadDto)
+		val (ettersendingKvittering, nyEttersending) = innsendingService.forberedSoknadInnsending(ettersendingsSoknadDto)
 		assertTrue(ettersendingKvittering.hoveddokumentRef == null)
 		assertTrue(ettersendingKvittering.innsendteVedlegg!!.isEmpty())
 		assertTrue(ettersendingKvittering.skalEttersendes!!.isNotEmpty())
@@ -350,7 +349,7 @@ class InnsendingServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun sendInnSoknadMedVedlegg() {
+	fun forberedSoknadInnsendingMedVedlegg() {
 		val innsendingService = lagInnsendingService(soknadService)
 		val dokumentSoknadDto =
 			SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1", "X1", "X2", "W2", "W3", "W4"))

@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpStatus
+import java.lang.Thread.sleep
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -131,6 +132,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
+		sleep(1000)
 		verify(exactly = 1) {
 			soknadsmottakerApi.sendInnSoknad(
 				capture(slotSoknad),
@@ -147,15 +149,15 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 
 		val innsendingskvittering = innsendteDokumenter.firstOrNull { it.vedleggsnr == Constants.KVITTERINGS_NR }
 		assertNotNull(innsendingskvittering)
-		assertEquals(OpplastingsStatusDto.LastetOpp, innsendingskvittering.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.KlarForInnsending, innsendingskvittering.opplastingsStatus)
 
 		val innsendtM2 = innsendteDokumenter.firstOrNull { it.vedleggsnr == vedleggsnrM2 }
 		assertNotNull(innsendtM2)
-		assertEquals(OpplastingsStatusDto.LastetOpp, innsendtM2.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.KlarForInnsending, innsendtM2.opplastingsStatus)
 
 		val hoveddokumentListe = innsendteDokumenter.filter { it.erHoveddokument }
 		assertEquals(2, hoveddokumentListe.size)
-		assertTrue { hoveddokumentListe.all { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp } }
+		assertTrue { hoveddokumentListe.all { it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending } }
 
 		// verify fetching of files from soknadsarkiverer
 		innsendteDokumenter.forEach { submittedAttachment ->
@@ -216,6 +218,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
+		sleep(1000)
 		verify(exactly = 1) {
 			soknadsmottakerApi.sendInnSoknad(
 				capture(slotSoknad),
@@ -235,7 +238,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 
 		val hoveddokumentListe = innsendteDokumenter.filter { it.erHoveddokument }
 		assertEquals(2, hoveddokumentListe.size)
-		assertTrue { hoveddokumentListe.all { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp } }
+		assertTrue { hoveddokumentListe.all { it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending } }
 
 		val soknadspdf = hoveddokumentListe.first { !it.erVariant }
 		assertEquals(Mimetype.applicationSlashPdf, soknadspdf.mimetype)
@@ -318,11 +321,11 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		// verify response
 		assertEquals(4, submissionResponse.attachments?.size)
 		assertEquals(
-			OpplastingsStatusDto.Innsendt,
+			OpplastingsStatusDto.KlarForInnsending,
 			submissionResponse.attachments?.first { it.attachmentCode == "M2" }?.uploadStatus
 		)
 		assertEquals(
-			OpplastingsStatusDto.Innsendt,
+			OpplastingsStatusDto.KlarForInnsending,
 			submissionResponse.attachments?.first { it.attachmentCode == "M3" }?.uploadStatus
 		)
 		assertEquals(
@@ -356,6 +359,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
+		sleep(1000)
 		verify(exactly = 1) {
 			soknadsmottakerApi.sendInnSoknad(
 				capture(slotSoknad),
@@ -372,18 +376,18 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 
 		val innsendtM2 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "M2" }
 		assertNotNull(innsendtM2)
-		assertEquals(OpplastingsStatusDto.LastetOpp, innsendtM2.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.KlarForInnsending, innsendtM2.opplastingsStatus)
 
 		val innsendtM3 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "M3" }
 		assertNotNull(innsendtM3)
-		assertEquals(OpplastingsStatusDto.LastetOpp, innsendtM2.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.KlarForInnsending, innsendtM3.opplastingsStatus)
 
 		val vedleggM4 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "M4" }
 		assertNull(vedleggM4)
 
 		val hoveddokumentListe = innsendteDokumenter.filter { it.erHoveddokument }
 		assertEquals(2, hoveddokumentListe.size)
-		assertTrue { hoveddokumentListe.all { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp } }
+		assertTrue { hoveddokumentListe.all { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending } }
 
 		// verify fetching of files from soknadsarkiverer
 		innsendteDokumenter.forEach { submittedAttachment ->
@@ -462,7 +466,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		// verify response
 		assertEquals(1, submissionResponse.attachments?.size)
 		assertEquals(
-			OpplastingsStatusDto.Innsendt,
+			OpplastingsStatusDto.KlarForInnsending,
 			submissionResponse.attachments?.first { it.attachmentCode == "M2" }?.uploadStatus
 		)
 		assertNull(submissionResponse.ettersendingsId)
@@ -485,6 +489,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
+		sleep(1000)
 		verify(exactly = 1) {
 			soknadsmottakerApi.sendInnSoknad(
 				capture(slotSoknad),
@@ -501,11 +506,11 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 
 		val innsendtM2 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "M2" }
 		assertNotNull(innsendtM2)
-		assertEquals(OpplastingsStatusDto.LastetOpp, innsendtM2.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.KlarForInnsending, innsendtM2.opplastingsStatus)
 
 		val hoveddokumentListe = innsendteDokumenter.filter { it.erHoveddokument }
 		assertEquals(2, hoveddokumentListe.size)
-		assertTrue { hoveddokumentListe.all { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp } }
+		assertTrue { hoveddokumentListe.all { it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending } }
 
 		val soknadspdf = hoveddokumentListe.first { !it.erVariant }
 		assertEquals(Mimetype.applicationSlashPdf, soknadspdf.mimetype)
@@ -588,6 +593,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
+		sleep(1000)
 		verify(exactly = 1) {
 			soknadsmottakerApi.sendInnSoknad(
 				capture(slotSoknad),
@@ -604,19 +610,19 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 
 		val innsendtM2 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "M2" }
 		assertNotNull(innsendtM2)
-		assertEquals(OpplastingsStatusDto.LastetOpp, innsendtM2.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.KlarForInnsending, innsendtM2.opplastingsStatus)
 
 		val innsendtM3 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "M3" }
 		assertNotNull(innsendtM3)
-		assertEquals(OpplastingsStatusDto.LastetOpp, innsendtM2.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.KlarForInnsending, innsendtM2.opplastingsStatus)
 
 		val innsendtL7 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "L7" }
 		assertNotNull(innsendtL7)
-		assertEquals(OpplastingsStatusDto.LastetOpp, innsendtL7.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.KlarForInnsending, innsendtL7.opplastingsStatus)
 
 		val hoveddokumentListe = innsendteDokumenter.filter { it.erHoveddokument }
 		assertEquals(2, hoveddokumentListe.size)
-		assertTrue { hoveddokumentListe.all { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp } }
+		assertTrue { hoveddokumentListe.all { it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending } }
 
 		// verify fetching of files from soknadsarkiverer
 		innsendteDokumenter.forEach { submittedAttachment ->
@@ -694,11 +700,11 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		// verify response
 		assertEquals(4, submissionResponse.attachments?.size)
 		assertEquals(
-			OpplastingsStatusDto.Innsendt,
+			OpplastingsStatusDto.KlarForInnsending,
 			submissionResponse.attachments?.first { it.attachmentCode == "M2" }?.uploadStatus
 		)
 		assertEquals(
-			OpplastingsStatusDto.Innsendt,
+			OpplastingsStatusDto.KlarForInnsending,
 			submissionResponse.attachments?.first { it.attachmentCode == "M3" }?.uploadStatus
 		)
 		assertEquals(
@@ -720,6 +726,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
+		sleep(1000)
 		verify(exactly = 1) {
 			soknadsmottakerApi.sendInnSoknad(
 				capture(slotSoknad),
@@ -736,18 +743,18 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 
 		val innsendtM2 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "M2" }
 		assertNotNull(innsendtM2)
-		assertEquals(OpplastingsStatusDto.LastetOpp, innsendtM2.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.KlarForInnsending, innsendtM2.opplastingsStatus)
 
 		val innsendtM3 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "M3" }
 		assertNotNull(innsendtM3)
-		assertEquals(OpplastingsStatusDto.LastetOpp, innsendtM2.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.KlarForInnsending, innsendtM2.opplastingsStatus)
 
 		val vedleggM4 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "M4" }
 		assertNull(vedleggM4)
 
 		val hoveddokumentListe = innsendteDokumenter.filter { it.erHoveddokument }
 		assertEquals(2, hoveddokumentListe.size)
-		assertTrue { hoveddokumentListe.all { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp } }
+		assertTrue { hoveddokumentListe.all { it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending } }
 
 		// verify fetching of files from soknadsarkiverer
 		innsendteDokumenter.forEach { submittedAttachment ->

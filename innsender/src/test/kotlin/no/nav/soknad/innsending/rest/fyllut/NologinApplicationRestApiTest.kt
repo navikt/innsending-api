@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpStatus
+import java.lang.Thread.sleep
 import java.util.*
 import kotlin.test.assertEquals
 
@@ -159,6 +160,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
+		sleep(50)
 		verify(exactly = 1) {
 			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),
@@ -264,7 +266,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 			.body
 		assertEquals(submitResponse.mainDocumentFileId, null, "Skal ikke returnere hoveddokumentRef ved nologin")
 		assertEquals(1, submitResponse.attachments?.filter { it.uploadStatus == OpplastingsStatusDto.SendSenere }?.size)
-		assertEquals(3, submitResponse.attachments?.filter { it.uploadStatus == OpplastingsStatusDto.Innsendt }?.size)
+		assertEquals(3, submitResponse.attachments?.filter { it.uploadStatus == OpplastingsStatusDto.KlarForInnsending }?.size)
 		assertEquals(0, submitResponse.attachments?.filter { it.uploadStatus == OpplastingsStatusDto.SendesAvAndre }?.size)
 
 		val vedleggT4Ettersending = submitResponse.attachments?.firstOrNull { it.attachmentCode == "T4" }
@@ -273,16 +275,17 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 		val vedleggForerkort = submitResponse.attachments?.firstOrNull { it.label == "Førerkort" }
 		assertNotNull(vedleggForerkort)
-		assertEquals(OpplastingsStatusDto.Innsendt, vedleggForerkort.uploadStatus)
+		assertEquals(OpplastingsStatusDto.KlarForInnsending, vedleggForerkort.uploadStatus)
 
 		val vedleggKvittering = submitResponse.attachments?.firstOrNull { it.label == "Kvittering fra apotek" }
 		assertNotNull(vedleggKvittering)
-		assertEquals(OpplastingsStatusDto.Innsendt, vedleggKvittering.uploadStatus)
+		assertEquals(OpplastingsStatusDto.KlarForInnsending, vedleggKvittering.uploadStatus)
 
 		val slotSoknad = slot<DokumentSoknadDto>()
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
+		sleep(50)
 		verify(exactly = 1) {
 			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),
@@ -340,13 +343,14 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 		val vedleggKvittering = submitResponse.attachments?.firstOrNull { it.attachmentCode == attachmentAnnenDokumentasjon.attachmentCode }
 		assertNotNull(vedleggKvittering)
-		assertEquals(OpplastingsStatusDto.Innsendt, vedleggKvittering.uploadStatus)
+		assertEquals(OpplastingsStatusDto.KlarForInnsending, vedleggKvittering.uploadStatus)
 		assertEquals("Kvittering fra apotek", vedleggKvittering.label)
 
 		val slotSoknad = slot<DokumentSoknadDto>()
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
+		sleep(25)
 		verify(exactly = 1) {
 			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),
@@ -548,6 +552,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
+		sleep(25)
 		verify(exactly = 1) {
 			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),
@@ -577,6 +582,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
+		sleep(25)
 		verify(exactly = 1) {
 			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),

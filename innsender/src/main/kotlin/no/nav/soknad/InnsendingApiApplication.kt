@@ -5,12 +5,14 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.runApplication
 import org.springframework.retry.annotation.EnableRetry
+import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.transaction.annotation.EnableTransactionManagement
 
 @SpringBootApplication(exclude = [SecurityAutoConfiguration::class])
 @EnableTransactionManagement
 @ConfigurationPropertiesScan
 @EnableRetry
+@EnableAsync
 class InnsendingApiApplication
 
 fun main(args: Array<String>) {

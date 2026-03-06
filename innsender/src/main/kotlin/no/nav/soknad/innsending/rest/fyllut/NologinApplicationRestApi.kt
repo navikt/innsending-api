@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.model.FileDto
 import no.nav.soknad.innsending.model.SubmitApplicationRequest
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.DocumentService
+import no.nav.soknad.innsending.service.InnsendingService
 import no.nav.soknad.innsending.service.NologinSoknadService
 import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.service.config.annotation.VerifyConfigValue
@@ -30,9 +31,10 @@ import java.util.UUID
 	claimMap = ["roles=nologin-access"],
 )
 class NologinApplicationRestApi(
-    private val documentService: DocumentService,
-    private val subjectHandler: SubjectHandlerInterface,
-    private val nologinSoknadService: NologinSoknadService,
+	private val documentService: DocumentService,
+	private val subjectHandler: SubjectHandlerInterface,
+	private val nologinSoknadService: NologinSoknadService,
+	private val innsendingService: InnsendingService,
 ) : NologinApplicationApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -109,7 +111,9 @@ class NologinApplicationRestApi(
 			?: "ukjent"
 		combinedLogger.log("$innsendingsId: Kall for å sende inn søknad av uinnlogget bruker (applikasjon $clientId)", brukerId)
 
-		val result = nologinSoknadService.lagreOgSendInnUinnloggetSoknad(innsendingsId, submitApplicationRequest, clientId)
+		val result = nologinSoknadService.lagreOgForberedInnsendingAvUinnloggetSoknad(innsendingsId, submitApplicationRequest, clientId)
+
+		innsendingService.sendInnForArkivering(result.innsendingsId.toString())
 
 		return ResponseEntity.ok(result)
 	}

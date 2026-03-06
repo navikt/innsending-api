@@ -147,17 +147,17 @@ fun translate(vedleggDtos: List<VedleggDto>): List<DocumentData> {
 	 */
 	// Lag DokumentData for hoveddokumentet (finn alle vedleggdto markert som hoveddokument)
 	val hoveddokumentVedlegg: List<Varianter> = vedleggDtos
-		.filter { it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
+		.filter { it.erHoveddokument && (it.opplastingsStatus == OpplastingsStatusDto.LastetOpp || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending)}
 		.map { translate(it) }
 
 	val hovedDokument: DocumentData = vedleggDtos
-		.filter { it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp && !it.erVariant }
+		.filter { it.erHoveddokument && (it.opplastingsStatus == OpplastingsStatusDto.LastetOpp || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending) && !it.erVariant }
 		.map { DocumentData(it.vedleggsnr!!, it.erHoveddokument, it.tittel, hoveddokumentVedlegg) }
 		.first()
 
 	// Merk: at det  er antatt at vedlegg ikke har varianter. Hvis vi skal støtte dette må varianter av samme vedlegg linkes sammen
 	val vedlegg: List<DocumentData> = vedleggDtos
-		.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
+		.filter { !it.erHoveddokument && (it.opplastingsStatus == OpplastingsStatusDto.LastetOpp || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending) }
 		.map { DocumentData(it.vedleggsnr!!, it.erHoveddokument, it.tittel, listOf(translate(it))) }
 
 	return listOf(hovedDokument) + vedlegg
@@ -171,17 +171,17 @@ fun translate(vedleggDtos: List<VedleggDto>, newFormat: Boolean): List<DokumentD
 	 */
 	// Lag DokumentData for hoveddokumentet (finn alle vedleggdto markert som hoveddokument)
 	val hoveddokumentVedlegg: List<Variant> = vedleggDtos
-		.filter { it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
+		.filter { it.erHoveddokument && (it.opplastingsStatus == OpplastingsStatusDto.LastetOpp || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending) }
 		.map { translate(it, true) }
 
 	val hovedDokument: DokumentData = vedleggDtos
-		.filter { it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp && !it.erVariant }
+		.filter { it.erHoveddokument && (it.opplastingsStatus == OpplastingsStatusDto.LastetOpp || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending) && !it.erVariant }
 		.map { DokumentData(it.vedleggsnr!!, it.erHoveddokument, it.tittel, hoveddokumentVedlegg) }
 		.first()
 
 	// Merk: at det  er antatt at vedlegg ikke har varianter. Hvis vi skal støtte dette må varianter av samme vedlegg linkes sammen
 	val vedlegg: List<DokumentData> = vedleggDtos
-		.filter { !it.erHoveddokument && it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
+		.filter { !it.erHoveddokument && (it.opplastingsStatus == OpplastingsStatusDto.LastetOpp || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending) }
 		.map { DokumentData(it.vedleggsnr!!, it.erHoveddokument, it.tittel, listOf(translate(it, true))) }
 
 	return listOf(hovedDokument) + vedlegg

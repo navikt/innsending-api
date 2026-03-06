@@ -44,7 +44,7 @@ class NologinSoknadService(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Transactional(timeout = TRANSACTION_TIMEOUT)
-	fun lagreOgSendInnUinnloggetSoknad(
+	fun lagreOgForberedInnsendingAvUinnloggetSoknad(
 		innsendingsId: UUID,
 		submitApplicationRequest: SubmitApplicationRequest,
 		applikasjon: String
@@ -60,7 +60,7 @@ class NologinSoknadService(
 		repo.lagreVedlegg(dbSoknad.createMainDocument())
 		repo.lagreVedlegg(dbSoknad.createMainDocument(true))
 
-		val result = innsendingService.submitApplication(
+		val result = innsendingService.preSubmitApplication(
 			soknadService.hentSoknad(dbSoknad.id!!),
 			submitApplicationRequest.mainDocument,
 			submitApplicationRequest.mainDocumentAlt,
@@ -72,7 +72,7 @@ class NologinSoknadService(
 	}
 
 	@Transactional(timeout = TRANSACTION_TIMEOUT)
-	fun lagreOgSendInnUinnloggetSoknad(uinnloggetSoknadDto: SkjemaDtoV2, applikasjon: String): KvitteringsDto {
+	fun lagreOgForberedInnsendingAvUinnloggetSoknad(uinnloggetSoknadDto: SkjemaDtoV2, applikasjon: String): KvitteringsDto {
 		val operation = InnsenderOperation.OPPRETT.name
 		val bruker = uinnloggetSoknadDto.brukerDto
 		val avsender = uinnloggetSoknadDto.avsenderId ?: if (bruker != null) AvsenderDto(
@@ -92,7 +92,7 @@ class NologinSoknadService(
 		)
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 		try {
-			val savedSoknadDbData = repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId))
+			val savedSoknadDbData = repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto = dokumentSoknadDto, innsendingsId = innsendingsId, avsender = avsender, bruker = bruker))
 			val soknadsid = savedSoknadDbData.id
 			val savedVedleggDbData = vedleggService.saveVedleggFromDto(soknadsid!!, dokumentSoknadDto.vedleggsListe)
 
@@ -118,7 +118,7 @@ class NologinSoknadService(
 			lagreFiler(savedDokumentSoknadDto, uinnloggetSoknadDto)
 
 			innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
-			return innsendingService.sendInnNoLoginSoknad(savedDokumentSoknadDto, avsender, bruker)
+			return innsendingService.forberedNoLoginSoknadInnsending(savedDokumentSoknadDto, avsenderDto = avsender, brukerDto = bruker)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, dokumentSoknadDto.tema)
 			throw e
