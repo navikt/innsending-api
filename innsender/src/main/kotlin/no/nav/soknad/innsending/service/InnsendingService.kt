@@ -393,6 +393,7 @@ class InnsendingService(
 		val uploadedAttachments = savedAttachments.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
 		val filesForSubmission = mainDocument + mainDocumentAlt + uploadedAttachments
 		soknadsmottakerAPI.sendInnSoknad(soknad, filesForSubmission, avsenderDto, brukerDto)
+		innsenderMetrics.incSubmissionsCounter(soknad.visningsType)
 
 		val submittedSoknad = soknadService.submit(innsendingsId, filesForSubmission)
 
