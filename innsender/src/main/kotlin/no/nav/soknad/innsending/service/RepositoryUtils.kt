@@ -438,6 +438,8 @@ class RepositoryUtils(
 				HendelseType.Opprettet
 			} else if (soknadDbData.status == SoknadsStatus.AutomatiskSlettet) {
 				HendelseType.SlettetAvSystem
+			} else if (soknadDbData.status == SoknadsStatus.KlarForInnsending) {
+				HendelseType.KlarForInnsending
 			} else if (soknadDbData.status == SoknadsStatus.Innsendt && soknadDbData.arkiveringsstatus == ArkiveringsStatus.IkkeSatt) {
 				HendelseType.Innsendt
 			} else if (soknadDbData.status == SoknadsStatus.Innsendt && soknadDbData.arkiveringsstatus == ArkiveringsStatus.Arkivert) {
