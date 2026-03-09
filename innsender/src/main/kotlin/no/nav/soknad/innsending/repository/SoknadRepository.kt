@@ -103,6 +103,18 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 	)
 	fun findInnsendtAndArkiveringsStatusIkkeSatt(@Param("before") before: LocalDateTime): List<String>
 
+	@Query(
+		value = "SELECT COUNT(*) FROM soknad WHERE status = 'KlarForInnsending' AND innsendtdato < :before",
+		nativeQuery = true
+	)
+	fun countNotSentInApplications(@Param("before") before: LocalDateTime): Long
+
+	@Query(
+		value = "SELECT innsendingsid FROM soknad WHERE status  = 'KlarForInnsending' AND innsendtdato < :before",
+		nativeQuery = true
+	)
+	fun findNotSentIntApplications(@Param("before") before: LocalDateTime): List<String>
+
 	@Transactional
 	@Modifying
 	@Query(

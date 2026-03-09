@@ -31,4 +31,21 @@ class ScheduledOperationsService(
 
 	}
 
+
+	fun findNotSentInApplications(offsetMinutes: Long): List<String> {
+		val numberOfnotSentInApplications =
+			soknadRepository.countNotSentInApplications(LocalDateTime.now().minusMinutes(offsetMinutes))
+		if (numberOfnotSentInApplications > 0) {
+			logger.warn("Total number of applications not yet sent in to soknadsMottaker: $numberOfnotSentInApplications")
+			val notSentInApplications =
+				soknadRepository.findNotSentIntApplications(LocalDateTime.now().minusMinutes(offsetMinutes))
+			logger.info("Applications not yet picked up and processed by soknadsarkiverer: $notSentInApplications")
+			innsenderMetrics.setNotSentIn(numberOfnotSentInApplications)
+			return notSentInApplications
+		} else {
+			logger.info("All applications sent in")
+			innsenderMetrics.setNotSentIn(numberOfnotSentInApplications)
+			return emptyList()
+		}
+	}
 }
