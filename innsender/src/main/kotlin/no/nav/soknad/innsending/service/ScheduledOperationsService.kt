@@ -33,6 +33,7 @@ class ScheduledOperationsService(
 
 
 	fun findNotSentInApplications(offsetMinutes: Long): List<String> {
+		logger.info("Checking if all applications are sent in")
 		val numberOfnotSentInApplications =
 			soknadRepository.countNotSentInApplications(LocalDateTime.now().minusMinutes(offsetMinutes))
 		if (numberOfnotSentInApplications > 0) {

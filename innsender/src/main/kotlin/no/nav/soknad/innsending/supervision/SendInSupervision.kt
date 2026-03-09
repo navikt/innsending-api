@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.supervision
 
 import no.nav.soknad.innsending.cleanup.LeaderSelection
-import no.nav.soknad.innsending.cleanup.LeaderSelectionUtility
 import no.nav.soknad.innsending.service.InnsendingService
 import no.nav.soknad.innsending.service.ScheduledOperationsService
 import org.slf4j.LoggerFactory
@@ -27,7 +26,7 @@ class SendInSupervision(
 		logger.info("Initializing scheduled job ${javaClass.kotlin.simpleName} (offsetHours=$offsetMinutes)")
 	}
 
-	@Scheduled(cron = "\${cron.runSendInSupervision}")
+	@Scheduled(cron = every10Minute_Start5MinutePassedHour)
 	fun run() {
 		try {
 			if (leaderSelection.isLeader()) {
@@ -39,5 +38,6 @@ class SendInSupervision(
 		}
 	}
 
-
 }
+
+private const val every10Minute_Start5MinutePassedHour = "0 5/10 * * * *"
