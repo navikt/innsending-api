@@ -321,11 +321,11 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		// verify response
 		assertEquals(4, submissionResponse.attachments?.size)
 		assertEquals(
-			OpplastingsStatusDto.KlarForInnsending,
+			OpplastingsStatusDto.Innsendt,
 			submissionResponse.attachments?.first { it.attachmentCode == "M2" }?.uploadStatus
 		)
 		assertEquals(
-			OpplastingsStatusDto.KlarForInnsending,
+			OpplastingsStatusDto.Innsendt,
 			submissionResponse.attachments?.first { it.attachmentCode == "M3" }?.uploadStatus
 		)
 		assertEquals(
@@ -466,7 +466,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		// verify response
 		assertEquals(1, submissionResponse.attachments?.size)
 		assertEquals(
-			OpplastingsStatusDto.KlarForInnsending,
+			OpplastingsStatusDto.Innsendt,
 			submissionResponse.attachments?.first { it.attachmentCode == "M2" }?.uploadStatus
 		)
 		assertNull(submissionResponse.ettersendingsId)
@@ -700,11 +700,11 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		// verify response
 		assertEquals(4, submissionResponse.attachments?.size)
 		assertEquals(
-			OpplastingsStatusDto.KlarForInnsending,
+			OpplastingsStatusDto.Innsendt,
 			submissionResponse.attachments?.first { it.attachmentCode == "M2" }?.uploadStatus
 		)
 		assertEquals(
-			OpplastingsStatusDto.KlarForInnsending,
+			OpplastingsStatusDto.Innsendt,
 			submissionResponse.attachments?.first { it.attachmentCode == "M3" }?.uploadStatus
 		)
 		assertEquals(

@@ -266,7 +266,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 			.body
 		assertEquals(submitResponse.mainDocumentFileId, null, "Skal ikke returnere hoveddokumentRef ved nologin")
 		assertEquals(1, submitResponse.attachments?.filter { it.uploadStatus == OpplastingsStatusDto.SendSenere }?.size)
-		assertEquals(3, submitResponse.attachments?.filter { it.uploadStatus == OpplastingsStatusDto.KlarForInnsending }?.size)
+		assertEquals(3, submitResponse.attachments?.filter { it.uploadStatus == OpplastingsStatusDto.Innsendt }?.size)
 		assertEquals(0, submitResponse.attachments?.filter { it.uploadStatus == OpplastingsStatusDto.SendesAvAndre }?.size)
 
 		val vedleggT4Ettersending = submitResponse.attachments?.firstOrNull { it.attachmentCode == "T4" }
@@ -275,11 +275,11 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 		val vedleggForerkort = submitResponse.attachments?.firstOrNull { it.label == "Førerkort" }
 		assertNotNull(vedleggForerkort)
-		assertEquals(OpplastingsStatusDto.KlarForInnsending, vedleggForerkort.uploadStatus)
+		assertEquals(OpplastingsStatusDto.Innsendt, vedleggForerkort.uploadStatus)
 
 		val vedleggKvittering = submitResponse.attachments?.firstOrNull { it.label == "Kvittering fra apotek" }
 		assertNotNull(vedleggKvittering)
-		assertEquals(OpplastingsStatusDto.KlarForInnsending, vedleggKvittering.uploadStatus)
+		assertEquals(OpplastingsStatusDto.Innsendt, vedleggKvittering.uploadStatus)
 
 		val slotSoknad = slot<DokumentSoknadDto>()
 		val slotVedleggsliste = slot<List<VedleggDto>>()
@@ -343,7 +343,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 		val vedleggKvittering = submitResponse.attachments?.firstOrNull { it.attachmentCode == attachmentAnnenDokumentasjon.attachmentCode }
 		assertNotNull(vedleggKvittering)
-		assertEquals(OpplastingsStatusDto.KlarForInnsending, vedleggKvittering.uploadStatus)
+		assertEquals(OpplastingsStatusDto.Innsendt, vedleggKvittering.uploadStatus)
 		assertEquals("Kvittering fra apotek", vedleggKvittering.label)
 
 		val slotSoknad = slot<DokumentSoknadDto>()
