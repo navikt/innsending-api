@@ -20,7 +20,7 @@ class SendInSupervision(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	@Scheduled(cron = everyMinute)
+	@Scheduled(cron = every5Minute_Start0MinutePassedHour)
 	fun runSendInSupervision() {
 		try {
 			logger.info("Running scheduled job ${javaClass.kotlin.simpleName}")
@@ -35,6 +35,5 @@ class SendInSupervision(
 
 }
 
-private const val every10Minute_Start5MinutePassedHour = "0 5/10 * * * *"
-private const val everyMinute = "0 * * * * *"
+private const val every5Minute_Start0MinutePassedHour = "0 0/5 * * * *"
 
