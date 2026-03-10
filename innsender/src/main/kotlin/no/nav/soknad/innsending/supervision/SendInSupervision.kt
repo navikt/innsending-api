@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 
 @EnableScheduling
 @Component
-@Profile("dev | prod")
+//@Profile("dev | prod")
 class SendInSupervision(
 	private val leaderSelection: LeaderSelection,
 	private val scheduledOperationsService: ScheduledOperationsService,
@@ -29,6 +29,7 @@ class SendInSupervision(
 	@Scheduled(cron = every10Minute_Start5MinutePassedHour)
 	fun run() {
 		try {
+			logger.info("Running scheduled job ${javaClass.kotlin.simpleName}")
 			if (leaderSelection.isLeader()) {
 				val notSentInApplications = scheduledOperationsService.findNotSentInApplications(offsetMinutes)
 				notSentInApplications.forEach {innsendingService.sendInnForArkivering(it)}
