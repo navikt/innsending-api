@@ -448,7 +448,7 @@ class InnsendingService(
 			attachments = submittedSoknad.vedleggsListeUtenHoveddokument.map {
 				AttachmentDto1(
 					attachmentCode = it.vedleggsnr!!,
-					uploadStatus = it.opplastingsStatus,
+					uploadStatus = if (OpplastingsStatusDto.KlarForInnsending==it.opplastingsStatus)  OpplastingsStatusDto.Innsendt else it.opplastingsStatus,
 					label = it.label,
 				 	fileIds = if (nologin) null else it.fileIds,
 				)
