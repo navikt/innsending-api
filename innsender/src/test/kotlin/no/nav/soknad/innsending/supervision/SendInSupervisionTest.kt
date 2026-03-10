@@ -8,10 +8,8 @@ import no.nav.soknad.innsending.cleanup.LeaderSelection
 import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.service.InnsendingService
 import no.nav.soknad.innsending.service.ScheduledOperationsService
-import no.nav.soknad.innsending.service.config.ConfigDefinition
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
 import java.util.UUID
 
 class SendInSupervisionTest {
@@ -56,7 +54,7 @@ class SendInSupervisionTest {
 
 	@Test
 	fun `should trigger resending all not sent in applications`() {
-		sendInSupervision.run()
+		sendInSupervision.runSendInSupervision()
 
 		verify(exactly = 1) { soknadRepository.countNotSentInApplications((any() )) }
 		verify(exactly = 1) { metrics.setNotSentIn(3) }

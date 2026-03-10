@@ -55,7 +55,7 @@ ettersendingsfrist: 14
 verifyArchivedApplications:
   offsetMinutes: 95
 checkNotSentInApplications:
-  offsetMinutes: 10
+  offsetMinutes: 5
 
 kafka:
   applicationId: ${KAFKA_STREAMS_APPLICATION_ID}

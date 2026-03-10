@@ -5,14 +5,12 @@ import no.nav.soknad.innsending.service.InnsendingService
 import no.nav.soknad.innsending.service.ScheduledOperationsService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @EnableScheduling
 @Component
-//@Profile("dev | prod")
 class SendInSupervision(
 	private val leaderSelection: LeaderSelection,
 	private val scheduledOperationsService: ScheduledOperationsService,
@@ -22,12 +20,8 @@ class SendInSupervision(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	init {
-		logger.info("Initializing scheduled job ${javaClass.kotlin.simpleName} (offsetHours=$offsetMinutes)")
-	}
-
-	@Scheduled(cron = every10Minute_Start5MinutePassedHour)
-	fun run() {
+	@Scheduled(cron = everyMinute)
+	fun runSendInSupervision() {
 		try {
 			logger.info("Running scheduled job ${javaClass.kotlin.simpleName}")
 			if (leaderSelection.isLeader()) {
@@ -37,8 +31,10 @@ class SendInSupervision(
 		} catch (e: Exception) {
 			logger.error("Something went wrong running scheduled job ${javaClass.kotlin.simpleName}", e)
 		}
-	}
+ 	}
 
 }
 
 private const val every10Minute_Start5MinutePassedHour = "0 5/10 * * * *"
+private const val everyMinute = "0 * * * * *"
+
