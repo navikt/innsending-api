@@ -23,9 +23,24 @@ services:
     image: fsouza/fake-gcs-server
     container_name: innsending-api-gcs
     restart: always
-    entrypoint: [ "/bin/fake-gcs-server", "-data", "/data", "-scheme", "http" ]
+    entrypoint: [ "/bin/fake-gcs-server", "-scheme", "http", "-filesystem-root", "/storage" ]
     ports:
       - "4443:4443"
+    volumes:
+      - cloud-storage-data:/storage
+
+  cloud-storage-browser:
+    image: sigoden/dufs:latest
+    container_name: innsending-api-gcs-browser
+    user: "0:0"
+    restart: always
+    depends_on:
+      - cloud-storage
+    command: ["/srv", "--bind", "0.0.0.0", "--port", "5000"]
+    ports:
+      - "8088:5000"
+    volumes:
+      - cloud-storage-data:/srv
 
   innsending-api:
     depends_on:
@@ -47,4 +62,6 @@ services:
 
 volumes:
   db:
+    driver: local
+  cloud-storage-data:
     driver: local
