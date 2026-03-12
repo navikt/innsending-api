@@ -21,6 +21,7 @@ class KonverterTilPdf(
 ) : KonverterTilPdfInterface {
 
 	private val logger = LoggerFactory.getLogger(KonverterTilPdf::class.java)
+	private val imageDownscaler = ImageDownscaler()
 
 	override fun tilPdf(
 		fil: ByteArray,
@@ -34,8 +35,10 @@ class KonverterTilPdf(
 
 		return if ("pdf".equals(filtype, ignoreCase = true)) {
 			checkAndFormatPDF(fil)
-		} else if (officeFileTypes.keys.contains(filtype) || imageFileTypes.keys.contains(filtype)) {
+		} else if (officeFileTypes.keys.contains(filtype)) {
 			createPDFFromOfficeDoc(genererFilnavn(innsendingId, filtype), fil, tittel, spraak ?: "nb-NO")
+		} else if (imageFileTypes.keys.contains(filtype)) {
+			createPDFFromImage(genererFilnavn(innsendingId, filtype), filtype, fil, tittel, spraak ?: "nb-NO")
 		} else if (textTypes.contains(filtype)) {
 			createPDFFromText(tittel, fil, spraak)
 		}	else {
@@ -71,6 +74,19 @@ class KonverterTilPdf(
 
 	private fun createPDFFromOfficeDoc(filnavn: String, fil: ByteArray, tittel: String = "Annet", spraak: String = "nb-NO"): Pair<ByteArray, Int> {
 		val pdf = pdfConverter.toPdf(filnavn, fil)
+		val antallSider = AntallSider().finnAntallSider(pdf) ?: 0
+		return Pair(setPdfMetadata(pdf, tittel, spraak), antallSider)
+	}
+
+	private fun createPDFFromImage(
+		filnavn: String,
+		filtype: String,
+		fil: ByteArray,
+		tittel: String = "Annet",
+		spraak: String = "nb-NO"
+	): Pair<ByteArray, Int> {
+		val scaledImage = imageDownscaler.downscaleForPdfIfNeeded(filnavn, filtype, fil)
+		val pdf = pdfConverter.toPdf(filnavn, scaledImage)
 		val antallSider = AntallSider().finnAntallSider(pdf) ?: 0
 		return Pair(setPdfMetadata(pdf, tittel, spraak), antallSider)
 	}

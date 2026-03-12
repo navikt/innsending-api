@@ -3,10 +3,12 @@ package no.nav.soknad.pdfutilities
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
+import org.apache.pdfbox.Loader
+import org.apache.pdfbox.rendering.ImageType
+import org.apache.pdfbox.rendering.PDFRenderer
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import kotlin.test.assertEquals
-import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
 import org.junit.jupiter.api.Assertions.assertTrue
 
 class KonverterTilPdfTest: ApplicationTest() {
@@ -37,6 +39,23 @@ class KonverterTilPdfTest: ApplicationTest() {
 		val ferdig = System.currentTimeMillis()
 		println("Tid til konvertering av mellomstorJpg = ${ferdig - start}")
 		assertEquals(1, antallSider)
+		assertTrue(harSynligInnhold(pdf))
+
+		val validation = VeraPDFValidator().validatePdf(pdf)
+
+		assertTrue(validation.isPdfACompliant)
+	}
+
+	@Test
+	fun verifiserKonverteringAvJpgMedMangePiksler() {
+		val jpg = Hjelpemetoder.getBytesFromFile("/A-Messeavisa-MC-messen-19-feb-2026.jpg")
+
+		val start = System.currentTimeMillis()
+		val (pdf, antallSider) = konverterTilPdf.tilPdf(jpg, soknadDto.innsendingsId!!, ".jpg", "Annet", "nb-NO")
+		val ferdig = System.currentTimeMillis()
+		println("Tid til konvertering av A-Messeavisa-MC-messen-19-feb-2026.jpg = ${ferdig - start}")
+		assertEquals(1, antallSider)
+		assertTrue(harSynligInnhold(pdf))
 
 		val validation = VeraPDFValidator().validatePdf(pdf)
 
@@ -52,8 +71,8 @@ class KonverterTilPdfTest: ApplicationTest() {
 		val png = KonverterTilPng().konverterTilPng(orig)
 		val ferdig = System.currentTimeMillis()
 		println("Tid til konvertering av forside-nav = ${ferdig - start}")
-		writeBytesToFile(png[0], "../target/forside-nav.png")
-0	}
+		assertTrue(png.isNotEmpty())
+	}
 
 	@Test
 	fun verifiserKonverteringAvTxtFil() {
@@ -121,6 +140,21 @@ class KonverterTilPdfTest: ApplicationTest() {
 		assertTrue(validation.isPdfACompliant)
 	}
 
+
+	private fun harSynligInnhold(pdf: ByteArray): Boolean {
+		Loader.loadPDF(pdf).use { document ->
+			val renderedPage = PDFRenderer(document).renderImageWithDPI(0, 72f, ImageType.RGB)
+			for (y in 0 until renderedPage.height) {
+				for (x in 0 until renderedPage.width) {
+					if (renderedPage.getRGB(x, y) != -1) {
+						return true
+					}
+				}
+			}
+		}
+
+		return false
+	}
 
 
 }
