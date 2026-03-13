@@ -91,13 +91,19 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 	}
 
-	fun deleteSoknad(innsendingsId: String): ResponseEntity<BodyStatusResponseDto>? {
-		return restTemplate.exchange(
+	fun deleteSoknad(innsendingsId: String): InnsendingApiResponse<BodyStatusResponseDto>? {
+
+		val response = restTemplate.exchange(
 			"http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}",
 			HttpMethod.DELETE,
 			createHttpEntity(null),
-			BodyStatusResponseDto::class.java
+			//BodyStatusResponseDto::class.java
+			String::class.java
 		)
+
+		val body = readBody(response, BodyStatusResponseDto::class.java)
+		return InnsendingApiResponse(response.statusCode, body, response.headers)
+
 	}
 
 	fun getSoknad(innsendingsId: String): ResponseEntity<SkjemaDto>? {

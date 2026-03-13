@@ -180,7 +180,7 @@ class InnsendingService(
 		try {
 			val lagretSoknadDb = repo.lagreSoknad(mapTilSoknadDb(soknadDto,
 				soknadDto.innsendingsId!!, SoknadsStatus.Innsendt, avsender=avsender, bruker=bruker))
-			logger.info("$innsendingsId: Satt soknad.status=${lagretSoknadDb.status}")
+			logger.info("$innsendingsId: sendInnForArkivering, satt soknad.status=${lagretSoknadDb.status}")
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			throw BackendErrorException(message = "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV")
@@ -266,7 +266,7 @@ class InnsendingService(
 		logger.info("$innsendingsId: Starter innsending av skjema ${soknad_.skjemanr}")
 
 		val soknad = soknadService.prepareSubmit(innsendingsId)
-		logger.info("$innsendingsId: Satt soknad.status=${soknad.status}")
+		logger.info("$innsendingsId: preSubmitApplication, satt soknad.status=${soknad.status}")
 		val brukerDto = if (soknad.brukerId.isNullOrEmpty()) null else BrukerDto(id = soknad.brukerId!!, idType = BrukerDto.IdType.FNR)
 		if (brukerDto == null && avsender == null) {
 			throw IllegalActionException(

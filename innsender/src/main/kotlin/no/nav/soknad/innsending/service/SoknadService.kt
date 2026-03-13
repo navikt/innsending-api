@@ -194,8 +194,8 @@ class SoknadService(
 
 	fun prepareSubmit(innsendingsId: String): DokumentSoknadDto {
 		val soknadDbData = repo.hentSoknadDb(innsendingsId)
-		if (soknadDbData.status == SoknadsStatus.Innsendt || soknadDbData.status == SoknadsStatus.KlarForInnsending) {
-			throw IllegalActionException("$innsendingsId: Søknad er allerede sendt inn")
+		if (!(soknadDbData.status == SoknadsStatus.Opprettet || soknadDbData.status == SoknadsStatus.Utfylt)) {
+			throw IllegalActionException("$innsendingsId: Kan ikke sende inn søknad når status er ${soknadDbData.status}")
 		}
 		val innsendtdato = LocalDateTime.now()
 		val submittedSoknad = repo.lagreSoknad(
