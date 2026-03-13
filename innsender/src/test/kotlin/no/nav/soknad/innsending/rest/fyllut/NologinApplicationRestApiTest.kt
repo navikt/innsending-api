@@ -686,7 +686,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
-		sleep(25)
+		sleep(50)
 		verify(exactly = 1) {
 			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),

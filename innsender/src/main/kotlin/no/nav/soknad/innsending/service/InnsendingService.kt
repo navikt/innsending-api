@@ -605,7 +605,8 @@ class InnsendingService(
 				antallsider = 1,
 				data = dummySkjema,
 				opprettetdato = OffsetDateTime.now()
-			)
+			),
+			true
 		)
 
 		return soknadService.hentSoknad(soknadDto.innsendingsId!!)

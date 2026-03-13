@@ -301,7 +301,8 @@ class EttersendingServiceTest : ApplicationTest() {
 						"W1",
 						true
 					)
-				})
+				}),
+				canChange = true
 			)
 
 		assertTrue(lagretFil.id != null)
