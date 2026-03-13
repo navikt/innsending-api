@@ -317,7 +317,111 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		assertEquals(2, hoveddokumentListe.size)
 	}
 
+
 	@Test
+	fun `Skal få feilmelding ved forsøk på å sende inn søknad på nytt`() {
+		val innsendingId = UUID.randomUUID().toString()
+
+		val navId1 = "personal-id"
+		val file1 = api.uploadNologinFileV2(vedleggId = navId1, innsendingId = innsendingId)
+			.assertSuccess()
+			.body
+
+		val navId2 = "e9logo"
+		api.uploadNologinFileV2(vedleggId = navId2, innsendingId = innsendingId)
+			.assertSuccess()
+			.body.let {
+				assertNotNull(it.id)
+			}
+
+		val navId3 = "dj5jkj"
+		val file3 = api.uploadNologinFileV2(vedleggId = navId3, innsendingId = innsendingId)
+			.assertSuccess()
+			.body
+
+		val navId4 = "dj5jkj-1"
+		val file4 = api.uploadNologinFileV2(vedleggId = navId4, innsendingId = innsendingId)
+			.assertSuccess()
+			.body
+
+		val attachmentLegitimasjon = AttachmentDto(
+			attachmentCode = "K2",
+			title = "Norsk pass",
+			label = "Norsk pass",
+			uploadStatus = OpplastingsStatusDto.LastetOpp,
+			fileIds = listOf(file1.id),
+		)
+
+		val attachmentSomSendesSenere = AttachmentDto(
+			attachmentCode = "T4",
+			title = "Kursbevis",
+			label = "Kursbevis for førstehjelpskurs",
+			uploadStatus = OpplastingsStatusDto.SendSenere,
+			fileIds = null,
+		)
+
+		val attachmentAnnenDokumentasjon1 = AttachmentDto(
+			attachmentCode = "N6",
+			title = "Annen dokumentasjon",
+			label = "Kvittering fra apotek",
+			uploadStatus = OpplastingsStatusDto.LastetOpp,
+			fileIds = listOf(file3.id),
+		)
+
+		val attachmentAnnenDokumentasjon2 = AttachmentDto(
+			attachmentCode = "N6",
+			title = "Annen dokumentasjon",
+			label = "Førerkort",
+			uploadStatus = OpplastingsStatusDto.LastetOpp,
+			fileIds = listOf(file4.id),
+		)
+
+		val submitResponse = api.submitNologinApplication(
+			innsendingId,
+			attachments = listOf(
+				attachmentLegitimasjon,
+				attachmentSomSendesSenere,
+				attachmentAnnenDokumentasjon1,
+				attachmentAnnenDokumentasjon2
+			)
+		)
+			.assertSuccess()
+			.body
+
+		assertEquals(submitResponse.mainDocumentFileId, null, "Skal ikke returnere hoveddokumentRef ved nologin")
+		assertEquals(1, submitResponse.attachments?.filter { it.uploadStatus == OpplastingsStatusDto.SendSenere }?.size)
+		assertEquals(3, submitResponse.attachments?.filter { it.uploadStatus == OpplastingsStatusDto.Innsendt }?.size)
+		assertEquals(0, submitResponse.attachments?.filter { it.uploadStatus == OpplastingsStatusDto.SendesAvAndre }?.size)
+
+		val vedleggT4Ettersending = submitResponse.attachments?.firstOrNull { it.attachmentCode == "T4" }
+		assertEquals("Kursbevis for førstehjelpskurs", vedleggT4Ettersending?.label)
+		assertEquals(OpplastingsStatusDto.SendSenere, vedleggT4Ettersending?.uploadStatus)
+
+		val vedleggForerkort = submitResponse.attachments?.firstOrNull { it.label == "Førerkort" }
+		assertNotNull(vedleggForerkort)
+		assertEquals(OpplastingsStatusDto.Innsendt, vedleggForerkort.uploadStatus)
+
+		val vedleggKvittering = submitResponse.attachments?.firstOrNull { it.label == "Kvittering fra apotek" }
+		assertNotNull(vedleggKvittering)
+		assertEquals(OpplastingsStatusDto.Innsendt, vedleggKvittering.uploadStatus)
+
+
+		val submitResponse2 = api.submitNologinApplication(
+			innsendingId,
+			attachments = listOf(
+				attachmentLegitimasjon,
+				attachmentSomSendesSenere,
+				attachmentAnnenDokumentasjon1,
+				attachmentAnnenDokumentasjon2
+			)
+		)
+			.assertClientError()
+			.errorBody.let {
+				assertEquals("Søknad med innsendingsId $innsendingId finnes allerede", it.message)
+			}
+	}
+
+		@Test
 	fun `skal sanitere vedleggstittel og -label`() {
 		val innsendingId = UUID.randomUUID().toString()
 
@@ -582,7 +686,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
-		sleep(25)
+		sleep(50)
 		verify(exactly = 1) {
 			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),

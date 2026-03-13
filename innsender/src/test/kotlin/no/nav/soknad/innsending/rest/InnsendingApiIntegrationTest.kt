@@ -4,6 +4,10 @@ import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearAllMocks
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
@@ -14,6 +18,7 @@ import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.stotteTilBolig
 import no.nav.soknad.innsending.utils.Api
+import no.nav.soknad.innsending.utils.Api.InnsendingApiResponse
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoV2TestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
@@ -26,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
 import java.lang.Thread.sleep
 import java.util.*
 import kotlin.test.assertEquals
@@ -419,7 +425,72 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertEquals(SoknadFile.FileStatus.notfound, filesUnknownAttachment[0].fileStatus)
 	}
 
+
 	@Test
+	fun testAtAndreGangsInnsendingFeiler() {
+		val skjemanr = "NAV 10-07.54"
+		val skjematittel = "Søknad om servicehund"
+		val hoveddokument =
+			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokument(skjemanr, withFile = false).build()
+		val hoveddokumentVariant =
+			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokumentVariant(skjemanr, withFile = true).build()
+
+		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = skjemanr, tittel = skjematittel)
+			.medHoveddokument(hoveddokument)
+			.medHoveddokumentVariant(hoveddokumentVariant)
+			.build()
+
+		val soknad = api.createSoknad(skjemaDto)
+			.assertSuccess()
+			.body
+		val innsendingsId = soknad.innsendingsId!!
+
+		val fileM2part1 = api.uploadAttachmentFile(innsendingsId, "M2")
+			.assertSuccess()
+			.body
+		val fileM2part2 = api.uploadAttachmentFile(innsendingsId, "M2")
+			.assertSuccess()
+			.body
+
+		val fileM3 = api.uploadAttachmentFile(innsendingsId, "M3")
+			.assertSuccess()
+			.body
+
+		val attachments = listOf(
+			AttachmentDto(
+				attachmentCode = "M2",
+				"Medisinske utgifter",
+				OpplastingsStatusDto.LastetOpp,
+				fileIds = listOf(fileM2part1.id, fileM2part2.id)
+			),
+			AttachmentDto(
+				attachmentCode = "M3",
+				"Legeerklæring",
+				OpplastingsStatusDto.LastetOpp,
+				fileIds = listOf(fileM3.id)
+			),
+			AttachmentDto(attachmentCode = "M4", "Kursbevis", OpplastingsStatusDto.SendesAvAndre),
+			AttachmentDto(attachmentCode = "M5", "Leiekontrakt", OpplastingsStatusDto.SendSenere),
+		)
+		val submissionResponse = api.submitDigitalApplication(soknad, attachments)
+			.assertSuccess()
+			.body
+
+		// verify response
+		assertEquals(4, submissionResponse.attachments?.size)
+		assertTrue(submissionResponse.mainDocumentFileId != null)
+
+		val submissionRespons2e = api.submitDigitalApplication(soknad, attachments)
+			.assertClientError()
+			.errorBody.let {
+				assertEquals("illegalAction.applicationSentInOrDeleted", it.errorCode)
+				assertEquals("Søknaden kan ikke vises. Søknaden er slettet eller innsendt og kan ikke vises eller endres.", it.message)
+			}
+
+	}
+
+
+		@Test
 	fun testTilleggstonadApplicationWithAttachmentFilesInBucket() {
 		val skjemanr = stotteTilBolig
 		val skjematittel = "Tilleggsstønad - støtte til bolig og overnatting"
@@ -785,4 +856,83 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertEquals(1, filesUnknownAttachment.size)
 		assertEquals(SoknadFile.FileStatus.notfound, filesUnknownAttachment[0].fileStatus)
 	}
+
+
+	@Test
+	fun `Test parallell delete and sendIn operation on application`() = runBlocking {
+		val (skjemaDto, attachments) = createApplication()
+		assertTrue( skjemaDto != null)
+
+		val threads = 2
+		val callResponses = mutableMapOf<String, HttpStatusCode>()
+
+		val jobs = (1..threads).map { iterasjon ->
+			async(Dispatchers.IO) {
+				when (iterasjon) {
+					1 -> callResponses.put("submitDigitalApplication", api.submitDigitalApplication(skjemaDto, attachments).statusCode)
+					2 -> {
+						callResponses.put("deleteSoknad", api.deleteSoknad(skjemaDto.innsendingsId!!)?.statusCode ?: HttpStatusCode.valueOf(400))
+					}
+				}
+			}
+		}
+		val responses = jobs.awaitAll()
+
+		assertTrue(callResponses.count() == 2)
+		assertEquals(HttpStatusCode.valueOf(200),callResponses.get("deleteSoknad"))
+		assertTrue(HttpStatusCode.valueOf(404)==callResponses.get("submitDigitalApplication") || HttpStatusCode.valueOf(500)==callResponses.get("submitDigitalApplication"))
+
+	}
+
+
+	private fun createApplication(): Pair<SkjemaDto?, List<AttachmentDto>> {
+		val skjemanr = "NAV 10-07.54"
+		val skjematittel = "Søknad om servicehund"
+		val hoveddokument =
+			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokument(skjemanr, withFile = false).build()
+		val hoveddokumentVariant =
+			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokumentVariant(skjemanr, withFile = true).build()
+
+		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = skjemanr, tittel = skjematittel)
+			.medHoveddokument(hoveddokument)
+			.medHoveddokumentVariant(hoveddokumentVariant)
+			.build()
+
+		val soknad = api.createSoknad(skjemaDto)
+			.assertSuccess()
+			.body
+		val innsendingsId = soknad.innsendingsId!!
+
+		val fileM2part1 = api.uploadAttachmentFile(innsendingsId, "M2")
+			.assertSuccess()
+			.body
+		val fileM2part2 = api.uploadAttachmentFile(innsendingsId, "M2")
+			.assertSuccess()
+			.body
+
+		val fileM3 = api.uploadAttachmentFile(innsendingsId, "M3")
+			.assertSuccess()
+			.body
+
+		val attachments = listOf(
+			AttachmentDto(
+				attachmentCode = "M2",
+				"Medisinske utgifter",
+				OpplastingsStatusDto.LastetOpp,
+				fileIds = listOf(fileM2part1.id, fileM2part2.id)
+			),
+			AttachmentDto(
+				attachmentCode = "M3",
+				"Legeerklæring",
+				OpplastingsStatusDto.LastetOpp,
+				fileIds = listOf(fileM3.id)
+			),
+			AttachmentDto(attachmentCode = "M4", "Kursbevis", OpplastingsStatusDto.SendesAvAndre),
+			AttachmentDto(attachmentCode = "M5", "Leiekontrakt", OpplastingsStatusDto.SendSenere),
+		)
+		return Pair(api.getSoknad(innsendingsId)?.body, attachments)
+
+	}
+
+
 }

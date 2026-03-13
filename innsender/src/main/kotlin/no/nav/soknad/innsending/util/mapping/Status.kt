@@ -27,10 +27,10 @@ fun mapTilSoknadsStatus(soknadsStatus: SoknadsStatusDto?, newStatus: SoknadsStat
 	return newStatus ?: when (soknadsStatus) {
 		SoknadsStatusDto.Opprettet -> SoknadsStatus.Opprettet
 		SoknadsStatusDto.Utfylt -> SoknadsStatus.Utfylt
+		SoknadsStatusDto.KlarForInnsending -> SoknadsStatus.KlarForInnsending
 		SoknadsStatusDto.Innsendt -> SoknadsStatus.Innsendt
 		SoknadsStatusDto.SlettetAvBruker -> SoknadsStatus.SlettetAvBruker
 		SoknadsStatusDto.AutomatiskSlettet -> SoknadsStatus.AutomatiskSlettet
-		SoknadsStatusDto.KlarForInnsending -> SoknadsStatus.KlarForInnsending
 		else -> SoknadsStatus.Opprettet
 	}
 }
@@ -39,6 +39,7 @@ fun mapTilSoknadsStatusDto(soknadsStatus: SoknadsStatus?): SoknadsStatusDto? =
 	when (soknadsStatus) {
 		SoknadsStatus.Opprettet -> SoknadsStatusDto.Opprettet
 		SoknadsStatus.Utfylt -> SoknadsStatusDto.Utfylt
+		SoknadsStatus.KlarForInnsending -> SoknadsStatusDto.KlarForInnsending
 		SoknadsStatus.Innsendt -> SoknadsStatusDto.Innsendt
 		SoknadsStatus.SlettetAvBruker -> SoknadsStatusDto.SlettetAvBruker
 		SoknadsStatus.AutomatiskSlettet -> SoknadsStatusDto.AutomatiskSlettet
@@ -50,6 +51,7 @@ fun mapTilOpplastingsStatusDto(opplastingsStatus: OpplastingsStatus): Opplasting
 		OpplastingsStatus.IKKE_VALGT -> OpplastingsStatusDto.IkkeValgt
 		OpplastingsStatus.SEND_SENERE -> OpplastingsStatusDto.SendSenere
 		OpplastingsStatus.LASTET_OPP -> OpplastingsStatusDto.LastetOpp
+		OpplastingsStatus.KLAR_FOR_INNSENDING -> OpplastingsStatusDto.KlarForInnsending
 		OpplastingsStatus.INNSENDT -> OpplastingsStatusDto.Innsendt
 		OpplastingsStatus.SENDES_AV_ANDRE -> OpplastingsStatusDto.SendesAvAndre
 		OpplastingsStatus.SENDES_IKKE -> OpplastingsStatusDto.SendesIkke
@@ -57,7 +59,6 @@ fun mapTilOpplastingsStatusDto(opplastingsStatus: OpplastingsStatus): Opplasting
 		OpplastingsStatus.NAV_KAN_HENTE_DOKUMENTASJON -> OpplastingsStatusDto.NavKanHenteDokumentasjon
 		OpplastingsStatus.LEVERT_DOKUMENTASJON_TIDLIGERE -> OpplastingsStatusDto.LevertDokumentasjonTidligere
 		OpplastingsStatus.HAR_IKKE_DOKUMENTASJON -> OpplastingsStatusDto.HarIkkeDokumentasjonen
-		OpplastingsStatus.KLAR_FOR_INNSENDING -> OpplastingsStatusDto.KlarForInnsending
 		else -> OpplastingsStatusDto.IkkeValgt
 	}
 
@@ -66,6 +67,7 @@ fun mapTilDbOpplastingsStatus(opplastingsStatusDto: OpplastingsStatusDto): Oppla
 		OpplastingsStatusDto.IkkeValgt -> OpplastingsStatus.IKKE_VALGT
 		OpplastingsStatusDto.SendSenere -> OpplastingsStatus.SEND_SENERE
 		OpplastingsStatusDto.LastetOpp -> OpplastingsStatus.LASTET_OPP
+		OpplastingsStatusDto.KlarForInnsending -> OpplastingsStatus.KLAR_FOR_INNSENDING
 		OpplastingsStatusDto.Innsendt -> OpplastingsStatus.INNSENDT
 		OpplastingsStatusDto.SendesAvAndre -> OpplastingsStatus.SENDES_AV_ANDRE
 		OpplastingsStatusDto.SendesIkke -> OpplastingsStatus.SENDES_IKKE
@@ -73,7 +75,6 @@ fun mapTilDbOpplastingsStatus(opplastingsStatusDto: OpplastingsStatusDto): Oppla
 		OpplastingsStatusDto.HarIkkeDokumentasjonen -> OpplastingsStatus.HAR_IKKE_DOKUMENTASJON
 		OpplastingsStatusDto.LevertDokumentasjonTidligere -> OpplastingsStatus.LEVERT_DOKUMENTASJON_TIDLIGERE
 		OpplastingsStatusDto.NavKanHenteDokumentasjon -> OpplastingsStatus.NAV_KAN_HENTE_DOKUMENTASJON
-		OpplastingsStatusDto.KlarForInnsending -> OpplastingsStatus.KLAR_FOR_INNSENDING
 	}
 
 fun avledOpplastingsstatusVedInnsending(filDto: FilDto?, vedleggDto: VedleggDto): OpplastingsStatusDto {
@@ -87,6 +88,7 @@ fun avledOpplastingsstatusVedInnsending(filDto: FilDto?, vedleggDto: VedleggDto)
 		OpplastingsStatusDto.IkkeValgt -> if (vedleggDto.erPakrevd) OpplastingsStatusDto.SendSenere else OpplastingsStatusDto.SendesIkke
 		OpplastingsStatusDto.SendesAvAndre,
 		OpplastingsStatusDto.SendSenere,
+		OpplastingsStatusDto.KlarForInnsending,
 		OpplastingsStatusDto.Innsendt,
 		OpplastingsStatusDto.NavKanHenteDokumentasjon,
 		OpplastingsStatusDto.LevertDokumentasjonTidligere,
