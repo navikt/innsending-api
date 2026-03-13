@@ -778,4 +778,5 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertEquals(1, filesUnknownAttachment.size)
 		assertEquals(SoknadFile.FileStatus.notfound, filesUnknownAttachment[0].fileStatus)
 	}
+
 }
