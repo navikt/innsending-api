@@ -934,5 +934,4 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 
 	}
 
-
 }

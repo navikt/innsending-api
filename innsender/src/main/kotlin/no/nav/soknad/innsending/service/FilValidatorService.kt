@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.service
 
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.antivirus.AntivirusInterface
+import no.nav.soknad.innsending.consumerapis.antivirus.AntivirusScanResult
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
@@ -21,7 +22,15 @@ class FilValidatorService(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	fun validerFil(fil: Resource, innsendingsId: String, antivirusEnabled: Boolean = false): String {
+		val validatedFile = validateFile(fil, innsendingsId)
+		if (antivirusEnabled && antivirus.scan(validatedFile.content) != AntivirusScanResult.OK) throw IllegalActionException(
+			message = "Opplasting feilet. Filen inneholder virus",
+			errorCode = ErrorCode.VIRUS_SCAN_FAILED
+		)
+		return validatedFile.fileType
+	}
 
+	fun validateFile(fil: Resource, innsendingsId: String): ValidatedFile {
 		// Sjekk filnavn
 		val fileName = fil.filename
 		if (!fileName.isNullOrEmpty() && fileName.contains(".")) {
@@ -51,17 +60,16 @@ class FilValidatorService(
 		)
 
 		val filtype = Validerer().validereFilformat(innsendingsId, opplastet, fileName)
-
-		if (antivirusEnabled && !antivirus.scan(opplastet)) throw IllegalActionException(
-			message = "Opplasting feilet. Filen inneholder virus",
-			errorCode = ErrorCode.VIRUS_SCAN_FAILED
-		)
-
 		innsenderMetrics.setFileSize(opplastet.size.toLong())
-		return filtype
+		return ValidatedFile(opplastet, filtype)
 	}
 
 	fun validerAntallSider(antallSider: Int) {
 		Validerer().validereAntallSider(antallSider, restConfig.maxNumberOfPages)
 	}
 }
+
+data class ValidatedFile(
+	val content: ByteArray,
+	val fileType: String,
+)
