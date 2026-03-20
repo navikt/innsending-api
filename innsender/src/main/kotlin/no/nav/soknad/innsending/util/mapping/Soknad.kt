@@ -25,7 +25,9 @@ fun mapTilSoknadDb(
 	dokumentSoknadDto: DokumentSoknadDto,
 	innsendingsId: String,
 	status: SoknadsStatus = SoknadsStatus.Opprettet,
-	id: Long? = null
+	id: Long? = null,
+	avsender: AvsenderDto? = null,
+	bruker: BrukerDto? = null,
 ) =
 	SoknadDbData(
 		id = id ?: dokumentSoknadDto.id,
@@ -35,7 +37,7 @@ fun mapTilSoknadDb(
 		tema = dokumentSoknadDto.tema,
 		spraak = dokumentSoknadDto.spraak ?: "no",
 		status = mapTilSoknadsStatus(dokumentSoknadDto.status, status),
-		brukerid = dokumentSoknadDto.brukerId,
+		brukerid = bruker?.id?: dokumentSoknadDto.brukerId,
 		ettersendingsid = dokumentSoknadDto.ettersendingsId,
 		opprettetdato = mapTilLocalDateTime(dokumentSoknadDto.opprettetDato)!!,
 		endretdato = LocalDateTime.now(),
@@ -48,7 +50,11 @@ fun mapTilSoknadDb(
 		arkiveringsstatus = mapTilDbArkiveringsStatus(dokumentSoknadDto.arkiveringsStatus ?: ArkiveringsStatusDto.IkkeSatt),
 		applikasjon = dokumentSoknadDto.applikasjon,
 		skalslettesdato = dokumentSoknadDto.sletteDato!!,
-		ernavopprettet = dokumentSoknadDto.erNavOpprettet
+		ernavopprettet = dokumentSoknadDto.erNavOpprettet,
+		brukertype = bruker?.idType ?: if (dokumentSoknadDto.brukerId != null) BrukerDto.IdType.FNR else null,
+		avsenderid = avsender?.id,
+		avsendernavn = avsender?.navn,
+		avsendertype = avsender?.idType,
 	)
 
 fun lagDokumentSoknadDto(
@@ -206,6 +212,10 @@ fun SubmitApplicationRequest.toDokumentSoknadDto(innsendingsId: UUID, clientId: 
 		arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
 		skalslettesdato = now.plusDays(Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD).toOffsetDateTime(),
 		ernavopprettet = false,
+		brukertype = if (this.bruker != null) BrukerDto.IdType.FNR else null,
+		avsenderid = this.avsender?.id,
+		avsendertype = this.avsender?.idType,
+		avsendernavn = this.avsender?.navn,
 	)
 }
 

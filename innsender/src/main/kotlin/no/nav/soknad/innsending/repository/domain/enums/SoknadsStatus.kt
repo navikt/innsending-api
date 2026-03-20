@@ -5,5 +5,6 @@ enum class SoknadsStatus {
 	Utfylt,
 	Innsendt,
 	SlettetAvBruker,
-	AutomatiskSlettet
+	AutomatiskSlettet,
+	KlarForInnsending
 }

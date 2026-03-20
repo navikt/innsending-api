@@ -32,6 +32,17 @@ interface VedleggRepository : JpaRepository<VedleggDbData, Long> {
 		@Param("endretdato") endretdato: LocalDateTime
 	): Int
 
+
+	@Transactional
+	@Modifying
+	@Query(value = "UPDATE VedleggDbData v SET v.status = :nyStatus, v.endretdato = :endretdato WHERE v.id = :id and v.status = :gammelStatus")
+	fun updateOpplastingsstatusBySoknadsIdAndOpplastingsstatus(
+		@Param("id") id: Long,
+		@Param("nyStatus") nyStatus: OpplastingsStatus,
+		@Param("gammelStatus") gammelStatus: OpplastingsStatus,
+		@Param("endretdato") endretdato: LocalDateTime = LocalDateTime.now()
+	): Int
+
 	@Transactional
 	@Modifying
 	@Query(value = "UPDATE VedleggDbData v SET v.erpakrevd = :erpakrevd, v.endretdato = :endretdato WHERE v.id = :id")

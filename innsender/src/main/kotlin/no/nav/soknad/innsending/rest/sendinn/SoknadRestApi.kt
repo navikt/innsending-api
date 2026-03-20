@@ -47,7 +47,7 @@ class SoknadRestApi(
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		combinedLogger.log("$innsendingsId: Kall for å hente søknad", brukerId)
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
-		combinedLogger.log("$innsendingsId: Hentet søknad", brukerId)
+		combinedLogger.log("$innsendingsId: Hentet søknad, status=${soknadDto.status}", brukerId)
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
@@ -96,11 +96,14 @@ class SoknadRestApi(
 		combinedLogger.log("$innsendingsId: Kall for å sende inn soknad", brukerId)
 
 		val soknadDto = hentOgValiderSoknad(innsendingsId)
-		val (kvitteringsDto, ettersending) = innsendingService.sendInnSoknad(soknadDto)
+		val (kvitteringsDto, ettersending) = innsendingService.forberedSoknadInnsending(soknadDto)
+
+		innsendingService.sendInnForArkivering(innsendingsId)
+
 		notificationService.close(innsendingsId)
 
 		combinedLogger.log(
-			"$innsendingsId: Sendt inn soknad.\n" +
+			"$innsendingsId: Klargjort for innsending av soknad.\n" +
 				"InnsendteVedlegg=${kvitteringsDto.innsendteVedlegg?.size}, " +
 				"SkalEttersendes=${kvitteringsDto.skalEttersendes?.size}, ettersendelsesfrist=${kvitteringsDto.ettersendingsfrist}",
 			brukerId
@@ -112,7 +115,6 @@ class SoknadRestApi(
 				NotificationOptions(erSystemGenerert = true, envQualifier = envQualifier)
 			)
 		}
-
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(kvitteringsDto)

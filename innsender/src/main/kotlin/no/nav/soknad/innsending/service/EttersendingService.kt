@@ -84,7 +84,11 @@ class EttersendingService(
 				arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
 				applikasjon = applikasjon,
 				skalslettesdato = skalslettesdato,
-				ernavopprettet = ernavopprettet
+				ernavopprettet = ernavopprettet,
+				brukertype = BrukerDto.IdType.FNR,
+				avsenderid = brukerId,
+				avsendertype = AvsenderDto.IdType.FNR,
+				avsendernavn = null,
 			)
 		)
 	}

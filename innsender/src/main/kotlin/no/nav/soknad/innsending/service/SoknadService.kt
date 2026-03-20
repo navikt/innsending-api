@@ -82,7 +82,11 @@ class SoknadService(
 					arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
 					applikasjon = applikasjon,
 					skalslettesdato = OffsetDateTime.now().plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD),
-					ernavopprettet = false
+					ernavopprettet = false,
+					brukertype = BrukerDto.IdType.FNR,
+					avsenderid = brukerId,
+					avsendertype = AvsenderDto.IdType.FNR,
+					avsendernavn = null,
 				)
 			)
 
@@ -185,6 +189,28 @@ class SoknadService(
 
 	fun endreSoknad(id: Long, visningsSteg: Long) {
 		repo.endreSoknadDb(id, visningsSteg)
+	}
+
+
+	fun prepareSubmit(innsendingsId: String): DokumentSoknadDto {
+		val soknadDbData = repo.hentSoknadDb(innsendingsId)
+		if (!(soknadDbData.status == SoknadsStatus.Opprettet || soknadDbData.status == SoknadsStatus.Utfylt)) {
+			throw IllegalActionException("$innsendingsId: Kan ikke sende inn søknad når status er ${soknadDbData.status}")
+		}
+		val innsendtdato = LocalDateTime.now()
+		val submittedSoknad = repo.lagreSoknad(
+			soknadDbData.copy(
+				status = SoknadsStatus.KlarForInnsending,
+				innsendtdato = innsendtdato,
+			)
+		)
+		return vedleggService.hentAlleVedlegg(submittedSoknad, innsendingsId)
+	}
+
+	fun prepareSubmitDokumenter(innsendingsId: String, innsendteVedlegg: List<VedleggDto>): DokumentSoknadDto {
+		val soknadDbData = repo.hentSoknadDb(innsendingsId)
+		repo.preSubmitVedlegg(soknadDbData.id!!, innsendteVedlegg.map { it.id!! }, LocalDateTime.now())
+		return vedleggService.hentAlleVedlegg(soknadDbData, innsendingsId)
 	}
 
 	fun submit(innsendingsId: String, innsendteVedlegg: List<VedleggDto>): DokumentSoknadDto {

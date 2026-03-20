@@ -34,6 +34,7 @@
 		<logger name="org.hibernate.SQL" level="${log.level.org.hibernate.SQL:-INFO}"/>
 		<logger name="org.hibernate.SQL_SLOW" level="${log.level.org.hibernate.SQL_SLOW:-INFO}"/>
 		<logger name="com.zaxxer.hikari" level="${log.level.com.zaxxer.hikari:-INFO}"/>
+		<logger name="org.hibernate.orm.connections.pooling" level="${log.level.com.zaxxer.hikari:-ERROR}"/>
 		<logger name="org.hibernate.type" level="${log.level.org.hibernate.type:-INFO}"/>
 		<logger name="org.hibernate" level="${log.level.org.hibernate:-INFO}"/>
 		<logger name="ch.qos.logback" level="${log.level.ch.qos.logback:-INFO}"/>

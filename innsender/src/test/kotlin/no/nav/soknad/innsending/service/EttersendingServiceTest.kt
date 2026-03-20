@@ -301,7 +301,8 @@ class EttersendingServiceTest : ApplicationTest() {
 						"W1",
 						true
 					)
-				})
+				}),
+				canChange = true
 			)
 
 		assertTrue(lagretFil.id != null)
@@ -359,7 +360,7 @@ class EttersendingServiceTest : ApplicationTest() {
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(ettersendingsSoknadDto2.innsendingsId!!)
 		assertTrue(hendelseDbDatasEttersending2.size > 1)
 		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending2[0].hendelsetype)
-		assertEquals(HendelseType.Innsendt, hendelseDbDatasEttersending2[1].hendelsetype)
+		assertEquals(HendelseType.Innsendt, hendelseDbDatasEttersending2.last().hendelsetype)
 
 		val vedleggDto = filService.hentFiler(
 			ettersendingsSoknadDto2,
@@ -398,7 +399,7 @@ class EttersendingServiceTest : ApplicationTest() {
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
 		assertTrue(hendelseDbDatasInnsendt.size > 1)
 		assertEquals(HendelseType.Opprettet, hendelseDbDatasInnsendt[0].hendelsetype)
-		assertEquals(HendelseType.Innsendt, hendelseDbDatasInnsendt[1].hendelsetype)
+		assertEquals(HendelseType.Innsendt, hendelseDbDatasInnsendt.last().hendelsetype)
 
 		val ettersending = OpprettEttersendingTestBuilder()
 			.skjemanr(dokumentSoknadDto.skjemanr)

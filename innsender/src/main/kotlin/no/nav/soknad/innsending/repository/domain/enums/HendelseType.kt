@@ -8,6 +8,7 @@ enum class HendelseType {
 	SlettetAvSystem,
 	SlettetPermanentAvBruker,
 	SlettetPermanentAvSystem,
+	KlarForInnsending,
 	Innsendt,
 	Arkivert,
 	ArkiveringFeilet,

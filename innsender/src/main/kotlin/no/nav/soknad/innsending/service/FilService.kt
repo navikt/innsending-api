@@ -88,12 +88,12 @@ class FilService(
 	)
 
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
-	fun lagreFil(soknadDto: DokumentSoknadDto, filDto: FilDto): FilDto {
+	fun lagreFil(soknadDto: DokumentSoknadDto, filDto: FilDto, canChange: Boolean = false): FilDto {
 		val operation = InnsenderOperation.LAST_OPP.name
 
-		if (!soknadDto.kanGjoreEndringer) {
+		if (!soknadDto.kanGjoreEndringer && !canChange	) {
 			when (soknadDto.status.name) {
-				SoknadsStatusDto.Innsendt.name -> throw IllegalActionException(
+				SoknadsStatusDto.Innsendt.name, SoknadsStatusDto.KlarForInnsending.name -> throw IllegalActionException(
 					message = "Søknad ${soknadDto.innsendingsId} er sendt inn og nye filer kan ikke lastes opp på denne. Opprett ny søknad for ettersendelse av informasjon. Innsendte søknader kan ikke endres. Ønsker søker å gjøre oppdateringer, så må vedkommende ettersende dette",
 					errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 				)

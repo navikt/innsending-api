@@ -264,13 +264,14 @@ class FyllutRestApi(
 			return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
 		}
 
-		val (submissionSummary, ettersendingsId) = innsendingService.submitApplication(
+		val (submissionSummary, ettersendingsId) = innsendingService.preSubmitApplication(
 			soknad,
 			submitApplicationRequest.mainDocument,
 			submitApplicationRequest.mainDocumentAlt,
 			submitApplicationRequest.attachments.sanitize(),
 			submitApplicationRequest.avsender,
 		)
+		innsendingService.sendInnForArkivering(innsendingsIdStr)
 
 		notificationService.close(innsendingsIdStr)
 		if (ettersendingsId != null) {
