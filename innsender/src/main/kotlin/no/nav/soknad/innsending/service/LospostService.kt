@@ -34,6 +34,7 @@ class LospostService(
 		tittel: String,
 		dokumentTittel: String,
 		sprak: String,
+		avsender: AvsenderDto? = null
 	): LospostDto {
 		val innsendingsId = Utilities.laginnsendingsId()
 		val applikasjon = subjectHandler.getClientId()
@@ -60,9 +61,7 @@ class LospostService(
 				skalslettesdato = OffsetDateTime.now().plusDays(Constants.DEFAULT_LEVETID_OPPRETTET_LOSPOST),
 				ernavopprettet = false,
 				brukertype = BrukerDto.IdType.FNR,
-				avsenderid = brukerId,
-				avsendertype = AvsenderDto.IdType.FNR,
-				avsendernavn = null,
+				avsender = avsender,
 			)
 		)
 		val vedlegg = repo.lagreVedlegg(

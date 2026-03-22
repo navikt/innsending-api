@@ -6,8 +6,11 @@ import no.nav.soknad.innsending.model.BrukerDto
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
-import no.nav.soknad.innsending.saf.generated.enums.BrukerIdType
+import no.nav.soknad.innsending.repository.domain.utils.AvsenderDtoConverter
+import no.nav.soknad.innsending.repository.domain.utils.BrukerDtoConverter
 import no.nav.soknad.innsending.util.Constants
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 
@@ -45,8 +48,11 @@ data class SoknadDbData(
 	@Column(name = "skalslettesdato", columnDefinition = "TIMESTAMP WITH TIME ZONE") val skalslettesdato: OffsetDateTime,
 	@Column(name = "ernavopprettet", columnDefinition = "boolean") val ernavopprettet: Boolean? = false,
 	@Column(name = "brukertype", columnDefinition = "varchar") val brukertype: BrukerDto.IdType?,
-	@Column(name = "avsenderid", columnDefinition = "varchar") val avsenderid: String?,
-	@Column(name = "avsendertype", columnDefinition = "varchar") val avsendertype: AvsenderDto.IdType?,
-	@Column(name = "avsendernavn", columnDefinition = "varchar") val avsendernavn: String?,
+	@Convert(converter = AvsenderDtoConverter::class)
+	@JdbcTypeCode(SqlTypes.JSON)
+	@Column(name = "avsender", columnDefinition = "jsonb") val avsender: AvsenderDto? = null,
+	@Convert(converter = BrukerDtoConverter::class)
+	@JdbcTypeCode(SqlTypes.JSON)
+	@Column(name = "affecteduser", columnDefinition = "jsonb") val affecteduser: BrukerDto? = null,
 
 	)

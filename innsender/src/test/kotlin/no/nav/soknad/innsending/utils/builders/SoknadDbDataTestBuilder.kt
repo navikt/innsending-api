@@ -60,8 +60,6 @@ data class SoknadDbDataTestBuilder(
 		applikasjon = applikasjon,
 		skalslettesdato = skalslettesdato,
 		brukertype = BrukerDto.IdType.FNR,
-		avsenderid = avsenderId ?: brukerId,
-		avsendertype = if (avsenderType != null) avsenderType else AvsenderDto.IdType.FNR,
-		avsendernavn = null,
+		avsender = if (avsenderId == null && avsenderNavn == null) {null} else {AvsenderDto(id=avsenderId, navn=avsenderNavn, idType = avsenderType ?: AvsenderDto.IdType.FNR ) },
 	)
 }

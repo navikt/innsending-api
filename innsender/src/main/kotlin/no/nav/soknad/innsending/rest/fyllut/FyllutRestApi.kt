@@ -264,12 +264,16 @@ class FyllutRestApi(
 			return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
 		}
 
+		val affectedUser = if (submitApplicationRequest.bruker != null && brukerId != submitApplicationRequest.bruker) {
+			BrukerDto(id = submitApplicationRequest.bruker!!, idType = BrukerDto.IdType.FNR )
+		} else null
+
 		val (submissionSummary, ettersendingsId) = innsendingService.preSubmitApplication(
 			soknad,
 			submitApplicationRequest.mainDocument,
 			submitApplicationRequest.mainDocumentAlt,
 			submitApplicationRequest.attachments.sanitize(),
-			submitApplicationRequest.avsender,
+			submitApplicationRequest.avsender, affectedUser
 		)
 		innsendingService.sendInnForArkivering(innsendingsIdStr)
 

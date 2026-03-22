@@ -52,9 +52,8 @@ fun mapTilSoknadDb(
 		skalslettesdato = dokumentSoknadDto.sletteDato!!,
 		ernavopprettet = dokumentSoknadDto.erNavOpprettet,
 		brukertype = bruker?.idType ?: if (dokumentSoknadDto.brukerId != null) BrukerDto.IdType.FNR else null,
-		avsenderid = avsender?.id,
-		avsendernavn = avsender?.navn,
-		avsendertype = avsender?.idType,
+		avsender = avsender,
+		affecteduser = null,
 	)
 
 fun lagDokumentSoknadDto(
@@ -213,9 +212,8 @@ fun SubmitApplicationRequest.toDokumentSoknadDto(innsendingsId: UUID, clientId: 
 		skalslettesdato = now.plusDays(Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD).toOffsetDateTime(),
 		ernavopprettet = false,
 		brukertype = if (this.bruker != null) BrukerDto.IdType.FNR else null,
-		avsenderid = this.avsender?.id,
-		avsendertype = this.avsender?.idType,
-		avsendernavn = this.avsender?.navn,
+		avsender = this.avsender,
+		affecteduser = null,
 	)
 }
 
