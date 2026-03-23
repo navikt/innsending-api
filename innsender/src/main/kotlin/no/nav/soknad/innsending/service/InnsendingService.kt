@@ -53,7 +53,7 @@ class InnsendingService(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
-	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto, avsenderDto: AvsenderDto?, brukerDto: BrukerDto?, affectedUser: BrukerDto? = null): Pair<List<VedleggDto>, List<VedleggDto>> {
+	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto, avsenderDto: AvsenderDto?, brukerDto: BrukerDto?): Pair<List<VedleggDto>, List<VedleggDto>> {
 
 		// Anta at filene til et vedlegg allerede er konvertert til PDF ved lagring.
 		// Eventuell varianter av hoveddokument skal være på annet format enn PDF, da formatet vil bli brukt for å mappe til arkivformat ved lagring, og for arkivformatet på variantene på et dokument må være ulike.
@@ -77,7 +77,7 @@ class InnsendingService(
 		val lagretSoknad = mapTilDokumentSoknadDto(
 			repo.lagreSoknad(
 			mapTilSoknadDb(soknadDtoInput, soknadDtoInput.innsendingsId!!,
-				SoknadsStatus.KlarForInnsending, avsender = avsenderDto, bruker = brukerDto).copy(innsendtdato = LocalDateTime.now(), affecteduser = affectedUser)
+				SoknadsStatus.KlarForInnsending, avsender = avsenderDto, bruker = brukerDto).copy(innsendtdato = LocalDateTime.now(), affecteduser = null)
 			)
 			,emptyList(), emptyList()
 		).copy(vedleggsListe = soknadDtoInput.vedleggsListe)
@@ -468,8 +468,7 @@ class InnsendingService(
 		try {
 			val avsenderDto = AvsenderDto(id= brukerId, idType = IdType.FNR)
 			val brukerDto = BrukerDto(id= brukerId, idType = BrukerDto.IdType.FNR)
-			val affectedUser = null
-			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput, avsenderDto, brukerDto, affectedUser)
+			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput, avsenderDto, brukerDto)
 
 			val innsendtSoknadDto = soknadService.hentSoknad(soknadDtoInput.innsendingsId!!)
 
