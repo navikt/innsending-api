@@ -260,7 +260,7 @@ data class Annet(
 data class BarnSomSkalFlytteMedDeg(
 	val fornavn: String,
 	val etternavn: String,
-	val fodselsdatoDdMmAaaa: String,
+	val fodselsdatoDdMmAaaa: String?,
 )
 
 data class NedsattArbeidsevnePgaSykdom(
