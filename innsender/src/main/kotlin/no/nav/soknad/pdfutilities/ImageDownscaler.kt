@@ -2,6 +2,7 @@ package no.nav.soknad.pdfutilities
 
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
+import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.imageFileTypes
 import org.slf4j.LoggerFactory
 import java.awt.Color
 import java.awt.image.BufferedImage
@@ -105,17 +106,12 @@ class ImageDownscaler {
 	}
 
 	private fun imageFormat(fileType: String): String {
-		return when (fileType.lowercase()) {
-			".jpg", ".jpeg" -> "jpeg"
-			".png" -> "png"
-			".bmp" -> "bmp"
-			".gif" -> "gif"
-			".tif", ".tiff" -> "tiff"
-			else -> throw IllegalActionException(
+		val mimeType = imageFileTypes[fileType.lowercase()]
+			?: throw IllegalActionException(
 				message = "Ukjent bildeformat. Kan ikke skalere ned bilde før PDF-konvertering",
 				errorCode = ErrorCode.NOT_SUPPORTED_FILE_FORMAT
 			)
-		}
+		return mimeType.substringAfter("/")
 	}
 
 	private fun removeAlphaChannel(bufferedImage: BufferedImage): BufferedImage {
