@@ -68,7 +68,7 @@ class MottakerAPI(
 			innsendingMottakerApi.nologinSubmission(innsending, innsending.innsendingsId)
 			logger.info("${soknadDto.innsendingsId}: sendt inn (nologin)")
 		} else {
-			val personId = soknadDto.brukerId ?: throw IllegalStateException("Kan ikke sende inn søknad uten brukerId")
+			val personId = brukerDto?.id ?: soknadDto.brukerId ?: throw IllegalStateException("Kan ikke sende inn søknad uten brukerId")
 			val soknad = translate(soknadDto, vedleggsListe, personId)
 			logger.info("${soknadDto.innsendingsId}: klar til å sende inn\n${maskerFnr(soknad)}\ntil ${restConfig.soknadsMottakerHost}")
 			mottakerClient.receive(soknad)
