@@ -252,7 +252,11 @@ class FyllutRestApi(
 	): ResponseEntity<ApplicationSubmissionResponse> {
 		val innsendingsIdStr = innsendingsId.toString()
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
-		combinedLogger.log("$innsendingsIdStr: Kall fra FyllUt for sende inn søknad", brukerId)
+		val affectedUser = if (submitApplicationRequest.bruker != null && brukerId != submitApplicationRequest.bruker) {
+			BrukerDto(id = submitApplicationRequest.bruker!!, idType = BrukerDto.IdType.FNR )
+		} else null
+
+		combinedLogger.log("$innsendingsIdStr: Kall fra FyllUt for sende inn søknad", "loggedIn: $brukerId / affected: ${affectedUser?.id ?: brukerId}")
 
 		val soknad = soknadService.hentSoknad(innsendingsIdStr)
 		validerSoknadsTilgang(soknad)
@@ -263,10 +267,6 @@ class FyllutRestApi(
 			// Derfor må ettersendingssøknader fremdeles sendes inn fra SendInnFrontend.
 			return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
 		}
-
-		val affectedUser = if (submitApplicationRequest.bruker != null && brukerId != submitApplicationRequest.bruker) {
-			BrukerDto(id = submitApplicationRequest.bruker!!, idType = BrukerDto.IdType.FNR )
-		} else null
 
 		val (submissionSummary, ettersendingsId) = innsendingService.preSubmitApplication(
 			soknad,
