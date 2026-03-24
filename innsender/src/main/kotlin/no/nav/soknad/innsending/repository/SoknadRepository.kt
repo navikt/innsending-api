@@ -92,13 +92,13 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 	fun countArkiveringFeilet(): Long
 
 	@Query(
-		value = "SELECT COUNT(*) FROM soknad WHERE arkiveringsstatus = 'IkkeSatt' (AND status  = 'Innsendt' OR status = 'KlarForInnsending') AND innsendtdato < :before",
+		value = "SELECT COUNT(*) FROM soknad WHERE arkiveringsstatus = 'IkkeSatt' AND (status  = 'Innsendt' OR status = 'KlarForInnsending') AND innsendtdato < :before",
 		nativeQuery = true
 	)
 	fun countInnsendtIkkeBehandlet(@Param("before") before: LocalDateTime): Long
 
 	@Query(
-		value = "SELECT innsendingsid FROM soknad WHERE arkiveringsstatus = 'IkkeSatt' AND (AND status  = 'Innsendt' OR status = 'KlarForInnsending') AND innsendtdato < :before",
+		value = "SELECT innsendingsid FROM soknad WHERE arkiveringsstatus = 'IkkeSatt' AND ( status  = 'Innsendt' OR status = 'KlarForInnsending') AND innsendtdato < :before",
 		nativeQuery = true
 	)
 	fun findInnsendtAndArkiveringsStatusIkkeSatt(@Param("before") before: LocalDateTime): List<String>
