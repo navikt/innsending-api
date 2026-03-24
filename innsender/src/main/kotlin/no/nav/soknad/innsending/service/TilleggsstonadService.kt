@@ -86,13 +86,15 @@ class TilleggsstonadService(
 					storrelse = xmlFile.size,
 					data = xmlFile,
 					opprettetdato = OffsetDateTime.now()
-				)
+				),
+				canChange = true
 			)
 			// Update state of json variant
 			vedleggService.endreVedleggStatus(
 				soknadDto,
 				jsonVariant.id!!,
-				OpplastingsStatusDto.SendesIkke
+				OpplastingsStatusDto.SendesIkke,
+				tilleggsStonadException = true
 			)
 
 			sjekkOgOppdaterTema(jsonObj, soknadDto)

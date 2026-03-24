@@ -43,6 +43,7 @@ import org.springframework.util.LinkedMultiValueMap
 import java.time.LocalDate
 import java.util.*
 import kotlin.test.*
+import java.lang.Thread.sleep
 
 
 class FyllutRestApiTest : ApplicationTest() {
@@ -308,7 +309,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val kvitteringsDto = sendInnRespons.body
 		assertEquals(1, kvitteringsDto!!.skalSendesAvAndre!!.size)
 		assertTrue(kvitteringsDto.hoveddokumentRef != null)
-
+		sleep(20)
 		assertThrows<Exception> {
 			restTemplate.exchange(
 				"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}", HttpMethod.GET,
@@ -687,6 +688,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		// When
 		val createdSoknad = api?.createSoknad(skjemaDto)
 		val sentInSoknad = api?.sendInnSoknad(createdSoknad?.body?.innsendingsId!!)
+		// Wait in order for the application to be sent in
+		//sleep(1000)
 		val response = api?.updateSoknadFail(sentInSoknad?.body?.innsendingsId!!, skjemaDto)
 
 		// Then

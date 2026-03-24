@@ -307,7 +307,7 @@ class VedleggService(
 				VedleggDbData(
 					id = null,
 					soknadDto.id!!,
-					status = OpplastingsStatus.IKKE_VALGT,
+					status = OpplastingsStatus.KLAR_FOR_INNSENDING,
 					erhoveddokument = true,
 					ervariant = true,
 					erpdfa = false,
@@ -439,9 +439,10 @@ class VedleggService(
 	fun endreVedleggStatus(
 		soknadDto: DokumentSoknadDto,
 		vedleggsId: Long,
-		opplastingsStatus: OpplastingsStatusDto
+		opplastingsStatus: OpplastingsStatusDto,
+		tilleggsStonadException: Boolean = false
 	) {
-		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException("Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet. Det kan ikke gjøres endring på en slettet eller innsendt søknad")
+		if (!soknadDto.kanGjoreEndringer && !tilleggsStonadException) throw IllegalActionException("Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet. Det kan ikke gjøres endring på en slettet eller innsendt søknad")
 
 		val vedleggDbData = repo.hentVedlegg(vedleggsId)
 		if (vedleggDbData.soknadsid != soknadDto.id) {

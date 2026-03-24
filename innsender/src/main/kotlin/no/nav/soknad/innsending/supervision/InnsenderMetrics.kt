@@ -43,6 +43,8 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	private val nologinMainSwitchHelp = "Nologin main switch (on=1/off=0)"
 	private val antivirusScanName = "antivirus_scan_total"
 	private val antivirusScanHelp = "Number of antivirus scan outcomes"
+	private val notSentInName = "applications_not_sent_in"
+	private val notSentInHelp = "Number of applications that have not been sent in"
 
 	private var operationsCounter = registerOperationCounter(name, help)
 	private var operationsErrorCounter = registerOperationCounter(errorName, helpError)
@@ -52,6 +54,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	private var archivingFailedGauge = registerGauge(archivingFailedName, archivingFailedHelp)
 	private var nologinGauge = registerGauge(nologinMainSwitchName, nologinMainSwitchHelp)
 	private var antivirusScanCounter = registerCounter(antivirusScanName, antivirusScanHelp, listOf("namespace", "mode", "result"))
+	private var notSentInGauge = registerGauge("applications_not_sent_in", "Number of applications that have not been sent in")
 
 	private var submissionsCounter = registerCounter(
 		"submissions_total", "Number of submitted applications",
@@ -76,6 +79,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 		antivirusScanCounter = registerCounter(antivirusScanName, antivirusScanHelp, listOf("namespace", "mode", "result"))
 		fileNumberOfPagesSummary = registerSummary(fileNumberOfPages, fileNumberOfPagesHelp)
 		fileSizeSummary = registerSummary(fileSize, fileSizeHelp)
+		notSentInGauge = registerGauge(notSentInName, notSentInHelp)
 	}
 
 	// Used in tests
@@ -90,6 +94,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 		registry.unregister(antivirusScanCounter)
 		registry.unregister(fileNumberOfPagesSummary)
 		registry.unregister(fileSizeSummary)
+		registry.unregister(notSentInGauge)
 	}
 
 	private fun registerOperationCounter(name: String, help: String): Counter =
@@ -171,5 +176,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 
 	fun setFileSize(size: Long) = fileSizeSummary.observe(size.toDouble())
 	fun clearFileSize() = fileSizeSummary.clear()
+
+	fun setNotSentIn(number: Long) = notSentInGauge.set(number.toDouble())
 
 }

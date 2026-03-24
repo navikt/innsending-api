@@ -2496,7 +2496,7 @@ components:
 
     SoknadsStatusDto:
       type: string
-      enum: [ "Opprettet", "Utfylt", "Innsendt", "SlettetAvBruker", "AutomatiskSlettet" ]
+      enum: [ "Opprettet", "Utfylt", "Innsendt", "SlettetAvBruker", "AutomatiskSlettet", "KlarForInnsending" ]
       description: Spesifikasjon av status på søknaden.
       example:
 

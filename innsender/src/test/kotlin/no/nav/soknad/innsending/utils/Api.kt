@@ -91,13 +91,19 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 	}
 
-	fun deleteSoknad(innsendingsId: String): ResponseEntity<BodyStatusResponseDto>? {
-		return restTemplate.exchange(
+	fun deleteSoknad(innsendingsId: String): InnsendingApiResponse<BodyStatusResponseDto>? {
+
+		val response = restTemplate.exchange(
 			"http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}",
 			HttpMethod.DELETE,
 			createHttpEntity(null),
-			BodyStatusResponseDto::class.java
+			//BodyStatusResponseDto::class.java
+			String::class.java
 		)
+
+		val body = readBody(response, BodyStatusResponseDto::class.java)
+		return InnsendingApiResponse(response.statusCode, body, response.headers)
+
 	}
 
 	fun getSoknad(innsendingsId: String): ResponseEntity<SkjemaDto>? {
@@ -508,6 +514,7 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		mainDocumentPath: String = "/litenPdf.pdf",
 		mainDocumentAltPath: String = "/__files/barnepass-NAV-11-12.15B.json",
 		authToken: String? = null,
+		bruker: String? = null,
 	): InnsendingApiResponse<ApplicationSubmissionResponse> {
 		val token: String = authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken()
 		val headers = Hjelpemetoder.createHeaders(token, MediaType.APPLICATION_JSON)
@@ -522,7 +529,7 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 			mainDocument = mainDocumentByteArray,
 			mainDocumentAlt = mainDocumentAltByteArray,
 			attachments = attachments,
-			bruker = soknad.brukerId,
+			bruker = bruker ?: soknad.brukerId,
 			avsender = AvsenderDto(navn = "Test Navn"),
 		)
 		val httpEntity = HttpEntity(request, headers)

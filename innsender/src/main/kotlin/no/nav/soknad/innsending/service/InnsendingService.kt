@@ -27,8 +27,10 @@ import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.pdfutilities.Validerer
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ByteArrayResource
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -52,7 +54,6 @@ class InnsendingService(
 
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto, avsenderDto: AvsenderDto?, brukerDto: BrukerDto?): Pair<List<VedleggDto>, List<VedleggDto>> {
-		val operation = InnsenderOperation.SEND_INN.name
 
 		// Anta at filene til et vedlegg allerede er konvertert til PDF ved lagring.
 		// Eventuell varianter av hoveddokument skal være på annet format enn PDF, da formatet vil bli brukt for å mappe til arkivformat ved lagring, og for arkivformatet på variantene på et dokument må være ulike.
@@ -64,14 +65,31 @@ class InnsendingService(
 		// Etter vellykket innsending skal innsendingsdato settes og status for søknad/ettersendinngssøknad settes til INNSENDT.
 		// Dato og opplastingsstatus settes på alle vedlegg som er endret
 		// Merk at dersom det ikke er lastet opp filer på et obligatorisk vedlegg, skal status settes SENDES_SENERE. Dette vil trigge oppretting av ettersendingssøknad
+
+		if (soknadDtoInput.status == SoknadsStatusDto.Innsendt || soknadDtoInput.status == SoknadsStatusDto.KlarForInnsending) {
+			logger.warn("${soknadDtoInput.innsendingsId}: Søknad allerede innsendt eller skal sendes inn, avbryter")
+			throw IllegalActionException(
+				message = "Søknaden er allerede sendt inn. Søknaden er innsendt og kan ikke sendes på nytt.",
+				errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
+			)
+		}
+
+		val lagretSoknad = mapTilDokumentSoknadDto(
+			repo.lagreSoknad(
+			mapTilSoknadDb(soknadDtoInput, soknadDtoInput.innsendingsId!!,
+				SoknadsStatus.KlarForInnsending, avsender = avsenderDto, bruker = brukerDto).copy(innsendtdato = LocalDateTime.now(), affecteduser = null)
+			)
+			,emptyList(), emptyList()
+		).copy(vedleggsListe = soknadDtoInput.vedleggsListe)
+
 		val soknadDto = if (soknadDtoInput.erEttersending)
-			addDummyHovedDokumentToSoknad(soknadDtoInput)
+			addDummyHovedDokumentToSoknad(lagretSoknad)
 		else {
 
-			if (tilleggstonadService.isTilleggsstonad(soknadDtoInput)) {
-				tilleggstonadService.addXmlDokumentvariantToSoknad(soknadDtoInput)
+			if (tilleggstonadService.isTilleggsstonad(lagretSoknad)) {
+				tilleggstonadService.addXmlDokumentvariantToSoknad(lagretSoknad)
 			} else {
-				soknadDtoInput
+				lagretSoknad
 			}
 		}
 
@@ -99,31 +117,11 @@ class InnsendingService(
 		val kvitteringForArkivering =
 			lagInnsendingsKvitteringOgLagre(soknadDto, opplastedeVedlegg, missingRequiredVedlegg)
 
-		// Ekstra sjekk på at søker ikke allerede har sendt inn søknaden. Dette fordi det har vært tilfeller der søker har klart å trigge innsending request av søknaden flere ganger på rappen
 		val existingSoknad = soknadService.hentSoknad(soknadDto.innsendingsId!!)
-		if (existingSoknad.status == SoknadsStatusDto.Innsendt) {
-			logger.warn("${soknadDto.innsendingsId}: Søknad allerede innsendt, avbryter")
-			throw IllegalActionException(
-				message = "Søknaden er allerede sendt inn. Søknaden er innsendt og kan ikke sendes på nytt.",
-				errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
-			)
-		}
 		vedleggService.deleteVedleggNotRelevantAnymore(
 			existingSoknad.innsendingsId!!,
 			existingSoknad.vedleggsListeUtenHoveddokument
 		)
-
-		// send soknadmetada til soknadsmottaker
-		try {
-			val avsender = avsenderDto ?: AvsenderDto(id = soknadDto.brukerId, idType = IdType.FNR)
-			val vedleggsListe = listOf(kvitteringForArkivering) + opplastedeVedlegg
-			soknadsmottakerAPI.sendInnSoknad(soknadDto, vedleggsListe, avsender, brukerDto)
-			innsenderMetrics.incSubmissionsCounter(soknadDto.visningsType)
-		} catch (e: Exception) {
-			exceptionHelper.reportException(e, operation, soknadDto.tema)
-			logger.error("${soknadDto.innsendingsId}: Feil ved sending av søknad til soknadsmottaker ${e.message}")
-			throw BackendErrorException("Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV", e)
-		}
 
 		// oppdater vedleggstabellen med status og innsendingsdato for opplastede vedlegg.
 		opplastedeVedlegg.forEach {
@@ -132,7 +130,7 @@ class InnsendingService(
 					vedleggDto = it,
 					soknadsId = soknadDto.id!!,
 					url = it.skjemaurl,
-					opplastingsStatus = OpplastingsStatus.INNSENDT
+					opplastingsStatus = OpplastingsStatus.KLAR_FOR_INNSENDING
 				)
 			)
 		}
@@ -141,7 +139,7 @@ class InnsendingService(
 				vedleggDto = kvitteringForArkivering,
 				soknadsId = soknadDto.id!!,
 				url = kvitteringForArkivering.skjemaurl,
-				opplastingsStatus = OpplastingsStatus.INNSENDT
+				opplastingsStatus = OpplastingsStatus.KLAR_FOR_INNSENDING
 			)
 		)
 
@@ -153,16 +151,48 @@ class InnsendingService(
 			)
 		}
 
-		try {
-			repo.lagreSoknad(mapTilSoknadDb(soknadDto, soknadDto.innsendingsId!!, SoknadsStatus.Innsendt))
-		} catch (e: Exception) {
-			exceptionHelper.reportException(e, operation, soknadDto.tema)
-			throw BackendErrorException(message = "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV")
-		}
 
 		return Pair(opplastedeVedlegg, missingRequiredVedlegg)
 	}
 
+	@Async
+	@Transactional(timeout=TRANSACTION_TIMEOUT)
+	fun sendInnForArkivering(
+		innsendingsId: String
+	) {
+		val operation = InnsenderOperation.SEND_INN.name
+		val soknadsDb = repo.hentSoknadDb(innsendingsId)
+		if (soknadsDb.status != SoknadsStatus.KlarForInnsending) return
+		val avsender = soknadsDb.avsender ?: AvsenderDto(id = soknadsDb.brukerid, idType = IdType.FNR)
+		val bruker = soknadsDb.affecteduser ?: if (soknadsDb.brukerid != null) BrukerDto(id = soknadsDb.brukerid, idType = BrukerDto.IdType.FNR) else null
+
+		val soknadDto = soknadService.hentSoknad(innsendingsId)
+		val opplastedeVedlegg = soknadDto.vedleggsListe.filter{(it.erHoveddokument && it.opplastingsStatus != OpplastingsStatusDto.SendesIkke) || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending }
+		logger.info("$innsendingsId: Starter innsending av skjema ${soknadDto.skjemanr}")
+		try {
+			soknadsmottakerAPI.sendInnSoknad(soknadDto, opplastedeVedlegg, avsender, bruker)
+			innsenderMetrics.incSubmissionsCounter(soknadDto.visningsType)
+		} catch (e: Exception) {
+			exceptionHelper.reportException(e, operation, soknadDto.tema)
+			logger.error("${soknadDto.innsendingsId}: Feil ved sending av søknad til soknadsmottaker ${e.message}")
+			throw BackendErrorException("Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV", e)
+		}
+
+		try {
+			val lagretSoknadDb = repo.lagreSoknad(soknadsDb.copy(status=SoknadsStatus.Innsendt, avsender = avsender, affecteduser = bruker))
+			logger.info("$innsendingsId: sendInnForArkivering, satt soknad.status=${lagretSoknadDb.status}")
+		} catch (e: Exception) {
+			exceptionHelper.reportException(e, operation, soknadDto.tema)
+			throw BackendErrorException(message = "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV")
+		}
+		innsenderMetrics.incOperationsCounter(operation, soknadDto.tema)
+
+		logger.info(
+			"$innsendingsId: Sendt inn soknad.\n"
+				+ "${soknadDto.tittel}, ${soknadDto.skjemanr}, ${soknadDto.tema}, ${soknadDto.ettersendingsId}, ${soknadDto.visningsType}"
+				+"InnsendteDokument=" + opplastedeVedlegg.map{"${it.label}, ${it.vedleggsnr}, ${it.mimetype}\n"}
+		)
+	}
 
 	private fun validerAtSoknadHarEndringSomKanSendesInn(
 		soknadDto: DokumentSoknadDto,
@@ -215,25 +245,27 @@ class InnsendingService(
 	}
 
 	@Transactional(timeout = TRANSACTION_TIMEOUT)
-	fun submitApplication(
-		soknad: DokumentSoknadDto,
+	fun preSubmitApplication(
+		soknad_: DokumentSoknadDto,
 		mainDocumentContent: ByteArray,
 		mainDocumentAltContent: ByteArray,
 		attachments: List<AttachmentDto>?,
 		avsender: AvsenderDto?,
+		affectedUser: BrukerDto? = null
 	): Pair<ApplicationSubmissionResponse, EttersendingsId?> {
-		val innsendingsId = soknad.innsendingsId!!
+		val innsendingsId = soknad_.innsendingsId!!
 		val allAttachments = attachments ?: emptyList()
-		logger.info("$innsendingsId: Starter innsending av skjema ${soknad.skjemanr}")
+		logger.info("$innsendingsId: Starter innsending av skjema ${soknad_.skjemanr}")
 
-		val brukerDto = if (soknad.brukerId.isNullOrEmpty()) null else BrukerDto(id = soknad.brukerId!!, idType = BrukerDto.IdType.FNR)
+		val soknad = soknadService.prepareSubmit(innsendingsId, affectedUser)
+		logger.info("$innsendingsId: preSubmitApplication, satt soknad.status=${soknad.status}")
+		val brukerDto = affectedUser ?: if (soknad.brukerId.isNullOrEmpty()) null else BrukerDto(id = soknad.brukerId!!, idType = BrukerDto.IdType.FNR)
 		if (brukerDto == null && avsender == null) {
 			throw IllegalActionException(
 				message = "Hverken bruker eller avsender er satt",
 				errorCode = ErrorCode.PROPERTY_NOT_SET
 			)
 		}
-		val avsenderDto = avsender ?: AvsenderDto(id = soknad.brukerId!!, idType = IdType.FNR)
 		if (soknad.erEttersending) {
 			throw IllegalActionException(
 				message = "Kan ikke sende inn ettersendingssøknad via denne funksjonen",
@@ -392,11 +424,8 @@ class InnsendingService(
 
 		val uploadedAttachments = savedAttachments.filter { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp }
 		val filesForSubmission = mainDocument + mainDocumentAlt + uploadedAttachments
-		soknadsmottakerAPI.sendInnSoknad(soknad, filesForSubmission, avsenderDto, brukerDto)
-		innsenderMetrics.incSubmissionsCounter(soknad.visningsType)
 
-		val submittedSoknad = soknadService.submit(innsendingsId, filesForSubmission)
-
+		val submittedSoknad = soknadService.prepareSubmitDokumenter(innsendingsId, filesForSubmission)
 		val nologin = soknad.visningsType == VisningsType.nologin
 		val ettersending = if (!nologin && attachmentsWithoutUploads.any { it.uploadStatus == OpplastingsStatusDto.SendSenere }) {
 			ettersendingService.sjekkOgOpprettEttersendingsSoknad(submittedSoknad)
@@ -411,13 +440,14 @@ class InnsendingService(
 			attachments = submittedSoknad.vedleggsListeUtenHoveddokument.map {
 				AttachmentDto1(
 					attachmentCode = it.vedleggsnr!!,
-					uploadStatus = it.opplastingsStatus,
+					uploadStatus = if (OpplastingsStatusDto.KlarForInnsending==it.opplastingsStatus)  OpplastingsStatusDto.Innsendt else it.opplastingsStatus,
 					label = it.label,
 				 	fileIds = if (nologin) null else it.fileIds,
 				)
 			},
 			ettersendingsId = ettersending?.innsendingsId?.toUUID()
 		)
+		logger.info("$innsendingsId: Ferdig preSubmitApplication, status= ${submittedSoknad.status}")
 		return Pair(
 			summary,
 			ettersending?.innsendingsId?.toUUID(),
@@ -425,7 +455,7 @@ class InnsendingService(
 	}
 
 	@Transactional(timeout = TRANSACTION_TIMEOUT)
-	fun sendInnSoknad(soknadDtoInput: DokumentSoknadDto): Pair<KvitteringsDto, DokumentSoknadDto?> {
+	fun forberedSoknadInnsending(soknadDtoInput: DokumentSoknadDto): Pair<KvitteringsDto, DokumentSoknadDto?> {
 		val brukerId = soknadDtoInput.brukerId
 		if (brukerId.isNullOrEmpty()) {
 			throw IllegalActionException(
@@ -433,16 +463,14 @@ class InnsendingService(
 				errorCode = ErrorCode.PROPERTY_NOT_SET
 			)
 		}
-		val operation = InnsenderOperation.SEND_INN.name
 		val startSendInn = System.currentTimeMillis()
 
 		try {
 			val avsenderDto = AvsenderDto(id= brukerId, idType = IdType.FNR)
 			val brukerDto = BrukerDto(id= brukerId, idType = BrukerDto.IdType.FNR)
-			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput, avsenderDto = avsenderDto, brukerDto = brukerDto)
+			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput, avsenderDto, brukerDto)
 
 			val innsendtSoknadDto = soknadService.hentSoknad(soknadDtoInput.innsendingsId!!)
-			innsenderMetrics.incOperationsCounter(operation, innsendtSoknadDto.tema)
 
 			val ettersending = if (manglende.isNotEmpty())
 				ettersendingService.sjekkOgOpprettEttersendingsSoknad(innsendtSoknadDto)
@@ -458,15 +486,13 @@ class InnsendingService(
 
 
 	@Transactional(timeout = TRANSACTION_TIMEOUT)
-	fun sendInnNoLoginSoknad(soknadDtoInput: DokumentSoknadDto, avsenderDto: AvsenderDto, brukerDto: BrukerDto?): KvitteringsDto {
-		val operation = InnsenderOperation.SEND_INN.name
+	fun forberedNoLoginSoknadInnsending(soknadDtoInput: DokumentSoknadDto, avsenderDto: AvsenderDto, brukerDto: BrukerDto?): KvitteringsDto {
 		val startSendInn = System.currentTimeMillis()
 
 		try {
 			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput, avsenderDto, brukerDto)
 
 			val innsendtSoknadDto = soknadService.hentSoknad(soknadDtoInput.innsendingsId!!)
-			innsenderMetrics.incOperationsCounter(operation, innsendtSoknadDto.tema)
 
 			// For uinnlogget søknad skal det ikke opprettes ettersending, men vi skal rapportere i kvittering hvilke vedlegg som mangler
 
@@ -571,7 +597,8 @@ class InnsendingService(
 				antallsider = 1,
 				data = dummySkjema,
 				opprettetdato = OffsetDateTime.now()
-			)
+			),
+			true
 		)
 
 		return soknadService.hentSoknad(soknadDto.innsendingsId!!)

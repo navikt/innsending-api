@@ -236,7 +236,9 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 		Assertions.assertEquals("TSO", innsendtSoknad.tema)
 		Assertions.assertEquals(
 			Mimetype.applicationSlashXml,
-			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.Innsendt }
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant
+				&& (it.opplastingsStatus == OpplastingsStatusDto.Innsendt || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending)
+			}
 				.first().mimetype
 		)
 		Assertions.assertEquals(
@@ -294,7 +296,9 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 		Assertions.assertEquals("TSO", innsendtSoknad.tema)
 		Assertions.assertEquals(
 			Mimetype.applicationSlashXml,
-			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.Innsendt }
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant
+				&& (it.opplastingsStatus == OpplastingsStatusDto.Innsendt || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending)
+			}
 				.first().mimetype
 		)
 		Assertions.assertEquals(
@@ -353,7 +357,9 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 		Assertions.assertEquals("TSR", innsendtSoknad.tema)
 		Assertions.assertEquals(
 			Mimetype.applicationSlashXml,
-			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.Innsendt }
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant
+				&& (it.opplastingsStatus == OpplastingsStatusDto.Innsendt || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending)
+			}
 				.first().mimetype
 		)
 		Assertions.assertEquals(
@@ -410,7 +416,9 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 		Assertions.assertEquals("TSR", innsendtSoknad.tema)
 		Assertions.assertEquals(
 			Mimetype.applicationSlashXml,
-			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.Innsendt }
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant
+				&& (it.opplastingsStatus == OpplastingsStatusDto.Innsendt || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending)
+			}
 				.first().mimetype
 		)
 		Assertions.assertEquals(
@@ -468,7 +476,8 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 		Assertions.assertEquals("TSO", innsendtSoknad.tema)
 		Assertions.assertEquals(
 			Mimetype.applicationSlashXml,
-			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.Innsendt }
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant
+				&& (it.opplastingsStatus == OpplastingsStatusDto.Innsendt || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending)}
 				.first().mimetype
 		)
 		Assertions.assertEquals(
@@ -526,7 +535,9 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 		Assertions.assertEquals("TSR", innsendtSoknad.tema)
 		Assertions.assertEquals(
 			Mimetype.applicationSlashXml,
-			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant && it.opplastingsStatus == OpplastingsStatusDto.Innsendt }
+			innsendtSoknad.vedleggsListe.filter { it.erHoveddokument && it.erVariant
+				&& (it.opplastingsStatus == OpplastingsStatusDto.Innsendt || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending)
+			}
 				.first().mimetype
 		)
 		Assertions.assertEquals(
