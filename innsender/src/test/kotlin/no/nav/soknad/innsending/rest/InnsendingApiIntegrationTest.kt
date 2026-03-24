@@ -13,7 +13,9 @@ import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.service.NotificationService
+import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.stotteTilBolig
@@ -44,6 +46,10 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var restTemplate: TestRestTemplate
+
+	@Autowired
+	lateinit var repo: RepositoryUtils
+
 
 	@SpykBean
 	private lateinit var soknadsmottakerApi: MottakerAPITest
@@ -423,6 +429,125 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			.body
 		assertEquals(1, filesUnknownAttachment.size)
 		assertEquals(SoknadFile.FileStatus.notfound, filesUnknownAttachment[0].fileStatus)
+	}
+
+
+
+	@Test
+	fun testAffectedUserSettesNårInnloggetBukerIkkeLikBrukerISubmission() {
+		val skjemanr = "NAV 10-07.54"
+		val skjematittel = "Søknad om servicehund"
+		val affectedUser = "010115116216"
+		val loggedInUser = "12345678901"
+		val hoveddokument =
+			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokument(skjemanr, withFile = false).build()
+		val hoveddokumentVariant =
+			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokumentVariant(skjemanr, withFile = true).build()
+
+		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = skjemanr, tittel = skjematittel)
+			.medHoveddokument(hoveddokument)
+			.medHoveddokumentVariant(hoveddokumentVariant)
+			.build()
+
+		val soknad = api.createSoknad(skjemaDto)
+			.assertSuccess()
+			.body
+		val innsendingsId = soknad.innsendingsId!!
+
+		val fileM2part1 = api.uploadAttachmentFile(innsendingsId, "M2")
+			.assertSuccess()
+			.body
+		val fileM2part2 = api.uploadAttachmentFile(innsendingsId, "M2")
+			.assertSuccess()
+			.body
+
+		val fileM3 = api.uploadAttachmentFile(innsendingsId, "M3")
+			.assertSuccess()
+			.body
+
+		val attachments = listOf(
+			AttachmentDto(
+				attachmentCode = "M2",
+				"Medisinske utgifter",
+				OpplastingsStatusDto.LastetOpp,
+				fileIds = listOf(fileM2part1.id, fileM2part2.id)
+			),
+			AttachmentDto(
+				attachmentCode = "M3",
+				"Legeerklæring",
+				OpplastingsStatusDto.LastetOpp,
+				fileIds = listOf(fileM3.id)
+			),
+			AttachmentDto(attachmentCode = "M4", "Kursbevis", OpplastingsStatusDto.SendesAvAndre),
+			AttachmentDto(attachmentCode = "M5", "Leiekontrakt", OpplastingsStatusDto.SendSenere),
+		)
+		val submissionResponse = api.submitDigitalApplication(soknad, attachments, bruker = affectedUser)
+			.assertSuccess()
+			.body
+
+		// verify response
+		assertEquals(4, submissionResponse.attachments?.size)
+		assertEquals(
+			OpplastingsStatusDto.Innsendt,
+			submissionResponse.attachments?.first { it.attachmentCode == "M2" }?.uploadStatus
+		)
+		assertEquals(
+			OpplastingsStatusDto.Innsendt,
+			submissionResponse.attachments?.first { it.attachmentCode == "M3" }?.uploadStatus
+		)
+		assertEquals(
+			OpplastingsStatusDto.SendesAvAndre,
+			submissionResponse.attachments?.first { it.attachmentCode == "M4" }?.uploadStatus
+		)
+		assertEquals(
+			OpplastingsStatusDto.SendSenere,
+			submissionResponse.attachments?.first { it.attachmentCode == "M5" }?.uploadStatus
+		)
+		assertNotNull(submissionResponse.ettersendingsId)
+
+		// verify notifications
+		val slotEttersendingsId = mutableListOf<String>()
+		val slotNotificationOpts = mutableListOf<NotificationOptions>()
+		verify(exactly = 2) {
+			notificationService.create(
+				capture(slotEttersendingsId),
+				capture(slotNotificationOpts)
+			)
+		}
+		assertEquals(innsendingsId, slotEttersendingsId.firstOrNull())
+		val ettersendingsId = slotEttersendingsId[1]
+		assertNotNull(ettersendingsId)
+		assertEquals(submissionResponse.ettersendingsId?.toString(), ettersendingsId)
+
+		verify(exactly = 1) { notificationService.close(innsendingsId) }
+
+		// verify invocation of soknadsmottaker
+		val slotSoknad = slot<DokumentSoknadDto>()
+		val slotVedleggsliste = slot<List<VedleggDto>>()
+		val slotAvsender = slot<AvsenderDto>()
+		val slotBruker = slot<BrukerDto?>()
+		sleep(1000)
+		verify(exactly = 1) {
+			soknadsmottakerApi.sendInnSoknad(
+				capture(slotSoknad),
+				capture(slotVedleggsliste),
+				capture(slotAvsender),
+				captureNullable(slotBruker)
+			)
+		}
+
+		assertEquals(innsendingsId, slotSoknad.captured.innsendingsId)
+		val innsendteDokumenter = slotVedleggsliste.captured
+		assertEquals(4, innsendteDokumenter.size)
+		assertTrue(innsendteDokumenter.all { it.mimetype != null })
+		assertEquals(affectedUser, slotBruker.captured?.id)
+
+		val savedSoknad = repo.hentSoknadDb(innsendingsId)
+		assertNotNull(savedSoknad)
+		assertEquals(affectedUser, savedSoknad.affecteduser?.id)
+		assertEquals(loggedInUser, savedSoknad.brukerid)
+		assertEquals(loggedInUser, savedSoknad.avsender?.id)
+		assertEquals(SoknadsStatus.Innsendt, savedSoknad.status)
 	}
 
 

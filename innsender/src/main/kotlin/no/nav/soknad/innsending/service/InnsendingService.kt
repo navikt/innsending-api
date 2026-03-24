@@ -54,7 +54,6 @@ class InnsendingService(
 
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto, avsenderDto: AvsenderDto?, brukerDto: BrukerDto?): Pair<List<VedleggDto>, List<VedleggDto>> {
-		val operation = InnsenderOperation.SEND_INN.name
 
 		// Anta at filene til et vedlegg allerede er konvertert til PDF ved lagring.
 		// Eventuell varianter av hoveddokument skal være på annet format enn PDF, da formatet vil bli brukt for å mappe til arkivformat ved lagring, og for arkivformatet på variantene på et dokument må være ulike.
@@ -75,10 +74,12 @@ class InnsendingService(
 			)
 		}
 
-		val lagretSoknad = mapTilDokumentSoknadDto(repo.lagreSoknad(
+		val lagretSoknad = mapTilDokumentSoknadDto(
+			repo.lagreSoknad(
 			mapTilSoknadDb(soknadDtoInput, soknadDtoInput.innsendingsId!!,
-				SoknadsStatus.KlarForInnsending, avsender = avsenderDto, bruker = brukerDto).copy(innsendtdato = LocalDateTime.now())),
-			emptyList(), emptyList()
+				SoknadsStatus.KlarForInnsending, avsender = avsenderDto, bruker = brukerDto).copy(innsendtdato = LocalDateTime.now(), affecteduser = null)
+			)
+			,emptyList(), emptyList()
 		).copy(vedleggsListe = soknadDtoInput.vedleggsListe)
 
 		val soknadDto = if (soknadDtoInput.erEttersending)
@@ -162,8 +163,8 @@ class InnsendingService(
 		val operation = InnsenderOperation.SEND_INN.name
 		val soknadsDb = repo.hentSoknadDb(innsendingsId)
 		if (soknadsDb.status != SoknadsStatus.KlarForInnsending) return
-		val avsender = AvsenderDto(soknadsDb.avsenderid, idType = soknadsDb.avsendertype, navn = soknadsDb.avsendernavn)
-		val bruker = if (soknadsDb.brukerid != null) BrukerDto(id = soknadsDb.brukerid, idType = BrukerDto.IdType.FNR) else null
+		val avsender = soknadsDb.avsender ?: AvsenderDto(id = soknadsDb.brukerid, idType = IdType.FNR)
+		val bruker = soknadsDb.affecteduser ?: if (soknadsDb.brukerid != null) BrukerDto(id = soknadsDb.brukerid, idType = BrukerDto.IdType.FNR) else null
 
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		val opplastedeVedlegg = soknadDto.vedleggsListe.filter{(it.erHoveddokument && it.opplastingsStatus != OpplastingsStatusDto.SendesIkke) || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending }
@@ -178,18 +179,8 @@ class InnsendingService(
 		}
 
 		try {
-			val lagretSoknadDb = repo.lagreSoknad(mapTilSoknadDb(soknadDto,
-				soknadDto.innsendingsId!!, SoknadsStatus.Innsendt, avsender=avsender, bruker=bruker))
+			val lagretSoknadDb = repo.lagreSoknad(soknadsDb.copy(status=SoknadsStatus.Innsendt, avsender = avsender, affecteduser = bruker))
 			logger.info("$innsendingsId: sendInnForArkivering, satt soknad.status=${lagretSoknadDb.status}")
-		} catch (e: Exception) {
-			exceptionHelper.reportException(e, operation, soknadDto.tema)
-			throw BackendErrorException(message = "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV")
-		}
-
-		try {
-			repo.oppdaterOpplastingsStatusGittSoknadsIdOgStatus(innsendingsId=innsendingsId, soknadsId = soknadDto.id!!,
-				gammelStatus=OpplastingsStatus.KLAR_FOR_INNSENDING,
-				nyStatus=OpplastingsStatus.INNSENDT)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			throw BackendErrorException(message = "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV")
@@ -260,14 +251,15 @@ class InnsendingService(
 		mainDocumentAltContent: ByteArray,
 		attachments: List<AttachmentDto>?,
 		avsender: AvsenderDto?,
+		affectedUser: BrukerDto? = null
 	): Pair<ApplicationSubmissionResponse, EttersendingsId?> {
 		val innsendingsId = soknad_.innsendingsId!!
 		val allAttachments = attachments ?: emptyList()
 		logger.info("$innsendingsId: Starter innsending av skjema ${soknad_.skjemanr}")
 
-		val soknad = soknadService.prepareSubmit(innsendingsId)
+		val soknad = soknadService.prepareSubmit(innsendingsId, affectedUser)
 		logger.info("$innsendingsId: preSubmitApplication, satt soknad.status=${soknad.status}")
-		val brukerDto = if (soknad.brukerId.isNullOrEmpty()) null else BrukerDto(id = soknad.brukerId!!, idType = BrukerDto.IdType.FNR)
+		val brukerDto = affectedUser ?: if (soknad.brukerId.isNullOrEmpty()) null else BrukerDto(id = soknad.brukerId!!, idType = BrukerDto.IdType.FNR)
 		if (brukerDto == null && avsender == null) {
 			throw IllegalActionException(
 				message = "Hverken bruker eller avsender er satt",

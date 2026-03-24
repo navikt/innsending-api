@@ -84,9 +84,7 @@ class SoknadService(
 					skalslettesdato = OffsetDateTime.now().plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD),
 					ernavopprettet = false,
 					brukertype = BrukerDto.IdType.FNR,
-					avsenderid = brukerId,
-					avsendertype = AvsenderDto.IdType.FNR,
-					avsendernavn = null,
+					avsender = null,
 				)
 			)
 
@@ -192,7 +190,7 @@ class SoknadService(
 	}
 
 
-	fun prepareSubmit(innsendingsId: String): DokumentSoknadDto {
+	fun prepareSubmit(innsendingsId: String, affectedUser: BrukerDto?): DokumentSoknadDto {
 		val soknadDbData = repo.hentSoknadDb(innsendingsId)
 		if (!(soknadDbData.status == SoknadsStatus.Opprettet || soknadDbData.status == SoknadsStatus.Utfylt)) {
 			throw IllegalActionException("$innsendingsId: Kan ikke sende inn søknad når status er ${soknadDbData.status}")
@@ -202,6 +200,7 @@ class SoknadService(
 			soknadDbData.copy(
 				status = SoknadsStatus.KlarForInnsending,
 				innsendtdato = innsendtdato,
+				affecteduser = affectedUser,
 			)
 		)
 		return vedleggService.hentAlleVedlegg(submittedSoknad, innsendingsId)

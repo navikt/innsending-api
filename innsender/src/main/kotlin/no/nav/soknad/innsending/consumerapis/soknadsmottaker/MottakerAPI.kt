@@ -11,6 +11,7 @@ import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.model.VisningsType
+import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.mapping.translate
 import no.nav.soknad.innsending.util.maskerFnr
 import org.slf4j.LoggerFactory
@@ -28,6 +29,8 @@ class MottakerAPI(
 ) : MottakerInterface, HealthRequestInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
+	private val combinedLogger = CombinedLogger(logger)
+
 
 	private val mottakerClient: SoknadApi
 	private val innsendingMottakerApi: no.nav.soknad.arkivering.soknadsmottaker.api.NologinSoknadApi
@@ -64,13 +67,13 @@ class MottakerAPI(
 	override fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggsListe: List<VedleggDto>, avsenderDto: AvsenderDto, brukerDto: BrukerDto?) {
 		if (soknadDto.visningsType == VisningsType.nologin) {
 			val innsending = translate(soknadDto, vedleggsListe, avsenderDto, brukerDto)
-			logger.info("${soknadDto.innsendingsId}: klar til å sende inn (nologin)\n${maskerFnr(innsending)}\ntil ${restConfig.soknadsMottakerHost}")
+			combinedLogger.log("${soknadDto.innsendingsId}: klar til å sende inn (nologin)\n${maskerFnr(innsending)}\ntil ${restConfig.soknadsMottakerHost}", brukerDto?.id?: avsenderDto.id?: avsenderDto.navn ?: "NN")
 			innsendingMottakerApi.nologinSubmission(innsending, innsending.innsendingsId)
 			logger.info("${soknadDto.innsendingsId}: sendt inn (nologin)")
 		} else {
-			val personId = soknadDto.brukerId ?: throw IllegalStateException("Kan ikke sende inn søknad uten brukerId")
+			val personId = brukerDto?.id ?: soknadDto.brukerId ?: throw IllegalStateException("Kan ikke sende inn søknad uten brukerId")
 			val soknad = translate(soknadDto, vedleggsListe, personId)
-			logger.info("${soknadDto.innsendingsId}: klar til å sende inn\n${maskerFnr(soknad)}\ntil ${restConfig.soknadsMottakerHost}")
+			combinedLogger.log("${soknadDto.innsendingsId}: klar til å sende inn\n${maskerFnr(soknad)}\ntil ${restConfig.soknadsMottakerHost}", personId)
 			mottakerClient.receive(soknad)
 			logger.info("${soknadDto.innsendingsId}: sendt inn")
 		}

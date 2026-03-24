@@ -252,7 +252,11 @@ class FyllutRestApi(
 	): ResponseEntity<ApplicationSubmissionResponse> {
 		val innsendingsIdStr = innsendingsId.toString()
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
-		combinedLogger.log("$innsendingsIdStr: Kall fra FyllUt for sende inn søknad", brukerId)
+		val affectedUser = if (submitApplicationRequest.bruker != null && brukerId != submitApplicationRequest.bruker) {
+			BrukerDto(id = submitApplicationRequest.bruker!!, idType = BrukerDto.IdType.FNR )
+		} else null
+
+		combinedLogger.log("$innsendingsIdStr: Kall fra FyllUt for sende inn søknad", "loggedIn: $brukerId / affected: ${affectedUser?.id ?: brukerId}")
 
 		val soknad = soknadService.hentSoknad(innsendingsIdStr)
 		validerSoknadsTilgang(soknad)
@@ -269,7 +273,7 @@ class FyllutRestApi(
 			submitApplicationRequest.mainDocument,
 			submitApplicationRequest.mainDocumentAlt,
 			submitApplicationRequest.attachments.sanitize(),
-			submitApplicationRequest.avsender,
+			submitApplicationRequest.avsender, affectedUser
 		)
 		innsendingService.sendInnForArkivering(innsendingsIdStr)
 
