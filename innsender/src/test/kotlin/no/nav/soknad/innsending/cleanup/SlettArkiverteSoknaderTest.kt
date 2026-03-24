@@ -138,8 +138,9 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 			Hjelpemetoder.lagFilDtoMedFil(skalSendeInnSoknad.vedleggsListe.first { it.erHoveddokument && !it.erVariant })
 		)
 		//Send inn søknad
-		val kvittering = innsendingService.sendInnSoknad(skalSendeInnSoknad)
+		val kvittering = innsendingService.forberedSoknadInnsending(skalSendeInnSoknad)
 		assertNotNull(kvittering)
+		innsendingService.sendInnForArkivering(kvittering.first.innsendingsId)
 	}
 
 	private fun simulerArkiveringsRespons(innsendingsId: String, arkiveringsStatus: ArkiveringsStatus) {

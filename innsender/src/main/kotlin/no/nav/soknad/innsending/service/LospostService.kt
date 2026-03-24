@@ -1,5 +1,7 @@
 package no.nav.soknad.innsending.service
 
+import no.nav.soknad.innsending.model.AvsenderDto
+import no.nav.soknad.innsending.model.BrukerDto
 import no.nav.soknad.innsending.model.LospostDto
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
@@ -32,6 +34,7 @@ class LospostService(
 		tittel: String,
 		dokumentTittel: String,
 		sprak: String,
+		avsender: AvsenderDto? = null
 	): LospostDto {
 		val innsendingsId = Utilities.laginnsendingsId()
 		val applikasjon = subjectHandler.getClientId()
@@ -56,7 +59,9 @@ class LospostService(
 				ettersendingsid = null,
 				innsendtdato = null,
 				skalslettesdato = OffsetDateTime.now().plusDays(Constants.DEFAULT_LEVETID_OPPRETTET_LOSPOST),
-				ernavopprettet = false
+				ernavopprettet = false,
+				brukertype = BrukerDto.IdType.FNR,
+				avsender = avsender,
 			)
 		)
 		val vedlegg = repo.lagreVedlegg(

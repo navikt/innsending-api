@@ -6,6 +6,7 @@ import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.KvitteringsDto
 import no.nav.soknad.innsending.model.SkjemaDtoV2
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
+import no.nav.soknad.innsending.service.InnsendingService
 import no.nav.soknad.innsending.service.NologinSoknadService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.service.config.ConfigDefinition
@@ -29,6 +30,7 @@ class NologinSoknadRestApi(
 	private var subjectHandler: SubjectHandlerInterface,
 	val soknadService: SoknadService,
 	val nologinSoknadService: NologinSoknadService,
+	private val innsendingService: InnsendingService,
 	): NologinSoknadApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -52,7 +54,9 @@ class NologinSoknadRestApi(
 
 		nologinSoknadService.verifiserInput(nologinSoknadDto)
 
-		val innsendtSoknad = nologinSoknadService.lagreOgSendInnUinnloggetSoknad(nologinSoknadDto, applikasjon)
+		val innsendtSoknad = nologinSoknadService.lagreOgForberedInnsendingAvUinnloggetSoknad(nologinSoknadDto, applikasjon)
+
+		innsendingService.sendInnForArkivering(innsendtSoknad.innsendingsId)
 
 		return ResponseEntity
 			.status(HttpStatus.OK)

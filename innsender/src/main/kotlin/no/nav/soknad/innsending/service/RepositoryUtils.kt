@@ -207,6 +207,27 @@ class RepositoryUtils(
 		throw BackendErrorException("Feil ved oppdatering av vedlegg ${vedleggDbData.id} for søknad $innsendingsId", ex)
 	}
 
+	fun oppdaterOpplastingsStatusGittSoknadsIdOgStatus(innsendingsId: String, soknadsId: Long, gammelStatus: OpplastingsStatus, nyStatus: OpplastingsStatus) {
+		try {
+			val antallEndret = vedleggRepository.updateOpplastingsstatusBySoknadsIdAndOpplastingsstatus(id = soknadsId, nyStatus = nyStatus, gammelStatus = gammelStatus)
+			.let {
+					logger.debug(
+						"{}: Oppdaterte vedlegg med status {} for soknadsId={}, antallEndret={}",
+						innsendingsId,
+						nyStatus,
+						soknadsId,
+						it
+					)
+					it
+				} ?: 0
+			if (antallEndret == 0) {
+				logger.warn("$innsendingsId: Fant ingen vedlegg med status $nyStatus for soknadsId=$soknadsId")
+			}
+		} catch (ex: Exception) {
+			throw BackendErrorException("$innsendingsId: Feil ved oppdatering av opplastingsstatus til $nyStatus på vedlegg til soknadsId=$soknadsId", ex)
+		}
+	}
+
 	fun updateVedleggStatus(
 		innsendingsId: String,
 		vedleggsId: Long,
@@ -232,6 +253,29 @@ class RepositoryUtils(
 	} catch (ex: Exception) {
 		throw BackendErrorException("Feil ved oppdatering av status for vedlegg $vedleggsId for søknad $innsendingsId", ex)
 	}
+
+
+	fun preSubmitVedlegg(soknadId: Long, vedleggIds: List<Long>, innsendtDato: LocalDateTime) {
+		val alleVedlegg = vedleggRepository.findAllById(vedleggIds).also {
+			if (it.size != vedleggIds.size) {
+				throw IllegalStateException("Fant ikke alle vedlegg for innsending (soknad dbId=$soknadId). Forventet ${vedleggIds.size}, fant ${it.size}.")
+			}
+			if (it.any { vedlegg -> vedlegg.soknadsid != soknadId }) {
+				throw IllegalStateException("Noen av vedleggene hører ikke til søknaden (soknad dbId=$soknadId)")
+			}
+			if (it.any { vedlegg -> vedlegg.status != OpplastingsStatus.LASTET_OPP }) {
+				throw IllegalStateException("Noen av vedleggene er ikke i status LASTET_OPP (soknad dbId=$soknadId)")
+			}
+		}
+		vedleggRepository.saveAll(alleVedlegg.map {
+			it.copy(
+				status = OpplastingsStatus.KLAR_FOR_INNSENDING,
+				innsendtdato = innsendtDato,
+				endretdato = innsendtDato
+			)
+		})
+	}
+
 
 	fun submitVedlegg(soknadId: Long, vedleggIds: List<Long>, innsendtDato: LocalDateTime) {
 		val alleVedlegg = vedleggRepository.findAllById(vedleggIds).also {
@@ -394,6 +438,8 @@ class RepositoryUtils(
 				HendelseType.Opprettet
 			} else if (soknadDbData.status == SoknadsStatus.AutomatiskSlettet) {
 				HendelseType.SlettetAvSystem
+			} else if (soknadDbData.status == SoknadsStatus.KlarForInnsending) {
+				HendelseType.KlarForInnsending
 			} else if (soknadDbData.status == SoknadsStatus.Innsendt && soknadDbData.arkiveringsstatus == ArkiveringsStatus.IkkeSatt) {
 				HendelseType.Innsendt
 			} else if (soknadDbData.status == SoknadsStatus.Innsendt && soknadDbData.arkiveringsstatus == ArkiveringsStatus.Arkivert) {

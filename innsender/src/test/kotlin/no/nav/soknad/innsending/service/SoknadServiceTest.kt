@@ -628,7 +628,10 @@ class SoknadServiceTest : ApplicationTest() {
 		val innsendingService = lagInnsendingService(soknadService)
 		// Check that reciept is returned for each sent in application
 		val kvitteringsDtoList = mutableListOf<KvitteringsDto>()
-		dokumentSoknadDtoList.forEach { kvitteringsDtoList.add(innsendingService.sendInnSoknad(it).first) }
+		dokumentSoknadDtoList.forEach {
+			kvitteringsDtoList.add(innsendingService.forberedSoknadInnsending(it).first)
+			innsendingService.sendInnForArkivering(it.innsendingsId!!)
+		}
 		assertTrue(kvitteringsDtoList.size == dokumentSoknadDtoList.size)
 
 		// Check that the applications attachments are kept after the applications are sent in
@@ -656,18 +659,20 @@ class SoknadServiceTest : ApplicationTest() {
 
 		val hendelseDbDatasArkivert =
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDtoList[0].innsendingsId!!)
-		assertTrue(hendelseDbDatasArkivert.size == 4)
+		assertTrue(hendelseDbDatasArkivert.size == 5)
 		assertEquals(HendelseType.Opprettet, hendelseDbDatasArkivert[0].hendelsetype)
-		assertEquals(HendelseType.Innsendt, hendelseDbDatasArkivert[1].hendelsetype)
-		assertEquals(HendelseType.Arkivert, hendelseDbDatasArkivert[2].hendelsetype)
-		assertEquals(HendelseType.SlettetPermanentAvSystem, hendelseDbDatasArkivert[3].hendelsetype)
+		assertEquals(HendelseType.KlarForInnsending, hendelseDbDatasArkivert[1].hendelsetype)
+		assertEquals(HendelseType.Innsendt, hendelseDbDatasArkivert[2].hendelsetype)
+		assertEquals(HendelseType.Arkivert, hendelseDbDatasArkivert[3].hendelsetype)
+		assertEquals(HendelseType.SlettetPermanentAvSystem, hendelseDbDatasArkivert[4].hendelsetype)
 
 		val hendelseDbDatasArkiveringFeilet =
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDtoList[1].innsendingsId!!)
-		assertTrue(hendelseDbDatasArkiveringFeilet.size == 3)
+		assertTrue(hendelseDbDatasArkiveringFeilet.size == 4)
 		assertEquals(HendelseType.Opprettet, hendelseDbDatasArkiveringFeilet[0].hendelsetype)
-		assertEquals(HendelseType.Innsendt, hendelseDbDatasArkiveringFeilet[1].hendelsetype)
-		assertEquals(HendelseType.ArkiveringFeilet, hendelseDbDatasArkiveringFeilet[2].hendelsetype)
+		assertEquals(HendelseType.KlarForInnsending, hendelseDbDatasArkiveringFeilet[1].hendelsetype)
+		assertEquals(HendelseType.Innsendt, hendelseDbDatasArkiveringFeilet[2].hendelsetype)
+		assertEquals(HendelseType.ArkiveringFeilet, hendelseDbDatasArkiveringFeilet[3].hendelsetype)
 
 	}
 
