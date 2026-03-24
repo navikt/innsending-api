@@ -34,7 +34,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
-import java.lang.Thread.sleep
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -144,8 +143,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
-		sleep(1000)
-		verify(exactly = 1) {
+		verify(timeout = 5000, exactly = 1) {
 			soknadsmottakerApi.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
@@ -230,8 +228,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
-		sleep(1000)
-		verify(exactly = 1) {
+		verify(timeout = 5000, exactly = 1) {
 			soknadsmottakerApi.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
@@ -371,8 +368,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
-		sleep(1000)
-		verify(exactly = 1) {
+		verify(timeout = 5000, exactly = 1) {
 			soknadsmottakerApi.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
@@ -526,8 +522,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
-		sleep(1000)
-		verify(exactly = 1) {
+		verify(timeout = 5000, exactly = 1) {
 			soknadsmottakerApi.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
@@ -685,8 +680,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
-		sleep(1000)
-		verify(exactly = 1) {
+		verify(timeout = 5000, exactly = 1) {
 			soknadsmottakerApi.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
@@ -789,8 +783,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
-		sleep(1000)
-		verify(exactly = 1) {
+		verify(timeout = 5000, exactly = 1) {
 			soknadsmottakerApi.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
@@ -922,8 +915,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
-		sleep(1000)
-		verify(exactly = 1) {
+		verify(timeout = 5000, exactly = 1) {
 			soknadsmottakerApi.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),

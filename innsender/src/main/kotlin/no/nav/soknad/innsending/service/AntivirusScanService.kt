@@ -7,8 +7,7 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.core.task.TaskExecutor
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -16,7 +15,6 @@ import java.util.UUID
 class AntivirusScanService(
 	private val antivirus: AntivirusInterface,
 	private val innsenderMetrics: InnsenderMetrics,
-	@param:Qualifier("antivirusTaskExecutor") private val taskExecutor: TaskExecutor,
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -44,6 +42,7 @@ class AntivirusScanService(
 		logger.info("$innsendingsId: Antiviruskontroll bestått for vedlegg $attachmentId")
 	}
 
+	@Async
 	fun scanAsynchronously(
 		namespace: FileStorageNamespace,
 		fileContent: ByteArray,
@@ -51,27 +50,25 @@ class AntivirusScanService(
 		attachmentId: String,
 		fileId: String,
 	) {
-		taskExecutor.execute {
-			try {
-				val result = antivirus.scan(fileContent)
-				registerResult(namespace, AntivirusScanMode.ASYNCHRONOUS, result)
-				when (result) {
-					AntivirusScanResult.OK ->
-						logger.info("$innsendingsId: Asynkron antiviruskontroll bestått for vedlegg $attachmentId (fileId=$fileId)")
+		try {
+			val result = antivirus.scan(fileContent)
+			registerResult(namespace, AntivirusScanMode.ASYNCHRONOUS, result)
+			when (result) {
+				AntivirusScanResult.OK ->
+					logger.info("$innsendingsId: Asynkron antiviruskontroll bestått for vedlegg $attachmentId (fileId=$fileId)")
 
-					AntivirusScanResult.FOUND ->
-						logger.warn("$innsendingsId: Asynkron antiviruskontroll fant virus for vedlegg $attachmentId (fileId=$fileId)")
+				AntivirusScanResult.FOUND ->
+					logger.warn("$innsendingsId: Asynkron antiviruskontroll fant virus for vedlegg $attachmentId (fileId=$fileId)")
 
-					AntivirusScanResult.ERROR ->
-						logger.warn("$innsendingsId: Asynkron antiviruskontroll mislyktes for vedlegg $attachmentId (fileId=$fileId)")
-				}
-			} catch (ex: Exception) {
-				registerResult(namespace, AntivirusScanMode.ASYNCHRONOUS, AntivirusScanResult.ERROR)
-				logger.warn(
-					"$innsendingsId: Asynkron antiviruskontroll kastet feil for vedlegg $attachmentId (fileId=$fileId)",
-					ex
-				)
+				AntivirusScanResult.ERROR ->
+					logger.warn("$innsendingsId: Asynkron antiviruskontroll mislyktes for vedlegg $attachmentId (fileId=$fileId)")
 			}
+		} catch (ex: Exception) {
+			registerResult(namespace, AntivirusScanMode.ASYNCHRONOUS, AntivirusScanResult.ERROR)
+			logger.warn(
+				"$innsendingsId: Asynkron antiviruskontroll kastet feil for vedlegg $attachmentId (fileId=$fileId)",
+				ex
+			)
 		}
 	}
 

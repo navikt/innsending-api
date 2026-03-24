@@ -14,7 +14,6 @@ import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.springframework.core.task.SyncTaskExecutor
 import java.util.UUID
 import kotlin.test.assertTrue
 
@@ -22,7 +21,7 @@ class AntivirusScanServiceUnitTest {
 
 	private val antivirus = mockk<AntivirusInterface>()
 	private val innsenderMetrics = mockk<InnsenderMetrics>(relaxed = true)
-	private val antivirusScanService = AntivirusScanService(antivirus, innsenderMetrics, SyncTaskExecutor())
+	private val antivirusScanService = AntivirusScanService(antivirus, innsenderMetrics)
 	private val logCaptor = LogCaptor.forClass(AntivirusScanService::class.java)
 
 	@AfterEach
