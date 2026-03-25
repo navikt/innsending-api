@@ -82,9 +82,20 @@ class InnsendingService(
 			,emptyList(), emptyList()
 		).copy(vedleggsListe = soknadDtoInput.vedleggsListe)
 
-		val soknadDto = if (soknadDtoInput.erEttersending)
-			addDummyHovedDokumentToSoknad(lagretSoknad)
-		else {
+		val soknadDto = if (soknadDtoInput.erEttersending) {
+			addDummyHovedDokumentToSoknad(lagretSoknad).let { soknad ->
+				// Temporary bugfix - should be removed when no attachments on ettersendinger has status KlarForInnsending in db
+				soknad.copy(vedleggsListe = soknad.vedleggsListe.map { vedlegg ->
+					if (vedlegg.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending) {
+						logger.info("${soknad.innsendingsId}: Bugfix - Endrer status på vedlegg ${vedlegg.id} fra KlarForInnsending til Innsendt")
+						repo.updateVedleggStatus(soknad.innsendingsId!!, vedlegg.id!!, OpplastingsStatus.INNSENDT)
+						vedlegg.copy(opplastingsStatus = OpplastingsStatusDto.Innsendt)
+					} else {
+						vedlegg
+					}
+				})
+			}
+		} else {
 
 			if (tilleggstonadService.isTilleggsstonad(lagretSoknad)) {
 				tilleggstonadService.addXmlDokumentvariantToSoknad(lagretSoknad)
