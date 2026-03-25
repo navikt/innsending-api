@@ -139,8 +139,11 @@ class EttersendingService(
 						VedleggDbData(
 							id = null,
 							soknadsid = savedEttersendingsSoknad.id!!,
-							status = if (OpplastingsStatusDto.SendSenere == v.opplastingsStatus)
-								OpplastingsStatus.IKKE_VALGT else mapTilDbOpplastingsStatus(v.opplastingsStatus),
+							status = when(v.opplastingsStatus) {
+								OpplastingsStatusDto.SendSenere -> OpplastingsStatus.IKKE_VALGT
+								OpplastingsStatusDto.KlarForInnsending -> OpplastingsStatus.INNSENDT
+								else -> mapTilDbOpplastingsStatus(v.opplastingsStatus)
+							},
 							erhoveddokument = v.erHoveddokument,
 							ervariant = v.erVariant,
 							erpdfa = v.erPdfa,

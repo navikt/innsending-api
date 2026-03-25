@@ -20,7 +20,6 @@ import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.stotteTilBolig
 import no.nav.soknad.innsending.utils.Api
-import no.nav.soknad.innsending.utils.Api.InnsendingApiResponse
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoV2TestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
@@ -518,6 +517,26 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		val ettersendingsId = slotEttersendingsId[1]
 		assertNotNull(ettersendingsId)
 		assertEquals(submissionResponse.ettersendingsId?.toString(), ettersendingsId)
+		api.getSoknadSendinn(ettersendingsId).assertSuccess().body.let {
+			assertEquals(SoknadsStatusDto.Opprettet, it.status)
+			assertEquals(4, it.vedleggsListe.size)
+
+			val m5Vedlegg = it.vedleggsListe.firstOrNull { vedlegg -> vedlegg.vedleggsnr == "M5" }
+			assertNotNull(m5Vedlegg)
+			assertEquals(OpplastingsStatusDto.IkkeValgt, m5Vedlegg.opplastingsStatus)
+
+			val m4Vedlegg = it.vedleggsListe.firstOrNull { vedlegg -> vedlegg.vedleggsnr == "M4" }
+			assertNotNull(m4Vedlegg)
+			assertEquals(OpplastingsStatusDto.SendesAvAndre, m4Vedlegg.opplastingsStatus)
+
+			val m2Vedlegg = it.vedleggsListe.firstOrNull { vedlegg -> vedlegg.vedleggsnr == "M2" }
+			assertNotNull(m2Vedlegg)
+			assertEquals(OpplastingsStatusDto.Innsendt, m2Vedlegg.opplastingsStatus)
+
+			val m3Vedlegg = it.vedleggsListe.firstOrNull { vedlegg -> vedlegg.vedleggsnr == "M3" }
+			assertNotNull(m3Vedlegg)
+			assertEquals(OpplastingsStatusDto.Innsendt, m3Vedlegg.opplastingsStatus)
+		}
 
 		verify(exactly = 1) { notificationService.close(innsendingsId) }
 
