@@ -219,7 +219,6 @@ class SoknadRestApiTest : ApplicationTest() {
 			)
 		}
 
-		println("Captured soknad: ${slotVedleggsliste.captured}")
 		assertTrue(slotVedleggsliste.captured.none { v -> v.vedleggsnr == "W6" })
 		assertEquals(3, slotVedleggsliste.captured.size)
 	}
