@@ -1,20 +1,32 @@
 package no.nav.soknad.innsending.rest.sendinn
 
+import com.ninjasquad.springmockk.MockkBean
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearAllMocks
+import io.mockk.slot
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
+import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
+import no.nav.soknad.innsending.model.AvsenderDto
+import no.nav.soknad.innsending.model.BrukerDto
+import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.SoknadType
+import no.nav.soknad.innsending.model.VedleggDto
+import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
+import no.nav.soknad.innsending.repository.domain.models.FilDbData
+import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
+import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.utils.Api
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -29,9 +41,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpStatus
+import java.lang.Thread.sleep
+import java.time.LocalDateTime
+import java.util.UUID
 import kotlin.test.assertNotEquals
 
 class SoknadRestApiTest : ApplicationTest() {
+	@Autowired
+	lateinit var repoUtils: RepositoryUtils
+
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
@@ -43,6 +61,9 @@ class SoknadRestApiTest : ApplicationTest() {
 
 	@SpykBean
 	lateinit var notificationPublisher: PublisherInterface
+
+	@MockkBean
+	private lateinit var soknadsmottakerAPI: MottakerAPITest
 
 	@Value("\${server.port}")
 	var serverPort: Int? = 9064
@@ -112,6 +133,95 @@ class SoknadRestApiTest : ApplicationTest() {
 		assertEquals(expectedTotalSize, response.body!!.size)
 		assertEquals(expectedEttersendingSize, responseEttersending.size)
 		assertEquals(expectedSoknadSize, responseSoknad.size)
+	}
+
+	@Test
+	fun `(Temporary bugfix) Should fix attachment status before submit`() {
+		val soknad = SoknadDbDataTestBuilder(ettersendingsId = UUID.randomUUID().toString(), forsteinnsendingsdato = LocalDateTime.now()).build()
+		repoUtils.lagreSoknad(soknad)
+		val vedlegg = VedleggDbData(
+			id = null,
+			soknadsid = soknad.id!!,
+			vedleggsnr = "W7",
+			status = OpplastingsStatus.LASTET_OPP,
+			erhoveddokument = false,
+			ervariant = false,
+			erpdfa = false,
+			erpakrevd = false,
+			tittel = "test",
+			label = "test",
+			beskrivelse = "test",
+			mimetype = "application/pdf",
+			uuid = UUID.randomUUID().toString(),
+			opprettetdato = LocalDateTime.now(),
+			endretdato = LocalDateTime.now(),
+			innsendtdato = null,
+			vedleggsurl = null,
+			formioid = null,
+			opplastingsvalgkommentarledetekst = null,
+			opplastingsvalgkommentar = null,
+			fileIds = null,
+		)
+		repoUtils.lagreVedlegg(
+			vedlegg
+		)
+		val data = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
+		repoUtils.saveFilDbData(soknad.innsendingsid, FilDbData(
+			id = null,
+			vedleggsid = vedlegg.id!!,
+			filnavn = "Test.pdf",
+			mimetype = "application/pdf",
+			storrelse = data.size,
+			data = data,
+			opprettetdato = LocalDateTime.now(),
+			antallsider = 1,
+		))
+		repoUtils.lagreVedlegg(
+			VedleggDbData(
+				id = null,
+				soknadsid = soknad.id,
+				vedleggsnr = "W6",
+				status = OpplastingsStatus.KLAR_FOR_INNSENDING, // <- this status need to be replaced before submit
+				erhoveddokument = false,
+				ervariant = false,
+				erpdfa = false,
+				erpakrevd = false,
+				tittel = "test",
+				label = "test",
+				beskrivelse = "test",
+				mimetype = "application/pdf",
+				uuid = UUID.randomUUID().toString(),
+				opprettetdato = LocalDateTime.now(),
+				endretdato = LocalDateTime.now(),
+				innsendtdato = null,
+				vedleggsurl = null,
+				formioid = null,
+				opplastingsvalgkommentarledetekst = null,
+				opplastingsvalgkommentar = null,
+				fileIds = null,
+			)
+		)
+
+		api!!.sendInnSoknad(soknad.innsendingsid).assertSuccess()
+
+		// verify invocation of soknadsmottaker
+		val slotSoknad = slot<DokumentSoknadDto>()
+		val slotVedleggsliste = slot<List<VedleggDto>>()
+		val slotAvsender = slot<AvsenderDto>()
+		val slotBruker = slot<BrukerDto?>()
+		sleep(1000)
+		verify(exactly = 1) {
+			soknadsmottakerAPI.sendInnSoknad(
+				capture(slotSoknad),
+				capture(slotVedleggsliste),
+				capture(slotAvsender),
+				captureNullable(slotBruker)
+			)
+		}
+
+		println("Captured soknad: ${slotVedleggsliste.captured}")
+		assertTrue(slotVedleggsliste.captured.none { v -> v.vedleggsnr == "W6" })
+		assertEquals(3, slotVedleggsliste.captured.size)
 	}
 
 	@Test
