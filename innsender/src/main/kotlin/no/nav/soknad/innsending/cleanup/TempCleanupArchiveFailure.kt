@@ -21,7 +21,7 @@ class TempCleanupArchiveFailure(
 	private val repo: RepositoryUtils,
 	private val soknadService: SoknadService,
 	private val mottakerApi: MottakerInterface,
-	@param:Value($$"${tempFailedApplications}")
+	@param:Value("\${tempFailedApplications}")
 	private var innsendingsids: String,
 ) {
 
@@ -36,6 +36,7 @@ class TempCleanupArchiveFailure(
 		innsendingsids
 			.split(",")
 			.map { it.trim() }
+			.filter { it.isNotEmpty() }
 			.forEach { innsendingsId ->
 				try {
 					if (!repo.existsByInnsendingsId(innsendingsId)) {

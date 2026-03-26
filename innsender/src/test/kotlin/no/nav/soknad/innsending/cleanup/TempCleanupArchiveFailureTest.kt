@@ -1,225 +1,204 @@
 package no.nav.soknad.innsending.cleanup
 
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.slot
-import io.mockk.verify
-import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
-import no.nav.soknad.innsending.model.*
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.*
+import no.nav.soknad.innsending.ApplicationTest
+import no.nav.soknad.innsending.consumerapis.pdl.PdlAPI
+import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
+import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
+import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
+import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
-import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
+import no.nav.soknad.innsending.service.FilService
+import no.nav.soknad.innsending.service.InnsendingService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import kotlin.test.assertEquals
+import java.util.UUID
+import kotlin.test.assertTrue
 
-class TempCleanupArchiveFailureTest {
+class TempCleanupArchiveFailureTest : ApplicationTest() {
+
+	@Autowired
+	private lateinit var repo: RepositoryUtils
+
+	@Autowired
+	private lateinit var filService: FilService
+
+	@Autowired
+	private lateinit var soknadService: SoknadService
+
+	@Autowired
+	private lateinit var innsendingService: InnsendingService
+
+	@Autowired
+	private lateinit var repositoryUtils: RepositoryUtils
+
+	@MockkBean
+	private lateinit var leaderSelectionUtility: LeaderSelectionUtility
+
+	@MockkBean
+	private lateinit var soknadsmottakerAPI: MottakerAPITest
+
+	@MockkBean
+	private lateinit var pdlInterface: PdlAPI
+
+	@MockkBean
+	private lateinit var subjectHandler: SubjectHandlerInterface
+
+	@BeforeEach
+	fun setup() {
+		every { leaderSelectionUtility.isLeader() } returns true
+		every { soknadsmottakerAPI.sendInnSoknad(any(), any(), any(), any()) } returns Unit
+		every { pdlInterface.hentPersonIdents(any()) } returns listOf(IdentDto("123456789", "FOLKEREGISTERIDENT", false))
+		every { pdlInterface.hentPersonData(any()) } returns PersonDto("123456789", "Fornavn", null, "Etternavn")
+		every { subjectHandler.getClientId() } returns "application"
+	}
 
 	@Test
 	fun `oppdaterer vedlegg uten filer og sender inn igjen ved ArkiveringFeilet`() {
-		val leaderSelection = mockk<LeaderSelection>()
-		val repo = mockk<RepositoryUtils>()
-		val soknadService = mockk<SoknadService>()
-		val mottakerApi = mockk<MottakerInterface>()
+		val innsendingsId = opprettInnsendtSoknad()
+		simulerArkiveringsRespons(innsendingsId, ArkiveringsStatus.ArkiveringFeilet)
 
-		val innsendingsId = "id-1"
-		val now = LocalDateTime.now()
-		val soknadDb = SoknadDbData(
-			id = 1L,
-			innsendingsid = innsendingsId,
-			tittel = "tittel",
-			skjemanr = "NAV 55-00.60",
-			tema = "BID",
-			spraak = "no",
-			status = no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus.Innsendt,
-			brukerid = "12345678901",
-			ettersendingsid = null,
-			opprettetdato = now,
-			endretdato = now,
-			innsendtdato = now,
-			visningssteg = 0,
-			visningstype = VisningsType.fyllUt,
-			kanlasteoppannet = true,
-			forsteinnsendingsdato = null,
-			ettersendingsfrist = 14,
-			arkiveringsstatus = ArkiveringsStatus.ArkiveringFeilet,
-			applikasjon = "application",
-			skalslettesdato = OffsetDateTime.now().plusDays(10),
-			ernavopprettet = false,
-			brukertype = BrukerDto.IdType.FNR,
-			avsender = AvsenderDto(id = "12345678901", idType = AvsenderDto.IdType.FNR),
-			affecteduser = BrukerDto(id = "12345678901", idType = BrukerDto.IdType.FNR)
-		)
-		val vedleggMedFil = lagVedlegg(id = 10L, soknadsid = 1L, status = OpplastingsStatus.KLAR_FOR_INNSENDING, vedleggsnr = "W6")
-		val vedleggUtenFil = lagVedlegg(id = 11L, soknadsid = 1L, status = OpplastingsStatus.KLAR_FOR_INNSENDING, vedleggsnr = "W7")
+		val soknadDb = repo.hentSoknadDb(innsendingsId)
+		val eksisterendeVedleggUtenFil = repo.hentAlleVedleggGittSoknadsid(soknadDb.id!!)
+			.first { repo.countFiles(innsendingsId, it.id!!) == 0 }
+		val eksisterendeVedleggMedFil = repo.hentAlleVedleggGittSoknadsid(soknadDb.id!!)
+			.first { repo.countFiles(innsendingsId, it.id!!) > 0 }
 
-		val soknadDto = DokumentSoknadDto(
-			innsendingsId = innsendingsId,
-			skjemanr = "NAV 55-00.60",
-			tittel = "tittel",
-			tema = "BID",
-			status = SoknadsStatusDto.Innsendt,
-			opprettetDato = OffsetDateTime.now(),
-			vedleggsListe = listOf(
-				vedleggDto(id = 1L, erHoveddokument = true, erVariant = false, status = OpplastingsStatusDto.KlarForInnsending, vedleggsnr = "NAV 55-00.60"),
-				vedleggDto(id = 2L, erHoveddokument = true, erVariant = true, status = OpplastingsStatusDto.KlarForInnsending, vedleggsnr = "NAV 55-00.60"),
-				vedleggDto(id = 3L, erHoveddokument = false, erVariant = false, status = OpplastingsStatusDto.KlarForInnsending, vedleggsnr = "W6"),
-			),
-			id = 1L,
-			brukerId = "12345678901",
-			spraak = "no",
-			visningsSteg = 0L,
-			visningsType = VisningsType.fyllUt,
-			kanLasteOppAnnet = true,
-			arkiveringsStatus = ArkiveringsStatusDto.ArkiveringFeilet,
-			soknadstype = SoknadType.soknad,
-			skjemaPath = "nav550060",
-			applikasjon = "application",
-			skalSlettesDato = OffsetDateTime.now().plusDays(10),
-		)
-
-		every { leaderSelection.isLeader() } returns true
-		every { repo.existsByInnsendingsId(innsendingsId) } returns true
-		every { repo.hentSoknadDb(innsendingsId) } returns soknadDb
-		every { repo.hentAlleVedleggGittSoknadsid(1L) } returns listOf(vedleggMedFil, vedleggUtenFil)
-		every { repo.countFiles(innsendingsId, 10L) } returns 1
-		every { repo.countFiles(innsendingsId, 11L) } returns 0
-		every { repo.updateVedleggStatus(innsendingsId, 11L, OpplastingsStatus.INNSENDT) } returns 1
-		every { soknadService.hentSoknad(innsendingsId) } returns soknadDto
-		every { mottakerApi.sendInnSoknad(any(), any(), any(), any()) } returns Unit
+		clearMocks(soknadsmottakerAPI)
+		every { soknadsmottakerAPI.sendInnSoknad(any(), any(), any(), any()) } returns Unit
 
 		val job = TempCleanupArchiveFailure(
-			leaderSelectionUtility = leaderSelection,
+			leaderSelectionUtility = leaderSelectionUtility,
 			repo = repo,
 			soknadService = soknadService,
-			mottakerApi = mottakerApi,
-			innsendingsids = innsendingsId
+			mottakerApi = soknadsmottakerAPI,
+			innsendingsids = innsendingsId,
 		)
-
 		job.fixAttachmentStatusAndResubmit()
 
-		verify(exactly = 1) { repo.updateVedleggStatus(innsendingsId, 11L, OpplastingsStatus.INNSENDT) }
-		verify(exactly = 0) { repo.updateVedleggStatus(innsendingsId, 10L, any()) }
-
-		val vedleggCaptor = slot<List<VedleggDto>>()
-		verify(exactly = 1) { mottakerApi.sendInnSoknad(soknadDto, capture(vedleggCaptor), any(), any()) }
-		assertEquals(3, vedleggCaptor.captured.size)
+		val slotVedleggsliste = slot<List<VedleggDto>>()
+		verify(exactly = 1) {
+			soknadsmottakerAPI.sendInnSoknad(any(), capture(slotVedleggsliste), any(), any())
+		}
+		assertEquals(1, slotVedleggsliste.captured.size)
+		assertTrue(slotVedleggsliste.captured.none { it.vedleggsnr == eksisterendeVedleggUtenFil.vedleggsnr })
+		assertTrue(slotVedleggsliste.captured.all { it.vedleggsnr == eksisterendeVedleggMedFil.vedleggsnr })
 	}
 
 	@Test
 	fun `sender ikke inn igjen nar arkiveringsstatus ikke er ArkiveringFeilet`() {
-		val leaderSelection = mockk<LeaderSelection>()
-		val repo = mockk<RepositoryUtils>()
-		val soknadService = mockk<SoknadService>()
-		val mottakerApi = mockk<MottakerInterface>()
-		val innsendingsId = "id-2"
-		val now = LocalDateTime.now()
+		val innsendingsId = opprettInnsendtSoknad()
+		simulerArkiveringsRespons(innsendingsId, ArkiveringsStatus.Arkivert)
 
-		val soknadDb = SoknadDbData(
-			id = 2L,
-			innsendingsid = innsendingsId,
-			tittel = "tittel",
-			skjemanr = "NAV 55-00.60",
-			tema = "BID",
-			spraak = "no",
-			status = no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus.Innsendt,
-			brukerid = "12345678901",
-			ettersendingsid = null,
-			opprettetdato = now,
-			endretdato = now,
-			innsendtdato = now,
-			visningssteg = 0,
-			visningstype = VisningsType.fyllUt,
-			kanlasteoppannet = true,
-			forsteinnsendingsdato = null,
-			ettersendingsfrist = 14,
-			arkiveringsstatus = ArkiveringsStatus.Arkivert,
-			applikasjon = "application",
-			skalslettesdato = OffsetDateTime.now().plusDays(10),
-			ernavopprettet = false,
-			brukertype = BrukerDto.IdType.FNR,
-			avsender = null,
-			affecteduser = null
-		)
-
-		every { leaderSelection.isLeader() } returns true
-		every { repo.existsByInnsendingsId(innsendingsId) } returns true
-		every { repo.hentSoknadDb(innsendingsId) } returns soknadDb
+		clearMocks(soknadsmottakerAPI)
+		every { soknadsmottakerAPI.sendInnSoknad(any(), any(), any(), any()) } returns Unit
 
 		val job = TempCleanupArchiveFailure(
-			leaderSelectionUtility = leaderSelection,
+			leaderSelectionUtility = leaderSelectionUtility,
 			repo = repo,
 			soknadService = soknadService,
-			mottakerApi = mottakerApi,
-			innsendingsids = innsendingsId
+			mottakerApi = soknadsmottakerAPI,
+			innsendingsids = innsendingsId,
 		)
-
 		job.fixAttachmentStatusAndResubmit()
 
-		verify(exactly = 0) { repo.hentAlleVedleggGittSoknadsid(any()) }
-		verify(exactly = 0) { soknadService.hentSoknad(any<String>()) }
-		verify(exactly = 0) { mottakerApi.sendInnSoknad(any(), any(), any(), any()) }
+		verify(exactly = 0) { soknadsmottakerAPI.sendInnSoknad(any(), any(), any(), any()) }
 	}
 
-	private fun lagVedlegg(id: Long, soknadsid: Long, status: OpplastingsStatus, vedleggsnr: String): VedleggDbData {
-		val now = LocalDateTime.now()
-		return VedleggDbData(
-			id = id,
-			soknadsid = soknadsid,
-			status = status,
-			erhoveddokument = false,
-			ervariant = false,
-			erpdfa = false,
-			erpakrevd = false,
-			vedleggsnr = vedleggsnr,
-			tittel = "vedlegg",
-			label = "vedlegg",
-			beskrivelse = "",
-			mimetype = "application/pdf",
-			uuid = "uuid-$id",
-			opprettetdato = now,
-			endretdato = now,
-			innsendtdato = null,
-			vedleggsurl = null,
-			formioid = null,
-			opplastingsvalgkommentarledetekst = null,
-			opplastingsvalgkommentar = null,
-			fileIds = null,
+	private fun opprettInnsendtSoknad(): String {
+		val soknad = repositoryUtils.lagreSoknad(
+			SoknadDbDataTestBuilder(
+				skjemanr = "NAV 55-00.60",
+				brukerId = "12345678901",
+				spraak = "nb",
+				innsendingsId = UUID.randomUUID().toString(),
+				status = SoknadsStatus.Innsendt,
+			).build()
 		)
+		val vedleggsnrMedFil = "V1"
+		val vedleggsnrUtenFil = "V2"
+		val allAttachments = listOf(
+			VedleggDbData(
+				id = null,
+				soknadsid = soknad.id!!,
+				status = OpplastingsStatus.KLAR_FOR_INNSENDING,
+				erhoveddokument = false,
+				ervariant = false,
+				erpdfa = true,
+				erpakrevd = false,
+				vedleggsnr = vedleggsnrMedFil,
+				tittel = "Testvedlegg1",
+				label = "Testlabel1",
+				beskrivelse = "Testbeskrivelse1",
+				mimetype = "application/pdf",
+				uuid = UUID.randomUUID().toString(),
+				opprettetdato = LocalDateTime.now(),
+				endretdato = LocalDateTime.now(),
+				innsendtdato = null,
+				vedleggsurl = null,
+				formioid = null,
+				opplastingsvalgkommentarledetekst = null,
+				opplastingsvalgkommentar = null,
+				fileIds = null,
+			),
+			VedleggDbData(
+				id = null,
+				soknadsid = soknad.id!!,
+				status = OpplastingsStatus.KLAR_FOR_INNSENDING,
+				erhoveddokument = false,
+				ervariant = false,
+				erpdfa = true,
+				erpakrevd = false,
+				vedleggsnr = vedleggsnrUtenFil,
+				tittel = "Testvedlegg2",
+				label = "Testlabel2",
+				beskrivelse = "Testbeskrivelse2",
+				mimetype = "application/pdf",
+				uuid = UUID.randomUUID().toString(),
+				opprettetdato = LocalDateTime.now(),
+				endretdato = LocalDateTime.now(),
+				innsendtdato = null,
+				vedleggsurl = null,
+				formioid = null,
+				opplastingsvalgkommentarledetekst = null,
+				opplastingsvalgkommentar = null,
+				fileIds = null,
+			)
+		).map {
+			repositoryUtils.lagreVedlegg(it)
+		}
+		val data = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
+		repositoryUtils.saveFilDbData(
+			soknad.innsendingsid,
+			FilDbData(
+				id = null,
+				vedleggsid = allAttachments.first { it.vedleggsnr == vedleggsnrMedFil }.id!!,
+				filnavn = "test",
+				mimetype = "application/pdf",
+				storrelse = data.size,
+				data = data,
+				opprettetdato = LocalDateTime.now(),
+				antallsider = 1,
+			)
+		)
+		return soknad.innsendingsid
 	}
 
-	private fun vedleggDto(
-		id: Long,
-		erHoveddokument: Boolean,
-		erVariant: Boolean,
-		status: OpplastingsStatusDto,
-		vedleggsnr: String,
-	): VedleggDto {
-		return VedleggDto(
-			tittel = "vedlegg",
-			label = "vedlegg",
-			erHoveddokument = erHoveddokument,
-			erVariant = erVariant,
-			erPdfa = false,
-			erPakrevd = true,
-			opplastingsStatus = status,
-			opprettetdato = OffsetDateTime.now(),
-			id = id,
-			vedleggsnr = vedleggsnr,
-			beskrivelse = "",
-			uuid = "uuid-$id",
-			mimetype = Mimetype.applicationSlashPdf,
-			document = null,
-			skjemaurl = null,
-			innsendtdato = OffsetDateTime.now(),
-			formioId = null,
-			opplastingsValgKommentarLedetekst = null,
-			opplastingsValgKommentar = null,
-			fileIds = null,
-		)
+	private fun simulerArkiveringsRespons(innsendingsId: String, arkiveringsStatus: ArkiveringsStatus) {
+		val soknad = repo.hentSoknadDb(innsendingsId)
+		repo.oppdaterArkiveringsstatus(soknad, arkiveringsStatus)
 	}
 }
