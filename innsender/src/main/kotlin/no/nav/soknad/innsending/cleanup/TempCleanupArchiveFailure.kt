@@ -88,5 +88,5 @@ class TempCleanupArchiveFailure(
 
 }
 
-// 14:30:00 on 26 March every year
-private const val cron = "0 30 14 26 3 *"
+// UTC: 12:15:00 on 26 March every year
+private const val cron = "0 15 12 26 3 *"
