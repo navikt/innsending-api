@@ -408,6 +408,17 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		return InnsendingApiResponse(response.statusCode, body, response.headers)
 	}
 
+	fun runAdminJob(jobName: String, authToken: String? = null): ResponseEntity<Unit> {
+		val token = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureOBOToken(scopes = "job-admin-access", navIdent = "Z123456")
+		val response = restTemplate.exchange(
+			"${baseUrl}/admin/v1/job",
+			HttpMethod.POST,
+			createHttpEntity(RunJobRequest(jobName), null, AZURE, token),
+			String::class.java
+		)
+		return ResponseEntity.status(response.statusCode).headers(response.headers).build()
+	}
+
 	@Deprecated("Replace with uploadNologinFileV2")
 	fun uploadNologinFile(
 		innsendingId: String? = null,

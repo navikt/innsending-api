@@ -46,9 +46,6 @@ class TempCleanupArchiveFailureTest : ApplicationTest() {
 	private lateinit var repositoryUtils: RepositoryUtils
 
 	@MockkBean
-	private lateinit var leaderSelectionUtility: LeaderSelectionUtility
-
-	@MockkBean
 	private lateinit var soknadsmottakerAPI: MottakerAPITest
 
 	@MockkBean
@@ -59,7 +56,6 @@ class TempCleanupArchiveFailureTest : ApplicationTest() {
 
 	@BeforeEach
 	fun setup() {
-		every { leaderSelectionUtility.isLeader() } returns true
 		every { soknadsmottakerAPI.sendInnSoknad(any(), any(), any(), any()) } returns Unit
 		every { pdlInterface.hentPersonIdents(any()) } returns listOf(IdentDto("123456789", "FOLKEREGISTERIDENT", false))
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("123456789", "Fornavn", null, "Etternavn")
@@ -81,7 +77,6 @@ class TempCleanupArchiveFailureTest : ApplicationTest() {
 		every { soknadsmottakerAPI.sendInnSoknad(any(), any(), any(), any()) } returns Unit
 
 		val job = TempCleanupArchiveFailure(
-			leaderSelectionUtility = leaderSelectionUtility,
 			repo = repo,
 			soknadService = soknadService,
 			mottakerApi = soknadsmottakerAPI,
@@ -107,7 +102,6 @@ class TempCleanupArchiveFailureTest : ApplicationTest() {
 		every { soknadsmottakerAPI.sendInnSoknad(any(), any(), any(), any()) } returns Unit
 
 		val job = TempCleanupArchiveFailure(
-			leaderSelectionUtility = leaderSelectionUtility,
 			repo = repo,
 			soknadService = soknadService,
 			mottakerApi = soknadsmottakerAPI,
