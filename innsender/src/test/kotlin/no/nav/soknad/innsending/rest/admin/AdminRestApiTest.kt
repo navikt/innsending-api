@@ -43,7 +43,7 @@ class AdminRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `should run cleanup job with job-admin scope`() {
+	fun `should run cleanup job with admin scope`() {
 		val response = api.runAdminJob("cleanup-klar-for-innsending")
 
 		assertEquals(HttpStatus.CREATED, response.statusCode)
@@ -52,7 +52,7 @@ class AdminRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `should reject call without required scope`() {
-		val token = TokenGenerator(mockOAuth2Server).lagAzureOBOToken(scopes = "config-admin-access")
+		val token = TokenGenerator(mockOAuth2Server).lagAzureOBOToken(scopes = "random-scope")
 		val response = api.runAdminJob("cleanup-klar-for-innsending", token)
 
 		assertEquals(HttpStatus.FORBIDDEN, response.statusCode)

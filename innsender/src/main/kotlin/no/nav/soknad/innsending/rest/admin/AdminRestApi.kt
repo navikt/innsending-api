@@ -19,7 +19,7 @@ class AdminRestApi(
 
 	@ProtectedWithClaims(
 		issuer = Constants.AZURE,
-		claimMap = ["scp=job-admin-access defaultaccess"],
+		claimMap = ["scp=admin-access defaultaccess"],
 	)
 	override fun runJob(runJobRequest: RunJobRequest): ResponseEntity<Unit> {
 		logger.info("Invoked admin runJob for jobName=${runJobRequest.jobName}")
