@@ -36,6 +36,8 @@ tags:
     description: API for endtoend-tester.
   - name: nologin-application
     description: API for søknader fra brukere som ikke er logget inn.
+  - name: admin
+    description: Admin-endepunkter
 
 paths:
   /fyllUt/v1/soknad/{innsendingsId}:
@@ -1058,6 +1060,9 @@ paths:
                   $ref: "#/components/schemas/DokumentSoknadDto"
       tags:
         - fyllut
+
+  /admin/v1/job:
+    $ref: "./admin/job.yaml"
 
   # Deprecated, see /v1/application-nologin
   /v1/nologin-fillager:

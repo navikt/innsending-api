@@ -385,7 +385,7 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 	}
 
     fun getConfig(config: ConfigDefinition, authToken: String? = null): InnsendingApiResponse<ConfigValueDto> {
-			val token = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureOBOToken(scopes = "config-admin-access", navIdent = "Z123456")
+			val token = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureOBOToken(scopes = "admin-access", navIdent = "Z123456")
 				val response = restTemplate.exchange(
 						"${baseUrl}/v1/config/${config.key}",
 						HttpMethod.GET,
@@ -397,7 +397,7 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		}
 
 	fun setConfig(config: ConfigDefinition, string: String?, authToken: String? = null): InnsendingApiResponse<ConfigValueDto> {
-		val token = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureOBOToken(scopes = "config-admin-access", navIdent = "Z123456")
+		val token = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureOBOToken(scopes = "admin-access", navIdent = "Z123456")
 		val response = restTemplate.exchange(
 				"${baseUrl}/v1/config/${config.key}",
 				HttpMethod.PUT,
@@ -406,6 +406,17 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		)
 		val body = readBody(response, ConfigValueDto::class.java)
 		return InnsendingApiResponse(response.statusCode, body, response.headers)
+	}
+
+	fun runAdminJob(jobName: String, authToken: String? = null): ResponseEntity<Unit> {
+		val token = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureOBOToken(scopes = "admin-access", navIdent = "Z123456")
+		val response = restTemplate.exchange(
+			"${baseUrl}/admin/v1/job",
+			HttpMethod.POST,
+			createHttpEntity(RunJobRequest(jobName), null, AZURE, token),
+			String::class.java
+		)
+		return ResponseEntity.status(response.statusCode).headers(response.headers).build()
 	}
 
 	@Deprecated("Replace with uploadNologinFileV2")

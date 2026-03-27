@@ -20,7 +20,7 @@ class ConfigRestApi(
 
 	@ProtectedWithClaims(
 		issuer = Constants.AZURE,
-		claimMap = ["scp=config-admin-access defaultaccess"],
+		claimMap = ["scp=admin-access defaultaccess"],
 	)
 	override fun getConfig(key: String): ResponseEntity<ConfigValueDto> {
 		val config = ConfigDefinition.fromKey(key)
@@ -29,7 +29,7 @@ class ConfigRestApi(
 
 	@ProtectedWithClaims(
 		issuer = Constants.AZURE,
-		claimMap = ["scp=config-admin-access defaultaccess"],
+		claimMap = ["scp=admin-access defaultaccess"],
 	)
 	override fun setConfig(key: String, setConfigRequest: SetConfigRequest): ResponseEntity<ConfigValueDto> {
 		val userId = subjectHandler.getNavIdent()
@@ -40,7 +40,7 @@ class ConfigRestApi(
 
 	@ProtectedWithClaims(
 		issuer = Constants.AZURE,
-		claimMap = ["scp=config-admin-access defaultaccess"],
+		claimMap = ["scp=admin-access defaultaccess"],
 	)
 	override fun getAllConfig(): ResponseEntity<List<ConfigValueDto>> {
 		return ResponseEntity.ok(configService.getConfig())
