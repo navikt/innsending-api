@@ -33,6 +33,7 @@ class MottakerAPI(
 
 
 	private val mottakerClient: SoknadApi
+	private val innsendingLoggedInMottakerApi: no.nav.soknad.arkivering.soknadsmottaker.api.LoggedInSoknadApi
 	private val innsendingMottakerApi: no.nav.soknad.arkivering.soknadsmottaker.api.NologinSoknadApi
 	private val healthApi: HealthApi
 
@@ -40,6 +41,7 @@ class MottakerAPI(
 		Serializer.jacksonObjectMapper.registerModule(JavaTimeModule())
 
 		mottakerClient = SoknadApi(soknadsmottakerRestClient)
+		innsendingLoggedInMottakerApi = no.nav.soknad.arkivering.soknadsmottaker.api.LoggedInSoknadApi(soknadsmottakerRestClient)
 		innsendingMottakerApi = no.nav.soknad.arkivering.soknadsmottaker.api.NologinSoknadApi(soknadsmottakerRestClient)
 		healthApi = HealthApi(restConfig.soknadsMottakerHost)
 	}
@@ -71,10 +73,9 @@ class MottakerAPI(
 			innsendingMottakerApi.nologinSubmission(innsending, innsending.innsendingsId)
 			logger.info("${soknadDto.innsendingsId}: sendt inn (nologin)")
 		} else {
-			val personId = brukerDto?.id ?: soknadDto.brukerId ?: throw IllegalStateException("Kan ikke sende inn søknad uten brukerId")
-			val soknad = translate(soknadDto, vedleggsListe, personId)
-			combinedLogger.log("${soknadDto.innsendingsId}: klar til å sende inn\n${maskerFnr(soknad)}\ntil ${restConfig.soknadsMottakerHost}", personId)
-			mottakerClient.receive(soknad)
+			val innsending = translate(soknadDto, vedleggsListe, avsenderDto, brukerDto)
+			combinedLogger.log("${soknadDto.innsendingsId}: klar til å sende inn (nologin)\n${maskerFnr(innsending)}\ntil ${restConfig.soknadsMottakerHost}", brukerDto?.id?: avsenderDto.id?: avsenderDto.navn ?: "NN")
+			innsendingLoggedInMottakerApi.loggedInSubmission(innsending, innsending.innsendingsId)
 			logger.info("${soknadDto.innsendingsId}: sendt inn")
 		}
 	}
