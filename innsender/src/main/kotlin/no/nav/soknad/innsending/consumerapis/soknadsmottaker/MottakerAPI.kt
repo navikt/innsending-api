@@ -4,7 +4,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import no.nav.soknad.innsending.model.AvsenderDto
 import no.nav.soknad.innsending.model.BrukerDto
 import no.nav.soknad.arkivering.soknadsmottaker.api.HealthApi
-import no.nav.soknad.arkivering.soknadsmottaker.api.SoknadApi
 import no.nav.soknad.arkivering.soknadsmottaker.infrastructure.Serializer
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.HealthRequestInterface
@@ -31,21 +30,17 @@ class MottakerAPI(
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val combinedLogger = CombinedLogger(logger)
 
-
-	private val mottakerClient: SoknadApi
 	private val innsendingLoggedInMottakerApi: no.nav.soknad.arkivering.soknadsmottaker.api.LoggedInSoknadApi
-	private val innsendingMottakerApi: no.nav.soknad.arkivering.soknadsmottaker.api.NologinSoknadApi
+	private val innsendingNoLoggedInMottakerApi: no.nav.soknad.arkivering.soknadsmottaker.api.NologinSoknadApi
 	private val healthApi: HealthApi
 
 	init {
 		Serializer.jacksonObjectMapper.registerModule(JavaTimeModule())
 
-		mottakerClient = SoknadApi(soknadsmottakerRestClient)
 		innsendingLoggedInMottakerApi = no.nav.soknad.arkivering.soknadsmottaker.api.LoggedInSoknadApi(soknadsmottakerRestClient)
-		innsendingMottakerApi = no.nav.soknad.arkivering.soknadsmottaker.api.NologinSoknadApi(soknadsmottakerRestClient)
+		innsendingNoLoggedInMottakerApi = no.nav.soknad.arkivering.soknadsmottaker.api.NologinSoknadApi(soknadsmottakerRestClient)
 		healthApi = HealthApi(restConfig.soknadsMottakerHost)
 	}
-
 
 	override fun isReady(): String {
 		try {
@@ -70,13 +65,13 @@ class MottakerAPI(
 		if (soknadDto.visningsType == VisningsType.nologin) {
 			val innsending = translate(soknadDto, vedleggsListe, avsenderDto, brukerDto)
 			combinedLogger.log("${soknadDto.innsendingsId}: klar til å sende inn (nologin)\n${maskerFnr(innsending)}\ntil ${restConfig.soknadsMottakerHost}", brukerDto?.id?: avsenderDto.id?: avsenderDto.navn ?: "NN")
-			innsendingMottakerApi.nologinSubmission(innsending, innsending.innsendingsId)
+			innsendingNoLoggedInMottakerApi.nologinSubmission(innsending, innsending.innsendingsId)
 			logger.info("${soknadDto.innsendingsId}: sendt inn (nologin)")
 		} else {
 			val innsending = translate(soknadDto, vedleggsListe, avsenderDto, brukerDto)
-			combinedLogger.log("${soknadDto.innsendingsId}: klar til å sende inn (nologin)\n${maskerFnr(innsending)}\ntil ${restConfig.soknadsMottakerHost}", brukerDto?.id?: avsenderDto.id?: avsenderDto.navn ?: "NN")
+			combinedLogger.log("${soknadDto.innsendingsId}: klar til å sende inn (loggedin)\n${maskerFnr(innsending)}\ntil ${restConfig.soknadsMottakerHost}", brukerDto?.id?: avsenderDto.id?: avsenderDto.navn ?: "NN")
 			innsendingLoggedInMottakerApi.loggedInSubmission(innsending, innsending.innsendingsId)
-			logger.info("${soknadDto.innsendingsId}: sendt inn")
+			logger.info("${soknadDto.innsendingsId}: sendt inn (loggedin)")
 		}
 	}
 
