@@ -22,14 +22,14 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 2
 
       - name: Check for changes in api/src/main/resources
         id: filter
         if: ${{ !inputs.force }}
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             resources:
@@ -53,7 +53,7 @@ jobs:
             "https://maven.pkg.github.com/navikt/innsending-api/no/nav/soknad/innsending/innsending-api/${VERSION}/innsending-api-${VERSION}-openapi-spec.zip")
           echo "exists=$([ "$STATUS" = "200" ] && echo true || echo false)" >> $GITHUB_OUTPUT
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         if: (inputs.force || steps.filter.outputs.resources == 'true') && steps.check.outputs.exists != 'true'
         with:
           distribution: 'temurin'
