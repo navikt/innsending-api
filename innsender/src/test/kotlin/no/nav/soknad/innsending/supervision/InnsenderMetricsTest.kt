@@ -81,4 +81,14 @@ class InnsenderMetricsTest : ApplicationTest() {
 
 	}
 
+	@Test
+	fun testAntivirusScanCounter() {
+		innsenderMetrics.incAntivirusScanCounter("digital", "async", "ok")
+		innsenderMetrics.incAntivirusScanCounter("digital", "async", "ok")
+		innsenderMetrics.incAntivirusScanCounter("digital", "async", "error")
+
+		assertEquals(2.0, innsenderMetrics.getAntivirusScanCounter("digital", "async", "ok"))
+		assertEquals(1.0, innsenderMetrics.getAntivirusScanCounter("digital", "async", "error"))
+	}
+
 }

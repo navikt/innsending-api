@@ -16,46 +16,74 @@ import org.slf4j.LoggerFactory
 import org.springframework.core.io.Resource
 import org.springframework.stereotype.Service
 import java.util.UUID
-import kotlin.math.log
 
 @Service
 class DocumentService(
 	private val fileStorage: FileStorage,
 	private val filValidatorService: FilValidatorService,
+	private val antivirusScanService: AntivirusScanService,
 	private val konverterTilPdf: KonverterTilPdfInterface,
 	private val innsenderMetrics: InnsenderMetrics,
 	private val pdfMerger: PdfMerger,
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	fun saveAttachment(namespace: FileStorageNamespace, fil: Resource, vedleggId: String, innsendingsId: UUID, language: String? = "nb"): FilMetadata {
+	fun saveAttachment(
+		namespace: FileStorageNamespace,
+		fil: Resource,
+		vedleggId: String,
+		innsendingsId: UUID,
+		language: String? = "nb",
+	): FilMetadata {
 		val innsendingsIdString = innsendingsId.toString()
-		val filtype = filValidatorService.validerFil(
-			fil = fil,
-			innsendingsId = innsendingsIdString,
-			antivirusEnabled = true,
-		)
-		val fileName = fil.filename ?: "$innsendingsId-$vedleggId$filtype"
-		val originalFileContent = fil.contentAsByteArray
+		val validatedFile = filValidatorService.validateFile(fil, innsendingsIdString)
+		val fileName = fil.filename ?: "$innsendingsId-$vedleggId${validatedFile.fileType}"
+		val effectiveScanMode = if (namespace == FileStorageNamespace.DIGITAL) {
+			AntivirusScanMode.ASYNCHRONOUS
+		} else {
+			AntivirusScanMode.SYNCHRONOUS
+		}
+
+		if (effectiveScanMode == AntivirusScanMode.SYNCHRONOUS) {
+			antivirusScanService.scanSynchronously(
+				namespace = namespace,
+				fileContent = validatedFile.content,
+				innsendingsId = innsendingsId,
+				attachmentId = vedleggId,
+			)
+		}
+
 		val (fileContentAsPdf, antallSider) = konverterTilPdf.tilPdf(
-			originalFileContent,
+			validatedFile.content,
 			innsendingsIdString,
-			filtype,
+			validatedFile.fileType,
 			fileName,
 			language
 		)
 		filValidatorService.validerAntallSider(antallSider)
 		innsenderMetrics.setFileNumberOfPages(antallSider.toLong())
 
-		logger.info("$innsendingsId: Fil validert ok og konvertert til pdf (filtype: $filtype, antall sider: $antallSider)")
-		return fileStorage.save(namespace, fileContentAsPdf, BlobMetadata(
+		logger.info("$innsendingsId: Fil validert ok og konvertert til pdf (filtype: ${validatedFile.fileType}, antall sider: $antallSider)")
+		val savedFile = fileStorage.save(namespace, fileContentAsPdf, BlobMetadata(
 			fileName = fileName,
 			attachmentId = vedleggId,
 			innsendingsId = innsendingsId,
-			fileType = filtype,
+			fileType = validatedFile.fileType,
 			mimetype = Mimetype.applicationSlashPdf,
 			language = language
 		))
+
+		if (effectiveScanMode == AntivirusScanMode.ASYNCHRONOUS) {
+			antivirusScanService.scanAsynchronously(
+				namespace = namespace,
+				fileContent = validatedFile.content,
+				innsendingsId = innsendingsId,
+				attachmentId = vedleggId,
+				fileId = savedFile.filId,
+			)
+		}
+
+		return savedFile
 	}
 
 	fun saveMainDocument(namespace: FileStorageNamespace, innsendingsId: UUID, fil: Resource, skjemanr: String, mimetype: Mimetype, language: String? = "nb"): FilMetadata {

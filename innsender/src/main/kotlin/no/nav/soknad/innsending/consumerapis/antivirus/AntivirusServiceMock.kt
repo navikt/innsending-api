@@ -10,8 +10,8 @@ class AntivirusServiceMock : AntivirusInterface {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	override fun scan(file: ByteArray): Boolean {
+	override fun scan(file: ByteArray): AntivirusScanResult {
 		logger.info("Skipper scanning av dokument for virus ved lokal kjøring")
-		return true
+		return AntivirusScanResult.OK
 	}
 }

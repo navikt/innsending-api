@@ -19,7 +19,7 @@ class AntivirusService(private val antivirusRestClient: RestClient, private val 
 	val responseType = object: ParameterizedTypeReference<List<ScanResult>>() {}
 
 
-	override fun scan(file: ByteArray): Boolean {
+	override fun scan(file: ByteArray): AntivirusScanResult {
 		val startTime = System.currentTimeMillis()
 		logger.info("Starter scanning av dokument for virus")
 
@@ -50,7 +50,7 @@ class AntivirusService(private val antivirusRestClient: RestClient, private val 
 
 			if (response.size != 1) {
 				logger.error("Feil størrelse på responsen fra virus scan")
-				return false
+				return AntivirusScanResult.ERROR
 			}
 
 			logger.info("Antivirus respons: $response")
@@ -58,14 +58,14 @@ class AntivirusService(private val antivirusRestClient: RestClient, private val 
 			val (filename, result) = response.first()
 
 			return when (result) {
-				ClamAvResult.OK -> true
+				ClamAvResult.OK -> AntivirusScanResult.OK
 				ClamAvResult.ERROR -> {
 					logger.warn("$filename kunne ikke skannes for virus")
-					false
+					AntivirusScanResult.ERROR
 				}
 				ClamAvResult.FOUND -> {
 					logger.warn("$filename har virus")
-					false
+					AntivirusScanResult.FOUND
 				}
 
 			}

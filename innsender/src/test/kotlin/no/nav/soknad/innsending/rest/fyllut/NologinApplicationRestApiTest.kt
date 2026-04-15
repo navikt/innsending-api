@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpStatus
-import java.lang.Thread.sleep
 import java.util.*
 import kotlin.test.assertEquals
 
@@ -160,8 +159,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
-		sleep(50)
-		verify(exactly = 1) {
+		verify(timeout = 5000, exactly = 1) {
 			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
@@ -285,8 +283,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
-		sleep(50)
-		verify(exactly = 1) {
+		verify(timeout = 5000, exactly = 1) {
 			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
@@ -454,8 +451,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
-		sleep(25)
-		verify(exactly = 1) {
+		verify(timeout = 5000, exactly = 1) {
 			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
@@ -656,8 +652,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
-		sleep(25)
-		verify(exactly = 1) {
+		verify(timeout = 5000, exactly = 1) {
 			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
@@ -686,8 +681,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
-		sleep(50)
-		verify(exactly = 1) {
+		verify(timeout = 5000, exactly = 1) {
 			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
