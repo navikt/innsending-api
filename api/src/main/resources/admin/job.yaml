@@ -1,0 +1,21 @@
+post:
+  summary: Run job
+  operationId: runJob
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            jobName:
+              type: string
+              description: Name of the job to run
+              example: "my-job"
+
+  responses:
+    201:
+      description: Jobben ble startet
+  tags:
+    - admin

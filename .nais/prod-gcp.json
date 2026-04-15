@@ -18,7 +18,7 @@
 			{ "name": "soknadsarkiverer" },
 			{
 				"name": "innsending-admin",
-				"scopes": ["config-admin-access"]
+				"scopes": ["admin-access"]
 			},
 			{
 				"name": "skjemautfylling",
