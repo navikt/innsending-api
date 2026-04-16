@@ -7,6 +7,7 @@ import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
+import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.service.config.ConfigService
@@ -700,6 +701,24 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		assertEquals(avsender.id, actualAvsender.id)
 		assertEquals(avsender.idType, actualAvsender.idType)
 		assertEquals(avsender.navn, actualAvsender.navn)
+	}
+
+	@Test
+	fun `skal avvise innsending med ugyldig avsenderid i SubmitApplicationRequest`() {
+		api.submitNologinApplication(
+			innsendingsId = UUID.randomUUID().toString(),
+			brukerId = null,
+			avsender = AvsenderDto(
+				id = "1234 56789",
+				idType = AvsenderDto.IdType.ORGNR,
+				navn = "Are Avsender AS",
+			),
+		)
+			.assertHttpStatus(HttpStatus.BAD_REQUEST)
+			.assertErrorCode(ErrorCode.ILLEGAL_ARGUMENT)
+			.errorBody.let {
+				assertEquals("avsender.id kan ikke inneholde mellomrom", it.message)
+			}
 	}
 
 	@Test

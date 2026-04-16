@@ -724,6 +724,20 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	@Test
+	fun `skal avvise innsending med ugyldig brukerid i SubmitApplicationRequest`() {
+		val soknad = api!!.createSoknad(SkjemaDtoTestBuilder().build())
+			.assertSuccess()
+			.body
+
+		api!!.submitDigitalApplication(soknad, bruker = "12345 678901")
+			.assertHttpStatus(HttpStatus.BAD_REQUEST)
+			.assertErrorCode(ErrorCode.ILLEGAL_ARGUMENT)
+			.errorBody.let {
+				assertEquals("bruker kan ikke inneholde mellomrom", it.message)
+			}
+	}
+
+	@Test
 	fun `Skal redirecte ved eksisterende søknad gitt at force er false`() {
 		// Gitt
 		val dokumentSoknadDto = opprettSoknad(skjemanr = "NAV-redirect")

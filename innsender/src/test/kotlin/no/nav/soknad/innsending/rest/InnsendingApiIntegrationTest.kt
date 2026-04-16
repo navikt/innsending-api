@@ -440,7 +440,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 	fun testAffectedUserSettesNårInnloggetBukerIkkeLikBrukerISubmission() {
 		val skjemanr = "NAV 10-07.54"
 		val skjematittel = "Søknad om servicehund"
-		val affectedUser = "010115116216"
+		val affectedUser = "01011511621"
 		val loggedInUser = "12345678901"
 		val hoveddokument =
 			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokument(skjemanr, withFile = false).build()

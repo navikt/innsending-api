@@ -18,6 +18,7 @@ import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.mapping.filmetadata.toDto
+import no.nav.soknad.innsending.util.validators.validerBrukerOgAvsender
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -104,6 +105,7 @@ class NologinApplicationRestApi(
         innsendingsId: UUID,
         submitApplicationRequest: SubmitApplicationRequest
 	): ResponseEntity<ApplicationSubmissionResponse> {
+		submitApplicationRequest.validerBrukerOgAvsender()
 		val clientId = subjectHandler.getClientId()
 		val brukerId = submitApplicationRequest.bruker
 			?: submitApplicationRequest.avsender?.id?.let { "$it (avsender)" }
