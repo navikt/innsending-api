@@ -54,7 +54,7 @@ components:
           type: string
         idType:
           type: string
-          enum: [ "FNR" ]
+          enum: [ "FNR", "ORGNR" ]
           description: Obligatorisk dersom id er satt. Angir hvilken type id som er brukt. Merk at FNR kan også være et D-NR. Merk at arkivet også aksepterer idType verdiene "ORGNR", "HPRNR", "UTL_ORG"
         navn:
           type: string

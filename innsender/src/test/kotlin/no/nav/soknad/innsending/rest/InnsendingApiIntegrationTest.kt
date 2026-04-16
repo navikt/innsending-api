@@ -322,7 +322,12 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			AttachmentDto(attachmentCode = "M4", "Kursbevis", OpplastingsStatusDto.SendesAvAndre),
 			AttachmentDto(attachmentCode = "M5", "Leiekontrakt", OpplastingsStatusDto.SendSenere),
 		)
-		val submissionResponse = api.submitDigitalApplication(soknad, attachments)
+		val avsender = AvsenderDto(
+			id = "123456789",
+			idType = AvsenderDto.IdType.ORGNR,
+			navn = "Testbedrift AS",
+		)
+		val submissionResponse = api.submitDigitalApplication(soknad, attachments, avsender = avsender)
 			.assertSuccess()
 			.body
 
@@ -377,6 +382,9 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		}
 
 		assertEquals(innsendingsId, slotSoknad.captured.innsendingsId)
+		assertEquals(avsender.id, slotAvsender.captured.id)
+		assertEquals(avsender.idType, slotAvsender.captured.idType)
+		assertEquals(avsender.navn, slotAvsender.captured.navn)
 		val innsendteDokumenter = slotVedleggsliste.captured
 		assertEquals(4, innsendteDokumenter.size)
 		assertTrue(innsendteDokumenter.all { it.mimetype != null })

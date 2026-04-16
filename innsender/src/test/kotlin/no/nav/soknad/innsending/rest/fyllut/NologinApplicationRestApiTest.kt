@@ -669,11 +669,16 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 	@Test
 	fun `skal sende inn søknad uten brukerId`() {
 		val innsendingsId = UUID.randomUUID().toString()
+		val avsender = AvsenderDto(
+			id = "123456789",
+			idType = AvsenderDto.IdType.ORGNR,
+			navn = "Are Avsender AS",
+		)
 
 		api.submitNologinApplication(
 			innsendingsId = innsendingsId,
 			brukerId = null,
-			avsender = AvsenderDto(navn = "Are Avsender"),
+			avsender = avsender,
 		)
 			.assertSuccess()
 
@@ -692,7 +697,9 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		assertNull(slotBruker.captured)
 		val actualAvsender = slotAvsender.captured
 		assertNotNull(actualAvsender)
-		assertEquals("Are Avsender", actualAvsender.navn)
+		assertEquals(avsender.id, actualAvsender.id)
+		assertEquals(avsender.idType, actualAvsender.idType)
+		assertEquals(avsender.navn, actualAvsender.navn)
 	}
 
 	@Test
