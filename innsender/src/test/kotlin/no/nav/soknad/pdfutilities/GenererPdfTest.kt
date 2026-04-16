@@ -11,6 +11,7 @@ import org.apache.pdfbox.text.PDFTextStripper
 import org.junit.Assert.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.*
 import kotlin.test.assertEquals
 
@@ -254,6 +255,11 @@ class GenererPdfTest {
 
 	}
 
+	@Test
+	fun formateringsTest() {
+		val lateInYear = OffsetDateTime.of(2025, 12, 30, 21, 0, 0, 0, ZoneOffset.UTC).toLocalDateTime()
+		assertEquals("30-12-2025", PdfGenerator().formaterDato(lateInYear))
+	}
 
 	private fun lagSoknadForTesting(tittel: String, spraak: String? = "nb_NO"): DokumentSoknadDto {
 		val brukerid = "20128012345"
