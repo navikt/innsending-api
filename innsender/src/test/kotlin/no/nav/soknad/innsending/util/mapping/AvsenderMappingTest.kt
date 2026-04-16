@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.util.mapping
 
 import no.nav.soknad.innsending.model.AvsenderDto
+import no.nav.soknad.innsending.util.mapping.avsender.toArkiveringAvsenderDto
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
@@ -14,7 +15,7 @@ class AvsenderMappingTest {
 			navn = "Testbedrift AS",
 		)
 
-		val translated = translate(avsender)
+		val translated = avsender.toArkiveringAvsenderDto()
 
 		assertEquals(avsender.id, translated.id)
 		assertEquals("ORGNR", translated.idType?.name)
@@ -25,8 +26,17 @@ class AvsenderMappingTest {
 	fun `skal bruke FNR som fallback nar avsender idType mangler`() {
 		val avsender = AvsenderDto(id = "123456789", navn = "Test Avsender")
 
-		val translated = translate(avsender)
+		val translated = avsender.toArkiveringAvsenderDto()
 
 		assertEquals("FNR", translated.idType?.name)
+	}
+
+	@Test
+	fun `skal ikke sette fallback idType nar avsender id mangler`() {
+		val avsender = AvsenderDto(navn = "Test Avsender")
+
+		val translated = avsender.toArkiveringAvsenderDto()
+
+		assertEquals(null, translated.idType)
 	}
 }

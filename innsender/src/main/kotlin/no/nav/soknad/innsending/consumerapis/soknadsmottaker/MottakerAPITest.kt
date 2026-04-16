@@ -37,8 +37,7 @@ class MottakerAPITest : MottakerInterface, HealthRequestInterface {
 			val innsending = translate(soknadDto, vedleggsListe, avsenderDto, brukerDto)
 			logger.info("${soknadDto.innsendingsId}: klar til å sende inn (nologin)\n${maskerFnr(innsending)}")
 		} else {
-			val personId = soknadDto.brukerId ?: throw IllegalStateException("Kan ikke sende inn søknad uten brukerId")
-			val soknad = translate(soknadDto, vedleggsListe, personId)
+			val soknad = translate(soknadDto, vedleggsListe, avsenderDto, brukerDto)
 			logger.info("${soknadDto.innsendingsId}: klar til å sende inn\n${maskerFnr(soknad)}")
 		}
 	}
