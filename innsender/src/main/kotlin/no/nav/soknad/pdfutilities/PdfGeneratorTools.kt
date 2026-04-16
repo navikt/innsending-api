@@ -191,11 +191,11 @@ class PdfGenerator {
 	}
 
 	private fun formaterDato(now: LocalDateTime): String {
-		return now.format(DateTimeFormatter.ofPattern("dd-MM-YYYY"))
+		return now.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
 	}
 
 	private fun formaterDatoMedManed(now: LocalDateTime): String {
-		return now.format(DateTimeFormatter.ofPattern("dd.MMM YYYY"))
+		return now.format(DateTimeFormatter.ofPattern("dd.MMM yyyy"))
 	}
 
 	private fun selectLanguage(language: String?): String {
