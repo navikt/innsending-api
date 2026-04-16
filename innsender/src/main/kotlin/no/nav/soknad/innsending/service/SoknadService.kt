@@ -191,7 +191,7 @@ class SoknadService(
 
 
 	fun prepareSubmit(innsendingsId: String, affectedUser: BrukerDto?, avsender: AvsenderDto? = null): DokumentSoknadDto {
-		val soknadDbData = repo.hentSoknadDb(innsendingsId)
+		val soknadDbData = repo.hentSoknadDbForUpdate(innsendingsId)
 		if (!(soknadDbData.status == SoknadsStatus.Opprettet || soknadDbData.status == SoknadsStatus.Utfylt)) {
 			throw IllegalActionException("$innsendingsId: Kan ikke sende inn søknad når status er ${soknadDbData.status}")
 		}
@@ -233,14 +233,16 @@ class SoknadService(
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun slettSoknadAvBruker(dokumentSoknadDto: DokumentSoknadDto) {
 		val operation = InnsenderOperation.SLETT.name
+		val innsendingsId = dokumentSoknadDto.innsendingsId!!
+		val currentSoknad = vedleggService.hentAlleVedlegg(repo.hentSoknadDbForUpdate(innsendingsId), innsendingsId)
 
 		// slett vedlegg og soknad
-		if (!dokumentSoknadDto.kanGjoreEndringer)
-			throw IllegalActionException("Det kan ikke gjøres endring på en slettet eller innsendt søknad. Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den er innsendt eller slettet")
+		if (!currentSoknad.kanGjoreEndringer)
+			throw IllegalActionException("Det kan ikke gjøres endring på en slettet eller innsendt søknad. Søknad ${currentSoknad.innsendingsId} kan ikke slettes da den er innsendt eller slettet")
 
-		dokumentSoknadDto.vedleggsListe.filter { it.id != null }.forEach { vedleggService.slettVedleggOgDensFiler(it) }
-		repo.slettSoknad(dokumentSoknadDto, HendelseType.SlettetPermanentAvBruker)
-		innsenderMetrics.incOperationsCounter(operation, dokumentSoknadDto.tema)
+		currentSoknad.vedleggsListe.filter { it.id != null }.forEach { vedleggService.slettVedleggOgDensFiler(it) }
+		repo.slettSoknad(currentSoknad, HendelseType.SlettetPermanentAvBruker)
+		innsenderMetrics.incOperationsCounter(operation, currentSoknad.tema)
 	}
 
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
