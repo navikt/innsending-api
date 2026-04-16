@@ -10,7 +10,9 @@ import org.apache.pdfbox.Loader
 import org.apache.pdfbox.text.PDFTextStripper
 import org.junit.Assert.assertTrue
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.test.assertEquals
 
@@ -63,6 +65,17 @@ class GenererPdfTest {
 		val document = Loader.loadPDF(bytes)
 		val stripper = PDFTextStripper()
 		return stripper.getText(document)
+	}
+
+	@Test
+	fun datoOgKlokkeFormateringTest() {
+		val tidspunkt = OffsetDateTime.parse("2025-12-30T21:15:00.000Z").toLocalDateTime()
+
+		assertEquals("30.12.2025", formaterDato(tidspunkt))
+	}
+
+	fun formaterDato(now: LocalDateTime): String {
+		return now.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
 	}
 
 

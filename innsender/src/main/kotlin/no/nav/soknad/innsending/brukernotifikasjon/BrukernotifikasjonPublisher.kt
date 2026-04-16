@@ -7,6 +7,7 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.Varsel
 import no.nav.soknad.innsending.config.BrukerNotifikasjonConfig
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.location.UrlHandler
+import no.nav.soknad.innsending.model.AvsenderDto
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
@@ -44,7 +45,8 @@ class BrukernotifikasjonPublisher(
 	)
 
 	fun createNotification(soknad: SoknadDbData, opts: NotificationOptions = NotificationOptions()): Boolean {
-		if (soknad.brukerid.isNullOrEmpty()) {
+		val opprettetAv = if (soknad.avsender?.idType== AvsenderDto.IdType.FNR) soknad.avsender?.id!! else soknad.brukerid?: ""
+		if (opprettetAv.isEmpty()) {
 			logger.info("${soknad.innsendingsid}: Brukerid mangler, kan ikke publisere brukernotifikasjon")
 			return false
 		}
@@ -55,6 +57,7 @@ class BrukernotifikasjonPublisher(
 		try {
 			val tittel = if (soknad.isEttersending()) "${getEttersendingPrefix(soknad)}${soknad.tittel}" else soknad.tittel
 			val lenke = createLink(soknad, opts.envQualifier)
+
 			val info = NotificationInfo(
 				tittel,
 				lenke,
@@ -64,12 +67,12 @@ class BrukernotifikasjonPublisher(
 			)
 			val groupId = soknad.ettersendingsid ?: soknad.innsendingsid
 			val soknadRef = SoknadRef(
-				soknad.innsendingsid,
-				soknad.isEttersending(),
-				groupId,
-				soknad.brukerid,
-				soknad.opprettetdato.toOffsetDateTime(),
-				opts.erSystemGenerert
+				innsendingId = soknad.innsendingsid,
+				erEttersendelse = soknad.isEttersending(),
+				groupId = groupId,
+				personId = opprettetAv?: "",
+				tidpunktEndret = soknad.opprettetdato.toOffsetDateTime(),
+				erSystemGenerert = opts.erSystemGenerert
 			)
 			sendTilKafkaPublisher.opprettBrukernotifikasjon(AddNotification(soknadRef, info))
 			logger.info("${soknad.innsendingsid}: Har sendt melding om ny brukernotifikasjon med lenke $lenke")
@@ -81,6 +84,7 @@ class BrukernotifikasjonPublisher(
 	}
 
 	fun closeNotification(soknad: SoknadDbData): Boolean {
+		val opprettetAv = if (soknad.avsender?.idType== AvsenderDto.IdType.FNR) soknad.avsender?.id!! else soknad.brukerid?: ""
 		if (soknad.brukerid.isNullOrEmpty()) {
 			logger.info("${soknad.innsendingsid}: Brukerid mangler, kan ikke avslutte brukernotifikasjon")
 			return false
@@ -94,7 +98,7 @@ class BrukernotifikasjonPublisher(
 				soknad.innsendingsid,
 				soknad.isEttersending(),
 				soknad.ettersendingsid ?: soknad.innsendingsid,
-				soknad.brukerid,
+				opprettetAv,
 				soknad.opprettetdato.toOffsetDateTime(),
 			)
 			sendTilKafkaPublisher.avsluttBrukernotifikasjon(soknadRef)

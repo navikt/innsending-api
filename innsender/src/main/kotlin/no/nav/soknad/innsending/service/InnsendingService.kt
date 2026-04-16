@@ -175,7 +175,7 @@ class InnsendingService(
 		val soknadsDb = repo.hentSoknadDb(innsendingsId)
 		if (soknadsDb.status != SoknadsStatus.KlarForInnsending) return
 		val avsender = soknadsDb.avsender ?: AvsenderDto(id = soknadsDb.brukerid, idType = IdType.FNR)
-		val bruker = soknadsDb.affecteduser ?: if (soknadsDb.brukerid != null) BrukerDto(id = soknadsDb.brukerid, idType = BrukerDto.IdType.FNR) else null
+		val bruker = soknadsDb.affecteduser ?: if (soknadsDb.brukerid != null) BrukerDto(id = soknadsDb.brukerid!!, idType = BrukerDto.IdType.FNR) else null
 
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		val opplastedeVedlegg = soknadDto.vedleggsListe.filter{(it.erHoveddokument && it.opplastingsStatus != OpplastingsStatusDto.SendesIkke) || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending }
@@ -844,7 +844,7 @@ class InnsendingService(
 				val document = if (vedleggDto.fileIds.isNullOrEmpty()) null else {
 					logger.info("$innsendingId: Henter filer for vedlegg med uuid $vedleggUuid, filIds: ${vedleggDto.fileIds}")
 					val namespace = visningsType.getFileStorageNamespace()
-					documentService.mergeFiles(namespace, innsendingId.toUUID(), vedleggDto.fileIds)
+					documentService.mergeFiles(namespace, innsendingId.toUUID(), vedleggDto.fileIds!!)
 				}
 				vedleggDto.toDto(document)
 			}
