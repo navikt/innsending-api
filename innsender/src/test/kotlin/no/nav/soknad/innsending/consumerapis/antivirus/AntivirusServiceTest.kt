@@ -43,7 +43,7 @@ class AntivirusServiceTest : ApplicationTest() {
 		val result = antivirusService.scan(fil)
 
 		// Så
-		assertEquals(true, result)
+		assertEquals(AntivirusScanResult.OK, result)
 	}
 
 	@Test
@@ -56,7 +56,7 @@ class AntivirusServiceTest : ApplicationTest() {
 		val result = antivirusService.scan(fil)
 
 		// Så
-		assertEquals(false, result)
+		assertEquals(AntivirusScanResult.FOUND, result)
 	}
 
 	@Test
@@ -69,6 +69,6 @@ class AntivirusServiceTest : ApplicationTest() {
 		val result = antivirusService.scan(fil)
 
 		// Så
-		assertEquals(false, result)
+		assertEquals(AntivirusScanResult.ERROR, result)
 	}
 }
