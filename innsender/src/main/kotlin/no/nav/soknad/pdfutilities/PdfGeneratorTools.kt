@@ -190,7 +190,7 @@ class PdfGenerator {
 		return now.format(formatter)
 	}
 
-	private fun formaterDato(now: LocalDateTime): String {
+	fun formaterDato(now: LocalDateTime): String {
 		return now.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
 	}
 
