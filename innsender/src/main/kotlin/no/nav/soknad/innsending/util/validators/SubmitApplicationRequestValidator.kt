@@ -15,12 +15,33 @@ fun SubmitApplicationRequest.validerBrukerOgAvsender() {
 		format = brukerIdRegex,
 		formatBeskrivelse = "11 siffer",
 	)
+	validerAvsender()
 	validerIdentifikator(
 		feltnavn = "avsender.id",
 		verdi = avsender?.id,
 		format = avsenderIdRegex,
 		formatBeskrivelse = "9 siffer",
 	)
+}
+
+private fun SubmitApplicationRequest.validerAvsender() {
+	val avsender = avsender ?: return
+	val harAvsenderId = !avsender.id.isNullOrBlank()
+	val harAvsenderIdType = avsender.idType != null
+
+	if (harAvsenderId.xor(harAvsenderIdType)) {
+		throw IllegalActionException(
+			message = "avsender.id og avsender.idType må begge oppgis hvis en av dem er satt",
+			errorCode = ErrorCode.ILLEGAL_ARGUMENT,
+		)
+	}
+
+	if (!harAvsenderId && !harAvsenderIdType && avsender.navn.isNullOrBlank()) {
+		throw IllegalActionException(
+			message = "avsender.navn må oppgis når avsender.id og avsender.idType ikke er satt",
+			errorCode = ErrorCode.ILLEGAL_ARGUMENT,
+		)
+	}
 }
 
 private fun validerIdentifikator(

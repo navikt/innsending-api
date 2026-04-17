@@ -15,7 +15,18 @@ class SubmitApplicationRequestValidatorTest {
 	fun `skal godta gyldig bruker og avsender`() {
 		val request = lagRequest(
 			bruker = "12345678901",
-			avsender = AvsenderDto(id = "123456789"),
+			avsender = AvsenderDto(id = "123456789", idType = AvsenderDto.IdType.ORGNR),
+		)
+
+		assertDoesNotThrow {
+			request.validerBrukerOgAvsender()
+		}
+	}
+
+	@Test
+	fun `skal godta avsender med kun navn naar id og idType mangler`() {
+		val request = lagRequest(
+			avsender = AvsenderDto(navn = "Nils Nilsen"),
 		)
 
 		assertDoesNotThrow {
@@ -44,7 +55,7 @@ class SubmitApplicationRequestValidatorTest {
 	@Test
 	fun `skal avvise avsenderid med mellomrom`() {
 		val exception = assertThrows<IllegalActionException> {
-			lagRequest(avsender = AvsenderDto(id = "123 56789")).validerBrukerOgAvsender()
+			lagRequest(avsender = AvsenderDto(id = "123 56789", idType = AvsenderDto.IdType.ORGNR)).validerBrukerOgAvsender()
 		}
 
 		assertEquals("avsender.id kan ikke inneholde mellomrom", exception.message)
@@ -53,10 +64,37 @@ class SubmitApplicationRequestValidatorTest {
 	@Test
 	fun `skal avvise avsenderid som ikke er 9 siffer`() {
 		val exception = assertThrows<IllegalActionException> {
-			lagRequest(avsender = AvsenderDto(id = "12345678")).validerBrukerOgAvsender()
+			lagRequest(avsender = AvsenderDto(id = "12345678", idType = AvsenderDto.IdType.ORGNR)).validerBrukerOgAvsender()
 		}
 
 		assertEquals("avsender.id må være 9 siffer", exception.message)
+	}
+
+	@Test
+	fun `skal avvise avsender naar id mangler men idType finnes`() {
+		val exception = assertThrows<IllegalActionException> {
+			lagRequest(avsender = AvsenderDto(idType = AvsenderDto.IdType.ORGNR)).validerBrukerOgAvsender()
+		}
+
+		assertEquals("avsender.id og avsender.idType må begge oppgis hvis en av dem er satt", exception.message)
+	}
+
+	@Test
+	fun `skal avvise avsender naar idType mangler men id finnes`() {
+		val exception = assertThrows<IllegalActionException> {
+			lagRequest(avsender = AvsenderDto(id = "123456789")).validerBrukerOgAvsender()
+		}
+
+		assertEquals("avsender.id og avsender.idType må begge oppgis hvis en av dem er satt", exception.message)
+	}
+
+	@Test
+	fun `skal avvise avsender uten navn naar id og idType mangler`() {
+		val exception = assertThrows<IllegalActionException> {
+			lagRequest(avsender = AvsenderDto()).validerBrukerOgAvsender()
+		}
+
+		assertEquals("avsender.navn må oppgis når avsender.id og avsender.idType ikke er satt", exception.message)
 	}
 
 	private fun lagRequest(bruker: String? = null, avsender: AvsenderDto? = null) = SubmitApplicationRequest(
