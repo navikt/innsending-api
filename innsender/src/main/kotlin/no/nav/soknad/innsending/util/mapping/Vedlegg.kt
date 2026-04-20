@@ -187,14 +187,6 @@ fun translate(vedleggDtos: List<VedleggDto>, newFormat: Boolean): List<DokumentD
 	return listOf(hovedDokument) + vedlegg
 }
 
-fun translate(avsenderDto: AvsenderDto): no.nav.soknad.arkivering.soknadsmottaker.model.AvsenderDto {
-	return no.nav.soknad.arkivering.soknadsmottaker.model.AvsenderDto(
-		id = avsenderDto.id,
-		idType = if (!avsenderDto.id.isNullOrEmpty()) no.nav.soknad.arkivering.soknadsmottaker.model.AvsenderDto.IdType.FNR else null,
-		navn = avsenderDto.navn,
-	)
-}
-
 fun translate(brukerDto: BrukerDto): no.nav.soknad.arkivering.soknadsmottaker.model.BrukerDto {
 	return no.nav.soknad.arkivering.soknadsmottaker.model.BrukerDto(
 		id = brukerDto.id,
@@ -204,5 +196,3 @@ fun translate(brukerDto: BrukerDto): no.nav.soknad.arkivering.soknadsmottaker.mo
 
 fun mapTilVedleggDb(vedleggDto: VedleggDto, soknadsId: Long) =
 	mapTilVedleggDb(vedleggDto, soknadsId, vedleggDto.skjemaurl, mapTilDbOpplastingsStatus(vedleggDto.opplastingsStatus))
-
-

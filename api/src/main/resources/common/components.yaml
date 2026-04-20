@@ -8,7 +8,7 @@ components:
 
     BrukerId:
       type: string
-      description: Fnr for bruker som har opprettet søknaden digitalt (hentet fra idporten-token), evt. fnr oppgitt manuelt i nologin-søknad.
+      description: Fnr for bruker som har opprettet søknaden digitalt (hentet fra idporten-token), evt. fnr oppgitt manuelt i nologin-søknad. Må være 11 siffer uten mellomrom.
       example: 12128012345
 
     Mimetype:
@@ -52,9 +52,10 @@ components:
       properties:
         id:
           type: string
+          description: Identifikator for avsender. Må være 9 siffer uten mellomrom når den er satt i SubmitApplicationRequest.
         idType:
           type: string
-          enum: [ "FNR" ]
+          enum: [ "FNR", "ORGNR" ]
           description: Obligatorisk dersom id er satt. Angir hvilken type id som er brukt. Merk at FNR kan også være et D-NR. Merk at arkivet også aksepterer idType verdiene "ORGNR", "HPRNR", "UTL_ORG"
         navn:
           type: string

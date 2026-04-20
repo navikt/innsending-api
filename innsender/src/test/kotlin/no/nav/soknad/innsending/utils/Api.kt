@@ -526,6 +526,7 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		mainDocumentAltPath: String = "/__files/barnepass-NAV-11-12.15B.json",
 		authToken: String? = null,
 		bruker: String? = null,
+		avsender: AvsenderDto? = null,
 	): InnsendingApiResponse<ApplicationSubmissionResponse> {
 		val token: String = authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken()
 		val headers = Hjelpemetoder.createHeaders(token, MediaType.APPLICATION_JSON)
@@ -541,7 +542,7 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 			mainDocumentAlt = mainDocumentAltByteArray,
 			attachments = attachments,
 			bruker = bruker ?: soknad.brukerId,
-			avsender = AvsenderDto(navn = "Test Navn"),
+			avsender = avsender,
 		)
 		val httpEntity = HttpEntity(request, headers)
 

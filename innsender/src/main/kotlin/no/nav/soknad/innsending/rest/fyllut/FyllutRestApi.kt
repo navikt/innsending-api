@@ -26,6 +26,7 @@ import no.nav.soknad.innsending.util.models.attachmentdto.sanitize
 import no.nav.soknad.innsending.util.models.erEttersending
 import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
+import no.nav.soknad.innsending.util.validators.validerBrukerOgAvsender
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -250,6 +251,7 @@ class FyllutRestApi(
 		submitApplicationRequest: SubmitApplicationRequest,
 		navEnvQualifier: EnvQualifier?
 	): ResponseEntity<ApplicationSubmissionResponse> {
+		submitApplicationRequest.validerBrukerOgAvsender()
 		val innsendingsIdStr = innsendingsId.toString()
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		val affectedUser = if (submitApplicationRequest.bruker != null && brukerId != submitApplicationRequest.bruker) {

@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.util.mapping
 
 import no.nav.soknad.arkivering.soknadsmottaker.model.Innsending
-import no.nav.soknad.arkivering.soknadsmottaker.model.Soknad
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
@@ -12,6 +11,7 @@ import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.mapping.avsender.toArkiveringAvsenderDto
 import no.nav.soknad.innsending.util.models.hoveddokument
 import no.nav.soknad.innsending.util.models.hoveddokumentVariant
 import no.nav.soknad.innsending.util.models.sletteDato
@@ -177,16 +177,6 @@ fun mapTilSkjemaDto(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
 	)
 }
 
-fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>, personId: String): Soknad {
-	return Soknad(
-		soknadDto.innsendingsId!!,
-		soknadDto.ettersendingsId != null,
-		personId,
-		soknadDto.tema,
-		translate(vedleggDtos)
-	)
-}
-
 fun SubmitApplicationRequest.toDokumentSoknadDto(innsendingsId: UUID, clientId: String): SoknadDbData {
 	val now = LocalDateTime.now()
 	return SoknadDbData(
@@ -257,7 +247,7 @@ fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>, avsen
 		innsendingsId = soknadDto.innsendingsId!!,
 		ettersendelseTilId = soknadDto.ettersendingsId,
 		kanal = if (soknadDto.visningsType == VisningsType.nologin) "NAV_NO_UINNLOGGET" else "NAV_NO",
-		avsenderDto = translate(avsenderDto),
+		avsenderDto = avsenderDto.toArkiveringAvsenderDto(),
 		brukerDto = brukerDto?.let { translate(it) },
 		tema = soknadDto.tema,
 		skjemanr = vedleggDtos.first{it.erHoveddokument}.vedleggsnr!!,
