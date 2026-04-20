@@ -268,7 +268,7 @@ class InnsendingService(
 		val allAttachments = attachments ?: emptyList()
 		logger.info("$innsendingsId: Starter innsending av skjema ${soknad_.skjemanr}")
 
-		val soknad = soknadService.prepareSubmit(innsendingsId, affectedUser)
+		val soknad = soknadService.prepareSubmit(innsendingsId, affectedUser, avsender)
 		logger.info("$innsendingsId: preSubmitApplication, satt soknad.status=${soknad.status}")
 		val brukerDto = affectedUser ?: if (soknad.brukerId.isNullOrEmpty()) null else BrukerDto(id = soknad.brukerId!!, idType = BrukerDto.IdType.FNR)
 		if (brukerDto == null && avsender == null) {

@@ -322,7 +322,12 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			AttachmentDto(attachmentCode = "M4", "Kursbevis", OpplastingsStatusDto.SendesAvAndre),
 			AttachmentDto(attachmentCode = "M5", "Leiekontrakt", OpplastingsStatusDto.SendSenere),
 		)
-		val submissionResponse = api.submitDigitalApplication(soknad, attachments)
+		val avsender = AvsenderDto(
+			id = "123456789",
+			idType = AvsenderDto.IdType.ORGNR,
+			navn = "Testbedrift AS",
+		)
+		val submissionResponse = api.submitDigitalApplication(soknad, attachments, avsender = avsender)
 			.assertSuccess()
 			.body
 
@@ -377,6 +382,9 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		}
 
 		assertEquals(innsendingsId, slotSoknad.captured.innsendingsId)
+		assertEquals(avsender.id, slotAvsender.captured.id)
+		assertEquals(avsender.idType, slotAvsender.captured.idType)
+		assertEquals(avsender.navn, slotAvsender.captured.navn)
 		val innsendteDokumenter = slotVedleggsliste.captured
 		assertEquals(4, innsendteDokumenter.size)
 		assertTrue(innsendteDokumenter.all { it.mimetype != null })
@@ -432,7 +440,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 	fun testAffectedUserSettesNårInnloggetBukerIkkeLikBrukerISubmission() {
 		val skjemanr = "NAV 10-07.54"
 		val skjematittel = "Søknad om servicehund"
-		val affectedUser = "010115116216"
+		val affectedUser = "01011511621"
 		val loggedInUser = "12345678901"
 		val hoveddokument =
 			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokument(skjemanr, withFile = false).build()
