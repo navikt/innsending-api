@@ -179,7 +179,7 @@ class SoknadRestApiTest : ApplicationTest() {
 		repoUtils.lagreVedlegg(
 			VedleggDbData(
 				id = null,
-				soknadsid = soknad.id,
+				soknadsid = soknad.id!!,
 				vedleggsnr = "W6",
 				status = OpplastingsStatus.KLAR_FOR_INNSENDING, // <- this status need to be replaced before submit
 				erhoveddokument = false,

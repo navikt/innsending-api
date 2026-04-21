@@ -323,7 +323,7 @@ class RepositoryUtils(
 			val validMimetype = dbMimetype ?: throw IllegalArgumentException("Ugyldig mimetype: $mimetype")
 			val filDbData = filRepository.findAllByVedleggsid(vedlegg.id!!).firstOrNull() ?: FilDbData(
 				id = null,
-				vedleggsid = vedlegg.id,
+				vedleggsid = vedlegg.id!!,
 				filnavn = "hoveddokument",
 				mimetype = validMimetype,
 				storrelse = fileContent.size,
