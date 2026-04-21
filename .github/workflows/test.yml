@@ -33,4 +33,4 @@ jobs:
           GITHUB_NAV_TOKEN: ${{ secrets.READER_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
         run: |
-          mvn clean install --settings maven-settings.xml
+          mvn clean install -U --settings maven-settings.xml
