@@ -313,12 +313,6 @@
 			<version>${openhtml.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>xml-apis</groupId>
-			<artifactId>xml-apis-ext</artifactId>
-			<version>${xml-apis-ext.version}</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
 			<groupId>javax.activation</groupId>
 			<artifactId>javax.activation-api</artifactId>
 			<version>${javax.activation.version}</version>
