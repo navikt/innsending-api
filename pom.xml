@@ -73,7 +73,7 @@
 		<mockk.version>1.14.9</mockk.version>
 		<springmockk.version>4.0.2</springmockk.version>
 		<testcontainers.version>1.21.4</testcontainers.version>
-		<junit-jupiter-params>5.12.2</junit-jupiter-params>
+		<junit-jupiter-params>6.0.3</junit-jupiter-params>
 
 		<!--PDF-->
 		<pdfbox.version>3.0.6</pdfbox.version>
