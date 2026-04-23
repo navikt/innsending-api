@@ -37,7 +37,7 @@
 		<dependency>
 			<groupId>no.nav.soknad.arkivering</groupId>
 			<artifactId>soknadsmottaker</artifactId>
-			<version>15ac3e3-prod</version>
+			<version>e497081-prod</version>
 			<classifier>openapi-spec</classifier>
 			<type>zip</type>
 		</dependency>

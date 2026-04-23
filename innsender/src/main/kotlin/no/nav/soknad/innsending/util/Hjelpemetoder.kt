@@ -60,6 +60,7 @@ fun maskerFnr(innsending: Innsending): Innsending {
 		skjemanr = innsending.skjemanr,
 		tittel = innsending.tittel,
 		dokumenter = maskerDokumentTitler(innsending.dokumenter),
+		innsendtDato = innsending.innsendtDato,
 	)
 }
 
