@@ -179,6 +179,18 @@ class Api(val restTemplate: TestRestTemplate, val serverPort: Int, val mockOAuth
 		return InnsendingApiResponse(response.statusCode, body)
 	}
 
+
+	fun patchVedlegg(innsendingsId: String, vedleggsId: Long, patchVedleggDto: PatchVedleggDto): InnsendingApiResponse<VedleggDto> {
+		val response = restTemplate.exchange(
+			"${baseUrl}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggsId}",
+			HttpMethod.PATCH,
+			createHttpEntity(patchVedleggDto),
+			String::class.java
+		)
+		val body = readBody(response, VedleggDto::class.java)
+		return InnsendingApiResponse(response.statusCode, body)
+	}
+
 	fun uploadFile(
 		innsendingsId: String,
 		vedleggsId: Long,

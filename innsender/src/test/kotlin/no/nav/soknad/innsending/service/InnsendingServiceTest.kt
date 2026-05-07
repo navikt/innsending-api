@@ -218,10 +218,9 @@ class InnsendingServiceTest : ApplicationTest() {
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
 		assertEquals(1, ettersendingsSoknadDto.vedleggsListe.size)
 
-		val (ettersendingKvittering, nyEttersending) = innsendingService.forberedSoknadInnsending(ettersendingsSoknadDto)
-		assertTrue(ettersendingKvittering.hoveddokumentRef == null)
-		assertTrue(ettersendingKvittering.innsendteVedlegg!!.isEmpty())
-		assertTrue(ettersendingKvittering.skalEttersendes!!.isNotEmpty())
+		assertThrows<IllegalActionException> {
+			val (ettersendingKvittering, nyEttersending) = innsendingService.forberedSoknadInnsending(ettersendingsSoknadDto)
+		}
 	}
 
 	@Test

@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.util.models
 
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
+import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import java.time.OffsetDateTime
@@ -37,12 +38,46 @@ val List<VedleggDto>.kvittering: VedleggDto?
 		return this.find { it.vedleggsnr == KVITTERINGS_NR }
 	}
 
+val List<VedleggDto>.systemGenererte: List<VedleggDto>
+	get() {
+		return this.filter {it.erHoveddokument || it.vedleggsnr == KVITTERINGS_NR }
+	}
+
+val List<VedleggDto>.ikkeSystemGenererte: List<VedleggDto>
+	get() {
+		return this.filter {!(it.erHoveddokument || it.vedleggsnr == KVITTERINGS_NR) }
+	}
+
+
 val List<VedleggDto>.sendesIkke: List<VedleggDto>
 	get() {
 		return this.filter {
 			!it.erHoveddokument && (
 				it.opplastingsStatus == OpplastingsStatusDto.SendesIkke ||
 					it.opplastingsStatus == OpplastingsStatusDto.HarIkkeDokumentasjonen
+				)
+		}
+	}
+
+val List<VedleggDto>.utsattInnsending: List<VedleggDto>
+	get() {
+		return this.filter {
+			!it.erHoveddokument && it.vedleggsnr != KVITTERINGS_NR && (
+				it.opplastingsStatus == OpplastingsStatusDto.SendSenere ||
+					it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt
+				)
+		}
+	}
+
+val List<VedleggDto>.sokerSenderIkke: List<VedleggDto>
+	get() {
+		return this.filter {
+			!it.erHoveddokument && it.vedleggsnr!=KVITTERINGS_NR && (
+				it.opplastingsStatus == OpplastingsStatusDto.SendesIkke ||
+				it.opplastingsStatus == OpplastingsStatusDto.HarIkkeDokumentasjonen ||
+				it.opplastingsStatus == OpplastingsStatusDto.LevertDokumentasjonTidligere ||
+				it.opplastingsStatus == OpplastingsStatusDto.SendesAvAndre ||
+				it.opplastingsStatus == OpplastingsStatusDto.LastetOppIkkeRelevantLenger
 				)
 		}
 	}
@@ -94,18 +129,23 @@ fun innsendteVedlegg(soknadOpprettetDato: OffsetDateTime, vedlegg: List<VedleggD
 val List<VedleggDto>.ubehandledeVedlegg: List<VedleggDto>
 	get() {
 		return this.filter {
-			!it.erHoveddokument
+			!it.erHoveddokument && it.vedleggsnr != KVITTERINGS_NR
 				&& ((it.erPakrevd && it.vedleggsnr == "N6") || it.vedleggsnr != "N6")
-				&& !(it.opplastingsStatus == OpplastingsStatusDto.Innsendt
-				|| it.opplastingsStatus == OpplastingsStatusDto.SendesAvAndre
-				|| it.opplastingsStatus == OpplastingsStatusDto.LastetOpp
-				|| it.opplastingsStatus == OpplastingsStatusDto.NavKanHenteDokumentasjon
-				|| it.opplastingsStatus == OpplastingsStatusDto.LevertDokumentasjonTidligere
-				|| it.opplastingsStatus == OpplastingsStatusDto.HarIkkeDokumentasjonen
-				)
+				&& !(erBehandlet(it.opplastingsStatus))
 		}
 	}
 
+fun erBehandlet(opplastingsStatus: OpplastingsStatusDto): Boolean {
+	opplastingsStatus.let {
+		return it == OpplastingsStatusDto.Innsendt
+			|| it == OpplastingsStatusDto.KlarForInnsending
+			|| it == OpplastingsStatusDto.SendesAvAndre
+			|| it == OpplastingsStatusDto.LastetOpp
+			|| it == OpplastingsStatusDto.NavKanHenteDokumentasjon
+			|| it == OpplastingsStatusDto.LevertDokumentasjonTidligere
+			|| it == OpplastingsStatusDto.HarIkkeDokumentasjonen
+	}
+}
 
 val List<VedleggDto>.ikkeBesvarteVedlegg: List<VedleggDto>
 	get() {

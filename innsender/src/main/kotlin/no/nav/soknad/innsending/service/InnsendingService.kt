@@ -228,20 +228,32 @@ class InnsendingService(
 				errorCode = ErrorCode.GENERAL_ERROR
 			)
 		}
-		// For å sende inn en ettersendingssøknad må det være lastet opp minst ett vedlegg, eller vært gjort endring på opplastingsstatus på vedlegg
-		if ((opplastedeVedlegg.isEmpty() || opplastedeVedlegg.none { !it.erHoveddokument })) {
-			val allePakrevdeBehandlet = alleVedlegg.ubehandledeVedlegg.isEmpty() || alleVedlegg.skalEttersendes.isNotEmpty()
-			if (allePakrevdeBehandlet) {
-				val separator = "\n"
-				logger.warn("Søker har ikke lastet opp filer på ettersendingssøknad ${soknadDto.innsendingsId}, " +
-					"men det er ikke gjenstående arbeid på noen av de påkrevde vedleggene. Vedleggsstatus:\n" +
-					soknadDto.vedleggsListe.joinToString(separator) { it.tittel + ", med status = " + it.opplastingsStatus + "\n" })
-			} else {
+
+		val ikkeSystemGenererteVedlegg = alleVedlegg.ikkeSystemGenererte
+
+		if (ikkeSystemGenererteVedlegg.isEmpty()) {
+			throw IllegalActionException(
+				message = "Innsending avbrutt da ingen vedlegg er lastet opp. Søker må ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
+				errorCode = ErrorCode.SEND_IN_ERROR_NO_CHANGE
+			)
+		}
+
+		// For å sende inn en ettersendingssøknad må det være lastet opp minst ett vedlegg, eller vært gjort endring på opplastingsstatus på minst ett vedlegg.
+		if ((opplastedeVedlegg.isEmpty() || opplastedeVedlegg.none { !(it.erHoveddokument || it.vedleggsnr == KVITTERINGS_NR) })) {
+			// Ingen vedlegg lastet opp
+			// Hvis det kun gjenstår utsatte vedleggsinnsendinger så avvises innsendingen
+			val utsatteVedlegg = ikkeSystemGenererteVedlegg.utsattInnsending
+			if (utsatteVedlegg.isNotEmpty() && ikkeSystemGenererteVedlegg.sokerSenderIkke.isEmpty()) {
 				throw IllegalActionException(
-					message = "Innsending avbrutt da ingen vedlegg er lastet opp. Søker må ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
+					message = "Innsending avbrutt da det kun er vedlegg som er markert for utsatt innsending. Søker må sende inn søknaden for å kunne ettersende vedleggene som er markert for utsatt innsending",
 					errorCode = ErrorCode.SEND_IN_ERROR_NO_CHANGE
 				)
 			}
+			val separator = "\n"
+			logger.warn(
+				"Søker har ikke lastet opp filer på ettersendingssøknad ${soknadDto.innsendingsId}. " +
+					"Det er noen påkrevde vedlegg som enda ikke er ferdig behandlet, eller vedlegg som søker ikke vil behandle. Vedleggsstatus:\n" +
+					soknadDto.vedleggsListe.joinToString(separator) { it.tittel + ", med status = " + it.opplastingsStatus + "\n" })
 		}
 	}
 
