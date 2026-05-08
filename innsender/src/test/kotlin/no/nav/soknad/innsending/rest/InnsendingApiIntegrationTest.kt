@@ -1007,23 +1007,27 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertTrue( skjemaDto != null)
 
 		val threads = 2
-		val callResponses = mutableMapOf<String, HttpStatusCode>()
 
-		val jobs = (1..threads).map { iterasjon ->
+		val callResponses = (1..threads).map { iterasjon ->
 			async(Dispatchers.IO) {
 				when (iterasjon) {
-					1 -> callResponses.put("submitDigitalApplication", api.submitDigitalApplication(skjemaDto, attachments).statusCode)
+					1 -> "submitDigitalApplication" to api.submitDigitalApplication(skjemaDto, attachments).statusCode
 					2 -> {
-						callResponses.put("deleteSoknad", api.deleteSoknad(skjemaDto.innsendingsId!!)?.statusCode ?: HttpStatusCode.valueOf(400))
+						"deleteSoknad" to (api.deleteSoknad(skjemaDto.innsendingsId!!)?.statusCode ?: HttpStatusCode.valueOf(400))
 					}
+					else -> error("Unexpected iteration $iterasjon")
 				}
 			}
-		}
-		val responses = jobs.awaitAll()
+		}.awaitAll().toMap()
 
 		assertTrue(callResponses.count() == 2)
-		assertEquals(HttpStatusCode.valueOf(200),callResponses.get("deleteSoknad"))
-		assertTrue(HttpStatusCode.valueOf(404)==callResponses.get("submitDigitalApplication") || HttpStatusCode.valueOf(500)==callResponses.get("submitDigitalApplication"))
+		val submitStatus = callResponses["submitDigitalApplication"]
+		val deleteStatus = callResponses["deleteSoknad"]
+		assertTrue(
+			(deleteStatus == HttpStatusCode.valueOf(200) && submitStatus == HttpStatusCode.valueOf(404)) ||
+				(deleteStatus == HttpStatusCode.valueOf(400) && submitStatus == HttpStatusCode.valueOf(200)),
+			"Unexpected parallel outcome: $callResponses"
+		)
 
 	}
 
