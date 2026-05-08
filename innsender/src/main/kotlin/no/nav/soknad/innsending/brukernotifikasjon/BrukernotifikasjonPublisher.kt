@@ -58,7 +58,7 @@ class BrukernotifikasjonPublisher(
 			val info = NotificationInfo(
 				tittel,
 				lenke,
-				daysUntil(soknad.skalslettesdato),
+				daysUntil(soknad.skalslettesdato) + 1,
 				if (soknad.isEttersending()) listOf(Varsel(Varsel.Kanal.sms)) else emptyList(),
 				if (opts.erSystemGenerert && !opts.erNavInitiert) getUtsattTidspunkt() else null
 			)
