@@ -252,7 +252,8 @@ fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>, avsen
 		tema = soknadDto.tema,
 		skjemanr = vedleggDtos.first{it.erHoveddokument}.vedleggsnr!!,
 		tittel = vedleggDtos.first{it.erHoveddokument}.tittel,
-		dokumenter = translate(vedleggDtos, true)
+		dokumenter = translate(vedleggDtos, true),
+		innsendtDato = soknadDto.innsendtDato ?: mapTilOffsetDateTime(LocalDateTime.now())
 	)
 }
 // Hjelpefunksjoner

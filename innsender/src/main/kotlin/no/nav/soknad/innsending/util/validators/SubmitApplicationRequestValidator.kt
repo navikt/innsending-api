@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.util.validators
 
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
+import no.nav.soknad.innsending.model.AvsenderDto
 import no.nav.soknad.innsending.model.SubmitApplicationRequest
 
 private val whitespaceRegex = Regex("""\s""")
@@ -16,12 +17,21 @@ fun SubmitApplicationRequest.validerBrukerOgAvsender() {
 		formatBeskrivelse = "11 siffer",
 	)
 	validerAvsender()
-	validerIdentifikator(
-		feltnavn = "avsender.id",
-		verdi = avsender?.id,
-		format = avsenderIdRegex,
-		formatBeskrivelse = "9 siffer",
-	)
+	if (avsender?.idType == AvsenderDto.IdType.FNR) {
+		validerIdentifikator(
+			feltnavn = "avsender.id",
+			verdi = avsender?.id,
+			format = brukerIdRegex,
+			formatBeskrivelse = "11 siffer",
+		)
+	} else if (avsender?.idType == AvsenderDto.IdType.ORGNR) {
+		validerIdentifikator(
+			feltnavn = "avsender.id",
+			verdi = avsender?.id,
+			format = avsenderIdRegex,
+			formatBeskrivelse = "9 siffer",
+		)
+	}
 }
 
 private fun SubmitApplicationRequest.validerAvsender() {

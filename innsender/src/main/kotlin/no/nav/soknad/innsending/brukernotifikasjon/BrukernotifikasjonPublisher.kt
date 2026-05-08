@@ -67,7 +67,7 @@ class BrukernotifikasjonPublisher(
 				soknad.innsendingsid,
 				soknad.isEttersending(),
 				groupId,
-				soknad.brukerid,
+				soknad.brukerid!!,
 				soknad.opprettetdato.toOffsetDateTime(),
 				opts.erSystemGenerert
 			)
@@ -94,7 +94,7 @@ class BrukernotifikasjonPublisher(
 				soknad.innsendingsid,
 				soknad.isEttersending(),
 				soknad.ettersendingsid ?: soknad.innsendingsid,
-				soknad.brukerid,
+				soknad.brukerid!!,
 				soknad.opprettetdato.toOffsetDateTime(),
 			)
 			sendTilKafkaPublisher.avsluttBrukernotifikasjon(soknadRef)

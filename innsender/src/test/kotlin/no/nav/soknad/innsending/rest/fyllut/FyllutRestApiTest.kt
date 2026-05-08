@@ -723,6 +723,32 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals(soknadBeforeUpdate.opprettetDato, soknadAfterInnsending.opprettetDato)
 	}
 
+
+	@Test
+	fun `skal godta innsending med kun gyldig brukerid i SubmitApplicationRequest`() {
+		val soknad = api!!.createSoknad(SkjemaDtoTestBuilder().build())
+			.assertSuccess()
+			.body
+
+		val response: Api.InnsendingApiResponse<ApplicationSubmissionResponse> = api!!.submitDigitalApplication(soknad, bruker = "12345678901")
+			.assertSuccess()
+		assertEquals(soknad.innsendingsId, response.body.innsendingsId.toString(), "Forventet response.body.innsendingsId lik innsendt innsendingsid")
+	}
+
+
+	@Test
+	fun `skal godta innsending med kun gyldig avsenderId i SubmitApplicationRequest`() {
+		val soknad = api!!.createSoknad(SkjemaDtoTestBuilder().build())
+			.assertSuccess()
+			.body
+
+		val response: Api.InnsendingApiResponse<ApplicationSubmissionResponse> =
+			api!!.submitDigitalApplication(soknad, bruker = "12345678901", avsender = AvsenderDto(id="12345678901", idType = AvsenderDto.IdType.FNR))
+			.assertSuccess()
+		assertEquals(soknad.innsendingsId, response.body.innsendingsId.toString(), "Forventet response.body.innsendingsId lik innsendt innsendingsid")
+	}
+
+
 	@Test
 	fun `skal avvise innsending med ugyldig brukerid i SubmitApplicationRequest`() {
 		val soknad = api!!.createSoknad(SkjemaDtoTestBuilder().build())
@@ -734,6 +760,20 @@ class FyllutRestApiTest : ApplicationTest() {
 			.assertErrorCode(ErrorCode.ILLEGAL_ARGUMENT)
 			.errorBody.let {
 				assertEquals("bruker kan ikke inneholde mellomrom", it.message)
+			}
+	}
+
+	@Test
+	fun `skal avvise innsending med ugyldig avsenderId i SubmitApplicationRequest`() {
+		val soknad = api!!.createSoknad(SkjemaDtoTestBuilder().build())
+			.assertSuccess()
+			.body
+
+		api!!.submitDigitalApplication(soknad, bruker = "12345678901", avsender = AvsenderDto(id="12345678901", idType = AvsenderDto.IdType.ORGNR))
+			.assertHttpStatus(HttpStatus.BAD_REQUEST)
+			.assertErrorCode(ErrorCode.ILLEGAL_ARGUMENT)
+			.errorBody.let {
+				assertEquals("avsender.id må være 9 siffer", it.message)
 			}
 	}
 
