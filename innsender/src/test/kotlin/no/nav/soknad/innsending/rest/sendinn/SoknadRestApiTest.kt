@@ -14,6 +14,8 @@ import no.nav.soknad.innsending.model.AvsenderDto
 import no.nav.soknad.innsending.model.BrukerDto
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.EnvQualifier
+import no.nav.soknad.innsending.model.OpplastingsStatusDto
+import no.nav.soknad.innsending.model.PatchVedleggDto
 import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
@@ -21,9 +23,11 @@ import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.util.mapping.oppdaterVedleggDb
 import no.nav.soknad.innsending.utils.Api
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.OpprettEttersendingBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
@@ -268,6 +272,43 @@ class SoknadRestApiTest : ApplicationTest() {
 			notificationForEttersending.brukernotifikasjonInfo.lenke.contains("ansatt.dev.nav.no"),
 			"Unexpected link: ${notificationForEttersending.brukernotifikasjonInfo.lenke}"
 		)
+	}
+
+
+	@Test
+	fun `Should reject submission if ettersending has no attachments`() {
+		val createEttersending = OpprettEttersendingBuilder().build()
+		val innsendingsId = api!!.createEttersending(createEttersending, envQualifier = EnvQualifier.preprodAnsatt)
+			.assertSuccess().body.innsendingsId!!
+
+		api!!.sendInnSoknad(innsendingsId, EnvQualifier.preprodAnsatt)
+			.assertClientError()
+	}
+
+	@Test
+	fun `Should reject submission if ettersending only has postponded uploads to attachments`() {
+		val createEttersending = OpprettEttersendingBuilder().medVedleggGittNr(listOf("W1", "W2")).build()
+		val soknad = api!!.createEttersending(createEttersending, envQualifier = EnvQualifier.preprodAnsatt)
+			.assertSuccess().body
+
+		api!!.sendInnSoknad(soknad.innsendingsId!!, EnvQualifier.preprodAnsatt)
+			.assertClientError()
+	}
+
+	@Test
+	fun `Should accept submission if ettersending has postponded uploads, and changed uploadStatus to attachments`() {
+		val createEttersending = OpprettEttersendingBuilder().medVedleggGittNr(listOf("W1", "W2")).build()
+		val soknad = api!!.createEttersending(createEttersending, envQualifier = EnvQualifier.preprodAnsatt)
+			.assertSuccess().body
+		val innsendingsId = soknad.innsendingsId!!
+		val vedleggsId = soknad.vedleggsListe.first { it.vedleggsnr == "W1" }.id!!
+		api!!.patchVedlegg(innsendingsId = innsendingsId, vedleggsId = vedleggsId, PatchVedleggDto(opplastingsStatus = OpplastingsStatusDto.SendesAvAndre)).assertSuccess()
+
+		val innsendingskvittering = api!!.sendInnSoknad(innsendingsId, EnvQualifier.preprodAnsatt)
+			.assertSuccess().body
+
+		assertEquals(1, innsendingskvittering.skalEttersendes?.size)
+		assertEquals(1, innsendingskvittering.skalSendesAvAndre?.size)
 	}
 
 }
