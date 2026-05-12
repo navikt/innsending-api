@@ -233,7 +233,7 @@ class InnsendingService(
 
 		if (ikkeSystemGenererteVedlegg.isEmpty()) {
 			throw IllegalActionException(
-				message = "Innsending avbrutt da ingen vedlegg er lastet opp. Søker må ved ettersending til en søknad, ha lastet opp ett eller flere vedlegg for å kunnne sende inn søknaden",
+				message = "Innsending avbrutt da det ikke er noen vedlegg spesifisert i denne ettersendingen. Søker skal ved ettersending, kunne laste opp ett eller flere vedlegg.",
 				errorCode = ErrorCode.SEND_IN_ERROR_NO_CHANGE
 			)
 		}
@@ -250,10 +250,10 @@ class InnsendingService(
 				)
 			}
 			val separator = "\n"
-			logger.warn(
+			logger.info(
 				"Søker har ikke lastet opp filer på ettersendingssøknad ${soknadDto.innsendingsId}. " +
 					"Det er noen påkrevde vedlegg som enda ikke er ferdig behandlet, eller vedlegg som søker ikke vil behandle. Vedleggsstatus:\n" +
-					soknadDto.vedleggsListe.joinToString(separator) { it.tittel + ", med status = " + it.opplastingsStatus + "\n" })
+					soknadDto.vedleggsListe.joinToString(separator) { it.vedleggsnr + ", med status = " + it.opplastingsStatus + "\n" })
 		}
 	}
 
