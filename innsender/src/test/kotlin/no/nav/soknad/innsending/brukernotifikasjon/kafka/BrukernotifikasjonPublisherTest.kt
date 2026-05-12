@@ -22,6 +22,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -47,6 +49,36 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		fyllutUrl = restConfig.fyllut.urls["default"]
 		sendinnUrl = restConfig.sendinn.urls["default"]
 	}
+
+	@Test
+	// Vi fjerner søknader/ettersendinger etter midnatt dagen etter slettetdato er passert. Da skal også brukernotifikasjoner slettes.
+	// I og med at vi har implementert sletting natten til dagen etter slettedatoen, og slettedatoen vises på brukernotifikasjonen,
+	// må vi passe på å legge til en ekstra dag i meldingen til soknadsmottaker.
+	fun testConverteringFraDatoTilDager() {
+		val soknad = SoknadDbDataTestBuilder(
+			skalslettesdato = OffsetDateTime.now().plusDays(10)
+		).build()
+
+		val message = slot<AddNotification>()
+		brukernotifikasjonPublisher.createNotification(soknad)
+		verify(exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
+
+		assertTrue(message.isCaptured)
+		val numberOfDays = message.captured.brukernotifikasjonInfo.antallAktiveDager
+		val deleteDateTime = zonedDateTimeFromDays(numberOfDays)
+		assertEquals(11, message.captured.brukernotifikasjonInfo.antallAktiveDager)
+		assertEquals(11, deleteDateTime.toLocalDate().toEpochDay() - OffsetDateTime.now(ZoneId.of("Europe/Oslo")).toLocalDate().toEpochDay())
+	}
+
+	private fun zonedDateTimeFromDays(days: Int): ZonedDateTime {
+		val now = OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
+		return now
+			.toLocalDate()
+			.plusDays(days.toLong())
+			.atTime(0, 5)
+			.atZone(now.offset)
+	}
+
 
 	@Test
 	fun `sjekk at melding for å publisere Oppgave eller Beskjed blir sendt ved oppretting av ny søknad`() {
@@ -277,7 +309,7 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		verify(exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
 
 		assertTrue(message.isCaptured)
-		assertEquals(mellomlagringDager, message.captured.brukernotifikasjonInfo.antallAktiveDager)
+		assertEquals(mellomlagringDager + 1, message.captured.brukernotifikasjonInfo.antallAktiveDager)
 		assertNull(message.captured.brukernotifikasjonInfo.utsettSendingTil)
 	}
 

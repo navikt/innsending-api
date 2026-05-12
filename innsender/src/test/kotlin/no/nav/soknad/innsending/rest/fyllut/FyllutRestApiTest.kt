@@ -175,7 +175,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals(false, notification.soknadRef.erSystemGenerert)
 		assertEquals(false, notification.soknadRef.erEttersendelse)
 		assertEquals(responseBody.tittel, notification.brukernotifikasjonInfo.notifikasjonsTittel)
-		assertEquals(28, notification.brukernotifikasjonInfo.antallAktiveDager)
+		assertEquals(28 + 1, notification.brukernotifikasjonInfo.antallAktiveDager)
 		assertTrue(
 			notification.brukernotifikasjonInfo.lenke.contains("/oppsummering?"),
 			"Link should point to summary page: ${notification.brukernotifikasjonInfo.lenke}"
@@ -206,7 +206,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val notification = parameterSlot.captured
 
 		assertEquals(responseBody.innsendingsId, notification.soknadRef.innsendingId)
-		assertEquals(mellomlagringDager, notification.brukernotifikasjonInfo.antallAktiveDager)
+		assertEquals(mellomlagringDager + 1, notification.brukernotifikasjonInfo.antallAktiveDager)
 	}
 
 	@Test
