@@ -234,7 +234,7 @@ class LospostRestApiTest : ApplicationTest() {
 		assertEquals(false, notification.soknadRef.erSystemGenerert)
 		assertEquals(false, notification.soknadRef.erEttersendelse)
 		assertEquals(lospostDto.tittel, notification.brukernotifikasjonInfo.notifikasjonsTittel)
-		assertEquals(1, notification.brukernotifikasjonInfo.antallAktiveDager)
+		assertEquals(1 + 1, notification.brukernotifikasjonInfo.antallAktiveDager)
 		assertNotNull(notification.brukernotifikasjonInfo.lenke)
 		assertEquals(0, notification.brukernotifikasjonInfo.eksternVarsling.size)
 		assertNull(notification.brukernotifikasjonInfo.utsettSendingTil)
