@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.Publish
 import no.nav.soknad.innsending.location.UrlHandler
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.VisningsType
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.mapping.toOffsetDateTime
@@ -48,10 +49,15 @@ class BrukernotifikasjonPublisher(
 			logger.info("${soknad.innsendingsid}: Brukerid mangler, kan ikke publisere brukernotifikasjon")
 			return false
 		}
-		logger.debug("${soknad.innsendingsid}: Skal publisere Brukernotifikasjon")
 		if (!notifikasjonConfig.publisereEndringer) {
 			return true
 		}
+		if (soknad.status != SoknadsStatus.Opprettet && soknad.status != SoknadsStatus.Utfylt ) {
+			logger.info("${soknad.innsendingsid}: Status er ikke Opprettet eller Utfylt, skal ikke publisere brukernotifikasjon")
+			return false
+		}
+
+		logger.debug("${soknad.innsendingsid}: Skal publisere Brukernotifikasjon")
 		try {
 			val tittel = if (soknad.isEttersending()) "${getEttersendingPrefix(soknad)}${soknad.tittel}" else soknad.tittel
 			val lenke = createLink(soknad, opts.envQualifier)

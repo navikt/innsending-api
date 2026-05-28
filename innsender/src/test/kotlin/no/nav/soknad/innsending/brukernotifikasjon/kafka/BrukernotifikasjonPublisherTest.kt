@@ -314,4 +314,23 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 	}
 
 
+	@Test
+	fun `Should not send new notification if soknad not editable`() {
+		// Given
+		val mellomlagringDager = 10
+		val soknad = SoknadDbDataTestBuilder(
+			skalslettesdato = OffsetDateTime.now().plusDays(mellomlagringDager.toLong()),
+			status = SoknadsStatus.SlettetAvBruker
+		).build()
+
+		// When
+		val response = brukernotifikasjonPublisher.createNotification(soknad)
+
+		// Then
+		assertEquals(false, response)
+		val message = slot<AddNotification>()
+		verify(exactly = 0) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
+
+	}
+
 }

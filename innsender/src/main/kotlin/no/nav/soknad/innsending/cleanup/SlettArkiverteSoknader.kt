@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.cleanup
 
+import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.util.Timer
 import org.slf4j.Logger
@@ -11,7 +12,8 @@ import org.springframework.stereotype.Service
 @Service
 class SlettArkiverteSoknader(
 	private val leaderSelectionUtility: LeaderSelection,
-	private val soknadService: SoknadService
+	private val soknadService: SoknadService,
+	private val publisher: BrukernotifikasjonPublisher,
 ) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
@@ -41,6 +43,7 @@ class SlettArkiverteSoknader(
 					.chunked(500)
 					.forEachIndexed { index, soknader ->
 						val batchTimer = Timer.start()
+						soknader.forEach { publisher.closeNotification(it) }
 						soknadService.slettSoknaderPermanent(soknader.map { it.innsendingsid })
 						logger.info("Slettet batch nr. ${index.plus(1)} med ${soknader.size} søknad(er) på ${batchTimer.getElapsedTimeMs()} ms")
 					}
