@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
+import java.lang.Thread.sleep
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -179,6 +180,7 @@ class LospostRestApiTest : ApplicationTest() {
 			.assertSuccess()
 		assertContains(response.headers?.location.toString(), "ansatt.dev.nav.no/sendinn")
 
+		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val parameterSlot = slot<AddNotification>()
 		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
 		val notification = parameterSlot.captured
@@ -201,6 +203,7 @@ class LospostRestApiTest : ApplicationTest() {
 			.assertSuccess()
 		assertContains(response.headers?.location.toString(), "intern.dev.nav.no/sendinn")
 
+		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val parameter = slot<AddNotification>()
 		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameter)) }
 		val notification = parameter.captured
@@ -224,6 +227,7 @@ class LospostRestApiTest : ApplicationTest() {
 			.body
 		assertNotNull(lospostDto.innsendingsId)
 
+		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val parameterSlot = slot<AddNotification>()
 		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
 		val notification = parameterSlot.captured

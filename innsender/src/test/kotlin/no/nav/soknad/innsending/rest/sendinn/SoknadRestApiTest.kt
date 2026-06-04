@@ -246,6 +246,7 @@ class SoknadRestApiTest : ApplicationTest() {
 			.assertSuccess().body
 		assertEquals(1, innsendingskvittering.skalEttersendes?.size)
 
+		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val notifications = mutableListOf<AddNotification>()
 		verify(exactly = 2) { notificationPublisher.opprettBrukernotifikasjon(capture(notifications)) }
 		verify(exactly = 1) { notificationPublisher.avsluttBrukernotifikasjon(any()) }

@@ -6,16 +6,8 @@ import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 
 interface PublisherInterface {
-	@Retryable(
-		maxAttempts = 3,
-		backoff = Backoff(delay = 500)
-	)
 	fun avsluttBrukernotifikasjon(soknadRef: SoknadRef)
 
-	@Retryable(
-		maxAttempts = 3,
-		backoff = Backoff(delay = 500)
-	)
 	fun opprettBrukernotifikasjon(nyNotifikasjon: AddNotification)
 
 }

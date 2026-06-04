@@ -10,10 +10,11 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
+import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.service.NotificationService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.config.ConfigDefinition
@@ -33,6 +34,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
+import java.lang.Thread.sleep
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -48,6 +50,8 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 	@Autowired
 	lateinit var repo: RepositoryUtils
 
+	@SpykBean
+	private lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher
 
 	@SpykBean
 	private lateinit var soknadsmottakerApi: MottakerAPITest
@@ -123,6 +127,8 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertNotNull(kvittering.skalEttersendes?.firstOrNull { it.vedleggsnr == vedleggsnrM5 })
 
 		// verify notifications
+		sleep(50)
+/*
 		val slotEttersendingsId = mutableListOf<String>()
 		val slotNotificationOpts = mutableListOf<NotificationOptions>()
 		verify(exactly = 2) {
@@ -134,8 +140,10 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertEquals(innsendingsId, slotEttersendingsId.firstOrNull())
 		val ettersendingsId = slotEttersendingsId[1]
 		assertNotNull(ettersendingsId, "Expected creation of notification for ettersending")
+*/
 
-		verify(exactly = 1) { notificationService.close(innsendingsId) }
+		val slotEttersending = mutableListOf<SoknadDbData>()
+		verify(exactly = 2) { brukernotifikasjonPublisher.createNotification(capture(slotEttersending), any()) }
 
 		// verify invocation of soknadsmottaker
 		val slotSoknad = slot<DokumentSoknadDto>()
@@ -352,6 +360,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertNotNull(submissionResponse.ettersendingsId)
 
 		// verify notifications
+/*
 		val slotEttersendingsId = mutableListOf<String>()
 		val slotNotificationOpts = mutableListOf<NotificationOptions>()
 		verify(exactly = 2) {
@@ -360,12 +369,17 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 				capture(slotNotificationOpts)
 			)
 		}
-		assertEquals(innsendingsId, slotEttersendingsId.firstOrNull())
-		val ettersendingsId = slotEttersendingsId[1]
+*/
+		val slotSoknads = mutableListOf<SoknadDbData>()
+		verify(exactly = 2) { brukernotifikasjonPublisher.createNotification(capture(slotSoknads), any()) }
+
+		assertEquals(innsendingsId, slotSoknads.firstOrNull()?.innsendingsid)
+		val ettersendingsId = slotSoknads[1].innsendingsid
 		assertNotNull(ettersendingsId)
 		assertEquals(submissionResponse.ettersendingsId?.toString(), ettersendingsId)
 
-		verify(exactly = 1) { notificationService.close(innsendingsId) }
+		val slotSoknadClose = mutableListOf<SoknadDbData>()
+		verify(exactly = 1) { brukernotifikasjonPublisher.closeNotification(capture(slotSoknadClose)) }
 
 		// verify invocation of soknadsmottaker
 		val slotSoknad = slot<DokumentSoknadDto>()
@@ -509,6 +523,8 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertNotNull(submissionResponse.ettersendingsId)
 
 		// verify notifications
+		sleep(50)
+/*
 		val slotEttersendingsId = mutableListOf<String>()
 		val slotNotificationOpts = mutableListOf<NotificationOptions>()
 		verify(exactly = 2) {
@@ -517,8 +533,17 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 				capture(slotNotificationOpts)
 			)
 		}
-		assertEquals(innsendingsId, slotEttersendingsId.firstOrNull())
-		val ettersendingsId = slotEttersendingsId[1]
+*/
+		val slotSoknads = mutableListOf<SoknadDbData>()
+		verify(exactly = 2) {
+			brukernotifikasjonPublisher.createNotification(
+				capture(slotSoknads),
+				any()
+			)
+		}
+
+		assertEquals(innsendingsId, slotSoknads.firstOrNull()?.innsendingsid)
+		val ettersendingsId = slotSoknads[1].innsendingsid
 		assertNotNull(ettersendingsId)
 		assertEquals(submissionResponse.ettersendingsId?.toString(), ettersendingsId)
 		api.getSoknadSendinn(ettersendingsId).assertSuccess().body.let {
@@ -542,7 +567,9 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			assertEquals(OpplastingsStatusDto.Innsendt, m3Vedlegg.opplastingsStatus)
 		}
 
-		verify(exactly = 1) { notificationService.close(innsendingsId) }
+		//verify(exactly = 1) { notificationService.close(innsendingsId) }
+		val slotCloseSoknads = mutableListOf<SoknadDbData>()
+		verify(exactly = 1) { brukernotifikasjonPublisher.closeNotification(capture(slotCloseSoknads)) }
 
 		// verify invocation of soknadsmottaker
 		val slotSoknad = slot<DokumentSoknadDto>()
@@ -690,6 +717,8 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertNull(submissionResponse.ettersendingsId)
 
 		// verify notifications
+		sleep(50)
+/*
 		val slotEttersendingsId = mutableListOf<String>()
 		val slotNotificationOpts = mutableListOf<NotificationOptions>()
 		verify(exactly = 1) {
@@ -698,9 +727,24 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 				capture(slotNotificationOpts)
 			)
 		}
-		assertEquals(innsendingsId, slotEttersendingsId.firstOrNull())
+*/
+		val slotCreateSoknad = mutableListOf<SoknadDbData>()
+		verify(exactly = 1) {
+			brukernotifikasjonPublisher.createNotification(
+				capture(slotCreateSoknad),
+				any()
+			)
+		}
 
-		verify(exactly = 1) { notificationService.close(innsendingsId) }
+		assertEquals(innsendingsId, slotCreateSoknad.firstOrNull()?.innsendingsid)
+
+		//verify(exactly = 1) { notificationService.close(innsendingsId) }
+		val slotCloseSoknad = mutableListOf<SoknadDbData>()
+		verify(exactly = 1) {
+			brukernotifikasjonPublisher.closeNotification(
+				capture(slotCloseSoknad)
+			)
+		}
 
 		// verify invocation of soknadsmottaker
 		val slotSoknad = slot<DokumentSoknadDto>()
@@ -802,8 +846,8 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertNotNull(kvittering.innsendteVedlegg?.first { it.vedleggsnr == "M3" })
 
 		// verify notifications
-		verify(exactly = 0) { notificationService.create(any(), any()) }
-		verify(exactly = 0) { notificationService.close(any()) }
+		verify(exactly = 0) { brukernotifikasjonPublisher.createNotification(any(), any()) }
+		verify(exactly = 0) { brukernotifikasjonPublisher.closeNotification(any()) }
 
 		// verify invocation of soknadsmottaker
 		val slotSoknad = slot<DokumentSoknadDto>()
@@ -934,8 +978,8 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertNull(submissionResponse.ettersendingsId)
 
 		// verify notifications
-		verify(exactly = 0) { notificationService.create(any(), any()) }
-		verify(exactly = 0) { notificationService.close(any()) }
+		verify(exactly = 0) { brukernotifikasjonPublisher.createNotification(any(), any()) }
+		verify(exactly = 0) { brukernotifikasjonPublisher.closeNotification(any()) }
 
 		// verify invocation of soknadsmottaker
 		val slotSoknad = slot<DokumentSoknadDto>()

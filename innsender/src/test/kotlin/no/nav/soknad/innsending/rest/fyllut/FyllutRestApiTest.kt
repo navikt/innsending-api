@@ -40,6 +40,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
+import java.lang.Thread.sleep
 import java.time.LocalDate
 import java.util.*
 import kotlin.test.*
@@ -165,6 +166,7 @@ class FyllutRestApiTest : ApplicationTest() {
 			.body
 
 		// Så
+		sleep(50)	// 	Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val parameterSlot = slot<AddNotification>()
 		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
 		val notification = parameterSlot.captured
@@ -201,6 +203,7 @@ class FyllutRestApiTest : ApplicationTest() {
 			.body
 
 		// Så
+		sleep(50)	// 	Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val parameterSlot = slot<AddNotification>()
 		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
 		val notification = parameterSlot.captured

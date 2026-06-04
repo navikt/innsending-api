@@ -13,6 +13,7 @@ import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.VisningsType
+import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.util.soknaddbdata.getSkjemaPath
 import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
@@ -21,13 +22,18 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import java.lang.Thread.sleep
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.UUID
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
+
+	@Autowired
+	lateinit var soknadRepository: SoknadRepository
 
 	@SpykBean
 	lateinit var sendTilPublisher: PublisherInterface
@@ -55,12 +61,17 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 	// I og med at vi har implementert sletting natten til dagen etter slettedatoen, og slettedatoen vises på brukernotifikasjonen,
 	// må vi passe på å legge til en ekstra dag i meldingen til soknadsmottaker.
 	fun testConverteringFraDatoTilDager() {
+		// Given
 		val soknad = SoknadDbDataTestBuilder(
 			skalslettesdato = OffsetDateTime.now().plusDays(10)
 		).build()
+		soknadRepository.save(soknad)
 
-		val message = slot<AddNotification>()
+		// When
 		brukernotifikasjonPublisher.createNotification(soknad)
+
+		// then
+		val message = slot<AddNotification>()
 		verify(exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
 
 		assertTrue(message.isCaptured)
@@ -82,9 +93,10 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 
 	@Test
 	fun `sjekk at melding for å publisere Oppgave eller Beskjed blir sendt ved oppretting av ny søknad`() {
+		// Given
 		val spraak = "no"
 		val personId = "12125912345"
-		val innsendingsid = "123456"
+		val innsendingsid = UUID.randomUUID().toString()
 
 		val soknad = SoknadDbDataTestBuilder(
 			brukerId = personId,
@@ -92,8 +104,12 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 			innsendingsId = innsendingsid,
 			status = SoknadsStatus.Opprettet,
 		).build()
+		soknadRepository.save(soknad)
+
+		// When
 		brukernotifikasjonPublisher.createNotification(soknad)
 
+		// Then
 		val message = slot<AddNotification>()
 		verify(exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
 
@@ -114,7 +130,8 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 
 	@Test
 	fun `sjekk at melding for å publisere Done blir sendt ved innsending av søknad`() {
-		val innsendingsid = "123456"
+		// Given
+		val innsendingsid = UUID.randomUUID().toString()
 		val personId = "12125912345"
 
 		val soknad = SoknadDbDataTestBuilder(
@@ -122,8 +139,13 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 			innsendingsId = innsendingsid,
 			status = SoknadsStatus.Innsendt,
 		).build()
+		soknadRepository.save(soknad)
+
+		// When
 		brukernotifikasjonPublisher.closeNotification(soknad)
 
+		// Then
+		sleep(50)	// Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val done = slot<SoknadRef>()
 		verify(exactly = 1) { sendTilPublisher.avsluttBrukernotifikasjon(capture(done)) }
 
@@ -134,7 +156,8 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 
 	@Test
 	fun `sjekk at brukernotifikasjon opprettes for ny ettersending`() {
-		val innsendingsid = "123456"
+		// Given
+		val innsendingsid = UUID.randomUUID().toString()
 		val ettersendingsSoknadsId = "123457"
 		val spraak = "no"
 		val personId = "12125912345"
@@ -146,8 +169,13 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 			status = SoknadsStatus.Opprettet,
 			ettersendingsId = innsendingsid
 		).build()
+		soknadRepository.save(ettersending)
+
+		// When
 		brukernotifikasjonPublisher.createNotification(ettersending)
 
+		// Then
+		sleep(50)	// Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val message = slot<AddNotification>()
 		verify(exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
 		assertTrue(message.isCaptured)
@@ -170,8 +198,9 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 
 	@Test
 	fun `sjekk at melding blir sendt for publisering av Done etter innsending av ettersendingssøknad`() {
-		val innsendingsid = "123456"
-		val ettersendingsSoknadsId = "123457"
+		// Given
+		val innsendingsid = UUID.randomUUID().toString()
+		val ettersendingsSoknadsId = UUID.randomUUID().toString()
 		val skjemanr = defaultSkjemanr
 		val tema = defaultTema
 		val spraak = "no"
@@ -188,8 +217,13 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 			status = SoknadsStatus.Innsendt,
 			ettersendingsId = innsendingsid
 		).build()
+		soknadRepository.save(ettersending)
+
+		// When
 		brukernotifikasjonPublisher.closeNotification(ettersending)
 
+		// Then
+		sleep(50)	// Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val avslutninger = mutableListOf<SoknadRef>()
 		verify(exactly = 1) { sendTilPublisher.avsluttBrukernotifikasjon(capture(avslutninger)) }
 
@@ -205,11 +239,13 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 	fun `Should create notification with fyllut url when visningsType=fyllut`() {
 		// Given
 		val fyllutSoknad = SoknadDbDataTestBuilder(visningsType = VisningsType.fyllUt).build()
+		soknadRepository.save(fyllutSoknad)
 
 		// When
 		brukernotifikasjonPublisher.createNotification(fyllutSoknad)
 
 		// Then
+		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val message = slot<AddNotification>()
 		verify(exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
 
@@ -224,6 +260,7 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 	fun `Should create notification with sendinn url when visningsType=dokumentinnsending`() {
 		// Given
 		val dokumentinnsendingSoknad = SoknadDbDataTestBuilder(visningsType = VisningsType.dokumentinnsending).build()
+		soknadRepository.save(dokumentinnsendingSoknad)
 
 		// When
 		brukernotifikasjonPublisher.createNotification(dokumentinnsendingSoknad)
@@ -244,6 +281,7 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 	fun `Should create notification with sendinn url when visningsType=ettersending`() {
 		// Given
 		val ettersending = SoknadDbDataTestBuilder(visningsType = VisningsType.ettersending).build()
+		soknadRepository.save(ettersending)
 
 		// When
 		brukernotifikasjonPublisher.createNotification(ettersending)
@@ -263,6 +301,7 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 	fun `Should create notification with utsattSending when systemGenerert=true`() {
 		// Given
 		val ettersending = SoknadDbDataTestBuilder().build()
+		soknadRepository.save(ettersending)
 
 		// When
 		brukernotifikasjonPublisher.createNotification(ettersending, NotificationOptions(erSystemGenerert = true))
@@ -280,6 +319,7 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 	fun `Should create notification without utsattSending when systemGenerert=false`() {
 		// Given
 		val ettersending = SoknadDbDataTestBuilder().build()
+		soknadRepository.save(ettersending)
 
 		// When
 		brukernotifikasjonPublisher.createNotification(ettersending, NotificationOptions(erSystemGenerert = false))
@@ -300,6 +340,7 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		val soknad = SoknadDbDataTestBuilder(
 			skalslettesdato = OffsetDateTime.now().plusDays(mellomlagringDager.toLong())
 		).build()
+		soknadRepository.save(soknad)
 
 		// When
 		brukernotifikasjonPublisher.createNotification(soknad)
@@ -322,6 +363,7 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 			skalslettesdato = OffsetDateTime.now().plusDays(mellomlagringDager.toLong()),
 			status = SoknadsStatus.SlettetAvBruker
 		).build()
+		soknadRepository.save(soknad)
 
 		// When
 		val response = brukernotifikasjonPublisher.createNotification(soknad)
