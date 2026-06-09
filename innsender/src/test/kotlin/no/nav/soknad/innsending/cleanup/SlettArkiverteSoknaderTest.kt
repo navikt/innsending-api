@@ -65,7 +65,7 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 
 	@BeforeEach
 	fun setup() {
-		job = SlettArkiverteSoknader(leaderSelectionUtility, soknadService, publisher)
+		job = SlettArkiverteSoknader(leaderSelectionUtility, soknadService)
 			.apply {
 				// Use reflection to set the private field if necessary
 				val fieldSlettArkiverteSoknaderEldreEnn = this::class.java.getDeclaredField("slettArkiverteSoknaderEldreEnn")

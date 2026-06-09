@@ -75,9 +75,8 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 		val fjernGamleSoknader = FjernGamleSoknader(soknadService, notificationService, leaderSelectionUtility)
 
 		fjernGamleSoknader.fjernGamleIkkeInnsendteSoknader()
-		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val notificationsClosed = mutableListOf<SoknadRef>()
-		verify(exactly = 1) { notificationPublisher.avsluttBrukernotifikasjon(capture(notificationsClosed)) }
+		verify(timeout = 500, exactly = 1) { notificationPublisher.avsluttBrukernotifikasjon(capture(notificationsClosed)) }
 		assertEquals(1, notificationsClosed.size)
 
 		val slettetSoknad = soknadService.hentSoknad(gammelSoknadId)

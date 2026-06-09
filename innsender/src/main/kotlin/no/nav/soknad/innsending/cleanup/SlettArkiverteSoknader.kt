@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service
 class SlettArkiverteSoknader(
 	private val leaderSelectionUtility: LeaderSelection,
 	private val soknadService: SoknadService,
-	private val publisher: BrukernotifikasjonPublisher,
 ) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
@@ -43,7 +42,6 @@ class SlettArkiverteSoknader(
 					.chunked(500)
 					.forEachIndexed { index, soknader ->
 						val batchTimer = Timer.start()
-						soknader.forEach { publisher.closeNotification(it) }
 						soknadService.slettSoknaderPermanent(soknader.map { it.innsendingsid })
 						logger.info("Slettet batch nr. ${index.plus(1)} med ${soknader.size} søknad(er) på ${batchTimer.getElapsedTimeMs()} ms")
 					}

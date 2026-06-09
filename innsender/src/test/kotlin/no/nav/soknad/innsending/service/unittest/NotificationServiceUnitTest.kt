@@ -74,9 +74,8 @@ class NotificationServiceUnitTest {
 		notificationService.create(soknadDb.innsendingsid)
 
 		// Then
-		sleep(20)
-		verify(exactly = 2) { soknadRepository.findByInnsendingsid(soknadDb.innsendingsid) }
-		verify(exactly = 1) { kafkaPublisher.opprettBrukernotifikasjon(capture(captorNotification)) }
+		verify(timeout = 100, exactly = 2) { soknadRepository.findByInnsendingsid(soknadDb.innsendingsid) }
+		verify(timeout = 100, exactly = 1) { kafkaPublisher.opprettBrukernotifikasjon(capture(captorNotification)) }
 
 		val expectedLink = "https://fyllut.intern.nav.no/fyllut/${soknadDb.innsendingsid}/nav207413/oppsummering?sub=digital&innsendingsId=${soknadDb.innsendingsid}"
 		val addNotification = captorNotification.captured
@@ -101,9 +100,8 @@ class NotificationServiceUnitTest {
 		notificationService.create(soknadDb.innsendingsid)
 
 		// Then
-		sleep(40)
-		verify(exactly = 2) { soknadRepository.findByInnsendingsid(soknadDb.innsendingsid) }
-		verify(exactly = 0) { kafkaPublisher.opprettBrukernotifikasjon(any()) }
+		verify(timeout = 100, exactly = 2) { soknadRepository.findByInnsendingsid(soknadDb.innsendingsid) }
+		verify(timeout = 100, exactly = 0) { kafkaPublisher.opprettBrukernotifikasjon(any()) }
 
 	}
 
@@ -122,9 +120,8 @@ class NotificationServiceUnitTest {
 		notificationService.create(soknadDb.innsendingsid)
 
 		// Then
-		sleep(20)	//	Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
-		verify(exactly = 2) { soknadRepository.findByInnsendingsid(soknadDb.innsendingsid) }
-		verify(exactly = 0) { kafkaPublisher.opprettBrukernotifikasjon(any()) }
+		verify(timeout = 100, exactly = 2) { soknadRepository.findByInnsendingsid(soknadDb.innsendingsid) }
+		verify(timeout = 100, exactly = 0) { kafkaPublisher.opprettBrukernotifikasjon(any()) }
 
 	}
 
@@ -167,9 +164,8 @@ class NotificationServiceUnitTest {
 		notificationService.close(soknadDb.innsendingsid)
 
 		// Then
-		sleep(20)
-		verify(exactly = 1) { soknadRepository.findByInnsendingsid(soknadDb.innsendingsid) }
-		verify(exactly = 0) { kafkaPublisher.avsluttBrukernotifikasjon(any()) }
+		verify(timeout = 100, exactly = 1) { soknadRepository.findByInnsendingsid(soknadDb.innsendingsid) }
+		verify(timeout = 100, exactly = 0) { kafkaPublisher.avsluttBrukernotifikasjon(any()) }
 
 	}
 

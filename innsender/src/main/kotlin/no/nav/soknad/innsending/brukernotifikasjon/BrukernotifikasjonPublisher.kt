@@ -97,7 +97,7 @@ class BrukernotifikasjonPublisher(
 			logger.info("${soknad.innsendingsid}: Har sendt melding om ny brukernotifikasjon med lenke $lenke")
 			return true
 		} catch (e: Exception) {
-			logger.warn("${soknad.innsendingsid}: Publisering av brukernotifikasjon feilet", e)
+			logger.error("${soknad.innsendingsid}: Publisering av brukernotifikasjon feilet", e)
 			throw e
 		}
 	}
@@ -130,7 +130,7 @@ class BrukernotifikasjonPublisher(
 			logger.info("${soknad.innsendingsid}: Har sendt melding om avslutning av brukernotifikasjon")
 			return true
 		} catch (e: Exception) {
-			logger.warn("${soknad.innsendingsid}: Sending av melding om avslutning av brukernotifikasjon feilet", e)
+			logger.error("${soknad.innsendingsid}: Sending av melding om avslutning av brukernotifikasjon feilet", e)
 			throw e
 		}
 	}

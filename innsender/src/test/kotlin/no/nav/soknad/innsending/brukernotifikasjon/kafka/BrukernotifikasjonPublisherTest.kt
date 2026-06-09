@@ -145,9 +145,8 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		brukernotifikasjonPublisher.closeNotification(soknad)
 
 		// Then
-		sleep(50)	// Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val done = slot<SoknadRef>()
-		verify(exactly = 1) { sendTilPublisher.avsluttBrukernotifikasjon(capture(done)) }
+		verify(timeout = 500, exactly = 1) { sendTilPublisher.avsluttBrukernotifikasjon(capture(done)) }
 
 		assertTrue(done.isCaptured)
 		assertEquals(personId, done.captured.personId)
@@ -175,9 +174,8 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		brukernotifikasjonPublisher.createNotification(ettersending)
 
 		// Then
-		sleep(50)	// Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val message = slot<AddNotification>()
-		verify(exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
+		verify(timeout = 500, exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
 		assertTrue(message.isCaptured)
 		val addNotification = message.captured
 
@@ -223,9 +221,8 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		brukernotifikasjonPublisher.closeNotification(ettersending)
 
 		// Then
-		sleep(50)	// Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val avslutninger = mutableListOf<SoknadRef>()
-		verify(exactly = 1) { sendTilPublisher.avsluttBrukernotifikasjon(capture(avslutninger)) }
+		verify(timeout = 500, exactly = 1) { sendTilPublisher.avsluttBrukernotifikasjon(capture(avslutninger)) }
 
 		assertTrue(avslutninger.isNotEmpty())
 		assertEquals(personId, avslutninger[0].personId)
@@ -245,9 +242,8 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		brukernotifikasjonPublisher.createNotification(fyllutSoknad)
 
 		// Then
-		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val message = slot<AddNotification>()
-		verify(exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
+		verify(timeout = 500, exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
 
 		assertTrue(message.isCaptured)
 		assertEquals(

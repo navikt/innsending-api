@@ -166,9 +166,8 @@ class FyllutRestApiTest : ApplicationTest() {
 			.body
 
 		// Så
-		sleep(50)	// 	Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val parameterSlot = slot<AddNotification>()
-		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
+		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
 		val notification = parameterSlot.captured
 
 		assertEquals(responseBody.innsendingsId, notification.soknadRef.innsendingId)
@@ -203,9 +202,8 @@ class FyllutRestApiTest : ApplicationTest() {
 			.body
 
 		// Så
-		sleep(50)	// 	Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val parameterSlot = slot<AddNotification>()
-		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
+		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
 		val notification = parameterSlot.captured
 
 		assertEquals(responseBody.innsendingsId, notification.soknadRef.innsendingId)

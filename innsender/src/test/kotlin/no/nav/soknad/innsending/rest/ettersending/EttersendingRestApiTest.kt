@@ -66,7 +66,6 @@ class EttersendingRestApiTest : ApplicationTest() {
 			.body
 
 		// Then
-		sleep(50)
 		assertEquals(skjemanr, ettersending.skjemanr)
 		assertEquals(tema, ettersending.tema)
 		assertEquals(1, ettersending.vedleggsListe.size)
@@ -74,7 +73,7 @@ class EttersendingRestApiTest : ApplicationTest() {
 		assertEquals(false, ettersending.erNavOpprettet)
 
 		val notificationSlot = slot<AddNotification>()
-		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(notificationSlot)) }
+		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(notificationSlot)) }
 		val notification = notificationSlot.captured
 
 		assertEquals(ettersending.innsendingsId, notification.soknadRef.innsendingId)
@@ -120,9 +119,8 @@ class EttersendingRestApiTest : ApplicationTest() {
 		assertEquals(innsendingsId, manueltOpprettetEttersending.ettersendingsId, "Should have ettersendingId from existing søknad innsendingsId")
 		assertEquals(vedleggsnr, manueltOpprettetEttersending.vedleggsListe[0].vedleggsnr)
 
-		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val notifications = mutableListOf<AddNotification>()
-		verify(exactly = 2) { notificationPublisher.opprettBrukernotifikasjon(capture(notifications)) }
+		verify(timeout = 100, exactly = 2) { notificationPublisher.opprettBrukernotifikasjon(capture(notifications)) }
 		val lastNotification = notifications.last()
 
 		assertEquals(manueltOpprettetEttersending.innsendingsId, lastNotification.soknadRef.innsendingId)
@@ -145,9 +143,8 @@ class EttersendingRestApiTest : ApplicationTest() {
 			.assertSuccess()
 			.body
 
-		sleep(50)
 		val notificationSlot = slot<AddNotification>()
-		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(notificationSlot)) }
+		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(notificationSlot)) }
 		val notification = notificationSlot.captured
 
 		assertEquals(ettersending.innsendingsId, notification.soknadRef.innsendingId)
