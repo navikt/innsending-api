@@ -40,6 +40,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
+import java.lang.Thread.sleep
 import java.time.LocalDate
 import java.util.*
 import kotlin.test.*
@@ -166,7 +167,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Så
 		val parameterSlot = slot<AddNotification>()
-		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
+		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
 		val notification = parameterSlot.captured
 
 		assertEquals(responseBody.innsendingsId, notification.soknadRef.innsendingId)
@@ -202,7 +203,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Så
 		val parameterSlot = slot<AddNotification>()
-		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
+		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
 		val notification = parameterSlot.captured
 
 		assertEquals(responseBody.innsendingsId, notification.soknadRef.innsendingId)

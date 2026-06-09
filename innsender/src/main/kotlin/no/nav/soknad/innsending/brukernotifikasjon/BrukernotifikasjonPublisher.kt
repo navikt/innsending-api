@@ -9,6 +9,8 @@ import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.Publish
 import no.nav.soknad.innsending.location.UrlHandler
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.VisningsType
+import no.nav.soknad.innsending.repository.SoknadRepository
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.mapping.toOffsetDateTime
@@ -16,6 +18,8 @@ import no.nav.soknad.innsending.util.soknaddbdata.getSkjemaPath
 import no.nav.soknad.innsending.util.soknaddbdata.isEttersending
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.web.util.UriComponentsBuilder
 import java.time.LocalDateTime
@@ -29,6 +33,7 @@ class BrukernotifikasjonPublisher(
 	private val notifikasjonConfig: BrukerNotifikasjonConfig,
 	private val sendTilKafkaPublisher: PublisherInterface,
 	private val urlHandler: UrlHandler,
+	private val soknadRepository: SoknadRepository,
 ) {
 	private val logger = LoggerFactory.getLogger(BrukernotifikasjonPublisher::class.java)
 
@@ -43,15 +48,32 @@ class BrukernotifikasjonPublisher(
 		"en" to ""
 	)
 
-	fun createNotification(soknad: SoknadDbData, opts: NotificationOptions = NotificationOptions()): Boolean {
+	@Retryable(
+		maxAttempts = 5,
+		backoff = Backoff(
+			delay = 5000,
+			multiplier = 2.0
+		)
+	)
+	fun createNotification(inputSoknad: SoknadDbData, opts: NotificationOptions = NotificationOptions()): Boolean {
+		if (!notifikasjonConfig.publisereEndringer) {
+			return true
+		}
+		val soknad = soknadRepository.findByInnsendingsid(inputSoknad.innsendingsid)
+		if (soknad == null) {
+			logger.info("Fant ikke søknad med innsendingsId ${inputSoknad.innsendingsid} i databasen, kan ikke publisere brukernotifikasjon")
+			return false
+		}
 		if (soknad.brukerid.isNullOrEmpty()) {
 			logger.info("${soknad.innsendingsid}: Brukerid mangler, kan ikke publisere brukernotifikasjon")
 			return false
 		}
-		logger.debug("${soknad.innsendingsid}: Skal publisere Brukernotifikasjon")
-		if (!notifikasjonConfig.publisereEndringer) {
-			return true
+		if (soknad.status != SoknadsStatus.Opprettet && soknad.status != SoknadsStatus.Utfylt ) {
+			logger.info("${soknad.innsendingsid}: Status er ikke Opprettet eller Utfylt, skal ikke publisere brukernotifikasjon")
+			return false
 		}
+
+		logger.debug("${soknad.innsendingsid}: Skal publisere Brukernotifikasjon")
 		try {
 			val tittel = if (soknad.isEttersending()) "${getEttersendingPrefix(soknad)}${soknad.tittel}" else soknad.tittel
 			val lenke = createLink(soknad, opts.envQualifier)
@@ -75,20 +97,27 @@ class BrukernotifikasjonPublisher(
 			logger.info("${soknad.innsendingsid}: Har sendt melding om ny brukernotifikasjon med lenke $lenke")
 			return true
 		} catch (e: Exception) {
-			logger.warn("${soknad.innsendingsid}: Publisering av brukernotifikasjon feilet", e)
-			return false
+			logger.error("${soknad.innsendingsid}: Publisering av brukernotifikasjon feilet", e)
+			throw e
 		}
 	}
 
+	@Retryable(
+		maxAttempts = 5,
+		backoff = Backoff(
+			delay = 5000,
+			multiplier = 2.0
+		)
+	)
 	fun closeNotification(soknad: SoknadDbData): Boolean {
+		if (!notifikasjonConfig.publisereEndringer) {
+			return true
+		}
 		if (soknad.brukerid.isNullOrEmpty()) {
 			logger.info("${soknad.innsendingsid}: Brukerid mangler, kan ikke avslutte brukernotifikasjon")
 			return false
 		}
 		logger.debug("${soknad.innsendingsid}: Skal avslutte Brukernotifikasjon")
-		if (!notifikasjonConfig.publisereEndringer) {
-			return true
-		}
 		try {
 			val soknadRef = SoknadRef(
 				soknad.innsendingsid,
@@ -101,8 +130,8 @@ class BrukernotifikasjonPublisher(
 			logger.info("${soknad.innsendingsid}: Har sendt melding om avslutning av brukernotifikasjon")
 			return true
 		} catch (e: Exception) {
-			logger.warn("${soknad.innsendingsid}: Sending av melding om avslutning av brukernotifikasjon feilet", e)
-			return false
+			logger.error("${soknad.innsendingsid}: Sending av melding om avslutning av brukernotifikasjon feilet", e)
+			throw e
 		}
 	}
 

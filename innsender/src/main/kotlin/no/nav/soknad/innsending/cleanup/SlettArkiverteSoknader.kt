@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.cleanup
 
+import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.util.Timer
 import org.slf4j.Logger
@@ -11,7 +12,7 @@ import org.springframework.stereotype.Service
 @Service
 class SlettArkiverteSoknader(
 	private val leaderSelectionUtility: LeaderSelection,
-	private val soknadService: SoknadService
+	private val soknadService: SoknadService,
 ) {
 
 	val logger: Logger = LoggerFactory.getLogger(javaClass)

@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.cleanup
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import no.nav.soknad.innsending.ApplicationTest
+import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.consumerapis.pdl.PdlAPI
 import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
@@ -39,6 +40,9 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 
 	@Autowired
 	private lateinit var soknadService: SoknadService
+
+	@Autowired
+	private lateinit var publisher: BrukernotifikasjonPublisher
 
 	@Autowired
 	private lateinit var innsendingService: InnsendingService
