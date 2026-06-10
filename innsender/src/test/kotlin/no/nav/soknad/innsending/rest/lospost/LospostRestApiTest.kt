@@ -180,7 +180,7 @@ class LospostRestApiTest : ApplicationTest() {
 		assertContains(response.headers?.location.toString(), "ansatt.dev.nav.no/sendinn")
 
 		val parameterSlot = slot<AddNotification>()
-		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
+		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
 		val notification = parameterSlot.captured
 		assertTrue(
 			notification.brukernotifikasjonInfo.lenke.contains("ansatt.dev.nav.no/sendinn"),
@@ -202,7 +202,7 @@ class LospostRestApiTest : ApplicationTest() {
 		assertContains(response.headers?.location.toString(), "intern.dev.nav.no/sendinn")
 
 		val parameter = slot<AddNotification>()
-		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameter)) }
+		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameter)) }
 		val notification = parameter.captured
 		assertTrue(
 			notification.brukernotifikasjonInfo.lenke.contains("intern.dev.nav.no/sendinn"),
@@ -225,7 +225,7 @@ class LospostRestApiTest : ApplicationTest() {
 		assertNotNull(lospostDto.innsendingsId)
 
 		val parameterSlot = slot<AddNotification>()
-		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
+		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
 		val notification = parameterSlot.captured
 
 		assertEquals(lospostDto.innsendingsId, notification.soknadRef.innsendingId)

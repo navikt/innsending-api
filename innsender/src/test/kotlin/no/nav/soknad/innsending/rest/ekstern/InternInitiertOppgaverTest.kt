@@ -27,6 +27,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.junit.jupiter.api.Test
 import org.springframework.http.*
+import java.lang.Thread.sleep
 import kotlin.test.assertNull
 
 
@@ -80,11 +81,16 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 
 	@Test
 	fun `happy case also creates oppgave  notification`() {
+		// Given
 		val brukerId = "12345678901"
 		val vedlegg = listOf("W1", "W2")
 		val skjemanr = "NAV 55-00.60"
+
+		// When
 		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr)
 
+		// Then
+		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val noticationSlot = slot<AddNotification>()
 		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlot)) }
 		val notication = noticationSlot.captured
@@ -98,11 +104,16 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 
 	@Test
 	fun `happy case also creates utkast notification`() {
+		// Given
 		val brukerId = "12345678901"
 		val vedlegg = listOf("W1", "W2")
 		val skjemanr = "NAV 55-00.60"
+
+		// When
 		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr, brukernotifikasjonstype = BrukernotifikasjonsType.utkast )
 
+		// Then
+		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val noticationSlot = slot<AddNotification>()
 		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlot)) }
 		val notication = noticationSlot.captured

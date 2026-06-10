@@ -19,6 +19,7 @@ import no.nav.soknad.innsending.utils.Hjelpemetoder
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import java.lang.Thread.sleep
 import java.time.OffsetDateTime
 import kotlin.test.assertEquals
 
@@ -74,9 +75,8 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 		val fjernGamleSoknader = FjernGamleSoknader(soknadService, notificationService, leaderSelectionUtility)
 
 		fjernGamleSoknader.fjernGamleIkkeInnsendteSoknader()
-
 		val notificationsClosed = mutableListOf<SoknadRef>()
-		verify(exactly = 1) { notificationPublisher.avsluttBrukernotifikasjon(capture(notificationsClosed)) }
+		verify(timeout = 500, exactly = 1) { notificationPublisher.avsluttBrukernotifikasjon(capture(notificationsClosed)) }
 		assertEquals(1, notificationsClosed.size)
 
 		val slettetSoknad = soknadService.hentSoknad(gammelSoknadId)

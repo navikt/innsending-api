@@ -26,6 +26,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
+import java.lang.Thread.sleep
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
@@ -89,6 +90,7 @@ class EksternRestApiTest : ApplicationTest() {
 			.assertSuccess()
 			.body
 
+		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val noticationSlot = slot<AddNotification>()
 		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlot)) }
 
@@ -115,6 +117,7 @@ class EksternRestApiTest : ApplicationTest() {
 		// When
 		api?.createEksternEttersending(ettersending)
 
+		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val noticationSlot = slot<AddNotification>()
 		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlot)) }
 
@@ -140,6 +143,7 @@ class EksternRestApiTest : ApplicationTest() {
 			.assertSuccess()
 			.body
 
+		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val noticationSlot = slot<AddNotification>()
 		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlot)) }
 
