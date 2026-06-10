@@ -111,7 +111,7 @@ spec:
 
   gcp:
     sqlInstances:
-      - type: POSTGRES_15
+      - type: POSTGRES_16
         tier: {{ tier }}
         diskType: SSD
         highAvailability: true
