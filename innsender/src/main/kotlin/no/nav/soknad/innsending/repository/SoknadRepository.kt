@@ -4,7 +4,9 @@ import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
+import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
@@ -17,6 +19,9 @@ import java.time.OffsetDateTime
 interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 
 	fun findByInnsendingsid(innsendingsid: String): SoknadDbData?
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("SELECT s FROM SoknadDbData s WHERE s.innsendingsid = :innsendingsid")
+	fun findByInnsendingsidForUpdate(@Param("innsendingsid") innsendingsid: String): SoknadDbData?
 	fun existsByInnsendingsid(innsendingsid: String): Boolean
 	fun findByBrukeridAndStatus(brukerid: String, status: SoknadsStatus): List<SoknadDbData>
 
