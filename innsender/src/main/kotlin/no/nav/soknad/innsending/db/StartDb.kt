@@ -11,7 +11,7 @@ import javax.sql.DataSource
 @Configuration
 class StartDb {
 
-	private var embeddedPostgres: EmbeddedPostgres = EmbeddedPostgres.builder().setTag("16").start()
+	private var embeddedPostgres: EmbeddedPostgres = EmbeddedPostgres.builder().setTag("18").start()
 
 	@Bean
 	fun embeddedPostgres(): DataSource {
