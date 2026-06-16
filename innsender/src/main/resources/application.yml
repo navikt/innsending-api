@@ -338,15 +338,6 @@ no.nav.security.jwt:
 spring:
   config:
     activate:
-      on-profile: loadtests
-
-  datasource:
-    url: ${DATABASE_JDBC_URL}
-
----
-spring:
-  config:
-    activate:
       on-profile: test | dev
 
   datasource:
