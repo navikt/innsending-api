@@ -318,7 +318,7 @@ data class Rettighetstype(
 @JsonPropertyOrder("beloep")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class DrosjeTransportutgifter(
-	@JacksonXmlProperty(localName = "belop")
+	@JacksonXmlProperty(localName = "beloep")
 	val beloep: Int
 )
 
