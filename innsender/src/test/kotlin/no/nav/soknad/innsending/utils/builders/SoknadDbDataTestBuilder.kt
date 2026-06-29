@@ -20,7 +20,7 @@ data class SoknadDbDataTestBuilder(
 	var tema: String = "BID",
 	var spraak: String = "nb",
 	var status: SoknadsStatus = SoknadsStatus.Opprettet,
-	var brukerId: String = "12345678901",
+	var brukerId: String? = "12345678901",
 	var ettersendingsId: String? = null,
 	var opprettetDato: LocalDateTime = LocalDateTime.now(),
 	var endretDato: LocalDateTime = LocalDateTime.now(),

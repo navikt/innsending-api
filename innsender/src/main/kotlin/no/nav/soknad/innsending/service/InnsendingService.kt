@@ -185,7 +185,7 @@ class InnsendingService(
 			innsenderMetrics.incSubmissionsCounter(soknadDto.visningsType)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
-			logger.error("${soknadDto.innsendingsId}: Feil ved sending av søknad til soknadsmottaker ${e.message}")
+			logger.error("${soknadDto.innsendingsId}: Feil ved sending av søknad til soknadsmottaker ${e.message}", e)
 			throw BackendErrorException("Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV", e)
 		}
 
@@ -193,6 +193,7 @@ class InnsendingService(
 			val lagretSoknadDb = repo.lagreSoknad(soknadsDb.copy(status=SoknadsStatus.Innsendt, avsender = avsender, affecteduser = bruker))
 			logger.info("$innsendingsId: sendInnForArkivering, satt soknad.status=${lagretSoknadDb.status}")
 		} catch (e: Exception) {
+			logger.error("${soknadDto.innsendingsId}: Feil ved oppdatering av status til Innsendt på innsending ${e.message}", e)
 			exceptionHelper.reportException(e, operation, soknadDto.tema)
 			throw BackendErrorException(message = "Feil ved sending av søknad ${soknadDto.innsendingsId} til NAV")
 		}

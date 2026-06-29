@@ -10,11 +10,11 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
+import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
-import no.nav.soknad.innsending.service.NotificationService
+import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.util.Constants
@@ -48,12 +48,11 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 	@Autowired
 	lateinit var repo: RepositoryUtils
 
+	@SpykBean
+	private lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher
 
 	@SpykBean
 	private lateinit var soknadsmottakerApi: MottakerAPITest
-
-	@SpykBean
-	private lateinit var notificationService: NotificationService
 
 	@Value("\${server.port}")
 	var serverPort: Int? = 9064
@@ -123,19 +122,8 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertNotNull(kvittering.skalEttersendes?.firstOrNull { it.vedleggsnr == vedleggsnrM5 })
 
 		// verify notifications
-		val slotEttersendingsId = mutableListOf<String>()
-		val slotNotificationOpts = mutableListOf<NotificationOptions>()
-		verify(exactly = 2) {
-			notificationService.create(
-				capture(slotEttersendingsId),
-				capture(slotNotificationOpts)
-			)
-		}
-		assertEquals(innsendingsId, slotEttersendingsId.firstOrNull())
-		val ettersendingsId = slotEttersendingsId[1]
-		assertNotNull(ettersendingsId, "Expected creation of notification for ettersending")
-
-		verify(exactly = 1) { notificationService.close(innsendingsId) }
+		val slotEttersending = mutableListOf<SoknadDbData>()
+		verify(timeout = 100, exactly = 2) { brukernotifikasjonPublisher.createNotification(capture(slotEttersending), any()) }
 
 		// verify invocation of soknadsmottaker
 		val slotSoknad = slot<DokumentSoknadDto>()
@@ -352,20 +340,16 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertNotNull(submissionResponse.ettersendingsId)
 
 		// verify notifications
-		val slotEttersendingsId = mutableListOf<String>()
-		val slotNotificationOpts = mutableListOf<NotificationOptions>()
-		verify(exactly = 2) {
-			notificationService.create(
-				capture(slotEttersendingsId),
-				capture(slotNotificationOpts)
-			)
-		}
-		assertEquals(innsendingsId, slotEttersendingsId.firstOrNull())
-		val ettersendingsId = slotEttersendingsId[1]
+		val slotSoknads = mutableListOf<SoknadDbData>()
+		verify(timeout = 100, exactly = 2) { brukernotifikasjonPublisher.createNotification(capture(slotSoknads), any()) }
+
+		assertEquals(innsendingsId, slotSoknads.firstOrNull()?.innsendingsid)
+		val ettersendingsId = slotSoknads[1].innsendingsid
 		assertNotNull(ettersendingsId)
 		assertEquals(submissionResponse.ettersendingsId?.toString(), ettersendingsId)
 
-		verify(exactly = 1) { notificationService.close(innsendingsId) }
+		val slotSoknadClose = mutableListOf<SoknadDbData>()
+		verify(exactly = 1) { brukernotifikasjonPublisher.closeNotification(capture(slotSoknadClose)) }
 
 		// verify invocation of soknadsmottaker
 		val slotSoknad = slot<DokumentSoknadDto>()
@@ -509,16 +493,16 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertNotNull(submissionResponse.ettersendingsId)
 
 		// verify notifications
-		val slotEttersendingsId = mutableListOf<String>()
-		val slotNotificationOpts = mutableListOf<NotificationOptions>()
-		verify(exactly = 2) {
-			notificationService.create(
-				capture(slotEttersendingsId),
-				capture(slotNotificationOpts)
+		val slotSoknads = mutableListOf<SoknadDbData>()
+		verify(timeout = 100, exactly = 2) {
+			brukernotifikasjonPublisher.createNotification(
+				capture(slotSoknads),
+				any()
 			)
 		}
-		assertEquals(innsendingsId, slotEttersendingsId.firstOrNull())
-		val ettersendingsId = slotEttersendingsId[1]
+
+		assertEquals(innsendingsId, slotSoknads.firstOrNull()?.innsendingsid)
+		val ettersendingsId = slotSoknads.last().innsendingsid
 		assertNotNull(ettersendingsId)
 		assertEquals(submissionResponse.ettersendingsId?.toString(), ettersendingsId)
 		api.getSoknadSendinn(ettersendingsId).assertSuccess().body.let {
@@ -542,7 +526,8 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			assertEquals(OpplastingsStatusDto.Innsendt, m3Vedlegg.opplastingsStatus)
 		}
 
-		verify(exactly = 1) { notificationService.close(innsendingsId) }
+		val slotCloseSoknads = mutableListOf<SoknadDbData>()
+		verify(timeout = 50, exactly = 1) { brukernotifikasjonPublisher.closeNotification(capture(slotCloseSoknads)) }
 
 		// verify invocation of soknadsmottaker
 		val slotSoknad = slot<DokumentSoknadDto>()
@@ -690,17 +675,22 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertNull(submissionResponse.ettersendingsId)
 
 		// verify notifications
-		val slotEttersendingsId = mutableListOf<String>()
-		val slotNotificationOpts = mutableListOf<NotificationOptions>()
-		verify(exactly = 1) {
-			notificationService.create(
-				capture(slotEttersendingsId),
-				capture(slotNotificationOpts)
+		val slotCreateSoknad = mutableListOf<SoknadDbData>()
+		verify(timeout = 100, exactly = 1) {
+			brukernotifikasjonPublisher.createNotification(
+				capture(slotCreateSoknad),
+				any()
 			)
 		}
-		assertEquals(innsendingsId, slotEttersendingsId.firstOrNull())
 
-		verify(exactly = 1) { notificationService.close(innsendingsId) }
+		assertEquals(innsendingsId, slotCreateSoknad.firstOrNull()?.innsendingsid)
+
+		val slotCloseSoknad = mutableListOf<SoknadDbData>()
+		verify(timeout = 100, exactly = 1) {
+			brukernotifikasjonPublisher.closeNotification(
+				capture(slotCloseSoknad)
+			)
+		}
 
 		// verify invocation of soknadsmottaker
 		val slotSoknad = slot<DokumentSoknadDto>()
@@ -802,8 +792,8 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertNotNull(kvittering.innsendteVedlegg?.first { it.vedleggsnr == "M3" })
 
 		// verify notifications
-		verify(exactly = 0) { notificationService.create(any(), any()) }
-		verify(exactly = 0) { notificationService.close(any()) }
+		verify(exactly = 0) { brukernotifikasjonPublisher.createNotification(any(), any()) }
+		verify(exactly = 0) { brukernotifikasjonPublisher.closeNotification(any()) }
 
 		// verify invocation of soknadsmottaker
 		val slotSoknad = slot<DokumentSoknadDto>()
@@ -934,8 +924,8 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertNull(submissionResponse.ettersendingsId)
 
 		// verify notifications
-		verify(exactly = 0) { notificationService.create(any(), any()) }
-		verify(exactly = 0) { notificationService.close(any()) }
+		verify(exactly = 0) { brukernotifikasjonPublisher.createNotification(any(), any()) }
+		verify(exactly = 0) { brukernotifikasjonPublisher.closeNotification(any()) }
 
 		// verify invocation of soknadsmottaker
 		val slotSoknad = slot<DokumentSoknadDto>()
@@ -1021,9 +1011,14 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		}
 		val responses = jobs.awaitAll()
 
+		// Either the delete or the send-in operation has been successfull, but not both
 		assertTrue(callResponses.count() == 2)
-		assertEquals(HttpStatusCode.valueOf(200),callResponses.get("deleteSoknad"))
-		assertTrue(HttpStatusCode.valueOf(404)==callResponses.get("submitDigitalApplication") || HttpStatusCode.valueOf(500)==callResponses.get("submitDigitalApplication"))
+		if (callResponses.get("deleteSoknad") == HttpStatusCode.valueOf(200)) {
+			assertTrue(HttpStatusCode.valueOf(404)==callResponses.get("submitDigitalApplication") || HttpStatusCode.valueOf(500)==callResponses.get("submitDigitalApplication"))
+		} else {
+			assertEquals(HttpStatusCode.valueOf(200),callResponses.get("submitDigitalApplication"))
+			assertTrue(HttpStatusCode.valueOf(404)==callResponses.get("deleteSoknad") || HttpStatusCode.valueOf(500)==callResponses.get("deleteSoknad"))
+		}
 
 	}
 

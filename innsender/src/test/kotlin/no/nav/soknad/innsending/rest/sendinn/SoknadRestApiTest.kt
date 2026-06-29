@@ -23,7 +23,6 @@ import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
-import no.nav.soknad.innsending.util.mapping.oppdaterVedleggDb
 import no.nav.soknad.innsending.utils.Api
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
@@ -45,7 +44,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpStatus
-import java.lang.Thread.sleep
 import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.test.assertNotEquals
@@ -213,8 +211,7 @@ class SoknadRestApiTest : ApplicationTest() {
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
-		sleep(1000)
-		verify(exactly = 1) {
+		verify(timeout = 1000, exactly = 1) {
 			soknadsmottakerAPI.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
@@ -247,8 +244,8 @@ class SoknadRestApiTest : ApplicationTest() {
 		assertEquals(1, innsendingskvittering.skalEttersendes?.size)
 
 		val notifications = mutableListOf<AddNotification>()
-		verify(exactly = 2) { notificationPublisher.opprettBrukernotifikasjon(capture(notifications)) }
-		verify(exactly = 1) { notificationPublisher.avsluttBrukernotifikasjon(any()) }
+		verify(timeout = 100, exactly = 2) { notificationPublisher.opprettBrukernotifikasjon(capture(notifications)) }
+		verify(timeout = 100, exactly = 1) { notificationPublisher.avsluttBrukernotifikasjon(any()) }
 
 		val notificationForInitialSoknad = notifications.first()
 		assertFalse(notificationForInitialSoknad.soknadRef.erEttersendelse)

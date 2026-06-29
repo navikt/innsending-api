@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
+import java.lang.Thread.sleep
 
 class EttersendingRestApiTest : ApplicationTest() {
 
@@ -72,7 +73,7 @@ class EttersendingRestApiTest : ApplicationTest() {
 		assertEquals(false, ettersending.erNavOpprettet)
 
 		val notificationSlot = slot<AddNotification>()
-		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(notificationSlot)) }
+		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(notificationSlot)) }
 		val notification = notificationSlot.captured
 
 		assertEquals(ettersending.innsendingsId, notification.soknadRef.innsendingId)
@@ -119,7 +120,7 @@ class EttersendingRestApiTest : ApplicationTest() {
 		assertEquals(vedleggsnr, manueltOpprettetEttersending.vedleggsListe[0].vedleggsnr)
 
 		val notifications = mutableListOf<AddNotification>()
-		verify(exactly = 2) { notificationPublisher.opprettBrukernotifikasjon(capture(notifications)) }
+		verify(timeout = 100, exactly = 2) { notificationPublisher.opprettBrukernotifikasjon(capture(notifications)) }
 		val lastNotification = notifications.last()
 
 		assertEquals(manueltOpprettetEttersending.innsendingsId, lastNotification.soknadRef.innsendingId)
@@ -143,7 +144,7 @@ class EttersendingRestApiTest : ApplicationTest() {
 			.body
 
 		val notificationSlot = slot<AddNotification>()
-		verify(exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(notificationSlot)) }
+		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(notificationSlot)) }
 		val notification = notificationSlot.captured
 
 		assertEquals(ettersending.innsendingsId, notification.soknadRef.innsendingId)
