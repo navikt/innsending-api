@@ -7,13 +7,13 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 
 @Configuration
-@Profile("endtoend | loadtests")
+@Profile("endtoend")
 class EndtoendConfig(
 	configService: ConfigService,
 ) {
 
 	init {
-		// enable nologin for endtoend and loadtests
+		// enable nologin for endtoend
 		val config = configService.getConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH)
 		if (!config.isEqualTo("on")) {
 			configService.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on", "SYSTEM")
