@@ -74,6 +74,30 @@ class LospostRestApiTest : ApplicationTest() {
 	}
 
 	@Test
+	fun `Should reject empty application title`() {
+		val request = OpprettLospost(
+			soknadTittel = " ",
+			tema = "BIL",
+			dokumentTittel = "Førerkort",
+			sprak = "nb"
+		)
+		api.createLospost(request)
+			.assertClientError()
+	}
+
+	@Test
+	fun `Should reject empty document title`() {
+		val request = OpprettLospost(
+			soknadTittel = "BIL - Førerkort",
+			tema = "BIL",
+			dokumentTittel = " ",
+			sprak = "nb"
+		)
+		api.createLospost(request)
+			.assertClientError()
+	}
+
+	@Test
 	fun `Should reject too large file`() {
 		val request = OpprettLospost(
 			soknadTittel = "BIL - Førerkort",
