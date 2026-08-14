@@ -191,6 +191,28 @@
 			</plugin>
 
 			<plugin>
+				<groupId>com.google.code.maven-replacer-plugin</groupId>
+				<artifactId>maven-replacer-plugin</artifactId>
+				<version>1.4.1</version>
+				<executions>
+					<execution>
+						<phase>process-sources</phase>
+						<goals>
+							<goal>replace</goal>
+						</goals>
+						<configuration>
+							<basedir>${project.build.directory}/generated-sources/openapi/src/main/kotlin</basedir>
+							<includes>
+								<include>**/infrastructure/ApiClient.kt</include>
+							</includes>
+							<token>protected inline fun &lt;reified I : Any\?, reified T: Any\?&gt; request</token>
+							<value>protected inline fun &lt;reified I : Any?, reified T: Any&gt; request</value>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
 				<groupId>org.jetbrains.kotlin</groupId>
 				<artifactId>kotlin-maven-plugin</artifactId>
 				<version>${kotlin.version}</version>

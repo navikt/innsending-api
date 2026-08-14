@@ -13,8 +13,7 @@ import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.Publish
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.repository.VedleggRepository
-import no.nav.soknad.innsending.service.VedleggService
-import no.nav.soknad.innsending.utils.Api
+import no.nav.soknad.innsending.utils.ApiWebClient
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -23,9 +22,9 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.junit.jupiter.api.Test
+import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.*
 import java.lang.Thread.sleep
 import kotlin.test.assertNull
@@ -42,9 +41,6 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
-	@Autowired
-	lateinit var restTemplate: TestRestTemplate
-
 	@SpykBean()
 	lateinit var publisherInterface: PublisherInterface
 
@@ -54,15 +50,16 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 	@Autowired
 	private lateinit var vedleggRepository: VedleggRepository
 
+	@LocalServerPort
+	var serverPort: Int = 0
 
-	@Value("\${server.port}")
-	var serverPort: Int? = 9064
-
-	var api: Api? = null
+	private var testApi: ApiWebClient? = null
+	private val api: ApiWebClient
+		get() = testApi!!
 
 	@BeforeEach
 	fun setup() {
-		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
+		testApi = ApiWebClient(webTestClient, serverPort!!, mockOAuth2Server)
 		clearAllMocks()
 		vedleggRepository.deleteAll()
 		soknadRepository.deleteAll()
@@ -132,10 +129,10 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		val skjemanr = "NAV 55-00.60"
 		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr)
 
-		val response = api?.eksternOppgaveSlett(soknadDto.innsendingsId!! )
+		val response = api.eksternOppgaveSlett(soknadDto.innsendingsId!! )
 
 		assertNotNull(response)
-		assertEquals(HttpStatus.OK, response?.statusCode)
+		assertEquals(HttpStatus.OK, response.statusCode)
 
 		val noticationSlot = slot<SoknadRef>()
 		verify(exactly = 1) { publisherInterface.avsluttBrukernotifikasjon(capture(noticationSlot)) }
@@ -149,10 +146,10 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		val skjemanr = "NAV 55-00.60"
 		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr)
 
-		val response = api?.eksternOppgaveSlettFail("12345" )
+		val response = api.eksternOppgaveSlettFail("12345" )
 
 		assertNotNull(response)
-		assertEquals(HttpStatus.NOT_FOUND, response?.statusCode)
+		assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
 	}
 
 
@@ -170,7 +167,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		val soknadDto3 = opprettSoknad(brukerId2, vedlegg, skjemanr)
 
 		// When
-		val response = api?.oppgaveHentSoknaderForSkjemanr(skjemanr, brukerId, listOf(SoknadType.ettersendelse), "nav-call-id" )
+		val response = api.oppgaveHentSoknaderForSkjemanr(skjemanr, brukerId, listOf(SoknadType.ettersendelse), "nav-call-id" )
 
 		// Then
 		assertNotNull(response)

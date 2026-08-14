@@ -12,19 +12,21 @@ import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.KodeverkService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
-import no.nav.soknad.innsending.utils.Api
+import no.nav.soknad.innsending.utils.ApiWebClient
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.test.web.server.LocalServerPort
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class TilleggstonadsTest : ApplicationTest() {
 
-	var api: Api? = null
+	var testApi: ApiWebClient? = null
+	val api: ApiWebClient
+		get() = testApi!!
 
 	val postnummerMap = mapOf(
 		"7950" to "ABELVÆR",
@@ -40,9 +42,6 @@ class TilleggstonadsTest : ApplicationTest() {
 	lateinit var kodeverkService: KodeverkService
 
 	@Autowired
-	lateinit var restTemplate: TestRestTemplate
-
-	@Autowired
 	lateinit var soknadService: SoknadService
 
 	@Autowired
@@ -54,20 +53,20 @@ class TilleggstonadsTest : ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
+	@LocalServerPort
+	var serverPort: Int = 0
+
 	@BeforeEach
 	fun setup() {
-		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
+		testApi = ApiWebClient(webTestClient, serverPort!!, mockOAuth2Server)
 		every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
 		every { kodeverkService.getPoststed(any()) } answers { postnummerMap[firstArg()] }
 	}
 
-	@Value("\${server.port}")
-	var serverPort: Int? = 9064
-
 	@Test
 	fun `Should return aktiviteter from Arena`() {
 		// When
-		val response = api?.getAktiviteter(AktivitetEndepunkt.aktivitet)
+		val response = api.getAktiviteter(AktivitetEndepunkt.aktivitet)
 
 		// Then
 		assertTrue(response != null)
@@ -94,7 +93,7 @@ class TilleggstonadsTest : ApplicationTest() {
 	@Test
 	fun `Should return daglig reise aktiviteter from Arena`() {
 		// When
-		val response = api?.getAktiviteter(AktivitetEndepunkt.dagligreise)
+		val response = api.getAktiviteter(AktivitetEndepunkt.dagligreise)
 
 		// Then
 		assertTrue(response != null)
@@ -149,7 +148,7 @@ class TilleggstonadsTest : ApplicationTest() {
 		val properties = "sokerMaalgruppe"
 
 		// When
-		val response = api?.getPrefillData(properties)
+		val response = api.getPrefillData(properties)
 
 		// Then
 		assertTrue(response != null)

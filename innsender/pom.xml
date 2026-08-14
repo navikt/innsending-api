@@ -42,7 +42,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webflux</artifactId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
 			<version>${spring-boot.version}</version>
 		</dependency>
 		<dependency>
@@ -378,21 +378,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>org.junit.vintage</groupId>
-					<artifactId>junit-vintage-engine</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.junit.jupiter</groupId>
-					<artifactId>junit-jupiter</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
 			<artifactId>kotlin-test-junit</artifactId>
 			<version>${kotlin.version}</version>
@@ -460,6 +445,29 @@
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>jbig2-imageio</artifactId>
 			<version>${jbig2-imageio.version}</version>
+		</dependency>
+
+		<!-- Test dependencies -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.junit.vintage</groupId>
+					<artifactId>junit-vintage-engine</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.junit.jupiter</groupId>
+					<artifactId>junit-jupiter</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<!-- Nødvendig for at WebTestClient skal være tilgjengelig i en MVC-app -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.github.hakky54</groupId>
@@ -529,6 +537,26 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>${maven-surefire-plugin.version}</version>
+			</plugin>
+
+			<plugin>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-maven-plugin</artifactId>
+				<version>${flyway.version}</version>
+
+				<dependencies>
+					<dependency>
+						<groupId>org.flywaydb</groupId>
+						<artifactId>flyway-database-postgresql</artifactId>
+						<version>${flyway.version}</version>
+					</dependency>
+
+					<dependency>
+						<groupId>org.postgresql</groupId>
+						<artifactId>postgresql</artifactId>
+						<version>42.7.7</version>
+					</dependency>
+				</dependencies>
 			</plugin>
 
 			<plugin>

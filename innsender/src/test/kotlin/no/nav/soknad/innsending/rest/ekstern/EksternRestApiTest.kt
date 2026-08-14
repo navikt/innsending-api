@@ -11,7 +11,7 @@ import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.Publish
 import no.nav.soknad.innsending.model.BrukernotifikasjonsType
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.SoknadType
-import no.nav.soknad.innsending.utils.Api
+import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.Skjema
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.EksternOpprettEttersendingTestBuilder
@@ -25,7 +25,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.test.web.server.LocalServerPort
 import java.lang.Thread.sleep
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
@@ -34,20 +34,19 @@ class EksternRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
-	@Autowired
-	lateinit var restTemplate: TestRestTemplate
-
 	@SpykBean()
 	lateinit var publisherInterface: PublisherInterface
 
-	@Value("\${server.port}")
-	var serverPort: Int? = 9064
+	@LocalServerPort
+	var serverPort: Int = 0
 
-	var api: Api? = null
+	private var testApi: ApiWebClient? = null
+	private val api: ApiWebClient
+		get() = testApi!!
 
 	@BeforeEach
 	fun setup() {
-		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
+		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
 	}
 
@@ -65,7 +64,7 @@ class EksternRestApiTest : ApplicationTest() {
 			.build()
 
 		// When
-		val ettersending = api!!.createEksternEttersending(createEttersendingRequest)
+		val ettersending = api.createEksternEttersending(createEttersendingRequest)
 			.assertSuccess()
 			.body
 

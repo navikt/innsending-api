@@ -13,7 +13,7 @@ import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.service.config.ConfigService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.Constants
-import no.nav.soknad.innsending.utils.Api
+import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoV2TestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoV2TestBuilder
 import org.junit.jupiter.api.BeforeEach
@@ -22,7 +22,7 @@ import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
 import java.util.*
 import kotlin.test.assertEquals
@@ -34,25 +34,22 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
-	@Autowired
-	lateinit var restTemplate: TestRestTemplate
-
 	@SpykBean
 	lateinit var metrics: InnsenderMetrics
 
 	@SpykBean
 	lateinit var soknadsmottaker: MottakerAPITest
 
-	@Value("\${server.port}")
-	var serverPort: Int? = 9064
+	@LocalServerPort
+	var serverPort: Int = 0
 
-	var testApi: Api? = null
-	val api: Api
+	var testApi: ApiWebClient? = null
+	val api: ApiWebClient
 		get() = testApi!!
 
 	@BeforeEach
 	fun setup() {
-		testApi = Api(restTemplate, serverPort!!, mockOAuth2Server)
+		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
 		api.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on")
 			.assertSuccess()
