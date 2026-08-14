@@ -90,12 +90,12 @@ class EksternRestApiTest : ApplicationTest() {
 			.body
 
 		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
-		val noticationSlot = slot<AddNotification>()
+		val noticationSlot = mutableListOf<AddNotification>()
 		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlot)) }
 
 		// Then
 		// The notification is an utkast if erSystemGenerert is false
-		val notication = noticationSlot.captured
+		val notication = noticationSlot.filter { it.soknadRef.innsendingId == ettersending.innsendingsId }.first()
 		assertEquals(false, notication.soknadRef.erSystemGenerert)
 		assertEquals(true, notication.soknadRef.erEttersendelse)
 		assertEquals(ettersending.innsendingsId, notication.soknadRef.innsendingId)
