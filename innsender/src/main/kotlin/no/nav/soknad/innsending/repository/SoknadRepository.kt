@@ -1,5 +1,7 @@
 package no.nav.soknad.innsending.repository
 
+import no.nav.soknad.innsending.model.AvsenderDto
+import no.nav.soknad.innsending.model.BrukerDto
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
@@ -67,6 +69,17 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 	fun updateArkiveringsStatus(
 		arkiveringsStatus: ArkiveringsStatus,
 		@Param("innsendingsids") innsendingsids: List<String>
+	)
+
+	@Transactional
+	@Modifying
+	@Query(
+		value = "UPDATE SoknadDbData SET status = :status, avsender = :avsender, affecteduser = :affecteduser WHERE innsendingsid = :innsendingsid",
+		nativeQuery = false
+	)
+	fun updateStatusAvsenderAndAffecteduser(
+		@Param("status") status: SoknadsStatus, @Param("avsender") avsender: AvsenderDto?, @Param("affecteduser") affecteduser: BrukerDto?,
+		@Param("innsendingsid") innsendingsid: String
 	)
 
 	@Query(
