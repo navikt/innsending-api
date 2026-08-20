@@ -4,13 +4,28 @@ import no.nav.soknad.innsending.utils.Date
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.tilleggsstonad.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import java.time.LocalDateTime
 import kotlin.math.roundToInt
 
 class TilleggsstonadJson2XmlConverterTest {
+
+	@ParameterizedTest
+	@CsvSource(
+		"2024-01-02, 2024-01-02+01:00",
+		"02-01-2024, 2024-01-02+01:00",
+		"2024-06-20, 2024-06-20+02:00",
+		"20-06-2024, 2024-06-20+02:00",
+		"2024-06-20T00:00:00.000Z, 2024-06-20+02:00"
+	)
+	fun `converts supported date formats using the Europe Oslo offset`(input: String, expected: String) {
+		assertEquals(expected, convertToDateStringWithTimeZone(input))
+	}
 
 	@Test
 	fun json2XmlTest_dagligReise() {
