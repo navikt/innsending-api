@@ -387,7 +387,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			erHoveddokument = true,
 			erVariant = true,
 			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
-			vedleggsNavn = "/__files/kjøreliste-NAV-11-12.24B-05032024.json" // tema=TSR
+			vedleggsNavn = "/__files/kjoereliste-NAV-11-12.24B-05032024.json" // tema=TSR
 		)
 		val inputDokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad(
 			skjemanr = kjoreliste,
@@ -447,7 +447,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			erHoveddokument = true,
 			erVariant = true,
 			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
-			vedleggsNavn = "/__files/kjøreliste-NAV-11-12.24B-26032024.json" // tema=TSO
+			vedleggsNavn = "/__files/kjoereliste-NAV-11-12.24B-26032024.json" // tema=TSO
 		)
 		val inputDokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad(
 			skjemanr = kjoreliste,
@@ -506,7 +506,7 @@ class TilleggsstonadServiceTest : InnsendingServiceTest() {
 			erHoveddokument = true,
 			erVariant = true,
 			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
-			vedleggsNavn = "/__files/kjøreliste-NAV-11-12.24B-24052024.json" // tema mangler, malgruppe=MOTDAGPEN
+			vedleggsNavn = "/__files/kjoereliste-NAV-11-12.24B-24052024.json" // tema mangler, malgruppe=MOTDAGPEN
 		)
 		val inputDokumentSoknadDto = Hjelpemetoder.lagDokumentSoknad(
 			skjemanr = kjoreliste,

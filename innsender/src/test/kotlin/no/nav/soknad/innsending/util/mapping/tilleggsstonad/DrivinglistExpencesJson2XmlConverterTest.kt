@@ -36,7 +36,7 @@ class DrivinglistExpencesJson2XmlConverterTest {
 	@Test
 	fun json2XmlTest_drivingListExpences_enBetalingsplan() {
 		val soknadDto = DokumentSoknadDtoTestBuilder(skjemanr = kjoreliste, tema = "TSO").build()
-		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/kjøreliste-NAV-11-12.24B-26032024.json")
+		val jsonFil = Hjelpemetoder.getBytesFromFile("/__files/kjoereliste-NAV-11-12.24B-26032024.json")
 
 		val jsonObj = convertToJsonDrivingListJson(soknadDto, jsonFil)
 
