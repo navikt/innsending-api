@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.junit.jupiter.api.Test
@@ -59,7 +58,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 
 	@BeforeEach
 	fun setup() {
-		testApi = ApiWebClient(webTestClient, serverPort!!, mockOAuth2Server)
+		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
 		vedleggRepository.deleteAll()
 		soknadRepository.deleteAll()
@@ -171,9 +170,9 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 
 		// Then
 		assertNotNull(response)
-		assertEquals(HttpStatus.OK, response?.statusCode)
+		assertEquals(HttpStatus.OK, response.statusCode)
 
-		val list = response?.body
+		val list = response.body
 		assertEquals(1, list?.size)
 		assertEquals(brukerId, list?.get(0)?.brukerId)
 	}
@@ -192,13 +191,13 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 			vedleggsListe = vedleggsListe
 		)
 
-		val response = api?.createEttersendingsOppgave(oppgave )
+		val response = api.createEttersendingsOppgave(oppgave )
 
 		assertNotNull(response)
-		assertEquals(HttpStatus.CREATED, response?.statusCode)
-		val opprettetSoknaddto = response?.body
+		assertEquals(HttpStatus.CREATED, response.statusCode)
+		val opprettetSoknaddto = response.body
 		assertEquals(true, opprettetSoknaddto?.erNavOpprettet)
-		return response?.body!!
+		return response.body!!
 
 	}
 

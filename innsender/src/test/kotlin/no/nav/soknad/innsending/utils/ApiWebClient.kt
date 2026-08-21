@@ -37,7 +37,6 @@ import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.model.SubmitApplicationRequest
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.service.config.ConfigDefinition
-import no.nav.soknad.innsending.util.Constants.AZURE
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.springframework.core.ParameterizedTypeReference
@@ -51,12 +50,8 @@ import org.springframework.http.ResponseEntity
 import org.springframework.http.client.MultipartBodyBuilder
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
-import org.springframework.util.CollectionUtils
-import org.springframework.util.LinkedMultiValueMap
-import org.springframework.util.MultiValueMap
 import org.springframework.web.util.UriComponentsBuilder
 import java.time.Duration
-import java.util.UUID
 import kotlin.test.assertEquals
 
 class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val mockOAuth2Server: MockOAuth2Server) {
@@ -78,7 +73,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 			.headers({ httpHeaders ->
 				httpHeaders.setAll(Hjelpemetoder.createHeaders(token, null).toSingleValueMap())
 			})
-			.bodyValue(SetConfigRequest(string) ?: "" )
+			.bodyValue(SetConfigRequest(string) )
 			.exchange()
 		return InnsendingApiResponse(response.returnResult().status, readBody(response, ConfigValueDto::class.java), response.returnResult().responseHeaders)
 	}
@@ -178,7 +173,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun updateSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<SkjemaDto>? {
+	fun updateSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<SkjemaDto> {
 		val response = webTestClient.put()
 			.uri ("/fyllUt/v1/soknad/${innsendingsId}")
 			.headers({ httpHeaders ->
@@ -192,7 +187,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun updateSoknadFail(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<RestErrorResponseDto>? {
+	fun updateSoknadFail(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<RestErrorResponseDto> {
 		val response = webTestClient.put()
 			.uri ("/fyllUt/v1/soknad/${innsendingsId}")
 			.headers({ httpHeaders ->
@@ -206,7 +201,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun deleteSoknad(innsendingsId: String): InnsendingApiResponse<BodyStatusResponseDto>? {
+	fun deleteSoknad(innsendingsId: String): InnsendingApiResponse<BodyStatusResponseDto> {
 		val response = webTestClient.delete()
 			.uri ("http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}")
 			.headers({ httpHeaders ->
@@ -220,7 +215,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun getPrefillData(properties: String): ResponseEntity<PrefillData>? {
+	fun getPrefillData(properties: String): ResponseEntity<PrefillData> {
 		val response = webTestClient.get()
 			.uri("${baseUrl}/fyllUt/v1/prefill-data?properties=$properties")
 			.headers({ httpHeaders ->
@@ -233,7 +228,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun getPrefillDataFail(properties: String): ResponseEntity<RestErrorResponseDto>? {
+	fun getPrefillDataFail(properties: String): ResponseEntity<RestErrorResponseDto> {
 		val response = webTestClient.get()
 			.uri ("${baseUrl}/fyllUt/v1/prefill-data?properties=$properties")
 			.headers({ httpHeaders ->
@@ -658,7 +653,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		}
 
 
-	fun getSoknad(innsendingsId: String): ResponseEntity<SkjemaDto>? {
+	fun getSoknad(innsendingsId: String): ResponseEntity<SkjemaDto> {
 		val response = webTestClient.get()
 			.uri("${baseUrl}/fyllUt/v1/soknad/${innsendingsId}")
 			.headers({ httpHeaders ->
@@ -672,7 +667,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 	// Query param ex: "soknad,ettersendelse"
-	fun getExistingSoknader(skjemanr: String, queryParam: String? = null): ResponseEntity<List<DokumentSoknadDto>>? {
+	fun getExistingSoknader(skjemanr: String, queryParam: String? = null): ResponseEntity<List<DokumentSoknadDto>> {
 		val url = if (queryParam != null) {
 			"http://localhost:${serverPort}/frontend/v1/skjema/${skjemanr}/soknader?soknadstyper=$queryParam"
 		} else {
@@ -711,7 +706,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun getAktiviteter(aktivitetEndepunkt: AktivitetEndepunkt): ResponseEntity<List<Aktivitet>>? {
+	fun getAktiviteter(aktivitetEndepunkt: AktivitetEndepunkt): ResponseEntity<List<Aktivitet>> {
 		val dagligReise = if (aktivitetEndepunkt == AktivitetEndepunkt.dagligreise) "true" else "false"
 		val response = webTestClient.get()
 			.uri("${baseUrl}/fyllUt/v1/aktiviteter?dagligreise=${dagligReise}")

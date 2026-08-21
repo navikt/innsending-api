@@ -16,7 +16,6 @@ import no.nav.soknad.innsending.utils.ApiWebClient
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.server.LocalServerPort
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -58,7 +57,7 @@ class TilleggstonadsTest : ApplicationTest() {
 
 	@BeforeEach
 	fun setup() {
-		testApi = ApiWebClient(webTestClient, serverPort!!, mockOAuth2Server)
+		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
 		every { kodeverkService.getPoststed(any()) } answers { postnummerMap[firstArg()] }
 	}
@@ -72,7 +71,8 @@ class TilleggstonadsTest : ApplicationTest() {
 		assertTrue(response != null)
 		assertEquals(200, response.statusCode.value())
 
-		val aktivitet = response.body!!.first()
+		val aktivitet = response.body?.first()
+		assertTrue(aktivitet != null)
 		assertEquals(MaalgruppeType.NEDSARBEVN, aktivitet.maalgruppe?.maalgruppetype)
 		assertEquals("Person med nedsatt arbeidsevne pga. sykdom", aktivitet.maalgruppe?.maalgruppenavn)
 		assertEquals("130892484", aktivitet.aktivitetId)

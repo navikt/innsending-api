@@ -29,7 +29,7 @@ class NologinRestApiTest: ApplicationTest() {
 
 	@BeforeEach
 	fun setup() {
-		testApi = ApiWebClient(webTestClient, serverPort!!, mockOAuth2Server)
+		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
 		api.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on")
 			.assertSuccess()

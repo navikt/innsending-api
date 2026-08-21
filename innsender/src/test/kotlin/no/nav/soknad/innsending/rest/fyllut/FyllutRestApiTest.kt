@@ -35,7 +35,6 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
@@ -215,12 +214,12 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Når
 		val opprettetSoknadResponse = api.createSoknad(skjemaDto)
-		val innsendingsId = opprettetSoknadResponse?.body?.innsendingsId!!
+		val innsendingsId = opprettetSoknadResponse.body.innsendingsId!!
 
 		api.utfyltSoknad(innsendingsId, skjemaDto)
 		api.sendInnSoknad(innsendingsId)
 
-		val soknad = soknadService.hentSoknad(opprettetSoknadResponse.body!!.innsendingsId!!)
+		val soknad = soknadService.hentSoknad(innsendingsId)
 		val vedlegg = soknad.id?.let { repo.hentAlleVedleggGittSoknadsid(it) }
 
 		// Så
@@ -338,7 +337,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Assertions
 		assertNotNull(filResponsBytes, "Responsen skal ikke være null")
-		assertTrue(filResponsBytes!!.isNotEmpty(), "PDF-filen skal inneholde data")
+		assertTrue(filResponsBytes.isNotEmpty(), "PDF-filen skal inneholde data")
 	}
 
 	@Test
@@ -688,8 +687,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Så
 		assertTrue(response != null)
 		assertEquals(200, response.statusCode.value())
-		assertEquals("OK", response.body!!.status)
-		assertEquals("Slettet soknad med id $innsendingsId", response.body!!.info)
+		assertEquals("OK", response.body.status)
+		assertEquals("Slettet soknad med id $innsendingsId", response.body.info)
 
 		assertThrows<ResourceNotFoundException>("Søknaden skal ikke finnes") { soknadService.hentSoknad(innsendingsId) }
 	}
@@ -701,9 +700,9 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// When
 		val createdSoknad = api.createSoknad(skjemaDto)
-		val sentInSoknad = api.sendInnSoknad(createdSoknad?.body?.innsendingsId!!)
+		val sentInSoknad = api.sendInnSoknad(createdSoknad.body.innsendingsId!!)
 		// Wait in order for the application to be sent in
-		val response = api.updateSoknadFail(sentInSoknad?.body?.innsendingsId!!, skjemaDto)
+		val response = api.updateSoknadFail(sentInSoknad.body.innsendingsId, skjemaDto)
 
 		// Then
 		assertTrue(response != null)
@@ -716,9 +715,9 @@ class FyllutRestApiTest : ApplicationTest() {
 	fun `Should not update opprettetDato when updating soknad`() {
 		// Given
 		val skjemaDto = SkjemaDtoTestBuilder().build()
-		val createdSoknad = api.createSoknad(skjemaDto)?.body
+		val createdSoknad = api.createSoknad(skjemaDto).body
 
-		val innsendingsId = createdSoknad?.innsendingsId!!
+		val innsendingsId = createdSoknad.innsendingsId!!
 		val soknadBeforeUpdate = soknadService.hentSoknad(innsendingsId)
 
 		// When
@@ -880,12 +879,12 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// When
 		val createdSoknad = api.createSoknad(skjemaDto)
-		val getSoknad = api.getSoknad(createdSoknad?.body?.innsendingsId!!)
+		val getSoknad = api.getSoknad(createdSoknad.body.innsendingsId!!)
 
 		// Then
 		assertEquals(
 			skalSlettesDato,
-			createdSoknad?.body?.skalSlettesDato?.toLocalDate()
+			createdSoknad.body.skalSlettesDato?.toLocalDate()
 		)
 		assertEquals(
 			skalSlettesDato,
