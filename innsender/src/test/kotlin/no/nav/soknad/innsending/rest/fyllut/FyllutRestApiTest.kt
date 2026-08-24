@@ -40,7 +40,6 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
-import java.lang.Thread.sleep
 import java.time.LocalDate
 import java.util.*
 import kotlin.test.*
