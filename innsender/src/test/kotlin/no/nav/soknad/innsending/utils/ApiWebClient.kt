@@ -791,32 +791,4 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		}
 	}
 
-
-
-
-	/*
-
-		fun getSoknad(innsendingsId: String): ResponseEntity<SkjemaDto>? {
-			val response = webTestClient.put()
-				.uri ("/fyllUt/v1/soknad/${innsendingsId}")
-				.headers({ httpHeaders ->
-					httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
-				})
-				.bodyValue(skjemaDto)
-				.exchange()
-
-			val result = response.returnResult<RestErrorResponseDto>()
-			return ResponseEntity(result.responseBody.blockFirst(), result.responseHeaders, result.status)
-
-
-			return restTemplate.exchange(
-				"${baseUrl}/fyllUt/v1/soknad/${innsendingsId}",
-				HttpMethod.GET,
-				createHttpEntity(null),
-				SkjemaDto::class.java
-			)
-		}
-
-	*/
-
 }

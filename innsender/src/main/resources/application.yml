@@ -10,12 +10,6 @@ defaultMaxFileSizeSum: 300
 
 tempFailedApplications: ${FAILED_APPLICATIONS_KLAR_FOR_INNSENDING:""}
 
-#logging:
-#  level:
-#    org:
-#      springframework:
-#        boot:
-#          autoconfigure: DEBUG
 
 spring:
   application:

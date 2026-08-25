@@ -17,7 +17,7 @@
 			<dependency>
 				<groupId>com.google.cloud</groupId>
 				<artifactId>libraries-bom</artifactId>
-				<version>26.83.0</version>
+				<version>${libraries-bom.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -28,42 +28,65 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
+<!--
 			<version>${spring-boot.version}</version>
+-->
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
+<!--
 			<version>${spring-boot.version}</version>
+-->
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
+<!--
 			<version>${spring-boot.version}</version>
+-->
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+<!--
+			<version>${spring-boot.version}</version>
+-->
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-flyway</artifactId>
+<!--
 			<version>${spring-boot.version}</version>
+-->
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-autoconfigure</artifactId>
+<!--
 			<version>${spring-boot.version}</version>
+-->
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
-			<version>${spring-boot.version}</version>
 		</dependency>
+<!--
+		<version>${spring-boot.version}</version>
+-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-configuration-processor</artifactId>
+<!--
 			<version>${spring-boot.version}</version>
+-->
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-cache</artifactId>
+<!--
 			<version>${spring-boot.version}</version>
+-->
 		</dependency>
 		<dependency>
 			<groupId>org.apache.kafka</groupId>
@@ -78,9 +101,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-docker-compose</artifactId>
-<!--
-			<scope>test</scope>
--->
 		</dependency>
 
 
@@ -465,11 +485,6 @@
 		</dependency>
 		<!-- Nødvendig for at WebTestClient skal være tilgjengelig i en MVC-app -->
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webflux</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>io.github.hakky54</groupId>
 			<artifactId>logcaptor</artifactId>
 			<version>${logcaptor.version}</version>
@@ -554,7 +569,7 @@
 					<dependency>
 						<groupId>org.postgresql</groupId>
 						<artifactId>postgresql</artifactId>
-						<version>42.7.7</version>
+						<version>${postgres.version}</version>
 					</dependency>
 				</dependencies>
 			</plugin>
