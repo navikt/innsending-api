@@ -13,7 +13,7 @@ import org.springframework.security.web.SecurityFilterChain
 class WebSecurityConfig {
 
 	@Bean
-	@Profile("test")
+	//@Profile("test")
 	fun filterChainTest(http: HttpSecurity): SecurityFilterChain {
 		http.csrf { csrf ->
 			csrf.disable()
