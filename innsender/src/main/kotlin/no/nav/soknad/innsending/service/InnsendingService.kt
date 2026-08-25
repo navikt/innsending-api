@@ -175,7 +175,8 @@ class InnsendingService(
 		val soknadsDb = repo.hentSoknadDb(innsendingsId)
 		if (soknadsDb.status != SoknadsStatus.KlarForInnsending) return
 		val avsender = soknadsDb.avsender ?: AvsenderDto(id = soknadsDb.brukerid, idType = IdType.FNR)
-		val bruker = soknadsDb.affecteduser ?: if (soknadsDb.brukerid != null) BrukerDto(id = soknadsDb.brukerid!!, idType = BrukerDto.IdType.FNR) else null
+		val brukerId = soknadsDb.brukerid
+		val bruker = soknadsDb.affecteduser ?: if (brukerId != null) BrukerDto(id = brukerId, idType = BrukerDto.IdType.FNR) else null
 
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		val opplastedeVedlegg = soknadDto.vedleggsListe.filter{(it.erHoveddokument && it.opplastingsStatus != OpplastingsStatusDto.SendesIkke) || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending }
