@@ -191,7 +191,7 @@ class InnsendingService(
 		}
 
 		try {
-			val lagretSoknadDb = repo.lagreSoknad(soknadsDb.copy(status=SoknadsStatus.Innsendt, avsender = avsender, affecteduser = bruker))
+			val lagretSoknadDb = repo.updateStatusAvsenderAndAffecteduser(soknadsDb.copy(status=SoknadsStatus.Innsendt, avsender = avsender, affecteduser = bruker))
 			logger.info("$innsendingsId: sendInnForArkivering, satt soknad.status=${lagretSoknadDb.status}")
 		} catch (e: Exception) {
 			logger.error("${soknadDto.innsendingsId}: Feil ved oppdatering av status til Innsendt på innsending ${e.message}", e)
