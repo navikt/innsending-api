@@ -58,7 +58,7 @@
 		<verapdf.core-model-jakarta.version>1.30.2</verapdf.core-model-jakarta.version>
 		<jackson-databind-nullable.version>0.2.10</jackson-databind-nullable.version>
 		<jackson-annotation.version>2.22</jackson-annotation.version>
-		<jackson.version>2.22.0</jackson.version>
+		<jackson.version>2.22.1</jackson.version>
 		<coroutines.version>1.11.0</coroutines.version>
 		<logstash.version>9.0</logstash.version>
 		<imgscalr-lib.version>4.2</imgscalr-lib.version>
