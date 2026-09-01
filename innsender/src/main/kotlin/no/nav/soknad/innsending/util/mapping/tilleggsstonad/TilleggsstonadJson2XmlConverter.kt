@@ -8,7 +8,9 @@ import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.math.roundToInt
 
@@ -93,12 +95,12 @@ fun convertToMaalgruppeinformasjon(jsonMaalgruppeinformasjon: JsonMaalgruppeinfo
 }
 
 fun convertToDateStringWithTimeZone(date: String): String {
-	val inputFormat = SimpleDateFormat("yyyy-MM-dd")
-
-	val inputDate = inputFormat.parse(date.substring(0, 10))
-	val outputFormat = SimpleDateFormat("yyyy-MM-ddXXX", Locale.of("no", "NO"))
-	outputFormat.timeZone = TimeZone.getTimeZone("CET")
-	return outputFormat.format(inputDate)
+	val datePart = date.substring(0, 10)
+	val inputFormatter =
+		if (datePart[2] == '-') DateTimeFormatter.ofPattern("dd-MM-uuuu") else DateTimeFormatter.ISO_LOCAL_DATE
+	return LocalDate.parse(datePart, inputFormatter)
+		.atStartOfDay(ZoneId.of("Europe/Oslo"))
+		.format(DateTimeFormatter.ISO_OFFSET_DATE)
 }
 
 fun convertToRettighetstype(soknadDto: DokumentSoknadDto, jsonRettighetstyper: JsonRettighetstyper?): Rettighetstype {
@@ -583,6 +585,4 @@ private fun convertAarsakTilIkkeDrosje(aarsak: String?): String? {
 	if (aarsak.isNullOrBlank()) return null
 	return aarsak
 }
-
-
 
