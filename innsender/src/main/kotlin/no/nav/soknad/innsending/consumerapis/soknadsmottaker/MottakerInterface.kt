@@ -4,14 +4,15 @@ import no.nav.soknad.innsending.model.AvsenderDto
 import no.nav.soknad.innsending.model.BrukerDto
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.VedleggDto
-import org.springframework.retry.annotation.Backoff
-import org.springframework.retry.annotation.Retryable
+import org.springframework.resilience.annotation.Retryable
 
 interface MottakerInterface {
 
 	@Retryable(
-		maxAttempts = 3,
-		backoff = Backoff(delay = 500)
+		maxRetries = 3,
+		delay = 500,
+		multiplier = 2.0,
+		jitter = 2
 	)
 	fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggsListe: List<VedleggDto>, avsenderDto: AvsenderDto, brukerDto: BrukerDto? = null)
 }

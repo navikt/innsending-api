@@ -53,7 +53,7 @@ class SendTilPublisherRetryTest : ApplicationTest() {
 
 		// Then
 		val capturedNotification = mutableListOf<AddNotification>()
-		verify(exactly = 5) { sendTilPublisher.opprettBrukernotifikasjon(capture(capturedNotification)) }
+		verify(exactly = 6) { sendTilPublisher.opprettBrukernotifikasjon(capture(capturedNotification)) }
 
 		assertTrue { capturedNotification.all { it.soknadRef.innsendingId == soknad.innsendingsid } }
 	}

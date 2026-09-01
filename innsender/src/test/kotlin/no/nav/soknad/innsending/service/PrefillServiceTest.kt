@@ -6,6 +6,8 @@ import kotlinx.coroutines.runBlocking
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenResponse
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.soknad.innsending.ApplicationTest
+import no.nav.soknad.innsending.consumerapis.kontoregister.KontoregisterInterface
+import no.nav.soknad.innsending.consumerapis.kontoregister.KontoregisterService
 import no.nav.soknad.innsending.model.MaalgruppeType
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -24,6 +26,10 @@ class PrefillServiceTest : ApplicationTest() {
 	@MockkBean
 	lateinit var kodeverkService: KodeverkService
 
+	@MockkBean
+	lateinit var kontoregisterService: KontoregisterInterface
+
+
 	@Autowired
 	lateinit var prefillService: PrefillService
 
@@ -38,6 +44,7 @@ class PrefillServiceTest : ApplicationTest() {
 	fun setup() {
 		every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
 		every { kodeverkService.getPoststed(any()) } answers { postnummerMap[firstArg()] }
+		every { kontoregisterService.getKontonummer() } returns "8361347234732292"
 	}
 
 	@Test

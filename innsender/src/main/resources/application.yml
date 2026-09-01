@@ -10,6 +10,7 @@ defaultMaxFileSizeSum: 300
 
 tempFailedApplications: ${FAILED_APPLICATIONS_KLAR_FOR_INNSENDING:""}
 
+
 spring:
   application:
     name: innsending-api
