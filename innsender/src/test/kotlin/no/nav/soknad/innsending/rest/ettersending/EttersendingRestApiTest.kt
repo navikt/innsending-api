@@ -10,7 +10,7 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.Varsel
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.EnvQualifier
-import no.nav.soknad.innsending.utils.Api
+import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
@@ -22,29 +22,28 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.test.web.client.TestRestTemplate
-import java.lang.Thread.sleep
+import org.springframework.boot.test.web.server.LocalServerPort
 
 class EttersendingRestApiTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
-	@Autowired
-	lateinit var restTemplate: TestRestTemplate
-
 	@SpykBean
 	lateinit var notificationPublisher: PublisherInterface
 
-	@Value("\${server.port}")
-	var serverPort: Int? = 9064
+	@LocalServerPort
+	var serverPort: Int = 0
 
-	var api: Api? = null
+	private var testApi: ApiWebClient? = null
+	private val api: ApiWebClient
+		get() = testApi!!
 
 	@BeforeEach
 	fun setup() {
-		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
-		clearAllMocks()
+		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
+		//clearAllMocks()
+		io.mockk.clearMocks(notificationPublisher)
 	}
 
 	@Test
@@ -61,7 +60,7 @@ class EttersendingRestApiTest : ApplicationTest() {
 			.build()
 
 		// When
-		val ettersending = api!!.createEttersending(opprettEttersendingRequest)
+		val ettersending = api.createEttersending(opprettEttersendingRequest)
 			.assertSuccess()
 			.body
 
@@ -95,14 +94,14 @@ class EttersendingRestApiTest : ApplicationTest() {
 		val vedleggsnr = "A1"
 		val skjemaDto = SkjemaDtoTestBuilder().build()
 
-		val opprettetSoknad = api!!.createSoknad(skjemaDto)
+		val opprettetSoknad = api.createSoknad(skjemaDto)
 			.assertSuccess()
 			.body
 		val innsendingsId = opprettetSoknad.innsendingsId!!
 
-		api?.utfyltSoknad(innsendingsId, skjemaDto)
-		val sendInnSoknadResponse = api?.sendInnSoknad(innsendingsId)
-		val innsendtSoknad = sendInnSoknadResponse!!.body!!
+		api.utfyltSoknad(innsendingsId, skjemaDto)
+		val sendInnSoknadResponse = api.sendInnSoknad(innsendingsId)
+		val innsendtSoknad = sendInnSoknadResponse.body!!
 
 		val ettersending = OpprettEttersendingTestBuilder()
 			.skjemanr(skjemaDto.skjemanr)
@@ -110,7 +109,7 @@ class EttersendingRestApiTest : ApplicationTest() {
 			.build()
 
 		// When
-		val manueltOpprettetEttersending = api!!.createEttersending(ettersending)
+		val manueltOpprettetEttersending = api.createEttersending(ettersending)
 			.assertSuccess()
 			.body
 
@@ -139,7 +138,7 @@ class EttersendingRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should send notification with correct link`() {
 		val opprettEttersendingRequest = OpprettEttersendingTestBuilder().build()
-		val ettersending = api!!.createEttersending(opprettEttersendingRequest, EnvQualifier.delingslenke)
+		val ettersending = api.createEttersending(opprettEttersendingRequest, EnvQualifier.delingslenke)
 			.assertSuccess()
 			.body
 

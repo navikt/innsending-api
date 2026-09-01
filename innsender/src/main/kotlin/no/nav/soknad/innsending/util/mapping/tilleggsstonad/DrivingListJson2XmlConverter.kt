@@ -76,6 +76,7 @@ fun convertToUtgiftsdager(expences: List<JsonDailyExpences>?): List<Utgiftsdager
 	}
 }
 
+
 fun convertToXmlGregorianWithTimeZone(dateString: String): XMLGregorianCalendar {
 
 	val format = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"

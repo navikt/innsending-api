@@ -41,7 +41,7 @@ data class Utgiftsperioder(
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class Utgiftsdager(
 
-	@JacksonXmlProperty(localName = "date")
+	@JacksonXmlProperty(localName = "utgiftsdag")
 	val utgiftsdag: String? = null,
 
 	@JacksonXmlProperty(localName = "parkeringsutgift")

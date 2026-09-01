@@ -27,7 +27,7 @@ class KafkaConfiguration(
 	@Bean
 	fun kafkaListenerContainerFactory(): KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, String>> {
 		val factory = ConcurrentKafkaListenerContainerFactory<String, String>().apply {
-			consumerFactory = consumerFactory()
+			setConsumerFactory( consumerFactory())
 			containerProperties.ackMode = ContainerProperties.AckMode.MANUAL_IMMEDIATE
 		}
 		return factory

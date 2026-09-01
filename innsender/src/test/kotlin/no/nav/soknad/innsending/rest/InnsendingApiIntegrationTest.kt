@@ -19,7 +19,7 @@ import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.stotteTilBolig
-import no.nav.soknad.innsending.utils.Api
+import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoV2TestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
@@ -29,21 +29,19 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class InnsendingApiIntegrationTest : ApplicationTest() {
+class InnsendingApiIntegrationTest: ApplicationTest()
+ {
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
-	@Autowired
-	lateinit var restTemplate: TestRestTemplate
 
 	@Autowired
 	lateinit var repo: RepositoryUtils
@@ -54,18 +52,20 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 	@SpykBean
 	private lateinit var soknadsmottakerApi: MottakerAPITest
 
-	@Value("\${server.port}")
-	var serverPort: Int? = 9064
+	 @LocalServerPort
+	 var serverPort: Int = 0
 
-	var testApi: Api? = null
-	val api: Api
+	var testApi: ApiWebClient? = null
+/*
+	val api: ApiWebClient
 		get() = testApi!!
+*/
 
 	@BeforeEach
 	fun setup() {
-		testApi = Api(restTemplate, serverPort!!, mockOAuth2Server)
+		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
-		api.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on")
+		testApi!!.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on")
 			.assertSuccess()
 	}
 
@@ -86,7 +86,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			.build()
 
 		// Opprett søknad
-		val soknad = api.createSoknad(skjemaDto)
+		val soknad = testApi!!.createSoknad(skjemaDto)
 			.assertSuccess()
 			.body
 		val innsendingsId = soknad.innsendingsId!!
@@ -100,19 +100,19 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			hoveddokument = hoveddokumentWithFile,
 			vedleggsListe = listOf(vedleggM2, vedleggM5)
 		)
-		api.utfyltSoknad(innsendingsId, updatedSoknad)
+		testApi!!.utfyltSoknad(innsendingsId, updatedSoknad)
 
-		val vedleggsIdM2 = api.getSoknadSendinn(innsendingsId)
+		val vedleggsIdM2 = testApi!!.getSoknadSendinn(innsendingsId)
 			.assertSuccess()
 			.body.vedleggsListe.first { it.vedleggsnr == vedleggsnrM2 }.id!!
 
 		// Last opp to filer til vedlegg M2
-		api.uploadFile(innsendingsId, vedleggsIdM2)
+		testApi!!.uploadFile(innsendingsId, vedleggsIdM2)
 			.assertHttpStatus(HttpStatus.CREATED)
-		api.uploadFile(innsendingsId, vedleggsIdM2)
+		testApi!!.uploadFile(innsendingsId, vedleggsIdM2)
 			.assertHttpStatus(HttpStatus.CREATED)
 
-		val kvittering = api.sendInnSoknad(innsendingsId)
+		val kvittering = testApi!!.sendInnSoknad(innsendingsId)
 			.assertSuccess()
 			.body
 
@@ -159,7 +159,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		// verify fetching of files from soknadsarkiverer
 		innsendteDokumenter.forEach { submittedAttachment ->
 			val attachmentUuid = submittedAttachment.uuid!!
-			val files = api.hentInnsendteFiler(innsendingsId, listOf(attachmentUuid))
+			val files = testApi!!.hentInnsendteFiler(innsendingsId, listOf(attachmentUuid))
 				.assertSuccess()
 				.body
 			assertEquals(
@@ -198,13 +198,13 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			.medHoveddokumentVariant(hoveddokumentVariant)
 			.build()
 
-		val soknad = api.createSoknad(skjemaDto)
+		val soknad = testApi!!.createSoknad(skjemaDto)
 			.assertSuccess()
 			.body
 		val innsendingsId = soknad.innsendingsId!!
 
-		api.utfyltSoknad(innsendingsId, skjemaDto)
-		val kvittering = api.sendInnSoknad(innsendingsId)
+		testApi!!.utfyltSoknad(innsendingsId, skjemaDto)
+		val kvittering = testApi!!.sendInnSoknad(innsendingsId)
 			.assertSuccess()
 			.body
 
@@ -244,7 +244,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		// verify fetching of files from soknadsarkiverer
 		innsendteDokumenter.forEach { submittedAttachment ->
 			val attachmentUuid = submittedAttachment.uuid!!
-			val files = api.hentInnsendteFiler(innsendingsId, listOf(attachmentUuid))
+			val files = testApi!!.hentInnsendteFiler(innsendingsId, listOf(attachmentUuid))
 				.assertSuccess()
 				.body
 			assertEquals(
@@ -278,19 +278,19 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			.medHoveddokumentVariant(hoveddokumentVariant)
 			.build()
 
-		val soknad = api.createSoknad(skjemaDto)
+		val soknad = testApi!!.createSoknad(skjemaDto)
 			.assertSuccess()
 			.body
 		val innsendingsId = soknad.innsendingsId!!
 
-		val fileM2part1 = api.uploadAttachmentFile(innsendingsId, "M2")
+		val fileM2part1 = testApi!!.uploadAttachmentFile(innsendingsId, "M2")
 			.assertSuccess()
 			.body
-		val fileM2part2 = api.uploadAttachmentFile(innsendingsId, "M2")
+		val fileM2part2 = testApi!!.uploadAttachmentFile(innsendingsId, "M2")
 			.assertSuccess()
 			.body
 
-		val fileM3 = api.uploadAttachmentFile(innsendingsId, "M3")
+		val fileM3 = testApi!!.uploadAttachmentFile(innsendingsId, "M3")
 			.assertSuccess()
 			.body
 
@@ -315,7 +315,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			idType = AvsenderDto.IdType.ORGNR,
 			navn = "Testbedrift AS",
 		)
-		val submissionResponse = api.submitDigitalApplication(soknad, attachments, avsender = avsender)
+		val submissionResponse = testApi!!.submitDigitalApplication(soknad, attachments, avsender = avsender)
 			.assertSuccess()
 			.body
 
@@ -391,7 +391,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		// verify fetching of files from soknadsarkiverer
 		innsendteDokumenter.forEach { submittedAttachment ->
 			val attachmentUuid = submittedAttachment.uuid!!
-			val files = api.hentInnsendteFiler(innsendingsId, listOf(attachmentUuid))
+			val files = testApi!!.hentInnsendteFiler(innsendingsId, listOf(attachmentUuid))
 				.assertSuccess()
 				.body
 			assertEquals(
@@ -411,7 +411,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		}
 
 		// verify fetching of file with unknown uuid
-		val filesUnknownAttachment = api.hentInnsendteFiler(innsendingsId, listOf(UUID.randomUUID().toString()))
+		val filesUnknownAttachment = testApi!!.hentInnsendteFiler(innsendingsId, listOf(UUID.randomUUID().toString()))
 			.assertSuccess()
 			.body
 		assertEquals(1, filesUnknownAttachment.size)
@@ -436,19 +436,19 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			.medHoveddokumentVariant(hoveddokumentVariant)
 			.build()
 
-		val soknad = api.createSoknad(skjemaDto)
+		val soknad = testApi!!.createSoknad(skjemaDto)
 			.assertSuccess()
 			.body
 		val innsendingsId = soknad.innsendingsId!!
 
-		val fileM2part1 = api.uploadAttachmentFile(innsendingsId, "M2")
+		val fileM2part1 = testApi!!.uploadAttachmentFile(innsendingsId, "M2")
 			.assertSuccess()
 			.body
-		val fileM2part2 = api.uploadAttachmentFile(innsendingsId, "M2")
+		val fileM2part2 = testApi!!.uploadAttachmentFile(innsendingsId, "M2")
 			.assertSuccess()
 			.body
 
-		val fileM3 = api.uploadAttachmentFile(innsendingsId, "M3")
+		val fileM3 = testApi!!.uploadAttachmentFile(innsendingsId, "M3")
 			.assertSuccess()
 			.body
 
@@ -468,7 +468,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			AttachmentDto(attachmentCode = "M4", "Kursbevis", OpplastingsStatusDto.SendesAvAndre),
 			AttachmentDto(attachmentCode = "M5", "Leiekontrakt", OpplastingsStatusDto.SendSenere),
 		)
-		val submissionResponse = api.submitDigitalApplication(soknad, attachments, bruker = affectedUser)
+		val submissionResponse = testApi!!.submitDigitalApplication(soknad, attachments, bruker = affectedUser)
 			.assertSuccess()
 			.body
 
@@ -505,7 +505,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		val ettersendingsId = slotSoknads.last().innsendingsid
 		assertNotNull(ettersendingsId)
 		assertEquals(submissionResponse.ettersendingsId?.toString(), ettersendingsId)
-		api.getSoknadSendinn(ettersendingsId).assertSuccess().body.let {
+		testApi!!.getSoknadSendinn(ettersendingsId).assertSuccess().body.let {
 			assertEquals(SoknadsStatusDto.Opprettet, it.status)
 			assertEquals(4, it.vedleggsListe.size)
 
@@ -572,19 +572,19 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			.medHoveddokumentVariant(hoveddokumentVariant)
 			.build()
 
-		val soknad = api.createSoknad(skjemaDto)
+		val soknad = testApi!!.createSoknad(skjemaDto)
 			.assertSuccess()
 			.body
 		val innsendingsId = soknad.innsendingsId!!
 
-		val fileM2part1 = api.uploadAttachmentFile(innsendingsId, "M2")
+		val fileM2part1 = testApi!!.uploadAttachmentFile(innsendingsId, "M2")
 			.assertSuccess()
 			.body
-		val fileM2part2 = api.uploadAttachmentFile(innsendingsId, "M2")
+		val fileM2part2 = testApi!!.uploadAttachmentFile(innsendingsId, "M2")
 			.assertSuccess()
 			.body
 
-		val fileM3 = api.uploadAttachmentFile(innsendingsId, "M3")
+		val fileM3 = testApi!!.uploadAttachmentFile(innsendingsId, "M3")
 			.assertSuccess()
 			.body
 
@@ -604,7 +604,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			AttachmentDto(attachmentCode = "M4", "Kursbevis", OpplastingsStatusDto.SendesAvAndre),
 			AttachmentDto(attachmentCode = "M5", "Leiekontrakt", OpplastingsStatusDto.SendSenere),
 		)
-		val submissionResponse = api.submitDigitalApplication(soknad, attachments)
+		val submissionResponse = testApi!!.submitDigitalApplication(soknad, attachments)
 			.assertSuccess()
 			.body
 
@@ -612,7 +612,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		assertEquals(4, submissionResponse.attachments?.size)
 		assertTrue(submissionResponse.mainDocumentFileId != null)
 
-		val submissionRespons2e = api.submitDigitalApplication(soknad, attachments)
+		val submissionRespons2e = testApi!!.submitDigitalApplication(soknad, attachments)
 			.assertClientError()
 			.errorBody.let {
 				assertEquals("illegalAction.applicationSentInOrDeleted", it.errorCode)
@@ -641,12 +641,12 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			.medHoveddokumentVariant(hoveddokumentVariant)
 			.build()
 
-		val soknad = api.createSoknad(skjemaDto)
+		val soknad = testApi!!.createSoknad(skjemaDto)
 			.assertSuccess()
 			.body
 		val innsendingsId = soknad.innsendingsId!!
 
-		val fileM2 = api.uploadAttachmentFile(innsendingsId, "M2")
+		val fileM2 = testApi!!.uploadAttachmentFile(innsendingsId, "M2")
 			.assertSuccess()
 			.body
 
@@ -658,7 +658,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 				fileIds = listOf(fileM2.id)
 			),
 		)
-		val submissionResponse = api.submitDigitalApplication(
+		val submissionResponse = testApi!!.submitDigitalApplication(
 			soknad,
 			attachments,
 			mainDocumentAltPath = mainDocumentAltPath
@@ -727,7 +727,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		// verify fetching of files from soknadsarkiverer
 		innsendteDokumenter.forEach { submittedAttachment ->
 			val attachmentUuid = submittedAttachment.uuid!!
-			val files = api.hentInnsendteFiler(innsendingsId, listOf(attachmentUuid))
+			val files = testApi!!.hentInnsendteFiler(innsendingsId, listOf(attachmentUuid))
 				.assertSuccess()
 				.body
 			assertEquals(
@@ -751,14 +751,14 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 	fun testNologinApplicationWithAttachmentFilesCopiedToDb() {
 		val innsendingsId = UUID.randomUUID().toString()
 
-		val fileM2part1 = api.uploadNologinFileV2(innsendingsId, "M2")
+		val fileM2part1 = testApi!!.uploadNologinFileV2(innsendingsId, "M2")
 			.assertSuccess()
 			.body
-		val fileM2part2 = api.uploadNologinFileV2(innsendingsId, "M2")
+		val fileM2part2 = testApi!!.uploadNologinFileV2(innsendingsId, "M2")
 			.assertSuccess()
 			.body
 
-		val fileM3 = api.uploadNologinFileV2(innsendingsId, "M3")
+		val fileM3 = testApi!!.uploadNologinFileV2(innsendingsId, "M3")
 			.assertSuccess()
 			.body
 
@@ -782,7 +782,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			.medVedlegg(listOf(vedleggM2, vedleggM3))
 			.build()
 
-		val kvittering = api.sendInnNologinSoknad(skjemaDto)
+		val kvittering = testApi!!.sendInnNologinSoknad(skjemaDto)
 			.assertSuccess()
 			.body
 
@@ -833,7 +833,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		// verify fetching of files from soknadsarkiverer
 		innsendteDokumenter.forEach { submittedAttachment ->
 			val attachmentUuid = submittedAttachment.uuid!!
-			val files = api.hentInnsendteFiler(innsendingsId, listOf(attachmentUuid))
+			val files = testApi!!.hentInnsendteFiler(innsendingsId, listOf(attachmentUuid))
 				.assertSuccess()
 				.body
 			assertEquals(
@@ -853,7 +853,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		}
 
 		// verify fetching of file with unknown uuid
-		val filesUnknownAttachment = api.hentInnsendteFiler(innsendingsId, listOf(UUID.randomUUID().toString()))
+		val filesUnknownAttachment = testApi!!.hentInnsendteFiler(innsendingsId, listOf(UUID.randomUUID().toString()))
 			.assertSuccess()
 			.body
 		assertEquals(1, filesUnknownAttachment.size)
@@ -867,14 +867,14 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 
 		val innsendingsId = UUID.randomUUID().toString()
 
-		val fileM2part1 = api.uploadNologinFileV2(innsendingsId, "M2")
+		val fileM2part1 = testApi!!.uploadNologinFileV2(innsendingsId, "M2")
 			.assertSuccess()
 			.body
-		val fileM2part2 = api.uploadNologinFileV2(innsendingsId, "M2")
+		val fileM2part2 = testApi!!.uploadNologinFileV2(innsendingsId, "M2")
 			.assertSuccess()
 			.body
 
-		val fileM3 = api.uploadNologinFileV2(innsendingsId, "M3")
+		val fileM3 = testApi!!.uploadNologinFileV2(innsendingsId, "M3")
 			.assertSuccess()
 			.body
 
@@ -894,7 +894,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			AttachmentDto(attachmentCode = "M4", "Kursbevis", OpplastingsStatusDto.SendesAvAndre),
 			AttachmentDto(attachmentCode = "M5", "Leiekontrakt", OpplastingsStatusDto.SendSenere),
 		)
-		val submissionResponse = api.submitNologinApplication(
+		val submissionResponse = testApi!!.submitNologinApplication(
 			innsendingsId = innsendingsId,
 			formNumber = skjemanr,
 			title = skjematittel,
@@ -964,7 +964,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		// verify fetching of files from soknadsarkiverer
 		innsendteDokumenter.forEach { submittedAttachment ->
 			val attachmentUuid = submittedAttachment.uuid!!
-			val files = api.hentInnsendteFiler(innsendingsId, listOf(attachmentUuid))
+			val files = testApi!!.hentInnsendteFiler(innsendingsId, listOf(attachmentUuid))
 				.assertSuccess()
 				.body
 			assertEquals(
@@ -984,7 +984,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		}
 
 		// verify fetching of file with unknown uuid
-		val filesUnknownAttachment = api.hentInnsendteFiler(innsendingsId, listOf(UUID.randomUUID().toString()))
+		val filesUnknownAttachment = testApi!!.hentInnsendteFiler(innsendingsId, listOf(UUID.randomUUID().toString()))
 			.assertSuccess()
 			.body
 		assertEquals(1, filesUnknownAttachment.size)
@@ -1002,9 +1002,9 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 		val jobs = (1..threads).map { iterasjon ->
 			async(Dispatchers.IO) {
 				when (iterasjon) {
-					1 -> callResponses.put("submitDigitalApplication", api.submitDigitalApplication(skjemaDto, attachments).statusCode)
+					1 -> callResponses.put("submitDigitalApplication", testApi!!.submitDigitalApplication(skjemaDto, attachments).statusCode)
 					2 -> {
-						callResponses.put("deleteSoknad", api.deleteSoknad(skjemaDto.innsendingsId!!)?.statusCode ?: HttpStatusCode.valueOf(400))
+						callResponses.put("deleteSoknad", testApi!!.deleteSoknad(skjemaDto.innsendingsId!!)?.statusCode ?: HttpStatusCode.valueOf(400))
 					}
 				}
 			}
@@ -1036,19 +1036,19 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			.medHoveddokumentVariant(hoveddokumentVariant)
 			.build()
 
-		val soknad = api.createSoknad(skjemaDto)
+		val soknad = testApi!!.createSoknad(skjemaDto)
 			.assertSuccess()
 			.body
 		val innsendingsId = soknad.innsendingsId!!
 
-		val fileM2part1 = api.uploadAttachmentFile(innsendingsId, "M2")
+		val fileM2part1 = testApi!!.uploadAttachmentFile(innsendingsId, "M2")
 			.assertSuccess()
 			.body
-		val fileM2part2 = api.uploadAttachmentFile(innsendingsId, "M2")
+		val fileM2part2 = testApi!!.uploadAttachmentFile(innsendingsId, "M2")
 			.assertSuccess()
 			.body
 
-		val fileM3 = api.uploadAttachmentFile(innsendingsId, "M3")
+		val fileM3 = testApi!!.uploadAttachmentFile(innsendingsId, "M3")
 			.assertSuccess()
 			.body
 
@@ -1068,7 +1068,7 @@ class InnsendingApiIntegrationTest : ApplicationTest() {
 			AttachmentDto(attachmentCode = "M4", "Kursbevis", OpplastingsStatusDto.SendesAvAndre),
 			AttachmentDto(attachmentCode = "M5", "Leiekontrakt", OpplastingsStatusDto.SendSenere),
 		)
-		return Pair(api.getSoknad(innsendingsId)?.body, attachments)
+		return Pair(testApi!!.getSoknad(innsendingsId)?.body, attachments)
 
 	}
 
