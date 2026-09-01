@@ -134,6 +134,18 @@ class RepositoryUtils(
 		throw BackendErrorException("Feil ved sletting av søknad ${dokumentSoknadDto.innsendingsId}", ex)
 	}
 
+
+	fun updateStatusAvsenderAndAffecteduser(soknadDbData: SoknadDbData): SoknadDbData {
+		try {
+			lagreHendelse(soknadDbData)
+			soknadRepository.updateStatusAvsenderAndAffecteduser(soknadDbData.status, soknadDbData.avsender, soknadDbData.affecteduser, soknadDbData.innsendingsid)
+			logger.info("Lagret søknad med status: ${soknadDbData.status}, skjemanr: ${soknadDbData.skjemanr}, innsendingsId: ${soknadDbData.innsendingsid} type: ${soknadDbData.visningstype}, applikasjon: ${soknadDbData.applikasjon}")
+			return soknadDbData
+		} catch (ex: Exception) {
+			throw BackendErrorException("Feil i lagring av søknad ${soknadDbData.tittel}", ex)
+		}
+	}
+
 	fun oppdaterEndretDato(soknadsId: Long) = try {
 		soknadRepository.updateEndretDato(soknadsId, LocalDateTime.now())
 	} catch (ex: Exception) {

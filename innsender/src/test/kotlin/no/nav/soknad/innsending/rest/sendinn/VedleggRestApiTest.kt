@@ -4,7 +4,7 @@ import io.mockk.clearAllMocks
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.utils.Api
+import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoTestBuilder
@@ -14,8 +14,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 
@@ -24,19 +23,16 @@ class VedleggRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
-	@Autowired
-	lateinit var restTemplate: TestRestTemplate
+	@LocalServerPort
+	var serverPort: Int = 0
 
-	@Value("\${server.port}")
-	var serverPort: Int? = 9064
-
-	var testApi: Api? = null
-	val api: Api
+	var testApi: ApiWebClient? = null
+	val api: ApiWebClient
 		get() = testApi!!
 
 	@BeforeEach
 	fun setup() {
-		testApi = Api(restTemplate, serverPort!!, mockOAuth2Server)
+		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
 	}
 
@@ -55,7 +51,7 @@ class VedleggRestApiTest : ApplicationTest() {
 
 		val postVedleggDto = PostVedleggDto("Nytt vedlegg")
 		val postVedleggRequestEntity = HttpEntity(postVedleggDto, Hjelpemetoder.createHeaders(token))
-		val postVedleggResponse = restTemplate.exchange(
+		val postVedleggResponse = restTestClient.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${opprettetSoknadDto.innsendingsId}/vedlegg", HttpMethod.POST,
 			postVedleggRequestEntity, VedleggDto::class.java
 		)
@@ -77,7 +73,7 @@ class VedleggRestApiTest : ApplicationTest() {
 		val vedleggDto = opprettetSoknadDto.vedleggsListe.first { !it.erHoveddokument }
 		val patchVedleggDto = PatchVedleggDto("Endret tittel", OpplastingsStatusDto.SendesAvAndre, opplastingsValgKommentarLedetekst = "Hvem sender inn dokumentasjonen", opplastingsValgKommentar = "Sendes av min fastlege")
 		val patchRequestEntity = HttpEntity(patchVedleggDto, Hjelpemetoder.createHeaders(token))
-		val patchResponse = restTemplate.exchange(
+		val patchResponse = restTestClient.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${opprettetSoknadDto.innsendingsId}/vedlegg/${vedleggDto.id}",
 			HttpMethod.PATCH,
 			patchRequestEntity,
@@ -108,7 +104,7 @@ class VedleggRestApiTest : ApplicationTest() {
 		val vedleggsTittel = "Nytt vedlegg"+"\u0000"
 		val postVedleggDto = PostVedleggDto(vedleggsTittel)
 		val postVedleggRequestEntity = HttpEntity(postVedleggDto, Hjelpemetoder.createHeaders(token))
-		val postVedleggResponse = restTemplate.exchange(
+		val postVedleggResponse = restTestClient.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${opprettetSoknadDto.innsendingsId}/vedlegg", HttpMethod.POST,
 			postVedleggRequestEntity, VedleggDto::class.java
 		)

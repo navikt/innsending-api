@@ -18,8 +18,7 @@ import no.nav.soknad.innsending.util.soknaddbdata.getSkjemaPath
 import no.nav.soknad.innsending.util.soknaddbdata.isEttersending
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.retry.annotation.Backoff
-import org.springframework.retry.annotation.Retryable
+import org.springframework.resilience.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.web.util.UriComponentsBuilder
 import java.time.LocalDateTime
@@ -49,11 +48,10 @@ class BrukernotifikasjonPublisher(
 	)
 
 	@Retryable(
-		maxAttempts = 5,
-		backoff = Backoff(
-			delay = 5000,
-			multiplier = 2.0
-		)
+		maxRetries = 5,
+		delay = 5000,
+		multiplier = 2.0,
+		jitter = 2
 	)
 	fun createNotification(inputSoknad: SoknadDbData, opts: NotificationOptions = NotificationOptions()): Boolean {
 		if (!notifikasjonConfig.publisereEndringer) {
@@ -103,11 +101,10 @@ class BrukernotifikasjonPublisher(
 	}
 
 	@Retryable(
-		maxAttempts = 5,
-		backoff = Backoff(
-			delay = 5000,
-			multiplier = 2.0
-		)
+		maxRetries = 5,
+		delay = 5000,
+		multiplier = 2.0,
+		jitter = 2
 	)
 	fun closeNotification(soknad: SoknadDbData): Boolean {
 		if (!notifikasjonConfig.publisereEndringer) {

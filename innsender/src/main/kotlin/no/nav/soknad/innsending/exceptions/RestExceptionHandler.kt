@@ -117,7 +117,7 @@ class RestExceptionHandler {
 	fun unauthenticatedHandler(
 		request: HttpServletRequest,
 		exception: JwtTokenMissingException
-	): ResponseEntity<RestErrorResponseDto?>? {
+	): ResponseEntity<RestErrorResponseDto>? {
 		logger.warn("Autentisering feilet ved kall til " + request.requestURI + ": " + exception.messageForLog, exception)
 
 		return ResponseEntity(
@@ -134,7 +134,7 @@ class RestExceptionHandler {
 	fun unauthorizedExceptionHandler(
 		request: HttpServletRequest,
 		exception: JwtTokenUnauthorizedException
-	): ResponseEntity<RestErrorResponseDto?>? {
+	): ResponseEntity<RestErrorResponseDto>? {
 		logger.warn("Autorisering feilet ved kall til " + request.requestURI + ": " + exception.message, exception)
 
 		return ResponseEntity(
@@ -150,7 +150,7 @@ class RestExceptionHandler {
 	fun handleConfigVerificationException(
 		request: HttpServletRequest,
 		exception: ConfigVerificationException,
-	): ResponseEntity<RestErrorResponseDto?>? {
+	): ResponseEntity<RestErrorResponseDto>? {
 		logger.warn("Kall til ${request.requestURI} avvist (${exception.configuration.key}): ${exception.message}", exception)
 
 		return ResponseEntity(
@@ -166,7 +166,7 @@ class RestExceptionHandler {
 	fun unsupportedOperationException(
 		request: HttpServletRequest,
 		exception: UnsupportedOperationException
-	): ResponseEntity<RestErrorResponseDto?>? {
+	): ResponseEntity<RestErrorResponseDto>? {
 		logger.warn("Kall til ${request.requestURI} ikke støttet: ${exception.messageForLog}", exception)
 
 		return ResponseEntity(
@@ -182,7 +182,7 @@ class RestExceptionHandler {
 	fun storageExceptionHandler(
 		request: HttpServletRequest,
 		exception: StorageException
-	): ResponseEntity<RestErrorResponseDto?>? {
+	): ResponseEntity<RestErrorResponseDto>? {
 		logger.error("Feil ved kall til ${request.requestURI}: ${exception.message}", exception)
 
 		return ResponseEntity(

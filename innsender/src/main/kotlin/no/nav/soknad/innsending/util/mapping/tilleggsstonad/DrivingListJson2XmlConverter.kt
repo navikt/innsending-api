@@ -76,6 +76,7 @@ fun convertToUtgiftsdager(expences: List<JsonDailyExpences>?): List<Utgiftsdager
 	}
 }
 
+
 fun convertToXmlGregorianWithTimeZone(dateString: String): XMLGregorianCalendar {
 	return DatatypeFactory.newInstance()
 		.newXMLGregorianCalendar(convertToDateStringWithTimeZone(dateString))
