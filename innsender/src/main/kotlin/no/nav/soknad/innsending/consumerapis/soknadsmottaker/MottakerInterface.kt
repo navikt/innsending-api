@@ -10,9 +10,9 @@ interface MottakerInterface {
 
 	@Retryable(
 		maxRetries = 3,
-		delay = 500,
-		multiplier = 2.0,
-		jitter = 2
+		delay = 1000,
+		multiplier = 3.0,
+		jitter = 10
 	)
 	fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggsListe: List<VedleggDto>, avsenderDto: AvsenderDto, brukerDto: BrukerDto? = null)
 }
