@@ -12,45 +12,79 @@ fungerer.
 
 ### Bygge lokalt
 
-Følgende må være installert:
+Følgende må være installert for å bygge prosjektet:
 
 - Java 21
 - Maven 3.9+
 - Docker (pga. at testene bruker [testcontainers](https://testcontainers.com/))
 
-Du må konfigurere maven med GitHub access token for å kunne laste ned Nav-artifakter fra GitHub Packages,
-f.eks. i `.m2/settings.xml`:
-
+Prosjektet bruker [mise](https://mise.jdx.dev/) til å styre riktige Java- og Maven-versjoner, definert
+i `mise.toml`.
+Om du ikke har mise installert på maskinen fra før, installer på rot med brew.
 ```
-<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
-	<servers>
-		<server>
-			<id>github</id>
-			<username>${DITT_GITHUB_BRUKERNAVN}</username>
-			<password>${DITT_TOKEN}</password>
-		</server>
-	</servers>
-</settings>
+$ brew install mise
 ```
 
-Kjør `mvn clean install` for å bygge prosjektet og kjøre tester.
+Naviger deretter til prosjektmappen for dette repoet på maskinen og installer mise i prosjektet:
 
-### Kjøre lokalt
+```
+$ mise install
+```
+
+Dette installerer Java 21 og Maven 3.9 lokalt for prosjektet. Aktiver mise i shellet ditt
+```
+$ mise activate <shell>
+```
+Se [installasjonsguiden](https://mise.jdx.dev/installing-mise.html) slik at
+`java`/`mvn` peker på versjonene fra `mise.toml` når du står i prosjektmappen.
+
+
+Du må være autentisert mot Github for å kunne laste ned Nav-artifakter fra Github Packages, se Nav's dokumentasjon for
+[Tilgang til Github](https://navikt.github.io/ny-i-nav/en-nais-device.html):
+1. Installer gh-cli: github.com/cli
+2. Logg inn og autentiser mot Github
+   $ gh auth login
+3. Konfigurer git til å bruke gh-cli for autentisering.
+   $ gh auth setup-git
+
+
+### Kjøre lokalt i IntelliJ
 
 Sett Spring profilen til `local` og kjør `InnsendingApiApplication`. En embedded Postgres
 database ([opentable](https://github.com/opentable/otj-pg-embedded)) spinnes opp som en docker
 container og kjører Flyway migrasjonene.
 
-### Docker Compose
+### Kjøre lokalt i terminal
 
+Container-runtimen kjøres med [Colima](https://github.com/abiosoft/colima) istedenfor Docker Desktop.
+
+Om du ikke har Colima, Docker og Docker-Compose installert fra før:
+```
+$ brew install colima docker docker-compose
+```
+
+Start container runtimen med Colima:
+```
+$ colima start
+```
+
+For å bygge prosjektet og kjøre testene:
+```
+$ mvn clean install
+```
+
+#### Jobbe lokalt
 En effektiv måte å jobbe lokalt på er å kjøre opp Postgres og Google Storage lokalt med Docker Compose
-(`docker compose up -d db cloud-storage`), og så kjøre innsending-api i Intellij med Spring profilen
+```
+$ docker compose up -d db cloud-storage
+```
+og så kjøre innsending-api i Intellij med Spring profilen
 satt til `docker` og miljøvariabel `DATABASE_PORT=5450`.
 
 Selve applikasjonen innsending-api kan også kjøres lokalt med Docker Compose:
 
 ```
-docker compose up --build
+$ docker compose up --build
 ```
 
 Vær oppmerksom på at dette er ganske tidkrevende ved første kjøring siden den laster ned alle dependencies.
