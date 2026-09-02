@@ -22,18 +22,18 @@ Prosjektet bruker [mise](https://mise.jdx.dev/) til å styre riktige Java- og Ma
 i `mise.toml`.
 Om du ikke har mise installert på maskinen fra før, installer på rot med brew.
 ```
-$ brew install mise
+brew install mise
 ```
 
 Naviger deretter til prosjektmappen for dette repoet på maskinen og installer mise i prosjektet:
 
 ```
-$ mise install
+mise install
 ```
 
 Dette installerer Java 21 og Maven 3.9 lokalt for prosjektet. Aktiver mise i shellet ditt
 ```
-$ mise activate <shell>
+mise activate <shell>
 ```
 Se [installasjonsguiden](https://mise.jdx.dev/installing-mise.html) slik at
 `java`/`mvn` peker på versjonene fra `mise.toml` når du står i prosjektmappen.
@@ -60,23 +60,23 @@ Container-runtimen kjøres med [Colima](https://github.com/abiosoft/colima) iste
 
 Om du ikke har Colima, Docker og Docker-Compose installert fra før:
 ```
-$ brew install colima docker docker-compose
+brew install colima docker docker-compose
 ```
 
 Start container runtimen med Colima:
 ```
-$ colima start
+colima start
 ```
 
 For å bygge prosjektet og kjøre testene:
 ```
-$ mvn clean install
+mvn clean install
 ```
 
 #### Jobbe lokalt
 En effektiv måte å jobbe lokalt på er å kjøre opp Postgres og Google Storage lokalt med Docker Compose
 ```
-$ docker compose up -d db cloud-storage
+docker compose up -d db cloud-storage
 ```
 og så kjøre innsending-api i Intellij med Spring profilen
 satt til `docker` og miljøvariabel `DATABASE_PORT=5450`.
@@ -84,7 +84,7 @@ satt til `docker` og miljøvariabel `DATABASE_PORT=5450`.
 Selve applikasjonen innsending-api kan også kjøres lokalt med Docker Compose:
 
 ```
-$ docker compose up --build
+docker compose up --build
 ```
 
 Vær oppmerksom på at dette er ganske tidkrevende ved første kjøring siden den laster ned alle dependencies.
