@@ -25,6 +25,88 @@ spring:
     validateOnMigrate: true
     validateMigrationNaming: true
 
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Spring Boot does not support auto-configuration with multiple issuers directly. Configured manually, see bean securityFilterChain.
+      client:
+        registration:
+          tokenx-safselvbetjening:
+            provider: tokenx
+            authorization-grant-type: urn:ietf:params:oauth:grant-type:token-exchange
+            client-authentication-method: private_key_jwt
+            client-id: "dev-gcp:team-soknad:innsending-api"
+            client-jwk: src/test/resources/tokenx-jwk.json
+            scope: dummyscope
+
+          saf-maskintilmaskin:
+            provider: azuread
+            authorization-grant-type: client_credentials
+            client-authentication-method: private_key_jwt
+            client-id: "dev-gcp:team-soknad:innsending-api"
+            client-jwk: src/test/resources/tokenx-jwk.json
+            scope: dummyscope
+
+          tokenx-pdl:
+            provider: tokenx
+            authorization-grant-type: urn:ietf:params:oauth:grant-type:token-exchange
+            client-authentication-method: private_key_jwt
+            client-id: "dev-gcp:team-soknad:innsending-api"
+            client-jwk: src/test/resources/tokenx-jwk.json
+            scope: dummyscope
+
+          soknadsmottaker:
+            provider: azuread
+            authorization-grant-type: client_credentials
+            client-id: "dev-gcp:team-soknad:innsending-api"
+            client-secret: "hemmelig"
+            scope: dummyscope
+
+          kontoregister:
+            provider: tokenx
+            grant-type: urn:ietf:params:oauth:grant-type:token-exchange
+            client-authentication-method: private_key_jwt
+            client-id: "dev-gcp:team-soknad:innsending-api"
+            client-jwk: src/test/resources/tokenx-jwk.json
+            scope: dummyscope
+
+          kodeverk:
+            provider: azuread
+            authorization-grant-type: client_credentials
+            client-authentication-method: private_key_jwt
+            client-id: "dev-gcp:team-soknad:innsending-api"
+            client-jwk: src/test/resources/tokenx-jwk.json
+            scope: dummyscope
+
+          arena:
+            provider: tokenx
+            grant-type: urn:ietf:params:oauth:grant-type:token-exchange
+            client-authentication-method: private_key_jwt
+            client-auth-method: private_key_jwt
+            client-id: "dev-gcp:team-soknad:innsending-api"
+            client-jwk: src/test/resources/tokenx-jwk.json
+            scope: dummyscope
+
+        provider:
+          azuread:
+            token-uri: http://localhost:${mock-oauth2-server.port}/azuread/token
+          tokenx:
+            token-uri: http://localhost:${mock-oauth2-server.port}/tokenx/token
+
+auth:
+  issuers:
+    azuread:
+      issuer-uri: http://localhost:${mock-oauth2-server.port}/azuread
+      accepted-audience: aud-localhost
+      jwk-set-uri: http://localhost:${mock-oauth2-server.port}/azuread/.well-known/openid-configuration
+    tokenx:
+      issuer-uri: http://localhost:${mock-oauth2-server.port}/tokenx
+      accepted-audience: aud-localhost
+      jwk-set-uri: http://localhost:${mock-oauth2-server.port}/tokenx/.well-known/openid-configuration
+
+
 bidrag_applikasjon: 1
 
 management:
