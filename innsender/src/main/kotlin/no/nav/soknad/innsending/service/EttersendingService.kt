@@ -106,6 +106,7 @@ class EttersendingService(
 		}
 		val operation = InnsenderOperation.OPPRETT.name
 		try {
+			val nyesteSoknadDb = repo.hentSoknadDb(nyesteSoknad.innsendingsId!!)
 			logger.debug("Skal opprette ettersendingssøknad basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
 				"Status for vedleggene til original søknad ${
 					nyesteSoknad.vedleggsListe.map
@@ -128,7 +129,8 @@ class EttersendingService(
 				?: nyesteSoknad.endretDato ?: nyesteSoknad.opprettetDato,
 				fristForEttersendelse = nyesteSoknad.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 				ernavopprettet = nyesteSoknad.erNavOpprettet ?: false,
-				affectedUser = repo.hentSoknadDb(nyesteSoknad.innsendingsId!!).affecteduser
+				avsender = nyesteSoknadDb.avsender,
+				affectedUser = nyesteSoknadDb.affecteduser
 			)
 
 			// Lagre vedlegg i DB

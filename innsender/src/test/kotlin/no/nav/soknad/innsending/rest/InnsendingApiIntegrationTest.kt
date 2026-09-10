@@ -421,11 +421,15 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 
 
 	@Test
-	fun testAffectedUserSettesNårInnloggetBukerIkkeLikBrukerISubmission() {
+	fun `automatic subsequent submission preserves affected user and sender`() {
 		val skjemanr = "NAV 10-07.54"
 		val skjematittel = "Søknad om servicehund"
 		val affectedUser = "01011511621"
-		val loggedInUser = "12345678901"
+		val avsender = AvsenderDto(
+			id = "123456789",
+			idType = AvsenderDto.IdType.ORGNR,
+			navn = "Representing organization",
+		)
 		val hoveddokument =
 			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokument(skjemanr, withFile = false).build()
 		val hoveddokumentVariant =
@@ -468,7 +472,12 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 			AttachmentDto(attachmentCode = "M4", "Kursbevis", OpplastingsStatusDto.SendesAvAndre),
 			AttachmentDto(attachmentCode = "M5", "Leiekontrakt", OpplastingsStatusDto.SendSenere),
 		)
-		val submissionResponse = testApi!!.submitDigitalApplication(soknad, attachments, bruker = affectedUser)
+		val submissionResponse = testApi!!.submitDigitalApplication(
+			soknad,
+			attachments,
+			bruker = affectedUser,
+			avsender = avsender,
+		)
 			.assertSuccess()
 			.body
 
@@ -505,7 +514,8 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		val ettersendingsId = slotSoknads.last().innsendingsid
 		assertNotNull(ettersendingsId)
 		assertEquals(submissionResponse.ettersendingsId?.toString(), ettersendingsId)
-		testApi!!.getSoknadSendinn(ettersendingsId).assertSuccess().body.let {
+		val ettersending = testApi!!.getSoknadSendinn(ettersendingsId).assertSuccess().body
+		ettersending.let {
 			assertEquals(SoknadsStatusDto.Opprettet, it.status)
 			assertEquals(4, it.vedleggsListe.size)
 
@@ -529,32 +539,38 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		val slotCloseSoknads = mutableListOf<SoknadDbData>()
 		verify(timeout = 50, exactly = 1) { brukernotifikasjonPublisher.closeNotification(capture(slotCloseSoknads)) }
 
+		val m5Vedlegg = ettersending.vedleggsListe.first { it.vedleggsnr == "M5" }
+		testApi!!.uploadFile(ettersendingsId, m5Vedlegg.id!!)
+			.assertHttpStatus(HttpStatus.CREATED)
+		testApi!!.sendInnSoknad(ettersendingsId)
+			.assertSuccess()
+
 		// verify invocation of soknadsmottaker
-		val slotSoknad = slot<DokumentSoknadDto>()
-		val slotVedleggsliste = slot<List<VedleggDto>>()
-		val slotAvsender = slot<AvsenderDto>()
-		val slotBruker = slot<BrukerDto?>()
-		verify(timeout = 5000, exactly = 1) {
+		val capturedSoknader = mutableListOf<DokumentSoknadDto>()
+		val capturedVedlegg = mutableListOf<List<VedleggDto>>()
+		val capturedAvsendere = mutableListOf<AvsenderDto>()
+		val capturedBrukere = mutableListOf<BrukerDto?>()
+		verify(timeout = 5000, exactly = 2) {
 			soknadsmottakerApi.sendInnSoknad(
-				capture(slotSoknad),
-				capture(slotVedleggsliste),
-				capture(slotAvsender),
-				captureNullable(slotBruker)
+				capture(capturedSoknader),
+				capture(capturedVedlegg),
+				capture(capturedAvsendere),
+				captureNullable(capturedBrukere)
 			)
 		}
 
-		assertEquals(innsendingsId, slotSoknad.captured.innsendingsId)
-		val innsendteDokumenter = slotVedleggsliste.captured
+		val originalSubmissionIndex = capturedSoknader.indexOfFirst { it.innsendingsId == innsendingsId }
+		val subsequentSubmissionIndex = capturedSoknader.indexOfFirst { it.innsendingsId == ettersendingsId }
+		assertTrue(originalSubmissionIndex >= 0)
+		assertTrue(subsequentSubmissionIndex >= 0)
+
+		val innsendteDokumenter = capturedVedlegg[originalSubmissionIndex]
 		assertEquals(4, innsendteDokumenter.size)
 		assertTrue(innsendteDokumenter.all { it.mimetype != null })
-		assertEquals(affectedUser, slotBruker.captured?.id)
-
-		val savedSoknad = repo.hentSoknadDb(innsendingsId)
-		assertNotNull(savedSoknad)
-		assertEquals(affectedUser, savedSoknad.affecteduser?.id)
-		assertEquals(loggedInUser, savedSoknad.brukerid)
-		assertEquals(loggedInUser, savedSoknad.avsender?.id)
-		assertEquals(SoknadsStatus.Innsendt, savedSoknad.status)
+		assertEquals(affectedUser, capturedBrukere[originalSubmissionIndex]?.id)
+		assertEquals(avsender, capturedAvsendere[originalSubmissionIndex])
+		assertEquals(affectedUser, capturedBrukere[subsequentSubmissionIndex]?.id)
+		assertEquals(avsender, capturedAvsendere[subsequentSubmissionIndex])
 	}
 
 
