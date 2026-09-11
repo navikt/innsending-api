@@ -1,6 +1,8 @@
 package no.nav.soknad.innsending.rest.sendinn
 
+import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearAllMocks
+import io.mockk.verify
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -9,6 +11,7 @@ import kotlinx.coroutines.awaitAll
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.Hjelpemetoder
@@ -39,6 +42,9 @@ class FilRestApiTest : ApplicationTest() {
 	@Autowired
 	private lateinit var innsenderMetrics: InnsenderMetrics
 
+	@SpykBean
+	private lateinit var filService: FilService
+
 	@LocalServerPort
 	var serverPort: Int = 0
 
@@ -59,6 +65,33 @@ class FilRestApiTest : ApplicationTest() {
 	}
 
 	private val defaultSkjemanr = "NAV 55-00.60"
+
+	@Test
+	fun `missing required file part returns dedicated bad request error`() {
+		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+		val soknadDto = opprettEnSoknad(defaultSkjemanr, "nb_NO", listOf("N6"))
+		val vedleggsId = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }.id!!
+		val multipartWithoutFile = LinkedMultiValueMap<Any, Any>().apply {
+			add("metadata", "missing file")
+		}
+		clearAllMocks()
+
+		val response = restTestClient.exchange(
+			"http://localhost:$serverPort/frontend/v1/soknad/${soknadDto.innsendingsId}/vedlegg/$vedleggsId/fil",
+			HttpMethod.POST,
+			HttpEntity(
+				multipartWithoutFile,
+				Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA)
+			),
+			RestErrorResponseDto::class.java
+		)
+
+		assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+		assertEquals("invalidRequest.missingMultipartPart", response.body?.errorCode)
+		verify(exactly = 0) {
+			filService.lagreFil(any<DokumentSoknadDto>(), any<FilDto>(), any<Boolean>())
+		}
+	}
 
 	@Test
 	fun sjekkOpplastingsstatusEtterOpplastingOgSlettingAvFilPaVedleggTest() {
