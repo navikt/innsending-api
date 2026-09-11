@@ -27,7 +27,7 @@ jobs:
             e2e-m2-${{ runner.os }}-
 
       - name: 'Build archiving components'
-        uses: navikt/archiving-infrastructure/.github/checkout-and-build@main
+        uses: navikt/archiving-infrastructure/.github/checkout-and-build@dependencies/java-25-2026-08
         with:
           component_names: |
             innsending-api@${{ github.head_ref }}
@@ -39,7 +39,7 @@ jobs:
           GITHUB_NAV_TOKEN: ${{ secrets.READER_TOKEN }}
 
       - name: 'Run e2e tests'
-        uses: navikt/archiving-infrastructure/.github/checkout-and-build@main
+        uses: navikt/archiving-infrastructure/.github/checkout-and-build@dependencies/java-25-2026-08
         with:
           component_name: archiving-infrastructure
           sub_directory: system-tests
