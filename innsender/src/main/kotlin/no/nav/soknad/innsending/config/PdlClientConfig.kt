@@ -21,6 +21,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientRequestException
 import reactor.netty.http.client.*
 import reactor.util.retry.Retry
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 
@@ -75,8 +76,15 @@ class PdlClientConfig(
 				next.exchange(request)
 					.retryWhen(
 						Retry.max(maxRetries)
-							.filter { throwable -> throwable is WebClientRequestException && throwable.cause is ReadTimeoutException }
-						.doBeforeRetry { logger.info("Retrying due to read timeout (attempt ${it.totalRetries() + 1}/${maxRetries}), error: ${it.failure().messageForLog}") }
+							.filter { throwable ->
+								throwable is WebClientRequestException &&
+									(throwable.cause is IOException || throwable.cause is ReadTimeoutException)
+							}
+							.doBeforeRetry {
+								logger.info(
+									"Retrying PDL request after transport failure (attempt ${it.totalRetries() + 1}/${maxRetries}), error: ${it.failure().messageForLog}"
+								)
+							}
 					).doOnError { error -> logger.error("Error in call to PDL - ${error.messageForLog}", error) }
 			}
 	)
