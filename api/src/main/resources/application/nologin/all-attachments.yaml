@@ -1,0 +1,16 @@
+delete:
+  summary: Delete all attachments for a no-login application
+  operationId: deleteNologinAttachments
+  security:
+  - azureM2M: []
+
+  parameters:
+    - $ref: "../../common/components.yaml#/components/parameters/InnsendingsId"
+
+  responses:
+    204:
+      description: No Content
+    500:
+      $ref: "../../common/components.yaml#/components/responses/InteralServerError"
+  tags:
+    - nologin-application
