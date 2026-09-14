@@ -60,7 +60,9 @@ class SecurityFilterChainFactory(
 
 	private fun delegatingJwtDecoder(): JwtDecoder =
 		JwtDecoder { token ->
-			val issuer = extractIssuer(token) ?: run {
+			val issuer = extractIssuer(token)
+
+			if (issuer == null) {
 				logger.info("Missing issuer (iss) in token")
 				throw BadCredentialsException("Missing issuer (iss) in token")
 			}

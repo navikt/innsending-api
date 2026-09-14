@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.rest.soknadsveiviser
 
-import no.nav.security.token.support.core.api.ProtectedWithClaims
+//import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.SoknadsveiviserApi
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.EnvQualifier
@@ -16,11 +16,13 @@ import org.springframework.web.bind.annotation.RestController
 // Since soknadsveiviser is deprecated and will be removed, it is separated from the sendinn folder
 @RestController
 @CrossOrigin(maxAge = 3600)
+/*
 @ProtectedWithClaims(
 	issuer = Constants.TOKENX,
 	claimMap = [Constants.CLAIM_ACR_LEVEL_4, Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH],
 	combineWithOr = true
 )
+*/
 class SoknadsveiviserRestApi : SoknadsveiviserApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)

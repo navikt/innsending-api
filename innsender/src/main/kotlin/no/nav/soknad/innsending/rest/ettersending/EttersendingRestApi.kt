@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.rest.ettersending
 
 
-import no.nav.security.token.support.core.api.ProtectedWithClaims
+//import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.EttersendingApi
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.location.UrlHandler
@@ -20,11 +20,13 @@ import org.springframework.web.bind.annotation.RestController
 import java.net.URI
 
 @RestController
+/*
 @ProtectedWithClaims(
 	issuer = Constants.TOKENX,
 	claimMap = [Constants.CLAIM_ACR_LEVEL_4, Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH],
 	combineWithOr = true
 )
+*/
 class EttersendingRestApi(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val ettersendingService: EttersendingService,

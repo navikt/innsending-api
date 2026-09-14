@@ -113,10 +113,12 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 			.build()
 			.toUri()
 
+		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
 		val response = webTestClient.post()
 			.uri(uri)
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), headers).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(token, headers).toSingleValueMap())
 			})
 			.bodyValue(skjemaDto)
 			.exchange()
@@ -740,10 +742,11 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
 			"Nav-Env-Qualifier" to envQualifier.value
 		) else null
+		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 		val response = webTestClient.post()
 			.uri("${baseUrl}/fyllut/v1/lospost")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), headers).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(token, headers).toSingleValueMap())
 			})
 			.bodyValue(opprettLospost)
 			.exchange()

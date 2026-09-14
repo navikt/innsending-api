@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.rest.fyllut
 
-import no.nav.security.token.support.core.api.ProtectedWithClaims
+//import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.NologinSoknadApi
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.KvitteringsDto
@@ -22,10 +22,12 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
+/*
 @ProtectedWithClaims(
 	issuer = Constants.AZURE,
 	claimMap = ["roles=nologin-access"],
 )
+*/
 class NologinSoknadRestApi(
 	private var subjectHandler: SubjectHandlerInterface,
 	val soknadService: SoknadService,

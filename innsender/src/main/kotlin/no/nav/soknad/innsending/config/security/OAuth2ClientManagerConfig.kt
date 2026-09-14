@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.config.security
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
 import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager
 import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
@@ -9,14 +10,24 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
 
 
+// Speiler @Profile-scopet til de reelle klient-konfigurasjonene (PdlClientConfig, SafClientConfig m.fl.):
+// spring.security.oauth2.client.registration.* finnes kun for dev/prod/gcp (og test, se application-test.yml).
+// Uten denne restriksjonen forsøker Spring å opprette denne beanen også under local/docker/endtoend,
+// der ingen registreringer finnes - da feiler autowiring av ClientRegistrationRepository.
+@Profile("test | prod | dev")
 @Configuration
 class OAuth2ClientManagerConfig(
-	private val clientRegistrationRepository: ClientRegistrationRepository,
 	private val tokenExchangeService: TokenExchangeService
 ) {
 
+	// clientRegistrationRepository injiseres som parameter på @Bean-metoden (samme mønster som
+	// RestClientOAuthConfig), ikke som konstruktørfelt. Siden beanen produseres implisitt av
+	// Spring Boots betingede OAuth2ClientAutoConfiguration, klarer ikke IntelliJs "could not
+	// autowire"-inspeksjon å resolve den ved konstruktør-injeksjon - kun ved metode-injeksjon.
 	@Bean
-	fun authorizedClientManager(): OAuth2AuthorizedClientManager {
+	fun authorizedClientManager(
+		clientRegistrationRepository: ClientRegistrationRepository
+	): OAuth2AuthorizedClientManager {
 		// Register support for client_credentials and our custom jwt-bearer flow
 		val provider = OAuth2AuthorizedClientProviderBuilder.builder()
 			.clientCredentials()

@@ -3,8 +3,8 @@ package no.nav.soknad.innsending.service
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import kotlinx.coroutines.runBlocking
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenResponse
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
+//import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenResponse
+//import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.kontoregister.KontoregisterInterface
 import no.nav.soknad.innsending.consumerapis.kontoregister.KontoregisterService
@@ -20,8 +20,10 @@ class PrefillServiceTest : ApplicationTest() {
 	@MockkBean
 	lateinit var subjectHandler: SubjectHandlerInterface
 
+/*
 	@MockkBean
 	lateinit var oauth2TokenService: OAuth2AccessTokenService
+*/
 
 	@MockkBean
 	lateinit var kodeverkService: KodeverkService
@@ -42,7 +44,7 @@ class PrefillServiceTest : ApplicationTest() {
 
 	@BeforeEach
 	fun setup() {
-		every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
+		//every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
 		every { kodeverkService.getPoststed(any()) } answers { postnummerMap[firstArg()] }
 		every { kontoregisterService.getKontonummer() } returns "8361347234732292"
 	}

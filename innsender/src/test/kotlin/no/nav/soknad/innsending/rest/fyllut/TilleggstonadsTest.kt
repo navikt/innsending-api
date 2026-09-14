@@ -3,8 +3,8 @@ package no.nav.soknad.innsending.rest.fyllut
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import no.nav.security.mock.oauth2.MockOAuth2Server
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenResponse
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
+//import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenResponse
+//import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.model.AktivitetEndepunkt
 import no.nav.soknad.innsending.model.MaalgruppeType
@@ -34,8 +34,10 @@ class TilleggstonadsTest : ApplicationTest() {
 		"7318" to "AGDENES",
 	)
 
+/*
 	@MockkBean
 	lateinit var oauth2TokenService: OAuth2AccessTokenService
+*/
 
 	@MockkBean
 	lateinit var kodeverkService: KodeverkService
@@ -58,7 +60,7 @@ class TilleggstonadsTest : ApplicationTest() {
 	@BeforeEach
 	fun setup() {
 		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
-		every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
+		//every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
 		every { kodeverkService.getPoststed(any()) } answers { postnummerMap[firstArg()] }
 	}
 

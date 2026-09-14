@@ -216,7 +216,6 @@ spring:
   security:
     oauth2:
       resourceserver:
-        jwt:
           # Spring Boot does not support auto-configuration with multiple issuers directly. Configured manually, see bean securityFilterChain.
       client:
         registration:
@@ -226,14 +225,12 @@ spring:
             scope: ${SAF_SCOPE}
             client-authentication-method: private_key_jwt
             client-id: ${TOKEN_X_CLIENT_ID}
-            client-jwk: ${TOKEN_X_PRIVATE_JWK}
 
           saf-maskintilmaskin:
             provider: azuread
             authorization-grant-type: client_credentials
             client-authentication-method: private_key_jwt
             client-id: ${AZURE_APP_CLIENT_ID}
-            client-jwk: ${AZURE_APP_JWK}
             scope: ${SAF_SCOPE}
 
           tokenx-pdl:
@@ -241,7 +238,6 @@ spring:
             authorization-grant-type: urn:ietf:params:oauth:grant-type:token-exchange
             client-authentication-method: private_key_jwt
             client-id: ${TOKEN_X_CLIENT_ID}
-            client-jwk: ${TOKEN_X_PRIVATE_JWK}
             scope: ${PDL_SCOPE}
 
           soknadsmottaker:
@@ -253,10 +249,9 @@ spring:
 
           kontoregister:
             provider: tokenx
-            grant-type: urn:ietf:params:oauth:grant-type:token-exchange
+            authorization-grant-type: urn:ietf:params:oauth:grant-type:token-exchange
             client-authentication-method: private_key_jwt
             client-id: ${TOKEN_X_CLIENT_ID}
-            client-jwk: ${TOKEN_X_PRIVATE_JWK}
             scope: ${KONTOREGISTER_SCOPE}
 
           kodeverk:
@@ -264,25 +259,24 @@ spring:
             authorization-grant-type: client_credentials
             client-authentication-method: private_key_jwt
             client-id: ${AZURE_APP_CLIENT_ID}
-            client-jwk: ${AZURE_APP_JWK}
             scope: ${KODEVERK_SCOPE}
 
           arena:
             provider: tokenx
-            grant-type: urn:ietf:params:oauth:grant-type:token-exchange
+            authorization-grant-type: urn:ietf:params:oauth:grant-type:token-exchange
             client-authentication-method: private_key_jwt
-            client-auth-method: private_key_jwt
             client-id: ${TOKEN_X_CLIENT_ID}
-            client-jwk: ${TOKEN_X_PRIVATE_JWK}
             scope: ${ARENA_SCOPE}
 
         provider:
           azuread:
             token-uri: ${AZURE_OPENID_CONFIG_TOKEN_ENDPOINT}
             issuer-uri: ${AZURE_OPENID_CONFIG_ISSUER}
+            jwk-set-uri:  ${AZURE_APP_JWK}
           tokenx:
             token-uri: ${TOKEN_X_TOKEN_ENDPOINT}
             issuer-uri: ${TOKEN_X_ISSUER}
+            jwk-set-uri: ${TOKEN_X_PRIVATE_JWK}
 
 auth:
   issuers:

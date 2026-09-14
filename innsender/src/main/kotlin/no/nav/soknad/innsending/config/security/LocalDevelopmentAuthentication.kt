@@ -11,7 +11,8 @@ import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import java.time.Instant
 
-class LocalDevelopmentAuthentication(
+@Component
+class LocalDevelopmentAuthenticationFactory(
 	@Value("\${auth.issuers.azuread.issuer-uri}") private val azureadIssuer: String,
 ) {
 	fun create(): JwtAuthenticationToken {

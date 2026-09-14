@@ -5,6 +5,9 @@ import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import no.nav.security.token.support.spring.test.MockLoginController
 import no.nav.soknad.innsending.util.Constants.AZURE
+import org.springframework.security.oauth2.jwt.Jwt
+import com.nimbusds.jwt.SignedJWT
+
 
 class TokenGenerator(
 	private val mockOAuth2Server: MockOAuth2Server,
@@ -16,6 +19,19 @@ class TokenGenerator(
 	private val tokenx = "tokenx"
 	private val audience = "aud-localhost"
 	private val expiry = 2 * 3600L
+
+
+	fun createMockJwt(issuer: String, fnr: String = subject, aud: String = audience, navIdent: String? = null): Jwt {
+		return Jwt.withTokenValue("mock-token")
+			.header("alg", "none")
+			.claim("client_id", "application")
+			.claim("iss", issuer)
+			.claim("aud", aud)
+			.claim("sub", fnr)
+			.claim(if (navIdent != null) "NAVident" else "pid", navIdent ?: fnr)
+			.claim("pid", subject)
+			.build()
+	}
 
 	fun lagTokenXToken(fnr: String? = null): String {
 		val pid = fnr ?: subject
@@ -67,6 +83,24 @@ class TokenGenerator(
 			clientId = MockLoginController::class.java.simpleName,
 			tokenCallback = oAuth2TokenCallback
 		).serialize()
+	}
+
+	fun lagAzureM2MSignedToken(roles: List<String> = emptyList()): SignedJWT {
+		val issuerId = AZURE
+		val oAuth2TokenCallback = DefaultOAuth2TokenCallback(
+			issuerId = issuerId,
+			typeHeader = JOSEObjectType.JWT.type,
+			audience = listOf(audience),
+			claims = buildMap {
+				put("roles", listOf("access_as_application").plus(roles))
+			},
+			expiry = expiry
+		)
+		return mockOAuth2Server.issueToken(
+			issuerId = issuerId,
+			clientId = MockLoginController::class.java.simpleName,
+			tokenCallback = oAuth2TokenCallback
+		)
 	}
 
 	fun lagAzureOBOToken(scopes: String? = null, navIdent: String? = null): String {

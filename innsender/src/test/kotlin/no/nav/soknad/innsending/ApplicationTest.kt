@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.RegisterExtension
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
+import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -35,6 +36,12 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @EnableTransactionManagement
 @EnableMockOAuth2Server
 class ApplicationTest() {
+
+	@MockitoBean
+	protected lateinit var azureJwtDecoder: JwtDecoder
+
+	@MockitoBean
+	protected lateinit var tokenxJwtDecoder: JwtDecoder
 
 	@Autowired
 	lateinit var webTestClient: WebTestClient

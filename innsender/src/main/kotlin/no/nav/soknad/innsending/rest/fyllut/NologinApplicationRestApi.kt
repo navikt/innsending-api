@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.rest.fyllut
 
-import no.nav.security.token.support.core.api.ProtectedWithClaims
+//import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.NologinApplicationApi
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.ApplicationSubmissionResponse
@@ -27,10 +27,12 @@ import org.springframework.web.multipart.MultipartFile
 import java.util.UUID
 
 @RestController
+/*
 @ProtectedWithClaims(
 	issuer = Constants.AZURE,
 	claimMap = ["roles=nologin-access"],
 )
+*/
 class NologinApplicationRestApi(
 	private val documentService: DocumentService,
 	private val subjectHandler: SubjectHandlerInterface,

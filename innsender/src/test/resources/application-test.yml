@@ -29,7 +29,6 @@ spring:
   security:
     oauth2:
       resourceserver:
-        jwt:
           # Spring Boot does not support auto-configuration with multiple issuers directly. Configured manually, see bean securityFilterChain.
       client:
         registration:
@@ -38,7 +37,6 @@ spring:
             authorization-grant-type: urn:ietf:params:oauth:grant-type:token-exchange
             client-authentication-method: private_key_jwt
             client-id: "dev-gcp:team-soknad:innsending-api"
-            client-jwk: src/test/resources/tokenx-jwk.json
             scope: dummyscope
 
           saf-maskintilmaskin:
@@ -46,7 +44,6 @@ spring:
             authorization-grant-type: client_credentials
             client-authentication-method: private_key_jwt
             client-id: "dev-gcp:team-soknad:innsending-api"
-            client-jwk: src/test/resources/tokenx-jwk.json
             scope: dummyscope
 
           tokenx-pdl:
@@ -54,7 +51,6 @@ spring:
             authorization-grant-type: urn:ietf:params:oauth:grant-type:token-exchange
             client-authentication-method: private_key_jwt
             client-id: "dev-gcp:team-soknad:innsending-api"
-            client-jwk: src/test/resources/tokenx-jwk.json
             scope: dummyscope
 
           soknadsmottaker:
@@ -66,10 +62,9 @@ spring:
 
           kontoregister:
             provider: tokenx
-            grant-type: urn:ietf:params:oauth:grant-type:token-exchange
+            authorization-grant-type: urn:ietf:params:oauth:grant-type:token-exchange
             client-authentication-method: private_key_jwt
             client-id: "dev-gcp:team-soknad:innsending-api"
-            client-jwk: src/test/resources/tokenx-jwk.json
             scope: dummyscope
 
           kodeverk:
@@ -77,24 +72,22 @@ spring:
             authorization-grant-type: client_credentials
             client-authentication-method: private_key_jwt
             client-id: "dev-gcp:team-soknad:innsending-api"
-            client-jwk: src/test/resources/tokenx-jwk.json
             scope: dummyscope
 
           arena:
             provider: tokenx
-            grant-type: urn:ietf:params:oauth:grant-type:token-exchange
+            authorization-grant-type: urn:ietf:params:oauth:grant-type:token-exchange
             client-authentication-method: private_key_jwt
-            client-auth-method: private_key_jwt
             client-id: "dev-gcp:team-soknad:innsending-api"
-            client-jwk: src/test/resources/tokenx-jwk.json
             scope: dummyscope
 
         provider:
           azuread:
             token-uri: http://localhost:${mock-oauth2-server.port}/azuread/token
+            jwk-set-uri: src/test/resources/tokenx-jwk.json
           tokenx:
             token-uri: http://localhost:${mock-oauth2-server.port}/tokenx/token
-
+            jwk-set-uri: src/test/resources/tokenx-jwk.json
 auth:
   issuers:
     azuread:

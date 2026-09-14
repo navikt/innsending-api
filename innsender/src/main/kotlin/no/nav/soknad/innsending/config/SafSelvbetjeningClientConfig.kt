@@ -1,8 +1,6 @@
 package no.nav.soknad.innsending.config
 
 import com.expediagroup.graphql.client.spring.GraphQLWebClient
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
-import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.CORRELATION_ID
 import no.nav.soknad.innsending.util.Constants.NAV_CONSUMER_ID
@@ -15,6 +13,10 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpHeaders
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
+import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
+import org.springframework.security.oauth2.core.OAuth2AuthorizationException
+import org.springframework.security.oauth2.core.OAuth2Error
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.netty.http.client.HttpClient
 import reactor.netty.http.client.HttpClientRequest
@@ -25,8 +27,7 @@ import reactor.netty.http.client.HttpClientResponse
 @EnableConfigurationProperties(RestConfig::class)
 class SafSelvbetjeningClientConfig(
 	private val restConfig: RestConfig,
-	oauth2Config: ClientConfigurationProperties,
-	private val oAuth2AccessTokenService: OAuth2AccessTokenService,
+	private val authorizedClientManager: OAuth2AuthorizedClientManager,
 	@Value("\${spring.application.name}") private val applicationName: String
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -62,13 +63,25 @@ class SafSelvbetjeningClientConfig(
 				it.header(NAV_CONSUMER_ID, applicationName)
 				it.header(
 					HttpHeaders.AUTHORIZATION,
-					"Bearer ${oAuth2AccessTokenService.getAccessToken(tokenxSafSelvbetjeningClientProperties).access_token}",
+					"Bearer ${hentAccessTokenForSafSelvbetjening()}",
 				)
 			}
 	)
 
-	private val tokenxSafSelvbetjeningClientProperties =
-		oauth2Config.registration["tokenx-safselvbetjening"]
-			?: throw RuntimeException("could not find oauth2 client config for tokenx-safselvbetjening")
+	private fun hentAccessTokenForSafSelvbetjening(): String {
+		val authorizeRequest = OAuth2AuthorizeRequest.withClientRegistrationId("tokenx-safselvbetjening")
+			.build()
+
+		val authorizedClient = authorizedClientManager.authorize(authorizeRequest)
+			?: throw OAuth2AuthorizationException(
+				OAuth2Error(
+					"invalid_token",
+					"Kunne ikke hente access token for klient tokenx-safselvbetjening. Sjekk konfigurasjon og grant-type.",
+					null
+				)
+			)
+
+		return authorizedClient.accessToken.tokenValue
+	}
 
 }

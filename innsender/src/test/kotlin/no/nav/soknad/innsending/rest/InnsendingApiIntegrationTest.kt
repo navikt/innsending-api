@@ -20,6 +20,7 @@ import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.stotteTilBolig
 import no.nav.soknad.innsending.utils.ApiWebClient
+import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoV2TestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
@@ -28,6 +29,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
@@ -65,12 +68,25 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 	fun setup() {
 		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
+/*
 		testApi!!.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on")
 			.assertSuccess()
+*/
+		val mockJwt = TokenGenerator(mockOAuth2Server).createMockJwt("tokenx")
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(mockJwt)
+
+		/*
+		val mockJwtAzure = TokenGenerator(mockOAuth2Server).createMockJwt("azuread")
+		`when`(azureJwtDecoder.decode(anyString())).thenReturn(mockJwtAzure)
+*/
+
 	}
 
 	@Test
 	fun testApplicationWithAttachmentFilesInDb() {
+		val mockJwt = TokenGenerator(mockOAuth2Server).createMockJwt("tokenx")
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(mockJwt)
+
 		val skjemanr = "NAV 10-07.54"
 		val vedleggsnrM2 = "M2"
 		val vedleggsnrM5 = "M5"
@@ -100,6 +116,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 			hoveddokument = hoveddokumentWithFile,
 			vedleggsListe = listOf(vedleggM2, vedleggM5)
 		)
+
 		testApi!!.utfyltSoknad(innsendingsId, updatedSoknad)
 
 		val vedleggsIdM2 = testApi!!.getSoknadSendinn(innsendingsId)
@@ -156,6 +173,8 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		assertEquals(2, hoveddokumentListe.size)
 		assertTrue { hoveddokumentListe.all { it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending } }
 
+		val mockJwtAzure = TokenGenerator(mockOAuth2Server).createMockJwt("azuread")
+		`when`(azureJwtDecoder.decode(anyString())).thenReturn(mockJwtAzure)
 		// verify fetching of files from soknadsarkiverer
 		innsendteDokumenter.forEach { submittedAttachment ->
 			val attachmentUuid = submittedAttachment.uuid!!
@@ -181,6 +200,9 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 
 	@Test
 	fun testTilleggstotteApplicationWithAttachmentFilesInDb() {
+
+		val mockJwt = TokenGenerator(mockOAuth2Server).createMockJwt("tokenx")
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(mockJwt)
 		val skjemanr = stotteTilBolig
 		val skjematittel = "Tilleggsstønad - støtte til bolig og overnatting"
 		val hoveddokument =
@@ -242,6 +264,8 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		assertEquals(Mimetype.applicationSlashXml, variant.mimetype)
 
 		// verify fetching of files from soknadsarkiverer
+		val mockJwtAzure = TokenGenerator(mockOAuth2Server).createMockJwt("azuread")
+		`when`(azureJwtDecoder.decode(anyString())).thenReturn(mockJwtAzure)
 		innsendteDokumenter.forEach { submittedAttachment ->
 			val attachmentUuid = submittedAttachment.uuid!!
 			val files = testApi!!.hentInnsendteFiler(innsendingsId, listOf(attachmentUuid))
@@ -278,6 +302,8 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 			.medHoveddokumentVariant(hoveddokumentVariant)
 			.build()
 
+		val mockJwt = TokenGenerator(mockOAuth2Server).createMockJwt("tokenx")
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(mockJwt)
 		val soknad = testApi!!.createSoknad(skjemaDto)
 			.assertSuccess()
 			.body
@@ -389,6 +415,8 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		assertTrue { hoveddokumentListe.all { it.opplastingsStatus == OpplastingsStatusDto.LastetOpp || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending } }
 
 		// verify fetching of files from soknadsarkiverer
+		val mockJwtAzure = TokenGenerator(mockOAuth2Server).createMockJwt("azuread")
+		`when`(azureJwtDecoder.decode(anyString())).thenReturn(mockJwtAzure)
 		innsendteDokumenter.forEach { submittedAttachment ->
 			val attachmentUuid = submittedAttachment.uuid!!
 			val files = testApi!!.hentInnsendteFiler(innsendingsId, listOf(attachmentUuid))
@@ -725,6 +753,8 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		assertEquals(Mimetype.applicationSlashXml, variant.mimetype)
 
 		// verify fetching of files from soknadsarkiverer
+		val mockJwtAzure = TokenGenerator(mockOAuth2Server).createMockJwt("azuread")
+		`when`(azureJwtDecoder.decode(anyString())).thenReturn(mockJwtAzure)
 		innsendteDokumenter.forEach { submittedAttachment ->
 			val attachmentUuid = submittedAttachment.uuid!!
 			val files = testApi!!.hentInnsendteFiler(innsendingsId, listOf(attachmentUuid))
@@ -750,6 +780,11 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 	@Test
 	fun testNologinApplicationWithAttachmentFilesCopiedToDb() {
 		val innsendingsId = UUID.randomUUID().toString()
+
+		val mockJwtAzure = TokenGenerator(mockOAuth2Server).createMockJwt("azuread", navIdent = "Z123456")
+		`when`(azureJwtDecoder.decode(anyString())).thenReturn(mockJwtAzure)
+		testApi!!.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on")
+			.assertSuccess()
 
 		val fileM2part1 = testApi!!.uploadNologinFileV2(innsendingsId, "M2")
 			.assertSuccess()
@@ -867,6 +902,10 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 
 		val innsendingsId = UUID.randomUUID().toString()
 
+		val mockJwtAzure = TokenGenerator(mockOAuth2Server).createMockJwt("azuread", navIdent = "Z123456")
+		`when`(azureJwtDecoder.decode(anyString())).thenReturn(mockJwtAzure)
+		testApi!!.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on")
+			.assertSuccess()
 		val fileM2part1 = testApi!!.uploadNologinFileV2(innsendingsId, "M2")
 			.assertSuccess()
 			.body

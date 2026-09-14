@@ -1,9 +1,10 @@
 package no.nav.soknad.innsending.exceptions
 
 import com.google.cloud.storage.StorageException
+import jakarta.security.auth.message.AuthException
 import jakarta.servlet.http.HttpServletRequest
-import no.nav.security.token.support.core.exceptions.JwtTokenMissingException
-import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
+//import no.nav.security.token.support.core.exceptions.JwtTokenMissingException
+//import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
 import no.nav.soknad.innsending.exceptions.utils.messageForLog
 import no.nav.soknad.innsending.model.RestErrorResponseDto
 import no.nav.soknad.innsending.service.config.annotation.ConfigVerificationException
@@ -113,6 +114,7 @@ class RestExceptionHandler {
 	}
 
 	// 401
+/*
 	@ExceptionHandler
 	fun unauthenticatedHandler(
 		request: HttpServletRequest,
@@ -128,12 +130,13 @@ class RestExceptionHandler {
 			), HttpStatus.UNAUTHORIZED
 		)
 	}
+*/
 
 	// 403
 	@ExceptionHandler
 	fun unauthorizedExceptionHandler(
 		request: HttpServletRequest,
-		exception: JwtTokenUnauthorizedException
+		exception: AuthException
 	): ResponseEntity<RestErrorResponseDto>? {
 		logger.warn("Autorisering feilet ved kall til " + request.requestURI + ": " + exception.message, exception)
 

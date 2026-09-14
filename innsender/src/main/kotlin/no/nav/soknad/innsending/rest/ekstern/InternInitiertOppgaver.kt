@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.rest.ekstern
 
-import no.nav.security.token.support.core.api.ProtectedWithClaims
+//import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.EksternoppgaveApi
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.exceptions.ErrorCode
@@ -19,10 +19,12 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
+/*
 @ProtectedWithClaims(
 	issuer = Constants.AZURE,
 	// TODO claimMap = ["scp=defaultaccess oppgave-initiering"]
 )
+*/
 class InternInitiertOppgaver(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val ettersendingService: EttersendingService,

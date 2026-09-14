@@ -1,5 +1,7 @@
 package no.nav.soknad.innsending.rest.fillager
 
+import com.nimbusds.jwt.JWT
+import com.nimbusds.jwt.JWTParser
 import io.mockk.clearAllMocks
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
@@ -8,10 +10,14 @@ import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.TokenGenerator
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
+import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration.jwtDecoder
+import org.springframework.security.oauth2.jwt.Jwt
 import java.util.UUID
 import kotlin.test.assertEquals
 
@@ -31,7 +37,9 @@ class NologinRestApiTest: ApplicationTest() {
 	fun setup() {
 		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
-		api.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on")
+		val mockJwtAzure = TokenGenerator(mockOAuth2Server).createMockJwt("azuread", navIdent = "Z123456")
+		`when`(azureJwtDecoder.decode(anyString())).thenReturn(mockJwtAzure)
+		testApi!!.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on")
 			.assertSuccess()
 	}
 
@@ -50,6 +58,9 @@ class NologinRestApiTest: ApplicationTest() {
 	@Test
 	fun `should not allow file upload when token does not contain correct role`() {
 		val token = TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("irrelevant-role"))
+		val mockJwtAzure: Jwt = azureJwtDecoder.decode(token)
+		`when`(azureJwtDecoder.decode(anyString())).thenReturn(mockJwtAzure)
+
 		api.uploadNologinFile(vedleggId = "abcdef", authToken = token)
 			.assertHttpStatus(HttpStatus.FORBIDDEN)
 	}

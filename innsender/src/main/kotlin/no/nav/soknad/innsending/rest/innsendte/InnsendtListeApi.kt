@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.rest.innsendte
 
-import no.nav.security.token.support.core.api.ProtectedWithClaims
+//import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.InnsendteApi
 import no.nav.soknad.innsending.model.SoknadFile
 import no.nav.soknad.innsending.service.InnsendingService
@@ -20,7 +20,7 @@ class InnsendtListeApi(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Timed(InnsenderOperation.HENT_FILER)
-	@ProtectedWithClaims(issuer = Constants.AZURE)
+	//@ProtectedWithClaims(issuer = Constants.AZURE)
 	override fun hentInnsendteFiler(uuids: List<String>, xInnsendingId: String): ResponseEntity<List<SoknadFile>> {
 		logger.info("$xInnsendingId: Kall for å hente filene $uuids til en innsendt søknad")
 

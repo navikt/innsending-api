@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.rest.ekstern
 
-import no.nav.security.token.support.core.api.ProtectedWithClaims
+//import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.EksternApi
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.model.BodyStatusResponseDto
@@ -22,11 +22,13 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
+/*
 @ProtectedWithClaims(
 	issuer = Constants.TOKENX,
 	claimMap = [Constants.CLAIM_ACR_LEVEL_4, Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH],
 	combineWithOr = true
 )
+*/
 class EksternRestApi(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val ettersendingService: EttersendingService,

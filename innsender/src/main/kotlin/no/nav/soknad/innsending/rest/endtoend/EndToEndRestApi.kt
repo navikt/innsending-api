@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.rest.endtoend
 
-import no.nav.security.token.support.core.api.ProtectedWithClaims
+//import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.EndtoendApi
 import no.nav.soknad.innsending.model.ArkiveringsStatusDto
 import no.nav.soknad.innsending.service.SoknadService
@@ -12,11 +12,13 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @Profile("endtoend")
+/*
 @ProtectedWithClaims(
 	issuer = Constants.TOKENX,
 	claimMap = [Constants.CLAIM_ACR_LEVEL_4, Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH],
 	combineWithOr = true
 )
+*/
 class EndToEndRestApi(
 	private val soknadService: SoknadService
 ) : EndtoendApi {

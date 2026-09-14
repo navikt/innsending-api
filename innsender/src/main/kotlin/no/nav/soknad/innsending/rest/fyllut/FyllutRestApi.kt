@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.rest.fyllut
 
-import no.nav.security.token.support.core.api.ProtectedWithClaims
+//import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.FyllutApi
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.exceptions.ErrorCode
@@ -16,9 +16,11 @@ import no.nav.soknad.innsending.service.PrefillService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
+/*
 import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH
 import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_LEVEL_4
 import no.nav.soknad.innsending.util.Constants.TOKENX
+*/
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.mapping.SkjemaDokumentSoknadTransformer
 import no.nav.soknad.innsending.util.mapping.mapTilSkjemaDto
@@ -35,7 +37,7 @@ import java.net.URI
 import java.util.UUID
 
 @RestController
-@ProtectedWithClaims(issuer = TOKENX, claimMap = [CLAIM_ACR_LEVEL_4, CLAIM_ACR_IDPORTEN_LOA_HIGH], combineWithOr = true)
+//@ProtectedWithClaims(issuer = TOKENX, claimMap = [CLAIM_ACR_LEVEL_4, CLAIM_ACR_IDPORTEN_LOA_HIGH], combineWithOr = true)
 class FyllutRestApi(
 	private val urlHandler: UrlHandler,
 	private val soknadService: SoknadService,

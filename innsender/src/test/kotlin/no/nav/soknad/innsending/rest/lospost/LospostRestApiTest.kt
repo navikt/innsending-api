@@ -15,12 +15,17 @@ import no.nav.soknad.innsending.model.OpprettLospost
 import no.nav.soknad.innsending.model.PostVedleggDto
 import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.TokenGenerator
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
+import org.springframework.security.oauth2.jwt.JwtDecoder
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -43,6 +48,9 @@ class LospostRestApiTest : ApplicationTest() {
 	@BeforeEach
 	fun setup() {
 		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
+		val mockJwt = TokenGenerator(mockOAuth2Server).createMockJwt("tokenx")
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(mockJwt)
+
 		clearAllMocks()
 	}
 
@@ -54,6 +62,7 @@ class LospostRestApiTest : ApplicationTest() {
 			dokumentTittel = "Førerkort",
 			sprak = "nb"
 		)
+
 		val response = api.createLospost(request)
 			.assertSuccess()
 

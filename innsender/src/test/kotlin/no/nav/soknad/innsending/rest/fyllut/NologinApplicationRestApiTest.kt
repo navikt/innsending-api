@@ -14,12 +14,15 @@ import no.nav.soknad.innsending.service.config.ConfigService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.utils.ApiWebClient
+import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoV2TestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoV2TestBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -51,7 +54,9 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 	fun setup() {
 		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
-		api.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on")
+		val mockJwtAzure = TokenGenerator(mockOAuth2Server).createMockJwt("azuread", navIdent = "Z123456")
+		`when`(azureJwtDecoder.decode(anyString())).thenReturn(mockJwtAzure)
+		testApi!!.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on")
 			.assertSuccess()
 	}
 
