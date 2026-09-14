@@ -15,10 +15,12 @@ import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.Publish
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.service.DocumentService
 import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.KodeverkService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.ungdomsprogram_reiseDaglig
 import no.nav.soknad.innsending.util.models.*
@@ -63,6 +65,9 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var filService: FilService
+
+	@Autowired
+	lateinit var documentService: DocumentService
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
@@ -691,6 +696,63 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals("Slettet soknad med id $innsendingsId", response.body.info)
 
 		assertThrows<ResourceNotFoundException>("Søknaden skal ikke finnes") { soknadService.hentSoknad(innsendingsId) }
+		verify(timeout = 5000, exactly = 1) {
+			notificationPublisher.avsluttBrukernotifikasjon(match { it.innsendingId == innsendingsId })
+		}
+	}
+
+	@Test
+	fun `delete digital application removes the application and only its transient files`() {
+		val application = opprettSoknad()
+		val otherApplication = opprettSoknad()
+		val innsendingsId = application.innsendingsId!!
+		val otherInnsendingsId = otherApplication.innsendingsId!!
+		val firstFile = api.uploadAttachmentFile(innsendingsId, "first").assertSuccess().body
+		val secondFile = api.uploadAttachmentFile(innsendingsId, "second").assertSuccess().body
+		val otherFile = api.uploadAttachmentFile(otherInnsendingsId, "other").assertSuccess().body
+		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		webTestClient.delete()
+			.uri("http://localhost:$serverPort/v1/application-digital/$innsendingsId")
+			.headers { headers ->
+				headers.setAll(Hjelpemetoder.createHeaders(token = token).toSingleValueMap())
+			}
+			.exchange()
+			.expectStatus().isNoContent
+
+		assertThrows<ResourceNotFoundException> { soknadService.hentSoknad(innsendingsId) }
+		assertNull(documentService.getFile(FileStorageNamespace.DIGITAL, UUID.fromString(innsendingsId), firstFile.id))
+		assertNull(documentService.getFile(FileStorageNamespace.DIGITAL, UUID.fromString(innsendingsId), secondFile.id))
+		assertNotNull(
+			documentService.getFile(
+				FileStorageNamespace.DIGITAL,
+				UUID.fromString(otherInnsendingsId),
+				otherFile.id
+			)
+		)
+		verify(timeout = 5000, exactly = 1) {
+			notificationPublisher.avsluttBrukernotifikasjon(match { it.innsendingId == innsendingsId })
+		}
+	}
+
+	@Test
+	fun `delete digital application rejects a user who does not own the application`() {
+		val application = opprettSoknad(brukerId = "10987654321")
+		val innsendingsId = application.innsendingsId!!
+		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+
+		webTestClient.delete()
+			.uri("http://localhost:$serverPort/v1/application-digital/$innsendingsId")
+			.headers { headers ->
+				headers.setAll(Hjelpemetoder.createHeaders(token = token).toSingleValueMap())
+			}
+			.exchange()
+			.expectStatus().isNotFound
+
+		assertEquals(innsendingsId, soknadService.hentSoknad(innsendingsId).innsendingsId)
+		verify(exactly = 0) {
+			notificationPublisher.avsluttBrukernotifikasjon(match { it.innsendingId == innsendingsId })
+		}
 	}
 
 	@Test
@@ -917,7 +979,10 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	// Opprett søknad med et hoveddokument, en hoveddokumentvariant og to vedlegg
-	private fun opprettSoknad(skjemanr: String = "NAV 08-21.05"): DokumentSoknadDto {
+	private fun opprettSoknad(
+		skjemanr: String = "NAV 08-21.05",
+		brukerId: String = TokenGenerator.subject,
+	): DokumentSoknadDto {
 		val vedleggDtoPdf = VedleggDtoTestBuilder(vedleggsnr = skjemanr).asHovedDokument().build()
 		val vedleggDtoJson = VedleggDtoTestBuilder(vedleggsnr = skjemanr).asHovedDokumentVariant().build()
 		val vedleggDto1 = VedleggDtoTestBuilder(
@@ -937,7 +1002,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		val dokumentSoknadDto =
 			DokumentSoknadDtoTestBuilder(
-				brukerId = TokenGenerator.subject,
+				brukerId = brukerId,
 				skjemanr = skjemanr,
 				vedleggsListe = vedleggsListe
 			).build()

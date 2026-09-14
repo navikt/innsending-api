@@ -25,3 +25,30 @@ post:
       $ref: "../../common/components.yaml#/components/responses/InteralServerError"
   tags:
     - fyllut
+
+delete:
+  summary: Delete a digital application
+  operationId: deleteDigitalApplication
+  security:
+  - idporten: []
+
+  parameters:
+    - $ref: "../../common/components.yaml#/components/parameters/InnsendingsId"
+
+  responses:
+    204:
+      description: No Content
+    401:
+      $ref: "../../common/components.yaml#/components/responses/AuthError"
+    403:
+      $ref: "../../common/components.yaml#/components/responses/AuthError"
+    404:
+      description: Application not found or not available to the authenticated user
+      content:
+        application/json:
+          schema:
+            $ref: "../../common/components.yaml#/components/schemas/RestErrorResponseDto"
+    500:
+      $ref: "../../common/components.yaml#/components/responses/InteralServerError"
+  tags:
+    - fyllut
