@@ -63,7 +63,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `delete all no-login attachments removes only files for the requested application`() {
+	fun `delete no-login application removes only files for the requested application`() {
 		val innsendingsId = UUID.randomUUID()
 		val otherInnsendingsId = UUID.randomUUID()
 		val firstFile = api.uploadNologinFileV2(innsendingsId.toString(), "first").assertSuccess().body
@@ -71,9 +71,9 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		val otherFile = api.uploadNologinFileV2(otherInnsendingsId.toString(), "other").assertSuccess().body
 		val token = TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("nologin-access"))
 
-		fun deleteAttachments() {
+		fun deleteApplication() {
 			webTestClient.delete()
-				.uri("http://localhost:$serverPort/v1/application-nologin/$innsendingsId/attachments")
+				.uri("http://localhost:$serverPort/v1/application-nologin/$innsendingsId")
 				.headers { headers ->
 					headers.setAll(Hjelpemetoder.createHeaders(token = token).toSingleValueMap())
 				}
@@ -81,8 +81,8 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 				.expectStatus().isNoContent
 		}
 
-		deleteAttachments()
-		deleteAttachments()
+		deleteApplication()
+		deleteApplication()
 
 		assertNull(documentService.getFile(FileStorageNamespace.NOLOGIN, innsendingsId, firstFile.id))
 		assertNull(documentService.getFile(FileStorageNamespace.NOLOGIN, innsendingsId, secondFile.id))

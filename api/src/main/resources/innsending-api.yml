@@ -1103,9 +1103,6 @@ paths:
   /v1/application-nologin/{innsendingsId}:
      $ref: "./application/nologin/nologin.yaml"
 
-  /v1/application-nologin/{innsendingsId}/attachments:
-     $ref: "./application/nologin/all-attachments.yaml"
-
   /v1/application-nologin/{innsendingsId}/attachments/{attachmentId}:
      $ref: "./application/nologin/attachments.yaml"
 
