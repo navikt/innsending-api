@@ -70,14 +70,12 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		val secondFile = api.uploadNologinFileV2(innsendingsId.toString(), "second").assertSuccess().body
 		val otherFile = api.uploadNologinFileV2(otherInnsendingsId.toString(), "other").assertSuccess().body
 
-		assertEquals(
-			HttpStatus.NO_CONTENT,
-			api.deleteApplication(innsendingsId.toString(), ApiWebClient.ApplicationType.NOLOGIN).statusCode
-		)
-		assertEquals(
-			HttpStatus.NO_CONTENT,
-			api.deleteApplication(innsendingsId.toString(), ApiWebClient.ApplicationType.NOLOGIN).statusCode
-		)
+		api.deleteApplication(innsendingsId.toString(), ApiWebClient.ApplicationType.NOLOGIN)
+			.assertSuccess()
+			.assertHttpStatus(HttpStatus.NO_CONTENT)
+		api.deleteApplication(innsendingsId.toString(), ApiWebClient.ApplicationType.NOLOGIN)
+			.assertSuccess()
+			.assertHttpStatus(HttpStatus.NO_CONTENT)
 
 		assertNull(documentService.getFile(FileStorageNamespace.NOLOGIN, innsendingsId, firstFile.id))
 		assertNull(documentService.getFile(FileStorageNamespace.NOLOGIN, innsendingsId, secondFile.id))

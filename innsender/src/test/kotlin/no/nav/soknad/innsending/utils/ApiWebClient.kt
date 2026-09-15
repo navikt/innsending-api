@@ -108,6 +108,14 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		return Pair(null, errorBody)
 	}
 
+	private fun readUnitBody(response: WebTestClient.ResponseSpec): Pair<Unit?, RestErrorResponseDto?> {
+		if (response.returnResult().status.is2xxSuccessful) {
+			return Pair(Unit, null)
+		}
+		val errorBody = objectMapper.readValue(response.returnResult().responseBodyContent, RestErrorResponseDto::class.java)
+		return Pair(null, errorBody)
+	}
+
 
 	fun createSoknad(skjemaDto: SkjemaDto, forceCreate: Boolean = true, envQualifier: EnvQualifier? = null): InnsendingApiResponse<SkjemaDto> {
 		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
@@ -337,7 +345,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		innsendingsId: String,
 		applicationType: ApplicationType,
 		authToken: String? = null,
-	): ResponseEntity<Unit> {
+	): InnsendingApiResponse<Unit> {
 		val token = authToken ?: when (applicationType) {
 			ApplicationType.NOLOGIN -> TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("nologin-access"))
 			ApplicationType.DIGITAL -> TokenGenerator(mockOAuth2Server).lagTokenXToken()
@@ -348,8 +356,11 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 				headers.setAll(Hjelpemetoder.createHeaders(token = token).toSingleValueMap())
 			}
 			.exchange()
-		val result = response.returnResult<Unit>()
-		return ResponseEntity(result.responseBody.blockFirst(), result.responseHeaders, result.status)
+		return InnsendingApiResponse(
+			response.returnResult().status,
+			readUnitBody(response),
+			response.returnResult().responseHeaders
+		)
 	}
 
 	fun uploadAttachmentFile(

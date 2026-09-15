@@ -711,10 +711,9 @@ class FyllutRestApiTest : ApplicationTest() {
 		val secondFile = api.uploadAttachmentFile(innsendingsId, "second").assertSuccess().body
 		val otherFile = api.uploadAttachmentFile(otherInnsendingsId, "other").assertSuccess().body
 
-		assertEquals(
-			HttpStatus.NO_CONTENT,
-			api.deleteApplication(innsendingsId, ApiWebClient.ApplicationType.DIGITAL).statusCode
-		)
+		api.deleteApplication(innsendingsId, ApiWebClient.ApplicationType.DIGITAL)
+			.assertSuccess()
+			.assertHttpStatus(HttpStatus.NO_CONTENT)
 
 		assertThrows<ResourceNotFoundException> { soknadService.hentSoknad(innsendingsId) }
 		assertNull(documentService.getFile(FileStorageNamespace.DIGITAL, UUID.fromString(innsendingsId), firstFile.id))
@@ -736,10 +735,9 @@ class FyllutRestApiTest : ApplicationTest() {
 		val application = opprettSoknad(brukerId = "10987654321")
 		val innsendingsId = application.innsendingsId!!
 
-		assertEquals(
-			HttpStatus.NOT_FOUND,
-			api.deleteApplication(innsendingsId, ApiWebClient.ApplicationType.DIGITAL).statusCode
-		)
+		api.deleteApplication(innsendingsId, ApiWebClient.ApplicationType.DIGITAL)
+			.assertClientError()
+			.assertHttpStatus(HttpStatus.NOT_FOUND)
 
 		assertEquals(innsendingsId, soknadService.hentSoknad(innsendingsId).innsendingsId)
 		verify(exactly = 0) {
