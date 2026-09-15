@@ -710,15 +710,11 @@ class FyllutRestApiTest : ApplicationTest() {
 		val firstFile = api.uploadAttachmentFile(innsendingsId, "first").assertSuccess().body
 		val secondFile = api.uploadAttachmentFile(innsendingsId, "second").assertSuccess().body
 		val otherFile = api.uploadAttachmentFile(otherInnsendingsId, "other").assertSuccess().body
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		webTestClient.delete()
-			.uri("http://localhost:$serverPort/v1/application-digital/$innsendingsId")
-			.headers { headers ->
-				headers.setAll(Hjelpemetoder.createHeaders(token = token).toSingleValueMap())
-			}
-			.exchange()
-			.expectStatus().isNoContent
+		assertEquals(
+			HttpStatus.NO_CONTENT,
+			api.deleteApplication(innsendingsId, ApiWebClient.ApplicationType.DIGITAL).statusCode
+		)
 
 		assertThrows<ResourceNotFoundException> { soknadService.hentSoknad(innsendingsId) }
 		assertNull(documentService.getFile(FileStorageNamespace.DIGITAL, UUID.fromString(innsendingsId), firstFile.id))
@@ -739,15 +735,11 @@ class FyllutRestApiTest : ApplicationTest() {
 	fun `delete digital application rejects a user who does not own the application`() {
 		val application = opprettSoknad(brukerId = "10987654321")
 		val innsendingsId = application.innsendingsId!!
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		webTestClient.delete()
-			.uri("http://localhost:$serverPort/v1/application-digital/$innsendingsId")
-			.headers { headers ->
-				headers.setAll(Hjelpemetoder.createHeaders(token = token).toSingleValueMap())
-			}
-			.exchange()
-			.expectStatus().isNotFound
+		assertEquals(
+			HttpStatus.NOT_FOUND,
+			api.deleteApplication(innsendingsId, ApiWebClient.ApplicationType.DIGITAL).statusCode
+		)
 
 		assertEquals(innsendingsId, soknadService.hentSoknad(innsendingsId).innsendingsId)
 		verify(exactly = 0) {

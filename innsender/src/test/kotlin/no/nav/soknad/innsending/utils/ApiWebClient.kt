@@ -56,6 +56,11 @@ import kotlin.test.assertEquals
 
 class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val mockOAuth2Server: MockOAuth2Server) {
 
+	enum class ApplicationType(val path: String) {
+		NOLOGIN("application-nologin"),
+		DIGITAL("application-digital"),
+	}
+
 	val baseUrl = "http://localhost:${serverPort}"
 	val objectMapper: ObjectMapper = jacksonObjectMapper().findAndRegisterModules()
 	val webTestClient = webTestClient_.mutate().responseTimeout(Duration.ofMinutes(2L)).baseUrl(baseUrl).build()
@@ -326,6 +331,25 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 
 		val body = readBody(response, FileDto::class.java)
 		return InnsendingApiResponse(response.returnResult().status, body, response.returnResult().responseHeaders)
+	}
+
+	fun deleteApplication(
+		innsendingsId: String,
+		applicationType: ApplicationType,
+		authToken: String? = null,
+	): ResponseEntity<Unit> {
+		val token = authToken ?: when (applicationType) {
+			ApplicationType.NOLOGIN -> TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("nologin-access"))
+			ApplicationType.DIGITAL -> TokenGenerator(mockOAuth2Server).lagTokenXToken()
+		}
+		val response = webTestClient.delete()
+			.uri("$baseUrl/v1/${applicationType.path}/$innsendingsId")
+			.headers { headers ->
+				headers.setAll(Hjelpemetoder.createHeaders(token = token).toSingleValueMap())
+			}
+			.exchange()
+		val result = response.returnResult<Unit>()
+		return ResponseEntity(result.responseBody.blockFirst(), result.responseHeaders, result.status)
 	}
 
 	fun uploadAttachmentFile(

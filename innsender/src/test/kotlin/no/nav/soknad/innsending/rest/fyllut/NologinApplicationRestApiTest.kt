@@ -69,20 +69,15 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		val firstFile = api.uploadNologinFileV2(innsendingsId.toString(), "first").assertSuccess().body
 		val secondFile = api.uploadNologinFileV2(innsendingsId.toString(), "second").assertSuccess().body
 		val otherFile = api.uploadNologinFileV2(otherInnsendingsId.toString(), "other").assertSuccess().body
-		val token = TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("nologin-access"))
 
-		fun deleteApplication() {
-			webTestClient.delete()
-				.uri("http://localhost:$serverPort/v1/application-nologin/$innsendingsId")
-				.headers { headers ->
-					headers.setAll(Hjelpemetoder.createHeaders(token = token).toSingleValueMap())
-				}
-				.exchange()
-				.expectStatus().isNoContent
-		}
-
-		deleteApplication()
-		deleteApplication()
+		assertEquals(
+			HttpStatus.NO_CONTENT,
+			api.deleteApplication(innsendingsId.toString(), ApiWebClient.ApplicationType.NOLOGIN).statusCode
+		)
+		assertEquals(
+			HttpStatus.NO_CONTENT,
+			api.deleteApplication(innsendingsId.toString(), ApiWebClient.ApplicationType.NOLOGIN).statusCode
+		)
 
 		assertNull(documentService.getFile(FileStorageNamespace.NOLOGIN, innsendingsId, firstFile.id))
 		assertNull(documentService.getFile(FileStorageNamespace.NOLOGIN, innsendingsId, secondFile.id))
