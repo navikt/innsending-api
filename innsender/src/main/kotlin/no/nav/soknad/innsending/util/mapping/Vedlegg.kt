@@ -157,9 +157,10 @@ fun translate(vedleggDtos: List<VedleggDto>): List<DocumentData> {
 
 	// Merk: at det  er antatt at vedlegg ikke har varianter. Hvis vi skal støtte dette må varianter av samme vedlegg linkes sammen
 	// Bruk label fremfor tittel for vedlegg (ikke hoveddokument), siden det er label som oppdateres med søkers oppgitte tittel for vedlegg av type Annet (N6)
+	// Faller tilbake på tittel dersom label ikke er satt
 	val vedlegg: List<DocumentData> = vedleggDtos
 		.filter { !it.erHoveddokument && (it.opplastingsStatus == OpplastingsStatusDto.LastetOpp || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending) }
-		.map { DocumentData(it.vedleggsnr!!, it.erHoveddokument, it.label, listOf(translate(it))) }
+		.map { DocumentData(it.vedleggsnr!!, it.erHoveddokument, it.label.ifBlank { it.tittel }, listOf(translate(it))) }
 
 	return listOf(hovedDokument) + vedlegg
 }
@@ -182,9 +183,10 @@ fun translate(vedleggDtos: List<VedleggDto>, newFormat: Boolean): List<DokumentD
 
 	// Merk: at det  er antatt at vedlegg ikke har varianter. Hvis vi skal støtte dette må varianter av samme vedlegg linkes sammen
 	// Bruk label fremfor tittel for vedlegg (ikke hoveddokument), siden det er label som oppdateres med søkers oppgitte tittel for vedlegg av type Annet (N6)
+	// Faller tilbake på tittel dersom label ikke er satt
 	val vedlegg: List<DokumentData> = vedleggDtos
 		.filter { !it.erHoveddokument && (it.opplastingsStatus == OpplastingsStatusDto.LastetOpp || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending) }
-		.map { DokumentData(it.vedleggsnr!!, it.erHoveddokument, it.label, listOf(translate(it, true))) }
+		.map { DokumentData(it.vedleggsnr!!, it.erHoveddokument, it.label.ifBlank { it.tittel }, listOf(translate(it, true))) }
 
 	return listOf(hovedDokument) + vedlegg
 }

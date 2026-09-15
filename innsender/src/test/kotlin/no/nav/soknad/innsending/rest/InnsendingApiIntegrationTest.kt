@@ -18,6 +18,7 @@ import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.mapping.translate
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.stotteTilBolig
 import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoTestBuilder
@@ -177,6 +178,78 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 				"For attachment ${submittedAttachment.vedleggsnr}, expected file content to be not null"
 			)
 		}
+	}
+
+	@Test
+	fun testApplicationAttachmentUsesLabelNotTittelWhenSubmitted() {
+		val skjemanr = "NAV 10-07.54"
+		val attachmentVedleggsnr = "N6"
+		val skjematittel = "Søknad om servicehund"
+		val attachmentTittel = "Annet (defined in the form)"
+		val attachmentLabel = "The applicant's own name for the attachment"
+
+		val hoveddokument =
+			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokument(skjemanr, withFile = false).build()
+
+		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = skjemanr, tittel = skjematittel)
+			.medHoveddokument(hoveddokument)
+			.build()
+
+		// Create application
+		val soknad = testApi!!.createSoknad(skjemaDto)
+			.assertSuccess()
+			.body
+		val innsendingsId = soknad.innsendingsId!!
+
+		// Add an attachment with different tittel and label, as for an "Annet" attachment (N6) where the applicant has entered their own name for the attachment
+		val attachment =
+			SkjemaDokumentDtoTestBuilder(vedleggsnr = attachmentVedleggsnr, tittel = attachmentTittel, label = attachmentLabel).build()
+		val hoveddokumentWithFile =
+			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokument(skjemanr, withFile = true).build()
+		val updatedSoknad = skjemaDto.copy(
+			hoveddokument = hoveddokumentWithFile,
+			vedleggsListe = listOf(attachment)
+		)
+		testApi!!.utfyltSoknad(innsendingsId, updatedSoknad)
+
+		val attachmentId = testApi!!.getSoknadSendinn(innsendingsId)
+			.assertSuccess()
+			.body.vedleggsListe.first { it.vedleggsnr == attachmentVedleggsnr }.id!!
+
+		// Upload file for the attachment
+		testApi!!.uploadFile(innsendingsId, attachmentId)
+			.assertHttpStatus(HttpStatus.CREATED)
+
+		val kvittering = testApi!!.sendInnSoknad(innsendingsId)
+			.assertSuccess()
+			.body
+
+		// verify response
+		assertNotNull(kvittering.innsendteVedlegg?.firstOrNull { it.vedleggsnr == attachmentVedleggsnr })
+
+		// verify invocation of soknadsmottaker
+		val slotSoknad = slot<DokumentSoknadDto>()
+		val slotVedleggsliste = slot<List<VedleggDto>>()
+		val slotAvsender = slot<AvsenderDto>()
+		val slotBruker = slot<BrukerDto?>()
+		verify(timeout = 5000, exactly = 1) {
+			soknadsmottakerApi.sendInnSoknad(
+				capture(slotSoknad),
+				capture(slotVedleggsliste),
+				capture(slotAvsender),
+				captureNullable(slotBruker)
+			)
+		}
+
+		val submittedAttachments = slotVedleggsliste.captured
+		val submittedAttachment = submittedAttachments.first { it.vedleggsnr == attachmentVedleggsnr }
+		assertEquals(attachmentTittel, submittedAttachment.tittel)
+		assertEquals(attachmentLabel, submittedAttachment.label)
+
+		// verify that label is used instead of tittel when translating to the archiving format
+		val translatedDocuments = translate(submittedAttachments)
+		val translatedAttachment = translatedDocuments.first { it.skjemanummer == attachmentVedleggsnr }
+		assertEquals(attachmentLabel, translatedAttachment.tittel)
 	}
 
 	@Test
