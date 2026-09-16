@@ -1013,27 +1013,34 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		assertTrue( skjemaDto != null)
 
 		val threads = 2
-		val callResponses = mutableMapOf<String, HttpStatusCode>()
 
-		val jobs = (1..threads).map { iterasjon ->
+		val callResponses = (1..threads).map { iterasjon ->
 			async(Dispatchers.IO) {
 				when (iterasjon) {
-					1 -> callResponses.put("submitDigitalApplication", testApi!!.submitDigitalApplication(skjemaDto, attachments).statusCode)
+					1 -> "submitDigitalApplication" to testApi!!.submitDigitalApplication(skjemaDto, attachments).statusCode
 					2 -> {
-						callResponses.put("deleteSoknad", testApi!!.deleteSoknad(skjemaDto.innsendingsId!!)?.statusCode ?: HttpStatusCode.valueOf(400))
+						"deleteSoknad" to (testApi!!.deleteSoknad(skjemaDto.innsendingsId!!)?.statusCode ?: HttpStatusCode.valueOf(400))
 					}
+					else -> error("Unexpected iteration $iterasjon")
 				}
 			}
-		}
-		val responses = jobs.awaitAll()
+		}.awaitAll().toMap()
 
 		// Either the delete or the send-in operation has been successfull, but not both
 		assertTrue(callResponses.count() == 2)
-		if (callResponses.get("deleteSoknad") == HttpStatusCode.valueOf(200)) {
-			assertTrue(HttpStatusCode.valueOf(404)==callResponses.get("submitDigitalApplication") || HttpStatusCode.valueOf(500)==callResponses.get("submitDigitalApplication"))
+		val submitStatus = callResponses["submitDigitalApplication"]
+		val deleteStatus = callResponses["deleteSoknad"]
+		if (deleteStatus == HttpStatusCode.valueOf(200)) {
+			assertTrue(
+				submitStatus == HttpStatusCode.valueOf(404) || submitStatus == HttpStatusCode.valueOf(500),
+				"Unexpected parallel outcome: $callResponses"
+			)
 		} else {
-			assertEquals(HttpStatusCode.valueOf(200),callResponses.get("submitDigitalApplication"))
-			assertTrue(HttpStatusCode.valueOf(404)==callResponses.get("deleteSoknad") || HttpStatusCode.valueOf(500)==callResponses.get("deleteSoknad"))
+			assertEquals(HttpStatusCode.valueOf(200), submitStatus)
+			assertTrue(
+				deleteStatus == HttpStatusCode.valueOf(404) || deleteStatus == HttpStatusCode.valueOf(500),
+				"Unexpected parallel outcome: $callResponses"
+			)
 		}
 
 	}
