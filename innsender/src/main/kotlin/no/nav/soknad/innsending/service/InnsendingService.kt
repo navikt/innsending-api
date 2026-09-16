@@ -74,10 +74,17 @@ class InnsendingService(
 			)
 		}
 
+		val eksisterendeSoknad = repo.hentSoknadDb(soknadDtoInput.innsendingsId!!)
 		val lagretSoknad = mapTilDokumentSoknadDto(
 			repo.lagreSoknad(
 			mapTilSoknadDb(soknadDtoInput, soknadDtoInput.innsendingsId!!,
-				SoknadsStatus.KlarForInnsending, avsender = avsenderDto, bruker = brukerDto).copy(innsendtdato = LocalDateTime.now(), affecteduser = null)
+				SoknadsStatus.KlarForInnsending, avsender = avsenderDto, bruker = brukerDto).copy(
+					innsendtdato = LocalDateTime.now(),
+					brukerid = eksisterendeSoknad.brukerid,
+					brukertype = eksisterendeSoknad.brukertype,
+					avsender = eksisterendeSoknad.avsender ?: avsenderDto,
+					affecteduser = eksisterendeSoknad.affecteduser ?: brukerDto,
+				)
 			)
 			,emptyList(), emptyList()
 		).copy(vedleggsListe = soknadDtoInput.vedleggsListe)
@@ -175,7 +182,8 @@ class InnsendingService(
 		val soknadsDb = repo.hentSoknadDb(innsendingsId)
 		if (soknadsDb.status != SoknadsStatus.KlarForInnsending) return
 		val avsender = soknadsDb.avsender ?: AvsenderDto(id = soknadsDb.brukerid, idType = IdType.FNR)
-		val bruker = soknadsDb.affecteduser ?: if (soknadsDb.brukerid != null) BrukerDto(id = soknadsDb.brukerid!!, idType = BrukerDto.IdType.FNR) else null
+		val brukerId = soknadsDb.brukerid
+		val bruker = soknadsDb.affecteduser ?: if (brukerId != null) BrukerDto(id = brukerId, idType = BrukerDto.IdType.FNR) else null
 
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		val opplastedeVedlegg = soknadDto.vedleggsListe.filter{(it.erHoveddokument && it.opplastingsStatus != OpplastingsStatusDto.SendesIkke) || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending }
@@ -190,7 +198,7 @@ class InnsendingService(
 		}
 
 		try {
-			val lagretSoknadDb = repo.lagreSoknad(soknadsDb.copy(status=SoknadsStatus.Innsendt, avsender = avsender, affecteduser = bruker))
+			val lagretSoknadDb = repo.updateStatusAvsenderAndAffecteduser(soknadsDb.copy(status=SoknadsStatus.Innsendt, avsender = avsender, affecteduser = bruker))
 			logger.info("$innsendingsId: sendInnForArkivering, satt soknad.status=${lagretSoknadDb.status}")
 		} catch (e: Exception) {
 			logger.error("${soknadDto.innsendingsId}: Feil ved oppdatering av status til Innsendt på innsending ${e.message}", e)

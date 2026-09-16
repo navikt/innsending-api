@@ -240,6 +240,10 @@ class SoknadService(
 		if (!currentSoknad.kanGjoreEndringer)
 			throw IllegalActionException("Det kan ikke gjøres endring på en slettet eller innsendt søknad. Søknad ${currentSoknad.innsendingsId} kan ikke slettes da den er innsendt eller slettet")
 
+		fileStorage.delete(
+			currentSoknad.getFileStorageNamespace(),
+			currentSoknad.innsendingsId!!.toUUID(),
+		)
 		currentSoknad.vedleggsListe.filter { it.id != null }.forEach { vedleggService.slettVedleggOgDensFiler(it) }
 		repo.slettSoknad(currentSoknad, HendelseType.SlettetPermanentAvBruker)
 		innsenderMetrics.incOperationsCounter(operation, currentSoknad.tema)

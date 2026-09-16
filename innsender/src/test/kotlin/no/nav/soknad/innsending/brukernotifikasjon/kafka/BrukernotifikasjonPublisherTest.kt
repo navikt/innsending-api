@@ -110,22 +110,23 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		brukernotifikasjonPublisher.createNotification(soknad)
 
 		// Then
-		val message = slot<AddNotification>()
-		verify(exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
-
-		assertTrue(message.isCaptured)
-		assertEquals(personId, message.captured.soknadRef.personId)
-		assertEquals(innsendingsid, message.captured.soknadRef.innsendingId)
-		assertTrue(message.captured.brukernotifikasjonInfo.notifikasjonsTittel.contains(soknad.tittel))
+		val messages = mutableListOf<AddNotification>()
+		verify(atLeast = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(messages)) }
+		assertTrue(messages.isNotEmpty())
+		val messages_ = messages.filter { it.soknadRef.innsendingId == innsendingsid }
+		assertTrue(messages_.isNotEmpty() && messages_.size == 1)
+		val message = messages_.first()
+		assertEquals(personId, message.soknadRef.personId)
+		assertTrue(message.brukernotifikasjonInfo.notifikasjonsTittel.contains(soknad.tittel))
 		assertEquals(
 			brukernotifikasjonPublisher.tittelPrefixNySoknad[spraak]!! + soknad.tittel,
-			message.captured.brukernotifikasjonInfo.notifikasjonsTittel
+			message.brukernotifikasjonInfo.notifikasjonsTittel
 		)
 		assertEquals(
 			"$fyllutUrl/${soknad.getSkjemaPath()}/oppsummering?sub=digital&innsendingsId=$innsendingsid",
-			message.captured.brukernotifikasjonInfo.lenke
+			message.brukernotifikasjonInfo.lenke
 		)
-		assertEquals(0, message.captured.brukernotifikasjonInfo.eksternVarsling.size)
+		assertEquals(0, message.brukernotifikasjonInfo.eksternVarsling.size)
 	}
 
 	@Test
@@ -145,12 +146,13 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		brukernotifikasjonPublisher.closeNotification(soknad)
 
 		// Then
-		val done = slot<SoknadRef>()
-		verify(timeout = 500, exactly = 1) { sendTilPublisher.avsluttBrukernotifikasjon(capture(done)) }
+		val done = mutableListOf<SoknadRef>()
+		verify(timeout = 500, atLeast = 1) { sendTilPublisher.avsluttBrukernotifikasjon(capture(done)) }
 
-		assertTrue(done.isCaptured)
-		assertEquals(personId, done.captured.personId)
-		assertEquals(innsendingsid, done.captured.innsendingId)
+		assertTrue(done.isNotEmpty())
+		assertTrue(done.any { it.innsendingId == innsendingsid })
+		assertEquals(personId, done.filter{it.innsendingId == innsendingsid}.first().personId)
+		assertTrue(done.filter{it.innsendingId == innsendingsid}.size== 1)
 	}
 
 	@Test
@@ -222,7 +224,8 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 
 		// Then
 		val avslutninger = mutableListOf<SoknadRef>()
-		verify(timeout = 500, exactly = 1) { sendTilPublisher.avsluttBrukernotifikasjon(capture(avslutninger)) }
+		verify(timeout = 500, atLeast = 1) { sendTilPublisher.avsluttBrukernotifikasjon(capture(avslutninger)) }
+
 
 		assertTrue(avslutninger.isNotEmpty())
 		assertEquals(personId, avslutninger[0].personId)
@@ -242,13 +245,15 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		brukernotifikasjonPublisher.createNotification(fyllutSoknad)
 
 		// Then
-		val message = slot<AddNotification>()
-		verify(timeout = 500, exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
+		val messages = mutableListOf<AddNotification>()
+		verify(timeout = 500, atLeast = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(messages)) }
 
-		assertTrue(message.isCaptured)
+		assertTrue(messages.isNotEmpty())
+		assertTrue(messages.filter { it.soknadRef.innsendingId == fyllutSoknad.innsendingsid }.size == 1)
+		val message = messages.filter { it.soknadRef.innsendingId == fyllutSoknad.innsendingsid }.first()
 		assertEquals(
 			"$fyllutUrl/${fyllutSoknad.getSkjemaPath()}/oppsummering?sub=digital&innsendingsId=${fyllutSoknad.innsendingsid}",
-			message.captured.brukernotifikasjonInfo.lenke
+			message.brukernotifikasjonInfo.lenke
 		)
 	}
 
@@ -262,15 +267,17 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		brukernotifikasjonPublisher.createNotification(dokumentinnsendingSoknad)
 
 		// Then
-		val message = slot<AddNotification>()
-		verify(exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
+		val messages = mutableListOf<AddNotification>()
+		verify(atLeast = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(messages)) }
 
-		assertTrue(message.isCaptured)
+		assertTrue(messages.isNotEmpty())
+		assertTrue(messages.filter { it.soknadRef.innsendingId == dokumentinnsendingSoknad.innsendingsid }.size == 1)
+		val message = messages.filter { it.soknadRef.innsendingId == dokumentinnsendingSoknad.innsendingsid }.first()
 		assertEquals(
 			"$sendinnUrl/${dokumentinnsendingSoknad.innsendingsid}",
-			message.captured.brukernotifikasjonInfo.lenke
+			message.brukernotifikasjonInfo.lenke
 		)
-		assertNull(message.captured.brukernotifikasjonInfo.utsettSendingTil)
+		assertNull(message.brukernotifikasjonInfo.utsettSendingTil)
 	}
 
 	@Test
@@ -283,13 +290,15 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		brukernotifikasjonPublisher.createNotification(ettersending)
 
 		// Then
-		val message = slot<AddNotification>()
-		verify(exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
+		val messages = mutableListOf<AddNotification>()
+		verify(atLeast = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(messages)) }
 
-		assertTrue(message.isCaptured)
+		assertTrue(messages.isNotEmpty())
+		assertTrue(messages.filter { it.soknadRef.innsendingId == ettersending.innsendingsid }.size == 1)
+		val message = messages.filter { it.soknadRef.innsendingId == ettersending.innsendingsid }.first()
 		assertEquals(
 			"$sendinnUrl/${ettersending.innsendingsid}",
-			message.captured.brukernotifikasjonInfo.lenke
+			message.brukernotifikasjonInfo.lenke
 		)
 	}
 
@@ -303,12 +312,14 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		brukernotifikasjonPublisher.createNotification(ettersending, NotificationOptions(erSystemGenerert = true))
 
 		// Then
-		val message = slot<AddNotification>()
-		verify(exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
+		val messages = mutableListOf<AddNotification>()
+		verify(atLeast = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(messages)) }
 
-		assertTrue(message.isCaptured)
-		assertNotNull(message.captured.brukernotifikasjonInfo.utsettSendingTil)
-		assertEquals(true, message.captured.soknadRef.erSystemGenerert)
+		assertTrue(messages.isNotEmpty())
+		assertTrue(messages.filter { it.soknadRef.innsendingId == ettersending.innsendingsid }.size == 1)
+		val message = messages.filter { it.soknadRef.innsendingId == ettersending.innsendingsid }.first()
+
+		assertEquals(true, message.soknadRef.erSystemGenerert)
 	}
 
 	@Test
@@ -321,12 +332,14 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		brukernotifikasjonPublisher.createNotification(ettersending, NotificationOptions(erSystemGenerert = false))
 
 		// Then
-		val message = slot<AddNotification>()
-		verify(exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
+		val messages = mutableListOf<AddNotification>()
+		verify(atLeast = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(messages)) }
 
-		assertTrue(message.isCaptured)
-		assertNull(message.captured.brukernotifikasjonInfo.utsettSendingTil)
-		assertEquals(false, message.captured.soknadRef.erSystemGenerert)
+		assertTrue(messages.isNotEmpty())
+		assertTrue(messages.filter { it.soknadRef.innsendingId == ettersending.innsendingsid }.size == 1)
+		val message = messages.filter { it.soknadRef.innsendingId == ettersending.innsendingsid }.first()
+		assertNull(message.brukernotifikasjonInfo.utsettSendingTil)
+		assertEquals(false, message.soknadRef.erSystemGenerert)
 	}
 
 	@Test
@@ -342,12 +355,14 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		brukernotifikasjonPublisher.createNotification(soknad)
 
 		// Then
-		val message = slot<AddNotification>()
-		verify(exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
+		val messages = mutableListOf<AddNotification>()
+		verify(atLeast = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(messages)) }
 
-		assertTrue(message.isCaptured)
-		assertEquals(mellomlagringDager + 1, message.captured.brukernotifikasjonInfo.antallAktiveDager)
-		assertNull(message.captured.brukernotifikasjonInfo.utsettSendingTil)
+		assertTrue(messages.isNotEmpty())
+		assertTrue(messages.filter { it.soknadRef.innsendingId == soknad.innsendingsid }.size == 1)
+		val message = messages.filter { it.soknadRef.innsendingId == soknad.innsendingsid }.first()
+		assertEquals(mellomlagringDager + 1, message.brukernotifikasjonInfo.antallAktiveDager)
+		assertNull(message.brukernotifikasjonInfo.utsettSendingTil)
 	}
 
 

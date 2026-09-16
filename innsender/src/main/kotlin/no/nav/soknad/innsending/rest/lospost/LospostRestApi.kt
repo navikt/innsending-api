@@ -44,6 +44,9 @@ class LospostRestApi(
 			dokumentTittel = opprettLospost.dokumentTittel.removeInvalidControlCharacters(),
 		)
 		val (soknadTittel, tema, dokumentTittel, sprak) = validatedInput
+		if (soknadTittel.isBlank() || dokumentTittel.isBlank()) {
+			throw IllegalArgumentException("Tittel er påkrevd")
+		}
 		combinedLogger.log("Skal opprette en innsending for løspost (tema $tema)", brukerId)
 
 		val lospost = lospostService.saveLospostInnsending(brukerId, tema, soknadTittel, dokumentTittel, sprak)

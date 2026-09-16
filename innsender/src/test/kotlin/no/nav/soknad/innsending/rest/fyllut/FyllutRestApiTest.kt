@@ -15,14 +15,16 @@ import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.Publish
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.service.DocumentService
 import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.KodeverkService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
+import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.ungdomsprogram_reiseDaglig
 import no.nav.soknad.innsending.util.models.*
-import no.nav.soknad.innsending.utils.Api
+import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
@@ -35,12 +37,10 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
-import java.lang.Thread.sleep
 import java.time.LocalDate
 import java.util.*
 import kotlin.test.*
@@ -58,9 +58,6 @@ class FyllutRestApiTest : ApplicationTest() {
 	lateinit var notificationPublisher: PublisherInterface
 
 	@Autowired
-	lateinit var restTemplate: TestRestTemplate
-
-	@Autowired
 	lateinit var soknadService: SoknadService
 
 	@Autowired
@@ -68,6 +65,9 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var filService: FilService
+
+	@Autowired
+	lateinit var documentService: DocumentService
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
@@ -79,18 +79,20 @@ class FyllutRestApiTest : ApplicationTest() {
 		"7318" to "AGDENES",
 	)
 
-	var api: Api? = null
+	var testApi: ApiWebClient? = null
+	val api: ApiWebClient
+		get() = testApi!!
 
 	@BeforeEach
 	fun setup() {
 		clearAllMocks()
-		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
+		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
 		every { kodeverkService.getPoststed(any()) } answers { postnummerMap[firstArg()] }
 	}
 
-	@Value("\${server.port}")
-	var serverPort: Int? = 9064
+	@LocalServerPort
+	var serverPort: Int = 0
 
 	@Test
 	fun testOpprettSoknadPaFyllUtApi() {
@@ -108,7 +110,7 @@ class FyllutRestApiTest : ApplicationTest() {
 			.build()
 
 		// Når
-		val opprettetSoknadResponse = api!!.createSoknad(skjemaDto)
+		val opprettetSoknadResponse = api.createSoknad(skjemaDto)
 			.assertSuccess()
 
 		val hoveddokumentMedFil = SkjemaDokumentDtoTestBuilder(tittel = "Application for one-time grant at birth").asHovedDokument("NAV 10-07.41", withFile = true).build()
@@ -116,7 +118,7 @@ class FyllutRestApiTest : ApplicationTest() {
 			.medHoveddokument(hoveddokumentMedFil)
 			.medHoveddokumentVariant(hoveddokumentVariant)
 			.build()
-		api?.utfyltSoknad(opprettetSoknadResponse.body.innsendingsId!!, utFyltSkjemaDto)
+		api.utfyltSoknad(opprettetSoknadResponse.body.innsendingsId!!, utFyltSkjemaDto)
 
 		// Så
 		testHentSoknadOgSendInn(opprettetSoknadResponse.body, token)
@@ -138,12 +140,12 @@ class FyllutRestApiTest : ApplicationTest() {
 			.build()
 
 		// Når
-		val opprettetSoknadResponse = api!!.createSoknad(skjemaDto)
+		val opprettetSoknadResponse = api.createSoknad(skjemaDto)
 			.assertSuccess()
 
 		// Så
 		///frontend/v1/sendInn/{innsendingsId}
-		val sendInnRespons = restTemplate.exchange(
+		val sendInnRespons = restTestClient.exchange(
 			"http://localhost:${serverPort}/frontend/v1/sendInn/${opprettetSoknadResponse.body.innsendingsId}", HttpMethod.POST,
 			HttpEntity<Unit>(Hjelpemetoder.createHeaders(token)), KvitteringsDto::class.java
 		)
@@ -161,7 +163,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val skjemaDto = SkjemaDtoTestBuilder(vedleggsListe = listOf(vedlegg)).build()
 
 		// Når
-		val responseBody = api!!.createSoknad(skjemaDto, envQualifier = EnvQualifier.preprodAltAnsatt)
+		val responseBody = api.createSoknad(skjemaDto, envQualifier = EnvQualifier.preprodAltAnsatt)
 			.assertSuccess()
 			.body
 
@@ -197,7 +199,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val skjemaDto = SkjemaDtoTestBuilder(vedleggsListe = listOf(vedlegg), mellomlagringDager = mellomlagringDager, skalslettesdato = null).build()
 
 		// Når
-		val responseBody = api!!.createSoknad(skjemaDto)
+		val responseBody = api.createSoknad(skjemaDto)
 			.assertSuccess()
 			.body
 
@@ -216,13 +218,13 @@ class FyllutRestApiTest : ApplicationTest() {
 		val skjemaDto = SkjemaDtoTestBuilder().build()
 
 		// Når
-		val opprettetSoknadResponse = api?.createSoknad(skjemaDto)
-		val innsendingsId = opprettetSoknadResponse?.body?.innsendingsId!!
+		val opprettetSoknadResponse = api.createSoknad(skjemaDto)
+		val innsendingsId = opprettetSoknadResponse.body.innsendingsId!!
 
-		api?.utfyltSoknad(innsendingsId, skjemaDto)
-		api?.sendInnSoknad(innsendingsId)
+		api.utfyltSoknad(innsendingsId, skjemaDto)
+		api.sendInnSoknad(innsendingsId)
 
-		val soknad = soknadService.hentSoknad(opprettetSoknadResponse.body!!.innsendingsId!!)
+		val soknad = soknadService.hentSoknad(innsendingsId)
 		val vedlegg = soknad.id?.let { repo.hentAlleVedleggGittSoknadsid(it) }
 
 		// Så
@@ -242,7 +244,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		val getRequestEntity = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
 
-		val getResponse = restTemplate.exchange(
+		val getResponse = restTestClient.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}", HttpMethod.GET,
 			getRequestEntity, DokumentSoknadDto::class.java
 		)
@@ -261,7 +263,7 @@ class FyllutRestApiTest : ApplicationTest() {
 			opplastingsValgKommentar = "Sendes av min fastlege"
 		)
 		val patchRequestT7 = HttpEntity(patchVedleggT7, Hjelpemetoder.createHeaders(token))
-		val patchResponseT7 = restTemplate.exchange(
+		val patchResponseT7 = restTestClient.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggT7.id}", HttpMethod.PATCH,
 			patchRequestT7, VedleggDto::class.java
 		)
@@ -277,7 +279,7 @@ class FyllutRestApiTest : ApplicationTest() {
 			opplastingsValgKommentar = null
 		)
 		val patchRequestN6 = HttpEntity(patchVedleggN6, Hjelpemetoder.createHeaders(token))
-		val patchResponseN6 = restTemplate.exchange(
+		val patchResponseN6 = restTestClient.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggN6.id}", HttpMethod.PATCH,
 			patchRequestN6, VedleggDto::class.java
 		)
@@ -290,7 +292,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		multipart.add("file", ClassPathResource("/litenPdf.pdf"))
 
 		val postFilRequestN6 = HttpEntity(multipart, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
-		val postFilResponseN6 = restTemplate.exchange(
+		val postFilResponseN6 = restTestClient.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggN6.id}/fil", HttpMethod.POST,
 			postFilRequestN6, FilDto::class.java
 		)
@@ -300,7 +302,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals(Mimetype.applicationSlashPdf, postFilResponseN6.body!!.mimetype)
 
 		///frontend/v1/sendInn/{innsendingsId}
-		val sendInnRespons = restTemplate.exchange(
+		val sendInnRespons = restTestClient.exchange(
 			"http://localhost:${serverPort}/frontend/v1/sendInn/${innsendingsId}", HttpMethod.POST,
 			HttpEntity<Unit>(Hjelpemetoder.createHeaders(token)), KvitteringsDto::class.java
 		)
@@ -311,7 +313,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertTrue(kvitteringsDto.hoveddokumentRef != null)
 		waitUntilAssertionSucceeds {
 			assertThrows<Exception> {
-				restTemplate.exchange(
+				restTestClient.exchange(
 					"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}", HttpMethod.GET,
 					HttpEntity<Unit>(Hjelpemetoder.createHeaders(token)), DokumentSoknadDto::class.java
 				)
@@ -319,13 +321,28 @@ class FyllutRestApiTest : ApplicationTest() {
 		}
 
 		val hentFilURL = "http://localhost:${serverPort}/${kvitteringsDto.hoveddokumentRef}"
-		val filRespons = restTemplate.exchange(
-			hentFilURL, HttpMethod.GET,
-			HttpEntity<Unit>(Hjelpemetoder.createHeaders(token, MediaType.APPLICATION_PDF)), ByteArray::class.java
-		)
-		assertEquals(HttpStatus.OK, filRespons.statusCode)
-		assertTrue(filRespons.body != null)
 
+		`hent og sjekk henting av pdf fil`(hentFilURL, token)
+	}
+
+
+	private fun `hent og sjekk henting av pdf fil`(filRef: String, token: String) {
+		val filResponsBytes = webTestClient.get()
+			.uri(filRef)
+			.headers { headers ->
+				headers.setAll(Hjelpemetoder.createHeaders(token, MediaType.APPLICATION_PDF).toSingleValueMap())
+			}
+			.accept(MediaType.APPLICATION_PDF)
+			.exchange()
+			.expectStatus().isOk
+			.expectHeader().contentType(MediaType.APPLICATION_PDF)
+			.expectBody(ByteArray::class.java)
+			.returnResult()
+			.responseBody
+
+		// Assertions
+		assertNotNull(filResponsBytes, "Responsen skal ikke være null")
+		assertTrue(filResponsBytes.isNotEmpty(), "PDF-filen skal inneholde data")
 	}
 
 	@Test
@@ -359,7 +376,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		).build()
 
 		// When
-		val response = api?.utfyltSoknad(innsendingsId, fraFyllUt)
+		val response = api.utfyltSoknad(innsendingsId, fraFyllUt)
 		val updatedSoknad = soknadService.hentSoknad(innsendingsId)
 
 		// Then
@@ -414,25 +431,25 @@ class FyllutRestApiTest : ApplicationTest() {
 		val skjemaDtoWithVedlegg = skjemaDto.copy(vedleggsListe = listOf(vedlegg))
 
 		// When
-		val opprettSoknadResponse = api?.createSoknad(skjemaDto)
-		val innsendingsId = opprettSoknadResponse?.body?.innsendingsId!!
+		val opprettSoknadResponse = api.createSoknad(skjemaDto)
+		val innsendingsId = opprettSoknadResponse.body.innsendingsId!!
 
 		// Complete søknad in fyllUt
-		api?.utfyltSoknad(innsendingsId, skjemaDtoWithVedlegg)
+		api.utfyltSoknad(innsendingsId, skjemaDtoWithVedlegg)
 
 		val savedSoknad = soknadService.hentSoknad(innsendingsId)
 		val vedleggsId = savedSoknad.vedleggsListe.first { it.vedleggsnr == vedleggsnr }.id!!
 
 		// Upload vedlegg in send-inn
-		api!!.uploadFile(innsendingsId = innsendingsId, vedleggsId = vedleggsId)
+		api.uploadFile(innsendingsId = innsendingsId, vedleggsId = vedleggsId)
 			.assertHttpStatus(HttpStatus.CREATED)
 		// Go back and remove vedlegg in fyllUt
-		val utfyltResponse = api?.utfyltSoknad(innsendingsId, skjemaDto)
+		val utfyltResponse = api.utfyltSoknad(innsendingsId, skjemaDto)
 
 		val updatedSoknad = soknadService.hentSoknad(innsendingsId)
 
 		// Then
-		assertEquals(302, utfyltResponse!!.statusCode.value())
+		assertEquals(302, utfyltResponse.statusCode.value())
 		assertEquals(
 			"http://localhost:3100/sendinn/${innsendingsId}",
 			utfyltResponse.headers.location!!.toString()
@@ -482,14 +499,14 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// When
 		// Complete søknad in fyllUt with N6 and T1 vedlegg. Vedlegg1 og vedlegg2 blir fjernet
-		val utfyltResponse = api?.utfyltSoknad(innsendingsId, fromFyllUt)
+		val utfyltResponse = api.utfyltSoknad(innsendingsId, fromFyllUt)
 
 		// Add N6 vedlegg i send-inn
-		api!!.addVedlegg(innsendingsId, fromSendInn)
+		api.addVedlegg(innsendingsId, fromSendInn)
 			.assertHttpStatus(HttpStatus.CREATED)
 
 		// Go back to fyllUt and remove the T1 vedlegg. Keep N6 from send-inn, but also add one from fyllUt with different title
-		val updatedUtfyltResponse = api?.utfyltSoknad(innsendingsId, updatedFyllUt)
+		val updatedUtfyltResponse = api.utfyltSoknad(innsendingsId, updatedFyllUt)
 		val updatedSoknad = soknadService.hentSoknad(innsendingsId)
 
 		// Then
@@ -538,7 +555,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		// Når
-		api?.updateSoknad(innsendingsId, fraFyllUt)
+		api.updateSoknad(innsendingsId, fraFyllUt)
 		val oppdatertSoknad = soknadService.hentSoknad(innsendingsId)
 
 		val filer = oppdatertSoknad.vedleggsListe.flatMap {
@@ -572,7 +589,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr, spraak = nyttSpraak).build()
 
 		// Når
-		val response = api?.updateSoknad(innsendingsId, fraFyllUt)
+		val response = api.updateSoknad(innsendingsId, fraFyllUt)
 		val oppdatertSoknad = response?.body!!
 
 		// Så
@@ -608,7 +625,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val requestEntity = HttpEntity(fraFyllUt, Hjelpemetoder.createHeaders(token))
 
 		// Når
-		val response = restTemplate.exchange(
+		val response = restTestClient.exchange(
 			"http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}", HttpMethod.PUT,
 			requestEntity, RestErrorResponseDto::class.java
 		)
@@ -633,7 +650,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		// Når
-		val response = api?.getSoknad(innsendingsId)
+		val response = api.getSoknad(innsendingsId)
 
 		val opprettetSoknad = response?.body!!
 
@@ -670,15 +687,62 @@ class FyllutRestApiTest : ApplicationTest() {
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		// Når
-		val response = api?.deleteSoknad(innsendingsId)
+		val response = api.deleteSoknad(innsendingsId)
 
 		// Så
 		assertTrue(response != null)
 		assertEquals(200, response.statusCode.value())
-		assertEquals("OK", response.body!!.status)
-		assertEquals("Slettet soknad med id $innsendingsId", response.body!!.info)
+		assertEquals("OK", response.body.status)
+		assertEquals("Slettet soknad med id $innsendingsId", response.body.info)
 
 		assertThrows<ResourceNotFoundException>("Søknaden skal ikke finnes") { soknadService.hentSoknad(innsendingsId) }
+		verify(timeout = 5000, exactly = 1) {
+			notificationPublisher.avsluttBrukernotifikasjon(match { it.innsendingId == innsendingsId })
+		}
+	}
+
+	@Test
+	fun `delete digital application removes the application and only its transient files`() {
+		val application = opprettSoknad()
+		val otherApplication = opprettSoknad()
+		val innsendingsId = application.innsendingsId!!
+		val otherInnsendingsId = otherApplication.innsendingsId!!
+		val firstFile = api.uploadAttachmentFile(innsendingsId, "first").assertSuccess().body
+		val secondFile = api.uploadAttachmentFile(innsendingsId, "second").assertSuccess().body
+		val otherFile = api.uploadAttachmentFile(otherInnsendingsId, "other").assertSuccess().body
+
+		api.deleteApplication(innsendingsId, ApiWebClient.ApplicationType.DIGITAL)
+			.assertSuccess()
+			.assertHttpStatus(HttpStatus.NO_CONTENT)
+
+		assertThrows<ResourceNotFoundException> { soknadService.hentSoknad(innsendingsId) }
+		assertNull(documentService.getFile(FileStorageNamespace.DIGITAL, UUID.fromString(innsendingsId), firstFile.id))
+		assertNull(documentService.getFile(FileStorageNamespace.DIGITAL, UUID.fromString(innsendingsId), secondFile.id))
+		assertNotNull(
+			documentService.getFile(
+				FileStorageNamespace.DIGITAL,
+				UUID.fromString(otherInnsendingsId),
+				otherFile.id
+			)
+		)
+		verify(timeout = 5000, exactly = 1) {
+			notificationPublisher.avsluttBrukernotifikasjon(match { it.innsendingId == innsendingsId })
+		}
+	}
+
+	@Test
+	fun `delete digital application rejects a user who does not own the application`() {
+		val application = opprettSoknad(brukerId = "10987654321")
+		val innsendingsId = application.innsendingsId!!
+
+		api.deleteApplication(innsendingsId, ApiWebClient.ApplicationType.DIGITAL)
+			.assertClientError()
+			.assertHttpStatus(HttpStatus.NOT_FOUND)
+
+		assertEquals(innsendingsId, soknadService.hentSoknad(innsendingsId).innsendingsId)
+		verify(exactly = 0) {
+			notificationPublisher.avsluttBrukernotifikasjon(match { it.innsendingId == innsendingsId })
+		}
 	}
 
 	@Test
@@ -687,10 +751,10 @@ class FyllutRestApiTest : ApplicationTest() {
 		val skjemaDto = SkjemaDtoTestBuilder().build()
 
 		// When
-		val createdSoknad = api?.createSoknad(skjemaDto)
-		val sentInSoknad = api?.sendInnSoknad(createdSoknad?.body?.innsendingsId!!)
+		val createdSoknad = api.createSoknad(skjemaDto)
+		val sentInSoknad = api.sendInnSoknad(createdSoknad.body.innsendingsId!!)
 		// Wait in order for the application to be sent in
-		val response = api?.updateSoknadFail(sentInSoknad?.body?.innsendingsId!!, skjemaDto)
+		val response = api.updateSoknadFail(sentInSoknad.body.innsendingsId, skjemaDto)
 
 		// Then
 		assertTrue(response != null)
@@ -703,19 +767,19 @@ class FyllutRestApiTest : ApplicationTest() {
 	fun `Should not update opprettetDato when updating soknad`() {
 		// Given
 		val skjemaDto = SkjemaDtoTestBuilder().build()
-		val createdSoknad = api?.createSoknad(skjemaDto)?.body
+		val createdSoknad = api.createSoknad(skjemaDto).body
 
-		val innsendingsId = createdSoknad?.innsendingsId!!
+		val innsendingsId = createdSoknad.innsendingsId!!
 		val soknadBeforeUpdate = soknadService.hentSoknad(innsendingsId)
 
 		// When
-		api?.updateSoknad(innsendingsId, skjemaDto)
+		api.updateSoknad(innsendingsId, skjemaDto)
 		val soknadAfterUpdate = soknadService.hentSoknad(innsendingsId)
 
-		api?.utfyltSoknad(innsendingsId, skjemaDto)
+		api.utfyltSoknad(innsendingsId, skjemaDto)
 		val soknadAfterUtfylt = soknadService.hentSoknad(innsendingsId)
 
-		api?.sendInnSoknad(innsendingsId)
+		api.sendInnSoknad(innsendingsId)
 		val soknadAfterInnsending = soknadService.hentSoknad(innsendingsId)
 
 		// Then
@@ -727,11 +791,11 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal godta innsending med kun gyldig brukerid i SubmitApplicationRequest`() {
-		val soknad = api!!.createSoknad(SkjemaDtoTestBuilder().build())
+		val soknad = api.createSoknad(SkjemaDtoTestBuilder().build())
 			.assertSuccess()
 			.body
 
-		val response: Api.InnsendingApiResponse<ApplicationSubmissionResponse> = api!!.submitDigitalApplication(soknad, bruker = "12345678901")
+		val response: ApiWebClient.InnsendingApiResponse<ApplicationSubmissionResponse> = api.submitDigitalApplication(soknad, bruker = "12345678901")
 			.assertSuccess()
 		assertEquals(soknad.innsendingsId, response.body.innsendingsId.toString(), "Forventet response.body.innsendingsId lik innsendt innsendingsid")
 	}
@@ -739,12 +803,12 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal godta innsending med kun gyldig avsenderId i SubmitApplicationRequest`() {
-		val soknad = api!!.createSoknad(SkjemaDtoTestBuilder().build())
+		val soknad = api.createSoknad(SkjemaDtoTestBuilder().build())
 			.assertSuccess()
 			.body
 
-		val response: Api.InnsendingApiResponse<ApplicationSubmissionResponse> =
-			api!!.submitDigitalApplication(soknad, bruker = "12345678901", avsender = AvsenderDto(id="12345678901", idType = AvsenderDto.IdType.FNR))
+		val response: ApiWebClient.InnsendingApiResponse<ApplicationSubmissionResponse> =
+			api.submitDigitalApplication(soknad, bruker = "12345678901", avsender = AvsenderDto(id="12345678901", idType = AvsenderDto.IdType.FNR))
 			.assertSuccess()
 		assertEquals(soknad.innsendingsId, response.body.innsendingsId.toString(), "Forventet response.body.innsendingsId lik innsendt innsendingsid")
 	}
@@ -752,11 +816,11 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal avvise innsending med ugyldig brukerid i SubmitApplicationRequest`() {
-		val soknad = api!!.createSoknad(SkjemaDtoTestBuilder().build())
+		val soknad = api.createSoknad(SkjemaDtoTestBuilder().build())
 			.assertSuccess()
 			.body
 
-		api!!.submitDigitalApplication(soknad, bruker = "12345 678901")
+		api.submitDigitalApplication(soknad, bruker = "12345 678901")
 			.assertHttpStatus(HttpStatus.BAD_REQUEST)
 			.assertErrorCode(ErrorCode.ILLEGAL_ARGUMENT)
 			.errorBody.let {
@@ -766,11 +830,11 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal avvise innsending med ugyldig avsenderId i SubmitApplicationRequest`() {
-		val soknad = api!!.createSoknad(SkjemaDtoTestBuilder().build())
+		val soknad = api.createSoknad(SkjemaDtoTestBuilder().build())
 			.assertSuccess()
 			.body
 
-		api!!.submitDigitalApplication(soknad, bruker = "12345678901", avsender = AvsenderDto(id="12345678901", idType = AvsenderDto.IdType.ORGNR))
+		api.submitDigitalApplication(soknad, bruker = "12345678901", avsender = AvsenderDto(id="12345678901", idType = AvsenderDto.IdType.ORGNR))
 			.assertHttpStatus(HttpStatus.BAD_REQUEST)
 			.assertErrorCode(ErrorCode.ILLEGAL_ARGUMENT)
 			.errorBody.let {
@@ -786,7 +850,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		// Når
-		val response = api?.createSoknadRedirect(fraFyllUt, false)
+		val response = api.createSoknadRedirect(fraFyllUt, false)
 
 		// Så
 		assertTrue(response != null)
@@ -803,7 +867,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		// Når
-		val response = api!!.createSoknad(fraFyllUt, true)
+		val response = api.createSoknad(fraFyllUt, true)
 			.assertSuccess()
 
 		// Så
@@ -816,7 +880,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val properties = "sokerFornavn,sokerEtternavn,sokerAdresser,sokerTelefonnummer"
 
 		// When
-		val response = api?.getPrefillData(properties)
+		val response = api.getPrefillData(properties)
 
 		// Then
 		assertTrue(response != null)
@@ -835,7 +899,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val properties = "sokerKontonummer"
 
 		// When
-		val response = api?.getPrefillData(properties)
+		val response = api.getPrefillData(properties)
 
 		// Then
 		assertTrue(response != null)
@@ -849,7 +913,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val properties = "sokerFornavn,sokerEtternavn,sokerInvalid"
 
 		// When
-		val response = api?.getPrefillDataFail(properties)
+		val response = api.getPrefillDataFail(properties)
 
 		// Then
 		assertTrue(response != null)
@@ -866,13 +930,13 @@ class FyllutRestApiTest : ApplicationTest() {
 		val skjemaDto = SkjemaDtoTestBuilder(skalslettesdato = null, mellomlagringDager = mellomlagringDager).build()
 
 		// When
-		val createdSoknad = api?.createSoknad(skjemaDto)
-		val getSoknad = api?.getSoknad(createdSoknad?.body?.innsendingsId!!)
+		val createdSoknad = api.createSoknad(skjemaDto)
+		val getSoknad = api.getSoknad(createdSoknad.body.innsendingsId!!)
 
 		// Then
 		assertEquals(
 			skalSlettesDato,
-			createdSoknad?.body?.skalSlettesDato?.toLocalDate()
+			createdSoknad.body.skalSlettesDato?.toLocalDate()
 		)
 		assertEquals(
 			skalSlettesDato,
@@ -893,7 +957,7 @@ class FyllutRestApiTest : ApplicationTest() {
 			val soknad = SkjemaDtoTestBuilder(vedleggsListe = listOf(t7Vedlegg, n6Vedlegg)).build()
 
 			// Når
-			val opprettetSoknadResponse = api!!.createSoknad(soknad).assertSuccess()
+			val opprettetSoknadResponse = api.createSoknad(soknad).assertSuccess()
 			soknader.add(opprettetSoknadResponse.body)
 
 		})
@@ -905,7 +969,10 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	// Opprett søknad med et hoveddokument, en hoveddokumentvariant og to vedlegg
-	private fun opprettSoknad(skjemanr: String = "NAV 08-21.05"): DokumentSoknadDto {
+	private fun opprettSoknad(
+		skjemanr: String = "NAV 08-21.05",
+		brukerId: String = TokenGenerator.subject,
+	): DokumentSoknadDto {
 		val vedleggDtoPdf = VedleggDtoTestBuilder(vedleggsnr = skjemanr).asHovedDokument().build()
 		val vedleggDtoJson = VedleggDtoTestBuilder(vedleggsnr = skjemanr).asHovedDokumentVariant().build()
 		val vedleggDto1 = VedleggDtoTestBuilder(
@@ -925,7 +992,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		val dokumentSoknadDto =
 			DokumentSoknadDtoTestBuilder(
-				brukerId = TokenGenerator.subject,
+				brukerId = brukerId,
 				skjemanr = skjemanr,
 				vedleggsListe = vedleggsListe
 			).build()

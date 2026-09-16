@@ -196,6 +196,9 @@ class SoknadServiceTest : ApplicationTest() {
 
 	@Test
 	fun testAtFilerIkkeSlettesVedInnsending() {
+
+		every { pdlInterface.hentPersonData(any()) } returns PersonDto( "12345678901", "Kan", null, "Søke")
+
 		val innsendingService = lagInnsendingService(soknadService)
 		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
 
@@ -624,6 +627,8 @@ class SoknadServiceTest : ApplicationTest() {
 		val soknad = slot<DokumentSoknadDto>()
 		val vedleggDtos2 = slot<List<VedleggDto>>()
 		every { soknadsmottakerAPI.sendInnSoknad(capture(soknad), capture(vedleggDtos2), any(), any()) } returns Unit
+		every { pdlInterface.hentPersonData(any()) } returns PersonDto( "12345678901", "Kan", null, "Søke")
+		every { subjectHandler.getClientId() } returns "application"
 
 		val innsendingService = lagInnsendingService(soknadService)
 		// Check that reciept is returned for each sent in application

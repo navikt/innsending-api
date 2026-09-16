@@ -103,6 +103,7 @@ paths:
       summary: Kall for å slette opprettet søknad gitt innsendingsId.
       description: Dersom funnet, slettes søknaden og dens vedlegg, eventuelle opplastede filer og brukernotifikasjon
       operationId: fyllUtSlettSoknad
+      deprecated: true
 
       parameters:
         - name: innsendingsId

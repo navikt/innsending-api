@@ -1,6 +1,8 @@
 package no.nav.soknad.innsending.rest.sendinn
 
+import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearAllMocks
+import io.mockk.verify
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -9,10 +11,10 @@ import kotlinx.coroutines.awaitAll
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
-import no.nav.soknad.innsending.utils.Api
+import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.Hjelpemetoder
-import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
 import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
@@ -24,11 +26,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class FilRestApiTest : ApplicationTest() {
 
@@ -36,22 +40,21 @@ class FilRestApiTest : ApplicationTest() {
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
 	@Autowired
-	lateinit var restTemplate: TestRestTemplate
-
-	@Autowired
 	private lateinit var innsenderMetrics: InnsenderMetrics
 
+	@SpykBean
+	private lateinit var filService: FilService
 
-	@Value("\${server.port}")
-	var serverPort: Int? = 9064
+	@LocalServerPort
+	var serverPort: Int = 0
 
-	var testApi: Api? = null
-	val api: Api
+	var testApi: ApiWebClient? = null
+	val api: ApiWebClient
 		get() = testApi!!
 
 	@BeforeEach
 	fun setup() {
-		testApi = Api(restTemplate, serverPort!!, mockOAuth2Server)
+		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
 	}
 
@@ -62,6 +65,33 @@ class FilRestApiTest : ApplicationTest() {
 	}
 
 	private val defaultSkjemanr = "NAV 55-00.60"
+
+	@Test
+	fun `missing required file part returns dedicated bad request error`() {
+		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+		val soknadDto = opprettEnSoknad(defaultSkjemanr, "nb_NO", listOf("N6"))
+		val vedleggsId = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }.id!!
+		val multipartWithoutFile = LinkedMultiValueMap<Any, Any>().apply {
+			add("metadata", "missing file")
+		}
+		clearAllMocks()
+
+		val response = restTestClient.exchange(
+			"http://localhost:$serverPort/frontend/v1/soknad/${soknadDto.innsendingsId}/vedlegg/$vedleggsId/fil",
+			HttpMethod.POST,
+			HttpEntity(
+				multipartWithoutFile,
+				Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA)
+			),
+			RestErrorResponseDto::class.java
+		)
+
+		assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+		assertEquals("invalidRequest.missingMultipartPart", response.body?.errorCode)
+		verify(exactly = 0) {
+			filService.lagreFil(any<DokumentSoknadDto>(), any<FilDto>(), any<Boolean>())
+		}
+	}
 
 	@Test
 	fun sjekkOpplastingsstatusEtterOpplastingOgSlettingAvFilPaVedleggTest() {
@@ -95,7 +125,7 @@ class FilRestApiTest : ApplicationTest() {
 		multipart.add("file", ClassPathResource(filPath))
 
 		val postFilRequest = HttpEntity(multipart, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
-		val postFilResponse = restTemplate.exchange(
+		val postFilResponse = restTestClient.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggsId}/fil",
 			HttpMethod.POST,
 			postFilRequest,
@@ -107,7 +137,7 @@ class FilRestApiTest : ApplicationTest() {
 		val opplastetFilDto = postFilResponse.body
 
 		val vedleggN6Request = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
-		val oppdatertVedleggN6Response = restTemplate.exchange(
+		val oppdatertVedleggN6Response = restTestClient.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggsId}",
 			HttpMethod.GET,
 			vedleggN6Request,
@@ -123,7 +153,7 @@ class FilRestApiTest : ApplicationTest() {
 
 	private fun slettFilOgValider(token: String, soknadDto: DokumentSoknadDto, vedleggsId: Long, filId: Long, expectedStatus: OpplastingsStatusDto) {
 		val slettFilRequest = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
-		val slettetFilVedleggResponse = restTemplate.exchange(
+		val slettetFilVedleggResponse = restTestClient.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggsId}/fil/${filId}",
 			HttpMethod.DELETE,
 			slettFilRequest,
@@ -228,7 +258,7 @@ class FilRestApiTest : ApplicationTest() {
 		multipart.add("file", ClassPathResource(filePath))
 
 		val httpEntity = HttpEntity(multipart, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
-		return restTemplate.exchange(
+		return restTestClient.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId!!}/vedlegg/${vedleggsId}/fil",
 			HttpMethod.POST,
 			httpEntity,
@@ -238,18 +268,46 @@ class FilRestApiTest : ApplicationTest() {
 	}
 
 	private fun hentOpplastetFil(token: String, innsendingsId: String, vedleggsId: Long, filId: Long):ResponseEntity<ByteArrayResource>  {
-		val httpEntity = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
-		return restTemplate.exchange(
+/*
+		val httpEntity = HttpEntity<Unit>(
+			Hjelpemetoder.createHeaders(
+				token,
+				mapOf(HttpHeaders.ACCEPT to "${MediaType.APPLICATION_PDF_VALUE}, ${MediaType.APPLICATION_JSON_VALUE}")
+			)
+		)
+		return restTestClient.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/$innsendingsId/vedlegg/$vedleggsId/fil/$filId",
 			HttpMethod.GET,
 			httpEntity,
-			ByteArrayResource::class.java
+			ByteArrayResource::class.java,
+
 		)
+*/
+		val filResponsBytes = webTestClient.get()
+			.uri("http://localhost:${serverPort}/frontend/v1/soknad/$innsendingsId/vedlegg/$vedleggsId/fil/$filId")
+			.headers { headers ->
+				headers.setAll(Hjelpemetoder.createHeaders(token, MediaType.APPLICATION_PDF).toSingleValueMap())
+			}
+			.accept(MediaType.APPLICATION_PDF)
+			.exchange()
+			.expectStatus().isOk
+			.expectHeader().contentType(MediaType.APPLICATION_PDF)
+			.expectBody(ByteArray::class.java)
+			.returnResult()
+			.responseBody
+
+		// Assertions
+		assertNotNull(filResponsBytes, "Responsen skal ikke være null")
+		assertTrue(filResponsBytes.isNotEmpty(), "PDF-filen skal inneholde data")
+		return ResponseEntity(ByteArrayResource(filResponsBytes), HttpHeaders().apply {
+			contentType = MediaType.APPLICATION_PDF
+		}, HttpStatus.OK)
+
 	}
 
 	private fun slettOpplastetFil(token: String, innsendingsId: String, vedleggsId: Long, filId: Long) {
 		val httpEntity = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
-		val response = restTemplate.exchange(
+		val response = restTestClient.exchange(
 			"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg/$vedleggsId/fil/$filId",
 			HttpMethod.DELETE,
 			httpEntity,
@@ -281,7 +339,7 @@ class FilRestApiTest : ApplicationTest() {
 
 		assertThrows(Exception::class.java) {
 			for (i in 1..50) {
-				val postFilResponseN6 = restTemplate.exchange(
+				val postFilResponseN6 = restTestClient.exchange(
 					"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil",
 					HttpMethod.POST,
 					postFilRequestN6,
@@ -315,7 +373,7 @@ class FilRestApiTest : ApplicationTest() {
 
 		var ok = true
 		assertThrows(Exception::class.java) {
-			restTemplate.exchange(
+			restTestClient.exchange(
 				"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil",
 				HttpMethod.POST,
 				postFilRequestN6,
@@ -345,7 +403,7 @@ class FilRestApiTest : ApplicationTest() {
 
 		assertThrows(Exception::class.java) {
 			for (i in 1..100) {
-				val postFilResponseN6 = restTemplate.exchange(
+				val postFilResponseN6 = restTestClient.exchange(
 					"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil",
 					HttpMethod.POST,
 					postFilRequestN6,

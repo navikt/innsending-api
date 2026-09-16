@@ -14,12 +14,16 @@ spring:
     default-property-inclusion: non_null
   jpa:
     open-in-view: false
-
-  flyway:
-    enabled: true
-
+    hibernate:
+      ddl-auto: none
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres?user=postgres&password=postgres
+  flyway:
+    enabled: true
+    outOfOrder: false
+    table: schema_version
+    validateOnMigrate: true
+    validateMigrationNaming: true
 
 bidrag_applikasjon: 1
 

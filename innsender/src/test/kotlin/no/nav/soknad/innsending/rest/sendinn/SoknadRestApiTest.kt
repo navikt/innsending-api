@@ -23,7 +23,7 @@ import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
-import no.nav.soknad.innsending.utils.Api
+import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.OpprettEttersendingBuilder
@@ -42,7 +42,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
 import java.time.LocalDateTime
 import java.util.UUID
@@ -56,9 +56,6 @@ class SoknadRestApiTest : ApplicationTest() {
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
 	@Autowired
-	lateinit var restTemplate: TestRestTemplate
-
-	@Autowired
 	lateinit var soknadService: SoknadService
 
 	@SpykBean
@@ -67,23 +64,25 @@ class SoknadRestApiTest : ApplicationTest() {
 	@MockkBean
 	private lateinit var soknadsmottakerAPI: MottakerAPITest
 
-	@Value("\${server.port}")
-	var serverPort: Int? = 9064
+	@LocalServerPort
+	var serverPort: Int = 0
 
 	private val defaultUser = "12345678901"
 	private val defaultSkjemanr = "NAV 55-00.60"
 
-	var api: Api? = null
+	var testApi: ApiWebClient? = null
+	val api: ApiWebClient
+		get() = testApi!!
 
 	@BeforeEach
 	fun setup() {
-		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
+		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
 	}
 
 	@Test
 	fun `Should fail creating soknad (old visningstype dokumentinnsending)`() {
-		val errorBody = api!!.createSoknadForSkjemanr(defaultSkjemanr)
+		val errorBody = api.createSoknadForSkjemanr(defaultSkjemanr)
 			.assertHttpStatus(HttpStatus.NOT_IMPLEMENTED)
 			.errorBody
 		assertEquals(
@@ -123,7 +122,7 @@ class SoknadRestApiTest : ApplicationTest() {
 			DokumentSoknadDtoTestBuilder(skjemanr = opprettetSoknad.skjemanr, brukerId = defaultUser).asEttersending().build()
 		soknadService.opprettNySoknad(ettersending2)
 
-		val response = api?.getExistingSoknader(opprettetSoknad.skjemanr, queryParam)
+		val response = api.getExistingSoknader(opprettetSoknad.skjemanr, queryParam)
 
 		// Then
 		val body = response?.body!!
@@ -204,7 +203,7 @@ class SoknadRestApiTest : ApplicationTest() {
 			)
 		)
 
-		api!!.sendInnSoknad(soknad.innsendingsid).assertSuccess()
+		api.sendInnSoknad(soknad.innsendingsid).assertSuccess()
 
 		// verify invocation of soknadsmottaker
 		val slotSoknad = slot<DokumentSoknadDto>()
@@ -230,16 +229,16 @@ class SoknadRestApiTest : ApplicationTest() {
 			SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build(),
 			SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
 		)).build()
-		val innsendingsId = api!!.createSoknad(createSoknadRequest, envQualifier = EnvQualifier.preprodAnsatt)
+		val innsendingsId = api.createSoknad(createSoknadRequest, envQualifier = EnvQualifier.preprodAnsatt)
 			.assertSuccess().body.innsendingsId!!
-		val soknad = api!!.getSoknadSendinn(innsendingsId)
+		val soknad = api.getSoknadSendinn(innsendingsId)
 			.assertSuccess().body
 
 		val vedleggsId = soknad.vedleggsListe.first { it.vedleggsnr == "N6" }.id
 		val fil = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
-		api!!.uploadFile(innsendingsId, vedleggsId!!, fil)
+		api.uploadFile(innsendingsId, vedleggsId!!, fil)
 
-		val innsendingskvittering = api!!.sendInnSoknad(innsendingsId, EnvQualifier.preprodAnsatt)
+		val innsendingskvittering = api.sendInnSoknad(innsendingsId, EnvQualifier.preprodAnsatt)
 			.assertSuccess().body
 		assertEquals(1, innsendingskvittering.skalEttersendes?.size)
 
@@ -275,33 +274,33 @@ class SoknadRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should reject submission if ettersending has no attachments`() {
 		val createEttersending = OpprettEttersendingBuilder().build()
-		val innsendingsId = api!!.createEttersending(createEttersending, envQualifier = EnvQualifier.preprodAnsatt)
+		val innsendingsId = api.createEttersending(createEttersending, envQualifier = EnvQualifier.preprodAnsatt)
 			.assertSuccess().body.innsendingsId!!
 
-		api!!.sendInnSoknad(innsendingsId, EnvQualifier.preprodAnsatt)
+		api.sendInnSoknad(innsendingsId, EnvQualifier.preprodAnsatt)
 			.assertClientError()
 	}
 
 	@Test
 	fun `Should reject submission if ettersending only has postponded uploads to attachments`() {
 		val createEttersending = OpprettEttersendingBuilder().medVedleggGittNr(listOf("W1", "W2")).build()
-		val soknad = api!!.createEttersending(createEttersending, envQualifier = EnvQualifier.preprodAnsatt)
+		val soknad = api.createEttersending(createEttersending, envQualifier = EnvQualifier.preprodAnsatt)
 			.assertSuccess().body
 
-		api!!.sendInnSoknad(soknad.innsendingsId!!, EnvQualifier.preprodAnsatt)
+		api.sendInnSoknad(soknad.innsendingsId!!, EnvQualifier.preprodAnsatt)
 			.assertClientError()
 	}
 
 	@Test
 	fun `Should accept submission if ettersending has postponded uploads, and changed uploadStatus to attachments`() {
 		val createEttersending = OpprettEttersendingBuilder().medVedleggGittNr(listOf("W1", "W2")).build()
-		val soknad = api!!.createEttersending(createEttersending, envQualifier = EnvQualifier.preprodAnsatt)
+		val soknad = api.createEttersending(createEttersending, envQualifier = EnvQualifier.preprodAnsatt)
 			.assertSuccess().body
 		val innsendingsId = soknad.innsendingsId!!
 		val vedleggsId = soknad.vedleggsListe.first { it.vedleggsnr == "W1" }.id!!
-		api!!.patchVedlegg(innsendingsId = innsendingsId, vedleggsId = vedleggsId, PatchVedleggDto(opplastingsStatus = OpplastingsStatusDto.SendesAvAndre)).assertSuccess()
+		api.patchVedlegg(innsendingsId = innsendingsId, vedleggsId = vedleggsId, PatchVedleggDto(opplastingsStatus = OpplastingsStatusDto.SendesAvAndre)).assertSuccess()
 
-		val innsendingskvittering = api!!.sendInnSoknad(innsendingsId, EnvQualifier.preprodAnsatt)
+		val innsendingskvittering = api.sendInnSoknad(innsendingsId, EnvQualifier.preprodAnsatt)
 			.assertSuccess().body
 
 		assertEquals(1, innsendingskvittering.skalEttersendes?.size)

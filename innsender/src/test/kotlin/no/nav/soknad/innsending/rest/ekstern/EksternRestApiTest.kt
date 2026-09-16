@@ -11,7 +11,7 @@ import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.Publish
 import no.nav.soknad.innsending.model.BrukernotifikasjonsType
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.SoknadType
-import no.nav.soknad.innsending.utils.Api
+import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.Skjema
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.EksternOpprettEttersendingTestBuilder
@@ -24,8 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.test.web.server.LocalServerPort
 import java.lang.Thread.sleep
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
@@ -34,20 +33,19 @@ class EksternRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
-	@Autowired
-	lateinit var restTemplate: TestRestTemplate
-
 	@SpykBean()
 	lateinit var publisherInterface: PublisherInterface
 
-	@Value("\${server.port}")
-	var serverPort: Int? = 9064
+	@LocalServerPort
+	var serverPort: Int = 0
 
-	var api: Api? = null
+	private var testApi: ApiWebClient? = null
+	private val api: ApiWebClient
+		get() = testApi!!
 
 	@BeforeEach
 	fun setup() {
-		api = Api(restTemplate, serverPort!!, mockOAuth2Server)
+		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
 	}
 
@@ -65,7 +63,7 @@ class EksternRestApiTest : ApplicationTest() {
 			.build()
 
 		// When
-		val ettersending = api!!.createEksternEttersending(createEttersendingRequest)
+		val ettersending = api.createEksternEttersending(createEttersendingRequest)
 			.assertSuccess()
 			.body
 
@@ -86,17 +84,19 @@ class EksternRestApiTest : ApplicationTest() {
 			.build()
 
 		// When
-		val ettersending = api!!.createEksternEttersending(createEttersendingRequest)
+		val ettersending = api.createEksternEttersending(createEttersendingRequest)
 			.assertSuccess()
 			.body
 
 		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
-		val noticationSlot = slot<AddNotification>()
-		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlot)) }
+		val noticationSlots = mutableListOf<AddNotification>()
+		verify(atLeast = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlots)) }
 
 		// Then
 		// The notification is an utkast if erSystemGenerert is false
-		val notication = noticationSlot.captured
+		assertTrue(noticationSlots.filter { it.soknadRef.innsendingId == ettersending.innsendingsId }.isNotEmpty())
+		assertTrue(noticationSlots.filter { it.soknadRef.innsendingId == ettersending.innsendingsId }.size == 1)
+		val notication = noticationSlots.filter { it.soknadRef.innsendingId == ettersending.innsendingsId }.first()
 		assertEquals(false, notication.soknadRef.erSystemGenerert)
 		assertEquals(true, notication.soknadRef.erEttersendelse)
 		assertEquals(ettersending.innsendingsId, notication.soknadRef.innsendingId)
@@ -115,15 +115,15 @@ class EksternRestApiTest : ApplicationTest() {
 			.build()
 
 		// When
-		api?.createEksternEttersending(ettersending)
+		val opprettEttersending = api.createEksternEttersending(ettersending)
 
 		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
-		val noticationSlot = slot<AddNotification>()
-		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlot)) }
+		val noticationSlots = mutableListOf<AddNotification>()
+		verify(atLeast = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlots)) }
 
 		// Then
 		// The notification is an oppgave if erSystemGenerert is true
-		val notication = noticationSlot.captured
+		val notication = noticationSlots.filter { it.soknadRef.innsendingId == opprettEttersending.body.innsendingsId }.first()
 		assertEquals(true, notication.soknadRef.erEttersendelse)
 		assertEquals(true, notication.soknadRef.erSystemGenerert)
 		assertNotNull(notication.brukernotifikasjonInfo.utsettSendingTil)
@@ -139,7 +139,7 @@ class EksternRestApiTest : ApplicationTest() {
 			.build()
 
 		// When
-		val ettersending = api!!.createEksternEttersending(createEttersendingRequest, EnvQualifier.preprodAnsatt)
+		val ettersending = api.createEksternEttersending(createEttersendingRequest, EnvQualifier.preprodAnsatt)
 			.assertSuccess()
 			.body
 
@@ -166,11 +166,11 @@ class EksternRestApiTest : ApplicationTest() {
 		// Given
 		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = defaultSkjemanr, tema = defaultTema).build()
 
-		val opprettetSoknadResponse = api!!.createSoknad(skjemaDto).assertSuccess()
+		val opprettetSoknadResponse = api.createSoknad(skjemaDto).assertSuccess()
 		val innsendingsId = opprettetSoknadResponse.body.innsendingsId!!
 
-		api?.utfyltSoknad(innsendingsId, skjemaDto)
-		api?.sendInnSoknad(innsendingsId)
+		api.utfyltSoknad(innsendingsId, skjemaDto)
+		api.sendInnSoknad(innsendingsId)
 
 		val ettersending = EksternOpprettEttersendingTestBuilder()
 			.skjemanr(skjemaDto.skjemanr)
@@ -180,12 +180,12 @@ class EksternRestApiTest : ApplicationTest() {
 			.build()
 
 		// When
-		val response = api?.createEksternEttersending(ettersending)
+		val response = api.createEksternEttersending(ettersending)
 
 		// Then
-		assertNotNull(response?.body)
+		assertNotNull(response.body)
 
-		val body = response!!.body!!
+		val body = response.body
 		assertEquals(1, body.vedleggsListe.size)
 		assertEquals(innsendingsId, body.ettersendingsId, "Should have ettersendingId from existing søknad innsendingsId")
 		assertEquals(defaultVedleggsnr, body.vedleggsListe[0].vedleggsnr)
@@ -196,11 +196,11 @@ class EksternRestApiTest : ApplicationTest() {
 		// Given
 		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = defaultSkjemanr, tema = defaultTema).build()
 
-		val opprettetSoknadResponse = api!!.createSoknad(skjemaDto).assertSuccess()
+		val opprettetSoknadResponse = api.createSoknad(skjemaDto).assertSuccess()
 		val innsendingsId = opprettetSoknadResponse.body.innsendingsId!!
 
-		api?.utfyltSoknad(innsendingsId, skjemaDto)
-		api?.sendInnSoknad(innsendingsId)
+		api.utfyltSoknad(innsendingsId, skjemaDto)
+		api.sendInnSoknad(innsendingsId)
 
 		val ettersending = EksternOpprettEttersendingTestBuilder()
 			.skjemanr(skjemaDto.skjemanr)
@@ -209,12 +209,12 @@ class EksternRestApiTest : ApplicationTest() {
 			.build()
 
 		// When
-		val response = api?.createEksternEttersending(ettersending)
+		val response = api.createEksternEttersending(ettersending)
 
 		// Then
-		assertNotNull(response?.body)
+		assertNotNull(response.body)
 
-		val body = response!!.body!!
+		val body = response.body
 		assertEquals(1, body.vedleggsListe.size)
 		assertNotEquals(
 			innsendingsId,
@@ -235,18 +235,18 @@ class EksternRestApiTest : ApplicationTest() {
 			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(defaultVedleggsnr).build()))
 			.build()
 
-		val createdEttersendingResponse = api?.createEksternEttersending(ettersending)
-		val innsendingsId = createdEttersendingResponse?.body?.ettersendingsId!!
+		val createdEttersendingResponse = api.createEksternEttersending(ettersending)
+		val innsendingsId = createdEttersendingResponse.body.ettersendingsId
 
 		// When
-		val response = api?.deleteEksternEttersending(innsendingsId)
+		val response = api.deleteEksternEttersending(innsendingsId!!)
 
 		// Then
-		assertNotNull(response?.body)
+		assertNotNull(response.body)
 
-		val body = response!!.body!!
-		assertEquals("Slettet ettersending med id $innsendingsId", body.info)
-		assertEquals("OK", body.status)
+		val body = response.body
+		assertEquals("Slettet ettersending med id $innsendingsId", body?.info)
+		assertEquals("OK", body?.status)
 	}
 
 	@Test
@@ -255,13 +255,13 @@ class EksternRestApiTest : ApplicationTest() {
 		val innsendingsId = "non-existing-id"
 
 		// When
-		val response = api?.deleteEksternEttersendingFail(innsendingsId)
+		val response = api.deleteEksternEttersendingFail(innsendingsId)
 
 		// Then
-		assertNotNull(response?.body)
-		assertEquals(404, response?.statusCode?.value())
-		val body = response!!.body!!
-		assertEquals("resourceNotFound", body.errorCode)
+		assertNotNull(response.body)
+		assertEquals(404, response.statusCode.value())
+		val body = response.body
+		assertEquals("resourceNotFound", body?.errorCode)
 	}
 
 	companion object {
@@ -282,28 +282,28 @@ class EksternRestApiTest : ApplicationTest() {
 	) {
 		// Given
 		val skjemanr = Skjema.generateSkjemanr();
-		api?.createEttersending(
+		api.createEttersending(
 			OpprettEttersendingTestBuilder()
 				.skjemanr(skjemanr)
 				.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().build()))
 				.build()
 		)
-		api?.createEttersending(
+		api.createEttersending(
 			OpprettEttersendingTestBuilder()
 				.skjemanr(skjemanr)
 				.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().build()))
 				.build()
 		)
-		api?.createSoknad(SkjemaDtoTestBuilder(skjemanr = skjemanr).build())
+		api.createSoknad(SkjemaDtoTestBuilder(skjemanr = skjemanr).build())
 
 		// When
-		val response = api?.getSoknaderForSkjemanr(skjemanr, querySoknadstyper)
+		val response = api.getSoknaderForSkjemanr(skjemanr, querySoknadstyper)
 
 		// Then
-		val body = response!!.body!!
-		assertEquals(expectedSize, body.size)
+		val body = response.body
+		assertEquals(expectedSize, body?.size)
 		if (querySoknadstyper?.isNotEmpty() == true) {
-			assertTrue(body.all { querySoknadstyper.contains(it.soknadstype) })
+			assertTrue(body?.all { querySoknadstyper.contains(it.soknadstype) } == true)
 		}
 	}
 

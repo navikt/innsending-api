@@ -26,6 +26,7 @@ import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTe
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
 import no.nav.soknad.pdfutilities.AntallSider
 import no.nav.soknad.pdfutilities.PdfGenerator
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -143,6 +144,11 @@ class InnsendingServiceTest : ApplicationTest() {
 		// Så skal
 		assertEquals(1, hoveddok.size)
 		assertTrue(hoveddok.all { it.fileStatus == SoknadFile.FileStatus.ok })
+
+		val soknad = repo.hentSoknadDb(dokumentSoknadDto.innsendingsId!!)
+		assertEquals(SoknadsStatus.Innsendt, soknad.status)
+		assertEquals(dokumentSoknadDto.brukerId, soknad.avsender?.id)
+		assertEquals(dokumentSoknadDto.brukerId, soknad.affecteduser?.id)
 	}
 
 	@Test

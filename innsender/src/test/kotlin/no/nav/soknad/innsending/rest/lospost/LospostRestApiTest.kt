@@ -13,15 +13,14 @@ import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.OpprettLospost
 import no.nav.soknad.innsending.model.PostVedleggDto
-import no.nav.soknad.innsending.utils.Api
+import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.test.web.server.LocalServerPort
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -31,22 +30,19 @@ class LospostRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
-	@Autowired
-	lateinit var restTemplate: TestRestTemplate
-
 	@SpykBean
 	lateinit var notificationPublisher: PublisherInterface
 
-	@Value("\${server.port}")
-	var serverPort: Int? = 9064
+	@LocalServerPort
+	var serverPort: Int = 0
 
-	var testApi: Api? = null
-	val api: Api
+	var testApi: ApiWebClient? = null
+	val api: ApiWebClient
 		get() = testApi!!
 
 	@BeforeEach
 	fun setup() {
-		testApi = Api(restTemplate, serverPort!!, mockOAuth2Server)
+		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
 	}
 
@@ -71,6 +67,30 @@ class LospostRestApiTest : ApplicationTest() {
 		assertEquals("N6", vedlegg.vedleggsnr)
 		assertEquals(request.dokumentTittel, vedlegg.tittel)
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedlegg.opplastingsStatus)
+	}
+
+	@Test
+	fun `Should reject empty application title`() {
+		val request = OpprettLospost(
+			soknadTittel = " ",
+			tema = "BIL",
+			dokumentTittel = "Førerkort",
+			sprak = "nb"
+		)
+		api.createLospost(request)
+			.assertClientError()
+	}
+
+	@Test
+	fun `Should reject empty document title`() {
+		val request = OpprettLospost(
+			soknadTittel = "BIL - Førerkort",
+			tema = "BIL",
+			dokumentTittel = " ",
+			sprak = "nb"
+		)
+		api.createLospost(request)
+			.assertClientError()
 	}
 
 	@Test

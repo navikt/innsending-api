@@ -7,11 +7,11 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import javax.sql.DataSource
 
-@Profile("test | local")
+@Profile("test", "local")
 @Configuration
 class StartDb {
 
-	private var embeddedPostgres: EmbeddedPostgres = EmbeddedPostgres.builder().setTag("15").start()
+	private var embeddedPostgres: EmbeddedPostgres = EmbeddedPostgres.builder().setTag("18").start()
 
 	@Bean
 	fun embeddedPostgres(): DataSource {

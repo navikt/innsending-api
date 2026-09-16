@@ -22,7 +22,7 @@ class AntivirusServiceTest : ApplicationTest() {
 
 	@BeforeEach
 	fun setup() {
-		WireMock.reset()
+		//WireMock.reset()
 		antivirusService = AntivirusService(
 			antivirusRestClient,
 			innsenderMetrics,

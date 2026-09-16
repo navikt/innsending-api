@@ -110,20 +110,25 @@ class DocumentServiceTest : ApplicationTest() {
 	@Test
 	fun `should delete all files for an innsending`() {
 		val innsendingId = UUID.randomUUID()
+		val otherInnsendingId = UUID.randomUUID()
 		val resource1 = loadResource("/litenPdf.pdf")
 		val resource2 = loadResource("/mellomstor.pdf")
 
 		val lagretFil1 = documentService.saveAttachment(FileStorageNamespace.NOLOGIN, resource1, "N11", innsendingId)
 		val lagretFil2 = documentService.saveAttachment(FileStorageNamespace.NOLOGIN, resource2, "N12", innsendingId)
+		val otherFile = documentService.saveAttachment(FileStorageNamespace.NOLOGIN, resource1, "N11", otherInnsendingId)
 
 		val deleted = documentService.deleteAttachment(FileStorageNamespace.NOLOGIN, innsendingId)
 		assertTrue(deleted)
 
 		val fil1 = documentService.getFile(FileStorageNamespace.NOLOGIN, innsendingId, lagretFil1.filId.toUUID())
 		val fil2 = documentService.getFile(FileStorageNamespace.NOLOGIN, innsendingId, lagretFil2.filId.toUUID())
+		val untouchedFile =
+			documentService.getFile(FileStorageNamespace.NOLOGIN, otherInnsendingId, otherFile.filId.toUUID())
 
 		assertNull(fil1)
 		assertNull(fil2)
+		assertNotNull(untouchedFile)
 	}
 
 	@Test

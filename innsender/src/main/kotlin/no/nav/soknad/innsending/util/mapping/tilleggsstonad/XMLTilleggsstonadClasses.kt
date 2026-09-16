@@ -292,7 +292,7 @@ data class Reiseutgifter(
 	val dagligReise: DagligReise? = null,
 	@JsonProperty("reiseObligatoriskSamling")
 	val reiseObligatoriskSamling: ReiseObligatoriskSamling? = null,
-	@JsonProperty("reisestoenadForArbeidssoeker")
+	@JsonProperty("reiseVedOppstartOgAvsluttetAktivitet")
 	val reiseVedOppstartOgAvsluttetAktivitet: ReiseVedOppstartOgAvsluttetAktivitet? = null,
 	@JsonProperty("reisestoenadForArbeidssoeker")
 	val reisestoenadForArbeidssoeker: ReisestoenadForArbeidssoeker? = null
@@ -318,7 +318,7 @@ data class Rettighetstype(
 @JsonPropertyOrder("beloep")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class DrosjeTransportutgifter(
-	@JacksonXmlProperty(localName = "belop")
+	@JacksonXmlProperty(localName = "beloep")
 	val beloep: Int
 )
 

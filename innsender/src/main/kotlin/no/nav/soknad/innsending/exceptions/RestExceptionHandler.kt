@@ -14,7 +14,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException
 import org.springframework.web.multipart.MultipartException
+import org.springframework.web.multipart.support.MissingServletRequestPartException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import java.nio.charset.IllegalCharsetNameException
 import java.nio.charset.MalformedInputException
@@ -112,12 +114,26 @@ class RestExceptionHandler {
 		)
 	}
 
+	@ExceptionHandler
+	fun missingServletRequestPartException(
+		exception: MissingServletRequestPartException
+	): ResponseEntity<RestErrorResponseDto> {
+		logger.warn(exception.messageForLog, exception)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = exception.message,
+				timestamp = OffsetDateTime.now(),
+				errorCode = ErrorCode.MISSING_MULTIPART_PART.code
+			), HttpStatus.BAD_REQUEST
+		)
+	}
+
 	// 401
 	@ExceptionHandler
 	fun unauthenticatedHandler(
 		request: HttpServletRequest,
 		exception: JwtTokenMissingException
-	): ResponseEntity<RestErrorResponseDto?>? {
+	): ResponseEntity<RestErrorResponseDto>? {
 		logger.warn("Autentisering feilet ved kall til " + request.requestURI + ": " + exception.messageForLog, exception)
 
 		return ResponseEntity(
@@ -134,7 +150,7 @@ class RestExceptionHandler {
 	fun unauthorizedExceptionHandler(
 		request: HttpServletRequest,
 		exception: JwtTokenUnauthorizedException
-	): ResponseEntity<RestErrorResponseDto?>? {
+	): ResponseEntity<RestErrorResponseDto>? {
 		logger.warn("Autorisering feilet ved kall til " + request.requestURI + ": " + exception.message, exception)
 
 		return ResponseEntity(
@@ -150,7 +166,7 @@ class RestExceptionHandler {
 	fun handleConfigVerificationException(
 		request: HttpServletRequest,
 		exception: ConfigVerificationException,
-	): ResponseEntity<RestErrorResponseDto?>? {
+	): ResponseEntity<RestErrorResponseDto>? {
 		logger.warn("Kall til ${request.requestURI} avvist (${exception.configuration.key}): ${exception.message}", exception)
 
 		return ResponseEntity(
@@ -166,7 +182,7 @@ class RestExceptionHandler {
 	fun unsupportedOperationException(
 		request: HttpServletRequest,
 		exception: UnsupportedOperationException
-	): ResponseEntity<RestErrorResponseDto?>? {
+	): ResponseEntity<RestErrorResponseDto>? {
 		logger.warn("Kall til ${request.requestURI} ikke støttet: ${exception.messageForLog}", exception)
 
 		return ResponseEntity(
@@ -182,7 +198,7 @@ class RestExceptionHandler {
 	fun storageExceptionHandler(
 		request: HttpServletRequest,
 		exception: StorageException
-	): ResponseEntity<RestErrorResponseDto?>? {
+	): ResponseEntity<RestErrorResponseDto>? {
 		logger.error("Feil ved kall til ${request.requestURI}: ${exception.message}", exception)
 
 		return ResponseEntity(
@@ -207,18 +223,13 @@ class RestExceptionHandler {
 		)
 	}
 
-	// If client aborts we don't want to log this as an error
 	@ExceptionHandler
-	fun clientAbortException(exception: ClientAbortException): ResponseEntity<RestErrorResponseDto> {
-		logger.warn(exception.messageForLog, exception)
-		return ResponseEntity(
-			RestErrorResponseDto(
-				message = exception.message ?: "Noe gikk galt, prøv igjen senere",
-				timestamp = OffsetDateTime.now(),
-				errorCode = ErrorCode.GENERAL_ERROR.code,
-			), HttpStatus.INTERNAL_SERVER_ERROR
-		)
-	}
+	fun asyncRequestNotUsableException(exception: AsyncRequestNotUsableException): ResponseEntity<Void>? =
+		disconnectedClient(exception)
+
+	@ExceptionHandler
+	fun clientAbortException(exception: ClientAbortException): ResponseEntity<Void>? =
+		disconnectedClient(exception)
 
 	// When the client aborts there is a multipart exception caused by ClientAbortException. We don't want to log this as an error.
 	// Causes could be that the user closes the browser, loses internet connection or that the upload times out.
@@ -233,5 +244,14 @@ class RestExceptionHandler {
 				errorCode = ErrorCode.GENERAL_ERROR.code,
 			), HttpStatus.INTERNAL_SERVER_ERROR
 		)
+	}
+
+	private fun disconnectedClient(exception: Exception): ResponseEntity<Void>? {
+		if (logger.isDebugEnabled) {
+			logger.debug(exception.messageForLog, exception)
+		} else {
+			logger.info(exception.messageForLog)
+		}
+		return null
 	}
 }
