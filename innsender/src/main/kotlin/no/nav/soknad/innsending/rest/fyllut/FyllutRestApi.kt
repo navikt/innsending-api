@@ -185,17 +185,25 @@ class FyllutRestApi(
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
 		combinedLogger.log("$innsendingsId: Kall fra FyllUt for å slette søknad", brukerId)
 
-		val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
-		validerSoknadsTilgang(dokumentSoknadDto)
-
-		notificationService.close(innsendingsId)
-		soknadService.slettSoknadAvBruker(dokumentSoknadDto)
+		deleteApplication(innsendingsId)
 		combinedLogger.log("$innsendingsId: Slettet søknad", brukerId)
 
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(BodyStatusResponseDto(HttpStatus.OK.name, "Slettet soknad med id $innsendingsId"))
 
+	}
+
+	@Timed(InnsenderOperation.SLETT)
+	override fun deleteDigitalApplication(innsendingsId: UUID): ResponseEntity<Unit> {
+		val brukerId = tilgangskontroll.hentBrukerFraToken()
+		val innsendingsIdString = innsendingsId.toString()
+		combinedLogger.log("$innsendingsId: Kall for å slette digital søknad", brukerId)
+
+		deleteApplication(innsendingsIdString)
+		combinedLogger.log("$innsendingsId: Slettet digital søknad", brukerId)
+
+		return ResponseEntity.noContent().build()
 	}
 
 	override fun fyllUtPrefillData(properties: List<String>): ResponseEntity<PrefillData> {
@@ -298,6 +306,14 @@ class FyllutRestApi(
 				errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 			)
 		}
+	}
+
+	private fun deleteApplication(innsendingsId: String) {
+		val dokumentSoknadDto = soknadService.hentSoknad(innsendingsId)
+		validerSoknadsTilgang(dokumentSoknadDto)
+
+		notificationService.close(innsendingsId)
+		soknadService.slettSoknadAvBruker(dokumentSoknadDto)
 	}
 
 }
