@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException
 import org.springframework.web.multipart.MultipartException
 import org.springframework.web.multipart.support.MissingServletRequestPartException
 import org.springframework.web.servlet.resource.NoResourceFoundException
@@ -222,18 +223,13 @@ class RestExceptionHandler {
 		)
 	}
 
-	// If client aborts we don't want to log this as an error
 	@ExceptionHandler
-	fun clientAbortException(exception: ClientAbortException): ResponseEntity<RestErrorResponseDto> {
-		logger.warn(exception.messageForLog, exception)
-		return ResponseEntity(
-			RestErrorResponseDto(
-				message = exception.message ?: "Noe gikk galt, prøv igjen senere",
-				timestamp = OffsetDateTime.now(),
-				errorCode = ErrorCode.GENERAL_ERROR.code,
-			), HttpStatus.INTERNAL_SERVER_ERROR
-		)
-	}
+	fun asyncRequestNotUsableException(exception: AsyncRequestNotUsableException): ResponseEntity<Void>? =
+		disconnectedClient(exception)
+
+	@ExceptionHandler
+	fun clientAbortException(exception: ClientAbortException): ResponseEntity<Void>? =
+		disconnectedClient(exception)
 
 	// When the client aborts there is a multipart exception caused by ClientAbortException. We don't want to log this as an error.
 	// Causes could be that the user closes the browser, loses internet connection or that the upload times out.
@@ -248,5 +244,14 @@ class RestExceptionHandler {
 				errorCode = ErrorCode.GENERAL_ERROR.code,
 			), HttpStatus.INTERNAL_SERVER_ERROR
 		)
+	}
+
+	private fun disconnectedClient(exception: Exception): ResponseEntity<Void>? {
+		if (logger.isDebugEnabled) {
+			logger.debug(exception.messageForLog, exception)
+		} else {
+			logger.info(exception.messageForLog)
+		}
+		return null
 	}
 }
