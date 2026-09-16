@@ -83,6 +83,16 @@ class NologinApplicationRestApi(
 	}
 
 	@Timed(InnsenderOperation.SLETT_FILER_NOLOGIN)
+	override fun deleteNologinApplication(innsendingsId: UUID): ResponseEntity<Unit> {
+		logger.info("$innsendingsId: Kall for å slette uinnlogget søknad")
+		documentService.deleteAttachment(
+			namespace = FileStorageNamespace.NOLOGIN,
+			innsendingsId = innsendingsId,
+		)
+		return ResponseEntity.noContent().build()
+	}
+
+	@Timed(InnsenderOperation.SLETT_FILER_NOLOGIN)
 	override fun deleteNologinAttachment(innsendingsId: UUID, attachmentId: String): ResponseEntity<Unit> {
 		logger.info("$innsendingsId: Kall for å slette alle filer for vedlegg $attachmentId")
 		documentService.deleteAttachment(

@@ -14,12 +14,15 @@ import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.*
 import no.nav.soknad.innsending.service.fillager.FileStorage
+import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
+import no.nav.soknad.innsending.util.stringextensions.toUUID
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 @ExtendWith(MockKExtension::class)
 class SoknadServiceUnitTest {
@@ -61,6 +64,28 @@ class SoknadServiceUnitTest {
 
 	@InjectMockKs
 	lateinit var soknadService: SoknadService
+
+	@Test
+	fun `storage deletion failure leaves application data intact for retry`() {
+		val application = DokumentSoknadDtoTestBuilder(visningsType = VisningsType.fyllUt).build()
+		val innsendingsId = application.innsendingsId!!
+		every {
+			fileStorage.delete(
+				FileStorageNamespace.DIGITAL,
+				innsendingsId.toUUID(),
+				null,
+				null,
+				false,
+			)
+		} throws RuntimeException("storage unavailable")
+
+		assertFailsWith<RuntimeException> {
+			soknadService.slettSoknadAvBruker(application)
+		}
+
+		verify(exactly = 0) { vedleggService.slettVedleggOgDensFiler(any()) }
+		verify(exactly = 0) { repo.slettSoknad(any(), any()) }
+	}
 
 	@Test
 	fun `Should return correct active soknader`() {
