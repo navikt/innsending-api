@@ -203,7 +203,7 @@ class InnsendingService(
 		logger.info(
 			"$innsendingsId: Sendt inn soknad.\n"
 				+ "${soknadDto.tittel}, ${soknadDto.skjemanr}, ${soknadDto.tema}, ${soknadDto.ettersendingsId}, ${soknadDto.visningsType}"
-				+"InnsendteDokument=" + opplastedeVedlegg.map{"${it.label}, ${it.vedleggsnr}, ${it.mimetype}\n"}
+				+"InnsendteDokument=" + opplastedeVedlegg.map{"${if (it.vedleggsnr == "N6") "**Maskert**" else it.label}, ${it.vedleggsnr}, ${it.mimetype}\n"}
 		)
 	}
 
