@@ -26,7 +26,7 @@ import java.util.UUID
 	claimMap = ["roles=nologin-access"],
 )
 */
-@PreAuthorize("@claimChecker.hasAccess(authentication, true, {'nologin-access'})")
+@PreAuthorize("@claimChecker.hasAccess(authentication, true, {'roles=nologin-access'})")
 class NologinRestApi(
 	private val documentService: DocumentService,
 ) : NologinApi {

@@ -8,7 +8,7 @@ import org.springframework.security.web.SecurityFilterChain
 
 
 @Configuration
-@Profile("!local")
+@Profile("!(dummy)")
 class ProdSecurityConfig(
 	private val securityFilterChainFactory: SecurityFilterChainFactory,
 ) {

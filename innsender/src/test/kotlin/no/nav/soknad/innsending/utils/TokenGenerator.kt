@@ -23,8 +23,11 @@ class TokenGenerator(
 
 	fun createMockJwt(issuer: String, fnr: String = subject, aud: String = audience, navIdent: String? = null): Jwt {
 		return Jwt.withTokenValue("mock-token")
-			.header("alg", "none")
+			.header("kid", "azuread")
+			.header("typ", "JWT")
+			.header("alg", "RS256")
 			.claim("client_id", "application")
+			.claim("roles", listOf("nologin-access"))
 			.claim("iss", issuer)
 			.claim("aud", aud)
 			.claim("sub", fnr)
@@ -67,8 +70,8 @@ class TokenGenerator(
 		).serialize()
 	}
 
-	fun lagAzureM2MToken(roles: List<String> = emptyList()): String {
-		val issuerId = AZURE
+	fun lagAzureM2MToken(roles: List<String> = emptyList(), issuer: String = AZURE): String {
+		val issuerId = issuer
 		val oAuth2TokenCallback = DefaultOAuth2TokenCallback(
 			issuerId = issuerId,
 			typeHeader = JOSEObjectType.JWT.type,
@@ -79,14 +82,14 @@ class TokenGenerator(
 			expiry = expiry
 		)
 		return mockOAuth2Server.issueToken(
-			issuerId = issuerId,
+			issuerId = issuer,
 			clientId = MockLoginController::class.java.simpleName,
 			tokenCallback = oAuth2TokenCallback
 		).serialize()
 	}
 
-	fun lagAzureM2MSignedToken(roles: List<String> = emptyList()): SignedJWT {
-		val issuerId = AZURE
+	fun lagAzureM2MSignedToken(issuer: String = AZURE, roles: List<String> = emptyList()): SignedJWT {
+		val issuerId = issuer
 		val oAuth2TokenCallback = DefaultOAuth2TokenCallback(
 			issuerId = issuerId,
 			typeHeader = JOSEObjectType.JWT.type,

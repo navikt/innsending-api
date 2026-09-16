@@ -22,6 +22,7 @@ import no.nav.soknad.innsending.util.validators.validerBrukerOgAvsender
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 import java.util.UUID
@@ -33,6 +34,7 @@ import java.util.UUID
 	claimMap = ["roles=nologin-access"],
 )
 */
+@PreAuthorize("@claimChecker.hasAccess(authentication, true, {'roles=nologin-access'})")
 class NologinApplicationRestApi(
 	private val documentService: DocumentService,
 	private val subjectHandler: SubjectHandlerInterface,

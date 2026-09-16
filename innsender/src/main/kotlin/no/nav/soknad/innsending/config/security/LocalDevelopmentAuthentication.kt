@@ -10,6 +10,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import java.time.Instant
+/*
 
 @Component
 class LocalDevelopmentAuthenticationFactory(
@@ -26,12 +27,14 @@ class LocalDevelopmentAuthenticationFactory(
 			.claim("aud", "local-dev")
 			.claim("NAVident", "A123456")
 			.claim("preferred_username", "local-dev@example.com")
-			.claim("scp", "defaultaccess serviceklage-klassifisering")
+			.claim("scp", "defaultaccess")
 			.build()
 
 		return JwtAuthenticationToken(jwt)
 	}
 }
+*/
+/*
 
 @Component
 class LocalDevelopmentAuthenticationFilter(
@@ -50,3 +53,4 @@ class LocalDevelopmentAuthenticationFilter(
 		filterChain.doFilter(request, response)
 	}
 }
+*/

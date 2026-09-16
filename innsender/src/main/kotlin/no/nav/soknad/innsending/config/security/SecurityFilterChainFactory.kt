@@ -20,7 +20,7 @@ class SecurityFilterChainFactory(
 	@Value("\${auth.issuers.tokenx.issuer-uri}") private val tokenxIssuer: String,
 	@Qualifier("azureJwtDecoder") private val azureJwtDecoder: JwtDecoder,
 	@Qualifier("tokenxJwtDecoder") private val tokenxJwtDecoder: JwtDecoder,
-	private val localDevelopmentAuthenticationFilter: LocalDevelopmentAuthenticationFilter,
+	//private val localDevelopmentAuthenticationFilter: LocalDevelopmentAuthenticationFilter,
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val mapper = jacksonObjectMapper()
@@ -53,7 +53,7 @@ class SecurityFilterChainFactory(
 				auth.requestMatchers(*PUBLIC_REQUEST_MATCHERS).permitAll()
 				auth.anyRequest().permitAll()
 			}
-			.addFilterBefore(localDevelopmentAuthenticationFilter, AnonymousAuthenticationFilter::class.java)
+			//.addFilterBefore(localDevelopmentAuthenticationFilter, AnonymousAuthenticationFilter::class.java)
 
 		return http.build()
 	}
