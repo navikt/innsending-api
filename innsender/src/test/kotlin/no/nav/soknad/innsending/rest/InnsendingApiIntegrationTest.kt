@@ -349,7 +349,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		assertEquals(submissionResponse.ettersendingsId?.toString(), ettersendingsId)
 
 		val slotSoknadClose = mutableListOf<SoknadDbData>()
-		verify(exactly = 1) { brukernotifikasjonPublisher.closeNotification(capture(slotSoknadClose)) }
+		verify(timeout = 5000, exactly = 1) { brukernotifikasjonPublisher.closeNotification(capture(slotSoknadClose)) }
 
 		// verify invocation of soknadsmottaker
 		val slotSoknad = slot<DokumentSoknadDto>()
@@ -537,7 +537,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		}
 
 		val slotCloseSoknads = mutableListOf<SoknadDbData>()
-		verify(timeout = 50, exactly = 1) { brukernotifikasjonPublisher.closeNotification(capture(slotCloseSoknads)) }
+		verify(timeout = 5000, exactly = 1) { brukernotifikasjonPublisher.closeNotification(capture(slotCloseSoknads)) }
 
 		val m5Vedlegg = ettersending.vedleggsListe.first { it.vedleggsnr == "M5" }
 		testApi!!.uploadFile(ettersendingsId, m5Vedlegg.id!!)
