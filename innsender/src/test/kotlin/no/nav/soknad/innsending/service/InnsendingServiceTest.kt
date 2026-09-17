@@ -22,8 +22,10 @@ import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
+import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
+import no.nav.soknad.innsending.util.mapping.translate
 import no.nav.soknad.pdfutilities.AntallSider
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
@@ -477,5 +479,42 @@ class InnsendingServiceTest : ApplicationTest() {
 
 	}
 
+	@Test
+	fun vedleggBrukerLabelIkkeTittelVedOversettingTilArkivering() {
+		val hovedDokument = VedleggDtoTestBuilder(tittel = "Hoveddokument tittel", label = "Hoveddokument label")
+			.asHovedDokument()
+			.build()
+		val n6Vedlegg = VedleggDtoTestBuilder(tittel = "N6 tittel", label = "Annen dokumentasjon")
+			.asDefaultVedlegg()
+			.build()
+
+		val documentData = translate(listOf(hovedDokument, n6Vedlegg))
+		val dokumentData = translate(listOf(hovedDokument, n6Vedlegg), true)
+
+		val oversattVedlegg = documentData.first { it.skjemanummer == n6Vedlegg.vedleggsnr }
+		val oversattVedleggNyttFormat = dokumentData.first { it.skjemanummer == n6Vedlegg.vedleggsnr }
+
+		assertEquals(n6Vedlegg.label, oversattVedlegg.tittel)
+		assertEquals(n6Vedlegg.label, oversattVedleggNyttFormat.tittel)
+	}
+
+	@Test
+	fun vedleggFallerTilbakePaaTittelNarLabelIkkeErSatt() {
+		val hovedDokument = VedleggDtoTestBuilder(tittel = "Hoveddokument tittel", label = "Hoveddokument label")
+			.asHovedDokument()
+			.build()
+		val vedleggUtenLabel = VedleggDtoTestBuilder(tittel = "Vedlegg tittel", label = "")
+			.asDefaultVedlegg()
+			.build()
+
+		val documentData = translate(listOf(hovedDokument, vedleggUtenLabel))
+		val dokumentData = translate(listOf(hovedDokument, vedleggUtenLabel), true)
+
+		val oversattVedlegg = documentData.first { it.skjemanummer == vedleggUtenLabel.vedleggsnr }
+		val oversattVedleggNyttFormat = dokumentData.first { it.skjemanummer == vedleggUtenLabel.vedleggsnr }
+
+		assertEquals(vedleggUtenLabel.tittel, oversattVedlegg.tittel)
+		assertEquals(vedleggUtenLabel.tittel, oversattVedleggNyttFormat.tittel)
+	}
 
 }
