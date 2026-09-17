@@ -1,7 +1,5 @@
 package no.nav.soknad.innsending.util
 
-import no.nav.soknad.arkivering.soknadsmottaker.model.AvsenderDto
-import no.nav.soknad.arkivering.soknadsmottaker.model.BrukerDto
 import no.nav.soknad.arkivering.soknadsmottaker.model.DocumentData
 import no.nav.soknad.arkivering.soknadsmottaker.model.DokumentData
 import no.nav.soknad.arkivering.soknadsmottaker.model.Innsending
@@ -77,11 +75,13 @@ fun maskerVedleggsTittel(dokumenter: List<DocumentData>): List<DocumentData> {
 
 fun maskerDokumentTitler(dokumenter: List<DokumentData>): List<DokumentData> {
 	return dokumenter.map {
+		val erN6 = it.skjemanummer == "N6"
 		DokumentData(
 			skjemanummer = it.skjemanummer,
 			erHovedskjema = it.erHovedskjema,
-			if (it.skjemanummer == "N6") "**Maskert**" else it.tittel,
-			it.varianter
+			if (erN6) "**Maskert**" else it.tittel,
+			// filnavn på varianter av N6-vedlegg kan inneholde samme frie tekst som tittel, og må maskeres på samme måte
+			if (erN6) it.varianter.map { variant -> variant.copy(filnavn = "**Maskert**") } else it.varianter
 		)
 	}
 }
