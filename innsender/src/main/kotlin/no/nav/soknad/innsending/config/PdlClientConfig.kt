@@ -15,6 +15,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.*
 import org.springframework.http.HttpHeaders
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
 import org.springframework.security.oauth2.core.OAuth2AuthorizationException
@@ -88,7 +89,12 @@ class PdlClientConfig(
 
 
 	private fun hentAccessTokenForPdl(): String {
+		val authentication = SecurityContextHolder.getContext().authentication
+			?: throw OAuth2AuthorizationException(
+				OAuth2Error("invalid_principal", "Ingen autentisert bruker i SecurityContext", null)
+			)
 		val authorizeRequest = OAuth2AuthorizeRequest.withClientRegistrationId("tokenx-pdl")
+			.principal(authentication)
 			.build()
 
 		val authorizedClient = authorizedClientManager.authorize(authorizeRequest)

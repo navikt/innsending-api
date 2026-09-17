@@ -34,6 +34,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.core.io.ClassPathResource
@@ -94,7 +96,8 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun testOpprettSoknadPaFyllUtApi() {
 		// Gitt
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
 
 		val t7Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build()
 		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
@@ -107,7 +110,7 @@ class FyllutRestApiTest : ApplicationTest() {
 			.build()
 
 		// Når
-		val opprettetSoknadResponse = api.createSoknad(skjemaDto)
+		val opprettetSoknadResponse = api.createSoknad(skjemaDto, authToken = token)
 			.assertSuccess()
 
 		val hoveddokumentMedFil = SkjemaDokumentDtoTestBuilder(tittel = "Application for one-time grant at birth").asHovedDokument("NAV 10-07.41", withFile = true).build()
@@ -126,7 +129,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Gitt
 		val skjemanr = ungdomsprogram_reiseDaglig
 		val tittel = "Ungdomsprogrammet - daglig reise"
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
 
 		val hoveddokument = SkjemaDokumentDtoTestBuilder( tittel = tittel).asHovedDokument(skjemanr, withFile = true).build()
 		val hoveddokumentVariant = SkjemaDokumentDtoTestBuilder( tittel = tittel).asHovedDokumentVariant(skjemanr,
@@ -137,7 +141,7 @@ class FyllutRestApiTest : ApplicationTest() {
 			.build()
 
 		// Når
-		val opprettetSoknadResponse = api.createSoknad(skjemaDto)
+		val opprettetSoknadResponse = api.createSoknad(skjemaDto, authToken = token)
 			.assertSuccess()
 
 		// Så
@@ -156,11 +160,13 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun testUserNotificationOnSoknadCreation() {
 		// Gitt
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
 		val vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build()
 		val skjemaDto = SkjemaDtoTestBuilder(vedleggsListe = listOf(vedlegg)).build()
 
 		// Når
-		val responseBody = api.createSoknad(skjemaDto, envQualifier = EnvQualifier.preprodAltAnsatt)
+		val responseBody = api.createSoknad(skjemaDto, envQualifier = EnvQualifier.preprodAltAnsatt, authToken = token)
 			.assertSuccess()
 			.body
 
@@ -191,12 +197,14 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun testUserNotificationWithShorterMellomlagringOnSoknadCreation() {
 		// Gitt
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
 		val mellomlagringDager = 10
 		val vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build()
 		val skjemaDto = SkjemaDtoTestBuilder(vedleggsListe = listOf(vedlegg), mellomlagringDager = mellomlagringDager, skalslettesdato = null).build()
 
 		// Når
-		val responseBody = api.createSoknad(skjemaDto)
+		val responseBody = api.createSoknad(skjemaDto, authToken = token)
 			.assertSuccess()
 			.body
 
@@ -212,10 +220,12 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Skal lage kvitteringsside`() {
 		// Gitt
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
 		val skjemaDto = SkjemaDtoTestBuilder().build()
 
 		// Når
-		val opprettetSoknadResponse = api.createSoknad(skjemaDto)
+		val opprettetSoknadResponse = api.createSoknad(skjemaDto, authToken = token)
 		val innsendingsId = opprettetSoknadResponse.body.innsendingsId!!
 
 		api.utfyltSoknad(innsendingsId, skjemaDto)
@@ -345,6 +355,9 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should update utfylt søknad and vedlegg with updated properties for språk and tittel, old vedlegg should be deleted`() {
 		// Given
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val newSpraak = "en_gb"
 		val newTittel = "Application for one-time grant at birth"
 		val newVedleggstittel1 = "Birth certificate"
@@ -412,6 +425,9 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should set status lastetOppIkkeRelevantLenger for vedlegg`() {
 		// Given
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val skjemanr = "NAV 10-07.41"
 		val vedleggsnr = "T7"
 		val hoveddokument = SkjemaDokumentDtoTestBuilder(vedleggsnr = skjemanr).asHovedDokument(skjemanr).build()
@@ -428,7 +444,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val skjemaDtoWithVedlegg = skjemaDto.copy(vedleggsListe = listOf(vedlegg))
 
 		// When
-		val opprettSoknadResponse = api.createSoknad(skjemaDto)
+		val opprettSoknadResponse = api.createSoknad(skjemaDto, authToken = token)
 		val innsendingsId = opprettSoknadResponse.body.innsendingsId!!
 
 		// Complete søknad in fyllUt
@@ -465,6 +481,9 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should keep vedlegg from send-inn, even after updating from fyllUt and should delete old vedlegg not relevant anymore`() {
 		// Given
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		// Opprett søknaden i innsending-api med hoveddokument (inkludert variant) og vedleggsnr1 og vedleggsnr2
 		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
@@ -546,6 +565,9 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Skal lagre filene i databasen`() {
 		// Gitt
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
@@ -579,6 +601,9 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Skal returnere riktig felter ved oppdatering av søknad`() {
 		// Gitt
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 		val nyttSpraak = "en_gb"
@@ -611,7 +636,8 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Skal returnere error response hvis vedleggslisten ikke er tom`() {
 		// Gitt
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
 
 		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
@@ -642,6 +668,9 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Skal hente opprettet søknad`() {
 		// Gitt
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val skjemanr = "NAV 11-12.12"
 		val dokumentSoknadDto = opprettSoknad(skjemanr)
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
@@ -649,7 +678,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Når
 		val response = api.getSoknad(innsendingsId)
 
-		val opprettetSoknad = response?.body!!
+		val opprettetSoknad = response.body!!
 
 		// Så
 		assertNotNull(response)
@@ -680,6 +709,9 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Skal slette opprettet søknad`() {
 		// Gitt
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
@@ -698,10 +730,13 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should return error code with status 400 if user tries to update søknad that is sent in`() {
 		// Given
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val skjemaDto = SkjemaDtoTestBuilder().build()
 
 		// When
-		val createdSoknad = api.createSoknad(skjemaDto)
+		val createdSoknad = api.createSoknad(skjemaDto, authToken = token)
 		val sentInSoknad = api.sendInnSoknad(createdSoknad.body.innsendingsId!!)
 		// Wait in order for the application to be sent in
 		val response = api.updateSoknadFail(sentInSoknad.body.innsendingsId, skjemaDto)
@@ -716,8 +751,11 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should not update opprettetDato when updating soknad`() {
 		// Given
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val skjemaDto = SkjemaDtoTestBuilder().build()
-		val createdSoknad = api.createSoknad(skjemaDto).body
+		val createdSoknad = api.createSoknad(skjemaDto, authToken = token).body
 
 		val innsendingsId = createdSoknad.innsendingsId!!
 		val soknadBeforeUpdate = soknadService.hentSoknad(innsendingsId)
@@ -741,7 +779,10 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal godta innsending med kun gyldig brukerid i SubmitApplicationRequest`() {
-		val soknad = api.createSoknad(SkjemaDtoTestBuilder().build())
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
+		val soknad = api.createSoknad(SkjemaDtoTestBuilder().build(), authToken = token)
 			.assertSuccess()
 			.body
 
@@ -753,7 +794,10 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal godta innsending med kun gyldig avsenderId i SubmitApplicationRequest`() {
-		val soknad = api.createSoknad(SkjemaDtoTestBuilder().build())
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
+		val soknad = api.createSoknad(SkjemaDtoTestBuilder().build(), authToken = token)
 			.assertSuccess()
 			.body
 
@@ -766,7 +810,10 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal avvise innsending med ugyldig brukerid i SubmitApplicationRequest`() {
-		val soknad = api.createSoknad(SkjemaDtoTestBuilder().build())
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
+		val soknad = api.createSoknad(SkjemaDtoTestBuilder().build(), authToken = token)
 			.assertSuccess()
 			.body
 
@@ -780,7 +827,10 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal avvise innsending med ugyldig avsenderId i SubmitApplicationRequest`() {
-		val soknad = api.createSoknad(SkjemaDtoTestBuilder().build())
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
+		val soknad = api.createSoknad(SkjemaDtoTestBuilder().build(), authToken = token)
 			.assertSuccess()
 			.body
 
@@ -795,6 +845,9 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Skal redirecte ved eksisterende søknad gitt at force er false`() {
 		// Gitt
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val dokumentSoknadDto = opprettSoknad(skjemanr = "NAV-redirect")
 
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
@@ -811,13 +864,16 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Skal opprette søknad når force er true, selv om brukeren har en søknad med samme skjemanr`() {
 		// Gitt
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 
 		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr).build()
 
 		// Når
-		val response = api.createSoknad(fraFyllUt, true)
+		val response = api.createSoknad(fraFyllUt, true, authToken = token)
 			.assertSuccess()
 
 		// Så
@@ -827,6 +883,9 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should return correct prefill-data from PDL`() {
 		// Given
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val properties = "sokerFornavn,sokerEtternavn,sokerAdresser,sokerTelefonnummer"
 
 		// When
@@ -846,6 +905,9 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should return correct prefill-data from kontoregister`() {
 		// Given
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val properties = "sokerKontonummer"
 
 		// When
@@ -860,6 +922,9 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should return 400 from prefill-data if invalid prop is sent`() {
 		// Given
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val properties = "sokerFornavn,sokerEtternavn,sokerInvalid"
 
 		// When
@@ -874,13 +939,16 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should save and return skalSlettesDato`() {
 		// Given
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val mellomlagringDager = 5
 		val skalSlettesDato = LocalDate.now().plusDays(mellomlagringDager.toLong())
 
 		val skjemaDto = SkjemaDtoTestBuilder(skalslettesdato = null, mellomlagringDager = mellomlagringDager).build()
 
 		// When
-		val createdSoknad = api.createSoknad(skjemaDto)
+		val createdSoknad = api.createSoknad(skjemaDto, authToken = token)
 		val getSoknad = api.getSoknad(createdSoknad.body.innsendingsId!!)
 
 		// Then
@@ -898,6 +966,9 @@ class FyllutRestApiTest : ApplicationTest() {
 	@Disabled("Ytelse på oppretting av flere søknader samtidig blir gjort i testen FilRestApiTest.verifiserOpplastingAvUlikeFiltyperTest")
 	fun testOpprettSoknaderOgHentingYtelse() {
 		// Gitt
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val t7Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build()
 		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
 
@@ -907,14 +978,14 @@ class FyllutRestApiTest : ApplicationTest() {
 			val soknad = SkjemaDtoTestBuilder(vedleggsListe = listOf(t7Vedlegg, n6Vedlegg)).build()
 
 			// Når
-			val opprettetSoknadResponse = api.createSoknad(soknad).assertSuccess()
+			val opprettetSoknadResponse = api.createSoknad(soknad, authToken = token).assertSuccess()
 			soknader.add(opprettetSoknadResponse.body)
 
 		})
 
 
 		// Så
-		soknader.forEach { testHentSoknadOgSendInn(it, TokenGenerator(mockOAuth2Server).lagTokenXToken()) }
+		soknader.forEach { testHentSoknadOgSendInn(it, token) }
 
 	}
 

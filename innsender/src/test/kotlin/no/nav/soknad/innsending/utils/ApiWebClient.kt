@@ -52,6 +52,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import org.springframework.web.util.UriComponentsBuilder
 import java.time.Duration
+import java.util.UUID
 import kotlin.test.assertEquals
 
 class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val mockOAuth2Server: MockOAuth2Server) {
@@ -104,7 +105,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun createSoknad(skjemaDto: SkjemaDto, forceCreate: Boolean = true, envQualifier: EnvQualifier? = null): InnsendingApiResponse<SkjemaDto> {
+	fun createSoknad(skjemaDto: SkjemaDto, forceCreate: Boolean = true, envQualifier: EnvQualifier? = null, authToken: String? = null): InnsendingApiResponse<SkjemaDto> {
 		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
 			"Nav-Env-Qualifier" to envQualifier.value
 		) else null
@@ -113,7 +114,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 			.build()
 			.toUri()
 
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+		val token = authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
 		val response = webTestClient.post()
 			.uri(uri)
@@ -127,12 +128,12 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun createSoknadForSkjemanr(skjemanr: String, spraak: String = "nb_NO"): InnsendingApiResponse<DokumentSoknadDto> {
+	fun createSoknadForSkjemanr(skjemanr: String, spraak: String = "nb_NO", authToken: String? = null): InnsendingApiResponse<DokumentSoknadDto> {
 		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak)
 		val response = webTestClient.post()
 			.uri("$baseUrl/frontend/v1/soknad")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
 			})
 			.bodyValue(opprettSoknadBody)
 			.exchange()
@@ -162,11 +163,11 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun utfyltSoknad(innsendingsId: String, skjemaDto: SkjemaDto): ResponseEntity<Unit> {
+	fun utfyltSoknad(innsendingsId: String, skjemaDto: SkjemaDto, authToken: String? = null): ResponseEntity<Unit> {
 		val response = webTestClient.put()
 			.uri("/fyllUt/v1/utfyltSoknad/${innsendingsId}")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
 			})
 			.bodyValue(skjemaDto)
 			.exchange()
@@ -203,11 +204,11 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun deleteSoknad(innsendingsId: String): InnsendingApiResponse<BodyStatusResponseDto> {
+	fun deleteSoknad(innsendingsId: String, authToken: String? = null): InnsendingApiResponse<BodyStatusResponseDto> {
 		val response = webTestClient.delete()
 			.uri ("http://localhost:${serverPort}/fyllUt/v1/soknad/${innsendingsId}")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
 			})
 			.exchange()
 
@@ -217,11 +218,11 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun getPrefillData(properties: String): ResponseEntity<PrefillData> {
+	fun getPrefillData(properties: String, authToken: String? = null): ResponseEntity<PrefillData> {
 		val response = webTestClient.get()
 			.uri("${baseUrl}/fyllUt/v1/prefill-data?properties=$properties")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
 			})
 			.exchange()
 
@@ -242,11 +243,11 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		return ResponseEntity(result.responseBody.blockFirst(), result.responseHeaders, result.status)
 	}
 
-	fun getSoknadSendinn(innsendingsId: String): InnsendingApiResponse<DokumentSoknadDto> {
+	fun getSoknadSendinn(innsendingsId: String, authToken: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()): InnsendingApiResponse<DokumentSoknadDto> {
 		val response = webTestClient.get()
 			.uri("http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken, null).toSingleValueMap())
 			})
 			.exchange()
 
@@ -255,11 +256,11 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun addVedlegg(innsendingsId: String, postVedleggDto: PostVedleggDto): InnsendingApiResponse<VedleggDto> {
+	fun addVedlegg(innsendingsId: String, postVedleggDto: PostVedleggDto, authToken: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()): InnsendingApiResponse<VedleggDto> {
 		val response = webTestClient.post()
 			.uri("${baseUrl}/frontend/v1/soknad/${innsendingsId}/vedlegg")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken, null).toSingleValueMap())
 			})
 			.bodyValue(postVedleggDto)
 			.exchange()
@@ -269,11 +270,11 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun patchVedlegg(innsendingsId: String, vedleggsId: Long, patchVedleggDto: PatchVedleggDto): InnsendingApiResponse<VedleggDto> {
+	fun patchVedlegg(innsendingsId: String, vedleggsId: Long, patchVedleggDto: PatchVedleggDto, authToken: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()): InnsendingApiResponse<VedleggDto> {
 		val response = webTestClient.patch()
 			.uri("${baseUrl}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggsId}")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken, null).toSingleValueMap())
 			})
 			.bodyValue(patchVedleggDto)
 			.exchange()
@@ -285,9 +286,10 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	fun uploadFile(
 		innsendingsId: String,
 		vedleggsId: Long,
-		file: ByteArray = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
+		file: ByteArray = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf"),
+		authToken: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 	): InnsendingApiResponse<FilDto> {
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+		val token: String = authToken
 
 		val builder = MultipartBodyBuilder()
 		builder.part("file", file)
@@ -346,14 +348,14 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		)
 	}
 
-	fun createEttersending(opprettEttersending: OpprettEttersending, envQualifier: EnvQualifier? = null): InnsendingApiResponse<DokumentSoknadDto> {
+	fun createEttersending(opprettEttersending: OpprettEttersending, envQualifier: EnvQualifier? = null, authToken: String? = null): InnsendingApiResponse<DokumentSoknadDto> {
 		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
 			"Nav-Env-Qualifier" to envQualifier.value
 		) else null
 		val response = webTestClient.post()
 			.uri("${baseUrl}/fyllut/v1/ettersending")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), headers).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken(), headers).toSingleValueMap())
 			})
 			.bodyValue(opprettEttersending)
 			.exchange()
@@ -363,11 +365,11 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun createEttersendingsOppgave(opprettEttersendingsOppgave: EksternEttersendingsOppgave): ResponseEntity<DokumentSoknadDto> {
+	fun createEttersendingsOppgave(opprettEttersendingsOppgave: EksternEttersendingsOppgave, authToken: String? = null): ResponseEntity<DokumentSoknadDto> {
 		val response = webTestClient.post()
 			.uri("${baseUrl}/ekstern/v1/oppgaver")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagAzureOBOToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagAzureOBOToken(), null).toSingleValueMap())
 			})
 			.bodyValue(opprettEttersendingsOppgave)
 			.exchange()
@@ -381,13 +383,14 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		skjemanr: String,
 		brukerId: String,
 		soknadstyper: List<SoknadType>?,
-		navCallId: String?
+		navCallId: String?,
+		authToken: String? = null
 	): ResponseEntity<List<DokumentSoknadDto>> {
 
 		val response = webTestClient.method(HttpMethod.GET) // <-- Endringen er her
 			.uri("${baseUrl}/ekstern/v1/oppgaver")
 			.headers { httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagAzureOBOToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagAzureOBOToken(), null).toSingleValueMap())
 			}
 			.bodyValue(BrukerSoknadRequest(brukerId = brukerId, skjemanr = skjemanr, soknadstyper = soknadstyper))
 			.exchange()
@@ -396,11 +399,11 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		return ResponseEntity(body.first, response.returnResult().responseHeaders, response.returnResult().status)
 	}
 
-	fun eksternOppgaveSlett(innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
+	fun eksternOppgaveSlett(innsendingsId: String, authToken: String? = null): ResponseEntity<BodyStatusResponseDto> {
 		val response = webTestClient.delete()
 			.uri("${baseUrl}/ekstern/v1/oppgaver/${innsendingsId}")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagAzureOBOToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagAzureOBOToken(), null).toSingleValueMap())
 			})
 			.exchange()
 
@@ -408,11 +411,11 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		return ResponseEntity(body.first, response.returnResult().responseHeaders, response.returnResult().status)
 	}
 
-	fun eksternOppgaveSlettFail(innsendingsId: String): ResponseEntity<RestErrorResponseDto> {
+	fun eksternOppgaveSlettFail(innsendingsId: String, authToken: String? = null): ResponseEntity<RestErrorResponseDto> {
 		val response = webTestClient.delete()
 			.uri("${baseUrl}/ekstern/v1/oppgaver/${innsendingsId}")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagAzureOBOToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagAzureOBOToken(), null).toSingleValueMap())
 			})
 			.exchange()
 
@@ -422,14 +425,14 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun createEksternEttersending(eksternOpprettEttersending: EksternOpprettEttersending, envQualifier: EnvQualifier? = null): InnsendingApiResponse<DokumentSoknadDto> {
+	fun createEksternEttersending(eksternOpprettEttersending: EksternOpprettEttersending, envQualifier: EnvQualifier? = null, authToken: String? = null): InnsendingApiResponse<DokumentSoknadDto> {
 		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
 			"Nav-Env-Qualifier" to envQualifier.value
 		) else null
 		val response = webTestClient.post()
 			.uri("${baseUrl}/ekstern/v1/ettersending")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), headers).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken(), headers).toSingleValueMap())
 			})
 			.bodyValue(eksternOpprettEttersending)
 			.exchange()
@@ -438,11 +441,11 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		return InnsendingApiResponse(response.returnResult().status, body, response.returnResult().responseHeaders)
 	}
 
-	fun deleteEksternEttersending(innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
+	fun deleteEksternEttersending(innsendingsId: String, authToken: String? = null): ResponseEntity<BodyStatusResponseDto> {
 		val response = webTestClient.delete()
 			.uri("${baseUrl}/ekstern/v1/ettersending/${innsendingsId}")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
 			})
 			.exchange()
 
@@ -451,11 +454,11 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 
 	}
 
-	fun deleteEksternEttersendingFail(innsendingsId: String): ResponseEntity<RestErrorResponseDto> {
+	fun deleteEksternEttersendingFail(innsendingsId: String, authToken: String? = null): ResponseEntity<RestErrorResponseDto> {
 		val response = webTestClient.delete()
 			.uri("${baseUrl}/ekstern/v1/ettersending/${innsendingsId}")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
 			})
 			.exchange()
 
@@ -495,8 +498,8 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 
 
 	@Deprecated("Is replaced by submitNologinApplication")
-	fun sendInnNologinSoknad(skjemaDto: SkjemaDtoV2): InnsendingApiResponse<KvitteringsDto> {
-		val token = TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("nologin-access"))
+	fun sendInnNologinSoknad(skjemaDto: SkjemaDtoV2, authToken: String? = null): InnsendingApiResponse<KvitteringsDto> {
+		val token = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("nologin-access"))
 		val response = webTestClient.post()
 			.uri("${baseUrl}/v1/nologin-soknad")
 			.header(HttpHeaders.AUTHORIZATION, "Bearer $token")
@@ -507,6 +510,29 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		return InnsendingApiResponse(response.returnResult().status, body, response.returnResult().responseHeaders)
 	}
 
+	fun submitNoLoginApplication(skjemaDto: SkjemaDtoV2,
+															 mainDocumentPath: String = "/litenPdf.pdf",
+															 mainDocumentAltPath: String = "/__files/barnepass-NAV-11-12.15B.json",
+															 authToken: String? = null,
+	)
+	: InnsendingApiResponse<ApplicationSubmissionResponse> {
+		return submitNologinApplication(
+			innsendingsId = skjemaDto.innsendingsId!!,
+			formNumber = skjemaDto.skjemanr,
+			title = skjemaDto.tittel,
+			tema = skjemaDto.tema,
+			brukerId = skjemaDto.brukerDto?.id,
+			attachments = skjemaDto.vedleggsListe?.map {
+				AttachmentDto(attachmentCode = it.vedleggsnr, label = it.label, title = it.tittel, description= it.beskrivelse,
+					uploadStatus = it.opplastingsStatus, formNumberPath = it.vedleggsurl,
+					fileIds = it.filIdListe?.map{id -> UUID.fromString(id)} ) },
+			mainDocumentPath = mainDocumentPath,
+			mainDocumentAltPath = mainDocumentAltPath,
+			language = skjemaDto.spraak,
+			authToken = authToken,
+			avsender = skjemaDto.avsenderId,
+		)
+	}
 
 	fun submitNologinApplication(
 		innsendingsId: String,
@@ -537,7 +563,6 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 			bruker = brukerId,
 			avsender = avsender,
 		)
-		val httpEntity = HttpEntity(request, headers)
 
 		val response = webTestClient.post()
 			.uri("${baseUrl}/v1/application-nologin/${innsendingsId}")
@@ -609,12 +634,12 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun hentInnsendteFiler(innsendingsId: String, uuids: List<String>): InnsendingApiResponse<List<SoknadFile>> {
-		val authToken = TokenGenerator(mockOAuth2Server).lagAzureM2MToken()
+	fun hentInnsendteFiler(innsendingsId: String, uuids: List<String>, authToken: String? = null): InnsendingApiResponse<List<SoknadFile>> {
+		val token = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureM2MToken()
 		val response = webTestClient.get()
 			.uri("${baseUrl}/innsendte/v1/files/${uuids.joinToString(",")}")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(token = authToken, mapOf("x-innsendingId" to innsendingsId)).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(token = token, mapOf("x-innsendingId" to innsendingsId)).toSingleValueMap())
 			})
 			.exchange()
 
@@ -623,14 +648,14 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun sendInnSoknad(innsendingsId: String, envQualifier: EnvQualifier? = null): InnsendingApiResponse<KvitteringsDto> {
+	fun sendInnSoknad(innsendingsId: String, envQualifier: EnvQualifier? = null, authToken: String? = null): InnsendingApiResponse<KvitteringsDto> {
 		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
 			"Nav-Env-Qualifier" to envQualifier.value
 		) else null
 		val response = webTestClient.post()
 			.uri("${baseUrl}/frontend/v1/sendInn/${innsendingsId}")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), headers).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken(), headers).toSingleValueMap())
 			})
 			.exchange()
 
@@ -655,11 +680,11 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		}
 
 
-	fun getSoknad(innsendingsId: String): ResponseEntity<SkjemaDto> {
+	fun getSoknad(innsendingsId: String, authToken: String? = null): ResponseEntity<SkjemaDto> {
 		val response = webTestClient.get()
 			.uri("${baseUrl}/fyllUt/v1/soknad/${innsendingsId}")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
 			})
 			.exchange()
 
@@ -669,7 +694,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 	// Query param ex: "soknad,ettersendelse"
-	fun getExistingSoknader(skjemanr: String, queryParam: String? = null): ResponseEntity<List<DokumentSoknadDto>> {
+	fun getExistingSoknader(skjemanr: String, queryParam: String? = null, authToken: String? = null): ResponseEntity<List<DokumentSoknadDto>> {
 		val url = if (queryParam != null) {
 			"http://localhost:${serverPort}/frontend/v1/skjema/${skjemanr}/soknader?soknadstyper=$queryParam"
 		} else {
@@ -680,7 +705,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		val response = webTestClient.get()
 			.uri(url)
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
 			})
 			.exchange()
 		val body = parseListResponse(response, DokumentSoknadDto::class.java)
@@ -690,7 +715,8 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 
 	fun getSoknaderForSkjemanr(
 		skjemanr: String,
-		soknadstyper: List<SoknadType>? = emptyList()
+		soknadstyper: List<SoknadType>? = emptyList(),
+		authToken: String? = null
 	): ResponseEntity<List<DokumentSoknadDto>> {
 		var query = ""
 		if (soknadstyper?.isNotEmpty() == true) {
@@ -699,7 +725,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		val response = webTestClient.get()
 			.uri("${baseUrl}/ekstern/v1/skjema/${skjemanr}/soknader${query}")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
 			})
 			.exchange()
 
@@ -708,12 +734,12 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun getAktiviteter(aktivitetEndepunkt: AktivitetEndepunkt): ResponseEntity<List<Aktivitet>> {
+	fun getAktiviteter(aktivitetEndepunkt: AktivitetEndepunkt, authToken: String? = null): ResponseEntity<List<Aktivitet>> {
 		val dagligReise = if (aktivitetEndepunkt == AktivitetEndepunkt.dagligreise) "true" else "false"
 		val response = webTestClient.get()
 			.uri("${baseUrl}/fyllUt/v1/aktiviteter?dagligreise=${dagligReise}")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
 			})
 			.exchange()
 
@@ -737,12 +763,13 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 
 	fun createLospost(
 		opprettLospost: OpprettLospost,
-		envQualifier: EnvQualifier? = null
+		envQualifier: EnvQualifier? = null,
+		auth: String? = null
 	): InnsendingApiResponse<LospostDto> {
 		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
 			"Nav-Env-Qualifier" to envQualifier.value
 		) else null
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+		val token = auth ?: TokenGenerator(mockOAuth2Server).lagTokenXToken()
 		val response = webTestClient.post()
 			.uri("${baseUrl}/fyllut/v1/lospost")
 			.headers({ httpHeaders ->

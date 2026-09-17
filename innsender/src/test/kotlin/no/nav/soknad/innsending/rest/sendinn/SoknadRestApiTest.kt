@@ -25,6 +25,7 @@ import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.OpprettEttersendingBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoTestBuilder
@@ -40,6 +41,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -82,7 +85,10 @@ class SoknadRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `Should fail creating soknad (old visningstype dokumentinnsending)`() {
-		val errorBody = api.createSoknadForSkjemanr(defaultSkjemanr)
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
+		val errorBody = api.createSoknadForSkjemanr(defaultSkjemanr, authToken = token)
 			.assertHttpStatus(HttpStatus.NOT_IMPLEMENTED)
 			.errorBody
 		assertEquals(
@@ -110,6 +116,9 @@ class SoknadRestApiTest : ApplicationTest() {
 		expectedSoknadSize: Int
 	) {
 		// Given
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		// 1 søknad and 2 ettersendingssøknader
 		val soknad = DokumentSoknadDtoTestBuilder(brukerId = defaultUser).build()
 		val opprettetSoknad = soknadService.opprettNySoknad(soknad)
@@ -122,7 +131,7 @@ class SoknadRestApiTest : ApplicationTest() {
 			DokumentSoknadDtoTestBuilder(skjemanr = opprettetSoknad.skjemanr, brukerId = defaultUser).asEttersending().build()
 		soknadService.opprettNySoknad(ettersending2)
 
-		val response = api.getExistingSoknader(opprettetSoknad.skjemanr, queryParam)
+		val response = api.getExistingSoknader(opprettetSoknad.skjemanr, queryParam, token)
 
 		// Then
 		val body = response?.body!!
@@ -138,6 +147,9 @@ class SoknadRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `(Temporary bugfix) Should fix attachment status before submit`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val soknad = SoknadDbDataTestBuilder(ettersendingsId = UUID.randomUUID().toString(), forsteinnsendingsdato = LocalDateTime.now()).build()
 		repoUtils.lagreSoknad(soknad)
 		val vedlegg = VedleggDbData(
@@ -203,7 +215,7 @@ class SoknadRestApiTest : ApplicationTest() {
 			)
 		)
 
-		api.sendInnSoknad(soknad.innsendingsid).assertSuccess()
+		api.sendInnSoknad(soknad.innsendingsid, authToken = token).assertSuccess()
 
 		// verify invocation of soknadsmottaker
 		val slotSoknad = slot<DokumentSoknadDto>()
@@ -225,20 +237,23 @@ class SoknadRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `Should create notification when ettersending is automatically created due to missing attachments`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val createSoknadRequest = SkjemaDtoTestBuilder(vedleggsListe = listOf(
 			SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build(),
 			SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
 		)).build()
-		val innsendingsId = api.createSoknad(createSoknadRequest, envQualifier = EnvQualifier.preprodAnsatt)
+		val innsendingsId = api.createSoknad(createSoknadRequest, envQualifier = EnvQualifier.preprodAnsatt, authToken = token)
 			.assertSuccess().body.innsendingsId!!
-		val soknad = api.getSoknadSendinn(innsendingsId)
+		val soknad = api.getSoknadSendinn(innsendingsId, token)
 			.assertSuccess().body
 
 		val vedleggsId = soknad.vedleggsListe.first { it.vedleggsnr == "N6" }.id
 		val fil = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
-		api.uploadFile(innsendingsId, vedleggsId!!, fil)
+		api.uploadFile(innsendingsId, vedleggsId!!, fil, token)
 
-		val innsendingskvittering = api.sendInnSoknad(innsendingsId, EnvQualifier.preprodAnsatt)
+		val innsendingskvittering = api.sendInnSoknad(innsendingsId, EnvQualifier.preprodAnsatt, authToken = token)
 			.assertSuccess().body
 		assertEquals(1, innsendingskvittering.skalEttersendes?.size)
 
@@ -273,34 +288,43 @@ class SoknadRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `Should reject submission if ettersending has no attachments`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val createEttersending = OpprettEttersendingBuilder().build()
-		val innsendingsId = api.createEttersending(createEttersending, envQualifier = EnvQualifier.preprodAnsatt)
+		val innsendingsId = api.createEttersending(createEttersending, envQualifier = EnvQualifier.preprodAnsatt, authToken = token)
 			.assertSuccess().body.innsendingsId!!
 
-		api.sendInnSoknad(innsendingsId, EnvQualifier.preprodAnsatt)
+		api.sendInnSoknad(innsendingsId, EnvQualifier.preprodAnsatt,  authToken = token)
 			.assertClientError()
 	}
 
 	@Test
 	fun `Should reject submission if ettersending only has postponded uploads to attachments`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val createEttersending = OpprettEttersendingBuilder().medVedleggGittNr(listOf("W1", "W2")).build()
-		val soknad = api.createEttersending(createEttersending, envQualifier = EnvQualifier.preprodAnsatt)
+		val soknad = api.createEttersending(createEttersending, envQualifier = EnvQualifier.preprodAnsatt,  authToken = token)
 			.assertSuccess().body
 
-		api.sendInnSoknad(soknad.innsendingsId!!, EnvQualifier.preprodAnsatt)
+		api.sendInnSoknad(soknad.innsendingsId!!, EnvQualifier.preprodAnsatt,  authToken = token)
 			.assertClientError()
 	}
 
 	@Test
 	fun `Should accept submission if ettersending has postponded uploads, and changed uploadStatus to attachments`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val createEttersending = OpprettEttersendingBuilder().medVedleggGittNr(listOf("W1", "W2")).build()
-		val soknad = api.createEttersending(createEttersending, envQualifier = EnvQualifier.preprodAnsatt)
+		val soknad = api.createEttersending(createEttersending, envQualifier = EnvQualifier.preprodAnsatt,  authToken = token)
 			.assertSuccess().body
 		val innsendingsId = soknad.innsendingsId!!
 		val vedleggsId = soknad.vedleggsListe.first { it.vedleggsnr == "W1" }.id!!
-		api.patchVedlegg(innsendingsId = innsendingsId, vedleggsId = vedleggsId, PatchVedleggDto(opplastingsStatus = OpplastingsStatusDto.SendesAvAndre)).assertSuccess()
+		api.patchVedlegg(innsendingsId = innsendingsId, vedleggsId = vedleggsId, PatchVedleggDto(opplastingsStatus = OpplastingsStatusDto.SendesAvAndre), authToken = token).assertSuccess()
 
-		val innsendingskvittering = api.sendInnSoknad(innsendingsId, EnvQualifier.preprodAnsatt)
+		val innsendingskvittering = api.sendInnSoknad(innsendingsId, EnvQualifier.preprodAnsatt,  authToken = token)
 			.assertSuccess().body
 
 		assertEquals(1, innsendingskvittering.skalEttersendes?.size)

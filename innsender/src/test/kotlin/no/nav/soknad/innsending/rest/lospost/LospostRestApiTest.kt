@@ -48,14 +48,15 @@ class LospostRestApiTest : ApplicationTest() {
 	@BeforeEach
 	fun setup() {
 		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
-		val mockJwt = TokenGenerator(mockOAuth2Server).createMockJwt("tokenx")
-		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(mockJwt)
 
 		clearAllMocks()
 	}
 
 	@Test
 	fun `Should create lospost innsending`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val request = OpprettLospost(
 			soknadTittel = "BIL - Førerkort",
 			tema = "BIL",
@@ -63,7 +64,7 @@ class LospostRestApiTest : ApplicationTest() {
 			sprak = "nb"
 		)
 
-		val response = api.createLospost(request)
+		val response = api.createLospost(request, auth = token)
 			.assertSuccess()
 
 		val body = response.body
@@ -80,37 +81,46 @@ class LospostRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `Should reject empty application title`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val request = OpprettLospost(
 			soknadTittel = " ",
 			tema = "BIL",
 			dokumentTittel = "Førerkort",
 			sprak = "nb"
 		)
-		api.createLospost(request)
+		api.createLospost(request, auth = token)
 			.assertClientError()
 	}
 
 	@Test
 	fun `Should reject empty document title`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val request = OpprettLospost(
 			soknadTittel = "BIL - Førerkort",
 			tema = "BIL",
 			dokumentTittel = " ",
 			sprak = "nb"
 		)
-		api.createLospost(request)
+		api.createLospost(request, auth = token)
 			.assertClientError()
 	}
 
 	@Test
 	fun `Should reject too large file`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val request = OpprettLospost(
 			soknadTittel = "BIL - Førerkort",
 			tema = "BIL",
 			dokumentTittel = "Førerkort",
 			sprak = "nb"
 		)
-		val createResponse = api.createLospost(request)
+		val createResponse = api.createLospost(request, auth = token)
 			.assertSuccess()
 
 		val body = createResponse.body
@@ -121,20 +131,23 @@ class LospostRestApiTest : ApplicationTest() {
 		assertEquals(request.dokumentTittel, vedlegg.tittel)
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedlegg.opplastingsStatus)
 		val file35MB = loadFile35MB()
-		api.uploadFile(body.innsendingsId!!, vedlegg.id!!, file35MB)
+		api.uploadFile(body.innsendingsId!!, vedlegg.id!!, file35MB, token)
 			.assertClientError()
 			.assertErrorCode(ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE)
 	}
 
 	@Test
 	fun `Should reject second file upload when total file size is to large`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val request = OpprettLospost(
 			soknadTittel = "BIL - Førerkort",
 			tema = "BIL",
 			dokumentTittel = "Førerkort",
 			sprak = "nb"
 		)
-		val createResponse = api.createLospost(request)
+		val createResponse = api.createLospost(request, auth = token)
 			.assertSuccess()
 
 		val body = createResponse.body
@@ -145,22 +158,25 @@ class LospostRestApiTest : ApplicationTest() {
 		assertEquals(request.dokumentTittel, vedlegg.tittel)
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedlegg.opplastingsStatus)
 		val file10MB = loadFile10MB()
-		api.uploadFile(body.innsendingsId!!, vedlegg.id!!, file10MB)
+		api.uploadFile(body.innsendingsId!!, vedlegg.id!!, file10MB, token)
 			.assertSuccess()
-		api.uploadFile(body.innsendingsId!!, vedlegg.id!!, file10MB)
+		api.uploadFile(body.innsendingsId!!, vedlegg.id!!, file10MB, token)
 			.assertClientError()
 			.assertErrorCode(ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE)
 	}
 
 	@Test
 	fun `Should reject upload since total size for application exceeds max limit`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val request = OpprettLospost(
 			soknadTittel = "BIL - Førerkort",
 			tema = "BIL",
 			dokumentTittel = "Førerkort",
 			sprak = "nb"
 		)
-		val createResponse = api.createLospost(request)
+		val createResponse = api.createLospost(request, auth = token)
 			.assertSuccess()
 
 		val body = createResponse.body
@@ -172,31 +188,34 @@ class LospostRestApiTest : ApplicationTest() {
 		assertEquals(request.dokumentTittel, vedleggMain.tittel)
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggMain.opplastingsStatus)
 		val file14MB = loadFile14MB()
-		api.uploadFile(innsendingsId, vedleggMain.id!!, file14MB)
+		api.uploadFile(innsendingsId, vedleggMain.id!!, file14MB, token)
 			.assertSuccess()
 
-		val vedlegg2 = api.addVedlegg(innsendingsId, PostVedleggDto("Mer informasjon"))
+		val vedlegg2 = api.addVedlegg(innsendingsId, PostVedleggDto("Mer informasjon"), token)
 			.assertSuccess()
 			.body
-		api.uploadFile(innsendingsId, vedlegg2.id!!, file14MB)
+		api.uploadFile(innsendingsId, vedlegg2.id!!, file14MB, token)
 			.assertSuccess()
 
-		val vedlegg3 = api.addVedlegg(innsendingsId, PostVedleggDto("Litt mer informasjon"))
+		val vedlegg3 = api.addVedlegg(innsendingsId, PostVedleggDto("Litt mer informasjon"), token)
 			.assertSuccess()
 			.body
-		api.uploadFile(innsendingsId, vedlegg3.id!!, file14MB)
+		api.uploadFile(innsendingsId, vedlegg3.id!!, file14MB, token)
 			.assertSuccess()
 
-		val vedlegg4 = api.addVedlegg(innsendingsId, PostVedleggDto("Enda mer informasjon"))
+		val vedlegg4 = api.addVedlegg(innsendingsId, PostVedleggDto("Enda mer informasjon"), token)
 			.assertSuccess()
 			.body
-		api.uploadFile(innsendingsId, vedlegg4.id!!, file14MB)
+		api.uploadFile(innsendingsId, vedlegg4.id!!, file14MB, token)
 			.assertClientError()
 			.assertErrorCode(ErrorCode.FILE_SIZE_SUM_TOO_LARGE)
 	}
 
 	@Test
 	fun `Should resolve urls based on env qualifier ansatt`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val request = OpprettLospost(
 			soknadTittel = "PEN - Arbeidskontrakt",
 			tema = "PEN",
@@ -204,7 +223,7 @@ class LospostRestApiTest : ApplicationTest() {
 			sprak = "nb"
 		)
 
-		val response = api.createLospost(request, EnvQualifier.preprodAnsatt)
+		val response = api.createLospost(request, EnvQualifier.preprodAnsatt, auth = token)
 			.assertSuccess()
 		assertContains(response.headers?.location.toString(), "ansatt.dev.nav.no/sendinn")
 
@@ -219,6 +238,9 @@ class LospostRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `Should resolve urls based on env qualifier intern`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val request = OpprettLospost(
 			soknadTittel = "PEN - Arbeidskontrakt",
 			tema = "PEN",
@@ -226,7 +248,7 @@ class LospostRestApiTest : ApplicationTest() {
 			sprak = "nb"
 		)
 
-		val response = api.createLospost(request, EnvQualifier.preprodIntern)
+		val response = api.createLospost(request, EnvQualifier.preprodIntern, auth = token)
 			.assertSuccess()
 		assertContains(response.headers?.location.toString(), "intern.dev.nav.no/sendinn")
 
@@ -241,6 +263,9 @@ class LospostRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `Should create notification with correct information`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val request = OpprettLospost(
 			soknadTittel = "PEN - Arbeidskontrakt",
 			tema = "PEN",
@@ -248,7 +273,7 @@ class LospostRestApiTest : ApplicationTest() {
 			sprak = "nb"
 		)
 
-		val lospostDto = api.createLospost(request)
+		val lospostDto = api.createLospost(request, auth = token)
 			.assertSuccess()
 			.body
 		assertNotNull(lospostDto.innsendingsId)
@@ -271,6 +296,9 @@ class LospostRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `Should filter lospost input with illegal characters`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val tittel = "BIL - Førerkort" +"\u0000"
 		val dokumentTittel = "Førerkort" +"\u0000"
 		val request = OpprettLospost(
@@ -279,7 +307,7 @@ class LospostRestApiTest : ApplicationTest() {
 			dokumentTittel = dokumentTittel,
 			sprak = "nb"
 		)
-		val lospostDto = api.createLospost(request)
+		val lospostDto = api.createLospost(request, auth = token)
 			.assertSuccess()
 			.body
 

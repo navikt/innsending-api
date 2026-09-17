@@ -14,6 +14,7 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.repository.VedleggRepository
 import no.nav.soknad.innsending.utils.ApiWebClient
+import no.nav.soknad.innsending.utils.TokenGenerator
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito.`when`
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.*
 import java.lang.Thread.sleep
@@ -69,7 +71,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		val brukerId = "12345678901"
 		val vedlegg = listOf("W1", "W2")
 		val skjemanr = "NAV 55-00.60"
-		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr)
+		val (soknadDto, token) = opprettSoknad(brukerId, vedlegg, skjemanr)
 
 		assertEquals(brukerId, soknadDto.brukerId)
 		assertEquals(skjemanr, soknadDto.skjemanr)
@@ -83,7 +85,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		val skjemanr = "NAV 55-00.60"
 
 		// When
-		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr)
+		val (soknadDto, token) = opprettSoknad(brukerId, vedlegg, skjemanr)
 
 		// Then
 		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
@@ -106,7 +108,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		val skjemanr = "NAV 55-00.60"
 
 		// When
-		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr, brukernotifikasjonstype = BrukernotifikasjonsType.utkast )
+		val (soknadDto, token) = opprettSoknad(brukerId, vedlegg, skjemanr, brukernotifikasjonstype = BrukernotifikasjonsType.utkast )
 
 		// Then
 		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
@@ -126,9 +128,9 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		val brukerId = "12345678901"
 		val vedlegg = listOf("W1", "W2")
 		val skjemanr = "NAV 55-00.60"
-		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr)
+		val (soknadDto, token) = opprettSoknad(brukerId, vedlegg, skjemanr)
 
-		val response = api.eksternOppgaveSlett(soknadDto.innsendingsId!! )
+		val response = api.eksternOppgaveSlett(soknadDto.innsendingsId!!, authToken = token)
 
 		assertNotNull(response)
 		assertEquals(HttpStatus.OK, response.statusCode)
@@ -143,9 +145,9 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		val brukerId = "12345678901"
 		val vedlegg = listOf("W1", "W2")
 		val skjemanr = "NAV 55-00.60"
-		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr)
+		val (soknadDto, token) = opprettSoknad(brukerId, vedlegg, skjemanr)
 
-		val response = api.eksternOppgaveSlettFail("12345" )
+		val response = api.eksternOppgaveSlettFail("12345" , authToken = token)
 
 		assertNotNull(response)
 		assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
@@ -161,12 +163,12 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		val skjemanr2 = "NAV 04-02.01"
 
 		// Given
-		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr)
-		val soknadDto2 = opprettSoknad(brukerId, vedlegg, skjemanr2)
-		val soknadDto3 = opprettSoknad(brukerId2, vedlegg, skjemanr)
+		val (soknadDto, token) = opprettSoknad(brukerId, vedlegg, skjemanr)
+		val (soknadDto2, token2) = opprettSoknad(brukerId, vedlegg, skjemanr2)
+		val (soknadDto3, token3) = opprettSoknad(brukerId2, vedlegg, skjemanr)
 
 		// When
-		val response = api.oppgaveHentSoknaderForSkjemanr(skjemanr, brukerId, listOf(SoknadType.ettersendelse), "nav-call-id" )
+		val response = api.oppgaveHentSoknaderForSkjemanr(skjemanr, brukerId, listOf(SoknadType.ettersendelse), "nav-call-id", authToken = token)
 
 		// Then
 		assertNotNull(response)
@@ -177,7 +179,10 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		assertEquals(brukerId, list?.get(0)?.brukerId)
 	}
 
-	private fun opprettSoknad(brukerId: String, vedlegg: List<String>, skjemanr: String, brukernotifikasjonstype: BrukernotifikasjonsType? = null): DokumentSoknadDto {
+	private fun opprettSoknad(brukerId: String, vedlegg: List<String>, skjemanr: String, brukernotifikasjonstype: BrukernotifikasjonsType? = null): Pair<DokumentSoknadDto, String> {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagAzureOBOTokenAndJwt(navIdent = brukerId)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val vedleggsListe = mutableListOf<InnsendtVedleggDto>()
 		vedlegg.forEach { vedleggsListe.add(InnsendtVedleggDto(vedleggsnr = it, tittel = "Tittel"+it, url = null)) }
 		val oppgave = EksternEttersendingsOppgave(
@@ -191,13 +196,13 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 			vedleggsListe = vedleggsListe
 		)
 
-		val response = api.createEttersendingsOppgave(oppgave )
+		val response = api.createEttersendingsOppgave(oppgave, token )
 
 		assertNotNull(response)
 		assertEquals(HttpStatus.CREATED, response.statusCode)
 		val opprettetSoknaddto = response.body
 		assertEquals(true, opprettetSoknaddto?.erNavOpprettet)
-		return response.body!!
+		return response.body!! to token
 
 	}
 

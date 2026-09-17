@@ -7,6 +7,7 @@ import no.nav.security.token.support.spring.test.MockLoginController
 import no.nav.soknad.innsending.util.Constants.AZURE
 import org.springframework.security.oauth2.jwt.Jwt
 import com.nimbusds.jwt.SignedJWT
+import java.time.Instant
 
 
 class TokenGenerator(
@@ -52,6 +53,23 @@ class TokenGenerator(
 		).serialize()
 	}
 
+	fun lagTokenXTokenAndJwt(fnr: String? = null): Pair<String, Jwt> {
+		val pid = fnr ?: subject
+		val token = mockOAuth2Server.issueToken(
+			issuerId = tokenx,
+			clientId = "application",
+			tokenCallback = DefaultOAuth2TokenCallback(
+				issuerId = tokenx,
+				subject = pid,
+				typeHeader = JOSEObjectType.JWT.type,
+				audience = listOf(audience),
+				claims = mapOf("acr" to "idporten-loa-high", "pid" to pid),
+				expiry = expiry
+			)
+		).serialize()
+		return token to toSpringJwt(token)
+	}
+
 	fun lagAzureToken(fnr: String? = null): String {
 		val pid = fnr ?: subject
 		val issuerId = AZURE
@@ -88,7 +106,7 @@ class TokenGenerator(
 		).serialize()
 	}
 
-	fun lagAzureM2MSignedToken(issuer: String = AZURE, roles: List<String> = emptyList()): SignedJWT {
+	fun lagAzureM2MTokenAndJwt(roles: List<String> = emptyList(), issuer: String = AZURE): Pair<String, Jwt> {
 		val issuerId = issuer
 		val oAuth2TokenCallback = DefaultOAuth2TokenCallback(
 			issuerId = issuerId,
@@ -99,11 +117,12 @@ class TokenGenerator(
 			},
 			expiry = expiry
 		)
-		return mockOAuth2Server.issueToken(
-			issuerId = issuerId,
+		val token = mockOAuth2Server.issueToken(
+			issuerId = issuer,
 			clientId = MockLoginController::class.java.simpleName,
 			tokenCallback = oAuth2TokenCallback
-		)
+		).serialize()
+		return token to toSpringJwt(token)
 	}
 
 	fun lagAzureOBOToken(scopes: String? = null, navIdent: String? = null): String {
@@ -132,4 +151,41 @@ class TokenGenerator(
 
 	}
 
+	fun lagAzureOBOTokenAndJwt(scopes: String? = null, navIdent: String? = null): Pair<String, Jwt> {
+		val issuerId = AZURE
+		val oAuth2TokenCallback = DefaultOAuth2TokenCallback(
+			issuerId = issuerId,
+			typeHeader = JOSEObjectType.JWT.type,
+			audience = listOf(audience),
+			claims = buildMap {
+				put("name", "Ola Nordmann")
+				put("preferred_username", "Ola.Nordmann@test.no")
+				put("azp", "consumer-app-id")
+				put("azp_name", "dev-gcp.namespace.consumer-app-name")
+				put("scp", "${scopes?.let { "$it " } ?: ""}defaultaccess")
+				if (navIdent != null) {
+					put("NAVident", navIdent)
+				}
+			},
+			expiry = expiry
+		)
+		return mockOAuth2Server.issueToken(
+			issuerId = issuerId,
+			clientId = MockLoginController::class.java.simpleName,
+			tokenCallback = oAuth2TokenCallback
+		).serialize().let { it to toSpringJwt(it) }
+
+	}
+
+	fun toSpringJwt(string: String): Jwt {
+		val signedJwt = SignedJWT.parse(string)
+		val claims = signedJwt.jwtClaimsSet
+
+		return Jwt.withTokenValue(string)
+			.headers { h -> h.putAll(signedJwt.header.toJSONObject()) }
+			.claims { c -> c.putAll(claims.claims) }
+			.issuedAt(claims.issueTime?.toInstant() ?: Instant.EPOCH)
+			.expiresAt(claims.expirationTime?.toInstant() ?: Instant.EPOCH)
+			.build()
+	}
 }

@@ -13,6 +13,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.authorization.AuthorizationDeniedException
+import org.springframework.security.oauth2.core.OAuth2AuthorizationException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.multipart.MultipartException
@@ -113,12 +115,11 @@ class RestExceptionHandler {
 		)
 	}
 
-	// 401
-/*
+	// 403
 	@ExceptionHandler
 	fun unauthenticatedHandler(
 		request: HttpServletRequest,
-		exception: JwtTokenMissingException
+		exception: OAuth2AuthorizationException
 	): ResponseEntity<RestErrorResponseDto>? {
 		logger.warn("Autentisering feilet ved kall til " + request.requestURI + ": " + exception.messageForLog, exception)
 
@@ -130,7 +131,23 @@ class RestExceptionHandler {
 			), HttpStatus.UNAUTHORIZED
 		)
 	}
-*/
+
+	// 403
+	@ExceptionHandler
+	fun authorizationDeniedException(
+		request: HttpServletRequest,
+		exception: AuthorizationDeniedException
+	): ResponseEntity<RestErrorResponseDto>? {
+		logger.warn("Autorisering feilet ved kall til " + request.requestURI + ": " + exception.message, exception)
+
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = "Autorisering feilet",
+				timestamp = OffsetDateTime.now(),
+				errorCode = "errorCode.forbidden"
+			), HttpStatus.FORBIDDEN
+		)
+	}
 
 	// 403
 	@ExceptionHandler

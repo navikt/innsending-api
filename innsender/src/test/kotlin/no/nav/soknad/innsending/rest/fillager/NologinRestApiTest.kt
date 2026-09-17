@@ -6,6 +6,7 @@ import io.mockk.clearAllMocks
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.service.config.ConfigDefinition
+import no.nav.soknad.innsending.service.config.ConfigService
 import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.TokenGenerator
 import org.junit.jupiter.api.BeforeEach
@@ -26,6 +27,9 @@ class NologinRestApiTest: ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
+	@Autowired
+	lateinit var configService: ConfigService
+
 	@LocalServerPort
 	var serverPort: Int = 0
 
@@ -37,29 +41,30 @@ class NologinRestApiTest: ApplicationTest() {
 	fun setup() {
 		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
-		val mockJwtAzure = TokenGenerator(mockOAuth2Server).createMockJwt(azureadUri, navIdent = "Z123456")
-		`when`(azureJwtDecoder.decode(anyString())).thenReturn(mockJwtAzure)
-
-		testApi!!.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on")
-			.assertSuccess()
+		configService.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on", "Z123456")
 	}
 
 	@Test
 	fun `should allow file upload when main switch is on`() {
-		api.uploadNologinFile(vedleggId = "abcdef")
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt(listOf("nologin-access"), azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
+		api.uploadNologinFile(vedleggId = "abcdef", authToken = token)
 			.assertSuccess()
 	}
 
 	@Test
 	fun `should allow file upload V2 when main switch is on`() {
-		api.uploadNologinFileV2(innsendingId = UUID.randomUUID().toString(), vedleggId = "abcdef")
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt(listOf("nologin-access"), azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
+		api.uploadNologinFileV2(innsendingId = UUID.randomUUID().toString(), vedleggId = "abcdef", authToken = token)
 			.assertSuccess()
 	}
 
 	@Test
 	fun `should not allow file upload when token does not contain correct role`() {
-		val token = TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("irrelevant-role"), azureadUri)
-		val mockJwtAzure: Jwt = azureJwtDecoder.decode(token)
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt(listOf("irrelevant-role"), azureadUri)
 		`when`(azureJwtDecoder.decode(anyString())).thenReturn(mockJwtAzure)
 
 		api.uploadNologinFile(vedleggId = "abcdef", authToken = token)
@@ -68,17 +73,21 @@ class NologinRestApiTest: ApplicationTest() {
 
 	@Test
 	fun `should not allow file upload V2 when token does not contain correct role`() {
-		val token = TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("irrelevant-role"), azureadUri)
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt(listOf("irrelevant-role"), azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
 		api.uploadNologinFileV2(innsendingId = UUID.randomUUID().toString(), vedleggId = "abcdef", authToken = token)
 			.assertHttpStatus(HttpStatus.FORBIDDEN)
 	}
 
 	@Test
 	fun `should not allow file upload when nologin is disabled`() {
-		api.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "off")
-			.assertSuccess()
+		configService.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "off", "Z123456")
 
-		api.uploadNologinFile(vedleggId = "abcdef")
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt(listOf("nologin-access"), azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
+		api.uploadNologinFile(vedleggId = "abcdef", authToken = token)
 			.assertHttpStatus(HttpStatus.SERVICE_UNAVAILABLE)
 			.errorBody.let { body ->
 				assertEquals("temporarilyUnavailable", body.errorCode)
@@ -87,10 +96,12 @@ class NologinRestApiTest: ApplicationTest() {
 
 	@Test
 	fun `should not allow file upload V2 when nologin is disabled`() {
-		api.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "off")
-			.assertSuccess()
+		configService.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "off", "Z123456")
 
-		api.uploadNologinFileV2(innsendingId = UUID.randomUUID().toString(), vedleggId = "abcdef")
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt(listOf("nologin-access"), azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
+		api.uploadNologinFileV2(innsendingId = UUID.randomUUID().toString(), vedleggId = "abcdef", authToken = token)
 			.assertHttpStatus(HttpStatus.SERVICE_UNAVAILABLE)
 			.errorBody.let { body ->
 				assertEquals("temporarilyUnavailable", body.errorCode)

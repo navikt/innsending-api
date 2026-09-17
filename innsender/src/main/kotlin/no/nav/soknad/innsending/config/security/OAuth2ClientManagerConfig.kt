@@ -33,7 +33,7 @@ class OAuth2ClientManagerConfig(
 			.clientCredentials()
 			.provider { context ->
 				val grantType = context.clientRegistration.authorizationGrantType.value
-				if (grantType == "urn:ietf:params:oauth:grant-type:jwt-bearer") {
+				if (grantType == "urn:ietf:params:oauth:grant-type:jwt-bearer" || grantType == "urn:ietf:params:oauth:grant-type:token-exchange") {
 					tokenExchangeService.performJwtBearerExchange(context)
 				} else null
 			}

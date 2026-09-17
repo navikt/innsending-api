@@ -13,6 +13,7 @@ import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.Skjema
+import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.EksternOpprettEttersendingTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
 import java.lang.Thread.sleep
@@ -56,6 +58,9 @@ class EksternRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should create ettersending with correct data`() {
 		// Given
+		val (token, mockJwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(mockJwt)
+
 		val createEttersendingRequest = EksternOpprettEttersendingTestBuilder()
 			.skjemanr(defaultSkjemanr)
 			.tema(defaultTema)
@@ -63,7 +68,7 @@ class EksternRestApiTest : ApplicationTest() {
 			.build()
 
 		// When
-		val ettersending = api.createEksternEttersending(createEttersendingRequest)
+		val ettersending = api.createEksternEttersending(createEttersendingRequest, authToken = token)
 			.assertSuccess()
 			.body
 
@@ -77,6 +82,9 @@ class EksternRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should create ettersending with utkast brukernotifikasjon when brukernotifikasjonstype is not provided (default)`() {
 		// Given
+		val (token, mockJwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(mockJwt)
+
 		val createEttersendingRequest = EksternOpprettEttersendingTestBuilder()
 			.skjemanr(defaultSkjemanr)
 			.tema(defaultTema)
@@ -84,7 +92,7 @@ class EksternRestApiTest : ApplicationTest() {
 			.build()
 
 		// When
-		val ettersending = api.createEksternEttersending(createEttersendingRequest)
+		val ettersending = api.createEksternEttersending(createEttersendingRequest, authToken = token)
 			.assertSuccess()
 			.body
 
@@ -107,6 +115,9 @@ class EksternRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should create ettersending with oppgave brukernotifikasjon since brukernotifikasjonstype is given`() {
 		// Given
+		val (token, mockJwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(mockJwt)
+
 		val ettersending = EksternOpprettEttersendingTestBuilder()
 			.skjemanr(defaultSkjemanr)
 			.tema(defaultTema)
@@ -115,7 +126,7 @@ class EksternRestApiTest : ApplicationTest() {
 			.build()
 
 		// When
-		val opprettEttersending = api.createEksternEttersending(ettersending)
+		val opprettEttersending = api.createEksternEttersending(ettersending, authToken = token)
 
 		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
 		val noticationSlots = mutableListOf<AddNotification>()
@@ -132,6 +143,9 @@ class EksternRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should include correct link in notification`() {
 		// Given
+		val (token, mockJwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(mockJwt)
+
 		val createEttersendingRequest = EksternOpprettEttersendingTestBuilder()
 			.skjemanr(defaultSkjemanr)
 			.tema(defaultTema)
@@ -139,7 +153,7 @@ class EksternRestApiTest : ApplicationTest() {
 			.build()
 
 		// When
-		val ettersending = api.createEksternEttersending(createEttersendingRequest, EnvQualifier.preprodAnsatt)
+		val ettersending = api.createEksternEttersending(createEttersendingRequest, EnvQualifier.preprodAnsatt, authToken = token)
 			.assertSuccess()
 			.body
 
@@ -164,13 +178,16 @@ class EksternRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should link ettersending with existing søknad if koblesTilEksisterendeSoknad is true`() {
 		// Given
+		val (token, mockJwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(mockJwt)
+
 		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = defaultSkjemanr, tema = defaultTema).build()
 
-		val opprettetSoknadResponse = api.createSoknad(skjemaDto).assertSuccess()
+		val opprettetSoknadResponse = api.createSoknad(skjemaDto, authToken = token).assertSuccess()
 		val innsendingsId = opprettetSoknadResponse.body.innsendingsId!!
 
-		api.utfyltSoknad(innsendingsId, skjemaDto)
-		api.sendInnSoknad(innsendingsId)
+		api.utfyltSoknad(innsendingsId, skjemaDto, authToken = token)
+		api.sendInnSoknad(innsendingsId, authToken = token)
 
 		val ettersending = EksternOpprettEttersendingTestBuilder()
 			.skjemanr(skjemaDto.skjemanr)
@@ -180,7 +197,7 @@ class EksternRestApiTest : ApplicationTest() {
 			.build()
 
 		// When
-		val response = api.createEksternEttersending(ettersending)
+		val response = api.createEksternEttersending(ettersending, authToken = token)
 
 		// Then
 		assertNotNull(response.body)
@@ -194,13 +211,16 @@ class EksternRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should not link ettersending with existing søknad if koblesTilEksisterendeSoknad is false (default)`() {
 		// Given
+		val (token, mockJwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(mockJwt)
+
 		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = defaultSkjemanr, tema = defaultTema).build()
 
-		val opprettetSoknadResponse = api.createSoknad(skjemaDto).assertSuccess()
+		val opprettetSoknadResponse = api.createSoknad(skjemaDto, authToken = token).assertSuccess()
 		val innsendingsId = opprettetSoknadResponse.body.innsendingsId!!
 
-		api.utfyltSoknad(innsendingsId, skjemaDto)
-		api.sendInnSoknad(innsendingsId)
+		api.utfyltSoknad(innsendingsId, skjemaDto, authToken = token)
+		api.sendInnSoknad(innsendingsId, authToken = token)
 
 		val ettersending = EksternOpprettEttersendingTestBuilder()
 			.skjemanr(skjemaDto.skjemanr)
@@ -209,7 +229,7 @@ class EksternRestApiTest : ApplicationTest() {
 			.build()
 
 		// When
-		val response = api.createEksternEttersending(ettersending)
+		val response = api.createEksternEttersending(ettersending, authToken = token)
 
 		// Then
 		assertNotNull(response.body)
@@ -227,6 +247,9 @@ class EksternRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should delete ettersending`() {
 		// Given
+		val (token, mockJwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(mockJwt)
+
 		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = defaultSkjemanr, tema = defaultTema).build()
 
 		val ettersending = EksternOpprettEttersendingTestBuilder()
@@ -235,11 +258,11 @@ class EksternRestApiTest : ApplicationTest() {
 			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(defaultVedleggsnr).build()))
 			.build()
 
-		val createdEttersendingResponse = api.createEksternEttersending(ettersending)
+		val createdEttersendingResponse = api.createEksternEttersending(ettersending, authToken = token)
 		val innsendingsId = createdEttersendingResponse.body.ettersendingsId
 
 		// When
-		val response = api.deleteEksternEttersending(innsendingsId!!)
+		val response = api.deleteEksternEttersending(innsendingsId!!, authToken = token)
 
 		// Then
 		assertNotNull(response.body)
@@ -252,10 +275,13 @@ class EksternRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should return 404 if ettersending doesn't exist when deleting`() {
 		// Given
+		val (token, mockJwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(mockJwt)
+
 		val innsendingsId = "non-existing-id"
 
 		// When
-		val response = api.deleteEksternEttersendingFail(innsendingsId)
+		val response = api.deleteEksternEttersendingFail(innsendingsId, authToken = token)
 
 		// Then
 		assertNotNull(response.body)
@@ -281,23 +307,26 @@ class EksternRestApiTest : ApplicationTest() {
 		expectedSize: Int,
 	) {
 		// Given
+		val (token, mockJwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(mockJwt)
+
 		val skjemanr = Skjema.generateSkjemanr();
 		api.createEttersending(
 			OpprettEttersendingTestBuilder()
 				.skjemanr(skjemanr)
 				.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().build()))
 				.build()
-		)
+		, authToken = token)
 		api.createEttersending(
 			OpprettEttersendingTestBuilder()
 				.skjemanr(skjemanr)
 				.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().build()))
 				.build()
-		)
-		api.createSoknad(SkjemaDtoTestBuilder(skjemanr = skjemanr).build())
+		, authToken = token)
+		api.createSoknad(SkjemaDtoTestBuilder(skjemanr = skjemanr).build(), authToken = token)
 
 		// When
-		val response = api.getSoknaderForSkjemanr(skjemanr, querySoknadstyper)
+		val response = api.getSoknaderForSkjemanr(skjemanr, querySoknadstyper, authToken = token)
 
 		// Then
 		val body = response.body

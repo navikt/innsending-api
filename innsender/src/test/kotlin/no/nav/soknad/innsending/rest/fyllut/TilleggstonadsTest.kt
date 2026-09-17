@@ -13,8 +13,10 @@ import no.nav.soknad.innsending.service.KodeverkService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.utils.ApiWebClient
+import no.nav.soknad.innsending.utils.TokenGenerator
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
 import kotlin.test.assertEquals
@@ -33,11 +35,6 @@ class TilleggstonadsTest : ApplicationTest() {
 		"5575" to "AKSDAL",
 		"7318" to "AGDENES",
 	)
-
-/*
-	@MockkBean
-	lateinit var oauth2TokenService: OAuth2AccessTokenService
-*/
 
 	@MockkBean
 	lateinit var kodeverkService: KodeverkService
@@ -66,8 +63,12 @@ class TilleggstonadsTest : ApplicationTest() {
 
 	@Test
 	fun `Should return aktiviteter from Arena`() {
+		// Given
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		// When
-		val response = api.getAktiviteter(AktivitetEndepunkt.aktivitet)
+		val response = api.getAktiviteter(AktivitetEndepunkt.aktivitet, authToken = token)
 
 		// Then
 		assertTrue(response != null)
@@ -94,8 +95,12 @@ class TilleggstonadsTest : ApplicationTest() {
 
 	@Test
 	fun `Should return daglig reise aktiviteter from Arena`() {
+		// Given
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		// When
-		val response = api.getAktiviteter(AktivitetEndepunkt.dagligreise)
+		val response = api.getAktiviteter(AktivitetEndepunkt.dagligreise, authToken = token)
 
 		// Then
 		assertTrue(response != null)
@@ -147,10 +152,13 @@ class TilleggstonadsTest : ApplicationTest() {
 	@Test
 	fun `Should return correct prefill-data from Arena (maalgruppe)`() {
 		// Given
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val properties = "sokerMaalgruppe"
 
 		// When
-		val response = api.getPrefillData(properties)
+		val response = api.getPrefillData(properties, token)
 
 		// Then
 		assertTrue(response != null)
