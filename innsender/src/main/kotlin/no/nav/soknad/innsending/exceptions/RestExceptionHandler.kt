@@ -3,8 +3,6 @@ package no.nav.soknad.innsending.exceptions
 import com.google.cloud.storage.StorageException
 import jakarta.security.auth.message.AuthException
 import jakarta.servlet.http.HttpServletRequest
-//import no.nav.security.token.support.core.exceptions.JwtTokenMissingException
-//import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
 import no.nav.soknad.innsending.exceptions.utils.messageForLog
 import no.nav.soknad.innsending.model.RestErrorResponseDto
 import no.nav.soknad.innsending.service.config.annotation.ConfigVerificationException
@@ -17,7 +15,9 @@ import org.springframework.security.authorization.AuthorizationDeniedException
 import org.springframework.security.oauth2.core.OAuth2AuthorizationException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException
 import org.springframework.web.multipart.MultipartException
+import org.springframework.web.multipart.support.MissingServletRequestPartException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import java.nio.charset.IllegalCharsetNameException
 import java.nio.charset.MalformedInputException
@@ -111,6 +111,20 @@ class RestExceptionHandler {
 				message = exception.message,
 				timestamp = OffsetDateTime.now(),
 				errorCode = ErrorCode.ILLEGAL_ARGUMENT.code
+			), HttpStatus.BAD_REQUEST
+		)
+	}
+
+	@ExceptionHandler
+	fun missingServletRequestPartException(
+		exception: MissingServletRequestPartException
+	): ResponseEntity<RestErrorResponseDto> {
+		logger.warn(exception.messageForLog, exception)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = exception.message,
+				timestamp = OffsetDateTime.now(),
+				errorCode = ErrorCode.MISSING_MULTIPART_PART.code
 			), HttpStatus.BAD_REQUEST
 		)
 	}
@@ -227,18 +241,13 @@ class RestExceptionHandler {
 		)
 	}
 
-	// If client aborts we don't want to log this as an error
 	@ExceptionHandler
-	fun clientAbortException(exception: ClientAbortException): ResponseEntity<RestErrorResponseDto> {
-		logger.warn(exception.messageForLog, exception)
-		return ResponseEntity(
-			RestErrorResponseDto(
-				message = exception.message ?: "Noe gikk galt, prøv igjen senere",
-				timestamp = OffsetDateTime.now(),
-				errorCode = ErrorCode.GENERAL_ERROR.code,
-			), HttpStatus.INTERNAL_SERVER_ERROR
-		)
-	}
+	fun asyncRequestNotUsableException(exception: AsyncRequestNotUsableException): ResponseEntity<Void>? =
+		disconnectedClient(exception)
+
+	@ExceptionHandler
+	fun clientAbortException(exception: ClientAbortException): ResponseEntity<Void>? =
+		disconnectedClient(exception)
 
 	// When the client aborts there is a multipart exception caused by ClientAbortException. We don't want to log this as an error.
 	// Causes could be that the user closes the browser, loses internet connection or that the upload times out.
@@ -253,5 +262,14 @@ class RestExceptionHandler {
 				errorCode = ErrorCode.GENERAL_ERROR.code,
 			), HttpStatus.INTERNAL_SERVER_ERROR
 		)
+	}
+
+	private fun disconnectedClient(exception: Exception): ResponseEntity<Void>? {
+		if (logger.isDebugEnabled) {
+			logger.debug(exception.messageForLog, exception)
+		} else {
+			logger.info(exception.messageForLog)
+		}
+		return null
 	}
 }

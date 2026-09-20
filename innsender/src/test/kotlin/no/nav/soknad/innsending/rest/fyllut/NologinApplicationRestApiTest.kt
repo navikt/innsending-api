@@ -9,8 +9,10 @@ import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.service.DocumentService
 import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.service.config.ConfigService
+import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.utils.ApiWebClient
@@ -43,6 +45,9 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 	@SpykBean
 	lateinit var soknadsmottaker: MottakerAPITest
 
+	@SpykBean
+	lateinit var documentService: DocumentService
+
 	@LocalServerPort
 	var serverPort: Int = 0
 
@@ -55,6 +60,32 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
 		configService.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on", "Z123456")
+	}
+
+	@Test
+	fun `delete no-login application removes only files for the requested application`() {
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
+		val innsendingsId = UUID.randomUUID()
+		val otherInnsendingsId = UUID.randomUUID()
+		val firstFile = api.uploadNologinFileV2(innsendingsId.toString(), "first").assertSuccess().body
+		val secondFile = api.uploadNologinFileV2(innsendingsId.toString(), "second").assertSuccess().body
+		val otherFile = api.uploadNologinFileV2(otherInnsendingsId.toString(), "other").assertSuccess().body
+
+		api.deleteApplication(innsendingsId.toString(), ApiWebClient.ApplicationType.NOLOGIN)
+			.assertSuccess()
+			.assertHttpStatus(HttpStatus.NO_CONTENT)
+		api.deleteApplication(innsendingsId.toString(), ApiWebClient.ApplicationType.NOLOGIN)
+			.assertSuccess()
+			.assertHttpStatus(HttpStatus.NO_CONTENT)
+
+		assertNull(documentService.getFile(FileStorageNamespace.NOLOGIN, innsendingsId, firstFile.id))
+		assertNull(documentService.getFile(FileStorageNamespace.NOLOGIN, innsendingsId, secondFile.id))
+		assertNotNull(documentService.getFile(FileStorageNamespace.NOLOGIN, otherInnsendingsId, otherFile.id))
+		verify(exactly = 2) {
+			documentService.deleteAttachment(FileStorageNamespace.NOLOGIN, innsendingsId)
+		}
 	}
 
 	@Test
@@ -545,7 +576,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 			.medVedlegg(listOf(vedlegg1))
 			.build()
 
-		api.sendInnNologinSoknad(skjemaDto, token)
+		api.sendInnNologinSoknad(skjemaDto)
 			.assertClientError()
 			.errorBody.let {
 				assertEquals("Vedleggsliste inneholder vedlegg uten id (fyllutId)", it.message)

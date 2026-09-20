@@ -19,6 +19,7 @@ import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.service.config.ConfigService
 import no.nav.soknad.innsending.util.Constants
+import no.nav.soknad.innsending.util.mapping.translate
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.stotteTilBolig
 import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.TokenGenerator
@@ -187,6 +188,78 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 				"For attachment ${submittedAttachment.vedleggsnr}, expected file content to be not null"
 			)
 		}
+	}
+
+	@Test
+	fun testApplicationAttachmentUsesLabelNotTittelWhenSubmitted() {
+		val skjemanr = "NAV 10-07.54"
+		val attachmentVedleggsnr = "N6"
+		val skjematittel = "Søknad om servicehund"
+		val attachmentTittel = "Annet (defined in the form)"
+		val attachmentLabel = "The applicant's own name for the attachment"
+
+		val hoveddokument =
+			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokument(skjemanr, withFile = false).build()
+
+		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = skjemanr, tittel = skjematittel)
+			.medHoveddokument(hoveddokument)
+			.build()
+
+		// Create application
+		val soknad = testApi!!.createSoknad(skjemaDto)
+			.assertSuccess()
+			.body
+		val innsendingsId = soknad.innsendingsId!!
+
+		// Add an attachment with different tittel and label, as for an "Annet" attachment (N6) where the applicant has entered their own name for the attachment
+		val attachment =
+			SkjemaDokumentDtoTestBuilder(vedleggsnr = attachmentVedleggsnr, tittel = attachmentTittel, label = attachmentLabel).build()
+		val hoveddokumentWithFile =
+			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokument(skjemanr, withFile = true).build()
+		val updatedSoknad = skjemaDto.copy(
+			hoveddokument = hoveddokumentWithFile,
+			vedleggsListe = listOf(attachment)
+		)
+		testApi!!.utfyltSoknad(innsendingsId, updatedSoknad)
+
+		val attachmentId = testApi!!.getSoknadSendinn(innsendingsId)
+			.assertSuccess()
+			.body.vedleggsListe.first { it.vedleggsnr == attachmentVedleggsnr }.id!!
+
+		// Upload file for the attachment
+		testApi!!.uploadFile(innsendingsId, attachmentId)
+			.assertHttpStatus(HttpStatus.CREATED)
+
+		val kvittering = testApi!!.sendInnSoknad(innsendingsId)
+			.assertSuccess()
+			.body
+
+		// verify response
+		assertNotNull(kvittering.innsendteVedlegg?.firstOrNull { it.vedleggsnr == attachmentVedleggsnr })
+
+		// verify invocation of soknadsmottaker
+		val slotSoknad = slot<DokumentSoknadDto>()
+		val slotVedleggsliste = slot<List<VedleggDto>>()
+		val slotAvsender = slot<AvsenderDto>()
+		val slotBruker = slot<BrukerDto?>()
+		verify(timeout = 5000, exactly = 1) {
+			soknadsmottakerApi.sendInnSoknad(
+				capture(slotSoknad),
+				capture(slotVedleggsliste),
+				capture(slotAvsender),
+				captureNullable(slotBruker)
+			)
+		}
+
+		val submittedAttachments = slotVedleggsliste.captured
+		val submittedAttachment = submittedAttachments.first { it.vedleggsnr == attachmentVedleggsnr }
+		assertEquals(attachmentTittel, submittedAttachment.tittel)
+		assertEquals(attachmentLabel, submittedAttachment.label)
+
+		// verify that label is used instead of tittel when translating to the archiving format
+		val translatedDocuments = translate(submittedAttachments)
+		val translatedAttachment = translatedDocuments.first { it.skjemanummer == attachmentVedleggsnr }
+		assertEquals(attachmentLabel, translatedAttachment.tittel)
 	}
 
 	@Test
@@ -442,14 +515,18 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 
 
 	@Test
-	fun testAffectedUserSettesNårInnloggetBukerIkkeLikBrukerISubmission() {
+	fun `automatic subsequent submission preserves affected user and sender`() {
 		val (token, mockJwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
 		`when`(tokenxJwtDecoder.decode(token)).thenReturn(mockJwt)
 
 		val skjemanr = "NAV 10-07.54"
 		val skjematittel = "Søknad om servicehund"
 		val affectedUser = "01011511621"
-		val loggedInUser = "12345678901"
+		val avsender = AvsenderDto(
+			id = "123456789",
+			idType = AvsenderDto.IdType.ORGNR,
+			navn = "Representing organization",
+		)
 		val hoveddokument =
 			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokument(skjemanr, withFile = false).build()
 		val hoveddokumentVariant =
@@ -492,7 +569,13 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 			AttachmentDto(attachmentCode = "M4", "Kursbevis", OpplastingsStatusDto.SendesAvAndre),
 			AttachmentDto(attachmentCode = "M5", "Leiekontrakt", OpplastingsStatusDto.SendSenere),
 		)
-		val submissionResponse = testApi!!.submitDigitalApplication(soknad, attachments, bruker = affectedUser, authToken = token)
+		val submissionResponse = testApi!!.submitDigitalApplication(
+			soknad,
+			attachments,
+			bruker = affectedUser,
+			avsender = avsender,
+			authToken = token
+		)
 			.assertSuccess()
 			.body
 
@@ -529,7 +612,8 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		val ettersendingsId = slotSoknads.last().innsendingsid
 		assertNotNull(ettersendingsId)
 		assertEquals(submissionResponse.ettersendingsId?.toString(), ettersendingsId)
-		testApi!!.getSoknadSendinn(ettersendingsId, authToken = token).assertSuccess().body.let {
+		val ettersending = testApi!!.getSoknadSendinn(ettersendingsId, authToken = token).assertSuccess().body
+			ettersending.let {
 			assertEquals(SoknadsStatusDto.Opprettet, it.status)
 			assertEquals(4, it.vedleggsListe.size)
 
@@ -553,32 +637,38 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		val slotCloseSoknads = mutableListOf<SoknadDbData>()
 		verify(timeout = 50, exactly = 1) { brukernotifikasjonPublisher.closeNotification(capture(slotCloseSoknads)) }
 
+		val m5Vedlegg = ettersending.vedleggsListe.first { it.vedleggsnr == "M5" }
+		testApi!!.uploadFile(ettersendingsId, m5Vedlegg.id!!)
+			.assertHttpStatus(HttpStatus.CREATED)
+		testApi!!.sendInnSoknad(ettersendingsId)
+			.assertSuccess()
+
 		// verify invocation of soknadsmottaker
-		val slotSoknad = slot<DokumentSoknadDto>()
-		val slotVedleggsliste = slot<List<VedleggDto>>()
-		val slotAvsender = slot<AvsenderDto>()
-		val slotBruker = slot<BrukerDto?>()
-		verify(timeout = 5000, exactly = 1) {
+		val capturedSoknader = mutableListOf<DokumentSoknadDto>()
+		val capturedVedlegg = mutableListOf<List<VedleggDto>>()
+		val capturedAvsendere = mutableListOf<AvsenderDto>()
+		val capturedBrukere = mutableListOf<BrukerDto?>()
+		verify(timeout = 5000, exactly = 2) {
 			soknadsmottakerApi.sendInnSoknad(
-				capture(slotSoknad),
-				capture(slotVedleggsliste),
-				capture(slotAvsender),
-				captureNullable(slotBruker)
+				capture(capturedSoknader),
+				capture(capturedVedlegg),
+				capture(capturedAvsendere),
+				captureNullable(capturedBrukere)
 			)
 		}
 
-		assertEquals(innsendingsId, slotSoknad.captured.innsendingsId)
-		val innsendteDokumenter = slotVedleggsliste.captured
+		val originalSubmissionIndex = capturedSoknader.indexOfFirst { it.innsendingsId == innsendingsId }
+		val subsequentSubmissionIndex = capturedSoknader.indexOfFirst { it.innsendingsId == ettersendingsId }
+		assertTrue(originalSubmissionIndex >= 0)
+		assertTrue(subsequentSubmissionIndex >= 0)
+
+		val innsendteDokumenter = capturedVedlegg[originalSubmissionIndex]
 		assertEquals(4, innsendteDokumenter.size)
 		assertTrue(innsendteDokumenter.all { it.mimetype != null })
-		assertEquals(affectedUser, slotBruker.captured?.id)
-
-		val savedSoknad = repo.hentSoknadDb(innsendingsId)
-		assertNotNull(savedSoknad)
-		assertEquals(affectedUser, savedSoknad.affecteduser?.id)
-		assertEquals(loggedInUser, savedSoknad.brukerid)
-		assertEquals(loggedInUser, savedSoknad.avsender?.id)
-		assertEquals(SoknadsStatus.Innsendt, savedSoknad.status)
+		assertEquals(affectedUser, capturedBrukere[originalSubmissionIndex]?.id)
+		assertEquals(avsender, capturedAvsendere[originalSubmissionIndex])
+		assertEquals(affectedUser, capturedBrukere[subsequentSubmissionIndex]?.id)
+		assertEquals(avsender, capturedAvsendere[subsequentSubmissionIndex])
 	}
 
 

@@ -74,10 +74,17 @@ class InnsendingService(
 			)
 		}
 
+		val eksisterendeSoknad = repo.hentSoknadDb(soknadDtoInput.innsendingsId!!)
 		val lagretSoknad = mapTilDokumentSoknadDto(
 			repo.lagreSoknad(
 			mapTilSoknadDb(soknadDtoInput, soknadDtoInput.innsendingsId!!,
-				SoknadsStatus.KlarForInnsending, avsender = avsenderDto, bruker = brukerDto).copy(innsendtdato = LocalDateTime.now(), affecteduser = null)
+				SoknadsStatus.KlarForInnsending, avsender = avsenderDto, bruker = brukerDto).copy(
+					innsendtdato = LocalDateTime.now(),
+					brukerid = eksisterendeSoknad.brukerid,
+					brukertype = eksisterendeSoknad.brukertype,
+					avsender = eksisterendeSoknad.avsender ?: avsenderDto,
+					affecteduser = eksisterendeSoknad.affecteduser ?: brukerDto,
+				)
 			)
 			,emptyList(), emptyList()
 		).copy(vedleggsListe = soknadDtoInput.vedleggsListe)
@@ -203,7 +210,7 @@ class InnsendingService(
 		logger.info(
 			"$innsendingsId: Sendt inn soknad.\n"
 				+ "${soknadDto.tittel}, ${soknadDto.skjemanr}, ${soknadDto.tema}, ${soknadDto.ettersendingsId}, ${soknadDto.visningsType}"
-				+"InnsendteDokument=" + opplastedeVedlegg.map{"${it.label}, ${it.vedleggsnr}, ${it.mimetype}\n"}
+				+"InnsendteDokument=" + opplastedeVedlegg.map{"${if (it.vedleggsnr == "N6") "**Maskert**" else it.label}, ${it.vedleggsnr}, ${it.mimetype}\n"}
 		)
 	}
 
