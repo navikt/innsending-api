@@ -69,14 +69,14 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 		val innsendingsId = UUID.randomUUID()
 		val otherInnsendingsId = UUID.randomUUID()
-		val firstFile = api.uploadNologinFileV2(innsendingsId.toString(), "first").assertSuccess().body
-		val secondFile = api.uploadNologinFileV2(innsendingsId.toString(), "second").assertSuccess().body
-		val otherFile = api.uploadNologinFileV2(otherInnsendingsId.toString(), "other").assertSuccess().body
+		val firstFile = api.uploadNologinFileV2(innsendingsId.toString(), "first", authToken = token).assertSuccess().body
+		val secondFile = api.uploadNologinFileV2(innsendingsId.toString(), "second", authToken = token).assertSuccess().body
+		val otherFile = api.uploadNologinFileV2(otherInnsendingsId.toString(), "other", authToken = token).assertSuccess().body
 
-		api.deleteApplication(innsendingsId.toString(), ApiWebClient.ApplicationType.NOLOGIN)
+		api.deleteApplication(innsendingsId.toString(), ApiWebClient.ApplicationType.NOLOGIN, authToken = token)
 			.assertSuccess()
 			.assertHttpStatus(HttpStatus.NO_CONTENT)
-		api.deleteApplication(innsendingsId.toString(), ApiWebClient.ApplicationType.NOLOGIN)
+		api.deleteApplication(innsendingsId.toString(), ApiWebClient.ApplicationType.NOLOGIN, authToken = token)
 			.assertSuccess()
 			.assertHttpStatus(HttpStatus.NO_CONTENT)
 
@@ -576,7 +576,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 			.medVedlegg(listOf(vedlegg1))
 			.build()
 
-		api.sendInnNologinSoknad(skjemaDto)
+		api.sendInnNologinSoknad(skjemaDto, authToken = token)
 			.assertClientError()
 			.errorBody.let {
 				assertEquals("Vedleggsliste inneholder vedlegg uten id (fyllutId)", it.message)

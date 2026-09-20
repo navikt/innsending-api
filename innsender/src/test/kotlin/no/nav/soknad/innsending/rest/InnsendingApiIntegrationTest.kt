@@ -13,7 +13,6 @@ import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.config.ConfigDefinition
@@ -31,7 +30,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
-import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -192,6 +190,9 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 
 	@Test
 	fun testApplicationAttachmentUsesLabelNotTittelWhenSubmitted() {
+		val (token, mockJwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(mockJwt)
+
 		val skjemanr = "NAV 10-07.54"
 		val attachmentVedleggsnr = "N6"
 		val skjematittel = "Søknad om servicehund"
@@ -206,7 +207,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 			.build()
 
 		// Create application
-		val soknad = testApi!!.createSoknad(skjemaDto)
+		val soknad = testApi!!.createSoknad(skjemaDto, authToken = token)
 			.assertSuccess()
 			.body
 		val innsendingsId = soknad.innsendingsId!!
@@ -220,17 +221,17 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 			hoveddokument = hoveddokumentWithFile,
 			vedleggsListe = listOf(attachment)
 		)
-		testApi!!.utfyltSoknad(innsendingsId, updatedSoknad)
+		testApi!!.utfyltSoknad(innsendingsId, updatedSoknad, authToken = token)
 
-		val attachmentId = testApi!!.getSoknadSendinn(innsendingsId)
+		val attachmentId = testApi!!.getSoknadSendinn(innsendingsId, authToken = token)
 			.assertSuccess()
 			.body.vedleggsListe.first { it.vedleggsnr == attachmentVedleggsnr }.id!!
 
 		// Upload file for the attachment
-		testApi!!.uploadFile(innsendingsId, attachmentId)
+		testApi!!.uploadFile(innsendingsId, attachmentId, authToken = token)
 			.assertHttpStatus(HttpStatus.CREATED)
 
-		val kvittering = testApi!!.sendInnSoknad(innsendingsId)
+		val kvittering = testApi!!.sendInnSoknad(innsendingsId, authToken = token)
 			.assertSuccess()
 			.body
 
@@ -638,9 +639,9 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		verify(timeout = 50, exactly = 1) { brukernotifikasjonPublisher.closeNotification(capture(slotCloseSoknads)) }
 
 		val m5Vedlegg = ettersending.vedleggsListe.first { it.vedleggsnr == "M5" }
-		testApi!!.uploadFile(ettersendingsId, m5Vedlegg.id!!)
+		testApi!!.uploadFile(ettersendingsId, m5Vedlegg.id!!, authToken = token)
 			.assertHttpStatus(HttpStatus.CREATED)
-		testApi!!.sendInnSoknad(ettersendingsId)
+		testApi!!.sendInnSoknad(ettersendingsId, authToken = token)
 			.assertSuccess()
 
 		// verify invocation of soknadsmottaker

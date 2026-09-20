@@ -7,8 +7,6 @@ import io.mockk.every
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
-//import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenResponse
-//import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
@@ -50,11 +48,6 @@ import kotlin.test.*
 
 class FyllutRestApiTest : ApplicationTest() {
 
-/*
-	@MockkBean
-	lateinit var oauth2TokenService: OAuth2AccessTokenService
-*/
-
 	@MockkBean
 	lateinit var kodeverkService: KodeverkService
 
@@ -91,7 +84,6 @@ class FyllutRestApiTest : ApplicationTest() {
 	fun setup() {
 		clearAllMocks()
 		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
-		//every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
 		every { kodeverkService.getPoststed(any()) } answers { postnummerMap[firstArg()] }
 	}
 
@@ -737,15 +729,18 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `delete digital application removes the application and only its transient files`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val application = opprettSoknad()
 		val otherApplication = opprettSoknad()
 		val innsendingsId = application.innsendingsId!!
 		val otherInnsendingsId = otherApplication.innsendingsId!!
-		val firstFile = api.uploadAttachmentFile(innsendingsId, "first").assertSuccess().body
-		val secondFile = api.uploadAttachmentFile(innsendingsId, "second").assertSuccess().body
-		val otherFile = api.uploadAttachmentFile(otherInnsendingsId, "other").assertSuccess().body
+		val firstFile = api.uploadAttachmentFile(innsendingsId, "first", authToken = token).assertSuccess().body
+		val secondFile = api.uploadAttachmentFile(innsendingsId, "second", authToken = token).assertSuccess().body
+		val otherFile = api.uploadAttachmentFile(otherInnsendingsId, "other", authToken = token).assertSuccess().body
 
-		api.deleteApplication(innsendingsId, ApiWebClient.ApplicationType.DIGITAL)
+		api.deleteApplication(innsendingsId, ApiWebClient.ApplicationType.DIGITAL, authToken = token)
 			.assertSuccess()
 			.assertHttpStatus(HttpStatus.NO_CONTENT)
 
@@ -766,10 +761,13 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `delete digital application rejects a user who does not own the application`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val application = opprettSoknad(brukerId = "10987654321")
 		val innsendingsId = application.innsendingsId!!
 
-		api.deleteApplication(innsendingsId, ApiWebClient.ApplicationType.DIGITAL)
+		api.deleteApplication(innsendingsId, ApiWebClient.ApplicationType.DIGITAL, authToken = token)
 			.assertClientError()
 			.assertHttpStatus(HttpStatus.NOT_FOUND)
 

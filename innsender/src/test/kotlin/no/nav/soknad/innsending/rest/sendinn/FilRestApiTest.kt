@@ -27,7 +27,6 @@ import org.junit.jupiter.api.assertThrows
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.ClassPathResource
@@ -70,8 +69,10 @@ class FilRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `missing required file part returns dedicated bad request error`() {
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-		val soknadDto = opprettEnSoknad(defaultSkjemanr, "nb_NO", listOf("N6"))
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
+		val soknadDto = opprettEnSoknad(defaultSkjemanr, "nb_NO", listOf("N6"), token)
 		val vedleggsId = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }.id!!
 		val multipartWithoutFile = LinkedMultiValueMap<Any, Any>().apply {
 			add("metadata", "missing file")
