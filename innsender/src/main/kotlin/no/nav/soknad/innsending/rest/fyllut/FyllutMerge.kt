@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@PreAuthorize("@claimChecker.hasAccess(authentication, true, {})")
+@PreAuthorize("@claimChecker.hasAccess(authentication, true, {}, true)")
 class FyllutMerge(private val pdfMerger: PdfMergerInterface): FyllutMergeApi {
 	private val logger = LoggerFactory.getLogger(javaClass)
 

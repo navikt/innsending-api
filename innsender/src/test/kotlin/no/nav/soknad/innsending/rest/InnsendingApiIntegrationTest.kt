@@ -783,7 +783,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 
 	@Test
 	fun testNologinApplicationWithAttachmentFilesCopiedToDb() {
-		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt(listOf("nologin-access"), azureadUri)
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
 		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
 
 		val innsendingsId = UUID.randomUUID().toString()
@@ -904,7 +904,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 
 		val innsendingsId = UUID.randomUUID().toString()
 
-		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt(listOf("nologin-access"), azureadUri)
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
 		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
 		val fileM2part1 = testApi!!.uploadNologinFileV2(innsendingsId, "M2", authToken = token)
 			.assertSuccess()

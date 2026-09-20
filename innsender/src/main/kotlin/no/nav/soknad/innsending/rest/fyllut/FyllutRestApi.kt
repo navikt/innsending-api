@@ -16,6 +16,7 @@ import no.nav.soknad.innsending.service.PrefillService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
+import no.nav.soknad.innsending.util.Constants
 /*
 import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH
 import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_LEVEL_4
@@ -32,12 +33,13 @@ import no.nav.soknad.innsending.util.validators.validerBrukerOgAvsender
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 import java.net.URI
 import java.util.UUID
 
 @RestController
-//@ProtectedWithClaims(issuer = TOKENX, claimMap = [CLAIM_ACR_LEVEL_4, CLAIM_ACR_IDPORTEN_LOA_HIGH], combineWithOr = true)
+@PreAuthorize("@claimChecker.hasAccess(authentication, false, {'${Constants.CLAIM_ACR_LEVEL_4}', '${Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH}'}, false)")
 class FyllutRestApi(
 	private val urlHandler: UrlHandler,
 	private val soknadService: SoknadService,

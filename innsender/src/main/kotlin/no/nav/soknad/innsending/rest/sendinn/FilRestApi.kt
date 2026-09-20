@@ -26,6 +26,7 @@ import org.springframework.core.io.Resource
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
@@ -34,13 +35,7 @@ import java.util.UUID
 
 @RestController
 @CrossOrigin(maxAge = 3600)
-/*
-@ProtectedWithClaims(
-	issuer = Constants.TOKENX,
-	claimMap = [Constants.CLAIM_ACR_LEVEL_4, Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH],
-	combineWithOr = true
-)
-*/
+@PreAuthorize("@claimChecker.hasAccess(authentication, false, {'${Constants.CLAIM_ACR_LEVEL_4}', '${Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH}'}, false)")
 class FilRestApi(
 	private val soknadService: SoknadService,
 	private val tilgangskontroll: Tilgangskontroll,

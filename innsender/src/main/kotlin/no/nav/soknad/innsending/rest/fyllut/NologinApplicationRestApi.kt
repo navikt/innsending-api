@@ -28,13 +28,7 @@ import org.springframework.web.multipart.MultipartFile
 import java.util.UUID
 
 @RestController
-/*
-@ProtectedWithClaims(
-	issuer = Constants.AZURE,
-	claimMap = ["roles=nologin-access"],
-)
-*/
-@PreAuthorize("@claimChecker.hasAccess(authentication, true, {'roles=nologin-access'})")
+@PreAuthorize("@claimChecker.hasAccess(authentication, true, {'roles=nologin-access'}, true)")
 class NologinApplicationRestApi(
 	private val documentService: DocumentService,
 	private val subjectHandler: SubjectHandlerInterface,

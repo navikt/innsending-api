@@ -106,14 +106,14 @@ class TokenGenerator(
 		).serialize()
 	}
 
-	fun lagAzureM2MTokenAndJwt(roles: List<String> = emptyList(), issuer: String = AZURE): Pair<String, Jwt> {
+	fun lagAzureM2MTokenAndJwt(roles: String? = null, issuer: String = AZURE): Pair<String, Jwt> {
 		val issuerId = issuer
 		val oAuth2TokenCallback = DefaultOAuth2TokenCallback(
 			issuerId = issuerId,
 			typeHeader = JOSEObjectType.JWT.type,
 			audience = listOf(audience),
 			claims = buildMap {
-				put("roles", listOf("access_as_application").plus(roles))
+				put("roles", "${roles.let { "$it " } ?: ""}access_as_application")
 			},
 			expiry = expiry
 		)

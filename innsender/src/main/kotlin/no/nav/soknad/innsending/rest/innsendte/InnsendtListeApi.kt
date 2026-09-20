@@ -10,6 +10,7 @@ import no.nav.soknad.innsending.util.Constants
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -20,7 +21,7 @@ class InnsendtListeApi(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Timed(InnsenderOperation.HENT_FILER)
-	//@ProtectedWithClaims(issuer = Constants.AZURE)
+	@PreAuthorize("@claimChecker.hasAccess(authentication, true, {}, true)")
 	override fun hentInnsendteFiler(uuids: List<String>, xInnsendingId: String): ResponseEntity<List<SoknadFile>> {
 		logger.info("$xInnsendingId: Kall for å hente filene $uuids til en innsendt søknad")
 

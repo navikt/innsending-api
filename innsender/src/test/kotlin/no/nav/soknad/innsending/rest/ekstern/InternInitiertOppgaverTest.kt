@@ -180,7 +180,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 	}
 
 	private fun opprettSoknad(brukerId: String, vedlegg: List<String>, skjemanr: String, brukernotifikasjonstype: BrukernotifikasjonsType? = null): Pair<DokumentSoknadDto, String> {
-		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagAzureOBOTokenAndJwt(navIdent = brukerId)
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagAzureOBOTokenAndJwt(scopes= "admin-access", navIdent = brukerId)
 		`when`(azureJwtDecoder.decode(token)).thenReturn(jwt)
 
 		val vedleggsListe = mutableListOf<InnsendtVedleggDto>()

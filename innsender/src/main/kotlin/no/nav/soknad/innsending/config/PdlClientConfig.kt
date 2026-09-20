@@ -15,11 +15,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.*
 import org.springframework.http.HttpHeaders
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
-import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
-import org.springframework.security.oauth2.core.OAuth2AuthorizationException
-import org.springframework.security.oauth2.core.OAuth2Error
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientRequestException
 import reactor.netty.http.client.*
@@ -32,8 +27,8 @@ import java.util.concurrent.TimeUnit
 @EnableConfigurationProperties(RestConfig::class)
 class PdlClientConfig(
 	private val restConfig: RestConfig,
-	private val authorizedClientManager: OAuth2AuthorizedClientManager,
-	) {
+	private val accessToken: AccessToken
+) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	private val connectionTimeoutSeconds = 10
@@ -72,7 +67,7 @@ class PdlClientConfig(
 			)
 			.defaultRequest {
 				it.header(Constants.HEADER_CALL_ID, MDCUtil.callIdOrNew())
-				it.header(HttpHeaders.AUTHORIZATION, "Bearer ${hentAccessTokenForPdl()}")
+				it.header(HttpHeaders.AUTHORIZATION, "Bearer ${accessToken.getAccessToken("tokenx-pdl", null)}")
 				it.header("Tema", "AAP")
 				it.header(HEADER_BEHANDLINGSNUMMER, PDL_BEHANDLINGSNUMMER)
 			}
@@ -86,6 +81,7 @@ class PdlClientConfig(
 			}
 	)
 
+/*
 
 
 	private fun hentAccessTokenForPdl(): String {
@@ -108,5 +104,6 @@ class PdlClientConfig(
 
 		return authorizedClient.accessToken.tokenValue
 	}
+*/
 
 }

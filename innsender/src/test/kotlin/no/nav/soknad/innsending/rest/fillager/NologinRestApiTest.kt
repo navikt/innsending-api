@@ -46,7 +46,7 @@ class NologinRestApiTest: ApplicationTest() {
 
 	@Test
 	fun `should allow file upload when main switch is on`() {
-		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt(listOf("nologin-access"), azureadUri)
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
 		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
 
 		api.uploadNologinFile(vedleggId = "abcdef", authToken = token)
@@ -55,7 +55,7 @@ class NologinRestApiTest: ApplicationTest() {
 
 	@Test
 	fun `should allow file upload V2 when main switch is on`() {
-		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt(listOf("nologin-access"), azureadUri)
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
 		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
 
 		api.uploadNologinFileV2(innsendingId = UUID.randomUUID().toString(), vedleggId = "abcdef", authToken = token)
@@ -64,7 +64,7 @@ class NologinRestApiTest: ApplicationTest() {
 
 	@Test
 	fun `should not allow file upload when token does not contain correct role`() {
-		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt(listOf("irrelevant-role"), azureadUri)
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("irrelevant-role", azureadUri)
 		`when`(azureJwtDecoder.decode(anyString())).thenReturn(mockJwtAzure)
 
 		api.uploadNologinFile(vedleggId = "abcdef", authToken = token)
@@ -73,7 +73,7 @@ class NologinRestApiTest: ApplicationTest() {
 
 	@Test
 	fun `should not allow file upload V2 when token does not contain correct role`() {
-		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt(listOf("irrelevant-role"), azureadUri)
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("irrelevant-role", azureadUri)
 		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
 
 		api.uploadNologinFileV2(innsendingId = UUID.randomUUID().toString(), vedleggId = "abcdef", authToken = token)
@@ -84,7 +84,7 @@ class NologinRestApiTest: ApplicationTest() {
 	fun `should not allow file upload when nologin is disabled`() {
 		configService.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "off", "Z123456")
 
-		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt(listOf("nologin-access"), azureadUri)
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
 		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
 
 		api.uploadNologinFile(vedleggId = "abcdef", authToken = token)
@@ -98,7 +98,7 @@ class NologinRestApiTest: ApplicationTest() {
 	fun `should not allow file upload V2 when nologin is disabled`() {
 		configService.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "off", "Z123456")
 
-		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt(listOf("nologin-access"), azureadUri)
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
 		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
 
 		api.uploadNologinFileV2(innsendingId = UUID.randomUUID().toString(), vedleggId = "abcdef", authToken = token)

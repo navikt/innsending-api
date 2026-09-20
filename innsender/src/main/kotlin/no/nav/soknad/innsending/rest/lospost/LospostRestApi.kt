@@ -16,6 +16,7 @@ import no.nav.soknad.innsending.util.stringextensions.removeInvalidControlCharac
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 import java.net.URI
 
@@ -27,6 +28,7 @@ import java.net.URI
 	combineWithOr = true
 )
 */
+@PreAuthorize("@claimChecker.hasAccess(authentication, false, {'${Constants.CLAIM_ACR_LEVEL_4}', '${Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH}'}, false)")
 class LospostRestApi(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val lospostService: LospostService,

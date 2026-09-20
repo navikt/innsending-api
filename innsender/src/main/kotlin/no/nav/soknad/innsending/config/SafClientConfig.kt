@@ -25,7 +25,7 @@ import reactor.netty.http.client.HttpClientResponse
 @EnableConfigurationProperties(RestConfig::class)
 class SafClientConfig(
 	private val restConfig: RestConfig,
-	private val authorizedClientManager: OAuth2AuthorizedClientManager,
+	private val accessToken: AccessToken,
 	@Value("\${spring.application.name}") private val applicationName: String
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -63,16 +63,13 @@ class SafClientConfig(
 				it.header(Constants.NAV_CONSUMER_ID, applicationName)
 				it.header(
 					HttpHeaders.AUTHORIZATION,
-					"Bearer ${hentAccessTokenForSaf()}",
+					"Bearer ${accessToken.getAccessToken(safMaskintilmaskin, m2mPrincipalName)}",
 				)
 			}
 	)
+/*
 
-	/**
-	 * Se kommentar i PdlClientConfig.hentAccessTokenForPdl - defaultRequest evalueres synkront
-	 * på kallende tråd, så det blokkerende kallet til authorizedClientManager er trygt her.
-	 */
-	private fun hentAccessTokenForSaf(): String {
+	private fun ahentAccessTokenForSaf(): String {
 		val authorizeRequest = OAuth2AuthorizeRequest.withClientRegistrationId(safMaskintilmaskin)
 			.principal(m2mPrincipalName)
 			.build()
@@ -88,5 +85,6 @@ class SafClientConfig(
 
 		return authorizedClient.accessToken.tokenValue
 	}
+*/
 
 }

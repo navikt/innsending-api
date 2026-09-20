@@ -11,6 +11,7 @@ import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.TokenGenerator
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -41,7 +42,10 @@ class AdminRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `should run cleanup job with admin scope`() {
-		val response = api.runAdminJob("cleanup-klar-for-innsending")
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagAzureOBOTokenAndJwt(scopes = "admin-access", navIdent = "Z123456")
+		`when`(azureJwtDecoder.decode(token)).thenReturn(jwt)
+
+		val response = api.runAdminJob("cleanup-klar-for-innsending", token)
 
 		assertEquals(HttpStatus.CREATED, response.statusCode)
 		verify(exactly = 1) { tempCleanupArchiveFailure.fixAttachmentStatusAndResubmit() }
@@ -49,7 +53,8 @@ class AdminRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `should reject call without required scope`() {
-		val token = TokenGenerator(mockOAuth2Server).lagAzureOBOToken(scopes = "random-scope")
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagAzureOBOTokenAndJwt(scopes = "random-scope", navIdent = "Z123456")
+		`when`(azureJwtDecoder.decode(token)).thenReturn(jwt)
 		val response = api.runAdminJob("cleanup-klar-for-innsending", token)
 
 		assertEquals(HttpStatus.FORBIDDEN, response.statusCode)
@@ -57,7 +62,9 @@ class AdminRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `should return bad request for unknown job name`() {
-		val response = api.runAdminJob("unknown-job")
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagAzureOBOTokenAndJwt(scopes = "admin-access", navIdent = "Z123456")
+		`when`(azureJwtDecoder.decode(token)).thenReturn(jwt)
+		val response = api.runAdminJob("unknown-job", token)
 
 		assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
 	}

@@ -15,23 +15,13 @@ class ClaimChecker(
 
 	private val log = LoggerFactory.getLogger(javaClass)
 
-	fun hasAccess(authentication: Authentication, isAzureIssuer: Boolean =false,  requiredClaims: Collection<String>): Boolean {
+	fun hasAccess(authentication: Authentication, isAzureIssuer: Boolean =false,  requiredClaims: Collection<String>, allRequired: Boolean = true): Boolean {
 		if (authentication !is JwtAuthenticationToken) {
 			log.warn("Ugyldig authentication-type: ${authentication::class.java.simpleName}")
 			return false
 		}
 
 		val jwt = authentication.token
-		val roles = jwt
-			.getClaimAsStringList("roles")
-			?: emptyList()
-		val harAlleRoller = requiredClaims.filter{it.contains("roles=")}.map { it.substringAfter("roles=") }
-			.all { role -> roles.contains(role) }
-		if (!harAlleRoller) {
-			log.info("Avvist: mangler ett eller flere påkrevde roller. Har: $roles, krever: $requiredClaims")
-			return false
-		}
-
 		val issuer = jwt.issuer?.toString() ?: return false
 		if (isAzureIssuer && !issuer.equals(azureadIssuer, ignoreCase = true)) {
 			log.info("Avvist: issuer $issuer er ikke konfigurert AzureAD issuer")
@@ -42,20 +32,73 @@ class ClaimChecker(
 			return false
 		}
 
+		if (requiredClaims.isEmpty()) return true
+
+		var oneOk = false
+		for (claim in requiredClaims) {
+			val claimName = claim.substringBefore("=")
+			val requiredValue = claim.substringAfter("=")
+			if (!checkOneClaim(jwt, claimName, requiredValue)) {
+				log.info("Mangler påkrevd claim $claimName=$requiredValue")
+				if (allRequired) {
+					return false
+				}
+			} else {
+				oneOk = true
+			}
+		}
+
+		return oneOk
+/*
+
+		val requiredRoles = requiredClaims.filter{it.contains("roles=")}.map { it.substringAfter("roles=") }.map { it.split(" ") }.flatten()
+		if (!requiredRoles.isEmpty()) {
+			val roles = jwt
+				.getClaimAsStringList("roles")
+				?: emptyList()
+			val harAlleRoller = requiredRoles.all { requiredRole -> roles.contains(requiredRole) }
+			if (!harAlleRoller) {
+				log.info("Avvist: mangler ett eller flere påkrevde roller. Har: $roles, krever: $requiredRoles")
+				return false
+			}
+		}
+
+		val requiredScopes: List<String> =
+			when (val claim = requiredClaims.find { it.contains("scp=") || it.contains("scope=") }) {
+				is String -> if (claim.substringAfter("=").contains(" "))
+					claim.substringAfter("=").split(" ") else listOf(claim.substringAfter("="))
+				else -> emptyList()
+			}
+
+		if (requiredScopes.isEmpty()) return true
+
 		val scopes: List<String> =
 			when (val claim = jwt.claims["scp"] ?: jwt.claims["scope"]) {
 				is String -> claim.split(" ")
 				is Collection<*> -> claim.filterIsInstance<String>()
 				else -> emptyList()
 			}
-		val harAlleScopes = requiredClaims.filter{it.contains("scope")}.map { it.substringAfter("scope=") }
-			.all { scope -> scopes.contains(scope) }
+		val harAlleScopes = requiredScopes.all { scope -> scopes.contains(scope) }
 
 		if (!harAlleScopes) {
-			log.info("Avvist: mangler ett eller flere påkrevde scopes. Har: $scopes, krever: $requiredClaims")
+			log.info("Avvist: mangler ett eller flere påkrevde scopes. Har: $scopes, krever: $requiredScopes")
 		}
 
 		return harAlleScopes
+*/
+	}
+
+	private fun checkOneClaim(jwt: org.springframework.security.oauth2.jwt.Jwt, claimName: String, requiredValue: String): Boolean {
+		val claimValue = jwt.claims[claimName]?.toString()
+		if (claimValue == null) {
+			log.info("Mangler påkrevd claim $claimName")
+			return false
+		}
+
+		val requiredValues: List<String> = requiredValue.split(" ")
+		val claims: List<String> = claimValue.split(" ")
+		return requiredValues.all { required -> claims.contains(required) }
+
 	}
 
 }

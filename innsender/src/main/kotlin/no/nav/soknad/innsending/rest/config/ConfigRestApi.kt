@@ -11,7 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@PreAuthorize("@claimChecker.hasAccess(authentication, true, {'scp=admin-access defaultaccess'})")
+@PreAuthorize("@claimChecker.hasAccess(authentication, true, {'scp=admin-access defaultaccess', 'scope=admin-access defaultaccess'}, false)")
 class ConfigRestApi(
 	private val configService: ConfigService,
 	private val subjectHandler: SubjectHandlerInterface,

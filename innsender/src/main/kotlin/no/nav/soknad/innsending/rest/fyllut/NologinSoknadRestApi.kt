@@ -19,15 +19,11 @@ import no.nav.soknad.innsending.util.models.skjemadto.getBrukerOrAvsenderForSecu
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-/*
-@ProtectedWithClaims(
-	issuer = Constants.AZURE,
-	claimMap = ["roles=nologin-access"],
-)
-*/
+@PreAuthorize("@claimChecker.hasAccess(authentication, true, {'roles=nologin-access'}, true)")
 class NologinSoknadRestApi(
 	private var subjectHandler: SubjectHandlerInterface,
 	val soknadService: SoknadService,

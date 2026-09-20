@@ -8,17 +8,12 @@ import no.nav.soknad.innsending.util.Constants
 import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @Profile("endtoend")
-/*
-@ProtectedWithClaims(
-	issuer = Constants.TOKENX,
-	claimMap = [Constants.CLAIM_ACR_LEVEL_4, Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH],
-	combineWithOr = true
-)
-*/
+@PreAuthorize("@claimChecker.hasAccess(authentication, false, {'${Constants.CLAIM_ACR_LEVEL_4}', '${Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH}'}, false)")
 class EndToEndRestApi(
 	private val soknadService: SoknadService
 ) : EndtoendApi {
