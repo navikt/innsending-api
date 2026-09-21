@@ -54,5 +54,6 @@ data class SoknadDbData(
 	@Convert(converter = BrukerDtoConverter::class)
 	@JdbcTypeCode(SqlTypes.JSON)
 	@Column(name = "affecteduser", columnDefinition = "jsonb") val affecteduser: BrukerDto? = null,
+	@Column(name = "grantuserdigitalaccess", columnDefinition = "boolean") val grantuserdigitalaccess: Boolean? = null,
 
 	)

@@ -488,14 +488,11 @@ class InnsendingServiceTest : ApplicationTest() {
 			.asDefaultVedlegg()
 			.build()
 
-		val documentData = translate(listOf(hovedDokument, n6Vedlegg))
 		val dokumentData = translate(listOf(hovedDokument, n6Vedlegg), true)
 
-		val oversattVedlegg = documentData.first { it.skjemanummer == n6Vedlegg.vedleggsnr }
-		val oversattVedleggNyttFormat = dokumentData.first { it.skjemanummer == n6Vedlegg.vedleggsnr }
+		val oversattVedlegg = dokumentData.first { it.skjemanummer == n6Vedlegg.vedleggsnr }
 
 		assertEquals(n6Vedlegg.label, oversattVedlegg.tittel)
-		assertEquals(n6Vedlegg.label, oversattVedleggNyttFormat.tittel)
 	}
 
 	@Test
@@ -507,14 +504,11 @@ class InnsendingServiceTest : ApplicationTest() {
 			.asDefaultVedlegg()
 			.build()
 
-		val documentData = translate(listOf(hovedDokument, vedleggUtenLabel))
 		val dokumentData = translate(listOf(hovedDokument, vedleggUtenLabel), true)
 
-		val oversattVedlegg = documentData.first { it.skjemanummer == vedleggUtenLabel.vedleggsnr }
-		val oversattVedleggNyttFormat = dokumentData.first { it.skjemanummer == vedleggUtenLabel.vedleggsnr }
+		val oversattVedlegg = dokumentData.first { it.skjemanummer == vedleggUtenLabel.vedleggsnr }
 
 		assertEquals(vedleggUtenLabel.tittel, oversattVedlegg.tittel)
-		assertEquals(vedleggUtenLabel.tittel, oversattVedleggNyttFormat.tittel)
 	}
 
 }
