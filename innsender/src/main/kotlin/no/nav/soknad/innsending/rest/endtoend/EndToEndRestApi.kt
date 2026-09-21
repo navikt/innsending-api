@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.rest.endtoend
 
-//import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.EndtoendApi
 import no.nav.soknad.innsending.model.ArkiveringsStatusDto
 import no.nav.soknad.innsending.service.SoknadService

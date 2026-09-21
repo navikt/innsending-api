@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.rest.soknadsveiviser
 
-//import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.SoknadsveiviserApi
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.EnvQualifier

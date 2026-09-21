@@ -9,9 +9,8 @@ import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.authentication.AnonymousAuthenticationFilter
 import org.springframework.stereotype.Component
-import tools.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.util.Base64
 
 @Component
@@ -20,7 +19,6 @@ class SecurityFilterChainFactory(
 	@Value("\${auth.issuers.tokenx.issuer-uri}") private val tokenxIssuer: String,
 	@Qualifier("azureJwtDecoder") private val azureJwtDecoder: JwtDecoder,
 	@Qualifier("tokenxJwtDecoder") private val tokenxJwtDecoder: JwtDecoder,
-	//private val localDevelopmentAuthenticationFilter: LocalDevelopmentAuthenticationFilter,
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val mapper = jacksonObjectMapper()

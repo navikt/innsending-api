@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.rest.sendinn
 
-//import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.SendinnFilApi
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException

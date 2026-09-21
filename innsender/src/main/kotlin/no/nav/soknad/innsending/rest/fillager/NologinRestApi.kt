@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.rest.fillager
 
-//import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.NologinApi
 import no.nav.soknad.innsending.model.LastOppFilResponse
 import no.nav.soknad.innsending.service.DocumentService

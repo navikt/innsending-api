@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.rest.lospost
 
-//import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.LospostApi
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.location.UrlHandler
@@ -21,13 +20,6 @@ import org.springframework.web.bind.annotation.RestController
 import java.net.URI
 
 @RestController
-/*
-@ProtectedWithClaims(
-	issuer = Constants.TOKENX,
-	claimMap = [Constants.CLAIM_ACR_LEVEL_4, Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH],
-	combineWithOr = true
-)
-*/
 @PreAuthorize("@claimChecker.hasAccess(authentication, false, {'${Constants.CLAIM_ACR_LEVEL_4}', '${Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH}'}, false)")
 class LospostRestApi(
 	private val tilgangskontroll: Tilgangskontroll,

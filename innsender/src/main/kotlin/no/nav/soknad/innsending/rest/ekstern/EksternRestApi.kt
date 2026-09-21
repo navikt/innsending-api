@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.rest.ekstern
 
-//import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.EksternApi
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.model.BodyStatusResponseDto

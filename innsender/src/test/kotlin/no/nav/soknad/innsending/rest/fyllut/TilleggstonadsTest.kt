@@ -3,8 +3,6 @@ package no.nav.soknad.innsending.rest.fyllut
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import no.nav.security.mock.oauth2.MockOAuth2Server
-//import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenResponse
-//import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.model.AktivitetEndepunkt
 import no.nav.soknad.innsending.model.MaalgruppeType

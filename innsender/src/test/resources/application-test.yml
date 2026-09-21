@@ -87,7 +87,15 @@ spring:
             jwk-set-uri: src/test/resources/tokenx-jwk.json
           tokenx:
             token-uri: http://localhost:${mock-oauth2-server.port}/tokenx/token
-            jwk-set-uri: src/test/resources/tokenx-jwk.json
+
+tokenx:
+  privateJwk: src/test/resources/tokenx-jwk.json
+  audiences:
+    tokenx-pdl: dummyAudience
+    tokenx-safselvbetjening: dev-fss:teamdokumenthandtering:safselvbetjening
+    kontoregister: dummyAudience
+    arena: dummyAudience
+
 auth:
   issuers:
     azuread:

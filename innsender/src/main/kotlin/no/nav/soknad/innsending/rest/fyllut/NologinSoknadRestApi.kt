@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.rest.fyllut
 
-//import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.NologinSoknadApi
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.KvitteringsDto
@@ -13,7 +12,6 @@ import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.service.config.annotation.VerifyConfigValue
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
-import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.models.skjemadto.getBrukerOrAvsenderForSecureLog
 import org.slf4j.LoggerFactory

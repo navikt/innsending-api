@@ -1,87 +1,96 @@
 package no.nav.soknad.innsending.config.security
 
+import com.nimbusds.jose.jwk.JWK
 import org.slf4j.LoggerFactory
-import org.springframework.http.MediaType
-import org.springframework.security.core.Authentication
 import org.springframework.security.oauth2.client.OAuth2AuthorizationContext
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient
-import org.springframework.security.oauth2.core.OAuth2AccessToken
-import org.springframework.security.oauth2.core.OAuth2AuthorizationException
-import org.springframework.security.oauth2.core.OAuth2Error
-import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
+import org.springframework.security.oauth2.client.TokenExchangeOAuth2AuthorizedClientProvider
+import org.springframework.security.oauth2.client.endpoint.NimbusJwtClientAuthenticationParametersConverter
+import org.springframework.security.oauth2.client.endpoint.RestClientTokenExchangeTokenResponseClient
+import org.springframework.security.oauth2.client.endpoint.TokenExchangeGrantRequest
+import org.springframework.security.oauth2.client.registration.ClientRegistration
+import org.springframework.core.convert.converter.Converter
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
-import org.springframework.web.client.RestClient
-import java.time.Instant
+import org.springframework.util.MultiValueMap
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.function.Function
 
-
+// Utfører token-exchange (RFC 8693) mot TokenX for registreringer med
+// authorization-grant-type: urn:ietf:params:oauth:grant-type:token-exchange
+// (tokenx-pdl, tokenx-safselvbetjening, kontoregister, arena - se application.yml).
+//
+// Tidligere versjon bygde token-requesten manuelt med det gamle NAV STS-formatet
+// (grant_type=jwt-bearer, assertion, requested_token_use=on_behalf_of, client_secret),
+// og sendte aldri client_assertion/client_assertion_type - derfor feilet TokenX med
+// "Parameter client_assertion_type missing". Nå brukes Spring Security sine innebygde
+// klasser for token-exchange og private_key_jwt-signering.
 @Service
 class TokenExchangeService(
+	private val tokenExchangeProperties: TokenExchangeProperties
 ) {
 	private val log = LoggerFactory.getLogger(javaClass)
 
+	// TOKEN_X_PRIVATE_JWK er den samme private nøkkelen for alle TokenX-registreringer,
+	// så den kan trygt caches og gjenbrukes på tvers av registration-id.
+	private val privateJwk: JWK by lazy { resolvePrivateJwk(tokenExchangeProperties.privateJwk) }
+
+	// 🔴 Rød sone: signering av client_assertion med privat nøkkel er sikkerhetskritisk.
+	// Se javadoc for NimbusJwtClientAuthenticationParametersConverter for detaljer om hvordan
+	// JWT-en (client_assertion) bygges og signeres (RFC 7523).
+	private val jwkResolver = Function<ClientRegistration, JWK> { privateJwk }
+
+	private val accessTokenResponseClient = RestClientTokenExchangeTokenResponseClient().apply {
+		// Legger til client_assertion + client_assertion_type (private_key_jwt) på requesten.
+		// Delegeres via egen lambda for å unngå at Kotlin ikke klarer å utlede/matche det
+		// generiske Converter-supertypet til NimbusJwtClientAuthenticationParametersConverter
+		// direkte (den bruker T kun i implements-klausulen, ikke i konstruktøren).
+		val nimbusConverter = NimbusJwtClientAuthenticationParametersConverter<TokenExchangeGrantRequest>(jwkResolver)
+		addParametersConverter(Converter<TokenExchangeGrantRequest, MultiValueMap<String, String>> { grantRequest ->
+			nimbusConverter.convert(grantRequest) ?: LinkedMultiValueMap()
+		})
+		// TokenX krever i tillegg parameteren "audience" (målsystemet), som ikke er en del av
+		// standard RFC 8693-parametrene Spring setter automatisk.
+		addParametersConverter(Converter<TokenExchangeGrantRequest, MultiValueMap<String, String>> { grantRequest ->
+			audienceParameters(grantRequest)
+		})
+	}
+
+	private val tokenExchangeProvider = TokenExchangeOAuth2AuthorizedClientProvider().apply {
+		setAccessTokenResponseClient(accessTokenResponseClient)
+	}
+
 	fun performJwtBearerExchange(context: OAuth2AuthorizationContext): OAuth2AuthorizedClient? {
-		log.info(
-			"Exchange token using ${context.clientRegistration.authorizationGrantType.value} for ${context.clientRegistration.registrationId}  and scope ${
-				context.clientRegistration.scopes.joinToString(
-					" "
-				)
-			} "
-		)
-		val principal: Authentication = context.principal
-		if (principal !is JwtAuthenticationToken) {
-			log.warn("invalid_principal", "Expected JwtAuthenticationToken but was ${principal.javaClass}")
-			throw OAuth2AuthorizationException(
-				OAuth2Error("invalid_principal", "Expected JwtAuthenticationToken but was ${principal.javaClass}", null)
-			)
-		}
-
 		val registration = context.clientRegistration
-		val tokenValue =
-			context.attributes["subject_token"] as? String ?: principal.token.tokenValue ?: return null
+		log.info(
+			"Exchange token using ${registration.authorizationGrantType.value} for ${registration.registrationId} and scope ${
+				registration.scopes.joinToString(" ")
+			}"
+		)
 
-		val body = LinkedMultiValueMap<String, String>().apply {
-			add(OAuth2ParameterNames.GRANT_TYPE, "urn:ietf:params:oauth:grant-type:jwt-bearer")
-			add("client_id", registration.clientId)
-			add("client_secret", registration.clientSecret ?: "")
-			add("assertion", tokenValue)
-			add("scope", registration.scopes.joinToString(" "))
-			add("requested_token_use", "on_behalf_of")
+		val authorizedClient = tokenExchangeProvider.authorize(context)
+
+		if (authorizedClient != null) {
+			log.info("Exchange token successful for ${registration.registrationId}")
 		}
 
-		// Bruker den injiserte builderen til å lage en RestClient for dette spesifikke kallet
-		val restClient = RestClient.builder()
-			.baseUrl(registration.providerDetails.tokenUri)
-			.build()
+		return authorizedClient
+	}
 
-		log.info("Ready to exchange token for ${registration.registrationId} og scope ${registration.scopes.joinToString()}")
-		val response = restClient.post()
-			.contentType(MediaType.APPLICATION_FORM_URLENCODED)
-			.body(body)
-			.retrieve()
-			.body(Map::class.java) ?: throw OAuth2AuthorizationException(
-			OAuth2Error("invalid_token_response", "Empty token response", null)
-		)
+	private fun audienceParameters(grantRequest: TokenExchangeGrantRequest): MultiValueMap<String, String> {
+		val registrationId = grantRequest.clientRegistration.registrationId
+		val audience = tokenExchangeProperties.audiences[registrationId]
+			?: error("Fant ingen konfigurert TokenX-audience for registration-id '$registrationId'. Sjekk tokenx.audiences i application.yml.")
 
-		val accessTokenValue = response["access_token"] as? String
-			?: throw OAuth2AuthorizationException(OAuth2Error("invalid_token", "No access_token in response", null))
+		return LinkedMultiValueMap<String, String>().apply {
+			add("audience", audience)
+		}
+	}
 
-		log.info("Received access token for ${registration.registrationId} og scope ${registration.scopes.joinToString()}")
-
-		val expiresIn = (response["expires_in"] as? Number)?.toLong() ?: 3600L
-		val issuedAt = Instant.now()
-		val expiresAt = issuedAt.plusSeconds(expiresIn)
-
-		val accessToken = OAuth2AccessToken(
-			OAuth2AccessToken.TokenType.BEARER,
-			accessTokenValue,
-			issuedAt,
-			expiresAt,
-			registration.scopes
-		)
-
-		log.info("Exchange token successful for ${registration.registrationId} og scope ${registration.scopes.joinToString()}")
-		return OAuth2AuthorizedClient(registration, principal.name, accessToken)
+	private fun resolvePrivateJwk(jwkValue: String): JWK {
+		// I prod/dev er dette selve JWK-en som JSON (injisert av NAIS), i tester en filsti.
+		val jwkJson = if (jwkValue.trim().startsWith("{")) jwkValue else Files.readString(Path.of(jwkValue))
+		return JWK.parse(jwkJson)
 	}
 }

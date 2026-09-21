@@ -1,10 +1,8 @@
 package no.nav.soknad.innsending.rest.fyllut
 
 import jakarta.validation.Valid
-//import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.FyllutMergeApi
 import no.nav.soknad.innsending.model.MergeFilerDto
-import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.pdfutilities.PdfMergerInterface
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus

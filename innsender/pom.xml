@@ -366,21 +366,23 @@
 			<artifactId>api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>no.nav.security</groupId>
-			<artifactId>token-validation-spring</artifactId>
-			<version>${token-validation.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>no.nav.security</groupId>
-			<artifactId>token-validation-jaxrs</artifactId>
-			<version>${token-validation.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>no.nav.security</groupId>
-			<artifactId>token-client-spring</artifactId>
-			<version>${token-validation.version}</version>
-		</dependency>
+		<!--
+				<dependency>
+					<groupId>no.nav.security</groupId>
+					<artifactId>token-validation-spring</artifactId>
+					<version>${token-validation.version}</version>
+				</dependency>
+				<dependency>
+					<groupId>no.nav.security</groupId>
+					<artifactId>token-validation-jaxrs</artifactId>
+					<version>${token-validation.version}</version>
+				</dependency>
+				<dependency>
+					<groupId>no.nav.security</groupId>
+					<artifactId>token-client-spring</artifactId>
+					<version>${token-validation.version}</version>
+				</dependency>
+		-->
 
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
@@ -450,6 +452,12 @@
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>jbig2-imageio</artifactId>
 			<version>${jbig2-imageio.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
+			<version>${caffeine.version}</version>
+			<scope>compile</scope>
 		</dependency>
 
 		<!-- Test dependencies -->
