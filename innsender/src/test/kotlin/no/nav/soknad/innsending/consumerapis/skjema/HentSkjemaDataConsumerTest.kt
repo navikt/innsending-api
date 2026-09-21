@@ -1,5 +1,8 @@
 package no.nav.soknad.innsending.consumerapis.skjema
 
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -46,6 +49,36 @@ class HentSkjemaDataConsumerTest : ApplicationTest() {
 		assertThrows<BackendErrorException> {
 			hentSkjemaDataConsumer.hentSkjemaEllerVedlegg("NAV 14-05.07")
 		}
+	}
+
+	@Test
+	fun `uses and caches bundled schema list when endpoint returns an empty list`() {
+		val skjemaClient = mockk<SkjemaClient>()
+		every { skjemaClient.hent() } returns emptyList()
+		val consumer = HentSkjemaDataConsumer(skjemaClient)
+
+		val first = consumer.hentSkjemaEllerVedlegg("N6")
+		val second = consumer.hentSkjemaEllerVedlegg("N6")
+
+		assertEquals("N6", first.skjemanummer)
+		assertEquals("Annet", first.tittel)
+		assertEquals(first, second)
+		verify(exactly = 1) { skjemaClient.hent() }
+	}
+
+	@Test
+	fun `keeps current schema list when a refresh returns an empty list`() {
+		val skjemaClient = mockk<SkjemaClient>()
+		val currentSchema = SkjemaOgVedleggsdata(skjemanummer = "CURRENT", tema = "TEMA")
+		every { skjemaClient.hent() } returnsMany listOf(listOf(currentSchema), emptyList())
+		val consumer = HentSkjemaDataConsumer(skjemaClient)
+
+		assertEquals("CURRENT", consumer.hentSkjemaEllerVedlegg("CURRENT").skjemanummer)
+		val refreshed = consumer.cache.refresh("sanityList").get()
+
+		assertEquals(listOf(currentSchema), refreshed)
+		assertEquals("CURRENT", consumer.hentSkjemaEllerVedlegg("CURRENT").skjemanummer)
+		verify(exactly = 2) { skjemaClient.hent() }
 	}
 
 }

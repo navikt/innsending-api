@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.consumerapis.skjema
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.CacheLoader
 import com.github.benmanes.caffeine.cache.LoadingCache
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.util.finnBackupLanguage
@@ -21,18 +22,20 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 
 	val cache: LoadingCache<String, List<SkjemaOgVedleggsdata>> = Caffeine
 		.newBuilder().refreshAfterWrite(Duration.ofHours(1))
-		.build { hentSkjemaData.hent() ?: emptyList()}
+		.build(object : CacheLoader<String, List<SkjemaOgVedleggsdata>> {
+			override fun load(key: String): List<SkjemaOgVedleggsdata> =
+				fetchSkjemaData("loading bundled fallback") ?: initSkjemaDataFromDisk()
+
+			override fun reload(
+				key: String,
+				oldValue: List<SkjemaOgVedleggsdata>
+			): List<SkjemaOgVedleggsdata> =
+				fetchSkjemaData("keeping current cached data") ?: oldValue
+		})
 
 	// TODO implementere språk avhengig oppslag?
 	fun hentSkjemaEllerVedlegg(id: String, spraak: String = "no"): KodeverkSkjema {
-
-		val sanityList = try {
-			// Hent fra cache, Cache Loader funksjonen (hentSkjemaData.hent()) blir kalt hvis cache er tom for "sanityList"
-			cache.get("sanityList") { hentSkjemaData.hent() ?: emptyList() }
-		} catch (e: Exception) {
-			logger.warn("Sanity cache er tom, forsøker å lese fra disk")
-			initSkjemaDataFromDisk()
-		}
+		val sanityList = cache.get("sanityList")
 
 		for (data in sanityList) {
 			if (id == data.skjemanummer || id == data.vedleggsid) {
@@ -49,6 +52,20 @@ class HentSkjemaDataConsumer(private val hentSkjemaData: SkjemaClient) {
 
 		logger.info(message + " Antall skjema/vedleggstyper lest opp = ${sanityList.size}")
 		throw BackendErrorException(message)
+	}
+
+	private fun fetchSkjemaData(fallbackAction: String): List<SkjemaOgVedleggsdata>? {
+		return try {
+			hentSkjemaData.hent()
+				?.takeIf { it.isNotEmpty() }
+				?: run {
+					logger.warn("Sanity returned no schema data; $fallbackAction")
+					null
+				}
+		} catch (e: Exception) {
+			logger.warn("Failed to load schema data from Sanity; $fallbackAction", e)
+			null
+		}
 	}
 
 	private fun createKodeverkSkjema(sanity: SkjemaOgVedleggsdata, spraak: String, id: String): KodeverkSkjema =
