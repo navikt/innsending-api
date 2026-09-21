@@ -612,6 +612,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		authToken: String? = null,
 		bruker: String? = null,
 		avsender: AvsenderDto? = null,
+		grantUserDigitalAccess: Boolean? = null,
 	): InnsendingApiResponse<ApplicationSubmissionResponse> {
 		val token: String = authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken()
 		val headers = Hjelpemetoder.createHeaders(token, MediaType.APPLICATION_JSON)
@@ -628,6 +629,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 			attachments = attachments,
 			bruker = bruker ?: soknad.brukerId,
 			avsender = avsender,
+			grantUserDigitalAccess = grantUserDigitalAccess,
 		)
 		val httpEntity = HttpEntity(request, headers)
 

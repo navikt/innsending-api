@@ -284,13 +284,14 @@ class InnsendingService(
 		mainDocumentAltContent: ByteArray,
 		attachments: List<AttachmentDto>?,
 		avsender: AvsenderDto?,
-		affectedUser: BrukerDto? = null
+		affectedUser: BrukerDto? = null,
+		grantUserDigitalAccess: Boolean?,
 	): Pair<ApplicationSubmissionResponse, EttersendingsId?> {
 		val innsendingsId = soknad_.innsendingsId!!
 		val allAttachments = attachments ?: emptyList()
 		logger.info("$innsendingsId: Starter innsending av skjema ${soknad_.skjemanr}")
 
-		val soknad = soknadService.prepareSubmit(innsendingsId, affectedUser, avsender)
+		val soknad = soknadService.prepareSubmit(innsendingsId, affectedUser, avsender, grantUserDigitalAccess)
 		logger.info("$innsendingsId: preSubmitApplication, satt soknad.status=${soknad.status}")
 		val brukerDto = affectedUser ?: if (soknad.brukerId.isNullOrEmpty()) null else BrukerDto(id = soknad.brukerId!!, idType = BrukerDto.IdType.FNR)
 		if (brukerDto == null && avsender == null) {
