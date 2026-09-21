@@ -9,7 +9,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class SkjemaService(
-	private val hentSkjemaDataConsumer: HentSkjemaDataConsumer
+	private val hentSkjemaDataConsumer: HentSkjemaDataConsumer,
+	private val kodeverkService: KodeverkService
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -17,7 +18,10 @@ class SkjemaService(
 	fun hentSkjema(nr: String, spraak: String, kastException: Boolean = true) = try {
 		hentSkjemaDataConsumer.hentSkjemaEllerVedlegg(nr, spraak)
 	} catch (ex: BackendErrorException) {
-		if (kastException) {
+		val kodeverkTittel = kodeverkService.getAttachmentTitle(nr, spraak)
+		if (kodeverkTittel != null) {
+			KodeverkSkjema(skjemanummer = nr, tittel = kodeverkTittel)
+		} else if (kastException) {
 			throw ResourceNotFoundException(ex.message, ex)
 		} else {
 			logger.warn("Skjemanr=$nr ikke funnet i Sanity. Fortsetter behandling")
