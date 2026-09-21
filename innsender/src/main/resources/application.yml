@@ -272,14 +272,14 @@ spring:
           azuread:
             token-uri: ${AZURE_OPENID_CONFIG_TOKEN_ENDPOINT}
             issuer-uri: ${AZURE_OPENID_CONFIG_ISSUER}
-            jwk-set-uri:  ${AZURE_APP_JWK}
           tokenx:
             token-uri: ${TOKEN_X_TOKEN_ENDPOINT}
             issuer-uri: ${TOKEN_X_ISSUER}
-            # NB: jwk-set-uri her ville vist til TokenX sin offentlige JWKS-endepunkt (for å
-            # validere id-tokens), IKKE til vår private signeringsnøkkel. Vi signerer selv
-            # client_assertion for private_key_jwt via TokenExchangeService/tokenx.privateJwk
-            # under, så denne trengs ikke her.
+
+# Konfigurasjon brukt av AzureAdClientCredentialsConfig til å signere client_assertion
+# (private_key_jwt) for client_credentials-kall mot Azure AD (kodeverk, saf-maskintilmaskin).
+azuread:
+  privateJwk: ${AZURE_APP_JWK}
 
 # Konfigurasjon brukt av TokenExchangeService til å signere client_assertion (private_key_jwt)
 # og sette riktig "audience" i token-exchange-kall mot TokenX. Se TokenExchangeService.kt.

@@ -84,9 +84,11 @@ spring:
         provider:
           azuread:
             token-uri: http://localhost:${mock-oauth2-server.port}/azuread/token
-            jwk-set-uri: src/test/resources/tokenx-jwk.json
           tokenx:
             token-uri: http://localhost:${mock-oauth2-server.port}/tokenx/token
+
+azuread:
+  privateJwk: src/test/resources/tokenx-jwk.json
 
 tokenx:
   privateJwk: src/test/resources/tokenx-jwk.json

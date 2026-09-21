@@ -17,7 +17,8 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 @Profile("test | prod | dev")
 @Configuration
 class OAuth2ClientManagerConfig(
-	private val tokenExchangeService: TokenExchangeService
+	private val tokenExchangeService: TokenExchangeService,
+	private val azureAdClientCredentialsConfig: AzureAdClientCredentialsConfig
 ) {
 
 	// clientRegistrationRepository injiseres som parameter på @Bean-metoden (samme mønster som
@@ -28,9 +29,10 @@ class OAuth2ClientManagerConfig(
 	fun authorizedClientManager(
 		clientRegistrationRepository: ClientRegistrationRepository
 	): OAuth2AuthorizedClientManager {
-		// Register support for client_credentials and our custom jwt-bearer flow
+		// Register support for client_credentials (inkl. private_key_jwt mot Azure AD -
+		// se AzureAdClientCredentialsConfig) og vårt eget token-exchange-oppsett mot TokenX.
 		val provider = OAuth2AuthorizedClientProviderBuilder.builder()
-			.clientCredentials()
+			.clientCredentials { it.accessTokenResponseClient(azureAdClientCredentialsConfig.accessTokenResponseClient) }
 			.provider { context ->
 				val grantType = context.clientRegistration.authorizationGrantType.value
 				if (grantType == "urn:ietf:params:oauth:grant-type:jwt-bearer" || grantType == "urn:ietf:params:oauth:grant-type:token-exchange") {
@@ -47,3 +49,4 @@ class OAuth2ClientManagerConfig(
 		return manager
 	}
 }
+

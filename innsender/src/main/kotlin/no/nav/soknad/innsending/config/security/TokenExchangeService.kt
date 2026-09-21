@@ -13,8 +13,6 @@ import org.springframework.core.convert.converter.Converter
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.util.MultiValueMap
-import java.nio.file.Files
-import java.nio.file.Path
 import java.time.Instant
 import java.util.function.Function
 
@@ -95,9 +93,4 @@ class TokenExchangeService(
 		}
 	}
 
-	private fun resolvePrivateJwk(jwkValue: String): JWK {
-		// I prod/dev er dette selve JWK-en som JSON (injisert av NAIS), i tester en filsti.
-		val jwkJson = if (jwkValue.trim().startsWith("{")) jwkValue else Files.readString(Path.of(jwkValue))
-		return JWK.parse(jwkJson)
-	}
 }
