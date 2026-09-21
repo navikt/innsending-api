@@ -52,6 +52,18 @@ class KodeverkService(
 		return response
 	}
 
+	fun getAttachmentTitle(vedleggsnr: String, spraak: String): String? {
+		val beskrivelser = getKodeverk(KodeverkType.KODEVERK_VEDLEGGSKODER)
+			?.betydninger
+			?.get(vedleggsnr)
+			?.firstOrNull()
+			?.beskrivelser
+			?: return null
+		val language = finnSpraakFraInput(spraak)
+
+		return beskrivelser[language]?.term ?: beskrivelser["nb"]?.term
+	}
+
 	// Add extra info from kodeverk such as 'tittel' (if not specified in input)
 	fun enrichEttersendingWithKodeverkInfo(ettersending: OpprettEttersending): OpprettEttersending {
 		val sprak = finnSpraakFraInput(ettersending.sprak)

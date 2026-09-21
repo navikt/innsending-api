@@ -172,5 +172,9 @@ class KodeverkServiceTest : ApplicationTest() {
 		assertEquals("Annet", enrichedEttersending.vedleggsListe?.get(0)?.tittel)
 	}
 
+	@Test
+	fun `returns localized attachment title`() {
+		assertEquals("Annet", kodeverkService.getAttachmentTitle("N6", "nb"))
+	}
 
 }
