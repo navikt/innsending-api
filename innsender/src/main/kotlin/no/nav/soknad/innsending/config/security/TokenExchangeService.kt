@@ -15,6 +15,7 @@ import org.springframework.util.LinkedMultiValueMap
 import org.springframework.util.MultiValueMap
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.Instant
 import java.util.function.Function
 
 // Utfører token-exchange (RFC 8693) mot TokenX for registreringer med
@@ -47,6 +48,12 @@ class TokenExchangeService(
 		// generiske Converter-supertypet til NimbusJwtClientAuthenticationParametersConverter
 		// direkte (den bruker T kun i implements-klausulen, ikke i konstruktøren).
 		val nimbusConverter = NimbusJwtClientAuthenticationParametersConverter<TokenExchangeGrantRequest>(jwkResolver)
+		// TokenX validerer client_assertion-JWT-en strengt og krever bl.a. "nbf" (not-before) -
+		// en claim Spring ikke setter som default (kun iss/sub/aud/exp/iat/jti). Uten denne
+		// svarer TokenX med "JWT missing required claims: [nbf]".
+		nimbusConverter.setJwtClientAssertionCustomizer { context ->
+			context.claims.notBefore(Instant.now())
+		}
 		addParametersConverter(Converter<TokenExchangeGrantRequest, MultiValueMap<String, String>> { grantRequest ->
 			nimbusConverter.convert(grantRequest) ?: LinkedMultiValueMap()
 		})

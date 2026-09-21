@@ -83,5 +83,14 @@ class TokenExchangeServiceTest {
 		assertTrue(body.contains("subject_token=innkommende-brukertoken"))
 		assertTrue(body.contains("subject_token_type=urn%3Aietf%3Aparams%3Aoauth%3Atoken-type%3Ajwt"))
 		assertTrue(body.contains("audience=dev-fss%3Apdl%3Apdl-api"))
+
+		// TokenX krever at client_assertion-JWT-en har en "nbf"-claim (not-before), se
+		// TokenExchangeService sin jwtClientAssertionCustomizer.
+		val clientAssertion = java.net.URLDecoder.decode(
+			body.split("&").single { it.startsWith("client_assertion=") }.substringAfter("="),
+			"UTF-8"
+		)
+		val payload = String(java.util.Base64.getUrlDecoder().decode(clientAssertion.split(".")[1]))
+		assertTrue(payload.contains("\"nbf\""), "client_assertion mangler nbf-claim: $payload")
 	}
 }
