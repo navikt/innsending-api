@@ -84,6 +84,7 @@ class InnsendingService(
 					brukertype = eksisterendeSoknad.brukertype,
 					avsender = eksisterendeSoknad.avsender ?: avsenderDto,
 					affecteduser = eksisterendeSoknad.affecteduser ?: brukerDto,
+					grantuserdigitalaccess = eksisterendeSoknad.grantuserdigitalaccess,
 				)
 			)
 			,emptyList(), emptyList()
@@ -189,7 +190,7 @@ class InnsendingService(
 		val opplastedeVedlegg = soknadDto.vedleggsListe.filter{(it.erHoveddokument && it.opplastingsStatus != OpplastingsStatusDto.SendesIkke) || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending }
 		logger.info("$innsendingsId: Starter innsending av skjema ${soknadDto.skjemanr}")
 		try {
-			soknadsmottakerAPI.sendInnSoknad(soknadDto, opplastedeVedlegg, avsender, bruker)
+			soknadsmottakerAPI.sendInnSoknad(soknadDto, opplastedeVedlegg, avsender, bruker, soknadsDb.grantuserdigitalaccess)
 			innsenderMetrics.incSubmissionsCounter(soknadDto.visningsType)
 		} catch (e: Exception) {
 			exceptionHelper.reportException(e, operation, soknadDto.tema)

@@ -103,6 +103,9 @@ components:
           $ref: "../common/components.yaml#/components/schemas/BrukerId"
         avsender:
           $ref: "../common/components.yaml#/components/schemas/AvsenderDto"
+        grantUserDigitalAccess:
+          type: boolean
+          description: Grants the user digital access to the submitted journal post
 
     ApplicationSubmissionResponse:
       type: object

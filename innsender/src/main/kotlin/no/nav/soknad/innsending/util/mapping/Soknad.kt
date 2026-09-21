@@ -54,6 +54,7 @@ fun mapTilSoknadDb(
 		brukertype = bruker?.idType ?: if (dokumentSoknadDto.brukerId != null) BrukerDto.IdType.FNR else null,
 		avsender = avsender,
 		affecteduser = null,
+		grantuserdigitalaccess = null,
 	)
 
 fun lagDokumentSoknadDto(
@@ -204,6 +205,7 @@ fun SubmitApplicationRequest.toDokumentSoknadDto(innsendingsId: UUID, clientId: 
 		brukertype = if (this.bruker != null) BrukerDto.IdType.FNR else null,
 		avsender = this.avsender,
 		affecteduser = null,
+		grantuserdigitalaccess = this.grantUserDigitalAccess,
 	)
 }
 
@@ -242,7 +244,13 @@ fun VisningsType?.getFileStorageNamespace(): FileStorageNamespace {
 	}
 }
 
-fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>, avsenderDto: AvsenderDto, brukerDto: BrukerDto?): Innsending {
+fun translate(
+	soknadDto: DokumentSoknadDto,
+	vedleggDtos: List<VedleggDto>,
+	avsenderDto: AvsenderDto,
+	brukerDto: BrukerDto?,
+	grantUserDigitalAccess: Boolean?,
+): Innsending {
 	return Innsending(
 		innsendingsId = soknadDto.innsendingsId!!,
 		ettersendelseTilId = soknadDto.ettersendingsId,
@@ -253,7 +261,8 @@ fun translate(soknadDto: DokumentSoknadDto, vedleggDtos: List<VedleggDto>, avsen
 		skjemanr = vedleggDtos.first{it.erHoveddokument}.vedleggsnr!!,
 		tittel = vedleggDtos.first{it.erHoveddokument}.tittel,
 		dokumenter = translate(vedleggDtos, true),
-		innsendtDato = soknadDto.innsendtDato ?: mapTilOffsetDateTime(LocalDateTime.now())
+		innsendtDato = soknadDto.innsendtDato ?: mapTilOffsetDateTime(LocalDateTime.now()),
+		grantUserDigitalAccess = grantUserDigitalAccess.takeIf { it == true },
 	)
 }
 // Hjelpefunksjoner

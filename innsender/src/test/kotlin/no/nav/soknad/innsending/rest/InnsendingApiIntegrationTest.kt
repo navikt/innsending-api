@@ -247,7 +247,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		assertEquals(attachmentLabel, submittedAttachment.label)
 
 		// verify that label is used instead of tittel when translating to the archiving format
-		val translatedDocuments = translate(submittedAttachments)
+		val translatedDocuments = translate(submittedAttachments, true)
 		val translatedAttachment = translatedDocuments.first { it.skjemanummer == attachmentVedleggsnr }
 		assertEquals(attachmentLabel, translatedAttachment.tittel)
 	}

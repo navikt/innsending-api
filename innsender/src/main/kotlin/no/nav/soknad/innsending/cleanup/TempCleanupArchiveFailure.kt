@@ -71,7 +71,7 @@ class TempCleanupArchiveFailure(
 					BrukerDto(id = it, idType = BrukerDto.IdType.FNR)
 				}
 
-				mottakerApi.sendInnSoknad(soknadDto, vedleggTilInnsending, avsender, bruker)
+				mottakerApi.sendInnSoknad(soknadDto, vedleggTilInnsending, avsender, bruker, soknadDb.grantuserdigitalaccess)
 				logger.info("$innsendingsId: sendt inn på nytt med ${vedleggTilInnsending.size} dokument(er)")
 			} catch (ex: Exception) {
 				logger.error("$innsendingsId: feilet ved oppdatering og resending av søknad", ex)

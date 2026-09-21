@@ -552,7 +552,8 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		mainDocumentPath: String = "/litenPdf.pdf",
 		mainDocumentAltPath: String = "/__files/barnepass-NAV-11-12.15B.json",
 		authToken: String? = null,
-		avsender: AvsenderDto? = null
+		avsender: AvsenderDto? = null,
+		grantUserDigitalAccess: Boolean? = null,
 	): InnsendingApiResponse<ApplicationSubmissionResponse> {
 		val token: String = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("nologin-access"))
 		val headers = Hjelpemetoder.createHeaders(token, MediaType.APPLICATION_JSON)
@@ -569,6 +570,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 			attachments = attachments,
 			bruker = brukerId,
 			avsender = avsender,
+			grantUserDigitalAccess = grantUserDigitalAccess,
 		)
 		val httpEntity = HttpEntity(request, headers)
 
