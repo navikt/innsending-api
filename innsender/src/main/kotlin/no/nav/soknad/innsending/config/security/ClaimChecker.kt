@@ -96,7 +96,9 @@ class ClaimChecker(
 		}
 
 		val requiredValues: List<String> = requiredValue.removeSurrounding("[", "]").split(" ").map { it.trim() }
-		val claims: List<String> = claimValue.removeSurrounding("[", "]").split(", ").map { it.trim() }
+		val claims: List<String> =
+			claimValue.removeSurrounding("[", "]").split(", ", " ").map { it.trim() }
+
 		//log.info("TMP: claimName=$claimName, claimValue=$claimValue, requiredValues=$requiredValues")
 		return requiredValues.all { required -> claims.contains(required) }
 
