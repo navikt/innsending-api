@@ -160,7 +160,7 @@ class EttersendingService(
 							endretdato = LocalDateTime.now(),
 							innsendtdato = if (v.opplastingsStatus == OpplastingsStatusDto.Innsendt && v.innsendtdato == null)
 								nyesteSoknad.innsendtDato?.toLocalDateTime() else v.innsendtdato?.toLocalDateTime(),
-							vedleggsurl = null,
+							vedleggsurl = v.skjemaurl,
 							formioid = v.formioId,
 							opplastingsvalgkommentarledetekst =  v.opplastingsValgKommentarLedetekst,
 							opplastingsvalgkommentar = null,

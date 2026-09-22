@@ -425,6 +425,10 @@ class EttersendingServiceTest : ApplicationTest() {
 			"Vedtak eller avtale om bidrag",
 			ettersendingsSoknadDto.vedleggsListe.first { it.vedleggsnr == "W2" }.tittel
 		)
+		assertEquals(
+			dokumentSoknadDto.vedleggsListe.first { it.vedleggsnr == "W1" }.skjemaurl,
+			ettersendingsSoknadDto.vedleggsListe.first { it.vedleggsnr == "W1" }.skjemaurl
+		)
 
 		val hendelseDbDatasEttersending =
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(ettersendingsSoknadDto.innsendingsId!!)
