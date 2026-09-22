@@ -172,5 +172,22 @@ class KodeverkServiceTest : ApplicationTest() {
 		assertEquals("Annet", enrichedEttersending.vedleggsListe?.get(0)?.tittel)
 	}
 
+	@Test
+	fun `Should preserve supplied vedlegg title`() {
+		val ettersending = OpprettEttersendingTestBuilder()
+			.skjemanr("NAV 02-07.05")
+			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().tittel("Supplied title").vedleggsnr("N6").build()))
+			.sprak("nb_NO")
+			.build()
+
+		val enrichedEttersending = kodeverkService.enrichEttersendingWithKodeverkInfo(ettersending)
+
+		assertEquals("Supplied title", enrichedEttersending.vedleggsListe?.get(0)?.tittel)
+	}
+
+	@Test
+	fun `returns localized attachment title`() {
+		assertEquals("Annet", kodeverkService.getAttachmentTitle("N6", "nb"))
+	}
 
 }

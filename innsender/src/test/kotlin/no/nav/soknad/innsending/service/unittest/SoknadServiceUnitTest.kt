@@ -6,7 +6,6 @@ import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.verify
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
-import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.model.VisningsType
@@ -28,9 +27,6 @@ import kotlin.test.assertFailsWith
 class SoknadServiceUnitTest {
 
 	private val defaultUser = "12345678901"
-
-	@RelaxedMockK
-	lateinit var hentSkjemaDataConsumer: HentSkjemaDataConsumer
 
 	@RelaxedMockK
 	lateinit var skjemaService: SkjemaService

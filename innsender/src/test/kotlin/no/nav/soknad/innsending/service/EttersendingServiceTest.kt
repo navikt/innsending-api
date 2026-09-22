@@ -395,7 +395,7 @@ class EttersendingServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun opprettEttersending() {
+	fun opprettFyllutEttersendingBeholderOppgittTittelOgFyllerManglendeFraKodeverk() {
 		val innsendingService = lagInnsendingService()
 		val ettersendingService = lagEttersendingService()
 
@@ -429,17 +429,29 @@ class EttersendingServiceTest : ApplicationTest() {
 			.vedleggsListe(
 				listOf(
 					InnsendtVedleggDtoTestBuilder().vedleggsnr("W1").tittel("Vedlegg1").build(),
-					InnsendtVedleggDtoTestBuilder().vedleggsnr("W2").tittel("Vedlegg2").build(),
+					InnsendtVedleggDtoTestBuilder().vedleggsnr("W2").tittel(null).build(),
 				)
 			).build()
 
 		// Opprett ettersendingssoknad
 		val ettersendingsSoknadDto =
-			ettersendingService.createEttersendingFromExistingSoknader(dokumentSoknadDto.brukerId!!, ettersending)
+			ettersendingService.createEttersendingFromFyllutEttersending(dokumentSoknadDto.brukerId!!, ettersending)
 
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.none { it.opplastingsStatus == OpplastingsStatusDto.Innsendt })
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
+		assertEquals(
+			"Vedlegg1",
+			ettersendingsSoknadDto.vedleggsListe.first { it.vedleggsnr == "W1" }.tittel
+		)
+		assertEquals(
+			"Vedtak eller avtale om bidrag",
+			ettersendingsSoknadDto.vedleggsListe.first { it.vedleggsnr == "W2" }.tittel
+		)
+		assertEquals(
+			dokumentSoknadDto.vedleggsListe.first { it.vedleggsnr == "W1" }.skjemaurl,
+			ettersendingsSoknadDto.vedleggsListe.first { it.vedleggsnr == "W1" }.skjemaurl
+		)
 
 		val hendelseDbDatasEttersending =
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(ettersendingsSoknadDto.innsendingsId!!)

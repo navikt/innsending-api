@@ -163,8 +163,7 @@ class EttersendingService(
 							endretdato = LocalDateTime.now(),
 							innsendtdato = if (v.opplastingsStatus == OpplastingsStatusDto.Innsendt && v.innsendtdato == null)
 								nyesteSoknad.innsendtDato?.toLocalDateTime() else v.innsendtdato?.toLocalDateTime(),
-							vedleggsurl = if (v.vedleggsnr != null)
-								skjemaService.hentSkjema(v.vedleggsnr!!, nyesteSoknad.spraak ?: "nb", false).url else null,
+							vedleggsurl = v.skjemaurl,
 							formioid = v.formioId,
 							opplastingsvalgkommentarledetekst =  v.opplastingsValgKommentarLedetekst,
 							opplastingsvalgkommentar = null,
@@ -393,9 +392,10 @@ class EttersendingService(
 		brukerId: String,
 		ettersending: OpprettEttersending,
 	): DokumentSoknadDto {
+		val enrichedEttersending = kodeverkService.enrichEttersendingWithKodeverkInfo(ettersending)
 		val dokumentSoknadDto = createEttersendingFromExistingSoknader(
 			brukerId = brukerId,
-			ettersending = ettersending,
+			ettersending = enrichedEttersending,
 			erNavInitiert = false
 		)
 		return dokumentSoknadDto
