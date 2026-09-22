@@ -173,16 +173,16 @@ class KodeverkServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Should replace supplied vedlegg title with title from kodeverk`() {
+	fun `Should preserve supplied vedlegg title`() {
 		val ettersending = OpprettEttersendingTestBuilder()
 			.skjemanr("NAV 02-07.05")
-			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().tittel("Outdated title").vedleggsnr("N6").build()))
+			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().tittel("Supplied title").vedleggsnr("N6").build()))
 			.sprak("nb_NO")
 			.build()
 
 		val enrichedEttersending = kodeverkService.enrichEttersendingWithKodeverkInfo(ettersending)
 
-		assertEquals("Annet", enrichedEttersending.vedleggsListe?.get(0)?.tittel)
+		assertEquals("Supplied title", enrichedEttersending.vedleggsListe?.get(0)?.tittel)
 	}
 
 	@Test

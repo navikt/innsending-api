@@ -76,6 +76,62 @@
 								}
 							}
 						],
+						"W3": [
+							{
+								"gyldigFra": "2020-02-11",
+								"gyldigTil": "9999-12-31",
+								"beskrivelser": {
+									"nb": {
+										"term": "Dokumentasjon av skolegang",
+										"tekst": "Dokumentasjon av skolegang"
+									},
+									"en": {
+										"term": "Documentation of schooling",
+										"tekst": "Documentation of schooling"
+									}
+								}
+							}
+						],
+						"X1": [
+							{
+								"gyldigFra": "2020-02-11",
+								"gyldigTil": "9999-12-31",
+								"beskrivelser": {
+									"nb": {
+										"term": "Dokumentasjon av utgifter",
+										"tekst": "Dokumentasjon av utgifter"
+									},
+									"en": {
+										"term": "Documentation of expenses",
+										"tekst": "Documentation of expenses"
+									}
+								}
+							}
+						],
+						"X2": [
+							{
+								"gyldigFra": "2020-02-11",
+								"gyldigTil": "9999-12-31",
+								"beskrivelser": {
+									"nb": {
+										"term": "Dokumentasjon",
+										"tekst": "Dokumentasjon"
+									}
+								}
+							}
+						],
+						"W4": [
+							{
+								"gyldigFra": "2020-02-11",
+								"gyldigTil": "9999-12-31",
+								"beskrivelser": {
+									"nb": {
+										"term": "Dokumentasjon",
+										"tekst": "Dokumentasjon"
+									}
+								}
+							}
+						],
 						"W1": [
 							{
 								"gyldigFra": "2020-02-11",

@@ -151,7 +151,7 @@ class VedleggService(
 					erpdfa = false,
 					erpakrevd = v.skjemanummer != "N6",
 					vedleggsnr = v.skjemanummer,
-					tittel = v.tittel ?: "",
+					tittel = tittel ?: v.tittel ?: "",
 					label = tittel ?: v.tittel ?: "",
 					beskrivelse = "",
 					mimetype = null,

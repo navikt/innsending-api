@@ -372,7 +372,7 @@ class EttersendingServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun opprettFyllutEttersendingHenterVedleggstitlerFraKodeverk() {
+	fun opprettFyllutEttersendingBeholderOppgittTittelOgFyllerManglendeFraKodeverk() {
 		val innsendingService = lagInnsendingService()
 		val ettersendingService = lagEttersendingService()
 
@@ -406,7 +406,7 @@ class EttersendingServiceTest : ApplicationTest() {
 			.vedleggsListe(
 				listOf(
 					InnsendtVedleggDtoTestBuilder().vedleggsnr("W1").tittel("Vedlegg1").build(),
-					InnsendtVedleggDtoTestBuilder().vedleggsnr("W2").tittel("Vedlegg2").build(),
+					InnsendtVedleggDtoTestBuilder().vedleggsnr("W2").tittel(null).build(),
 				)
 			).build()
 
@@ -418,7 +418,7 @@ class EttersendingServiceTest : ApplicationTest() {
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.none { it.opplastingsStatus == OpplastingsStatusDto.Innsendt })
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
 		assertEquals(
-			"Dokumentasjon på mottatt bidrag",
+			"Vedlegg1",
 			ettersendingsSoknadDto.vedleggsListe.first { it.vedleggsnr == "W1" }.tittel
 		)
 		assertEquals(

@@ -74,7 +74,7 @@ class KodeverkService(
 			?: beskrivelser["nb"]?.term
 	}
 
-	// Keep form titles supplied by clients, but use Kodeverk as the authority for attachment titles.
+	// Fill missing form and attachment titles without replacing titles supplied by clients.
 	fun enrichEttersendingWithKodeverkInfo(ettersending: OpprettEttersending): OpprettEttersending {
 		val sprak = finnSpraakFraInput(ettersending.sprak)
 
@@ -83,7 +83,7 @@ class KodeverkService(
 				?: getFormTitle(ettersending.skjemanr, sprak),
 			vedleggsListe = ettersending.vedleggsListe?.map { vedlegg ->
 				vedlegg.copy(
-					tittel = getAttachmentTitle(vedlegg.vedleggsnr, sprak) ?: vedlegg.tittel
+					tittel = vedlegg.tittel ?: getAttachmentTitle(vedlegg.vedleggsnr, sprak)
 				)
 			}
 		)
