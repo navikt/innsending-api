@@ -39,7 +39,7 @@ class ClaimChecker(
 			val claimName = claim.substringBefore("=")
 			val requiredValue = claim.substringAfter("=")
 			if (!checkOneClaim(jwt, claimName, requiredValue)) {
-				log.info("Mangler påkrevd claim $claimName=$requiredValue")
+				log.info("Mangler claim $claimName=$requiredValue")
 				if (allRequired) {
 					return false
 				}

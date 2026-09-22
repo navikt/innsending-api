@@ -65,6 +65,7 @@ class SecurityFilterChainFactory(
 				throw BadCredentialsException("Missing issuer (iss) in token")
 			}
 
+			logger.info("TMP: In delegatingJwtDecoder for Issuer: $issuer")
 			when (issuer) {
 				azureadIssuer -> azureJwtDecoder.decode(token)
 				tokenxIssuer -> tokenxJwtDecoder.decode(token)

@@ -10,10 +10,6 @@ defaultMaxFileSizeSum: 300
 
 tempFailedApplications: ${FAILED_APPLICATIONS_KLAR_FOR_INNSENDING:""}
 
-logging:
-  level:
-    org.springframework.security: DEBUG
-
 spring:
   application:
     name: innsending-api
@@ -358,6 +354,9 @@ spring:
     hikari:
       maximum-pool-size: 3
 
+  security:
+    debug: true
+
 restconfig:
   sendinn:
     urls:
@@ -375,3 +374,8 @@ restconfig:
       preprodAltAnsatt: https://fyllut-preprod-alt.ansatt.dev.nav.no/fyllut
       delingslenke: https://skjemadelingslenke.ekstern.dev.nav.no/fyllut
       default: ${FYLL_UT_URL:http://localhost:3001/fyllut}
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
