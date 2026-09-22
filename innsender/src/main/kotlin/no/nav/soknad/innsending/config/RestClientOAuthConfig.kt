@@ -127,10 +127,6 @@ class RestClientOAuthConfig(
 	fun soknadsmottakerClientWithoutOAuth(restConfig: RestConfig) =
 		RestClient.builder().baseUrl(restConfig.soknadsMottakerHost).build()
 
-	@Bean
-	@Qualifier("skjemaRestClient")
-	fun skjemaClientWithoutOAuth(restConfig: RestConfig) = RestClient.builder().baseUrl(restConfig.sanityHost).build()
-
 	private fun timeouts(
 		readTimeoutMinutes: Long = defaultReadTimeout,
 		connectTimeoutSeconds: Long = defaultConnectTimeout

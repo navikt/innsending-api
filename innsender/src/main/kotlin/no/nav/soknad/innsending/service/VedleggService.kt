@@ -139,7 +139,7 @@ class VedleggService(
 		tittel: String? = null,
 		formioid: String? = null
 	): List<VedleggDbData> {
-		val vedleggDbDataListe = vedleggsnrListe.map { nr -> skjemaService.hentSkjema(nr, spraak) }.map { v ->
+		val vedleggDbDataListe = vedleggsnrListe.map { nr -> skjemaService.hentVedlegg(nr, spraak) }.map { v ->
 
 			val lagretVedleggDbData = repo.lagreVedlegg(
 				VedleggDbData(
