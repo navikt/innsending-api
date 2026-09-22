@@ -1,10 +1,9 @@
 package no.nav.soknad.innsending.utils.builders.ettersending
 
 import no.nav.soknad.innsending.model.InnsendtVedleggDto
-import no.nav.soknad.innsending.utils.Skjema
 
 class InnsendtVedleggDtoTestBuilder {
-	private var vedleggsnr: String = Skjema.generateVedleggsnr()
+	private var vedleggsnr: String = "${('A'..'Z').random()}${(1..9).random()}"
 	private var tittel: String? = "Vedleggstittel"
 
 	fun vedleggsnr(vedleggsnr: String) = apply { this.vedleggsnr = vedleggsnr }
