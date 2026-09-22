@@ -372,7 +372,7 @@ class EttersendingServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun opprettEttersending() {
+	fun opprettFyllutEttersendingHenterVedleggstitlerFraKodeverk() {
 		val innsendingService = lagInnsendingService()
 		val ettersendingService = lagEttersendingService()
 
@@ -412,11 +412,19 @@ class EttersendingServiceTest : ApplicationTest() {
 
 		// Opprett ettersendingssoknad
 		val ettersendingsSoknadDto =
-			ettersendingService.createEttersendingFromExistingSoknader(dokumentSoknadDto.brukerId!!, ettersending)
+			ettersendingService.createEttersendingFromFyllutEttersending(dokumentSoknadDto.brukerId!!, ettersending)
 
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.isNotEmpty())
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.none { it.opplastingsStatus == OpplastingsStatusDto.Innsendt })
 		assertTrue(ettersendingsSoknadDto.vedleggsListe.any { it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
+		assertEquals(
+			"Dokumentasjon på mottatt bidrag",
+			ettersendingsSoknadDto.vedleggsListe.first { it.vedleggsnr == "W1" }.tittel
+		)
+		assertEquals(
+			"Vedtak eller avtale om bidrag",
+			ettersendingsSoknadDto.vedleggsListe.first { it.vedleggsnr == "W2" }.tittel
+		)
 
 		val hendelseDbDatasEttersending =
 			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(ettersendingsSoknadDto.innsendingsId!!)

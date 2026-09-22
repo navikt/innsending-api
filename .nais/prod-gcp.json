@@ -91,8 +91,6 @@
 		"PDL_URL": "https://pdl-api.prod-fss-pub.nais.io",
 		"SAFSELVBETJENING_URL": "https://safselvbetjening.prod-fss-pub.nais.io",
 		"SAF_URL": "https://saf.prod-fss-pub.nais.io",
-		"SANITY_HOST": "https://www.nav.no",
-		"SANITY_ENDPOINT": "/soknader/api/sanity/skjemautlisting",
 		"SOKNADSMOTTAKER_HOST": "https://soknadsmottaker-gcp.intern.nav.no",
 		"SOKNADSMOTTAKER_ENDPOINT": "/save",
 		"PUBLISERE_BRUKERNOTIFIKASJONER": "true",

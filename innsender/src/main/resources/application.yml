@@ -104,8 +104,6 @@ restconfig:
   maxFileSize: ${defaultMaxFileSize}
   maxFileSizeSum: ${defaultMaxFileSizeSum}
   maxNumberOfPages: 200
-  sanityHost: https://www.nav.no
-  sanityEndpoint: /soknader/api/sanity/skjemautlisting
   filesInOneRequestToFilestorage: 10
   soknadsMottakerHost: http://localhost:9043/soknadsmottaker-api
   soknadsMottakerEndpoint: /save
@@ -152,8 +150,6 @@ restconfig:
   maxFileSize: ${defaultMaxFileSize}
   maxFileSizeSum: ${defaultMaxFileSizeSum}
   maxNumberOfPages: 200
-  sanityHost: https://www.nav.no
-  sanityEndpoint: /soknader/api/sanity/skjemautlisting
   filesInOneRequestToFilestorage: 10
   soknadsMottakerHost: ${SOKNADSMOTTAKER_HOST}
   soknadsMottakerEndpoint: /save
@@ -224,8 +220,6 @@ restconfig:
   maxFileSize: ${MAX_FILE_SIZE}
   maxFileSizeSum: ${MAX_FILE_SIZE_SUM}
   maxNumberOfPages: ${MAX_NUMBER_OF_PAGES}
-  sanityHost: ${SANITY_HOST}
-  sanityEndpoint: ${SANITY_ENDPOINT}
   filesInOneRequestToFilestorage: 10
   soknadsMottakerHost: ${SOKNADSMOTTAKER_HOST}
   soknadsMottakerEndpoint: ${SOKNADSMOTTAKER_ENDPOINT}

@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.kodeverk.api.KodeverkApi
 import no.nav.soknad.innsending.kodeverk.model.GetKodeverkKoderBetydningerResponse
 import no.nav.soknad.innsending.model.OpprettEttersending
+import no.nav.soknad.innsending.util.finnBackupLanguage
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -52,32 +53,37 @@ class KodeverkService(
 		return response
 	}
 
-	fun getAttachmentTitle(vedleggsnr: String, spraak: String): String? {
-		val beskrivelser = getKodeverk(KodeverkType.KODEVERK_VEDLEGGSKODER)
+	fun getFormTitle(skjemanr: String, spraak: String): String? =
+		getTitle(KodeverkType.KODEVERK_NAVSKJEMA, skjemanr, spraak)
+
+	fun getAttachmentTitle(vedleggsnr: String, spraak: String): String? =
+		getTitle(KodeverkType.KODEVERK_VEDLEGGSKODER, vedleggsnr, spraak)
+
+	private fun getTitle(kodeverkType: KodeverkType, kode: String, spraak: String): String? {
+		val beskrivelser = getKodeverk(kodeverkType)
 			?.betydninger
-			?.get(vedleggsnr)
+			?.get(kode)
 			?.firstOrNull()
 			?.beskrivelser
 			?: return null
 		val language = finnSpraakFraInput(spraak)
+		val backupLanguage = finnBackupLanguage(language).let { if (it == "no") "nb" else it }
 
-		return beskrivelser[language]?.term ?: beskrivelser["nb"]?.term
+		return beskrivelser[language]?.term
+			?: beskrivelser[backupLanguage]?.term
+			?: beskrivelser["nb"]?.term
 	}
 
-	// Add extra info from kodeverk such as 'tittel' (if not specified in input)
+	// Keep form titles supplied by clients, but use Kodeverk as the authority for attachment titles.
 	fun enrichEttersendingWithKodeverkInfo(ettersending: OpprettEttersending): OpprettEttersending {
 		val sprak = finnSpraakFraInput(ettersending.sprak)
 
-		val kodeverkNavSkjema = getKodeverk(KodeverkType.KODEVERK_NAVSKJEMA) ?: return ettersending
-		val kodeverkVedleggskoder = getKodeverk(KodeverkType.KODEVERK_VEDLEGGSKODER) ?: return ettersending
-
 		return ettersending.copy(
 			tittel = ettersending.tittel
-				?: kodeverkNavSkjema.betydninger[ettersending.skjemanr]?.first()?.beskrivelser?.get(sprak)?.term,
+				?: getFormTitle(ettersending.skjemanr, sprak),
 			vedleggsListe = ettersending.vedleggsListe?.map { vedlegg ->
 				vedlegg.copy(
-					tittel = vedlegg.tittel
-						?: kodeverkVedleggskoder.betydninger[vedlegg.vedleggsnr]?.first()?.beskrivelser?.get(sprak)?.term
+					tittel = getAttachmentTitle(vedlegg.vedleggsnr, sprak) ?: vedlegg.tittel
 				)
 			}
 		)

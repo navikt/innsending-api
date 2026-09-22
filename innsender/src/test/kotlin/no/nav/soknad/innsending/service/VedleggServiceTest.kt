@@ -85,7 +85,8 @@ class VedleggServiceTest : ApplicationTest() {
 
 		assertNotNull(lagretVedleggDto.id)
 		assertEquals("N6", lagretVedleggDto.vedleggsnr)
-		assertEquals("Litt mer info", lagretVedleggDto.tittel)
+		assertEquals("Annet", lagretVedleggDto.tittel)
+		assertEquals("Litt mer info", lagretVedleggDto.label)
 	}
 
 	@Test
