@@ -56,7 +56,8 @@ class EttersendingService(
 		mellomlagringDager: Long = Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD,
 		ernavopprettet: Boolean = false,
 		avsender: AvsenderDto? = null,
-		affectedUser: BrukerDto? = null
+		affectedUser: BrukerDto? = null,
+		grantUserDigitalAccess: Boolean? = null,
 	)
 		: SoknadDbData {
 		val innsendingsId = Utilities.laginnsendingsId()
@@ -89,7 +90,8 @@ class EttersendingService(
 				ernavopprettet = ernavopprettet,
 				brukertype = BrukerDto.IdType.FNR,
 				avsender = avsender,
-				affecteduser = affectedUser
+				affecteduser = affectedUser,
+				grantuserdigitalaccess = grantUserDigitalAccess,
 			)
 		)
 	}
@@ -130,7 +132,8 @@ class EttersendingService(
 				fristForEttersendelse = nyesteSoknad.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 				ernavopprettet = nyesteSoknad.erNavOpprettet ?: false,
 				avsender = nyesteSoknadDb.avsender,
-				affectedUser = nyesteSoknadDb.affecteduser
+				affectedUser = nyesteSoknadDb.affecteduser,
+				grantUserDigitalAccess = nyesteSoknadDb.grantuserdigitalaccess,
 			)
 
 			// Lagre vedlegg i DB

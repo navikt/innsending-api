@@ -118,6 +118,29 @@ class EttersendingServiceTest : ApplicationTest() {
 	)
 
 	@Test
+	fun `ettersending inherits grant user digital access including absence`() {
+		val ettersendingService = lagEttersendingService()
+
+		listOf(true, null).forEach { grantUserDigitalAccess ->
+			val source = ettersendingService.saveEttersending(
+				brukerId = testpersonid,
+				ettersendingsId = "source-$grantUserDigitalAccess",
+				tittel = "Source application",
+				skjemanr = "NAV 00-00.00",
+				tema = "BIL",
+				sprak = "nb",
+				forsteInnsendingsDato = OffsetDateTime.now(),
+				grantUserDigitalAccess = grantUserDigitalAccess,
+			)
+			val sourceDto = no.nav.soknad.innsending.util.mapping.lagDokumentSoknadDto(source, emptyList())
+
+			val inherited = ettersendingService.saveEttersending(sourceDto, "follow-up-$grantUserDigitalAccess")
+
+			assertEquals(grantUserDigitalAccess, repo.hentSoknadDb(inherited.innsendingsId!!).grantuserdigitalaccess)
+		}
+	}
+
+	@Test
 	fun opprettEttersendingGittArkivertSoknadTest() {
 
 		val brukerid = testpersonid

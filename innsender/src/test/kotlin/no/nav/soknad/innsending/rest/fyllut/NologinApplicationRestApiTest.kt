@@ -731,6 +731,21 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 	}
 
 	@Test
+	fun `skal videresende grant user digital access`() {
+		api.submitNologinApplication(
+			innsendingsId = UUID.randomUUID().toString(),
+			avsender = AvsenderDto(id = "123456789", idType = AvsenderDto.IdType.ORGNR),
+			grantUserDigitalAccess = true,
+		).assertSuccess()
+
+		val grantUserDigitalAccess = slot<Boolean?>()
+		verify(timeout = 5000, exactly = 1) {
+			soknadsmottaker.sendInnSoknad(any(), any(), any(), any(), captureNullable(grantUserDigitalAccess))
+		}
+		assertEquals(true, grantUserDigitalAccess.captured)
+	}
+
+	@Test
 	fun `skal avvise innsending med ugyldig avsenderid i SubmitApplicationRequest`() {
 		api.submitNologinApplication(
 			innsendingsId = UUID.randomUUID().toString(),
