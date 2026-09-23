@@ -8,10 +8,6 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.security.token.support.client.core.ClientProperties
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenResponse
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
-import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.soknad.innsending.consumerapis.pdl.PdlAPI
 import no.nav.soknad.innsending.pdl.generated.HentIdenter
 import org.junit.jupiter.api.AfterEach
@@ -87,11 +83,8 @@ class PdlClientConfigTest {
 
 	private fun createClientConfig(): PdlClientConfig {
 		val restConfig = RestConfig().apply { pdlUrl = wireMockServer.baseUrl() }
-		val oauth2Config = ClientConfigurationProperties(
-			mapOf("tokenx-pdl" to mockk<ClientProperties>())
-		)
-		val accessTokenService = mockk<OAuth2AccessTokenService>()
-		every { accessTokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
-		return PdlClientConfig(restConfig, oauth2Config, accessTokenService)
+		val accessToken: AccessToken = mockk()
+		every { accessToken.getAccessToken(any(), any()) } returns "token"
+		return PdlClientConfig(restConfig, accessToken)
 	}
 }

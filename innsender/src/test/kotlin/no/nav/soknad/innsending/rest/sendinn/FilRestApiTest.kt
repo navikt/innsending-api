@@ -24,8 +24,9 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.ClassPathResource
@@ -68,8 +69,10 @@ class FilRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `missing required file part returns dedicated bad request error`() {
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-		val soknadDto = opprettEnSoknad(defaultSkjemanr, "nb_NO", listOf("N6"))
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
+		val soknadDto = opprettEnSoknad(defaultSkjemanr, "nb_NO", listOf("N6"), token)
 		val vedleggsId = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }.id!!
 		val multipartWithoutFile = LinkedMultiValueMap<Any, Any>().apply {
 			add("metadata", "missing file")
@@ -95,12 +98,14 @@ class FilRestApiTest : ApplicationTest() {
 
 	@Test
 	fun sjekkOpplastingsstatusEtterOpplastingOgSlettingAvFilPaVedleggTest() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 		val vedlegg = listOf("N6", "W2")
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
+		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg, token)
 
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
@@ -170,9 +175,12 @@ class FilRestApiTest : ApplicationTest() {
 	@Test
 	fun verifiserOpplastingAvUlikeFiltyperTest() =
 		runBlocking {
+			val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+			`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 			val awaits: MutableList<Deferred<Unit>> = mutableListOf()
-			awaits.add(async(Dispatchers.IO) {	testOpplastingAvOfficeFormater() })
-			awaits.add(async(Dispatchers.IO) {	testOpplastingAvBildeFormater()	})
+			awaits.add(async(Dispatchers.IO) {	testOpplastingAvOfficeFormater(token) })
+			awaits.add(async(Dispatchers.IO) {	testOpplastingAvBildeFormater(token)	})
 			awaits.awaitAll()
 
 			val filePages = innsenderMetrics.fileNumberOfPagesSummary
@@ -184,14 +192,16 @@ class FilRestApiTest : ApplicationTest() {
 
 	@Test
 	fun verifiserAvvisningAvUlovligeFiltyper() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 		val vedlegg = listOf("N6", "W2")
 		val bildeNavnPrefix = "bilde"
 		val filPath = "/__files/$bildeNavnPrefix"
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
+		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg, token)
 
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
@@ -202,40 +212,39 @@ class FilRestApiTest : ApplicationTest() {
 
 	}
 
-	private fun testOpplastingAvBildeFormater() {
+	private fun testOpplastingAvBildeFormater(token: String) {
 		val bildeNavnPrefix = "bilde"
 		val filPath = "/__files/$bildeNavnPrefix"
 
 		runBlocking {
 			val awaits: MutableList<Deferred<Unit>> = mutableListOf()
 			val start = System.currentTimeMillis()
-			imageFileTypes.keys.forEach { awaits.add(async(Dispatchers.IO) { lastOppOgSjekk(filPath, it) }) }
+			imageFileTypes.keys.forEach { awaits.add(async(Dispatchers.IO) { lastOppOgSjekk(filPath, it, token) }) }
 			awaits.awaitAll()
 			val time = System.currentTimeMillis() - start
 			System.out.println("Time for lastOppOgSjekk for $bildeNavnPrefix: $time")
 		}
 	}
 
-	private suspend fun testOpplastingAvOfficeFormater() {
+	private suspend fun testOpplastingAvOfficeFormater(token: String) {
 		val officeNavnPrefix = "office"
 		val filPath = "/__files/$officeNavnPrefix"
 
 		runBlocking {
 			val awaits: MutableList<Deferred<Unit>> = mutableListOf()
 			val start = System.currentTimeMillis()
-			officeFileTypes.keys.forEach { awaits.add(async(Dispatchers.IO) { lastOppOgSjekk(filPath, it) }) }
+			officeFileTypes.keys.forEach { awaits.add(async(Dispatchers.IO) { lastOppOgSjekk(filPath, it, token) }) }
 			val time = System.currentTimeMillis() - start
 			System.out.println("Time for lastOppOgSjekk for $officeNavnPrefix: $time")
 		}
 	}
 
-	private fun lastOppOgSjekk( filSti: String, type: String) {
+	private fun lastOppOgSjekk( filSti: String, type: String, token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()) {
 		val skjemanr = defaultSkjemanr
 		val spraak = "nb-NO"
 		val vedlegg = listOf("W2")
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
+		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg, token)
 		val vedleggW2 = soknadDto.vedleggsListe.first { it.vedleggsnr == "W2" }.id
 
 		val filDto = lastOppFil(token, soknadDto.innsendingsId!!, vedleggW2!!, filSti+type)
@@ -249,7 +258,6 @@ class FilRestApiTest : ApplicationTest() {
 		assertEquals(filDto.body!!.storrelse, opplastetFil.body!!.byteArray.size)
 
 //		opplastetFil.body?.let { writeBytesToFile(it.byteArray, "target/delme-$type.pdf") }
-
 
 	}
 
@@ -322,12 +330,14 @@ class FilRestApiTest : ApplicationTest() {
 
 	@Test
 	fun sjekkAtOpplastingAvForStorFilGirFeilTest() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 		val vedlegg = listOf("N6", "W2")
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
+		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg, token)
 
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
@@ -356,12 +366,14 @@ class FilRestApiTest : ApplicationTest() {
 
 	@Test
 	fun sjekkAtOpplastingAvUlovligFilformatGirFeilTest() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 		val vedlegg = listOf("N6", "W2")
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
+		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg, token)
 
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
@@ -386,12 +398,14 @@ class FilRestApiTest : ApplicationTest() {
 
 	@Test
 	fun sjekkAtOpplastingAvKryptertFilGirFeilTest() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(anyString())).thenReturn(jwt)
+
 		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 		val vedlegg = listOf("N6", "W2")
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 
-		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
+		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg, token)
 
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
@@ -420,16 +434,17 @@ class FilRestApiTest : ApplicationTest() {
 	private fun opprettEnSoknad(
 		skjemanr: String,
 		spraak: String,
-		vedlegg: List<String>
+		vedlegg: List<String>,
+		authToken: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 	): DokumentSoknadDto {
 		val requestBody = SkjemaDtoTestBuilder(
 			skjemanr = skjemanr,
 			spraak = spraak,
 			vedleggsListe = vedlegg.map { SkjemaDokumentDtoTestBuilder(vedleggsnr = it).build() }
 		).build()
-		val dokumentSoknadDto = api.createSoknad(requestBody)
+		val dokumentSoknadDto = api.createSoknad(requestBody, authToken = authToken)
 			.assertSuccess()
 			.body
-		return api.getSoknadSendinn(dokumentSoknadDto.innsendingsId!!).assertSuccess().body
+		return api.getSoknadSendinn(dokumentSoknadDto.innsendingsId!!, authToken = authToken).assertSuccess().body
 	}
 }

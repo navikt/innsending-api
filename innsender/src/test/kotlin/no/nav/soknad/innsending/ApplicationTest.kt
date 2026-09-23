@@ -9,8 +9,10 @@ import no.nav.soknad.InnsendingApiApplication
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
+import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -36,8 +38,20 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @EnableMockOAuth2Server
 class ApplicationTest() {
 
+	@MockitoBean
+	protected lateinit var azureJwtDecoder: JwtDecoder
+
+	@MockitoBean
+	protected lateinit var tokenxJwtDecoder: JwtDecoder
+
 	@Autowired
 	lateinit var webTestClient: WebTestClient
+
+	@Value("\${auth.issuers.azuread.issuer-uri}")
+	protected val azureadUri: String = ""
+
+	@Value("\${auth.issuers.tokenx.issuer-uri}")
+	protected val tokenxUri: String = ""
 
 	val restTestClient: no.nav.soknad.innsending.utils.RestTestClient
 		get() = no.nav.soknad.innsending.utils.RestTestClient(webTestClient)

@@ -9,6 +9,7 @@ import no.nav.soknad.innsending.utils.TokenGenerator
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -35,21 +36,27 @@ class ConfigRestApiTest : ApplicationTest() {
 	fun setup() {
 		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
-		api.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, NOLOGIN_MAIN_SWITCH_DEFAULT_VALUE)
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagAzureOBOTokenAndJwt(scopes = "admin-access", navIdent = "Z123456")
+		`when`(azureJwtDecoder.decode(token)).thenReturn(jwt)
+
+		api.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, NOLOGIN_MAIN_SWITCH_DEFAULT_VALUE, authToken = token)
 			.assertSuccess()
-		api.setConfig(ConfigDefinition.NOLOGIN_MAX_SUBMISSIONS_COUNT, NOLOGIN_MAX_SUBMISSIONS_DEFAULT_VALUE)
+		api.setConfig(ConfigDefinition.NOLOGIN_MAX_SUBMISSIONS_COUNT, NOLOGIN_MAX_SUBMISSIONS_DEFAULT_VALUE, authToken = token)
 			.assertSuccess()
-		api.setConfig(ConfigDefinition.NOLOGIN_MAX_SUBMISSIONS_WINDOW_MINUTES, "5")
+		api.setConfig(ConfigDefinition.NOLOGIN_MAX_SUBMISSIONS_WINDOW_MINUTES, "5", authToken = token)
 			.assertSuccess()
-		api.setConfig(ConfigDefinition.NOLOGIN_MAX_FILE_UPLOADS_COUNT, "20")
+		api.setConfig(ConfigDefinition.NOLOGIN_MAX_FILE_UPLOADS_COUNT, "20", authToken = token)
 			.assertSuccess()
-		api.setConfig(ConfigDefinition.NOLOGIN_MAX_FILE_UPLOADS_WINDOW_MINUTES, "20")
+		api.setConfig(ConfigDefinition.NOLOGIN_MAX_FILE_UPLOADS_WINDOW_MINUTES, "20", authToken = token)
 			.assertSuccess()
 	}
 
 	@Test
 	fun `should update config value`() {
-		api.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on")
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagAzureOBOTokenAndJwt(scopes = "admin-access", navIdent = "Z123456")
+		`when`(azureJwtDecoder.decode(token)).thenReturn(jwt)
+
+		api.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on", authToken = token)
 			.assertSuccess()
 			.body.let {
 				assertEquals("on", it.value)
@@ -59,14 +66,20 @@ class ConfigRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `should fail on update when value is not one of the two allowed`() {
-		api.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "true")
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagAzureOBOTokenAndJwt(scopes = "admin-access", navIdent = "Z123456")
+		`when`(azureJwtDecoder.decode(token)).thenReturn(jwt)
+
+		api.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "true", authToken = token)
 			.assertClientError()
 	}
 
 	@Test
 	fun `should update with new integer value`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagAzureOBOTokenAndJwt(scopes = "admin-access", navIdent = "Z123456")
+		`when`(azureJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val newValue = NOLOGIN_MAX_SUBMISSIONS_DEFAULT_VALUE.toInt().plus(5).toString()
-		api.setConfig(ConfigDefinition.NOLOGIN_MAX_SUBMISSIONS_COUNT, newValue)
+		api.setConfig(ConfigDefinition.NOLOGIN_MAX_SUBMISSIONS_COUNT, newValue, authToken = token)
 			.assertSuccess()
 			.body.let {
 				assertEquals(newValue, it.value)
@@ -75,26 +88,37 @@ class ConfigRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `should fail on update when value is not an integer`() {
-		api.setConfig(ConfigDefinition.NOLOGIN_MAX_SUBMISSIONS_COUNT, "abc")
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagAzureOBOTokenAndJwt(scopes = "admin-access", navIdent = "Z123456")
+		`when`(azureJwtDecoder.decode(token)).thenReturn(jwt)
+
+		api.setConfig(ConfigDefinition.NOLOGIN_MAX_SUBMISSIONS_COUNT, "abc", authToken = token)
 			.assertClientError()
 	}
 
 	@Test
 	fun `should fail on update when value is a negative integer`() {
-		api.setConfig(ConfigDefinition.NOLOGIN_MAX_SUBMISSIONS_COUNT, "-5")
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagAzureOBOTokenAndJwt(scopes = "admin-access", navIdent = "Z123456")
+		`when`(azureJwtDecoder.decode(token)).thenReturn(jwt)
+
+		api.setConfig(ConfigDefinition.NOLOGIN_MAX_SUBMISSIONS_COUNT, "-5", authToken = token)
 			.assertClientError()
 	}
 
 	@Test
 	fun `should fail on update when new value is null`() {
-		api.setConfig(ConfigDefinition.NOLOGIN_MAX_SUBMISSIONS_COUNT, null)
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagAzureOBOTokenAndJwt(scopes = "admin-access", navIdent = "Z123456")
+		`when`(azureJwtDecoder.decode(token)).thenReturn(jwt)
+
+		api.setConfig(ConfigDefinition.NOLOGIN_MAX_SUBMISSIONS_COUNT, null, authToken = token)
 			.assertClientError()
 	}
 
 	@Test
 	fun `should reject token with incorrect scope`() {
-		val token = TokenGenerator(mockOAuth2Server).lagAzureOBOToken(scopes = "random-scope")
-		api.getConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, token)
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagAzureOBOTokenAndJwt(scopes = "random-scope", navIdent = "Z123456")
+		`when`(azureJwtDecoder.decode(token)).thenReturn(jwt)
+
+		api.getConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, authToken = token)
 			.assertHttpStatus(HttpStatus.FORBIDDEN)
 		api.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on", token)
 			.assertHttpStatus(HttpStatus.FORBIDDEN)

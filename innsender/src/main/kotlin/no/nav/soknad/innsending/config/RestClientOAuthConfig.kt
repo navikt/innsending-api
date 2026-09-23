@@ -1,23 +1,18 @@
 package no.nav.soknad.innsending.config
 
-import no.nav.security.token.support.client.core.ClientProperties
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
-import no.nav.security.token.support.client.spring.ClientConfigurationProperties
-import no.nav.soknad.arkivering.soknadsarkiverer.service.tokensupport.TokenService
-import no.nav.soknad.innsending.security.SubjectHandlerInterface
-import no.nav.soknad.innsending.util.Constants
-import no.nav.soknad.innsending.util.Constants.NAV_CONSUMER_ID
-import no.nav.soknad.innsending.util.MDCUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
-import org.springframework.http.HttpRequest
 import org.springframework.http.client.*
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
+import org.springframework.security.oauth2.core.AuthorizationGrantType
 import org.springframework.web.client.RestClient
 import java.time.Duration
 
@@ -45,16 +40,18 @@ class RestClientOAuthConfig(
 	@Profile("prod | dev")
 	@Qualifier("arenaApiRestClient")
 	fun arenaApiClient(
+		authorizedClientManager: OAuth2AuthorizedClientManager,
+		clientRegistrationRepository: ClientRegistrationRepository,
 		restConfig: RestConfig,
-		clientConfigProperties: ClientConfigurationProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService,
-		subjectHandler: SubjectHandlerInterface
-	) = restClientOAuth2Client(
-		restConfig.arenaUrl,
-		clientConfigProperties.registration["arena"]!!,
-		oAuth2AccessTokenService,
-		subjectHandler
-	)
+	): RestClient {
+		val oauth2Interceptor =
+			createOauth2Interceptor(authorizedClientManager, "arena", clientRegistrationRepository)
+		return RestClient.builder()
+			.baseUrl(restConfig.arenaUrl)
+			.requestFactory(timeouts())
+			.requestInterceptor(oauth2Interceptor)
+			.build()
+	}
 
 	@Bean
 	@Profile("!(prod | dev)")
@@ -66,17 +63,17 @@ class RestClientOAuthConfig(
 	@Profile("prod | dev")
 	@Qualifier("kodeverkApiClient")
 	fun kodeverkApiClient(
+		authorizedClientManager: OAuth2AuthorizedClientManager,
+		clientRegistrationRepository: ClientRegistrationRepository,
 		restConfig: RestConfig,
-		clientConfigProperties: ClientConfigurationProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService,
-		subjectHandler: SubjectHandlerInterface
 	): RestClient {
-		return restClientOAuth2Client(
-			restConfig.kodeverkUrl,
-			clientConfigProperties.registration["kodeverk"]!!,
-			oAuth2AccessTokenService,
-			subjectHandler
-		)
+		val oauth2Interceptor =
+			createOauth2Interceptor(authorizedClientManager, "kodeverk", clientRegistrationRepository)
+		return RestClient.builder()
+			.baseUrl(restConfig.kodeverkUrl)
+			.requestFactory(timeouts())
+			.requestInterceptor(oauth2Interceptor)
+			.build()
 	}
 
 	@Bean
@@ -92,14 +89,18 @@ class RestClientOAuthConfig(
 	@Profile("prod | dev")
 	@Qualifier("kontoregisterApiRestClient")
 	fun kontoregisterApiClient(
+		authorizedClientManager: OAuth2AuthorizedClientManager,
+		clientRegistrationRepository: ClientRegistrationRepository,
 		restConfig: RestConfig,
-		clientConfigProperties: ClientConfigurationProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService
-	) = restClientOAuth2Client(
-		restConfig.kontoregisterUrl + "/api/borger",
-		clientConfigProperties.registration["kontoregister"]!!,
-		oAuth2AccessTokenService
-	)
+	): RestClient {
+		val oauth2Interceptor =
+			createOauth2Interceptor(authorizedClientManager, "kontoregister", clientRegistrationRepository)
+		return RestClient.builder()
+			.baseUrl(restConfig.kontoregisterUrl + "/api/borger")
+			.requestFactory(timeouts())
+			.requestInterceptor(oauth2Interceptor)
+			.build()
+	}
 
 	@Bean
 	@Profile("!(prod | dev)")
@@ -107,19 +108,22 @@ class RestClientOAuthConfig(
 	fun kontoregisterApiClientWithoutAuth(restConfig: RestConfig) =
 		RestClient.builder().baseUrl(restConfig.kontoregisterUrl + "/api/borger").build()
 
-
 	@Bean
 	@Profile("prod | dev")
 	@Qualifier("soknadsmottakerRestClient")
 	fun soknadsmottakerRestClient(
+		authorizedClientManager: OAuth2AuthorizedClientManager,
+		clientRegistrationRepository: ClientRegistrationRepository,
 		restConfig: RestConfig,
-		clientConfigProperties: ClientConfigurationProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService
-	) = restClientOAuth2Client(
-		restConfig.soknadsMottakerHost,
-		clientConfigProperties.registration["soknadsmottaker"]!!,
-		oAuth2AccessTokenService
-	)
+	): RestClient {
+		val oauth2Interceptor =
+			createOauth2Interceptor(authorizedClientManager, "soknadsmottaker", clientRegistrationRepository)
+		return RestClient.builder()
+			.baseUrl(restConfig.soknadsMottakerHost)
+			.requestFactory(timeouts())
+			.requestInterceptor(oauth2Interceptor)
+			.build()
+	}
 
 	@Bean
 	@Profile("!(prod | dev)")
@@ -138,57 +142,44 @@ class RestClientOAuthConfig(
 		return factory
 	}
 
-	private fun restClientOAuth2Client(
-		baseUrl: String,
-		clientProperties: ClientProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService,
-		subjectHandler: SubjectHandlerInterface? = null
-	): RestClient {
+	/**
+	 * Privat hjelpemetode for å lage en gjenbrukbar interceptor.
+	 * Denne metoden fungerer for både 'jwt-bearer' (som krever en bruker-principal)
+	 * og 'client_credentials' (som ikke krever det).
+	 */
+	private fun createOauth2Interceptor(
+		authorizedClientManager: OAuth2AuthorizedClientManager,
+		clientRegistrationId: String,
+		clientRegistrationRepository: ClientRegistrationRepository
+	): ClientHttpRequestInterceptor {
+		return ClientHttpRequestInterceptor { request, body, execution ->
+			logger.info("createOauth2Interceptor for clientRegistrationId: $clientRegistrationId")
+			val clientRegistration = clientRegistrationRepository.findByRegistrationId(clientRegistrationId)
+				?: throw IllegalStateException("Fant ikke klient-registrering for '$clientRegistrationId'.")
 
-		val tokenService = TokenService(clientProperties, oAuth2AccessTokenService)
+			val authorizeRequestBuilder = OAuth2AuthorizeRequest.withClientRegistrationId(clientRegistrationId)
 
-		return RestClient.builder()
-			.baseUrl(baseUrl)
-			.requestFactory(timeouts())
-			.requestInterceptor(RequestHeaderInterceptor(tokenService, applicationName, subjectHandler))
-			.build()
-	}
-
-	class RequestHeaderInterceptor(
-		val tokenService: TokenService,
-		val applicationName: String,
-		val subjectHandler: SubjectHandlerInterface? = null
-	) :
-		ClientHttpRequestInterceptor {
-
-		val logger: Logger = LoggerFactory.getLogger(javaClass)
-
-		override fun intercept(
-			request: HttpRequest,
-			body: ByteArray,
-			execution: ClientHttpRequestExecution
-		): ClientHttpResponse {
-			val token = tokenService.getToken()
-			val callId = MDCUtil.callIdOrNew()
-
-			logger.info("Kaller service med callId: $callId")
-
-			request.headers.setBearerAuth(token ?: "")
-			request.headers.set(Constants.HEADER_CALL_ID, callId)
-			request.headers.set(NAV_CONSUMER_ID, applicationName)
-			request.headers.set(Constants.HEADER_INNSENDINGSID, MDC.get(Constants.MDC_INNSENDINGS_ID) ?: "")
-
-			try {
-				if (subjectHandler?.getUserIdFromToken() != null) {
-					request.headers.set(Constants.NAV_PERSON_IDENT, subjectHandler.getUserIdFromToken())
-				}
-			} catch (ex: Exception) {
-				logger.info("Ingen user funnet i token for callId $callId: $ex")
+			if (clientRegistration.authorizationGrantType == AuthorizationGrantType.CLIENT_CREDENTIALS) {
+				// ✅ For machine-to-machine flow, just use a static principal name
+				authorizeRequestBuilder.principal("m2m-service-account")
+			} else {
+				// ✅ For OBO (JWT-bearer), forward the current authenticated user
+				val principal = SecurityContextHolder.getContext().authentication
+					?: throw IllegalStateException("Ingen SecurityContext Authentication funnet for OBO flyt.")
+				authorizeRequestBuilder.principal(principal)
 			}
 
-			return execution.execute(request, body)
+			val authorizeRequest = authorizeRequestBuilder.build()
+
+			val authorizedClient = authorizedClientManager.authorize(authorizeRequest)
+				?: throw IllegalStateException(
+					"Kunne ikke autorisere klienten '$clientRegistrationId'. " +
+						"Sjekk konfigurasjon og grant-type."
+				)
+
+			request.headers.setBearerAuth(authorizedClient.accessToken.tokenValue)
+			execution.execute(request, body)
 		}
 	}
-
 
 }

@@ -16,7 +16,6 @@ import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.utils.ApiWebClient
-import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoV2TestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoV2TestBuilder
@@ -24,6 +23,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -58,22 +59,24 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 	fun setup() {
 		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
-		api.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on")
-			.assertSuccess()
+		configService.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on", "Z123456")
 	}
 
 	@Test
 	fun `delete no-login application removes only files for the requested application`() {
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
 		val innsendingsId = UUID.randomUUID()
 		val otherInnsendingsId = UUID.randomUUID()
-		val firstFile = api.uploadNologinFileV2(innsendingsId.toString(), "first").assertSuccess().body
-		val secondFile = api.uploadNologinFileV2(innsendingsId.toString(), "second").assertSuccess().body
-		val otherFile = api.uploadNologinFileV2(otherInnsendingsId.toString(), "other").assertSuccess().body
+		val firstFile = api.uploadNologinFileV2(innsendingsId.toString(), "first", authToken = token).assertSuccess().body
+		val secondFile = api.uploadNologinFileV2(innsendingsId.toString(), "second", authToken = token).assertSuccess().body
+		val otherFile = api.uploadNologinFileV2(otherInnsendingsId.toString(), "other", authToken = token).assertSuccess().body
 
-		api.deleteApplication(innsendingsId.toString(), ApiWebClient.ApplicationType.NOLOGIN)
+		api.deleteApplication(innsendingsId.toString(), ApiWebClient.ApplicationType.NOLOGIN, authToken = token)
 			.assertSuccess()
 			.assertHttpStatus(HttpStatus.NO_CONTENT)
-		api.deleteApplication(innsendingsId.toString(), ApiWebClient.ApplicationType.NOLOGIN)
+		api.deleteApplication(innsendingsId.toString(), ApiWebClient.ApplicationType.NOLOGIN, authToken = token)
 			.assertSuccess()
 			.assertHttpStatus(HttpStatus.NO_CONTENT)
 
@@ -87,27 +90,30 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal sende inn soknad og handtere vedlegg med ulike statuser (old)`() {
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
 		val innsendingId = UUID.randomUUID().toString()
 
 		val navId1 = "personal-id"
-		val file1 = api.uploadNologinFileV2(vedleggId = navId1, innsendingId = innsendingId)
+		val file1 = api.uploadNologinFileV2(vedleggId = navId1, innsendingId = innsendingId, authToken = token)
 			.assertSuccess()
 			.body
 
 		val navId2 = "e9logo"
-		api.uploadNologinFileV2(vedleggId = navId2, innsendingId = innsendingId)
+		api.uploadNologinFileV2(vedleggId = navId2, innsendingId = innsendingId, authToken = token)
 			.assertSuccess()
 			.body.let {
 				assertNotNull(it.id)
 			}
 
 		val navId3 = "dj5jkj"
-		val file3 = api.uploadNologinFileV2(vedleggId = navId3, innsendingId = innsendingId)
+		val file3 = api.uploadNologinFileV2(vedleggId = navId3, innsendingId = innsendingId, authToken = token)
 			.assertSuccess()
 			.body
 
 		val navId4 = "dj5jkj-1"
-		val file4 = api.uploadNologinFileV2(vedleggId = navId4, innsendingId = innsendingId)
+		val file4 = api.uploadNologinFileV2(vedleggId = navId4, innsendingId = innsendingId, authToken = token)
 			.assertSuccess()
 			.body
 
@@ -169,7 +175,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 			)
 			.build()
 
-		val kvittering = api.sendInnNologinSoknad(skjemaDto)
+		val kvittering = api.sendInnNologinSoknad(skjemaDto, token)
 			.assertSuccess()
 			.body
 		assertEquals(kvittering.hoveddokumentRef, null, "Skal ikke returnere hoveddokumentRef ved nologin")
@@ -223,27 +229,30 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal sende inn soknad og handtere vedlegg med ulike statuser`() {
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
 		val innsendingId = UUID.randomUUID().toString()
 
 		val navId1 = "personal-id"
-		val file1 = api.uploadNologinFileV2(vedleggId = navId1, innsendingId = innsendingId)
+		val file1 = api.uploadNologinFileV2(vedleggId = navId1, innsendingId = innsendingId, authToken = token)
 			.assertSuccess()
 			.body
 
 		val navId2 = "e9logo"
-		api.uploadNologinFileV2(vedleggId = navId2, innsendingId = innsendingId)
+		api.uploadNologinFileV2(vedleggId = navId2, innsendingId = innsendingId, authToken = token)
 			.assertSuccess()
 			.body.let {
 				assertNotNull(it.id)
 			}
 
 		val navId3 = "dj5jkj"
-		val file3 = api.uploadNologinFileV2(vedleggId = navId3, innsendingId = innsendingId)
+		val file3 = api.uploadNologinFileV2(vedleggId = navId3, innsendingId = innsendingId, authToken = token)
 			.assertSuccess()
 			.body
 
 		val navId4 = "dj5jkj-1"
-		val file4 = api.uploadNologinFileV2(vedleggId = navId4, innsendingId = innsendingId)
+		val file4 = api.uploadNologinFileV2(vedleggId = navId4, innsendingId = innsendingId, authToken = token)
 			.assertSuccess()
 			.body
 
@@ -286,7 +295,8 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 				attachmentSomSendesSenere,
 				attachmentAnnenDokumentasjon1,
 				attachmentAnnenDokumentasjon2
-			)
+			),
+			authToken = token
 		)
 			.assertSuccess()
 			.body
@@ -345,27 +355,30 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `Skal få feilmelding ved forsøk på å sende inn søknad på nytt`() {
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
 		val innsendingId = UUID.randomUUID().toString()
 
 		val navId1 = "personal-id"
-		val file1 = api.uploadNologinFileV2(vedleggId = navId1, innsendingId = innsendingId)
+		val file1 = api.uploadNologinFileV2(vedleggId = navId1, innsendingId = innsendingId, authToken = token)
 			.assertSuccess()
 			.body
 
 		val navId2 = "e9logo"
-		api.uploadNologinFileV2(vedleggId = navId2, innsendingId = innsendingId)
+		api.uploadNologinFileV2(vedleggId = navId2, innsendingId = innsendingId, authToken = token)
 			.assertSuccess()
 			.body.let {
 				assertNotNull(it.id)
 			}
 
 		val navId3 = "dj5jkj"
-		val file3 = api.uploadNologinFileV2(vedleggId = navId3, innsendingId = innsendingId)
+		val file3 = api.uploadNologinFileV2(vedleggId = navId3, innsendingId = innsendingId, authToken = token)
 			.assertSuccess()
 			.body
 
 		val navId4 = "dj5jkj-1"
-		val file4 = api.uploadNologinFileV2(vedleggId = navId4, innsendingId = innsendingId)
+		val file4 = api.uploadNologinFileV2(vedleggId = navId4, innsendingId = innsendingId, authToken = token)
 			.assertSuccess()
 			.body
 
@@ -408,7 +421,8 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 				attachmentSomSendesSenere,
 				attachmentAnnenDokumentasjon1,
 				attachmentAnnenDokumentasjon2
-			)
+			),
+			authToken = token
 		)
 			.assertSuccess()
 			.body
@@ -438,7 +452,8 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 				attachmentSomSendesSenere,
 				attachmentAnnenDokumentasjon1,
 				attachmentAnnenDokumentasjon2
-			)
+			),
+			authToken = token
 		)
 			.assertClientError()
 			.errorBody.let {
@@ -448,10 +463,13 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 		@Test
 	fun `skal sanitere vedleggstittel og -label`() {
+			val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
+			`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
 		val innsendingId = UUID.randomUUID().toString()
 
 		val navId3 = "dj5jkj"
-		val file3 = api.uploadNologinFileV2(vedleggId = navId3, innsendingId = innsendingId)
+		val file3 = api.uploadNologinFileV2(vedleggId = navId3, innsendingId = innsendingId, authToken = token)
 			.assertSuccess()
 			.body
 
@@ -465,7 +483,8 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 		val submitResponse = api.submitNologinApplication(
 			innsendingId,
-			attachments = listOf(attachmentAnnenDokumentasjon)
+			attachments = listOf(attachmentAnnenDokumentasjon),
+			authToken = token,
 		)
 			.assertSuccess()
 			.body
@@ -504,6 +523,9 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal feile dersom vedleggene ikke har unike id'er (old)`() {
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
 		val innsendingId = UUID.randomUUID().toString()
 		val vedleggId = "dj5jkj"
 
@@ -527,7 +549,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 			.medVedlegg(listOf(vedlegg1, vedlegg2))
 			.build()
 
-		api.sendInnNologinSoknad(skjemaDto)
+		api.sendInnNologinSoknad(skjemaDto, token)
 			.assertClientError()
 			.errorBody.let {
 				assertEquals("Vedleggsliste inneholder vedlegg med duplikate id'er (fyllutId)", it.message)
@@ -536,6 +558,9 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal feile dersom vedlegg mangler id (old)`() {
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
 		val innsendingId = UUID.randomUUID().toString()
 
 		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
@@ -551,7 +576,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 			.medVedlegg(listOf(vedlegg1))
 			.build()
 
-		api.sendInnNologinSoknad(skjemaDto)
+		api.sendInnNologinSoknad(skjemaDto, authToken = token)
 			.assertClientError()
 			.errorBody.let {
 				assertEquals("Vedleggsliste inneholder vedlegg uten id (fyllutId)", it.message)
@@ -560,7 +585,10 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal avvise innsending dersom soknad allerede er sendt inn (old)`() {
-		val file1 = api.uploadNologinFile(vedleggId = "abcdef")
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
+		val file1 = api.uploadNologinFile(vedleggId = "abcdef", authToken = token)
 			.assertSuccess()
 			.body
 		val innsendingId = file1.innsendingId.toString()
@@ -578,10 +606,10 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 			.medVedlegg(listOf(vedlegg1))
 			.build()
 
-		api.sendInnNologinSoknad(skjemaDto)
+		api.sendInnNologinSoknad(skjemaDto, token)
 			.assertSuccess()
 
-		api.sendInnNologinSoknad(skjemaDto)
+		api.sendInnNologinSoknad(skjemaDto, token)
 			.assertClientError()
 			.errorBody.let {
 				assertEquals("Søknad med innsendingsId ${skjemaDto.innsendingsId} finnes allerede", it.message)
@@ -590,12 +618,16 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal avvise innsending dersom soknad allerede er sendt inn`() {
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
 		val innsendingsId = UUID.randomUUID().toString()
 
 		api.submitNologinApplication(
 			innsendingsId = innsendingsId,
 			formNumber = "NAV 11-12.12",
 			title = "Testskjema",
+			authToken = token
 		)
 			.assertSuccess()
 
@@ -603,6 +635,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 			innsendingsId = innsendingsId,
 			formNumber = "NAV 11-12.12",
 			title = "Testskjema",
+			authToken = token
 		)
 			.assertClientError()
 			.errorBody.let {
@@ -612,7 +645,10 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal avvise innsending dersom nologin main switch er av (old)`() {
-		val file1 = api.uploadNologinFile(vedleggId = "abcdef")
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
+		val file1 = api.uploadNologinFile(vedleggId = "abcdef", authToken = token)
 			.assertSuccess()
 			.body
 		val innsendingId = file1.innsendingId.toString()
@@ -631,7 +667,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 			.build()
 
 		configService.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "off", "test")
-		api.sendInnNologinSoknad(skjemaDto)
+		api.sendInnNologinSoknad(skjemaDto, token)
 			.assertHttpStatus(HttpStatus.SERVICE_UNAVAILABLE)
 			.errorBody.let { body ->
 				assertEquals("temporarilyUnavailable", body.errorCode)
@@ -640,11 +676,15 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal avvise innsending dersom nologin main switch er av`() {
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
 		configService.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "off", "test")
 		api.submitNologinApplication(
 			innsendingsId = UUID.randomUUID().toString(),
 			formNumber = "NAV 11-12.12",
 			title = "Testskjema",
+			authToken = token
 		)
 			.assertHttpStatus(HttpStatus.SERVICE_UNAVAILABLE)
 			.errorBody.let { body ->
@@ -654,7 +694,10 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal sende inn søknad uten brukerId (old)`() {
-		val file1 = api.uploadNologinFile(vedleggId = "abcdef")
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
+		val file1 = api.uploadNologinFile(vedleggId = "abcdef", authToken = token)
 			.assertSuccess()
 			.body
 		val innsendingId = file1.innsendingId.toString()
@@ -673,7 +716,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 			.medVedlegg(listOf(vedlegg1))
 			.build()
 
-		api.sendInnNologinSoknad(skjemaDto)
+		api.sendInnNologinSoknad(skjemaDto, authToken = token)
 			.assertSuccess()
 
 		val slotSoknad = slot<DokumentSoknadDto>()
@@ -696,6 +739,9 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal sende inn søknad uten brukerId`() {
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
 		val innsendingsId = UUID.randomUUID().toString()
 		val avsender = AvsenderDto(
 			id = "123456789",
@@ -707,6 +753,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 			innsendingsId = innsendingsId,
 			brukerId = null,
 			avsender = avsender,
+			authToken = token
 		)
 			.assertSuccess()
 
@@ -732,6 +779,9 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `skal avvise innsending med ugyldig avsenderid i SubmitApplicationRequest`() {
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
 		api.submitNologinApplication(
 			innsendingsId = UUID.randomUUID().toString(),
 			brukerId = null,
@@ -740,7 +790,8 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 				idType = AvsenderDto.IdType.ORGNR,
 				navn = "Are Avsender AS",
 			),
-		)
+			authToken = token
+			)
 			.assertHttpStatus(HttpStatus.BAD_REQUEST)
 			.assertErrorCode(ErrorCode.ILLEGAL_ARGUMENT)
 			.errorBody.let {
@@ -750,8 +801,11 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `innsending skal feile dersom hverken avsender eller bruker er satt (old)`() {
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
 		val innsendingId = UUID.randomUUID().toString()
-		val file1 = api.uploadNologinFileV2(innsendingId = innsendingId, vedleggId = "abcdef")
+		val file1 = api.uploadNologinFileV2(innsendingId = innsendingId, vedleggId = "abcdef", authToken = token)
 			.assertSuccess()
 			.body
 
@@ -769,7 +823,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 			.medVedlegg(listOf(vedlegg1))
 			.build()
 
-		api.sendInnNologinSoknad(skjemaDto)
+		api.sendInnNologinSoknad(skjemaDto, authToken = token)
 			.assertClientError()
 			.errorBody.let {
 				assertEquals("Hverken bruker eller avsender er satt", it.message)
@@ -778,10 +832,14 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `innsending skal feile dersom hverken avsender eller bruker er satt`() {
+		val (token, mockJwtAzure) = TokenGenerator(mockOAuth2Server).lagAzureM2MTokenAndJwt("nologin-access", azureadUri)
+		`when`(azureJwtDecoder.decode(token)).thenReturn(mockJwtAzure)
+
 		api.submitNologinApplication(
 			innsendingsId = UUID.randomUUID().toString(),
 			brukerId = null,
 			avsender = null,
+			authToken = token
 		)
 			.assertClientError()
 			.errorBody.let {
