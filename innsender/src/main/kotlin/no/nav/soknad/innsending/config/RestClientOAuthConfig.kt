@@ -35,6 +35,7 @@ class RestClientOAuthConfig(
 			.requestFactory(timeouts(readTimeoutMinutes = 2))
 			.build()
 	}
+
 	@Bean
 	@Profile("prod | dev")
 	@Qualifier("arenaApiRestClient")
@@ -83,7 +84,6 @@ class RestClientOAuthConfig(
 	): RestClient {
 		return RestClient.builder().baseUrl(restConfig.kodeverkUrl).build()
 	}
-
 
 	@Bean
 	@Profile("prod | dev")

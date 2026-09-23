@@ -8,7 +8,6 @@ import no.nav.soknad.innsending.service.config.annotation.VerifyConfigValue
 import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
-import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.stringextensions.toUUID
 import org.springframework.http.HttpStatus

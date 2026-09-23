@@ -11,10 +11,6 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpHeaders
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
-import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
-import org.springframework.security.oauth2.core.OAuth2AuthorizationException
-import org.springframework.security.oauth2.core.OAuth2Error
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.netty.http.client.HttpClient
 import reactor.netty.http.client.HttpClientRequest
@@ -67,24 +63,5 @@ class SafClientConfig(
 				)
 			}
 	)
-/*
-
-	private fun ahentAccessTokenForSaf(): String {
-		val authorizeRequest = OAuth2AuthorizeRequest.withClientRegistrationId(safMaskintilmaskin)
-			.principal(m2mPrincipalName)
-			.build()
-
-		val authorizedClient = authorizedClientManager.authorize(authorizeRequest)
-			?: throw OAuth2AuthorizationException(
-				OAuth2Error(
-					"invalid_token",
-					"Kunne ikke hente access token for klient '$safMaskintilmaskin'. Sjekk konfigurasjon og grant-type.",
-					null
-				)
-			)
-
-		return authorizedClient.accessToken.tokenValue
-	}
-*/
 
 }

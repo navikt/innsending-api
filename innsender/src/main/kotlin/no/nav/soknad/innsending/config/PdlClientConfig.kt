@@ -37,9 +37,6 @@ class PdlClientConfig(
 	private val writeTimeoutSeconds = 30
 	private val maxRetries = 3L
 
-	// Registration-id fra spring.security.oauth2.client.registration.tokenx-pdl (application.yml)
-	private val tokenxPdlRegistrationId = "tokenx-pdl"
-
 	@Bean("pdlGraphQLClient")
 	fun graphQLClient() = GraphQLWebClient(
 		url = "${restConfig.pdlUrl}/graphql",
@@ -88,30 +85,5 @@ class PdlClientConfig(
 					).doOnError { error -> logger.error("Error in call to PDL - ${error.messageForLog}", error) }
 			}
 	)
-
-/*
-
-
-	private fun hentAccessTokenForPdl(): String {
-		val authentication = SecurityContextHolder.getContext().authentication
-			?: throw OAuth2AuthorizationException(
-				OAuth2Error("invalid_principal", "Ingen autentisert bruker i SecurityContext", null)
-			)
-		val authorizeRequest = OAuth2AuthorizeRequest.withClientRegistrationId("tokenx-pdl")
-			.principal(authentication)
-			.build()
-
-		val authorizedClient = authorizedClientManager.authorize(authorizeRequest)
-			?: throw OAuth2AuthorizationException(
-				OAuth2Error(
-					"invalid_token",
-					"Kunne ikke hente access token for klient 'tokenx-pdl'. Sjekk konfigurasjon og grant-type.",
-					null
-				)
-			)
-
-		return authorizedClient.accessToken.tokenValue
-	}
-*/
 
 }

@@ -16,11 +16,6 @@ import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
 import no.nav.soknad.innsending.util.Constants
-/*
-import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH
-import no.nav.soknad.innsending.util.Constants.CLAIM_ACR_LEVEL_4
-import no.nav.soknad.innsending.util.Constants.TOKENX
-*/
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.mapping.SkjemaDokumentSoknadTransformer
 import no.nav.soknad.innsending.util.mapping.mapTilSkjemaDto

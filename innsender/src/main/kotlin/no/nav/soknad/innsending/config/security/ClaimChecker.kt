@@ -49,43 +49,6 @@ class ClaimChecker(
 		}
 
 		return oneOk
-/*
-
-		val requiredRoles = requiredClaims.filter{it.contains("roles=")}.map { it.substringAfter("roles=") }.map { it.split(" ") }.flatten()
-		if (!requiredRoles.isEmpty()) {
-			val roles = jwt
-				.getClaimAsStringList("roles")
-				?: emptyList()
-			val harAlleRoller = requiredRoles.all { requiredRole -> roles.contains(requiredRole) }
-			if (!harAlleRoller) {
-				log.info("Avvist: mangler ett eller flere påkrevde roller. Har: $roles, krever: $requiredRoles")
-				return false
-			}
-		}
-
-		val requiredScopes: List<String> =
-			when (val claim = requiredClaims.find { it.contains("scp=") || it.contains("scope=") }) {
-				is String -> if (claim.substringAfter("=").contains(" "))
-					claim.substringAfter("=").split(" ") else listOf(claim.substringAfter("="))
-				else -> emptyList()
-			}
-
-		if (requiredScopes.isEmpty()) return true
-
-		val scopes: List<String> =
-			when (val claim = jwt.claims["scp"] ?: jwt.claims["scope"]) {
-				is String -> claim.split(" ")
-				is Collection<*> -> claim.filterIsInstance<String>()
-				else -> emptyList()
-			}
-		val harAlleScopes = requiredScopes.all { scope -> scopes.contains(scope) }
-
-		if (!harAlleScopes) {
-			log.info("Avvist: mangler ett eller flere påkrevde scopes. Har: $scopes, krever: $requiredScopes")
-		}
-
-		return harAlleScopes
-*/
 	}
 
 	private fun checkOneClaim(jwt: org.springframework.security.oauth2.jwt.Jwt, claimName: String, requiredValue: String): Boolean {
@@ -99,7 +62,6 @@ class ClaimChecker(
 		val claims: List<String> =
 			claimValue.removeSurrounding("[", "]").split(", ", " ").map { it.trim() }
 
-		//log.info("TMP: claimName=$claimName, claimValue=$claimValue, requiredValues=$requiredValues")
 		return requiredValues.all { required -> claims.contains(required) }
 
 	}
