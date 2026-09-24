@@ -1,5 +1,17 @@
 # innsending-api
 
+## OpenAPI compatibility
+
+Version 2.0.0 removes the unused `/fyllUt/v2/*`, legacy `/v1/nologin-*`,
+`GET /ekstern/v1/skjema/{skjemanr}/soknader`, and unused Send Inn attachment
+read operations. The disabled `/frontend/v1/soknad` and
+`/frontend/v1/ettersendPaSkjema` creation operations are removed together with
+the corresponding page in `send-inn-frontend`. Deploy that frontend change
+before deploying this API change.
+
+`DELETE /fyllUt/v1/soknad/{innsendingsId}` remains available because it still
+receives production traffic. External ettersending and oppgaver APIs are unchanged.
+
 Backend for innsending av dokumenter. Brukes av [FyllUt](https://github.com/navikt/skjemabygging-formio)
 og [SendInn](https://github.com/navikt/send-inn-frontend). Før søknaden blir sendt inn mellomlagres den sammen med
 metadataen i `innsending-api`,og når søknaden sendes inn blir metadataen for søknaden sendt
