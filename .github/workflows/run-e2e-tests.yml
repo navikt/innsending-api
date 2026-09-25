@@ -41,7 +41,7 @@ jobs:
       - name: 'Run e2e tests'
         uses: navikt/archiving-infrastructure/.github/checkout-and-build@main
         with:
-          component_name: archiving-infrastructure
+          component_name: archiving-infrastructure@refactor/use-application-nologin-api
           sub_directory: system-tests
           skip_tests: false
           run_docker_build: false
