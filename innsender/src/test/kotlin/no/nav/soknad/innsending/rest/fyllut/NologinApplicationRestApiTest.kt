@@ -18,8 +18,6 @@ import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.TokenGenerator
-import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoV2TestBuilder
-import no.nav.soknad.innsending.utils.builders.SkjemaDtoV2TestBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
@@ -85,141 +83,6 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		}
 	}
 
-	@Test
-	fun `skal sende inn soknad og handtere vedlegg med ulike statuser (old)`() {
-		val innsendingId = UUID.randomUUID().toString()
-
-		val navId1 = "personal-id"
-		val file1 = api.uploadNologinFileV2(vedleggId = navId1, innsendingId = innsendingId)
-			.assertSuccess()
-			.body
-
-		val navId2 = "e9logo"
-		api.uploadNologinFileV2(vedleggId = navId2, innsendingId = innsendingId)
-			.assertSuccess()
-			.body.let {
-				assertNotNull(it.id)
-			}
-
-		val navId3 = "dj5jkj"
-		val file3 = api.uploadNologinFileV2(vedleggId = navId3, innsendingId = innsendingId)
-			.assertSuccess()
-			.body
-
-		val navId4 = "dj5jkj-1"
-		val file4 = api.uploadNologinFileV2(vedleggId = navId4, innsendingId = innsendingId)
-			.assertSuccess()
-			.body
-
-		val vedleggLegitimasjon = SkjemaDokumentDtoV2TestBuilder(
-			vedleggsnr = "K2",
-			tittel = "Norsk pass",
-			label = "Norsk pass",
-			pakrevd = true,
-			formioId = navId1,
-			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
-			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(file1.id.toString()),
-		).build()
-
-		val vedleggSomSendesSenere = SkjemaDokumentDtoV2TestBuilder(
-			vedleggsnr = "T4",
-			tittel = "Kursbevis",
-			label = "Kursbevis for førstehjelpskurs",
-			pakrevd = true,
-			formioId = navId2,
-			opplastingsStatus = OpplastingsStatusDto.SendSenere,
-			filIdListe = null,
-		).build()
-
-		val vedleggAnnenDokumentasjon1 = SkjemaDokumentDtoV2TestBuilder(
-			vedleggsnr = "N6",
-			tittel = "Annen dokumentasjon",
-			label = "Kvittering fra apotek",
-			// propertyNavn = "annenDokumentasjon", <-- brukes ikke ved nologin
-			pakrevd = false,
-			formioId = navId3,
-			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
-			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(file3.id.toString()),
-		).build()
-
-		val vedleggAnnenDokumentasjon2 = SkjemaDokumentDtoV2TestBuilder(
-			vedleggsnr = "N6",
-			tittel = "Annen dokumentasjon",
-			label = "Førerkort",
-			// propertyNavn = "annenDokumentasjon", <-- brukes ikke ved nologin
-			pakrevd = false,
-			formioId = navId4,
-			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
-			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(file4.id.toString()),
-		).build()
-
-		val skjemaDto = SkjemaDtoV2TestBuilder()
-			.medBrukerId("12345678901")
-			.medInnsendingsId(innsendingId)
-			.medVedlegg(
-				listOf(
-					vedleggLegitimasjon,
-					vedleggSomSendesSenere,
-					vedleggAnnenDokumentasjon1,
-					vedleggAnnenDokumentasjon2
-				)
-			)
-			.build()
-
-		val kvittering = api.sendInnNologinSoknad(skjemaDto)
-			.assertSuccess()
-			.body
-		assertEquals(kvittering.hoveddokumentRef, null, "Skal ikke returnere hoveddokumentRef ved nologin")
-		assertEquals(1, kvittering.skalEttersendes!!.size)
-		assertEquals(3, kvittering.innsendteVedlegg!!.size)
-		assertEquals(0, kvittering.skalSendesAvAndre!!.size)
-
-		val vedleggT4Ettersending = kvittering.skalEttersendes!!.first()
-		assertEquals("Kursbevis for førstehjelpskurs", vedleggT4Ettersending.tittel)
-
-		assertNotNull(kvittering.innsendteVedlegg!!.firstOrNull { it.tittel == "Førerkort" })
-		assertNotNull(kvittering.innsendteVedlegg!!.firstOrNull { it.tittel == "Kvittering fra apotek" })
-
-		val slotSoknad = slot<DokumentSoknadDto>()
-		val slotVedleggsliste = slot<List<VedleggDto>>()
-		val slotAvsender = slot<AvsenderDto>()
-		val slotBruker = slot<BrukerDto?>()
-		verify(timeout = 5000, exactly = 1) {
-			soknadsmottaker.sendInnSoknad(
-				capture(slotSoknad),
-				capture(slotVedleggsliste),
-				capture(slotAvsender),
-				captureNullable(slotBruker)
-			)
-		}
-
-		assertEquals(innsendingId, slotSoknad.captured.innsendingsId)
-		val innsendteDokumenter = slotVedleggsliste.captured
-		assertEquals(6, innsendteDokumenter.size)
-
-		val innsendtK2 = innsendteDokumenter.firstOrNull { it.vedleggsnr == vedleggLegitimasjon.vedleggsnr }
-		assertNotNull(innsendtK2)
-
-		val vedleggT4 = innsendteDokumenter.firstOrNull { it.vedleggsnr == vedleggSomSendesSenere.vedleggsnr }
-		assertNull(vedleggT4)
-
-		val innsendtN6_1 =
-			innsendteDokumenter.firstOrNull { it.vedleggsnr == vedleggAnnenDokumentasjon1.vedleggsnr && it.tittel == vedleggAnnenDokumentasjon1.tittel }
-		assertNotNull(innsendtN6_1)
-
-		val innsendtN6_2 =
-			innsendteDokumenter.firstOrNull { it.vedleggsnr == vedleggAnnenDokumentasjon2.vedleggsnr && it.tittel == vedleggAnnenDokumentasjon2.tittel }
-		assertNotNull(innsendtN6_2)
-
-		val innsendingskvittering = innsendteDokumenter.firstOrNull { it.vedleggsnr == Constants.KVITTERINGS_NR }
-		assertNotNull(innsendingskvittering)
-
-		val hoveddokumentListe = innsendteDokumenter.filter { it.erHoveddokument }
-		assertEquals(2, hoveddokumentListe.size)
-	}
 
 	@Test
 	fun `skal sende inn soknad og handtere vedlegg med ulike statuser`() {
@@ -502,91 +365,8 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		assertEquals(2, hoveddokumentListe.size)
 	}
 
-	@Test
-	fun `skal feile dersom vedleggene ikke har unike id'er (old)`() {
-		val innsendingId = UUID.randomUUID().toString()
-		val vedleggId = "dj5jkj"
 
-		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
-			vedleggsnr = "N6",
-			tittel = "Annen dokumentasjon",
-			label = "Kvittering fra apotek",
-			formioId = vedleggId,
-		).build()
 
-		val vedlegg2 = SkjemaDokumentDtoV2TestBuilder(
-			vedleggsnr = "N6",
-			tittel = "Annen dokumentasjon",
-			label = "Førerkort",
-			formioId = vedleggId,
-		).build()
-
-		val skjemaDto = SkjemaDtoV2TestBuilder()
-			.medBrukerId("12345678901")
-			.medInnsendingsId(innsendingId)
-			.medVedlegg(listOf(vedlegg1, vedlegg2))
-			.build()
-
-		api.sendInnNologinSoknad(skjemaDto)
-			.assertClientError()
-			.errorBody.let {
-				assertEquals("Vedleggsliste inneholder vedlegg med duplikate id'er (fyllutId)", it.message)
-			}
-	}
-
-	@Test
-	fun `skal feile dersom vedlegg mangler id (old)`() {
-		val innsendingId = UUID.randomUUID().toString()
-
-		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
-			vedleggsnr = "N6",
-			tittel = "Annen dokumentasjon",
-			label = "Kvittering fra apotek",
-			formioId = null,
-		).build()
-
-		val skjemaDto = SkjemaDtoV2TestBuilder()
-			.medBrukerId("12345678901")
-			.medInnsendingsId(innsendingId)
-			.medVedlegg(listOf(vedlegg1))
-			.build()
-
-		api.sendInnNologinSoknad(skjemaDto)
-			.assertClientError()
-			.errorBody.let {
-				assertEquals("Vedleggsliste inneholder vedlegg uten id (fyllutId)", it.message)
-			}
-	}
-
-	@Test
-	fun `skal avvise innsending dersom soknad allerede er sendt inn (old)`() {
-		val file1 = api.uploadNologinFile(vedleggId = "abcdef")
-			.assertSuccess()
-			.body
-		val innsendingId = file1.innsendingId.toString()
-
-		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
-			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
-			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(file1.filId.toString()),
-			vedleggsnr = "abcdef",
-		).build()
-
-		val skjemaDto = SkjemaDtoV2TestBuilder()
-			.medBrukerId("12345678901")
-			.medInnsendingsId(innsendingId)
-			.medVedlegg(listOf(vedlegg1))
-			.build()
-
-		api.sendInnNologinSoknad(skjemaDto)
-			.assertSuccess()
-
-		api.sendInnNologinSoknad(skjemaDto)
-			.assertClientError()
-			.errorBody.let {
-				assertEquals("Søknad med innsendingsId ${skjemaDto.innsendingsId} finnes allerede", it.message)
-			}
-	}
 
 	@Test
 	fun `skal avvise innsending dersom soknad allerede er sendt inn`() {
@@ -610,33 +390,6 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 			}
 	}
 
-	@Test
-	fun `skal avvise innsending dersom nologin main switch er av (old)`() {
-		val file1 = api.uploadNologinFile(vedleggId = "abcdef")
-			.assertSuccess()
-			.body
-		val innsendingId = file1.innsendingId.toString()
-
-		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
-			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
-			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(file1.filId.toString()),
-			vedleggsnr = "abcdef",
-		).build()
-
-		val skjemaDto = SkjemaDtoV2TestBuilder()
-			.medBrukerId("12345678901")
-			.medInnsendingsId(innsendingId)
-			.medVedlegg(listOf(vedlegg1))
-			.build()
-
-		configService.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "off", "test")
-		api.sendInnNologinSoknad(skjemaDto)
-			.assertHttpStatus(HttpStatus.SERVICE_UNAVAILABLE)
-			.errorBody.let { body ->
-				assertEquals("temporarilyUnavailable", body.errorCode)
-			}
-	}
 
 	@Test
 	fun `skal avvise innsending dersom nologin main switch er av`() {
@@ -652,47 +405,6 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 			}
 	}
 
-	@Test
-	fun `skal sende inn søknad uten brukerId (old)`() {
-		val file1 = api.uploadNologinFile(vedleggId = "abcdef")
-			.assertSuccess()
-			.body
-		val innsendingId = file1.innsendingId.toString()
-
-		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
-			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
-			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(file1.filId.toString()),
-			vedleggsnr = "abcdef",
-		).build()
-
-		val skjemaDto = SkjemaDtoV2TestBuilder()
-			.utenBrukerId()
-			.medAvsender("Are Avsender")
-			.medInnsendingsId(innsendingId)
-			.medVedlegg(listOf(vedlegg1))
-			.build()
-
-		api.sendInnNologinSoknad(skjemaDto)
-			.assertSuccess()
-
-		val slotSoknad = slot<DokumentSoknadDto>()
-		val slotVedleggsliste = slot<List<VedleggDto>>()
-		val slotAvsender = slot<AvsenderDto>()
-		val slotBruker = slot<BrukerDto?>()
-		verify(timeout = 5000, exactly = 1) {
-			soknadsmottaker.sendInnSoknad(
-				capture(slotSoknad),
-				capture(slotVedleggsliste),
-				capture(slotAvsender),
-				captureNullable(slotBruker)
-			)
-		}
-		assertNull(slotBruker.captured)
-		val actualAvsender = slotAvsender.captured
-		assertNotNull(actualAvsender)
-		assertEquals("Are Avsender", actualAvsender.navn)
-	}
 
 	@Test
 	fun `skal sende inn søknad uten brukerId`() {
@@ -748,33 +460,6 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 			}
 	}
 
-	@Test
-	fun `innsending skal feile dersom hverken avsender eller bruker er satt (old)`() {
-		val innsendingId = UUID.randomUUID().toString()
-		val file1 = api.uploadNologinFileV2(innsendingId = innsendingId, vedleggId = "abcdef")
-			.assertSuccess()
-			.body
-
-		val vedlegg1 = SkjemaDokumentDtoV2TestBuilder(
-			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
-			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(file1.id.toString()),
-			vedleggsnr = "abcdef",
-		).build()
-
-		val skjemaDto = SkjemaDtoV2TestBuilder()
-			.utenBrukerId()
-			.utenAvsender()
-			.medInnsendingsId(innsendingId)
-			.medVedlegg(listOf(vedlegg1))
-			.build()
-
-		api.sendInnNologinSoknad(skjemaDto)
-			.assertClientError()
-			.errorBody.let {
-				assertEquals("Hverken bruker eller avsender er satt", it.message)
-			}
-	}
 
 	@Test
 	fun `innsending skal feile dersom hverken avsender eller bruker er satt`() {

@@ -19,11 +19,9 @@ import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.FilDto
 import no.nav.soknad.innsending.model.FileDto
 import no.nav.soknad.innsending.model.KvitteringsDto
-import no.nav.soknad.innsending.model.LastOppFilResponse
 import no.nav.soknad.innsending.model.LospostDto
 import no.nav.soknad.innsending.model.OpprettEttersending
 import no.nav.soknad.innsending.model.OpprettLospost
-import no.nav.soknad.innsending.model.OpprettSoknadBody
 import no.nav.soknad.innsending.model.PatchVedleggDto
 import no.nav.soknad.innsending.model.PostVedleggDto
 import no.nav.soknad.innsending.model.PrefillData
@@ -31,7 +29,6 @@ import no.nav.soknad.innsending.model.RestErrorResponseDto
 import no.nav.soknad.innsending.model.RunJobRequest
 import no.nav.soknad.innsending.model.SetConfigRequest
 import no.nav.soknad.innsending.model.SkjemaDto
-import no.nav.soknad.innsending.model.SkjemaDtoV2
 import no.nav.soknad.innsending.model.SoknadFile
 import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.model.SubmitApplicationRequest
@@ -135,19 +132,6 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 			.exchange()
 
 		return InnsendingApiResponse(response.returnResult().status, readBody(response,SkjemaDto::class.java), response.returnResult().responseHeaders)
-	}
-
-
-	fun createSoknadForSkjemanr(skjemanr: String, spraak: String = "nb_NO"): InnsendingApiResponse<DokumentSoknadDto> {
-		val opprettSoknadBody = OpprettSoknadBody(skjemanr, spraak)
-		val response = webTestClient.post()
-			.uri("$baseUrl/frontend/v1/soknad")
-			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
-			})
-			.bodyValue(opprettSoknadBody)
-			.exchange()
-		return InnsendingApiResponse(response.returnResult().status, readBody(response,DokumentSoknadDto::class.java), response.returnResult().responseHeaders)
 	}
 
 
@@ -498,49 +482,6 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	@Deprecated("Replace with uploadNologinFileV2")
-	fun uploadNologinFile(
-		innsendingId: String? = null,
-		vedleggId: String,
-		filePath: String = "/litenPdf.pdf",
-		authToken: String? = null,
-	): InnsendingApiResponse<LastOppFilResponse> {
-		val token: String = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("nologin-access"))
-		val file = Hjelpemetoder.getBytesFromFile(filePath)
-
-		val builder = MultipartBodyBuilder()
-		builder.part("filinnhold", file)
-			.filename("litenPdf.pdf")
-			.contentType(MediaType.APPLICATION_PDF)
-		builder.part("vedleggId", vedleggId)
-		if (innsendingId != null) {builder.part("innsendingId", innsendingId)}
-
-		val response = webTestClient.post()
-			.uri("${baseUrl}/v1/nologin-fillager")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer $token")
-			.contentType(MediaType.MULTIPART_FORM_DATA)
-			.bodyValue(builder.build())
-			.exchange()
-
-		val body = readBody(response, LastOppFilResponse::class.java)
-		return InnsendingApiResponse(response.returnResult().status, body, response.returnResult().responseHeaders)
-	}
-
-
-	@Deprecated("Is replaced by submitNologinApplication")
-	fun sendInnNologinSoknad(skjemaDto: SkjemaDtoV2): InnsendingApiResponse<KvitteringsDto> {
-		val token = TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("nologin-access"))
-		val response = webTestClient.post()
-			.uri("${baseUrl}/v1/nologin-soknad")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer $token")
-			.bodyValue(skjemaDto)
-			.exchange()
-
-		val body = readBody(response, KvitteringsDto::class.java)
-		return InnsendingApiResponse(response.returnResult().status, body, response.returnResult().responseHeaders)
-	}
-
-
 	fun submitNologinApplication(
 		innsendingsId: String,
 		formNumber: String = "NAV 11-12.15B",
@@ -720,26 +661,6 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		return ResponseEntity(body.first, response.returnResult().responseHeaders, response.returnResult().status)
 
 	}
-
-	fun getSoknaderForSkjemanr(
-		skjemanr: String,
-		soknadstyper: List<SoknadType>? = emptyList()
-	): ResponseEntity<List<DokumentSoknadDto>> {
-		var query = ""
-		if (soknadstyper?.isNotEmpty() == true) {
-			query = "?soknadstyper=${soknadstyper.joinToString()}"
-		}
-		val response = webTestClient.get()
-			.uri("${baseUrl}/ekstern/v1/skjema/${skjemanr}/soknader${query}")
-			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
-			})
-			.exchange()
-
-		val body = parseListResponse(response, DokumentSoknadDto::class.java)
-		return ResponseEntity(body.first, response.returnResult().responseHeaders, response.returnResult().status)
-	}
-
 
 	fun getAktiviteter(aktivitetEndepunkt: AktivitetEndepunkt): ResponseEntity<List<Aktivitet>> {
 		val dagligReise = if (aktivitetEndepunkt == AktivitetEndepunkt.dagligreise) "true" else "false"
