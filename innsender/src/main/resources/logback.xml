@@ -7,6 +7,12 @@
 				<customFields>{"google_cloud_project":"${GOOGLE_CLOUD_PROJECT}","nais_namespace_name":"${NAIS_NAMESPACE}","nais_pod_name":"${NAIS_POD_NAME}","nais_container_name":"${NAIS_APP_NAME}"}</customFields>
 				<includeContext>false</includeContext>
 			</encoder>
+		</appender>
+		<appender name="ASYNC_TEAM_LOGS" class="ch.qos.logback.classic.AsyncAppender">
+			<appender-ref ref="team-logs" />
+			<queueSize>512</queueSize>
+			<discardingThreshold>0</discardingThreshold>
+			<includeCallerData>false</includeCallerData>
 			<filter class="ch.qos.logback.core.filter.EvaluatorFilter">
 				<evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
 					<marker>TEAM_LOGS</marker>
@@ -15,8 +21,9 @@
 				<OnMismatch>DENY</OnMismatch>
 			</filter>
 		</appender>
+
 		<logger name="team-logs-logger" level="INFO" additivity="false">
-			<appender-ref ref="team-logs" />
+			<appender-ref ref="ASYNC_TEAM_LOGS" />
 		</logger>
 
 		<appender name="STDOUT_JSON" class="ch.qos.logback.core.ConsoleAppender">
@@ -61,7 +68,7 @@
 
 		<root level="INFO">
 			<appender-ref ref="STDOUT_JSON"/>
-			<appender-ref ref="team-logs" />
+			<appender-ref ref="ASYNC_TEAM_LOGS" />
 		</root>
 	</springProfile>
 
