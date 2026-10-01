@@ -29,8 +29,8 @@ jobs:
     name: Build and push Docker container preprod
     runs-on: ubuntu-latest-8-cores
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-java@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: 21
@@ -64,8 +64,8 @@ jobs:
     if: github.event.inputs.environment == 'preprod'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: actions/checkout@v7
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: dev-gcp
           RESOURCE: .nais/nais-gcp.yml
@@ -78,8 +78,8 @@ jobs:
     if: github.event.inputs.environment == 'prod'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: actions/checkout@v7
+      - uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: prod-gcp
           RESOURCE: .nais/nais-gcp.yml
