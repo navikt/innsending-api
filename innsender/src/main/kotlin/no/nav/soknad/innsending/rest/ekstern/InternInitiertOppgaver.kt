@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.rest.ekstern
 
-import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.EksternoppgaveApi
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.exceptions.ErrorCode
@@ -16,13 +15,11 @@ import no.nav.soknad.innsending.util.logging.CombinedLogger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@ProtectedWithClaims(
-	issuer = Constants.AZURE,
-	// TODO claimMap = ["scp=defaultaccess oppgave-initiering"]
-)
+@PreAuthorize("@claimChecker.hasAccess(authentication, true, {'scp=admin-access defaultaccess', 'scope=admin-access defaultaccess'}, false)")
 class InternInitiertOppgaver(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val ettersendingService: EttersendingService,

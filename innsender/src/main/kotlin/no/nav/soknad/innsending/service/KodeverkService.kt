@@ -44,6 +44,7 @@ class KodeverkService(
 		val response = try {
 			cache.get(kodeverkType.value)
 		} catch (e: Exception) {
+			logger.warn("Kunne ikke hente kodeverk: ${kodeverkType.value}", e)
 			throw BackendErrorException(
 				message = "Kunne ikke hente kodeverk: ${kodeverkType.value}",
 				errorCode = ErrorCode.KODEVERK_ERROR,

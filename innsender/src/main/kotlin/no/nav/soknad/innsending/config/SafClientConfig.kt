@@ -1,8 +1,6 @@
 package no.nav.soknad.innsending.config
 
 import com.expediagroup.graphql.client.spring.GraphQLWebClient
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
-import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.MDCUtil
 import org.slf4j.LoggerFactory
@@ -23,11 +21,16 @@ import reactor.netty.http.client.HttpClientResponse
 @EnableConfigurationProperties(RestConfig::class)
 class SafClientConfig(
 	private val restConfig: RestConfig,
-	oauth2Config: ClientConfigurationProperties,
-	private val oAuth2AccessTokenService: OAuth2AccessTokenService,
+	private val accessToken: AccessToken,
 	@Value("\${spring.application.name}") private val applicationName: String
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
+
+	// Registration-id fra spring.security.oauth2.client.registration.saf-maskintilmaskin (application.yml)
+	private val safMaskintilmaskin = "saf-maskintilmaskin"
+
+	// Maskin-til-maskin (client_credentials) - trenger ingen innlogget bruker som principal
+	private val m2mPrincipalName = "saf-maskintilmaskin-m2m"
 
 	@Bean("safGraphQLWebClient")
 	fun safGraphQLWebClient() = GraphQLWebClient(
@@ -56,13 +59,9 @@ class SafClientConfig(
 				it.header(Constants.NAV_CONSUMER_ID, applicationName)
 				it.header(
 					HttpHeaders.AUTHORIZATION,
-					"Bearer ${oAuth2AccessTokenService.getAccessToken(clientProperties).access_token}",
+					"Bearer ${accessToken.getAccessToken(safMaskintilmaskin, m2mPrincipalName)}",
 				)
 			}
 	)
 
-	private val safMaskintilmaskin = "saf-maskintilmaskin"
-
-	private val clientProperties = oauth2Config.registration[safMaskintilmaskin]
-		?: throw RuntimeException("could not find oauth2 client config for $safMaskintilmaskin")
 }

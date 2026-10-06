@@ -11,6 +11,7 @@ import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.utils.ApiWebClient
+import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -49,6 +51,9 @@ class EttersendingRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should create ettersending with no existing søknader`() {
 		// Given
+		val (token, mockJwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(mockJwt)
+
 		val skjemanr = "NAV 55-00.60"
 		val tema = "DAG"
 		val vedleggsnr = "A1"
@@ -60,7 +65,7 @@ class EttersendingRestApiTest : ApplicationTest() {
 			.build()
 
 		// When
-		val ettersending = api.createEttersending(opprettEttersendingRequest)
+		val ettersending = api.createEttersending(opprettEttersendingRequest, authToken = token)
 			.assertSuccess()
 			.body
 
@@ -91,17 +96,20 @@ class EttersendingRestApiTest : ApplicationTest() {
 	@Test
 	fun `Should create ettersending with existing søknad`() {
 		// Given
+		val (token, mockJwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(mockJwt)
+
 		val vedleggsnr = "A1"
 		val skjemaDto = SkjemaDtoTestBuilder().build()
 
-		val opprettetSoknad = api.createSoknad(skjemaDto)
+		val opprettetSoknad = api.createSoknad(skjemaDto, authToken = token)
 			.assertSuccess()
 			.body
 		val innsendingsId = opprettetSoknad.innsendingsId!!
 
-		api.utfyltSoknad(innsendingsId, skjemaDto)
-		val sendInnSoknadResponse = api.sendInnSoknad(innsendingsId)
-		val innsendtSoknad = sendInnSoknadResponse.body!!
+		api.utfyltSoknad(innsendingsId, skjemaDto, authToken = token)
+		val sendInnSoknadResponse = api.sendInnSoknad(innsendingsId, authToken = token)
+		val innsendtSoknad = sendInnSoknadResponse.body
 
 		val ettersending = OpprettEttersendingTestBuilder()
 			.skjemanr(skjemaDto.skjemanr)
@@ -109,7 +117,7 @@ class EttersendingRestApiTest : ApplicationTest() {
 			.build()
 
 		// When
-		val manueltOpprettetEttersending = api.createEttersending(ettersending)
+		val manueltOpprettetEttersending = api.createEttersending(ettersending, authToken = token)
 			.assertSuccess()
 			.body
 
@@ -137,8 +145,11 @@ class EttersendingRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `Should send notification with correct link`() {
+		val (token, mockJwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(mockJwt)
+
 		val opprettEttersendingRequest = OpprettEttersendingTestBuilder().build()
-		val ettersending = api.createEttersending(opprettEttersendingRequest, EnvQualifier.delingslenke)
+		val ettersending = api.createEttersending(opprettEttersendingRequest, EnvQualifier.delingslenke, authToken = token)
 			.assertSuccess()
 			.body
 

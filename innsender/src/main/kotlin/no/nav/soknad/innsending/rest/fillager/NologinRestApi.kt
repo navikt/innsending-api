@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.rest.fillager
 
-import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.NologinApi
 import no.nav.soknad.innsending.model.LastOppFilResponse
 import no.nav.soknad.innsending.service.DocumentService
@@ -9,20 +8,17 @@ import no.nav.soknad.innsending.service.config.annotation.VerifyConfigValue
 import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
-import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.stringextensions.toUUID
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 import java.util.UUID
 
 @RestController
-@ProtectedWithClaims(
-	issuer = Constants.AZURE,
-	claimMap = ["roles=nologin-access"],
-)
+@PreAuthorize("@claimChecker.hasAccess(authentication, true, {'roles=nologin-access'}, true)")
 class NologinRestApi(
 	private val documentService: DocumentService,
 ) : NologinApi {

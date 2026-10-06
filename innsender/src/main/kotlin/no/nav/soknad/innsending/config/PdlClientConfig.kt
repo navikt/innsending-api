@@ -5,8 +5,6 @@ import io.netty.channel.ChannelOption
 import io.netty.handler.timeout.ReadTimeoutException
 import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.handler.timeout.WriteTimeoutHandler
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
-import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.soknad.innsending.exceptions.utils.messageForLog
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.HEADER_BEHANDLINGSNUMMER
@@ -30,8 +28,7 @@ import java.util.concurrent.TimeUnit
 @EnableConfigurationProperties(RestConfig::class)
 class PdlClientConfig(
 	private val restConfig: RestConfig,
-	oauth2Config: ClientConfigurationProperties,
-	private val oAuth2AccessTokenService: OAuth2AccessTokenService,
+	private val accessToken: AccessToken
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -68,7 +65,7 @@ class PdlClientConfig(
 			)
 			.defaultRequest {
 				it.header(Constants.HEADER_CALL_ID, MDCUtil.callIdOrNew())
-				it.header(HttpHeaders.AUTHORIZATION, "Bearer ${oAuth2AccessTokenService.getAccessToken(tokenxPDLClientProperties).access_token}")
+				it.header(HttpHeaders.AUTHORIZATION, "Bearer ${accessToken.getAccessToken("tokenx-pdl", null)}")
 				it.header("Tema", "AAP")
 				it.header(HEADER_BEHANDLINGSNUMMER, PDL_BEHANDLINGSNUMMER)
 			}
@@ -88,9 +85,5 @@ class PdlClientConfig(
 					).doOnError { error -> logger.error("Error in call to PDL - ${error.messageForLog}", error) }
 			}
 	)
-
-	private val tokenxPDLClientProperties =
-		oauth2Config.registration["tokenx-pdl"]
-			?: throw RuntimeException("could not find oauth2 client config for tokenx-pdl")
 
 }

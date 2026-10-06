@@ -3,8 +3,6 @@ package no.nav.soknad.innsending.rest.fyllut
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import no.nav.security.mock.oauth2.MockOAuth2Server
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenResponse
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.model.AktivitetEndepunkt
 import no.nav.soknad.innsending.model.MaalgruppeType
@@ -13,8 +11,10 @@ import no.nav.soknad.innsending.service.KodeverkService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.utils.ApiWebClient
+import no.nav.soknad.innsending.utils.TokenGenerator
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
 import kotlin.test.assertEquals
@@ -33,9 +33,6 @@ class TilleggstonadsTest : ApplicationTest() {
 		"5575" to "AKSDAL",
 		"7318" to "AGDENES",
 	)
-
-	@MockkBean
-	lateinit var oauth2TokenService: OAuth2AccessTokenService
 
 	@MockkBean
 	lateinit var kodeverkService: KodeverkService
@@ -58,14 +55,18 @@ class TilleggstonadsTest : ApplicationTest() {
 	@BeforeEach
 	fun setup() {
 		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
-		every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
+		//every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
 		every { kodeverkService.getPoststed(any()) } answers { postnummerMap[firstArg()] }
 	}
 
 	@Test
 	fun `Should return aktiviteter from Arena`() {
+		// Given
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		// When
-		val response = api.getAktiviteter(AktivitetEndepunkt.aktivitet)
+		val response = api.getAktiviteter(AktivitetEndepunkt.aktivitet, authToken = token)
 
 		// Then
 		assertTrue(response != null)
@@ -92,8 +93,12 @@ class TilleggstonadsTest : ApplicationTest() {
 
 	@Test
 	fun `Should return daglig reise aktiviteter from Arena`() {
+		// Given
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		// When
-		val response = api.getAktiviteter(AktivitetEndepunkt.dagligreise)
+		val response = api.getAktiviteter(AktivitetEndepunkt.dagligreise, authToken = token)
 
 		// Then
 		assertTrue(response != null)
@@ -145,10 +150,13 @@ class TilleggstonadsTest : ApplicationTest() {
 	@Test
 	fun `Should return correct prefill-data from Arena (maalgruppe)`() {
 		// Given
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val properties = "sokerMaalgruppe"
 
 		// When
-		val response = api.getPrefillData(properties)
+		val response = api.getPrefillData(properties, token)
 
 		// Then
 		assertTrue(response != null)

@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import java.lang.Thread.sleep
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime

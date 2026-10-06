@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpEntity
@@ -40,13 +41,14 @@ class VedleggRestApiTest : ApplicationTest() {
 
 	@Test
 	fun oppdrettVedleggTest() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 		val vedlegg = emptyList<String>()
 
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-
-		val opprettetSoknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
+		val opprettetSoknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg, token)
 		assertTrue(opprettetSoknadDto.vedleggsListe.isNotEmpty())
 
 		val postVedleggDto = PostVedleggDto("Nytt vedlegg")
@@ -64,11 +66,13 @@ class VedleggRestApiTest : ApplicationTest() {
 
 	@Test
 	fun oppdaterVedleggTest() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 		val vedlegg = listOf("N6")
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-		val opprettetSoknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
+		val opprettetSoknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg, token)
 
 		val vedleggDto = opprettetSoknadDto.vedleggsListe.first { !it.erHoveddokument }
 		val patchVedleggDto = PatchVedleggDto("Endret tittel", OpplastingsStatusDto.SendesAvAndre, opplastingsValgKommentarLedetekst = "Hvem sender inn dokumentasjonen", opplastingsValgKommentar = "Sendes av min fastlege")
@@ -92,13 +96,14 @@ class VedleggRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `Validerer tekst input`() {
+		val (token, jwt) = TokenGenerator(mockOAuth2Server).lagTokenXTokenAndJwt()
+		`when`(tokenxJwtDecoder.decode(token)).thenReturn(jwt)
+
 		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
 		val vedlegg = emptyList<String>()
 
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-
-		val opprettetSoknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
+		val opprettetSoknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg, token)
 		assertTrue(opprettetSoknadDto.vedleggsListe.isNotEmpty())
 
 		val vedleggsTittel = "Nytt vedlegg"+"\u0000"
@@ -120,17 +125,18 @@ class VedleggRestApiTest : ApplicationTest() {
 	private fun opprettEnSoknad(
 		skjemanr: String,
 		spraak: String,
-		vedlegg: List<String>
+		vedlegg: List<String>,
+		authToken: String
 	): DokumentSoknadDto {
 		val requestBody = SkjemaDtoTestBuilder(
 			skjemanr = skjemanr,
 			spraak = spraak,
 			vedleggsListe = vedlegg.map { SkjemaDokumentDtoTestBuilder(vedleggsnr = it).build() }
 		).build()
-		val dokumentSoknadDto = api.createSoknad(requestBody)
+		val dokumentSoknadDto = api.createSoknad(requestBody, authToken = authToken)
 			.assertSuccess()
 			.body
-		return api.getSoknadSendinn(dokumentSoknadDto.innsendingsId!!).assertSuccess().body
+		return api.getSoknadSendinn(dokumentSoknadDto.innsendingsId!!, authToken = authToken).assertSuccess().body
 	}
 
 
