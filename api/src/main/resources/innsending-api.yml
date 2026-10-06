@@ -1065,6 +1065,9 @@ paths:
   /admin/v1/job:
     $ref: "./admin/job.yaml"
 
+  /admin/v1/soknad/{innsendingsId}/arkiveringsstatus:
+    $ref: "./admin/arkiveringsstatus.yaml"
+
   # Deprecated, see /v1/application-nologin
   /v1/nologin-fillager:
     $ref: "./nologin/fillager.yaml"

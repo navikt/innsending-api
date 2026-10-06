@@ -12,6 +12,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.context.request.async.AsyncRequestNotUsableException
@@ -111,6 +113,60 @@ class RestExceptionHandler {
 				timestamp = OffsetDateTime.now(),
 				errorCode = ErrorCode.ILLEGAL_ARGUMENT.code
 			), HttpStatus.BAD_REQUEST
+		)
+	}
+
+	// 400
+	@ExceptionHandler
+	fun methodArgumentNotValidException(exception: MethodArgumentNotValidException): ResponseEntity<RestErrorResponseDto> {
+		val message = "Ugyldig forespørsel: " +
+			exception.bindingResult.fieldErrors.joinToString(", ") { "${it.field} ${it.defaultMessage}" }
+		logger.warn(message)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = message,
+				timestamp = OffsetDateTime.now(),
+				errorCode = ErrorCode.ILLEGAL_ARGUMENT.code
+			), HttpStatus.BAD_REQUEST
+		)
+	}
+
+	// 400
+	@ExceptionHandler
+	fun httpMessageNotReadableException(exception: HttpMessageNotReadableException): ResponseEntity<RestErrorResponseDto> {
+		logger.warn("Kunne ikke lese request body: ${exception::class.simpleName}")
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = "Ugyldig request body",
+				timestamp = OffsetDateTime.now(),
+				errorCode = ErrorCode.ILLEGAL_ARGUMENT.code
+			), HttpStatus.BAD_REQUEST
+		)
+	}
+
+	// 403
+	@ExceptionHandler
+	fun forbiddenException(exception: ForbiddenException): ResponseEntity<RestErrorResponseDto> {
+		logger.warn(exception.messageForLog)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = exception.message,
+				timestamp = OffsetDateTime.now(),
+				errorCode = exception.errorCode.code
+			), HttpStatus.FORBIDDEN
+		)
+	}
+
+	// 409
+	@ExceptionHandler
+	fun conflictException(exception: ConflictException): ResponseEntity<RestErrorResponseDto> {
+		logger.warn(exception.messageForLog)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = exception.message,
+				timestamp = OffsetDateTime.now(),
+				errorCode = exception.errorCode.code
+			), HttpStatus.CONFLICT
 		)
 	}
 
