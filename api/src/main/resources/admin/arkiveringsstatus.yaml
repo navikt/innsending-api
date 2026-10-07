@@ -6,13 +6,7 @@ post:
   operationId: oppdaterArkiveringsstatus
 
   parameters:
-    - name: innsendingsId
-      in: path
-      description: Søknadens innsendingsId
-      required: true
-      schema:
-        type: string
-      style: simple
+    - $ref: "../common/components.yaml#/components/parameters/InnsendingsId"
 
   requestBody:
     required: true

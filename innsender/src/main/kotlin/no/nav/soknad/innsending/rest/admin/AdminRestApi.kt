@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
+import java.util.UUID
 
 @RestController
 @ProtectedWithClaims(issuer = Constants.AZURE)
@@ -48,7 +49,7 @@ class AdminRestApi(
 		claimMap = ["scp=admin-access defaultaccess"],
 	)
 	override fun oppdaterArkiveringsstatus(
-		innsendingsId: String,
+		innsendingsId: UUID,
 		oppdaterArkiveringsstatusRequest: OppdaterArkiveringsstatusRequest,
 	): ResponseEntity<OppdaterArkiveringsstatusResponse> {
 		val claims = tokenValidationContextHolder.getTokenValidationContext().getClaims(Constants.AZURE)
@@ -63,14 +64,14 @@ class AdminRestApi(
 		}
 
 		adminArkiveringsstatusService.settArkivert(
-			innsendingsId = innsendingsId,
+			innsendingsId = innsendingsId.toString(),
 			begrunnelse = oppdaterArkiveringsstatusRequest.begrunnelse,
 			navIdent = navIdent,
 		)
 
 		return ResponseEntity.ok(
 			OppdaterArkiveringsstatusResponse(
-				innsendingsId = innsendingsId,
+				innsendingsId = innsendingsId.toString(),
 				arkiveringsstatus = AdminArkiveringsstatus.Arkivert,
 			)
 		)

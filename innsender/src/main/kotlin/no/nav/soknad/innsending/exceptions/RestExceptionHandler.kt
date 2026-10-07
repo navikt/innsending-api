@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.context.request.async.AsyncRequestNotUsableException
 import org.springframework.web.multipart.MultipartException
 import org.springframework.web.multipart.support.MissingServletRequestPartException
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import java.nio.charset.IllegalCharsetNameException
 import java.nio.charset.MalformedInputException
@@ -110,6 +111,20 @@ class RestExceptionHandler {
 		return ResponseEntity(
 			RestErrorResponseDto(
 				message = exception.message,
+				timestamp = OffsetDateTime.now(),
+				errorCode = ErrorCode.ILLEGAL_ARGUMENT.code
+			), HttpStatus.BAD_REQUEST
+		)
+	}
+
+	// 400
+	@ExceptionHandler
+	fun methodArgumentTypeMismatchException(exception: MethodArgumentTypeMismatchException): ResponseEntity<RestErrorResponseDto> {
+		val message = "Ugyldig format for parameter '${exception.name}'"
+		logger.warn(message)
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = message,
 				timestamp = OffsetDateTime.now(),
 				errorCode = ErrorCode.ILLEGAL_ARGUMENT.code
 			), HttpStatus.BAD_REQUEST

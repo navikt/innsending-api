@@ -132,6 +132,21 @@ class AdminRestApiTest : ApplicationTest() {
 	}
 
 	@Test
+	fun `should return bad request for invalid innsendingsId without changing status`() {
+		val innsendingsId = lagreSoknad(ArkiveringsStatus.ArkiveringFeilet)
+
+		val response = api.oppdaterArkiveringsstatus("invalid-uuid", gyldigRequest())
+
+		assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+		assertEquals("illegalArgument", response.errorBody.errorCode)
+		assertEquals(ArkiveringsStatus.ArkiveringFeilet, soknadRepository.findByInnsendingsid(innsendingsId)!!.arkiveringsstatus)
+		assertTrue(
+			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(innsendingsId)
+				.none { it.hendelsetype == HendelseType.Arkivert }
+		)
+	}
+
+	@Test
 	fun `should return forbidden when azp_name is not innsending-admin`() {
 		val innsendingsId = lagreSoknad(ArkiveringsStatus.ArkiveringFeilet)
 		val token = TokenGenerator(mockOAuth2Server).lagAzureOBOToken(
