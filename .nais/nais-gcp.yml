@@ -118,6 +118,17 @@ spec:
         diskSize: {{ default_database_size }}
         diskAutoresize: true
         autoBackupHour: 6
+        flags:
+          - name: cloudsql.enable_pgaudit
+            value: "on"
+          - name: pgaudit.log
+            value: "read"
+          - name: pgaudit.log_parameter
+            value: "off"
+          - name: pgaudit.log_relation
+            value: "on"
+          - name: cloudsql.pgaudit_mask_literals
+            value: "on"
         databases:
           - name: {{ database-name }}
             envVarPrefix: DATABASE
