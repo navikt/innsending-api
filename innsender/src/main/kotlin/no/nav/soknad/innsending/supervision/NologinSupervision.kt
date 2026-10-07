@@ -26,9 +26,10 @@ class NologinSupervision(
 	@Scheduled(cron = everyMinute)
 	fun supervise() {
 		try {
-			if (leaderSelection.isLeader()) {
-				val nologinMainSwitch = configService.getConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH)
+			val nologinMainSwitch = configService.getConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH)
+			metrics.setNologinMainSwitch(if (nologinMainSwitch.isEqualTo("on")) 1L else 0L)
 
+			if (leaderSelection.isLeader()) {
 				if (nologinMainSwitch.isEqualTo("on")) {
 					val minutes = configService.getConfig(ConfigDefinition.NOLOGIN_MAX_SUBMISSIONS_WINDOW_MINUTES).getLongValue()
 					val maxSubmissions = configService.getConfig(ConfigDefinition.NOLOGIN_MAX_SUBMISSIONS_COUNT).getLongValue()
@@ -42,12 +43,10 @@ class NologinSupervision(
 						metrics.setNologinMainSwitch(0)
 					} else {
 						logger.info("Nologin supervision completed successfully")
-						metrics.setNologinMainSwitch(1)
 					}
 
 				} else {
 					logger.debug("Nologin is turned off")
-					metrics.setNologinMainSwitch(0)
 				}
 			}
 		} catch (e: Exception) {
