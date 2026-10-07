@@ -190,7 +190,12 @@ class SoknadService(
 	}
 
 
-	fun prepareSubmit(innsendingsId: String, affectedUser: BrukerDto?, avsender: AvsenderDto? = null): DokumentSoknadDto {
+	fun prepareSubmit(
+		innsendingsId: String,
+		affectedUser: BrukerDto?,
+		avsender: AvsenderDto? = null,
+		grantUserDigitalAccess: Boolean?,
+	): DokumentSoknadDto {
 		val soknadDbData = repo.hentSoknadDb(innsendingsId)
 		if (!(soknadDbData.status == SoknadsStatus.Opprettet || soknadDbData.status == SoknadsStatus.Utfylt)) {
 			throw IllegalActionException("$innsendingsId: Kan ikke sende inn søknad når status er ${soknadDbData.status}")
@@ -202,6 +207,7 @@ class SoknadService(
 				innsendtdato = innsendtdato,
 				affecteduser = affectedUser,
 				avsender = avsender ?: soknadDbData.avsender,
+				grantuserdigitalaccess = grantUserDigitalAccess.takeIf { it == true },
 			)
 		)
 		return vedleggService.hentAlleVedlegg(submittedSoknad, innsendingsId)

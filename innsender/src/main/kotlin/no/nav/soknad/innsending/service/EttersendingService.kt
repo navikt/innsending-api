@@ -56,7 +56,8 @@ class EttersendingService(
 		mellomlagringDager: Long = Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD,
 		ernavopprettet: Boolean = false,
 		avsender: AvsenderDto? = null,
-		affectedUser: BrukerDto? = null
+		affectedUser: BrukerDto? = null,
+		grantUserDigitalAccess: Boolean? = null,
 	)
 		: SoknadDbData {
 		val innsendingsId = Utilities.laginnsendingsId()
@@ -89,7 +90,8 @@ class EttersendingService(
 				ernavopprettet = ernavopprettet,
 				brukertype = BrukerDto.IdType.FNR,
 				avsender = avsender,
-				affecteduser = affectedUser
+				affecteduser = affectedUser,
+				grantuserdigitalaccess = grantUserDigitalAccess,
 			)
 		)
 	}
@@ -130,7 +132,8 @@ class EttersendingService(
 				fristForEttersendelse = nyesteSoknad.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 				ernavopprettet = nyesteSoknad.erNavOpprettet ?: false,
 				avsender = nyesteSoknadDb.avsender,
-				affectedUser = nyesteSoknadDb.affecteduser
+				affectedUser = nyesteSoknadDb.affecteduser,
+				grantUserDigitalAccess = nyesteSoknadDb.grantuserdigitalaccess,
 			)
 
 			// Lagre vedlegg i DB
@@ -205,6 +208,7 @@ class EttersendingService(
 		val vedleggsnrList = ettersending.vedleggsListe?.map { it.vedleggsnr } ?: emptyList()
 
 		try {
+			val existingSoknadDb = repo.hentSoknadDb(existingSoknad.innsendingsId!!)
 			logger.info("Oppretter ettersending fra innsendt søknad fra ${existingSoknad.innsendingsId} og vedleggsliste = $vedleggsnrList")
 			val ettersendingDb = saveEttersending(
 				brukerId = brukerId,
@@ -217,6 +221,7 @@ class EttersendingService(
 				?: existingSoknad.endretDato ?: existingSoknad.opprettetDato,
 				fristForEttersendelse = existingSoknad.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 				ernavopprettet = erNavInitiert,
+				grantUserDigitalAccess = existingSoknadDb.grantuserdigitalaccess,
 			)
 
 			val combinedVedleggList =
