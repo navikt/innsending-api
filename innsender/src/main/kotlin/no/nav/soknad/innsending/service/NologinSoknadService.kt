@@ -66,6 +66,7 @@ class NologinSoknadService(
 			submitApplicationRequest.mainDocumentAlt,
 			submitApplicationRequest.attachments.sanitize(),
 			submitApplicationRequest.avsender,
+			grantUserDigitalAccess = submitApplicationRequest.grantUserDigitalAccess,
 		)
 
 		return result.first
