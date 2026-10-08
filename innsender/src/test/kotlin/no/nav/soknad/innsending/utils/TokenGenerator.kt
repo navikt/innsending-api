@@ -69,7 +69,12 @@ class TokenGenerator(
 		).serialize()
 	}
 
-	fun lagAzureOBOToken(scopes: String? = null, navIdent: String? = null): String {
+	fun lagAzureOBOToken(
+		scopes: String? = null,
+		navIdent: String? = null,
+		azpName: String? = "dev-gcp.namespace.consumer-app-name",
+		preferredUsername: String? = "Ola.Nordmann@test.no",
+	): String {
 		val issuerId = AZURE
 		val oAuth2TokenCallback = DefaultOAuth2TokenCallback(
 			issuerId = issuerId,
@@ -77,9 +82,13 @@ class TokenGenerator(
 			audience = listOf(audience),
 			claims = buildMap {
 				put("name", "Ola Nordmann")
-				put("preferred_username", "Ola.Nordmann@test.no")
+				if (preferredUsername != null) {
+					put("preferred_username", preferredUsername)
+				}
 				put("azp", "consumer-app-id")
-				put("azp_name", "dev-gcp.namespace.consumer-app-name")
+				if (azpName != null) {
+					put("azp_name", azpName)
+				}
 				put("scp", "${scopes?.let { "$it " } ?: ""}defaultaccess")
 				if (navIdent != null) {
 					put("NAVident", navIdent)

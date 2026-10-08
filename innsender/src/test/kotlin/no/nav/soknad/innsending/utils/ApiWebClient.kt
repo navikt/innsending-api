@@ -20,6 +20,7 @@ import no.nav.soknad.innsending.model.FilDto
 import no.nav.soknad.innsending.model.FileDto
 import no.nav.soknad.innsending.model.KvitteringsDto
 import no.nav.soknad.innsending.model.LospostDto
+import no.nav.soknad.innsending.model.OppdaterArkiveringsstatusResponse
 import no.nav.soknad.innsending.model.OpprettEttersending
 import no.nav.soknad.innsending.model.OpprettLospost
 import no.nav.soknad.innsending.model.PatchVedleggDto
@@ -692,6 +693,30 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		return ResponseEntity(Unit, response.returnResult().responseHeaders, response.returnResult().status)
 	}
 
+
+	fun oppdaterArkiveringsstatus(
+		innsendingsId: String,
+		requestBody: Map<String, Any?>,
+		authToken: String? = null,
+	): InnsendingApiResponse<OppdaterArkiveringsstatusResponse> {
+		val token = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureOBOToken(
+			scopes = "admin-access",
+			navIdent = "Z123456",
+			azpName = "dev-gcp:team-soknad:innsending-admin",
+		)
+		val response = webTestClient.post()
+			.uri("${baseUrl}/admin/v1/soknad/${innsendingsId}/arkiveringsstatus")
+			.headers({ httpHeaders ->
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(token, null).toSingleValueMap())
+			})
+			.bodyValue(requestBody)
+			.exchange()
+		return InnsendingApiResponse(
+			response.returnResult().status,
+			readBody(response, OppdaterArkiveringsstatusResponse::class.java),
+			response.returnResult().responseHeaders
+		)
+	}
 
 	fun createLospost(
 		opprettLospost: OpprettLospost,

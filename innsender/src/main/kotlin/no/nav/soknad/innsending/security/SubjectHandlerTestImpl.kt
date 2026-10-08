@@ -28,4 +28,8 @@ class SubjectHandlerTestImpl : SubjectHandlerInterface {
 	override fun getNavIdent(): String {
 		return "Z123456"
 	}
+
+	override fun getAzureClientName(): String? = null
+
+	override fun getAzureUserIdent(): String? = null
 }
