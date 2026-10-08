@@ -48,7 +48,7 @@
 		<!--Other-->
 		<kotlin-serialization.version>1.11.0</kotlin-serialization.version>
 		<kafka.version>4.2.0</kafka.version>
-		<micrometer.version>1.16.5</micrometer.version>
+		<micrometer.version>1.16.6</micrometer.version>
 		<prometheus.version>1.6.1</prometheus.version>
 		<jakarta-servlet-api.version>6.1.0</jakarta-servlet-api.version>
 		<jakarta-validation-api.version>3.1.1</jakarta-validation-api.version>
