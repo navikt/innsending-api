@@ -119,7 +119,7 @@
 		"SOKNADSMOTTAKER_HOST": "https://soknadsmottaker-gcp.intern.dev.nav.no",
 		"SOKNADSMOTTAKER_ENDPOINT": "/save",
 		"PUBLISERE_BRUKERNOTIFIKASJONER": "true",
-		"SEND_INN_URL": "https://www.intern.dev.nav.no/sendinn",
+		"SEND_INN_URL": "https://www.intern.dev.nav.no/sendinn-dokumenter",
 		"FYLL_UT_URL": "https://fyllut-preprod.intern.dev.nav.no/fyllut",
 		"SAFSELVBETJENING_TOKEN_X_AUDIENCE": "dev-fss:teamdokumenthandtering:safselvbetjening-q1",
 		"PDL_TOKEN_X_AUDIENCE": "dev-fss:pdl:pdl-api",

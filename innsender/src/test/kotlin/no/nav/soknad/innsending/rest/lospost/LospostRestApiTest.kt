@@ -197,13 +197,13 @@ class LospostRestApiTest : ApplicationTest() {
 
 		val response = api.createLospost(request, EnvQualifier.preprodAnsatt)
 			.assertSuccess()
-		assertContains(response.headers?.location.toString(), "ansatt.dev.nav.no/sendinn")
+		assertContains(response.headers?.location.toString(), "ansatt.dev.nav.no/sendinn-dokumenter/")
 
 		val parameterSlot = slot<AddNotification>()
 		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
 		val notification = parameterSlot.captured
 		assertTrue(
-			notification.brukernotifikasjonInfo.lenke.contains("ansatt.dev.nav.no/sendinn"),
+			notification.brukernotifikasjonInfo.lenke.contains("ansatt.dev.nav.no/sendinn-dokumenter/"),
 			"Link not expected: ${notification.brukernotifikasjonInfo.lenke}"
 		)
 	}
@@ -219,13 +219,13 @@ class LospostRestApiTest : ApplicationTest() {
 
 		val response = api.createLospost(request, EnvQualifier.preprodIntern)
 			.assertSuccess()
-		assertContains(response.headers?.location.toString(), "intern.dev.nav.no/sendinn")
+		assertContains(response.headers?.location.toString(), "intern.dev.nav.no/sendinn-dokumenter/")
 
 		val parameter = slot<AddNotification>()
 		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameter)) }
 		val notification = parameter.captured
 		assertTrue(
-			notification.brukernotifikasjonInfo.lenke.contains("intern.dev.nav.no/sendinn"),
+			notification.brukernotifikasjonInfo.lenke.contains("intern.dev.nav.no/sendinn-dokumenter/"),
 			"Link not expected: ${notification.brukernotifikasjonInfo.lenke}"
 		)
 	}
