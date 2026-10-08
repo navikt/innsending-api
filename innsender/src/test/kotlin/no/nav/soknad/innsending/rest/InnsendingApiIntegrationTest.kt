@@ -245,7 +245,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		assertEquals(attachmentLabel, submittedAttachment.label)
 
 		// verify that label is used instead of tittel when translating to the archiving format
-		val translatedDocuments = translate(submittedAttachments)
+		val translatedDocuments = translate(submittedAttachments, true)
 		val translatedAttachment = translatedDocuments.first { it.skjemanummer == attachmentVedleggsnr }
 		assertEquals(attachmentLabel, translatedAttachment.tittel)
 	}
@@ -386,9 +386,15 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 			idType = AvsenderDto.IdType.ORGNR,
 			navn = "Testbedrift AS",
 		)
-		val submissionResponse = testApi!!.submitDigitalApplication(soknad, attachments, avsender = avsender)
+		val submissionResponse = testApi!!.submitDigitalApplication(
+			soknad,
+			attachments,
+			avsender = avsender,
+			grantUserDigitalAccess = true,
+		)
 			.assertSuccess()
 			.body
+		assertEquals(true, repo.hentSoknadDb(innsendingsId).grantuserdigitalaccess)
 
 		// verify response
 		assertEquals(4, submissionResponse.attachments?.size)
@@ -427,12 +433,14 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
+		val slotGrantUserDigitalAccess = slot<Boolean?>()
 		verify(timeout = 5000, exactly = 1) {
 			soknadsmottakerApi.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
 				capture(slotAvsender),
-				captureNullable(slotBruker)
+				captureNullable(slotBruker),
+				captureNullable(slotGrantUserDigitalAccess),
 			)
 		}
 
@@ -440,6 +448,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		assertEquals(avsender.id, slotAvsender.captured.id)
 		assertEquals(avsender.idType, slotAvsender.captured.idType)
 		assertEquals(avsender.navn, slotAvsender.captured.navn)
+		assertEquals(true, slotGrantUserDigitalAccess.captured)
 		val innsendteDokumenter = slotVedleggsliste.captured
 		assertEquals(4, innsendteDokumenter.size)
 		assertTrue(innsendteDokumenter.all { it.mimetype != null })
@@ -873,10 +882,12 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 			innsendingsId = innsendingsId,
 			formNumber = skjemanr,
 			title = skjematittel,
-			attachments = attachments
+			attachments = attachments,
+			grantUserDigitalAccess = true,
 		)
 			.assertSuccess()
 			.body
+		assertEquals(true, repo.hentSoknadDb(innsendingsId).grantuserdigitalaccess)
 
 		// verify response
 		assertEquals(4, submissionResponse.attachments?.size)
@@ -907,16 +918,19 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
+		val slotGrantUserDigitalAccess = slot<Boolean?>()
 		verify(timeout = 5000, exactly = 1) {
 			soknadsmottakerApi.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
 				capture(slotAvsender),
-				captureNullable(slotBruker)
+				captureNullable(slotBruker),
+				captureNullable(slotGrantUserDigitalAccess),
 			)
 		}
 
 		assertEquals(innsendingsId, slotSoknad.captured.innsendingsId)
+		assertEquals(true, slotGrantUserDigitalAccess.captured)
 		val innsendteDokumenter = slotVedleggsliste.captured
 		assertEquals(4, innsendteDokumenter.size)
 		assertTrue(innsendteDokumenter.all { it.mimetype != null })
