@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   description: API for å støtte oppretting av søknad og opplasting av vedlegg til disse.
-  version: 1.0.1
+  version: 2.0.0
   title: Innsending-api
   contact:
     name: team-fyllut-sendinn
@@ -22,14 +22,8 @@ tags:
     description: API for sendinn-frontend applikasjonen for å håndtere vedlegg.
   - name: sendinn-fil
     description: API for sendinn-frontend applikasjonen for å håndtere filer.
-  - name: nologin
-    description: API for søknader fra brukere som ikke er logget inn.
-  - name: nologin-soknad
-    description: API for soknad fra søker som ikke er logget inn. Endepunkt for å opprette og sende inn søknad gitt utfylt skjema og allerede opplastede filer på vedlegg.
   - name: config
     description: API for konfigurasjon av applikasjonen.
-  - name: soknadsveiviser
-    description: API for soknadsveiviser applikasjonen (deprecated).
   - name: ekstern
     description: API for eksterne applikasjoner.
   - name: endtoend
@@ -192,161 +186,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SkjemaDto"
-      tags:
-        - fyllut
-
-  /fyllUt/v2/soknad/{innsendingsId}:
-    get:
-      summary: Hent en eksisterende søknadsutfylling
-      description: Dette endepunktet kalles når vedkommende henter søknaden på oppsummeringssiden. Brukernotifikasjoner som blir opprettet når vedkommende starter søknadsutfyllingen linker til oppsummeringssiden.
-      operationId: fyllUtHentSoknadV2
-
-      parameters:
-        - name: innsendingsId
-          in: path
-          description: Identifisering av søknad som skal hentes
-          required: true
-          schema:
-            type: string
-          style: simple
-
-      responses:
-        '200':
-          description: Pågående søknad returneres.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SkjemaDtoV2"
-        404:
-          description: Ingen søknad funnet.
-      tags:
-        - fyllut
-    put:
-      summary: Oppdater en eksisterende søknadsutfylling
-      description: Dette endepunktet kalles for hvert steg i FyllUt-flyten og oppdaterer søknaden. Alle felter blir overskrevet unntatt brukerId og skjemanr. Vedleggslisten skal være tom. (Vedleggslisten og hoveddokument (PDF) vil bli lagt til i "PUT /fyllUt/v1/utfyltSoknad/{innsendingsId}").
-        Status blir satt til "opprettet". Når søknaden er ferdig utfylt så blir status satt til "utfylt" i "PUT /fyllUt/v1/utfyltSoknad/{innsendingsId}".
-      operationId: fyllUtOppdaterSoknadV2
-
-      parameters:
-        - name: innsendingsId
-          in: path
-          description: identifisering av søknad
-          required: true
-          schema:
-            type: string
-          style: simple
-
-      requestBody:
-        description: Søknadsmetadata for å oppdatere søknaden. HovedokumentVariant (JSON) oppdateres underveis, mens hoveddokument (PDF) av søknaden vil bli lagt til når søknaden sendes inn (siste steg i FyllUt-flyten)
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SkjemaDtoV2"
-        required: true
-
-      responses:
-        200:
-          description: Oppdatering av søknad
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SkjemaDtoV2"
-      tags:
-        - fyllut
-
-    delete:
-      summary: Kall for å slette opprettet søknad gitt innsendingsId.
-      description: Dersom funnet, slettes søknaden og dens vedlegg, eventuelle opplastede filer og brukernotifikasjon
-      operationId: fyllUtSlettSoknadV2
-
-      parameters:
-        - name: innsendingsId
-          in: path
-          description: identifisering av søknad
-          required: true
-          schema:
-            type: string
-          style: simple
-
-      responses:
-        200:
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/BodyStatusResponseDto"
-      tags:
-        - fyllut
-
-
-  /fyllUt/v2/utfyltSoknad/{innsendingsId}:
-    put:
-      summary: Lagre en ferdig utfylt søknad
-      description: Dette endepunktet kalles i steg i FyllUt-flyten fra oppsummeringssiden før brukeren blir videresendt til SendInn-applikasjonen. Til motsetning fra "PUT /fyllUt/v1/soknad/{innsendingsId}" så blir vedlegg og den genererte PDF'en for hoveddokumentet også sendt med fra frontend. Status blir satt til "utfylt"
-      operationId: fyllUtUtfyltSoknadV2
-
-      parameters:
-        - name: innsendingsId
-          in: path
-          description: identifisering av søknad
-          required: true
-          schema:
-            type: string
-          style: simple
-        - $ref: "./common/components.yaml#/components/parameters/EnvQualifier"
-
-      requestBody:
-        description: Søknaddata for å oppdatere søknaden
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SkjemaDto"
-        required: true
-
-      responses:
-        302:
-          description: Oppdatering av ferdig utfylt søknad, med redirect til SendInn
-      tags:
-        - fyllut
-
-  /fyllUt/v2/soknad:
-    post:
-      summary: Start en ny søknadsutfylling
-      description: FyllUt tjenesten gir søker mulighet til å fylle ut en søknad. Dette endepunktet kalles når vedkommende starter søknaden og det opprettes en tom søknad i databasen. Hvis bruker allerede har en aktiv søknad på samme skjemanr vil hen få valg om å fortsette på den eller starte en ny.
-                   En brukernotifikasjon som linker til oppsummeringssiden i FyllUt blir opprettet. For hvert steg i FyllUt kalles PUT endepunktet for å oppdatere søknaden underveis.
-      operationId: fyllUtOpprettSoknadV2
-
-      requestBody:
-        description: Søknadsmetadata for å opprette søknaden.  HovedokumentVariant (JSON) oppdateres underveis, mens hoveddokument (PDF) av søknaden vil bli lagt til når søknaden sendes inn (siste steg i FyllUt-flyten).
-                     Liste over eventuelle obligatoriske og valgfrie vedlegg som skal/kan legges til vil bli lagt til i søknaden etterhvert som bruker fyller ut søknaden.
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SkjemaDtoV2"
-        required: true
-
-      parameters:
-        - name: force
-          in: query
-          description: Hvis bruker allerede har en aktiv søknad på samme skjemanr vil hen få valg om å fortsette på den eller starte en ny.
-                       Denne parameteren brukes for å indikere om en bruker ønsker å starte en ny søknad uavhengig av om det allerede er en aktiv søknad på gang.
-          required: false
-          schema:
-            type: boolean
-        - $ref: "./common/components.yaml#/components/parameters/EnvQualifier"
-
-      responses:
-        200:
-          description: Returnerer en BodyStatusResponseDto med status og info. Status "soknadAlreadyExists" indikerer at en søknad for dette skjemanummeret allerede er påbegynt. Frontend vil redirecte til side for å velge mellom å fortsette påbegynt søknad eller opprette ny søknad.
-          content:
-            application/json:
-              schema: {} # For at openapi-generator skal generere en type for responsen som støtter både SkjemaDto og BodyStatusResponseDto
-        201:
-          description: Søknad opprettet
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SkjemaDtoV2"
       tags:
         - fyllut
 
@@ -539,64 +378,6 @@ paths:
         - innsendte
 
 
-  /frontend/v1/soknad:
-    post:
-      summary: Kall for å opprette en søknad basert på skjemanummer og med en eventuell liste av vedlegg.
-      description: På basis av oppgitt skjemanummer og eventuelle vedlegg, blir det opprettet en søknad som inviterer søker til å laste ned skjema for utfylling og opplasting av dette og eventuelle vedlegg.
-      operationId: opprettSoknad
-      deprecated: true
-
-      parameters:
-        - $ref: "./common/components.yaml#/components/parameters/EnvQualifier"
-
-      requestBody:
-        description: Data neccessary in order to publish a new task or message user notification.
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/OpprettSoknadBody"
-        required: true
-
-      responses:
-        201:
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DokumentSoknadDto"
-      tags:
-        - soknadsveiviser
-
-
-  /frontend/v1/ettersendPaSkjema:
-    post:
-      summary: Kall for å opprette en ettersendingssøknad basert på et skjemanummer.
-      description: På basis av oppgitt skjemanummer, blir det opprettet en ettersendingssøknad som inviterer søker til å laste opp vedlegg.
-      operationId: opprettEttersendingGittSkjemanr
-      deprecated: true
-
-      parameters:
-        - $ref: "./common/components.yaml#/components/parameters/EnvQualifier"
-
-      requestBody:
-        description: Data neccessary in order to publish a new task or message user notification.
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/OpprettEttersendingGittSkjemaNr"
-        required: true
-
-      responses:
-        201:
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DokumentSoknadDto"
-      tags:
-        - soknadsveiviser
-
-
   /frontend/v1/soknad/{innsendingsId}:
     get:
       summary: Kall for å hente opprettet søknad gitt innsendingsId.
@@ -708,65 +489,7 @@ paths:
       tags:
         - sendinn-vedlegg
 
-    get:
-      summary: Kall for å hente vedlegg (inkludert hoveddokument) til søknad gitt innsendingsId.
-      description: Dersom funnet, returneres liste av søknadens vedlegg.
-      operationId: hentVedleggsListe
-
-      parameters:
-        - name: innsendingsId
-          in: path
-          description: identifisering av søknad som skal hentes
-          required: true
-          schema:
-            type: string
-          style: simple
-
-      responses:
-        200:
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/VedleggDto"
-      tags:
-        - sendinn-vedlegg
-
   /frontend/v1/soknad/{innsendingsId}/vedlegg/{vedleggsId}:
-    get:
-      summary: Kall for å hente ett spesifikt vedlegg med dens  til søknad gitt innsendingsId.
-      description: Dersom funnet, returneres spesifisert vedlegg.
-      operationId: hentVedlegg
-
-      parameters:
-        - name: innsendingsId
-          in: path
-          description: identifisering av søknad som skal hentes
-          required: true
-          schema:
-            type: string
-          style: simple
-        - name: vedleggsId
-          in: path
-          description: identifisering av vedlegg som skal hentes
-          required: true
-          schema:
-            type: integer
-            format: int64
-          style: simple
-
-      responses:
-        200:
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/VedleggDto"
-      tags:
-        - sendinn-vedlegg
-
     patch:
       summary: Kall for å endre tittel og status på et vedlegg.
       description: Kall for å endre tittel og status på et vedlegg. Merk at tittel kun kan endres på vedlegg av type Annet (vedleggsid=N6).
@@ -1065,42 +788,6 @@ paths:
   /admin/v1/job:
     $ref: "./admin/job.yaml"
 
-  # Deprecated, see /v1/application-nologin
-  /v1/nologin-fillager:
-    $ref: "./nologin/fillager.yaml"
-
-  # Deprecated, see /v1/application-nologin
-  /v1/nologin-fillager/{filId}:
-    $ref: "./nologin/fil.yaml"
-
-  # Deprecated, see /v1/application-nologin
-  /v1/nologin-soknad:
-    post:
-      summary: Kall for å opprette og sende inn en søknad for en ikke innlogget søker.
-      description: Søknaden lagres i databasen sammen med alle filene til søknadens vedlegg, og sendes deretter inn.
-      operationId: opprettNologinSoknad
-
-      parameters:
-        - $ref: "./common/components.yaml#/components/parameters/EnvQualifier"
-
-      requestBody:
-        description: Data neccessary in order to store and send in an application.
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SkjemaDtoV2"
-        required: true
-
-      responses:
-        200:
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/KvitteringsDto"
-      tags:
-        - nologin-soknad
-
   /v1/application-nologin/{innsendingsId}:
      $ref: "./application/nologin/nologin.yaml"
 
@@ -1236,42 +923,6 @@ paths:
                       errorCode: somethingFailedTryLater
             tags:
               - ekstern
-
-  /ekstern/v1/skjema/{skjemanr}/soknader:
-    get:
-      summary: Kall for å hente opprettede søknader for bruker gitt skjemanummer fra eksterne applikasjoner
-      description: Kan filtrere på 'soknad' | 'ettersendelse'
-      operationId: eksternHentSoknaderForSkjemanr
-
-      parameters:
-        - name: skjemanr
-          in: path
-          description: Skjemaet som søknaden er basert på
-          required: true
-          schema:
-            type: string
-          style: simple
-          example: "NAV 55-00.60"
-        - name: soknadstyper
-          in: query
-          description: "Komma-separert liste som filtrerer hvilke type søknader som skal returnes. Feks: 'soknad,ettersendelse'"
-          schema:
-            type: array
-            items:
-              $ref: "#/components/schemas/SoknadType"
-
-      responses:
-        200:
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/DokumentSoknadDto"
-      tags:
-        - ekstern
-
 
   /ekstern/v1/oppgaver:
         post:
@@ -2199,41 +1850,6 @@ components:
           $ref: "#/components/schemas/FristForEttersendelse"
         mellomlagringDager:
           $ref: "#/components/schemas/MellomlagringDager"
-
-    OpprettEttersendingGittSkjemaNr:
-      type: object
-      description: Data for å opprette en søknad gitt skjemanummer
-      required:
-        - skjemanr
-        - sprak
-      properties:
-        skjemanr:
-          $ref: "#/components/schemas/Skjemanr"
-        sprak:
-          $ref: "#/components/schemas/Spraak"
-        vedleggsListe:
-          type: array
-          description: Liste av vedlegg som kan lastes opp
-          items:
-            $ref: "#/components/schemas/Vedleggsnr"
-
-    OpprettSoknadBody:
-      type: object
-      description: Data for å opprette soknad basert på skjemanummer.
-      required:
-        - skjemanr
-        - sprak
-
-      properties:
-        skjemanr:
-          $ref: "#/components/schemas/Skjemanr"
-        sprak:
-          $ref: "#/components/schemas/Spraak"
-        vedleggsListe:
-          type: array
-          description: Liste av obligatoriske vedlegg som kan lastes opp til søknaden.
-          items:
-            $ref: "#/components/schemas/Vedleggsnr"
 
     Pakrevd:
       type: boolean

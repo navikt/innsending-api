@@ -17,6 +17,7 @@ import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.HendelseRepository
 import no.nav.soknad.innsending.repository.domain.enums.HendelseType
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
@@ -24,6 +25,7 @@ import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
+import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
 import org.junit.jupiter.api.Assertions.*
@@ -116,6 +118,53 @@ class EttersendingServiceTest : ApplicationTest() {
 		pdlInterface = pdlInterface,
 		documentService = documentService,
 	)
+
+	@Test
+	fun `ettersending inherits grant user digital access including absence`() {
+		val ettersendingService = lagEttersendingService()
+
+		listOf(true, null).forEach { grantUserDigitalAccess ->
+			val source = ettersendingService.saveEttersending(
+				brukerId = testpersonid,
+				ettersendingsId = "source-$grantUserDigitalAccess",
+				tittel = "Source application",
+				skjemanr = "NAV 00-00.00",
+				tema = "BIL",
+				sprak = "nb",
+				forsteInnsendingsDato = OffsetDateTime.now(),
+				grantUserDigitalAccess = grantUserDigitalAccess,
+			)
+			val sourceDto = no.nav.soknad.innsending.util.mapping.lagDokumentSoknadDto(source, emptyList())
+
+			val inherited = ettersendingService.saveEttersending(sourceDto, "follow-up-$grantUserDigitalAccess")
+
+			assertEquals(grantUserDigitalAccess, repo.hentSoknadDb(inherited.innsendingsId!!).grantuserdigitalaccess)
+		}
+	}
+
+	@Test
+	fun `manual ettersending inherits stored grant user digital access including absence`() {
+		val ettersendingService = lagEttersendingService()
+
+		listOf(true, false, null).forEach { grantUserDigitalAccess ->
+			val source = repo.lagreSoknad(
+				SoknadDbDataTestBuilder(status = SoknadsStatus.Innsendt, brukerId = testpersonid)
+					.build().copy(grantuserdigitalaccess = grantUserDigitalAccess)
+			)
+			val sourceDto = soknadService.hentSoknad(source.innsendingsid)
+			val ettersending = OpprettEttersendingTestBuilder().skjemanr(source.skjemanr).build()
+
+			val inherited = ettersendingService.createEttersendingFromInnsendtSoknad(
+				brukerId = testpersonid,
+				existingSoknad = sourceDto,
+				ettersending = ettersending,
+			)
+
+			assertEquals(source.innsendingsid, inherited.ettersendingsId)
+			assertEquals(grantUserDigitalAccess, repo.hentSoknadDb(inherited.innsendingsId!!).grantuserdigitalaccess)
+			assertEquals(grantUserDigitalAccess, repo.hentSoknadDb(source.innsendingsid).grantuserdigitalaccess)
+		}
+	}
 
 	@Test
 	fun opprettEttersendingGittArkivertSoknadTest() {

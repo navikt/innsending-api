@@ -1,9 +1,7 @@
 package no.nav.soknad.innsending.util
 
-import no.nav.soknad.arkivering.soknadsmottaker.model.DocumentData
 import no.nav.soknad.arkivering.soknadsmottaker.model.DokumentData
 import no.nav.soknad.arkivering.soknadsmottaker.model.Innsending
-import no.nav.soknad.arkivering.soknadsmottaker.model.Soknad
 
 const val testpersonid = "19876898104"
 
@@ -32,16 +30,6 @@ fun finnBackupLanguage(wanted: String): String {
 	return backupLanguage[spraak]!!
 }
 
-fun maskerFnr(soknad: Soknad): Soknad {
-	return Soknad(
-		soknad.innsendingId,
-		soknad.erEttersendelse,
-		personId = "*****",
-		soknad.tema,
-		maskerVedleggsTittel(soknad.dokumenter)
-	)
-}
-
 fun maskerFnr(innsending: Innsending): Innsending {
 	return Innsending(
 		innsendingsId = innsending.innsendingsId,
@@ -62,17 +50,6 @@ fun maskerFnr(innsending: Innsending): Innsending {
 	)
 }
 
-fun maskerVedleggsTittel(dokumenter: List<DocumentData>): List<DocumentData> {
-	return dokumenter.map {
-		DocumentData(
-			skjemanummer = it.skjemanummer,
-			erHovedskjema = it.erHovedskjema,
-			if (it.skjemanummer == "N6") "**Maskert**" else it.tittel,
-			it.varianter
-		)
-	}
-}
-
 fun maskerDokumentTitler(dokumenter: List<DokumentData>): List<DokumentData> {
 	return dokumenter.map {
 		val erN6 = it.skjemanummer == "N6"
@@ -85,4 +62,3 @@ fun maskerDokumentTitler(dokumenter: List<DokumentData>): List<DokumentData> {
 		)
 	}
 }
-
