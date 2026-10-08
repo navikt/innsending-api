@@ -109,6 +109,10 @@ For mocking brukes blant
 annet [mockK](https://mockk.io/), [mockwebserver](https://github.com/square/okhttp/tree/master/mockwebserver)
 og [mock-oauth2-server](https://github.com/navikt/mock-oauth2-server)
 
+Testoppsett for søknader bruker DTO-buildere og den aktive opprettingsflyten
+`SoknadService.opprettNySoknad`. `SoknadAssertions` bruker denne flyten og henter
+den lagrede søknaden når en test trenger database-ID-er for søknaden og vedleggene.
+
 ### Antivirus
 
 Opplastede filer fra brukere blir sjekket for virus med [ClamAV](https://www.clamav.net/) via

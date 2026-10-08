@@ -25,9 +25,6 @@ class VedleggServiceTest : ApplicationTest() {
 	private lateinit var innsenderMetrics: InnsenderMetrics
 
 	@Autowired
-	private lateinit var skjemaService: SkjemaService
-
-	@Autowired
 	private lateinit var vedleggService: VedleggService
 
 	@Autowired
@@ -43,13 +40,11 @@ class VedleggServiceTest : ApplicationTest() {
 	private lateinit var subjectHandler: SubjectHandlerInterface
 
 	private fun lagSoknadService(): SoknadService = SoknadService(
-        skjemaService = skjemaService,
         repo = repo,
         vedleggService = vedleggService,
         filService = filService,
         innsenderMetrics = innsenderMetrics,
         exceptionHelper = exceptionHelper,
-        subjectHandler = subjectHandler,
         fileStorage = fileStorage,
 	)
 

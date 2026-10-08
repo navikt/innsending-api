@@ -10,7 +10,6 @@ import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
-import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.*
 import no.nav.soknad.innsending.service.fillager.FileStorage
 import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
@@ -27,9 +26,6 @@ import kotlin.test.assertFailsWith
 class SoknadServiceUnitTest {
 
 	private val defaultUser = "12345678901"
-
-	@RelaxedMockK
-	lateinit var skjemaService: SkjemaService
 
 	@RelaxedMockK
 	lateinit var vedleggService: VedleggService
@@ -54,9 +50,6 @@ class SoknadServiceUnitTest {
 
 	@RelaxedMockK
 	lateinit var repo: RepositoryUtils
-
-	@RelaxedMockK
-	lateinit var subjectHandler: SubjectHandlerInterface
 
 	@InjectMockKs
 	lateinit var soknadService: SoknadService
