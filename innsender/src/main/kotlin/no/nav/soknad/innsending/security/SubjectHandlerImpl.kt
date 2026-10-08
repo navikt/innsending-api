@@ -59,15 +59,26 @@ class SubjectHandlerImpl(private val ctxHolder: TokenValidationContextHolder) : 
 
 	override fun getNavIdent(): String {
 		tokenValidationContext.getClaims(AZURE).let { claims ->
-			return claims.getStringClaim("NAVident")
+			return claims.getStringClaim(NAV_IDENT)
 				?: throw RuntimeException("Could not find NAVident claim in token")
 		}
+	}
+
+	override fun getAzureClientName(): String? =
+		tokenValidationContext.getClaims(AZURE).getStringClaim(AZP_NAME)
+
+	override fun getAzureUserIdent(): String? {
+		val claims = tokenValidationContext.getClaims(AZURE)
+		return claims.getStringClaim(NAV_IDENT)?.takeIf { it.isNotBlank() }
+			?: claims.getStringClaim(PREFERRED_USERNAME)?.takeIf { it.isNotBlank() }
 	}
 
 	companion object {
 		private const val CLAIM_PID = "pid"
 		private const val CLIENT_ID = "client_id"
 		private const val AZP = "azp"
+		private const val AZP_NAME = "azp_name"
+		private const val NAV_IDENT = "NAVident"
+		private const val PREFERRED_USERNAME = "preferred_username"
 	}
 }
-

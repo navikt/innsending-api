@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.rest.admin
 
 import no.nav.security.token.support.core.api.ProtectedWithClaims
-import no.nav.security.token.support.core.context.TokenValidationContextHolder
 import no.nav.soknad.innsending.api.AdminApi
 import no.nav.soknad.innsending.cleanup.TempCleanupArchiveFailure
 import no.nav.soknad.innsending.exceptions.ForbiddenException
@@ -9,6 +8,7 @@ import no.nav.soknad.innsending.model.AdminArkiveringsstatus
 import no.nav.soknad.innsending.model.OppdaterArkiveringsstatusRequest
 import no.nav.soknad.innsending.model.OppdaterArkiveringsstatusResponse
 import no.nav.soknad.innsending.model.RunJobRequest
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.admin.AdminArkiveringsstatusService
 import no.nav.soknad.innsending.util.Constants
 import org.slf4j.LoggerFactory
@@ -22,7 +22,7 @@ import java.util.UUID
 class AdminRestApi(
 	private val tempCleanupArchiveFailure: TempCleanupArchiveFailure,
 	private val adminArkiveringsstatusService: AdminArkiveringsstatusService,
-	private val tokenValidationContextHolder: TokenValidationContextHolder,
+	private val subjectHandler: SubjectHandlerInterface,
 ) : AdminApi {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -52,11 +52,9 @@ class AdminRestApi(
 		innsendingsId: UUID,
 		oppdaterArkiveringsstatusRequest: OppdaterArkiveringsstatusRequest,
 	): ResponseEntity<OppdaterArkiveringsstatusResponse> {
-		val claims = tokenValidationContextHolder.getTokenValidationContext().getClaims(Constants.AZURE)
-		adminArkiveringsstatusService.verifiserTilgang(claims.getStringClaim(CLAIM_AZP_NAME))
+		adminArkiveringsstatusService.verifiserTilgang(subjectHandler.getAzureClientName())
 
-		val navIdent = claims.getStringClaim(CLAIM_NAV_IDENT)?.takeIf { it.isNotBlank() }
-			?: claims.getStringClaim(CLAIM_PREFERRED_USERNAME)?.takeIf { it.isNotBlank() }
+		val navIdent = subjectHandler.getAzureUserIdent()
 			?: throw ForbiddenException("Fant ikke brukeridentitet i token")
 
 		if (oppdaterArkiveringsstatusRequest.arkiveringsstatus != AdminArkiveringsstatus.Arkivert) {
@@ -79,8 +77,5 @@ class AdminRestApi(
 
 	private companion object {
 		const val CLEANUP_KLAR_FOR_INNSENDING = "cleanup-klar-for-innsending"
-		const val CLAIM_AZP_NAME = "azp_name"
-		const val CLAIM_NAV_IDENT = "NAVident"
-		const val CLAIM_PREFERRED_USERNAME = "preferred_username"
 	}
 }

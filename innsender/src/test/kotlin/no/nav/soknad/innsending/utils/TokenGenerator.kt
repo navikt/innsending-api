@@ -72,7 +72,7 @@ class TokenGenerator(
 	fun lagAzureOBOToken(
 		scopes: String? = null,
 		navIdent: String? = null,
-		azpName: String = "dev-gcp.namespace.consumer-app-name",
+		azpName: String? = "dev-gcp.namespace.consumer-app-name",
 		preferredUsername: String? = "Ola.Nordmann@test.no",
 	): String {
 		val issuerId = AZURE
@@ -86,7 +86,9 @@ class TokenGenerator(
 					put("preferred_username", preferredUsername)
 				}
 				put("azp", "consumer-app-id")
-				put("azp_name", azpName)
+				if (azpName != null) {
+					put("azp_name", azpName)
+				}
 				put("scp", "${scopes?.let { "$it " } ?: ""}defaultaccess")
 				if (navIdent != null) {
 					put("NAVident", navIdent)

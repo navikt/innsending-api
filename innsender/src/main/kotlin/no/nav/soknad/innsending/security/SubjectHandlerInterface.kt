@@ -6,4 +6,6 @@ interface SubjectHandlerInterface {
 	fun getToken(): String
 	fun getClientId(): String
 	fun getNavIdent(): String
+	fun getAzureClientName(): String?
+	fun getAzureUserIdent(): String?
 }

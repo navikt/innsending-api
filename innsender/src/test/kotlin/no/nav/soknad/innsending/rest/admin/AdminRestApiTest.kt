@@ -114,6 +114,20 @@ class AdminRestApiTest : ApplicationTest() {
 	}
 
 	@Test
+	fun `should use preferred_username when NAVident is blank`() {
+		val innsendingsId = lagreSoknad(ArkiveringsStatus.ArkiveringFeilet)
+		val token = TokenGenerator(mockOAuth2Server).lagAzureOBOToken(
+			scopes = "admin-access",
+			navIdent = "   ",
+			azpName = INNSENDING_ADMIN,
+		)
+
+		val response = api.oppdaterArkiveringsstatus(innsendingsId, gyldigRequest(), token)
+
+		assertEquals(HttpStatus.OK, response.statusCode)
+	}
+
+	@Test
 	fun `should return conflict when arkiveringsstatus is not ArkiveringFeilet`() {
 		val innsendingsId = lagreSoknad(ArkiveringsStatus.IkkeSatt)
 
@@ -173,6 +187,37 @@ class AdminRestApiTest : ApplicationTest() {
 		val response = api.oppdaterArkiveringsstatus(innsendingsId, gyldigRequest(), token)
 
 		assertEquals(HttpStatus.FORBIDDEN, response.statusCode)
+	}
+
+	@Test
+	fun `should return forbidden when azp_name is missing`() {
+		val innsendingsId = lagreSoknad(ArkiveringsStatus.ArkiveringFeilet)
+		val token = TokenGenerator(mockOAuth2Server).lagAzureOBOToken(
+			scopes = "admin-access",
+			navIdent = "Z123456",
+			azpName = null,
+		)
+
+		val response = api.oppdaterArkiveringsstatus(innsendingsId, gyldigRequest(), token)
+
+		assertEquals(HttpStatus.FORBIDDEN, response.statusCode)
+		assertEquals(ArkiveringsStatus.ArkiveringFeilet, soknadRepository.findByInnsendingsid(innsendingsId)!!.arkiveringsstatus)
+	}
+
+	@Test
+	fun `should return forbidden when user identity is blank`() {
+		val innsendingsId = lagreSoknad(ArkiveringsStatus.ArkiveringFeilet)
+		val token = TokenGenerator(mockOAuth2Server).lagAzureOBOToken(
+			scopes = "admin-access",
+			navIdent = "   ",
+			azpName = INNSENDING_ADMIN,
+			preferredUsername = "   ",
+		)
+
+		val response = api.oppdaterArkiveringsstatus(innsendingsId, gyldigRequest(), token)
+
+		assertEquals(HttpStatus.FORBIDDEN, response.statusCode)
+		assertEquals(ArkiveringsStatus.ArkiveringFeilet, soknadRepository.findByInnsendingsid(innsendingsId)!!.arkiveringsstatus)
 	}
 
 	@Test
