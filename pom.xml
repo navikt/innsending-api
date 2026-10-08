@@ -75,7 +75,7 @@
 		<logcaptor.version>2.12.6</logcaptor.version>
 		<mockk.version>1.14.11</mockk.version>
 		<springmockk.version>4.0.2</springmockk.version>
-		<testcontainers.version>1.21.4</testcontainers.version>
+		<testcontainers.version>2.0.3</testcontainers.version>
 		<junit-jupiter-params>5.12.2</junit-jupiter-params>
 		<mock-oauth2-server.version>3.0.3</mock-oauth2-server.version>
 
