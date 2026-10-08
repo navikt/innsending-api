@@ -9,11 +9,9 @@ import no.nav.soknad.innsending.repository.domain.enums.HendelseType
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
-import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.fillager.FileStorage
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.supervision.InnsenderOperation
-import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
 import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
 import no.nav.soknad.innsending.util.Utilities
@@ -32,79 +30,15 @@ import java.time.OffsetDateTime
 
 @Service
 class SoknadService(
-	private val skjemaService: SkjemaService,
 	private val repo: RepositoryUtils,
 	private val vedleggService: VedleggService,
 	private val filService: FilService,
 	private val innsenderMetrics: InnsenderMetrics,
 	private val exceptionHelper: ExceptionHelper,
-	private val subjectHandler: SubjectHandlerInterface,
 	private val fileStorage: FileStorage
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
-
-	@Deprecated("Is currently only used in tests, will be removed in the future")
-	@Transactional(timeout= TRANSACTION_TIMEOUT)
-	fun opprettSoknad(
-		brukerId: String,
-		skjemanr: String,
-		spraak: String,
-		vedleggsnrListe: List<String> = emptyList()
-	): DokumentSoknadDto {
-		val operation = InnsenderOperation.OPPRETT.name
-
-		// hentSkjema informasjon gitt skjemanr
-		val kodeverkSkjema = skjemaService.hentSkjema(skjemanr, spraak)
-		val applikasjon = subjectHandler.getClientId()
-
-		try {
-			// lagre soknad
-			val savedSoknadDbData = repo.lagreSoknad(
-				SoknadDbData(
-					id = null,
-					innsendingsid = Utilities.laginnsendingsId(),
-					tittel = kodeverkSkjema.tittel ?: "",
-					skjemanr = kodeverkSkjema.skjemanummer ?: "",
-					tema = kodeverkSkjema.tema ?: "",
-					spraak = spraak,
-					status = SoknadsStatus.Opprettet,
-					brukerid = brukerId,
-					ettersendingsid = null,
-					opprettetdato = LocalDateTime.now(),
-					endretdato = LocalDateTime.now(),
-					innsendtdato = null,
-					visningssteg = 0,
-					visningstype = VisningsType.fyllUt,
-					kanlasteoppannet = true,
-					forsteinnsendingsdato = null,
-					ettersendingsfrist = Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
-					arkiveringsstatus = ArkiveringsStatus.IkkeSatt,
-					applikasjon = applikasjon,
-					skalslettesdato = OffsetDateTime.now().plusDays(DEFAULT_LEVETID_OPPRETTET_SOKNAD),
-					ernavopprettet = false,
-					brukertype = BrukerDto.IdType.FNR,
-					avsender = null,
-				)
-			)
-
-			// Lagre soknadens hovedvedlegg
-			val skjemaDbData = vedleggService.opprettHovedddokumentVedlegg(savedSoknadDbData, kodeverkSkjema)
-
-			val vedleggDbDataListe = vedleggService.saveVedlegg(savedSoknadDbData.id!!, vedleggsnrListe, spraak)
-
-			val savedVedleggDbDataListe = listOf(skjemaDbData) + vedleggDbDataListe
-
-			val dokumentSoknadDto = lagDokumentSoknadDto(savedSoknadDbData, savedVedleggDbDataListe)
-
-			return dokumentSoknadDto
-		} catch (e: Exception) {
-			exceptionHelper.reportException(e, operation, kodeverkSkjema.tema ?: "Ukjent")
-			throw e
-		} finally {
-			innsenderMetrics.incOperationsCounter(operation, kodeverkSkjema.tema ?: "Ukjent")
-		}
-	}
 
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun opprettNySoknad(dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
