@@ -36,22 +36,9 @@ class NologinRestApiTest: ApplicationTest() {
 	}
 
 	@Test
-	fun `should allow file upload when main switch is on`() {
-		api.uploadNologinFile(vedleggId = "abcdef")
-			.assertSuccess()
-	}
-
-	@Test
 	fun `should allow file upload V2 when main switch is on`() {
 		api.uploadNologinFileV2(innsendingId = UUID.randomUUID().toString(), vedleggId = "abcdef")
 			.assertSuccess()
-	}
-
-	@Test
-	fun `should not allow file upload when token does not contain correct role`() {
-		val token = TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("irrelevant-role"))
-		api.uploadNologinFile(vedleggId = "abcdef", authToken = token)
-			.assertHttpStatus(HttpStatus.FORBIDDEN)
 	}
 
 	@Test
@@ -59,18 +46,6 @@ class NologinRestApiTest: ApplicationTest() {
 		val token = TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("irrelevant-role"))
 		api.uploadNologinFileV2(innsendingId = UUID.randomUUID().toString(), vedleggId = "abcdef", authToken = token)
 			.assertHttpStatus(HttpStatus.FORBIDDEN)
-	}
-
-	@Test
-	fun `should not allow file upload when nologin is disabled`() {
-		api.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "off")
-			.assertSuccess()
-
-		api.uploadNologinFile(vedleggId = "abcdef")
-			.assertHttpStatus(HttpStatus.SERVICE_UNAVAILABLE)
-			.errorBody.let { body ->
-				assertEquals("temporarilyUnavailable", body.errorCode)
-			}
 	}
 
 	@Test
