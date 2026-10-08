@@ -94,7 +94,7 @@
 		"SOKNADSMOTTAKER_HOST": "https://soknadsmottaker-gcp.intern.nav.no",
 		"SOKNADSMOTTAKER_ENDPOINT": "/save",
 		"PUBLISERE_BRUKERNOTIFIKASJONER": "true",
-		"SEND_INN_URL": "https://www.nav.no/sendinn",
+		"SEND_INN_URL": "https://www.nav.no/sendinn-dokumenter",
 		"FYLL_UT_URL": "https://www.nav.no/fyllut",
 		"SAFSELVBETJENING_TOKEN_X_AUDIENCE": "prod-fss:teamdokumenthandtering:safselvbetjening",
 		"PDL_TOKEN_X_AUDIENCE": "prod-fss:pdl:pdl-api",
