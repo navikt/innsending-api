@@ -89,6 +89,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
 		every { kodeverkService.getPoststed(any()) } answers { postnummerMap[firstArg()] }
+		every { kodeverkService.getAttachmentTitle("N6", any()) } returns "Annet"
 	}
 
 	@LocalServerPort

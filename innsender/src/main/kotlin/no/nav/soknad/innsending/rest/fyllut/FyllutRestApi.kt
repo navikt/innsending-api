@@ -283,7 +283,9 @@ class FyllutRestApi(
 			submitApplicationRequest.mainDocument,
 			submitApplicationRequest.mainDocumentAlt,
 			submitApplicationRequest.attachments.sanitize(),
-			submitApplicationRequest.avsender, affectedUser
+			submitApplicationRequest.avsender,
+			affectedUser,
+			submitApplicationRequest.grantUserDigitalAccess,
 		)
 		innsendingService.sendInnForArkivering(innsendingsIdStr)
 

@@ -59,8 +59,6 @@ restconfig:
   maxFileSize: 15
   maxFileSizeSum: 45
   maxNumberOfPages: 200
-  sanityHost: http://localhost:${wiremock.server.port}
-  sanityEndpoint: /soknader/api/sanity/skjemautlisting
   filesInOneRequestToFilestorage: 10
   soknadsMottakerHost: http://localhost:${wiremock.server.port}/soknadsmottaker-api
   soknadsMottakerEndpoint: /save

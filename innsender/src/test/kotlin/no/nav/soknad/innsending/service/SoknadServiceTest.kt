@@ -8,8 +8,6 @@ import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
-import no.nav.soknad.innsending.consumerapis.skjema.HentSkjemaDataConsumer
-import no.nav.soknad.innsending.consumerapis.skjema.SkjemaClient
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
@@ -58,9 +56,6 @@ class SoknadServiceTest : ApplicationTest() {
 	private lateinit var soknadService: SoknadService
 
 	@Autowired
-	private lateinit var hentSkjemaDataConsumer: HentSkjemaDataConsumer
-
-	@Autowired
 	private lateinit var soknadRepository: SoknadRepository
 
 	@Autowired
@@ -93,8 +88,6 @@ class SoknadServiceTest : ApplicationTest() {
 	@Autowired
 	private lateinit var restConfig: RestConfig
 
-	private val hentSkjemaData = mockk<SkjemaClient>()
-
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
 
 	private val pdlInterface = mockk<PdlInterface>()
@@ -106,7 +99,6 @@ class SoknadServiceTest : ApplicationTest() {
 
 	@BeforeEach
 	fun setup() {
-		every { hentSkjemaData.hent() } returns hentSkjemaDataConsumer.initSkjemaDataFromDisk()
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("1234567890", "Kan", null, "Søke")
 		every { subjectHandler.getClientId() } returns "application"
 	}
@@ -157,14 +149,13 @@ class SoknadServiceTest : ApplicationTest() {
 	fun opprettSoknadGittSkjemanrOgIkkeStottetSprak() {
 		val brukerid = testpersonid
 		val skjemanr = defaultSkjemanr
-		val skjemaTittel_en = hentSkjemaDataConsumer.hentSkjemaEllerVedlegg(defaultSkjemanr, "en").tittel
 		val spraak = "fr"
 		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
 
 		assertEquals(brukerid, dokumentSoknadDto.brukerId)
 		assertEquals(skjemanr, dokumentSoknadDto.skjemanr)
 		assertEquals(spraak, dokumentSoknadDto.spraak) // Beholder ønsket språk
-		assertEquals(skjemaTittel_en, dokumentSoknadDto.tittel) // engelsk backup for fransk
+		assertEquals("Child support agreement", dokumentSoknadDto.tittel)
 		assertNotNull(dokumentSoknadDto.innsendingsId)
 
 		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
@@ -184,7 +175,7 @@ class SoknadServiceTest : ApplicationTest() {
 			"ResourceNotFoundException was expected"
 		)
 
-		assertEquals("Skjema med id = $skjemanr ikke funnet. Ikke funnet i skjema listen", exception.message)
+		assertEquals("Skjema med id = $skjemanr ikke funnet i kodeverk", exception.message)
 	}
 
 	@Test
