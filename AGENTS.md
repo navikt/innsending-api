@@ -5,3 +5,8 @@
 - To run the application with a working Docker socket, use `docker compose up --build`.
 
 See `README.md` for GitHub Packages authentication and local setup details.
+
+# Documentation
+
+- Add only essential project information to `README.md`, such as setup, operation, or changes that require users to act.
+- Do not add trivial documentation of individual application features or implementation details merely because code changed.

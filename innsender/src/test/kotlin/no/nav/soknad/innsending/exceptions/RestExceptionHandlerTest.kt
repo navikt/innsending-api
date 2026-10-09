@@ -22,7 +22,7 @@ class RestExceptionHandlerTest {
 	@BeforeEach
 	fun setUp() {
 		mockMvc = MockMvcBuilders
-			.standaloneSetup(DisconnectController())
+			.standaloneSetup(DisconnectController(), IdentityController())
 			.setControllerAdvice(RestExceptionHandler())
 			.build()
 		logCaptor = LogCaptor.forClass(RestExceptionHandler::class.java)
@@ -31,6 +31,28 @@ class RestExceptionHandlerTest {
 	@AfterEach
 	fun tearDown() {
 		logCaptor.close()
+	}
+
+	@Test
+	fun `invalid user identity produces a generic 401 and a safe reason category in logs`() {
+		mockMvc.get("/identity/invalid")
+			.andExpect {
+				status { isUnauthorized() }
+				jsonPath("$.message") { value("Autentisering feilet") }
+				jsonPath("$.errorCode") { value("errorCode.unauthorized") }
+			}
+
+		assertTrue(logCaptor.warnLogs == listOf("Autentisering feilet: ugyldig brukerclaim"))
+		assertTrue(logCaptor.errorLogs.isEmpty())
+	}
+
+	@Test
+	fun `program errors remain server errors instead of becoming authentication failures`() {
+		mockMvc.get("/identity/context-error")
+			.andExpect {
+				status { isInternalServerError() }
+				jsonPath("$.errorCode") { value(ErrorCode.GENERAL_ERROR.code) }
+			}
 	}
 
 	@Test
@@ -53,6 +75,15 @@ class RestExceptionHandlerTest {
 			}
 
 		assertTrue(logCaptor.errorLogs.isEmpty())
+	}
+
+	@RestController
+	private class IdentityController {
+		@GetMapping("/identity/invalid")
+		fun invalidIdentity(): String = throw InvalidUserIdentityException()
+
+		@GetMapping("/identity/context-error")
+		fun contextError(): String = throw IllegalStateException("Missing request context")
 	}
 
 	@RestController
