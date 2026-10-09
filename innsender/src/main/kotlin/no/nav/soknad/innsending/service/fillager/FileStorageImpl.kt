@@ -4,6 +4,7 @@ import com.google.cloud.storage.Blob
 import com.google.cloud.storage.BlobId
 import com.google.cloud.storage.BlobInfo
 import com.google.cloud.storage.Storage
+import com.google.cloud.storage.StorageException
 import no.nav.soknad.innsending.config.CloudStorageConfig
 import no.nav.soknad.innsending.model.Mimetype
 import no.nav.soknad.innsending.util.stringextensions.toUUID
@@ -108,12 +109,37 @@ class FileStorageImpl(
 				}
 			}
 		} else {
-			val updatedBlobInfo = blob.toBuilder()
-				.setMetadata(blob.metadata?.plus(("status" to FilStatus.SLETTET.value)))
-				.build()
-			storage.update(updatedBlobInfo)
-			logger.info("$innsendingsId: Fil ${blob.name} markert som slettet i bucket $bucket")
-			return true
+			var currentBlob = blob
+			lateinit var conflict: StorageException
+			for (attempt in 1..MAX_SOFT_DELETE_ATTEMPTS) {
+				val metadata = requireNotNull(currentBlob.metadata) { "Metadata mangler for fil ${blob.name}" }
+				val updatedBlobInfo = currentBlob.toBuilder()
+					.setMetadata(metadata + ("status" to FilStatus.SLETTET.value))
+					.build()
+				try {
+					storage.update(
+						updatedBlobInfo,
+						Storage.BlobTargetOption.generationMatch(),
+						Storage.BlobTargetOption.metagenerationMatch(),
+					)
+					logger.info("$innsendingsId: Fil ${blob.name} markert som slettet i bucket $bucket")
+					return true
+				} catch (ex: StorageException) {
+					if (ex.code != 409 && ex.code != 412) throw ex
+					val refreshedBlob = storage.get(blob.blobId) ?: throw ex
+					if (refreshedBlob.generation != blob.generation) throw ex
+					if (refreshedBlob.metadata?.get("status") == FilStatus.SLETTET.value) {
+						logger.info("$innsendingsId: Fil ${blob.name} allerede markert som slettet i bucket $bucket")
+						return true
+					}
+					conflict = ex
+					currentBlob = refreshedBlob
+					if (attempt < MAX_SOFT_DELETE_ATTEMPTS) {
+						logger.warn("$innsendingsId: Metadatakonflikt ved sletting av fil ${blob.name}, prøver på nytt etter forsøk $attempt")
+					}
+				}
+			}
+			throw conflict
 		}
 	}
 
@@ -146,6 +172,8 @@ class FileStorageImpl(
 		return blobs.iterateAll().toList()
 	}
 }
+
+private const val MAX_SOFT_DELETE_ATTEMPTS = 3
 
 fun List<Blob>.getFile(filId: UUID): Blob? = this.firstOrNull { it.metadata?.get("filId") == filId.toString() }
 
