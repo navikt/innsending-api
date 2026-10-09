@@ -1,7 +1,9 @@
 package no.nav.soknad.innsending.service.fillager
 
+import com.google.api.client.http.LowLevelHttpRequest
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.client.testing.http.MockHttpTransport
+import com.google.api.client.testing.http.MockLowLevelHttpRequest
 import com.google.api.client.testing.http.MockLowLevelHttpResponse
 import com.google.api.services.storage.model.StorageObject
 import com.google.api.gax.paging.Page
@@ -45,9 +47,6 @@ class FileStorageImplTest {
 		every { storage.get(any<BlobId>()) } answers { persistedBlob }
 		every { storage.update(any<BlobInfo>(), *anyVararg<Storage.BlobTargetOption>()) } answers {
 			persist(firstArg<BlobInfo>())
-		}
-		every { storage.update(any<BlobInfo>()) } answers {
-			storage.update(firstArg<BlobInfo>(), *emptyArray<Storage.BlobTargetOption>())
 		}
 	}
 
@@ -274,7 +273,7 @@ class FileStorageImplTest {
 		snapshot(request, request.metageneration + 1).also { persistedBlob = it }
 
 	private fun snapshot(info: BlobInfo, metageneration: Long = 1): Blob {
-		val objectJson = GsonFactory.getDefaultInstance().toString(
+		snapshotJson = GsonFactory.getDefaultInstance().toString(
 			StorageObject()
 				.setBucket(info.bucket)
 				.setName(info.name)
@@ -282,13 +281,21 @@ class FileStorageImplTest {
 				.setMetageneration(metageneration)
 				.setMetadata(info.metadata)
 		)
-		val transport = MockHttpTransport.Builder()
-			.setLowLevelHttpResponse(MockLowLevelHttpResponse().setContentType("application/json").setContent(objectJson))
-			.build()
-		return StorageOptions.newBuilder()
-			.setProjectId("test-project")
-			.setCredentials(NoCredentials.getInstance())
-			.setTransportOptions(HttpTransportOptions.newBuilder().setHttpTransportFactory { transport }.build())
-			.build().service.get(BlobId.of(info.bucket, info.name))
+		return snapshotStorage.get(BlobId.of(info.bucket, info.name))
 	}
+
+	private var snapshotJson = ""
+
+	private val snapshotTransport = object : MockHttpTransport() {
+		override fun buildRequest(method: String, url: String): LowLevelHttpRequest =
+			MockLowLevelHttpRequest(url).setResponse(
+				MockLowLevelHttpResponse().setContentType("application/json").setContent(snapshotJson)
+			)
+	}
+
+	private val snapshotStorage: Storage = StorageOptions.newBuilder()
+		.setProjectId("test-project")
+		.setCredentials(NoCredentials.getInstance())
+		.setTransportOptions(HttpTransportOptions.newBuilder().setHttpTransportFactory { snapshotTransport }.build())
+		.build().service
 }

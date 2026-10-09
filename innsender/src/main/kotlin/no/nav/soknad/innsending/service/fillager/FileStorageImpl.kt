@@ -110,9 +110,8 @@ class FileStorageImpl(
 			}
 		} else {
 			var currentBlob = blob
-			var attempt = 0
-			while (true) {
-				attempt++
+			lateinit var conflict: StorageException
+			for (attempt in 1..MAX_SOFT_DELETE_ATTEMPTS) {
 				val metadata = requireNotNull(currentBlob.metadata) { "Metadata mangler for fil ${blob.name}" }
 				val updatedBlobInfo = currentBlob.toBuilder()
 					.setMetadata(metadata + ("status" to FilStatus.SLETTET.value))
@@ -133,11 +132,14 @@ class FileStorageImpl(
 						logger.info("$innsendingsId: Fil ${blob.name} allerede markert som slettet i bucket $bucket")
 						return true
 					}
-					if (attempt >= 3) throw ex
-					logger.warn("$innsendingsId: Metadatakonflikt ved sletting av fil ${blob.name}, prøver på nytt etter forsøk $attempt")
+					conflict = ex
 					currentBlob = refreshedBlob
+					if (attempt < MAX_SOFT_DELETE_ATTEMPTS) {
+						logger.warn("$innsendingsId: Metadatakonflikt ved sletting av fil ${blob.name}, prøver på nytt etter forsøk $attempt")
+					}
 				}
 			}
+			throw conflict
 		}
 	}
 
@@ -170,6 +172,8 @@ class FileStorageImpl(
 		return blobs.iterateAll().toList()
 	}
 }
+
+private const val MAX_SOFT_DELETE_ATTEMPTS = 3
 
 fun List<Blob>.getFile(filId: UUID): Blob? = this.firstOrNull { it.metadata?.get("filId") == filId.toString() }
 
