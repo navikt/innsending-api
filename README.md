@@ -20,18 +20,6 @@ henter søknadsfilene via REST endepunkt fra `innsending-api`.
 Se [Arktitektur Wiki](https://github.com/navikt/archiving-infrastructure/wiki) for mer informasjon om hvordan oppsettet
 fungerer.
 
-## Brukeridentitet
-
-I `test`, `dev` og `prod` må brukeridentiteten hentes fra tokenet. Manglende
-brukerclaims eller feil datatype i `pid` gir en generisk 401-respons uten
-claimverdier. Manglende request-kontekst og programfeil videreføres som serverfeil,
-aldri som en reserveidentitet.
-
-`SubjectHandlerTestImpl` gir fortsatt en eksplisitt testidentitet i `local`,
-`docker` og `endtoend`. Azure-flyten for ettersendingsoppgaver bruker den eksplisitte
-`brukerId` i oppgaven til å finne tidligere søknader. Feil i dette databaseoppslaget
-videreføres i stedet for å behandles som et tomt resultat.
-
 ## Utvikling
 
 ### Bygge lokalt
