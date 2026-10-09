@@ -33,6 +33,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.OffsetDateTime
+import kotlin.test.assertFailsWith
+import kotlin.test.assertSame
 
 class EttersendingServiceTest : ApplicationTest() {
 
@@ -91,7 +93,7 @@ class EttersendingServiceTest : ApplicationTest() {
 		every { subjectHandler.getClientId() } returns "application"
 	}
 
-	private fun lagEttersendingService(): EttersendingService = EttersendingService(
+	private fun lagEttersendingService(soknadService: SoknadService = this.soknadService): EttersendingService = EttersendingService(
 		repo = repo,
 		skjemaService = skjemaService,
 		exceptionHelper = exceptionHelper,
@@ -118,6 +120,19 @@ class EttersendingServiceTest : ApplicationTest() {
 		pdlInterface = pdlInterface,
 		documentService = documentService,
 	)
+
+	@Test
+	fun `submitted application lookup failure is not treated as an empty result`() {
+		val failingSoknadService = mockk<SoknadService>()
+		val failure = IllegalStateException("Database unavailable")
+		every { failingSoknadService.hentInnsendteSoknader(any()) } throws failure
+		val service = lagEttersendingService(failingSoknadService)
+
+		assertSame(failure, assertFailsWith<IllegalStateException> {
+			service.getInnsendteSoknader("NAV 55-00.60", testpersonid)
+		})
+		verify(exactly = 0) { subjectHandler.getUserIdFromToken() }
+	}
 
 	@Test
 	fun `ettersending inherits grant user digital access including absence`() {

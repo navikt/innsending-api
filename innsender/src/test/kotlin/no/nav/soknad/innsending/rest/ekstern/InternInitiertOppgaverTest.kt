@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.rest.ekstern
 
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearAllMocks
+import io.mockk.every
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
@@ -10,10 +11,16 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
+import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
+import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.repository.VedleggRepository
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.service.RepositoryUtils
+import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.ApiWebClient
+import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -22,10 +29,12 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import org.springframework.test.util.AopTestUtils
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.*
 import java.lang.Thread.sleep
+import java.time.LocalDateTime
 import kotlin.test.assertNull
 
 
@@ -42,6 +51,12 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 
 	@SpykBean()
 	lateinit var publisherInterface: PublisherInterface
+
+	@SpykBean
+	lateinit var pdlInterface: PdlInterface
+
+	@Autowired
+	lateinit var repo: RepositoryUtils
 
 	@Autowired
 	private lateinit var soknadRepository: SoknadRepository
@@ -62,6 +77,45 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		clearAllMocks()
 		vedleggRepository.deleteAll()
 		soknadRepository.deleteAll()
+	}
+
+	@Test
+	fun `Azure task links to the explicit user and not the fallback user's newer application`() {
+		val brukerId = "10987654321"
+		val skjemanr = "NAV 55-00.60"
+		val pdl = AopTestUtils.getUltimateTargetObject<PdlInterface>(pdlInterface)
+		every { pdl.hentPersonIdents(any()) } answers {
+			listOf(IdentDto(firstArg(), "FOLKEREGISTERIDENT", false))
+		}
+		val ownApplication = repo.lagreSoknad(
+			SoknadDbDataTestBuilder(
+				brukerId = brukerId,
+				skjemanr = skjemanr,
+				status = SoknadsStatus.Innsendt,
+				innsendtdato = LocalDateTime.now().minusDays(2),
+			).build()
+		)
+		val otherApplication = repo.lagreSoknad(
+			SoknadDbDataTestBuilder(
+				brukerId = testpersonid,
+				skjemanr = skjemanr,
+				status = SoknadsStatus.Innsendt,
+				innsendtdato = LocalDateTime.now().minusDays(1),
+			).build()
+		)
+
+		val ettersending = opprettSoknad(brukerId, listOf("W1"), skjemanr, koblesTilEksisterendeSoknad = true)
+
+		assertEquals(ownApplication.innsendingsid, ettersending.ettersendingsId)
+		val stored = repo.hentSoknadDb(ettersending.innsendingsId!!)
+		assertEquals(brukerId, stored.brukerid)
+		assertEquals(ownApplication.innsendingsid, stored.ettersendingsid)
+		assertTrue(stored.ettersendingsid != otherApplication.innsendingsid)
+		verify(exactly = 1) { pdl.hentPersonIdents(brukerId) }
+		verify(exactly = 0) { pdl.hentPersonIdents(testpersonid) }
+		verify(timeout = 5000, exactly = 1) {
+			publisherInterface.opprettBrukernotifikasjon(match { it.soknadRef.innsendingId == ettersending.innsendingsId })
+		}
 	}
 
 	@Test
@@ -177,7 +231,13 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		assertEquals(brukerId, list?.get(0)?.brukerId)
 	}
 
-	private fun opprettSoknad(brukerId: String, vedlegg: List<String>, skjemanr: String, brukernotifikasjonstype: BrukernotifikasjonsType? = null): DokumentSoknadDto {
+	private fun opprettSoknad(
+		brukerId: String,
+		vedlegg: List<String>,
+		skjemanr: String,
+		brukernotifikasjonstype: BrukernotifikasjonsType? = null,
+		koblesTilEksisterendeSoknad: Boolean = false,
+	): DokumentSoknadDto {
 		val vedleggsListe = mutableListOf<InnsendtVedleggDto>()
 		vedlegg.forEach { vedleggsListe.add(InnsendtVedleggDto(vedleggsnr = it, tittel = "Tittel"+it, url = null)) }
 		val oppgave = EksternEttersendingsOppgave(
@@ -187,7 +247,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 			tema = "BID",
 			tittel = "Avtale om barnebidrag",
 			brukernotifikasjonstype = brukernotifikasjonstype,
-			koblesTilEksisterendeSoknad = false,
+			koblesTilEksisterendeSoknad = koblesTilEksisterendeSoknad,
 			vedleggsListe = vedleggsListe
 		)
 

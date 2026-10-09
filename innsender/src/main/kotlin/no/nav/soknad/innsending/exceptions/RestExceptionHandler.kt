@@ -130,6 +130,19 @@ class RestExceptionHandler {
 
 	// 401
 	@ExceptionHandler
+	fun invalidUserIdentityException(exception: InvalidUserIdentityException): ResponseEntity<RestErrorResponseDto> {
+		logger.warn("Autentisering feilet: ugyldig brukerclaim")
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = exception.message,
+				timestamp = OffsetDateTime.now(),
+				errorCode = "errorCode.unauthorized"
+			), HttpStatus.UNAUTHORIZED
+		)
+	}
+
+	// 401
+	@ExceptionHandler
 	fun unauthenticatedHandler(
 		request: HttpServletRequest,
 		exception: JwtTokenMissingException
