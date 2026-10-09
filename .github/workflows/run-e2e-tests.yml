@@ -33,7 +33,7 @@ jobs:
             innsending-api@${{ github.head_ref }}
             arkiv-mock
             soknadsmottaker
-            soknadsarkiverer
+            soknadsarkiverer@fix/kafka-test-client-lifecycle
           prepull_test_images: true
         env:
           GITHUB_NAV_TOKEN: ${{ secrets.READER_TOKEN }}
