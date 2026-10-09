@@ -2,7 +2,6 @@ package no.nav.soknad.innsending.rest.ekstern
 
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearAllMocks
-import io.mockk.slot
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
@@ -137,13 +136,15 @@ class EksternRestApiTest : ApplicationTest() {
 			.assertSuccess()
 			.body
 
-		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
-		val noticationSlot = slot<AddNotification>()
-		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlot)) }
+		verify(timeout = 5000) {
+			publisherInterface.opprettBrukernotifikasjon(match { it.soknadRef.innsendingId == ettersending.innsendingsId })
+		}
+		val noticationSlots = mutableListOf<AddNotification>()
+		verify(atLeast = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlots)) }
 
 		// Then
 		// The notification is an utkast if erSystemGenerert is false
-		val notication = noticationSlot.captured
+		val notication = noticationSlots.single { it.soknadRef.innsendingId == ettersending.innsendingsId }
 		assertEquals(false, notication.soknadRef.erSystemGenerert)
 		assertEquals(true, notication.soknadRef.erEttersendelse)
 		assertEquals(ettersending.innsendingsId, notication.soknadRef.innsendingId)
