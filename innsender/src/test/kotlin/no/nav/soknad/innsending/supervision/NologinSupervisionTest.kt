@@ -4,6 +4,8 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.verifyOrder
+import io.mockk.verifySequence
 import no.nav.soknad.innsending.cleanup.LeaderSelection
 import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.repository.domain.models.ConfigDbData
@@ -55,6 +57,60 @@ class NologinSupervisionTest {
 	}
 
 	@Test
+	fun `should report main switch on without supervising when not leader`() {
+		every { leaderSelection.isLeader() } returns false
+		every { configService.getConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH) } returns mainSwitchOn
+
+		nologinSupervision.supervise()
+
+		verify(exactly = 1) { metrics.setNologinMainSwitch(1) }
+		verify(exactly = 0) { soknadRepository.countRecentlySubmitted(any(), any()) }
+		verify(exactly = 0) { configService.setConfig(any(), any(), any()) }
+		verify(exactly = 0) { configService.getConfig(ConfigDefinition.NOLOGIN_MAX_SUBMISSIONS_COUNT) }
+		verify(exactly = 0) { configService.getConfig(ConfigDefinition.NOLOGIN_MAX_SUBMISSIONS_WINDOW_MINUTES) }
+	}
+
+	@Test
+	fun `should report main switch off when not leader`() {
+		every { leaderSelection.isLeader() } returns false
+		every { configService.getConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH) } returns mainSwitchOff
+
+		nologinSupervision.supervise()
+
+		verify(exactly = 1) { metrics.setNologinMainSwitch(0) }
+		verify(exactly = 0) { soknadRepository.countRecentlySubmitted(any(), any()) }
+		verify(exactly = 0) { configService.setConfig(any(), any(), any()) }
+	}
+
+	@Test
+	fun `should update main switch from on to off when not leader`() {
+		every { leaderSelection.isLeader() } returns false
+		every { configService.getConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH) } returnsMany listOf(mainSwitchOn, mainSwitchOff)
+
+		nologinSupervision.supervise()
+		nologinSupervision.supervise()
+
+		verifySequence {
+			metrics.setNologinMainSwitch(1)
+			metrics.setNologinMainSwitch(0)
+		}
+		verify(exactly = 0) { soknadRepository.countRecentlySubmitted(any(), any()) }
+		verify(exactly = 0) { configService.setConfig(any(), any(), any()) }
+	}
+
+	@Test
+	fun `should report main switch even when leader selection fails`() {
+		every { leaderSelection.isLeader() } throws IllegalStateException("Leader selection unavailable")
+		every { configService.getConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH) } returns mainSwitchOn
+
+		nologinSupervision.supervise()
+
+		verify(exactly = 1) { metrics.setNologinMainSwitch(1) }
+		verify(exactly = 0) { soknadRepository.countRecentlySubmitted(any(), any()) }
+		verify(exactly = 0) { configService.setConfig(any(), any(), any()) }
+	}
+
+	@Test
 	fun `should not count recently submitted nologin application when main switch off`() {
 		every { configService.getConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH) } returns mainSwitchOff
 		nologinSupervision.supervise()
@@ -83,6 +139,11 @@ class NologinSupervisionTest {
 		verify(exactly = 1) { soknadRepository.countRecentlySubmitted(any(), any()) }
 		verify(exactly = 1) { metrics.setNologinMainSwitch(0) }
 		verify(exactly = 1) { configService.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "off", any()) }
+		verifyOrder {
+			metrics.setNologinMainSwitch(1)
+			configService.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "off", "system")
+			metrics.setNologinMainSwitch(0)
+		}
 	}
 
 	private fun configDto(definition: ConfigDefinition, value: String) = ConfigDbData(
