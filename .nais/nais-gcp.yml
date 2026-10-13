@@ -122,7 +122,7 @@ spec:
           - name: cloudsql.enable_pgaudit
             value: "on"
           - name: pgaudit.log
-            value: "read"
+            value: "read,write"
           - name: pgaudit.log_parameter
             value: "off"
           - name: pgaudit.log_relation
