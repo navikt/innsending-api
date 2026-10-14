@@ -12,6 +12,8 @@ import no.nav.soknad.innsending.service.InnsendingService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.testpersonid
+import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
+import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
 import org.junit.jupiter.api.Assertions
 import kotlin.test.assertTrue
 
@@ -40,13 +42,48 @@ class SoknadAssertions {
 			spraak: String = "nb_NO"
 		): DokumentSoknadDto {
 			val skjemanr = "NAV 55-00.60"
-			val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak, vedleggsListe)
+			val hoveddokument = VedleggDtoTestBuilder(
+				vedleggsnr = skjemanr,
+				erHoveddokument = true,
+				mimetype = Mimetype.applicationSlashPdf,
+				innsendtdato = null,
+				formioId = null
+			).build()
+			val hoveddokumentVariant = VedleggDtoTestBuilder(
+				vedleggsnr = skjemanr,
+				erHoveddokument = true,
+				erVariant = true,
+				erPdfa = false,
+				mimetype = Mimetype.applicationSlashJson,
+				innsendtdato = null,
+				formioId = null
+			).build()
+			val vedlegg = vedleggsListe.map { vedleggsnr ->
+				VedleggDtoTestBuilder(
+					vedleggsnr = vedleggsnr,
+					erPdfa = false,
+					erPakrevd = vedleggsnr != "N6",
+					innsendtdato = null,
+					skjemaurl = null
+				).build()
+			}
+			val input = DokumentSoknadDtoTestBuilder(
+				brukerId = brukerid,
+				skjemanr = skjemanr,
+				spraak = spraak,
+				tema = "BID",
+				vedleggsListe = listOf(hoveddokument, hoveddokumentVariant) + vedlegg
+			).build()
+			val skjemaDto = testOgSjekkOpprettingAvSoknad(soknadService, input)
+			val dokumentSoknadDto = soknadService.hentSoknad(requireNotNull(skjemaDto.innsendingsId))
 
 			Assertions.assertEquals(brukerid, dokumentSoknadDto.brukerId)
 			Assertions.assertEquals(skjemanr, dokumentSoknadDto.skjemanr)
 			Assertions.assertEquals(spraak, dokumentSoknadDto.spraak)
 			Assertions.assertTrue(dokumentSoknadDto.innsendingsId != null)
-			Assertions.assertTrue(dokumentSoknadDto.vedleggsListe.size == vedleggsListe.size + 1)
+			Assertions.assertEquals(vedleggsListe.size + 2, dokumentSoknadDto.vedleggsListe.size)
+			Assertions.assertTrue(dokumentSoknadDto.vedleggsListe.all { it.id != null })
+			Assertions.assertEquals(vedleggsListe, dokumentSoknadDto.vedleggsListe.filter { !it.erHoveddokument }.map { it.vedleggsnr })
 
 			return dokumentSoknadDto
 
@@ -94,6 +131,3 @@ class SoknadAssertions {
 		}
 	}
 }
-
-
-
