@@ -43,7 +43,7 @@ Naviger deretter til prosjektmappen for dette repoet på maskinen og installer m
 mise install
 ```
 
-Dette installerer Java 21 og Maven 3.9 lokalt for prosjektet. Aktiver mise i shellet ditt
+Dette installerer Java 21 og Maven 3.10 lokalt for prosjektet. Aktiver mise i shellet ditt
 ```
 mise activate <shell>
 ```
