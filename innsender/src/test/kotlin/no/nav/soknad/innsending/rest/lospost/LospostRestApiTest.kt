@@ -199,9 +199,7 @@ class LospostRestApiTest : ApplicationTest() {
 			.assertSuccess()
 		assertContains(response.headers?.location.toString(), "ansatt.dev.nav.no/sendinn")
 
-		val parameterSlot = slot<AddNotification>()
-		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
-		val notification = parameterSlot.captured
+		val notification = awaitNotification(assertNotNull(response.body.innsendingsId))
 		assertTrue(
 			notification.brukernotifikasjonInfo.lenke.contains("ansatt.dev.nav.no/sendinn"),
 			"Link not expected: ${notification.brukernotifikasjonInfo.lenke}"
@@ -221,9 +219,7 @@ class LospostRestApiTest : ApplicationTest() {
 			.assertSuccess()
 		assertContains(response.headers?.location.toString(), "intern.dev.nav.no/sendinn")
 
-		val parameter = slot<AddNotification>()
-		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameter)) }
-		val notification = parameter.captured
+		val notification = awaitNotification(assertNotNull(response.body.innsendingsId))
 		assertTrue(
 			notification.brukernotifikasjonInfo.lenke.contains("intern.dev.nav.no/sendinn"),
 			"Link not expected: ${notification.brukernotifikasjonInfo.lenke}"
@@ -242,11 +238,8 @@ class LospostRestApiTest : ApplicationTest() {
 		val lospostDto = api.createLospost(request)
 			.assertSuccess()
 			.body
-		assertNotNull(lospostDto.innsendingsId)
-
-		val parameterSlot = slot<AddNotification>()
-		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
-		val notification = parameterSlot.captured
+		val submissionId = assertNotNull(lospostDto.innsendingsId)
+		val notification = awaitNotification(submissionId)
 
 		assertEquals(lospostDto.innsendingsId, notification.soknadRef.innsendingId)
 		assertEquals(lospostDto.innsendingsId, notification.soknadRef.groupId)
@@ -280,6 +273,19 @@ class LospostRestApiTest : ApplicationTest() {
 
 	}
 
+
+	private fun awaitNotification(submissionId: String): AddNotification {
+		val notification = slot<AddNotification>()
+		verify(timeout = 5000, exactly = 1) {
+			notificationPublisher.opprettBrukernotifikasjon(
+				and(
+					match { it.soknadRef.innsendingId == submissionId },
+					capture(notification)
+				)
+			)
+		}
+		return notification.captured
+	}
 
 	fun loadFile10MB() = Hjelpemetoder.getBytesFromFile("/mellomstor-fra-jpg.pdf")
 
