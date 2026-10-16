@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.brukernotifikasjon.kafka
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.verify
@@ -26,13 +26,13 @@ class SendTilPublisherRetryTest : ApplicationTest() {
 	@Autowired
 	lateinit var soknadRepository: SoknadRepository
 
-	@SpykBean
+	@MockkSpyBean
 	private lateinit var sendTilPublisher: PublisherInterface
 
-	@SpykBean
+	@MockkSpyBean
 	private lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher
 
-	@SpykBean
+	@MockkSpyBean
 	private lateinit var notificationService: NotificationService
 
 	@BeforeEach

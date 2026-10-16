@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.rest
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
 import io.mockk.slot
 import io.mockk.verify
@@ -45,10 +45,10 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 	@Autowired
 	lateinit var repo: RepositoryUtils
 
-	@SpykBean
+	@MockkSpyBean
 	private lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher
 
-	@SpykBean
+	@MockkSpyBean
 	private lateinit var soknadsmottakerApi: MottakerAPITest
 
 	 @LocalServerPort
