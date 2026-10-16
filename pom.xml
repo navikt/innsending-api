@@ -81,7 +81,7 @@
 		<mockk.version>1.14.11</mockk.version>
 		<springmockk.version>4.0.2</springmockk.version>
 		<testcontainers.version>2.0.5</testcontainers.version>
-		<junit-jupiter-params>5.12.2</junit-jupiter-params>
+		<junit-jupiter.version>6.1.3</junit-jupiter.version>
 		<mock-oauth2-server.version>3.0.3</mock-oauth2-server.version>
 
 		<!--PDF-->
