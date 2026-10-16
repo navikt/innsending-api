@@ -28,6 +28,7 @@ import no.nav.soknad.innsending.util.models.hoveddokumentVariant
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
+import no.nav.soknad.innsending.utils.transactionalSubmissionService
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
 import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
@@ -39,6 +40,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.transaction.PlatformTransactionManager
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.*
@@ -48,6 +50,9 @@ class SoknadServiceTest : ApplicationTest() {
 
 	@Autowired
 	private lateinit var repo: RepositoryUtils
+
+	@Autowired
+	private lateinit var transactionManager: PlatformTransactionManager
 
 	@Autowired
 	private lateinit var innsenderMetrics: InnsenderMetrics
@@ -126,7 +131,7 @@ class SoknadServiceTest : ApplicationTest() {
 		restConfig = restConfig,
 		pdlInterface = pdlInterface,
 		documentService = documentService,
-	)
+	).let { transactionalSubmissionService(it, transactionManager) }
 
 	@Test
 	fun opprettNySoknadLagrerOpplysningerOgOpprettetHendelse() {

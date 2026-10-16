@@ -35,6 +35,10 @@ Paths below are relative to `innsender/src/test/kotlin/no/nav/soknad/innsending/
 
 Keep application state and captured calls isolated per test. Prefer the external client or publisher boundary when verifying effects, rather than spying on internal orchestration.
 
+Some external clients also implement `HealthRequestInterface` and have qualifiers required by `HealthCheck`. Preserve those bean contracts when replacing them, for example by mocking the concrete client class. Replacing only the business interface can prevent the test context from starting.
+
+For existing database-backed tests that construct `InnsendingService` directly, `utils/TransactionalSubmissionService.kt` applies its transaction annotations while keeping archival synchronous. REST tests use the application bean. Wrapping an entire test in a transaction is not a substitute for production commit boundaries and can hide stale persistence-context state after bulk updates.
+
 ## Asynchronous and concurrent behaviour
 
 - Use bounded waits, such as MockK `verify(timeout = ...)` for outgoing calls or bounded polling of REST GET results. Do not use fixed sleeps. Match `innsendingsId` or the payload's `innsendingId` to this test's application.

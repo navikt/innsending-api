@@ -22,6 +22,7 @@ import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
+import no.nav.soknad.innsending.utils.transactionalSubmissionService
 import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
@@ -35,12 +36,16 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.transaction.PlatformTransactionManager
 import kotlin.test.assertNotNull
 
 class InnsendingServiceTest : ApplicationTest() {
 
 	@Autowired
 	private lateinit var repo: RepositoryUtils
+
+	@Autowired
+	private lateinit var transactionManager: PlatformTransactionManager
 
 	@Autowired
 	private lateinit var innsenderMetrics: InnsenderMetrics
@@ -88,7 +93,7 @@ class InnsendingServiceTest : ApplicationTest() {
 		restConfig = restConfig,
 		pdlInterface = pdlInterface,
 		documentService = documentService,
-	)
+	).let { transactionalSubmissionService(it, transactionManager) }
 
 	@BeforeEach
 	fun setup() {
