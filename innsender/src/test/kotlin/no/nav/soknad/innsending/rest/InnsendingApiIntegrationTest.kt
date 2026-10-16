@@ -1011,7 +1011,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		} else {
 			assertEquals(HttpStatusCode.valueOf(200), submitStatus)
 			assertTrue(
-				deleteStatus == HttpStatusCode.valueOf(404) || deleteStatus == HttpStatusCode.valueOf(500),
+				deleteStatus == HttpStatusCode.valueOf(400) || deleteStatus == HttpStatusCode.valueOf(404),
 				"Unexpected parallel outcome: $callResponses"
 			)
 		}
