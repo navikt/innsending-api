@@ -37,7 +37,7 @@ Keep application state and captured calls isolated per test. Prefer the external
 
 Some external clients also implement `HealthRequestInterface` and have qualifiers required by `HealthCheck`. Preserve those bean contracts when replacing them, for example by mocking the concrete client class. Replacing only the business interface can prevent the test context from starting.
 
-For existing database-backed tests that construct `InnsendingService` directly, `utils/TransactionalSubmissionService.kt` applies its transaction annotations while keeping archival synchronous. REST tests use the application bean. Wrapping an entire test in a transaction is not a substitute for production commit boundaries and can hide stale persistence-context state after bulk updates.
+Use `withTransactions(service, transactionManager)` from `utils/TransactionalTestProxy.kt` only for manually constructed, class-proxyable services whose tests need real `@Transactional` behaviour. Use Spring-managed beans directly; tests with mocked repositories normally do not need this helper. It does not apply `@Async`, and `REQUIRED` joins any existing transaction, so avoid a test-wide transaction when verifying commit boundaries.
 
 ## Asynchronous and concurrent behaviour
 

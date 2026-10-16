@@ -25,7 +25,7 @@ import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
-import no.nav.soknad.innsending.utils.transactionalSubmissionService
+import no.nav.soknad.innsending.utils.withTransactions
 import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
@@ -122,7 +122,7 @@ class EttersendingServiceTest : ApplicationTest() {
 		restConfig = restConfig,
 		pdlInterface = pdlInterface,
 		documentService = documentService,
-	).let { transactionalSubmissionService(it, transactionManager) }
+	).let { withTransactions(it, transactionManager) }
 
 	@Test
 	fun `ettersending inherits grant user digital access including absence`() {

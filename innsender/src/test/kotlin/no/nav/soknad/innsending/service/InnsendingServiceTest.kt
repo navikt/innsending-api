@@ -22,7 +22,7 @@ import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
-import no.nav.soknad.innsending.utils.transactionalSubmissionService
+import no.nav.soknad.innsending.utils.withTransactions
 import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
@@ -93,7 +93,7 @@ class InnsendingServiceTest : ApplicationTest() {
 		restConfig = restConfig,
 		pdlInterface = pdlInterface,
 		documentService = documentService,
-	).let { transactionalSubmissionService(it, transactionManager) }
+	).let { withTransactions(it, transactionManager) }
 
 	@BeforeEach
 	fun setup() {

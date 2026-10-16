@@ -28,7 +28,7 @@ import no.nav.soknad.innsending.util.models.hoveddokumentVariant
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
-import no.nav.soknad.innsending.utils.transactionalSubmissionService
+import no.nav.soknad.innsending.utils.withTransactions
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
 import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
@@ -131,7 +131,7 @@ class SoknadServiceTest : ApplicationTest() {
 		restConfig = restConfig,
 		pdlInterface = pdlInterface,
 		documentService = documentService,
-	).let { transactionalSubmissionService(it, transactionManager) }
+	).let { withTransactions(it, transactionManager) }
 
 	@Test
 	fun opprettNySoknadLagrerOpplysningerOgOpprettetHendelse() {
