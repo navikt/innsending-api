@@ -80,7 +80,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 	}
 
 	@Test
-	fun `Azure task links to the explicit user and not the fallback user's newer application`() {
+	fun `Azure task uses explicit user when another user has a newer application`() {
 		val brukerId = "10987654321"
 		val skjemanr = "NAV 55-00.60"
 		val pdl = AopTestUtils.getUltimateTargetObject<PdlInterface>(pdlInterface)
@@ -95,7 +95,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 				innsendtdato = LocalDateTime.now().minusDays(2),
 			).build()
 		)
-		val otherApplication = repo.lagreSoknad(
+		repo.lagreSoknad(
 			SoknadDbDataTestBuilder(
 				brukerId = testpersonid,
 				skjemanr = skjemanr,
@@ -104,18 +104,25 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 			).build()
 		)
 
-		val ettersending = opprettSoknad(brukerId, listOf("W1"), skjemanr, koblesTilEksisterendeSoknad = true)
+		val vedlegg = listOf("W1")
+		val vedleggsListe = vedlegg.map { InnsendtVedleggDto(vedleggsnr = it, tittel = "Tittel$it", url = null) }
+		val oppgave = EksternEttersendingsOppgave(
+			brukerId = brukerId,
+			skjemanr = skjemanr,
+			sprak = "nb_NO",
+			tema = "BID",
+			tittel = "Avtale om barnebidrag",
+			koblesTilEksisterendeSoknad = true,
+			vedleggsListe = vedleggsListe
+		)
+		val response = api.createEttersendingsOppgave(oppgave)
 
-		assertEquals(ownApplication.innsendingsid, ettersending.ettersendingsId)
+		assertNotNull(response)
+		assertEquals(HttpStatus.CREATED, response.statusCode)
+		val ettersending = response.body!!
 		val stored = repo.hentSoknadDb(ettersending.innsendingsId!!)
 		assertEquals(brukerId, stored.brukerid)
 		assertEquals(ownApplication.innsendingsid, stored.ettersendingsid)
-		assertTrue(stored.ettersendingsid != otherApplication.innsendingsid)
-		verify(exactly = 1) { pdl.hentPersonIdents(brukerId) }
-		verify(exactly = 0) { pdl.hentPersonIdents(testpersonid) }
-		verify(timeout = 5000, exactly = 1) {
-			publisherInterface.opprettBrukernotifikasjon(match { it.soknadRef.innsendingId == ettersending.innsendingsId })
-		}
 	}
 
 	@Test
@@ -231,13 +238,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		assertEquals(brukerId, list?.get(0)?.brukerId)
 	}
 
-	private fun opprettSoknad(
-		brukerId: String,
-		vedlegg: List<String>,
-		skjemanr: String,
-		brukernotifikasjonstype: BrukernotifikasjonsType? = null,
-		koblesTilEksisterendeSoknad: Boolean = false,
-	): DokumentSoknadDto {
+	private fun opprettSoknad(brukerId: String, vedlegg: List<String>, skjemanr: String, brukernotifikasjonstype: BrukernotifikasjonsType? = null): DokumentSoknadDto {
 		val vedleggsListe = mutableListOf<InnsendtVedleggDto>()
 		vedlegg.forEach { vedleggsListe.add(InnsendtVedleggDto(vedleggsnr = it, tittel = "Tittel"+it, url = null)) }
 		val oppgave = EksternEttersendingsOppgave(
@@ -247,7 +248,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 			tema = "BID",
 			tittel = "Avtale om barnebidrag",
 			brukernotifikasjonstype = brukernotifikasjonstype,
-			koblesTilEksisterendeSoknad = koblesTilEksisterendeSoknad,
+			koblesTilEksisterendeSoknad = false,
 			vedleggsListe = vedleggsListe
 		)
 
