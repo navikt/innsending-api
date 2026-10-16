@@ -1,0 +1,33 @@
+components:
+  schemas:
+    AdminArkiveringsstatus:
+      type: string
+      description: Arkiveringsstatus som kan settes via admin-endepunkt
+      enum:
+        - Arkivert
+      example: Arkivert
+    OppdaterArkiveringsstatusRequest:
+      type: object
+      required:
+        - arkiveringsstatus
+        - begrunnelse
+      properties:
+        arkiveringsstatus:
+          $ref: "#/components/schemas/AdminArkiveringsstatus"
+        begrunnelse:
+          type: string
+          description: Kort begrunnelse for endringen
+          minLength: 1
+          maxLength: 200
+          example: "Arkivering feilet i dev pga. testdata"
+    OppdaterArkiveringsstatusResponse:
+      type: object
+      required:
+        - innsendingsId
+        - arkiveringsstatus
+      properties:
+        innsendingsId:
+          type: string
+          example: "f1d8b3a2-3c4e-4c1e-9f4b-2a6f1e2d3c4b"
+        arkiveringsstatus:
+          $ref: "#/components/schemas/AdminArkiveringsstatus"

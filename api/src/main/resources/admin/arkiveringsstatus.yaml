@@ -1,0 +1,56 @@
+post:
+  summary: Sett arkiveringsstatus for søknad til Arkivert
+  description: |
+    Setter arkiveringsstatus for en søknad fra ArkiveringFeilet til Arkivert.
+    Kun tilgjengelig i dev-gcp og kun for kall fra innsending-admin. Innlogget bruker og begrunnelse logges.
+  operationId: oppdaterArkiveringsstatus
+
+  parameters:
+    - $ref: "../common/components.yaml#/components/parameters/InnsendingsId"
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "./components.yaml#/components/schemas/OppdaterArkiveringsstatusRequest"
+
+  responses:
+    200:
+      description: Arkiveringsstatus ble oppdatert
+      content:
+        application/json:
+          schema:
+            $ref: "./components.yaml#/components/schemas/OppdaterArkiveringsstatusResponse"
+    400:
+      description: Ugyldig forespørsel
+      content:
+        application/json:
+          schema:
+            $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
+    401:
+      description: Uautentisert
+      content:
+        application/json:
+          schema:
+            $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
+    403:
+      description: Ikke tillatt (feil miljø eller feil klientapplikasjon)
+      content:
+        application/json:
+          schema:
+            $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
+    404:
+      description: Fant ikke søknad
+      content:
+        application/json:
+          schema:
+            $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
+    409:
+      description: Søknadens arkiveringsstatus er ikke ArkiveringFeilet
+      content:
+        application/json:
+          schema:
+            $ref: "../common/components.yaml#/components/schemas/RestErrorResponseDto"
+  tags:
+    - admin

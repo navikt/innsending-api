@@ -788,6 +788,9 @@ paths:
   /admin/v1/job:
     $ref: "./admin/job.yaml"
 
+  /admin/v1/soknad/{innsendingsId}/arkiveringsstatus:
+    $ref: "./admin/arkiveringsstatus.yaml"
+
   /v1/application-nologin/{innsendingsId}:
      $ref: "./application/nologin/nologin.yaml"
 

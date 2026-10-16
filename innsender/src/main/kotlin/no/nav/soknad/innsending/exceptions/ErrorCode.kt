@@ -5,6 +5,8 @@ enum class ErrorCode(val code: String) {
 	// General Errors
 	GENERAL_ERROR("somethingFailedTryLater"),
 	NOT_FOUND("resourceNotFound"),
+	FORBIDDEN("forbidden"),
+	CONFLICT("conflict"),
 	NON_CRITICAL("nonCriticalError"),
 	ILLEGAL_ARGUMENT("illegalArgument"),
 	MISSING_MULTIPART_PART("invalidRequest.missingMultipartPart"),

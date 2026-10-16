@@ -10,8 +10,10 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.context.request.async.AsyncRequestNotUsableException
+import java.util.UUID
 import kotlin.test.assertTrue
 
 class RestExceptionHandlerTest {
@@ -31,6 +33,20 @@ class RestExceptionHandlerTest {
 	@AfterEach
 	fun tearDown() {
 		logCaptor.close()
+	}
+
+	@Test
+	fun `returns bad request for invalid UUID without logging the supplied value`() {
+		mockMvc.get("/uuid/invalid-uuid")
+			.andExpect {
+				status { isBadRequest() }
+				jsonPath("$.errorCode") { value("illegalArgument") }
+				jsonPath("$.message") { value("Ugyldig format for parameter 'id'") }
+			}
+
+		assertTrue(logCaptor.warnLogs.any { it == "Ugyldig format for parameter 'id'" })
+		assertTrue(logCaptor.logs.none { it.contains("invalid-uuid") })
+		assertTrue(logCaptor.errorLogs.isEmpty())
 	}
 
 	@Test
@@ -57,6 +73,9 @@ class RestExceptionHandlerTest {
 
 	@RestController
 	private class DisconnectController {
+
+		@GetMapping("/uuid/{id}")
+		fun uuid(@PathVariable id: UUID): String = id.toString()
 
 		@GetMapping("/disconnect/async", produces = [MediaType.TEXT_PLAIN_VALUE])
 		fun asyncDisconnect(): String {
