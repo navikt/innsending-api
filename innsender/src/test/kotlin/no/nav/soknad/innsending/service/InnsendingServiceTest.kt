@@ -144,8 +144,13 @@ class InnsendingServiceTest : ApplicationTest() {
 		)
 
 		// Så skal
-		assertEquals(1, hoveddok.size)
-		assertTrue(hoveddok.all { it.fileStatus == SoknadFile.FileStatus.ok })
+		assertEquals(2, hoveddok.size)
+		assertEquals(SoknadFile.FileStatus.ok, hoveddok.single {
+			it.id == dokumentSoknadDto.vedleggsListe.single { vedlegg -> vedlegg.erHoveddokument && !vedlegg.erVariant }.uuid
+		}.fileStatus)
+		assertEquals(SoknadFile.FileStatus.notfound, hoveddok.single {
+			it.id == dokumentSoknadDto.vedleggsListe.single { vedlegg -> vedlegg.erHoveddokument && vedlegg.erVariant }.uuid
+		}.fileStatus)
 
 		val soknad = repo.hentSoknadDb(dokumentSoknadDto.innsendingsId!!)
 		assertEquals(SoknadsStatus.Innsendt, soknad.status)
@@ -470,8 +475,9 @@ class InnsendingServiceTest : ApplicationTest() {
 		)
 
 		// Så skal
-		assertEquals(7, vedleggsFiler.size)
+		assertEquals(8, vedleggsFiler.size)
 		assertEquals(2, vedleggsFiler.filter { it.fileStatus == SoknadFile.FileStatus.ok }.size)
+		assertEquals(6, vedleggsFiler.filter { it.fileStatus == SoknadFile.FileStatus.notfound }.size)
 		assertEquals(
 			2,
 			AntallSider().finnAntallSider(vedleggsFiler.filter { it.fileStatus == SoknadFile.FileStatus.ok }.last().content)

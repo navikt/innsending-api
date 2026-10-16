@@ -129,53 +129,28 @@ class SoknadServiceTest : ApplicationTest() {
 	)
 
 	@Test
-	fun opprettSoknadGittSkjemanr() {
+	fun opprettNySoknadLagrerOpplysningerOgOpprettetHendelse() {
 		val brukerid = testpersonid
 		val skjemanr = defaultSkjemanr
 		val spraak = "nb_NO"
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
+		val input = DokumentSoknadDtoTestBuilder(
+			brukerId = brukerid,
+			skjemanr = skjemanr,
+			spraak = spraak
+		).build()
+		val skjemaDto = soknadService.opprettNySoknad(input)
+		val dokumentSoknadDto = soknadService.hentSoknad(requireNotNull(skjemaDto.innsendingsId))
 
 		assertEquals(brukerid, dokumentSoknadDto.brukerId)
 		assertEquals(skjemanr, dokumentSoknadDto.skjemanr)
 		assertEquals(spraak, dokumentSoknadDto.spraak)
+		assertEquals(input.tittel, dokumentSoknadDto.tittel)
+		assertEquals(input.tema, dokumentSoknadDto.tema)
 		assertNotNull(dokumentSoknadDto.innsendingsId)
 
 		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
 		assertTrue(hendelseDbDatas.isNotEmpty())
 		assertEquals(HendelseType.Opprettet, hendelseDbDatas[0].hendelsetype)
-	}
-
-	@Test
-	fun opprettSoknadGittSkjemanrOgIkkeStottetSprak() {
-		val brukerid = testpersonid
-		val skjemanr = defaultSkjemanr
-		val spraak = "fr"
-		val dokumentSoknadDto = soknadService.opprettSoknad(brukerid, skjemanr, spraak)
-
-		assertEquals(brukerid, dokumentSoknadDto.brukerId)
-		assertEquals(skjemanr, dokumentSoknadDto.skjemanr)
-		assertEquals(spraak, dokumentSoknadDto.spraak) // Beholder ønsket språk
-		assertEquals("Child support agreement", dokumentSoknadDto.tittel)
-		assertNotNull(dokumentSoknadDto.innsendingsId)
-
-		val hendelseDbDatas = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
-		assertTrue(hendelseDbDatas.isNotEmpty())
-		assertEquals(HendelseType.Opprettet, hendelseDbDatas[0].hendelsetype)
-	}
-
-
-	@Test
-	fun opprettSoknadGittUkjentSkjemanrKasterException() {
-		val brukerid = testpersonid
-		val skjemanr = "NAV XX-00.11"
-		val spraak = "nb_NO"
-		val exception = assertThrows(
-			ResourceNotFoundException::class.java,
-			{ soknadService.opprettSoknad(brukerid, skjemanr, spraak) },
-			"ResourceNotFoundException was expected"
-		)
-
-		assertEquals("Skjema med id = $skjemanr ikke funnet i kodeverk", exception.message)
 	}
 
 	@Test
@@ -511,13 +486,9 @@ class SoknadServiceTest : ApplicationTest() {
 
 	@Test
 	fun testAutomatiskSlettingAvGamleSoknader() {
-		val brukerid = testpersonid
-		val skjemanr = defaultSkjemanr
-		val spraak = "nb_NO"
-
 		val dokumentSoknadDtoList = mutableListOf<DokumentSoknadDto>()
-		dokumentSoknadDtoList.add(soknadService.opprettSoknad(brukerid, skjemanr, spraak))
-		dokumentSoknadDtoList.add(soknadService.opprettSoknad(brukerid, skjemanr, spraak))
+		dokumentSoknadDtoList.add(SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, emptyList()))
+		dokumentSoknadDtoList.add(SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, emptyList()))
 
 		soknadService.slettGamleSoknader(1L)
 		dokumentSoknadDtoList.forEach { assertEquals(soknadService.hentSoknad(it.id!!).status, SoknadsStatusDto.Opprettet) }
