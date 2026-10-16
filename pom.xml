@@ -42,7 +42,7 @@
 
 		<!--Database-->
 		<otj-pg-embedded.version>1.1.1</otj-pg-embedded.version>
-		<flyway.version>12.0.3</flyway.version>
+		<flyway.version>13.10.0</flyway.version>
 		<postgres.version>42.7.14</postgres.version>
 		<postgresql.version>${postgres.version}</postgresql.version>
 
