@@ -22,9 +22,7 @@ import no.nav.soknad.innsending.util.mapping.translate
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.stotteTilBolig
 import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoTestBuilder
-import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoV2TestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
-import no.nav.soknad.innsending.utils.builders.SkjemaDtoV2TestBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
@@ -247,7 +245,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		assertEquals(attachmentLabel, submittedAttachment.label)
 
 		// verify that label is used instead of tittel when translating to the archiving format
-		val translatedDocuments = translate(submittedAttachments)
+		val translatedDocuments = translate(submittedAttachments, true)
 		val translatedAttachment = translatedDocuments.first { it.skjemanummer == attachmentVedleggsnr }
 		assertEquals(attachmentLabel, translatedAttachment.tittel)
 	}
@@ -388,9 +386,15 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 			idType = AvsenderDto.IdType.ORGNR,
 			navn = "Testbedrift AS",
 		)
-		val submissionResponse = testApi!!.submitDigitalApplication(soknad, attachments, avsender = avsender)
+		val submissionResponse = testApi!!.submitDigitalApplication(
+			soknad,
+			attachments,
+			avsender = avsender,
+			grantUserDigitalAccess = true,
+		)
 			.assertSuccess()
 			.body
+		assertEquals(true, repo.hentSoknadDb(innsendingsId).grantuserdigitalaccess)
 
 		// verify response
 		assertEquals(4, submissionResponse.attachments?.size)
@@ -429,12 +433,14 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
+		val slotGrantUserDigitalAccess = slot<Boolean?>()
 		verify(timeout = 5000, exactly = 1) {
 			soknadsmottakerApi.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
 				capture(slotAvsender),
-				captureNullable(slotBruker)
+				captureNullable(slotBruker),
+				captureNullable(slotGrantUserDigitalAccess),
 			)
 		}
 
@@ -442,6 +448,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		assertEquals(avsender.id, slotAvsender.captured.id)
 		assertEquals(avsender.idType, slotAvsender.captured.idType)
 		assertEquals(avsender.navn, slotAvsender.captured.navn)
+		assertEquals(true, slotGrantUserDigitalAccess.captured)
 		val innsendteDokumenter = slotVedleggsliste.captured
 		assertEquals(4, innsendteDokumenter.size)
 		assertTrue(innsendteDokumenter.all { it.mimetype != null })
@@ -836,118 +843,6 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		}
 	}
 
-	@Test
-	fun testNologinApplicationWithAttachmentFilesCopiedToDb() {
-		val innsendingsId = UUID.randomUUID().toString()
-
-		val fileM2part1 = testApi!!.uploadNologinFileV2(innsendingsId, "M2")
-			.assertSuccess()
-			.body
-		val fileM2part2 = testApi!!.uploadNologinFileV2(innsendingsId, "M2")
-			.assertSuccess()
-			.body
-
-		val fileM3 = testApi!!.uploadNologinFileV2(innsendingsId, "M3")
-			.assertSuccess()
-			.body
-
-		val vedleggM2 = SkjemaDokumentDtoV2TestBuilder(
-			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
-			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(fileM2part1.id.toString(), fileM2part2.id.toString()),
-			vedleggsnr = "M2",
-		).build()
-
-		val vedleggM3 = SkjemaDokumentDtoV2TestBuilder(
-			opplastingsStatus = OpplastingsStatusDto.LastetOpp,
-			mimetype = Mimetype.applicationSlashPdf,
-			filIdListe = listOf(fileM3.id.toString()),
-			vedleggsnr = "M3",
-		).build()
-
-		val skjemaDto = SkjemaDtoV2TestBuilder()
-			.medAvsender("Are Avsender")
-			.medInnsendingsId(innsendingsId)
-			.medVedlegg(listOf(vedleggM2, vedleggM3))
-			.build()
-
-		val kvittering = testApi!!.sendInnNologinSoknad(skjemaDto)
-			.assertSuccess()
-			.body
-
-		// verify response
-		assertEquals(2, kvittering.innsendteVedlegg?.size)
-		assertNotNull(kvittering.innsendteVedlegg?.first { it.vedleggsnr == "M2" })
-		assertNotNull(kvittering.innsendteVedlegg?.first { it.vedleggsnr == "M3" })
-
-		// verify notifications
-		verify(exactly = 0) { brukernotifikasjonPublisher.createNotification(any(), any()) }
-		verify(exactly = 0) { brukernotifikasjonPublisher.closeNotification(any()) }
-
-		// verify invocation of soknadsmottaker
-		val slotSoknad = slot<DokumentSoknadDto>()
-		val slotVedleggsliste = slot<List<VedleggDto>>()
-		val slotAvsender = slot<AvsenderDto>()
-		val slotBruker = slot<BrukerDto?>()
-		verify(timeout = 5000, exactly = 1) {
-			soknadsmottakerApi.sendInnSoknad(
-				capture(slotSoknad),
-				capture(slotVedleggsliste),
-				capture(slotAvsender),
-				captureNullable(slotBruker)
-			)
-		}
-
-		assertEquals(innsendingsId, slotSoknad.captured.innsendingsId)
-		val innsendteDokumenter = slotVedleggsliste.captured
-		assertEquals(5, innsendteDokumenter.size)
-		assertTrue(innsendteDokumenter.all { it.mimetype != null })
-
-		val innsendtM2 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "M2" }
-		assertNotNull(innsendtM2)
-		assertEquals(OpplastingsStatusDto.KlarForInnsending, innsendtM2.opplastingsStatus)
-
-		val innsendtM3 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "M3" }
-		assertNotNull(innsendtM3)
-		assertEquals(OpplastingsStatusDto.KlarForInnsending, innsendtM2.opplastingsStatus)
-
-		val innsendtL7 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "L7" }
-		assertNotNull(innsendtL7)
-		assertEquals(OpplastingsStatusDto.KlarForInnsending, innsendtL7.opplastingsStatus)
-
-		val hoveddokumentListe = innsendteDokumenter.filter { it.erHoveddokument }
-		assertEquals(2, hoveddokumentListe.size)
-		assertTrue { hoveddokumentListe.all { it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending } }
-
-		// verify fetching of files from soknadsarkiverer
-		innsendteDokumenter.forEach { submittedAttachment ->
-			val attachmentUuid = submittedAttachment.uuid!!
-			val files = testApi!!.hentInnsendteFiler(innsendingsId, listOf(attachmentUuid))
-				.assertSuccess()
-				.body
-			assertEquals(
-				1,
-				files.size,
-				"For attachment ${submittedAttachment.vedleggsnr}, expected to find exactly 1 file"
-			)
-			assertEquals(
-				SoknadFile.FileStatus.ok,
-				files[0].fileStatus,
-				"For attachment ${submittedAttachment.vedleggsnr}, expected file status to be ok"
-			)
-			assertNotNull(
-				files[0].content,
-				"For attachment ${submittedAttachment.vedleggsnr}, expected file content to be not null"
-			)
-		}
-
-		// verify fetching of file with unknown uuid
-		val filesUnknownAttachment = testApi!!.hentInnsendteFiler(innsendingsId, listOf(UUID.randomUUID().toString()))
-			.assertSuccess()
-			.body
-		assertEquals(1, filesUnknownAttachment.size)
-		assertEquals(SoknadFile.FileStatus.notfound, filesUnknownAttachment[0].fileStatus)
-	}
 
 	@Test
 	fun testNologinApplicationWithAttachmentFilesInBucket() {
@@ -987,10 +882,12 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 			innsendingsId = innsendingsId,
 			formNumber = skjemanr,
 			title = skjematittel,
-			attachments = attachments
+			attachments = attachments,
+			grantUserDigitalAccess = true,
 		)
 			.assertSuccess()
 			.body
+		assertEquals(true, repo.hentSoknadDb(innsendingsId).grantuserdigitalaccess)
 
 		// verify response
 		assertEquals(4, submissionResponse.attachments?.size)
@@ -1021,16 +918,19 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
+		val slotGrantUserDigitalAccess = slot<Boolean?>()
 		verify(timeout = 5000, exactly = 1) {
 			soknadsmottakerApi.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
 				capture(slotAvsender),
-				captureNullable(slotBruker)
+				captureNullable(slotBruker),
+				captureNullable(slotGrantUserDigitalAccess),
 			)
 		}
 
 		assertEquals(innsendingsId, slotSoknad.captured.innsendingsId)
+		assertEquals(true, slotGrantUserDigitalAccess.captured)
 		val innsendteDokumenter = slotVedleggsliste.captured
 		assertEquals(4, innsendteDokumenter.size)
 		assertTrue(innsendteDokumenter.all { it.mimetype != null })

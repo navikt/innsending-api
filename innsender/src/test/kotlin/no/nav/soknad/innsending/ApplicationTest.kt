@@ -75,7 +75,6 @@ class ApplicationTest() {
 			reg.add("pdl-person.path") { "/pdl-api/graphql" }
 			reg.add("pdl-prefill.path") { "/pdl-api/graphql" }
 			reg.add("saf.path") { "/saf-api/graphql" }
-			reg.add("sanity.path") { "/soknader/api/sanity/skjemautlisting" }
 			reg.add("token-exchange.path") { "/default/token" }
 		}
 	}

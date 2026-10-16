@@ -136,17 +136,11 @@ class FilRestApiTest : ApplicationTest() {
 		assertEquals(Mimetype.applicationSlashPdf, postFilResponse.body!!.mimetype)
 		val opplastetFilDto = postFilResponse.body
 
-		val vedleggN6Request = HttpEntity<Unit>(Hjelpemetoder.createHeaders(token))
-		val oppdatertVedleggN6Response = restTestClient.exchange(
-			"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggsId}",
-			HttpMethod.GET,
-			vedleggN6Request,
-			VedleggDto::class.java
-		)
-
-		assertTrue(oppdatertVedleggN6Response.body != null)
-		val oppdatertVedleggN6 = oppdatertVedleggN6Response.body
-		assertEquals(OpplastingsStatusDto.LastetOpp, oppdatertVedleggN6!!.opplastingsStatus)
+		val oppdatertSoknad = api.getSoknadSendinn(soknadDto.innsendingsId!!)
+			.assertSuccess()
+			.body
+		val oppdatertVedleggN6 = oppdatertSoknad.vedleggsListe.first { it.id == vedleggsId }
+		assertEquals(OpplastingsStatusDto.LastetOpp, oppdatertVedleggN6.opplastingsStatus)
 
 		return opplastetFilDto
 	}

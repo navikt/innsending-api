@@ -5,7 +5,6 @@ import no.nav.soknad.innsending.api.SendinnVedleggApi
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
-import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.FilService
@@ -42,39 +41,6 @@ class VedleggRestApi(
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val combinedLogger = CombinedLogger(logger)
 
-
-	@Timed(InnsenderOperation.HENT)
-	override fun hentVedleggsListe(innsendingsId: String): ResponseEntity<List<VedleggDto>> {
-		val brukerId = tilgangskontroll.hentBrukerFraToken()
-
-		combinedLogger.log("$innsendingsId: Kall for å vedleggene til søknad", brukerId)
-
-		val soknadDto = hentOgValiderSoknad(innsendingsId)
-		val vedleggsListeDto = soknadDto.vedleggsListe
-
-		combinedLogger.log("$innsendingsId: Hentet vedleggene til søknad", brukerId)
-
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(vedleggsListeDto)
-	}
-
-	@Timed(InnsenderOperation.HENT)
-	override fun hentVedlegg(innsendingsId: String, vedleggsId: Long): ResponseEntity<VedleggDto> {
-		val brukerId = tilgangskontroll.hentBrukerFraToken()
-
-		combinedLogger.log("$innsendingsId: Kall for å hente vedlegg $vedleggsId til søknad", brukerId)
-
-		val soknadDto = hentOgValiderSoknad(innsendingsId)
-		val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
-			?: throw ResourceNotFoundException("Ikke funnet vedlegg $vedleggsId for søknad $innsendingsId")
-
-		combinedLogger.log("$innsendingsId: Hentet vedlegg $vedleggsId til søknad", brukerId)
-
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(vedleggDto)
-	}
 
 	@Timed(InnsenderOperation.ENDRE)
 	override fun endreVedlegg(
