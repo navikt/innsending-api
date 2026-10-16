@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.rest.sendinn
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
 import io.mockk.verify
 import kotlinx.coroutines.Deferred
@@ -42,7 +42,7 @@ class FilRestApiTest : ApplicationTest() {
 	@Autowired
 	private lateinit var innsenderMetrics: InnsenderMetrics
 
-	@SpykBean
+	@MockkSpyBean
 	private lateinit var filService: FilService
 
 	@LocalServerPort

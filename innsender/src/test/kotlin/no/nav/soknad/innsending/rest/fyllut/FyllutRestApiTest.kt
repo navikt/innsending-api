@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.rest.fyllut
 
 import com.ninjasquad.springmockk.MockkBean
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
 import io.mockk.clearMocks
 import io.mockk.every
@@ -59,7 +59,7 @@ class FyllutRestApiTest : ApplicationTest() {
 	@MockkBean
 	lateinit var kodeverkService: KodeverkService
 
-	@SpykBean
+	@MockkSpyBean
 	lateinit var notificationPublisher: PublisherInterface
 
 	@SpykBean
