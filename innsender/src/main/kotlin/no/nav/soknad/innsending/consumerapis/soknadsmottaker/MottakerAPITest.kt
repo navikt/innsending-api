@@ -32,12 +32,18 @@ class MottakerAPITest : MottakerInterface, HealthRequestInterface {
 		return "ok"
 	}
 
-	override fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggsListe: List<VedleggDto>, avsenderDto: AvsenderDto, brukerDto: BrukerDto?) {
+	override fun sendInnSoknad(
+		soknadDto: DokumentSoknadDto,
+		vedleggsListe: List<VedleggDto>,
+		avsenderDto: AvsenderDto,
+		brukerDto: BrukerDto?,
+		grantUserDigitalAccess: Boolean?,
+	) {
 		if (soknadDto.visningsType == VisningsType.nologin) {
-			val innsending = translate(soknadDto, vedleggsListe, avsenderDto, brukerDto)
+			val innsending = translate(soknadDto, vedleggsListe, avsenderDto, brukerDto, grantUserDigitalAccess)
 			logger.info("${soknadDto.innsendingsId}: klar til å sende inn (nologin)\n${maskerFnr(innsending)}")
 		} else {
-			val soknad = translate(soknadDto, vedleggsListe, avsenderDto, brukerDto)
+			val soknad = translate(soknadDto, vedleggsListe, avsenderDto, brukerDto, grantUserDigitalAccess)
 			logger.info("${soknadDto.innsendingsId}: klar til å sende inn\n${maskerFnr(soknad)}")
 		}
 	}

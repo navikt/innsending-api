@@ -11,5 +11,5 @@ object Skjema {
 	fun generateVedleggsnr(): String {
 		return "${('A'..'Z').random()}${(1..9).random()}"
 	}
-	
+
 }

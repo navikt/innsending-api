@@ -14,5 +14,11 @@ interface MottakerInterface {
 		multiplier = 2.0,
 		jitter = 2
 	)
-	fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggsListe: List<VedleggDto>, avsenderDto: AvsenderDto, brukerDto: BrukerDto? = null)
+	fun sendInnSoknad(
+		soknadDto: DokumentSoknadDto,
+		vedleggsListe: List<VedleggDto>,
+		avsenderDto: AvsenderDto,
+		brukerDto: BrukerDto? = null,
+		grantUserDigitalAccess: Boolean? = null,
+	)
 }

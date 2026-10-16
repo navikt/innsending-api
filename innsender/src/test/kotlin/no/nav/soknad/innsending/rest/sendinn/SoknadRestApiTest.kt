@@ -80,17 +80,6 @@ class SoknadRestApiTest : ApplicationTest() {
 		clearAllMocks()
 	}
 
-	@Test
-	fun `Should fail creating soknad (old visningstype dokumentinnsending)`() {
-		val errorBody = api.createSoknadForSkjemanr(defaultSkjemanr)
-			.assertHttpStatus(HttpStatus.NOT_IMPLEMENTED)
-			.errorBody
-		assertEquals(
-			"Operasjonen er ikke støttet",
-			errorBody.message
-		)
-	}
-
 	companion object {
 		@JvmStatic
 		fun hentSoknaderForSkjemanr() = listOf(

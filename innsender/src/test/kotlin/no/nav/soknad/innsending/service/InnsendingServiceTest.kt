@@ -22,8 +22,10 @@ import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
+import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
+import no.nav.soknad.innsending.util.mapping.translate
 import no.nav.soknad.pdfutilities.AntallSider
 import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
@@ -142,8 +144,13 @@ class InnsendingServiceTest : ApplicationTest() {
 		)
 
 		// Så skal
-		assertEquals(1, hoveddok.size)
-		assertTrue(hoveddok.all { it.fileStatus == SoknadFile.FileStatus.ok })
+		assertEquals(2, hoveddok.size)
+		assertEquals(SoknadFile.FileStatus.ok, hoveddok.single {
+			it.id == dokumentSoknadDto.vedleggsListe.single { vedlegg -> vedlegg.erHoveddokument && !vedlegg.erVariant }.uuid
+		}.fileStatus)
+		assertEquals(SoknadFile.FileStatus.notfound, hoveddok.single {
+			it.id == dokumentSoknadDto.vedleggsListe.single { vedlegg -> vedlegg.erHoveddokument && vedlegg.erVariant }.uuid
+		}.fileStatus)
 
 		val soknad = repo.hentSoknadDb(dokumentSoknadDto.innsendingsId!!)
 		assertEquals(SoknadsStatus.Innsendt, soknad.status)
@@ -468,8 +475,9 @@ class InnsendingServiceTest : ApplicationTest() {
 		)
 
 		// Så skal
-		assertEquals(7, vedleggsFiler.size)
+		assertEquals(8, vedleggsFiler.size)
 		assertEquals(2, vedleggsFiler.filter { it.fileStatus == SoknadFile.FileStatus.ok }.size)
+		assertEquals(6, vedleggsFiler.filter { it.fileStatus == SoknadFile.FileStatus.notfound }.size)
 		assertEquals(
 			2,
 			AntallSider().finnAntallSider(vedleggsFiler.filter { it.fileStatus == SoknadFile.FileStatus.ok }.last().content)
@@ -477,5 +485,36 @@ class InnsendingServiceTest : ApplicationTest() {
 
 	}
 
+	@Test
+	fun vedleggBrukerLabelIkkeTittelVedOversettingTilArkivering() {
+		val hovedDokument = VedleggDtoTestBuilder(tittel = "Hoveddokument tittel", label = "Hoveddokument label")
+			.asHovedDokument()
+			.build()
+		val n6Vedlegg = VedleggDtoTestBuilder(tittel = "N6 tittel", label = "Annen dokumentasjon")
+			.asDefaultVedlegg()
+			.build()
+
+		val dokumentData = translate(listOf(hovedDokument, n6Vedlegg), true)
+
+		val oversattVedlegg = dokumentData.first { it.skjemanummer == n6Vedlegg.vedleggsnr }
+
+		assertEquals(n6Vedlegg.label, oversattVedlegg.tittel)
+	}
+
+	@Test
+	fun vedleggFallerTilbakePaaTittelNarLabelIkkeErSatt() {
+		val hovedDokument = VedleggDtoTestBuilder(tittel = "Hoveddokument tittel", label = "Hoveddokument label")
+			.asHovedDokument()
+			.build()
+		val vedleggUtenLabel = VedleggDtoTestBuilder(tittel = "Vedlegg tittel", label = "")
+			.asDefaultVedlegg()
+			.build()
+
+		val dokumentData = translate(listOf(hovedDokument, vedleggUtenLabel), true)
+
+		val oversattVedlegg = dokumentData.first { it.skjemanummer == vedleggUtenLabel.vedleggsnr }
+
+		assertEquals(vedleggUtenLabel.tittel, oversattVedlegg.tittel)
+	}
 
 }

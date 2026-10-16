@@ -61,14 +61,20 @@ class MottakerAPI(
 		return "pong"
 	}
 
-	override fun sendInnSoknad(soknadDto: DokumentSoknadDto, vedleggsListe: List<VedleggDto>, avsenderDto: AvsenderDto, brukerDto: BrukerDto?) {
+	override fun sendInnSoknad(
+		soknadDto: DokumentSoknadDto,
+		vedleggsListe: List<VedleggDto>,
+		avsenderDto: AvsenderDto,
+		brukerDto: BrukerDto?,
+		grantUserDigitalAccess: Boolean?,
+	) {
 		if (soknadDto.visningsType == VisningsType.nologin) {
-			val innsending = translate(soknadDto, vedleggsListe, avsenderDto, brukerDto)
+			val innsending = translate(soknadDto, vedleggsListe, avsenderDto, brukerDto, grantUserDigitalAccess)
 			combinedLogger.log("${soknadDto.innsendingsId}: klar til å sende inn (nologin)\n${maskerFnr(innsending)}\ntil ${restConfig.soknadsMottakerHost}", brukerDto?.id?: avsenderDto.id?: avsenderDto.navn ?: "NN")
 			innsendingNoLoggedInMottakerApi.nologinSubmission(innsending, innsending.innsendingsId)
 			logger.info("${soknadDto.innsendingsId}: sendt inn (nologin)")
 		} else {
-			val innsending = translate(soknadDto, vedleggsListe, avsenderDto, brukerDto)
+			val innsending = translate(soknadDto, vedleggsListe, avsenderDto, brukerDto, grantUserDigitalAccess)
 			combinedLogger.log("${soknadDto.innsendingsId}: klar til å sende inn (loggedin)\n${maskerFnr(innsending)}\ntil ${restConfig.soknadsMottakerHost}", brukerDto?.id?: avsenderDto.id?: avsenderDto.navn ?: "NN")
 			innsendingLoggedInMottakerApi.loggedInSubmission(innsending, innsending.innsendingsId)
 			logger.info("${soknadDto.innsendingsId}: sendt inn (loggedin)")
