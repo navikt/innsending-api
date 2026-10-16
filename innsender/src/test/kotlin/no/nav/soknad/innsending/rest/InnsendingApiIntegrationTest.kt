@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
+import org.springframework.http.MediaType
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -66,6 +67,23 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		clearAllMocks()
 		testApi!!.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on")
 			.assertSuccess()
+	}
+
+	@Test
+	fun `serves OpenAPI documentation and Swagger UI`() {
+		webTestClient.get()
+			.uri("http://localhost:$serverPort/v3/api-docs")
+			.exchange()
+			.expectStatus().isOk
+			.expectBody()
+			.jsonPath("$.openapi").isNotEmpty
+			.jsonPath("$.paths").isNotEmpty
+
+		webTestClient.get()
+			.uri("http://localhost:$serverPort/swagger-ui/index.html")
+			.exchange()
+			.expectStatus().isOk
+			.expectHeader().contentTypeCompatibleWith(MediaType.TEXT_HTML)
 	}
 
 	@Test
