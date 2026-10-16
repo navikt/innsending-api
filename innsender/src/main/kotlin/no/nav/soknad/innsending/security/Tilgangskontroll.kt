@@ -6,7 +6,6 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
-import no.nav.soknad.innsending.util.testpersonid
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
@@ -18,14 +17,7 @@ class Tilgangskontroll(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	fun hentBrukerFraToken(): String {
-		return try {
-			subjectHandler.getUserIdFromToken()
-		} catch (ex: Exception) {
-			logger.warn("Midlertidig bruk av testpersonid $testpersonid fordi følgende feil ved hentBrukerFraToken ${ex.message}")
-			testpersonid
-		}
-	}
+	fun hentBrukerFraToken(): String = subjectHandler.getUserIdFromToken()
 
 	fun hentPersonIdents(brukerId: String): List<String> {
 		return pdlService.hentPersonIdents(brukerId).map { it.ident }
