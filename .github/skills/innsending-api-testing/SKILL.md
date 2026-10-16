@@ -28,7 +28,7 @@ Cover the changed success path and relevant rejection or failure paths. For subm
 Paths below are relative to `innsender/src/test/kotlin/no/nav/soknad/innsending/`.
 
 - `ApplicationTest.kt` supplies the Spring Boot random-port test context, `test` profile, `WebTestClient`, WireMock, and MockOAuth2Server.
-- `utils/ApiWebClient.kt` provides `createSoknad`, `utfyltSoknad`, `getSoknadSendinn`, upload and submission helpers, plus response assertions. Use `assertHttpStatus` when the exact status matters, and inspect the body. Use `webTestClient` or `utils/RestTestClient.kt` for requests the helpers do not cover.
+- `utils/ApiWebClient.kt` provides `createSoknad`, `utfyltSoknad`, `getSoknadSendinn`, upload and submission helpers, plus response assertions. Use `assertHttpStatus` when the exact status matters, and inspect the body. When a request is not covered, extend `utils/ApiWebClient.kt` with the necessary helper instead of calling `webTestClient` or `utils/RestTestClient.kt` directly from a test or introducing local HTTP helpers.
 - Reuse `utils/builders/`, `utils/TokenGenerator.kt`, and resources under `innsender/src/test/resources/`. Use synthetic data only. Do not print personal data, tokens, or secrets in test output or failure messages.
 - `rest/InnsendingApiIntegrationTest.kt` shows REST-driven submission flows and captured soknadsmottaker payloads. `rest/fyllut/FyllutRestApiTest.kt` shows notification payload assertions at `PublisherInterface`.
 - `service/unittest/` contains focused MockK tests. `service/RepositoryUtilsTest.kt` demonstrates database-backed state-transition checks. Reuse JUnit and Kotlin assertions already used nearby rather than adding another framework.
