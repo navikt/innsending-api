@@ -45,7 +45,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
-import org.springframework.http.client.MultipartBodyBuilder
 import org.springframework.util.LinkedMultiValueMap
 import java.time.LocalDate
 import java.util.*
@@ -125,12 +124,8 @@ class FyllutRestApiTest : ApplicationTest() {
 	fun `missing and invalid tokens remain rejected before application creation`() {
 		val countBefore = soknadRepository.count()
 		listOf(null, "not-a-token").forEach { token ->
-			webTestClient.post()
-				.uri("http://localhost:$serverPort/fyllUt/v1/soknad?force=true")
-				.headers { if (token != null) it.setBearerAuth(token) }
-				.bodyValue(SkjemaDtoTestBuilder().build())
-				.exchange()
-				.expectStatus().is4xxClientError
+			api.createSoknad(SkjemaDtoTestBuilder().build(), authToken = token)
+				.assertClientError()
 		}
 
 		assertEquals(countBefore, soknadRepository.count())
@@ -143,15 +138,10 @@ class FyllutRestApiTest : ApplicationTest() {
 		val filesBefore = filRepository.count()
 		val skjema = SkjemaDtoTestBuilder().build()
 
-		webTestClient.post()
-			.uri("http://localhost:$serverPort/fyllUt/v1/soknad?force=true")
-			.headers { it.setBearerAuth(tokenWithMalformedUserClaim()) }
-			.bodyValue(skjema)
-			.exchange()
-			.expectStatus().isUnauthorized
-			.expectBody()
-			.jsonPath("$.message").isEqualTo("Autentisering feilet")
-			.jsonPath("$.errorCode").isEqualTo("errorCode.unauthorized")
+		val response = api.createSoknad(skjema, authToken = tokenWithMalformedUserClaim())
+			.assertHttpStatus(HttpStatus.UNAUTHORIZED)
+		assertEquals("Autentisering feilet", response.errorBody.message)
+		assertEquals("errorCode.unauthorized", response.errorBody.errorCode)
 
 		assertEquals(countBefore, soknadRepository.count())
 		assertEquals(filesBefore, filRepository.count())
@@ -162,39 +152,27 @@ class FyllutRestApiTest : ApplicationTest() {
 	fun `malformed user claim rejects listing instead of returning fallback user's applications`() {
 		val created = api.createSoknad(SkjemaDtoTestBuilder().build()).assertSuccess().body
 
-		webTestClient.get()
-			.uri("http://localhost:$serverPort/frontend/v1/skjema/{skjemanr}/soknader", created.skjemanr)
-			.headers { it.setBearerAuth(tokenWithMalformedUserClaim()) }
-			.exchange()
-			.expectStatus().isUnauthorized
-			.expectBody()
-			.jsonPath("$.message").isEqualTo("Autentisering feilet")
-			.jsonPath("$.errorCode").isEqualTo("errorCode.unauthorized")
+		val response = api.getExistingSoknader(created.skjemanr, authToken = tokenWithMalformedUserClaim())
+			.assertHttpStatus(HttpStatus.UNAUTHORIZED)
+		assertEquals("Autentisering feilet", response.errorBody.message)
+		assertEquals("errorCode.unauthorized", response.errorBody.errorCode)
 	}
 
 	@Test
 	fun `malformed user claim rejects upload without persisting a file`() {
 		val created = api.createSoknad(SkjemaDtoTestBuilder().build()).assertSuccess().body
-		val application = soknadService.hentSoknad(created.innsendingsId!!)
+		val innsendingsId = created.innsendingsId!!
+		val application = soknadService.hentSoknad(innsendingsId)
 		val attachment = application.vedleggsListe.first { it.erHoveddokument }
 		val filesBefore = filRepository.count()
 		clearMocks(fileStorage, answers = false)
-		val multipart = MultipartBodyBuilder().apply {
-			part("file", Hjelpemetoder.getBytesFromFile("/litenPdf.pdf"))
-				.filename("litenPdf.pdf")
-				.contentType(MediaType.APPLICATION_PDF)
-		}
-
-		webTestClient.post()
-			.uri("http://localhost:$serverPort/frontend/v1/soknad/${created.innsendingsId}/vedlegg/${attachment.id}/fil")
-			.headers { it.setBearerAuth(tokenWithMalformedUserClaim()) }
-			.contentType(MediaType.MULTIPART_FORM_DATA)
-			.bodyValue(multipart.build())
-			.exchange()
-			.expectStatus().isUnauthorized
-			.expectBody()
-			.jsonPath("$.message").isEqualTo("Autentisering feilet")
-			.jsonPath("$.errorCode").isEqualTo("errorCode.unauthorized")
+		val response = api.uploadFile(
+			innsendingsId,
+			attachment.id!!,
+			authToken = tokenWithMalformedUserClaim(),
+		).assertHttpStatus(HttpStatus.UNAUTHORIZED)
+		assertEquals("Autentisering feilet", response.errorBody.message)
+		assertEquals("errorCode.unauthorized", response.errorBody.errorCode)
 
 		assertEquals(filesBefore, filRepository.count())
 		verify(exactly = 0) { fileStorage.save(any(), any(), any()) }

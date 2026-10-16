@@ -36,7 +36,6 @@ import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.service.config.ConfigDefinition
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -114,7 +113,12 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun createSoknad(skjemaDto: SkjemaDto, forceCreate: Boolean = true, envQualifier: EnvQualifier? = null): InnsendingApiResponse<SkjemaDto> {
+	fun createSoknad(
+		skjemaDto: SkjemaDto,
+		forceCreate: Boolean = true,
+		envQualifier: EnvQualifier? = null,
+		authToken: String? = TokenGenerator(mockOAuth2Server).lagTokenXToken(),
+	): InnsendingApiResponse<SkjemaDto> {
 		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
 			"Nav-Env-Qualifier" to envQualifier.value
 		) else null
@@ -126,7 +130,8 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		val response = webTestClient.post()
 			.uri(uri)
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), headers).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken, MediaType.APPLICATION_JSON).toSingleValueMap())
+				headers?.let { httpHeaders.setAll(it) }
 			})
 			.bodyValue(skjemaDto)
 			.exchange()
@@ -280,10 +285,9 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	fun uploadFile(
 		innsendingsId: String,
 		vedleggsId: Long,
-		file: ByteArray = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
+		file: ByteArray = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf"),
+		authToken: String? = TokenGenerator(mockOAuth2Server).lagTokenXToken(),
 	): InnsendingApiResponse<FilDto> {
-		val token: String = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-
 		val builder = MultipartBodyBuilder()
 		builder.part("file", file)
 			.filename("litenPdf.pdf")
@@ -291,7 +295,7 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 
 		val response = webTestClient.post()
 			.uri("$baseUrl/frontend/v1/soknad/$innsendingsId/vedlegg/$vedleggsId/fil")
-			.header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+			.headers { headers -> authToken?.let { headers.setBearerAuth(it) } }
 			.contentType(MediaType.MULTIPART_FORM_DATA)
 			.bodyValue(builder.build())
 			.exchange()
@@ -647,22 +651,25 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 	// Query param ex: "soknad,ettersendelse"
-	fun getExistingSoknader(skjemanr: String, queryParam: String? = null): ResponseEntity<List<DokumentSoknadDto>> {
+	fun getExistingSoknader(
+		skjemanr: String,
+		queryParam: String? = null,
+		authToken: String? = TokenGenerator(mockOAuth2Server).lagTokenXToken(),
+	): InnsendingApiResponse<List<DokumentSoknadDto>> {
 		val url = if (queryParam != null) {
 			"http://localhost:${serverPort}/frontend/v1/skjema/${skjemanr}/soknader?soknadstyper=$queryParam"
 		} else {
 			"http://localhost:${serverPort}/frontend/v1/skjema/${skjemanr}/soknader"
 		}
 
-		val responseType = object : ParameterizedTypeReference<List<DokumentSoknadDto>>() {}
 		val response = webTestClient.get()
 			.uri(url)
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken, MediaType.APPLICATION_JSON).toSingleValueMap())
 			})
 			.exchange()
 		val body = parseListResponse(response, DokumentSoknadDto::class.java)
-		return ResponseEntity(body.first, response.returnResult().responseHeaders, response.returnResult().status)
+		return InnsendingApiResponse(response.returnResult().status, body, response.returnResult().responseHeaders)
 
 	}
 
