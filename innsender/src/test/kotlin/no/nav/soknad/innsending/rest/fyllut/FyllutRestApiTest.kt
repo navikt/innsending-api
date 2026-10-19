@@ -3,10 +3,12 @@ package no.nav.soknad.innsending.rest.fyllut
 import com.ninjasquad.springmockk.MockkBean
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearAllMocks
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
+import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenResponse
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
@@ -15,12 +17,15 @@ import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.Publish
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.repository.FilRepository
+import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.service.DocumentService
 import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.KodeverkService
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
+import no.nav.soknad.innsending.service.fillager.FileStorage
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.ungdomsprogram_reiseDaglig
 import no.nav.soknad.innsending.util.models.*
@@ -56,6 +61,15 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	@SpykBean
 	lateinit var notificationPublisher: PublisherInterface
+
+	@SpykBean
+	lateinit var fileStorage: FileStorage
+
+	@Autowired
+	lateinit var soknadRepository: SoknadRepository
+
+	@Autowired
+	lateinit var filRepository: FilRepository
 
 	@Autowired
 	lateinit var soknadService: SoknadService
@@ -94,6 +108,75 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	@LocalServerPort
 	var serverPort: Int = 0
+
+	private fun tokenWithMalformedUserClaim(): String = mockOAuth2Server.issueToken(
+		issuerId = Constants.TOKENX,
+		clientId = "application",
+		tokenCallback = DefaultOAuth2TokenCallback(
+			issuerId = Constants.TOKENX,
+			subject = TokenGenerator.subject,
+			audience = listOf("aud-localhost"),
+			claims = mapOf("acr" to "idporten-loa-high", "pid" to listOf("invalid-user-claim")),
+		),
+	).serialize()
+
+	@Test
+	fun `missing and invalid tokens remain rejected before application creation`() {
+		val countBefore = soknadRepository.count()
+		listOf(null, "not-a-token").forEach { token ->
+			api.createSoknad(SkjemaDtoTestBuilder().build(), authToken = token)
+				.assertClientError()
+		}
+
+		assertEquals(countBefore, soknadRepository.count())
+		verify(exactly = 0) { fileStorage.save(any(), any(), any()) }
+	}
+
+	@Test
+	fun `malformed user claim rejects creation without persisting an application or files`() {
+		val countBefore = soknadRepository.count()
+		val filesBefore = filRepository.count()
+		val skjema = SkjemaDtoTestBuilder().build()
+
+		val response = api.createSoknad(skjema, authToken = tokenWithMalformedUserClaim())
+			.assertHttpStatus(HttpStatus.UNAUTHORIZED)
+		assertEquals("Autentisering feilet", response.errorBody.message)
+		assertEquals("errorCode.unauthorized", response.errorBody.errorCode)
+
+		assertEquals(countBefore, soknadRepository.count())
+		assertEquals(filesBefore, filRepository.count())
+		verify(exactly = 0) { fileStorage.save(any(), any(), any()) }
+	}
+
+	@Test
+	fun `malformed user claim rejects listing instead of returning fallback user's applications`() {
+		val created = api.createSoknad(SkjemaDtoTestBuilder().build()).assertSuccess().body
+
+		val response = api.getExistingSoknader(created.skjemanr, authToken = tokenWithMalformedUserClaim())
+			.assertHttpStatus(HttpStatus.UNAUTHORIZED)
+		assertEquals("Autentisering feilet", response.errorBody.message)
+		assertEquals("errorCode.unauthorized", response.errorBody.errorCode)
+	}
+
+	@Test
+	fun `malformed user claim rejects upload without persisting a file`() {
+		val created = api.createSoknad(SkjemaDtoTestBuilder().build()).assertSuccess().body
+		val innsendingsId = created.innsendingsId!!
+		val application = soknadService.hentSoknad(innsendingsId)
+		val attachment = application.vedleggsListe.first { it.erHoveddokument }
+		val filesBefore = filRepository.count()
+		clearMocks(fileStorage, answers = false)
+		val response = api.uploadFile(
+			innsendingsId,
+			attachment.id!!,
+			authToken = tokenWithMalformedUserClaim(),
+		).assertHttpStatus(HttpStatus.UNAUTHORIZED)
+		assertEquals("Autentisering feilet", response.errorBody.message)
+		assertEquals("errorCode.unauthorized", response.errorBody.errorCode)
+
+		assertEquals(filesBefore, filRepository.count())
+		verify(exactly = 0) { fileStorage.save(any(), any(), any()) }
+	}
 
 	@Test
 	fun testOpprettSoknadPaFyllUtApi() {
