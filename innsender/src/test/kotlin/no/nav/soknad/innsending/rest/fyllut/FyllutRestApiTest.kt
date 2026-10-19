@@ -62,7 +62,7 @@ class FyllutRestApiTest : ApplicationTest() {
 	@MockkSpyBean
 	lateinit var notificationPublisher: PublisherInterface
 
-	@SpykBean
+	@MockkSpyBean
 	lateinit var fileStorage: FileStorage
 
 	@Autowired

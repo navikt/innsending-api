@@ -52,7 +52,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 	@MockkSpyBean()
 	lateinit var publisherInterface: PublisherInterface
 
-	@SpykBean
+	@MockkSpyBean
 	lateinit var pdlInterface: PdlInterface
 
 	@Autowired
