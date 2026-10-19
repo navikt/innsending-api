@@ -1,8 +1,10 @@
 package no.nav.soknad.innsending.config
 
+import io.github.resilience4j.core.IntervalFunction
 import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryConfig
 import io.github.resilience4j.retry.RetryRegistry
+import no.nav.soknad.innsending.consumerapis.antivirus.AntivirusScanOutcome
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.time.Duration
@@ -31,4 +33,16 @@ class RetryConfiguration {
 
 	@Bean
 	fun retrySaf(): Retry = retryRegistry.retry("SAF", safRetryConfig)
+
+	@Bean
+	fun retryAntivirus(): Retry = retryRegistry.retry(
+		"ANTIVIRUS",
+		RetryConfig.custom<AntivirusScanOutcome>()
+			.maxAttempts(3)
+			.intervalFunction(IntervalFunction.ofExponentialRandomBackoff(2_000L, 2.0, 0.25))
+			.retryOnResult { it.retryable }
+			.retryOnException { false }
+			.failAfterMaxAttempts(false)
+			.build(),
+	)
 }
