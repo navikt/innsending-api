@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.rest.ekstern
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.slot
@@ -49,10 +49,10 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
-	@SpykBean()
+	@MockkSpyBean()
 	lateinit var publisherInterface: PublisherInterface
 
-	@SpykBean
+	@MockkSpyBean
 	lateinit var pdlInterface: PdlInterface
 
 	@Autowired

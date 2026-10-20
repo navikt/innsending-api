@@ -2,7 +2,7 @@ package no.nav.soknad.innsending.rest.ettersending
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.tomakehurst.wiremock.client.WireMock.*
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
@@ -26,7 +26,7 @@ class SafEttersendingRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
-	@SpykBean
+	@MockkSpyBean
 	lateinit var notificationPublisher: PublisherInterface
 
 	@LocalServerPort

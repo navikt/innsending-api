@@ -29,7 +29,7 @@ class GoogleStorage {
 	fun embeddedGcs(): Container = gcsServer
 
 	class Container(private val gcsPort: Int = 4443) : GenericContainer<Container>(
-		DockerImageName.parse("fsouza/fake-gcs-server")
+		DockerImageName.parse("fsouza/fake-gcs-server:1")
 	) {
 
 		private val logger = LoggerFactory.getLogger(javaClass)
