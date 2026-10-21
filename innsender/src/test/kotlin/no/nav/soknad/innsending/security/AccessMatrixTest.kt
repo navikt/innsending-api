@@ -289,7 +289,7 @@ class AccessMatrixTest : ApplicationTest() {
 		soknadService.opprettNySoknad(DokumentSoknadDtoTestBuilder(brukerId = brukerId).build()).innsendingsId!!
 
 	private fun sendinn(method: HttpMethod, innsendingsId: String, bearer: String): MatrixResponse =
-		exchange(method, "/frontend/v1/soknad/$innsendingsId", bearer, MediaType.APPLICATION_JSON, multipart = false)
+		exchange(method, "/frontend/v1/soknad/$innsendingsId", bearer, contentType = null, multipart = false)
 
 	data class MatrixResponse(val status: Int, val errorCode: String?) {
 		fun isAuthDenial() = status == 401 || status == 403
@@ -304,13 +304,17 @@ class AccessMatrixTest : ApplicationTest() {
 		else "fikk ${response.status} ${response.errorCode}, ventet ${denied.status} ${denied.errorCode}"
 	}
 
+	private val bodyMethods = setOf(HttpMethod.POST, HttpMethod.PUT, HttpMethod.PATCH)
+
 	private fun call(endpoint: Endpoint, bearer: String?): MatrixResponse {
 		val consumes = endpoint.info.consumesCondition.consumableMediaTypes
 		val multipart = consumes.any { it.isCompatibleWith(MediaType.MULTIPART_FORM_DATA) }
+		// Endepunkter med consumes matcher bare med riktig Content-Type, også for GET
 		val contentType = when {
 			multipart -> MediaType.MULTIPART_FORM_DATA
 			consumes.isNotEmpty() -> consumes.first()
-			else -> MediaType.APPLICATION_JSON
+			endpoint.method in bodyMethods -> MediaType.APPLICATION_JSON
+			else -> null
 		}
 		return exchange(endpoint.method, concretePath(endpoint), bearer, contentType, multipart)
 	}
@@ -319,13 +323,13 @@ class AccessMatrixTest : ApplicationTest() {
 		method: HttpMethod,
 		path: String,
 		bearer: String?,
-		contentType: MediaType,
+		contentType: MediaType?,
 		multipart: Boolean,
 	): MatrixResponse {
 		val request = client.method(method).uri(path)
 			.headers { headers ->
 				bearer?.let { headers.set(HttpHeaders.AUTHORIZATION, "Bearer $it") }
-				if (!multipart && method in setOf(HttpMethod.POST, HttpMethod.PUT, HttpMethod.PATCH)) {
+				if (!multipart && contentType != null) {
 					headers.contentType = contentType
 				}
 			}
@@ -333,7 +337,7 @@ class AccessMatrixTest : ApplicationTest() {
 			multipart -> request.body(BodyInserters.fromMultipartData(MultipartBodyBuilder().apply {
 				part("files", "innhold".toByteArray()).filename("matrise.pdf").contentType(MediaType.APPLICATION_PDF)
 			}.build()))
-			method in setOf(HttpMethod.POST, HttpMethod.PUT, HttpMethod.PATCH) -> request.bodyValue("{}")
+			method in bodyMethods -> request.bodyValue("{}")
 			else -> request
 		}
 		val result = spec.exchange().returnResult(String::class.java)
