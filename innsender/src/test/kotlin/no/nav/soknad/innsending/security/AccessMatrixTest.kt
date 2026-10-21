@@ -11,15 +11,18 @@ import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.core.annotation.AnnotatedElementUtils
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.http.client.MultipartBodyBuilder
+import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.method.HandlerMethod
 import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
+import java.time.Duration
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -43,6 +46,16 @@ class AccessMatrixTest : ApplicationTest() {
 	@Autowired
 	@Qualifier("requestMappingHandlerMapping")
 	lateinit var handlerMapping: RequestMappingHandlerMapping
+
+	@LocalServerPort
+	var serverPort: Int = 0
+
+	// Den delte webTestClient-en får port 0 fordi den lages før serveren starter
+	private val client: WebTestClient
+		get() = webTestClient.mutate()
+			.baseUrl("http://localhost:$serverPort")
+			.responseTimeout(Duration.ofMinutes(1))
+			.build()
 
 	private val tokens: TokenGenerator
 		get() = TokenGenerator(mockOAuth2Server)
@@ -239,7 +252,7 @@ class AccessMatrixTest : ApplicationTest() {
 	@Test
 	fun `public documentation endpoints answer without token`() {
 		listOf("/v3/api-docs", "/swagger-ui/index.html").forEach { path ->
-			val status = webTestClient.get().uri(path).exchange().returnResult(String::class.java).status.value()
+			val status = client.get().uri(path).exchange().returnResult(String::class.java).status.value()
 			assertEquals(200, status, "GET $path")
 		}
 	}
@@ -247,7 +260,7 @@ class AccessMatrixTest : ApplicationTest() {
 	@Test
 	fun `unknown route is never served`() {
 		listOf(null, tokens.lagTokenXToken()).forEach { bearer ->
-			val status = webTestClient.get().uri("/finnes/ikke/${UUID.randomUUID()}")
+			val status = client.get().uri("/finnes/ikke/${UUID.randomUUID()}")
 				.headers { headers -> bearer?.let { headers.setBearerAuth(it) } }
 				.exchange().returnResult(String::class.java).status
 			assertTrue(status.is4xxClientError, "Ukjent rute ga $status")
@@ -309,7 +322,7 @@ class AccessMatrixTest : ApplicationTest() {
 		contentType: MediaType,
 		multipart: Boolean,
 	): MatrixResponse {
-		val request = webTestClient.method(method).uri(path)
+		val request = client.method(method).uri(path)
 			.headers { headers ->
 				bearer?.let { headers.set(HttpHeaders.AUTHORIZATION, "Bearer $it") }
 				if (!multipart && method in setOf(HttpMethod.POST, HttpMethod.PUT, HttpMethod.PATCH)) {
