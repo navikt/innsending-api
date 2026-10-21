@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.service
 
 import com.ninjasquad.springmockk.MockkBean
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -65,7 +65,7 @@ class InnsendingServiceTest : ApplicationTest() {
 	@Autowired
 	private lateinit var tilleggstonadService: TilleggsstonadService
 
-	@SpykBean
+	@MockkSpyBean
 	private lateinit var ettersendingService: EttersendingService
 
 	@Autowired

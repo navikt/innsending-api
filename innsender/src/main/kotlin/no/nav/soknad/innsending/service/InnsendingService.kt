@@ -468,7 +468,7 @@ class InnsendingService(
 			submittedAt = submittedSoknad.innsendtDato!!,
 			subsequentSubmissionDeadline = beregnInnsendingsfrist(submittedSoknad),
 			attachments = submittedSoknad.vedleggsListeUtenHoveddokument.map {
-				AttachmentDto1(
+				AttachmentDto(
 					attachmentCode = it.vedleggsnr!!,
 					uploadStatus = if (OpplastingsStatusDto.KlarForInnsending==it.opplastingsStatus)  OpplastingsStatusDto.Innsendt else it.opplastingsStatus,
 					label = it.label,

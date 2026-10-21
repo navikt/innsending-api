@@ -1,5 +1,5 @@
 # https://www.baeldung.com/ops/docker-cache-maven-dependencies
-FROM maven:3.9.5-eclipse-temurin-21-alpine as builder
+FROM maven:3.10.0-eclipse-temurin-21-alpine as builder
 
 # Sett opp home directory
 ENV HOME=/usr/app

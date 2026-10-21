@@ -8,6 +8,9 @@ server:
 defaultMaxFileSize: 150
 defaultMaxFileSizeSum: 300
 
+restconfig:
+  safMaxInMemorySize: ${SAF_MAX_IN_MEMORY_SIZE:4MB}
+
 tempFailedApplications: ${FAILED_APPLICATIONS_KLAR_FOR_INNSENDING:""}
 
 

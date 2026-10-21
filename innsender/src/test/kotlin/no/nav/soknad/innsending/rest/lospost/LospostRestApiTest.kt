@@ -1,11 +1,8 @@
 package no.nav.soknad.innsending.rest.lospost
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
-import io.mockk.slot
-import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
-import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.exceptions.ErrorCode
@@ -15,6 +12,7 @@ import no.nav.soknad.innsending.model.OpprettLospost
 import no.nav.soknad.innsending.model.PostVedleggDto
 import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.awaitNotification
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -30,7 +28,7 @@ class LospostRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
-	@SpykBean
+	@MockkSpyBean
 	lateinit var notificationPublisher: PublisherInterface
 
 	@LocalServerPort
@@ -199,9 +197,7 @@ class LospostRestApiTest : ApplicationTest() {
 			.assertSuccess()
 		assertContains(response.headers?.location.toString(), "ansatt.dev.nav.no/sendinn")
 
-		val parameterSlot = slot<AddNotification>()
-		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
-		val notification = parameterSlot.captured
+		val notification = notificationPublisher.awaitNotification(assertNotNull(response.body.innsendingsId))
 		assertTrue(
 			notification.brukernotifikasjonInfo.lenke.contains("ansatt.dev.nav.no/sendinn"),
 			"Link not expected: ${notification.brukernotifikasjonInfo.lenke}"
@@ -221,9 +217,7 @@ class LospostRestApiTest : ApplicationTest() {
 			.assertSuccess()
 		assertContains(response.headers?.location.toString(), "intern.dev.nav.no/sendinn")
 
-		val parameter = slot<AddNotification>()
-		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameter)) }
-		val notification = parameter.captured
+		val notification = notificationPublisher.awaitNotification(assertNotNull(response.body.innsendingsId))
 		assertTrue(
 			notification.brukernotifikasjonInfo.lenke.contains("intern.dev.nav.no/sendinn"),
 			"Link not expected: ${notification.brukernotifikasjonInfo.lenke}"
@@ -242,11 +236,8 @@ class LospostRestApiTest : ApplicationTest() {
 		val lospostDto = api.createLospost(request)
 			.assertSuccess()
 			.body
-		assertNotNull(lospostDto.innsendingsId)
-
-		val parameterSlot = slot<AddNotification>()
-		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
-		val notification = parameterSlot.captured
+		val submissionId = assertNotNull(lospostDto.innsendingsId)
+		val notification = notificationPublisher.awaitNotification(submissionId)
 
 		assertEquals(lospostDto.innsendingsId, notification.soknadRef.innsendingId)
 		assertEquals(lospostDto.innsendingsId, notification.soknadRef.groupId)

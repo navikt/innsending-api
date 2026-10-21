@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.rest
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
 import io.mockk.slot
 import io.mockk.verify
@@ -26,6 +26,7 @@ import org.junit.jupiter.api.assertNull
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -40,10 +41,10 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 	@Autowired
 	lateinit var repo: RepositoryUtils
 
-	@SpykBean
+	@MockkSpyBean
 	private lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher
 
-	@SpykBean
+	@MockkSpyBean
 	private lateinit var soknadsmottakerApi: MottakerAPITest
 
 	 @LocalServerPort
@@ -61,6 +62,23 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		clearAllMocks()
 		testApi!!.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on")
 			.assertSuccess()
+	}
+
+	@Test
+	fun `serves OpenAPI documentation and Swagger UI`() {
+		webTestClient.get()
+			.uri("http://localhost:$serverPort/v3/api-docs")
+			.exchange()
+			.expectStatus().isOk
+			.expectBody()
+			.jsonPath("$.openapi").isNotEmpty
+			.jsonPath("$.paths").isNotEmpty
+
+		webTestClient.get()
+			.uri("http://localhost:$serverPort/swagger-ui/index.html")
+			.exchange()
+			.expectStatus().isOk
+			.expectHeader().contentTypeCompatibleWith(MediaType.TEXT_HTML)
 	}
 
 	@Test

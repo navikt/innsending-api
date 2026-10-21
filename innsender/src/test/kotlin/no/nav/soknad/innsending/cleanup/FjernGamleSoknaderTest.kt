@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.cleanup
 
 import com.ninjasquad.springmockk.MockkBean
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -41,7 +41,7 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 	@MockkBean
 	private lateinit var subjectHandler: SubjectHandlerInterface
 
-	@SpykBean
+	@MockkSpyBean
 	lateinit var notificationPublisher: PublisherInterface
 
 	private val defaultSkjemanr = "NAV 55-00.60"

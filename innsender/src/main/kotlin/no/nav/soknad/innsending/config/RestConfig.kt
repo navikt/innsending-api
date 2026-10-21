@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.util.unit.DataSize
 import kotlin.properties.Delegates
 
 @ConfigurationProperties("restconfig")
@@ -19,6 +20,7 @@ class RestConfig {
 	lateinit var pdlScope: String
 	lateinit var pdlUrl: String
 	lateinit var safselvbetjeningUrl: String
+	var safMaxInMemorySize: DataSize = DataSize.ofMegabytes(4)
 	lateinit var safUrl: String
 	lateinit var azureUrl: String
 	lateinit var arenaUrl: String
