@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.brukernotifikasjon.kafka
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
 import io.mockk.slot
 import io.mockk.verify
@@ -35,7 +35,7 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 	@Autowired
 	lateinit var soknadRepository: SoknadRepository
 
-	@SpykBean
+	@MockkSpyBean
 	lateinit var sendTilPublisher: PublisherInterface
 
 	@Autowired

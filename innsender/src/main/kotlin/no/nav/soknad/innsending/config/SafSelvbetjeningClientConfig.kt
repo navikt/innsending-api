@@ -15,10 +15,14 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpHeaders
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
+import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
+import reactor.core.publisher.SignalType
 import reactor.netty.http.client.HttpClient
 import reactor.netty.http.client.HttpClientRequest
 import reactor.netty.http.client.HttpClientResponse
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
 @Configuration
 @Profile("test | prod | dev")
@@ -39,6 +43,8 @@ class SafSelvbetjeningClientConfig(
 	fun graphQLClient() = GraphQLWebClient(
 		url = "${restConfig.safselvbetjeningUrl}/graphql",
 		builder = WebClient.builder()
+			.codecs { it.defaultCodecs().maxInMemorySize(maxResponseSizeBytes()) }
+			.filter { request, next -> next.exchange(request).map(::logResponseSize) }
 			.clientConnector(
 				ReactorClientHttpConnector(
 					HttpClient.create()
@@ -66,6 +72,36 @@ class SafSelvbetjeningClientConfig(
 				)
 			}
 	)
+
+	private fun maxResponseSizeBytes(): Int {
+		val bytes = restConfig.safMaxInMemorySize.toBytes()
+		require(bytes in 1..Int.MAX_VALUE.toLong()) {
+			"restconfig.safMaxInMemorySize must be between 1 and ${Int.MAX_VALUE} bytes"
+		}
+		return bytes.toInt()
+	}
+
+	private fun logResponseSize(response: ClientResponse): ClientResponse {
+		val receivedBytes = AtomicLong()
+		val logged = AtomicBoolean()
+		fun log(signal: SignalType) {
+			if (logged.compareAndSet(false, true)) {
+				logger.atInfo()
+					.addKeyValue("saf_response_bytes_received", receivedBytes.get())
+					.addKeyValue("saf_response_body_terminal_signal", signal.toString())
+					.log("SAF response body received")
+			}
+		}
+		return response.mutate()
+			.body { body ->
+				body.doOnNext { receivedBytes.addAndGet(it.readableByteCount().toLong()) }
+					// Log before propagating the signal: error handling may subscribe again to release the body.
+					.doOnComplete { log(SignalType.ON_COMPLETE) }
+					.doOnError { log(SignalType.ON_ERROR) }
+					.doOnCancel { log(SignalType.CANCEL) }
+			}
+			.build()
+	}
 
 	private val tokenxSafSelvbetjeningClientProperties =
 		oauth2Config.registration["tokenx-safselvbetjening"]
