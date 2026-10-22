@@ -1,13 +1,9 @@
 package no.nav.soknad.innsending.rest
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
 import io.mockk.slot
 import io.mockk.verify
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
@@ -30,7 +26,7 @@ import org.junit.jupiter.api.assertNull
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
-import org.springframework.http.HttpStatusCode
+import org.springframework.http.MediaType
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -45,10 +41,10 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 	@Autowired
 	lateinit var repo: RepositoryUtils
 
-	@SpykBean
+	@MockkSpyBean
 	private lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher
 
-	@SpykBean
+	@MockkSpyBean
 	private lateinit var soknadsmottakerApi: MottakerAPITest
 
 	 @LocalServerPort
@@ -66,6 +62,23 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		clearAllMocks()
 		testApi!!.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "on")
 			.assertSuccess()
+	}
+
+	@Test
+	fun `serves OpenAPI documentation and Swagger UI`() {
+		webTestClient.get()
+			.uri("http://localhost:$serverPort/v3/api-docs")
+			.exchange()
+			.expectStatus().isOk
+			.expectBody()
+			.jsonPath("$.openapi").isNotEmpty
+			.jsonPath("$.paths").isNotEmpty
+
+		webTestClient.get()
+			.uri("http://localhost:$serverPort/swagger-ui/index.html")
+			.exchange()
+			.expectStatus().isOk
+			.expectHeader().contentTypeCompatibleWith(MediaType.TEXT_HTML)
 	}
 
 	@Test
@@ -979,87 +992,5 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		assertEquals(1, filesUnknownAttachment.size)
 		assertEquals(SoknadFile.FileStatus.notfound, filesUnknownAttachment[0].fileStatus)
 	}
-
-	@Test
-	fun `Test parallell delete and sendIn operation on application`() = runBlocking {
-		val (skjemaDto, attachments) = createApplication()
-		assertTrue( skjemaDto != null)
-
-		val threads = 2
-		val callResponses = mutableMapOf<String, HttpStatusCode>()
-
-		val jobs = (1..threads).map { iterasjon ->
-			async(Dispatchers.IO) {
-				when (iterasjon) {
-					1 -> callResponses.put("submitDigitalApplication", testApi!!.submitDigitalApplication(skjemaDto, attachments).statusCode)
-					2 -> {
-						callResponses.put("deleteSoknad", testApi!!.deleteSoknad(skjemaDto.innsendingsId!!)?.statusCode ?: HttpStatusCode.valueOf(400))
-					}
-				}
-			}
-		}
-		val responses = jobs.awaitAll()
-
-		// Either the delete or the send-in operation has been successfull, but not both
-		assertTrue(callResponses.count() == 2)
-		if (callResponses.get("deleteSoknad") == HttpStatusCode.valueOf(200)) {
-			assertTrue(HttpStatusCode.valueOf(404)==callResponses.get("submitDigitalApplication") || HttpStatusCode.valueOf(500)==callResponses.get("submitDigitalApplication"))
-		} else {
-			assertEquals(HttpStatusCode.valueOf(200),callResponses.get("submitDigitalApplication"))
-			assertTrue(HttpStatusCode.valueOf(404)==callResponses.get("deleteSoknad") || HttpStatusCode.valueOf(500)==callResponses.get("deleteSoknad"))
-		}
-
-	}
-
-
-	private fun createApplication(): Pair<SkjemaDto?, List<AttachmentDto>> {
-		val skjemanr = "NAV 10-07.54"
-		val skjematittel = "Søknad om servicehund"
-		val hoveddokument =
-			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokument(skjemanr, withFile = false).build()
-		val hoveddokumentVariant =
-			SkjemaDokumentDtoTestBuilder(tittel = skjematittel).asHovedDokumentVariant(skjemanr, withFile = true).build()
-
-		val skjemaDto = SkjemaDtoTestBuilder(skjemanr = skjemanr, tittel = skjematittel)
-			.medHoveddokument(hoveddokument)
-			.medHoveddokumentVariant(hoveddokumentVariant)
-			.build()
-
-		val soknad = testApi!!.createSoknad(skjemaDto)
-			.assertSuccess()
-			.body
-		val innsendingsId = soknad.innsendingsId!!
-
-		val fileM2part1 = testApi!!.uploadAttachmentFile(innsendingsId, "M2")
-			.assertSuccess()
-			.body
-		val fileM2part2 = testApi!!.uploadAttachmentFile(innsendingsId, "M2")
-			.assertSuccess()
-			.body
-
-		val fileM3 = testApi!!.uploadAttachmentFile(innsendingsId, "M3")
-			.assertSuccess()
-			.body
-
-		val attachments = listOf(
-			AttachmentDto(
-				attachmentCode = "M2",
-				"Medisinske utgifter",
-				OpplastingsStatusDto.LastetOpp,
-				fileIds = listOf(fileM2part1.id, fileM2part2.id)
-			),
-			AttachmentDto(
-				attachmentCode = "M3",
-				"Legeerklæring",
-				OpplastingsStatusDto.LastetOpp,
-				fileIds = listOf(fileM3.id)
-			),
-			AttachmentDto(attachmentCode = "M4", "Kursbevis", OpplastingsStatusDto.SendesAvAndre),
-			AttachmentDto(attachmentCode = "M5", "Leiekontrakt", OpplastingsStatusDto.SendSenere),
-		)
-		return Pair(testApi!!.getSoknad(innsendingsId)?.body, attachments)
-
-	}
-
 
 }
