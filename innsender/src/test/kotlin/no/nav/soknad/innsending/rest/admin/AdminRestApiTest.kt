@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.rest.admin
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.verify
@@ -22,7 +22,7 @@ class AdminRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
-	@SpykBean
+	@MockkSpyBean
 	lateinit var tempCleanupArchiveFailure: TempCleanupArchiveFailure
 
 	@LocalServerPort

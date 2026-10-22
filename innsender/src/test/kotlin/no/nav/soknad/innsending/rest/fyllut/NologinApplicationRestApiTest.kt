@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.rest.fyllut
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
 import io.mockk.slot
 import io.mockk.verify
@@ -36,13 +36,13 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
-	@SpykBean
+	@MockkSpyBean
 	lateinit var metrics: InnsenderMetrics
 
-	@SpykBean
+	@MockkSpyBean
 	lateinit var soknadsmottaker: MottakerAPITest
 
-	@SpykBean
+	@MockkSpyBean
 	lateinit var documentService: DocumentService
 
 	@LocalServerPort

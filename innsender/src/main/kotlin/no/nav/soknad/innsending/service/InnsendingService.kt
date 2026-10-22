@@ -53,7 +53,7 @@ class InnsendingService(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
-	fun sendInnSoknadStart(soknadDtoInput: DokumentSoknadDto, avsenderDto: AvsenderDto?, brukerDto: BrukerDto?): Pair<List<VedleggDto>, List<VedleggDto>> {
+	fun sendInnSoknadStart(innsendingsId: String, avsenderDto: AvsenderDto?, brukerDto: BrukerDto?): Pair<List<VedleggDto>, List<VedleggDto>> {
 
 		// Anta at filene til et vedlegg allerede er konvertert til PDF ved lagring.
 		// Eventuell varianter av hoveddokument skal være på annet format enn PDF, da formatet vil bli brukt for å mappe til arkivformat ved lagring, og for arkivformatet på variantene på et dokument må være ulike.
@@ -66,31 +66,27 @@ class InnsendingService(
 		// Dato og opplastingsstatus settes på alle vedlegg som er endret
 		// Merk at dersom det ikke er lastet opp filer på et obligatorisk vedlegg, skal status settes SENDES_SENERE. Dette vil trigge oppretting av ettersendingssøknad
 
-		if (soknadDtoInput.status == SoknadsStatusDto.Innsendt || soknadDtoInput.status == SoknadsStatusDto.KlarForInnsending) {
-			logger.warn("${soknadDtoInput.innsendingsId}: Søknad allerede innsendt eller skal sendes inn, avbryter")
+		val eksisterendeSoknad = repo.hentSoknadDbForUpdate(innsendingsId)
+		if (eksisterendeSoknad.status != SoknadsStatus.Opprettet && eksisterendeSoknad.status != SoknadsStatus.Utfylt) {
+			logger.warn("$innsendingsId: Søknad allerede innsendt eller skal sendes inn, avbryter")
 			throw IllegalActionException(
 				message = "Søknaden er allerede sendt inn. Søknaden er innsendt og kan ikke sendes på nytt.",
 				errorCode = ErrorCode.APPLICATION_SENT_IN_OR_DELETED
 			)
 		}
 
-		val eksisterendeSoknad = repo.hentSoknadDb(soknadDtoInput.innsendingsId!!)
-		val lagretSoknad = mapTilDokumentSoknadDto(
+		val lagretSoknad = vedleggService.hentAlleVedlegg(
 			repo.lagreSoknad(
-			mapTilSoknadDb(soknadDtoInput, soknadDtoInput.innsendingsId!!,
-				SoknadsStatus.KlarForInnsending, avsender = avsenderDto, bruker = brukerDto).copy(
+				eksisterendeSoknad.copy(
+					status = SoknadsStatus.KlarForInnsending,
 					innsendtdato = LocalDateTime.now(),
-					brukerid = eksisterendeSoknad.brukerid,
-					brukertype = eksisterendeSoknad.brukertype,
 					avsender = eksisterendeSoknad.avsender ?: avsenderDto,
 					affecteduser = eksisterendeSoknad.affecteduser ?: brukerDto,
-					grantuserdigitalaccess = eksisterendeSoknad.grantuserdigitalaccess,
 				)
 			)
-			,emptyList(), emptyList()
-		).copy(vedleggsListe = soknadDtoInput.vedleggsListe)
+		)
 
-		val soknadDto = if (soknadDtoInput.erEttersending) {
+		val soknadDto = if (lagretSoknad.erEttersending) {
 			addDummyHovedDokumentToSoknad(lagretSoknad).let { soknad ->
 				// Temporary bugfix - should be removed when no attachments on ettersendinger has status KlarForInnsending in db
 				soknad.copy(vedleggsListe = soknad.vedleggsListe.map { vedlegg ->
@@ -130,8 +126,8 @@ class InnsendingService(
 			ErrorCode.FILE_SIZE_SUM_TOO_LARGE,
 		)
 
-		logger.info("${soknadDtoInput.innsendingsId}: Opplastede vedlegg = ${opplastedeVedlegg.map { it.vedleggsnr + ':' + it.uuid + ':' + it.opprettetdato + ':' + it.document?.size }}")
-		logger.info("${soknadDtoInput.innsendingsId}: Ikke opplastede påkrevde vedlegg = ${missingRequiredVedlegg.map { it.vedleggsnr + ':' + it.opprettetdato }}")
+		logger.info("$innsendingsId: Opplastede vedlegg = ${opplastedeVedlegg.map { it.vedleggsnr + ':' + it.uuid + ':' + it.opprettetdato + ':' + it.document?.size }}")
+		logger.info("$innsendingsId: Ikke opplastede påkrevde vedlegg = ${missingRequiredVedlegg.map { it.vedleggsnr + ':' + it.opprettetdato }}")
 
 		val kvitteringForArkivering =
 			lagInnsendingsKvitteringOgLagre(soknadDto, opplastedeVedlegg, missingRequiredVedlegg)
@@ -472,7 +468,7 @@ class InnsendingService(
 			submittedAt = submittedSoknad.innsendtDato!!,
 			subsequentSubmissionDeadline = beregnInnsendingsfrist(submittedSoknad),
 			attachments = submittedSoknad.vedleggsListeUtenHoveddokument.map {
-				AttachmentDto1(
+				AttachmentDto(
 					attachmentCode = it.vedleggsnr!!,
 					uploadStatus = if (OpplastingsStatusDto.KlarForInnsending==it.opplastingsStatus)  OpplastingsStatusDto.Innsendt else it.opplastingsStatus,
 					label = it.label,
@@ -502,7 +498,7 @@ class InnsendingService(
 		try {
 			val avsenderDto = AvsenderDto(id= brukerId, idType = IdType.FNR)
 			val brukerDto = BrukerDto(id= brukerId, idType = BrukerDto.IdType.FNR)
-			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput, avsenderDto, brukerDto)
+			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput.innsendingsId!!, avsenderDto, brukerDto)
 
 			val innsendtSoknadDto = soknadService.hentSoknad(soknadDtoInput.innsendingsId!!)
 
@@ -524,7 +520,7 @@ class InnsendingService(
 		val startSendInn = System.currentTimeMillis()
 
 		try {
-			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput, avsenderDto, brukerDto)
+			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput.innsendingsId!!, avsenderDto, brukerDto)
 
 			val innsendtSoknadDto = soknadService.hentSoknad(soknadDtoInput.innsendingsId!!)
 
