@@ -8,7 +8,6 @@ import no.nav.security.token.support.core.context.TokenValidationContextHolder
 import no.nav.security.token.support.core.jwt.JwtTokenClaims
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.InvalidUserIdentityException
-import no.nav.soknad.innsending.util.Constants.SELVBETJENING
 import no.nav.soknad.innsending.util.Constants.TOKENX
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -22,29 +21,24 @@ class SubjectHandlerImplTest {
 	private val holder = mockk<TokenValidationContextHolder>()
 	private val handler = SubjectHandlerImpl(holder)
 
-	private fun claims(pid: Any?, sub: String?, issuer: String = TOKENX) {
+	private fun claims(pid: Any?, sub: String?) {
 		every { holder.getTokenValidationContext() } returns context
-		every { context.hasTokenFor(TOKENX) } returns (issuer == TOKENX)
-		every { context.hasTokenFor(SELVBETJENING) } returns (issuer == SELVBETJENING)
-		every { context.getClaims(issuer) } returns JwtTokenClaims(
+		every { context.hasTokenFor(TOKENX) } returns true
+		every { context.getClaims(TOKENX) } returns JwtTokenClaims(
 			JWTClaimsSet.Builder().claim("pid", pid).subject(sub).build()
 		)
 	}
 
 	@Test
-	fun `pid takes precedence over sub for both supported user issuers`() {
-		listOf(TOKENX, SELVBETJENING).forEach { issuer ->
-			claims("authenticated-user", "subject", issuer)
-			assertEquals("authenticated-user", handler.getUserIdFromToken())
-		}
+	fun `pid takes precedence over sub for TokenX`() {
+		claims("authenticated-user", "subject")
+		assertEquals("authenticated-user", handler.getUserIdFromToken())
 	}
 
 	@Test
-	fun `absent pid still uses sub for both supported user issuers`() {
-		listOf(TOKENX, SELVBETJENING).forEach { issuer ->
-			claims(null, "authenticated-user", issuer)
-			assertEquals("authenticated-user", handler.getUserIdFromToken())
-		}
+	fun `absent pid still uses sub for TokenX`() {
+		claims(null, "authenticated-user")
+		assertEquals("authenticated-user", handler.getUserIdFromToken())
 	}
 
 	@Test
@@ -84,9 +78,9 @@ class SubjectHandlerImplTest {
 
 	@Test
 	fun `missing expected user issuer is not translated into a user claim error`() {
-		claims(null, null, SELVBETJENING)
+		claims(null, null)
 		val failure = IllegalStateException("Missing user issuer")
-		every { context.getClaims(SELVBETJENING) } throws failure
+		every { context.getClaims(TOKENX) } throws failure
 
 		assertSame(failure, assertFailsWith<IllegalStateException> { handler.getUserIdFromToken() })
 	}
