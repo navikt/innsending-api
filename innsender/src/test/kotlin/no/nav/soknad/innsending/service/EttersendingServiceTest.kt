@@ -25,6 +25,7 @@ import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
+import no.nav.soknad.innsending.utils.withTransactions
 import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
@@ -32,12 +33,16 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.transaction.PlatformTransactionManager
 import java.time.OffsetDateTime
 
 class EttersendingServiceTest : ApplicationTest() {
 
 	@Autowired
 	private lateinit var repo: RepositoryUtils
+
+	@Autowired
+	private lateinit var transactionManager: PlatformTransactionManager
 
 	@Autowired
 	private lateinit var innsenderMetrics: InnsenderMetrics
@@ -117,7 +122,7 @@ class EttersendingServiceTest : ApplicationTest() {
 		restConfig = restConfig,
 		pdlInterface = pdlInterface,
 		documentService = documentService,
-	)
+	).let { withTransactions(it, transactionManager) }
 
 	@Test
 	fun `ettersending inherits grant user digital access including absence`() {

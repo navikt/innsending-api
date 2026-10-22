@@ -415,22 +415,26 @@ class VedleggService(
 
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
 	fun slettVedlegg(soknadDto: DokumentSoknadDto, vedleggsId: Long) {
-		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException("Søknad ${soknadDto.innsendingsId} kan ikke endres da den allerede er innsendt. Det kan ikke gjøres endring på en slettet eller innsendt søknad.")
+		val soknadDbData = repo.hentSoknadDbForUpdate(soknadDto.innsendingsId!!)
+		if (!kanGjoreEndringer(soknadDbData.status)) throw IllegalActionException("Søknad ${soknadDto.innsendingsId} kan ikke endres da den allerede er innsendt. Det kan ikke gjøres endring på en slettet eller innsendt søknad.")
+		val soknadsId = soknadDbData.id!!
 
-		val vedleggDto = soknadDto.vedleggsListe.firstOrNull { it.id == vedleggsId }
+		val vedleggDbData = repo.hentAlleVedleggGittSoknadsid(soknadsId).firstOrNull { it.id == vedleggsId }
 			?: throw ResourceNotFoundException("Angitt vedlegg $vedleggsId eksisterer ikke for søknad ${soknadDto.innsendingsId}")
 
-		if (vedleggDto.erHoveddokument) throw IllegalActionException("Kan ikke slette hovedskjema på en søknad. Søknaden må alltid ha sitt hovedskjema")
-		if (!vedleggDto.vedleggsnr.equals("N6") || (vedleggDto.vedleggsnr.equals("N6") && vedleggDto.erPakrevd)) throw IllegalActionException(
+		if (vedleggDbData.erhoveddokument) throw IllegalActionException("Kan ikke slette hovedskjema på en søknad. Søknaden må alltid ha sitt hovedskjema")
+		if (!vedleggDbData.vedleggsnr.equals("N6") || (vedleggDbData.vedleggsnr.equals("N6") && vedleggDbData.erpakrevd)) throw IllegalActionException(
 			"Kan ikke slette påkrevd vedlegg. Vedlegg som er obligatorisk for søknaden kan ikke slettes av søker"
 		)
 
-		slettVedleggOgDensFiler(vedleggDto, soknadDto.id!!)
+		slettVedleggOgDensFiler(vedleggDbData, soknadsId)
 	}
 
-	private fun slettVedleggOgDensFiler(vedleggDto: VedleggDto, soknadsId: Long) {
+	private fun slettVedleggOgDensFiler(vedleggDbData: VedleggDbData, soknadsId: Long) {
 		// Ikke slette hovedskjema, og ikke obligatoriske. Slette vedlegget og dens opplastede filer
-		slettVedleggOgDensFiler(vedleggDto)
+		val vedleggsId = vedleggDbData.id!!
+		repo.slettFilerForVedlegg(vedleggsId)
+		repo.slettVedlegg(vedleggsId)
 		// Oppdatere soknad.sisteendret
 		repo.oppdaterEndretDato(soknadsId)
 	}
@@ -466,10 +470,11 @@ class VedleggService(
 		required: Boolean? = null
 	): VedleggDto {
 
-		if (!soknadDto.kanGjoreEndringer) throw IllegalActionException("Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet. Det kan ikke gjøres endring på en slettet eller innsendt søknad")
+		val soknadDbData = repo.hentSoknadDbForUpdate(soknadDto.innsendingsId!!)
+		if (!kanGjoreEndringer(soknadDbData.status)) throw IllegalActionException("Søknad ${soknadDto.innsendingsId} kan ikke endres da den er innsendt eller slettet. Det kan ikke gjøres endring på en slettet eller innsendt søknad")
 
 		val vedleggDbData = repo.hentVedlegg(vedleggsId)
-		if (vedleggDbData.soknadsid != soknadDto.id) {
+		if (vedleggDbData.soknadsid != soknadDbData.id) {
 			throw IllegalActionException("Søknad ${soknadDto.innsendingsId} har ikke vedlegg med id $vedleggsId. Kan ikke endre vedlegg da søknaden ikke har et slikt vedlegg")
 		}
 		if (vedleggDbData.vedleggsnr != "N6" && patchVedleggDto.tittel != null) {
@@ -482,13 +487,16 @@ class VedleggService(
 		*/
 
 		val oppdatertVedlegg =
-			repo.oppdaterVedlegg(soknadDto.innsendingsId!!, oppdaterVedleggDb(vedleggDbData, patchVedleggDto, required))
+			repo.oppdaterVedlegg(soknadDbData.innsendingsid, oppdaterVedleggDb(vedleggDbData, patchVedleggDto, required))
 
 		// Oppdater soknadens sist endret dato
-		repo.oppdaterEndretDato(soknadDto.id!!)
+		repo.oppdaterEndretDato(soknadDbData.id!!)
 
 		return lagVedleggDto(vedleggDbData = oppdatertVedlegg, document = null)
 	}
+
+	private fun kanGjoreEndringer(status: SoknadsStatus): Boolean =
+		status == SoknadsStatus.Opprettet || status == SoknadsStatus.Utfylt
 
 
 	// Oppdater eller legg til nytt vedlegg

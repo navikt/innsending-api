@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertSame
 
 @ExtendWith(MockKExtension::class)
 class SoknadServiceUnitTest {
@@ -58,6 +59,14 @@ class SoknadServiceUnitTest {
 	fun `storage deletion failure leaves application data intact for retry`() {
 		val application = DokumentSoknadDtoTestBuilder(visningsType = VisningsType.fyllUt).build()
 		val innsendingsId = application.innsendingsId!!
+		val applicationRow = SoknadDbDataTestBuilder(
+			id = application.id,
+			innsendingsId = innsendingsId,
+			visningsType = VisningsType.fyllUt,
+		).build()
+		val storageFailure = RuntimeException("storage unavailable")
+		every { repo.hentSoknadDbForUpdate(innsendingsId) } returns applicationRow
+		every { vedleggService.hentAlleVedlegg(applicationRow, innsendingsId) } returns application
 		every {
 			fileStorage.delete(
 				FileStorageNamespace.DIGITAL,
@@ -66,12 +75,16 @@ class SoknadServiceUnitTest {
 				null,
 				false,
 			)
-		} throws RuntimeException("storage unavailable")
+		} throws storageFailure
 
-		assertFailsWith<RuntimeException> {
+		val failure = assertFailsWith<RuntimeException> {
 			soknadService.slettSoknadAvBruker(application)
 		}
+		assertSame(storageFailure, failure)
 
+		verify(exactly = 1) {
+			fileStorage.delete(FileStorageNamespace.DIGITAL, innsendingsId.toUUID(), null, null, false)
+		}
 		verify(exactly = 0) { vedleggService.slettVedleggOgDensFiler(any()) }
 		verify(exactly = 0) { repo.slettSoknad(any(), any()) }
 	}
