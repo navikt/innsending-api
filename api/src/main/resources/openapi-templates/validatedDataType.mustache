@@ -1,0 +1,1 @@
+{{! Arrays of models cascade through type-use annotations. Preserve the upstream item dataType, including its nullability. }}{{#isArray}}{{{baseType}}}<{{#items}}{{#useBeanValidation}}{{#isModel}}{{^isEnum}}@Valid {{/isEnum}}{{/isModel}}{{/useBeanValidation}}{{{dataType}}}{{/items}}>{{/isArray}}{{^isArray}}{{{dataType}}}{{/isArray}}

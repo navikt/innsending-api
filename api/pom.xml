@@ -76,6 +76,7 @@
 						<configuration>
 							<inputSpec>${project.basedir}/src/main/resources/innsending-api.yml</inputSpec>
 							<generatorName>kotlin-spring</generatorName>
+							<templateDirectory>${project.basedir}/src/main/resources/openapi-templates</templateDirectory>
 							<apiPackage>no.nav.soknad.innsending.api</apiPackage>
 							<modelPackage>no.nav.soknad.innsending.model</modelPackage>
 							<configOptions>
@@ -107,6 +108,9 @@
 				</executions>
 				<configuration>
 					<jvmTarget>${java.version}</jvmTarget>
+					<args>
+						<arg>-Xemit-jvm-type-annotations</arg>
+					</args>
 				</configuration>
 			</plugin>
 		</plugins>
