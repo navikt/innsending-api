@@ -2,7 +2,9 @@ package no.nav.soknad.innsending.rest.lospost
 
 import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
+import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
+import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.exceptions.ErrorCode
@@ -12,7 +14,6 @@ import no.nav.soknad.innsending.model.OpprettLospost
 import no.nav.soknad.innsending.model.PostVedleggDto
 import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.Hjelpemetoder
-import no.nav.soknad.innsending.utils.awaitNotification
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -42,6 +43,22 @@ class LospostRestApiTest : ApplicationTest() {
 	fun setup() {
 		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
+	}
+
+	/**
+	 * Venter på at brukernotifikasjonen for den gitte innsendingsIden er publisert asynkront, og returnerer den.
+	 * Notifikasjoner filtreres på innsendingsId siden spionen deles av alle testene som kjører i samme
+	 * Spring-kontekst, og asynkrone kall fra andre tester derfor kan bli registrert på mocken.
+	 */
+	private fun ventPaaBrukernotifikasjon(innsendingsId: String?): AddNotification {
+		assertNotNull(innsendingsId, "innsendingsId mangler")
+		verify(timeout = 5000, exactly = 1) {
+			notificationPublisher.opprettBrukernotifikasjon(match { it.soknadRef.innsendingId == innsendingsId })
+		}
+
+		val notifications = mutableListOf<AddNotification>()
+		verify { notificationPublisher.opprettBrukernotifikasjon(capture(notifications)) }
+		return notifications.first { it.soknadRef.innsendingId == innsendingsId }
 	}
 
 	@Test
@@ -197,7 +214,7 @@ class LospostRestApiTest : ApplicationTest() {
 			.assertSuccess()
 		assertContains(response.headers?.location.toString(), "ansatt.dev.nav.no/sendinn")
 
-		val notification = notificationPublisher.awaitNotification(assertNotNull(response.body.innsendingsId))
+		val notification = ventPaaBrukernotifikasjon(response.body.innsendingsId)
 		assertTrue(
 			notification.brukernotifikasjonInfo.lenke.contains("ansatt.dev.nav.no/sendinn"),
 			"Link not expected: ${notification.brukernotifikasjonInfo.lenke}"
@@ -217,7 +234,7 @@ class LospostRestApiTest : ApplicationTest() {
 			.assertSuccess()
 		assertContains(response.headers?.location.toString(), "intern.dev.nav.no/sendinn")
 
-		val notification = notificationPublisher.awaitNotification(assertNotNull(response.body.innsendingsId))
+		val notification = ventPaaBrukernotifikasjon(response.body.innsendingsId)
 		assertTrue(
 			notification.brukernotifikasjonInfo.lenke.contains("intern.dev.nav.no/sendinn"),
 			"Link not expected: ${notification.brukernotifikasjonInfo.lenke}"
@@ -236,8 +253,9 @@ class LospostRestApiTest : ApplicationTest() {
 		val lospostDto = api.createLospost(request)
 			.assertSuccess()
 			.body
-		val submissionId = assertNotNull(lospostDto.innsendingsId)
-		val notification = notificationPublisher.awaitNotification(submissionId)
+		assertNotNull(lospostDto.innsendingsId)
+
+		val notification = ventPaaBrukernotifikasjon(lospostDto.innsendingsId)
 
 		assertEquals(lospostDto.innsendingsId, notification.soknadRef.innsendingId)
 		assertEquals(lospostDto.innsendingsId, notification.soknadRef.groupId)
