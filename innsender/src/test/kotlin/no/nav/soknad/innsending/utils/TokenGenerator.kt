@@ -4,12 +4,15 @@ import com.nimbusds.jose.JOSEObjectType
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.crypto.RSASSASigner
+import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.PlainJWT
 import com.nimbusds.jwt.SignedJWT
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
+import no.nav.security.mock.oauth2.token.KeyProvider
+import no.nav.security.mock.oauth2.token.OAuth2TokenProvider
 import no.nav.soknad.innsending.util.Constants.AZURE
 import no.nav.soknad.innsending.util.Constants.TOKENX
 import java.util.Date
@@ -132,6 +135,29 @@ class TokenGenerator(
 
 	// Gyldige TokenX-claims uten signatur (alg=none)
 	fun lagUnsignedTokenXToken(): String = PlainJWT(tokenXClaims()).serialize()
+
+	/**
+	 * Gyldige TokenX-claims uten de oppgitte claimene, signert med issuerens ekte nøkkel.
+	 * mock-oauth2-server setter alltid exp, iat og sub, så tokenet må signeres utenom serveren.
+	 */
+	fun lagTokenXTokenWithoutClaims(vararg omitted: String): String {
+		val claims = JWTClaimsSet.Builder(tokenXClaims()).apply { omitted.forEach { claim(it, null) } }.build()
+		val signingKey = issuerSigningKey(TOKENX)
+		val jwt = SignedJWT(
+			JWSHeader.Builder(JWSAlgorithm.RS256).keyID(signingKey.keyID).type(JOSEObjectType.JWT).build(),
+			claims
+		)
+		jwt.sign(RSASSASigner(signingKey))
+		return jwt.serialize()
+	}
+
+	// mock-oauth2-server eksponerer ikke signeringsnøkkelen, så vi henter den med refleksjon. Bare for test.
+	private fun issuerSigningKey(issuerId: String): RSAKey {
+		val tokenProvider = mockOAuth2Server.config.tokenProvider
+		val keyProviderField = OAuth2TokenProvider::class.java.getDeclaredField("keyProvider").apply { isAccessible = true }
+		val keyProvider = keyProviderField.get(tokenProvider) as KeyProvider
+		return keyProvider.signingKey(issuerId).toRSAKey()
+	}
 
 	private fun tokenXClaims(): JWTClaimsSet {
 		val now = Date()

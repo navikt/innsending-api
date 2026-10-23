@@ -133,6 +133,14 @@ class AccessMatrixTest : ApplicationTest() {
 		TestToken("TokenX ukjent issuer", false, emptySet()) { tokens.lagTokenXToken(issuerId = "ukjent") },
 		TestToken("TokenX ukjent signeringsnøkkel", false, emptySet()) { tokens.lagTokenXTokenSignedWithUnknownKey() },
 		TestToken("TokenX usignert (alg=none)", false, emptySet()) { tokens.lagUnsignedTokenXToken() },
+		// Kontroll: signert med issuerens nøkkel utenom mock-serveren. Beviser at tokenene uten claims under avvises på grunn av claimene
+		TestToken("TokenX egensignert med alle claims", true, setOf(AccessPolicy.TOKENX_HIGH_ACR)) {
+			tokens.lagTokenXTokenWithoutClaims()
+		},
+		// Texas krever iss, exp og iat, men ikke sub. Token-support krever alle fire
+		TestToken("TokenX uten exp", false, emptySet()) { tokens.lagTokenXTokenWithoutClaims("exp") },
+		TestToken("TokenX uten iat", false, emptySet()) { tokens.lagTokenXTokenWithoutClaims("iat") },
+		TestToken("TokenX uten sub", false, emptySet()) { tokens.lagTokenXTokenWithoutClaims("sub") },
 		TestToken("Azure OBO scp=admin-access defaultaccess", true, setOf(AccessPolicy.AZURE, AccessPolicy.AZURE_ADMIN)) {
 			tokens.lagAzureOBOTokenWithScp(scp = "admin-access defaultaccess", navIdent = "Z123456")
 		},
@@ -255,6 +263,24 @@ class AccessMatrixTest : ApplicationTest() {
 			val status = client.get().uri(path).exchange().returnResult(String::class.java).status.value()
 			assertEquals(200, status, "GET $path")
 		}
+	}
+
+	// Actuator-endepunktene ligger utenfor controllerne og dekkes ikke av inventaret over. Token-support beskytter dem ikke i dag.
+	@Test
+	fun `actuator endpoints answer without token`() {
+		listOf("/internal/health", "/internal/info", "/internal/metrics", "/internal/prometheus").forEach { path ->
+			val status = client.get().uri(path).exchange().returnResult(String::class.java).status.value()
+			// Helse kan svare 503 når en avhengighet er nede. Kontrakten gjelder tilgang, ikke status på helsa
+			assertTrue(status !in setOf(401, 403, 404), "GET $path uten token ga $status")
+		}
+	}
+
+	// refresh står i management.endpoints.web.exposure.include, men spring-cloud-context mangler, så endepunktet finnes ikke
+	@Test
+	fun `actuator refresh is not exposed`() {
+		val status = client.post().uri("/internal/refresh").exchange().returnResult(String::class.java).status.value()
+		// 404 fra manglende ressurs eller 405 fra ressurshåndtereren, som bare godtar GET og HEAD
+		assertTrue(status in setOf(404, 405), "POST /internal/refresh ga $status")
 	}
 
 	@Test
