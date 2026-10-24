@@ -85,6 +85,21 @@ class NologinRestApiTest: ApplicationTest() {
 	}
 
 	@Test
+	fun `should not delete no-login file when token does not contain correct role`() {
+		val innsendingsId = UUID.randomUUID()
+		val attachmentId = "abcdef"
+		val file = api.uploadNologinFileV2(innsendingsId.toString(), attachmentId)
+			.assertSuccess()
+			.body
+		val token = TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("irrelevant-role"))
+
+		api.deleteNologinFileV2(innsendingsId.toString(), attachmentId, file.id, authToken = token)
+			.assertHttpStatus(HttpStatus.FORBIDDEN)
+
+		assertNotNull(documentService.getFile(FileStorageNamespace.NOLOGIN, innsendingsId, file.id))
+	}
+
+	@Test
 	fun `should not allow file upload V2 when nologin is disabled`() {
 		api.setConfig(ConfigDefinition.NOLOGIN_MAIN_SWITCH, "off")
 			.assertSuccess()
