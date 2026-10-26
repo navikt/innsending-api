@@ -258,7 +258,7 @@ class EttersendingService(
 
 		logger.info("Oppretter ettersending fra arkivert søknad fra ${archivedSoknad.innsendingsId} for skjemanr=${archivedSoknad.skjemanr}")
 		try {
-			val original = archivedSoknad.innsendingsId?.takeIf { repo.existsByInnsendingsId(it) }?.let { repo.hentSoknadDb(it) }
+			val original = archivedSoknad.innsendingsId?.let { repo.finnSoknadDb(it) }
 			val ettersendingDb = saveEttersending(
 				brukerId = brukerId,
 				ettersendingsId = archivedSoknad.innsendingsId,
