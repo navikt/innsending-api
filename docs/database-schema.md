@@ -27,6 +27,7 @@ erDiagram
         varchar arkiveringsstatus
         jsonb avsender
         jsonb affecteduser
+        jsonb owner
     }
     vedlegg {
         bigint id PK
@@ -65,7 +66,7 @@ En søknad kan ha flere vedlegg, og et vedlegg kan ha flere filer. `ettersending
 
 ### soknad
 
-Metadata om søknaden, hvem den gjelder, avsender, status og frister.
+Metadata om søknaden, eier, hvem den gjelder, avsender, status og frister.
 
 | Kolonne | Type | NULL | SQL-default | Beskrivelse |
 | --- | --- | --- | --- | --- |
@@ -94,6 +95,9 @@ Metadata om søknaden, hvem den gjelder, avsender, status og frister.
 | `affecteduser` | `jsonb` | Ja | Ingen | Brukeren søknaden gjelder |
 | `avsender` | `jsonb` | Ja | Ingen | Avsender |
 | `grantuserdigitalaccess` | `boolean` | Ja | Ingen | Ønske om digital tilgang |
+| `owner` | `jsonb` | Ja | Ingen | Eieridentifikasjon med `id` og `idType` |
+
+`owner`, `affecteduser` og `avsender` er separate JSON-verdier. Attributtene i JSON-objektene er ikke egne kolonner eller fremmednøkler.
 
 ### vedlegg
 
@@ -252,3 +256,4 @@ Dokumentasjonen bygger på følgende migreringsskript, listet i kjørerekkefølg
 | `V1.41__soknad_add_affected_user.sql` | Legger til brukeren søknaden gjelder som JSON |
 | `V1.42__soknad_add_avsender.sql` | Erstatter avsenderfeltene med JSON |
 | `V1.43__soknad_add_grant_user_digital_access.sql` | Legger til ønske om digital tilgang |
+| `V1.44__soknad_add_owner.sql` | Legger til nullable `owner` som JSONB uten default eller utfylling av eksisterende data |

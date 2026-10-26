@@ -6,6 +6,7 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
 import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
@@ -28,6 +29,7 @@ fun mapTilSoknadDb(
 	id: Long? = null,
 	avsender: AvsenderDto? = null,
 	bruker: BrukerDto? = null,
+	owner: ApplicationOwner? = null,
 ) =
 	SoknadDbData(
 		id = id ?: dokumentSoknadDto.id,
@@ -55,7 +57,35 @@ fun mapTilSoknadDb(
 		avsender = avsender,
 		affecteduser = null,
 		grantuserdigitalaccess = null,
+		owner = owner,
 	)
+
+// Retain the stored row identity and owner; keep the existing mapping for the other fields.
+fun SoknadDbData.withUpdatedData(application: DokumentSoknadDto, status: SoknadsStatus): SoknadDbData = copy(
+	tittel = application.tittel,
+	skjemanr = application.skjemanr,
+	tema = application.tema,
+	spraak = application.spraak ?: "no",
+	status = mapTilSoknadsStatus(application.status, status),
+	brukerid = application.brukerId,
+	ettersendingsid = application.ettersendingsId,
+	opprettetdato = mapTilLocalDateTime(application.opprettetDato)!!,
+	endretdato = LocalDateTime.now(),
+	innsendtdato = if (status == SoknadsStatus.Innsendt) LocalDateTime.now() else mapTilLocalDateTime(application.innsendtDato),
+	visningssteg = application.visningsSteg,
+	visningstype = application.visningsType,
+	kanlasteoppannet = application.kanLasteOppAnnet ?: true,
+	forsteinnsendingsdato = mapTilLocalDateTime(application.forsteInnsendingsDato),
+	ettersendingsfrist = application.fristForEttersendelse,
+	arkiveringsstatus = mapTilDbArkiveringsStatus(application.arkiveringsStatus ?: ArkiveringsStatusDto.IkkeSatt),
+	applikasjon = application.applikasjon,
+	skalslettesdato = application.sletteDato!!,
+	ernavopprettet = application.erNavOpprettet,
+	brukertype = if (application.brukerId != null) BrukerDto.IdType.FNR else null,
+	avsender = null,
+	affecteduser = null,
+	grantuserdigitalaccess = null,
+)
 
 fun lagDokumentSoknadDto(
 	soknadDbData: SoknadDbData,
@@ -206,6 +236,7 @@ fun SubmitApplicationRequest.toDokumentSoknadDto(innsendingsId: UUID, clientId: 
 		avsender = this.avsender,
 		affecteduser = null,
 		grantuserdigitalaccess = this.grantUserDigitalAccess,
+		owner = null,
 	)
 }
 

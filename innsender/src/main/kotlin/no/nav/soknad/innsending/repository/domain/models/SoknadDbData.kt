@@ -6,6 +6,7 @@ import no.nav.soknad.innsending.model.BrukerDto
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.utils.ApplicationOwnerConverter
 import no.nav.soknad.innsending.repository.domain.utils.AvsenderDtoConverter
 import no.nav.soknad.innsending.repository.domain.utils.BrukerDtoConverter
 import no.nav.soknad.innsending.util.Constants
@@ -55,5 +56,8 @@ data class SoknadDbData(
 	@JdbcTypeCode(SqlTypes.JSON)
 	@Column(name = "affecteduser", columnDefinition = "jsonb") val affecteduser: BrukerDto? = null,
 	@Column(name = "grantuserdigitalaccess", columnDefinition = "boolean") val grantuserdigitalaccess: Boolean? = null,
+	@Convert(converter = ApplicationOwnerConverter::class)
+	@JdbcTypeCode(SqlTypes.JSON)
+	@Column(name = "owner", columnDefinition = "jsonb", updatable = false) val owner: ApplicationOwner? = null,
 
 	)

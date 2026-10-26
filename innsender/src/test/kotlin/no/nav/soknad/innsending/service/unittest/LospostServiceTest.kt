@@ -59,6 +59,8 @@ class LospostServiceTest {
 		verify(exactly = 1) { repo.lagreVedlegg(capture(captorVedlegg)) }
 
 		val soknad = captorSoknad.captured
+		assertEquals(defaultUser, soknad.owner?.id)
+		assertEquals(defaultUser, soknad.brukerid)
 		assertEquals(VisningsType.lospost, soknad.visningstype)
 		assertEquals(Constants.LOSPOST_SKJEMANUMMER, soknad.skjemanr)
 		assertEquals("Send dokumentasjon til Nav", soknad.tittel)

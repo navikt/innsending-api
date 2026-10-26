@@ -14,6 +14,8 @@ Use these principles when writing tests and when reviewing code changes that inc
 - Use repository tests for database-specific behaviour, including queries, constraints, locks, and transactions. Direct database setup and assertions are natural at this boundary. Use the real test database rather than mocking database semantics.
 - In REST tests, read changed state through REST GET endpoints instead of repository reads or database assertions. A direct database assertion is an exception: explain what cannot be observed through REST and why the assertion belongs in this test.
 
+Moving SQL into a test helper does not remove this exception requirement. Use `ApplicationTestRepository` only when the state cannot be verified through REST responses, receipts, outgoing calls, or another observable boundary. Do not use it as a shortcut for an available REST GET. Keep assertions and bounded waits in the test, not in the repository.
+
 ## REST test workflow
 
 1. Create the application through REST where practical. Reuse request builders and file fixtures. For states that REST cannot create practically, use existing setup helpers or database builders, keeping setup separate from the action under test.
@@ -29,6 +31,7 @@ Paths below are relative to `innsender/src/test/kotlin/no/nav/soknad/innsending/
 
 - `ApplicationTest.kt` supplies the Spring Boot random-port test context, `test` profile, `WebTestClient`, WireMock, and MockOAuth2Server.
 - `utils/ApiWebClient.kt` provides `createSoknad`, `utfyltSoknad`, `getSoknadSendinn`, upload and submission helpers, plus response assertions. Use `assertHttpStatus` when the exact status matters, and inspect the body. When a request is not covered, extend `utils/ApiWebClient.kt` with the necessary helper instead of calling `webTestClient` or `utils/RestTestClient.kt` directly from a test or introducing local HTTP helpers.
+- [`utils/ApplicationTestRepository.kt`](../../../innsender/src/test/kotlin/no/nav/soknad/innsending/utils/ApplicationTestRepository.kt) encapsulates SQL for justified database assertions and historical fixture states that REST cannot create. It returns typed stored state; callers must still explain why each database observation is necessary.
 - Reuse `utils/builders/`, `utils/TokenGenerator.kt`, and resources under `innsender/src/test/resources/`. Use synthetic data only. Do not print personal data, tokens, or secrets in test output or failure messages.
 - `rest/InnsendingApiIntegrationTest.kt` shows REST-driven submission flows and captured soknadsmottaker payloads. `rest/fyllut/FyllutRestApiTest.kt` shows notification payload assertions at `PublisherInterface`.
 - `service/unittest/` contains focused MockK tests. `service/RepositoryUtilsTest.kt` demonstrates database-backed state-transition checks. Reuse JUnit and Kotlin assertions already used nearby rather than adding another framework.
