@@ -48,6 +48,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import org.springframework.web.util.UriComponentsBuilder
 import java.time.Duration
+import java.util.UUID
 import kotlin.test.assertEquals
 
 class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val mockOAuth2Server: MockOAuth2Server) {
@@ -545,6 +546,30 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 			filePath = filePath,
 			authToken = token,
 			applicationPath = "application-nologin"
+		)
+	}
+
+	fun deleteNologinFileV2(
+		innsendingsId: String,
+		attachmentId: String,
+		fileId: UUID,
+		authToken: String? = null,
+	): InnsendingApiResponse<Unit> {
+		val token: String = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("nologin-access"))
+		val response = webTestClient.delete()
+			.uri("$baseUrl/v1/application-nologin/$innsendingsId/attachments/$attachmentId/$fileId")
+			.headers { headers ->
+				headers.setAll(Hjelpemetoder.createHeaders(token = token).toSingleValueMap())
+			}
+			.exchange()
+
+		if (response.returnResult().status == HttpStatus.NO_CONTENT) {
+			assertEquals(0, response.returnResult().responseBodyContent?.size ?: 0, "Expected 204 response to have an empty body")
+		}
+		return InnsendingApiResponse(
+			response.returnResult().status,
+			readUnitBody(response),
+			response.returnResult().responseHeaders,
 		)
 	}
 
