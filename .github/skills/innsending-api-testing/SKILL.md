@@ -7,6 +7,8 @@ description: Write, change, and review tests in innsending-api. Use when adding 
 
 Use these principles when writing tests and when reviewing code changes that include tests. Read the changed behaviour and nearby tests first. Existing tests provide fixtures and infrastructure, not an exemption from these principles.
 
+Prioritize readability over reducing duplication in parameterized tests: vary input data for one operation, and split tests when parameters would select different operations or require conditional assertions.
+
 ## Check that tests detect defects
 
 Avoid tautological tests: derive expected outcomes from the behaviour contract, not from the implementation's algorithm, the production helper being tested, or configured mock return values. Use targeted mutation testing to verify that tests fail when a condition is reversed or a required side effect is removed. Without a configured tool, make a temporary mutation, run the focused tests, restore only that mutation immediately afterwards even if the run fails, and verify the diff and a passing rerun. Investigate surviving mutations for missing behavioural assertions, distinguish equivalent mutations from coverage gaps, and do not add assertions tied to implementation details just to kill a mutant.

@@ -26,7 +26,6 @@ import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -87,9 +86,9 @@ class OwnerWritingRestApiTest : ApplicationTest() {
 		assertEquals(TokenGenerator.subject, fetched.brukerId)
 	}
 
-	@ParameterizedTest(name = "complete form: {0}, owner present: {1}")
-	@CsvSource("false,true", "false,false", "true,true", "true,false")
-	fun `ordinary form updates preserve the stored owner despite another request identity`(completeForm: Boolean, ownerPresent: Boolean) {
+	@ParameterizedTest(name = "owner present: {0}")
+	@ValueSource(booleans = [true, false])
+	fun `ordinary form updates preserve the stored owner despite another request identity`(ownerPresent: Boolean) {
 		val original = SkjemaDtoTestBuilder(brukerId = TokenGenerator.subject).build()
 		val created = createApplication(original)
 		val applicationId = assertNotNull(created.innsendingsId)
@@ -99,18 +98,42 @@ class OwnerWritingRestApiTest : ApplicationTest() {
 		applicationTestRepository.setOwner(applicationId, storedOwner)
 		val request = original.copy(brukerId = otherIdentity, tittel = "Updated application title")
 
-		if (completeForm) {
-			val response = api.utfyltSoknad(applicationId, request)
-			assertEquals(HttpStatus.FOUND, response.statusCode)
-			assertNotNull(response.headers.location)
-			assertNull(response.body)
-		} else {
-			val response = api.updateSoknad(applicationId, request)
-			assertEquals(HttpStatus.OK, response.statusCode)
-			val updated = assertNotNull(response.body)
-			assertEquals(request.tittel, updated.tittel)
-			assertEquals(TokenGenerator.subject, updated.brukerId)
-		}
+		val response = api.updateSoknad(applicationId, request)
+		assertEquals(HttpStatus.OK, response.statusCode)
+		val updated = assertNotNull(response.body)
+		assertEquals(request.tittel, updated.tittel)
+		assertEquals(TokenGenerator.subject, updated.brukerId)
+
+		val fetched = api.getSoknadSendinn(applicationId).assertHttpStatus(HttpStatus.OK).body
+		assertEquals(applicationId, fetched.innsendingsId)
+		assertEquals(request.tittel, fetched.tittel)
+		assertEquals(TokenGenerator.subject, fetched.brukerId)
+		val mainDocuments = fetched.vedleggsListe.filter { it.erHoveddokument }
+		assertEquals(2, mainDocuments.size)
+		assertEquals(setOf(false, true), mainDocuments.map { it.erVariant }.toSet())
+		assertEquals(setOf(original.skjemanr), mainDocuments.map { it.vedleggsnr }.toSet())
+		// Owner is not exposed by REST, so inspect only that hidden state through the test repository.
+		val stored = applicationTestRepository.findBySubmissionId(applicationId)
+		assertEquals(!ownerPresent, stored.ownerIsSqlNull)
+		assertEquals(storedOwner, stored.owner)
+	}
+
+	@ParameterizedTest(name = "owner present: {0}")
+	@ValueSource(booleans = [true, false])
+	fun `form completion preserves the stored owner despite another request identity`(ownerPresent: Boolean) {
+		val original = SkjemaDtoTestBuilder(brukerId = TokenGenerator.subject).build()
+		val created = createApplication(original)
+		val applicationId = assertNotNull(created.innsendingsId)
+		assertOwner(applicationId, TokenGenerator.subject)
+		// These historical owner states cannot be assigned through the public API.
+		val storedOwner = if (ownerPresent) ApplicationOwner.person("12345678902") else null
+		applicationTestRepository.setOwner(applicationId, storedOwner)
+		val request = original.copy(brukerId = otherIdentity, tittel = "Updated application title")
+
+		val response = api.utfyltSoknad(applicationId, request)
+		assertEquals(HttpStatus.FOUND, response.statusCode)
+		assertNotNull(response.headers.location)
+		assertNull(response.body)
 
 		val fetched = api.getSoknadSendinn(applicationId).assertHttpStatus(HttpStatus.OK).body
 		assertEquals(applicationId, fetched.innsendingsId)

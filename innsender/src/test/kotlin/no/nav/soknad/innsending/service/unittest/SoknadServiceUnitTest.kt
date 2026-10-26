@@ -26,7 +26,7 @@ import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.ValueSource
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
@@ -64,9 +64,9 @@ class SoknadServiceUnitTest {
 	@InjectMockKs
 	lateinit var soknadService: SoknadService
 
-	@ParameterizedTest
-	@CsvSource("false,true", "false,false", "true,true", "true,false")
-	fun `updates and automatic deletion preserve the stored owner`(automaticDeletion: Boolean, ownerPresent: Boolean) {
+	@ParameterizedTest(name = "owner present: {0}")
+	@ValueSource(booleans = [true, false])
+	fun `updates preserve the stored owner`(ownerPresent: Boolean) {
 		val application = DokumentSoknadDtoTestBuilder(brukerId = defaultUser, id = 1, vedleggsListe = emptyList()).build()
 		val applicationId = application.innsendingsId!!
 		val owner = if (ownerPresent) ApplicationOwner.person("10987654321") else null
@@ -80,16 +80,39 @@ class SoknadServiceUnitTest {
 		every { vedleggService.hentAlleVedlegg(storedApplication, applicationId) } returns application
 		every { repo.lagreSoknad(capture(savedApplication)) } answers { firstArg() }
 
-		if (automaticDeletion) {
-			soknadService.slettSoknadAutomatisk(applicationId)
-		} else {
-			soknadService.updateSoknad(storedApplication, application, application.copy(tittel = "Updated title"), SoknadsStatus.Utfylt)
-		}
+		soknadService.updateSoknad(storedApplication, application, application.copy(tittel = "Updated title"), SoknadsStatus.Utfylt)
 
 		assertEquals(storedApplication.owner, savedApplication.captured.owner)
 		assertEquals(storedApplication.brukerid, savedApplication.captured.brukerid)
-		assertEquals(if (automaticDeletion) SoknadsStatus.AutomatiskSlettet else SoknadsStatus.Utfylt, savedApplication.captured.status)
-		assertEquals(if (automaticDeletion) application.tittel else "Updated title", savedApplication.captured.tittel)
+		assertEquals(SoknadsStatus.Utfylt, savedApplication.captured.status)
+		assertEquals("Updated title", savedApplication.captured.tittel)
+		assertNull(savedApplication.captured.avsender)
+		assertNull(savedApplication.captured.affecteduser)
+		assertNull(savedApplication.captured.grantuserdigitalaccess)
+	}
+
+	@ParameterizedTest(name = "owner present: {0}")
+	@ValueSource(booleans = [true, false])
+	fun `automatic deletion preserves the stored owner`(ownerPresent: Boolean) {
+		val application = DokumentSoknadDtoTestBuilder(brukerId = defaultUser, id = 1, vedleggsListe = emptyList()).build()
+		val applicationId = application.innsendingsId!!
+		val owner = if (ownerPresent) ApplicationOwner.person("10987654321") else null
+		val storedApplication = mapTilSoknadDb(application, applicationId, owner = owner).copy(
+			avsender = AvsenderDto(id = defaultUser, idType = AvsenderDto.IdType.FNR),
+			affecteduser = BrukerDto(id = defaultUser, idType = BrukerDto.IdType.FNR),
+			grantuserdigitalaccess = true,
+		)
+		val savedApplication = slot<SoknadDbData>()
+		every { repo.hentSoknadDb(applicationId) } returns storedApplication
+		every { vedleggService.hentAlleVedlegg(storedApplication, applicationId) } returns application
+		every { repo.lagreSoknad(capture(savedApplication)) } answers { firstArg() }
+
+		soknadService.slettSoknadAutomatisk(applicationId)
+
+		assertEquals(storedApplication.owner, savedApplication.captured.owner)
+		assertEquals(storedApplication.brukerid, savedApplication.captured.brukerid)
+		assertEquals(SoknadsStatus.AutomatiskSlettet, savedApplication.captured.status)
+		assertEquals(application.tittel, savedApplication.captured.tittel)
 		assertNull(savedApplication.captured.avsender)
 		assertNull(savedApplication.captured.affecteduser)
 		assertNull(savedApplication.captured.grantuserdigitalaccess)
