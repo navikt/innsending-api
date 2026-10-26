@@ -74,6 +74,7 @@
 		<hibernate-validator.version>9.1.4.Final</hibernate-validator.version>
 
 		<!--Security issues-->
+		<bouncycastle-bom.version>1.86.2</bouncycastle-bom.version>
 		<standalone-wiremock.version>3.13.2</standalone-wiremock.version>
 		<jsoup.version>1.23.2</jsoup.version>
 		<junrar.version>7.6.1</junrar.version>
