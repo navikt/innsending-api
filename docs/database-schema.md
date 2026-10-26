@@ -57,7 +57,7 @@ erDiagram
     }
 ```
 
-En søknad kan ha flere vedlegg, og et vedlegg kan ha flere filer. `ettersendingsid` knytter en søknad til en tidligere innsending. Hendelser knyttes til søknader med `innsendingsid` og kan beholdes etter at søknaden er slettet. `alive` og `config` har ingen relasjoner til de andre tabellene.
+En søknad kan ha flere vedlegg, og et vedlegg kan ha flere filer. `ettersendingsid` viser normalt til den opprinnelige innsendingen, men settes til søknadens egen `innsendingsid` når en ettersending opprettes uten en tidligere innsending. Hendelser knyttes til søknader med `innsendingsid` og kan beholdes etter at søknaden er slettet. `alive` og `config` har ingen relasjoner til de andre tabellene.
 
 ## Tabeller
 
