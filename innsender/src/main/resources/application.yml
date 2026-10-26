@@ -186,6 +186,23 @@ kafka:
     enabled: FALSE
 
 ---
+# Validerer innkommende token i e2e-testene i archiving-infrastructure. Brukes sammen med endtoend.
+# Issuerne er mock-oauth2-server i Docker-nettverket. Audience må stemme med tokenene systemtestene henter.
+spring:
+  config:
+    activate:
+      on-profile: endtoend-auth
+
+no.nav.security.jwt:
+  issuer:
+    tokenx:
+      discoveryurl: ${ENDTOEND_TOKEN_X_WELL_KNOWN_URL:http://authserver:6969/tokenx/.well-known/openid-configuration}
+      accepted_audience: ${ENDTOEND_TOKEN_X_AUDIENCE:dev-gcp:team-soknad:innsending-api}
+    azuread:
+      discoveryurl: ${ENDTOEND_AZURE_WELL_KNOWN_URL:http://authserver:6969/azuread/.well-known/openid-configuration}
+      accepted_audience: ${ENDTOEND_AZURE_AUDIENCE:aud-localhost}
+
+---
 spring:
   config:
     activate:
