@@ -91,4 +91,21 @@ class InnsenderMetricsTest : ApplicationTest() {
 		assertEquals(1.0, innsenderMetrics.getAntivirusScanCounter("digital", "async", "error"))
 	}
 
+	@Test
+	fun testAntivirusRetryCounters() {
+		innsenderMetrics.incAntivirusScanAttemptCounter("digital", "error", "timeout")
+		innsenderMetrics.incAntivirusScanAttemptCounter("digital", "error", "http_server_error")
+		innsenderMetrics.incAntivirusScanAttemptCounter("digital", "ok", "none")
+		innsenderMetrics.incAntivirusScanRetryCounter("digital", "timeout")
+		innsenderMetrics.incAntivirusScanRetryCounter("digital", "http_server_error")
+		innsenderMetrics.incAntivirusScanRecoveredCounter("digital", "ok")
+
+		assertEquals(1.0, innsenderMetrics.getAntivirusScanAttemptCounter("digital", "error", "timeout"))
+		assertEquals(1.0, innsenderMetrics.getAntivirusScanAttemptCounter("digital", "error", "http_server_error"))
+		assertEquals(1.0, innsenderMetrics.getAntivirusScanAttemptCounter("digital", "ok", "none"))
+		assertEquals(1.0, innsenderMetrics.getAntivirusScanRetryCounter("digital", "timeout"))
+		assertEquals(1.0, innsenderMetrics.getAntivirusScanRetryCounter("digital", "http_server_error"))
+		assertEquals(1.0, innsenderMetrics.getAntivirusScanRecoveredCounter("digital", "ok"))
+	}
+
 }

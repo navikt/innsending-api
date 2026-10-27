@@ -121,6 +121,50 @@ et [nais-endepunkt](https://docs.nais.io/security/antivirus/).
 For å teste virussjekken kan standard [EICAR test-filer](https://github.com/fire1ce/eicar-standard-antivirus-test-files)
 brukes.
 
+Digitale vedlegg lagres før den asynkrone virussjekken starter. Innsending blokkeres ikke av
+resultatet. Nologin-vedlegg må fortsatt bestå en synkron virussjekk før de lagres, uten retry.
+
+Den asynkrone sjekken gjør maksimalt tre forsøk ved HTTP 500, 502, 503 eller 504 og ved
+midlertidige nettverksfeil. Ventetiden dobles fra 2 til 4 sekunder, med tilfeldig variasjon
+på ±25 %. Virusfunn, andre HTTP-feil, ugyldige svar og et `ERROR`-resultat fra skanneren
+prøves ikke på nytt. Avbrutte oppgaver stopper uten nye forsøk.
+
+Midlertidige feil logges på `WARN`. En endelig mislykket virussjekk gir én `ERROR`, som fanges av
+Grafana-varselet for feillogger. En sjekk som lykkes etter retry logges på `INFO`, uten
+`ERROR`. Virusfunn logges fortsatt på `WARN`. Loggene har `scan_attempts`, `scan_result`,
+`scan_failure_reason`, `http_status`, `exception_type` og fil-ID-er for korrelasjon med `trace_id`, men ikke
+filnavn, dokumentinnhold eller responsinnhold fra skanneren.
+
+| Metrikk | Hva den måler |
+|---|---|
+| `innsendingapi_antivirus_scan_total{namespace,mode,result}` | Ett endelig resultat per sjekk, også når alle forsøk feiler |
+| `innsendingapi_antivirus_scan_attempts_total{namespace,result,reason}` | Hvert asynkront forsøk, inkludert feil som senere blir løst |
+| `innsendingapi_antivirus_scan_retries_total{namespace,reason}` | Ekstra forsøk etter det første |
+| `innsendingapi_antivirus_scan_recovered_total{namespace,result}` | Sjekker som gir `ok` eller `found` etter retry |
+| `innsendingapi_antivirus_scan_duration_seconds{namespace,result}` | Histogram for hele den asynkrone sjekken, inkludert backoff |
+
+Alle etikettverdier kommer fra faste utfall og feilkategorier. Tellerne starter på null,
+slik at det første feiltilfellet eller den første retry-en kan måles med `increase`.
+ID-er brukes ikke som etiketter i metrikkene.
+Den eksisterende `VIRUS_SCAN`-latensmetrikken måler fortsatt hvert HTTP-forsøk uten backoff.
+
+Eksempler for Grafana Explore, med cluster-etiketten `prod`:
+
+```promql
+sum by (result) (increase(innsendingapi_antivirus_scan_total{k8s_cluster_name="prod",mode="async"}[15m]))
+sum by (reason) (increase(innsendingapi_antivirus_scan_retries_total{k8s_cluster_name="prod"}[15m]))
+sum by (result) (increase(innsendingapi_antivirus_scan_recovered_total{k8s_cluster_name="prod"}[15m]))
+```
+
+```logql
+{k8s_cluster_name="prod",service_name="innsending-api"} | json | scan_failure_reason="http_server_error"
+```
+
+Retry skjer i den eksisterende bakgrunnsoppgaven, ikke i en varig kø. Oppgaver overlever
+ikke en pod-restart, og en endelig mislykket virussjekk sletter ikke vedlegget eller utsetter
+innsendingen. Resultater må lagres og knyttes til riktig filversjon før virussjekken kan
+brukes til å blokkere innsending.
+
 ### Skedulert merge og deploy
 
 Applikasjonen kan deployes på et gitt tidspunkt ved å legge til `/schedule {TIDSPUNKT_SOM_ISO_8601_UTC}` i PR-teksten.
