@@ -15,6 +15,19 @@ Avoid tautological tests: derive expected outcomes from the behaviour contract, 
 
 ## Choose the test boundary
 
+Choose the test type by the behaviour being verified. The naming conventions below apply to new tests; existing names vary.
+
+| Test type | Choose when | Boundary and naming | Example |
+| --- | --- | --- | --- |
+| Unit test | Testing a utility, mapping, converter, or isolated calculation. | Call the code directly without Spring or a database. Use `<Subject>Test`. | `SoknadMappingTest` |
+| Service unit test | Testing service behaviour that does not require HTTP, persistence, or Spring transaction semantics. | Construct the service with mocked dependencies. Use `<Service>UnitTest`. | `SoknadServiceUnitTest` |
+| REST API test | Testing endpoints belonging to one REST API defined in the OpenAPI specification. | Exercise HTTP through the real controller, service, and persistence path. Use `<Api>RestApiTest`, matching the API name. | `FyllutRestApiTest` |
+| Feature integration test | Testing a feature or flow across APIs, persistence, and outgoing integrations rather than one API's endpoints. | Exercise the real application through REST where practical. Use `<Feature>IntegrationTest`, not a fictitious API name. These tests may remain in the `rest` package. | `OwnerWritingIntegrationTest`, `OwnerSuccessorIntegrationTest` |
+| Database-backed repository or service test | Testing queries, constraints, locks, transactions, or persisted state transitions. | Use the real test database. Use `<Subject>Test`. | `RepositoryUtilsTest` |
+| Migration test | Testing schema changes, historical rows, migration conflicts, or compatibility between old and new writers. | Run the actual Flyway migration against a real test database. Use `<Feature>MigrationTest`. | `OwnerMigrationTest` |
+
+REST API tests and REST-driven feature integration tests both use `ApplicationTest` and mock external boundaries. Their names distinguish the scope being tested, not different test runners. Both follow the REST workflow below.
+
 - Start with black-box REST tests for API-visible behaviour. Exercise the real controller, service, and persistence path. Mock external boundaries, not internal services or repositories.
 - Test utilities and mappings directly with unit tests. Use focused service tests with mocked dependencies for behaviour that does not need the HTTP stack.
 - Use repository tests for database-specific behaviour, including queries, constraints, locks, and transactions. Direct database setup and assertions are natural at this boundary. Use the real test database rather than mocking database semantics.

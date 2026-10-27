@@ -40,7 +40,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @Import(ApplicationTestRepository::class)
-class OwnerWritingRestApiTest : ApplicationTest() {
+class OwnerWritingIntegrationTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
