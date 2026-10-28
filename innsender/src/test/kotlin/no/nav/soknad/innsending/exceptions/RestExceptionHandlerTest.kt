@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.exceptions
 
 import nl.altindag.log.LogCaptor
+import no.nav.soknad.innsending.consumerapis.texas.TexasUnavailableException
 import org.apache.catalina.connector.ClientAbortException
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -55,8 +56,24 @@ class RestExceptionHandlerTest {
 		assertTrue(logCaptor.errorLogs.isEmpty())
 	}
 
+	@Test
+	fun `feil mot Texas gir 503 og aldri 401 eller 403`() {
+		mockMvc.get("/texas/unavailable")
+			.andExpect {
+				status { isServiceUnavailable() }
+				jsonPath("$.errorCode") { value("temporarilyUnavailable") }
+			}
+
+		assertTrue(logCaptor.errorLogs.single().contains("Texas svarte 503"))
+	}
+
 	@RestController
 	private class DisconnectController {
+
+		@GetMapping("/texas/unavailable", produces = [MediaType.APPLICATION_JSON_VALUE])
+		fun texasUnavailable(): String {
+			throw TexasUnavailableException("Texas svarte 503 for identity_provider=entra_id target=api://x/.default")
+		}
 
 		@GetMapping("/disconnect/async", produces = [MediaType.TEXT_PLAIN_VALUE])
 		fun asyncDisconnect(): String {
