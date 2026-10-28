@@ -235,13 +235,18 @@ fil-konvertering_url: ${KONVERTERING_TIL_PDF_URL}
 
 bidrag_applikasjon: ${BIDRAG_APPLIKASJON}
 
-# Maskintoken fra Texas-sidecaren. Target er samme scope som før
+# Token fra Texas-sidecaren. Target er samme scope eller TokenX-audience som før
 texas:
   token-endpoint: ${NAIS_TOKEN_ENDPOINT}
+  exchange-endpoint: ${NAIS_TOKEN_EXCHANGE_ENDPOINT}
   target:
     soknadsmottaker: ${SOKNADSMOTTAKER_SCOPE}
     kodeverk: ${KODEVERK_SCOPE}
     saf: ${SAF_SCOPE}
+    pdl: ${PDL_TOKEN_X_AUDIENCE}
+    safselvbetjening: ${SAFSELVBETJENING_TOKEN_X_AUDIENCE}
+    arena: ${ARENA_TOKEN_X_AUDIENCE}
+    kontoregister: ${KONTOREGISTER_TOKEN_X_AUDIENCE}
 
 restconfig:
   version: ${APP_VERSION}
@@ -285,50 +290,6 @@ no.nav.security.jwt:
     azuread:
       discoveryurl: ${AZURE_APP_WELL_KNOWN_URL}
       accepted_audience: ${AZURE_APP_CLIENT_ID}
-
-  client:
-    registration:
-      tokenx-safselvbetjening:
-        token-endpoint-url: ${TOKEN_X_TOKEN_ENDPOINT}
-        grant-type: urn:ietf:params:oauth:grant-type:token-exchange
-        authentication:
-          client-auth-method: private_key_jwt
-          client-id: ${TOKEN_X_CLIENT_ID}
-          client-jwk: ${TOKEN_X_PRIVATE_JWK}
-        token-exchange:
-          audience: ${SAFSELVBETJENING_TOKEN_X_AUDIENCE}
-
-      tokenx-pdl:
-        token-endpoint-url: ${TOKEN_X_TOKEN_ENDPOINT}
-        grant-type: urn:ietf:params:oauth:grant-type:token-exchange
-        authentication:
-          client-auth-method: private_key_jwt
-          client-id: ${TOKEN_X_CLIENT_ID}
-          client-jwk: ${TOKEN_X_PRIVATE_JWK}
-        token-exchange:
-          audience: ${PDL_TOKEN_X_AUDIENCE}
-
-      kontoregister:
-        token-endpoint-url: ${TOKEN_X_TOKEN_ENDPOINT}
-        grant-type: urn:ietf:params:oauth:grant-type:token-exchange
-        scope: ${KONTOREGISTER_SCOPE}
-        authentication:
-          client-auth-method: private_key_jwt
-          client-id: ${TOKEN_X_CLIENT_ID}
-          client-jwk: ${TOKEN_X_PRIVATE_JWK}
-        token-exchange:
-          audience: ${KONTOREGISTER_TOKEN_X_AUDIENCE}
-
-      arena:
-        token-endpoint-url: ${TOKEN_X_TOKEN_ENDPOINT}
-        grant-type: urn:ietf:params:oauth:grant-type:token-exchange
-        scope: ${ARENA_SCOPE}
-        authentication:
-          client-auth-method: private_key_jwt
-          client-id: ${TOKEN_X_CLIENT_ID}
-          client-jwk: ${TOKEN_X_PRIVATE_JWK}
-        token-exchange:
-          audience: ${ARENA_TOKEN_X_AUDIENCE}
 
 ---
 spring:

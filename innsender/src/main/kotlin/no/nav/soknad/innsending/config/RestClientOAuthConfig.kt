@@ -1,11 +1,9 @@
 package no.nav.soknad.innsending.config
 
-import no.nav.security.token.support.client.core.ClientProperties
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
-import no.nav.security.token.support.client.spring.ClientConfigurationProperties
-import no.nav.soknad.arkivering.soknadsarkiverer.service.tokensupport.TokenService
 import no.nav.soknad.innsending.consumerapis.texas.TexasTokenKlient
+import no.nav.soknad.innsending.security.BrukerTokenKilde
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
+import no.nav.soknad.innsending.security.krevTokenXToken
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.NAV_CONSUMER_ID
 import no.nav.soknad.innsending.util.MDCUtil
@@ -47,13 +45,13 @@ class RestClientOAuthConfig(
 	@Qualifier("arenaApiRestClient")
 	fun arenaApiClient(
 		restConfig: RestConfig,
-		clientConfigProperties: ClientConfigurationProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService,
+		texasTokenKlient: TexasTokenKlient,
+		brukerTokenKilde: BrukerTokenKilde,
+		@Value("\${texas.target.arena}") target: String,
 		subjectHandler: SubjectHandlerInterface
-	) = restClientOAuth2Client(
+	): RestClient = restClientWithToken(
 		restConfig.arenaUrl,
-		clientConfigProperties.registration["arena"]!!,
-		oAuth2AccessTokenService,
+		{ texasTokenKlient.hentBrukerToken(target, brukerTokenKilde.krevTokenXToken(target)) },
 		subjectHandler
 	)
 
@@ -87,12 +85,12 @@ class RestClientOAuthConfig(
 	@Qualifier("kontoregisterApiRestClient")
 	fun kontoregisterApiClient(
 		restConfig: RestConfig,
-		clientConfigProperties: ClientConfigurationProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService
-	) = restClientOAuth2Client(
+		texasTokenKlient: TexasTokenKlient,
+		brukerTokenKilde: BrukerTokenKilde,
+		@Value("\${texas.target.kontoregister}") target: String
+	): RestClient = restClientWithToken(
 		restConfig.kontoregisterUrl + "/api/borger",
-		clientConfigProperties.registration["kontoregister"]!!,
-		oAuth2AccessTokenService
+		{ texasTokenKlient.hentBrukerToken(target, brukerTokenKilde.krevTokenXToken(target)) }
 	)
 
 	@Bean
@@ -126,17 +124,6 @@ class RestClientOAuthConfig(
 		factory.setReadTimeout(Duration.ofMinutes(readTimeoutMinutes))
 		factory.setConnectTimeout(Duration.ofSeconds(connectTimeoutSeconds))
 		return factory
-	}
-
-	private fun restClientOAuth2Client(
-		baseUrl: String,
-		clientProperties: ClientProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService,
-		subjectHandler: SubjectHandlerInterface? = null
-	): RestClient {
-
-		val tokenService = TokenService(clientProperties, oAuth2AccessTokenService)
-		return restClientWithToken(baseUrl, tokenService::getToken, subjectHandler)
 	}
 
 	private fun restClientWithToken(

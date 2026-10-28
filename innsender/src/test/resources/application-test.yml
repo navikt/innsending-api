@@ -85,8 +85,11 @@ status_log_url: "https://logs.adeo.no"
 
 texas:
   token-endpoint: http://localhost:${wiremock.server.port}/texas/api/v1/token
+  exchange-endpoint: http://localhost:${wiremock.server.port}/texas/api/v1/token/exchange
   target:
     saf: api://dev-fss.teamdokumenthandtering.saf-q1/.default
+    pdl: dev-fss:pdl:pdl-api
+    safselvbetjening: dev-fss:teamdokumenthandtering:safselvbetjening
 
 wiremock:
   reset-mappings-after-each-test: true
@@ -105,46 +108,3 @@ no.nav.security.jwt:
       discoveryurl: http://localhost:${mock-oauth2-server.port}/azuread/.well-known/openid-configuration
       accepted_audience: aud-localhost
 
-  client:
-    registration:
-      tokenx-safselvbetjening:
-        token-endpoint-url: http://localhost:${mock-oauth2-server.port}/tokenx/token
-        grant-type: urn:ietf:params:oauth:grant-type:token-exchange
-        authentication:
-          client-auth-method: private_key_jwt
-          client-id: "dev-gcp:team-soknad:innsending-api"
-          client-jwk: src/test/resources/tokenx-jwk.json
-        token-exchange:
-          audience: dev-fss:teamdokumenthandtering:safselvbetjening
-
-      tokenx-pdl:
-        token-endpoint-url: http://localhost:${mock-oauth2-server.port}/tokenx/token
-        grant-type: urn:ietf:params:oauth:grant-type:token-exchange
-        authentication:
-          client-auth-method: private_key_jwt
-          client-id: "dev-gcp:team-soknad:innsending-api"
-          client-jwk: src/test/resources/tokenx-jwk.json
-        token-exchange:
-          audience: dummyAudience
-
-      kontoregister:
-        token-endpoint-url: http://localhost:${mock-oauth2-server.port}/tokenx/token
-        grant-type: client_credentials
-        scope: dummyScope
-        authentication:
-          client-id: "dev-gcp:team-soknad:innsending-api"
-          client-jwk: src/test/resources/tokenx-jwk.json
-          client-auth-method: private_key_jwt
-        token-exchange:
-          audience: dummyAudience
-
-      arena:
-        token-endpoint-url: http://localhost:${mock-oauth2-server.port}/tokenx/token
-        grant-type: client_credentials
-        scope: dummyScope
-        authentication:
-          client-id: "dev-gcp:team-soknad:innsending-api"
-          client-jwk: src/test/resources/tokenx-jwk.json
-          client-auth-method: private_key_jwt
-        token-exchange:
-          audience: dummyAudience
