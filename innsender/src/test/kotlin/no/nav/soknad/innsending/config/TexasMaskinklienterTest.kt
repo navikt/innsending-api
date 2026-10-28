@@ -8,6 +8,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.soknad.innsending.consumerapis.texas.TexasTokenKlient
 import no.nav.soknad.innsending.consumerapis.texas.TexasUnavailableException
+import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.util.Constants
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -60,6 +61,25 @@ class TexasMaskinklienterTest {
 
 		assertFailsWith<TexasUnavailableException> { client.get().uri("/ping").retrieve().toBodilessEntity() }
 		wireMockServer.verify(0, anyRequestedFor(anyUrl()))
+	}
+
+	@Test
+	fun `kodeverk bruker sitt eget target, sender tokenet som bearer og beholder Nav-Personident`() {
+		val target = "api://dev-gcp.team-rocket.kodeverk-api/.default"
+		every { texasTokenKlient.hentMaskinToken(target) } returns "kodeverk-token"
+		val subjectHandler = mockk<SubjectHandlerInterface>()
+		every { subjectHandler.getUserIdFromToken() } returns "12345678901"
+
+		val client = config.kodeverkApiClient(restConfig(), texasTokenKlient, target, subjectHandler)
+		client.get().uri("/kodeverk").retrieve().toBodilessEntity()
+
+		verify(exactly = 1) { texasTokenKlient.hentMaskinToken(target) }
+		wireMockServer.verify(
+			getRequestedFor(urlEqualTo("/kodeverk"))
+				.withHeader("Authorization", equalTo("Bearer kodeverk-token"))
+				.withHeader(Constants.NAV_PERSON_IDENT, equalTo("12345678901"))
+				.withHeader(Constants.NAV_CONSUMER_ID, equalTo("innsending-api"))
+		)
 	}
 
 	private fun restConfig() = RestConfig().apply {

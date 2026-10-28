@@ -68,17 +68,10 @@ class RestClientOAuthConfig(
 	@Qualifier("kodeverkApiClient")
 	fun kodeverkApiClient(
 		restConfig: RestConfig,
-		clientConfigProperties: ClientConfigurationProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService,
+		texasTokenKlient: TexasTokenKlient,
+		@Value("\${texas.target.kodeverk}") target: String,
 		subjectHandler: SubjectHandlerInterface
-	): RestClient {
-		return restClientOAuth2Client(
-			restConfig.kodeverkUrl,
-			clientConfigProperties.registration["kodeverk"]!!,
-			oAuth2AccessTokenService,
-			subjectHandler
-		)
-	}
+	): RestClient = restClientWithToken(restConfig.kodeverkUrl, { texasTokenKlient.hentMaskinToken(target) }, subjectHandler)
 
 	@Bean
 	@Profile("!(prod | dev)")
