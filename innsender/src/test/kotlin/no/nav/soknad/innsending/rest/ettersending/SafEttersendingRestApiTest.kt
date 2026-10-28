@@ -76,15 +76,6 @@ class SafEttersendingRestApiTest : ApplicationTest() {
 		assertEquals(archiveReference, fromRest.ettersendingsId)
 
 		wireMock.verify(1, postRequestedFor(urlPathEqualTo("/saf-api/graphql")))
-		wireMock.verify(
-			postRequestedFor(urlPathEqualTo("/saf-api/graphql"))
-				.withHeader("Authorization", equalTo("Bearer texas-test-token"))
-		)
-		wireMock.verify(
-			postRequestedFor(urlPathEqualTo("/texas/api/v1/token"))
-				.withRequestBody(matchingJsonPath("$.identity_provider", equalTo("entra_id")))
-				.withRequestBody(matchingJsonPath("$.target", equalTo("api://dev-fss.teamdokumenthandtering.saf-q1/.default")))
-		)
 		verify(timeout = 5000, exactly = 1) {
 			notificationPublisher.opprettBrukernotifikasjon(
 				match { it.soknadRef.innsendingId == created.innsendingsId }

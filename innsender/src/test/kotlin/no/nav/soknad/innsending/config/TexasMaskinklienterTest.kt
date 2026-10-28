@@ -6,8 +6,10 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.soknad.innsending.consumerapis.saf.SafClient
 import no.nav.soknad.innsending.consumerapis.texas.TexasTokenKlient
 import no.nav.soknad.innsending.consumerapis.texas.TexasUnavailableException
+import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.util.Constants
 import org.junit.jupiter.api.AfterEach
@@ -82,8 +84,40 @@ class TexasMaskinklienterTest {
 		)
 	}
 
+	@Test
+	fun `SAF bruker sitt eget target og sender tokenet som bearer`() {
+		val target = "api://dev-fss.teamdokumenthandtering.saf-q1/.default"
+		every { texasTokenKlient.hentMaskinToken(target) } returns "saf-token"
+		wireMockServer.stubFor(
+			post(urlEqualTo("/graphql"))
+				.willReturn(okJson("""{"data":{"dokumentoversiktBruker":{"journalposter":[]}}}"""))
+		)
+
+		safClient(target).hentDokumentoversiktBruker("12345678901")
+
+		verify(exactly = 1) { texasTokenKlient.hentMaskinToken(target) }
+		wireMockServer.verify(
+			postRequestedFor(urlEqualTo("/graphql"))
+				.withHeader("Authorization", equalTo("Bearer saf-token"))
+				.withHeader(Constants.NAV_CONSUMER_ID, equalTo("innsending-api"))
+		)
+	}
+
+	@Test
+	fun `feil mot Texas stopper kallet til SAF`() {
+		every { texasTokenKlient.hentMaskinToken(any()) } throws TexasUnavailableException("Texas svarte 503")
+
+		assertFailsWith<BackendErrorException> { safClient("target").hentDokumentoversiktBruker("12345678901") }
+		wireMockServer.verify(0, anyRequestedFor(anyUrl()))
+	}
+
+	private fun safClient(target: String) = SafClient(
+		SafClientConfig(restConfig(), texasTokenKlient, target, "innsending-api").safGraphQLWebClient()
+	)
+
 	private fun restConfig() = RestConfig().apply {
 		soknadsMottakerHost = wireMockServer.baseUrl()
 		kodeverkUrl = wireMockServer.baseUrl()
+		safUrl = wireMockServer.baseUrl()
 	}
 }
