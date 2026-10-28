@@ -5,7 +5,9 @@ import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.soknad.arkivering.soknadsarkiverer.service.tokensupport.TokenService
 import no.nav.soknad.innsending.consumerapis.texas.TexasTokenKlient
+import no.nav.soknad.innsending.security.BrukerTokenKilde
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
+import no.nav.soknad.innsending.security.krevTokenXToken
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.NAV_CONSUMER_ID
 import no.nav.soknad.innsending.util.MDCUtil
@@ -47,13 +49,13 @@ class RestClientOAuthConfig(
 	@Qualifier("arenaApiRestClient")
 	fun arenaApiClient(
 		restConfig: RestConfig,
-		clientConfigProperties: ClientConfigurationProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService,
+		texasTokenKlient: TexasTokenKlient,
+		brukerTokenKilde: BrukerTokenKilde,
+		@Value("\${texas.target.arena}") target: String,
 		subjectHandler: SubjectHandlerInterface
-	) = restClientOAuth2Client(
+	): RestClient = restClientWithToken(
 		restConfig.arenaUrl,
-		clientConfigProperties.registration["arena"]!!,
-		oAuth2AccessTokenService,
+		{ texasTokenKlient.hentBrukerToken(target, brukerTokenKilde.krevTokenXToken(target)) },
 		subjectHandler
 	)
 
