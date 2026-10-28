@@ -47,6 +47,14 @@ class BrukerTokenKildeTest {
 		assertFalse(feil.message!!.contains("azure-token"))
 	}
 
+	@Test
+	fun `gir null utenfor en HTTP-forespørsel`() {
+		val holder = mockk<TokenValidationContextHolder>()
+		every { holder.getTokenValidationContext() } throws IllegalStateException("No thread-bound request found")
+
+		assertNull(TokenSupportBrukerTokenKilde(holder).hentTokenXToken())
+	}
+
 	private fun kildeMed(tokens: Map<String, JwtToken>): BrukerTokenKilde {
 		val holder = mockk<TokenValidationContextHolder>()
 		every { holder.getTokenValidationContext() } returns TokenValidationContext(tokens)
