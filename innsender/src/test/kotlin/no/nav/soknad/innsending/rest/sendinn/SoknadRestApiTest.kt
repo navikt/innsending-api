@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.rest.sendinn
 
 import com.ninjasquad.springmockk.MockkBean
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
 import io.mockk.slot
 import io.mockk.verify
@@ -58,7 +58,7 @@ class SoknadRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var soknadService: SoknadService
 
-	@SpykBean
+	@MockkSpyBean
 	lateinit var notificationPublisher: PublisherInterface
 
 	@MockkBean

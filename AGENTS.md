@@ -5,3 +5,10 @@
 - To run the application with a working Docker socket, use `docker compose up --build`.
 
 See `README.md` for GitHub Packages authentication and local setup details.
+
+# Documentation
+
+- Add only essential project information to `README.md`, such as setup, operation, or changes that require users to act.
+- Do not add trivial documentation of individual application features or implementation details merely because code changed.
+- When changing Flyway migrations, persistence models, repositories, persisted enum values, converters, views, triggers, or functions, use `.github/skills/refresh-database-schema-docs/SKILL.md`. Assess and update `docs/database-schema.md` in the same change, including its diagram, table reference, and migration list. If the documentation is unaffected, explain why in the pull request.
+- When changing audit flags, activation requirements, application-user exemptions, or log destinations, use the same skill and assess and update `docs/auditlogging.md` in the same change. Verify affected searches in an available environment. If verification is blocked, record that limitation rather than claiming the searches are verified.

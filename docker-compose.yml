@@ -1,8 +1,8 @@
 services:
   gotenberg:
-    image: gotenberg/gotenberg:8.0.0
+    image: gotenberg/gotenberg:8.38.1
     container_name: gotenberg
-    command: gotenberg --api-disable-health-check-logging --libreoffice-auto-start --webhook-disable --api-timeout 240s
+    command: gotenberg --api-disable-health-check-route-telemetry --libreoffice-auto-start --webhook-disable --api-timeout 240s
     restart: always
     ports:
       - '3050:3000'
@@ -20,7 +20,7 @@ services:
       - db:/var/lib/postgresql/data
 
   cloud-storage:
-    image: fsouza/fake-gcs-server
+    image: fsouza/fake-gcs-server:1
     container_name: innsending-api-gcs
     restart: always
     entrypoint: [ "/bin/fake-gcs-server", "-scheme", "http", "-filesystem-root", "/storage" ]
@@ -30,7 +30,7 @@ services:
       - cloud-storage-data:/storage
 
   cloud-storage-browser:
-    image: sigoden/dufs:latest
+    image: sigoden/dufs:v0.46.0
     container_name: innsending-api-gcs-browser
     user: "0:0"
     restart: always

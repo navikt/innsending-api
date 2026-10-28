@@ -352,16 +352,11 @@ class EttersendingService(
 		}
 	}
 
-	fun getInnsendteSoknader(skjemanr: String): List<DokumentSoknadDto> {
-		return try {
-			soknadService.hentInnsendteSoknader(tilgangskontroll.hentPersonIdents())
-				.filter { it.skjemanr == skjemanr }
-				.filter { it.innsendtDato!!.isAfter(OffsetDateTime.now().minusDays(Constants.MAX_AKTIVE_DAGER)) }
-				.sortedByDescending { it.innsendtDato }
-		} catch (e: Exception) {
-			logger.info("Ingen søknader funnet i basen for bruker på skjemanr = $skjemanr")
-			emptyList()
-		}
+	fun getInnsendteSoknader(skjemanr: String, brukerId: String): List<DokumentSoknadDto> {
+		return soknadService.hentInnsendteSoknader(tilgangskontroll.hentPersonIdents(brukerId))
+			.filter { it.skjemanr == skjemanr }
+			.filter { it.innsendtDato!!.isAfter(OffsetDateTime.now().minusDays(Constants.MAX_AKTIVE_DAGER)) }
+			.sortedByDescending { it.innsendtDato }
 	}
 
 	@Transactional(timeout = TRANSACTION_TIMEOUT)
@@ -409,7 +404,7 @@ class EttersendingService(
 		ettersending: OpprettEttersending,
 		erNavInitiert: Boolean = false
 	): DokumentSoknadDto {
-		val innsendteSoknader = getInnsendteSoknader(ettersending.skjemanr)
+		val innsendteSoknader = getInnsendteSoknader(ettersending.skjemanr, brukerId)
 		val arkiverteSoknader = getArkiverteEttersendinger(ettersending.skjemanr, brukerId)
 
 		return createEttersendingWithExistingSoknader(

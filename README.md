@@ -20,6 +20,11 @@ henter søknadsfilene via REST endepunkt fra `innsending-api`.
 Se [Arktitektur Wiki](https://github.com/navikt/archiving-infrastructure/wiki) for mer informasjon om hvordan oppsettet
 fungerer.
 
+## Database og audit-logger
+
+- [Databaseskjema](docs/database-schema.md) forklarer tabellene, fillagringen og Flyway-migreringene.
+- [Audit-logger](docs/auditlogging.md) viser hvordan du finner pgAudit-logger og feilsøker manglende treff.
+
 ## Utvikling
 
 ### Bygge lokalt
@@ -43,7 +48,7 @@ Naviger deretter til prosjektmappen for dette repoet på maskinen og installer m
 mise install
 ```
 
-Dette installerer Java 21 og Maven 3.9 lokalt for prosjektet. Aktiver mise i shellet ditt
+Dette installerer Java 21 og Maven 3.10 lokalt for prosjektet. Aktiver mise i shellet ditt
 ```
 mise activate <shell>
 ```

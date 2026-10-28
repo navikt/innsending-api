@@ -3,8 +3,8 @@ package no.nav.soknad.innsending.security
 import no.nav.security.token.support.core.context.TokenValidationContext
 import no.nav.security.token.support.core.context.TokenValidationContextHolder
 import no.nav.soknad.innsending.exceptions.BackendErrorException
+import no.nav.soknad.innsending.exceptions.InvalidUserIdentityException
 import no.nav.soknad.innsending.util.Constants.AZURE
-import no.nav.soknad.innsending.util.Constants.SELVBETJENING
 import no.nav.soknad.innsending.util.Constants.TOKENX
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -23,17 +23,17 @@ class SubjectHandlerImpl(private val ctxHolder: TokenValidationContextHolder) : 
 		}
 
 	override fun getUserIdFromToken(): String {
-		return when {
-			tokenValidationContext.hasTokenFor(TOKENX) -> getUserIdFromTokenWithIssuer(TOKENX)
-			else -> getUserIdFromTokenWithIssuer(SELVBETJENING)
+		if (!tokenValidationContext.hasTokenFor(TOKENX)) {
+			throw BackendErrorException("Autentisering kunne ikke fullføres")
 		}
-	}
 
-	private fun getUserIdFromTokenWithIssuer(issuer: String): String {
-		val token = tokenValidationContext.getClaims(issuer)
-		val pid: String? = token.getStringClaim(CLAIM_PID)
-		val sub: String? = token.subject
-		return pid ?: sub ?: throw RuntimeException("Could not find any userId for token in pid or sub claim")
+		val token = tokenValidationContext.getClaims(TOKENX)
+		val pid = token.get(CLAIM_PID)
+		return when (pid) {
+			is String -> pid
+			null -> token.subject ?: throw InvalidUserIdentityException()
+			else -> throw InvalidUserIdentityException()
+		}
 	}
 
 	override fun getToken(): String {
