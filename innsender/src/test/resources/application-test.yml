@@ -83,6 +83,9 @@ ettersendingsfrist: 14
 
 status_log_url: "https://logs.adeo.no"
 
+texas:
+  token-endpoint: http://localhost:${wiremock.server.port}/texas/api/v1/token
+
 wiremock:
   reset-mappings-after-each-test: true
   server:

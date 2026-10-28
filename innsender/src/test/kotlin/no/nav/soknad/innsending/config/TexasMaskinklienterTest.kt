@@ -1,0 +1,69 @@
+package no.nav.soknad.innsending.config
+
+import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.WireMock.*
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import no.nav.soknad.innsending.consumerapis.texas.TexasTokenKlient
+import no.nav.soknad.innsending.consumerapis.texas.TexasUnavailableException
+import no.nav.soknad.innsending.util.Constants
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import kotlin.test.assertFailsWith
+
+/**
+ * Maskinklientene som henter token fra Texas: riktig target per integrasjon, tokenet sendes som bearer,
+ * og feil mot Texas stopper kallet før det går til nedstrøms tjeneste.
+ */
+class TexasMaskinklienterTest {
+
+	private val wireMockServer = WireMockServer(wireMockConfig().dynamicPort())
+	private val texasTokenKlient = mockk<TexasTokenKlient>()
+	private val config = RestClientOAuthConfig("innsending-api")
+
+	@BeforeEach
+	fun setUp() {
+		wireMockServer.start()
+		wireMockServer.stubFor(any(anyUrl()).willReturn(ok()))
+	}
+
+	@AfterEach
+	fun tearDown() {
+		wireMockServer.stop()
+	}
+
+	@Test
+	fun `soknadsmottaker bruker sitt eget target og sender tokenet som bearer`() {
+		val target = "api://dev-gcp.team-soknad.soknadsmottaker/.default"
+		every { texasTokenKlient.hentMaskinToken(target) } returns "soknadsmottaker-token"
+
+		val client = config.soknadsmottakerRestClient(restConfig(), texasTokenKlient, target)
+		client.get().uri("/ping").retrieve().toBodilessEntity()
+
+		verify(exactly = 1) { texasTokenKlient.hentMaskinToken(target) }
+		wireMockServer.verify(
+			getRequestedFor(urlEqualTo("/ping"))
+				.withHeader("Authorization", equalTo("Bearer soknadsmottaker-token"))
+				.withHeader(Constants.NAV_CONSUMER_ID, equalTo("innsending-api"))
+				.withHeader(Constants.HEADER_CALL_ID, matching(".+"))
+		)
+	}
+
+	@Test
+	fun `feil mot Texas stopper kallet til soknadsmottaker`() {
+		every { texasTokenKlient.hentMaskinToken(any()) } throws TexasUnavailableException("Texas svarte 503")
+
+		val client = config.soknadsmottakerRestClient(restConfig(), texasTokenKlient, "target")
+
+		assertFailsWith<TexasUnavailableException> { client.get().uri("/ping").retrieve().toBodilessEntity() }
+		wireMockServer.verify(0, anyRequestedFor(anyUrl()))
+	}
+
+	private fun restConfig() = RestConfig().apply {
+		soknadsMottakerHost = wireMockServer.baseUrl()
+		kodeverkUrl = wireMockServer.baseUrl()
+	}
+}
