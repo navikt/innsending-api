@@ -246,6 +246,7 @@ texas:
     pdl: ${PDL_TOKEN_X_AUDIENCE}
     safselvbetjening: ${SAFSELVBETJENING_TOKEN_X_AUDIENCE}
     arena: ${ARENA_TOKEN_X_AUDIENCE}
+    kontoregister: ${KONTOREGISTER_TOKEN_X_AUDIENCE}
 
 restconfig:
   version: ${APP_VERSION}
@@ -289,19 +290,6 @@ no.nav.security.jwt:
     azuread:
       discoveryurl: ${AZURE_APP_WELL_KNOWN_URL}
       accepted_audience: ${AZURE_APP_CLIENT_ID}
-
-  client:
-    registration:
-      kontoregister:
-        token-endpoint-url: ${TOKEN_X_TOKEN_ENDPOINT}
-        grant-type: urn:ietf:params:oauth:grant-type:token-exchange
-        scope: ${KONTOREGISTER_SCOPE}
-        authentication:
-          client-auth-method: private_key_jwt
-          client-id: ${TOKEN_X_CLIENT_ID}
-          client-jwk: ${TOKEN_X_PRIVATE_JWK}
-        token-exchange:
-          audience: ${KONTOREGISTER_TOKEN_X_AUDIENCE}
 
 ---
 spring:

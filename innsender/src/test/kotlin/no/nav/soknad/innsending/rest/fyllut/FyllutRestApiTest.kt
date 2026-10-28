@@ -9,8 +9,6 @@ import io.mockk.slot
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenResponse
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
@@ -52,9 +50,6 @@ import kotlin.test.*
 
 
 class FyllutRestApiTest : ApplicationTest() {
-
-	@MockkBean
-	lateinit var oauth2TokenService: OAuth2AccessTokenService
 
 	@MockkBean
 	lateinit var kodeverkService: KodeverkService
@@ -101,7 +96,6 @@ class FyllutRestApiTest : ApplicationTest() {
 	fun setup() {
 		clearAllMocks()
 		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
-		every { oauth2TokenService.getAccessToken(any()) } returns OAuth2AccessTokenResponse(access_token = "token")
 		every { kodeverkService.getPoststed(any()) } answers { postnummerMap[firstArg()] }
 		every { kodeverkService.getAttachmentTitle("N6", any()) } returns "Annet"
 	}

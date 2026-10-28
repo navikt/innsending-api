@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.test.web.client.ExpectedCount.once
 import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers.header
+import org.springframework.test.web.client.match.MockRestRequestMatchers.headerDoesNotExist
 import org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
 import org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
 import org.springframework.web.client.RestClient
@@ -103,8 +104,54 @@ class TexasBrukerklienterTest {
 		verify(exactly = 0) { texasTokenKlient.hentBrukerToken(any(), any()) }
 	}
 
+	@Test
+	fun `kontoregister bytter innbyggerens token med kontoregister-target og sender byttet token`() {
+		val target = "dev-gcp:okonomi:sokos-kontoregister-person"
+		every { brukerTokenKilde.hentTokenXToken() } returns brukerToken
+		every { texasTokenKlient.hentBrukerToken(target, brukerToken) } returns byttetToken
+
+		val (client, server) = medMockServer(kontoregisterClient(target))
+		server.expect(once(), requestTo("$KONTOREGISTER_URL/api/borger/kontooppslag"))
+			.andExpect(header("Authorization", "Bearer $byttetToken"))
+			.andExpect(header(Constants.NAV_CONSUMER_ID, "innsending-api"))
+			.andExpect(headerDoesNotExist(Constants.NAV_PERSON_IDENT))
+			.andRespond(withSuccess())
+
+		client.get().uri("/kontooppslag").retrieve().toBodilessEntity()
+
+		server.verify()
+		verify(exactly = 1) { texasTokenKlient.hentBrukerToken(target, brukerToken) }
+		assertTokenIkkeLogget()
+	}
+
+	@Test
+	fun `feil mot Texas stopper kallet til kontoregister`() {
+		every { brukerTokenKilde.hentTokenXToken() } returns brukerToken
+		every { texasTokenKlient.hentBrukerToken(any(), any()) } throws TexasUnavailableException("Texas svarte 503")
+
+		val (client, server) = medMockServer(kontoregisterClient("target"))
+
+		assertFailsWith<TexasUnavailableException> { client.get().uri("/kontooppslag").retrieve().toBodilessEntity() }
+		server.verify()
+		assertTokenIkkeLogget()
+	}
+
+	@Test
+	fun `kontoregister kalles ikke uten TokenX-token`() {
+		every { brukerTokenKilde.hentTokenXToken() } returns null
+
+		val (client, server) = medMockServer(kontoregisterClient("target"))
+
+		assertFailsWith<ManglerBrukerTokenException> { client.get().uri("/kontooppslag").retrieve().toBodilessEntity() }
+		server.verify()
+		verify(exactly = 0) { texasTokenKlient.hentBrukerToken(any(), any()) }
+	}
+
 	private fun arenaClient(target: String) =
 		config.arenaApiClient(restConfig(), texasTokenKlient, brukerTokenKilde, target, subjectHandler)
+
+	private fun kontoregisterClient(target: String) =
+		config.kontoregisterApiClient(restConfig(), texasTokenKlient, brukerTokenKilde, target)
 
 	/** Uten forventninger svarer serveren med AssertionError på alle kall, så et kall nedstrøms ville gitt feil unntak. */
 	private fun medMockServer(client: RestClient): Pair<RestClient, MockRestServiceServer> {
@@ -115,6 +162,7 @@ class TexasBrukerklienterTest {
 
 	private fun restConfig() = RestConfig().apply {
 		arenaUrl = ARENA_URL
+		kontoregisterUrl = KONTOREGISTER_URL
 	}
 
 	private fun assertTokenIkkeLogget() {
@@ -127,5 +175,6 @@ class TexasBrukerklienterTest {
 
 	private companion object {
 		const val ARENA_URL = "http://arena.test"
+		const val KONTOREGISTER_URL = "http://kontoregister.test"
 	}
 }

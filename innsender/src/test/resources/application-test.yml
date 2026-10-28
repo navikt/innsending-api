@@ -108,15 +108,3 @@ no.nav.security.jwt:
       discoveryurl: http://localhost:${mock-oauth2-server.port}/azuread/.well-known/openid-configuration
       accepted_audience: aud-localhost
 
-  client:
-    registration:
-      kontoregister:
-        token-endpoint-url: http://localhost:${mock-oauth2-server.port}/tokenx/token
-        grant-type: client_credentials
-        scope: dummyScope
-        authentication:
-          client-id: "dev-gcp:team-soknad:innsending-api"
-          client-jwk: src/test/resources/tokenx-jwk.json
-          client-auth-method: private_key_jwt
-        token-exchange:
-          audience: dummyAudience
