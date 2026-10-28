@@ -243,6 +243,7 @@ texas:
     soknadsmottaker: ${SOKNADSMOTTAKER_SCOPE}
     kodeverk: ${KODEVERK_SCOPE}
     saf: ${SAF_SCOPE}
+    pdl: ${PDL_TOKEN_X_AUDIENCE}
 
 restconfig:
   version: ${APP_VERSION}
@@ -298,16 +299,6 @@ no.nav.security.jwt:
           client-jwk: ${TOKEN_X_PRIVATE_JWK}
         token-exchange:
           audience: ${SAFSELVBETJENING_TOKEN_X_AUDIENCE}
-
-      tokenx-pdl:
-        token-endpoint-url: ${TOKEN_X_TOKEN_ENDPOINT}
-        grant-type: urn:ietf:params:oauth:grant-type:token-exchange
-        authentication:
-          client-auth-method: private_key_jwt
-          client-id: ${TOKEN_X_CLIENT_ID}
-          client-jwk: ${TOKEN_X_PRIVATE_JWK}
-        token-exchange:
-          audience: ${PDL_TOKEN_X_AUDIENCE}
 
       kontoregister:
         token-endpoint-url: ${TOKEN_X_TOKEN_ENDPOINT}
