@@ -89,6 +89,7 @@ texas:
   target:
     saf: api://dev-fss.teamdokumenthandtering.saf-q1/.default
     pdl: dev-fss:pdl:pdl-api
+    safselvbetjening: dev-fss:teamdokumenthandtering:safselvbetjening
 
 wiremock:
   reset-mappings-after-each-test: true
@@ -109,16 +110,6 @@ no.nav.security.jwt:
 
   client:
     registration:
-      tokenx-safselvbetjening:
-        token-endpoint-url: http://localhost:${mock-oauth2-server.port}/tokenx/token
-        grant-type: urn:ietf:params:oauth:grant-type:token-exchange
-        authentication:
-          client-auth-method: private_key_jwt
-          client-id: "dev-gcp:team-soknad:innsending-api"
-          client-jwk: src/test/resources/tokenx-jwk.json
-        token-exchange:
-          audience: dev-fss:teamdokumenthandtering:safselvbetjening
-
       kontoregister:
         token-endpoint-url: http://localhost:${mock-oauth2-server.port}/tokenx/token
         grant-type: client_credentials
