@@ -235,9 +235,10 @@ fil-konvertering_url: ${KONVERTERING_TIL_PDF_URL}
 
 bidrag_applikasjon: ${BIDRAG_APPLIKASJON}
 
-# Maskintoken fra Texas-sidecaren. Target er samme scope som før
+# Token fra Texas-sidecaren. Target er samme scope eller TokenX-audience som før
 texas:
   token-endpoint: ${NAIS_TOKEN_ENDPOINT}
+  exchange-endpoint: ${NAIS_TOKEN_EXCHANGE_ENDPOINT}
   target:
     soknadsmottaker: ${SOKNADSMOTTAKER_SCOPE}
     kodeverk: ${KODEVERK_SCOPE}
