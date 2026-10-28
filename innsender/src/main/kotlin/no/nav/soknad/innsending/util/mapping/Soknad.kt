@@ -6,6 +6,7 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
 import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
@@ -28,6 +29,7 @@ fun mapTilSoknadDb(
 	id: Long? = null,
 	avsender: AvsenderDto? = null,
 	bruker: BrukerDto? = null,
+	owner: ApplicationOwner? = null,
 ) =
 	SoknadDbData(
 		id = id ?: dokumentSoknadDto.id,
@@ -55,7 +57,12 @@ fun mapTilSoknadDb(
 		avsender = avsender,
 		affecteduser = null,
 		grantuserdigitalaccess = null,
+		owner = owner,
 	)
+
+// Keeps the stored row identity and owner, which the DTO does not carry.
+fun SoknadDbData.withUpdatedData(application: DokumentSoknadDto, status: SoknadsStatus): SoknadDbData =
+	mapTilSoknadDb(application, innsendingsid, status, id = id, owner = owner)
 
 fun lagDokumentSoknadDto(
 	soknadDbData: SoknadDbData,
@@ -206,6 +213,7 @@ fun SubmitApplicationRequest.toDokumentSoknadDto(innsendingsId: UUID, clientId: 
 		avsender = this.avsender,
 		affecteduser = null,
 		grantuserdigitalaccess = this.grantUserDigitalAccess,
+		owner = null,
 	)
 }
 

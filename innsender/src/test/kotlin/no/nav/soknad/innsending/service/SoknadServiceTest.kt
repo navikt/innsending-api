@@ -147,6 +147,7 @@ class SoknadServiceTest : ApplicationTest() {
 		val dokumentSoknadDto = soknadService.hentSoknad(requireNotNull(skjemaDto.innsendingsId))
 
 		assertEquals(brukerid, dokumentSoknadDto.brukerId)
+		assertEquals(brukerid, repo.hentSoknadDb(dokumentSoknadDto.innsendingsId!!).owner?.id)
 		assertEquals(skjemanr, dokumentSoknadDto.skjemanr)
 		assertEquals(spraak, dokumentSoknadDto.spraak)
 		assertEquals(input.tittel, dokumentSoknadDto.tittel)
@@ -405,11 +406,19 @@ class SoknadServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Should update utfylt søknad with new vedlegg`() {
+	fun `completed application updates keep one main document and one variant`() {
 		// Given
 		val skjemanr = "NAV 10-07.04"
 
-		val newSoknad = DokumentSoknadDtoTestBuilder(brukerId = testpersonid, skjemanr = skjemanr).build()
+		// Main documents share the form number and differ only by the variant flag.
+		val newSoknad = DokumentSoknadDtoTestBuilder(
+			brukerId = testpersonid,
+			skjemanr = skjemanr,
+			vedleggsListe = listOf(
+				VedleggDtoTestBuilder(vedleggsnr = skjemanr).asHovedDokument().build(),
+				VedleggDtoTestBuilder(vedleggsnr = skjemanr).asHovedDokumentVariant().build(),
+			),
+		).build()
 		val innsendingsId = soknadService.opprettNySoknad(newSoknad).innsendingsId!!
 
 		val vedleggDto1 = VedleggDtoTestBuilder(erHoveddokument = false, vedleggsnr = "vedleggsnr1").build()
@@ -440,6 +449,9 @@ class SoknadServiceTest : ApplicationTest() {
 			2,
 			updatedSoknad.vedleggsListe.filter{it.erHoveddokument}.size, "Skal ha 2 hoveddokument vedlegg"
 		)
+		val mainDocuments = updatedSoknad.vedleggsListe.filter { it.erHoveddokument }
+		assertEquals(setOf(false, true), mainDocuments.map { it.erVariant }.toSet())
+		assertTrue(mainDocuments.all { it.vedleggsnr == skjemanr })
 		assertEquals(
 			2,
 			updatedSoknad.vedleggsListe.filter{!it.erHoveddokument}.size, "Skal ha 2 vedlegg"
@@ -494,6 +506,9 @@ class SoknadServiceTest : ApplicationTest() {
 		val dokumentSoknadDtoList = mutableListOf<DokumentSoknadDto>()
 		dokumentSoknadDtoList.add(SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, emptyList()))
 		dokumentSoknadDtoList.add(SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, emptyList()))
+		val ownersBeforeDeletion = dokumentSoknadDtoList.associate {
+			it.innsendingsId!! to repo.hentSoknadDb(it.innsendingsId!!).owner
+		}
 
 		soknadService.slettGamleSoknader(1L)
 		dokumentSoknadDtoList.forEach { assertEquals(soknadService.hentSoknad(it.id!!).status, SoknadsStatusDto.Opprettet) }
@@ -504,6 +519,7 @@ class SoknadServiceTest : ApplicationTest() {
 				SoknadsStatusDto.AutomatiskSlettet,
 				soknadService.hentSoknad(it.id!!).status,
 			)
+			assertEquals(ownersBeforeDeletion[it.innsendingsId], repo.hentSoknadDb(it.innsendingsId!!).owner)
 		}
 
 		// og hendelse for oppretting og seltting registrert på søknad
