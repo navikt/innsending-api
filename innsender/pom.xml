@@ -15,6 +15,13 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
+				<groupId>org.bouncycastle</groupId>
+				<artifactId>bc-jdk18on-bom</artifactId>
+				<version>${bouncycastle-bom.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
 				<groupId>com.google.cloud</groupId>
 				<artifactId>libraries-bom</artifactId>
 				<version>${libraries-bom.version}</version>
