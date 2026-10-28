@@ -22,8 +22,15 @@ interface BrukerTokenKilde {
 @Component
 @Profile("test | dev | prod")
 class TokenSupportBrukerTokenKilde(private val contextHolder: TokenValidationContextHolder) : BrukerTokenKilde {
-	override fun hentTokenXToken(): String? =
-		contextHolder.getTokenValidationContext().getJwtToken(TOKENX)?.encodedToken
+	override fun hentTokenXToken(): String? {
+		val context = try {
+			contextHolder.getTokenValidationContext()
+		} catch (_: IllegalStateException) {
+			// Kalt utenfor en HTTP-forespørsel, for eksempel fra en jobb. Da finnes det ikke noe innbyggertoken
+			return null
+		}
+		return context.getJwtToken(TOKENX)?.encodedToken
+	}
 }
 
 /** Forespørselen har ikke noe TokenX-token å bytte. Meldingen skal aldri inneholde token. */
