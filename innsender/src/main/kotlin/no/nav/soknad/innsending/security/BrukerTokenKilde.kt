@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.security
 import no.nav.security.token.support.core.context.TokenValidationContextHolder
 import no.nav.soknad.innsending.util.Constants.TOKENX
 import org.springframework.context.annotation.Profile
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 
 /**
@@ -12,15 +13,26 @@ import org.springframework.stereotype.Component
  * må håndtere det på samme måte som en feil mot tjenesten. Token-support byttet tidligere det første gyldige tokenet,
  * uansett issuer.
  *
- * Tokenet leses fra request-konteksten i tråden som kaller. Hent det før arbeid flyttes til en annen tråd.
- * I steg 3 i #461 byttes kilden fra token-support til Spring Security.
+ * Tokenet leses fra sikkerhetskonteksten i tråden som kaller. Hent det før arbeid flyttes til en annen tråd.
  */
 interface BrukerTokenKilde {
 	fun hentTokenXToken(): String?
 }
 
+/**
+ * Leser TokenX-tokenet fra Spring Security (#461, steg 3f). Utenfor en HTTP-forespørsel finnes ingen autentisering,
+ * og da gis null.
+ */
 @Component
 @Profile("test | dev | prod")
+class SpringSecurityBrukerTokenKilde : BrukerTokenKilde {
+	override fun hentTokenXToken(): String? =
+		(SecurityContextHolder.getContext().authentication as? TokenAutentisering)
+			?.takeIf { it.utsteder == TokenUtsteder.TOKENX }
+			?.credentials
+}
+
+/** Kilden før steg 3f. Ikke i bruk. Fjernes med token-support i steg 4. */
 class TokenSupportBrukerTokenKilde(private val contextHolder: TokenValidationContextHolder) : BrukerTokenKilde {
 	override fun hentTokenXToken(): String? {
 		val context = try {

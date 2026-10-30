@@ -8,11 +8,8 @@ import no.nav.soknad.innsending.util.Constants.AZURE
 import no.nav.soknad.innsending.util.Constants.TOKENX
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Profile
-import org.springframework.stereotype.Component
 
-@Component
-@Profile("test | dev | prod | endtoend-auth")
+/** Identitet fra token-support. Erstattet av [SpringSecuritySubjectHandler] i steg 3f. Fjernes med token-support i steg 4. */
 class SubjectHandlerImpl(private val ctxHolder: TokenValidationContextHolder) : SubjectHandlerInterface {
 
 	private val logger: Logger = LoggerFactory.getLogger(javaClass)
