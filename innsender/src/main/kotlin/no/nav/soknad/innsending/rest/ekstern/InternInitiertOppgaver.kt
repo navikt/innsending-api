@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.rest.ekstern
 
-import no.nav.security.token.support.core.api.ProtectedWithClaims
+import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.EksternoppgaveApi
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.exceptions.ErrorCode
@@ -12,7 +12,6 @@ import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.EttersendingService
 import no.nav.soknad.innsending.service.NotificationService
 import no.nav.soknad.innsending.service.SoknadService
-import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -21,10 +20,9 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @KreverAzure
-@ProtectedWithClaims(
-	issuer = Constants.AZURE,
-	// TODO claimMap = ["scp=defaultaccess oppgave-initiering"]
-)
+// Azure-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3i)
+// TODO strengere tilgang, for eksempel scp=defaultaccess oppgave-initiering. Utenfor migreringen i #461
+@Unprotected
 class InternInitiertOppgaver(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val ettersendingService: EttersendingService,

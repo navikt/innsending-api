@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.rest.fyllut
 
-import no.nav.security.token.support.core.api.ProtectedWithClaims
+import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.NologinApplicationApi
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.ApplicationSubmissionResponse
@@ -16,7 +16,6 @@ import no.nav.soknad.innsending.service.config.annotation.VerifyConfigValue
 import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
-import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.mapping.filmetadata.toDto
 import no.nav.soknad.innsending.util.validators.validerBrukerOgAvsender
@@ -29,10 +28,8 @@ import java.util.UUID
 
 @RestController
 @KreverAzureNologin
-@ProtectedWithClaims(
-	issuer = Constants.AZURE,
-	claimMap = ["roles=nologin-access"],
-)
+// Azure-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3i)
+@Unprotected
 class NologinApplicationRestApi(
 	private val documentService: DocumentService,
 	private val subjectHandler: SubjectHandlerInterface,

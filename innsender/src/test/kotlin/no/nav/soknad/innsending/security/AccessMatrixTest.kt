@@ -211,11 +211,12 @@ open class AccessMatrixTest : ApplicationTest() {
 		assertTrue(missing.isEmpty(), "Endepunkter uten tilgangsregel i AccessMatrixTest:\n${missing.joinToString("\n")}")
 	}
 
-	// Byttes til sjekk av @PreAuthorize i samme PR som token-support fjernes
+	// Gjelder bare endepunktene token-support fortsatt håndhever. Fra steg 3i valideres Azure-token av Texas, og
+	// tilgangen håndheves bare av @PreAuthorize. Fjernes når token-support fjernes i steg 4
 	@Test
 	fun `every protected endpoint has an access annotation`() {
 		val missing = applicationEndpoints()
-			.filter { policyFor(it) != AccessPolicy.PUBLIC }
+			.filter { policyFor(it) == AccessPolicy.TOKENX_HIGH_ACR }
 			.filterNot {
 				AnnotatedElementUtils.hasAnnotation(it.handler.method, ProtectedWithClaims::class.java) ||
 					AnnotatedElementUtils.hasAnnotation(it.handler.beanType, ProtectedWithClaims::class.java)

@@ -1,12 +1,11 @@
 package no.nav.soknad.innsending.rest.admin
 
-import no.nav.security.token.support.core.api.ProtectedWithClaims
+import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.AdminApi
 import no.nav.soknad.innsending.cleanup.TempCleanupArchiveFailure
 import no.nav.soknad.innsending.model.RunJobRequest
 import no.nav.soknad.innsending.security.KreverAzure
 import no.nav.soknad.innsending.security.KreverAzureAdmin
-import no.nav.soknad.innsending.util.Constants
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -14,16 +13,13 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @KreverAzure
-@ProtectedWithClaims(issuer = Constants.AZURE)
+// Azure-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3i)
+@Unprotected
 class AdminRestApi(
 	private val tempCleanupArchiveFailure: TempCleanupArchiveFailure,
 ) : AdminApi {
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	@ProtectedWithClaims(
-		issuer = Constants.AZURE,
-		claimMap = ["scp=admin-access defaultaccess"],
-	)
 	@KreverAzureAdmin
 	override fun runJob(runJobRequest: RunJobRequest): ResponseEntity<Unit> {
 		logger.info("Invoked admin runJob for jobName=${runJobRequest.jobName}")
