@@ -19,7 +19,7 @@ class SpringSecuritySubjectHandler : SubjectHandlerInterface {
 	private fun autentisering(): TokenAutentisering? =
 		SecurityContextHolder.getContext().authentication as? TokenAutentisering
 
-	private fun tokenX(): TokenAutentisering? = autentisering()?.takeIf { it.utsteder == TokenUtsteder.TOKENX }
+	private fun tokenX(): ValidertToken? = autentisering()?.token(TokenUtsteder.TOKENX)
 
 	override fun getUserIdFromToken(): String {
 		val tokenX = tokenX() ?: throw BackendErrorException("Autentisering kunne ikke fullføres")
@@ -32,20 +32,22 @@ class SpringSecuritySubjectHandler : SubjectHandlerInterface {
 	}
 
 	override fun getToken(): String =
-		tokenX()?.credentials ?: throw BackendErrorException("Could not get tokenx token")
+		tokenX()?.token ?: throw BackendErrorException("Could not get tokenx token")
 
 	override fun getConsumerId(): String = "srvinnsending-api"
 
-	// MockOAuth2Server setter klient-ID i azp, mens ekte token bruker client_id
+	// TokenX først, ellers Azure, som før. MockOAuth2Server setter klient-ID i azp, mens ekte token bruker client_id
 	override fun getClientId(): String {
 		val autentisering = autentisering() ?: throw BackendErrorException("Autentisering kunne ikke fullføres")
-		return autentisering.stringClaim(CLIENT_ID)
-			?: autentisering.stringClaim(AZP)
+		val token = autentisering.token(TokenUtsteder.TOKENX) ?: autentisering.token(TokenUtsteder.AZURE)
+			?: throw BackendErrorException("Autentisering kunne ikke fullføres")
+		return token.stringClaim(CLIENT_ID)
+			?: token.stringClaim(AZP)
 			?: throw BackendErrorException("Fant ikke klient-ID i tokenet")
 	}
 
 	override fun getNavIdent(): String {
-		val azure = autentisering()?.takeIf { it.utsteder == TokenUtsteder.AZURE }
+		val azure = autentisering()?.token(TokenUtsteder.AZURE)
 			?: throw RuntimeException("Could not find NAVident claim in token")
 		return azure.stringClaim("NAVident") ?: throw RuntimeException("Could not find NAVident claim in token")
 	}
