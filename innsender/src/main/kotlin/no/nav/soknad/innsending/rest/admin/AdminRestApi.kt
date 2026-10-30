@@ -4,6 +4,8 @@ import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.AdminApi
 import no.nav.soknad.innsending.cleanup.TempCleanupArchiveFailure
 import no.nav.soknad.innsending.model.RunJobRequest
+import no.nav.soknad.innsending.security.KreverAzure
+import no.nav.soknad.innsending.security.KreverAzureAdmin
 import no.nav.soknad.innsending.util.Constants
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -11,6 +13,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
+@KreverAzure
 @ProtectedWithClaims(issuer = Constants.AZURE)
 class AdminRestApi(
 	private val tempCleanupArchiveFailure: TempCleanupArchiveFailure,
@@ -21,6 +24,7 @@ class AdminRestApi(
 		issuer = Constants.AZURE,
 		claimMap = ["scp=admin-access defaultaccess"],
 	)
+	@KreverAzureAdmin
 	override fun runJob(runJobRequest: RunJobRequest): ResponseEntity<Unit> {
 		logger.info("Invoked admin runJob for jobName=${runJobRequest.jobName}")
 		when (runJobRequest.jobName) {
