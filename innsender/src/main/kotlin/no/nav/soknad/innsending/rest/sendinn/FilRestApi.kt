@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.rest.sendinn
 
-import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.SendinnFilApi
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
@@ -35,8 +34,6 @@ import java.util.UUID
 @RestController
 @KreverInnbygger
 @CrossOrigin(maxAge = 3600)
-// TokenX-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3j)
-@Unprotected
 class FilRestApi(
 	private val soknadService: SoknadService,
 	private val tilgangskontroll: Tilgangskontroll,

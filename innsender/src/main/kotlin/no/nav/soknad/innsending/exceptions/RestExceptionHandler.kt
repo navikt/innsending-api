@@ -2,8 +2,6 @@ package no.nav.soknad.innsending.exceptions
 
 import com.google.cloud.storage.StorageException
 import jakarta.servlet.http.HttpServletRequest
-import no.nav.security.token.support.core.exceptions.JwtTokenMissingException
-import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
 import no.nav.soknad.innsending.consumerapis.texas.TexasUnavailableException
 import no.nav.soknad.innsending.exceptions.utils.messageForLog
 import no.nav.soknad.innsending.model.RestErrorResponseDto
@@ -145,41 +143,8 @@ class RestExceptionHandler {
 	}
 
 	// 401
-	@ExceptionHandler
-	fun unauthenticatedHandler(
-		request: HttpServletRequest,
-		exception: JwtTokenMissingException
-	): ResponseEntity<RestErrorResponseDto>? {
-		logger.warn("Autentisering feilet ved kall til " + request.requestURI + ": " + exception.messageForLog, exception)
-
-		return ResponseEntity(
-			RestErrorResponseDto(
-				message = "Autentisering feilet",
-				timestamp = OffsetDateTime.now(),
-				errorCode = "errorCode.unauthorized"
-			), HttpStatus.UNAUTHORIZED
-		)
-	}
-
-	// 403
-	@ExceptionHandler
-	fun unauthorizedExceptionHandler(
-		request: HttpServletRequest,
-		exception: JwtTokenUnauthorizedException
-	): ResponseEntity<RestErrorResponseDto>? {
-		logger.warn("Autorisering feilet ved kall til " + request.requestURI + ": " + exception.message, exception)
-
-		return ResponseEntity(
-			RestErrorResponseDto(
-				message = "Autorisering feilet",
-				timestamp = OffsetDateTime.now(),
-				errorCode = "errorCode.forbidden"
-			), HttpStatus.FORBIDDEN
-		)
-	}
-
-	// 403 fra @PreAuthorize (#461). Gir samme svar som token-support, også når tokenet mangler eller er ugyldig.
-	// Overgang til 401 for manglende token er en egen kontraktsendring etter migreringen
+	// 403 fra @PreAuthorize, også når tokenet mangler eller er ugyldig (#461).
+	// Overgang til 401 for manglende token er en egen kontraktsendring
 	@ExceptionHandler(value = [AccessDeniedException::class, AuthenticationException::class])
 	fun accessDeniedHandler(
 		request: HttpServletRequest,

@@ -5,9 +5,8 @@ import org.springframework.security.access.prepost.PreAuthorize
 /**
  * Tilgangene et gyldig innkommende token gir, avledet av issuer og claims (#461).
  *
- * Reglene er de samme som `@ProtectedWithClaims` i token-support håndhever i dag. En claim med strengverdi må være lik
- * verdien i regelen, og en claim med listeverdi må inneholde den. Avledningen brukes både når token-support har validert
- * tokenet (broen i steg 3a–3h) og når Texas har validert det (steg 3i og 3j), slik at `@PreAuthorize` ikke endres i byttet.
+ * Reglene er de samme som `@ProtectedWithClaims` i token-support håndhevet før migreringen. En claim med strengverdi
+ * må være lik verdien i regelen, og en claim med listeverdi må inneholde den.
  */
 object Tilgang {
 	const val TOKENX = "UTSTEDER_TOKENX"
@@ -39,7 +38,7 @@ object Tilgang {
 		}
 	}
 
-	// Samme semantikk som JwtTokenClaims.containsClaim i token-support
+	// Samme semantikk som JwtTokenClaims.containsClaim i token-support hadde
 	private fun harClaim(claims: Map<String, Any?>, navn: String, verdi: String): Boolean =
 		when (val claim = claims[navn]) {
 			is String -> claim == verdi

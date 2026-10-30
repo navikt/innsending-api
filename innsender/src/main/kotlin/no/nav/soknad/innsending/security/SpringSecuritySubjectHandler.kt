@@ -7,10 +7,9 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 
 /**
- * Leser identiteten fra Spring Security (#461, steg 3f).
+ * Leser identiteten fra Spring Security (#461).
  *
- * Gir samme svar som [SubjectHandlerImpl] ga med token-support. Autentiseringen kommer fra broen i steg 3a og senere
- * fra Texas, så denne klassen trenger ikke endres når valideringen byttes.
+ * Gir samme svar som før migreringen fra token-support. Autentiseringen kommer fra [TexasAutentiseringFilter].
  */
 @Component
 @Profile("test | dev | prod | endtoend-auth")

@@ -4,8 +4,9 @@ import com.github.tomakehurst.wiremock.common.ConsoleNotifier
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension
 import io.prometheus.metrics.model.registry.PrometheusRegistry
-import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import no.nav.soknad.InnsendingApiApplication
+import no.nav.soknad.innsending.utils.TestMockOAuth2Server
+import no.nav.soknad.innsending.utils.TestMockOAuth2ServerConfig
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.springframework.beans.factory.annotation.Autowired
@@ -31,9 +32,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 	SpringExtension::class
 )
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@Import(TestWebTestClientConfig::class)
+@Import(TestWebTestClientConfig::class, TestMockOAuth2ServerConfig::class)
 @EnableTransactionManagement
-@EnableMockOAuth2Server
 class ApplicationTest() {
 
 	@Autowired
@@ -62,6 +62,7 @@ class ApplicationTest() {
 		@DynamicPropertySource
 		fun properties(reg: DynamicPropertyRegistry) {
 			reg.add("wiremock.server.port") { wireMock.port.toString() }
+			reg.add("mock-oauth2-server.port") { TestMockOAuth2Server.port.toString() }
 			reg.add("antivirus.path") { "/antivirus/scan" }
 			reg.add("arena.path") { "/arena-api/api/v1/tilleggsstoenad/dagligreise.*" }
 			reg.add("arena-aktiviteter.path") { "/arena-api/api/v1/tilleggsstoenad/aktiviteter.*" }

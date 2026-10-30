@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.rest.admin
 
-import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.AdminApi
 import no.nav.soknad.innsending.cleanup.TempCleanupArchiveFailure
 import no.nav.soknad.innsending.model.RunJobRequest
@@ -13,8 +12,6 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @KreverAzure
-// Azure-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3i)
-@Unprotected
 class AdminRestApi(
 	private val tempCleanupArchiveFailure: TempCleanupArchiveFailure,
 ) : AdminApi {

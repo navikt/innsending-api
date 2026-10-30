@@ -12,7 +12,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
  *
  * [TilgangInterceptor] sjekker reglene før request-bodyen leses, og metodesikkerheten sjekker dem igjen når
  * controller-metoden kalles. I local, docker og endtoend uten endtoend-auth valideres ikke token, og identiteten er
- * fast. Der håndheves heller ikke tilgangsreglene, på samme måte som token-support ikke er aktiv der.
+ * fast. Der håndheves heller ikke tilgangsreglene.
  */
 @Configuration
 @EnableMethodSecurity

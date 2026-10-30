@@ -35,13 +35,10 @@ class TexasAutentiseringFilterTest {
 	// Usignert, fordi filteret bare leser iss for å velge utsteder. Introspeksjonen er mocket
 	private fun token(issuer: String?) = PlainJWT(JWTClaimsSet.Builder().issuer(issuer).build()).serialize()
 
-	private fun kjør(
-		authorization: String?,
-		utstedere: Set<TokenUtsteder> = TokenUtsteder.entries.toSet(),
-	): Pair<MockHttpServletRequest, Authentication?> {
+	private fun kjør(authorization: String?): Pair<MockHttpServletRequest, Authentication?> {
 		val request = MockHttpServletRequest().apply { authorization?.let { addHeader("Authorization", it) } }
 		var underveis: Authentication? = null
-		TexasAutentiseringFilter(introspeksjon, utstedere, issuere)
+		TexasAutentiseringFilter(introspeksjon, issuere)
 			.doFilter(request, MockHttpServletResponse()) { _, _ -> underveis = SecurityContextHolder.getContext().authentication }
 		return request to underveis
 	}
@@ -84,13 +81,6 @@ class TexasAutentiseringFilterTest {
 	}
 
 	@Test
-	fun `utsteder Texas ikke har tatt over, sendes ikke til Texas`() {
-		assertNull(kjør("Bearer ${token(tokenxIssuer)}", utstedere = setOf(TokenUtsteder.AZURE)).second)
-
-		verify(exactly = 0) { introspeksjon.introspekter(any(), any()) }
-	}
-
-	@Test
 	fun `ukjent, manglende eller uleselig iss gir ingen autentisering og ingen kall`() {
 		listOf(token("https://ukjent.test"), token(null), "ikke-en-jwt").forEach { assertNull(kjør("Bearer $it").second) }
 
@@ -115,11 +105,11 @@ class TexasAutentiseringFilterTest {
 	}
 
 	@Test
-	fun `token som broen allerede har autentisert, sendes ikke til Texas`() {
-		val fraBroen = TokenAutentisering(TokenUtsteder.TOKENX, mapOf("acr" to "Level4"), "tokenx-token")
-		SecurityContextHolder.getContext().authentication = fraBroen
+	fun `eksisterende autentisering overskrives ikke og sendes ikke til Texas`() {
+		val eksisterende = TokenAutentisering(TokenUtsteder.TOKENX, mapOf("acr" to "Level4"), "tokenx-token")
+		SecurityContextHolder.getContext().authentication = eksisterende
 
-		assertSame(fraBroen, kjør("Bearer ${token(tokenxIssuer)}").second)
+		assertSame(eksisterende, kjør("Bearer ${token(tokenxIssuer)}").second)
 		verify(exactly = 0) { introspeksjon.introspekter(any(), any()) }
 	}
 
@@ -133,7 +123,7 @@ class TexasAutentiseringFilterTest {
 	@Test
 	fun `utsteder uten konfigurert issuer stopper oppstarten`() {
 		assertFailsWith<IllegalArgumentException> {
-			TexasAutentiseringFilter(introspeksjon, setOf(TokenUtsteder.TOKENX), mapOf(TokenUtsteder.AZURE to azureIssuer))
+			TexasAutentiseringFilter(introspeksjon, mapOf(TokenUtsteder.AZURE to azureIssuer))
 		}
 	}
 }

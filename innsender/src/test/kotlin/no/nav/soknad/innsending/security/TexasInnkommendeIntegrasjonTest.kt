@@ -13,8 +13,8 @@ import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-// Innkommende token valideres av Texas (#461, steg 3i og 3j). Tilgangsmatrisen dekker gyldige og ugyldige token
-class TexasAzureIntegrasjonTest : ApplicationTest() {
+// Innkommende token valideres av Texas (#461). Tilgangsmatrisen dekker gyldige og ugyldige token
+class TexasInnkommendeIntegrasjonTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server

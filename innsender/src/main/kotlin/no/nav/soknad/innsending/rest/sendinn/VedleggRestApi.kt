@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.rest.sendinn
 
-import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.SendinnVedleggApi
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.ErrorCode
@@ -26,8 +25,6 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @KreverInnbygger
 @CrossOrigin(maxAge = 3600)
-// TokenX-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3j)
-@Unprotected
 class VedleggRestApi(
 	private val soknadService: SoknadService,
 	private val tilgangskontroll: Tilgangskontroll,

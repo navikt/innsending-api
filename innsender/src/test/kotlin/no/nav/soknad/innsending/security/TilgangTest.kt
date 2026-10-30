@@ -8,7 +8,7 @@ import no.nav.soknad.innsending.security.Tilgang.TOKENX
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
-// Reglene skal være de samme som @ProtectedWithClaims i token-support (#461)
+// Reglene er de samme som @ProtectedWithClaims i token-support håndhevet før migreringen (#461)
 class TilgangTest {
 
 	private fun tokenX(vararg claims: Pair<String, Any?>) = Tilgang.tilgangerFor(TokenUtsteder.TOKENX, mapOf(*claims))

@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.rest.config
 
-import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.ConfigApi
 import no.nav.soknad.innsending.model.ConfigValueDto
 import no.nav.soknad.innsending.model.SetConfigRequest
@@ -14,8 +13,6 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @KreverAzure
-// Azure-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3i)
-@Unprotected
 class ConfigRestApi(
 	private val configService: ConfigService,
 	private val subjectHandler: SubjectHandlerInterface,

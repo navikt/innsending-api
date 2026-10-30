@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.rest.fyllut
 
 import jakarta.validation.Valid
-import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.FyllutMergeApi
 import no.nav.soknad.innsending.model.MergeFilerDto
 import no.nav.soknad.innsending.security.KreverAzure
@@ -14,8 +13,6 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @KreverAzure
-// Azure-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3i)
-@Unprotected
 class FyllutMerge(private val pdfMerger: PdfMergerInterface): FyllutMergeApi {
 	private val logger = LoggerFactory.getLogger(javaClass)
 

@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.rest.fyllut
 
-import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.FyllutApi
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.exceptions.ErrorCode
@@ -34,8 +33,6 @@ import java.util.UUID
 
 @RestController
 @KreverInnbygger
-// TokenX-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3j)
-@Unprotected
 class FyllutRestApi(
 	private val urlHandler: UrlHandler,
 	private val soknadService: SoknadService,

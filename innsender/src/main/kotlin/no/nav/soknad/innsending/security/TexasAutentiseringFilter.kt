@@ -13,7 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.filter.OncePerRequestFilter
 
 /**
- * Validerer innkommende token hos Texas for utstederne Texas har overtatt (#461, steg 3i og 3j).
+ * Validerer innkommende token hos Texas (#461).
  *
  * Gyldig token blir en [TokenAutentisering] med claimene fra Texas, og tilgangsreglene er de samme som før.
  * Ugyldig token gir ingen autentisering, og `@PreAuthorize` avviser med 403. Svarer ikke Texas, merkes forespørselen
@@ -24,21 +24,20 @@ import org.springframework.web.filter.OncePerRequestFilter
  * tokenet og brukes bare til å velge utsteder. Texas verifiserer signatur, issuer og audience før tokenet godtas.
  * Ukjent eller manglende iss gir ingen autentisering, og `@PreAuthorize` avviser med 403.
  *
- * Texas validerer ett token om gangen. En header med flere kommaseparerte token gir derfor ingen autentisering fra
- * Texas. Token-support godtok det, men skyggemodus teller om det forekommer (utfallet flere_token).
+ * Texas validerer ett token om gangen. En header med flere kommaseparerte token gir derfor ingen autentisering.
+ * Token-support godtok det før migreringen.
  */
 class TexasAutentiseringFilter(
 	private val introspeksjon: TokenIntrospeksjon,
-	utstedere: Set<TokenUtsteder>,
 	/** Issuer-URL per utsteder, fra TOKEN_X_ISSUER og AZURE_OPENID_CONFIG_ISSUER */
 	issuere: Map<TokenUtsteder, String>,
 ) : OncePerRequestFilter() {
 
 	private val utstederForIssuer: Map<String, TokenUtsteder> =
-		issuere.filterKeys { it in utstedere }.entries.associate { (utsteder, issuer) -> issuer to utsteder }
+		issuere.entries.associate { (utsteder, issuer) -> issuer to utsteder }
 
 	init {
-		val mangler = utstedere - issuere.keys
+		val mangler = TokenUtsteder.entries - issuere.keys
 		require(mangler.isEmpty()) { "Mangler issuer for $mangler" }
 	}
 

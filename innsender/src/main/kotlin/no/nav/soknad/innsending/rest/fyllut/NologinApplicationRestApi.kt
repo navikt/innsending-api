@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.rest.fyllut
 
-import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.NologinApplicationApi
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.ApplicationSubmissionResponse
@@ -28,8 +27,6 @@ import java.util.UUID
 
 @RestController
 @KreverAzureNologin
-// Azure-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3i)
-@Unprotected
 class NologinApplicationRestApi(
 	private val documentService: DocumentService,
 	private val subjectHandler: SubjectHandlerInterface,

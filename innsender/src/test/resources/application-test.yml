@@ -89,12 +89,9 @@ texas:
   introspection-endpoint: http://localhost:${wiremock.server.port}/texas/api/v1/introspect
   # Validert av FakeTexasIntrospeksjon, som følger reglene til Texas mot MockOAuth2Server
   innkommende:
-    utstedere: AZURE,TOKENX
     issuer:
       tokenx: http://localhost:${mock-oauth2-server.port}/tokenx
       azure: http://localhost:${mock-oauth2-server.port}/azuread
-  skygge:
-    aktiv: false
   target:
     saf: api://dev-fss.teamdokumenthandtering.saf-q1/.default
     pdl: dev-fss:pdl:pdl-api
@@ -106,14 +103,9 @@ wiremock:
     port: 0 # random port
 
 
-no.nav.security.jwt:
-  mock:
-    enable: true
-  issuer:
-    tokenx:
-      discoveryurl: http://localhost:${mock-oauth2-server.port}/tokenx/.well-known/openid-configuration
-      accepted_audience: aud-localhost
-    azuread:
-      discoveryurl: http://localhost:${mock-oauth2-server.port}/azuread/.well-known/openid-configuration
-      accepted_audience: aud-localhost
+# Audience FakeTexasIntrospeksjon godtar, som klient-ID-en Texas sjekker mot i dev og prod
+fake-texas:
+  audience:
+    tokenx: aud-localhost
+    azure: aud-localhost
 

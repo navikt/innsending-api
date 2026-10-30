@@ -32,11 +32,11 @@ import kotlin.test.fail
 /**
  * Tilgangsmatrise for alle endepunkter (#461).
  *
- * Testen beskriver dagens tilgangskontrakt uavhengig av hvilket bibliotek som validerer token.
- * Den skal kjøre uendret før og etter byttet fra token-support til Spring Security og Texas.
+ * Testen beskriver tilgangskontrakten uavhengig av hvilket bibliotek som validerer token. Den kjørte uendret gjennom
+ * byttet fra token-support til Spring Security og Texas, bortsett fra raden for TokenX uten sub (steg 3j).
  * Bare [deniedResponses] skal endres, og bare etter en vedtatt kontraktsendring.
  */
-open class AccessMatrixTest : ApplicationTest() {
+class AccessMatrixTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
@@ -73,8 +73,8 @@ open class AccessMatrixTest : ApplicationTest() {
 
 	data class DeniedResponse(val status: Int, val errorCode: String)
 
-	// Token-support pakker både manglende token og manglende claims inn i JwtTokenUnauthorizedException,
-	// som RestExceptionHandler mapper til 403. Endres bare etter vedtatt kontraktsendring.
+	// Både manglende eller ugyldig token og manglende tilgang gir 403, som med token-support før migreringen.
+	// Endres bare etter vedtatt kontraktsendring.
 	private val deniedResponses = mapOf(
 		Outcome.UNAUTHENTICATED to DeniedResponse(403, "errorCode.forbidden"),
 		Outcome.FORBIDDEN to DeniedResponse(403, "errorCode.forbidden"),
@@ -138,7 +138,7 @@ open class AccessMatrixTest : ApplicationTest() {
 		TestToken("TokenX egensignert med alle claims", true, setOf(AccessPolicy.TOKENX_HIGH_ACR)) {
 			tokens.lagTokenXTokenWithoutClaims()
 		},
-		// Texas krever iss, exp og iat, men ikke sub. Token-support krevde alle fire
+		// Texas krever iss, exp og iat, men ikke sub
 		TestToken("TokenX uten exp", false, emptySet()) { tokens.lagTokenXTokenWithoutClaims("exp") },
 		TestToken("TokenX uten iat", false, emptySet()) { tokens.lagTokenXTokenWithoutClaims("iat") },
 		// Kontraktsendring i steg 3j (#461): Texas godtar TokenX-token uten sub. TokenX utsteder alltid sub, og
@@ -275,7 +275,7 @@ open class AccessMatrixTest : ApplicationTest() {
 		}
 	}
 
-	// Actuator-endepunktene ligger utenfor controllerne og dekkes ikke av inventaret over. Token-support beskytter dem ikke i dag.
+	// Actuator-endepunktene ligger utenfor controllerne og dekkes ikke av inventaret over. De er åpne.
 	@Test
 	fun `actuator endpoints answer without token`() {
 		listOf("/internal/health", "/internal/info", "/internal/metrics", "/internal/prometheus").forEach { path ->

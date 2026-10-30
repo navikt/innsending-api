@@ -1,7 +1,6 @@
 package no.nav.soknad.innsending.rest.ettersending
 
 
-import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.EttersendingApi
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.location.UrlHandler
@@ -21,8 +20,6 @@ import java.net.URI
 
 @RestController
 @KreverInnbygger
-// TokenX-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3j)
-@Unprotected
 class EttersendingRestApi(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val ettersendingService: EttersendingService,

@@ -186,31 +186,19 @@ kafka:
     enabled: FALSE
 
 ---
-# Validerer innkommende token i e2e-testene i archiving-infrastructure. Brukes sammen med endtoend.
-# Issuerne er mock-oauth2-server i Docker-nettverket. Audience må stemme med tokenene systemtestene henter.
+# Validerer innkommende token i e2e-testene i archiving-infrastructure med Texas. Brukes sammen med endtoend.
+# Systemtestene starter Texas og mock-oauth2-server i Docker-nettverket og setter variablene under (#461).
 spring:
   config:
     activate:
       on-profile: endtoend-auth
 
-no.nav.security.jwt:
-  issuer:
-    tokenx:
-      discoveryurl: ${ENDTOEND_TOKEN_X_WELL_KNOWN_URL:http://authserver:6969/tokenx/.well-known/openid-configuration}
-      accepted_audience: ${ENDTOEND_TOKEN_X_AUDIENCE:dev-gcp:team-soknad:innsending-api}
-    azuread:
-      discoveryurl: ${ENDTOEND_AZURE_WELL_KNOWN_URL:http://authserver:6969/azuread/.well-known/openid-configuration}
-      accepted_audience: ${ENDTOEND_AZURE_AUDIENCE:aud-localhost}
-
-# Texas validerer innkommende token når systemtestene starter en Texas-container og setter variablene (#461).
-# Uten dem validerer token-support som før
 texas:
-  introspection-endpoint: ${NAIS_TOKEN_INTROSPECTION_ENDPOINT:}
+  introspection-endpoint: ${NAIS_TOKEN_INTROSPECTION_ENDPOINT}
   innkommende:
-    utstedere: ${TEXAS_INNKOMMENDE_UTSTEDERE:}
     issuer:
-      tokenx: ${TOKEN_X_ISSUER:}
-      azure: ${AZURE_OPENID_CONFIG_ISSUER:}
+      tokenx: ${TOKEN_X_ISSUER}
+      azure: ${AZURE_OPENID_CONFIG_ISSUER}
 
 ---
 spring:
@@ -250,17 +238,11 @@ texas:
   token-endpoint: ${NAIS_TOKEN_ENDPOINT}
   exchange-endpoint: ${NAIS_TOKEN_EXCHANGE_ENDPOINT}
   introspection-endpoint: ${NAIS_TOKEN_INTROSPECTION_ENDPOINT}
-  # Utstedere der Texas validerer innkommende token. De andre valideres av token-support (#461, steg 3i og 3j)
+  # Texas validerer innkommende token. Utsteder velges ut fra iss i tokenet, så hver forespørsel gir ett kall til Texas
   innkommende:
-    utstedere: ${TEXAS_INNKOMMENDE_UTSTEDERE:AZURE,TOKENX}
-    # Velger utsteder for introspeksjon ut fra iss i tokenet, så hver forespørsel gir ett kall til Texas
     issuer:
-      tokenx: ${TOKEN_X_ISSUER:}
-      azure: ${AZURE_OPENID_CONFIG_ISSUER:}
-  # Skyggemodus (#461, steg 3h): Texas validerer innkommende token ved siden av token-support uten å påvirke svaret
-  skygge:
-    aktiv: ${TEXAS_SKYGGE_AKTIV:true}
-    andel: ${TEXAS_SKYGGE_ANDEL:1.0}
+      tokenx: ${TOKEN_X_ISSUER}
+      azure: ${AZURE_OPENID_CONFIG_ISSUER}
   target:
     soknadsmottaker: ${SOKNADSMOTTAKER_SCOPE}
     kodeverk: ${KODEVERK_SCOPE}
@@ -303,15 +285,6 @@ brukernotifikasjonconfig:
   publisereEndringer: ${PUBLISERE_BRUKERNOTIFIKASJONER}
 
 ettersendingsfrist: ${ETTERSENDINGSFRIST}
-
-no.nav.security.jwt:
-  issuer:
-    tokenx:
-      discoveryurl: ${TOKEN_X_WELL_KNOWN_URL}
-      accepted_audience: ${TOKEN_X_CLIENT_ID}
-    azuread:
-      discoveryurl: ${AZURE_APP_WELL_KNOWN_URL}
-      accepted_audience: ${AZURE_APP_CLIENT_ID}
 
 ---
 spring:

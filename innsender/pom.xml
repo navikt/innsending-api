@@ -403,20 +403,16 @@
 			<artifactId>api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<!-- Kom tidligere med token-client-spring. Versjonen styres av Spring Boot -->
 		<dependency>
-			<groupId>no.nav.security</groupId>
-			<artifactId>token-validation-spring</artifactId>
-			<version>${token-validation.version}</version>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
 		</dependency>
+		<!-- Leser iss i innkommende token for å velge utsteder hos Texas -->
 		<dependency>
-			<groupId>no.nav.security</groupId>
-			<artifactId>token-validation-jaxrs</artifactId>
-			<version>${token-validation.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>no.nav.security</groupId>
-			<artifactId>token-client-spring</artifactId>
-			<version>${token-validation.version}</version>
+			<groupId>com.nimbusds</groupId>
+			<artifactId>nimbus-jose-jwt</artifactId>
+			<version>${nimbus-jose-jwt.version}</version>
 		</dependency>
 
 		<dependency>
@@ -452,12 +448,6 @@
 			<groupId>no.nav.security</groupId>
 			<artifactId>mock-oauth2-server</artifactId>
 			<version>${mock-oauth2-server.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>no.nav.security</groupId>
-			<artifactId>token-validation-spring-test</artifactId>
-			<version>${token-validation.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

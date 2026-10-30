@@ -1,12 +1,7 @@
 package no.nav.soknad.innsending.config
 
-import jakarta.servlet.Filter
-import no.nav.security.token.support.core.context.TokenValidationContextHolder
 import no.nav.soknad.innsending.consumerapis.texas.TokenIntrospeksjon
 import no.nav.soknad.innsending.security.TexasAutentiseringFilter
-import no.nav.soknad.innsending.security.TexasSkygge
-import no.nav.soknad.innsending.security.TexasSkyggeFilter
-import no.nav.soknad.innsending.security.TokenSupportBroFilter
 import no.nav.soknad.innsending.security.TokenUtsteder
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Value
@@ -20,13 +15,12 @@ import org.springframework.security.web.authentication.AnonymousAuthenticationFi
 import org.springframework.security.web.savedrequest.NullRequestCache
 
 /**
- * Spring Security setter autentisering for forespørselen, mens tilgangsreglene ligger som `@PreAuthorize` på
- * controllerne (#461). Kjeden selv avviser ingen forespørsler, slik at offentlige ruter er uendret.
+ * Texas validerer innkommende token, Spring Security setter autentiseringen for forespørselen, og tilgangsreglene
+ * ligger som `@PreAuthorize` på controllerne (#461). Kjeden selv avviser ingen forespørsler, slik at offentlige ruter
+ * er åpne.
  *
- * Hvem som validerer innkommende token, styres per utsteder av `texas.innkommende.utstedere` (#461, steg 3i og 3j).
- * Utstederne i lista valideres av Texas. De andre valideres fortsatt av token-support gjennom broen.
- * Profilene med tokenvalidering har en [TokenValidationContextHolder] fra token-support, og bare da legges broen inn.
- * I local, docker og endtoend uten endtoend-auth finnes den ikke, og identiteten er fast (SubjectHandlerTestImpl).
+ * Profilene med tokenvalidering (test, dev, prod og endtoend-auth) har en [TokenIntrospeksjon]. I local, docker og
+ * endtoend uten endtoend-auth finnes den ikke, og identiteten er fast (SubjectHandlerTestImpl).
  */
 @Configuration
 @EnableWebSecurity
@@ -35,10 +29,7 @@ class WebSecurityConfig {
 	@Bean
 	fun filterChain(
 		http: HttpSecurity,
-		tokenValidationContextHolder: ObjectProvider<TokenValidationContextHolder>,
 		tokenIntrospeksjon: ObjectProvider<TokenIntrospeksjon>,
-		texasSkygge: ObjectProvider<TexasSkygge>,
-		@Value("\${texas.innkommende.utstedere:}") texasUtstedere: String,
 		@Value("\${texas.innkommende.issuer.tokenx:}") tokenxIssuer: String,
 		@Value("\${texas.innkommende.issuer.azure:}") azureIssuer: String,
 	): SecurityFilterChain {
@@ -47,27 +38,14 @@ class WebSecurityConfig {
 		http.sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
 		http.requestCache { it.requestCache(NullRequestCache()) }
 
-		val viaTexas = TokenUtsteder.fraListe(texasUtstedere)
-		val viaTokenSupport = TokenUtsteder.entries.toSet() - viaTexas
-
-		// Rekkefølgen er bro, Texas, skygge: Texas validerer bare det broen ikke har autentisert, og skyggemodus trenger
-		// token-supports avgjørelse fra broen. Hvert filter legges rett etter det forrige
-		var forrige: Class<out Filter>? = null
-		fun leggTil(filter: Filter) {
-			forrige?.let { http.addFilterAfter(filter, it) }
-				?: http.addFilterBefore(filter, AnonymousAuthenticationFilter::class.java)
-			forrige = filter.javaClass
+		tokenIntrospeksjon.ifAvailable { introspeksjon ->
+			val issuere = mapOf(TokenUtsteder.TOKENX to tokenxIssuer, TokenUtsteder.AZURE to azureIssuer)
+				.filterValues { it.isNotBlank() }
+			http.addFilterBefore(
+				TexasAutentiseringFilter(introspeksjon, issuere),
+				AnonymousAuthenticationFilter::class.java,
+			)
 		}
-
-		tokenValidationContextHolder.ifAvailable { holder -> leggTil(TokenSupportBroFilter(holder, viaTokenSupport)) }
-		if (viaTexas.isNotEmpty()) {
-			val introspeksjon = tokenIntrospeksjon.ifAvailable
-				?: error("texas.innkommende.utstedere=$viaTexas krever Texas, men profilen har ingen introspeksjon")
-			val issuere = mapOf(TokenUtsteder.TOKENX to tokenxIssuer, TokenUtsteder.AZURE to azureIssuer).filterValues { it.isNotBlank() }
-			leggTil(TexasAutentiseringFilter(introspeksjon, viaTexas, issuere))
-		}
-		// Skyggemodus (steg 3h) sammenligner bare utstederne token-support fortsatt validerer
-		texasSkygge.ifAvailable { skygge -> leggTil(TexasSkyggeFilter(skygge)) }
 		return http.build()
 	}
 }

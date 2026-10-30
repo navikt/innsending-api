@@ -3,15 +3,7 @@ package no.nav.soknad.innsending.security
 import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
-enum class TokenUtsteder {
-	TOKENX, AZURE;
-
-	companion object {
-		/** Leser en kommaseparert liste, for eksempel verdien av texas.innkommende.utstedere. */
-		fun fraListe(verdi: String): Set<TokenUtsteder> =
-			verdi.split(',').map { it.trim() }.filter { it.isNotEmpty() }.map { valueOf(it.uppercase()) }.toSet()
-	}
-}
+enum class TokenUtsteder { TOKENX, AZURE }
 
 /** Et validert token. Tokenet og claimene skal aldri logges, så [toString] viser ingen av dem. */
 class ValidertToken(val claims: Map<String, Any?>, val token: String) {
@@ -23,8 +15,8 @@ class ValidertToken(val claims: Map<String, Any?>, val token: String) {
 /**
  * De validerte innkommende tokenene i Spring Security, per utsteder.
  *
- * Vanligvis har forespørselen ett bearer-token. Token-support godtar også flere kommaseparerte token i samme header,
- * og da gjelder tilgangene fra alle. Broen beholder det i steg 3a–3h, slik at oppførselen ikke endres.
+ * Texas validerer ett token per forespørsel, så det er ett token her. Strukturen tillater flere, med tilgangene fra
+ * alle, slik token-support gjorde.
  *
  * Tokenene og claimene skal aldri logges. [toString] viser derfor bare utstedere og tilganger, og [getPrincipal] gir
  * utstedere, ikke identitet. Identitet leses gjennom [SubjectHandlerInterface].

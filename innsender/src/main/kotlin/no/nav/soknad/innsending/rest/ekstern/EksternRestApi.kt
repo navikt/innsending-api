@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.rest.ekstern
 
-import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.EksternApi
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.model.BodyStatusResponseDto
@@ -22,8 +21,6 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @KreverInnbygger
-// TokenX-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3j)
-@Unprotected
 class EksternRestApi(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val ettersendingService: EttersendingService,

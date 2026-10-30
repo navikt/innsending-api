@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 
 @Component
-// Med endtoend-auth leser e2e identiteten fra token, via SubjectHandlerImpl
+// Med endtoend-auth leser e2e identiteten fra token, via SpringSecuritySubjectHandler
 @Profile("(local | docker | endtoend) & !endtoend-auth")
 class SubjectHandlerTestImpl : SubjectHandlerInterface {
 	private var token = "token"

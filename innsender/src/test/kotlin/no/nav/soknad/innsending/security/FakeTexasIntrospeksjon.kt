@@ -75,7 +75,7 @@ class FakeTexasIntrospeksjonConfig {
 	@Primary
 	fun fakeTexasIntrospeksjon(
 		server: MockOAuth2Server,
-		@Value("\${no.nav.security.jwt.issuer.tokenx.accepted_audience}") tokenxAudience: String,
-		@Value("\${no.nav.security.jwt.issuer.azuread.accepted_audience}") azureAudience: String,
+		@Value("\${fake-texas.audience.tokenx}") tokenxAudience: String,
+		@Value("\${fake-texas.audience.azure}") azureAudience: String,
 	): FakeTexasIntrospeksjon = FakeTexasIntrospeksjon(server, mapOf("tokenx" to tokenxAudience, "azuread" to azureAudience))
 }
