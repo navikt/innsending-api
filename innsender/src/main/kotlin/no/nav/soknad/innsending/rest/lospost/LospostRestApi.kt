@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.location.UrlHandler
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.LospostDto
 import no.nav.soknad.innsending.model.OpprettLospost
+import no.nav.soknad.innsending.security.KreverInnbygger
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.LospostService
 import no.nav.soknad.innsending.service.NotificationService
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.net.URI
 
 @RestController
+@KreverInnbygger
 @ProtectedWithClaims(
 	issuer = Constants.TOKENX,
 	claimMap = [Constants.CLAIM_ACR_LEVEL_4, Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH],
