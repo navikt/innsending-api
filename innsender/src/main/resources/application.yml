@@ -239,6 +239,11 @@ bidrag_applikasjon: ${BIDRAG_APPLIKASJON}
 texas:
   token-endpoint: ${NAIS_TOKEN_ENDPOINT}
   exchange-endpoint: ${NAIS_TOKEN_EXCHANGE_ENDPOINT}
+  introspection-endpoint: ${NAIS_TOKEN_INTROSPECTION_ENDPOINT}
+  # Skyggemodus (#461, steg 3h): Texas validerer innkommende token ved siden av token-support uten å påvirke svaret
+  skygge:
+    aktiv: ${TEXAS_SKYGGE_AKTIV:true}
+    andel: ${TEXAS_SKYGGE_ANDEL:1.0}
   target:
     soknadsmottaker: ${SOKNADSMOTTAKER_SCOPE}
     kodeverk: ${KODEVERK_SCOPE}
