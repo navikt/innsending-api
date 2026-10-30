@@ -1,6 +1,8 @@
 package no.nav.soknad.innsending.config
 
 import no.nav.security.token.support.core.context.TokenValidationContextHolder
+import no.nav.soknad.innsending.security.TexasSkygge
+import no.nav.soknad.innsending.security.TexasSkyggeFilter
 import no.nav.soknad.innsending.security.TokenSupportBroFilter
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.context.annotation.Bean
@@ -24,13 +26,21 @@ import org.springframework.security.web.savedrequest.NullRequestCache
 class WebSecurityConfig {
 
 	@Bean
-	fun filterChain(http: HttpSecurity, tokenValidationContextHolder: ObjectProvider<TokenValidationContextHolder>): SecurityFilterChain {
+	fun filterChain(
+		http: HttpSecurity,
+		tokenValidationContextHolder: ObjectProvider<TokenValidationContextHolder>,
+		texasSkygge: ObjectProvider<TexasSkygge>,
+	): SecurityFilterChain {
 		http.csrf { it.disable() }
 		// Appen bruker bare bearer-token. Ingen sesjon og ingen lagret forespørsel å sende brukeren tilbake til
 		http.sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
 		http.requestCache { it.requestCache(NullRequestCache()) }
 		tokenValidationContextHolder.ifAvailable { holder ->
 			http.addFilterBefore(TokenSupportBroFilter(holder), AnonymousAuthenticationFilter::class.java)
+			// Skyggemodus (steg 3h) trenger token-supports avgjørelse fra broen
+			texasSkygge.ifAvailable { skygge ->
+				http.addFilterAfter(TexasSkyggeFilter(skygge), TokenSupportBroFilter::class.java)
+			}
 		}
 		return http.build()
 	}

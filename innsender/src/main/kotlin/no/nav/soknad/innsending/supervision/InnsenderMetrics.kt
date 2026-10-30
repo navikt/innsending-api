@@ -45,6 +45,8 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	private val antivirusScanHelp = "Number of antivirus scan outcomes"
 	private val notSentInName = "applications_not_sent_in"
 	private val notSentInHelp = "Number of applications that have not been sent in"
+	private val texasShadowName = "texas_shadow_total"
+	private val texasShadowHelp = "Texas shadow validation compared with token-support, by issuer and outcome (#461)"
 
 	private var operationsCounter = registerOperationCounter(name, help)
 	private var operationsErrorCounter = registerOperationCounter(errorName, helpError)
@@ -55,6 +57,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	private var nologinGauge = registerGauge(nologinMainSwitchName, nologinMainSwitchHelp)
 	private var antivirusScanCounter = registerCounter(antivirusScanName, antivirusScanHelp, listOf("namespace", "mode", "result"))
 	private var notSentInGauge = registerGauge("applications_not_sent_in", "Number of applications that have not been sent in")
+	private var texasShadowCounter = registerCounter(texasShadowName, texasShadowHelp, listOf("issuer", "outcome"))
 
 	private var submissionsCounter = registerCounter(
 		"submissions_total", "Number of submitted applications",
@@ -80,6 +83,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 		fileNumberOfPagesSummary = registerSummary(fileNumberOfPages, fileNumberOfPagesHelp)
 		fileSizeSummary = registerSummary(fileSize, fileSizeHelp)
 		notSentInGauge = registerGauge(notSentInName, notSentInHelp)
+		texasShadowCounter = registerCounter(texasShadowName, texasShadowHelp, listOf("issuer", "outcome"))
 	}
 
 	// Used in tests
@@ -95,6 +99,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 		registry.unregister(fileNumberOfPagesSummary)
 		registry.unregister(fileSizeSummary)
 		registry.unregister(notSentInGauge)
+		registry.unregister(texasShadowCounter)
 	}
 
 	private fun registerOperationCounter(name: String, help: String): Counter =
@@ -170,6 +175,12 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 
 	fun getAntivirusScanCounter(namespace: String, mode: String, result: String) =
 		antivirusScanCounter.labelValues(namespace, mode, result)?.get()
+
+	fun incTexasSkygge(issuer: String, outcome: String) =
+		texasShadowCounter.labelValues(issuer, outcome).inc()
+
+	fun getTexasSkygge(issuer: String, outcome: String) =
+		texasShadowCounter.labelValues(issuer, outcome)?.get()
 
 	fun setFileNumberOfPages(pages: Long) = fileNumberOfPagesSummary.observe(pages.toDouble())
 	fun clearFileNumberOfPages() = fileNumberOfPagesSummary.clear()
