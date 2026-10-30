@@ -28,8 +28,8 @@ interface BrukerTokenKilde {
 class SpringSecurityBrukerTokenKilde : BrukerTokenKilde {
 	override fun hentTokenXToken(): String? =
 		(SecurityContextHolder.getContext().authentication as? TokenAutentisering)
-			?.takeIf { it.utsteder == TokenUtsteder.TOKENX }
-			?.credentials
+			?.token(TokenUtsteder.TOKENX)
+			?.token
 }
 
 /** Kilden før steg 3f. Ikke i bruk. Fjernes med token-support i steg 4. */

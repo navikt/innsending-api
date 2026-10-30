@@ -50,9 +50,9 @@ class TokenSupportBroFilterTest {
 
 		val autentisering = kjør(mapOf(TOKENX to token)) as TokenAutentisering
 
-		assertEquals(TokenUtsteder.TOKENX, autentisering.utsteder)
+		assertEquals(setOf(TokenUtsteder.TOKENX), autentisering.tokens.keys)
 		assertEquals(token.encodedToken, autentisering.credentials)
-		assertEquals("12345678901", autentisering.claims["pid"])
+		assertEquals("12345678901", autentisering.token(TokenUtsteder.TOKENX)!!.claims["pid"])
 		assertEquals(setOf(Tilgang.TOKENX, Tilgang.INNBYGGER), autentisering.authorities.map { it.authority }.toSet())
 	}
 
@@ -60,8 +60,21 @@ class TokenSupportBroFilterTest {
 	fun `validert Azure-token blir Azure med roller`() {
 		val autentisering = kjør(mapOf(AZURE to jwt("roles" to listOf("nologin-access")))) as TokenAutentisering
 
-		assertEquals(TokenUtsteder.AZURE, autentisering.utsteder)
+		assertEquals(setOf(TokenUtsteder.AZURE), autentisering.tokens.keys)
 		assertEquals(setOf(Tilgang.AZURE, Tilgang.AZURE_NOLOGIN), autentisering.authorities.map { it.authority }.toSet())
+	}
+
+	// Token-support godtar flere kommaseparerte token. Tilgangene fra begge gjelder, som før broen
+	@Test
+	fun `TokenX- og Azure-token i samme forespørsel gir tilganger fra begge`() {
+		val autentisering = kjør(
+			mapOf(TOKENX to jwt("acr" to "Level4"), AZURE to jwt("scp" to "admin-access defaultaccess"))
+		) as TokenAutentisering
+
+		assertEquals(
+			setOf(Tilgang.TOKENX, Tilgang.INNBYGGER, Tilgang.AZURE, Tilgang.AZURE_ADMIN),
+			autentisering.authorities.map { it.authority }.toSet()
+		)
 	}
 
 	@Test

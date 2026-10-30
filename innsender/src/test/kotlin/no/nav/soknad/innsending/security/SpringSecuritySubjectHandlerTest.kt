@@ -89,6 +89,21 @@ class SpringSecuritySubjectHandlerTest {
 	}
 
 	@Test
+	fun `med både TokenX- og Azure-token leses hver identitet fra sitt token`() {
+		SecurityContextHolder.getContext().authentication = TokenAutentisering(
+			mapOf(
+				TokenUtsteder.AZURE to ValidertToken(mapOf("NAVident" to "Z123456", "azp" to "azure-klient"), "azure-token"),
+				TokenUtsteder.TOKENX to ValidertToken(mapOf("pid" to "12345678901", "client_id" to "tokenx-klient"), "tokenx-token"),
+			)
+		)
+
+		assertEquals("12345678901", handler.getUserIdFromToken())
+		assertEquals("tokenx-token", handler.getToken())
+		assertEquals("tokenx-klient", handler.getClientId())
+		assertEquals("Z123456", handler.getNavIdent())
+	}
+
+	@Test
 	fun `NAVident leses bare fra Azure-token`() {
 		innlogget(TokenUtsteder.AZURE, "NAVident" to "Z123456")
 		assertEquals("Z123456", handler.getNavIdent())
