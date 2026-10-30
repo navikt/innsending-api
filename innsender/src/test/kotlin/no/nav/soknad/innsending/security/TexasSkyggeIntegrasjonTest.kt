@@ -29,6 +29,9 @@ class TexasSkyggeIntegrasjonTest : ApplicationTest() {
 	@Autowired
 	lateinit var texas: FakeTexasIntrospeksjon
 
+	@Autowired
+	lateinit var filterChainProxy: org.springframework.security.web.FilterChainProxy
+
 	@LocalServerPort
 	var serverPort: Int = 0
 
@@ -62,6 +65,18 @@ class TexasSkyggeIntegrasjonTest : ApplicationTest() {
 
 		assertEquals(404, hentUkjentSoknad(TokenGenerator(mockOAuth2Server).lagTokenXToken()))
 		ventPå { antall("texas_feil") > før }
+	}
+
+	// Bro, Texas og skygge skal ligge i denne rekkefølgen, se WebSecurityConfig
+	@Test
+	fun `filtrene i Spring Security-kjeden ligger i riktig rekkefølge`() {
+		val filtre = filterChainProxy.filterChains.single().filters.map { it.javaClass.name }
+		val bro = filtre.indexOf(TokenSupportBroFilter::class.java.name)
+		val texas = filtre.indexOf(TexasAutentiseringFilter::class.java.name)
+		val skygge = filtre.indexOf(TexasSkyggeFilter::class.java.name)
+		val anonym = filtre.indexOf(org.springframework.security.web.authentication.AnonymousAuthenticationFilter::class.java.name)
+
+		kotlin.test.assertTrue(bro in 0 until texas && texas < skygge && skygge < anonym, "Rekkefølge: $filtre")
 	}
 
 	private fun antall(utfall: String) = metrics.getTexasSkygge("tokenx", utfall) ?: 0.0

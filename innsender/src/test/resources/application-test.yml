@@ -90,6 +90,9 @@ texas:
   # Validert av FakeTexasIntrospeksjon, som følger reglene til Texas mot MockOAuth2Server
   innkommende:
     utstedere: AZURE,TOKENX
+    issuer:
+      tokenx: http://localhost:${mock-oauth2-server.port}/tokenx
+      azure: http://localhost:${mock-oauth2-server.port}/azuread
   skygge:
     aktiv: false
   target:

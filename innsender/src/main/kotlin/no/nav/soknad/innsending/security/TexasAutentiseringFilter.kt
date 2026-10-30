@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.security
 
+import com.nimbusds.jwt.JWTParser
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -19,13 +20,27 @@ import org.springframework.web.filter.OncePerRequestFilter
  * med [TEXAS_FEIL], og [TilgangInterceptor] gir 503 i stedet for 403 hvis endepunktet krever token.
  * Offentlige ruter påvirkes ikke.
  *
+ * Utstederen velges ut fra iss i tokenet, slik at hver forespørsel gir ett kall til Texas. iss leses uten å verifisere
+ * tokenet og brukes bare til å velge utsteder. Texas verifiserer signatur, issuer og audience før tokenet godtas.
+ * Ukjent eller manglende iss gir ingen autentisering, og `@PreAuthorize` avviser med 403.
+ *
  * Texas validerer ett token om gangen. En header med flere kommaseparerte token gir derfor ingen autentisering fra
  * Texas. Token-support godtok det, men skyggemodus teller om det forekommer (utfallet flere_token).
  */
 class TexasAutentiseringFilter(
 	private val introspeksjon: TokenIntrospeksjon,
-	private val utstedere: Set<TokenUtsteder>,
+	utstedere: Set<TokenUtsteder>,
+	/** Issuer-URL per utsteder, fra TOKEN_X_ISSUER og AZURE_OPENID_CONFIG_ISSUER */
+	issuere: Map<TokenUtsteder, String>,
 ) : OncePerRequestFilter() {
+
+	private val utstederForIssuer: Map<String, TokenUtsteder> =
+		issuere.filterKeys { it in utstedere }.entries.associate { (utsteder, issuer) -> issuer to utsteder }
+
+	init {
+		val mangler = utstedere - issuere.keys
+		require(mangler.isEmpty()) { "Mangler issuer for $mangler" }
+	}
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -44,12 +59,16 @@ class TexasAutentiseringFilter(
 		filterChain.doFilter(request, response)
 	}
 
-	private fun autentiser(token: String): TokenAutentisering? =
-		utstedere.firstNotNullOfOrNull { utsteder ->
-			introspeksjon.introspekter(identityProvider(utsteder), token)
-				.takeIf { it.aktiv }
-				?.let { TokenAutentisering(utsteder, it.claims, token) }
-		}
+	private fun autentiser(token: String): TokenAutentisering? {
+		val utsteder = uverifisertIssuer(token)?.let(utstederForIssuer::get) ?: return null
+		return introspeksjon.introspekter(identityProvider(utsteder), token)
+			.takeIf { it.aktiv }
+			?.let { TokenAutentisering(utsteder, it.claims, token) }
+	}
+
+	// Bare for å velge utsteder. Tokenet er ikke verifisert her
+	private fun uverifisertIssuer(token: String): String? =
+		runCatching { JWTParser.parse(token).jwtClaimsSet.issuer }.getOrNull()
 
 	private fun identityProvider(utsteder: TokenUtsteder) = when (utsteder) {
 		TokenUtsteder.TOKENX -> TexasIntrospeksjonKlient.TOKENX
