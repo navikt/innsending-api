@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.config
 
-import jakarta.servlet.Filter
 import no.nav.security.token.support.core.context.TokenValidationContextHolder
 import no.nav.soknad.innsending.consumerapis.texas.TokenIntrospeksjon
 import no.nav.soknad.innsending.security.TexasAutentiseringFilter
@@ -17,6 +16,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter
+import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter
 import org.springframework.security.web.savedrequest.NullRequestCache
 
 /**
@@ -50,24 +50,20 @@ class WebSecurityConfig {
 		val viaTexas = TokenUtsteder.fraListe(texasUtstedere)
 		val viaTokenSupport = TokenUtsteder.entries.toSet() - viaTexas
 
-		// Rekkefølgen er bro, Texas, skygge: Texas validerer bare det broen ikke har autentisert, og skyggemodus trenger
-		// token-supports avgjørelse fra broen. Hvert filter legges rett etter det forrige
-		var forrige: Class<out Filter>? = null
-		fun leggTil(filter: Filter) {
-			forrige?.let { http.addFilterAfter(filter, it) }
-				?: http.addFilterBefore(filter, AnonymousAuthenticationFilter::class.java)
-			forrige = filter.javaClass
+		// Rekkefølgen er bro, Texas, skygge, og alle før AnonymousAuthenticationFilter: Texas validerer bare det broen
+		// ikke har autentisert, og skyggemodus trenger avgjørelsene fra begge. Hvert filter forankres ved et eget
+		// innebygd filter, slik at de får hvert sitt ordensnummer i stedet for å dele ett
+		tokenValidationContextHolder.ifAvailable { holder ->
+			http.addFilterBefore(TokenSupportBroFilter(holder, viaTokenSupport), SecurityContextHolderAwareRequestFilter::class.java)
 		}
-
-		tokenValidationContextHolder.ifAvailable { holder -> leggTil(TokenSupportBroFilter(holder, viaTokenSupport)) }
 		if (viaTexas.isNotEmpty()) {
 			val introspeksjon = tokenIntrospeksjon.ifAvailable
 				?: error("texas.innkommende.utstedere=$viaTexas krever Texas, men profilen har ingen introspeksjon")
 			val issuere = mapOf(TokenUtsteder.TOKENX to tokenxIssuer, TokenUtsteder.AZURE to azureIssuer).filterValues { it.isNotBlank() }
-			leggTil(TexasAutentiseringFilter(introspeksjon, viaTexas, issuere))
+			http.addFilterAfter(TexasAutentiseringFilter(introspeksjon, viaTexas, issuere), SecurityContextHolderAwareRequestFilter::class.java)
 		}
 		// Skyggemodus (steg 3h) sammenligner bare utstederne token-support fortsatt validerer
-		texasSkygge.ifAvailable { skygge -> leggTil(TexasSkyggeFilter(skygge)) }
+		texasSkygge.ifAvailable { skygge -> http.addFilterBefore(TexasSkyggeFilter(skygge), AnonymousAuthenticationFilter::class.java) }
 		return http.build()
 	}
 }
