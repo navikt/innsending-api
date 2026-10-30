@@ -13,10 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.core.annotation.AnnotatedElementUtils
+import org.springframework.core.annotation.AnnotationUtils
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.http.client.MultipartBodyBuilder
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.method.HandlerMethod
 import org.springframework.web.reactive.function.BodyInserters
@@ -35,7 +37,7 @@ import kotlin.test.fail
  * Den skal kjøre uendret før og etter byttet fra token-support til Spring Security og Texas.
  * Bare [deniedResponses] skal endres, og bare etter en vedtatt kontraktsendring.
  */
-class AccessMatrixTest : ApplicationTest() {
+open class AccessMatrixTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
@@ -220,6 +222,26 @@ class AccessMatrixTest : ApplicationTest() {
 			}
 			.map { "${it.method} ${it.pathPattern} (${it.key})" }
 		assertTrue(missing.isEmpty(), "Beskyttede endepunkter uten tilgangsannotasjon:\n${missing.joinToString("\n")}")
+	}
+
+	// Spring Security-regelen (#461, steg 3b–3e). Metoderegelen går foran controllerens, som i Spring Security
+	@Test
+	fun `every endpoint has the Spring Security rule for its access policy`() {
+		val expectedRule = mapOf(
+			AccessPolicy.TOKENX_HIGH_ACR to KreverInnbygger::class.java,
+			AccessPolicy.AZURE to KreverAzure::class.java,
+			AccessPolicy.AZURE_ADMIN to KreverAzureAdmin::class.java,
+			AccessPolicy.AZURE_NOLOGIN to KreverAzureNologin::class.java,
+		).mapValues { (_, annotation) -> AnnotationUtils.findAnnotation(annotation, PreAuthorize::class.java)!!.value }
+
+		val wrong = applicationEndpoints().mapNotNull { endpoint ->
+			val policy = policyFor(endpoint) ?: return@mapNotNull null
+			val actual = (AnnotatedElementUtils.findMergedAnnotation(endpoint.handler.method, PreAuthorize::class.java)
+				?: AnnotatedElementUtils.findMergedAnnotation(endpoint.handler.beanType, PreAuthorize::class.java))?.value
+			val expected = expectedRule[policy]
+			if (actual == expected) null else "${endpoint.method} ${endpoint.pathPattern} [$policy]: har $actual, skal ha $expected"
+		}
+		assertTrue(wrong.isEmpty(), "Endepunkter med feil @PreAuthorize:\n${wrong.joinToString("\n")}")
 	}
 
 	@Test
