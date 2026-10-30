@@ -15,8 +15,9 @@ import java.time.Duration
 import java.util.UUID
 import kotlin.test.assertEquals
 
-// Skyggemodus koblet inn i Spring Security-kjeden (#461, steg 3h). TokenX valideres fortsatt av token-support
-@TestPropertySource(properties = ["texas.skygge.aktiv=true"])
+// Skyggemodus koblet inn i Spring Security-kjeden (#461, steg 3h). Fra steg 3j validerer Texas alle utstedere, og
+// skyggemodus er av. Testen lar token-support validere TokenX for å teste skyggemodus til den fjernes i steg 4
+@TestPropertySource(properties = ["texas.skygge.aktiv=true", "texas.innkommende.utstedere=AZURE"])
 class TexasSkyggeIntegrasjonTest : ApplicationTest() {
 
 	@Autowired

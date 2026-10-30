@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.rest.ettersending
 
 
-import no.nav.security.token.support.core.api.ProtectedWithClaims
+import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.EttersendingApi
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.location.UrlHandler
@@ -12,7 +12,6 @@ import no.nav.soknad.innsending.security.KreverInnbygger
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.EttersendingService
 import no.nav.soknad.innsending.service.NotificationService
-import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -22,11 +21,8 @@ import java.net.URI
 
 @RestController
 @KreverInnbygger
-@ProtectedWithClaims(
-	issuer = Constants.TOKENX,
-	claimMap = [Constants.CLAIM_ACR_LEVEL_4, Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH],
-	combineWithOr = true
-)
+// TokenX-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3j)
+@Unprotected
 class EttersendingRestApi(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val ettersendingService: EttersendingService,

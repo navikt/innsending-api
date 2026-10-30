@@ -2,7 +2,6 @@ package no.nav.soknad.innsending.security
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.security.mock.oauth2.MockOAuth2Server
-import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.service.SoknadService
@@ -139,10 +138,12 @@ open class AccessMatrixTest : ApplicationTest() {
 		TestToken("TokenX egensignert med alle claims", true, setOf(AccessPolicy.TOKENX_HIGH_ACR)) {
 			tokens.lagTokenXTokenWithoutClaims()
 		},
-		// Texas krever iss, exp og iat, men ikke sub. Token-support krever alle fire
+		// Texas krever iss, exp og iat, men ikke sub. Token-support krevde alle fire
 		TestToken("TokenX uten exp", false, emptySet()) { tokens.lagTokenXTokenWithoutClaims("exp") },
 		TestToken("TokenX uten iat", false, emptySet()) { tokens.lagTokenXTokenWithoutClaims("iat") },
-		TestToken("TokenX uten sub", false, emptySet()) { tokens.lagTokenXTokenWithoutClaims("sub") },
+		// Kontraktsendring i steg 3j (#461): Texas godtar TokenX-token uten sub. TokenX utsteder alltid sub, og
+		// identiteten leses fra pid, så endringen har ingen praktisk betydning
+		TestToken("TokenX uten sub", true, setOf(AccessPolicy.TOKENX_HIGH_ACR)) { tokens.lagTokenXTokenWithoutClaims("sub") },
 		TestToken("Azure OBO scp=admin-access defaultaccess", true, setOf(AccessPolicy.AZURE, AccessPolicy.AZURE_ADMIN)) {
 			tokens.lagAzureOBOTokenWithScp(scp = "admin-access defaultaccess", navIdent = "Z123456")
 		},
@@ -209,20 +210,6 @@ open class AccessMatrixTest : ApplicationTest() {
 
 		val missing = endpoints.filter { policyFor(it) == null }.map { "${it.method} ${it.pathPattern} (${it.key})" }
 		assertTrue(missing.isEmpty(), "Endepunkter uten tilgangsregel i AccessMatrixTest:\n${missing.joinToString("\n")}")
-	}
-
-	// Gjelder bare endepunktene token-support fortsatt håndhever. Fra steg 3i valideres Azure-token av Texas, og
-	// tilgangen håndheves bare av @PreAuthorize. Fjernes når token-support fjernes i steg 4
-	@Test
-	fun `every protected endpoint has an access annotation`() {
-		val missing = applicationEndpoints()
-			.filter { policyFor(it) == AccessPolicy.TOKENX_HIGH_ACR }
-			.filterNot {
-				AnnotatedElementUtils.hasAnnotation(it.handler.method, ProtectedWithClaims::class.java) ||
-					AnnotatedElementUtils.hasAnnotation(it.handler.beanType, ProtectedWithClaims::class.java)
-			}
-			.map { "${it.method} ${it.pathPattern} (${it.key})" }
-		assertTrue(missing.isEmpty(), "Beskyttede endepunkter uten tilgangsannotasjon:\n${missing.joinToString("\n")}")
 	}
 
 	// Spring Security-regelen (#461, steg 3b–3e). Metoderegelen går foran controllerens, som i Spring Security

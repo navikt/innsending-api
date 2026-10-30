@@ -13,7 +13,7 @@ import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-// Azure-token valideres av Texas (#461, steg 3i). Tilgangsmatrisen dekker gyldige og ugyldige token
+// Innkommende token valideres av Texas (#461, steg 3i og 3j). Tilgangsmatrisen dekker gyldige og ugyldige token
 class TexasAzureIntegrasjonTest : ApplicationTest() {
 
 	@Autowired
@@ -43,12 +43,18 @@ class TexasAzureIntegrasjonTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Texas nede påvirker ikke innbyggere, som fortsatt valideres av token-support`() {
+	fun `Texas nede gir 503 også for innbyggere`() {
 		texas.overstyring = { _, _ -> throw TexasUnavailableException("Texas svarte 503 på introspeksjon") }
 
-		val status = get("/frontend/v1/soknad/${UUID.randomUUID()}", tokens.lagTokenXToken()).first
+		val svar = get("/frontend/v1/soknad/${UUID.randomUUID()}", tokens.lagTokenXToken())
 
-		assertEquals(404, status)
+		assertEquals(503, svar.first)
+		assertEquals("temporarilyUnavailable", svar.second)
+	}
+
+	@Test
+	fun `gyldig TokenX-token fra Texas slipper gjennom til controlleren`() {
+		assertEquals(404, get("/frontend/v1/soknad/${UUID.randomUUID()}", tokens.lagTokenXToken()).first)
 	}
 
 	@Test

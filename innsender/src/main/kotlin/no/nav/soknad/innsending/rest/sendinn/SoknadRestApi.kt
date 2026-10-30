@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.rest.sendinn
 
-import no.nav.security.token.support.core.api.ProtectedWithClaims
+import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.SendinnSoknadApi
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.exceptions.ErrorCode
@@ -17,7 +17,6 @@ import no.nav.soknad.innsending.service.NotificationService
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
-import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import org.slf4j.LoggerFactory
@@ -29,11 +28,8 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @KreverInnbygger
 @CrossOrigin(maxAge = 3600)
-@ProtectedWithClaims(
-	issuer = Constants.TOKENX,
-	claimMap = [Constants.CLAIM_ACR_LEVEL_4, Constants.CLAIM_ACR_IDPORTEN_LOA_HIGH],
-	combineWithOr = true
-)
+// TokenX-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3j)
+@Unprotected
 class SoknadRestApi(
 	private val soknadService: SoknadService,
 	private val tilgangskontroll: Tilgangskontroll,

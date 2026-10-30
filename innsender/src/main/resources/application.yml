@@ -242,7 +242,7 @@ texas:
   introspection-endpoint: ${NAIS_TOKEN_INTROSPECTION_ENDPOINT}
   # Utstedere der Texas validerer innkommende token. De andre valideres av token-support (#461, steg 3i og 3j)
   innkommende:
-    utstedere: ${TEXAS_INNKOMMENDE_UTSTEDERE:AZURE}
+    utstedere: ${TEXAS_INNKOMMENDE_UTSTEDERE:AZURE,TOKENX}
   # Skyggemodus (#461, steg 3h): Texas validerer innkommende token ved siden av token-support uten å påvirke svaret
   skygge:
     aktiv: ${TEXAS_SKYGGE_AKTIV:true}
