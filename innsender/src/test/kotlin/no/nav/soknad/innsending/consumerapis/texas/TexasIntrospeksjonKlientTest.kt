@@ -50,15 +50,16 @@ class TexasIntrospeksjonKlientTest {
 	}
 
 	@Test
-	fun `ugyldig token gir begrunnelsen fra Texas og ingen claims`() {
+	fun `ugyldig token gir verken claims eller feilteksten fra Texas`() {
 		server.expect(requestTo(endpoint))
-			.andRespond(withSuccess("""{"active":false,"error":"token is expired"}""", MediaType.APPLICATION_JSON))
+			.andRespond(withSuccess("""{"active":false,"error":"ugyldig token $token for 12345678901"}""", MediaType.APPLICATION_JSON))
 
 		val svar = klient.introspekter(TexasIntrospeksjonKlient.ENTRA_ID, token)
 
 		assertFalse(svar.aktiv)
-		assertEquals("token is expired", svar.feil)
 		assertTrue(svar.claims.isEmpty())
+		assertFalse(svar.toString().contains(token))
+		assertFalse(svar.toString().contains("12345678901"))
 	}
 
 	@Test
@@ -91,6 +92,6 @@ class TexasIntrospeksjonKlientTest {
 
 	@Test
 	fun `toString viser ikke claims`() {
-		assertFalse(TexasIntrospeksjon(true, mapOf("pid" to "12345678901"), null).toString().contains("12345678901"))
+		assertFalse(TexasIntrospeksjon(true, mapOf("pid" to "12345678901")).toString().contains("12345678901"))
 	}
 }

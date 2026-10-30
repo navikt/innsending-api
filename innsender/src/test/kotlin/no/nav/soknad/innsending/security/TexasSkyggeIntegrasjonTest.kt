@@ -15,7 +15,7 @@ import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.test.context.TestPropertySource
 import java.time.Duration
 import java.util.UUID
-import kotlin.test.assertTrue
+import kotlin.test.assertEquals
 
 // Skyggemodus koblet inn i Spring Security-kjeden (#461, steg 3h)
 @TestPropertySource(properties = ["texas.skygge.aktiv=true"])
@@ -40,15 +40,32 @@ class TexasSkyggeIntegrasjonTest : ApplicationTest() {
 		)
 		val før = metrics.getTexasSkygge("tokenx", "texas_avviser") ?: 0.0
 
-		val status = webTestClient.mutate().baseUrl("http://localhost:$serverPort").build()
+		val status = hentUkjentSoknad(token)
+
+		// Token-support godtok tokenet. Svaret er det vanlige for en søknad som ikke finnes, uansett hva Texas mener
+		assertEquals(404, status)
+		ventPå { (metrics.getTexasSkygge("tokenx", "texas_avviser") ?: 0.0) > før }
+	}
+
+	@Test
+	fun `feil mot Texas endrer ikke svaret`() {
+		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
+		stubFor(
+			post(urlEqualTo("/texas/api/v1/introspect"))
+				.withRequestBody(equalToJson("""{"identity_provider":"tokenx","token":"$token"}"""))
+				.willReturn(aResponse().withStatus(500))
+		)
+		val før = metrics.getTexasSkygge("tokenx", "texas_feil") ?: 0.0
+
+		assertEquals(404, hentUkjentSoknad(token))
+		ventPå { (metrics.getTexasSkygge("tokenx", "texas_feil") ?: 0.0) > før }
+	}
+
+	private fun hentUkjentSoknad(token: String): Int =
+		webTestClient.mutate().baseUrl("http://localhost:$serverPort").build()
 			.get().uri("/frontend/v1/soknad/${UUID.randomUUID()}")
 			.headers { it.setBearerAuth(token) }
 			.exchange().returnResult(String::class.java).status.value()
-
-		// Token-support godtok tokenet, og Texas sitt avvik skal ikke gi avvisning
-		assertTrue(status !in setOf(401, 403, 503), "Fikk $status")
-		ventPå { (metrics.getTexasSkygge("tokenx", "texas_avviser") ?: 0.0) > før }
-	}
 
 	private fun ventPå(betingelse: () -> Boolean) {
 		val frist = System.nanoTime() + Duration.ofSeconds(10).toNanos()

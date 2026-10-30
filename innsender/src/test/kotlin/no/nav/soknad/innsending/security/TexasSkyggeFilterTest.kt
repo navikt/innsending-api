@@ -15,7 +15,10 @@ import kotlin.test.assertNotNull
 
 class TexasSkyggeFilterTest {
 
-	private val skygge = mockk<TexasSkygge> { every { sammenlign(any(), any()) } just runs }
+	private val skygge = mockk<TexasSkygge> {
+		every { sammenlign(any(), any()) } just runs
+		every { flereToken() } just runs
+	}
 	private val filter = TexasSkyggeFilter(skygge)
 
 	@AfterEach
@@ -42,6 +45,14 @@ class TexasSkyggeFilterTest {
 		kjør("bearer ugyldig")
 
 		verify { skygge.sammenlign("ugyldig", null) }
+	}
+
+	@Test
+	fun `flere kommaseparerte token sendes ikke til Texas`() {
+		kjør("Bearer tokenx-token,azure-token")
+
+		verify(exactly = 0) { skygge.sammenlign(any(), any()) }
+		verify { skygge.flereToken() }
 	}
 
 	@Test

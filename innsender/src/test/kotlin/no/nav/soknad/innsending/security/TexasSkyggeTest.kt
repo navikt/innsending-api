@@ -47,8 +47,8 @@ class TexasSkyggeTest {
 	}
 
 	private fun tokenX(vararg claims: Pair<String, Any?>) = TokenAutentisering(TokenUtsteder.TOKENX, mapOf(*claims), token)
-	private fun aktiv(vararg claims: Pair<String, Any?>) = TexasIntrospeksjon(true, mapOf(*claims), null)
-	private val inaktiv = TexasIntrospeksjon(false, emptyMap(), "token is expired")
+	private fun aktiv(vararg claims: Pair<String, Any?>) = TexasIntrospeksjon(true, mapOf(*claims))
+	private val inaktiv = TexasIntrospeksjon(false, emptyMap())
 
 	private fun antall(issuer: String, outcome: String) = metrics.getTexasSkygge(issuer, outcome)
 
@@ -126,6 +126,44 @@ class TexasSkyggeTest {
 		TexasSkygge(klient, metrics, 1.0, fullKø).sammenlign(token, tokenX("acr" to "Level4"))
 
 		assertEquals(1.0, antall("tokenx", "hoppet_over"))
+	}
+
+	@Test
+	fun `sammenligning som har ventet for lenge i køen telles som for gammel`() {
+		var nå = 0L
+		val køen = mutableListOf<Runnable>()
+		val skyggeMedKø = TexasSkygge(klient, metrics, 1.0, { køen += it }, { nå })
+
+		skyggeMedKø.sammenlign(token, tokenX("pid" to pid, "acr" to "Level4"))
+		nå += java.util.concurrent.TimeUnit.SECONDS.toNanos(6)
+		køen.single().run()
+
+		assertEquals(1.0, antall("tokenx", "for_gammel"))
+		verify(exactly = 0) { klient.introspekter(any(), any()) }
+	}
+
+	@Test
+	fun `token som har utløpt før Texas validerer er ikke et avvik`() {
+		every { klient.introspekter(TOKENX, token) } returns inaktiv
+
+		skygge.sammenlign(token, tokenX("pid" to pid, "acr" to "Level4", "exp" to java.util.Date(System.currentTimeMillis() - 1000)))
+
+		assertEquals(1.0, antall("tokenx", "for_gammel"))
+	}
+
+	@Test
+	fun `flere token i samme forespørsel sammenlignes ikke`() {
+		val begge = TokenAutentisering(
+			mapOf(
+				TokenUtsteder.TOKENX to ValidertToken(mapOf("acr" to "Level4"), token),
+				TokenUtsteder.AZURE to ValidertToken(emptyMap(), "azure"),
+			)
+		)
+
+		skygge.sammenlign(token, begge)
+
+		assertEquals(1.0, antall("ingen", "flere_token"))
+		verify(exactly = 0) { klient.introspekter(any(), any()) }
 	}
 
 	@Test

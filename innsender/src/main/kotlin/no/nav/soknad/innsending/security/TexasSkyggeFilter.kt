@@ -15,7 +15,9 @@ class TexasSkyggeFilter(private val skygge: TexasSkygge) : OncePerRequestFilter(
 
 	override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain) {
 		bearerToken(request)?.let { token ->
-			skygge.sammenlign(token, SecurityContextHolder.getContext().authentication as? TokenAutentisering)
+			// Token-support godtar flere kommaseparerte token. Hele headeren skal ikke sendes til Texas som ett token
+			if (token.contains(',')) skygge.flereToken()
+			else skygge.sammenlign(token, SecurityContextHolder.getContext().authentication as? TokenAutentisering)
 		}
 		filterChain.doFilter(request, response)
 	}

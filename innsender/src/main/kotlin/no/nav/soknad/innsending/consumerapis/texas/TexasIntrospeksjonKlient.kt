@@ -10,7 +10,7 @@ import org.springframework.web.client.RestClientResponseException
  * Validerer innkommende token hos Texas-sidecaren via NAIS_TOKEN_INTROSPECTION_ENDPOINT (#461).
  *
  * Texas svarer `active: true` med claimene når tokenet er gyldig for appen, og `active: false` med en feilmelding
- * ellers. Feil i kallet blir [TexasUnavailableException] uten respons-body og uten cause, slik at tokenet aldri havner
+ * ellers. Feilmeldingen tas ikke vare på, fordi vi ikke kontrollerer hva den inneholder. Feil i kallet blir [TexasUnavailableException] uten respons-body og uten cause, slik at tokenet aldri havner
  * i logger. Ingen retry i appen.
  */
 class TexasIntrospeksjonKlient(
@@ -37,8 +37,8 @@ class TexasIntrospeksjonKlient(
 
 		val claims = respons.entries.associate { (navn, verdi) -> navn.toString() to verdi }
 		return when (claims["active"]) {
-			true -> TexasIntrospeksjon(aktiv = true, claims = claims - setOf("active", "error"), feil = null)
-			false -> TexasIntrospeksjon(aktiv = false, claims = emptyMap(), feil = claims["error"] as? String)
+			true -> TexasIntrospeksjon(aktiv = true, claims = claims - setOf("active", "error"))
+			false -> TexasIntrospeksjon(aktiv = false, claims = emptyMap())
 			else -> throw TexasUnavailableException("Svaret fra Texas manglet active for $beskrivelse")
 		}
 	}
@@ -49,7 +49,7 @@ class TexasIntrospeksjonKlient(
 	}
 }
 
-/** Claimene skal aldri logges. [feil] er Texas sin begrunnelse når tokenet avvises, og inneholder ikke tokenet. */
-class TexasIntrospeksjon(val aktiv: Boolean, val claims: Map<String, Any?>, val feil: String?) {
-	override fun toString(): String = "TexasIntrospeksjon(aktiv=$aktiv, feil=$feil)"
+/** Claimene skal aldri logges, så [toString] viser bare om tokenet er gyldig. */
+class TexasIntrospeksjon(val aktiv: Boolean, val claims: Map<String, Any?>) {
+	override fun toString(): String = "TexasIntrospeksjon(aktiv=$aktiv)"
 }
