@@ -1,14 +1,12 @@
 package no.nav.soknad.innsending.security
 
-import com.github.tomakehurst.wiremock.client.WireMock.aResponse
-import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
-import com.github.tomakehurst.wiremock.client.WireMock.post
-import com.github.tomakehurst.wiremock.client.WireMock.stubFor
-import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
+import no.nav.soknad.innsending.consumerapis.texas.TexasIntrospeksjon
+import no.nav.soknad.innsending.consumerapis.texas.TexasUnavailableException
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.TokenGenerator
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -17,7 +15,7 @@ import java.time.Duration
 import java.util.UUID
 import kotlin.test.assertEquals
 
-// Skyggemodus koblet inn i Spring Security-kjeden (#461, steg 3h)
+// Skyggemodus koblet inn i Spring Security-kjeden (#461, steg 3h). TokenX valideres fortsatt av token-support
 @TestPropertySource(properties = ["texas.skygge.aktiv=true"])
 class TexasSkyggeIntegrasjonTest : ApplicationTest() {
 
@@ -27,39 +25,45 @@ class TexasSkyggeIntegrasjonTest : ApplicationTest() {
 	@Autowired
 	lateinit var metrics: InnsenderMetrics
 
+	@Autowired
+	lateinit var texas: FakeTexasIntrospeksjon
+
 	@LocalServerPort
 	var serverPort: Int = 0
 
-	@Test
-	fun `Texas sammenlignes med token-support uten å påvirke svaret`() {
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-		stubFor(
-			post(urlEqualTo("/texas/api/v1/introspect"))
-				.withRequestBody(equalToJson("""{"identity_provider":"tokenx","token":"$token"}"""))
-				.willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("""{"active":false,"error":"test"}"""))
-		)
-		val før = metrics.getTexasSkygge("tokenx", "texas_avviser") ?: 0.0
+	@AfterEach
+	fun nullstillTexas() {
+		texas.overstyring = null
+	}
 
-		val status = hentUkjentSoknad(token)
+	@Test
+	fun `like svar fra Texas og token-support telles som samsvar`() {
+		val før = antall("samsvar")
+
+		assertEquals(404, hentUkjentSoknad(TokenGenerator(mockOAuth2Server).lagTokenXToken()))
+		ventPå { antall("samsvar") > før }
+	}
+
+	@Test
+	fun `avvik fra Texas endrer ikke svaret`() {
+		texas.overstyring = { _, _ -> TexasIntrospeksjon(false, emptyMap()) }
+		val før = antall("texas_avviser")
 
 		// Token-support godtok tokenet. Svaret er det vanlige for en søknad som ikke finnes, uansett hva Texas mener
-		assertEquals(404, status)
-		ventPå { (metrics.getTexasSkygge("tokenx", "texas_avviser") ?: 0.0) > før }
+		assertEquals(404, hentUkjentSoknad(TokenGenerator(mockOAuth2Server).lagTokenXToken()))
+		ventPå { antall("texas_avviser") > før }
 	}
 
 	@Test
 	fun `feil mot Texas endrer ikke svaret`() {
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-		stubFor(
-			post(urlEqualTo("/texas/api/v1/introspect"))
-				.withRequestBody(equalToJson("""{"identity_provider":"tokenx","token":"$token"}"""))
-				.willReturn(aResponse().withStatus(500))
-		)
-		val før = metrics.getTexasSkygge("tokenx", "texas_feil") ?: 0.0
+		texas.overstyring = { _, _ -> throw TexasUnavailableException("Texas svarte 500 på introspeksjon") }
+		val før = antall("texas_feil")
 
-		assertEquals(404, hentUkjentSoknad(token))
-		ventPå { (metrics.getTexasSkygge("tokenx", "texas_feil") ?: 0.0) > før }
+		assertEquals(404, hentUkjentSoknad(TokenGenerator(mockOAuth2Server).lagTokenXToken()))
+		ventPå { antall("texas_feil") > før }
 	}
+
+	private fun antall(utfall: String) = metrics.getTexasSkygge("tokenx", utfall) ?: 0.0
 
 	private fun hentUkjentSoknad(token: String): Int =
 		webTestClient.mutate().baseUrl("http://localhost:$serverPort").build()

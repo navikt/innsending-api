@@ -13,12 +13,18 @@ import org.springframework.web.client.RestClientResponseException
  * ellers. Feilmeldingen tas ikke vare på, fordi vi ikke kontrollerer hva den inneholder. Feil i kallet blir [TexasUnavailableException] uten respons-body og uten cause, slik at tokenet aldri havner
  * i logger. Ingen retry i appen.
  */
+/** Validering av innkommende token. Texas i dev og prod, en stand-in med samme regler i tester. */
+interface TokenIntrospeksjon {
+	/** Kaster [TexasUnavailableException] når valideringen ikke kan gjøres. */
+	fun introspekter(identityProvider: String, token: String): TexasIntrospeksjon
+}
+
 class TexasIntrospeksjonKlient(
 	private val restClient: RestClient,
 	private val introspectionEndpoint: String,
-) {
+) : TokenIntrospeksjon {
 
-	fun introspekter(identityProvider: String, token: String): TexasIntrospeksjon {
+	override fun introspekter(identityProvider: String, token: String): TexasIntrospeksjon {
 		val beskrivelse = "identity_provider=$identityProvider"
 		val respons = try {
 			restClient.post()

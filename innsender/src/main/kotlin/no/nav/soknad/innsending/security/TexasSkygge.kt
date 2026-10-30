@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.security
 
 import no.nav.soknad.innsending.consumerapis.texas.TexasIntrospeksjonKlient
+import no.nav.soknad.innsending.consumerapis.texas.TokenIntrospeksjon
 import no.nav.soknad.innsending.consumerapis.texas.TexasUnavailableException
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import org.slf4j.LoggerFactory
@@ -23,11 +24,13 @@ import java.util.concurrent.TimeUnit
  * feilteksten fra Texas.
  */
 class TexasSkygge(
-	private val klient: TexasIntrospeksjonKlient,
+	private val klient: TokenIntrospeksjon,
 	private val metrics: InnsenderMetrics,
 	private val andel: Double,
 	private val executor: Executor = standardExecutor(),
 	private val klokke: () -> Long = System::nanoTime,
+	/** Utstederne token-support fortsatt validerer. Token fra utstedere Texas har overtatt, sammenlignes ikke (steg 3i og 3j) */
+	private val utstedere: Set<TokenUtsteder> = TokenUtsteder.entries.toSet(),
 ) : DisposableBean {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -48,6 +51,7 @@ class TexasSkygge(
 	fun sammenlign(token: String, tokenSupport: TokenAutentisering?) {
 		if (andel < 1.0 && ThreadLocalRandom.current().nextDouble() >= andel) return
 		val utsteder = tokenSupport?.tokens?.keys?.singleOrNull()
+		if (utsteder != null && utsteder !in utstedere) return
 		if (tokenSupport != null && utsteder == null) {
 			// Flere token i samme header. Texas validerer ett token om gangen, så dette sammenlignes ikke
 			tell(null, Utfall.FLERE_TOKEN)
@@ -120,7 +124,7 @@ class TexasSkygge(
 
 	// Token-support avviste tokenet, eller det var ikke et token den kjente. Texas skal avvise det for begge utstedere
 	private fun sammenlignAvvist(token: String) {
-		val godtattAv = TokenUtsteder.entries.firstOrNull { klient.introspekter(identityProvider(it), token).aktiv }
+		val godtattAv = utstedere.firstOrNull { klient.introspekter(identityProvider(it), token).aktiv }
 		if (godtattAv != null) {
 			logger.warn("Texas-skygge: Texas godtok $godtattAv-token som token-support avviste")
 			tell(godtattAv, Utfall.TEXAS_GODTAR)

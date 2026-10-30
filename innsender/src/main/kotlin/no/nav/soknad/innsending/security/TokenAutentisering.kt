@@ -3,7 +3,15 @@ package no.nav.soknad.innsending.security
 import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
-enum class TokenUtsteder { TOKENX, AZURE }
+enum class TokenUtsteder {
+	TOKENX, AZURE;
+
+	companion object {
+		/** Leser en kommaseparert liste, for eksempel verdien av texas.innkommende.utstedere. */
+		fun fraListe(verdi: String): Set<TokenUtsteder> =
+			verdi.split(',').map { it.trim() }.filter { it.isNotEmpty() }.map { valueOf(it.uppercase()) }.toSet()
+	}
+}
 
 /** Et validert token. Tokenet og claimene skal aldri logges, så [toString] viser ingen av dem. */
 class ValidertToken(val claims: Map<String, Any?>, val token: String) {

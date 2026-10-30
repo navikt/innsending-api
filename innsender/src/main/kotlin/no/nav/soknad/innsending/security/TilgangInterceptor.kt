@@ -2,7 +2,9 @@ package no.nav.soknad.innsending.security
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import no.nav.soknad.innsending.consumerapis.texas.TexasUnavailableException
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException
+import org.springframework.security.authorization.AuthorizationDeniedException
 import org.springframework.security.authorization.method.PreAuthorizeAuthorizationManager
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
@@ -25,7 +27,15 @@ class TilgangInterceptor : HandlerInterceptor {
 
 	override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
 		if (handler is HandlerMethod) {
-			preAuthorize.verify(::autentisering, SimpleMethodInvocation(handler.bean, handler.method))
+			try {
+				preAuthorize.verify(::autentisering, SimpleMethodInvocation(handler.bean, handler.method))
+			} catch (e: AuthorizationDeniedException) {
+				// Texas svarte ikke, så vi vet ikke om tokenet er gyldig. Det skal gi 503, aldri 403 (#461)
+				if (request.getAttribute(TexasAutentiseringFilter.TEXAS_FEIL) == true) {
+					throw TexasUnavailableException("Texas svarte ikke ved validering av innkommende token")
+				}
+				throw e
+			}
 		}
 		return true
 	}

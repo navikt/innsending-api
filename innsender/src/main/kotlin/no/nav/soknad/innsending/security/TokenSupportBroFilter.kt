@@ -19,7 +19,11 @@ import org.springframework.web.filter.OncePerRequestFilter
  *
  * Filteret registreres bare i Spring Security-kjeden og er derfor ikke en Spring-bønne.
  */
-class TokenSupportBroFilter(private val contextHolder: TokenValidationContextHolder) : OncePerRequestFilter() {
+class TokenSupportBroFilter(
+	private val contextHolder: TokenValidationContextHolder,
+	/** Utstederne token-support fortsatt validerer. Texas tar over én og én i steg 3i og 3j */
+	private val utstedere: Set<TokenUtsteder> = TokenUtsteder.entries.toSet(),
+) : OncePerRequestFilter() {
 
 	override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain) {
 		val context = SecurityContextHolder.getContext()
@@ -33,6 +37,7 @@ class TokenSupportBroFilter(private val contextHolder: TokenValidationContextHol
 	private fun autentiseringFraTokenSupport(): TokenAutentisering? {
 		val validert = contextHolder.getTokenValidationContext()
 		val tokens = listOf(TOKENX to TokenUtsteder.TOKENX, AZURE to TokenUtsteder.AZURE)
+			.filter { (_, utsteder) -> utsteder in utstedere }
 			.mapNotNull { (issuer, utsteder) ->
 				validert.getJwtToken(issuer)?.let { jwt -> utsteder to ValidertToken(jwt.jwtTokenClaims.allClaims, jwt.encodedToken) }
 			}
