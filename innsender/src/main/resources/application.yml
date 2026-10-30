@@ -243,6 +243,10 @@ texas:
   # Utstedere der Texas validerer innkommende token. De andre valideres av token-support (#461, steg 3i og 3j)
   innkommende:
     utstedere: ${TEXAS_INNKOMMENDE_UTSTEDERE:AZURE}
+    # Velger utsteder for introspeksjon ut fra iss i tokenet, så hver forespørsel gir ett kall til Texas
+    issuer:
+      tokenx: ${TOKEN_X_ISSUER:}
+      azure: ${AZURE_OPENID_CONFIG_ISSUER:}
   # Skyggemodus (#461, steg 3h): Texas validerer innkommende token ved siden av token-support uten å påvirke svaret
   skygge:
     aktiv: ${TEXAS_SKYGGE_AKTIV:true}

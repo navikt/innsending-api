@@ -26,7 +26,8 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class FakeTexasIntrospeksjon(
 	private val server: MockOAuth2Server,
-	private val audience: String,
+	/** Audience per issuer-ID i MockOAuth2Server, som accepted_audience for hver utsteder */
+	private val audience: Map<String, String>,
 ) : TokenIntrospeksjon {
 
 	private val nøkler = ConcurrentHashMap<String, JWKSet>()
@@ -59,7 +60,7 @@ class FakeTexasIntrospeksjon(
 		val claims = jwt.jwtClaimsSet
 		val nå = Date()
 		return claims.issuer == server.issuerUrl(issuerId).toString() &&
-			audience in claims.audience.orEmpty() &&
+			audience.getValue(issuerId) in claims.audience.orEmpty() &&
 			claims.expirationTime?.after(nå) == true &&
 			claims.issueTime != null &&
 			(claims.notBeforeTime == null || !claims.notBeforeTime.after(nå))
@@ -74,6 +75,7 @@ class FakeTexasIntrospeksjonConfig {
 	@Primary
 	fun fakeTexasIntrospeksjon(
 		server: MockOAuth2Server,
-		@Value("\${no.nav.security.jwt.issuer.azuread.accepted_audience}") audience: String,
-	): FakeTexasIntrospeksjon = FakeTexasIntrospeksjon(server, audience)
+		@Value("\${no.nav.security.jwt.issuer.tokenx.accepted_audience}") tokenxAudience: String,
+		@Value("\${no.nav.security.jwt.issuer.azuread.accepted_audience}") azureAudience: String,
+	): FakeTexasIntrospeksjon = FakeTexasIntrospeksjon(server, mapOf("tokenx" to tokenxAudience, "azuread" to azureAudience))
 }
