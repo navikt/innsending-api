@@ -13,6 +13,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.core.AuthenticationException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.context.request.async.AsyncRequestNotUsableException
@@ -166,6 +168,24 @@ class RestExceptionHandler {
 		exception: JwtTokenUnauthorizedException
 	): ResponseEntity<RestErrorResponseDto>? {
 		logger.warn("Autorisering feilet ved kall til " + request.requestURI + ": " + exception.message, exception)
+
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = "Autorisering feilet",
+				timestamp = OffsetDateTime.now(),
+				errorCode = "errorCode.forbidden"
+			), HttpStatus.FORBIDDEN
+		)
+	}
+
+	// 403 fra @PreAuthorize (#461). Gir samme svar som token-support, også når tokenet mangler eller er ugyldig.
+	// Overgang til 401 for manglende token er en egen kontraktsendring etter migreringen
+	@ExceptionHandler(value = [AccessDeniedException::class, AuthenticationException::class])
+	fun accessDeniedHandler(
+		request: HttpServletRequest,
+		exception: RuntimeException
+	): ResponseEntity<RestErrorResponseDto> {
+		logger.warn("Autorisering feilet ved kall til ${request.requestURI}: ${exception.javaClass.simpleName}")
 
 		return ResponseEntity(
 			RestErrorResponseDto(
