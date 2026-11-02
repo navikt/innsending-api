@@ -33,10 +33,11 @@ class TilgangTest {
 	}
 
 	@Test
-	fun `TokenX uten brukbar identitet gir ikke innbyggertilgang`() {
+	fun `TokenX uten både pid og sub gir ikke innbyggertilgang`() {
 		assertEquals(setOf(TOKENX), tokenX("acr" to "Level4", "pid" to null))
-		assertEquals(setOf(TOKENX), tokenX("acr" to "Level4", "pid" to listOf("12345678901"), "sub" to "12345678901"))
 		assertEquals(setOf(TOKENX, INNBYGGER), tokenX("acr" to "Level4", "pid" to null, "sub" to "12345678901"))
+		// Feil type på pid avvises senere med 401 av identitetsoppslaget, som før migreringen
+		assertEquals(setOf(TOKENX, INNBYGGER), tokenX("acr" to "Level4", "pid" to listOf("12345678901")))
 	}
 
 	@Test

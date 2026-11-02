@@ -15,8 +15,9 @@ object Tilgang {
 
 	/**
 	 * Innbygger med TokenX-token og høyt sikkerhetsnivå: `acr=Level4` eller `acr=idporten-loa-high`.
-	 * Tokenet må også ha en brukbar identitet: pid som tekst, eller sub når pid mangler. Texas krever ikke sub, så uten
-	 * denne regelen ville et token uten pid og sub nådd controlleren og gitt 401 i stedet for 403 (#461, steg 3j).
+	 * Tokenet må også ha pid eller sub. Texas krever ikke sub, så uten denne regelen ville et token uten begge nådd
+	 * controlleren og gitt 401 i stedet for 403, slik token-support ga (#461, steg 3j). En pid med feil type gir
+	 * fortsatt 401 fra identitetsoppslaget, som før.
 	 */
 	const val INNBYGGER = "INNBYGGER_HOYT_NIVAA"
 
@@ -43,12 +44,7 @@ object Tilgang {
 		}
 	}
 
-	// Samme regel som SpringSecuritySubjectHandler.getUserIdFromToken
-	private fun harIdentitet(claims: Map<String, Any?>): Boolean = when (val pid = claims["pid"]) {
-		is String -> true
-		null -> claims["sub"] is String
-		else -> false
-	}
+	private fun harIdentitet(claims: Map<String, Any?>): Boolean = claims["pid"] != null || claims["sub"] is String
 
 	// Samme semantikk som JwtTokenClaims.containsClaim i token-support
 	private fun harClaim(claims: Map<String, Any?>, navn: String, verdi: String): Boolean =
