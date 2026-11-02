@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.security
 
+import com.nimbusds.jwt.JWTParser
 import no.nav.soknad.innsending.consumerapis.texas.TexasIntrospeksjonKlient
 import no.nav.soknad.innsending.consumerapis.texas.TokenIntrospeksjon
 import no.nav.soknad.innsending.consumerapis.texas.TexasUnavailableException
@@ -124,6 +125,11 @@ class TexasSkygge(
 
 	// Token-support avviste tokenet, eller det var ikke et token den kjente. Texas skal avvise det for begge utstedere
 	private fun sammenlignAvvist(token: String) {
+		// Bare token som ser ut som JWT med iss sendes til Texas, så søppel i Authorization ikke gir Texas-trafikk
+		if (runCatching { JWTParser.parse(token).jwtClaimsSet.issuer }.getOrNull() == null) {
+			tell(null, Utfall.SAMSVAR)
+			return
+		}
 		val godtattAv = utstedere.firstOrNull { klient.introspekter(identityProvider(it), token).aktiv }
 		if (godtattAv != null) {
 			logger.warn("Texas-skygge: Texas godtok $godtattAv-token som token-support avviste")

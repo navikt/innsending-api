@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.config
 
-import no.nav.soknad.innsending.consumerapis.texas.TexasIntrospeksjonKlient
 import no.nav.soknad.innsending.consumerapis.texas.TexasTokenKlient
 import no.nav.soknad.innsending.consumerapis.texas.TokenIntrospeksjon
 import no.nav.soknad.innsending.security.TexasSkygge
@@ -25,11 +24,6 @@ class TexasConfig {
 		@Value("\${texas.exchange-endpoint}") exchangeEndpoint: String,
 	): TexasTokenKlient = TexasTokenKlient(restClient(TOKEN_TIMEOUT), tokenEndpoint, exchangeEndpoint)
 
-	@Bean
-	fun texasIntrospeksjonKlient(
-		@Value("\${texas.introspection-endpoint}") introspectionEndpoint: String,
-	): TexasIntrospeksjonKlient = TexasIntrospeksjonKlient(restClient(INTROSPEKSJON_TIMEOUT), introspectionEndpoint)
-
 	// Skyggemodus i steg 3h. Utviklerteamet avgjør hvor lenge den kjører før 3i og 3j.
 	// Sammenligner bare utstederne token-support fortsatt validerer, og slås av når Texas har tatt over alle
 	@Bean
@@ -45,17 +39,19 @@ class TexasConfig {
 		return TexasSkygge(introspeksjon, metrics, andel.coerceIn(0.0, 1.0), utstedere = viaTokenSupport)
 	}
 
+	// Tilkobling og lesing har hver sin grense. Grensen deles mellom dem, slik at et kall aldri venter lenger enn
+	// det vedtatte totalt. Svarene fra Texas er små, så lesegrensen gjelder i praksis hele svaret
 	private fun restClient(timeout: Duration): RestClient {
+		val tilkobling = timeout.dividedBy(4)
 		val requestFactory = SimpleClientHttpRequestFactory().apply {
-			setConnectTimeout(timeout)
-			setReadTimeout(timeout)
+			setConnectTimeout(tilkobling)
+			setReadTimeout(timeout.minus(tilkobling))
 		}
 		return RestClient.builder().requestFactory(requestFactory).build()
 	}
 
 	private companion object {
-		// Vedtatt i #461: 5 sekunder for tokenkall og 2 sekunder for introspeksjon, uten retry i appen
+		// Vedtatt i #461: 5 sekunder for tokenkall, uten retry i appen. Introspeksjon ligger i TexasIntrospeksjonConfig
 		val TOKEN_TIMEOUT: Duration = Duration.ofSeconds(5)
-		val INTROSPEKSJON_TIMEOUT: Duration = Duration.ofSeconds(2)
 	}
 }

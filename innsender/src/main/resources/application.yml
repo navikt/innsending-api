@@ -202,6 +202,16 @@ no.nav.security.jwt:
       discoveryurl: ${ENDTOEND_AZURE_WELL_KNOWN_URL:http://authserver:6969/azuread/.well-known/openid-configuration}
       accepted_audience: ${ENDTOEND_AZURE_AUDIENCE:aud-localhost}
 
+# Texas validerer innkommende token når systemtestene starter en Texas-container og setter variablene (#461).
+# Uten dem validerer token-support som før
+texas:
+  introspection-endpoint: ${NAIS_TOKEN_INTROSPECTION_ENDPOINT:}
+  innkommende:
+    utstedere: ${TEXAS_INNKOMMENDE_UTSTEDERE:}
+    issuer:
+      tokenx: ${TOKEN_X_ISSUER:}
+      azure: ${AZURE_OPENID_CONFIG_ISSUER:}
+
 ---
 spring:
   config:
