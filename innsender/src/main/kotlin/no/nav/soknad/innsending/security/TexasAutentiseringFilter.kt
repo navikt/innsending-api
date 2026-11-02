@@ -53,6 +53,10 @@ class TexasAutentiseringFilter(
 				// Meldingen lager vi selv, uten token eller respons-body
 				logger.warn("Kunne ikke validere token hos Texas: ${e.message}")
 				request.setAttribute(TEXAS_FEIL, true)
+			} catch (e: RuntimeException) {
+				// Uventet feil i valideringen skal gi 503 som Texas-feil, ikke Spring sin feilside. Bare klassenavnet logges
+				logger.warn("Uventet feil ved validering av token hos Texas (${e.javaClass.simpleName})")
+				request.setAttribute(TEXAS_FEIL, true)
 			}
 		}
 		filterChain.doFilter(request, response)

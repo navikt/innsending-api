@@ -17,6 +17,7 @@ object TestMockOAuth2Server {
 
 @TestConfiguration
 class TestMockOAuth2ServerConfig {
-	@Bean
+	// Serveren deles av alle testkontekstene. Uten destroyMethod = "" ville Spring kalt shutdown() når første kontekst lukkes
+	@Bean(destroyMethod = "")
 	fun mockOAuth2Server(): MockOAuth2Server = TestMockOAuth2Server.server
 }

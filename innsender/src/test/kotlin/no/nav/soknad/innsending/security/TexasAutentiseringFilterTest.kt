@@ -105,6 +105,16 @@ class TexasAutentiseringFilterTest {
 	}
 
 	@Test
+	fun `uventet feil i valideringen behandles som Texas-feil`() {
+		every { introspeksjon.introspekter(any(), any()) } throws IllegalStateException("uventet")
+
+		val (request, autentisering) = kjør("Bearer ${token(azureIssuer)}")
+
+		assertNull(autentisering)
+		assertEquals(true, request.getAttribute(TexasAutentiseringFilter.TEXAS_FEIL))
+	}
+
+	@Test
 	fun `eksisterende autentisering overskrives ikke og sendes ikke til Texas`() {
 		val eksisterende = TokenAutentisering(TokenUtsteder.TOKENX, mapOf("acr" to "Level4"), "tokenx-token")
 		SecurityContextHolder.getContext().authentication = eksisterende
