@@ -107,5 +107,5 @@ wiremock:
 fake-texas:
   audience:
     tokenx: aud-localhost
-    azure: aud-localhost
+    azure: aud-localhost-azure
 

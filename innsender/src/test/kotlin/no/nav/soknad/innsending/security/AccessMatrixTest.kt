@@ -130,6 +130,7 @@ class AccessMatrixTest : ApplicationTest() {
 		},
 		TestToken("TokenX uten acr", true, emptySet()) { tokens.lagTokenXToken(acr = null) },
 		TestToken("TokenX feil audience", false, emptySet()) { tokens.lagTokenXToken(audience = "annen-app") },
+		TestToken("TokenX med Azure-audience", false, emptySet()) { tokens.lagTokenXToken(audience = TokenGenerator.AZURE_AUDIENCE) },
 		TestToken("TokenX utløpt", false, emptySet()) { tokens.lagTokenXToken(expiry = -3600) },
 		TestToken("TokenX ukjent issuer", false, emptySet()) { tokens.lagTokenXToken(issuerId = "ukjent") },
 		TestToken("TokenX ukjent signeringsnøkkel", false, emptySet()) { tokens.lagTokenXTokenSignedWithUnknownKey() },
@@ -164,6 +165,7 @@ class AccessMatrixTest : ApplicationTest() {
 			tokens.lagAzureM2MToken(roles = listOf("nologin-access"))
 		},
 		TestToken("Azure feil audience", false, emptySet()) { tokens.lagAzureM2MToken(audience = "annen-app") },
+		TestToken("Azure med TokenX-audience", false, emptySet()) { tokens.lagAzureM2MToken(audience = TokenGenerator.ACCEPTED_AUDIENCE) },
 		TestToken("Azure utløpt", false, emptySet()) { tokens.lagAzureM2MToken(expiry = -3600) },
 	)
 

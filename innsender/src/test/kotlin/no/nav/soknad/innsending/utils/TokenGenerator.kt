@@ -24,6 +24,9 @@ class TokenGenerator(
 	companion object {
 		val subject = "12345678901"
 		const val ACCEPTED_AUDIENCE = "aud-localhost"
+
+		// Ulik audience for Azure, slik at testene oppdager om et token for den ene utstederen godtas for den andre
+		const val AZURE_AUDIENCE = "aud-localhost-azure"
 		const val TOKENX_CLIENT_ID = "application"
 		const val AZURE_CLIENT_ID = "consumer-app-id"
 		const val ACR_LEVEL_4 = "Level4"
@@ -62,7 +65,7 @@ class TokenGenerator(
 
 	fun lagAzureM2MToken(
 		roles: List<String> = emptyList(),
-		audience: String = ACCEPTED_AUDIENCE,
+		audience: String = AZURE_AUDIENCE,
 		expiry: Long = defaultExpiry,
 	): String {
 		val objectId = UUID.randomUUID().toString()
@@ -94,7 +97,7 @@ class TokenGenerator(
 	fun lagAzureOBOTokenWithScp(
 		scp: String,
 		navIdent: String? = null,
-		audience: String = ACCEPTED_AUDIENCE,
+		audience: String = AZURE_AUDIENCE,
 		expiry: Long = defaultExpiry,
 	): String {
 		val oAuth2TokenCallback = DefaultOAuth2TokenCallback(
