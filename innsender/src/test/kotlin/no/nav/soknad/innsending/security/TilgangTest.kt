@@ -11,7 +11,9 @@ import kotlin.test.assertEquals
 // Reglene er de samme som @ProtectedWithClaims i token-support håndhevet før migreringen (#461)
 class TilgangTest {
 
-	private fun tokenX(vararg claims: Pair<String, Any?>) = Tilgang.tilgangerFor(TokenUtsteder.TOKENX, mapOf(*claims))
+	// Identitet er med som standard, så testene under handler om acr
+	private fun tokenX(vararg claims: Pair<String, Any?>) =
+		Tilgang.tilgangerFor(TokenUtsteder.TOKENX, mapOf("pid" to "12345678901") + mapOf(*claims))
 	private fun azure(vararg claims: Pair<String, Any?>) = Tilgang.tilgangerFor(TokenUtsteder.AZURE, mapOf(*claims))
 
 	@Test
@@ -28,6 +30,14 @@ class TilgangTest {
 		assertEquals(setOf(TOKENX), tokenX("acr" to null))
 		// Store og små bokstaver teller, som i token-support
 		assertEquals(setOf(TOKENX), tokenX("acr" to "level4"))
+	}
+
+	@Test
+	fun `TokenX uten både pid og sub gir ikke innbyggertilgang`() {
+		assertEquals(setOf(TOKENX), tokenX("acr" to "Level4", "pid" to null))
+		assertEquals(setOf(TOKENX, INNBYGGER), tokenX("acr" to "Level4", "pid" to null, "sub" to "12345678901"))
+		// Feil type på pid avvises senere med 401 av identitetsoppslaget, som før migreringen
+		assertEquals(setOf(TOKENX, INNBYGGER), tokenX("acr" to "Level4", "pid" to listOf("12345678901")))
 	}
 
 	@Test

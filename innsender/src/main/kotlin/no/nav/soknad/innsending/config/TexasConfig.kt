@@ -20,9 +20,10 @@ class TexasConfig {
 	): TexasTokenKlient = TexasTokenKlient(restClient(TOKEN_TIMEOUT), tokenEndpoint, exchangeEndpoint)
 
 	private fun restClient(timeout: Duration): RestClient {
+		val tilkobling = timeout.dividedBy(4)
 		val requestFactory = SimpleClientHttpRequestFactory().apply {
-			setConnectTimeout(timeout)
-			setReadTimeout(timeout)
+			setConnectTimeout(tilkobling)
+			setReadTimeout(timeout.minus(tilkobling))
 		}
 		return RestClient.builder().requestFactory(requestFactory).build()
 	}

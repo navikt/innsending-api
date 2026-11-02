@@ -21,9 +21,11 @@ class TexasIntrospeksjonConfig {
 	fun texasIntrospeksjonKlient(
 		@Value("\${texas.introspection-endpoint:}") introspectionEndpoint: String,
 	): TexasIntrospeksjonKlient {
+		// Grensen deles mellom tilkobling og lesing, slik at et kall aldri venter lenger enn 2 sekunder totalt
+		val tilkobling = TIMEOUT.dividedBy(4)
 		val requestFactory = SimpleClientHttpRequestFactory().apply {
-			setConnectTimeout(TIMEOUT)
-			setReadTimeout(TIMEOUT)
+			setConnectTimeout(tilkobling)
+			setReadTimeout(TIMEOUT.minus(tilkobling))
 		}
 		return TexasIntrospeksjonKlient(RestClient.builder().requestFactory(requestFactory).build(), introspectionEndpoint)
 	}

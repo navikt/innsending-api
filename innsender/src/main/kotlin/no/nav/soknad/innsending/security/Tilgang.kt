@@ -12,7 +12,12 @@ object Tilgang {
 	const val TOKENX = "UTSTEDER_TOKENX"
 	const val AZURE = "UTSTEDER_AZURE"
 
-	/** Innbygger med TokenX-token og høyt sikkerhetsnivå: `acr=Level4` eller `acr=idporten-loa-high`. */
+	/**
+	 * Innbygger med TokenX-token og høyt sikkerhetsnivå: `acr=Level4` eller `acr=idporten-loa-high`.
+	 * Tokenet må også ha pid eller sub. Texas krever ikke sub, så uten denne regelen ville et token uten begge nådd
+	 * controlleren og gitt 401 i stedet for 403, slik token-support ga (#461, steg 3j). En pid med feil type gir
+	 * fortsatt 401 fra identitetsoppslaget, som før.
+	 */
 	const val INNBYGGER = "INNBYGGER_HOYT_NIVAA"
 
 	/** Azure-token med nøyaktig `scp=admin-access defaultaccess`. Rekkefølge og ekstra scope gir ikke admin, som i dag. */
@@ -28,7 +33,7 @@ object Tilgang {
 	fun tilgangerFor(utsteder: TokenUtsteder, claims: Map<String, Any?>): Set<String> = when (utsteder) {
 		TokenUtsteder.TOKENX -> buildSet {
 			add(TOKENX)
-			if (hoyeAcrVerdier.any { harClaim(claims, "acr", it) }) add(INNBYGGER)
+			if (hoyeAcrVerdier.any { harClaim(claims, "acr", it) } && harIdentitet(claims)) add(INNBYGGER)
 		}
 
 		TokenUtsteder.AZURE -> buildSet {
@@ -37,6 +42,8 @@ object Tilgang {
 			if (harClaim(claims, "roles", NOLOGIN_ROLLE)) add(AZURE_NOLOGIN)
 		}
 	}
+
+	private fun harIdentitet(claims: Map<String, Any?>): Boolean = claims["pid"] != null || claims["sub"] is String
 
 	// Samme semantikk som JwtTokenClaims.containsClaim i token-support hadde
 	private fun harClaim(claims: Map<String, Any?>, navn: String, verdi: String): Boolean =
