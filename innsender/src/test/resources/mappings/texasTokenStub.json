@@ -1,0 +1,20 @@
+{
+	"request": {
+		"urlPath": "/texas/api/v1/token",
+		"method": "POST",
+		"bodyPatterns": [
+			{ "matchesJsonPath": "$[?(@.identity_provider == 'entra_id')]" }
+		]
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": {
+			"access_token": "texas-test-token",
+			"expires_in": 3599,
+			"token_type": "Bearer"
+		}
+	}
+}

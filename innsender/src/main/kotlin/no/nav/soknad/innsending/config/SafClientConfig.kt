@@ -1,8 +1,7 @@
 package no.nav.soknad.innsending.config
 
 import com.expediagroup.graphql.client.spring.GraphQLWebClient
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
-import no.nav.security.token.support.client.spring.ClientConfigurationProperties
+import no.nav.soknad.innsending.consumerapis.texas.TexasTokenKlient
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.MDCUtil
 import org.slf4j.LoggerFactory
@@ -23,8 +22,8 @@ import reactor.netty.http.client.HttpClientResponse
 @EnableConfigurationProperties(RestConfig::class)
 class SafClientConfig(
 	private val restConfig: RestConfig,
-	oauth2Config: ClientConfigurationProperties,
-	private val oAuth2AccessTokenService: OAuth2AccessTokenService,
+	private val texasTokenKlient: TexasTokenKlient,
+	@Value("\${texas.target.saf}") private val safTarget: String,
 	@Value("\${spring.application.name}") private val applicationName: String
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -56,13 +55,8 @@ class SafClientConfig(
 				it.header(Constants.NAV_CONSUMER_ID, applicationName)
 				it.header(
 					HttpHeaders.AUTHORIZATION,
-					"Bearer ${oAuth2AccessTokenService.getAccessToken(clientProperties).access_token}",
+					"Bearer ${texasTokenKlient.hentMaskinToken(safTarget)}",
 				)
 			}
 	)
-
-	private val safMaskintilmaskin = "saf-maskintilmaskin"
-
-	private val clientProperties = oauth2Config.registration[safMaskintilmaskin]
-		?: throw RuntimeException("could not find oauth2 client config for $safMaskintilmaskin")
 }

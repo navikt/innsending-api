@@ -1,8 +1,9 @@
 package no.nav.soknad.innsending.config
 
 import com.expediagroup.graphql.client.spring.GraphQLWebClient
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
-import no.nav.security.token.support.client.spring.ClientConfigurationProperties
+import no.nav.soknad.innsending.consumerapis.texas.TexasTokenKlient
+import no.nav.soknad.innsending.security.BrukerTokenKilde
+import no.nav.soknad.innsending.security.krevTokenXToken
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.CORRELATION_ID
 import no.nav.soknad.innsending.util.Constants.NAV_CONSUMER_ID
@@ -29,8 +30,9 @@ import java.util.concurrent.atomic.AtomicLong
 @EnableConfigurationProperties(RestConfig::class)
 class SafSelvbetjeningClientConfig(
 	private val restConfig: RestConfig,
-	oauth2Config: ClientConfigurationProperties,
-	private val oAuth2AccessTokenService: OAuth2AccessTokenService,
+	private val texasTokenKlient: TexasTokenKlient,
+	private val brukerTokenKilde: BrukerTokenKilde,
+	@Value("\${texas.target.safselvbetjening}") private val safselvbetjeningTarget: String,
 	@Value("\${spring.application.name}") private val applicationName: String
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -68,7 +70,7 @@ class SafSelvbetjeningClientConfig(
 				it.header(NAV_CONSUMER_ID, applicationName)
 				it.header(
 					HttpHeaders.AUTHORIZATION,
-					"Bearer ${oAuth2AccessTokenService.getAccessToken(tokenxSafSelvbetjeningClientProperties).access_token}",
+					"Bearer ${texasTokenKlient.hentBrukerToken(safselvbetjeningTarget, brukerTokenKilde.krevTokenXToken(safselvbetjeningTarget))}",
 				)
 			}
 	)
@@ -102,9 +104,4 @@ class SafSelvbetjeningClientConfig(
 			}
 			.build()
 	}
-
-	private val tokenxSafSelvbetjeningClientProperties =
-		oauth2Config.registration["tokenx-safselvbetjening"]
-			?: throw RuntimeException("could not find oauth2 client config for tokenx-safselvbetjening")
-
 }

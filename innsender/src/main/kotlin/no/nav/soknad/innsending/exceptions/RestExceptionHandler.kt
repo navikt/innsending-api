@@ -4,6 +4,7 @@ import com.google.cloud.storage.StorageException
 import jakarta.servlet.http.HttpServletRequest
 import no.nav.security.token.support.core.exceptions.JwtTokenMissingException
 import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
+import no.nav.soknad.innsending.consumerapis.texas.TexasUnavailableException
 import no.nav.soknad.innsending.exceptions.utils.messageForLog
 import no.nav.soknad.innsending.model.RestErrorResponseDto
 import no.nav.soknad.innsending.service.config.annotation.ConfigVerificationException
@@ -204,6 +205,23 @@ class RestExceptionHandler {
 				timestamp = OffsetDateTime.now(),
 				errorCode = "errorCode.unsupportedOperation"
 			), HttpStatus.NOT_IMPLEMENTED
+		)
+	}
+
+	// 503: vi fikk ikke token fra Texas. Feilen er vår, så den skal aldri gi 401 eller 403 til den som kaller
+	@ExceptionHandler
+	fun texasUnavailableException(
+		request: HttpServletRequest,
+		exception: TexasUnavailableException
+	): ResponseEntity<RestErrorResponseDto> {
+		logger.error("Feil ved kall til ${request.requestURI}: ${exception.message}")
+
+		return ResponseEntity(
+			RestErrorResponseDto(
+				message = "Tjenesten er midlertidig utilgjengelig",
+				timestamp = OffsetDateTime.now(),
+				errorCode = ErrorCode.TEMPORARILY_UNAVAILABLE.code
+			), HttpStatus.SERVICE_UNAVAILABLE
 		)
 	}
 
