@@ -68,7 +68,7 @@ class TokenSupportBroFilterTest {
 	@Test
 	fun `TokenX- og Azure-token i samme forespørsel gir tilganger fra begge`() {
 		val autentisering = kjør(
-			mapOf(TOKENX to jwt("acr" to "Level4"), AZURE to jwt("scp" to "admin-access defaultaccess"))
+			mapOf(TOKENX to jwt("pid" to "12345678901", "acr" to "Level4"), AZURE to jwt("scp" to "admin-access defaultaccess"))
 		) as TokenAutentisering
 
 		assertEquals(

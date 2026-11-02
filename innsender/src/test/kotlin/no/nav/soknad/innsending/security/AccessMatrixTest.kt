@@ -144,6 +144,8 @@ open class AccessMatrixTest : ApplicationTest() {
 		// Kontraktsendring i steg 3j (#461): Texas godtar TokenX-token uten sub. TokenX utsteder alltid sub, og
 		// identiteten leses fra pid, så endringen har ingen praktisk betydning
 		TestToken("TokenX uten sub", true, setOf(AccessPolicy.TOKENX_HIGH_ACR)) { tokens.lagTokenXTokenWithoutClaims("sub") },
+		// Uten pid og sub finnes ingen identitet. Det skal gi 403 før controlleren, ikke 401 fra identitetsoppslaget
+		TestToken("TokenX uten pid og sub", true, emptySet()) { tokens.lagTokenXTokenWithoutClaims("pid", "sub") },
 		TestToken("Azure OBO scp=admin-access defaultaccess", true, setOf(AccessPolicy.AZURE, AccessPolicy.AZURE_ADMIN)) {
 			tokens.lagAzureOBOTokenWithScp(scp = "admin-access defaultaccess", navIdent = "Z123456")
 		},

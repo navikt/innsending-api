@@ -13,7 +13,11 @@ object Tilgang {
 	const val TOKENX = "UTSTEDER_TOKENX"
 	const val AZURE = "UTSTEDER_AZURE"
 
-	/** Innbygger med TokenX-token og høyt sikkerhetsnivå: `acr=Level4` eller `acr=idporten-loa-high`. */
+	/**
+	 * Innbygger med TokenX-token og høyt sikkerhetsnivå: `acr=Level4` eller `acr=idporten-loa-high`.
+	 * Tokenet må også ha en brukbar identitet: pid som tekst, eller sub når pid mangler. Texas krever ikke sub, så uten
+	 * denne regelen ville et token uten pid og sub nådd controlleren og gitt 401 i stedet for 403 (#461, steg 3j).
+	 */
 	const val INNBYGGER = "INNBYGGER_HOYT_NIVAA"
 
 	/** Azure-token med nøyaktig `scp=admin-access defaultaccess`. Rekkefølge og ekstra scope gir ikke admin, som i dag. */
@@ -29,7 +33,7 @@ object Tilgang {
 	fun tilgangerFor(utsteder: TokenUtsteder, claims: Map<String, Any?>): Set<String> = when (utsteder) {
 		TokenUtsteder.TOKENX -> buildSet {
 			add(TOKENX)
-			if (hoyeAcrVerdier.any { harClaim(claims, "acr", it) }) add(INNBYGGER)
+			if (hoyeAcrVerdier.any { harClaim(claims, "acr", it) } && harIdentitet(claims)) add(INNBYGGER)
 		}
 
 		TokenUtsteder.AZURE -> buildSet {
@@ -37,6 +41,13 @@ object Tilgang {
 			if (harClaim(claims, "scp", ADMIN_SCP)) add(AZURE_ADMIN)
 			if (harClaim(claims, "roles", NOLOGIN_ROLLE)) add(AZURE_NOLOGIN)
 		}
+	}
+
+	// Samme regel som SpringSecuritySubjectHandler.getUserIdFromToken
+	private fun harIdentitet(claims: Map<String, Any?>): Boolean = when (val pid = claims["pid"]) {
+		is String -> true
+		null -> claims["sub"] is String
+		else -> false
 	}
 
 	// Samme semantikk som JwtTokenClaims.containsClaim i token-support
