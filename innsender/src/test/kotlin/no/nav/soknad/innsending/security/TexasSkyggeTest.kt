@@ -24,7 +24,8 @@ import kotlin.test.assertFalse
 
 class TexasSkyggeTest {
 
-	private val token = "eyJhbGciOiJSUzI1NiJ9.innkommende-token.signatur"
+	// Usignert, men med iss, slik at skyggemodus sender det til Texas. Klienten er mocket
+	private val token = com.nimbusds.jwt.PlainJWT(com.nimbusds.jwt.JWTClaimsSet.Builder().issuer("https://tokenx.test").build()).serialize()
 	private val pid = "12345678901"
 
 	private val klient = mockk<TexasIntrospeksjonKlient>()
@@ -98,6 +99,14 @@ class TexasSkyggeTest {
 		assertEquals(1.0, antall("ingen", "samsvar"))
 		verify { klient.introspekter(TOKENX, token) }
 		verify { klient.introspekter(ENTRA_ID, token) }
+	}
+
+	@Test
+	fun `avvist søppel uten iss sendes ikke til Texas`() {
+		listOf("ikke-en-jwt", com.nimbusds.jwt.PlainJWT(com.nimbusds.jwt.JWTClaimsSet.Builder().build()).serialize())
+			.forEach { skygge.sammenlign(it, null) }
+
+		verify(exactly = 0) { klient.introspekter(any(), any()) }
 	}
 
 	@Test

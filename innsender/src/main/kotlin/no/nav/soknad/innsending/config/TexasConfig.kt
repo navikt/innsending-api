@@ -37,10 +37,13 @@ class TexasConfig {
 		@Value("\${texas.skygge.andel:1.0}") andel: Double,
 	): TexasSkygge = TexasSkygge(klient, metrics, andel.coerceIn(0.0, 1.0))
 
+	// Tilkobling og lesing har hver sin grense. Grensen deles mellom dem, slik at et kall aldri venter lenger enn
+	// det vedtatte totalt. Svarene fra Texas er små, så lesegrensen gjelder i praksis hele svaret
 	private fun restClient(timeout: Duration): RestClient {
+		val tilkobling = timeout.dividedBy(4)
 		val requestFactory = SimpleClientHttpRequestFactory().apply {
-			setConnectTimeout(timeout)
-			setReadTimeout(timeout)
+			setConnectTimeout(tilkobling)
+			setReadTimeout(timeout.minus(tilkobling))
 		}
 		return RestClient.builder().requestFactory(requestFactory).build()
 	}
