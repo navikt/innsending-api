@@ -12,16 +12,20 @@ import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.AktivSakDto
+import no.nav.soknad.innsending.model.AvsenderDto
+import no.nav.soknad.innsending.model.BrukerDto
 import no.nav.soknad.innsending.model.InnsendtVedleggDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.HendelseRepository
 import no.nav.soknad.innsending.repository.domain.enums.HendelseType
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.Utilities
+import no.nav.soknad.innsending.util.mapping.lagDokumentSoknadDto
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
@@ -33,6 +37,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.transaction.PlatformTransactionManager
 import java.time.OffsetDateTime
 
@@ -83,6 +88,9 @@ class EttersendingServiceTest : ApplicationTest() {
 	@Autowired
 	private lateinit var tilgangskontroll: Tilgangskontroll
 
+	@Autowired
+	private lateinit var jdbcTemplate: JdbcTemplate
+
 	private val soknadsmottakerAPI = mockk<MottakerInterface>()
 
 	private val pdlInterface = mockk<PdlInterface>()
@@ -123,6 +131,65 @@ class EttersendingServiceTest : ApplicationTest() {
 		pdlInterface = pdlInterface,
 		documentService = documentService,
 	).let { withTransactions(it, transactionManager) }
+
+	@Test
+	fun `stored successors inherit the original owner including SQL null without deriving it from parties`() {
+		val service = lagEttersendingService()
+		val sender = AvsenderDto(id = "987654321", idType = AvsenderDto.IdType.ORGNR)
+		val affectedUser = BrukerDto(id = testpersonid, idType = BrukerDto.IdType.FNR)
+		listOf(ApplicationOwner.person("10987654321"), null).forEach { owner ->
+			val original = repo.lagreSoknad(
+				SoknadDbDataTestBuilder(status = SoknadsStatus.Innsendt, brukerId = testpersonid).build().copy(
+					owner = owner, avsender = sender, affecteduser = affectedUser, grantuserdigitalaccess = false,
+				)
+			)
+			val originalDto = lagDokumentSoknadDto(original, emptyList()).copy(brukerId = "11111111111")
+			val request = OpprettEttersendingTestBuilder().skjemanr(original.skjemanr).build()
+
+			val automatic = service.saveEttersending(originalDto, original.innsendingsid)
+			val manual = service.createEttersendingFromInnsendtSoknad("22222222222", originalDto, request)
+			val archived = service.createEttersendingFromArchivedSoknad(
+				testpersonid,
+				AktivSakDto(original.skjemanr, original.tittel, original.tema, OffsetDateTime.now(), false, emptyList(), original.innsendingsid),
+				request, null,
+			)
+
+			listOf(automatic, manual, archived).forEach { successor ->
+				val stored = repo.hentSoknadDb(successor.innsendingsId!!)
+				assertEquals(owner, stored.owner)
+				assertEquals(
+					owner == null,
+					jdbcTemplate.queryForObject("SELECT owner IS NULL FROM soknad WHERE innsendingsid = ?", Boolean::class.java, stored.innsendingsid),
+				)
+			}
+			val storedAutomatic = repo.hentSoknadDb(automatic.innsendingsId!!)
+			assertEquals(sender, storedAutomatic.avsender)
+			assertEquals(affectedUser, storedAutomatic.affecteduser)
+			assertEquals(false, storedAutomatic.grantuserdigitalaccess)
+			assertEquals("11111111111", storedAutomatic.brukerid)
+			val storedManual = repo.hentSoknadDb(manual.innsendingsId!!)
+			assertNull(storedManual.avsender)
+			assertNull(storedManual.affecteduser)
+			assertEquals(false, storedManual.grantuserdigitalaccess)
+			assertEquals("22222222222", storedManual.brukerid)
+			val storedArchived = repo.hentSoknadDb(archived.innsendingsId!!)
+			assertNull(storedArchived.avsender)
+			assertNull(storedArchived.affecteduser)
+			assertNull(storedArchived.grantuserdigitalaccess)
+			assertEquals(testpersonid, storedArchived.brukerid)
+			assertEquals(owner, repo.hentSoknadDb(original.innsendingsid).owner)
+		}
+	}
+
+	@Test
+	fun `new supplementary applications store the trusted initiating owner`() {
+		val service = lagEttersendingService()
+		val request = OpprettEttersendingTestBuilder().build()
+		listOf(false, true).forEach { initiatedByNav ->
+			val application = service.createEttersending(testpersonid, request, initiatedByNav)
+			assertEquals(ApplicationOwner.person(testpersonid), repo.hentSoknadDb(application.innsendingsId!!).owner)
+		}
+	}
 
 	@Test
 	fun `ettersending inherits grant user digital access including absence`() {
@@ -204,6 +271,7 @@ class EttersendingServiceTest : ApplicationTest() {
 			forsteInnsendingsDato = null
 		)
 
+		assertEquals(ApplicationOwner.person(brukerid), repo.hentSoknadDb(dokumentSoknadDto.innsendingsId!!).owner)
 		assertTrue(dokumentSoknadDto.innsendingsId != null && VisningsType.ettersending == dokumentSoknadDto.visningsType && dokumentSoknadDto.ettersendingsId == arkivertInnsendingsId)
 		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
 		assertEquals(3, dokumentSoknadDto.vedleggsListe.size)
