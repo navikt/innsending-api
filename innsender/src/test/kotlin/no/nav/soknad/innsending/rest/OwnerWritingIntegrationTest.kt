@@ -86,15 +86,14 @@ class OwnerWritingIntegrationTest : ApplicationTest() {
 		assertEquals(TokenGenerator.subject, fetched.brukerId)
 	}
 
-	@ParameterizedTest(name = "owner present: {0}")
-	@ValueSource(booleans = [true, false])
-	fun `ordinary form updates preserve the stored owner despite another request identity`(ownerPresent: Boolean) {
+	@Test
+	fun `ordinary form updates preserve the stored historical owner despite another request identity`() {
 		val original = SkjemaDtoTestBuilder(brukerId = TokenGenerator.subject).build()
 		val created = createApplication(original)
 		val applicationId = assertNotNull(created.innsendingsId)
 		assertOwner(applicationId, TokenGenerator.subject)
 		// These historical owner states cannot be assigned through the public API.
-		val storedOwner = if (ownerPresent) ApplicationOwner.person("12345678902") else null
+		val storedOwner = ApplicationOwner.person("12345678902")
 		applicationTestRepository.setOwner(applicationId, storedOwner)
 		val request = original.copy(brukerId = otherIdentity, tittel = "Updated application title")
 
@@ -114,19 +113,18 @@ class OwnerWritingIntegrationTest : ApplicationTest() {
 		assertEquals(setOf(original.skjemanr), mainDocuments.map { it.vedleggsnr }.toSet())
 		// Owner is not exposed by REST, so inspect only that hidden state through the test repository.
 		val stored = applicationTestRepository.findBySubmissionId(applicationId)
-		assertEquals(!ownerPresent, stored.ownerIsSqlNull)
+		assertEquals(false, stored.ownerIsSqlNull)
 		assertEquals(storedOwner, stored.owner)
 	}
 
-	@ParameterizedTest(name = "owner present: {0}")
-	@ValueSource(booleans = [true, false])
-	fun `form completion preserves the stored owner despite another request identity`(ownerPresent: Boolean) {
+	@Test
+	fun `form completion preserves the stored historical owner despite another request identity`() {
 		val original = SkjemaDtoTestBuilder(brukerId = TokenGenerator.subject).build()
 		val created = createApplication(original)
 		val applicationId = assertNotNull(created.innsendingsId)
 		assertOwner(applicationId, TokenGenerator.subject)
 		// These historical owner states cannot be assigned through the public API.
-		val storedOwner = if (ownerPresent) ApplicationOwner.person("12345678902") else null
+		val storedOwner = ApplicationOwner.person("12345678902")
 		applicationTestRepository.setOwner(applicationId, storedOwner)
 		val request = original.copy(brukerId = otherIdentity, tittel = "Updated application title")
 
@@ -145,7 +143,7 @@ class OwnerWritingIntegrationTest : ApplicationTest() {
 		assertEquals(setOf(original.skjemanr), mainDocuments.map { it.vedleggsnr }.toSet())
 		// Owner is not exposed by REST, so inspect only that hidden state through the test repository.
 		val stored = applicationTestRepository.findBySubmissionId(applicationId)
-		assertEquals(!ownerPresent, stored.ownerIsSqlNull)
+		assertEquals(false, stored.ownerIsSqlNull)
 		assertEquals(storedOwner, stored.owner)
 	}
 
@@ -252,21 +250,19 @@ class OwnerWritingIntegrationTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `legacy application with SQL null owner remains readable and listed without backfill`() {
+	fun `application with SQL null owner is unavailable and excluded from lists`() {
 		val created = createApplication()
 		val applicationId = assertNotNull(created.innsendingsId)
 		assertOwner(applicationId, TokenGenerator.subject)
-		// Emulate a pre-release row. Release one must not require or backfill ownership during reads.
+		// Public requests cannot remove owner; emulate corrupt/historical stored data.
 		applicationTestRepository.setOwner(applicationId, null)
 
-		val fetched = api.getSoknadSendinn(applicationId).assertHttpStatus(HttpStatus.OK).body
-		assertEquals(applicationId, fetched.innsendingsId)
-		assertEquals(TokenGenerator.subject, fetched.brukerId)
+		api.getSoknadSendinn(applicationId).assertHttpStatus(HttpStatus.NOT_FOUND)
 		val filledForm = api.getSoknad(applicationId)
-		assertEquals(HttpStatus.OK, filledForm.statusCode)
-		assertEquals(applicationId, assertNotNull(filledForm.body).innsendingsId)
+		assertEquals(HttpStatus.NOT_FOUND, filledForm.statusCode)
+		assertNull(filledForm.body)
 		val listed = api.getExistingSoknader(created.skjemanr).assertHttpStatus(HttpStatus.OK).body
-		assertEquals(listOf(applicationId), listed.map { it.innsendingsId })
+		assertTrue(listed.none { it.innsendingsId == applicationId })
 		// SQL NULL is internal state and cannot be distinguished from a populated owner through the API.
 		assertTrue(applicationTestRepository.findBySubmissionId(applicationId).ownerIsSqlNull,
 			"Reading a legacy application must leave its owner SQL NULL")

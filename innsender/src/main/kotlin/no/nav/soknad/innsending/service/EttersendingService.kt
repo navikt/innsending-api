@@ -20,6 +20,7 @@ import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.dokumentsoknad.getMissingRequiredAttachments
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.innsending.util.mapping.*
+import no.nav.soknad.innsending.util.soknaddbdata.validPersonOwnerId
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -43,6 +44,13 @@ class EttersendingService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
+	private fun verifySuccessorOwner(original: SoknadDbData): ApplicationOwner {
+		check(original.validPersonOwnerId() != null) {
+			"Cannot create a successor without a verified person owner"
+		}
+		return checkNotNull(original.owner)
+	}
+
 	// Lagre ettersendingssøknad i DB
 	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun saveEttersending(
@@ -57,7 +65,7 @@ class EttersendingService(
 		mellomlagringDager: Long = Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD,
 		ernavopprettet: Boolean = false,
 		avsender: AvsenderDto? = null,
-		affectedUser: BrukerDto? = null,
+		affectedUser: BrukerDto? = BrukerDto(id = brukerId, idType = BrukerDto.IdType.FNR),
 		grantUserDigitalAccess: Boolean? = null,
 		owner: ApplicationOwner? = ApplicationOwner.person(brukerId),
 	)
@@ -112,6 +120,7 @@ class EttersendingService(
 		val operation = InnsenderOperation.OPPRETT.name
 		try {
 			val nyesteSoknadDb = repo.hentSoknadDb(nyesteSoknad.innsendingsId!!)
+			val verifiedOwner = verifySuccessorOwner(nyesteSoknadDb)
 			logger.debug("Skal opprette ettersendingssøknad basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
 				"Status for vedleggene til original søknad ${
 					nyesteSoknad.vedleggsListe.map
@@ -137,7 +146,7 @@ class EttersendingService(
 				avsender = nyesteSoknadDb.avsender,
 				affectedUser = nyesteSoknadDb.affecteduser,
 				grantUserDigitalAccess = nyesteSoknadDb.grantuserdigitalaccess,
-				owner = nyesteSoknadDb.owner,
+				owner = verifiedOwner,
 			)
 
 			// Lagre vedlegg i DB
@@ -226,7 +235,9 @@ class EttersendingService(
 				fristForEttersendelse = existingSoknad.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 				ernavopprettet = erNavInitiert,
 				grantUserDigitalAccess = existingSoknadDb.grantuserdigitalaccess,
-				owner = existingSoknadDb.owner,
+				avsender = existingSoknadDb.avsender,
+				affectedUser = existingSoknadDb.affecteduser,
+				owner = verifySuccessorOwner(existingSoknadDb),
 			)
 
 			val combinedVedleggList =
@@ -268,7 +279,9 @@ class EttersendingService(
 				sprak = ettersending.sprak,
 				forsteInnsendingsDato = forsteInnsendingsDato ?: archivedSoknad.innsendtDato,
 				ernavopprettet = erNavInitiert,
-				owner = if (original != null) original.owner else ApplicationOwner.person(brukerId),
+				owner = if (original != null) verifySuccessorOwner(original) else ApplicationOwner.person(brukerId),
+				avsender = original?.avsender,
+				affectedUser = if (original != null) original.affecteduser else BrukerDto(id = brukerId, idType = BrukerDto.IdType.FNR),
 			)
 
 			val combinedVedleggList =

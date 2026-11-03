@@ -430,16 +430,13 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		assertNotNull(submissionResponse.ettersendingsId)
 
 		// verify notifications
-		val slotSoknads = mutableListOf<SoknadDbData>()
-		verify(timeout = 100, exactly = 2) { brukernotifikasjonPublisher.createNotification(capture(slotSoknads), any()) }
-
-		assertEquals(innsendingsId, slotSoknads.firstOrNull()?.innsendingsid)
-		val ettersendingsId = slotSoknads[1].innsendingsid
-		assertNotNull(ettersendingsId)
-		assertEquals(submissionResponse.ettersendingsId?.toString(), ettersendingsId)
-
-		val slotSoknadClose = mutableListOf<SoknadDbData>()
-		verify(exactly = 1) { brukernotifikasjonPublisher.closeNotification(capture(slotSoknadClose)) }
+		val ettersendingsId = checkNotNull(submissionResponse.ettersendingsId).toString()
+		listOf(innsendingsId, ettersendingsId).forEach { expectedId ->
+			verify(timeout = 5000, exactly = 1) {
+				brukernotifikasjonPublisher.createNotification(match { it.innsendingsid == expectedId }, any())
+			}
+		}
+		verify(timeout = 5000, exactly = 1) { brukernotifikasjonPublisher.closeNotification(match { it.innsendingsid == innsendingsId }) }
 
 		// verify invocation of soknadsmottaker
 		val slotSoknad = slot<DokumentSoknadDto>()
@@ -595,18 +592,12 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		assertNotNull(submissionResponse.ettersendingsId)
 
 		// verify notifications
-		val slotSoknads = mutableListOf<SoknadDbData>()
-		verify(timeout = 100, exactly = 2) {
-			brukernotifikasjonPublisher.createNotification(
-				capture(slotSoknads),
-				any()
-			)
+		val ettersendingsId = checkNotNull(submissionResponse.ettersendingsId).toString()
+		listOf(innsendingsId, ettersendingsId).forEach { expectedId ->
+			verify(timeout = 5000, exactly = 1) {
+				brukernotifikasjonPublisher.createNotification(match { it.innsendingsid == expectedId }, any())
+			}
 		}
-
-		assertEquals(innsendingsId, slotSoknads.firstOrNull()?.innsendingsid)
-		val ettersendingsId = slotSoknads.last().innsendingsid
-		assertNotNull(ettersendingsId)
-		assertEquals(submissionResponse.ettersendingsId?.toString(), ettersendingsId)
 		val ettersending = testApi!!.getSoknadSendinn(ettersendingsId).assertSuccess().body
 		ettersending.let {
 			assertEquals(SoknadsStatusDto.Opprettet, it.status)

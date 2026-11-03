@@ -41,6 +41,7 @@ class NologinSoknadService(
 			submitApplicationRequest.mainDocumentAlt,
 			submitApplicationRequest.attachments.sanitize(),
 			submitApplicationRequest.avsender,
+			affectedUser = dbSoknad.affecteduser,
 			grantUserDigitalAccess = submitApplicationRequest.grantUserDigitalAccess,
 		)
 

@@ -6,6 +6,7 @@ import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
+import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
 import no.nav.soknad.innsending.util.Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
 import no.nav.soknad.innsending.utils.Skjema.generateSkjemanr
 import java.time.LocalDateTime
@@ -60,6 +61,8 @@ data class SoknadDbDataTestBuilder(
 		applikasjon = applikasjon,
 		skalslettesdato = skalslettesdato,
 		brukertype = BrukerDto.IdType.FNR,
+		owner = if (visningsType == VisningsType.nologin) null else brukerId?.let { ApplicationOwner.person(it) },
+		affecteduser = brukerId?.let { BrukerDto(id = it, idType = BrukerDto.IdType.FNR) },
 		avsender = if (avsenderId == null && avsenderNavn == null) {null} else {AvsenderDto(id=avsenderId, navn=avsenderNavn, idType = avsenderType ?: AvsenderDto.IdType.FNR ) },
 	)
 }

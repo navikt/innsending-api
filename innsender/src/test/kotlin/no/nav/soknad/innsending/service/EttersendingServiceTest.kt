@@ -133,11 +133,11 @@ class EttersendingServiceTest : ApplicationTest() {
 	).let { withTransactions(it, transactionManager) }
 
 	@Test
-	fun `stored successors inherit the original owner including SQL null without deriving it from parties`() {
+	fun `stored successors inherit the original owner and parties`() {
 		val service = lagEttersendingService()
 		val sender = AvsenderDto(id = "987654321", idType = AvsenderDto.IdType.ORGNR)
 		val affectedUser = BrukerDto(id = testpersonid, idType = BrukerDto.IdType.FNR)
-		listOf(ApplicationOwner.person("10987654321"), null).forEach { owner ->
+		listOf(ApplicationOwner.person("10987654321")).forEach { owner ->
 			val original = repo.lagreSoknad(
 				SoknadDbDataTestBuilder(status = SoknadsStatus.Innsendt, brukerId = testpersonid).build().copy(
 					owner = owner, avsender = sender, affecteduser = affectedUser, grantuserdigitalaccess = false,
@@ -168,15 +168,41 @@ class EttersendingServiceTest : ApplicationTest() {
 			assertEquals(false, storedAutomatic.grantuserdigitalaccess)
 			assertEquals("11111111111", storedAutomatic.brukerid)
 			val storedManual = repo.hentSoknadDb(manual.innsendingsId!!)
-			assertNull(storedManual.avsender)
-			assertNull(storedManual.affecteduser)
+			assertEquals(sender, storedManual.avsender)
+			assertEquals(affectedUser, storedManual.affecteduser)
 			assertEquals(false, storedManual.grantuserdigitalaccess)
 			assertEquals("22222222222", storedManual.brukerid)
 			val storedArchived = repo.hentSoknadDb(archived.innsendingsId!!)
-			assertNull(storedArchived.avsender)
-			assertNull(storedArchived.affecteduser)
+			assertEquals(sender, storedArchived.avsender)
+			assertEquals(affectedUser, storedArchived.affecteduser)
 			assertNull(storedArchived.grantuserdigitalaccess)
 			assertEquals(testpersonid, storedArchived.brukerid)
+			assertEquals(owner, repo.hentSoknadDb(original.innsendingsid).owner)
+		}
+	}
+
+	@Test
+	fun `successor creation rejects missing invalid and anonymous owners without creating rows`() {
+		val service = lagEttersendingService()
+		val ownerStates = listOf(
+			VisningsType.fyllUt to null,
+			VisningsType.fyllUt to ApplicationOwner(null, null),
+			VisningsType.fyllUt to ApplicationOwner("12345678901", "ORGNR"),
+			VisningsType.nologin to ApplicationOwner.person(testpersonid),
+		)
+		ownerStates.forEach { (type, owner) ->
+			// These are persisted historical/corrupt states, not supported public creation inputs.
+			val original = repo.lagreSoknad(SoknadDbDataTestBuilder(visningsType = type, status = SoknadsStatus.Innsendt).build().copy(owner = owner))
+			val originalDto = lagDokumentSoknadDto(original, emptyList())
+			val countBefore = jdbcTemplate.queryForObject("SELECT count(*) FROM soknad", Long::class.java)
+			val request = OpprettEttersendingTestBuilder().skjemanr(original.skjemanr).build()
+			kotlin.test.assertFailsWith<IllegalStateException> { service.saveEttersending(originalDto, original.innsendingsid) }
+			kotlin.test.assertFailsWith<IllegalStateException> { service.createEttersendingFromInnsendtSoknad(testpersonid, originalDto, request) }
+			kotlin.test.assertFailsWith<IllegalStateException> {
+				service.createEttersendingFromArchivedSoknad(testpersonid,
+					AktivSakDto(original.skjemanr, original.tittel, original.tema, OffsetDateTime.now(), false, emptyList(), original.innsendingsid), request, null)
+			}
+			assertEquals(countBefore, jdbcTemplate.queryForObject("SELECT count(*) FROM soknad", Long::class.java))
 			assertEquals(owner, repo.hentSoknadDb(original.innsendingsid).owner)
 		}
 	}
