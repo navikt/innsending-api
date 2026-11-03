@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.utils
 
 import com.nimbusds.jose.JOSEObjectType
+import com.nimbusds.oauth2.sdk.TokenRequest
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import no.nav.security.token.support.spring.test.MockLoginController
@@ -11,6 +12,7 @@ class TokenGenerator(
 ) {
 	companion object {
 		val subject = "12345678901"
+		const val TASK_CLIENT_ID = "task-client-id"
 	}
 
 	private val tokenx = "tokenx"
@@ -68,6 +70,30 @@ class TokenGenerator(
 			tokenCallback = oAuth2TokenCallback
 		).serialize()
 	}
+
+	fun taskApplicationToken(
+		azp: Any? = TASK_CLIENT_ID,
+		subject: String = "task-service-principal",
+		objectId: Any? = subject,
+		additionalClaims: Map<String, Any> = emptyMap(),
+	): String = mockOAuth2Server.issueToken(
+		issuerId = AZURE,
+		clientId = MockLoginController::class.java.simpleName,
+		tokenCallback = object : DefaultOAuth2TokenCallback(
+			issuerId = AZURE,
+			subject = subject,
+			typeHeader = JOSEObjectType.JWT.type,
+			audience = listOf(audience),
+			expiry = expiry,
+		) {
+			override fun addClaims(tokenRequest: TokenRequest): Map<String, Any> = buildMap {
+				put("roles", listOf("access_as_application"))
+				if (azp != null) put("azp", azp)
+				if (objectId != null) put("oid", objectId)
+				putAll(additionalClaims)
+			}
+		},
+	).serialize()
 
 	fun lagAzureOBOToken(scopes: String? = null, navIdent: String? = null): String {
 		val issuerId = AZURE

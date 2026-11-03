@@ -71,9 +71,7 @@ class SoknadService(
 
 
 	fun hentAktiveSoknader(brukerIds: List<String>): List<DokumentSoknadDto> {
-		return brukerIds.flatMap {
-			hentSoknadGittBrukerId(it, SoknadsStatus.Opprettet) + hentSoknadGittBrukerId(it, SoknadsStatus.Utfylt)
-		}
+		return findApplicationsByOwner(brukerIds, SoknadsStatus.Opprettet) + findApplicationsByOwner(brukerIds, SoknadsStatus.Utfylt)
 	}
 
 	fun hentAktiveSoknader(brukerId: String, skjemanr: String): List<DokumentSoknadDto> {
@@ -87,14 +85,14 @@ class SoknadService(
 	}
 
 	fun hentInnsendteSoknader(brukerIds: List<String>): List<DokumentSoknadDto> {
-		return brukerIds.flatMap { hentSoknadGittBrukerId(it, SoknadsStatus.Innsendt) }
+		return findApplicationsByOwner(brukerIds, SoknadsStatus.Innsendt)
 	}
 
-	private fun hentSoknadGittBrukerId(
-		brukerId: String,
+	private fun findApplicationsByOwner(
+		idents: List<String>,
 		soknadsStatus: SoknadsStatus = SoknadsStatus.Opprettet
 	): List<DokumentSoknadDto> {
-		val soknader = repo.finnAlleSoknaderGittBrukerIdOgStatus(brukerId, soknadsStatus)
+		val soknader = repo.findApplicationsByOwnerAndStatus(idents, soknadsStatus)
 
 		return soknader.map { vedleggService.hentAlleVedlegg(it) }
 	}

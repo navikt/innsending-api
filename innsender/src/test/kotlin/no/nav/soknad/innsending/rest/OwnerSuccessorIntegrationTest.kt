@@ -72,9 +72,8 @@ class OwnerSuccessorIntegrationTest : ApplicationTest() {
 		clearMocks(publisherTarget, receiverTarget, answers = false)
 	}
 
-	@ParameterizedTest(name = "source has historical owner: {0}")
-	@ValueSource(booleans = [true, false])
-	fun `automatic successor inherits the stored owner without changing legacy notification recipients`(hasHistoricalOwner: Boolean) {
+	@org.junit.jupiter.api.Test
+	fun `automatic successor inherits the stored historical owner and notifies that owner`() {
 		val historicalOwner = "12345678902"
 		val requestIdentity = "12128012345"
 		val sender = AvsenderDto(id = TokenGenerator.subject, idType = AvsenderDto.IdType.FNR)
@@ -114,7 +113,7 @@ class OwnerSuccessorIntegrationTest : ApplicationTest() {
 		assertEquals(OpplastingsStatusDto.SendSenere, patched.opplastingsStatus)
 
 		// REST cannot create a historical owner or a pre-release SQL NULL owner.
-		val sourceOwner = if (hasHistoricalOwner) ApplicationOwner.person(historicalOwner) else null
+		val sourceOwner = ApplicationOwner.person(historicalOwner)
 		applicationTestRepository.setOwner(applicationId, sourceOwner)
 
 		val receipt = api.sendInnSoknad(applicationId).assertHttpStatus(HttpStatus.OK).body
@@ -176,11 +175,12 @@ class OwnerSuccessorIntegrationTest : ApplicationTest() {
 		val successorNotification = publisherTarget.awaitNotification(successorId)
 		verify(timeout = 5000, exactly = 1) {
 			publisherTarget.avsluttBrukernotifikasjon(match {
-				it.innsendingId == applicationId && it.personId == TokenGenerator.subject && it.groupId == applicationId
+				it.innsendingId == applicationId && it.personId == historicalOwner && it.groupId == applicationId
 			})
 		}
+		assertEquals(TokenGenerator.subject, originalNotification.soknadRef.personId)
+		assertEquals(historicalOwner, successorNotification.soknadRef.personId)
 		listOf(originalNotification, successorNotification).forEach {
-			assertTrue(it.soknadRef.personId == TokenGenerator.subject, "Release one must keep notifications addressed to the legacy user")
 			assertEquals(applicationId, it.soknadRef.groupId)
 		}
 		assertEquals(false, originalNotification.soknadRef.erEttersendelse)

@@ -262,9 +262,7 @@ class FyllutRestApi(
 		submitApplicationRequest.validerBrukerOgAvsender()
 		val innsendingsIdStr = innsendingsId.toString()
 		val brukerId = tilgangskontroll.hentBrukerFraToken()
-		val affectedUser = if (submitApplicationRequest.bruker != null && brukerId != submitApplicationRequest.bruker) {
-			BrukerDto(id = submitApplicationRequest.bruker!!, idType = BrukerDto.IdType.FNR )
-		} else null
+		val affectedUser = submitApplicationRequest.bruker?.let { BrukerDto(id = it, idType = BrukerDto.IdType.FNR) }
 
 		combinedLogger.log("$innsendingsIdStr: Kall fra FyllUt for sende inn søknad", "loggedIn: $brukerId / affected: ${affectedUser?.id ?: brukerId}")
 

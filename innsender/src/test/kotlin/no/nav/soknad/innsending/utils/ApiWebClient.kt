@@ -243,16 +243,35 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		return ResponseEntity(result.responseBody.blockFirst(), result.responseHeaders, result.status)
 	}
 
-	fun getSoknadSendinn(innsendingsId: String): InnsendingApiResponse<DokumentSoknadDto> {
+	fun getSoknadSendinn(innsendingsId: String, authToken: String? = null): InnsendingApiResponse<DokumentSoknadDto> {
 		val response = webTestClient.get()
 			.uri("http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
 			})
 			.exchange()
 
 		val body = readBody(response, DokumentSoknadDto::class.java)
 		return InnsendingApiResponse(response.returnResult().status, body, response.returnResult().responseHeaders)
+	}
+
+	fun getLegacyFile(submissionId: String, attachmentId: Long, fileId: Long, authToken: String? = null): InnsendingApiResponse<ByteArray> {
+		return getFileBytes("$baseUrl/frontend/v1/soknad/$submissionId/vedlegg/$attachmentId/fil/$fileId", authToken)
+	}
+
+	fun getDigitalFile(submissionId: String, attachmentId: String, fileId: UUID, authToken: String? = null): InnsendingApiResponse<ByteArray> {
+		return getFileBytes("$baseUrl/v1/application-digital/$submissionId/attachments/$attachmentId/$fileId", authToken)
+	}
+
+	private fun getFileBytes(url: String, authToken: String?): InnsendingApiResponse<ByteArray> {
+		val response = webTestClient.get()
+			.uri(url)
+			.headers { it.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap()) }
+			.exchange()
+		val result = response.returnResult<ByteArray>()
+		val body = if (result.status.is2xxSuccessful) Pair(result.responseBodyContent, null)
+			else Pair(null, result.responseBodyContent?.takeIf { it.isNotEmpty() }?.let { objectMapper.readValue(it, RestErrorResponseDto::class.java) })
+		return InnsendingApiResponse(result.status, body, result.responseHeaders)
 	}
 
 
@@ -385,11 +404,11 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
-	fun createEttersendingsOppgave(opprettEttersendingsOppgave: EksternEttersendingsOppgave): ResponseEntity<DokumentSoknadDto> {
+	fun createEttersendingsOppgave(opprettEttersendingsOppgave: EksternEttersendingsOppgave, token: String = TokenGenerator(mockOAuth2Server).taskApplicationToken()): ResponseEntity<DokumentSoknadDto> {
 		val response = webTestClient.post()
 			.uri("${baseUrl}/ekstern/v1/oppgaver")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagAzureOBOToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(token, null).toSingleValueMap())
 			})
 			.bodyValue(opprettEttersendingsOppgave)
 			.exchange()
@@ -398,18 +417,37 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		return ResponseEntity(body.first, response.returnResult().responseHeaders, response.returnResult().status)
 	}
 
+	fun createEttersendingsOppgaveFail(task: EksternEttersendingsOppgave, token: String): ResponseEntity<RestErrorResponseDto> {
+		val response = webTestClient.post().uri("$baseUrl/ekstern/v1/oppgaver")
+			.headers { it.setAll(Hjelpemetoder.createHeaders(token, null).toSingleValueMap()) }
+			.bodyValue(task).exchange()
+		val result = response.returnResult<RestErrorResponseDto>()
+		return ResponseEntity(objectMapper.readValue(result.responseBodyContent, RestErrorResponseDto::class.java), result.responseHeaders, result.status)
+	}
+
+	fun oppgaveHentSoknaderForSkjemanrFail(
+		skjemanr: String, brukerId: String, soknadstyper: List<SoknadType>?, navCallId: String?, token: String,
+	): ResponseEntity<RestErrorResponseDto> {
+		val response = webTestClient.method(HttpMethod.GET).uri("$baseUrl/ekstern/v1/oppgaver")
+			.headers { it.setAll(Hjelpemetoder.createHeaders(token, null).toSingleValueMap()) }
+			.bodyValue(BrukerSoknadRequest(brukerId, skjemanr, soknadstyper)).exchange()
+		val result = response.returnResult<RestErrorResponseDto>()
+		return ResponseEntity(objectMapper.readValue(result.responseBodyContent, RestErrorResponseDto::class.java), result.responseHeaders, result.status)
+	}
+
 
 	fun oppgaveHentSoknaderForSkjemanr(
 		skjemanr: String,
 		brukerId: String,
 		soknadstyper: List<SoknadType>?,
-		navCallId: String?
+		navCallId: String?,
+		token: String = TokenGenerator(mockOAuth2Server).taskApplicationToken(),
 	): ResponseEntity<List<DokumentSoknadDto>> {
 
 		val response = webTestClient.method(HttpMethod.GET) // <-- Endringen er her
 			.uri("${baseUrl}/ekstern/v1/oppgaver")
 			.headers { httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagAzureOBOToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(token, null).toSingleValueMap())
 			}
 			.bodyValue(BrukerSoknadRequest(brukerId = brukerId, skjemanr = skjemanr, soknadstyper = soknadstyper))
 			.exchange()
@@ -418,11 +456,11 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		return ResponseEntity(body.first, response.returnResult().responseHeaders, response.returnResult().status)
 	}
 
-	fun eksternOppgaveSlett(innsendingsId: String): ResponseEntity<BodyStatusResponseDto> {
+	fun eksternOppgaveSlett(innsendingsId: String, token: String = TokenGenerator(mockOAuth2Server).taskApplicationToken()): ResponseEntity<BodyStatusResponseDto> {
 		val response = webTestClient.delete()
 			.uri("${baseUrl}/ekstern/v1/oppgaver/${innsendingsId}")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagAzureOBOToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(token, null).toSingleValueMap())
 			})
 			.exchange()
 
@@ -430,16 +468,16 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		return ResponseEntity(body.first, response.returnResult().responseHeaders, response.returnResult().status)
 	}
 
-	fun eksternOppgaveSlettFail(innsendingsId: String): ResponseEntity<RestErrorResponseDto> {
+	fun eksternOppgaveSlettFail(innsendingsId: String, token: String = TokenGenerator(mockOAuth2Server).taskApplicationToken()): ResponseEntity<RestErrorResponseDto> {
 		val response = webTestClient.delete()
 			.uri("${baseUrl}/ekstern/v1/oppgaver/${innsendingsId}")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagAzureOBOToken(), null).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(token, null).toSingleValueMap())
 			})
 			.exchange()
 
 		val body = readBody(response, RestErrorResponseDto::class.java)
-		return ResponseEntity(body.first, response.returnResult().responseHeaders, response.returnResult().status)
+		return ResponseEntity(body.second ?: body.first, response.returnResult().responseHeaders, response.returnResult().status)
 
 	}
 
@@ -580,9 +618,10 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		mainDocumentPath: String = "/litenPdf.pdf",
 		mainDocumentAltPath: String = "/__files/barnepass-NAV-11-12.15B.json",
 		authToken: String? = null,
-		bruker: String? = null,
+		bruker: String? = soknad.brukerId,
 		avsender: AvsenderDto? = null,
 		grantUserDigitalAccess: Boolean? = null,
+		omitUser: Boolean = false,
 	): InnsendingApiResponse<ApplicationSubmissionResponse> {
 		val token: String = authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken()
 		val headers = Hjelpemetoder.createHeaders(token, MediaType.APPLICATION_JSON)
@@ -597,18 +636,22 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 			mainDocument = mainDocumentByteArray,
 			mainDocumentAlt = mainDocumentAltByteArray,
 			attachments = attachments,
-			bruker = bruker ?: soknad.brukerId,
+			bruker = bruker,
 			avsender = avsender,
 			grantUserDigitalAccess = grantUserDigitalAccess,
 		)
-		val httpEntity = HttpEntity(request, headers)
+		val requestBody: Any = if (omitUser) {
+			val json = objectMapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(request).apply { remove("bruker") }
+			objectMapper.writeValueAsString(json)
+		} else request
 
 		val response = webTestClient.post()
 			.uri("${baseUrl}/v1/application-digital/${soknad.innsendingsId!!}")
 			.headers({ httpHeaders ->
 				httpHeaders.setAll(Hjelpemetoder.createHeaders(token = token).toSingleValueMap())
 			})
-			.bodyValue(request)
+			.contentType(MediaType.APPLICATION_JSON)
+			.bodyValue(requestBody)
 			.exchange()
 
 		val body = readBody(response, ApplicationSubmissionResponse::class.java)

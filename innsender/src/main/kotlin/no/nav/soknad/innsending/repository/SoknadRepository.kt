@@ -25,7 +25,18 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 	@Query("SELECT s FROM SoknadDbData s WHERE s.innsendingsid = :innsendingsid")
 	fun findByInnsendingsidForUpdate(@Param("innsendingsid") innsendingsid: String): SoknadDbData?
 	fun existsByInnsendingsid(innsendingsid: String): Boolean
-	fun findByBrukeridAndStatus(brukerid: String, status: SoknadsStatus): List<SoknadDbData>
+	@Query(
+		value = """SELECT * FROM soknad WHERE status = :status
+			AND visningstype IN ('0', '1', '2', '3')
+			AND jsonb_typeof(owner) = 'object'
+			AND CASE WHEN jsonb_typeof(owner) = 'object' THEN owner - 'id' - 'idType' END = '{}'::jsonb
+			AND jsonb_typeof(owner->'id') = 'string'
+			AND jsonb_typeof(owner->'idType') = 'string'
+			AND owner->>'idType' = 'FNR' AND owner->>'id' ~ '^[0-9]{11}$'
+			AND owner->>'id' IN (:idents)""",
+		nativeQuery = true,
+	)
+	fun findByOwnerAndStatus(@Param("idents") idents: List<String>, @Param("status") status: String): List<SoknadDbData>
 
 	@Transactional
 	@Modifying
