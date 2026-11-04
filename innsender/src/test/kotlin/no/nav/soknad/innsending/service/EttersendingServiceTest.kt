@@ -133,7 +133,7 @@ class EttersendingServiceTest : ApplicationTest() {
 	).let { withTransactions(it, transactionManager) }
 
 	@Test
-	fun `stored successors inherit the original owner and parties`() {
+	fun `automatic and Nav initiated successors inherit the original owner and parties`() {
 		val service = lagEttersendingService()
 		val sender = AvsenderDto(id = "987654321", idType = AvsenderDto.IdType.ORGNR)
 		val affectedUser = BrukerDto(id = testpersonid, idType = BrukerDto.IdType.FNR)
@@ -147,11 +147,11 @@ class EttersendingServiceTest : ApplicationTest() {
 			val request = OpprettEttersendingTestBuilder().skjemanr(original.skjemanr).build()
 
 			val automatic = service.saveEttersending(originalDto, original.innsendingsid)
-			val manual = service.createEttersendingFromInnsendtSoknad("22222222222", originalDto, request)
+			val manual = service.createEttersendingFromInnsendtSoknad("22222222222", originalDto, request, erNavInitiert = true)
 			val archived = service.createEttersendingFromArchivedSoknad(
 				testpersonid,
 				AktivSakDto(original.skjemanr, original.tittel, original.tema, OffsetDateTime.now(), false, emptyList(), original.innsendingsid),
-				request, null,
+				request, null, erNavInitiert = true,
 			)
 
 			listOf(automatic, manual, archived).forEach { successor ->
@@ -197,10 +197,10 @@ class EttersendingServiceTest : ApplicationTest() {
 			val countBefore = jdbcTemplate.queryForObject("SELECT count(*) FROM soknad", Long::class.java)
 			val request = OpprettEttersendingTestBuilder().skjemanr(original.skjemanr).build()
 			kotlin.test.assertFailsWith<IllegalStateException> { service.saveEttersending(originalDto, original.innsendingsid) }
-			kotlin.test.assertFailsWith<IllegalStateException> { service.createEttersendingFromInnsendtSoknad(testpersonid, originalDto, request) }
+			kotlin.test.assertFailsWith<IllegalStateException> { service.createEttersendingFromInnsendtSoknad(testpersonid, originalDto, request, erNavInitiert = true) }
 			kotlin.test.assertFailsWith<IllegalStateException> {
 				service.createEttersendingFromArchivedSoknad(testpersonid,
-					AktivSakDto(original.skjemanr, original.tittel, original.tema, OffsetDateTime.now(), false, emptyList(), original.innsendingsid), request, null)
+					AktivSakDto(original.skjemanr, original.tittel, original.tema, OffsetDateTime.now(), false, emptyList(), original.innsendingsid), request, null, erNavInitiert = true)
 			}
 			assertEquals(countBefore, jdbcTemplate.queryForObject("SELECT count(*) FROM soknad", Long::class.java))
 			assertEquals(owner, repo.hentSoknadDb(original.innsendingsid).owner)

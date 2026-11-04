@@ -18,6 +18,7 @@ import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.dokumentsoknad.getMissingRequiredAttachments
+import no.nav.soknad.innsending.util.dokumentsoknad.isUnauthenticatedSubmission
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.innsending.util.mapping.*
 import no.nav.soknad.innsending.util.soknaddbdata.validPersonOwnerId
@@ -237,7 +238,7 @@ class EttersendingService(
 				grantUserDigitalAccess = existingSoknadDb.grantuserdigitalaccess,
 				avsender = existingSoknadDb.avsender,
 				affectedUser = existingSoknadDb.affecteduser,
-				owner = verifySuccessorOwner(existingSoknadDb),
+				owner = if (erNavInitiert) verifySuccessorOwner(existingSoknadDb) else ApplicationOwner.person(brukerId),
 			)
 
 			val combinedVedleggList =
@@ -279,7 +280,7 @@ class EttersendingService(
 				sprak = ettersending.sprak,
 				forsteInnsendingsDato = forsteInnsendingsDato ?: archivedSoknad.innsendtDato,
 				ernavopprettet = erNavInitiert,
-				owner = if (original != null) verifySuccessorOwner(original) else ApplicationOwner.person(brukerId),
+				owner = if (erNavInitiert && original != null) verifySuccessorOwner(original) else ApplicationOwner.person(brukerId),
 				avsender = original?.avsender,
 				affectedUser = if (original != null) original.affecteduser else BrukerDto(id = brukerId, idType = BrukerDto.IdType.FNR),
 			)
@@ -425,7 +426,11 @@ class EttersendingService(
 		erNavInitiert: Boolean = false
 	): DokumentSoknadDto {
 		val innsendteSoknader = getInnsendteSoknader(ettersending.skjemanr, brukerId)
+			.filterNot { it.visningsType.isUnauthenticatedSubmission() }
 		val arkiverteSoknader = getArkiverteEttersendinger(ettersending.skjemanr, brukerId)
+			.filterNot { archived ->
+				archived.innsendingsId?.let { repo.finnSoknadDb(it) }?.visningstype.isUnauthenticatedSubmission()
+			}
 
 		return createEttersendingWithExistingSoknader(
 			innsendteSoknader = innsendteSoknader,
