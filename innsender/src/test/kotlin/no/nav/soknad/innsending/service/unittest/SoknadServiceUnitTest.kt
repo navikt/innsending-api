@@ -4,23 +4,32 @@ import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.slot
 import io.mockk.verify
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
+import no.nav.soknad.innsending.model.AvsenderDto
+import no.nav.soknad.innsending.model.BrukerDto
 import no.nav.soknad.innsending.model.SoknadType
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
+import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.service.*
 import no.nav.soknad.innsending.service.fillager.FileStorage
 import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
+import no.nav.soknad.innsending.util.mapping.mapTilSoknadDb
 import no.nav.soknad.innsending.util.stringextensions.toUUID
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 
 @ExtendWith(MockKExtension::class)
@@ -54,6 +63,60 @@ class SoknadServiceUnitTest {
 
 	@InjectMockKs
 	lateinit var soknadService: SoknadService
+
+	@ParameterizedTest(name = "owner present: {0}")
+	@ValueSource(booleans = [true, false])
+	fun `updates preserve the stored owner`(ownerPresent: Boolean) {
+		val application = DokumentSoknadDtoTestBuilder(brukerId = defaultUser, id = 1, vedleggsListe = emptyList()).build()
+		val applicationId = application.innsendingsId!!
+		val owner = if (ownerPresent) ApplicationOwner.person("10987654321") else null
+		val storedApplication = mapTilSoknadDb(application, applicationId, owner = owner).copy(
+			avsender = AvsenderDto(id = defaultUser, idType = AvsenderDto.IdType.FNR),
+			affecteduser = BrukerDto(id = defaultUser, idType = BrukerDto.IdType.FNR),
+			grantuserdigitalaccess = true,
+		)
+		val savedApplication = slot<SoknadDbData>()
+		every { repo.hentSoknadDb(applicationId) } returns storedApplication
+		every { vedleggService.hentAlleVedlegg(storedApplication, applicationId) } returns application
+		every { repo.lagreSoknad(capture(savedApplication)) } answers { firstArg() }
+
+		soknadService.updateSoknad(storedApplication, application, application.copy(tittel = "Updated title"), SoknadsStatus.Utfylt)
+
+		assertEquals(storedApplication.owner, savedApplication.captured.owner)
+		assertEquals(storedApplication.brukerid, savedApplication.captured.brukerid)
+		assertEquals(SoknadsStatus.Utfylt, savedApplication.captured.status)
+		assertEquals("Updated title", savedApplication.captured.tittel)
+		assertNull(savedApplication.captured.avsender)
+		assertNull(savedApplication.captured.affecteduser)
+		assertNull(savedApplication.captured.grantuserdigitalaccess)
+	}
+
+	@ParameterizedTest(name = "owner present: {0}")
+	@ValueSource(booleans = [true, false])
+	fun `automatic deletion preserves the stored owner`(ownerPresent: Boolean) {
+		val application = DokumentSoknadDtoTestBuilder(brukerId = defaultUser, id = 1, vedleggsListe = emptyList()).build()
+		val applicationId = application.innsendingsId!!
+		val owner = if (ownerPresent) ApplicationOwner.person("10987654321") else null
+		val storedApplication = mapTilSoknadDb(application, applicationId, owner = owner).copy(
+			avsender = AvsenderDto(id = defaultUser, idType = AvsenderDto.IdType.FNR),
+			affecteduser = BrukerDto(id = defaultUser, idType = BrukerDto.IdType.FNR),
+			grantuserdigitalaccess = true,
+		)
+		val savedApplication = slot<SoknadDbData>()
+		every { repo.hentSoknadDb(applicationId) } returns storedApplication
+		every { vedleggService.hentAlleVedlegg(storedApplication, applicationId) } returns application
+		every { repo.lagreSoknad(capture(savedApplication)) } answers { firstArg() }
+
+		soknadService.slettSoknadAutomatisk(applicationId)
+
+		assertEquals(storedApplication.owner, savedApplication.captured.owner)
+		assertEquals(storedApplication.brukerid, savedApplication.captured.brukerid)
+		assertEquals(SoknadsStatus.AutomatiskSlettet, savedApplication.captured.status)
+		assertEquals(application.tittel, savedApplication.captured.tittel)
+		assertNull(savedApplication.captured.avsender)
+		assertNull(savedApplication.captured.affecteduser)
+		assertNull(savedApplication.captured.grantuserdigitalaccess)
+	}
 
 	@Test
 	fun `storage deletion failure leaves application data intact for retry`() {
