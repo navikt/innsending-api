@@ -10,7 +10,9 @@ import no.nav.soknad.innsending.repository.domain.utils.AvsenderDtoConverter
 import no.nav.soknad.innsending.repository.domain.utils.BrukerDtoConverter
 import no.nav.soknad.innsending.repository.domain.utils.SoknadsStatusAttributeConverter
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.transaction.annotation.Transactional
 
+@Transactional
 class ApplicationTestRepository(
 	private val jdbcTemplate: JdbcTemplate,
 	objectMapper: ObjectMapper,
@@ -19,6 +21,14 @@ class ApplicationTestRepository(
 	private val userConverter = BrukerDtoConverter(objectMapper)
 	private val senderConverter = AvsenderDtoConverter(objectMapper)
 	private val statusConverter = SoknadsStatusAttributeConverter()
+
+	fun deleteApplications(submissionIds: List<String>) {
+		submissionIds.forEach { id ->
+			jdbcTemplate.update("DELETE FROM vedlegg WHERE soknadsid = (SELECT id FROM soknad WHERE innsendingsid = ?)", id)
+			jdbcTemplate.update("DELETE FROM hendelse WHERE innsendingsid = ?", id)
+			jdbcTemplate.update("DELETE FROM soknad WHERE innsendingsid = ?", id)
+		}
+	}
 
 	fun setOwner(submissionId: String, owner: ApplicationOwner?) {
 		val updatedRows = jdbcTemplate.update(

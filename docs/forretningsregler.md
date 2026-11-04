@@ -17,7 +17,13 @@ Eier, berørt bruker og avsender beskriver ulike roller. De kan være samme pers
 
 ### Eierskap og tilgang
 
-Ved vanlig innlogget oppretting settes `brukerid` fra tokenidentiteten, og `owner` settes fra denne verdien. Oppdateringer bevarer owner. Ettersendinger knyttet til en original arver originalens owner, også når verdien er `NULL`.
+Ved vanlig innlogget oppretting settes `brukerid` fra tokenidentiteten, og `owner` settes fra denne verdien. Oppdateringer bevarer owner.
+
+En ettersending som opprettes av en innlogget bruker, får denne brukeren som eier, også når den kobles til en original med en annen eier. Ved identbytte brukes den nye identen. Nav-initierte ettersendinger koblet til en original og automatiske etterfølgere arver originalens lagrede owner, også når verdien er `NULL` før backfill. Finnes arkivoriginalen ikke lokalt, brukes fortsatt `brukerId` som eier. Nav-appene sender personen saken gjelder som `brukerId`; denne personen er ikke nødvendigvis originalens eier.
+
+Søknader sendt inn uinnlogget ignoreres når vi velger en original for ettersending. Vi velger neste aktuelle søknad, eller oppretter en frittstående ettersending hvis ingen aktuelle originaler finnes. Sjekken bruker dagens markører, `visningstype = nologin` lokalt og kanalen `NAV_NO_UINNLOGGET` i arkivet, ikke manglende owner.
+
+Det er fortsatt uavklart om en personopprettet ettersending bør kobles til en original som den innloggede brukeren ikke eide. Inntil videre beholdes denne koblingen.
 
 Manglende owner på historiske søknader i etablerte digitale personflyter skal fylles fra `brukerid` med `idType=FNR`. Uinnloggede søknader skal ha SQL `NULL` i owner, selv om en bruker er oppgitt i requesten.
 

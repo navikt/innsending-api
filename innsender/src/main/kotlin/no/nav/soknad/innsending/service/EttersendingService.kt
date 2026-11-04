@@ -18,6 +18,7 @@ import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.dokumentsoknad.getMissingRequiredAttachments
+import no.nav.soknad.innsending.util.dokumentsoknad.isUnauthenticatedSubmission
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.innsending.util.mapping.*
 import org.slf4j.LoggerFactory
@@ -226,7 +227,7 @@ class EttersendingService(
 				fristForEttersendelse = existingSoknad.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 				ernavopprettet = erNavInitiert,
 				grantUserDigitalAccess = existingSoknadDb.grantuserdigitalaccess,
-				owner = existingSoknadDb.owner,
+				owner = if (erNavInitiert) existingSoknadDb.owner else ApplicationOwner.person(brukerId),
 			)
 
 			val combinedVedleggList =
@@ -268,7 +269,7 @@ class EttersendingService(
 				sprak = ettersending.sprak,
 				forsteInnsendingsDato = forsteInnsendingsDato ?: archivedSoknad.innsendtDato,
 				ernavopprettet = erNavInitiert,
-				owner = if (original != null) original.owner else ApplicationOwner.person(brukerId),
+				owner = if (erNavInitiert && original != null) original.owner else ApplicationOwner.person(brukerId),
 			)
 
 			val combinedVedleggList =
@@ -412,7 +413,11 @@ class EttersendingService(
 		erNavInitiert: Boolean = false
 	): DokumentSoknadDto {
 		val innsendteSoknader = getInnsendteSoknader(ettersending.skjemanr, brukerId)
+			.filterNot { it.visningsType.isUnauthenticatedSubmission() }
 		val arkiverteSoknader = getArkiverteEttersendinger(ettersending.skjemanr, brukerId)
+			.filterNot { archived ->
+				archived.innsendingsId?.let { repo.finnSoknadDb(it) }?.visningstype.isUnauthenticatedSubmission()
+			}
 
 		return createEttersendingWithExistingSoknader(
 			innsendteSoknader = innsendteSoknader,

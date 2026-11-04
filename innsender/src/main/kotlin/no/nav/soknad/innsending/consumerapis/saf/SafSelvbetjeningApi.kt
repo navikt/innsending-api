@@ -12,6 +12,7 @@ import no.nav.soknad.innsending.safselvbetjening.generated.HentDokumentOversikt
 import no.nav.soknad.innsending.safselvbetjening.generated.enums.Journalposttype
 import no.nav.soknad.innsending.safselvbetjening.generated.hentdokumentoversikt.DokumentInfo
 import no.nav.soknad.innsending.safselvbetjening.generated.hentdokumentoversikt.Dokumentoversikt
+import no.nav.soknad.innsending.util.dokumentsoknad.isUnauthenticatedSubmission
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
@@ -105,6 +106,7 @@ class SafSelvbetjeningApi(
 						listOf(Journalposttype.I), relevanteTema
 					)
 					dokumentoversikt.journalposter
+						.filterNot { it.kanal.isUnauthenticatedSubmission() }
 						.map {
 							ArkiverteSaker(
 								it.eksternReferanseId, it.tittel ?: "", it.tema ?: "",
