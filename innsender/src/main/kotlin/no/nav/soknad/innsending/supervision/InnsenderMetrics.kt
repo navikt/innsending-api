@@ -6,7 +6,11 @@ import io.prometheus.metrics.core.metrics.Gauge
 import io.prometheus.metrics.core.metrics.Histogram
 import io.prometheus.metrics.core.metrics.Summary
 import io.prometheus.metrics.model.registry.PrometheusRegistry
+import no.nav.soknad.innsending.consumerapis.antivirus.AntivirusScanFailureReason
+import no.nav.soknad.innsending.consumerapis.antivirus.AntivirusScanResult
 import no.nav.soknad.innsending.model.VisningsType
+import no.nav.soknad.innsending.service.AntivirusScanMode
+import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
@@ -53,7 +57,11 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	private var absentInArchiveGauge = registerGauge(absentInArchiveName, absentInArchiveHelp)
 	private var archivingFailedGauge = registerGauge(archivingFailedName, archivingFailedHelp)
 	private var nologinGauge = registerGauge(nologinMainSwitchName, nologinMainSwitchHelp)
-	private var antivirusScanCounter = registerCounter(antivirusScanName, antivirusScanHelp, listOf("namespace", "mode", "result"))
+	private var antivirusScanCounter = registerAntivirusScanCounter()
+	private var antivirusScanAttemptCounter = registerAntivirusScanAttemptCounter()
+	private var antivirusScanRetryCounter = registerAntivirusScanRetryCounter()
+	private var antivirusScanRecoveredCounter = registerAntivirusScanRecoveredCounter()
+	private var antivirusScanDuration = registerAntivirusScanDuration()
 	private var notSentInGauge = registerGauge("applications_not_sent_in", "Number of applications that have not been sent in")
 
 	private var submissionsCounter = registerCounter(
@@ -76,7 +84,11 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 		absentInArchiveGauge = registerGauge(absentInArchiveName, absentInArchiveHelp)
 		archivingFailedGauge = registerGauge(archivingFailedName, archivingFailedHelp)
 		nologinGauge = registerGauge(nologinMainSwitchName, nologinMainSwitchHelp)
-		antivirusScanCounter = registerCounter(antivirusScanName, antivirusScanHelp, listOf("namespace", "mode", "result"))
+		antivirusScanCounter = registerAntivirusScanCounter()
+		antivirusScanAttemptCounter = registerAntivirusScanAttemptCounter()
+		antivirusScanRetryCounter = registerAntivirusScanRetryCounter()
+		antivirusScanRecoveredCounter = registerAntivirusScanRecoveredCounter()
+		antivirusScanDuration = registerAntivirusScanDuration()
 		fileNumberOfPagesSummary = registerSummary(fileNumberOfPages, fileNumberOfPagesHelp)
 		fileSizeSummary = registerSummary(fileSize, fileSizeHelp)
 		notSentInGauge = registerGauge(notSentInName, notSentInHelp)
@@ -92,6 +104,10 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 		registry.unregister(archivingFailedGauge)
 		registry.unregister(nologinGauge)
 		registry.unregister(antivirusScanCounter)
+		registry.unregister(antivirusScanAttemptCounter)
+		registry.unregister(antivirusScanRetryCounter)
+		registry.unregister(antivirusScanRecoveredCounter)
+		registry.unregister(antivirusScanDuration)
 		registry.unregister(fileNumberOfPagesSummary)
 		registry.unregister(fileSizeSummary)
 		registry.unregister(notSentInGauge)
@@ -116,6 +132,59 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 			.help(help)
 			.labelNames(label, appLabel)
 			.register(registry)
+
+	private fun registerAntivirusScanDuration(): Histogram =
+		Histogram.builder()
+			.name("${soknadNamespace}_antivirus_scan_duration_seconds")
+			.help("Asynchronous antivirus scan duration including retries and backoff")
+			.labelNames("namespace", "result")
+			.classicExponentialUpperBounds(0.1, 2.0, 13)
+			.register(registry)
+
+	private fun registerAntivirusScanCounter(): Counter =
+		registerCounter(antivirusScanName, antivirusScanHelp, listOf("namespace", "mode", "result")).also { counter ->
+			FileStorageNamespace.entries.forEach { namespace ->
+				AntivirusScanMode.entries.forEach { mode ->
+					AntivirusScanResult.entries.forEach { result ->
+						counter.initLabelValues(namespace.value, mode.value, result.metricValue)
+					}
+				}
+			}
+		}
+
+	private fun registerAntivirusScanAttemptCounter(): Counter =
+		registerCounter(
+			"antivirus_scan_attempts_total", "Number of asynchronous antivirus scan attempts", listOf("namespace", "result", "reason"),
+		).also { counter ->
+			FileStorageNamespace.entries.forEach { namespace ->
+				counter.initLabelValues(namespace.value, "ok", "none")
+				counter.initLabelValues(namespace.value, "found", "none")
+				AntivirusScanFailureReason.entries.filter { it != AntivirusScanFailureReason.NONE }.forEach { reason ->
+					counter.initLabelValues(namespace.value, "error", reason.metricValue)
+				}
+			}
+		}
+
+	private fun registerAntivirusScanRetryCounter(): Counter =
+		registerCounter(
+			"antivirus_scan_retries_total", "Number of additional asynchronous antivirus scan attempts", listOf("namespace", "reason"),
+		).also { counter ->
+			FileStorageNamespace.entries.forEach { namespace ->
+				AntivirusScanFailureReason.entries.filter { it.retryable }.forEach { reason ->
+					counter.initLabelValues(namespace.value, reason.metricValue)
+				}
+			}
+		}
+
+	private fun registerAntivirusScanRecoveredCounter(): Counter =
+		registerCounter(
+			"antivirus_scan_recovered_total", "Number of asynchronous antivirus scans completed after retry", listOf("namespace", "result"),
+		).also { counter ->
+			FileStorageNamespace.entries.forEach { namespace ->
+				counter.initLabelValues(namespace.value, "ok")
+				counter.initLabelValues(namespace.value, "found")
+			}
+		}
 
 	private fun registerSummary(name: String, help: String): Summary =
 		Summary
@@ -170,6 +239,27 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 
 	fun getAntivirusScanCounter(namespace: String, mode: String, result: String) =
 		antivirusScanCounter.labelValues(namespace, mode, result)?.get()
+
+	fun incAntivirusScanAttemptCounter(namespace: String, result: String, reason: String) =
+		antivirusScanAttemptCounter.labelValues(namespace, result, reason).inc()
+
+	fun getAntivirusScanAttemptCounter(namespace: String, result: String, reason: String) =
+		antivirusScanAttemptCounter.labelValues(namespace, result, reason).get()
+
+	fun incAntivirusScanRetryCounter(namespace: String, reason: String) =
+		antivirusScanRetryCounter.labelValues(namespace, reason).inc()
+
+	fun getAntivirusScanRetryCounter(namespace: String, reason: String) =
+		antivirusScanRetryCounter.labelValues(namespace, reason).get()
+
+	fun incAntivirusScanRecoveredCounter(namespace: String, result: String) =
+		antivirusScanRecoveredCounter.labelValues(namespace, result).inc()
+
+	fun getAntivirusScanRecoveredCounter(namespace: String, result: String) =
+		antivirusScanRecoveredCounter.labelValues(namespace, result).get()
+
+	fun observeAntivirusScanDuration(namespace: String, result: String, seconds: Double) =
+		antivirusScanDuration.labelValues(namespace, result).observe(seconds)
 
 	fun setFileNumberOfPages(pages: Long) = fileNumberOfPagesSummary.observe(pages.toDouble())
 	fun clearFileNumberOfPages() = fileNumberOfPagesSummary.clear()
