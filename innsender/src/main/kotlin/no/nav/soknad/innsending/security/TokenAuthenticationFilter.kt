@@ -72,7 +72,6 @@ class TokenAuthenticationFilter(
 	private fun unverifiedIssuer(token: String): String? =
 		runCatching { JWTParser.parse(token).jwtClaimsSet.issuer }.getOrNull()
 
-
 	companion object {
 		/** Request-attributt som sier at Texas ikke svarte, slik at avvisningen blir 503 og ikke 403. */
 		const val TOKEN_VALIDATION_UNAVAILABLE = "no.nav.soknad.innsending.token-validation-unavailable"
