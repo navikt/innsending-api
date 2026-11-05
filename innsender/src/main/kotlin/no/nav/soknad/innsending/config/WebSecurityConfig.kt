@@ -1,9 +1,9 @@
 package no.nav.soknad.innsending.config
 
 import no.nav.security.token.support.core.context.TokenValidationContextHolder
-import no.nav.soknad.innsending.security.TexasSkygge
-import no.nav.soknad.innsending.security.TexasSkyggeFilter
-import no.nav.soknad.innsending.security.TokenSupportBroFilter
+import no.nav.soknad.innsending.security.TexasShadow
+import no.nav.soknad.innsending.security.TexasShadowFilter
+import no.nav.soknad.innsending.security.TokenSupportBridgeFilter
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -29,17 +29,17 @@ class WebSecurityConfig {
 	fun filterChain(
 		http: HttpSecurity,
 		tokenValidationContextHolder: ObjectProvider<TokenValidationContextHolder>,
-		texasSkygge: ObjectProvider<TexasSkygge>,
+		texasShadow: ObjectProvider<TexasShadow>,
 	): SecurityFilterChain {
 		http.csrf { it.disable() }
 		// Appen bruker bare bearer-token. Ingen sesjon og ingen lagret forespørsel å sende brukeren tilbake til
 		http.sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
 		http.requestCache { it.requestCache(NullRequestCache()) }
 		tokenValidationContextHolder.ifAvailable { holder ->
-			http.addFilterBefore(TokenSupportBroFilter(holder), AnonymousAuthenticationFilter::class.java)
+			http.addFilterBefore(TokenSupportBridgeFilter(holder), AnonymousAuthenticationFilter::class.java)
 			// Skyggemodus (steg 3h) trenger token-supports avgjørelse fra broen
-			texasSkygge.ifAvailable { skygge ->
-				http.addFilterAfter(TexasSkyggeFilter(skygge), TokenSupportBroFilter::class.java)
+			texasShadow.ifAvailable { shadow ->
+				http.addFilterAfter(TexasShadowFilter(shadow), TokenSupportBridgeFilter::class.java)
 			}
 		}
 		return http.build()

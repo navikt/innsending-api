@@ -7,7 +7,7 @@ import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.location.UrlHandler
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.security.KreverInnbygger
+import no.nav.soknad.innsending.security.RequiresCitizen
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.ArenaService
@@ -36,7 +36,7 @@ import java.net.URI
 import java.util.UUID
 
 @RestController
-@KreverInnbygger
+@RequiresCitizen
 @ProtectedWithClaims(issuer = TOKENX, claimMap = [CLAIM_ACR_LEVEL_4, CLAIM_ACR_IDPORTEN_LOA_HIGH], combineWithOr = true)
 class FyllutRestApi(
 	private val urlHandler: UrlHandler,

@@ -5,10 +5,10 @@ import io.netty.channel.ChannelOption
 import io.netty.handler.timeout.ReadTimeoutException
 import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.handler.timeout.WriteTimeoutHandler
-import no.nav.soknad.innsending.consumerapis.texas.TexasTokenKlient
+import no.nav.soknad.innsending.consumerapis.token.AccessTokenProvider
 import no.nav.soknad.innsending.exceptions.utils.messageForLog
-import no.nav.soknad.innsending.security.BrukerTokenKilde
-import no.nav.soknad.innsending.security.krevTokenXToken
+import no.nav.soknad.innsending.security.UserTokenSource
+import no.nav.soknad.innsending.security.requireUserToken
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.HEADER_BEHANDLINGSNUMMER
 import no.nav.soknad.innsending.util.Constants.PDL_BEHANDLINGSNUMMER
@@ -32,8 +32,8 @@ import java.util.concurrent.TimeUnit
 @EnableConfigurationProperties(RestConfig::class)
 class PdlClientConfig(
 	private val restConfig: RestConfig,
-	private val texasTokenKlient: TexasTokenKlient,
-	private val brukerTokenKilde: BrukerTokenKilde,
+	private val accessTokenProvider: AccessTokenProvider,
+	private val userTokenSource: UserTokenSource,
 	@Value("\${texas.target.pdl}") private val pdlTarget: String,
 ) {
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -71,7 +71,7 @@ class PdlClientConfig(
 			)
 			.defaultRequest {
 				it.header(Constants.HEADER_CALL_ID, MDCUtil.callIdOrNew())
-				it.header(HttpHeaders.AUTHORIZATION, "Bearer ${texasTokenKlient.hentBrukerToken(pdlTarget, brukerTokenKilde.krevTokenXToken(pdlTarget))}")
+				it.header(HttpHeaders.AUTHORIZATION, "Bearer ${accessTokenProvider.exchangeUserToken(pdlTarget, userTokenSource.requireUserToken(pdlTarget))}")
 				it.header("Tema", "AAP")
 				it.header(HEADER_BEHANDLINGSNUMMER, PDL_BEHANDLINGSNUMMER)
 			}

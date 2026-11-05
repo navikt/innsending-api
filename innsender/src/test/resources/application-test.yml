@@ -87,8 +87,8 @@ texas:
   token-endpoint: http://localhost:${wiremock.server.port}/texas/api/v1/token
   exchange-endpoint: http://localhost:${wiremock.server.port}/texas/api/v1/token/exchange
   introspection-endpoint: http://localhost:${wiremock.server.port}/texas/api/v1/introspect
-  skygge:
-    aktiv: false
+  shadow:
+    enabled: false
   target:
     saf: api://dev-fss.teamdokumenthandtering.saf-q1/.default
     pdl: dev-fss:pdl:pdl-api

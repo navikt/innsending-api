@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 import kotlin.test.assertTrue
 
 // Avvisning fra @PreAuthorize skal gi samme svar som token-support (#461, steg 3g)
-class TilgangsavvisningTest {
+class AccessDeniedResponseTest {
 
 	private lateinit var mockMvc: MockMvc
 	private lateinit var logCaptor: LogCaptor
@@ -23,7 +23,7 @@ class TilgangsavvisningTest {
 	@BeforeEach
 	fun setUp() {
 		mockMvc = MockMvcBuilders
-			.standaloneSetup(AvvisendeController())
+			.standaloneSetup(DenyingController())
 			.setControllerAdvice(RestExceptionHandler())
 			.build()
 		logCaptor = LogCaptor.forClass(RestExceptionHandler::class.java)
@@ -33,7 +33,7 @@ class TilgangsavvisningTest {
 	fun tearDown() = logCaptor.close()
 
 	@Test
-	fun `avvist tilgang gir 403 forbidden`() {
+	fun `denied access gives 403 forbidden`() {
 		mockMvc.get("/avvist").andExpect {
 			status { isForbidden() }
 			jsonPath("$.errorCode") { value("errorCode.forbidden") }
@@ -42,7 +42,7 @@ class TilgangsavvisningTest {
 	}
 
 	@Test
-	fun `manglende autentisering gir også 403 forbidden`() {
+	fun `missing authentication also gives 403 forbidden`() {
 		mockMvc.get("/uautentisert").andExpect {
 			status { isForbidden() }
 			jsonPath("$.errorCode") { value("errorCode.forbidden") }
@@ -51,11 +51,11 @@ class TilgangsavvisningTest {
 	}
 
 	@RestController
-	private class AvvisendeController {
+	private class DenyingController {
 		@GetMapping("/avvist", produces = [MediaType.APPLICATION_JSON_VALUE])
-		fun avvist(): String = throw AuthorizationDeniedException("Access Denied")
+		fun deniedEndpoint(): String = throw AuthorizationDeniedException("Access Denied")
 
 		@GetMapping("/uautentisert", produces = [MediaType.APPLICATION_JSON_VALUE])
-		fun uautentisert(): String = throw AuthenticationCredentialsNotFoundException("Ingen autentisering")
+		fun unauthenticatedEndpoint(): String = throw AuthenticationCredentialsNotFoundException("Ingen autentisering")
 	}
 }

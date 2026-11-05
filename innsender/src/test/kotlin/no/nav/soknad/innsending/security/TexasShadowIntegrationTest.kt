@@ -18,8 +18,8 @@ import java.util.UUID
 import kotlin.test.assertEquals
 
 // Skyggemodus koblet inn i Spring Security-kjeden (#461, steg 3h)
-@TestPropertySource(properties = ["texas.skygge.aktiv=true"])
-class TexasSkyggeIntegrasjonTest : ApplicationTest() {
+@TestPropertySource(properties = ["texas.shadow.enabled=true"])
+class TexasShadowIntegrationTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
@@ -31,46 +31,46 @@ class TexasSkyggeIntegrasjonTest : ApplicationTest() {
 	var serverPort: Int = 0
 
 	@Test
-	fun `Texas sammenlignes med token-support uten å påvirke svaret`() {
+	fun `Texas is compared with token-support without affecting the response`() {
 		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 		stubFor(
 			post(urlEqualTo("/texas/api/v1/introspect"))
 				.withRequestBody(equalToJson("""{"identity_provider":"tokenx","token":"$token"}"""))
 				.willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("""{"active":false,"error":"test"}"""))
 		)
-		val før = metrics.getTexasSkygge("tokenx", "texas_avviser") ?: 0.0
+		val before = metrics.getTexasShadow("tokenx", "texas_rejects") ?: 0.0
 
-		val status = hentUkjentSoknad(token)
+		val status = getUnknownApplication(token)
 
 		// Token-support godtok tokenet. Svaret er det vanlige for en søknad som ikke finnes, uansett hva Texas mener
 		assertEquals(404, status)
-		ventPå { (metrics.getTexasSkygge("tokenx", "texas_avviser") ?: 0.0) > før }
+		waitUntil { (metrics.getTexasShadow("tokenx", "texas_rejects") ?: 0.0) > before }
 	}
 
 	@Test
-	fun `feil mot Texas endrer ikke svaret`() {
+	fun `a Texas failure does not change the response`() {
 		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
 		stubFor(
 			post(urlEqualTo("/texas/api/v1/introspect"))
 				.withRequestBody(equalToJson("""{"identity_provider":"tokenx","token":"$token"}"""))
 				.willReturn(aResponse().withStatus(500))
 		)
-		val før = metrics.getTexasSkygge("tokenx", "texas_feil") ?: 0.0
+		val before = metrics.getTexasShadow("tokenx", "texas_error") ?: 0.0
 
-		assertEquals(404, hentUkjentSoknad(token))
-		ventPå { (metrics.getTexasSkygge("tokenx", "texas_feil") ?: 0.0) > før }
+		assertEquals(404, getUnknownApplication(token))
+		waitUntil { (metrics.getTexasShadow("tokenx", "texas_error") ?: 0.0) > before }
 	}
 
-	private fun hentUkjentSoknad(token: String): Int =
+	private fun getUnknownApplication(token: String): Int =
 		webTestClient.mutate().baseUrl("http://localhost:$serverPort").build()
 			.get().uri("/frontend/v1/soknad/${UUID.randomUUID()}")
 			.headers { it.setBearerAuth(token) }
 			.exchange().returnResult(String::class.java).status.value()
 
-	private fun ventPå(betingelse: () -> Boolean) {
-		val frist = System.nanoTime() + Duration.ofSeconds(10).toNanos()
-		while (!betingelse()) {
-			check(System.nanoTime() < frist) { "Skyggesammenligningen ble ikke telt innen 10 sekunder" }
+	private fun waitUntil(condition: () -> Boolean) {
+		val deadline = System.nanoTime() + Duration.ofSeconds(10).toNanos()
+		while (!condition()) {
+			check(System.nanoTime() < deadline) { "Skyggesammenligningen ble ikke telt innen 10 sekunder" }
 			Thread.sleep(50)
 		}
 	}

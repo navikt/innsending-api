@@ -11,12 +11,12 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.consumerapis.saf.SafSelvbetjeningApi
-import no.nav.soknad.innsending.consumerapis.texas.TexasTokenKlient
-import no.nav.soknad.innsending.consumerapis.texas.TexasUnavailableException
+import no.nav.soknad.innsending.consumerapis.token.AccessTokenProvider
+import no.nav.soknad.innsending.consumerapis.token.TokenServiceUnavailableException
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.safselvbetjening.generated.HentDokumentOversikt
-import no.nav.soknad.innsending.security.BrukerTokenKilde
-import no.nav.soknad.innsending.security.ManglerBrukerTokenException
+import no.nav.soknad.innsending.security.UserTokenSource
+import no.nav.soknad.innsending.security.MissingUserTokenException
 import no.nav.soknad.innsending.service.SafService
 import no.nav.soknad.innsending.util.Constants
 import net.logstash.logback.encoder.LogstashEncoder
@@ -43,9 +43,9 @@ class SafSelvbetjeningClientConfigTest {
 
 	private val server = WireMockServer(wireMockConfig().dynamicPort())
 	private val target = "dev-fss:teamdokumenthandtering:safselvbetjening"
-	private val brukerToken = "synthetic-user-token"
-	private val texasTokenKlient = mockk<TexasTokenKlient>()
-	private val brukerTokenKilde = mockk<BrukerTokenKilde>()
+	private val userToken = "synthetic-user-token"
+	private val accessTokenProvider = mockk<AccessTokenProvider>()
+	private val userTokenSource = mockk<UserTokenSource>()
 	private val logger = LoggerFactory.getLogger(SafSelvbetjeningClientConfig::class.java) as Logger
 	private val responseLogs = CopyOnWriteArrayList<ILoggingEvent>()
 	private val logged = CountDownLatch(1)
@@ -60,8 +60,8 @@ class SafSelvbetjeningClientConfigTest {
 
 	@BeforeEach
 	fun setup() {
-		every { brukerTokenKilde.hentTokenXToken() } returns brukerToken
-		every { texasTokenKlient.hentBrukerToken(target, brukerToken) } returns "synthetic-token"
+		every { userTokenSource.getUserToken() } returns userToken
+		every { accessTokenProvider.exchangeUserToken(target, userToken) } returns "synthetic-token"
 		server.start()
 		appender.start()
 		logger.addAppender(appender)
@@ -137,7 +137,7 @@ class SafSelvbetjeningClientConfigTest {
 
 		execute()
 
-		verify(exactly = 1) { texasTokenKlient.hentBrukerToken(target, brukerToken) }
+		verify(exactly = 1) { accessTokenProvider.exchangeUserToken(target, userToken) }
 		server.verify(
 			1,
 			postRequestedFor(urlEqualTo("/graphql"))
@@ -148,11 +148,11 @@ class SafSelvbetjeningClientConfigTest {
 
 	@Test
 	fun `a Texas failure stops the call to SAF and the citizen gets an empty list`() {
-		every { texasTokenKlient.hentBrukerToken(any(), any()) } throws TexasUnavailableException("Texas svarte 503")
+		every { accessTokenProvider.exchangeUserToken(any(), any()) } throws TokenServiceUnavailableException("Texas svarte 503")
 
 		val exception = assertThrows(BackendErrorException::class.java) { safSelvbetjeningApi().hentBrukersSakerIArkivet("synthetic-identity") }
 
-		assertTrue(generateSequence<Throwable>(exception) { it.cause }.any { it is TexasUnavailableException })
+		assertTrue(generateSequence<Throwable>(exception) { it.cause }.any { it is TokenServiceUnavailableException })
 		assertTokenNotInMessages(exception)
 		assertEquals(emptyList<Any>(), SafService(safSelvbetjeningApi(), mockk()).hentInnsendteSoknader("synthetic-identity"))
 		server.verify(0, anyRequestedFor(anyUrl()))
@@ -160,14 +160,14 @@ class SafSelvbetjeningClientConfigTest {
 
 	@Test
 	fun `a request without a TokenX token is not exchanged and does not reach SAF`() {
-		every { brukerTokenKilde.hentTokenXToken() } returns null
+		every { userTokenSource.getUserToken() } returns null
 
 		val exception = assertThrows(BackendErrorException::class.java) { safSelvbetjeningApi().hentBrukersSakerIArkivet("synthetic-identity") }
 
-		assertTrue(generateSequence<Throwable>(exception) { it.cause }.any { it is ManglerBrukerTokenException })
+		assertTrue(generateSequence<Throwable>(exception) { it.cause }.any { it is MissingUserTokenException })
 		assertTokenNotInMessages(exception)
 		assertEquals(emptyList<Any>(), SafService(safSelvbetjeningApi(), mockk()).hentInnsendteSoknader("synthetic-identity"))
-		verify(exactly = 0) { texasTokenKlient.hentBrukerToken(any(), any()) }
+		verify(exactly = 0) { accessTokenProvider.exchangeUserToken(any(), any()) }
 		server.verify(0, anyRequestedFor(anyUrl()))
 	}
 
@@ -193,7 +193,7 @@ class SafSelvbetjeningClientConfigTest {
 
 	private fun assertTokenNotInMessages(exception: Throwable) {
 		generateSequence(exception) { it.cause }.forEach {
-			assertFalse(it.message.orEmpty().contains(brukerToken))
+			assertFalse(it.message.orEmpty().contains(userToken))
 			assertFalse(it.message.orEmpty().contains("synthetic-token"))
 		}
 	}
@@ -218,7 +218,7 @@ class SafSelvbetjeningClientConfigTest {
 			assertEquals("onComplete", event["saf_response_body_terminal_signal"].asText())
 			assertFalse(json.contains("synthetic-identity"))
 			assertFalse(json.contains("synthetic-token"))
-			assertFalse(json.contains(brukerToken))
+			assertFalse(json.contains(userToken))
 			assertFalse(json.contains("Syntetisk"))
 			assertFalse(json.contains("synthetic upstream failure"))
 		} finally {
@@ -232,7 +232,7 @@ class SafSelvbetjeningClientConfigTest {
 
 	private fun createClientConfig(restConfig: RestConfig): SafSelvbetjeningClientConfig {
 		restConfig.safselvbetjeningUrl = server.baseUrl()
-		return SafSelvbetjeningClientConfig(restConfig, texasTokenKlient, brukerTokenKilde, target, "innsending-api")
+		return SafSelvbetjeningClientConfig(restConfig, accessTokenProvider, userTokenSource, target, "innsending-api")
 	}
 
 	private fun archiveResponse(count: Int): String {

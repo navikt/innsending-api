@@ -13,51 +13,51 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 
-class BrukerTokenKildeTest {
+class TokenSupportUserTokenSourceTest {
 
 	private val tokenxToken = mockk<JwtToken> { every { encodedToken } returns "tokenx-token" }
 	private val azureToken = mockk<JwtToken> { every { encodedToken } returns "azure-token" }
 
 	@Test
-	fun `gir TokenX-tokenet`() {
-		val kilde = kildeMed(mapOf(TOKENX to tokenxToken))
+	fun `gives the TokenX token`() {
+		val source = sourceWith(mapOf(TOKENX to tokenxToken))
 
-		assertEquals("tokenx-token", kilde.hentTokenXToken())
+		assertEquals("tokenx-token", source.getUserToken())
 	}
 
 	@Test
-	fun `gir aldri et Azure-token`() {
-		val kilde = kildeMed(mapOf(AZURE to azureToken))
+	fun `never gives an Azure token`() {
+		val source = sourceWith(mapOf(AZURE to azureToken))
 
-		assertNull(kilde.hentTokenXToken())
+		assertNull(source.getUserToken())
 	}
 
 	@Test
-	fun `velger TokenX selv om Azure-tokenet kommer først`() {
-		val kilde = kildeMed(linkedMapOf(AZURE to azureToken, TOKENX to tokenxToken))
+	fun `chooses TokenX even when the Azure token comes first`() {
+		val source = sourceWith(linkedMapOf(AZURE to azureToken, TOKENX to tokenxToken))
 
-		assertEquals("tokenx-token", kilde.hentTokenXToken())
+		assertEquals("tokenx-token", source.getUserToken())
 	}
 
 	@Test
-	fun `krevTokenXToken kaster uten token og uten å nevne token i meldingen`() {
-		val kilde = kildeMed(mapOf(AZURE to azureToken))
+	fun `requireUserToken throws without a token and without mentioning the token in the message`() {
+		val source = sourceWith(mapOf(AZURE to azureToken))
 
-		val feil = assertFailsWith<ManglerBrukerTokenException> { kilde.krevTokenXToken("dev-fss:pdl:pdl-api") }
-		assertFalse(feil.message!!.contains("azure-token"))
+		val error = assertFailsWith<MissingUserTokenException> { source.requireUserToken("dev-fss:pdl:pdl-api") }
+		assertFalse(error.message!!.contains("azure-token"))
 	}
 
 	@Test
-	fun `gir null utenfor en HTTP-forespørsel`() {
+	fun `gives null outside an HTTP request`() {
 		val holder = mockk<TokenValidationContextHolder>()
 		every { holder.getTokenValidationContext() } throws IllegalStateException("No thread-bound request found")
 
-		assertNull(TokenSupportBrukerTokenKilde(holder).hentTokenXToken())
+		assertNull(TokenSupportUserTokenSource(holder).getUserToken())
 	}
 
-	private fun kildeMed(tokens: Map<String, JwtToken>): BrukerTokenKilde {
+	private fun sourceWith(tokens: Map<String, JwtToken>): UserTokenSource {
 		val holder = mockk<TokenValidationContextHolder>()
 		every { holder.getTokenValidationContext() } returns TokenValidationContext(tokens)
-		return TokenSupportBrukerTokenKilde(holder)
+		return TokenSupportUserTokenSource(holder)
 	}
 }

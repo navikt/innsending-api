@@ -1,9 +1,9 @@
 package no.nav.soknad.innsending.config
 
-import no.nav.soknad.innsending.consumerapis.texas.TexasTokenKlient
-import no.nav.soknad.innsending.security.BrukerTokenKilde
+import no.nav.soknad.innsending.consumerapis.token.AccessTokenProvider
+import no.nav.soknad.innsending.security.UserTokenSource
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
-import no.nav.soknad.innsending.security.krevTokenXToken
+import no.nav.soknad.innsending.security.requireUserToken
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.NAV_CONSUMER_ID
 import no.nav.soknad.innsending.util.MDCUtil
@@ -45,13 +45,13 @@ class RestClientOAuthConfig(
 	@Qualifier("arenaApiRestClient")
 	fun arenaApiClient(
 		restConfig: RestConfig,
-		texasTokenKlient: TexasTokenKlient,
-		brukerTokenKilde: BrukerTokenKilde,
+		accessTokenProvider: AccessTokenProvider,
+		userTokenSource: UserTokenSource,
 		@Value("\${texas.target.arena}") target: String,
 		subjectHandler: SubjectHandlerInterface
 	): RestClient = restClientWithToken(
 		restConfig.arenaUrl,
-		{ texasTokenKlient.hentBrukerToken(target, brukerTokenKilde.krevTokenXToken(target)) },
+		{ accessTokenProvider.exchangeUserToken(target, userTokenSource.requireUserToken(target)) },
 		subjectHandler
 	)
 
@@ -66,10 +66,10 @@ class RestClientOAuthConfig(
 	@Qualifier("kodeverkApiClient")
 	fun kodeverkApiClient(
 		restConfig: RestConfig,
-		texasTokenKlient: TexasTokenKlient,
+		accessTokenProvider: AccessTokenProvider,
 		@Value("\${texas.target.kodeverk}") target: String,
 		subjectHandler: SubjectHandlerInterface
-	): RestClient = restClientWithToken(restConfig.kodeverkUrl, { texasTokenKlient.hentMaskinToken(target) }, subjectHandler)
+	): RestClient = restClientWithToken(restConfig.kodeverkUrl, { accessTokenProvider.getMachineToken(target) }, subjectHandler)
 
 	@Bean
 	@Profile("!(prod | dev)")
@@ -85,12 +85,12 @@ class RestClientOAuthConfig(
 	@Qualifier("kontoregisterApiRestClient")
 	fun kontoregisterApiClient(
 		restConfig: RestConfig,
-		texasTokenKlient: TexasTokenKlient,
-		brukerTokenKilde: BrukerTokenKilde,
+		accessTokenProvider: AccessTokenProvider,
+		userTokenSource: UserTokenSource,
 		@Value("\${texas.target.kontoregister}") target: String
 	): RestClient = restClientWithToken(
 		restConfig.kontoregisterUrl + "/api/borger",
-		{ texasTokenKlient.hentBrukerToken(target, brukerTokenKilde.krevTokenXToken(target)) }
+		{ accessTokenProvider.exchangeUserToken(target, userTokenSource.requireUserToken(target)) }
 	)
 
 	@Bean
@@ -105,9 +105,9 @@ class RestClientOAuthConfig(
 	@Qualifier("soknadsmottakerRestClient")
 	fun soknadsmottakerRestClient(
 		restConfig: RestConfig,
-		texasTokenKlient: TexasTokenKlient,
+		accessTokenProvider: AccessTokenProvider,
 		@Value("\${texas.target.soknadsmottaker}") target: String
-	) = restClientWithToken(restConfig.soknadsMottakerHost, { texasTokenKlient.hentMaskinToken(target) })
+	) = restClientWithToken(restConfig.soknadsMottakerHost, { accessTokenProvider.getMachineToken(target) })
 
 	@Bean
 	@Profile("!(prod | dev)")

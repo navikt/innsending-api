@@ -1,8 +1,9 @@
 package no.nav.soknad.innsending.config
 
-import no.nav.soknad.innsending.consumerapis.texas.TexasIntrospeksjonKlient
-import no.nav.soknad.innsending.consumerapis.texas.TexasTokenKlient
-import no.nav.soknad.innsending.security.TexasSkygge
+import no.nav.soknad.innsending.consumerapis.texas.TexasIntrospectionClient
+import no.nav.soknad.innsending.consumerapis.texas.TexasTokenClient
+import no.nav.soknad.innsending.consumerapis.token.TokenIntrospector
+import no.nav.soknad.innsending.security.TexasShadow
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -18,32 +19,32 @@ import java.time.Duration
 class TexasConfig {
 
 	@Bean
-	fun texasTokenKlient(
+	fun texasTokenClient(
 		@Value("\${texas.token-endpoint}") tokenEndpoint: String,
 		@Value("\${texas.exchange-endpoint}") exchangeEndpoint: String,
-	): TexasTokenKlient = TexasTokenKlient(restClient(TOKEN_TIMEOUT), tokenEndpoint, exchangeEndpoint)
+	): TexasTokenClient = TexasTokenClient(restClient(TOKEN_TIMEOUT), tokenEndpoint, exchangeEndpoint)
 
 	@Bean
-	fun texasIntrospeksjonKlient(
+	fun texasIntrospectionClient(
 		@Value("\${texas.introspection-endpoint}") introspectionEndpoint: String,
-	): TexasIntrospeksjonKlient = TexasIntrospeksjonKlient(restClient(INTROSPEKSJON_TIMEOUT), introspectionEndpoint)
+	): TexasIntrospectionClient = TexasIntrospectionClient(restClient(INTROSPEKSJON_TIMEOUT), introspectionEndpoint)
 
 	// Skyggemodus i steg 3h. Utviklerteamet avgjør hvor lenge den kjører før 3i og 3j
 	@Bean
-	@ConditionalOnProperty(name = ["texas.skygge.aktiv"], havingValue = "true")
-	fun texasSkygge(
-		klient: TexasIntrospeksjonKlient,
+	@ConditionalOnProperty(name = ["texas.shadow.enabled"], havingValue = "true")
+	fun texasShadow(
+		introspector: TokenIntrospector,
 		metrics: InnsenderMetrics,
-		@Value("\${texas.skygge.andel:1.0}") andel: Double,
-	): TexasSkygge = TexasSkygge(klient, metrics, andel.coerceIn(0.0, 1.0))
+		@Value("\${texas.shadow.sample-rate:1.0}") sampleRate: Double,
+	): TexasShadow = TexasShadow(introspector, metrics, sampleRate.coerceIn(0.0, 1.0))
 
 	// Tilkobling og lesing har hver sin grense. Grensen deles mellom dem, slik at et kall aldri venter lenger enn
 	// det vedtatte totalt. Svarene fra Texas er små, så lesegrensen gjelder i praksis hele svaret
 	private fun restClient(timeout: Duration): RestClient {
-		val tilkobling = timeout.dividedBy(4)
+		val connectTimeout = timeout.dividedBy(4)
 		val requestFactory = SimpleClientHttpRequestFactory().apply {
-			setConnectTimeout(tilkobling)
-			setReadTimeout(timeout.minus(tilkobling))
+			setConnectTimeout(connectTimeout)
+			setReadTimeout(timeout.minus(connectTimeout))
 		}
 		return RestClient.builder().requestFactory(requestFactory).build()
 	}

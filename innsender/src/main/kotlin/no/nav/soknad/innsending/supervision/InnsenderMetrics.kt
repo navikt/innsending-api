@@ -176,10 +176,10 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	fun getAntivirusScanCounter(namespace: String, mode: String, result: String) =
 		antivirusScanCounter.labelValues(namespace, mode, result)?.get()
 
-	fun incTexasSkygge(issuer: String, outcome: String) =
+	fun incTexasShadow(issuer: String, outcome: String) =
 		texasShadowCounter.labelValues(issuer, outcome).inc()
 
-	fun getTexasSkygge(issuer: String, outcome: String) =
+	fun getTexasShadow(issuer: String, outcome: String) =
 		texasShadowCounter.labelValues(issuer, outcome)?.get()
 
 	fun setFileNumberOfPages(pages: Long) = fileNumberOfPagesSummary.observe(pages.toDouble())
