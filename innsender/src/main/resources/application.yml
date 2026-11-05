@@ -206,8 +206,8 @@ no.nav.security.jwt:
 # Uten dem validerer token-support som før
 texas:
   introspection-endpoint: ${NAIS_TOKEN_INTROSPECTION_ENDPOINT:}
-  innkommende:
-    utstedere: ${TEXAS_INNKOMMENDE_UTSTEDERE:}
+  incoming:
+    issuers: ${TEXAS_INCOMING_ISSUERS:}
     issuer:
       tokenx: ${TOKEN_X_ISSUER:}
       azure: ${AZURE_OPENID_CONFIG_ISSUER:}
@@ -251,16 +251,16 @@ texas:
   exchange-endpoint: ${NAIS_TOKEN_EXCHANGE_ENDPOINT}
   introspection-endpoint: ${NAIS_TOKEN_INTROSPECTION_ENDPOINT}
   # Utstedere der Texas validerer innkommende token. De andre valideres av token-support (#461, steg 3i og 3j)
-  innkommende:
-    utstedere: ${TEXAS_INNKOMMENDE_UTSTEDERE:AZURE}
+  incoming:
+    issuers: ${TEXAS_INCOMING_ISSUERS:AZURE}
     # Velger utsteder for introspeksjon ut fra iss i tokenet, så hver forespørsel gir ett kall til Texas
     issuer:
       tokenx: ${TOKEN_X_ISSUER:}
       azure: ${AZURE_OPENID_CONFIG_ISSUER:}
   # Skyggemodus (#461, steg 3h): Texas validerer innkommende token ved siden av token-support uten å påvirke svaret
-  skygge:
-    aktiv: ${TEXAS_SKYGGE_AKTIV:true}
-    andel: ${TEXAS_SKYGGE_ANDEL:1.0}
+  shadow:
+    enabled: ${TEXAS_SHADOW_ENABLED:true}
+    sample-rate: ${TEXAS_SHADOW_SAMPLE_RATE:1.0}
   target:
     soknadsmottaker: ${SOKNADSMOTTAKER_SCOPE}
     kodeverk: ${KODEVERK_SCOPE}

@@ -3,21 +3,21 @@ package no.nav.soknad.innsending.security
 import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
-enum class TokenUtsteder {
+enum class TokenIssuer {
 	TOKENX, AZURE;
 
 	companion object {
 		/** Leser en kommaseparert liste, for eksempel verdien av texas.innkommende.utstedere. */
-		fun fraListe(verdi: String): Set<TokenUtsteder> =
-			verdi.split(',').map { it.trim() }.filter { it.isNotEmpty() }.map { valueOf(it.uppercase()) }.toSet()
+		fun fromList(value: String): Set<TokenIssuer> =
+			value.split(',').map { it.trim() }.filter { it.isNotEmpty() }.map { valueOf(it.uppercase()) }.toSet()
 	}
 }
 
 /** Et validert token. Tokenet og claimene skal aldri logges, så [toString] viser ingen av dem. */
-class ValidertToken(val claims: Map<String, Any?>, val token: String) {
-	fun stringClaim(navn: String): String? = claims[navn] as? String
+class ValidatedToken(val claims: Map<String, Any?>, val token: String) {
+	fun stringClaim(name: String): String? = claims[name] as? String
 
-	override fun toString(): String = "ValidertToken"
+	override fun toString(): String = "ValidatedToken"
 }
 
 /**
@@ -29,28 +29,28 @@ class ValidertToken(val claims: Map<String, Any?>, val token: String) {
  * Tokenene og claimene skal aldri logges. [toString] viser derfor bare utstedere og tilganger, og [getPrincipal] gir
  * utstedere, ikke identitet. Identitet leses gjennom [SubjectHandlerInterface].
  */
-class TokenAutentisering(
-	val tokens: Map<TokenUtsteder, ValidertToken>,
+class TokenAuthentication(
+	val tokens: Map<TokenIssuer, ValidatedToken>,
 ) : AbstractAuthenticationToken(
-	tokens.flatMap { (utsteder, token) -> Tilgang.tilgangerFor(utsteder, token.claims) }.distinct().map(::SimpleGrantedAuthority)
+	tokens.flatMap { (issuer, token) -> Access.authoritiesFor(issuer, token.claims) }.distinct().map(::SimpleGrantedAuthority)
 ) {
 
-	constructor(utsteder: TokenUtsteder, claims: Map<String, Any?>, token: String) :
-		this(mapOf(utsteder to ValidertToken(claims, token)))
+	constructor(issuer: TokenIssuer, claims: Map<String, Any?>, token: String) :
+		this(mapOf(issuer to ValidatedToken(claims, token)))
 
 	init {
-		require(tokens.isNotEmpty()) { "TokenAutentisering krever minst ett validert token" }
+		require(tokens.isNotEmpty()) { "TokenAuthentication krever minst ett validert token" }
 		isAuthenticated = true
 	}
 
-	fun token(utsteder: TokenUtsteder): ValidertToken? = tokens[utsteder]
+	fun token(issuer: TokenIssuer): ValidatedToken? = tokens[issuer]
 
-	override fun getCredentials(): String = (tokens[TokenUtsteder.TOKENX] ?: tokens.values.first()).token
+	override fun getCredentials(): String = (tokens[TokenIssuer.TOKENX] ?: tokens.values.first()).token
 
 	override fun getPrincipal(): String = tokens.keys.joinToString(",") { it.name }
 
 	override fun toString(): String =
-		"TokenAutentisering(utstedere=${tokens.keys}, tilganger=${authorities.map { it.authority }})"
+		"TokenAuthentication(utstedere=${tokens.keys}, tilganger=${authorities.map { it.authority }})"
 
 	override fun equals(other: Any?): Boolean = this === other
 

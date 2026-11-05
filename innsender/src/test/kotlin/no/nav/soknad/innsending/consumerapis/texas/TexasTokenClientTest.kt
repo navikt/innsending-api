@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.classic.spi.ThrowableProxyUtil
 import ch.qos.logback.core.read.ListAppender
+import no.nav.soknad.innsending.consumerapis.token.TokenServiceUnavailableException
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -27,17 +28,17 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 
-class TexasTokenKlientTest {
+class TexasTokenClientTest {
 
 	private val tokenEndpoint = "http://texas.test/api/v1/token"
 	private val exchangeEndpoint = "http://texas.test/api/v1/token/exchange"
 	private val tokenxTarget = "dev-fss:pdl:pdl-api"
-	private val brukerToken = "eyJhbGciOiJSUzI1NiJ9.innbyggerens-token-med-pid.signatur"
+	private val userToken = "eyJhbGciOiJSUzI1NiJ9.innbyggerens-token-med-pid.signatur"
 	private val target = "api://dev-gcp.team-soknad.soknadsmottaker/.default"
 	private val token = "eyJhbGciOiJSUzI1NiJ9.hemmelig-texas-token.signatur"
 
 	private lateinit var server: MockRestServiceServer
-	private lateinit var klient: TexasTokenKlient
+	private lateinit var client: TexasTokenClient
 
 	private val rootLogger = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME) as Logger
 	private val appender = ListAppender<ILoggingEvent>()
@@ -46,7 +47,7 @@ class TexasTokenKlientTest {
 	fun setUp() {
 		val builder = RestClient.builder()
 		server = MockRestServiceServer.bindTo(builder).build()
-		klient = TexasTokenKlient(builder.build(), tokenEndpoint, exchangeEndpoint)
+		client = TexasTokenClient(builder.build(), tokenEndpoint, exchangeEndpoint)
 		appender.start()
 		rootLogger.addAppender(appender)
 	}
@@ -58,20 +59,20 @@ class TexasTokenKlientTest {
 	}
 
 	@Test
-	fun `ber om maskintoken fra Entra med riktig target`() {
+	fun `requests a machine token from Entra with the right target`() {
 		server.expect(once(), requestTo(tokenEndpoint))
 			.andExpect(method(HttpMethod.POST))
 			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 			.andExpect(content().json("""{"identity_provider":"entra_id","target":"$target"}""", true))
 			.andRespond(withSuccess(tokenResponse(), MediaType.APPLICATION_JSON))
 
-		assertEquals(token, klient.hentMaskinToken(target))
+		assertEquals(token, client.getMachineToken(target))
 		server.verify()
 	}
 
 	@ParameterizedTest
 	@ValueSource(ints = [400, 401, 403, 500, 502, 503])
-	fun `feilstatus fra Texas gir TexasUnavailableException uten token og uten body`(status: Int) {
+	fun `an error status from Texas gives TokenServiceUnavailableException without token and without body`(status: Int) {
 		server.expect(once(), requestTo(tokenEndpoint))
 			.andRespond(
 				withStatus(HttpStatus.valueOf(status))
@@ -79,112 +80,112 @@ class TexasTokenKlientTest {
 					.body("""{"error":"invalid_request","access_token":"$token"}""")
 			)
 
-		val feil = assertFailsWith<TexasUnavailableException> { klient.hentMaskinToken(target) }
+		val error = assertFailsWith<TokenServiceUnavailableException> { client.getMachineToken(target) }
 
-		assertEquals("Texas svarte $status for identity_provider=entra_id target=$target", feil.message)
-		assertEquals(null, feil.cause)
+		assertEquals("Texas svarte $status for identity_provider=entra_id target=$target", error.message)
+		assertEquals(null, error.cause)
 		server.verify()
-		assertTokenIkkeLogget()
+		assertTokenNotLogged()
 	}
 
 	@Test
-	fun `nettverksfeil og timeout gir TexasUnavailableException uten nytt forsøk`() {
+	fun `network errors and timeouts give TokenServiceUnavailableException without retry`() {
 		server.expect(once(), requestTo(tokenEndpoint))
 			.andRespond(withException(SocketTimeoutException("Read timed out")))
 
-		val feil = assertFailsWith<TexasUnavailableException> { klient.hentMaskinToken(target) }
+		val error = assertFailsWith<TokenServiceUnavailableException> { client.getMachineToken(target) }
 
-		assertEquals(null, feil.cause)
+		assertEquals(null, error.cause)
 		server.verify()
-		assertTokenIkkeLogget()
+		assertTokenNotLogged()
 	}
 
 	@Test
-	fun `ugyldig JSON fra Texas gir TexasUnavailableException uten body`() {
+	fun `invalid JSON from Texas gives TokenServiceUnavailableException without body`() {
 		server.expect(once(), requestTo(tokenEndpoint))
 			.andRespond(withSuccess("""{"access_token":"$token" ikke json""", MediaType.APPLICATION_JSON))
 
-		val feil = assertFailsWith<TexasUnavailableException> { klient.hentMaskinToken(target) }
+		val error = assertFailsWith<TokenServiceUnavailableException> { client.getMachineToken(target) }
 
-		assertFalse(feil.message!!.contains(token))
-		assertEquals(null, feil.cause)
+		assertFalse(error.message!!.contains(token))
+		assertEquals(null, error.cause)
 		server.verify()
-		assertTokenIkkeLogget()
+		assertTokenNotLogged()
 	}
 
 	@ParameterizedTest
 	@ValueSource(strings = ["""{"expires_in":3599}""", """{"access_token":""}""", """{"access_token":42}"""])
-	fun `svar uten gyldig access_token gir TexasUnavailableException`(body: String) {
+	fun `a response without a valid access_token gives TokenServiceUnavailableException`(body: String) {
 		server.expect(once(), requestTo(tokenEndpoint))
 			.andRespond(withSuccess(body, MediaType.APPLICATION_JSON))
 
-		assertFailsWith<TexasUnavailableException> { klient.hentMaskinToken(target) }
+		assertFailsWith<TokenServiceUnavailableException> { client.getMachineToken(target) }
 		server.verify()
 	}
 
 	@Test
-	fun `tokenet logges ikke ved vellykket kall`() {
+	fun `the token is not logged on a successful call`() {
 		server.expect(once(), requestTo(tokenEndpoint))
 			.andRespond(withSuccess(tokenResponse(), MediaType.APPLICATION_JSON))
 
-		klient.hentMaskinToken(target)
+		client.getMachineToken(target)
 
-		assertTokenIkkeLogget()
+		assertTokenNotLogged()
 	}
 
 	@Test
-	fun `bytter innbyggerens token hos TokenX med riktig target`() {
+	fun `exchanges the citizen token at TokenX with the right target`() {
 		server.expect(once(), requestTo(exchangeEndpoint))
 			.andExpect(method(HttpMethod.POST))
 			.andExpect(
 				content().json(
-					"""{"identity_provider":"tokenx","target":"$tokenxTarget","user_token":"$brukerToken"}""", true
+					"""{"identity_provider":"tokenx","target":"$tokenxTarget","user_token":"$userToken"}""", true
 				)
 			)
 			.andRespond(withSuccess(tokenResponse(), MediaType.APPLICATION_JSON))
 
-		assertEquals(token, klient.hentBrukerToken(tokenxTarget, brukerToken))
+		assertEquals(token, client.exchangeUserToken(tokenxTarget, userToken))
 		server.verify()
-		assertTokenIkkeLogget()
+		assertTokenNotLogged()
 	}
 
 	@ParameterizedTest
 	@ValueSource(ints = [400, 401, 500, 503])
-	fun `feil ved utveksling gir TexasUnavailableException uten innbyggerens token`(status: Int) {
+	fun `an exchange failure gives TokenServiceUnavailableException without the citizen token`(status: Int) {
 		server.expect(once(), requestTo(exchangeEndpoint))
 			.andRespond(
 				withStatus(HttpStatus.valueOf(status))
 					.contentType(MediaType.APPLICATION_JSON)
-					.body("""{"error":"invalid_grant","user_token":"$brukerToken"}""")
+					.body("""{"error":"invalid_grant","user_token":"$userToken"}""")
 			)
 
-		val feil = assertFailsWith<TexasUnavailableException> { klient.hentBrukerToken(tokenxTarget, brukerToken) }
+		val error = assertFailsWith<TokenServiceUnavailableException> { client.exchangeUserToken(tokenxTarget, userToken) }
 
-		assertEquals("Texas svarte $status for identity_provider=tokenx target=$tokenxTarget", feil.message)
-		assertEquals(null, feil.cause)
+		assertEquals("Texas svarte $status for identity_provider=tokenx target=$tokenxTarget", error.message)
+		assertEquals(null, error.cause)
 		server.verify()
-		assertTokenIkkeLogget()
+		assertTokenNotLogged()
 	}
 
 	@Test
-	fun `nettverksfeil ved utveksling gir TexasUnavailableException uten nytt forsøk`() {
+	fun `network errors during exchange give TokenServiceUnavailableException without retry`() {
 		server.expect(once(), requestTo(exchangeEndpoint))
 			.andRespond(withException(SocketTimeoutException("Read timed out")))
 
-		val feil = assertFailsWith<TexasUnavailableException> { klient.hentBrukerToken(tokenxTarget, brukerToken) }
+		val error = assertFailsWith<TokenServiceUnavailableException> { client.exchangeUserToken(tokenxTarget, userToken) }
 
-		assertFalse(feil.message!!.contains(brukerToken))
+		assertFalse(error.message!!.contains(userToken))
 		server.verify()
-		assertTokenIkkeLogget()
+		assertTokenNotLogged()
 	}
 
 	private fun tokenResponse() = """{"access_token":"$token","expires_in":3599,"token_type":"Bearer"}"""
 
-	private fun assertTokenIkkeLogget() {
+	private fun assertTokenNotLogged() {
 		appender.list.forEach { event ->
-			val tekst = event.formattedMessage + (event.throwableProxy?.let { ThrowableProxyUtil.asString(it) } ?: "")
-			assertFalse(tekst.contains(token), "Tokenet ble logget: ${event.loggerName}")
-			assertFalse(tekst.contains(brukerToken), "Innbyggerens token ble logget: ${event.loggerName}")
+			val text = event.formattedMessage + (event.throwableProxy?.let { ThrowableProxyUtil.asString(it) } ?: "")
+			assertFalse(text.contains(token), "Tokenet ble logget: ${event.loggerName}")
+			assertFalse(text.contains(userToken), "Innbyggerens token ble logget: ${event.loggerName}")
 		}
 	}
 }

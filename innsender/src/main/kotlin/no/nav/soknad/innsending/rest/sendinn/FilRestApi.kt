@@ -6,7 +6,7 @@ import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.security.KreverInnbygger
+import no.nav.soknad.innsending.security.RequiresCitizen
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.DocumentService
 import no.nav.soknad.innsending.service.FilService
@@ -34,7 +34,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @RestController
-@KreverInnbygger
+@RequiresCitizen
 @CrossOrigin(maxAge = 3600)
 @ProtectedWithClaims(
 	issuer = Constants.TOKENX,

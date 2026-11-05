@@ -8,16 +8,16 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.filter.OncePerRequestFilter
 
 /**
- * Sender bearer-tokenet til [TexasSkygge] sammen med token-supports avgjørelse (#461, steg 3h). Fjernes i steg 4.
- * Ligger etter [TokenSupportBroFilter] i Spring Security-kjeden og påvirker aldri forespørselen.
+ * Sender bearer-tokenet til [TexasShadow] sammen med token-supports avgjørelse (#461, steg 3h). Fjernes i steg 4.
+ * Ligger etter [TokenSupportBridgeFilter] i Spring Security-kjeden og påvirker aldri forespørselen.
  */
-class TexasSkyggeFilter(private val skygge: TexasSkygge) : OncePerRequestFilter() {
+class TexasShadowFilter(private val shadow: TexasShadow) : OncePerRequestFilter() {
 
 	override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain) {
 		bearerToken(request)?.let { token ->
 			// Token-support godtar flere kommaseparerte token. Hele headeren skal ikke sendes til Texas som ett token
-			if (token.contains(',')) skygge.flereToken()
-			else skygge.sammenlign(token, SecurityContextHolder.getContext().authentication as? TokenAutentisering)
+			if (token.contains(',')) shadow.multipleTokens()
+			else shadow.compare(token, SecurityContextHolder.getContext().authentication as? TokenAuthentication)
 		}
 		filterChain.doFilter(request, response)
 	}

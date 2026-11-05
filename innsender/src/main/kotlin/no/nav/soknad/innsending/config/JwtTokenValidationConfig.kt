@@ -15,6 +15,6 @@ import org.springframework.context.annotation.Profile
 )
 // Med spring-security-tilgang (bare i test) validerer token-support fortsatt token, men controllerne håndheves
 // bare av @PreAuthorize. Se AccessMatrixSpringSecurityTest (#461)
-@Profile("(test | dev | prod) & !spring-security-tilgang")
+@Profile("(test | dev | prod) & !spring-security-access")
 @Configuration
 class JwtTokenValidationConfig
