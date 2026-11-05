@@ -24,7 +24,7 @@ import org.springframework.web.filter.OncePerRequestFilter
  * Ukjent eller manglende iss gir ingen autentisering, og `@PreAuthorize` avviser med 403.
  *
  * Texas validerer ett token om gangen. En header med flere kommaseparerte token gir derfor ingen autentisering fra
- * Texas. Token-support godtok det, men skyggemodus teller om det forekommer (utfallet flere_token).
+ * Texas. Token-support godtok det, men skyggemodus teller om det forekommer (utfallet multiple_tokens).
  */
 class TokenAuthenticationFilter(
 	private val introspector: TokenIntrospector,
@@ -68,7 +68,6 @@ class TokenAuthenticationFilter(
 	// Bare for å velge utsteder. Tokenet er ikke verifisert her
 	private fun unverifiedIssuer(token: String): String? =
 		runCatching { JWTParser.parse(token).jwtClaimsSet.issuer }.getOrNull()
-
 
 	companion object {
 		/** Request-attributt som sier at Texas ikke svarte, slik at avvisningen blir 503 og ikke 403. */

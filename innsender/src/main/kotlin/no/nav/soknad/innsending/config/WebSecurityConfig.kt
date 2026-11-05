@@ -23,7 +23,7 @@ import org.springframework.security.web.savedrequest.NullRequestCache
  * Spring Security setter autentisering for forespørselen, mens tilgangsreglene ligger som `@PreAuthorize` på
  * controllerne (#461). Kjeden selv avviser ingen forespørsler, slik at offentlige ruter er uendret.
  *
- * Hvem som validerer innkommende token, styres per utsteder av `texas.innkommende.utstedere` (#461, steg 3i og 3j).
+ * Hvem som validerer innkommende token, styres per utsteder av `texas.incoming.issuers` (#461, steg 3i og 3j).
  * Utstederne i lista valideres av Texas. De andre valideres fortsatt av token-support gjennom broen.
  * Profilene med tokenvalidering har en [TokenValidationContextHolder] fra token-support, og bare da legges broen inn.
  * I local, docker og endtoend uten endtoend-auth finnes den ikke, og identiteten er fast (SubjectHandlerTestImpl).
