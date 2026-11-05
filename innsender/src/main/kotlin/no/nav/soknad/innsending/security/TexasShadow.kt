@@ -142,7 +142,6 @@ class TexasShadow(
 	private fun count(issuer: TokenIssuer?, outcome: Outcome) =
 		metrics.incTexasShadow(issuer?.name?.lowercase() ?: "none", outcome.label)
 
-
 	override fun destroy() {
 		(executor as? ThreadPoolExecutor)?.shutdownNow()
 	}
