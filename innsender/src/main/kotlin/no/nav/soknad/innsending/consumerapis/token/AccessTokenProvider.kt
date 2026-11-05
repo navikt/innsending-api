@@ -8,4 +8,7 @@ package no.nav.soknad.innsending.consumerapis.token
 interface AccessTokenProvider {
 	/** Maskintoken (client credentials) for [target], for eksempel et Entra ID-scope. */
 	fun getMachineToken(target: String): String
+
+	/** Bytter innbyggerens token (token exchange) til et token for [target], for eksempel en TokenX-audience. */
+	fun exchangeUserToken(target: String, userToken: String): String
 }

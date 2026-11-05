@@ -9,36 +9,55 @@ import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
 
 /**
- * Henter maskintoken (Entra ID client credentials) fra Texas-sidecaren via NAIS_TOKEN_ENDPOINT.
+ * Henter token fra Texas-sidecaren:
+ * - maskintoken (Entra ID client credentials) via NAIS_TOKEN_ENDPOINT
+ * - TokenX-utveksling av innbyggerens token via NAIS_TOKEN_EXCHANGE_ENDPOINT
  *
  * Texas cacher tokenene selv, så klienten har ingen egen cache og prøver ikke på nytt.
- * Feil blir [TokenServiceUnavailableException] uten respons-body og uten cause, slik at tokenet aldri havner i logger.
+ * Feil blir [TokenServiceUnavailableException] uten respons-body og uten cause, slik at verken
+ * innbyggerens token eller tokenet fra Texas kan havne i logger gjennom en melding eller stacktrace.
  */
-class TexasTokenClient(private val restClient: RestClient) : AccessTokenProvider {
+class TexasTokenClient(
+	private val restClient: RestClient,
+	private val tokenEndpoint: String,
+	private val exchangeEndpoint: String,
+) : AccessTokenProvider {
 
-	override fun getMachineToken(target: String): String {
+	override fun getMachineToken(target: String): String =
+		fetchToken(tokenEndpoint, ENTRA_ID, target, mapOf("identity_provider" to ENTRA_ID, "target" to target))
+
+	override fun exchangeUserToken(target: String, userToken: String): String =
+		fetchToken(
+			exchangeEndpoint, TOKENX, target,
+			mapOf("identity_provider" to TOKENX, "target" to target, "user_token" to userToken)
+		)
+
+	private fun fetchToken(endpoint: String, identityProvider: String, target: String, body: Map<String, String>): String {
+		val description = "identity_provider=$identityProvider target=$target"
 		val response = try {
 			restClient.post()
+				.uri(endpoint)
 				.contentType(MediaType.APPLICATION_JSON)
-				.body(mapOf("identity_provider" to ENTRA_ID, "target" to target))
+				.body(body)
 				.retrieve()
 				.body(Map::class.java)
 		} catch (e: RestClientResponseException) {
-			throw TokenServiceUnavailableException("Texas svarte ${e.statusCode.value()} for identity_provider=$ENTRA_ID target=$target")
+			throw TokenServiceUnavailableException("Texas svarte ${e.statusCode.value()} for $description")
 		} catch (e: ResourceAccessException) {
-			throw TokenServiceUnavailableException("Fikk ikke kontakt med Texas for identity_provider=$ENTRA_ID target=$target (${e.javaClass.simpleName})")
+			throw TokenServiceUnavailableException("Fikk ikke kontakt med Texas for $description (${e.javaClass.simpleName})")
 		} catch (e: RestClientException) {
-			throw TokenServiceUnavailableException("Ugyldig svar fra Texas for identity_provider=$ENTRA_ID target=$target (${e.javaClass.simpleName})")
+			throw TokenServiceUnavailableException("Ugyldig svar fra Texas for $description (${e.javaClass.simpleName})")
 		}
 
 		val token = response?.get("access_token")
 		if (token !is String || token.isBlank()) {
-			throw TokenServiceUnavailableException("Svaret fra Texas manglet access_token for identity_provider=$ENTRA_ID target=$target")
+			throw TokenServiceUnavailableException("Svaret fra Texas manglet access_token for $description")
 		}
 		return token
 	}
 
 	private companion object {
 		const val ENTRA_ID = "entra_id"
+		const val TOKENX = "tokenx"
 	}
 }

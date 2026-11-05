@@ -31,6 +31,9 @@ import kotlin.test.assertFalse
 class TexasTokenClientTest {
 
 	private val tokenEndpoint = "http://texas.test/api/v1/token"
+	private val exchangeEndpoint = "http://texas.test/api/v1/token/exchange"
+	private val tokenxTarget = "dev-fss:pdl:pdl-api"
+	private val userToken = "eyJhbGciOiJSUzI1NiJ9.innbyggerens-token-med-pid.signatur"
 	private val target = "api://dev-gcp.team-soknad.soknadsmottaker/.default"
 	private val token = "eyJhbGciOiJSUzI1NiJ9.hemmelig-texas-token.signatur"
 
@@ -42,9 +45,9 @@ class TexasTokenClientTest {
 
 	@BeforeEach
 	fun setUp() {
-		val builder = RestClient.builder().baseUrl(tokenEndpoint)
+		val builder = RestClient.builder()
 		server = MockRestServiceServer.bindTo(builder).build()
-		client = TexasTokenClient(builder.build())
+		client = TexasTokenClient(builder.build(), tokenEndpoint, exchangeEndpoint)
 		appender.start()
 		rootLogger.addAppender(appender)
 	}
@@ -130,12 +133,59 @@ class TexasTokenClientTest {
 		assertTokenNotLogged()
 	}
 
+	@Test
+	fun `exchanges the citizen token at TokenX with the right target`() {
+		server.expect(once(), requestTo(exchangeEndpoint))
+			.andExpect(method(HttpMethod.POST))
+			.andExpect(
+				content().json(
+					"""{"identity_provider":"tokenx","target":"$tokenxTarget","user_token":"$userToken"}""", true
+				)
+			)
+			.andRespond(withSuccess(tokenResponse(), MediaType.APPLICATION_JSON))
+
+		assertEquals(token, client.exchangeUserToken(tokenxTarget, userToken))
+		server.verify()
+		assertTokenNotLogged()
+	}
+
+	@ParameterizedTest
+	@ValueSource(ints = [400, 401, 500, 503])
+	fun `an exchange failure gives TokenServiceUnavailableException without the citizen token`(status: Int) {
+		server.expect(once(), requestTo(exchangeEndpoint))
+			.andRespond(
+				withStatus(HttpStatus.valueOf(status))
+					.contentType(MediaType.APPLICATION_JSON)
+					.body("""{"error":"invalid_grant","user_token":"$userToken"}""")
+			)
+
+		val error = assertFailsWith<TokenServiceUnavailableException> { client.exchangeUserToken(tokenxTarget, userToken) }
+
+		assertEquals("Texas svarte $status for identity_provider=tokenx target=$tokenxTarget", error.message)
+		assertEquals(null, error.cause)
+		server.verify()
+		assertTokenNotLogged()
+	}
+
+	@Test
+	fun `network errors during exchange give TokenServiceUnavailableException without retry`() {
+		server.expect(once(), requestTo(exchangeEndpoint))
+			.andRespond(withException(SocketTimeoutException("Read timed out")))
+
+		val error = assertFailsWith<TokenServiceUnavailableException> { client.exchangeUserToken(tokenxTarget, userToken) }
+
+		assertFalse(error.message!!.contains(userToken))
+		server.verify()
+		assertTokenNotLogged()
+	}
+
 	private fun tokenResponse() = """{"access_token":"$token","expires_in":3599,"token_type":"Bearer"}"""
 
 	private fun assertTokenNotLogged() {
 		appender.list.forEach { event ->
 			val text = event.formattedMessage + (event.throwableProxy?.let { ThrowableProxyUtil.asString(it) } ?: "")
 			assertFalse(text.contains(token), "Tokenet ble logget: ${event.loggerName}")
+			assertFalse(text.contains(userToken), "Innbyggerens token ble logget: ${event.loggerName}")
 		}
 	}
 }

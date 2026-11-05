@@ -14,16 +14,18 @@ import java.time.Duration
 class TexasConfig {
 
 	@Bean
-	fun texasTokenClient(@Value("\${texas.token-endpoint}") tokenEndpoint: String): TexasTokenClient {
+	fun texasTokenClient(
+		@Value("\${texas.token-endpoint}") tokenEndpoint: String,
+		@Value("\${texas.exchange-endpoint}") exchangeEndpoint: String,
+	): TexasTokenClient {
 		val requestFactory = SimpleClientHttpRequestFactory().apply {
 			setConnectTimeout(TIMEOUT)
 			setReadTimeout(TIMEOUT)
 		}
 		return TexasTokenClient(
-			RestClient.builder()
-				.baseUrl(tokenEndpoint)
-				.requestFactory(requestFactory)
-				.build()
+			RestClient.builder().requestFactory(requestFactory).build(),
+			tokenEndpoint,
+			exchangeEndpoint,
 		)
 	}
 
