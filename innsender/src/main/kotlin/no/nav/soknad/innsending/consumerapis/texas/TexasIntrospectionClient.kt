@@ -14,8 +14,9 @@ import org.springframework.web.client.RestClientResponseException
  * Validerer innkommende token hos Texas-sidecaren via NAIS_TOKEN_INTROSPECTION_ENDPOINT (#461).
  *
  * Texas svarer `active: true` med claimene når tokenet er gyldig for appen, og `active: false` med en feilmelding
- * ellers. Feilmeldingen tas ikke vare på, fordi vi ikke kontrollerer hva den inneholder. Feil i kallet blir [TokenServiceUnavailableException] uten respons-body og uten cause, slik at tokenet aldri havner
- * i logger. Ingen retry i appen.
+ * ellers. Feilmeldingen tas ikke vare på, fordi vi ikke kontrollerer hva den inneholder. Feil i kallet blir
+ * [TokenServiceUnavailableException] uten respons-body og uten cause, slik at tokenet aldri havner i logger.
+ * Ingen retry i appen.
  */
 class TexasIntrospectionClient(
 	private val restClient: RestClient,

@@ -7,7 +7,7 @@ enum class TokenIssuer {
 	TOKENX, AZURE;
 
 	companion object {
-		/** Leser en kommaseparert liste, for eksempel verdien av texas.innkommende.utstedere. */
+		/** Leser en kommaseparert liste, for eksempel verdien av texas.incoming.issuers. */
 		fun fromList(value: String): Set<TokenIssuer> =
 			value.split(',').map { it.trim() }.filter { it.isNotEmpty() }.map { valueOf(it.uppercase()) }.toSet()
 	}
