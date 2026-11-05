@@ -4,7 +4,7 @@ import no.nav.security.token.support.client.core.ClientProperties
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.soknad.arkivering.soknadsarkiverer.service.tokensupport.TokenService
-import no.nav.soknad.innsending.consumerapis.texas.TexasTokenKlient
+import no.nav.soknad.innsending.consumerapis.token.AccessTokenProvider
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.NAV_CONSUMER_ID
@@ -68,10 +68,10 @@ class RestClientOAuthConfig(
 	@Qualifier("kodeverkApiClient")
 	fun kodeverkApiClient(
 		restConfig: RestConfig,
-		texasTokenKlient: TexasTokenKlient,
+		accessTokenProvider: AccessTokenProvider,
 		@Value("\${texas.target.kodeverk}") target: String,
 		subjectHandler: SubjectHandlerInterface
-	): RestClient = restClientWithToken(restConfig.kodeverkUrl, { texasTokenKlient.hentMaskinToken(target) }, subjectHandler)
+	): RestClient = restClientWithToken(restConfig.kodeverkUrl, { accessTokenProvider.getMachineToken(target) }, subjectHandler)
 
 	@Bean
 	@Profile("!(prod | dev)")
@@ -107,9 +107,9 @@ class RestClientOAuthConfig(
 	@Qualifier("soknadsmottakerRestClient")
 	fun soknadsmottakerRestClient(
 		restConfig: RestConfig,
-		texasTokenKlient: TexasTokenKlient,
+		accessTokenProvider: AccessTokenProvider,
 		@Value("\${texas.target.soknadsmottaker}") target: String
-	) = restClientWithToken(restConfig.soknadsMottakerHost, { texasTokenKlient.hentMaskinToken(target) })
+	) = restClientWithToken(restConfig.soknadsMottakerHost, { accessTokenProvider.getMachineToken(target) })
 
 	@Bean
 	@Profile("!(prod | dev)")

@@ -296,8 +296,8 @@ class AccessMatrixTest : ApplicationTest() {
 	@Test
 	fun `citizen only sees applications owned by one of their identities`() {
 		// PDL-stubben (pdlIdenterOk.json) gir identene 12345678901, 12345678902 og 19876898104 for alle oppslag
-		val ownedViaHistoricalIdent = opprettSoknad(brukerId = "19876898104")
-		val ownedByOtherPerson = opprettSoknad(brukerId = "01017012345")
+		val ownedViaHistoricalIdent = createApplication(brukerId = "19876898104")
+		val ownedByOtherPerson = createApplication(brukerId = "01017012345")
 		val token = tokens.lagTokenXToken(fnr = TokenGenerator.subject)
 
 		assertEquals(200, sendinn(HttpMethod.GET, ownedViaHistoricalIdent, token).status)
@@ -311,7 +311,7 @@ class AccessMatrixTest : ApplicationTest() {
 			"Søknaden skal fortsatt finnes etter avvist sletting")
 	}
 
-	private fun opprettSoknad(brukerId: String): String =
+	private fun createApplication(brukerId: String): String =
 		soknadService.opprettNySoknad(DokumentSoknadDtoTestBuilder(brukerId = brukerId).build()).innsendingsId!!
 
 	private fun sendinn(method: HttpMethod, innsendingsId: String, bearer: String): MatrixResponse =
