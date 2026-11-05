@@ -7,7 +7,7 @@ import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.kontoregister.KontoregisterInterface
 import no.nav.soknad.innsending.consumerapis.kontoregister.KontoregisterService
 import no.nav.soknad.innsending.model.MaalgruppeType
-import no.nav.soknad.innsending.security.BrukerTokenKilde
+import no.nav.soknad.innsending.security.UserTokenSource
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -21,7 +21,7 @@ class PrefillServiceTest : ApplicationTest() {
 
 	// Testen kaller PrefillService uten en HTTP-forespørsel, så innbyggerens TokenX-token må komme herfra
 	@MockkBean
-	lateinit var brukerTokenKilde: BrukerTokenKilde
+	lateinit var userTokenSource: UserTokenSource
 
 	@MockkBean
 	lateinit var kodeverkService: KodeverkService
@@ -42,7 +42,7 @@ class PrefillServiceTest : ApplicationTest() {
 
 	@BeforeEach
 	fun setup() {
-		every { brukerTokenKilde.hentTokenXToken() } returns "innbyggerens-tokenx-token"
+		every { userTokenSource.getUserToken() } returns "innbyggerens-tokenx-token"
 		every { kodeverkService.getPoststed(any()) } answers { postnummerMap[firstArg()] }
 		every { kontoregisterService.getKontonummer() } returns "8361347234732292"
 	}

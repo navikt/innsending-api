@@ -19,19 +19,19 @@ import org.springframework.web.servlet.HandlerInterceptor
  * Avvisning gir [org.springframework.security.authorization.AuthorizationDeniedException], som RestExceptionHandler
  * gjør om til 403.
  */
-class TilgangInterceptor : HandlerInterceptor {
+class AccessInterceptor : HandlerInterceptor {
 
 	private val preAuthorize = PreAuthorizeAuthorizationManager()
 
 	override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
 		if (handler is HandlerMethod) {
-			preAuthorize.verify(::autentisering, SimpleMethodInvocation(handler.bean, handler.method))
+			preAuthorize.verify(::authentication, SimpleMethodInvocation(handler.bean, handler.method))
 		}
 		return true
 	}
 
 	// AnonymousAuthenticationFilter setter alltid en autentisering i HTTP-forespørsler
-	private fun autentisering(): Authentication =
+	private fun authentication(): Authentication =
 		SecurityContextHolder.getContext().authentication
 			?: throw AuthenticationCredentialsNotFoundException("Ingen autentisering i forespørselen")
 }

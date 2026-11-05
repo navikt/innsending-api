@@ -15,8 +15,8 @@ import org.springframework.stereotype.Component
  *
  * Tokenet leses fra sikkerhetskonteksten i tråden som kaller. Hent det før arbeid flyttes til en annen tråd.
  */
-interface BrukerTokenKilde {
-	fun hentTokenXToken(): String?
+interface UserTokenSource {
+	fun getUserToken(): String?
 }
 
 /**
@@ -25,16 +25,16 @@ interface BrukerTokenKilde {
  */
 @Component
 @Profile("test | dev | prod")
-class SpringSecurityBrukerTokenKilde : BrukerTokenKilde {
-	override fun hentTokenXToken(): String? =
-		(SecurityContextHolder.getContext().authentication as? TokenAutentisering)
-			?.token(TokenUtsteder.TOKENX)
+class SpringSecurityUserTokenSource : UserTokenSource {
+	override fun getUserToken(): String? =
+		(SecurityContextHolder.getContext().authentication as? TokenAuthentication)
+			?.token(TokenIssuer.TOKENX)
 			?.token
 }
 
 /** Kilden før steg 3f. Ikke i bruk. Fjernes med token-support i steg 4. */
-class TokenSupportBrukerTokenKilde(private val contextHolder: TokenValidationContextHolder) : BrukerTokenKilde {
-	override fun hentTokenXToken(): String? {
+class TokenSupportUserTokenSource(private val contextHolder: TokenValidationContextHolder) : UserTokenSource {
+	override fun getUserToken(): String? {
 		val context = try {
 			contextHolder.getTokenValidationContext()
 		} catch (_: IllegalStateException) {
@@ -46,8 +46,8 @@ class TokenSupportBrukerTokenKilde(private val contextHolder: TokenValidationCon
 }
 
 /** Forespørselen har ikke noe TokenX-token å bytte. Meldingen skal aldri inneholde token. */
-class ManglerBrukerTokenException(message: String) : RuntimeException(message)
+class MissingUserTokenException(message: String) : RuntimeException(message)
 
-/** Henter TokenX-tokenet eller kaster [ManglerBrukerTokenException]. */
-fun BrukerTokenKilde.krevTokenXToken(target: String): String =
-	hentTokenXToken() ?: throw ManglerBrukerTokenException("Forespørselen har ikke noe TokenX-token å bytte for target=$target")
+/** Henter TokenX-tokenet eller kaster [MissingUserTokenException]. */
+fun UserTokenSource.requireUserToken(target: String): String =
+	getUserToken() ?: throw MissingUserTokenException("Forespørselen har ikke noe TokenX-token å bytte for target=$target")

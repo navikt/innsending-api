@@ -10,7 +10,7 @@ import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.KvitteringsDto
 import no.nav.soknad.innsending.model.PatchSoknadDto
-import no.nav.soknad.innsending.security.KreverInnbygger
+import no.nav.soknad.innsending.security.RequiresCitizen
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.InnsendingService
 import no.nav.soknad.innsending.service.NotificationService
@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@KreverInnbygger
+@RequiresCitizen
 @CrossOrigin(maxAge = 3600)
 @ProtectedWithClaims(
 	issuer = Constants.TOKENX,

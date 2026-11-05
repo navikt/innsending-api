@@ -6,7 +6,7 @@ import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.security.KreverInnbygger
+import no.nav.soknad.innsending.security.RequiresCitizen
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.SoknadService
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@KreverInnbygger
+@RequiresCitizen
 @CrossOrigin(maxAge = 3600)
 @ProtectedWithClaims(
 	issuer = Constants.TOKENX,
