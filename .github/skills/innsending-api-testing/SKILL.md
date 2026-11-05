@@ -7,16 +7,33 @@ description: Write, change, and review tests in innsending-api. Use when adding 
 
 Use these principles when writing tests and when reviewing code changes that include tests. Read the changed behaviour and nearby tests first. Existing tests provide fixtures and infrastructure, not an exemption from these principles.
 
+Prioritize readability over reducing duplication in parameterized tests: vary input data for one operation, and split tests when parameters would select different operations or require conditional assertions.
+
 ## Check that tests detect defects
 
 Avoid tautological tests: derive expected outcomes from the behaviour contract, not from the implementation's algorithm, the production helper being tested, or configured mock return values. Use targeted mutation testing to verify that tests fail when a condition is reversed or a required side effect is removed. Without a configured tool, make a temporary mutation, run the focused tests, restore only that mutation immediately afterwards even if the run fails, and verify the diff and a passing rerun. Investigate surviving mutations for missing behavioural assertions, distinguish equivalent mutations from coverage gaps, and do not add assertions tied to implementation details just to kill a mutant.
 
 ## Choose the test boundary
 
+Choose the test type by the behaviour being verified. The naming conventions below apply to new tests; existing names vary.
+
+| Test type | Choose when | Boundary and naming | Example |
+| --- | --- | --- | --- |
+| Unit test | Testing a utility, mapping, converter, or isolated calculation. | Call the code directly without Spring or a database. Use `<Subject>Test`. | `SoknadMappingTest` |
+| Service unit test | Testing service behaviour that does not require HTTP, persistence, or Spring transaction semantics. | Construct the service with mocked dependencies. Use `<Service>UnitTest`. | `SoknadServiceUnitTest` |
+| REST API test | Testing endpoints belonging to one REST API defined in the OpenAPI specification. | Exercise HTTP through the real controller, service, and persistence path. Use `<Api>RestApiTest`, matching the API name. | `FyllutRestApiTest` |
+| Feature integration test | Testing a feature or flow across APIs, persistence, and outgoing integrations rather than one API's endpoints. | Exercise the real application through REST where practical. Use `<Feature>IntegrationTest`, not a fictitious API name. These tests may remain in the `rest` package. | `OwnerWritingIntegrationTest`, `OwnerSuccessorIntegrationTest` |
+| Database-backed repository or service test | Testing queries, constraints, locks, transactions, or persisted state transitions. | Use the real test database. Use `<Subject>Test`. | `RepositoryUtilsTest` |
+| Migration test | Testing schema changes, historical rows, migration conflicts, or compatibility between old and new writers. | Run the actual Flyway migration against a real test database. Use `<Feature>MigrationTest`. | `OwnerMigrationTest` |
+
+REST API tests and REST-driven feature integration tests both use `ApplicationTest` and mock external boundaries. Their names distinguish the scope being tested, not different test runners. Both follow the REST workflow below.
+
 - Start with black-box REST tests for API-visible behaviour. Exercise the real controller, service, and persistence path. Mock external boundaries, not internal services or repositories.
 - Test utilities and mappings directly with unit tests. Use focused service tests with mocked dependencies for behaviour that does not need the HTTP stack.
 - Use repository tests for database-specific behaviour, including queries, constraints, locks, and transactions. Direct database setup and assertions are natural at this boundary. Use the real test database rather than mocking database semantics.
 - In REST tests, read changed state through REST GET endpoints instead of repository reads or database assertions. A direct database assertion is an exception: explain what cannot be observed through REST and why the assertion belongs in this test.
+
+Moving SQL into a test helper does not remove this exception requirement. Use `ApplicationTestRepository` only when the state cannot be verified through REST responses, receipts, outgoing calls, or another observable boundary. Do not use it as a shortcut for an available REST GET. Keep assertions and bounded waits in the test, not in the repository.
 
 ## REST test workflow
 
@@ -33,6 +50,7 @@ Paths below are relative to `innsender/src/test/kotlin/no/nav/soknad/innsending/
 
 - `ApplicationTest.kt` supplies the Spring Boot random-port test context, `test` profile, `WebTestClient`, WireMock, and MockOAuth2Server.
 - `utils/ApiWebClient.kt` provides `createSoknad`, `utfyltSoknad`, `getSoknadSendinn`, upload and submission helpers, plus response assertions. Use `assertHttpStatus` when the exact status matters, and inspect the body. When a request is not covered, extend `utils/ApiWebClient.kt` with the necessary helper instead of calling `webTestClient` or `utils/RestTestClient.kt` directly from a test or introducing local HTTP helpers.
+- [`utils/ApplicationTestRepository.kt`](../../../innsender/src/test/kotlin/no/nav/soknad/innsending/utils/ApplicationTestRepository.kt) encapsulates SQL for justified database assertions and historical fixture states that REST cannot create. It returns typed stored state; callers must still explain why each database observation is necessary.
 - Reuse `utils/builders/`, `utils/TokenGenerator.kt`, and resources under `innsender/src/test/resources/`. Use synthetic data only. Do not print personal data, tokens, or secrets in test output or failure messages.
 - `rest/InnsendingApiIntegrationTest.kt` shows REST-driven submission flows and captured soknadsmottaker payloads. `rest/fyllut/FyllutRestApiTest.kt` shows notification payload assertions at `PublisherInterface`.
 - `service/unittest/` contains focused MockK tests. `service/RepositoryUtilsTest.kt` demonstrates database-backed state-transition checks. Reuse JUnit and Kotlin assertions already used nearby rather than adding another framework.
