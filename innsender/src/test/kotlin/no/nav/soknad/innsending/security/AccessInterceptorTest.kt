@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.security
 
-import no.nav.soknad.innsending.consumerapis.texas.TexasUnavailableException
+import no.nav.soknad.innsending.consumerapis.token.TokenServiceUnavailableException
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.mock.web.MockHttpServletRequest
@@ -13,39 +13,39 @@ import org.springframework.web.method.HandlerMethod
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-class TilgangInterceptorTest {
+class AccessInterceptorTest {
 
-	private val interceptor = TilgangInterceptor()
+	private val interceptor = AccessInterceptor()
 
-	@KreverAzure
+	@RequiresAzure
 	class AzureController {
-		fun hent() = "ok"
+		fun get() = "ok"
 	}
 
-	class OffentligController {
-		fun hent() = "ok"
+	class PublicController {
+		fun get() = "ok"
 	}
 
-	private fun handler(bean: Any) = HandlerMethod(bean, bean.javaClass.getMethod("hent"))
+	private fun handler(bean: Any) = HandlerMethod(bean, bean.javaClass.getMethod("get"))
 
 	@AfterEach
-	fun ryddOpp() = SecurityContextHolder.clearContext()
+	fun cleanUp() = SecurityContextHolder.clearContext()
 
-	private fun anonym() {
+	private fun anonymous() {
 		SecurityContextHolder.getContext().authentication =
 			AnonymousAuthenticationToken("key", "anonymousUser", AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"))
 	}
 
 	@Test
-	fun `riktig tilgang slipper gjennom`() {
-		SecurityContextHolder.getContext().authentication = TokenAutentisering(TokenUtsteder.AZURE, emptyMap(), "t")
+	fun `the right access lets the request through`() {
+		SecurityContextHolder.getContext().authentication = TokenAuthentication(TokenIssuer.AZURE, emptyMap(), "t")
 
 		assertTrue(interceptor.preHandle(MockHttpServletRequest(), MockHttpServletResponse(), handler(AzureController())))
 	}
 
 	@Test
-	fun `manglende tilgang avvises før bodyen leses`() {
-		anonym()
+	fun `missing access is rejected before the body is read`() {
+		anonymous()
 
 		assertFailsWith<AuthorizationDeniedException> {
 			interceptor.preHandle(MockHttpServletRequest(), MockHttpServletResponse(), handler(AzureController()))
@@ -53,20 +53,20 @@ class TilgangInterceptorTest {
 	}
 
 	@Test
-	fun `Texas nede gir 503 i stedet for 403`() {
-		anonym()
-		val request = MockHttpServletRequest().apply { setAttribute(TexasAutentiseringFilter.TEXAS_FEIL, true) }
+	fun `Texas down gives 503 instead of 403`() {
+		anonymous()
+		val request = MockHttpServletRequest().apply { setAttribute(TokenAuthenticationFilter.TOKEN_VALIDATION_UNAVAILABLE, true) }
 
-		assertFailsWith<TexasUnavailableException> {
+		assertFailsWith<TokenServiceUnavailableException> {
 			interceptor.preHandle(request, MockHttpServletResponse(), handler(AzureController()))
 		}
 	}
 
 	@Test
-	fun `endepunkt uten regel slipper gjennom, også når Texas er nede`() {
-		anonym()
-		val request = MockHttpServletRequest().apply { setAttribute(TexasAutentiseringFilter.TEXAS_FEIL, true) }
+	fun `an endpoint without a rule lets the request through, also when Texas is down`() {
+		anonymous()
+		val request = MockHttpServletRequest().apply { setAttribute(TokenAuthenticationFilter.TOKEN_VALIDATION_UNAVAILABLE, true) }
 
-		assertTrue(interceptor.preHandle(request, MockHttpServletResponse(), handler(OffentligController())))
+		assertTrue(interceptor.preHandle(request, MockHttpServletResponse(), handler(PublicController())))
 	}
 }

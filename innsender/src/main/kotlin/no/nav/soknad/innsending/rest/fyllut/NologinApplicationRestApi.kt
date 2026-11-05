@@ -6,7 +6,7 @@ import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.ApplicationSubmissionResponse
 import no.nav.soknad.innsending.model.FileDto
 import no.nav.soknad.innsending.model.SubmitApplicationRequest
-import no.nav.soknad.innsending.security.KreverAzureNologin
+import no.nav.soknad.innsending.security.RequiresAzureNologin
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.DocumentService
 import no.nav.soknad.innsending.service.InnsendingService
@@ -27,7 +27,7 @@ import org.springframework.web.multipart.MultipartFile
 import java.util.UUID
 
 @RestController
-@KreverAzureNologin
+@RequiresAzureNologin
 // Azure-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3i)
 @Unprotected
 class NologinApplicationRestApi(

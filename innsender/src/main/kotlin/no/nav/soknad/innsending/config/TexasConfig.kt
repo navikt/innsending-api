@@ -1,9 +1,9 @@
 package no.nav.soknad.innsending.config
 
-import no.nav.soknad.innsending.consumerapis.texas.TexasTokenKlient
-import no.nav.soknad.innsending.consumerapis.texas.TokenIntrospeksjon
-import no.nav.soknad.innsending.security.TexasSkygge
-import no.nav.soknad.innsending.security.TokenUtsteder
+import no.nav.soknad.innsending.consumerapis.texas.TexasTokenClient
+import no.nav.soknad.innsending.consumerapis.token.TokenIntrospector
+import no.nav.soknad.innsending.security.TexasShadow
+import no.nav.soknad.innsending.security.TokenIssuer
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -19,39 +19,39 @@ import java.time.Duration
 class TexasConfig {
 
 	@Bean
-	fun texasTokenKlient(
+	fun texasTokenClient(
 		@Value("\${texas.token-endpoint}") tokenEndpoint: String,
 		@Value("\${texas.exchange-endpoint}") exchangeEndpoint: String,
-	): TexasTokenKlient = TexasTokenKlient(restClient(TOKEN_TIMEOUT), tokenEndpoint, exchangeEndpoint)
+	): TexasTokenClient = TexasTokenClient(restClient(TOKEN_TIMEOUT), tokenEndpoint, exchangeEndpoint)
 
 	// Skyggemodus i steg 3h. Utviklerteamet avgjør hvor lenge den kjører før 3i og 3j.
 	// Sammenligner bare utstederne token-support fortsatt validerer, og slås av når Texas har tatt over alle
 	@Bean
-	@ConditionalOnProperty(name = ["texas.skygge.aktiv"], havingValue = "true")
-	fun texasSkygge(
-		introspeksjon: TokenIntrospeksjon,
+	@ConditionalOnProperty(name = ["texas.shadow.enabled"], havingValue = "true")
+	fun texasShadow(
+		introspector: TokenIntrospector,
 		metrics: InnsenderMetrics,
-		@Value("\${texas.skygge.andel:1.0}") andel: Double,
-		@Value("\${texas.innkommende.utstedere:}") texasUtstedere: String,
-	): TexasSkygge? {
-		val viaTokenSupport = TokenUtsteder.entries.toSet() - TokenUtsteder.fraListe(texasUtstedere)
+		@Value("\${texas.shadow.sample-rate:1.0}") sampleRate: Double,
+		@Value("\${texas.incoming.issuers:}") texasIssuers: String,
+	): TexasShadow? {
+		val viaTokenSupport = TokenIssuer.entries.toSet() - TokenIssuer.fromList(texasIssuers)
 		if (viaTokenSupport.isEmpty()) return null
-		return TexasSkygge(introspeksjon, metrics, andel.coerceIn(0.0, 1.0), utstedere = viaTokenSupport)
+		return TexasShadow(introspector, metrics, sampleRate.coerceIn(0.0, 1.0), issuers = viaTokenSupport)
 	}
 
 	// Tilkobling og lesing har hver sin grense. Grensen deles mellom dem, slik at et kall aldri venter lenger enn
 	// det vedtatte totalt. Svarene fra Texas er små, så lesegrensen gjelder i praksis hele svaret
 	private fun restClient(timeout: Duration): RestClient {
-		val tilkobling = timeout.dividedBy(4)
+		val connectTimeout = timeout.dividedBy(4)
 		val requestFactory = SimpleClientHttpRequestFactory().apply {
-			setConnectTimeout(tilkobling)
-			setReadTimeout(timeout.minus(tilkobling))
+			setConnectTimeout(connectTimeout)
+			setReadTimeout(timeout.minus(connectTimeout))
 		}
 		return RestClient.builder().requestFactory(requestFactory).build()
 	}
 
 	private companion object {
-		// Vedtatt i #461: 5 sekunder for tokenkall, uten retry i appen. Introspeksjon ligger i TexasIntrospeksjonConfig
+		// Vedtatt i #461: 5 sekunder for tokenkall, uten retry i appen. Introspeksjon ligger i TexasIntrospectionConfig
 		val TOKEN_TIMEOUT: Duration = Duration.ofSeconds(5)
 	}
 }

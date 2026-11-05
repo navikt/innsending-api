@@ -1,12 +1,12 @@
 package no.nav.soknad.innsending.config
 
 import no.nav.security.token.support.core.context.TokenValidationContextHolder
-import no.nav.soknad.innsending.consumerapis.texas.TokenIntrospeksjon
-import no.nav.soknad.innsending.security.TexasAutentiseringFilter
-import no.nav.soknad.innsending.security.TexasSkygge
-import no.nav.soknad.innsending.security.TexasSkyggeFilter
-import no.nav.soknad.innsending.security.TokenSupportBroFilter
-import no.nav.soknad.innsending.security.TokenUtsteder
+import no.nav.soknad.innsending.consumerapis.token.TokenIntrospector
+import no.nav.soknad.innsending.security.TokenAuthenticationFilter
+import no.nav.soknad.innsending.security.TexasShadow
+import no.nav.soknad.innsending.security.TexasShadowFilter
+import no.nav.soknad.innsending.security.TokenSupportBridgeFilter
+import no.nav.soknad.innsending.security.TokenIssuer
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -36,34 +36,34 @@ class WebSecurityConfig {
 	fun filterChain(
 		http: HttpSecurity,
 		tokenValidationContextHolder: ObjectProvider<TokenValidationContextHolder>,
-		tokenIntrospeksjon: ObjectProvider<TokenIntrospeksjon>,
-		texasSkygge: ObjectProvider<TexasSkygge>,
-		@Value("\${texas.innkommende.utstedere:}") texasUtstedere: String,
-		@Value("\${texas.innkommende.issuer.tokenx:}") tokenxIssuer: String,
-		@Value("\${texas.innkommende.issuer.azure:}") azureIssuer: String,
+		tokenIntrospector: ObjectProvider<TokenIntrospector>,
+		texasShadow: ObjectProvider<TexasShadow>,
+		@Value("\${texas.incoming.issuers:}") texasIssuers: String,
+		@Value("\${texas.incoming.issuer.tokenx:}") tokenxIssuer: String,
+		@Value("\${texas.incoming.issuer.azure:}") azureIssuer: String,
 	): SecurityFilterChain {
 		http.csrf { it.disable() }
 		// Appen bruker bare bearer-token. Ingen sesjon og ingen lagret forespørsel å sende brukeren tilbake til
 		http.sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
 		http.requestCache { it.requestCache(NullRequestCache()) }
 
-		val viaTexas = TokenUtsteder.fraListe(texasUtstedere)
-		val viaTokenSupport = TokenUtsteder.entries.toSet() - viaTexas
+		val viaTexas = TokenIssuer.fromList(texasIssuers)
+		val viaTokenSupport = TokenIssuer.entries.toSet() - viaTexas
 
 		// Rekkefølgen er bro, Texas, skygge, og alle før AnonymousAuthenticationFilter: Texas validerer bare det broen
 		// ikke har autentisert, og skyggemodus trenger avgjørelsene fra begge. Hvert filter forankres ved et eget
 		// innebygd filter, slik at de får hvert sitt ordensnummer i stedet for å dele ett
 		tokenValidationContextHolder.ifAvailable { holder ->
-			http.addFilterBefore(TokenSupportBroFilter(holder, viaTokenSupport), SecurityContextHolderAwareRequestFilter::class.java)
+			http.addFilterBefore(TokenSupportBridgeFilter(holder, viaTokenSupport), SecurityContextHolderAwareRequestFilter::class.java)
 		}
 		if (viaTexas.isNotEmpty()) {
-			val introspeksjon = tokenIntrospeksjon.ifAvailable
-				?: error("texas.innkommende.utstedere=$viaTexas krever Texas, men profilen har ingen introspeksjon")
-			val issuere = mapOf(TokenUtsteder.TOKENX to tokenxIssuer, TokenUtsteder.AZURE to azureIssuer).filterValues { it.isNotBlank() }
-			http.addFilterAfter(TexasAutentiseringFilter(introspeksjon, viaTexas, issuere), SecurityContextHolderAwareRequestFilter::class.java)
+			val introspector = tokenIntrospector.ifAvailable
+				?: error("texas.incoming.issuers=$viaTexas krever Texas, men profilen har ingen introspeksjon")
+			val issuerUrls = mapOf(TokenIssuer.TOKENX to tokenxIssuer, TokenIssuer.AZURE to azureIssuer).filterValues { it.isNotBlank() }
+			http.addFilterAfter(TokenAuthenticationFilter(introspector, viaTexas, issuerUrls), SecurityContextHolderAwareRequestFilter::class.java)
 		}
 		// Skyggemodus (steg 3h) sammenligner bare utstederne token-support fortsatt validerer
-		texasSkygge.ifAvailable { skygge -> http.addFilterBefore(TexasSkyggeFilter(skygge), AnonymousAuthenticationFilter::class.java) }
+		texasShadow.ifAvailable { shadow -> http.addFilterBefore(TexasShadowFilter(shadow), AnonymousAuthenticationFilter::class.java) }
 		return http.build()
 	}
 }

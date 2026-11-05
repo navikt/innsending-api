@@ -13,7 +13,7 @@ import org.springframework.test.context.ActiveProfiles
  * samme svar for hvert endepunkt og hver tokentype. Det er den samme fordelingen som etter steg 3i og 3j,
  * bare med token-support i stedet for Texas som validerer.
  */
-@ActiveProfiles("test", "spring-security-tilgang")
+@ActiveProfiles("test", "spring-security-access")
 class AccessMatrixSpringSecurityTest : AccessMatrixTest()
 
 @EnableJwtTokenValidation(
@@ -26,6 +26,6 @@ class AccessMatrixSpringSecurityTest : AccessMatrixTest()
 		"org.webjars.swagger-ui"
 	]
 )
-@Profile("test & spring-security-tilgang")
+@Profile("test & spring-security-access")
 @Configuration
-class JwtTokenValidationUtenTilgangsreglerConfig
+class JwtTokenValidationWithoutAccessRulesConfig

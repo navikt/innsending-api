@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.config
 
 import com.expediagroup.graphql.client.spring.GraphQLWebClient
-import no.nav.soknad.innsending.consumerapis.texas.TexasTokenKlient
+import no.nav.soknad.innsending.consumerapis.token.AccessTokenProvider
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.MDCUtil
 import org.slf4j.LoggerFactory
@@ -22,7 +22,7 @@ import reactor.netty.http.client.HttpClientResponse
 @EnableConfigurationProperties(RestConfig::class)
 class SafClientConfig(
 	private val restConfig: RestConfig,
-	private val texasTokenKlient: TexasTokenKlient,
+	private val accessTokenProvider: AccessTokenProvider,
 	@Value("\${texas.target.saf}") private val safTarget: String,
 	@Value("\${spring.application.name}") private val applicationName: String
 ) {
@@ -55,7 +55,7 @@ class SafClientConfig(
 				it.header(Constants.NAV_CONSUMER_ID, applicationName)
 				it.header(
 					HttpHeaders.AUTHORIZATION,
-					"Bearer ${texasTokenKlient.hentMaskinToken(safTarget)}",
+					"Bearer ${accessTokenProvider.getMachineToken(safTarget)}",
 				)
 			}
 	)

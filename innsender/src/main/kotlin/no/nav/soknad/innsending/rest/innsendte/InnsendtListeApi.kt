@@ -3,7 +3,7 @@ package no.nav.soknad.innsending.rest.innsendte
 import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.InnsendteApi
 import no.nav.soknad.innsending.model.SoknadFile
-import no.nav.soknad.innsending.security.KreverAzure
+import no.nav.soknad.innsending.security.RequiresAzure
 import no.nav.soknad.innsending.service.InnsendingService
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
@@ -22,7 +22,7 @@ class InnsendtListeApi(
 	@Timed(InnsenderOperation.HENT_FILER)
 	// Azure-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3i)
 	@Unprotected
-	@KreverAzure
+	@RequiresAzure
 	override fun hentInnsendteFiler(uuids: List<String>, xInnsendingId: String): ResponseEntity<List<SoknadFile>> {
 		logger.info("$xInnsendingId: Kall for å hente filene $uuids til en innsendt søknad")
 

@@ -8,7 +8,7 @@ import no.nav.soknad.innsending.model.BrukernotifikasjonsType
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.EksternOpprettEttersending
 import no.nav.soknad.innsending.model.EnvQualifier
-import no.nav.soknad.innsending.security.KreverInnbygger
+import no.nav.soknad.innsending.security.RequiresCitizen
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.EttersendingService
@@ -21,7 +21,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@KreverInnbygger
+@RequiresCitizen
 // TokenX-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3j)
 @Unprotected
 class EksternRestApi(

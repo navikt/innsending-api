@@ -7,7 +7,7 @@ import no.nav.soknad.innsending.location.UrlHandler
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.LospostDto
 import no.nav.soknad.innsending.model.OpprettLospost
-import no.nav.soknad.innsending.security.KreverInnbygger
+import no.nav.soknad.innsending.security.RequiresCitizen
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.LospostService
 import no.nav.soknad.innsending.service.NotificationService
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.net.URI
 
 @RestController
-@KreverInnbygger
+@RequiresCitizen
 // TokenX-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3j)
 @Unprotected
 class LospostRestApi(

@@ -4,7 +4,7 @@ import jakarta.validation.Valid
 import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.FyllutMergeApi
 import no.nav.soknad.innsending.model.MergeFilerDto
-import no.nav.soknad.innsending.security.KreverAzure
+import no.nav.soknad.innsending.security.RequiresAzure
 import no.nav.soknad.pdfutilities.PdfMergerInterface
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@KreverAzure
+@RequiresAzure
 // Azure-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3i)
 @Unprotected
 class FyllutMerge(private val pdfMerger: PdfMergerInterface): FyllutMergeApi {

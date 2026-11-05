@@ -3,7 +3,7 @@ package no.nav.soknad.innsending.rest.endtoend
 import no.nav.security.token.support.core.api.Unprotected
 import no.nav.soknad.innsending.api.EndtoendApi
 import no.nav.soknad.innsending.model.ArkiveringsStatusDto
-import no.nav.soknad.innsending.security.KreverInnbygger
+import no.nav.soknad.innsending.security.RequiresCitizen
 import no.nav.soknad.innsending.service.SoknadService
 import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpStatus
@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@KreverInnbygger
+@RequiresCitizen
 @Profile("endtoend")
 // TokenX-token valideres av Texas og tilgangen av @PreAuthorize (#461, steg 3j)
 @Unprotected

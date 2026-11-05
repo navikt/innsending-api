@@ -10,9 +10,9 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import io.mockk.verify
 import no.nav.soknad.innsending.consumerapis.pdl.PdlAPI
-import no.nav.soknad.innsending.consumerapis.texas.TexasTokenKlient
-import no.nav.soknad.innsending.consumerapis.texas.TexasUnavailableException
-import no.nav.soknad.innsending.security.BrukerTokenKilde
+import no.nav.soknad.innsending.consumerapis.token.AccessTokenProvider
+import no.nav.soknad.innsending.consumerapis.token.TokenServiceUnavailableException
+import no.nav.soknad.innsending.security.UserTokenSource
 import no.nav.soknad.innsending.util.Constants.HEADER_BEHANDLINGSNUMMER
 import no.nav.soknad.innsending.util.Constants.PDL_BEHANDLINGSNUMMER
 import no.nav.soknad.innsending.pdl.generated.HentIdenter
@@ -88,13 +88,13 @@ class PdlClientConfigTest {
 	}
 
 	@Test
-	fun `bytter innbyggerens TokenX-token hos Texas med PDL som target`() {
+	fun `exchanges the citizen TokenX token with PDL as target`() {
 		wireMockServer.start()
 		wireMockServer.stubFor(post(urlEqualTo("/graphql")).willReturn(okJson(identerResponse())))
 
 		PdlAPI(createClientConfig().graphQLClient()).hentPersonIdents("12345678901")
 
-		verify(exactly = 1) { texasTokenKlient.hentBrukerToken(pdlTarget, "innbyggerens-tokenx-token") }
+		verify(exactly = 1) { accessTokenProvider.exchangeUserToken(pdlTarget, "innbyggerens-tokenx-token") }
 		wireMockServer.verify(
 			postRequestedFor(urlEqualTo("/graphql"))
 				.withHeader("Authorization", equalTo("Bearer pdl-token"))
@@ -103,9 +103,9 @@ class PdlClientConfigTest {
 	}
 
 	@Test
-	fun `feil mot Texas stopper kallet til PDL og gir samme fallback som før`() {
+	fun `a Texas failure stops the call to PDL with the same fallback as before`() {
 		wireMockServer.start()
-		every { texasTokenKlient.hentBrukerToken(any(), any()) } throws TexasUnavailableException("Texas svarte 503")
+		every { accessTokenProvider.exchangeUserToken(any(), any()) } throws TokenServiceUnavailableException("Texas svarte 503")
 
 		val idents = PdlAPI(createClientConfig().graphQLClient()).hentPersonIdents("12345678901")
 
@@ -114,23 +114,23 @@ class PdlClientConfigTest {
 	}
 
 	@Test
-	fun `uten TokenX-token kalles verken Texas eller PDL, og fallback er som før`() {
+	fun `without a TokenX token neither Texas nor PDL is called, and the fallback is unchanged`() {
 		wireMockServer.start()
-		every { brukerTokenKilde.hentTokenXToken() } returns null
+		every { userTokenSource.getUserToken() } returns null
 
 		val idents = PdlAPI(createClientConfig().graphQLClient()).hentPersonIdents("12345678901")
 
 		assertEquals(listOf("12345678901"), idents.map { it.ident })
-		verify(exactly = 0) { texasTokenKlient.hentBrukerToken(any(), any()) }
+		verify(exactly = 0) { accessTokenProvider.exchangeUserToken(any(), any()) }
 		wireMockServer.verify(0, anyRequestedFor(anyUrl()))
 	}
 
 	private val pdlTarget = "dev-fss:pdl:pdl-api"
-	private val texasTokenKlient = mockk<TexasTokenKlient> {
-		every { hentBrukerToken(pdlTarget, "innbyggerens-tokenx-token") } returns "pdl-token"
+	private val accessTokenProvider = mockk<AccessTokenProvider> {
+		every { exchangeUserToken(pdlTarget, "innbyggerens-tokenx-token") } returns "pdl-token"
 	}
-	private val brukerTokenKilde = mockk<BrukerTokenKilde> {
-		every { hentTokenXToken() } returns "innbyggerens-tokenx-token"
+	private val userTokenSource = mockk<UserTokenSource> {
+		every { getUserToken() } returns "innbyggerens-tokenx-token"
 	}
 
 	private fun identerResponse() =
@@ -138,6 +138,6 @@ class PdlClientConfigTest {
 
 	private fun createClientConfig(): PdlClientConfig {
 		val restConfig = RestConfig().apply { pdlUrl = wireMockServer.baseUrl() }
-		return PdlClientConfig(restConfig, texasTokenKlient, brukerTokenKilde, pdlTarget)
+		return PdlClientConfig(restConfig, accessTokenProvider, userTokenSource, pdlTarget)
 	}
 }
