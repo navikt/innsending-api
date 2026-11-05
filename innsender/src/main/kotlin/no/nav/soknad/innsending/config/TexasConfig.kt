@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.config
 
-import no.nav.soknad.innsending.consumerapis.texas.TexasTokenKlient
+import no.nav.soknad.innsending.consumerapis.texas.TexasTokenClient
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -14,15 +14,15 @@ import java.time.Duration
 class TexasConfig {
 
 	@Bean
-	fun texasTokenKlient(
+	fun texasTokenClient(
 		@Value("\${texas.token-endpoint}") tokenEndpoint: String,
 		@Value("\${texas.exchange-endpoint}") exchangeEndpoint: String,
-	): TexasTokenKlient {
+	): TexasTokenClient {
 		val requestFactory = SimpleClientHttpRequestFactory().apply {
 			setConnectTimeout(TIMEOUT)
 			setReadTimeout(TIMEOUT)
 		}
-		return TexasTokenKlient(
+		return TexasTokenClient(
 			RestClient.builder().requestFactory(requestFactory).build(),
 			tokenEndpoint,
 			exchangeEndpoint,

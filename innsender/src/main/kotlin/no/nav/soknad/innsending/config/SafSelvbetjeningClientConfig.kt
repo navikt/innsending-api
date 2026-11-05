@@ -1,9 +1,9 @@
 package no.nav.soknad.innsending.config
 
 import com.expediagroup.graphql.client.spring.GraphQLWebClient
-import no.nav.soknad.innsending.consumerapis.texas.TexasTokenKlient
-import no.nav.soknad.innsending.security.BrukerTokenKilde
-import no.nav.soknad.innsending.security.krevTokenXToken
+import no.nav.soknad.innsending.consumerapis.token.AccessTokenProvider
+import no.nav.soknad.innsending.security.UserTokenSource
+import no.nav.soknad.innsending.security.requireUserToken
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.CORRELATION_ID
 import no.nav.soknad.innsending.util.Constants.NAV_CONSUMER_ID
@@ -30,8 +30,8 @@ import java.util.concurrent.atomic.AtomicLong
 @EnableConfigurationProperties(RestConfig::class)
 class SafSelvbetjeningClientConfig(
 	private val restConfig: RestConfig,
-	private val texasTokenKlient: TexasTokenKlient,
-	private val brukerTokenKilde: BrukerTokenKilde,
+	private val accessTokenProvider: AccessTokenProvider,
+	private val userTokenSource: UserTokenSource,
 	@Value("\${texas.target.safselvbetjening}") private val safselvbetjeningTarget: String,
 	@Value("\${spring.application.name}") private val applicationName: String
 ) {
@@ -70,7 +70,7 @@ class SafSelvbetjeningClientConfig(
 				it.header(NAV_CONSUMER_ID, applicationName)
 				it.header(
 					HttpHeaders.AUTHORIZATION,
-					"Bearer ${texasTokenKlient.hentBrukerToken(safselvbetjeningTarget, brukerTokenKilde.krevTokenXToken(safselvbetjeningTarget))}",
+					"Bearer ${accessTokenProvider.exchangeUserToken(safselvbetjeningTarget, userTokenSource.requireUserToken(safselvbetjeningTarget))}",
 				)
 			}
 	)
