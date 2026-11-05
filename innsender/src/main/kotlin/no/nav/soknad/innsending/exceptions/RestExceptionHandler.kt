@@ -2,7 +2,7 @@ package no.nav.soknad.innsending.exceptions
 
 import com.google.cloud.storage.StorageException
 import jakarta.servlet.http.HttpServletRequest
-import no.nav.soknad.innsending.consumerapis.texas.TexasUnavailableException
+import no.nav.soknad.innsending.consumerapis.token.TokenServiceUnavailableException
 import no.nav.soknad.innsending.exceptions.utils.messageForLog
 import no.nav.soknad.innsending.model.RestErrorResponseDto
 import no.nav.soknad.innsending.service.config.annotation.ConfigVerificationException
@@ -197,7 +197,7 @@ class RestExceptionHandler {
 	@ExceptionHandler
 	fun texasUnavailableException(
 		request: HttpServletRequest,
-		exception: TexasUnavailableException
+		exception: TokenServiceUnavailableException
 	): ResponseEntity<RestErrorResponseDto> {
 		logger.error("Feil ved kall til ${request.requestURI}: ${exception.message}")
 

@@ -2,7 +2,7 @@ package no.nav.soknad.innsending.security
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import no.nav.soknad.innsending.consumerapis.texas.TexasUnavailableException
+import no.nav.soknad.innsending.consumerapis.token.TokenServiceUnavailableException
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException
 import org.springframework.security.authorization.AuthorizationDeniedException
 import org.springframework.security.authorization.method.PreAuthorizeAuthorizationManager
@@ -21,18 +21,18 @@ import org.springframework.web.servlet.HandlerInterceptor
  * Avvisning gir [org.springframework.security.authorization.AuthorizationDeniedException], som RestExceptionHandler
  * gjør om til 403.
  */
-class TilgangInterceptor : HandlerInterceptor {
+class AccessInterceptor : HandlerInterceptor {
 
 	private val preAuthorize = PreAuthorizeAuthorizationManager()
 
 	override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
 		if (handler is HandlerMethod) {
 			try {
-				preAuthorize.verify(::autentisering, SimpleMethodInvocation(handler.bean, handler.method))
+				preAuthorize.verify(::authentication, SimpleMethodInvocation(handler.bean, handler.method))
 			} catch (e: AuthorizationDeniedException) {
 				// Texas svarte ikke, så vi vet ikke om tokenet er gyldig. Det skal gi 503, aldri 403 (#461)
-				if (request.getAttribute(TexasAutentiseringFilter.TEXAS_FEIL) == true) {
-					throw TexasUnavailableException("Texas svarte ikke ved validering av innkommende token")
+				if (request.getAttribute(TokenAuthenticationFilter.TOKEN_VALIDATION_UNAVAILABLE) == true) {
+					throw TokenServiceUnavailableException("Texas svarte ikke ved validering av innkommende token")
 				}
 				throw e
 			}
@@ -41,7 +41,7 @@ class TilgangInterceptor : HandlerInterceptor {
 	}
 
 	// AnonymousAuthenticationFilter setter alltid en autentisering i HTTP-forespørsler
-	private fun autentisering(): Authentication =
+	private fun authentication(): Authentication =
 		SecurityContextHolder.getContext().authentication
 			?: throw AuthenticationCredentialsNotFoundException("Ingen autentisering i forespørselen")
 }

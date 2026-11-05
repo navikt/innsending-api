@@ -8,9 +8,9 @@ import org.springframework.security.access.prepost.PreAuthorize
  * Reglene er de samme som `@ProtectedWithClaims` i token-support håndhevet før migreringen. En claim med strengverdi
  * må være lik verdien i regelen, og en claim med listeverdi må inneholde den.
  */
-object Tilgang {
-	const val TOKENX = "UTSTEDER_TOKENX"
-	const val AZURE = "UTSTEDER_AZURE"
+object Access {
+	const val TOKENX = "ISSUER_TOKENX"
+	const val AZURE = "ISSUER_AZURE"
 
 	/**
 	 * Innbygger med TokenX-token og høyt sikkerhetsnivå: `acr=Level4` eller `acr=idporten-loa-high`.
@@ -18,7 +18,7 @@ object Tilgang {
 	 * controlleren og gitt 401 i stedet for 403, slik token-support ga (#461, steg 3j). En pid med feil type gir
 	 * fortsatt 401 fra identitetsoppslaget, som før.
 	 */
-	const val INNBYGGER = "INNBYGGER_HOYT_NIVAA"
+	const val CITIZEN = "CITIZEN_HIGH_LOA"
 
 	/** Azure-token med nøyaktig `scp=admin-access defaultaccess`. Rekkefølge og ekstra scope gir ikke admin, som i dag. */
 	const val AZURE_ADMIN = "AZURE_ADMIN"
@@ -26,30 +26,30 @@ object Tilgang {
 	/** Azure-token der `roles` inneholder `nologin-access`. */
 	const val AZURE_NOLOGIN = "AZURE_NOLOGIN"
 
-	private val hoyeAcrVerdier = setOf("Level4", "idporten-loa-high")
+	private val highAcrValues = setOf("Level4", "idporten-loa-high")
 	private const val ADMIN_SCP = "admin-access defaultaccess"
-	private const val NOLOGIN_ROLLE = "nologin-access"
+	private const val NOLOGIN_ROLE = "nologin-access"
 
-	fun tilgangerFor(utsteder: TokenUtsteder, claims: Map<String, Any?>): Set<String> = when (utsteder) {
-		TokenUtsteder.TOKENX -> buildSet {
+	fun authoritiesFor(issuer: TokenIssuer, claims: Map<String, Any?>): Set<String> = when (issuer) {
+		TokenIssuer.TOKENX -> buildSet {
 			add(TOKENX)
-			if (hoyeAcrVerdier.any { harClaim(claims, "acr", it) } && harIdentitet(claims)) add(INNBYGGER)
+			if (highAcrValues.any { hasClaim(claims, "acr", it) } && hasIdentity(claims)) add(CITIZEN)
 		}
 
-		TokenUtsteder.AZURE -> buildSet {
+		TokenIssuer.AZURE -> buildSet {
 			add(AZURE)
-			if (harClaim(claims, "scp", ADMIN_SCP)) add(AZURE_ADMIN)
-			if (harClaim(claims, "roles", NOLOGIN_ROLLE)) add(AZURE_NOLOGIN)
+			if (hasClaim(claims, "scp", ADMIN_SCP)) add(AZURE_ADMIN)
+			if (hasClaim(claims, "roles", NOLOGIN_ROLE)) add(AZURE_NOLOGIN)
 		}
 	}
 
-	private fun harIdentitet(claims: Map<String, Any?>): Boolean = claims["pid"] != null || claims["sub"] is String
+	private fun hasIdentity(claims: Map<String, Any?>): Boolean = claims["pid"] != null || claims["sub"] is String
 
 	// Samme semantikk som JwtTokenClaims.containsClaim i token-support hadde
-	private fun harClaim(claims: Map<String, Any?>, navn: String, verdi: String): Boolean =
-		when (val claim = claims[navn]) {
-			is String -> claim == verdi
-			is Collection<*> -> claim.contains(verdi)
+	private fun hasClaim(claims: Map<String, Any?>, name: String, value: String): Boolean =
+		when (val claim = claims[name]) {
+			is String -> claim == value
+			is Collection<*> -> claim.contains(value)
 			else -> false
 		}
 }
@@ -57,23 +57,23 @@ object Tilgang {
 /** Innbygger med TokenX-token og høyt sikkerhetsnivå. */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-@PreAuthorize("hasAuthority('" + Tilgang.INNBYGGER + "')")
-annotation class KreverInnbygger
+@PreAuthorize("hasAuthority('" + Access.CITIZEN + "')")
+annotation class RequiresCitizen
 
 /** Gyldig Azure-token, uten krav til scope eller rolle. */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-@PreAuthorize("hasAuthority('" + Tilgang.AZURE + "')")
-annotation class KreverAzure
+@PreAuthorize("hasAuthority('" + Access.AZURE + "')")
+annotation class RequiresAzure
 
 /** Azure-token fra innsending-admin med admin-scope. */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-@PreAuthorize("hasAuthority('" + Tilgang.AZURE_ADMIN + "')")
-annotation class KreverAzureAdmin
+@PreAuthorize("hasAuthority('" + Access.AZURE_ADMIN + "')")
+annotation class RequiresAzureAdmin
 
 /** Azure-token med rollen nologin-access. */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-@PreAuthorize("hasAuthority('" + Tilgang.AZURE_NOLOGIN + "')")
-annotation class KreverAzureNologin
+@PreAuthorize("hasAuthority('" + Access.AZURE_NOLOGIN + "')")
+annotation class RequiresAzureNologin

@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component
  *
  * Tokenet leses fra sikkerhetskonteksten i tråden som kaller. Hent det før arbeid flyttes til en annen tråd.
  */
-interface BrukerTokenKilde {
-	fun hentTokenXToken(): String?
+interface UserTokenSource {
+	fun getUserToken(): String?
 }
 
 /**
@@ -21,16 +21,16 @@ interface BrukerTokenKilde {
  */
 @Component
 @Profile("test | dev | prod")
-class SpringSecurityBrukerTokenKilde : BrukerTokenKilde {
-	override fun hentTokenXToken(): String? =
-		(SecurityContextHolder.getContext().authentication as? TokenAutentisering)
-			?.token(TokenUtsteder.TOKENX)
+class SpringSecurityUserTokenSource : UserTokenSource {
+	override fun getUserToken(): String? =
+		(SecurityContextHolder.getContext().authentication as? TokenAuthentication)
+			?.token(TokenIssuer.TOKENX)
 			?.token
 }
 
 /** Forespørselen har ikke noe TokenX-token å bytte. Meldingen skal aldri inneholde token. */
-class ManglerBrukerTokenException(message: String) : RuntimeException(message)
+class MissingUserTokenException(message: String) : RuntimeException(message)
 
-/** Henter TokenX-tokenet eller kaster [ManglerBrukerTokenException]. */
-fun BrukerTokenKilde.krevTokenXToken(target: String): String =
-	hentTokenXToken() ?: throw ManglerBrukerTokenException("Forespørselen har ikke noe TokenX-token å bytte for target=$target")
+/** Henter TokenX-tokenet eller kaster [MissingUserTokenException]. */
+fun UserTokenSource.requireUserToken(target: String): String =
+	getUserToken() ?: throw MissingUserTokenException("Forespørselen har ikke noe TokenX-token å bytte for target=$target")

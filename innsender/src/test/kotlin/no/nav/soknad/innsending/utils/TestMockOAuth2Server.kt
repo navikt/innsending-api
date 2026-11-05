@@ -5,7 +5,7 @@ import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 
 /**
- * Én MockOAuth2Server for hele testkjøringen. Utsteder tokenene testene sender, og FakeTexasIntrospeksjon validerer
+ * Én MockOAuth2Server for hele testkjøringen. Utsteder tokenene testene sender, og FakeTokenIntrospector validerer
  * dem mot nøklene her. Erstatter @EnableMockOAuth2Server fra token-support (#461).
  */
 object TestMockOAuth2Server {

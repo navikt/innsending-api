@@ -195,7 +195,7 @@ spring:
 
 texas:
   introspection-endpoint: ${NAIS_TOKEN_INTROSPECTION_ENDPOINT}
-  innkommende:
+  incoming:
     issuer:
       tokenx: ${TOKEN_X_ISSUER}
       azure: ${AZURE_OPENID_CONFIG_ISSUER}
@@ -239,7 +239,7 @@ texas:
   exchange-endpoint: ${NAIS_TOKEN_EXCHANGE_ENDPOINT}
   introspection-endpoint: ${NAIS_TOKEN_INTROSPECTION_ENDPOINT}
   # Texas validerer innkommende token. Utsteder velges ut fra iss i tokenet, så hver forespørsel gir ett kall til Texas
-  innkommende:
+  incoming:
     issuer:
       tokenx: ${TOKEN_X_ISSUER}
       azure: ${AZURE_OPENID_CONFIG_ISSUER}

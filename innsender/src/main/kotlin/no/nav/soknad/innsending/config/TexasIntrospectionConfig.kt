@@ -1,6 +1,6 @@
 package no.nav.soknad.innsending.config
 
-import no.nav.soknad.innsending.consumerapis.texas.TexasIntrospeksjonKlient
+import no.nav.soknad.innsending.consumerapis.texas.TexasIntrospectionClient
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -15,19 +15,19 @@ import java.time.Duration
  */
 @Configuration
 @Profile("test | dev | prod | endtoend-auth")
-class TexasIntrospeksjonConfig {
+class TexasIntrospectionConfig {
 
 	@Bean
-	fun texasIntrospeksjonKlient(
+	fun texasIntrospectionClient(
 		@Value("\${texas.introspection-endpoint:}") introspectionEndpoint: String,
-	): TexasIntrospeksjonKlient {
+	): TexasIntrospectionClient {
 		// Grensen deles mellom tilkobling og lesing, slik at et kall aldri venter lenger enn 2 sekunder totalt
-		val tilkobling = TIMEOUT.dividedBy(4)
+		val connectTimeout = TIMEOUT.dividedBy(4)
 		val requestFactory = SimpleClientHttpRequestFactory().apply {
-			setConnectTimeout(tilkobling)
-			setReadTimeout(TIMEOUT.minus(tilkobling))
+			setConnectTimeout(connectTimeout)
+			setReadTimeout(TIMEOUT.minus(connectTimeout))
 		}
-		return TexasIntrospeksjonKlient(RestClient.builder().requestFactory(requestFactory).build(), introspectionEndpoint)
+		return TexasIntrospectionClient(RestClient.builder().requestFactory(requestFactory).build(), introspectionEndpoint)
 	}
 
 	private companion object {

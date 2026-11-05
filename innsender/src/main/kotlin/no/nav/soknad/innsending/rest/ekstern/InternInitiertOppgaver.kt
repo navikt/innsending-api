@@ -5,7 +5,7 @@ import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.security.KreverAzure
+import no.nav.soknad.innsending.security.RequiresAzure
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.EttersendingService
@@ -18,7 +18,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@KreverAzure
+@RequiresAzure
 // TODO strengere tilgang, for eksempel scp=defaultaccess oppgave-initiering. Utenfor migreringen i #461
 class InternInitiertOppgaver(
 	private val tilgangskontroll: Tilgangskontroll,

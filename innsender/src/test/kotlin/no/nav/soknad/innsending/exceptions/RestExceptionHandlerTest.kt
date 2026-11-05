@@ -1,7 +1,7 @@
 package no.nav.soknad.innsending.exceptions
 
 import nl.altindag.log.LogCaptor
-import no.nav.soknad.innsending.consumerapis.texas.TexasUnavailableException
+import no.nav.soknad.innsending.consumerapis.token.TokenServiceUnavailableException
 import org.apache.catalina.connector.ClientAbortException
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -57,7 +57,7 @@ class RestExceptionHandlerTest {
 	}
 
 	@Test
-	fun `feil mot Texas gir 503 og aldri 401 eller 403`() {
+	fun `a Texas failure gives 503 and never 401 or 403`() {
 		mockMvc.get("/texas/unavailable")
 			.andExpect {
 				status { isServiceUnavailable() }
@@ -72,7 +72,7 @@ class RestExceptionHandlerTest {
 
 		@GetMapping("/texas/unavailable", produces = [MediaType.APPLICATION_JSON_VALUE])
 		fun texasUnavailable(): String {
-			throw TexasUnavailableException("Texas svarte 503 for identity_provider=entra_id target=api://x/.default")
+			throw TokenServiceUnavailableException("Texas svarte 503 for identity_provider=entra_id target=api://x/.default")
 		}
 
 		@GetMapping("/disconnect/async", produces = [MediaType.TEXT_PLAIN_VALUE])

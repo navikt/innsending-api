@@ -3,7 +3,7 @@ package no.nav.soknad.innsending.rest.fyllut
 import jakarta.validation.Valid
 import no.nav.soknad.innsending.api.FyllutMergeApi
 import no.nav.soknad.innsending.model.MergeFilerDto
-import no.nav.soknad.innsending.security.KreverAzure
+import no.nav.soknad.innsending.security.RequiresAzure
 import no.nav.soknad.pdfutilities.PdfMergerInterface
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@KreverAzure
+@RequiresAzure
 class FyllutMerge(private val pdfMerger: PdfMergerInterface): FyllutMergeApi {
 	private val logger = LoggerFactory.getLogger(javaClass)
 

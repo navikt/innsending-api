@@ -1,8 +1,8 @@
 package no.nav.soknad.innsending.config
 
-import no.nav.soknad.innsending.consumerapis.texas.TokenIntrospeksjon
-import no.nav.soknad.innsending.security.TexasAutentiseringFilter
-import no.nav.soknad.innsending.security.TokenUtsteder
+import no.nav.soknad.innsending.consumerapis.token.TokenIntrospector
+import no.nav.soknad.innsending.security.TokenAuthenticationFilter
+import no.nav.soknad.innsending.security.TokenIssuer
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -19,7 +19,7 @@ import org.springframework.security.web.savedrequest.NullRequestCache
  * ligger som `@PreAuthorize` på controllerne (#461). Kjeden selv avviser ingen forespørsler, slik at offentlige ruter
  * er åpne.
  *
- * Profilene med tokenvalidering (test, dev, prod og endtoend-auth) har en [TokenIntrospeksjon]. I local, docker og
+ * Profilene med tokenvalidering (test, dev, prod og endtoend-auth) har en [TokenIntrospector]. I local, docker og
  * endtoend uten endtoend-auth finnes den ikke, og identiteten er fast (SubjectHandlerTestImpl).
  */
 @Configuration
@@ -29,20 +29,20 @@ class WebSecurityConfig {
 	@Bean
 	fun filterChain(
 		http: HttpSecurity,
-		tokenIntrospeksjon: ObjectProvider<TokenIntrospeksjon>,
-		@Value("\${texas.innkommende.issuer.tokenx:}") tokenxIssuer: String,
-		@Value("\${texas.innkommende.issuer.azure:}") azureIssuer: String,
+		tokenIntrospector: ObjectProvider<TokenIntrospector>,
+		@Value("\${texas.incoming.issuer.tokenx:}") tokenxIssuer: String,
+		@Value("\${texas.incoming.issuer.azure:}") azureIssuer: String,
 	): SecurityFilterChain {
 		http.csrf { it.disable() }
 		// Appen bruker bare bearer-token. Ingen sesjon og ingen lagret forespørsel å sende brukeren tilbake til
 		http.sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
 		http.requestCache { it.requestCache(NullRequestCache()) }
 
-		tokenIntrospeksjon.ifAvailable { introspeksjon ->
-			val issuere = mapOf(TokenUtsteder.TOKENX to tokenxIssuer, TokenUtsteder.AZURE to azureIssuer)
+		tokenIntrospector.ifAvailable { introspector ->
+			val issuerUrls = mapOf(TokenIssuer.TOKENX to tokenxIssuer, TokenIssuer.AZURE to azureIssuer)
 				.filterValues { it.isNotBlank() }
 			http.addFilterBefore(
-				TexasAutentiseringFilter(introspeksjon, issuere),
+				TokenAuthenticationFilter(introspector, issuerUrls),
 				AnonymousAuthenticationFilter::class.java,
 			)
 		}

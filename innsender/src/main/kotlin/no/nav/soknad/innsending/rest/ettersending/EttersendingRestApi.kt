@@ -7,7 +7,7 @@ import no.nav.soknad.innsending.location.UrlHandler
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.OpprettEttersending
-import no.nav.soknad.innsending.security.KreverInnbygger
+import no.nav.soknad.innsending.security.RequiresCitizen
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.EttersendingService
 import no.nav.soknad.innsending.service.NotificationService
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.net.URI
 
 @RestController
-@KreverInnbygger
+@RequiresCitizen
 class EttersendingRestApi(
 	private val tilgangskontroll: Tilgangskontroll,
 	private val ettersendingService: EttersendingService,

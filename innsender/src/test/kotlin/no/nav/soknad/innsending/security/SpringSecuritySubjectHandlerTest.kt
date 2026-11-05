@@ -16,84 +16,84 @@ class SpringSecuritySubjectHandlerTest {
 	private val handler = SpringSecuritySubjectHandler()
 
 	@AfterEach
-	fun ryddOpp() = SecurityContextHolder.clearContext()
+	fun cleanUp() = SecurityContextHolder.clearContext()
 
-	private fun innlogget(utsteder: TokenUtsteder, vararg claims: Pair<String, Any?>, token: String = "token") {
-		SecurityContextHolder.getContext().authentication = TokenAutentisering(utsteder, mapOf(*claims), token)
+	private fun authenticatedAs(issuer: TokenIssuer, vararg claims: Pair<String, Any?>, token: String = "token") {
+		SecurityContextHolder.getContext().authentication = TokenAuthentication(issuer, mapOf(*claims), token)
 	}
 
 	@Test
-	fun `pid går foran sub for TokenX`() {
-		innlogget(TokenUtsteder.TOKENX, "pid" to "authenticated-user", "sub" to "subject")
+	fun `pid takes precedence over sub for TokenX`() {
+		authenticatedAs(TokenIssuer.TOKENX, "pid" to "authenticated-user", "sub" to "subject")
 		assertEquals("authenticated-user", handler.getUserIdFromToken())
 	}
 
 	@Test
-	fun `uten pid brukes sub for TokenX`() {
-		innlogget(TokenUtsteder.TOKENX, "sub" to "authenticated-user")
+	fun `without pid sub is used for TokenX`() {
+		authenticatedAs(TokenIssuer.TOKENX, "sub" to "authenticated-user")
 		assertEquals("authenticated-user", handler.getUserIdFromToken())
 	}
 
 	@Test
-	fun `pid med feil type avvises uten å bruke sub og uten claimverdier i feilen`() {
+	fun `a pid with the wrong type is rejected without using sub and without claim values in the error`() {
 		listOf(listOf("private-claim-value"), 42, mapOf("value" to "private-claim-value")).forEach { pid ->
-			innlogget(TokenUtsteder.TOKENX, "pid" to pid, "sub" to "subject")
+			authenticatedAs(TokenIssuer.TOKENX, "pid" to pid, "sub" to "subject")
 
-			val feil = assertFailsWith<InvalidUserIdentityException> { handler.getUserIdFromToken() }
-			assertEquals("Autentisering feilet", feil.message)
-			assertNull(feil.cause)
+			val error = assertFailsWith<InvalidUserIdentityException> { handler.getUserIdFromToken() }
+			assertEquals("Autentisering feilet", error.message)
+			assertNull(error.cause)
 		}
 	}
 
 	@Test
-	fun `mangler både pid og sub`() {
-		innlogget(TokenUtsteder.TOKENX)
+	fun `missing both pid and sub`() {
+		authenticatedAs(TokenIssuer.TOKENX)
 		assertFailsWith<InvalidUserIdentityException> { handler.getUserIdFromToken() }
 	}
 
 	@Test
-	fun `uten autentisering gir generell serverfeil`() {
-		val feil = assertFailsWith<BackendErrorException> { handler.getUserIdFromToken() }
-		assertEquals("Autentisering kunne ikke fullføres", feil.message)
-		assertNull(feil.cause)
+	fun `no authentication gives a generic server error`() {
+		val error = assertFailsWith<BackendErrorException> { handler.getUserIdFromToken() }
+		assertEquals("Autentisering kunne ikke fullføres", error.message)
+		assertNull(error.cause)
 	}
 
 	@Test
-	fun `Azure-token gir ikke innbyggeridentitet`() {
-		innlogget(TokenUtsteder.AZURE, "pid" to "12345678901", "sub" to "subject")
+	fun `an Azure token gives no citizen identity`() {
+		authenticatedAs(TokenIssuer.AZURE, "pid" to "12345678901", "sub" to "subject")
 		assertFailsWith<BackendErrorException> { handler.getUserIdFromToken() }
 	}
 
 	@Test
-	fun `annen type autentisering gir ikke identitet`() {
+	fun `another authentication type gives no identity`() {
 		SecurityContextHolder.getContext().authentication = TestingAuthenticationToken("12345678901", null)
 		assertFailsWith<BackendErrorException> { handler.getUserIdFromToken() }
 	}
 
 	@Test
-	fun `getToken gir bare TokenX-token`() {
-		innlogget(TokenUtsteder.TOKENX, token = "tokenx-token")
+	fun `getToken gives only a TokenX token`() {
+		authenticatedAs(TokenIssuer.TOKENX, token = "tokenx-token")
 		assertEquals("tokenx-token", handler.getToken())
 
-		innlogget(TokenUtsteder.AZURE, token = "azure-token")
+		authenticatedAs(TokenIssuer.AZURE, token = "azure-token")
 		assertFailsWith<BackendErrorException> { handler.getToken() }
 	}
 
 	@Test
-	fun `klient-ID leses fra client_id og ellers azp`() {
-		innlogget(TokenUtsteder.TOKENX, "client_id" to "dev-gcp:team:fyllut", "azp" to "annen")
+	fun `the client ID is read from client_id and otherwise azp`() {
+		authenticatedAs(TokenIssuer.TOKENX, "client_id" to "dev-gcp:team:fyllut", "azp" to "annen")
 		assertEquals("dev-gcp:team:fyllut", handler.getClientId())
 
-		innlogget(TokenUtsteder.AZURE, "azp" to "azure-klient")
+		authenticatedAs(TokenIssuer.AZURE, "azp" to "azure-klient")
 		assertEquals("azure-klient", handler.getClientId())
 	}
 
 	@Test
-	fun `med både TokenX- og Azure-token leses hver identitet fra sitt token`() {
-		SecurityContextHolder.getContext().authentication = TokenAutentisering(
+	fun `with both a TokenX and an Azure token each identity is read from its own token`() {
+		SecurityContextHolder.getContext().authentication = TokenAuthentication(
 			mapOf(
-				TokenUtsteder.AZURE to ValidertToken(mapOf("NAVident" to "Z123456", "azp" to "azure-klient"), "azure-token"),
-				TokenUtsteder.TOKENX to ValidertToken(mapOf("pid" to "12345678901", "client_id" to "tokenx-klient"), "tokenx-token"),
+				TokenIssuer.AZURE to ValidatedToken(mapOf("NAVident" to "Z123456", "azp" to "azure-klient"), "azure-token"),
+				TokenIssuer.TOKENX to ValidatedToken(mapOf("pid" to "12345678901", "client_id" to "tokenx-klient"), "tokenx-token"),
 			)
 		)
 
@@ -104,11 +104,11 @@ class SpringSecuritySubjectHandlerTest {
 	}
 
 	@Test
-	fun `NAVident leses bare fra Azure-token`() {
-		innlogget(TokenUtsteder.AZURE, "NAVident" to "Z123456")
+	fun `NAVident is read only from an Azure token`() {
+		authenticatedAs(TokenIssuer.AZURE, "NAVident" to "Z123456")
 		assertEquals("Z123456", handler.getNavIdent())
 
-		innlogget(TokenUtsteder.TOKENX, "NAVident" to "Z123456")
+		authenticatedAs(TokenIssuer.TOKENX, "NAVident" to "Z123456")
 		assertFailsWith<RuntimeException> { handler.getNavIdent() }
 	}
 }
