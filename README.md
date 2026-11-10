@@ -20,6 +20,11 @@ henter søknadsfilene via REST endepunkt fra `innsending-api`.
 Se [Arktitektur Wiki](https://github.com/navikt/archiving-infrastructure/wiki) for mer informasjon om hvordan oppsettet
 fungerer.
 
+## Database og audit-logger
+
+- [Databaseskjema](docs/database-schema.md) forklarer tabellene, fillagringen og Flyway-migreringene.
+- [Audit-logger](docs/auditlogging.md) viser hvordan du finner pgAudit-logger og feilsøker manglende treff.
+
 ## Utvikling
 
 ### Bygge lokalt
