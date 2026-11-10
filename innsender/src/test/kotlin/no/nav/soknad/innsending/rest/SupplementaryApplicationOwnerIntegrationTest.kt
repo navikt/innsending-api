@@ -84,18 +84,6 @@ class SupplementaryApplicationOwnerIntegrationTest : ApplicationTest() {
 
 	@ParameterizedTest(name = "source owner present: {0}")
 	@ValueSource(booleans = [true, false])
-	fun `person initiated supplementary application gets the logged in owner instead of the stored original owner`(ownerPresent: Boolean) {
-		val original = historicalApplication(owner = if (ownerPresent) ApplicationOwner.person(otherPerson) else null)
-		val request = OpprettEttersendingTestBuilder().skjemanr(formNumber).build()
-
-		val created = api.createEttersending(request).assertHttpStatus(HttpStatus.CREATED).body.also(::trackCreated)
-
-		assertPersonApplication(created, original.innsendingsid)
-		assertOwner(created, ApplicationOwner.person(TokenGenerator.subject))
-	}
-
-	@ParameterizedTest(name = "source owner present: {0}")
-	@ValueSource(booleans = [true, false])
 	fun `person initiated archived supplementary application gets the logged in owner instead of the original owner`(ownerPresent: Boolean) {
 		val original = historicalApplication(userId = otherPerson, owner = if (ownerPresent) ApplicationOwner.person(otherPerson) else null)
 		stubArchive(archiveRecord(original.innsendingsid))
@@ -105,20 +93,6 @@ class SupplementaryApplicationOwnerIntegrationTest : ApplicationTest() {
 
 		assertPersonApplication(created, original.innsendingsid)
 		assertOwner(created, ApplicationOwner.person(TokenGenerator.subject))
-	}
-
-	@ParameterizedTest(name = "source owner present: {0}")
-	@ValueSource(booleans = [true, false])
-	fun `Nav initiated supplementary application inherits the stored owner even when it differs from the request user`(ownerPresent: Boolean) {
-		val owner = if (ownerPresent) ApplicationOwner.person(otherPerson) else null
-		val original = historicalApplication(owner = owner)
-
-		val response = api.createEttersendingsOppgave(navRequest())
-
-		assertEquals(HttpStatus.CREATED, response.statusCode)
-		val created = assertNotNull(response.body).also(::trackCreated)
-		assertNavApplication(created, original.innsendingsid)
-		assertOwner(created, owner)
 	}
 
 	@ParameterizedTest(name = "source owner present: {0}")

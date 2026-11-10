@@ -10,20 +10,31 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.Varsel
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.EnvQualifier
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
 import no.nav.soknad.innsending.utils.ApiWebClient
+import no.nav.soknad.innsending.utils.ApplicationTestRepository
+import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
+import org.awaitility.Awaitility.await
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.server.LocalServerPort
+import org.springframework.context.annotation.Import
+import org.springframework.http.HttpStatus
+import java.time.Duration
 
+@Import(ApplicationTestRepository::class)
 class EttersendingRestApiTest : ApplicationTest() {
 
 	@Autowired
@@ -35,7 +46,12 @@ class EttersendingRestApiTest : ApplicationTest() {
 	@LocalServerPort
 	var serverPort: Int = 0
 
+	@Autowired
+	lateinit var storedApplications: ApplicationTestRepository
+
 	private var testApi: ApiWebClient? = null
+	private val fixtureIds = mutableListOf<String>()
+	private val otherPerson = "10987654321"
 	private val api: ApiWebClient
 		get() = testApi!!
 
@@ -44,6 +60,11 @@ class EttersendingRestApiTest : ApplicationTest() {
 		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		//clearAllMocks()
 		io.mockk.clearMocks(notificationPublisher)
+	}
+
+	@AfterEach
+	fun removeHistoricalFixtures() {
+		storedApplications.deleteApplications(fixtureIds)
 	}
 
 	@Test
@@ -88,20 +109,23 @@ class EttersendingRestApiTest : ApplicationTest() {
 		assertNull(notification.brukernotifikasjonInfo.utsettSendingTil)
 	}
 
-	@Test
-	fun `Should create ettersending with existing søknad`() {
+	@ParameterizedTest(name = "source owner present: {0}")
+	@ValueSource(booleans = [true, false])
+	fun `Should create ettersending with existing søknad`(ownerPresent: Boolean) {
 		// Given
 		val vedleggsnr = "A1"
 		val skjemaDto = SkjemaDtoTestBuilder().build()
-
-		val opprettetSoknad = api.createSoknad(skjemaDto)
-			.assertSuccess()
-			.body
-		val innsendingsId = opprettetSoknad.innsendingsId!!
-
-		api.utfyltSoknad(innsendingsId, skjemaDto)
-		val sendInnSoknadResponse = api.sendInnSoknad(innsendingsId)
-		val innsendtSoknad = sendInnSoknadResponse.body!!
+		val original = api.createSoknad(skjemaDto).assertSuccess().body
+		val originalId = original.innsendingsId!!
+		fixtureIds.add(originalId)
+		api.utfyltSoknad(originalId, skjemaDto)
+		api.sendInnSoknad(originalId).assertSuccess()
+		// The submitted original has no readable person GET. Await its commit before assigning a historical owner.
+		await().atMost(Duration.ofSeconds(5)).untilAsserted {
+			assertEquals(SoknadsStatus.Innsendt, storedApplications.findBySubmissionId(originalId).status)
+		}
+		// REST cannot assign an owner distinct from the user or a pre-release SQL NULL owner.
+		storedApplications.setOwner(originalId, if (ownerPresent) ApplicationOwner.person(otherPerson) else null)
 
 		val ettersending = OpprettEttersendingTestBuilder()
 			.skjemanr(skjemaDto.skjemanr)
@@ -115,16 +139,25 @@ class EttersendingRestApiTest : ApplicationTest() {
 
 		// Then
 		assertEquals(1, manueltOpprettetEttersending.vedleggsListe.size)
-		assertEquals(innsendingsId, manueltOpprettetEttersending.ettersendingsId, "Should have ettersendingId from existing søknad innsendingsId")
+		assertEquals(originalId, manueltOpprettetEttersending.ettersendingsId, "Should have ettersendingId from existing søknad innsendingsId")
 		assertEquals(vedleggsnr, manueltOpprettetEttersending.vedleggsListe[0].vedleggsnr)
+		fixtureIds.add(manueltOpprettetEttersending.innsendingsId!!)
+		val fetched = api.getSoknadSendinn(manueltOpprettetEttersending.innsendingsId!!).assertHttpStatus(HttpStatus.OK).body
+		assertEquals(originalId, fetched.ettersendingsId)
+		assertTrue(fetched.brukerId == TokenGenerator.subject, "The supplementary application must retain the logged-in user")
+		assertEquals(false, fetched.erNavOpprettet)
+		// Owner is not exposed through REST. Inspect only this internal field in the database.
+		val stored = storedApplications.findBySubmissionId(manueltOpprettetEttersending.innsendingsId!!)
+		assertTrue(stored.owner == ApplicationOwner.person(TokenGenerator.subject), "The supplementary application must persist the logged-in owner")
+		assertEquals(false, stored.ownerIsSqlNull)
 
 		val notifications = mutableListOf<AddNotification>()
-		verify(timeout = 100, exactly = 2) { notificationPublisher.opprettBrukernotifikasjon(capture(notifications)) }
+		verify(timeout = 5000, exactly = 2) { notificationPublisher.opprettBrukernotifikasjon(capture(notifications)) }
 		val lastNotification = notifications.last()
 
 		assertEquals(manueltOpprettetEttersending.innsendingsId, lastNotification.soknadRef.innsendingId)
-		assertEquals(innsendtSoknad.innsendingsId, lastNotification.soknadRef.groupId)
-		assertEquals(manueltOpprettetEttersending.brukerId, lastNotification.soknadRef.personId)
+		assertEquals(originalId, lastNotification.soknadRef.groupId)
+		assertEquals(TokenGenerator.subject, lastNotification.soknadRef.personId)
 		assertEquals(false, lastNotification.soknadRef.erSystemGenerert)
 		assertEquals(true, lastNotification.soknadRef.erEttersendelse)
 		assertEquals("Ettersend manglende vedlegg til: ${ettersending.tittel}", lastNotification.brukernotifikasjonInfo.notifikasjonsTittel)

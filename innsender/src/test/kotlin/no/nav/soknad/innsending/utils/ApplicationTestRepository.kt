@@ -24,6 +24,7 @@ class ApplicationTestRepository(
 
 	fun deleteApplications(submissionIds: List<String>) {
 		submissionIds.forEach { id ->
+			jdbcTemplate.update("DELETE FROM fil WHERE vedleggsid IN (SELECT id FROM vedlegg WHERE soknadsid = (SELECT id FROM soknad WHERE innsendingsid = ?))", id)
 			jdbcTemplate.update("DELETE FROM vedlegg WHERE soknadsid = (SELECT id FROM soknad WHERE innsendingsid = ?)", id)
 			jdbcTemplate.update("DELETE FROM hendelse WHERE innsendingsid = ?", id)
 			jdbcTemplate.update("DELETE FROM soknad WHERE innsendingsid = ?", id)
