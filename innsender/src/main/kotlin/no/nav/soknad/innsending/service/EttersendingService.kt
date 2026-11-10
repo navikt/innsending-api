@@ -21,6 +21,7 @@ import no.nav.soknad.innsending.util.dokumentsoknad.getMissingRequiredAttachment
 import no.nav.soknad.innsending.util.dokumentsoknad.isUnauthenticatedSubmission
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.innsending.util.mapping.*
+import no.nav.soknad.innsending.util.soknaddbdata.validPersonOwnerId
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -44,6 +45,13 @@ class EttersendingService(
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
+	private fun verifySuccessorOwner(original: SoknadDbData): ApplicationOwner {
+		check(original.validPersonOwnerId() != null) {
+			"Cannot create a successor without a verified person owner"
+		}
+		return checkNotNull(original.owner)
+	}
+
 	// Lagre ettersendingssøknad i DB
 	@Transactional(timeout = TRANSACTION_TIMEOUT)
 	fun saveEttersending(
@@ -58,7 +66,7 @@ class EttersendingService(
 		mellomlagringDager: Long = Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD,
 		ernavopprettet: Boolean = false,
 		avsender: AvsenderDto? = null,
-		affectedUser: BrukerDto? = null,
+		affectedUser: BrukerDto? = BrukerDto(id = brukerId, idType = BrukerDto.IdType.FNR),
 		grantUserDigitalAccess: Boolean? = null,
 		owner: ApplicationOwner? = ApplicationOwner.person(brukerId),
 	)
@@ -113,6 +121,7 @@ class EttersendingService(
 		val operation = InnsenderOperation.OPPRETT.name
 		try {
 			val nyesteSoknadDb = repo.hentSoknadDb(nyesteSoknad.innsendingsId!!)
+			val verifiedOwner = verifySuccessorOwner(nyesteSoknadDb)
 			logger.debug("Skal opprette ettersendingssøknad basert på ${nyesteSoknad.innsendingsId} med ettersendingsid=$ettersendingsId. " +
 				"Status for vedleggene til original søknad ${
 					nyesteSoknad.vedleggsListe.map
@@ -138,7 +147,7 @@ class EttersendingService(
 				avsender = nyesteSoknadDb.avsender,
 				affectedUser = nyesteSoknadDb.affecteduser,
 				grantUserDigitalAccess = nyesteSoknadDb.grantuserdigitalaccess,
-				owner = nyesteSoknadDb.owner,
+				owner = verifiedOwner,
 			)
 
 			// Lagre vedlegg i DB
@@ -227,7 +236,9 @@ class EttersendingService(
 				fristForEttersendelse = existingSoknad.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 				ernavopprettet = erNavInitiert,
 				grantUserDigitalAccess = existingSoknadDb.grantuserdigitalaccess,
-				owner = if (erNavInitiert) existingSoknadDb.owner else ApplicationOwner.person(brukerId),
+				avsender = existingSoknadDb.avsender,
+				affectedUser = existingSoknadDb.affecteduser,
+				owner = if (erNavInitiert) verifySuccessorOwner(existingSoknadDb) else ApplicationOwner.person(brukerId),
 			)
 
 			val combinedVedleggList =
@@ -269,7 +280,9 @@ class EttersendingService(
 				sprak = ettersending.sprak,
 				forsteInnsendingsDato = forsteInnsendingsDato ?: archivedSoknad.innsendtDato,
 				ernavopprettet = erNavInitiert,
-				owner = if (erNavInitiert && original != null) original.owner else ApplicationOwner.person(brukerId),
+				owner = if (erNavInitiert && original != null) verifySuccessorOwner(original) else ApplicationOwner.person(brukerId),
+				avsender = original?.avsender,
+				affectedUser = if (original != null) original.affecteduser else BrukerDto(id = brukerId, idType = BrukerDto.IdType.FNR),
 			)
 
 			val combinedVedleggList =
@@ -360,8 +373,11 @@ class EttersendingService(
 		}
 	}
 
-	fun getInnsendteSoknader(skjemanr: String, brukerId: String): List<DokumentSoknadDto> {
-		return soknadService.hentInnsendteSoknader(tilgangskontroll.hentPersonIdents(brukerId))
+	fun getInnsendteSoknader(skjemanr: String, brukerId: String, erNavInitiert: Boolean = false): List<DokumentSoknadDto> {
+		val idents = tilgangskontroll.hentPersonIdents(brukerId)
+		val submitted = if (erNavInitiert) soknadService.findSubmittedApplicationsForTask(idents)
+		else soknadService.hentInnsendteSoknader(idents)
+		return submitted
 			.filter { it.skjemanr == skjemanr }
 			.filter { it.innsendtDato!!.isAfter(OffsetDateTime.now().minusDays(Constants.MAX_AKTIVE_DAGER)) }
 			.sortedByDescending { it.innsendtDato }
@@ -412,7 +428,7 @@ class EttersendingService(
 		ettersending: OpprettEttersending,
 		erNavInitiert: Boolean = false
 	): DokumentSoknadDto {
-		val innsendteSoknader = getInnsendteSoknader(ettersending.skjemanr, brukerId)
+		val innsendteSoknader = getInnsendteSoknader(ettersending.skjemanr, brukerId, erNavInitiert)
 			.filterNot { it.visningsType.isUnauthenticatedSubmission() }
 		val arkiverteSoknader = getArkiverteEttersendinger(ettersending.skjemanr, brukerId)
 			.filterNot { archived ->
@@ -477,6 +493,13 @@ class EttersendingService(
 		val aktiveSoknaderGittSkjemanr = soknadService.hentAktiveSoknader(brukerId, skjemanr, SoknadType.ettersendelse)
 		if (aktiveSoknaderGittSkjemanr.isNotEmpty()) {
 			logger.warn("Dupliserer søknad på skjemanr=$skjemanr, søker har allerede ${aktiveSoknaderGittSkjemanr.size} under arbeid")
+		}
+	}
+
+	fun logWarningForExistingTask(affectedPersonId: String, formNumber: String) {
+		val active = soknadService.findActiveApplicationsForTask(tilgangskontroll.hentPersonIdents(affectedPersonId), formNumber, SoknadType.ettersendelse)
+		if (active.isNotEmpty()) {
+			logger.warn("Duplicate task for form=$formNumber, affected person already has ${active.size} active applications")
 		}
 	}
 

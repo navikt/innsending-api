@@ -40,6 +40,25 @@ class ApplicationTestRepository(
 		check(updatedRows == 1) { "Expected exactly one application to update" }
 	}
 
+	fun setParties(submissionId: String, affectedUser: BrukerDto?, sender: AvsenderDto?) {
+		check(jdbcTemplate.update(
+			"UPDATE soknad SET affecteduser = CAST(? AS jsonb), avsender = CAST(? AS jsonb) WHERE innsendingsid = ?",
+			userConverter.convertToDatabaseColumn(affectedUser), senderConverter.convertToDatabaseColumn(sender), submissionId,
+		) == 1) { "Expected exactly one application to update" }
+	}
+
+	fun setRawOwner(submissionId: String, json: String?) {
+		check(jdbcTemplate.update("UPDATE soknad SET owner = CAST(? AS jsonb) WHERE innsendingsid = ?", json, submissionId) == 1)
+	}
+
+	fun setStoredDisplayType(submissionId: String, ordinal: String) {
+		check(jdbcTemplate.update("UPDATE soknad SET visningstype = ? WHERE innsendingsid = ?", ordinal, submissionId) == 1)
+	}
+
+	fun countByLegacyUserId(userId: String): Long = checkNotNull(
+		jdbcTemplate.queryForObject("SELECT count(*) FROM soknad WHERE brukerid = ?", Long::class.java, userId)
+	)
+
 	fun findBySubmissionId(submissionId: String): StoredApplication {
 		val applications = jdbcTemplate.query(
 			"""SELECT owner, owner IS NULL AS owner_is_sql_null, status, brukerid,

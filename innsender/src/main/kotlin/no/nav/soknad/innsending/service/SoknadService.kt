@@ -71,9 +71,7 @@ class SoknadService(
 
 
 	fun hentAktiveSoknader(brukerIds: List<String>): List<DokumentSoknadDto> {
-		return brukerIds.flatMap {
-			hentSoknadGittBrukerId(it, SoknadsStatus.Opprettet) + hentSoknadGittBrukerId(it, SoknadsStatus.Utfylt)
-		}
+		return findApplicationsByOwner(brukerIds, SoknadsStatus.Opprettet) + findApplicationsByOwner(brukerIds, SoknadsStatus.Utfylt)
 	}
 
 	fun hentAktiveSoknader(brukerId: String, skjemanr: String): List<DokumentSoknadDto> {
@@ -87,14 +85,27 @@ class SoknadService(
 	}
 
 	fun hentInnsendteSoknader(brukerIds: List<String>): List<DokumentSoknadDto> {
-		return brukerIds.flatMap { hentSoknadGittBrukerId(it, SoknadsStatus.Innsendt) }
+		return findApplicationsByOwner(brukerIds, SoknadsStatus.Innsendt)
 	}
 
-	private fun hentSoknadGittBrukerId(
-		brukerId: String,
+	fun findSubmittedApplicationsForTask(affectedPersonIds: List<String>): List<DokumentSoknadDto> =
+		repo.findTaskApplicationsByAffectedPersonAndStatus(affectedPersonIds, SoknadsStatus.Innsendt)
+			.map { vedleggService.hentAlleVedlegg(it) }
+
+	fun findActiveApplicationsForTask(affectedPersonIds: List<String>, formNumber: String, vararg types: SoknadType): List<DokumentSoknadDto> =
+		listOf(SoknadsStatus.Opprettet, SoknadsStatus.Utfylt)
+			.flatMap { repo.findTaskApplicationsByAffectedPersonAndStatus(affectedPersonIds, it) }
+			.map { vedleggService.hentAlleVedlegg(it) }
+			.filter {
+				it.skjemanr == formNumber && it.visningsType != VisningsType.dokumentinnsending &&
+					(types.isEmpty() || it.soknadstype in types)
+			}
+
+	private fun findApplicationsByOwner(
+		idents: List<String>,
 		soknadsStatus: SoknadsStatus = SoknadsStatus.Opprettet
 	): List<DokumentSoknadDto> {
-		val soknader = repo.finnAlleSoknaderGittBrukerIdOgStatus(brukerId, soknadsStatus)
+		val soknader = repo.findApplicationsByOwnerAndStatus(idents, soknadsStatus)
 
 		return soknader.map { vedleggService.hentAlleVedlegg(it) }
 	}

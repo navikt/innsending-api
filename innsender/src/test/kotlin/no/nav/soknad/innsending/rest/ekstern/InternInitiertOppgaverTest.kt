@@ -34,8 +34,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.util.AopTestUtils
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.context.annotation.Import
 import org.springframework.http.*
@@ -89,17 +87,16 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		soknadRepository.deleteAll()
 	}
 
-	@ParameterizedTest(name = "source owner present: {0}")
-	@ValueSource(booleans = [true, false])
-	fun `Azure task uses explicit user when another user has a newer application`(ownerPresent: Boolean) {
+	@Test
+	fun `Azure task uses explicit user when another user has a newer application`() {
 		val brukerId = "10987654321"
 		val skjemanr = "NAV 55-00.60"
-		val sourceOwner = if (ownerPresent) ApplicationOwner.person(testpersonid) else null
+		val sourceOwner = ApplicationOwner.person(testpersonid)
 		val pdl = AopTestUtils.getUltimateTargetObject<PdlInterface>(pdlInterface)
 		every { pdl.hentPersonIdents(any()) } answers {
 			listOf(IdentDto(firstArg(), "FOLKEREGISTERIDENT", false))
 		}
-		// REST cannot create a source with a different stored owner or a historical SQL NULL owner.
+		// REST cannot create a historical submission with a different stored owner.
 		val ownApplication = repo.lagreSoknad(
 			SoknadDbDataTestBuilder(
 				brukerId = brukerId,
@@ -142,17 +139,21 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		assertTrue(fetched.brukerId == brukerId, "The task must retain the request user, not the owner")
 		assertEquals(true, fetched.erNavOpprettet)
 		val notification = publisherInterface.awaitNotification(ettersending.innsendingsId!!)
-		assertTrue(notification.soknadRef.personId == brukerId, "Notifications must retain the request recipient, not the owner")
+		assertTrue(notification.soknadRef.personId == testpersonid, "Notifications must use the inherited owner, not the request user")
 		assertEquals(ownApplication.innsendingsid, notification.soknadRef.groupId)
 		// Owner is not exposed through REST. Inspect only this internal field in the database.
 		val storedOwner = storedApplications.findBySubmissionId(ettersending.innsendingsId!!)
 		assertTrue(storedOwner.owner == sourceOwner, "The supplementary application must inherit the source owner")
-		assertEquals(sourceOwner == null, storedOwner.ownerIsSqlNull)
+		assertEquals(false, storedOwner.ownerIsSqlNull)
 	}
 
 	@Test
 	fun `happy case create task`() {
-		val brukerId = "12345678901"
+		val brukerId = "10987654321"
+		val pdl = AopTestUtils.getUltimateTargetObject<PdlInterface>(pdlInterface)
+		every { pdl.hentPersonIdents(any()) } answers {
+			listOf(IdentDto(firstArg(), "FOLKEREGISTERIDENT", false))
+		}
 		val vedlegg = listOf("W1", "W2")
 		val skjemanr = "NAV 55-00.60"
 		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr)
@@ -165,6 +166,10 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		val stored = storedApplications.findBySubmissionId(soknadDto.innsendingsId!!)
 		assertTrue(stored.owner == ApplicationOwner.person(brukerId), "The task owner must match the request user")
 		assertEquals(false, stored.ownerIsSqlNull)
+		val listed = api.oppgaveHentSoknaderForSkjemanr(skjemanr, brukerId, null, null)
+		assertEquals(HttpStatus.OK, listed.statusCode)
+		val fetched = listed.body!!.single { it.innsendingsId == soknadDto.innsendingsId }
+		assertTrue(fetched.brukerId == brukerId, "The task list must retain the explicit request user")
 	}
 
 	@Test

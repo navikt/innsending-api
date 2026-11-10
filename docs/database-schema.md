@@ -77,7 +77,7 @@ Metadata om søknaden, eier, hvem den gjelder, avsender, status og frister.
 | `tema` | `varchar(10)` | Ja | Ingen | Tema |
 | `spraak` | `varchar(10)` | Ja | Ingen | Språkkode |
 | `status` | `varchar(255)` | Ja | Ingen | Søknadsstatus |
-| `brukerid` | `varchar(11)` | Ja | Ingen | Brukeridentifikator |
+| `brukerid` | `varchar(11)` | Ja | Ingen | Historisk brukeridentifikator, beholdt etter eiermigreringen |
 | `ettersendingsid` | `varchar(255)` | Ja | Ingen | Kobling til opprinnelig innsending |
 | `opprettetdato` | `timestamptz` | Nei | UTC-uttrykk | Opprettet |
 | `endretdato` | `timestamptz` | Nei | UTC-uttrykk | Sist endret |
@@ -92,12 +92,20 @@ Metadata om søknaden, eier, hvem den gjelder, avsender, status og frister.
 | `skalslettesdato` | `timestamptz` | Ja | Ingen | Planlagt sletting |
 | `ernavopprettet` | `boolean` | Ja | Ingen | Om Nav opprettet søknaden |
 | `brukertype` | `varchar(255)` | Ja | Ingen | Type brukeridentifikator |
-| `affecteduser` | `jsonb` | Ja | Ingen | Brukeren søknaden gjelder |
+| `affecteduser` | `jsonb` | Ja | Ingen | Brukeren søknaden gjelder, også brukt ved arkivering |
 | `avsender` | `jsonb` | Ja | Ingen | Avsender |
 | `grantuserdigitalaccess` | `boolean` | Ja | Ingen | Ønske om digital tilgang |
-| `owner` | `jsonb` | Ja | Ingen | Eieridentifikasjon med `id` og `idType` |
+| `owner` | `jsonb` | Ja | Ingen | Tilgangseier med tekstfeltene `id` og `idType` (`FNR`) |
 
 `owner`, `affecteduser` og `avsender` er separate JSON-verdier. Attributtene i JSON-objektene er ikke egne kolonner eller fremmednøkler.
+
+V1.45 i release 2 fyller manglende `owner` fra historisk `brukerid` bare i etablerte digitale personflyter, uavhengig av status. En eksisterende gyldig eier bevares, også når eierens identitet er forskjellig fra `brukerid`. Migreringen utleder ikke historiske representantforhold.
+
+Valideringen krever fortsatt `brukerid` for digitale visningstyper, elleve ASCII-siffer (`[0-9]{11}`) i identitetene og `brukertype` lik `NULL` eller `'0'` (FNR). Eksisterende `owner` og `affecteduser` må være JSON-objekter med nøyaktig to tekstfelt, `id` og `idType`, der `idType` er `FNR`. Andre felter, JSON-typer eller identitetstyper godtas ikke. Ugyldige data eller ukjent visningstype avbryter hele migreringen. Feilmeldingen inneholder bare antall rader med avvik.
+
+Manglende `affecteduser` fylles fra samme historiske identitet, også for `nologin`. En gyldig digital `affecteduser` bevares selv om den er forskjellig fra eieren. For `nologin` må `owner` være SQL-`NULL`, og eksisterende `affecteduser` må samsvare med `brukerid` når den er satt. Anonyme utkast uten begge identitetene beholdes uendret. Migreringen overskriver ikke eksisterende JSON-verdier og endrer ikke `brukerid`.
+
+Denne historiske utfyllingen er ikke en løpende reserveverdi ved innsending. Etter migreringen skal innsendingsflyten kunne lagre og bevare `affecteduser` som SQL-`NULL`. Se [forretningsreglene](forretningsregler.md#berørt-bruker-ved-innsending) for forskjellen mellom endelig innsendingsrequest og den eldre flyten uten request-body.
 
 ### vedlegg
 
@@ -185,11 +193,13 @@ Alle tabellene har `id` som primærnøkkel. `soknad.innsendingsid` og `config.ke
 
 | Tabell | Indekser utover primærnøkkelen |
 | --- | --- |
-| `soknad` | Unik indeks på `innsendingsid`, samt vanlige indekser på `innsendingsid`, `brukerid`, `status`, `opprettetdato` og `arkiveringsstatus` |
+| `soknad` | Unik indeks på `innsendingsid`, samt vanlige indekser på `innsendingsid`, `brukerid`, `status`, `opprettetdato` og `arkiveringsstatus`. `soknad_owner_status_idx` og `soknad_affected_person_status_idx` er B-tree-uttrykksindekser på henholdsvis owner og affecteduser (`idType`, `id`, `status`), avgrenset til digitale visningstyper `'0'`–`'3'` |
 | `vedlegg` | `soknadsid` |
 | `fil` | `vedleggsid` |
 | `hendelse` | `innsendingsid`, `hendelsetype`, `applikasjon`, `skjemanr` og `tema` |
 | `config` | Unik indeks på `key` |
+
+Affecteduser-indeksen støtter særskilte oppslag for autoriserte Nav-flyter, ikke personbasert tilgang.
 
 Databasen har ingen views. Triggeren `before_update_soknad_guard` bruker funksjonen `prevent_illegal_status_change_for_soknad()` til å begrense statusendringer fra `Innsendt` og `KlarForInnsending`. `Innsendt` kan ikke endres til en annen ikke-null status. Fra `KlarForInnsending` tillates samme status eller `Innsendt`.
 
@@ -203,6 +213,17 @@ Statusene lagres som tekst med disse enum-navnene.
 | `soknad.arkiveringsstatus` | `IkkeSatt`, `Arkivert`, `ArkiveringFeilet` |
 | `vedlegg.status` | `IKKE_VALGT`, `SEND_SENERE`, `LASTET_OPP`, `SEND_I_POST`, `SENDES_AV_ANDRE`, `SENDES_IKKE`, `INNSENDT`, `LASTET_OPP_IKKE_RELEVANT_LENGER`, `HAR_IKKE_DOKUMENTASJON`, `LEVERT_DOKUMENTASJON_TIDLIGERE`, `NAV_KAN_HENTE_DOKUMENTASJON`, `KLAR_FOR_INNSENDING` |
 | `hendelse.hendelsetype` | `Ukjent`, `Opprettet`, `Endret`, `SlettetAvBruker`, `SlettetAvSystem`, `SlettetPermanentAvBruker`, `SlettetPermanentAvSystem`, `KlarForInnsending`, `Innsendt`, `Arkivert`, `ArkiveringFeilet`, `Utfylt` |
+
+`visningstype` lagres som ordinaltekst i en varchar-kolonne: `'0'` er `fyllUt`, `'1'` er `dokumentinnsending`, `'2'` er `ettersending`, `'3'` er `lospost`, og `'4'` er `nologin`. Owner-indeksen og affecteduser-indeksen dekker de fire digitale typene i alle statuser. Oppslag må inkludere avgrensningen til digitale visningstyper for å kunne bruke de partielle indeksene.
+
+## Deployment og rollback av eiermigreringen
+
+1. Deploy først den additive V1.44-releasen. Den nullable eierkolonnen tillater fortsatt eldre skrivere. Ikke aktiver oppslag som krever utfylt eier før V1.45 er kjørt.
+2. Stans og tøm eldre skrivere før releasen med V1.45 og V1.46. Planlegg en skrivepause for begge migreringene. V1.45 tar `SHARE ROW EXCLUSIVE` på `soknad` før validering og holder låsen gjennom oppdateringene. Vanlige lesinger kan fortsette. V1.46 bygger begge indeksene transaksjonelt og blokkerer også skriving. Begge migreringene har ti sekunders `lock_timeout`; dette begrenser venting på låser, ikke total kjøretid.
+3. Ved valideringsfeil rulles hele V1.45 tilbake. Feilmeldingen viser antall rader med avvik. Undersøk årsakene gjennom godkjent datatilgang og prøv igjen uten å legge identiteter eller radinnhold i logger. Dersom V1.46 feiler, er V1.45 allerede committet, mens begge indeksbyggingene rulles tilbake. Flyway prøver den utestående migreringen igjen ved neste oppstart.
+4. Etter vellykket migrering må alle skrivere opprettholde skillet mellom tilgangseier og den søknaden gjelder. Den midlertidige tabellåsen beskytter ikke mot eldre skrivere som starter igjen etterpå.
+
+Rollback av applikasjonen må bruke en versjon som autoriserer mot `owner` og bevarer partene, også når `affecteduser` er `NULL`. En versjon som bruker `brukerid` til tilgangskontroll er ikke en trygg rollback når partene kan være forskjellige. Behold kolonner, indekser og utfylte verdier ved rollback; ikke slett eller nullstill dem. Tilbakeføring av data krever en egen vurdering og godkjent prosedyre.
 
 ## Migreringer
 
@@ -257,3 +278,5 @@ Dokumentasjonen bygger på følgende migreringsskript, listet i kjørerekkefølg
 | `V1.42__soknad_add_avsender.sql` | Erstatter avsenderfeltene med JSON |
 | `V1.43__soknad_add_grant_user_digital_access.sql` | Legger til ønske om digital tilgang |
 | `V1.44__soknad_add_owner.sql` | Legger til nullable `owner` som JSONB uten default eller utfylling av eksisterende data |
+| `V1.45__soknad_backfill_owner.sql` | Validerer identiteter og parter transaksjonelt, bevarer gyldig eier ulik `brukerid` og fyller manglende digital eier. Fyller historisk `affecteduser` også for `nologin` |
+| `V1.46__soknad_owner_index.sql` | Oppretter partielle B-tree-uttrykksindekser på henholdsvis owner og affecteduser (`idType`, `id`, `status`) for digitale visningstyper |

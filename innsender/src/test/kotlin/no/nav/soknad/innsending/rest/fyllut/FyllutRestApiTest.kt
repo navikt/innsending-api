@@ -43,8 +43,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.core.io.ClassPathResource
@@ -443,9 +441,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertTrue(filResponsBytes.isNotEmpty(), "PDF-filen skal inneholde data")
 	}
 
-	@ParameterizedTest(name = "owner present: {0}")
-	@ValueSource(booleans = [true, false])
-	fun `Should update utfylt søknad and vedlegg with updated properties for språk and tittel, old vedlegg should be deleted`(ownerPresent: Boolean) {
+	@Test
+	fun `Should update utfylt søknad and vedlegg with updated properties for språk and tittel, old vedlegg should be deleted`() {
 		// Given
 		val newSpraak = "en_gb"
 		val newTittel = "Application for one-time grant at birth"
@@ -455,8 +452,8 @@ class FyllutRestApiTest : ApplicationTest() {
 		val dokumentSoknadDto = opprettSoknad() // med vedleggTittel1 og vedleggTittel2, begge med unik formioId satt
 		val skjemanr = dokumentSoknadDto.skjemanr
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
-		// REST cannot assign a historical owner distinct from the user or SQL NULL.
-		val owner = if (ownerPresent) ApplicationOwner.person("12345678902") else null
+		// REST cannot assign a historical owner from the token's PDL history.
+		val owner = ApplicationOwner.person("12345678902")
 		storedApplications.setOwner(innsendingsId, owner)
 
 		val updatedT7 =
@@ -491,7 +488,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertTrue(updatedSoknad.brukerId == TokenGenerator.subject, "Completion must retain the existing user identity")
 		// Owner is not exposed by REST; completion must preserve the stored value.
 		val stored = storedApplications.findBySubmissionId(innsendingsId)
-		assertEquals(!ownerPresent, stored.ownerIsSqlNull)
+		assertEquals(false, stored.ownerIsSqlNull)
 		assertTrue(stored.owner == owner, "Completion must preserve the historical owner")
 		assertEquals("en", updatedSoknad.spraak, "Språk is updated (gets converted to the first 2 letters)")
 		assertEquals(
@@ -687,15 +684,14 @@ class FyllutRestApiTest : ApplicationTest() {
 		}
 	}
 
-	@ParameterizedTest(name = "owner present: {0}")
-	@ValueSource(booleans = [true, false])
-	fun `Skal returnere riktig felter ved oppdatering av søknad`(ownerPresent: Boolean) {
+	@Test
+	fun `Skal returnere riktig felter ved oppdatering av søknad`() {
 		// Gitt
 		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 		val nyttSpraak = "en_gb"
-		// REST cannot assign a historical owner distinct from the user or SQL NULL.
-		val owner = if (ownerPresent) ApplicationOwner.person("12345678902") else null
+		// REST cannot assign a historical owner from the token's PDL history.
+		val owner = ApplicationOwner.person("12345678902")
 		storedApplications.setOwner(innsendingsId, owner)
 
 		val fraFyllUt = SkjemaDtoTestBuilder(brukerId = "10987654321", skjemanr = dokumentSoknadDto.skjemanr, spraak = nyttSpraak).build()
@@ -711,9 +707,13 @@ class FyllutRestApiTest : ApplicationTest() {
 		val fetched = api.getSoknadSendinn(innsendingsId).assertHttpStatus(HttpStatus.OK).body
 		assertTrue(fetched.brukerId == TokenGenerator.subject, "Updates must retain the existing user identity")
 		assertEquals("en", fetched.spraak)
+		val mainDocuments = fetched.vedleggsListe.filter { it.erHoveddokument }
+		assertEquals(2, mainDocuments.size)
+		assertEquals(setOf(false, true), mainDocuments.map { it.erVariant }.toSet())
+		assertEquals(setOf(dokumentSoknadDto.skjemanr), mainDocuments.map { it.vedleggsnr }.toSet())
 		// Owner is not exposed by REST; updates must preserve the stored value.
 		val stored = storedApplications.findBySubmissionId(innsendingsId)
-		assertEquals(!ownerPresent, stored.ownerIsSqlNull)
+		assertEquals(false, stored.ownerIsSqlNull)
 		assertTrue(stored.owner == owner, "Updates must preserve the historical owner")
 
 		assertEquals("en", oppdatertSoknad.spraak, "Språk er oppdatert")
@@ -800,20 +800,18 @@ class FyllutRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `legacy application with SQL null owner remains readable and listed without backfill`() {
+	fun `application with SQL null owner is unavailable and excluded from lists without backfill`() {
 		val created = api.createSoknad(SkjemaDtoTestBuilder().build()).assertHttpStatus(HttpStatus.CREATED).body
 		val applicationId = assertNotNull(created.innsendingsId)
 		// REST cannot create a pre-release SQL NULL owner.
 		storedApplications.setOwner(applicationId, null)
 
-		val fetched = api.getSoknadSendinn(applicationId).assertHttpStatus(HttpStatus.OK).body
-		assertEquals(applicationId, fetched.innsendingsId)
-		assertTrue(fetched.brukerId == TokenGenerator.subject, "Legacy reads must retain the existing user identity")
+		api.getSoknadSendinn(applicationId).assertHttpStatus(HttpStatus.NOT_FOUND)
 		val filledForm = api.getSoknad(applicationId)
-		assertEquals(HttpStatus.OK, filledForm.statusCode)
-		assertEquals(applicationId, assertNotNull(filledForm.body).innsendingsId)
+		assertEquals(HttpStatus.NOT_FOUND, filledForm.statusCode)
+		assertNull(filledForm.body)
 		val listed = api.getExistingSoknader(created.skjemanr).assertHttpStatus(HttpStatus.OK).body
-		assertTrue(listed.any { it.innsendingsId == applicationId })
+		assertTrue(listed.none { it.innsendingsId == applicationId })
 		// REST cannot distinguish SQL NULL from a populated owner. Reads must not backfill it.
 		assertTrue(storedApplications.findBySubmissionId(applicationId).ownerIsSqlNull)
 	}

@@ -27,6 +27,10 @@ spring:
 
 bidrag_applikasjon: 1
 
+task-authorization:
+  pre-authorized-apps: '[{"clientId":"task-client-id","name":"dev-gcp:team-soknad:task-client"},{"clientId":"other-client-id","name":"dev-gcp:team-soknad:other-client"}]'
+  allowed-applications: dev-gcp:team-soknad:task-client
+
 management:
   endpoint:
   health:

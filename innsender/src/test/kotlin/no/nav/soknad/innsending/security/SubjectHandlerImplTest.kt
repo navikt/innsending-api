@@ -9,6 +9,7 @@ import no.nav.security.token.support.core.jwt.JwtTokenClaims
 import no.nav.soknad.innsending.exceptions.BackendErrorException
 import no.nav.soknad.innsending.exceptions.InvalidUserIdentityException
 import no.nav.soknad.innsending.util.Constants.TOKENX
+import no.nav.soknad.innsending.util.Constants.AZURE
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -20,6 +21,26 @@ class SubjectHandlerImplTest {
 	private val context = mockk<TokenValidationContext>()
 	private val holder = mockk<TokenValidationContextHolder>()
 	private val handler = SubjectHandlerImpl(holder)
+
+	@Test
+	fun `Azure caller identity prefers the authorized azp over a different client_id`() {
+		every { holder.getTokenValidationContext() } returns context
+		every { context.hasTokenFor(AZURE) } returns true
+		every { context.getClaims(AZURE) } returns JwtTokenClaims(
+			JWTClaimsSet.Builder().claim("azp", "authorized-application").claim("client_id", "different-application").build()
+		)
+		assertEquals("authorized-application", handler.getClientId())
+	}
+
+	@Test
+	fun `non-task Azure routes retain legacy caller identity when azp is absent`() {
+		every { holder.getTokenValidationContext() } returns context
+		every { context.hasTokenFor(AZURE) } returns true
+		every { context.getClaims(AZURE) } returns JwtTokenClaims(
+			JWTClaimsSet.Builder().claim("client_id", "legacy-application").build()
+		)
+		assertEquals("legacy-application", handler.getClientId())
+	}
 
 	private fun claims(pid: Any?, sub: String?) {
 		every { holder.getTokenValidationContext() } returns context

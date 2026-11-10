@@ -46,13 +46,14 @@ class SubjectHandlerImpl(private val ctxHolder: TokenValidationContextHolder) : 
 	}
 
 
-	// The MockOAuth2Server sets AZP claim for the client id, while the real tokens uses client_id claim
 	override fun getClientId(): String {
-		val claims = try {
-			tokenValidationContext.getClaims(TOKENX)
-		} catch (e: Exception) {
-			tokenValidationContext.getClaims(AZURE)
+		if (tokenValidationContext.hasTokenFor(AZURE)) {
+			val claims = tokenValidationContext.getClaims(AZURE)
+			// Task authorization requires azp separately; retain legacy identity handling on other Azure APIs.
+			return claims.getStringClaim(AZP) ?: claims.getStringClaim(CLIENT_ID)
+				?: throw BackendErrorException("Azure caller identity is missing")
 		}
+		val claims = tokenValidationContext.getClaims(TOKENX)
 		return claims.getStringClaim(CLIENT_ID)
 			?: claims.getStringClaim(AZP)
 	}

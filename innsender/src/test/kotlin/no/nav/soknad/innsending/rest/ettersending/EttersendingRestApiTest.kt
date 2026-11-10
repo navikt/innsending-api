@@ -25,8 +25,6 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
 import org.awaitility.Awaitility.await
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -51,7 +49,6 @@ class EttersendingRestApiTest : ApplicationTest() {
 
 	private var testApi: ApiWebClient? = null
 	private val fixtureIds = mutableListOf<String>()
-	private val otherPerson = "10987654321"
 	private val api: ApiWebClient
 		get() = testApi!!
 
@@ -109,9 +106,8 @@ class EttersendingRestApiTest : ApplicationTest() {
 		assertNull(notification.brukernotifikasjonInfo.utsettSendingTil)
 	}
 
-	@ParameterizedTest(name = "source owner present: {0}")
-	@ValueSource(booleans = [true, false])
-	fun `Should create ettersending with existing søknad`(ownerPresent: Boolean) {
+	@Test
+	fun `Should create ettersending with existing søknad`() {
 		// Given
 		val vedleggsnr = "A1"
 		val skjemaDto = SkjemaDtoTestBuilder().build()
@@ -124,8 +120,8 @@ class EttersendingRestApiTest : ApplicationTest() {
 		await().atMost(Duration.ofSeconds(5)).untilAsserted {
 			assertEquals(SoknadsStatus.Innsendt, storedApplications.findBySubmissionId(originalId).status)
 		}
-		// REST cannot assign an owner distinct from the user or a pre-release SQL NULL owner.
-		storedApplications.setOwner(originalId, if (ownerPresent) ApplicationOwner.person(otherPerson) else null)
+		// REST cannot assign a historical owner from the token's PDL history.
+		storedApplications.setOwner(originalId, ApplicationOwner.person("12345678902"))
 
 		val ettersending = OpprettEttersendingTestBuilder()
 			.skjemanr(skjemaDto.skjemanr)
