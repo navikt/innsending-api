@@ -7,13 +7,15 @@ import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
+import java.time.Duration
 
 /**
  * Henter token fra Texas-sidecaren:
  * - maskintoken (Entra ID client credentials) via NAIS_TOKEN_ENDPOINT
  * - TokenX-utveksling av innbyggerens token via NAIS_TOKEN_EXCHANGE_ENDPOINT
  *
- * Texas cacher tokenene selv, så klienten har ingen egen cache og prøver ikke på nytt.
+ * Texas cacher tokenene selv, så klienten har ingen egen cache. Ved forbigående feil prøver klienten én gang til
+ * (se [TexasRetry]).
  * Feil blir [TokenServiceUnavailableException] uten respons-body og uten cause, slik at verken
  * innbyggerens token eller tokenet fra Texas kan havne i logger gjennom en melding eller stacktrace.
  */
@@ -21,7 +23,10 @@ class TexasTokenClient(
 	private val restClient: RestClient,
 	private val tokenEndpoint: String,
 	private val exchangeEndpoint: String,
+	retryWait: Duration = TexasRetry.DEFAULT_WAIT,
 ) : AccessTokenProvider {
+
+	private val retry = TexasRetry.create("tokenkall", retryWait)
 
 	override fun getMachineToken(target: String): String =
 		fetchToken(tokenEndpoint, ENTRA_ID, target, mapOf("identity_provider" to ENTRA_ID, "target" to target))
@@ -35,12 +40,14 @@ class TexasTokenClient(
 	private fun fetchToken(endpoint: String, identityProvider: String, target: String, body: Map<String, String>): String {
 		val description = "identity_provider=$identityProvider target=$target"
 		val response = try {
-			restClient.post()
-				.uri(endpoint)
-				.contentType(MediaType.APPLICATION_JSON)
-				.body(body)
-				.retrieve()
-				.body(Map::class.java)
+			retry.executeSupplier {
+				restClient.post()
+					.uri(endpoint)
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(body)
+					.retrieve()
+					.body(Map::class.java)
+			}
 		} catch (e: RestClientResponseException) {
 			throw TokenServiceUnavailableException("Texas svarte ${e.statusCode.value()} for $description")
 		} catch (e: ResourceAccessException) {

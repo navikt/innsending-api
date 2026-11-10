@@ -9,6 +9,7 @@ import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
+import java.time.Duration
 
 /**
  * Validerer innkommende token hos Texas-sidecaren via NAIS_TOKEN_INTROSPECTION_ENDPOINT (#461).
@@ -16,23 +17,28 @@ import org.springframework.web.client.RestClientResponseException
  * Texas svarer `active: true` med claimene når tokenet er gyldig for appen, og `active: false` med en feilmelding
  * ellers. Feilmeldingen tas ikke vare på, fordi vi ikke kontrollerer hva den inneholder. Feil i kallet blir
  * [TokenServiceUnavailableException] uten respons-body og uten cause, slik at tokenet aldri havner i logger.
- * Ingen retry i appen.
+ * Ved forbigående feil prøver klienten én gang til (se [TexasRetry]).
  */
 class TexasIntrospectionClient(
 	private val restClient: RestClient,
 	private val introspectionEndpoint: String,
+	retryWait: Duration = TexasRetry.DEFAULT_WAIT,
 ) : TokenIntrospector {
+
+	private val retry = TexasRetry.create("introspeksjon", retryWait)
 
 	override fun introspect(issuer: TokenIssuer, token: String): IntrospectionResult {
 		val identityProvider = identityProvider(issuer)
 		val description = "identity_provider=$identityProvider"
 		val response = try {
-			restClient.post()
-				.uri(introspectionEndpoint)
-				.contentType(MediaType.APPLICATION_JSON)
-				.body(mapOf("identity_provider" to identityProvider, "token" to token))
-				.retrieve()
-				.body(Map::class.java)
+			retry.executeSupplier {
+				restClient.post()
+					.uri(introspectionEndpoint)
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(mapOf("identity_provider" to identityProvider, "token" to token))
+					.retrieve()
+					.body(Map::class.java)
+			}
 		} catch (e: RestClientResponseException) {
 			throw TokenServiceUnavailableException("Texas svarte ${e.statusCode.value()} på introspeksjon for $description")
 		} catch (e: ResourceAccessException) {

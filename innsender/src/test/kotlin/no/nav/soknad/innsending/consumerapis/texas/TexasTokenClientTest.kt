@@ -15,6 +15,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.client.ExpectedCount.once
+import org.springframework.test.web.client.ExpectedCount.times
 import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers.content
 import org.springframework.test.web.client.match.MockRestRequestMatchers.method
@@ -24,6 +25,7 @@ import org.springframework.test.web.client.response.MockRestResponseCreators.wit
 import org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
 import org.springframework.web.client.RestClient
 import java.net.SocketTimeoutException
+import java.time.Duration
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -47,7 +49,7 @@ class TexasTokenClientTest {
 	fun setUp() {
 		val builder = RestClient.builder()
 		server = MockRestServiceServer.bindTo(builder).build()
-		client = TexasTokenClient(builder.build(), tokenEndpoint, exchangeEndpoint)
+		client = TexasTokenClient(builder.build(), tokenEndpoint, exchangeEndpoint, retryWait = Duration.ZERO)
 		appender.start()
 		rootLogger.addAppender(appender)
 	}
@@ -71,8 +73,8 @@ class TexasTokenClientTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(ints = [400, 401, 403, 500, 502, 503])
-	fun `an error status from Texas gives TokenServiceUnavailableException without token and without body`(status: Int) {
+	@ValueSource(ints = [400, 401, 403, 500])
+	fun `an error status from Texas gives TokenServiceUnavailableException without retry, token or body`(status: Int) {
 		server.expect(once(), requestTo(tokenEndpoint))
 			.andRespond(
 				withStatus(HttpStatus.valueOf(status))
@@ -88,14 +90,44 @@ class TexasTokenClientTest {
 		assertTokenNotLogged()
 	}
 
+	@ParameterizedTest
+	@ValueSource(ints = [502, 503, 504])
+	fun `a transient error status from Texas is retried once and then gives TokenServiceUnavailableException`(status: Int) {
+		server.expect(times(2), requestTo(tokenEndpoint))
+			.andRespond(
+				withStatus(HttpStatus.valueOf(status))
+					.contentType(MediaType.APPLICATION_JSON)
+					.body("""{"error":"upstream","access_token":"$token"}""")
+			)
+
+		val error = assertFailsWith<TokenServiceUnavailableException> { client.getMachineToken(target) }
+
+		assertEquals("Texas svarte $status for identity_provider=entra_id target=$target", error.message)
+		assertEquals(null, error.cause)
+		server.verify()
+		assertTokenNotLogged()
+	}
+
 	@Test
-	fun `network errors and timeouts give TokenServiceUnavailableException without retry`() {
-		server.expect(once(), requestTo(tokenEndpoint))
+	fun `network errors and timeouts are retried once and then give TokenServiceUnavailableException`() {
+		server.expect(times(2), requestTo(tokenEndpoint))
 			.andRespond(withException(SocketTimeoutException("Read timed out")))
 
 		val error = assertFailsWith<TokenServiceUnavailableException> { client.getMachineToken(target) }
 
 		assertEquals(null, error.cause)
+		server.verify()
+		assertTokenNotLogged()
+	}
+
+	@Test
+	fun `a machine token is returned when the retry after a network error succeeds`() {
+		server.expect(once(), requestTo(tokenEndpoint))
+			.andRespond(withException(SocketTimeoutException("Read timed out")))
+		server.expect(once(), requestTo(tokenEndpoint))
+			.andRespond(withSuccess(tokenResponse(), MediaType.APPLICATION_JSON))
+
+		assertEquals(token, client.getMachineToken(target))
 		server.verify()
 		assertTokenNotLogged()
 	}
@@ -150,9 +182,9 @@ class TexasTokenClientTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(ints = [400, 401, 500, 503])
+	@ValueSource(ints = [400, 401, 500, 503, 504])
 	fun `an exchange failure gives TokenServiceUnavailableException without the citizen token`(status: Int) {
-		server.expect(once(), requestTo(exchangeEndpoint))
+		server.expect(if (status >= 502) times(2) else once(), requestTo(exchangeEndpoint))
 			.andRespond(
 				withStatus(HttpStatus.valueOf(status))
 					.contentType(MediaType.APPLICATION_JSON)
@@ -168,8 +200,8 @@ class TexasTokenClientTest {
 	}
 
 	@Test
-	fun `network errors during exchange give TokenServiceUnavailableException without retry`() {
-		server.expect(once(), requestTo(exchangeEndpoint))
+	fun `network errors during exchange are retried once and then give TokenServiceUnavailableException`() {
+		server.expect(times(2), requestTo(exchangeEndpoint))
 			.andRespond(withException(SocketTimeoutException("Read timed out")))
 
 		val error = assertFailsWith<TokenServiceUnavailableException> { client.exchangeUserToken(tokenxTarget, userToken) }
