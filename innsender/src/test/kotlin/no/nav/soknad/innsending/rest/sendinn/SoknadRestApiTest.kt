@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.rest.sendinn
 import com.ninjasquad.springmockk.MockkBean
 import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
+import io.mockk.justRun
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
@@ -10,21 +11,30 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
+import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.AvsenderDto
 import no.nav.soknad.innsending.model.BrukerDto
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.EnvQualifier
+import no.nav.soknad.innsending.model.Mimetype
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.PatchVedleggDto
 import no.nav.soknad.innsending.model.SoknadType
+import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
 import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.SoknadService
 import no.nav.soknad.innsending.utils.ApiWebClient
+import no.nav.soknad.innsending.utils.ApplicationTestRepository
+import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.awaitNotification
+import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.OpprettEttersendingBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoTestBuilder
@@ -40,15 +50,22 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.awaitility.Awaitility.await
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
+import org.springframework.context.annotation.Import
+import java.time.Duration
 import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.test.assertNotEquals
 
+@Import(ApplicationTestRepository::class)
 class SoknadRestApiTest : ApplicationTest() {
+	@Autowired
+	lateinit var storedApplications: ApplicationTestRepository
+
 	@Autowired
 	lateinit var repoUtils: RepositoryUtils
 
@@ -214,28 +231,45 @@ class SoknadRestApiTest : ApplicationTest() {
 
 	@Test
 	fun `Should create notification when ettersending is automatically created due to missing attachments`() {
-		val createSoknadRequest = SkjemaDtoTestBuilder(vedleggsListe = listOf(
+		val createSoknadRequest = SkjemaDtoTestBuilder(brukerId = "10987654321", vedleggsListe = listOf(
 			SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build(),
 			SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
 		)).build()
 		val innsendingsId = api.createSoknad(createSoknadRequest, envQualifier = EnvQualifier.preprodAnsatt)
 			.assertSuccess().body.innsendingsId!!
+		notificationPublisher.awaitNotification(innsendingsId)
 		val soknad = api.getSoknadSendinn(innsendingsId)
 			.assertSuccess().body
 
 		val vedleggsId = soknad.vedleggsListe.first { it.vedleggsnr == "N6" }.id
 		val fil = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf")
 		api.uploadFile(innsendingsId, vedleggsId!!, fil)
+		// REST cannot assign a historical owner from the token's PDL history.
+		val historicalOwner = "12345678902"
+		val owner = ApplicationOwner.person(historicalOwner)
+		storedApplications.setOwner(innsendingsId, owner)
+		justRun { soknadsmottakerAPI.sendInnSoknad(match { it.innsendingsId == innsendingsId }, any(), any(), any(), any()) }
 
 		val innsendingskvittering = api.sendInnSoknad(innsendingsId, EnvQualifier.preprodAnsatt)
 			.assertSuccess().body
 		assertEquals(1, innsendingskvittering.skalEttersendes?.size)
 
 		val notifications = mutableListOf<AddNotification>()
-		verify(timeout = 100, exactly = 2) { notificationPublisher.opprettBrukernotifikasjon(capture(notifications)) }
-		verify(timeout = 100, exactly = 1) { notificationPublisher.avsluttBrukernotifikasjon(any()) }
+		verify(timeout = 5000, exactly = 2) {
+			notificationPublisher.opprettBrukernotifikasjon(match {
+				it.soknadRef.groupId == innsendingsId
+			})
+		}
+		verify { notificationPublisher.opprettBrukernotifikasjon(capture(notifications)) }
+		val groupNotifications = notifications.filter { it.soknadRef.groupId == innsendingsId }
+		verify(timeout = 5000, exactly = 1) {
+			notificationPublisher.avsluttBrukernotifikasjon(match {
+				it.innsendingId == innsendingsId && it.groupId == innsendingsId && it.personId == historicalOwner
+			})
+		}
 
-		val notificationForInitialSoknad = notifications.first()
+		val notificationForInitialSoknad = groupNotifications.single { it.soknadRef.innsendingId == innsendingsId }
+		assertTrue(notificationForInitialSoknad.soknadRef.personId == TokenGenerator.subject, "Creation must notify the original owner")
 		assertFalse(notificationForInitialSoknad.soknadRef.erEttersendelse)
 		assertEquals(false, notificationForInitialSoknad.soknadRef.erSystemGenerert)
 		assertEquals(innsendingsId, notificationForInitialSoknad.soknadRef.innsendingId)
@@ -246,7 +280,8 @@ class SoknadRestApiTest : ApplicationTest() {
 			"Unexpected link: ${notificationForInitialSoknad.brukernotifikasjonInfo.lenke}"
 		)
 
-		val notificationForEttersending = notifications.last()
+		val notificationForEttersending = groupNotifications.single { it.soknadRef.innsendingId != innsendingsId }
+		assertTrue(notificationForEttersending.soknadRef.personId == historicalOwner, "The successor must notify the inherited owner")
 		assertTrue(notificationForEttersending.soknadRef.erEttersendelse)
 		assertEquals(true, notificationForEttersending.soknadRef.erSystemGenerert)
 		assertNotNull(notificationForEttersending.soknadRef.innsendingId)
@@ -257,6 +292,55 @@ class SoknadRestApiTest : ApplicationTest() {
 			notificationForEttersending.brukernotifikasjonInfo.lenke.contains("ansatt.dev.nav.no"),
 			"Unexpected link: ${notificationForEttersending.brukernotifikasjonInfo.lenke}"
 		)
+		val successorId = notificationForEttersending.soknadRef.innsendingId
+		val successor = api.getSoknadSendinn(successorId).assertHttpStatus(HttpStatus.OK).body
+		assertEquals(innsendingsId, successor.ettersendingsId)
+		assertEquals(SoknadsStatusDto.Opprettet, successor.status)
+		assertTrue(successor.brukerId == TokenGenerator.subject, "The successor must retain the legacy user identity")
+		assertEquals(createSoknadRequest.tittel, successor.tittel)
+		assertEquals(createSoknadRequest.skjemanr, successor.skjemanr)
+		val missingAttachment = successor.vedleggsListe.single { it.vedleggsnr == "T7" }
+		assertEquals("T7", missingAttachment.vedleggsnr)
+		assertEquals(OpplastingsStatusDto.IkkeValgt, missingAttachment.opplastingsStatus)
+		assertEquals(true, missingAttachment.erPakrevd)
+		assertFalse(missingAttachment.erHoveddokument)
+		assertTrue(missingAttachment.fileIds.isNullOrEmpty())
+
+		val submittedAttachments = slot<List<VedleggDto>>()
+		verify(timeout = 5000, exactly = 1) {
+			soknadsmottakerAPI.sendInnSoknad(
+				match { it.innsendingsId == innsendingsId && it.brukerId == TokenGenerator.subject },
+				capture(submittedAttachments),
+				eq(AvsenderDto(id = TokenGenerator.subject, idType = AvsenderDto.IdType.FNR)),
+				eq(BrukerDto(id = TokenGenerator.subject, idType = BrukerDto.IdType.FNR)),
+				isNull(),
+			)
+		}
+		assertTrue(submittedAttachments.captured.none { it.vedleggsnr == "T7" })
+		val submittedMainDocuments = submittedAttachments.captured.filter { it.erHoveddokument }
+		assertEquals(2, submittedMainDocuments.size)
+		assertEquals(setOf(false, true), submittedMainDocuments.map { it.erVariant }.toSet())
+		assertEquals(setOf(Mimetype.applicationSlashPdf, Mimetype.applicationSlashJson), submittedMainDocuments.map { it.mimetype }.toSet())
+		assertEquals(Mimetype.applicationSlashPdf, submittedAttachments.captured.single { it.vedleggsnr == Constants.KVITTERINGS_NR }.mimetype)
+		assertTrue(submittedAttachments.captured.all { it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending })
+		// The submitted original has no readable person GET. Await its commit before checking hidden owners and final call counts.
+		await().atMost(Duration.ofSeconds(5)).untilAsserted {
+			val original = storedApplications.findBySubmissionId(innsendingsId)
+			assertEquals(SoknadsStatus.Innsendt, original.status)
+			listOf(original, storedApplications.findBySubmissionId(successorId)).forEach {
+				assertEquals(false, it.ownerIsSqlNull)
+				assertTrue(it.owner == owner, "Original and automatic successor must retain the stored owner")
+			}
+		}
+		val ids = setOf(innsendingsId, successorId)
+		verify(exactly = 1) { soknadsmottakerAPI.sendInnSoknad(match { it.innsendingsId in ids }, any(), any(), any(), any()) }
+		verify(exactly = 2) { notificationPublisher.opprettBrukernotifikasjon(match { it.soknadRef.innsendingId in ids }) }
+		verify(exactly = 1) { notificationPublisher.avsluttBrukernotifikasjon(match { it.innsendingId in ids }) }
+		val activeGroup = api.getExistingSoknader(createSoknadRequest.skjemanr).assertHttpStatus(HttpStatus.OK).body
+			.filter { it.innsendingsId == innsendingsId || it.ettersendingsId == innsendingsId }
+		assertEquals(listOf(successorId), activeGroup.map { it.innsendingsId })
+		api.getSoknadSendinn(innsendingsId).assertHttpStatus(HttpStatus.BAD_REQUEST)
+			.assertErrorCode(ErrorCode.APPLICATION_SENT_IN_OR_DELETED)
 	}
 
 

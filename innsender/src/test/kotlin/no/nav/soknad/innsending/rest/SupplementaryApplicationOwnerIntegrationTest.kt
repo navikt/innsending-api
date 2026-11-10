@@ -98,19 +98,6 @@ class SupplementaryApplicationOwnerIntegrationTest : ApplicationTest() {
 
 	@ParameterizedTest(name = "source owner present: {0}")
 	@ValueSource(booleans = [true, false])
-	fun `person initiated supplementary application gets the logged in owner instead of the stored original owner`(ownerPresent: Boolean) {
-		val original = historicalApplication(owner = if (ownerPresent) ApplicationOwner.person(otherPerson) else null)
-		stubArchive(archiveRecord(original.innsendingsid))
-		val request = OpprettEttersendingTestBuilder().skjemanr(formNumber).build()
-
-		val created = api.createEttersending(request).assertHttpStatus(HttpStatus.CREATED).body.also(::trackCreated)
-
-		assertPersonApplication(created, original.innsendingsid)
-		assertOwner(created, ApplicationOwner.person(TokenGenerator.subject))
-	}
-
-	@ParameterizedTest(name = "source owner present: {0}")
-	@ValueSource(booleans = [true, false])
 	fun `person initiated archived supplementary application gets the logged in owner instead of the original owner`(ownerPresent: Boolean) {
 		val original = historicalApplication(userId = otherPerson, owner = if (ownerPresent) ApplicationOwner.person(otherPerson) else null)
 		stubArchive(archiveRecord(original.innsendingsid))
