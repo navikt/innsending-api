@@ -15,7 +15,8 @@ BEGIN
        -- Exact object equality also rejects wrong JSON structure, types and extra fields.
        OR (owner IS NOT NULL AND (
            visningstype = '4'
-           OR owner IS DISTINCT FROM jsonb_build_object('id', brukerid, 'idType', 'FNR')))
+           OR (owner ->> 'id' ~ '^[0-9]{11}$') IS NOT TRUE
+           OR owner IS DISTINCT FROM jsonb_build_object('id', owner ->> 'id', 'idType', 'FNR')))
        -- A digital affected party may legitimately differ from the owner.
        OR (affecteduser IS NOT NULL AND (
            (affecteduser ->> 'id' ~ '^[0-9]{11}$') IS NOT TRUE

@@ -105,6 +105,16 @@ class OwnerBackfillMigrationTest {
 		assertTrue(indexDefinition.contains("status) WHERE"))
 		assertTrue(indexDefinition.contains("visningstype"))
 		assertFalse(indexDefinition.contains("'4'"))
+		val affectedPersonIndex = jdbc.queryForObject(
+			"SELECT pg_get_indexdef(indexrelid) FROM pg_index WHERE indexrelid = 'soknad_affected_person_status_idx'::regclass AND indisvalid",
+			String::class.java,
+		).orEmpty()
+		assertTrue(affectedPersonIndex.contains("USING btree"))
+		assertTrue(affectedPersonIndex.contains("affecteduser ->> 'idType'"))
+		assertTrue(affectedPersonIndex.contains("affecteduser ->> 'id'"))
+		assertTrue(affectedPersonIndex.contains("status) WHERE"))
+		assertTrue(affectedPersonIndex.contains("visningstype"))
+		assertFalse(affectedPersonIndex.contains("'4'"))
 	}
 
 	@Test
@@ -115,6 +125,22 @@ class OwnerBackfillMigrationTest {
 		migrate("1.46")
 
 		assertEquals(originalState, snapshots(" - 'affecteduser'"))
+		assertEquals(0L, count("affecteduser IS DISTINCT FROM jsonb_build_object('id', brukerid, 'idType', 'FNR')"))
+	}
+
+	@Test
+	fun `valid owners distinct from the legacy person survive every digital display type and status`() {
+		(0..3).forEach { displayType ->
+			SoknadsStatus.values().forEach { status ->
+				insert("distinct-$displayType-${status.name}", displayType.toString(), owner = OTHER_PARTY, status = status.name)
+			}
+		}
+		val before = snapshots(" - 'affecteduser'")
+
+		migrate("1.46")
+
+		assertEquals(before, snapshots(" - 'affecteduser'"))
+		assertEquals(4L * SoknadsStatus.values().size, count("owner ->> 'id' = '$OTHER_ID'"))
 		assertEquals(0L, count("affecteduser IS DISTINCT FROM jsonb_build_object('id', brukerid, 'idType', 'FNR')"))
 	}
 
@@ -215,7 +241,6 @@ class OwnerBackfillMigrationTest {
 			conflict("non-ASCII legacy identity", legacyId = "１２３４５６７８９０１")
 			conflict("non-FNR legacy type", userType = "1")
 			conflict("enum name is not a legacy type ordinal", userType = "FNR")
-			conflict("existing owner conflicts with legacy identity", owner = OTHER_PARTY)
 			listOf(
 				"null", "[]", "\"text\"", "{}",
 				"""{"id":"12345678901"}""",
@@ -228,6 +253,8 @@ class OwnerBackfillMigrationTest {
 				"""{"id":"12345678901","idType":"ORGNR"}""",
 				"""{"id":"1234567890","idType":"FNR"}""",
 				"""{"id":"１２３４５６７８９０１","idType":"FNR"}""",
+				"""{"id":"10987654321","idType":"ORGNR"}""",
+				"""{"id":"10987654321","idType":"FNR","extra":true}""",
 			).forEachIndexed { index, json ->
 				conflict("malformed owner $index", owner = json)
 				conflict("malformed affected party $index", affectedUser = json)

@@ -1,5 +1,6 @@
 package no.nav.soknad.innsending.rest
 
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import io.mockk.slot
@@ -149,6 +150,11 @@ class OwnerWritingIntegrationTest : ApplicationTest() {
 
 	@Test
 	fun `Nav initiated task creation writes the explicit request user as owner`() {
+		// The shared PDL fixture otherwise returns the default person's identifiers for every request.
+		wireMock.stubFor(post(urlEqualTo("/pdl-api/graphql"))
+			.withRequestBody(matchingJsonPath("$.operationName", equalTo("HentIdenter")))
+			.withRequestBody(matchingJsonPath("$.variables.ident", equalTo(otherIdentity)))
+			.willReturn(okJson("""{"data":{"hentIdenter":{"identer":[{"ident":"$otherIdentity","gruppe":"FOLKEREGISTERIDENT","historisk":false}]}}}""")))
 		val request = EksternEttersendingsOppgave(
 			brukerId = otherIdentity,
 			skjemanr = "NAV 55-00.60",

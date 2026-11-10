@@ -8,6 +8,7 @@ import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
 import no.nav.soknad.innsending.security.TaskOwnerAuthorization
+import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.EttersendingService
 import no.nav.soknad.innsending.service.NotificationService
 import no.nav.soknad.innsending.service.SoknadService
@@ -27,6 +28,7 @@ class InternInitiertOppgaver(
 	private val ettersendingService: EttersendingService,
 	private val soknadService: SoknadService,
 	private val notificationService: NotificationService,
+	private val tilgangskontroll: Tilgangskontroll,
 ): EksternoppgaveApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -47,9 +49,9 @@ class InternInitiertOppgaver(
 			brukerId
 		)
 
-		ettersendingService.logWarningForExistingEttersendelse(
-			brukerId = brukerId,
-			skjemanr = eksternEttersendingsOppgave.skjemanr,
+		ettersendingService.logWarningForExistingTask(
+			affectedPersonId = brukerId,
+			formNumber = eksternEttersendingsOppgave.skjemanr,
 		)
 
 		val eksternOpprettEttersending = EksternOpprettEttersending(
@@ -132,7 +134,7 @@ class InternInitiertOppgaver(
 				"[${applikasjon}] - Henter søknader med søknadstyper=${typeFilter ?: "<alle>"} for $skjemanr",
 				brukerId
 			)
-		val soknader = soknadService.hentAktiveSoknader(brukerId, skjemanr, *typeFilter)
+		val soknader = soknadService.findActiveApplicationsForTask(tilgangskontroll.hentPersonIdents(brukerId), skjemanr, *typeFilter)
 
 		return ResponseEntity.status(HttpStatus.OK).body(soknader)
 	}

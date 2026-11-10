@@ -387,14 +387,14 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		)
 	}
 
-	fun createEttersending(opprettEttersending: OpprettEttersending, envQualifier: EnvQualifier? = null): InnsendingApiResponse<DokumentSoknadDto> {
+	fun createEttersending(opprettEttersending: OpprettEttersending, envQualifier: EnvQualifier? = null, authToken: String? = null): InnsendingApiResponse<DokumentSoknadDto> {
 		val headers: Map<String, String>? = if (envQualifier != null) mapOf(
 			"Nav-Env-Qualifier" to envQualifier.value
 		) else null
 		val response = webTestClient.post()
 			.uri("${baseUrl}/fyllut/v1/ettersending")
 			.headers({ httpHeaders ->
-				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), headers).toSingleValueMap())
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken(), headers).toSingleValueMap())
 			})
 			.bodyValue(opprettEttersending)
 			.exchange()

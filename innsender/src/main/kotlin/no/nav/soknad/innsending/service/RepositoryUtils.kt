@@ -105,6 +105,12 @@ class RepositoryUtils(
 		throw BackendErrorException("Feil ved henting av alle soknader for bruker xxxx med status $status", ex)
 	}
 
+	fun findTaskApplicationsByAffectedPersonAndStatus(idents: List<String>, status: SoknadsStatus) = try {
+		if (idents.isEmpty()) emptyList() else soknadRepository.findByAffectedPersonAndStatus(idents.distinct(), status.name)
+	} catch (ex: Exception) {
+		throw BackendErrorException("Failed to find task applications by affected person and status $status", ex)
+	}
+
 	fun findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(
 		eldreEnn: Long,
 		vindu: Long

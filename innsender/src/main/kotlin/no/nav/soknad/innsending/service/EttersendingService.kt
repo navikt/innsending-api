@@ -373,8 +373,11 @@ class EttersendingService(
 		}
 	}
 
-	fun getInnsendteSoknader(skjemanr: String, brukerId: String): List<DokumentSoknadDto> {
-		return soknadService.hentInnsendteSoknader(tilgangskontroll.hentPersonIdents(brukerId))
+	fun getInnsendteSoknader(skjemanr: String, brukerId: String, erNavInitiert: Boolean = false): List<DokumentSoknadDto> {
+		val idents = tilgangskontroll.hentPersonIdents(brukerId)
+		val submitted = if (erNavInitiert) soknadService.findSubmittedApplicationsForTask(idents)
+		else soknadService.hentInnsendteSoknader(idents)
+		return submitted
 			.filter { it.skjemanr == skjemanr }
 			.filter { it.innsendtDato!!.isAfter(OffsetDateTime.now().minusDays(Constants.MAX_AKTIVE_DAGER)) }
 			.sortedByDescending { it.innsendtDato }
@@ -425,7 +428,7 @@ class EttersendingService(
 		ettersending: OpprettEttersending,
 		erNavInitiert: Boolean = false
 	): DokumentSoknadDto {
-		val innsendteSoknader = getInnsendteSoknader(ettersending.skjemanr, brukerId)
+		val innsendteSoknader = getInnsendteSoknader(ettersending.skjemanr, brukerId, erNavInitiert)
 			.filterNot { it.visningsType.isUnauthenticatedSubmission() }
 		val arkiverteSoknader = getArkiverteEttersendinger(ettersending.skjemanr, brukerId)
 			.filterNot { archived ->
@@ -490,6 +493,13 @@ class EttersendingService(
 		val aktiveSoknaderGittSkjemanr = soknadService.hentAktiveSoknader(brukerId, skjemanr, SoknadType.ettersendelse)
 		if (aktiveSoknaderGittSkjemanr.isNotEmpty()) {
 			logger.warn("Dupliserer søknad på skjemanr=$skjemanr, søker har allerede ${aktiveSoknaderGittSkjemanr.size} under arbeid")
+		}
+	}
+
+	fun logWarningForExistingTask(affectedPersonId: String, formNumber: String) {
+		val active = soknadService.findActiveApplicationsForTask(tilgangskontroll.hentPersonIdents(affectedPersonId), formNumber, SoknadType.ettersendelse)
+		if (active.isNotEmpty()) {
+			logger.warn("Duplicate task for form=$formNumber, affected person already has ${active.size} active applications")
 		}
 	}
 

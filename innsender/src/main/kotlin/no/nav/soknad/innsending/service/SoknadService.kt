@@ -88,6 +88,19 @@ class SoknadService(
 		return findApplicationsByOwner(brukerIds, SoknadsStatus.Innsendt)
 	}
 
+	fun findSubmittedApplicationsForTask(affectedPersonIds: List<String>): List<DokumentSoknadDto> =
+		repo.findTaskApplicationsByAffectedPersonAndStatus(affectedPersonIds, SoknadsStatus.Innsendt)
+			.map { vedleggService.hentAlleVedlegg(it) }
+
+	fun findActiveApplicationsForTask(affectedPersonIds: List<String>, formNumber: String, vararg types: SoknadType): List<DokumentSoknadDto> =
+		listOf(SoknadsStatus.Opprettet, SoknadsStatus.Utfylt)
+			.flatMap { repo.findTaskApplicationsByAffectedPersonAndStatus(affectedPersonIds, it) }
+			.map { vedleggService.hentAlleVedlegg(it) }
+			.filter {
+				it.skjemanr == formNumber && it.visningsType != VisningsType.dokumentinnsending &&
+					(types.isEmpty() || it.soknadstype in types)
+			}
+
 	private fun findApplicationsByOwner(
 		idents: List<String>,
 		soknadsStatus: SoknadsStatus = SoknadsStatus.Opprettet

@@ -38,6 +38,17 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 	)
 	fun findByOwnerAndStatus(@Param("idents") idents: List<String>, @Param("status") status: String): List<SoknadDbData>
 
+	// This is a task-API lookup, never a person-access lookup.
+	@Query(
+		value = """SELECT * FROM soknad WHERE status = :status
+			AND visningstype IN ('0', '1', '2', '3')
+			AND affecteduser->>'idType' = 'FNR' AND affecteduser->>'id' IN (:idents)
+			AND affecteduser->>'id' ~ '^[0-9]{11}$'
+			AND affecteduser = jsonb_build_object('id', affecteduser->>'id', 'idType', 'FNR')""",
+		nativeQuery = true,
+	)
+	fun findByAffectedPersonAndStatus(@Param("idents") idents: List<String>, @Param("status") status: String): List<SoknadDbData>
+
 	@Transactional
 	@Modifying
 	@Query(value = "UPDATE SoknadDbData SET endretdato = :endretdato WHERE id = :id", nativeQuery = false)
