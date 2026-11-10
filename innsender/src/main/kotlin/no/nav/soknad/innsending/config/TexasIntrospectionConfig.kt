@@ -21,7 +21,8 @@ class TexasIntrospectionConfig {
 	fun texasIntrospectionClient(
 		@Value("\${texas.introspection-endpoint:}") introspectionEndpoint: String,
 	): TexasIntrospectionClient {
-		// Grensen deles mellom tilkobling og lesing, slik at et kall aldri venter lenger enn 2 sekunder totalt
+		// 0,5 s for å koble til og 1,5 s for hver lesing fra socketen, per forsøk. Grensen gjelder ikke hele kallet: et svar
+		// som kommer bit for bit, kan i teorien ta lengre tid. Texas kjører på localhost og svarer med lite JSON
 		val connectTimeout = TIMEOUT.dividedBy(4)
 		val requestFactory = SimpleClientHttpRequestFactory().apply {
 			setConnectTimeout(connectTimeout)
@@ -31,7 +32,8 @@ class TexasIntrospectionConfig {
 	}
 
 	private companion object {
-		// Vedtatt i #461: 2 sekunder for introspeksjon, uten retry i appen
+		// Vedtatt i #461: 2 sekunder for introspeksjon, fordelt på tilkobling og lesing. TexasRetry prøver én gang
+		// til, så et kall kan ta rundt 4,2 sekunder før det gir opp
 		val TIMEOUT: Duration = Duration.ofSeconds(2)
 	}
 }
