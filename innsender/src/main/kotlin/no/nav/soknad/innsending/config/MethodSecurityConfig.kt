@@ -1,6 +1,7 @@
 package no.nav.soknad.innsending.config
 
 import no.nav.soknad.innsending.security.AccessInterceptor
+import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
@@ -17,9 +18,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 @Configuration
 @EnableMethodSecurity
 @Profile("test | dev | prod | endtoend-auth")
-class MethodSecurityConfig : WebMvcConfigurer {
+class MethodSecurityConfig(private val innsenderMetrics: InnsenderMetrics) : WebMvcConfigurer {
 
 	override fun addInterceptors(registry: InterceptorRegistry) {
-		registry.addInterceptor(AccessInterceptor())
+		registry.addInterceptor(AccessInterceptor(innsenderMetrics::incTokenValidation))
 	}
 }

@@ -136,4 +136,44 @@ class TokenAuthenticationFilterTest {
 			TokenAuthenticationFilter(introspector, mapOf(TokenIssuer.AZURE to azureIssuer))
 		}
 	}
+
+	private fun check(request: MockHttpServletRequest) = request.getAttribute(TokenCheck.ATTRIBUTE) as TokenCheck?
+
+	@Test
+	fun `the result is recorded for each outcome`() {
+		val valid = token(tokenxIssuer)
+		val expired = token(azureIssuer)
+		every { introspector.introspect(TOKENX, valid) } returns IntrospectionResult(true, mapOf("acr" to "Level4"))
+		every { introspector.introspect(AZURE, expired) } returns IntrospectionResult(false, emptyMap())
+
+		val cases = mapOf(
+			null to TokenCheck(TokenValidationResult.MISSING, null),
+			"Basic abc" to TokenCheck(TokenValidationResult.MISSING, null),
+			"Bearer a,b" to TokenCheck(TokenValidationResult.MALFORMED, null),
+			"Bearer ikke-en-jwt" to TokenCheck(TokenValidationResult.MALFORMED, null),
+			"Bearer ${token("https://ukjent.test")}" to TokenCheck(TokenValidationResult.UNKNOWN_ISSUER, null),
+			"Bearer ${token(null)}" to TokenCheck(TokenValidationResult.UNKNOWN_ISSUER, null),
+			"Bearer $expired" to TokenCheck(TokenValidationResult.INACTIVE, AZURE),
+			"Bearer $valid" to TokenCheck(TokenValidationResult.OK, TOKENX),
+		)
+
+		cases.forEach { (authorization, expected) ->
+			SecurityContextHolder.clearContext()
+			assertEquals(expected, check(runFilter(authorization).first), "Authorization: $authorization")
+		}
+	}
+
+	@Test
+	fun `Texas down is recorded as unavailable with the issuer`() {
+		every { introspector.introspect(any(), any()) } throws TokenServiceUnavailableException("Texas svarte 503 på introspeksjon")
+
+		assertEquals(TokenCheck(TokenValidationResult.UNAVAILABLE, AZURE), check(runFilter("Bearer ${token(azureIssuer)}").first))
+	}
+
+	@Test
+	fun `nothing is recorded when the request is already authenticated`() {
+		SecurityContextHolder.getContext().authentication = TokenAuthentication(TOKENX, mapOf("acr" to "Level4"), "tokenx-token")
+
+		assertNull(check(runFilter("Bearer ${token(tokenxIssuer)}").first))
+	}
 }

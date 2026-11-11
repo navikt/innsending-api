@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest
 import no.nav.soknad.innsending.consumerapis.token.TokenServiceUnavailableException
 import no.nav.soknad.innsending.exceptions.utils.messageForLog
 import no.nav.soknad.innsending.model.RestErrorResponseDto
+import no.nav.soknad.innsending.security.TokenValidationOutcome
 import no.nav.soknad.innsending.service.config.annotation.ConfigVerificationException
 import org.apache.catalina.connector.ClientAbortException
 import org.slf4j.Logger
@@ -150,7 +151,12 @@ class RestExceptionHandler {
 		request: HttpServletRequest,
 		exception: RuntimeException
 	): ResponseEntity<RestErrorResponseDto> {
-		logger.warn("Autorisering feilet ved kall til ${request.requestURI}: ${exception.javaClass.simpleName}")
+		// Utfallet har bare faste verdier og klient-appen fra et verifisert token, se TokenValidationOutcome
+		val outcome = request.getAttribute(TokenValidationOutcome.ATTRIBUTE) as? TokenValidationOutcome
+		logger.warn(
+			"Autorisering feilet ved kall til ${request.requestURI}: ${exception.javaClass.simpleName}" +
+				(outcome?.let { " ($it)" } ?: "")
+		)
 
 		return ResponseEntity(
 			RestErrorResponseDto(
@@ -199,7 +205,8 @@ class RestExceptionHandler {
 		request: HttpServletRequest,
 		exception: TokenServiceUnavailableException
 	): ResponseEntity<RestErrorResponseDto> {
-		logger.error("Feil ved kall til ${request.requestURI}: ${exception.message}")
+		val outcome = request.getAttribute(TokenValidationOutcome.ATTRIBUTE) as? TokenValidationOutcome
+		logger.error("Feil ved kall til ${request.requestURI}: ${exception.message}" + (outcome?.let { " ($it)" } ?: ""))
 
 		return ResponseEntity(
 			RestErrorResponseDto(

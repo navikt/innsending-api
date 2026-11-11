@@ -25,6 +25,9 @@ import org.springframework.web.filter.OncePerRequestFilter
  *
  * Texas validerer ett token om gangen. En header med flere kommaseparerte token gir derfor ingen autentisering.
  * Token-support godtok det før migreringen.
+ *
+ * Filteret legger resultatet i request-attributtet [TokenCheck.ATTRIBUTE], slik at [AccessInterceptor] kan telle og
+ * logge hvorfor en forespørsel ble avvist. Attributtet påvirker ikke om forespørselen slipper inn.
  */
 class TokenAuthenticationFilter(
 	private val introspector: TokenIntrospector,
@@ -44,33 +47,42 @@ class TokenAuthenticationFilter(
 
 	override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain) {
 		val context = SecurityContextHolder.getContext()
-		val token = bearerToken(request)
-		if (context.authentication == null && token != null && !token.contains(',')) {
-			try {
-				authenticate(token)?.let { context.authentication = it }
-			} catch (e: TokenServiceUnavailableException) {
-				// Meldingen lager vi selv, uten token eller respons-body
-				logger.warn("Kunne ikke validere token hos Texas: ${e.message}")
-				request.setAttribute(TOKEN_VALIDATION_UNAVAILABLE, true)
-			} catch (e: RuntimeException) {
-				// Uventet feil i valideringen skal gi 503 som Texas-feil, ikke Spring sin feilside. Bare klassenavnet logges
-				logger.warn("Uventet feil ved validering av token hos Texas (${e.javaClass.simpleName})")
-				request.setAttribute(TOKEN_VALIDATION_UNAVAILABLE, true)
-			}
+		if (context.authentication == null) {
+			// Resultatet brukes bare til logg og metrikk i AccessInterceptor, ikke til tilgangsbeslutningen
+			request.setAttribute(TokenCheck.ATTRIBUTE, validate(bearerToken(request), request))
 		}
 		filterChain.doFilter(request, response)
 	}
 
-	private fun authenticate(token: String): TokenAuthentication? {
-		val issuer = unverifiedIssuer(token)?.let(issuerForUrl::get) ?: return null
-		return introspector.introspect(issuer, token)
-			.takeIf { it.active }
-			?.let { TokenAuthentication(issuer, it.claims, token) }
-	}
+	private fun validate(token: String?, request: HttpServletRequest): TokenCheck {
+		if (token == null) return TokenCheck(TokenValidationResult.MISSING, null)
+		if (token.contains(',')) return TokenCheck(TokenValidationResult.MALFORMED, null)
 
-	// Bare for å velge utsteder. Tokenet er ikke verifisert her
-	private fun unverifiedIssuer(token: String): String? =
-		runCatching { JWTParser.parse(token).jwtClaimsSet.issuer }.getOrNull()
+		// Bare for å velge utsteder. Tokenet er ikke verifisert her
+		val claims = runCatching { JWTParser.parse(token).jwtClaimsSet }.getOrNull()
+			?: return TokenCheck(TokenValidationResult.MALFORMED, null)
+		val issuer = claims.issuer?.let(issuerForUrl::get) ?: return TokenCheck(TokenValidationResult.UNKNOWN_ISSUER, null)
+
+		return try {
+			val result = introspector.introspect(issuer, token)
+			if (result.active) {
+				SecurityContextHolder.getContext().authentication = TokenAuthentication(issuer, result.claims, token)
+				TokenCheck(TokenValidationResult.OK, issuer)
+			} else {
+				TokenCheck(TokenValidationResult.INACTIVE, issuer)
+			}
+		} catch (e: TokenServiceUnavailableException) {
+			// Meldingen lager vi selv, uten token eller respons-body
+			logger.warn("Kunne ikke validere token hos Texas: ${e.message}")
+			request.setAttribute(TOKEN_VALIDATION_UNAVAILABLE, true)
+			TokenCheck(TokenValidationResult.UNAVAILABLE, issuer)
+		} catch (e: RuntimeException) {
+			// Uventet feil i valideringen skal gi 503 som Texas-feil, ikke Spring sin feilside. Bare klassenavnet logges
+			logger.warn("Uventet feil ved validering av token hos Texas (${e.javaClass.simpleName})")
+			request.setAttribute(TOKEN_VALIDATION_UNAVAILABLE, true)
+			TokenCheck(TokenValidationResult.UNAVAILABLE, issuer)
+		}
+	}
 
 	companion object {
 		/** Request-attributt som sier at Texas ikke svarte, slik at avvisningen blir 503 og ikke 403. */
