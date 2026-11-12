@@ -17,7 +17,7 @@ import java.util.*
 @Service
 class KonverterTilPdf(
 	private val pdfConverter: FileToPdfInterface,
-	private val pdfMerger: PdfMerger
+	private val checkAndFormatPdf: CheckAndFormatPdf,
 ) : KonverterTilPdfInterface {
 
 	private val logger = LoggerFactory.getLogger(KonverterTilPdf::class.java)
@@ -34,7 +34,7 @@ class KonverterTilPdf(
 		logger.info("$innsendingId: Skal konvertere filtype=$filtype til PDF")
 
 		return if ("pdf".equals(filtype, ignoreCase = true)) {
-			checkAndFormatPDF(fil)
+			checkAndFormatPDF(fil, innsendingId)
 		} else if (officeFileTypes.keys.contains(filtype)) {
 			createPDFFromOfficeDoc(genererFilnavn(innsendingId, filtype), fil, tittel, spraak ?: "nb-NO")
 		} else if (imageFileTypes.keys.contains(filtype)) {
@@ -49,9 +49,9 @@ class KonverterTilPdf(
 		}
 	}
 
-	private fun checkAndFormatPDF(fil: ByteArray): Pair<ByteArray, Int> {
+	private fun checkAndFormatPDF(fil: ByteArray, innsendingId: String): Pair<ByteArray, Int> {
 		val antallSider = AntallSider().finnAntallSider(fil) ?: 0
-		return Pair(CheckAndFormatPdf().flatUtPdf(pdfMerger, fil, antallSider), antallSider) // Bare hvis inneholder formfields?
+		return Pair(checkAndFormatPdf.flatUtPdf(fil, antallSider, innsendingId), antallSider)
 	}
 
 	private fun genererFilnavn(innsendingId: String, filtype:String): String {
@@ -92,11 +92,11 @@ class KonverterTilPdf(
 	}
 
 	override fun flatUtPdf(fil: ByteArray, antallSider: Int): ByteArray {
-		return CheckAndFormatPdf().flatUtPdf(pdfMerger, fil, antallSider)
+		return checkAndFormatPdf.flatUtPdf(fil, antallSider)
 	}
 
 	override fun harSkrivbareFelt(input: ByteArray?): Boolean {
-		return CheckAndFormatPdf().harSkrivbareFelt(input)
+		return checkAndFormatPdf.harSkrivbareFelt(input)
 	}
 
 	// Using libreOffice route, metadata for language and title is not set
