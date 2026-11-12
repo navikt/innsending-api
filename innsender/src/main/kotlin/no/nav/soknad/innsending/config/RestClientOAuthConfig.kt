@@ -1,10 +1,9 @@
 package no.nav.soknad.innsending.config
 
-import no.nav.security.token.support.client.core.ClientProperties
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
-import no.nav.security.token.support.client.spring.ClientConfigurationProperties
-import no.nav.soknad.arkivering.soknadsarkiverer.service.tokensupport.TokenService
+import no.nav.soknad.innsending.consumerapis.token.AccessTokenProvider
+import no.nav.soknad.innsending.security.UserTokenSource
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
+import no.nav.soknad.innsending.security.requireUserToken
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.Constants.NAV_CONSUMER_ID
 import no.nav.soknad.innsending.util.MDCUtil
@@ -46,13 +45,13 @@ class RestClientOAuthConfig(
 	@Qualifier("arenaApiRestClient")
 	fun arenaApiClient(
 		restConfig: RestConfig,
-		clientConfigProperties: ClientConfigurationProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService,
+		accessTokenProvider: AccessTokenProvider,
+		userTokenSource: UserTokenSource,
+		@Value("\${texas.target.arena}") target: String,
 		subjectHandler: SubjectHandlerInterface
-	) = restClientOAuth2Client(
+	): RestClient = restClientWithToken(
 		restConfig.arenaUrl,
-		clientConfigProperties.registration["arena"]!!,
-		oAuth2AccessTokenService,
+		{ accessTokenProvider.exchangeUserToken(target, userTokenSource.requireUserToken(target)) },
 		subjectHandler
 	)
 
@@ -67,17 +66,10 @@ class RestClientOAuthConfig(
 	@Qualifier("kodeverkApiClient")
 	fun kodeverkApiClient(
 		restConfig: RestConfig,
-		clientConfigProperties: ClientConfigurationProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService,
+		accessTokenProvider: AccessTokenProvider,
+		@Value("\${texas.target.kodeverk}") target: String,
 		subjectHandler: SubjectHandlerInterface
-	): RestClient {
-		return restClientOAuth2Client(
-			restConfig.kodeverkUrl,
-			clientConfigProperties.registration["kodeverk"]!!,
-			oAuth2AccessTokenService,
-			subjectHandler
-		)
-	}
+	): RestClient = restClientWithToken(restConfig.kodeverkUrl, { accessTokenProvider.getMachineToken(target) }, subjectHandler)
 
 	@Bean
 	@Profile("!(prod | dev)")
@@ -93,12 +85,12 @@ class RestClientOAuthConfig(
 	@Qualifier("kontoregisterApiRestClient")
 	fun kontoregisterApiClient(
 		restConfig: RestConfig,
-		clientConfigProperties: ClientConfigurationProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService
-	) = restClientOAuth2Client(
+		accessTokenProvider: AccessTokenProvider,
+		userTokenSource: UserTokenSource,
+		@Value("\${texas.target.kontoregister}") target: String
+	): RestClient = restClientWithToken(
 		restConfig.kontoregisterUrl + "/api/borger",
-		clientConfigProperties.registration["kontoregister"]!!,
-		oAuth2AccessTokenService
+		{ accessTokenProvider.exchangeUserToken(target, userTokenSource.requireUserToken(target)) }
 	)
 
 	@Bean
@@ -113,13 +105,9 @@ class RestClientOAuthConfig(
 	@Qualifier("soknadsmottakerRestClient")
 	fun soknadsmottakerRestClient(
 		restConfig: RestConfig,
-		clientConfigProperties: ClientConfigurationProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService
-	) = restClientOAuth2Client(
-		restConfig.soknadsMottakerHost,
-		clientConfigProperties.registration["soknadsmottaker"]!!,
-		oAuth2AccessTokenService
-	)
+		accessTokenProvider: AccessTokenProvider,
+		@Value("\${texas.target.soknadsmottaker}") target: String
+	) = restClientWithToken(restConfig.soknadsMottakerHost, { accessTokenProvider.getMachineToken(target) })
 
 	@Bean
 	@Profile("!(prod | dev)")
@@ -138,24 +126,18 @@ class RestClientOAuthConfig(
 		return factory
 	}
 
-	private fun restClientOAuth2Client(
+	private fun restClientWithToken(
 		baseUrl: String,
-		clientProperties: ClientProperties,
-		oAuth2AccessTokenService: OAuth2AccessTokenService,
+		tokenSupplier: () -> String?,
 		subjectHandler: SubjectHandlerInterface? = null
-	): RestClient {
-
-		val tokenService = TokenService(clientProperties, oAuth2AccessTokenService)
-
-		return RestClient.builder()
-			.baseUrl(baseUrl)
-			.requestFactory(timeouts())
-			.requestInterceptor(RequestHeaderInterceptor(tokenService, applicationName, subjectHandler))
-			.build()
-	}
+	): RestClient = RestClient.builder()
+		.baseUrl(baseUrl)
+		.requestFactory(timeouts())
+		.requestInterceptor(RequestHeaderInterceptor(tokenSupplier, applicationName, subjectHandler))
+		.build()
 
 	class RequestHeaderInterceptor(
-		val tokenService: TokenService,
+		private val tokenSupplier: () -> String?,
 		val applicationName: String,
 		val subjectHandler: SubjectHandlerInterface? = null
 	) :
@@ -168,7 +150,7 @@ class RestClientOAuthConfig(
 			body: ByteArray,
 			execution: ClientHttpRequestExecution
 		): ClientHttpResponse {
-			val token = tokenService.getToken()
+			val token = tokenSupplier()
 			val callId = MDCUtil.callIdOrNew()
 
 			logger.info("Kaller service med callId: $callId")

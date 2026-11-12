@@ -1,0 +1,21 @@
+{
+	"request": {
+		"urlPath": "/texas/api/v1/token/exchange",
+		"method": "POST",
+		"bodyPatterns": [
+			{ "matchesJsonPath": { "expression": "$.identity_provider", "equalTo": "tokenx" } },
+			{ "matchesJsonPath": "$.user_token" }
+		]
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": {
+			"access_token": "texas-exchanged-test-token",
+			"expires_in": 3599,
+			"token_type": "Bearer"
+		}
+	}
+}
