@@ -28,6 +28,8 @@ class GotenbergConvertToPdf(
 		private const val LIBRE_OFFICE_ROUTE = "/forms/libreoffice/convert"
 		private const val HTML_ROUTE = "/forms/chromium/convert/html"
 		private const val PDF_MERGE_ROUTE = "/forms/pdfengines/merge"
+		private const val PDF_FLATTEN_ROUTE = "/forms/pdfengines/flatten"
+		private const val FLATTEN_FILE_NAME = "flatten.pdf"
 		private const val GOTENBERG_TRACE_HEADER = "gotenberg-trace"
 
 		private const val mergeWithPdfa = false
@@ -89,6 +91,16 @@ class GotenbergConvertToPdf(
 		return merged
 	}
 
+	// Gotenberg 8 bruker qpdf (--generate-appearances --flatten-annotations=all). Én fil inn gir én PDF ut; flere filer ville gitt ZIP.
+	override fun flattenPdf(fileContent: ByteArray, trace: String): ByteArray {
+		val multipartBody = MultipartBodyBuilder().run {
+			part("files", ByteArrayMultipartFile(FLATTEN_FILE_NAME, fileContent).resource)
+			build()
+		}
+
+		return convertFileRequest(FLATTEN_FILE_NAME, multipartBody, PDF_FLATTEN_ROUTE, trace)
+	}
+
 	private fun filter_pdfa_and_or_ua(properties: Map<String, String>): Map<String, String> {
 		// pdfa and pdfua is default selected
 		return filter_pdfua(filter_pdfa(properties))
@@ -111,7 +123,8 @@ class GotenbergConvertToPdf(
 	private fun convertFileRequest(
 		filename: String,
 		multipartBody: MultiValueMap<String, HttpEntity<*>>,
-		route: String
+		route: String,
+		trace: String? = null,
 	): ByteArray {
 
 		val uri = route
@@ -120,6 +133,7 @@ class GotenbergConvertToPdf(
 			.post()
 			.uri(uri)
 			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"$filename\"")
+			.headers { headers -> if (trace != null) headers.set(GOTENBERG_TRACE_HEADER, trace) }
 			.body(multipartBody)
 			.exchange { request, response ->
 
