@@ -6,9 +6,11 @@ import io.mockk.slot
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
+import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.*
+import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.service.DocumentService
 import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.service.config.ConfigService
@@ -16,9 +18,11 @@ import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.utils.ApiWebClient
+import no.nav.soknad.innsending.utils.ApplicationTestRepository
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.TokenGenerator
 import org.junit.jupiter.api.BeforeEach
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
@@ -26,10 +30,20 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
+import org.springframework.context.annotation.Import
+import java.time.Duration
 import java.util.*
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
+@Import(ApplicationTestRepository::class)
 class NologinApplicationRestApiTest : ApplicationTest() {
+	@Autowired
+	lateinit var storedApplications: ApplicationTestRepository
+
+	@MockkSpyBean
+	lateinit var notifications: PublisherInterface
+
 	@Autowired
 	lateinit var configService: ConfigService
 
@@ -87,6 +101,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 	@Test
 	fun `skal sende inn soknad og handtere vedlegg med ulike statuser`() {
 		val innsendingId = UUID.randomUUID().toString()
+		val sender = AvsenderDto(id = "10987654321", idType = AvsenderDto.IdType.FNR, navn = "Synthetic sender")
 
 		val navId1 = "personal-id"
 		val file1 = api.uploadNologinFileV2(vedleggId = navId1, innsendingId = innsendingId)
@@ -144,6 +159,8 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 
 		val submitResponse = api.submitNologinApplication(
 			innsendingId,
+			avsender = sender,
+			grantUserDigitalAccess = true,
 			attachments = listOf(
 				attachmentLegitimasjon,
 				attachmentSomSendesSenere,
@@ -179,11 +196,16 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
 				capture(slotAvsender),
-				captureNullable(slotBruker)
+				captureNullable(slotBruker),
+				eq(true),
 			)
 		}
 
 		assertEquals(innsendingId, slotSoknad.captured.innsendingsId)
+		val expectedUser = BrukerDto(id = TokenGenerator.subject, idType = BrukerDto.IdType.FNR)
+		assertTrue(slotBruker.captured == expectedUser, "The submission must retain the request user")
+		assertTrue(slotAvsender.captured == sender, "The submission must retain the request sender")
+		assertStoredNologinOwner(innsendingId, TokenGenerator.subject, sender, true)
 		val innsendteDokumenter = slotVedleggsliste.captured
 		assertEquals(5, innsendteDokumenter.size)
 
@@ -431,7 +453,8 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
 				capture(slotAvsender),
-				captureNullable(slotBruker)
+				captureNullable(slotBruker),
+				isNull(),
 			)
 		}
 		assertNull(slotBruker.captured)
@@ -440,6 +463,26 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 		assertEquals(avsender.id, actualAvsender.id)
 		assertEquals(avsender.idType, actualAvsender.idType)
 		assertEquals(avsender.navn, actualAvsender.navn)
+		assertStoredNologinOwner(innsendingsId, null, avsender, null)
+	}
+
+	private fun assertStoredNologinOwner(applicationId: String, requestUser: String?, sender: AvsenderDto, grantUserDigitalAccess: Boolean?) {
+		val expectedUser = requestUser?.let { BrukerDto(id = it, idType = BrukerDto.IdType.FNR) }
+		// Submitted no-login rows have no readable person GET. Await the commit before checking hidden state and absence of notifications.
+		await().atMost(Duration.ofSeconds(5)).untilAsserted {
+			val stored = storedApplications.findBySubmissionId(applicationId)
+			assertEquals(SoknadsStatus.Innsendt, stored.status)
+			assertTrue(stored.ownerIsSqlNull, "No-login ownership must remain SQL NULL")
+			assertNull(stored.owner)
+			assertTrue(stored.userId == requestUser, "The stored user identity must retain its request meaning")
+			assertTrue(stored.affectedUser == expectedUser, "The stored affected user must retain its request meaning")
+			assertEquals(expectedUser == null, stored.affectedUserIsSqlNull)
+			assertTrue(stored.sender == sender, "The stored sender must retain its request meaning")
+			assertEquals(grantUserDigitalAccess, stored.grantUserDigitalAccess)
+		}
+		verify(exactly = 0) {
+			notifications.opprettBrukernotifikasjon(match { it.soknadRef.innsendingId == applicationId })
+		}
 	}
 
 	@Test

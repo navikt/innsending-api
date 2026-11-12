@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.HendelseType
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
 import no.nav.soknad.innsending.repository.domain.models.FilDbData
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.service.fillager.FileStorage
@@ -46,7 +47,13 @@ class SoknadService(
 
 		val innsendingsId = Utilities.laginnsendingsId()
 		try {
-			val savedSoknadDbData = repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId))
+			val savedSoknadDbData = repo.lagreSoknad(
+				mapTilSoknadDb(
+					dokumentSoknadDto,
+					innsendingsId,
+					owner = dokumentSoknadDto.brukerId?.let { ApplicationOwner.person(it) },
+				)
+			)
 			val soknadsid = savedSoknadDbData.id
 			val savedVedleggDbData = vedleggService.saveVedleggFromDto(soknadsid!!, dokumentSoknadDto.vedleggsListe)
 
@@ -200,7 +207,8 @@ class SoknadService(
 		val operation = InnsenderOperation.SLETT.name
 
 		// Ved automatisk sletting beholdes innslag i basen, men eventuelt opplastede filer slettes
-		val dokumentSoknadDto = hentSoknad(innsendingsId)
+		val storedApplication = repo.hentSoknadDb(innsendingsId)
+		val dokumentSoknadDto = vedleggService.hentAlleVedlegg(storedApplication, innsendingsId)
 
 		if (!dokumentSoknadDto.kanGjoreEndringer)
 			throw IllegalActionException("Det kan ikke gjøres endring på en slettet eller innsendt søknad. Søknad ${dokumentSoknadDto.innsendingsId} kan ikke slettes da den allerede er innsendt")
@@ -211,7 +219,7 @@ class SoknadService(
 			innsendingsId.toUUID(),
 			permanent = true
 		)
-		repo.lagreSoknad(mapTilSoknadDb(dokumentSoknadDto, innsendingsId, SoknadsStatus.AutomatiskSlettet))
+		repo.lagreSoknad(storedApplication.withUpdatedData(dokumentSoknadDto, SoknadsStatus.AutomatiskSlettet))
 
 		logger.info("slettSoknadAutomatisk: Status for søknad $innsendingsId er satt til ${SoknadsStatus.AutomatiskSlettet}")
 
@@ -292,8 +300,9 @@ class SoknadService(
 			throw BackendErrorException("Feil antall vedlegg. Skal kun ha hoveddokument og hoveddokumentVariant. Innsendt vedleggsliste skal være tom")
 		}
 
-		val existingSoknad = hentSoknad(innsendingsId)
-		val updatedDokumentSoknadDto = updateSoknad(existingSoknad, dokumentSoknadDto, SoknadsStatus.Opprettet)
+		val storedApplication = repo.hentSoknadDb(innsendingsId)
+		val existingSoknad = vedleggService.hentAlleVedlegg(storedApplication, innsendingsId)
+		val updatedDokumentSoknadDto = updateSoknad(storedApplication, existingSoknad, dokumentSoknadDto, SoknadsStatus.Opprettet)
 
 		return mapTilSkjemaDto(updatedDokumentSoknadDto)
 	}
@@ -325,15 +334,17 @@ class SoknadService(
 
 
 	fun updateUtfyltSoknad(innsendingsId: String, dokumentSoknadDto: DokumentSoknadDto): SkjemaDto {
-		val existingSoknad = hentSoknad(innsendingsId)
+		val storedApplication = repo.hentSoknadDb(innsendingsId)
+		val existingSoknad = vedleggService.hentAlleVedlegg(storedApplication, innsendingsId)
 
 		vedleggService.updateVedleggStatuses(existingSoknad.vedleggsListe, dokumentSoknadDto)
 
-		val updatedDokumentSoknadDto = updateSoknad(existingSoknad, dokumentSoknadDto, SoknadsStatus.Utfylt)
+		val updatedDokumentSoknadDto = updateSoknad(storedApplication, existingSoknad, dokumentSoknadDto, SoknadsStatus.Utfylt)
 		return mapTilSkjemaDto(updatedDokumentSoknadDto)
 	}
 
 	fun updateSoknad(
+		storedApplication: SoknadDbData,
 		existingSoknad: DokumentSoknadDto,
 		dokumentSoknadDto: DokumentSoknadDto,
 		status: SoknadsStatus
@@ -344,13 +355,7 @@ class SoknadService(
 		val innsendingsId = existingSoknad.innsendingsId!!
 
 		// Update søknad
-		val soknadDb = mapTilSoknadDb(
-			dokumentSoknadDto = dokumentSoknadDto,
-			innsendingsId = innsendingsId,
-			id = existingSoknad.id,
-			status = status
-		)
-		val updatedSoknad = repo.lagreSoknad(soknadDb)
+		val updatedSoknad = repo.lagreSoknad(storedApplication.withUpdatedData(dokumentSoknadDto, status))
 		val soknadId = updatedSoknad.id!!
 
 		// Update vedlegg
