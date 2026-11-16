@@ -7,6 +7,7 @@ import io.prometheus.metrics.core.metrics.Histogram
 import io.prometheus.metrics.core.metrics.Summary
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.soknad.innsending.model.VisningsType
+import no.nav.soknad.innsending.security.TokenValidationOutcome
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
@@ -45,6 +46,9 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	private val antivirusScanHelp = "Number of antivirus scan outcomes"
 	private val notSentInName = "applications_not_sent_in"
 	private val notSentInHelp = "Number of applications that have not been sent in"
+	private val tokenValidationName = "token_validation_total"
+	private val tokenValidationHelp = "Outcome of token validation for endpoints that require a token"
+	private val tokenValidationLabels = listOf("result", "issuer", "client")
 
 	private var operationsCounter = registerOperationCounter(name, help)
 	private var operationsErrorCounter = registerOperationCounter(errorName, helpError)
@@ -55,6 +59,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	private var nologinGauge = registerGauge(nologinMainSwitchName, nologinMainSwitchHelp)
 	private var antivirusScanCounter = registerCounter(antivirusScanName, antivirusScanHelp, listOf("namespace", "mode", "result"))
 	private var notSentInGauge = registerGauge("applications_not_sent_in", "Number of applications that have not been sent in")
+	private var tokenValidationCounter = registerCounter(tokenValidationName, tokenValidationHelp, tokenValidationLabels)
 
 	private var submissionsCounter = registerCounter(
 		"submissions_total", "Number of submitted applications",
@@ -80,6 +85,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 		fileNumberOfPagesSummary = registerSummary(fileNumberOfPages, fileNumberOfPagesHelp)
 		fileSizeSummary = registerSummary(fileSize, fileSizeHelp)
 		notSentInGauge = registerGauge(notSentInName, notSentInHelp)
+		tokenValidationCounter = registerCounter(tokenValidationName, tokenValidationHelp, tokenValidationLabels)
 	}
 
 	// Used in tests
@@ -95,6 +101,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 		registry.unregister(fileNumberOfPagesSummary)
 		registry.unregister(fileSizeSummary)
 		registry.unregister(notSentInGauge)
+		registry.unregister(tokenValidationCounter)
 	}
 
 	private fun registerOperationCounter(name: String, help: String): Counter =
@@ -178,5 +185,12 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	fun clearFileSize() = fileSizeSummary.clear()
 
 	fun setNotSentIn(number: Long) = notSentInGauge.set(number.toDouble())
+
+	// Labelene har faste verdier eller en klient-app fra et verifisert token, se TokenValidationOutcome og ClientLabels
+	fun incTokenValidation(outcome: TokenValidationOutcome) =
+		tokenValidationCounter.labelValues(outcome.result.label, outcome.issuer, outcome.client).inc()
+
+	fun getTokenValidationCount(outcome: TokenValidationOutcome): Double =
+		tokenValidationCounter.labelValues(outcome.result.label, outcome.issuer, outcome.client).get()
 
 }

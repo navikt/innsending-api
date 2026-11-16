@@ -1,11 +1,11 @@
 package no.nav.soknad.innsending.rest.fyllut
 
-import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.NologinApplicationApi
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.ApplicationSubmissionResponse
 import no.nav.soknad.innsending.model.FileDto
 import no.nav.soknad.innsending.model.SubmitApplicationRequest
+import no.nav.soknad.innsending.security.RequiresAzureNologin
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.DocumentService
 import no.nav.soknad.innsending.service.InnsendingService
@@ -15,7 +15,6 @@ import no.nav.soknad.innsending.service.config.annotation.VerifyConfigValue
 import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
 import no.nav.soknad.innsending.supervision.InnsenderOperation
 import no.nav.soknad.innsending.supervision.timer.Timed
-import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import no.nav.soknad.innsending.util.mapping.filmetadata.toDto
 import no.nav.soknad.innsending.util.validators.validerBrukerOgAvsender
@@ -27,10 +26,7 @@ import org.springframework.web.multipart.MultipartFile
 import java.util.UUID
 
 @RestController
-@ProtectedWithClaims(
-	issuer = Constants.AZURE,
-	claimMap = ["roles=nologin-access"],
-)
+@RequiresAzureNologin
 class NologinApplicationRestApi(
 	private val documentService: DocumentService,
 	private val subjectHandler: SubjectHandlerInterface,

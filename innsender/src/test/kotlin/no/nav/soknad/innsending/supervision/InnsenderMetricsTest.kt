@@ -1,6 +1,8 @@
 package no.nav.soknad.innsending.supervision
 
 import no.nav.soknad.innsending.ApplicationTest
+import no.nav.soknad.innsending.security.TokenValidationOutcome
+import no.nav.soknad.innsending.security.TokenValidationResult
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -89,6 +91,19 @@ class InnsenderMetricsTest : ApplicationTest() {
 
 		assertEquals(2.0, innsenderMetrics.getAntivirusScanCounter("digital", "async", "ok"))
 		assertEquals(1.0, innsenderMetrics.getAntivirusScanCounter("digital", "async", "error"))
+	}
+
+	@Test
+	fun testTokenValidationCounter() {
+		val ok = TokenValidationOutcome(TokenValidationResult.OK, "azure", "prod-gcp:flex:app")
+		val inactive = TokenValidationOutcome(TokenValidationResult.INACTIVE, "tokenx", "unknown")
+
+		innsenderMetrics.incTokenValidation(ok)
+		innsenderMetrics.incTokenValidation(ok)
+		innsenderMetrics.incTokenValidation(inactive)
+
+		assertEquals(2.0, innsenderMetrics.getTokenValidationCount(ok))
+		assertEquals(1.0, innsenderMetrics.getTokenValidationCount(inactive))
 	}
 
 }
