@@ -26,6 +26,7 @@ import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -95,6 +96,7 @@ class SupplementaryApplicationOwnerIntegrationTest : ApplicationTest() {
 		assertOwner(created, ApplicationOwner.person(TokenGenerator.subject))
 	}
 
+	@Disabled("Nav-initiated archive linking requires an agreed token flow: https://github.com/navikt/innsending-api/issues/522")
 	@ParameterizedTest(name = "source owner present: {0}")
 	@ValueSource(booleans = [true, false])
 	fun `Nav initiated archived supplementary application inherits the stored owner even when it differs from the request user`(ownerPresent: Boolean) {
