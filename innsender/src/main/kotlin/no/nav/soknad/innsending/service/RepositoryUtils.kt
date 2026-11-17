@@ -99,6 +99,13 @@ class RepositoryUtils(
 		throw BackendErrorException("Feil ved henting av alle soknader for bruker xxxx med status $status", ex)
 	}
 
+	fun finnKandidaterForEttersending(brukerIds: List<String>, skjemanr: String, innsendtEtter: LocalDateTime): List<SoknadDbData> = try {
+		if (brukerIds.isEmpty()) emptyList()
+		else soknadRepository.finnKandidaterForEttersending(brukerIds, SoknadsStatus.Innsendt, skjemanr, innsendtEtter)
+	} catch (ex: Exception) {
+		throw BackendErrorException("Henting av kandidater for ettersending feilet", ex)
+	}
+
 	fun findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(
 		eldreEnn: Long,
 		vindu: Long
