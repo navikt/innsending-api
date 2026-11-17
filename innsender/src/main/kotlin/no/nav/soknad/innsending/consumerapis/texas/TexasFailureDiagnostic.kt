@@ -26,8 +26,17 @@ internal data class TexasFailureDiagnostic(
 
 	companion object {
 		private const val MAX_CAUSES = 8
+		private const val MAX_TOP_FRAMES = 8
+		private const val MAX_APP_FRAMES = 4
+		private const val APP_PACKAGE = "no.nav.soknad.innsending."
 
-		fun from(operation: String, identityProvider: String, target: String, httpStatus: Int?, error: Throwable?): TexasFailureDiagnostic {
+		fun from(
+			operation: String,
+			identityProvider: String,
+			target: String,
+			httpStatus: Int?,
+			error: Throwable?,
+		): TexasFailureDiagnostic {
 			val seen = Collections.newSetFromMap(IdentityHashMap<Throwable, Boolean>())
 			val chain = mutableListOf<Throwable>()
 			var current = error
@@ -39,19 +48,32 @@ internal data class TexasFailureDiagnostic(
 				error == null -> Category.INVALID_ACCESS_TOKEN
 				error is RestClientResponseException -> Category.HTTP
 				error is ResourceAccessException -> Category.TRANSPORT_READ
-				// Jackson kan pakke lesefeil inn i parserfeil. Jackson 2 sine syntaksfeil er også IOException.
+				// Lesefeil må vurderes før parser-wrapperne, som kan pakke inn en IOException.
+				// Jackson 2 sin JsonProcessingException er også IOException, men er en parserfeil.
 				chain.any { it is IOException && it !is JsonProcessingException } -> Category.TRANSPORT_READ
-				chain.any { it is HttpMessageConversionException || it is UnknownContentTypeException || it is JsonProcessingException || it is JacksonException } -> Category.PARSING_CONVERSION
+				chain.any {
+					it is HttpMessageConversionException ||
+						it is UnknownContentTypeException ||
+						it is JsonProcessingException ||
+						it is JacksonException
+				} -> Category.PARSING_CONVERSION
 				else -> Category.UNKNOWN
 			}
 			return TexasFailureDiagnostic(
-				operation, identityProvider, target, category,
-				(error as? RestClientResponseException)?.statusCode?.value() ?: httpStatus,
-				chain.map { cause ->
+				operation = operation,
+				identityProvider = identityProvider,
+				target = target,
+				category = category,
+				httpStatus = (error as? RestClientResponseException)?.statusCode?.value() ?: httpStatus,
+				causes = chain.map { cause ->
 					val frames = cause.stackTrace
-					Cause(cause.javaClass.name, (frames.take(8) + frames.filter {
-						it.className.startsWith("no.nav.soknad.innsending.")
-					}.take(4)).distinct().map { "${it.className}.${it.methodName}(${it.fileName}:${it.lineNumber})" })
+					val topFrames = frames.take(MAX_TOP_FRAMES)
+					val appFrames = frames.filter { it.className.startsWith(APP_PACKAGE) }.take(MAX_APP_FRAMES)
+					Cause(
+						type = cause.javaClass.name,
+						frames = (topFrames + appFrames).distinct()
+							.map { "${it.className}.${it.methodName}(${it.fileName}:${it.lineNumber})" },
+					)
 				},
 				causeChainTruncated = current != null,
 			)
