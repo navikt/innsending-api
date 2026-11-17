@@ -44,7 +44,15 @@ class TexasTokenClient(
 		var httpStatus: Int? = null
 		fun failure(message: String, error: Throwable? = null): TokenServiceUnavailableException {
 			logger.atWarn()
-				.addKeyValue("texas_failure", TexasFailureDiagnostic.from(operation, identityProvider, target, httpStatus, error))
+				.addKeyValue("operation", operation)
+				.addKeyValue("identity_provider", identityProvider)
+				.addKeyValue("target", target)
+				.addKeyValue("http_status", (error as? RestClientResponseException)?.statusCode?.value() ?: httpStatus)
+				.addKeyValue("reason", message)
+				.addKeyValue("exception_types", generateSequence(error) { it.cause }
+					.take(MAX_EXCEPTION_TYPES)
+					.map { it.javaClass.name }
+					.toList())
 				.log("Texas tokenkall feilet endelig")
 			return TokenServiceUnavailableException(message)
 		}
@@ -76,6 +84,7 @@ class TexasTokenClient(
 	}
 
 	private companion object {
+		const val MAX_EXCEPTION_TYPES = 4
 		const val ENTRA_ID = "entra_id"
 		const val TOKENX = "tokenx"
 	}
