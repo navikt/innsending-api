@@ -53,7 +53,7 @@ class TexasTokenClient(
 					.take(MAX_EXCEPTION_TYPES)
 					.map { it.javaClass.name }
 					.toList())
-				.log("Texas tokenkall feilet endelig")
+				.log("Tokenkall til Texas feilet")
 			return TokenServiceUnavailableException(message)
 		}
 		val response = try {
