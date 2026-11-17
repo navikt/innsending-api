@@ -1,9 +1,12 @@
 package no.nav.soknad.innsending.consumerapis.texas
 
 import ch.qos.logback.classic.Logger
+import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.classic.spi.ThrowableProxyUtil
 import ch.qos.logback.core.read.ListAppender
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import net.logstash.logback.encoder.LogstashEncoder
 import no.nav.soknad.innsending.consumerapis.token.TokenServiceUnavailableException
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -14,6 +17,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.mock.http.client.MockClientHttpResponse
 import org.springframework.test.web.client.ExpectedCount.once
 import org.springframework.test.web.client.ExpectedCount.times
 import org.springframework.test.web.client.MockRestServiceServer
@@ -24,11 +28,16 @@ import org.springframework.test.web.client.response.MockRestResponseCreators.wit
 import org.springframework.test.web.client.response.MockRestResponseCreators.withStatus
 import org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
 import org.springframework.web.client.RestClient
+import org.springframework.web.client.RestClientException
+import java.io.IOException
+import java.io.InputStream
 import java.net.SocketTimeoutException
 import java.time.Duration
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import no.nav.soknad.innsending.consumerapis.texas.TexasFailureDiagnostic.Category
 
 class TexasTokenClientTest {
 
@@ -38,6 +47,7 @@ class TexasTokenClientTest {
 	private val userToken = "eyJhbGciOiJSUzI1NiJ9.innbyggerens-token-med-pid.signatur"
 	private val target = "api://dev-gcp.team-soknad.soknadsmottaker/.default"
 	private val token = "eyJhbGciOiJSUzI1NiJ9.hemmelig-texas-token.signatur"
+	private val privateMarkers = listOf("synthetic-raw-message", "synthetic-body", "synthetic-cause", "synthetic-suppressed", "synthetic-header", "synthetic-person-data")
 
 	private lateinit var server: MockRestServiceServer
 	private lateinit var client: TexasTokenClient
@@ -70,6 +80,7 @@ class TexasTokenClientTest {
 
 		assertEquals(token, client.getMachineToken(target))
 		server.verify()
+		assertEquals(0, diagnosticEvents().size)
 	}
 
 	@ParameterizedTest
@@ -79,15 +90,17 @@ class TexasTokenClientTest {
 			.andRespond(
 				withStatus(HttpStatus.valueOf(status))
 					.contentType(MediaType.APPLICATION_JSON)
-					.body("""{"error":"invalid_request","access_token":"$token"}""")
+					.header("X-Private", privateMarkers[4])
+					.body("""{"error":"${privateMarkers.joinToString()}","access_token":"$token"}""")
 			)
 
 		val error = assertFailsWith<TokenServiceUnavailableException> { client.getMachineToken(target) }
 
 		assertEquals("Texas svarte $status for identity_provider=entra_id target=$target", error.message)
 		assertEquals(null, error.cause)
+		assertDiagnostic(Category.HTTP, status)
 		server.verify()
-		assertTokenNotLogged()
+		assertTokenNotLogged(error)
 	}
 
 	@ParameterizedTest
@@ -104,6 +117,8 @@ class TexasTokenClientTest {
 
 		assertEquals("Texas svarte $status for identity_provider=entra_id target=$target", error.message)
 		assertEquals(null, error.cause)
+		assertDiagnostic(Category.HTTP, status)
+		assertEquals(1, appender.list.count { it.loggerName == TexasRetry::class.java.name })
 		server.verify()
 		assertTokenNotLogged()
 	}
@@ -116,6 +131,8 @@ class TexasTokenClientTest {
 		val error = assertFailsWith<TokenServiceUnavailableException> { client.getMachineToken(target) }
 
 		assertEquals(null, error.cause)
+		val diagnostic = assertDiagnostic(Category.TRANSPORT_READ, null)
+		assertTrue(diagnostic.causes.any { it.type == SocketTimeoutException::class.java.name && it.frames.isNotEmpty() })
 		server.verify()
 		assertTokenNotLogged()
 	}
@@ -130,19 +147,27 @@ class TexasTokenClientTest {
 		assertEquals(token, client.getMachineToken(target))
 		server.verify()
 		assertTokenNotLogged()
+		assertEquals(0, diagnosticEvents().size)
 	}
 
-	@Test
-	fun `invalid JSON from Texas gives TokenServiceUnavailableException without body`() {
+	@ParameterizedTest
+	@ValueSource(strings = ["application/json", "text/plain"])
+	fun `invalid JSON or content type gives safe parsing diagnostics`(contentType: String) {
 		server.expect(once(), requestTo(tokenEndpoint))
-			.andRespond(withSuccess("""{"access_token":"$token" ikke json""", MediaType.APPLICATION_JSON))
+			.andRespond(withSuccess("""{"access_token":"$token","private":"${privateMarkers.joinToString()}" ikke json""", MediaType.parseMediaType(contentType)))
 
 		val error = assertFailsWith<TokenServiceUnavailableException> { client.getMachineToken(target) }
 
 		assertFalse(error.message!!.contains(token))
 		assertEquals(null, error.cause)
+		val diagnostic = assertDiagnostic(Category.PARSING_CONVERSION, 200)
+		assertTrue(diagnostic.causes.all { it.frames.isNotEmpty() })
+		assertTrue(diagnostic.causes.any {
+			if (contentType == "text/plain") it.type == "org.springframework.web.client.UnknownContentTypeException"
+			else it.type == "tools.jackson.core.exc.StreamReadException"
+		}, diagnostic.causes.map { it.type }.toString())
 		server.verify()
-		assertTokenNotLogged()
+		assertTokenNotLogged(error)
 	}
 
 	@ParameterizedTest
@@ -151,7 +176,9 @@ class TexasTokenClientTest {
 		server.expect(once(), requestTo(tokenEndpoint))
 			.andRespond(withSuccess(body, MediaType.APPLICATION_JSON))
 
-		assertFailsWith<TokenServiceUnavailableException> { client.getMachineToken(target) }
+		val error = assertFailsWith<TokenServiceUnavailableException> { client.getMachineToken(target) }
+		assertEquals(emptyList(), assertDiagnostic(Category.INVALID_ACCESS_TOKEN, 200).causes)
+		assertTokenNotLogged(error)
 		server.verify()
 	}
 
@@ -195,6 +222,7 @@ class TexasTokenClientTest {
 
 		assertEquals("Texas svarte $status for identity_provider=tokenx target=$tokenxTarget", error.message)
 		assertEquals(null, error.cause)
+		assertDiagnostic(Category.HTTP, status, "exchange")
 		server.verify()
 		assertTokenNotLogged()
 	}
@@ -207,17 +235,93 @@ class TexasTokenClientTest {
 		val error = assertFailsWith<TokenServiceUnavailableException> { client.exchangeUserToken(tokenxTarget, userToken) }
 
 		assertFalse(error.message!!.contains(userToken))
+		assertDiagnostic(Category.TRANSPORT_READ, null, "exchange")
 		server.verify()
 		assertTokenNotLogged()
 	}
 
+	@ParameterizedTest
+	@ValueSource(ints = [0, 32])
+	fun `a response read failure keeps its type and frames without private content`(bytesBeforeFailure: Int) {
+		val readError = IOException("${privateMarkers.joinToString()} $token $userToken")
+		server.expect(once(), requestTo(tokenEndpoint)).andRespond {
+			MockClientHttpResponse(object : InputStream() {
+				private val prefix = """{"access_token":"${"x".repeat(32)}""".toByteArray()
+				private var position = 0
+				override fun read(): Int = if (position < bytesBeforeFailure) prefix[position++].toInt() else throw readError
+			}, HttpStatus.OK).apply { headers.contentType = MediaType.APPLICATION_JSON }
+		}
+
+		val error = assertFailsWith<TokenServiceUnavailableException> { client.getMachineToken(target) }
+
+		val diagnostic = assertDiagnostic(Category.TRANSPORT_READ, 200)
+		assertTrue(diagnostic.causes.any { it.type == IOException::class.java.name && it.frames.contains(readError.stackTrace.first().toString()) })
+		assertTokenNotLogged(error)
+		server.verify()
+	}
+
+	@ParameterizedTest
+	@ValueSource(ints = [2, 12])
+	fun `nested unknown causes are bounded and never retain private messages or suppressed errors`(depth: Int) {
+		val causes = List(depth) { IllegalStateException("${privateMarkers.joinToString()} $token $userToken") }
+		causes.zipWithNext().forEach { (outer, inner) -> outer.initCause(inner) }
+		if (depth == 2) causes.last().initCause(causes.first())
+		val original = RestClientException(privateMarkers[0], causes.first()).apply {
+			addSuppressed(IllegalArgumentException(privateMarkers[3]))
+		}
+		server.expect(once(), requestTo(exchangeEndpoint)).andRespond { throw original }
+
+		val error = assertFailsWith<TokenServiceUnavailableException> { client.exchangeUserToken(tokenxTarget, userToken) }
+
+		val diagnostic = assertDiagnostic(Category.UNKNOWN, null, "exchange")
+		assertEquals(if (depth == 2) 3 else 8, diagnostic.causes.size)
+		assertEquals(RestClientException::class.java.name, diagnostic.causes.first().type)
+		assertTrue(diagnostic.causes.drop(1).all { it.type == IllegalStateException::class.java.name && it.frames.isNotEmpty() })
+		assertTrue(diagnostic.causeChainTruncated)
+		assertEquals(null, error.cause)
+		assertTrue(error.suppressed.isEmpty())
+		assertTokenNotLogged(error)
+		server.verify()
+	}
+
+	private fun diagnosticEvents() = appender.list.filter { it.loggerName == TexasTokenClient::class.java.name }
+
+	private fun assertDiagnostic(category: Category, status: Int?, operation: String = "token"): TexasFailureDiagnostic {
+		val event = diagnosticEvents().single()
+		assertEquals(Level.WARN, event.level)
+		assertEquals(null, event.throwableProxy)
+		val diagnostic = event.keyValuePairs.single { it.key == "texas_failure" }.value as TexasFailureDiagnostic
+		assertEquals(category, diagnostic.category)
+		assertEquals(status, diagnostic.httpStatus)
+		assertEquals(operation, diagnostic.operation)
+		assertEquals(if (operation == "token") "entra_id" else "tokenx", diagnostic.identityProvider)
+		assertEquals(if (operation == "token") target else tokenxTarget, diagnostic.target)
+		val encoded = jacksonObjectMapper().readTree(encode(event))
+		assertEquals(category.name, encoded["texas_failure"]["category"].asText())
+		assertEquals(operation, encoded["texas_failure"]["operation"].asText())
+		return diagnostic
+	}
+
 	private fun tokenResponse() = """{"access_token":"$token","expires_in":3599,"token_type":"Bearer"}"""
 
-	private fun assertTokenNotLogged() {
-		appender.list.forEach { event ->
-			val text = event.formattedMessage + (event.throwableProxy?.let { ThrowableProxyUtil.asString(it) } ?: "")
-			assertFalse(text.contains(token), "Tokenet ble logget: ${event.loggerName}")
-			assertFalse(text.contains(userToken), "Innbyggerens token ble logget: ${event.loggerName}")
+	private fun encode(event: ILoggingEvent): String {
+		val encoder = LogstashEncoder().apply {
+			context = rootLogger.loggerContext
+			start()
+		}
+		return try {
+			encoder.encode(event).toString(Charsets.UTF_8)
+		} finally {
+			encoder.stop()
+		}
+	}
+
+	private fun assertTokenNotLogged(error: Throwable? = null) {
+		val output = appender.list.joinToString("\n") { event ->
+			event.formattedMessage + (event.throwableProxy?.let { ThrowableProxyUtil.asString(it) } ?: "") + encode(event)
+		} + error?.stackTraceToString().orEmpty()
+		(listOf(token, userToken) + privateMarkers).forEach { marker ->
+			assertFalse(output.contains(marker), "Privat testmarkør finnes i logg eller videreført feil")
 		}
 	}
 }

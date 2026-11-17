@@ -2,6 +2,7 @@ package no.nav.soknad.innsending.consumerapis.texas
 
 import no.nav.soknad.innsending.consumerapis.token.AccessTokenProvider
 import no.nav.soknad.innsending.consumerapis.token.TokenServiceUnavailableException
+import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestClient
@@ -27,38 +28,49 @@ class TexasTokenClient(
 ) : AccessTokenProvider {
 
 	private val retry = TexasRetry.create("tokenkall", retryWait)
+	private val logger = LoggerFactory.getLogger(javaClass)
 
 	override fun getMachineToken(target: String): String =
-		fetchToken(tokenEndpoint, ENTRA_ID, target, mapOf("identity_provider" to ENTRA_ID, "target" to target))
+		fetchToken("token", tokenEndpoint, ENTRA_ID, target, mapOf("identity_provider" to ENTRA_ID, "target" to target))
 
 	override fun exchangeUserToken(target: String, userToken: String): String =
 		fetchToken(
-			exchangeEndpoint, TOKENX, target,
+			"exchange", exchangeEndpoint, TOKENX, target,
 			mapOf("identity_provider" to TOKENX, "target" to target, "user_token" to userToken)
 		)
 
-	private fun fetchToken(endpoint: String, identityProvider: String, target: String, body: Map<String, String>): String {
+	private fun fetchToken(operation: String, endpoint: String, identityProvider: String, target: String, body: Map<String, String>): String {
 		val description = "identity_provider=$identityProvider target=$target"
+		var httpStatus: Int? = null
+		fun failure(message: String, error: Throwable? = null): TokenServiceUnavailableException {
+			logger.atWarn()
+				.addKeyValue("texas_failure", TexasFailureDiagnostic.from(operation, identityProvider, target, httpStatus, error))
+				.log("Texas tokenkall feilet endelig")
+			return TokenServiceUnavailableException(message)
+		}
 		val response = try {
 			retry.executeSupplier {
+				httpStatus = null
 				restClient.post()
 					.uri(endpoint)
 					.contentType(MediaType.APPLICATION_JSON)
 					.body(body)
 					.retrieve()
+					// Observer status før konvertering. Standardhåndteringen av HTTP-feil er uendret.
+					.onStatus({ !it.isError }) { _, response -> httpStatus = response.statusCode.value() }
 					.body(Map::class.java)
 			}
 		} catch (e: RestClientResponseException) {
-			throw TokenServiceUnavailableException("Texas svarte ${e.statusCode.value()} for $description")
+			throw failure("Texas svarte ${e.statusCode.value()} for $description", e)
 		} catch (e: ResourceAccessException) {
-			throw TokenServiceUnavailableException("Fikk ikke kontakt med Texas for $description (${e.javaClass.simpleName})")
+			throw failure("Fikk ikke kontakt med Texas for $description (${e.javaClass.simpleName})", e)
 		} catch (e: RestClientException) {
-			throw TokenServiceUnavailableException("Ugyldig svar fra Texas for $description (${e.javaClass.simpleName})")
+			throw failure("Ugyldig svar fra Texas for $description (${e.javaClass.simpleName})", e)
 		}
 
 		val token = response?.get("access_token")
 		if (token !is String || token.isBlank()) {
-			throw TokenServiceUnavailableException("Svaret fra Texas manglet access_token for $description")
+			throw failure("Svaret fra Texas manglet access_token for $description")
 		}
 		return token
 	}
