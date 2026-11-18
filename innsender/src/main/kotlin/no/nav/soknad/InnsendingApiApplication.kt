@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.transaction.annotation.RollbackOn
 
 @SpringBootApplication()
-// Kotlin has no checked exceptions, so roll back on all exceptions, not only RuntimeException.
 @EnableTransactionManagement(rollbackOn = RollbackOn.ALL_EXCEPTIONS)
 @ConfigurationPropertiesScan
 @EnableResilientMethods
