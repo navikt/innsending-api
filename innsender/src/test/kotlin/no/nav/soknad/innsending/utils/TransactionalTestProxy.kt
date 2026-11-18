@@ -3,11 +3,13 @@ package no.nav.soknad.innsending.utils
 import org.springframework.aop.framework.ProxyFactory
 import org.springframework.transaction.TransactionManager
 import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource
+import org.springframework.transaction.interceptor.RollbackRuleAttribute
 import org.springframework.transaction.interceptor.TransactionInterceptor
 
 /**
  * Applies only transaction advice to a manually constructed, class-proxyable test service.
  * Transactional methods must be public and overridable; self-invocation bypasses the proxy.
+ * Like the application, it rolls back on every exception, including checked exceptions.
  */
 inline fun <reified T : Any> withTransactions(
 	service: T,
@@ -15,7 +17,9 @@ inline fun <reified T : Any> withTransactions(
 ): T {
 	val interceptor = TransactionInterceptor().apply {
 		setTransactionManager(transactionManager)
-		setTransactionAttributeSource(AnnotationTransactionAttributeSource())
+		setTransactionAttributeSource(AnnotationTransactionAttributeSource().apply {
+			addDefaultRollbackRule(RollbackRuleAttribute.ROLLBACK_ON_ALL_EXCEPTIONS)
+		})
 	}
 	val proxy = ProxyFactory(service).apply {
 		isProxyTargetClass = true
