@@ -9,7 +9,6 @@ import org.springframework.transaction.interceptor.TransactionInterceptor
 /**
  * Applies only transaction advice to a manually constructed, class-proxyable test service.
  * Transactional methods must be public and overridable; self-invocation bypasses the proxy.
- * Like the application, it rolls back on every exception, including checked exceptions.
  */
 inline fun <reified T : Any> withTransactions(
 	service: T,
