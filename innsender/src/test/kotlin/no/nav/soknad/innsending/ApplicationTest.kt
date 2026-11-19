@@ -19,7 +19,6 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.transaction.annotation.EnableTransactionManagement
 
 
 @ActiveProfiles("test")
@@ -33,7 +32,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 )
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Import(TestWebTestClientConfig::class, TestMockOAuth2ServerConfig::class)
-@EnableTransactionManagement
 class ApplicationTest() {
 
 	@Autowired

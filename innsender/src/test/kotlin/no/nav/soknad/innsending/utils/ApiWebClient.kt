@@ -500,11 +500,12 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		authToken: String? = null,
 		avsender: AvsenderDto? = null,
 		grantUserDigitalAccess: Boolean? = null,
+		mainDocumentAlt: ByteArray? = null,
 	): InnsendingApiResponse<ApplicationSubmissionResponse> {
 		val token: String = authToken ?: TokenGenerator(mockOAuth2Server).lagAzureM2MToken(listOf("nologin-access"))
 		val headers = Hjelpemetoder.createHeaders(token, MediaType.APPLICATION_JSON)
 		val mainDocumentByteArray: ByteArray =  Hjelpemetoder.getBytesFromFile(mainDocumentPath)
-		val mainDocumentAltByteArray: ByteArray =  Hjelpemetoder.getBytesFromFile(mainDocumentAltPath)
+		val mainDocumentAltByteArray: ByteArray = mainDocumentAlt ?: Hjelpemetoder.getBytesFromFile(mainDocumentAltPath)
 
 		val request = SubmitApplicationRequest(
 			formNumber = formNumber,
@@ -583,11 +584,12 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		bruker: String? = null,
 		avsender: AvsenderDto? = null,
 		grantUserDigitalAccess: Boolean? = null,
+		mainDocumentAlt: ByteArray? = null,
 	): InnsendingApiResponse<ApplicationSubmissionResponse> {
 		val token: String = authToken ?: TokenGenerator(mockOAuth2Server).lagTokenXToken()
 		val headers = Hjelpemetoder.createHeaders(token, MediaType.APPLICATION_JSON)
 		val mainDocumentByteArray: ByteArray =  Hjelpemetoder.getBytesFromFile(mainDocumentPath)
-		val mainDocumentAltByteArray: ByteArray =  Hjelpemetoder.getBytesFromFile(mainDocumentAltPath)
+		val mainDocumentAltByteArray: ByteArray = mainDocumentAlt ?: Hjelpemetoder.getBytesFromFile(mainDocumentAltPath)
 
 		val request = SubmitApplicationRequest(
 			formNumber = soknad.skjemanr,
