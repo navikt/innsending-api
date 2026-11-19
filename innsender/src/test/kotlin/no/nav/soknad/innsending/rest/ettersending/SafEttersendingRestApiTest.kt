@@ -10,6 +10,9 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.utils.ApiWebClient
+import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
+import no.nav.soknad.innsending.utils.ApplicationTestRepository
+import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -17,14 +20,19 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
+import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
 import java.time.LocalDate
 import java.util.UUID
 
+@Import(ApplicationTestRepository::class)
 class SafEttersendingRestApiTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
+
+	@Autowired
+	lateinit var storedApplications: ApplicationTestRepository
 
 	@MockkSpyBean
 	lateinit var notificationPublisher: PublisherInterface
@@ -74,6 +82,10 @@ class SafEttersendingRestApiTest : ApplicationTest() {
 			.assertHttpStatus(HttpStatus.OK)
 			.body
 		assertEquals(archiveReference, fromRest.ettersendingsId)
+		// Owner is not exposed through REST. Inspect only this internal field in the database.
+		val stored = storedApplications.findBySubmissionId(created.innsendingsId!!)
+		assertTrue(stored.owner == ApplicationOwner.person(TokenGenerator.subject), "The supplementary application must persist the logged-in owner")
+		assertEquals(false, stored.ownerIsSqlNull)
 
 		wireMock.verify(1, postRequestedFor(urlPathEqualTo("/saf-api/graphql")))
 		verify(timeout = 5000, exactly = 1) {

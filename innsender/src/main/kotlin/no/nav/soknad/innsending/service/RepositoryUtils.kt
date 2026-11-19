@@ -46,6 +46,12 @@ class RepositoryUtils(
 		throw BackendErrorException("Henting av søknad $innsendingsId fra databasen feilet", ex)
 	}
 
+	fun finnSoknadDb(innsendingsId: String): SoknadDbData? = try {
+		soknadRepository.findByInnsendingsid(innsendingsId)
+	} catch (ex: Exception) {
+		throw BackendErrorException("Henting av søknad $innsendingsId fra databasen feilet", ex)
+	}
+
 	fun hentSoknadDbForUpdate(innsendingsId: String): SoknadDbData = try {
 		soknadRepository.findByInnsendingsidForUpdate(innsendingsId)
 			?: throw ResourceNotFoundException("Fant ikke søknad med innsendingsid $innsendingsId")
