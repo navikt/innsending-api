@@ -27,6 +27,17 @@ interface SoknadRepository : JpaRepository<SoknadDbData, Long> {
 	fun existsByInnsendingsid(innsendingsid: String): Boolean
 	fun findByBrukeridAndStatus(brukerid: String, status: SoknadsStatus): List<SoknadDbData>
 
+	@Query(
+		"SELECT s FROM SoknadDbData s WHERE s.brukerid IN :brukerIds AND s.status = :status " +
+			"AND s.skjemanr = :skjemanr AND s.innsendtdato > :innsendtEtter ORDER BY s.innsendtdato DESC"
+	)
+	fun finnKandidaterForEttersending(
+		@Param("brukerIds") brukerIds: List<String>,
+		@Param("status") status: SoknadsStatus,
+		@Param("skjemanr") skjemanr: String,
+		@Param("innsendtEtter") innsendtEtter: LocalDateTime,
+	): List<SoknadDbData>
+
 	@Transactional
 	@Modifying
 	@Query(value = "UPDATE SoknadDbData SET endretdato = :endretdato WHERE id = :id", nativeQuery = false)
