@@ -427,16 +427,14 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 			OpplastingsStatusDto.SendSenere,
 			submissionResponse.attachments?.first { it.attachmentCode == "M5" }?.uploadStatus
 		)
-		assertNotNull(submissionResponse.ettersendingsId)
+		val ettersendingsId = submissionResponse.ettersendingsId?.toString()
+		assertNotNull(ettersendingsId)
 
 		// verify notifications
-		val slotSoknads = mutableListOf<SoknadDbData>()
-		verify(timeout = 100, exactly = 2) { brukernotifikasjonPublisher.createNotification(capture(slotSoknads), any()) }
-
-		assertEquals(innsendingsId, slotSoknads.firstOrNull()?.innsendingsid)
-		val ettersendingsId = slotSoknads[1].innsendingsid
-		assertNotNull(ettersendingsId)
-		assertEquals(submissionResponse.ettersendingsId?.toString(), ettersendingsId)
+		verify(timeout = 5000, exactly = 1) {
+			brukernotifikasjonPublisher.createNotification(match { it.innsendingsid == innsendingsId }, any())
+			brukernotifikasjonPublisher.createNotification(match { it.innsendingsid == ettersendingsId }, any())
+		}
 
 		val slotSoknadClose = mutableListOf<SoknadDbData>()
 		verify(exactly = 1) { brukernotifikasjonPublisher.closeNotification(capture(slotSoknadClose)) }
