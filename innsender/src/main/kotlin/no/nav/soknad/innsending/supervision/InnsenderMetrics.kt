@@ -49,6 +49,9 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	private val tokenValidationName = "token_validation_total"
 	private val tokenValidationHelp = "Outcome of token validation for endpoints that require a token"
 	private val tokenValidationLabels = listOf("result", "issuer", "client")
+	private val pdfFlatteningName = "pdf_flattening_total"
+	private val pdfFlatteningHelp = "Outcome of flattening uploaded PDFs with form fields"
+	private val pdfFlatteningLabels = listOf("outcome")
 
 	private var operationsCounter = registerOperationCounter(name, help)
 	private var operationsErrorCounter = registerOperationCounter(errorName, helpError)
@@ -60,6 +63,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	private var antivirusScanCounter = registerCounter(antivirusScanName, antivirusScanHelp, listOf("namespace", "mode", "result"))
 	private var notSentInGauge = registerGauge("applications_not_sent_in", "Number of applications that have not been sent in")
 	private var tokenValidationCounter = registerCounter(tokenValidationName, tokenValidationHelp, tokenValidationLabels)
+	private var pdfFlatteningCounter = registerPdfFlatteningCounter()
 
 	private var submissionsCounter = registerCounter(
 		"submissions_total", "Number of submitted applications",
@@ -86,6 +90,7 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 		fileSizeSummary = registerSummary(fileSize, fileSizeHelp)
 		notSentInGauge = registerGauge(notSentInName, notSentInHelp)
 		tokenValidationCounter = registerCounter(tokenValidationName, tokenValidationHelp, tokenValidationLabels)
+		pdfFlatteningCounter = registerPdfFlatteningCounter()
 	}
 
 	// Used in tests
@@ -102,7 +107,14 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 		registry.unregister(fileSizeSummary)
 		registry.unregister(notSentInGauge)
 		registry.unregister(tokenValidationCounter)
+		registry.unregister(pdfFlatteningCounter)
 	}
+
+	// Alle utfall registreres med 0 ved oppstart, slik at Grafana viser dem før første opplasting
+	private fun registerPdfFlatteningCounter(): Counter =
+		registerCounter(pdfFlatteningName, pdfFlatteningHelp, pdfFlatteningLabels).also { counter ->
+			PdfFlatteningOutcome.entries.forEach { counter.initLabelValues(it.label) }
+		}
 
 	private fun registerOperationCounter(name: String, help: String): Counter =
 		registerCounter(name, help, listOf(operationLabel, temaLabel, appLabel))
@@ -193,4 +205,30 @@ class InnsenderMetrics(private val registry: PrometheusRegistry) {
 	fun getTokenValidationCount(outcome: TokenValidationOutcome): Double =
 		tokenValidationCounter.labelValues(outcome.result.label, outcome.issuer, outcome.client).get()
 
+	fun incPdfFlattening(outcome: PdfFlatteningOutcome) =
+		pdfFlatteningCounter.labelValues(outcome.label).inc()
+
+	fun getPdfFlatteningCount(outcome: PdfFlatteningOutcome): Double =
+		pdfFlatteningCounter.labelValues(outcome.label).get()
+
+}
+
+enum class PdfFlatteningOutcome(val label: String) {
+	// Gotenberg flatet ut, og resultatet besto etterkontrollen
+	GOTENBERG("gotenberg"),
+
+	// Gotenberg feilet; sidene ble gjort om til bilder
+	FALLBACK_ERROR("fallback_error"),
+
+	// Gotenberg svarte, men resultatet besto ikke etterkontrollen; sidene ble gjort om til bilder
+	FALLBACK_INVALID("fallback_invalid"),
+
+	// Gotenberg feilet eller resultatet var ugyldig, og dokumentet er for stort for bildekonvertering; originalen ble lagret
+	UNFLATTENED("unflattened"),
+
+	// PDF-en har ingen skjemafelt eller widgets å flate ut
+	SKIPPED("skipped"),
+
+	// Både Gotenberg og bildekonverteringen feilet; opplastingen feiler
+	FAILED("failed"),
 }

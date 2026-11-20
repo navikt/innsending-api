@@ -25,4 +25,8 @@ class ToPdfConverterTest : FileToPdfInterface {
 		return toPdf(fileName, docs.first())
 	}
 
+	override fun flattenPdf(fileContent: ByteArray, trace: String): ByteArray {
+		return fileContent
+	}
+
 }
