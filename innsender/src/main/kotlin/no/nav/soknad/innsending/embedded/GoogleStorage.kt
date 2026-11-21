@@ -45,8 +45,6 @@ class GoogleStorage {
 						"/data"
 					)
 				}
-				// Loggmeldingen kan komme før porten er videresendt til hosten.
-				// Vent på HTTP-svar fra hosten før containerIsStarted sender PUT /_internal/config.
 				.waitingFor(Wait.forHttp("/storage/v1/b").forPort(gcsPort))
 		}
 
