@@ -63,6 +63,7 @@ jobs:
       - uses: nais/deploy/actions/deploy@d003bddf74ce5b96fa3056ae60bd4b9b3bbc89ef # v3
         env:
           CLUSTER: prod-gcp
+          TIMEOUT: 25m
           RESOURCE: .nais/nais-gcp.yml
           VARS: .nais/prod-gcp.json
           VAR: image=${{needs.build-and-push.outputs.image}}
