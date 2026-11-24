@@ -17,7 +17,7 @@ spec:
   startup:
     path: /health/isReady
     initialDelay: 30
-    failureThreshold: 30
+    failureThreshold: 54
     periodSeconds: 5
   liveness:
     path: /health/isAlive

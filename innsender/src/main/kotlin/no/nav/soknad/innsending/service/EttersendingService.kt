@@ -360,11 +360,24 @@ class EttersendingService(
 		}
 	}
 
-	fun getInnsendteSoknader(skjemanr: String, brukerId: String): List<DokumentSoknadDto> {
-		return soknadService.hentInnsendteSoknader(tilgangskontroll.hentPersonIdents(brukerId))
-			.filter { it.skjemanr == skjemanr }
-			.filter { it.innsendtDato!!.isAfter(OffsetDateTime.now().minusDays(Constants.MAX_AKTIVE_DAGER)) }
-			.sortedByDescending { it.innsendtDato }
+	private fun kanKoblesTilBruker(
+		soknad: SoknadDbData,
+		kandidater: Map<String, SoknadDbData>,
+		personIdenter: List<String>,
+	): Boolean {
+		if (soknad.visningstype.isUnauthenticatedSubmission() || !gjelderBruker(soknad, personIdenter)) return false
+		val koblingsId = soknad.ettersendingsid ?: return true
+		if (koblingsId == soknad.innsendingsid) return true
+		val original = kandidater[koblingsId] ?: return false
+		return !original.visningstype.isUnauthenticatedSubmission() && gjelderBruker(original, personIdenter) &&
+			(original.ettersendingsid == null || original.ettersendingsid == original.innsendingsid)
+	}
+
+	private fun gjelderBruker(soknad: SoknadDbData, personIdenter: List<String>): Boolean {
+		val berortPerson = soknad.affecteduser ?: soknad.brukerid
+			?.takeIf { soknad.brukertype == null || soknad.brukertype == BrukerDto.IdType.FNR }
+			?.let { BrukerDto(id = it, idType = BrukerDto.IdType.FNR) }
+		return berortPerson?.idType == BrukerDto.IdType.FNR && berortPerson.id in personIdenter
 	}
 
 	@Transactional(timeout = TRANSACTION_TIMEOUT)
@@ -412,9 +425,17 @@ class EttersendingService(
 		ettersending: OpprettEttersending,
 		erNavInitiert: Boolean = false
 	): DokumentSoknadDto {
-		val innsendteSoknader = getInnsendteSoknader(ettersending.skjemanr, brukerId)
-			.filterNot { it.visningsType.isUnauthenticatedSubmission() }
+		val personIdenter = tilgangskontroll.hentPersonIdents(brukerId)
+		val kandidater = repo.finnKandidaterForEttersending(
+			personIdenter, ettersending.skjemanr, LocalDateTime.now().minusDays(Constants.MAX_AKTIVE_DAGER)
+		).associateBy { it.innsendingsid }
+		val innsendteSoknader = kandidater.values.filter {
+			kanKoblesTilBruker(it, kandidater, personIdenter)
+		}.take(1).map { vedleggService.hentAlleVedlegg(it) }
+		val avvisteReferanser = kandidater.values.filterNot { gjelderBruker(it, personIdenter) }
+			.flatMap { listOfNotNull(it.innsendingsid, it.ettersendingsid) }.toSet()
 		val arkiverteSoknader = getArkiverteEttersendinger(ettersending.skjemanr, brukerId)
+			.filter { it.innsendingsId !in avvisteReferanser }
 			.filterNot { archived ->
 				archived.innsendingsId?.let { repo.finnSoknadDb(it) }?.visningstype.isUnauthenticatedSubmission()
 			}
