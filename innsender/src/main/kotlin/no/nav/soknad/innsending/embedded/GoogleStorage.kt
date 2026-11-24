@@ -45,7 +45,7 @@ class GoogleStorage {
 						"/data"
 					)
 				}
-				.waitingFor(Wait.forLogMessage(".*server started at.*\\s", 1))
+				.waitingFor(Wait.forHttp("/storage/v1/b").forPort(gcsPort))
 		}
 
 		fun getUrl(): String = "http://$host:${getMappedPort(gcsPort)}"

@@ -6,9 +6,10 @@ import org.springframework.boot.runApplication
 import org.springframework.resilience.annotation.EnableResilientMethods
 import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.transaction.annotation.EnableTransactionManagement
+import org.springframework.transaction.annotation.RollbackOn
 
 @SpringBootApplication()
-@EnableTransactionManagement
+@EnableTransactionManagement(rollbackOn = RollbackOn.ALL_EXCEPTIONS)
 @ConfigurationPropertiesScan
 @EnableResilientMethods
 @EnableAsync

@@ -3,6 +3,7 @@ package no.nav.soknad.innsending.utils
 import org.springframework.aop.framework.ProxyFactory
 import org.springframework.transaction.TransactionManager
 import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource
+import org.springframework.transaction.interceptor.RollbackRuleAttribute
 import org.springframework.transaction.interceptor.TransactionInterceptor
 
 /**
@@ -15,7 +16,9 @@ inline fun <reified T : Any> withTransactions(
 ): T {
 	val interceptor = TransactionInterceptor().apply {
 		setTransactionManager(transactionManager)
-		setTransactionAttributeSource(AnnotationTransactionAttributeSource())
+		setTransactionAttributeSource(AnnotationTransactionAttributeSource().apply {
+			addDefaultRollbackRule(RollbackRuleAttribute.ROLLBACK_ON_ALL_EXCEPTIONS)
+		})
 	}
 	val proxy = ProxyFactory(service).apply {
 		isProxyTargetClass = true
