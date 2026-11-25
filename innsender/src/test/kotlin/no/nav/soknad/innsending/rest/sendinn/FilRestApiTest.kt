@@ -325,11 +325,20 @@ class FilRestApiTest : ApplicationTest() {
 			api.uploadFile(soknadDto.innsendingsId!!, vedleggN6.id!!, fil, fileName = "mellomstor-fra-jpg.pdf")
 		}.take(20).takeWhileInclusive { it.statusCode.is2xxSuccessful }.toList()
 
-		responses.dropLast(1).forEach { it.assertHttpStatus(HttpStatus.CREATED) }
+		val accepted = responses.dropLast(1)
+		assertTrue(accepted.isNotEmpty(), "Expected the first upload to be below the limit")
+		accepted.forEach { it.assertHttpStatus(HttpStatus.CREATED) }
 		assertFalse(responses.last().statusCode.is2xxSuccessful, "Expected the upload to be rejected within 20 attempts")
 		responses.last()
 			.assertHttpStatus(HttpStatus.BAD_REQUEST)
 			.assertErrorCode(ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE)
+
+		// The rejected file is not stored, and the attachment keeps the files and status it had before
+		val storedFileIds = api.getFilesForVedlegg(soknadDto.innsendingsId!!, vedleggN6.id!!).assertSuccess().body.map { it.id }
+		assertEquals(accepted.map { it.body.id }.toSet(), storedFileIds.toSet())
+		assertEquals(accepted.size, storedFileIds.size)
+		val vedlegg = api.getSoknadSendinn(soknadDto.innsendingsId!!).assertSuccess().body.vedleggsListe.first { it.id == vedleggN6.id }
+		assertEquals(OpplastingsStatusDto.LastetOpp, vedlegg.opplastingsStatus)
 	}
 
 	@Test
