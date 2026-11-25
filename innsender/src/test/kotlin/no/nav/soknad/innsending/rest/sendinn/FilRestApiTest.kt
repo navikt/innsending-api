@@ -317,11 +317,12 @@ class FilRestApiTest : ApplicationTest() {
 		val soknadDto = opprettEnSoknad(defaultSkjemanr, "nb_NO", listOf("N6", "W2"))
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
-		val fil = Hjelpemetoder.getBytesFromFile("/pdfs/acroform-fields-tom-array.pdf")
+		// A one page PDF of about 9.4 MB. The earlier file had more than 200 pages and was rejected for that reason.
+		val fil = Hjelpemetoder.getBytesFromFile("/mellomstor-fra-jpg.pdf")
 
 		// The limit applies to the stored, converted size. Upload the same file until the attachment exceeds 15 MB.
 		val responses = generateSequence {
-			api.uploadFile(soknadDto.innsendingsId!!, vedleggN6.id!!, fil, fileName = "acroform-fields-tom-array.pdf")
+			api.uploadFile(soknadDto.innsendingsId!!, vedleggN6.id!!, fil, fileName = "mellomstor-fra-jpg.pdf")
 		}.take(20).takeWhileInclusive { it.statusCode.is2xxSuccessful }.toList()
 
 		responses.dropLast(1).forEach { it.assertHttpStatus(HttpStatus.CREATED) }
