@@ -8,6 +8,7 @@ import no.nav.soknad.InnsendingApiApplication
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.utils.ApplicationTestRepository
+import no.nav.soknad.innsending.utils.EmptyDatabaseBeforeTestClass
 import no.nav.soknad.innsending.utils.TestMockOAuth2Server
 import no.nav.soknad.innsending.utils.TestMockOAuth2ServerConfig
 import no.nav.soknad.innsending.utils.TestWireMockServer
@@ -17,11 +18,13 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.cache.CacheManager
 import org.springframework.context.annotation.Import
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.test.context.TestExecutionListeners
+import org.springframework.test.context.TestExecutionListeners.MergeMode
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -37,8 +40,8 @@ import java.time.Duration
 @ExtendWith(
 	SpringExtension::class
 )
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Import(TestWebTestClientConfig::class, TestMockOAuth2ServerConfig::class, ApplicationTestRepository::class)
+@TestExecutionListeners(listeners = [EmptyDatabaseBeforeTestClass::class], mergeMode = MergeMode.MERGE_WITH_DEFAULTS)
 class ApplicationTest() {
 
 	@Autowired
@@ -98,6 +101,15 @@ class ApplicationTest() {
 		WireMock.configureFor(WireMock(wireMock))
 		// Calls that arrive between tests, such as late asynchronous calls, must not count in this test's verifications.
 		wireMock.resetRequests()
+	}
+
+	@Autowired
+	private lateinit var cacheManager: CacheManager
+
+	@BeforeEach
+	fun clearCaches() {
+		// Test classes share Spring contexts, so cached PDL lookups from an earlier test must not decide this test's result.
+		cacheManager.cacheNames.forEach { cacheManager.getCache(it)?.clear() }
 	}
 
 	@AfterEach

@@ -431,8 +431,10 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 			brukernotifikasjonPublisher.createNotification(match { it.innsendingsid == ettersendingsId }, any())
 		}
 
-		val slotSoknadClose = mutableListOf<SoknadDbData>()
-		verify(exactly = 1) { brukernotifikasjonPublisher.closeNotification(capture(slotSoknadClose)) }
+		// NotificationService.close runs asynchronously, so wait for the call.
+		verify(timeout = 5000, exactly = 1) {
+			brukernotifikasjonPublisher.closeNotification(match { it.innsendingsid == innsendingsId })
+		}
 
 		// verify invocation of soknadsmottaker
 		val slotSoknad = slot<DokumentSoknadDto>()

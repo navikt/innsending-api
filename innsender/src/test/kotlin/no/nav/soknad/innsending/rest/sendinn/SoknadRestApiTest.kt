@@ -9,7 +9,6 @@ import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.AvsenderDto
 import no.nav.soknad.innsending.model.BrukerDto
-import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.PatchVedleggDto
@@ -196,13 +195,12 @@ class SoknadRestApiTest : ApplicationTest() {
 		api.sendInnSoknad(soknad.innsendingsid).assertSuccess()
 
 		// verify invocation of soknadsmottaker
-		val slotSoknad = slot<DokumentSoknadDto>()
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
 		verify(timeout = 1000, exactly = 1) {
 			soknadsmottaker.sendInnSoknad(
-				capture(slotSoknad),
+				match { it.innsendingsId == soknad.innsendingsid },
 				capture(slotVedleggsliste),
 				capture(slotAvsender),
 				captureNullable(slotBruker)
