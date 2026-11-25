@@ -2,7 +2,6 @@ package no.nav.soknad.pdfutilities
 
 import nl.altindag.log.LogCaptor
 import no.nav.soknad.innsending.utils.Hjelpemetoder
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -26,6 +25,6 @@ class KonverterTilPngTest {
 		val pdf = Hjelpemetoder.getBytesFromFile("/pdfs/$filnavn.pdf")
 		val bilde = KonverterTilPng().konverterTilPng(pdf)
 
-		assertNotNull(bilde)
+		assertTrue("Skal gi minst ett bilde", bilde.isNotEmpty())
 	}
 }
