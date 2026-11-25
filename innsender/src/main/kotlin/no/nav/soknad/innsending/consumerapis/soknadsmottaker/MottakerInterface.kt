@@ -10,7 +10,7 @@ interface MottakerInterface {
 
 	@Retryable(
 		maxRetries = 3,
-		delay = 500,
+		delayString = "\${retry.soknadsmottaker.delay-ms:500}",
 		multiplier = 2.0,
 		jitter = 2
 	)

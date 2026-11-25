@@ -39,7 +39,7 @@ class SendTilPublisherRetryTest : ApplicationTest() {
 	fun setUp() = clearAllMocks()
 
 	@Test
-	fun `attempts to send notification three times before giving up`() {
+	fun `gives up after the first attempt and five retries`() {
 		// Given
 		val innsendingsid = UUID.randomUUID().toString()
 		val soknad = SoknadDbDataTestBuilder(brukerId = "12345678901", innsendingsId = innsendingsid, skjemanr ="NAV 20-74.13", status = SoknadsStatus.Opprettet).build()

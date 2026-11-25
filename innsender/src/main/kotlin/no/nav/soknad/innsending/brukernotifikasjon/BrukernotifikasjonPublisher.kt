@@ -49,7 +49,7 @@ class BrukernotifikasjonPublisher(
 
 	@Retryable(
 		maxRetries = 5,
-		delay = 5000,
+		delayString = "\${retry.brukernotifikasjon.delay-ms:5000}",
 		multiplier = 2.0,
 		jitter = 2
 	)
@@ -102,7 +102,7 @@ class BrukernotifikasjonPublisher(
 
 	@Retryable(
 		maxRetries = 5,
-		delay = 5000,
+		delayString = "\${retry.brukernotifikasjon.delay-ms:5000}",
 		multiplier = 2.0,
 		jitter = 2
 	)

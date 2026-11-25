@@ -81,6 +81,13 @@ brukernotifikasjonconfig:
 
 ettersendingsfrist: 14
 
+# Testene sjekker antall forsøk, ikke ventetiden mellom dem. Produksjon bruker standardverdiene i @Retryable.
+retry:
+  soknadsmottaker:
+    delay-ms: 1
+  brukernotifikasjon:
+    delay-ms: 1
+
 status_log_url: "https://logs.adeo.no"
 
 texas:
