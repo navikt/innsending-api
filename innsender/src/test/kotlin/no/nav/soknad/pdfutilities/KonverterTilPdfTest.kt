@@ -1,20 +1,17 @@
 package no.nav.soknad.pdfutilities
 
-import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.rendering.ImageType
 import org.apache.pdfbox.rendering.PDFRenderer
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 
-class KonverterTilPdfTest: ApplicationTest() {
+class KonverterTilPdfTest {
 
-	@Autowired
-	private lateinit var konverterTilPdf: KonverterTilPdf
+	private val konverterTilPdf = GotenbergTestConverters.konverterTilPdf
 
 	private val soknadDto = DokumentSoknadDtoTestBuilder().build()
 

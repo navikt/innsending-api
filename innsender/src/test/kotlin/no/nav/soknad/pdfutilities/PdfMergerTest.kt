@@ -1,18 +1,15 @@
 package no.nav.soknad.pdfutilities
 
-import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Disabled
 
-class PdfMergerTest : ApplicationTest() {
+class PdfMergerTest {
 
-	@Autowired
-	private lateinit var pdfMerger: PdfMergerInterface
+	private val pdfMerger: PdfMergerInterface = GotenbergTestConverters.pdfMerger
 
 	private val antallSider = AntallSider()
 	private val validerer = VeraPDFValidator()

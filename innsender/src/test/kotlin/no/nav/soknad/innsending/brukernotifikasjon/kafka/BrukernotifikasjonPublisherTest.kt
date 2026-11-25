@@ -1,27 +1,26 @@
 package no.nav.soknad.innsending.brukernotifikasjon.kafka
 
-import com.ninjasquad.springmockk.MockkSpyBean
-import io.mockk.clearAllMocks
+import io.mockk.every
+import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
 import no.nav.soknad.arkivering.soknadsmottaker.model.Varsel
-import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
-import no.nav.soknad.innsending.config.RestConfig
+import no.nav.soknad.innsending.config.BrukerNotifikasjonConfig
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
+import no.nav.soknad.innsending.location.UrlHandler
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.util.soknaddbdata.getSkjemaPath
 import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -30,31 +29,33 @@ import java.util.UUID
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
+internal class BrukernotifikasjonPublisherTest {
 
-	@Autowired
-	lateinit var soknadRepository: SoknadRepository
+	private val fyllutUrl = "https://fyllut.example/fyllut"
+	private val sendinnUrl = "https://sendinn.example/sendinn"
 
-	@MockkSpyBean
-	lateinit var sendTilPublisher: PublisherInterface
-
-	@Autowired
-	lateinit var restConfig: RestConfig
-
-	@Autowired
-	lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher
+	// The publisher reads the stored application by id. A map gives the same lookup without a database.
+	private val storedApplications = mutableMapOf<String, SoknadDbData>()
+	private val soknadRepository = mockk<SoknadRepository> {
+		every { save(any<SoknadDbData>()) } answers { firstArg<SoknadDbData>().also { storedApplications[it.innsendingsid] = it } }
+		every { findByInnsendingsid(any()) } answers { storedApplications[firstArg()] }
+	}
+	private val sendTilPublisher = mockk<PublisherInterface>(relaxed = true)
+	// The tests use the default options without an environment qualifier. A strict mock fails on any other argument.
+	// UrlHandlerImplTest and UrlHandlerDevImplTest cover how the URLs are chosen.
+	private val urlHandler = mockk<UrlHandler> {
+		every { getFyllutUrl(isNull()) } returns fyllutUrl
+		every { getSendInnUrl(isNull()) } returns sendinnUrl
+	}
+	private val brukernotifikasjonPublisher = BrukernotifikasjonPublisher(
+		BrukerNotifikasjonConfig().apply { publisereEndringer = true },
+		sendTilPublisher,
+		urlHandler,
+		soknadRepository,
+	)
 
 	private val defaultSkjemanr = "NAV 55-00.60"
 	private val defaultTema = "BID"
-	private var fyllutUrl: String? = null
-	private var sendinnUrl: String? = null
-
-	@BeforeEach
-	fun setUp() {
-		clearAllMocks()
-		fyllutUrl = restConfig.fyllut.urls["default"]
-		sendinnUrl = restConfig.sendinn.urls["default"]
-	}
 
 	@Test
 	fun `sjekk at melding for å publisere Oppgave eller Beskjed blir sendt ved oppretting av ny søknad`() {
