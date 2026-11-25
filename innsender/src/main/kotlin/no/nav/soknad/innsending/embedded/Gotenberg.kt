@@ -12,14 +12,19 @@ import org.testcontainers.utility.DockerImageName
 @Configuration
 class Gotenberg {
 
-	final val gotenberg: Container = Container()
+	// The container is shared and stopped when the JVM exits, not when a Spring context closes.
+	@Bean(destroyMethod = "")
+	fun embeddedGotenberg(): Container = shared
 
-	init {
-		gotenberg.start()
+	companion object {
+		// One Gotenberg container per JVM, shared by every Spring context and by the PDF tests without Spring.
+		val shared: Container by lazy {
+			Container().apply {
+				start()
+				Runtime.getRuntime().addShutdownHook(Thread { stop() })
+			}
+		}
 	}
-
-	@Bean(destroyMethod = "stop")
-	fun embeddedGotenberg(): Container = gotenberg
 
 	class Container(private val gotenbergPort: Int = 3000) : GenericContainer<Container>(
 		DockerImageName.parse("gotenberg/gotenberg:8.38.1")
