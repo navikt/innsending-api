@@ -6,7 +6,6 @@ import io.mockk.every
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
-import no.nav.soknad.InnsendingApiApplication
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
@@ -26,10 +25,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.util.AopTestUtils
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -40,12 +36,6 @@ import java.time.LocalDateTime
 import kotlin.test.assertNull
 
 
-@SpringBootTest(
-	webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
-	properties = ["spring.main.allow-bean-definition-overriding=true"],
-	classes = [InnsendingApiApplication::class]
-)
-@ExtendWith(SpringExtension::class)
 class InternInitiertOppgaverTest: ApplicationTest() {
 
 	@Autowired
