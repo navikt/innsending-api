@@ -1,12 +1,10 @@
 package no.nav.soknad.innsending.rest.ekstern
 
-import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.BrukernotifikasjonsType
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.utils.ApiWebClient
@@ -25,9 +23,6 @@ import kotlin.test.assertNull
 class EksternRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
-
-	@MockkSpyBean()
-	lateinit var publisherInterface: PublisherInterface
 
 	@LocalServerPort
 	var serverPort: Int = 0
@@ -82,7 +77,7 @@ class EksternRestApiTest : ApplicationTest() {
 
 		// Then
 		// The notification is an oppgave if erSystemGenerert is true
-		val notication = publisherInterface.awaitNotification(opprettEttersending.body.innsendingsId!!)
+		val notication = notificationPublisher.awaitNotification(opprettEttersending.body.innsendingsId!!)
 		assertEquals(true, notication.soknadRef.erEttersendelse)
 		assertEquals(true, notication.soknadRef.erSystemGenerert)
 		assertNotNull(notication.brukernotifikasjonInfo.utsettSendingTil)
@@ -103,10 +98,10 @@ class EksternRestApiTest : ApplicationTest() {
 			.body
 
 		verify(timeout = 5000) {
-			publisherInterface.opprettBrukernotifikasjon(match { it.soknadRef.innsendingId == ettersending.innsendingsId })
+			notificationPublisher.opprettBrukernotifikasjon(match { it.soknadRef.innsendingId == ettersending.innsendingsId })
 		}
 		val noticationSlots = mutableListOf<AddNotification>()
-		verify(atLeast = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlots)) }
+		verify(atLeast = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(noticationSlots)) }
 
 		// Then
 		// The notification is an utkast if erSystemGenerert is false

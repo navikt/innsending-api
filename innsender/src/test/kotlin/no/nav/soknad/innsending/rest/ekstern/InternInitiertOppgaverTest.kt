@@ -9,7 +9,6 @@ import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.InnsendingApiApplication
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
 import no.nav.soknad.innsending.model.*
@@ -36,7 +35,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.context.annotation.Import
 import org.springframework.http.*
 import java.time.LocalDateTime
 import kotlin.test.assertNull
@@ -48,14 +46,10 @@ import kotlin.test.assertNull
 	classes = [InnsendingApiApplication::class]
 )
 @ExtendWith(SpringExtension::class)
-@Import(ApplicationTestRepository::class)
 class InternInitiertOppgaverTest: ApplicationTest() {
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
-
-	@MockkSpyBean()
-	lateinit var publisherInterface: PublisherInterface
 
 	@MockkSpyBean
 	lateinit var pdlInterface: PdlInterface
@@ -139,7 +133,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		val fetched = listed.body!!.single { it.innsendingsId == ettersending.innsendingsId }
 		assertTrue(fetched.brukerId == brukerId, "The task must retain the request user, not the owner")
 		assertEquals(true, fetched.erNavOpprettet)
-		val notification = publisherInterface.awaitNotification(ettersending.innsendingsId!!)
+		val notification = notificationPublisher.awaitNotification(ettersending.innsendingsId!!)
 		assertTrue(notification.soknadRef.personId == brukerId, "Notifications must retain the request recipient, not the owner")
 		assertEquals(ownApplication.innsendingsid, notification.soknadRef.groupId)
 		// Owner is not exposed through REST. Inspect only this internal field in the database.
@@ -157,7 +151,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 
 		assertEquals(brukerId, soknadDto.brukerId)
 		assertEquals(skjemanr, soknadDto.skjemanr)
-		val notification = publisherInterface.awaitNotification(soknadDto.innsendingsId!!)
+		val notification = notificationPublisher.awaitNotification(soknadDto.innsendingsId!!)
 		assertTrue(notification.soknadRef.personId == brukerId, "Notifications must use the explicit request user")
 		// Owner is not exposed through REST. Inspect only this internal field in the database.
 		val stored = storedApplications.findBySubmissionId(soknadDto.innsendingsId!!)
@@ -176,7 +170,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr)
 
 		// Then
-		val notication = publisherInterface.awaitNotification(soknadDto.innsendingsId!!)
+		val notication = notificationPublisher.awaitNotification(soknadDto.innsendingsId!!)
 		assertEquals(true, notication.soknadRef.erSystemGenerert)
 		assertTrue(notication.soknadRef.erEttersendelse)
 		assertEquals(soknadDto.innsendingsId, notication.soknadRef.innsendingId)
@@ -196,7 +190,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr, brukernotifikasjonstype = BrukernotifikasjonsType.utkast )
 
 		// Then
-		val notication = publisherInterface.awaitNotification(soknadDto.innsendingsId!!)
+		val notication = notificationPublisher.awaitNotification(soknadDto.innsendingsId!!)
 		assertEquals(false, notication.soknadRef.erSystemGenerert)
 		assertTrue(notication.soknadRef.erEttersendelse)
 		assertEquals(soknadDto.innsendingsId, notication.soknadRef.innsendingId)
@@ -218,7 +212,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		assertEquals(HttpStatus.OK, response.statusCode)
 
 		val noticationSlot = slot<SoknadRef>()
-		verify(exactly = 1) { publisherInterface.avsluttBrukernotifikasjon(capture(noticationSlot)) }
+		verify(exactly = 1) { notificationPublisher.avsluttBrukernotifikasjon(capture(noticationSlot)) }
 		assertEquals(soknadDto.innsendingsId, noticationSlot.captured.innsendingId)
 	}
 

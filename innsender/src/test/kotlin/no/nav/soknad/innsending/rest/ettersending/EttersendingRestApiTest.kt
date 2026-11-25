@@ -1,6 +1,5 @@
 package no.nav.soknad.innsending.rest.ettersending
 
-import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
 import io.mockk.slot
 import io.mockk.verify
@@ -8,7 +7,6 @@ import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.Varsel
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
@@ -30,18 +28,13 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.awaitility.Awaitility.await
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
 import java.time.Duration
 
-@Import(ApplicationTestRepository::class)
 class EttersendingRestApiTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
-
-	@MockkSpyBean
-	lateinit var notificationPublisher: PublisherInterface
 
 	@LocalServerPort
 	var serverPort: Int = 0

@@ -7,10 +7,8 @@ import io.mockk.slot
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.SendTilPublisherTest
 import no.nav.soknad.innsending.consumerapis.pdl.PdlAPI
 import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
-import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.ApplicationSubmissionResponse
 import no.nav.soknad.innsending.model.BodyStatusResponseDto
@@ -64,12 +62,6 @@ class SubmissionConcurrencyTest : ApplicationTest() {
 	@MockkBean
 	lateinit var pdl: PdlAPI
 
-	@MockkBean
-	lateinit var soknadsmottaker: MottakerAPITest
-
-	@MockkBean
-	lateinit var notifications: SendTilPublisherTest
-
 	@LocalServerPort
 	var serverPort: Int = 0
 
@@ -84,12 +76,11 @@ class SubmissionConcurrencyTest : ApplicationTest() {
 
 	@BeforeEach
 	fun setup() {
-		clearMocks(pdl, soknadsmottaker, notifications)
+		clearMocks(pdl, notificationPublisher)
 		every { pdl.hentPersonIdents(any()) } answers { listOf(IdentDto(firstArg(), "FOLKEREGISTERIDENT", false)) }
 		every { pdl.hentPersonData(any()) } returns null
-		every { soknadsmottaker.sendInnSoknad(any(), any(), any(), any(), any()) } returns Unit
-		every { notifications.avsluttBrukernotifikasjon(any()) } returns Unit
-		every { notifications.opprettBrukernotifikasjon(any()) } returns Unit
+		every { notificationPublisher.avsluttBrukernotifikasjon(any()) } returns Unit
+		every { notificationPublisher.opprettBrukernotifikasjon(any()) } returns Unit
 		client = webTestClient.mutate()
 			.baseUrl("http://localhost:$serverPort")
 			.responseTimeout(Duration.ofSeconds(40))
@@ -294,7 +285,7 @@ class SubmissionConcurrencyTest : ApplicationTest() {
 	private fun assertNotificationClosed(submissionId: String) {
 		// Concurrent requests can both request closure; this change does not deduplicate notifications.
 		verify(timeout = WAIT_SECONDS * 1000, atLeast = 1) {
-			notifications.avsluttBrukernotifikasjon(match { it.innsendingId == submissionId })
+			notificationPublisher.avsluttBrukernotifikasjon(match { it.innsendingId == submissionId })
 		}
 	}
 

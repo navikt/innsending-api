@@ -1,16 +1,11 @@
 package no.nav.soknad.innsending.rest.sendinn
 
-import com.ninjasquad.springmockk.MockkBean
-import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
-import io.mockk.justRun
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
-import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.AvsenderDto
 import no.nav.soknad.innsending.model.BrukerDto
@@ -50,16 +45,13 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.awaitility.Awaitility.await
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
-import org.springframework.context.annotation.Import
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.test.assertNotEquals
 
-@Import(ApplicationTestRepository::class)
 class SoknadRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var storedApplications: ApplicationTestRepository
@@ -72,12 +64,6 @@ class SoknadRestApiTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var soknadService: SoknadService
-
-	@MockkSpyBean
-	lateinit var notificationPublisher: PublisherInterface
-
-	@MockkBean
-	private lateinit var soknadsmottakerAPI: MottakerAPITest
 
 	@LocalServerPort
 	var serverPort: Int = 0
@@ -93,8 +79,6 @@ class SoknadRestApiTest : ApplicationTest() {
 	fun setup() {
 		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
-		// Submissions in this class archive in the background. Without a stub the strict mock throws there.
-		justRun { soknadsmottakerAPI.sendInnSoknad(any(), any(), any(), any(), any()) }
 	}
 
 	companion object {
@@ -217,7 +201,7 @@ class SoknadRestApiTest : ApplicationTest() {
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
 		verify(timeout = 1000, exactly = 1) {
-			soknadsmottakerAPI.sendInnSoknad(
+			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
 				capture(slotAvsender),
@@ -247,7 +231,6 @@ class SoknadRestApiTest : ApplicationTest() {
 		// REST cannot assign a historical owner distinct from the user or SQL NULL.
 		val owner = if (ownerPresent) ApplicationOwner.person("12345678902") else null
 		storedApplications.setOwner(innsendingsId, owner)
-		justRun { soknadsmottakerAPI.sendInnSoknad(match { it.innsendingsId == innsendingsId }, any(), any(), any(), any()) }
 
 		val innsendingskvittering = api.sendInnSoknad(innsendingsId, EnvQualifier.preprodAnsatt)
 			.assertSuccess().body
@@ -306,7 +289,7 @@ class SoknadRestApiTest : ApplicationTest() {
 
 		val submittedAttachments = slot<List<VedleggDto>>()
 		verify(timeout = 5000, exactly = 1) {
-			soknadsmottakerAPI.sendInnSoknad(
+			soknadsmottaker.sendInnSoknad(
 				match { it.innsendingsId == innsendingsId && it.brukerId == TokenGenerator.subject },
 				capture(submittedAttachments),
 				eq(AvsenderDto(id = TokenGenerator.subject, idType = AvsenderDto.IdType.FNR)),
@@ -325,7 +308,7 @@ class SoknadRestApiTest : ApplicationTest() {
 			}
 		}
 		val ids = setOf(innsendingsId, successorId)
-		verify(exactly = 1) { soknadsmottakerAPI.sendInnSoknad(match { it.innsendingsId in ids }, any(), any(), any(), any()) }
+		verify(exactly = 1) { soknadsmottaker.sendInnSoknad(match { it.innsendingsId in ids }, any(), any(), any(), any()) }
 		verify(exactly = 2) { notificationPublisher.opprettBrukernotifikasjon(match { it.soknadRef.innsendingId in ids }) }
 		verify(exactly = 1) { notificationPublisher.avsluttBrukernotifikasjon(match { it.innsendingId in ids }) }
 		val activeGroup = api.getExistingSoknader(createSoknadRequest.skjemanr).assertHttpStatus(HttpStatus.OK).body

@@ -6,8 +6,6 @@ import io.mockk.slot
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
-import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
@@ -15,7 +13,6 @@ import no.nav.soknad.innsending.service.DocumentService
 import no.nav.soknad.innsending.service.config.ConfigDefinition
 import no.nav.soknad.innsending.service.config.ConfigService
 import no.nav.soknad.innsending.service.fillager.FileStorageNamespace
-import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.ApplicationTestRepository
 import no.nav.soknad.innsending.utils.TokenGenerator
@@ -27,31 +24,20 @@ import org.junit.jupiter.api.assertNull
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
-import org.springframework.context.annotation.Import
 import java.time.Duration
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-@Import(ApplicationTestRepository::class)
 class NologinApplicationRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var storedApplications: ApplicationTestRepository
-
-	@MockkSpyBean
-	lateinit var notifications: PublisherInterface
 
 	@Autowired
 	lateinit var configService: ConfigService
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
-
-	@MockkSpyBean
-	lateinit var metrics: InnsenderMetrics
-
-	@MockkSpyBean
-	lateinit var soknadsmottaker: MottakerAPITest
 
 	@MockkSpyBean
 	lateinit var documentService: DocumentService
@@ -375,7 +361,7 @@ class NologinApplicationRestApiTest : ApplicationTest() {
 			assertEquals(grantUserDigitalAccess, stored.grantUserDigitalAccess)
 		}
 		verify(exactly = 0) {
-			notifications.opprettBrukernotifikasjon(match { it.soknadRef.innsendingId == applicationId })
+			notificationPublisher.opprettBrukernotifikasjon(match { it.soknadRef.innsendingId == applicationId })
 		}
 	}
 

@@ -7,7 +7,6 @@ import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.consumerapis.pdl.PdlAPI
 import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
-import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
@@ -51,9 +50,6 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 	private lateinit var leaderSelectionUtility: LeaderSelectionUtility
 
 	@MockkBean
-	private lateinit var soknadsmottakerAPI: MottakerAPITest
-
-	@MockkBean
 	private lateinit var pdlInterface: PdlAPI
 
 	@MockkBean
@@ -83,7 +79,6 @@ class SlettArkiverteSoknaderTest : ApplicationTest() {
 	@Test
 	fun testSlettingAvInnsendteSoknader() {
 		every { leaderSelectionUtility.isLeader() } returns true
-		every { soknadsmottakerAPI.sendInnSoknad(any(), any(), any(), any()) } returns Unit
 		every { pdlInterface.hentPersonIdents(any()) } returns listOf(IdentDto("123456789", "FOLKEREGISTERIDENT", false))
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("123456789", "Fornavn", null, "Etternavn")
 		every { subjectHandler.getClientId() } returns "application"

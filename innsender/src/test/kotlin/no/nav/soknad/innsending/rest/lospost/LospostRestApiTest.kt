@@ -1,10 +1,8 @@
 package no.nav.soknad.innsending.rest.lospost
 
-import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
@@ -22,12 +20,10 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.context.annotation.Import
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-@Import(ApplicationTestRepository::class)
 class LospostRestApiTest : ApplicationTest() {
 
 	@Autowired
@@ -35,9 +31,6 @@ class LospostRestApiTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var storedApplications: ApplicationTestRepository
-
-	@MockkSpyBean
-	lateinit var notificationPublisher: PublisherInterface
 
 	@LocalServerPort
 	var serverPort: Int = 0

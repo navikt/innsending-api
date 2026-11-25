@@ -11,7 +11,6 @@ import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
@@ -45,7 +44,6 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.core.io.ClassPathResource
-import org.springframework.context.annotation.Import
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
 import org.awaitility.Awaitility.await
@@ -55,7 +53,6 @@ import java.util.*
 import kotlin.test.*
 
 
-@Import(ApplicationTestRepository::class)
 class FyllutRestApiTest : ApplicationTest() {
 
 	@Autowired
@@ -63,9 +60,6 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	@MockkBean
 	lateinit var kodeverkService: KodeverkService
-
-	@MockkSpyBean
-	lateinit var notificationPublisher: PublisherInterface
 
 	@MockkSpyBean
 	lateinit var fileStorage: FileStorage

@@ -2,15 +2,11 @@ package no.nav.soknad.innsending.rest.ettersending
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.tomakehurst.wiremock.client.WireMock.*
-import com.ninjasquad.springmockk.MockkBean
-import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
-import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.model.SkjemaDto
 import no.nav.soknad.innsending.repository.FilRepository
 import no.nav.soknad.innsending.repository.SoknadRepository
@@ -32,14 +28,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
-@Import(ApplicationTestRepository::class)
 class SafEttersendingRestApiTest : ApplicationTest() {
 
 	@Autowired
@@ -47,12 +41,6 @@ class SafEttersendingRestApiTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var storedApplications: ApplicationTestRepository
-
-	@MockkSpyBean
-	lateinit var notificationPublisher: PublisherInterface
-
-	@MockkBean(relaxed = true)
-	lateinit var soknadsmottaker: MottakerAPITest
 
 	@Autowired
 	lateinit var repo: RepositoryUtils
@@ -78,7 +66,6 @@ class SafEttersendingRestApiTest : ApplicationTest() {
 		soknadRepository.deleteAll()
 		api = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearMocks(notificationPublisher)
-		clearMocks(soknadsmottaker)
 	}
 
 	@Test

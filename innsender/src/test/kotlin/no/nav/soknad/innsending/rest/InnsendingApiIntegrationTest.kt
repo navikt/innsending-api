@@ -7,9 +7,7 @@ import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
-import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.service.config.ConfigDefinition
@@ -43,9 +41,6 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 
 	@MockkSpyBean
 	private lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher
-
-	@MockkSpyBean
-	private lateinit var soknadsmottakerApi: MottakerAPITest
 
 	 @LocalServerPort
 	 var serverPort: Int = 0
@@ -143,7 +138,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
 		verify(timeout = 5000, exactly = 1) {
-			soknadsmottakerApi.sendInnSoknad(
+			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
 				capture(slotAvsender),
@@ -244,7 +239,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
 		verify(timeout = 5000, exactly = 1) {
-			soknadsmottakerApi.sendInnSoknad(
+			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
 				capture(slotAvsender),
@@ -300,7 +295,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
 		verify(timeout = 5000, exactly = 1) {
-			soknadsmottakerApi.sendInnSoknad(
+			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
 				capture(slotAvsender),
@@ -446,7 +441,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		val slotBruker = slot<BrukerDto?>()
 		val slotGrantUserDigitalAccess = slot<Boolean?>()
 		verify(timeout = 5000, exactly = 1) {
-			soknadsmottakerApi.sendInnSoknad(
+			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
 				capture(slotAvsender),
@@ -642,7 +637,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		val capturedAvsendere = mutableListOf<AvsenderDto>()
 		val capturedBrukere = mutableListOf<BrukerDto?>()
 		verify(timeout = 5000, exactly = 2) {
-			soknadsmottakerApi.sendInnSoknad(
+			soknadsmottaker.sendInnSoknad(
 				capture(capturedSoknader),
 				capture(capturedVedlegg),
 				capture(capturedAvsendere),
@@ -805,7 +800,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		val slotAvsender = slot<AvsenderDto>()
 		val slotBruker = slot<BrukerDto?>()
 		verify(timeout = 5000, exactly = 1) {
-			soknadsmottakerApi.sendInnSoknad(
+			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
 				capture(slotAvsender),
@@ -931,7 +926,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		val slotBruker = slot<BrukerDto?>()
 		val slotGrantUserDigitalAccess = slot<Boolean?>()
 		verify(timeout = 5000, exactly = 1) {
-			soknadsmottakerApi.sendInnSoknad(
+			soknadsmottaker.sendInnSoknad(
 				capture(slotSoknad),
 				capture(slotVedleggsliste),
 				capture(slotAvsender),

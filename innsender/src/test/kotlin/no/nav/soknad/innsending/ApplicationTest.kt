@@ -2,8 +2,12 @@ package no.nav.soknad.innsending
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.soknad.InnsendingApiApplication
+import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
+import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
+import no.nav.soknad.innsending.utils.ApplicationTestRepository
 import no.nav.soknad.innsending.utils.TestMockOAuth2Server
 import no.nav.soknad.innsending.utils.TestMockOAuth2ServerConfig
 import no.nav.soknad.innsending.utils.TestWireMockServer
@@ -34,11 +38,20 @@ import java.time.Duration
 	SpringExtension::class
 )
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@Import(TestWebTestClientConfig::class, TestMockOAuth2ServerConfig::class)
+@Import(TestWebTestClientConfig::class, TestMockOAuth2ServerConfig::class, ApplicationTestRepository::class)
 class ApplicationTest() {
 
 	@Autowired
 	lateinit var webTestClient: WebTestClient
+
+	// Spring reuses a test context only when the bean overrides and their field names are equal. Test classes therefore
+	// use these shared spies instead of declaring their own overrides of the same beans. Unstubbed spies call the real
+	// bean, and springmockk clears them after each test.
+	@MockkSpyBean
+	lateinit var notificationPublisher: PublisherInterface
+
+	@MockkSpyBean
+	lateinit var soknadsmottaker: MottakerAPITest
 
 	val restTestClient: no.nav.soknad.innsending.utils.RestTestClient
 		get() = no.nav.soknad.innsending.utils.RestTestClient(webTestClient)
