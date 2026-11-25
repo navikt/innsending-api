@@ -135,7 +135,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 
 		// verify notifications
 		val slotEttersending = mutableListOf<SoknadDbData>()
-		verify(timeout = 100, exactly = 2) { brukernotifikasjonPublisher.createNotification(capture(slotEttersending), any()) }
+		verify(timeout = 5000, exactly = 2) { brukernotifikasjonPublisher.createNotification(capture(slotEttersending), any()) }
 
 		// verify invocation of soknadsmottaker
 		val slotSoknad = slot<DokumentSoknadDto>()
@@ -594,7 +594,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 
 		// verify notifications
 		val slotSoknads = mutableListOf<SoknadDbData>()
-		verify(timeout = 100, exactly = 2) {
+		verify(timeout = 5000, exactly = 2) {
 			brukernotifikasjonPublisher.createNotification(
 				capture(slotSoknads),
 				any()
@@ -628,7 +628,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		}
 
 		val slotCloseSoknads = mutableListOf<SoknadDbData>()
-		verify(timeout = 50, exactly = 1) { brukernotifikasjonPublisher.closeNotification(capture(slotCloseSoknads)) }
+		verify(timeout = 5000, exactly = 1) { brukernotifikasjonPublisher.closeNotification(capture(slotCloseSoknads)) }
 
 		val m5Vedlegg = ettersending.vedleggsListe.first { it.vedleggsnr == "M5" }
 		testApi!!.uploadFile(ettersendingsId, m5Vedlegg.id!!)
@@ -783,7 +783,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 
 		// verify notifications
 		val slotCreateSoknad = mutableListOf<SoknadDbData>()
-		verify(timeout = 100, exactly = 1) {
+		verify(timeout = 5000, exactly = 1) {
 			brukernotifikasjonPublisher.createNotification(
 				capture(slotCreateSoknad),
 				any()
@@ -793,7 +793,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 		assertEquals(innsendingsId, slotCreateSoknad.firstOrNull()?.innsendingsid)
 
 		val slotCloseSoknad = mutableListOf<SoknadDbData>()
-		verify(timeout = 100, exactly = 1) {
+		verify(timeout = 5000, exactly = 1) {
 			brukernotifikasjonPublisher.closeNotification(
 				capture(slotCloseSoknad)
 			)

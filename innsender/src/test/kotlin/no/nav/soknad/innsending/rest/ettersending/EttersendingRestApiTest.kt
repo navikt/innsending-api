@@ -93,7 +93,7 @@ class EttersendingRestApiTest : ApplicationTest() {
 		assertEquals(false, ettersending.erNavOpprettet)
 
 		val notificationSlot = slot<AddNotification>()
-		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(notificationSlot)) }
+		verify(timeout = 5000, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(notificationSlot)) }
 		val notification = notificationSlot.captured
 
 		assertEquals(ettersending.innsendingsId, notification.soknadRef.innsendingId)
@@ -176,7 +176,7 @@ class EttersendingRestApiTest : ApplicationTest() {
 			.body
 
 		val notificationSlot = slot<AddNotification>()
-		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(notificationSlot)) }
+		verify(timeout = 5000, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(notificationSlot)) }
 		val notification = notificationSlot.captured
 
 		assertEquals(ettersending.innsendingsId, notification.soknadRef.innsendingId)

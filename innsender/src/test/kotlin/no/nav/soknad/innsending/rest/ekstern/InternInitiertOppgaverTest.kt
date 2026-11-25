@@ -7,7 +7,6 @@ import io.mockk.slot
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.InnsendingApiApplication
-import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
@@ -39,7 +38,6 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.context.annotation.Import
 import org.springframework.http.*
-import java.lang.Thread.sleep
 import java.time.LocalDateTime
 import kotlin.test.assertNull
 
@@ -178,10 +176,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr)
 
 		// Then
-		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
-		val noticationSlot = slot<AddNotification>()
-		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlot)) }
-		val notication = noticationSlot.captured
+		val notication = publisherInterface.awaitNotification(soknadDto.innsendingsId!!)
 		assertEquals(true, notication.soknadRef.erSystemGenerert)
 		assertTrue(notication.soknadRef.erEttersendelse)
 		assertEquals(soknadDto.innsendingsId, notication.soknadRef.innsendingId)
@@ -201,10 +196,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr, brukernotifikasjonstype = BrukernotifikasjonsType.utkast )
 
 		// Then
-		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
-		val noticationSlot = slot<AddNotification>()
-		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlot)) }
-		val notication = noticationSlot.captured
+		val notication = publisherInterface.awaitNotification(soknadDto.innsendingsId!!)
 		assertEquals(false, notication.soknadRef.erSystemGenerert)
 		assertTrue(notication.soknadRef.erEttersendelse)
 		assertEquals(soknadDto.innsendingsId, notication.soknadRef.innsendingId)

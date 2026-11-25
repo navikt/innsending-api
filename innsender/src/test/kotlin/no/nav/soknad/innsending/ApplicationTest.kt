@@ -7,6 +7,7 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.soknad.InnsendingApiApplication
 import no.nav.soknad.innsending.utils.TestMockOAuth2Server
 import no.nav.soknad.innsending.utils.TestMockOAuth2ServerConfig
+import org.awaitility.Awaitility
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,6 +20,7 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.reactive.server.WebTestClient
+import java.time.Duration
 
 
 @ActiveProfiles("test")
@@ -41,6 +43,12 @@ class ApplicationTest() {
 		get() = no.nav.soknad.innsending.utils.RestTestClient(webTestClient)
 
 	companion object {
+
+		init {
+			// Check at once and then every 10 ms, so bounded waits end shortly after the condition holds.
+			Awaitility.setDefaultPollDelay(Duration.ZERO)
+			Awaitility.setDefaultPollInterval(Duration.ofMillis(10))
+		}
 
 		@JvmField
 		@RegisterExtension

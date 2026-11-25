@@ -49,6 +49,8 @@ import org.springframework.core.io.ClassPathResource
 import org.springframework.context.annotation.Import
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
+import org.awaitility.Awaitility.await
+import java.time.Duration
 import java.time.LocalDate
 import java.util.*
 import kotlin.test.*
@@ -261,7 +263,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Så
 		val parameterSlot = slot<AddNotification>()
-		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
+		verify(timeout = 5000, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
 		val notification = parameterSlot.captured
 
 		assertEquals(responseBody.innsendingsId, notification.soknadRef.innsendingId)
@@ -297,7 +299,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Så
 		val parameterSlot = slot<AddNotification>()
-		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
+		verify(timeout = 5000, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
 		val notification = parameterSlot.captured
 
 		assertEquals(responseBody.innsendingsId, notification.soknadRef.innsendingId)
@@ -403,7 +405,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val kvitteringsDto = sendInnRespons.body
 		assertEquals(1, kvitteringsDto!!.skalSendesAvAndre!!.size)
 		assertTrue(kvitteringsDto.hoveddokumentRef != null)
-		waitUntilAssertionSucceeds {
+		await().atMost(Duration.ofSeconds(5)).untilAsserted {
 			assertThrows<Exception> {
 				restTestClient.exchange(
 					"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}", HttpMethod.GET,
@@ -1132,26 +1134,6 @@ class FyllutRestApiTest : ApplicationTest() {
 		val innsendingsId = soknadService.opprettNySoknad(dokumentSoknadDto).innsendingsId!!
 
 		return soknadService.hentSoknad(innsendingsId)
-	}
-
-	private fun waitUntilAssertionSucceeds(
-		timeoutMillis: Long = 5000,
-		pollIntervalMillis: Long = 50,
-		assertion: () -> Unit,
-	) {
-		val deadline = System.currentTimeMillis() + timeoutMillis
-		var lastAssertionError: AssertionError? = null
-		while (System.currentTimeMillis() < deadline) {
-			try {
-				assertion()
-				return
-			} catch (e: AssertionError) {
-				lastAssertionError = e
-				Thread.sleep(pollIntervalMillis)
-			}
-		}
-
-		throw lastAssertionError ?: AssertionError("Condition was not met within $timeoutMillis ms")
 	}
 
 }

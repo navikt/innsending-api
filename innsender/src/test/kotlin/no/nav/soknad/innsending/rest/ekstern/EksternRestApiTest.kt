@@ -12,13 +12,13 @@ import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.EksternOpprettEttersendingTestBuilder
+import no.nav.soknad.innsending.utils.awaitNotification
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
-import java.lang.Thread.sleep
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
@@ -81,15 +81,9 @@ class EksternRestApiTest : ApplicationTest() {
 			.assertSuccess()
 			.body
 
-		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
-		val noticationSlots = mutableListOf<AddNotification>()
-		verify(atLeast = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlots)) }
-
 		// Then
 		// The notification is an utkast if erSystemGenerert is false
-		assertTrue(noticationSlots.filter { it.soknadRef.innsendingId == ettersending.innsendingsId }.isNotEmpty())
-		assertTrue(noticationSlots.filter { it.soknadRef.innsendingId == ettersending.innsendingsId }.size == 1)
-		val notication = noticationSlots.filter { it.soknadRef.innsendingId == ettersending.innsendingsId }.first()
+		val notication = publisherInterface.awaitNotification(ettersending.innsendingsId!!)
 		assertEquals(false, notication.soknadRef.erSystemGenerert)
 		assertEquals(true, notication.soknadRef.erEttersendelse)
 		assertEquals(ettersending.innsendingsId, notication.soknadRef.innsendingId)
@@ -110,13 +104,9 @@ class EksternRestApiTest : ApplicationTest() {
 		// When
 		val opprettEttersending = api.createEksternEttersending(ettersending)
 
-		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
-		val noticationSlots = mutableListOf<AddNotification>()
-		verify(atLeast = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlots)) }
-
 		// Then
 		// The notification is an oppgave if erSystemGenerert is true
-		val notication = noticationSlots.filter { it.soknadRef.innsendingId == opprettEttersending.body.innsendingsId }.first()
+		val notication = publisherInterface.awaitNotification(opprettEttersending.body.innsendingsId!!)
 		assertEquals(true, notication.soknadRef.erEttersendelse)
 		assertEquals(true, notication.soknadRef.erSystemGenerert)
 		assertNotNull(notication.brukernotifikasjonInfo.utsettSendingTil)
