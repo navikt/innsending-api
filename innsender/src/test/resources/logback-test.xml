@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Keep debug="true". Without it, MockK failed to attach its agent in local runs ("Could not self-attach to current VM", "Agent JAR loaded but agent failed to initialize"). The cause is unknown. -->
 <configuration debug="true">
 	<appender name="STDOUT_JSON" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
-			<pattern>%d{HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{15}) - %msg %n</pattern>
+			<!-- Expected errors in tests log a lot of stack traces. 15 lines per exception and cause show where it happened. -->
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{15}) - %msg %n%ex{15}</pattern>
 		</encoder>
 	</appender>
 
@@ -11,6 +13,10 @@
 	<logger name="org.apache.fontbox.ttf.GlyphSubstitutionTable" level="off"/>
 	<logger name="org.apache.pdfbox.pdmodel.font.FileSystemFontProvider" level="off"/>
 	<logger name="org.apache.fontbox.cff.Type1CharString" level="off"/>
+
+	<!-- Each Spring context starts its own database. Only warnings from setup and migrations are of interest. -->
+	<logger name="com.opentable.db.postgres.embedded" level="WARN"/>
+	<logger name="org.flywaydb" level="WARN"/>
 
 	<root level="INFO">
 		<appender-ref ref="STDOUT_JSON"/>

@@ -58,7 +58,7 @@ class ApplicationTest() {
 				wireMockConfig()
 					//.port(5490)
 					.dynamicPort()
-					.notifier(ConsoleNotifier(true))
+					.notifier(ConsoleNotifier(false))
 					.withRootDirectory("src/test/resources")
 					.asynchronousResponseEnabled(false)
 			)
