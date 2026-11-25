@@ -1,15 +1,16 @@
 package no.nav.soknad.innsending
 
-import com.github.tomakehurst.wiremock.common.ConsoleNotifier
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
-import com.github.tomakehurst.wiremock.junit5.WireMockExtension
+import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.WireMock
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.soknad.InnsendingApiApplication
 import no.nav.soknad.innsending.utils.TestMockOAuth2Server
 import no.nav.soknad.innsending.utils.TestMockOAuth2ServerConfig
+import no.nav.soknad.innsending.utils.TestWireMockServer
 import org.awaitility.Awaitility
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
-import org.junit.jupiter.api.extension.RegisterExtension
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
@@ -51,23 +52,12 @@ class ApplicationTest() {
 		}
 
 		@JvmField
-		@RegisterExtension
-		val wireMock: WireMockExtension = WireMockExtension.newInstance()
-			.configureStaticDsl(true)
-			.options(
-				wireMockConfig()
-					//.port(5490)
-					.dynamicPort()
-					.notifier(ConsoleNotifier(false))
-					.withRootDirectory("src/test/resources")
-					.asynchronousResponseEnabled(false)
-			)
-			.build()
+		val wireMock: WireMockServer = TestWireMockServer.server
 
 		@JvmStatic
 		@DynamicPropertySource
 		fun properties(reg: DynamicPropertyRegistry) {
-			reg.add("wiremock.server.port") { wireMock.port.toString() }
+			reg.add("wiremock.server.port") { wireMock.port().toString() }
 			reg.add("mock-oauth2-server.port") { TestMockOAuth2Server.port.toString() }
 			reg.add("antivirus.path") { "/antivirus/scan" }
 			reg.add("arena.path") { "/arena-api/api/v1/tilleggsstoenad/dagligreise.*" }
@@ -88,5 +78,19 @@ class ApplicationTest() {
 
 	@MockitoBean
 	lateinit var prometheusRegistry: PrometheusRegistry
+
+	@BeforeEach
+	fun prepareWireMock() {
+		// The static WireMock DSL stores its target per thread, so point it at the shared server before each test.
+		WireMock.configureFor(WireMock(wireMock))
+		// Calls that arrive between tests, such as late asynchronous calls, must not count in this test's verifications.
+		wireMock.resetRequests()
+	}
+
+	@AfterEach
+	fun resetWireMock() {
+		// Removes stubs added by the test, the request journal and scenario states, and reloads the stubs from files.
+		wireMock.resetToDefaultMappings()
+	}
 
 }
