@@ -1,26 +1,23 @@
 package no.nav.soknad.innsending.security
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.nimbusds.jwt.JWTClaimsSet
-import io.mockk.every
-import io.mockk.mockk
-import no.nav.security.token.support.core.context.TokenValidationContext
-import no.nav.security.token.support.core.context.TokenValidationContextHolder
-import no.nav.security.token.support.core.jwt.JwtTokenClaims
-import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
-import no.nav.soknad.innsending.util.Constants.AZURE
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.NullAndEmptySource
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.authentication.TestingAuthenticationToken
+import org.springframework.security.core.context.SecurityContextHolder
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class TaskOwnerAuthorizationTest {
-	private val contextHolder = mockk<TokenValidationContextHolder>()
-	private val context = mockk<TokenValidationContext>()
 	private val preAuthorizedApps = """[{"clientId":"task-client-id","name":"dev-gcp:team-soknad:task-client"},{"clientId":"other-client-id","name":"dev-gcp:team-soknad:other-client"}]"""
 	private val allowedApplications = "dev-gcp:team-soknad:task-client"
+
+	@AfterEach
+	fun cleanUp() = SecurityContextHolder.clearContext()
 
 	@Test
 	fun `should return azp for an authorized application token`() {
@@ -33,13 +30,13 @@ class TaskOwnerAuthorizationTest {
 	@ValueSource(strings = ["unknown-client-id", "other-client-id", " "])
 	fun `should deny missing unknown or non-task azp`(azp: String?) {
 		withClaims(azp = azp)
-		assertFailsWith<JwtTokenUnauthorizedException> { authorization().requireAuthorizedApplication() }
+		assertFailsWith<AccessDeniedException> { authorization().requireAuthorizedApplication() }
 	}
 
 	@Test
 	fun `should not use client_id as a fallback for azp`() {
 		withClaims(azp = null, additionalClaims = mapOf("client_id" to "task-client-id"))
-		assertFailsWith<JwtTokenUnauthorizedException> { authorization().requireAuthorizedApplication() }
+		assertFailsWith<AccessDeniedException> { authorization().requireAuthorizedApplication() }
 	}
 
 	@ParameterizedTest
@@ -47,28 +44,38 @@ class TaskOwnerAuthorizationTest {
 	@ValueSource(strings = ["user-object-id", " "])
 	fun `should deny tokens without matching nonblank sub and oid`(objectId: String?) {
 		withClaims(objectId = objectId)
-		assertFailsWith<JwtTokenUnauthorizedException> { authorization().requireAuthorizedApplication() }
+		assertFailsWith<AccessDeniedException> { authorization().requireAuthorizedApplication() }
 	}
 
 	@Test
 	fun `should deny matching blank sub and oid`() {
 		withClaims(subject = "", objectId = "")
-		assertFailsWith<JwtTokenUnauthorizedException> { authorization().requireAuthorizedApplication() }
+		assertFailsWith<AccessDeniedException> { authorization().requireAuthorizedApplication() }
 	}
 
 	@Test
 	fun `should deny non-string azp and oid claims`() {
 		withClaims(azp = listOf("task-client-id"))
-		assertFailsWith<JwtTokenUnauthorizedException> { authorization().requireAuthorizedApplication() }
+		assertFailsWith<AccessDeniedException> { authorization().requireAuthorizedApplication() }
 		withClaims(objectId = listOf("service-principal"))
-		assertFailsWith<JwtTokenUnauthorizedException> { authorization().requireAuthorizedApplication() }
+		assertFailsWith<AccessDeniedException> { authorization().requireAuthorizedApplication() }
 	}
 
 	@Test
 	fun `should not use TokenX when no Azure token is available`() {
-		every { contextHolder.getTokenValidationContext() } returns context
-		every { context.hasTokenFor(AZURE) } returns false
-		assertFailsWith<JwtTokenUnauthorizedException> { authorization().requireAuthorizedApplication() }
+		SecurityContextHolder.getContext().authentication = TokenAuthentication(
+			TokenIssuer.TOKENX,
+			mapOf("sub" to "service-principal", "oid" to "service-principal", "azp" to "task-client-id"),
+			"token",
+		)
+		assertFailsWith<AccessDeniedException> { authorization().requireAuthorizedApplication() }
+	}
+
+	@Test
+	fun `should deny missing or non-token authentication`() {
+		assertFailsWith<AccessDeniedException> { authorization().requireAuthorizedApplication() }
+		SecurityContextHolder.getContext().authentication = TestingAuthenticationToken("principal", null)
+		assertFailsWith<AccessDeniedException> { authorization().requireAuthorizedApplication() }
 	}
 
 	@ParameterizedTest
@@ -83,7 +90,7 @@ class TaskOwnerAuthorizationTest {
 	])
 	fun `should deny all callers for empty or malformed preauthorization configuration`(configuration: String) {
 		withClaims()
-		assertFailsWith<JwtTokenUnauthorizedException> {
+		assertFailsWith<AccessDeniedException> {
 			authorization(preAuthorizedApps = configuration).requireAuthorizedApplication()
 		}
 	}
@@ -92,7 +99,7 @@ class TaskOwnerAuthorizationTest {
 	fun `should deny all callers for ambiguous client identities`() {
 		withClaims()
 		val duplicate = """[{"clientId":"task-client-id","name":"dev-gcp:team-soknad:task-client"},{"clientId":"task-client-id","name":"dev-gcp:team-soknad:other-client"}]"""
-		assertFailsWith<JwtTokenUnauthorizedException> {
+		assertFailsWith<AccessDeniedException> {
 			authorization(preAuthorizedApps = duplicate).requireAuthorizedApplication()
 		}
 	}
@@ -101,7 +108,7 @@ class TaskOwnerAuthorizationTest {
 	fun `should deny malformed entries even alongside a valid authorized application`() {
 		withClaims()
 		val malformed = preAuthorizedApps.dropLast(1) + ",{}]"
-		assertFailsWith<JwtTokenUnauthorizedException> {
+		assertFailsWith<AccessDeniedException> {
 			authorization(preAuthorizedApps = malformed).requireAuthorizedApplication()
 		}
 	}
@@ -109,7 +116,7 @@ class TaskOwnerAuthorizationTest {
 	@Test
 	fun `should deny trailing JSON after valid preauthorization configuration`() {
 		withClaims()
-		assertFailsWith<JwtTokenUnauthorizedException> {
+		assertFailsWith<AccessDeniedException> {
 			authorization(preAuthorizedApps = "$preAuthorizedApps []").requireAuthorizedApplication()
 		}
 	}
@@ -118,7 +125,7 @@ class TaskOwnerAuthorizationTest {
 	@ValueSource(strings = ["", " ", "task-client", "*", "dev-gcp:team-soknad:task-client,", "dev-gcp:team-soknad:task-client,*", "dev-gcp.team-soknad.task-client"])
 	fun `should deny all callers for empty or malformed task allowlist`(configuration: String) {
 		withClaims()
-		assertFailsWith<JwtTokenUnauthorizedException> {
+		assertFailsWith<AccessDeniedException> {
 			authorization(allowedApplications = configuration).requireAuthorizedApplication()
 		}
 	}
@@ -126,10 +133,10 @@ class TaskOwnerAuthorizationTest {
 	@Test
 	fun `should match the exact configured application including cluster and namespace`() {
 		withClaims()
-		assertFailsWith<JwtTokenUnauthorizedException> {
+		assertFailsWith<AccessDeniedException> {
 			authorization(allowedApplications = "prod-gcp:team-soknad:task-client").requireAuthorizedApplication()
 		}
-		assertFailsWith<JwtTokenUnauthorizedException> {
+		assertFailsWith<AccessDeniedException> {
 			authorization(allowedApplications = "dev-gcp:other-team:task-client").requireAuthorizedApplication()
 		}
 	}
@@ -137,7 +144,7 @@ class TaskOwnerAuthorizationTest {
 	private fun authorization(
 		preAuthorizedApps: String = this.preAuthorizedApps,
 		allowedApplications: String = this.allowedApplications,
-	) = TaskOwnerAuthorization(contextHolder, jacksonObjectMapper(), preAuthorizedApps, allowedApplications)
+	) = TaskOwnerAuthorization(jacksonObjectMapper(), preAuthorizedApps, allowedApplications)
 
 	private fun withClaims(
 		azp: Any? = "task-client-id",
@@ -145,13 +152,12 @@ class TaskOwnerAuthorizationTest {
 		objectId: Any? = subject,
 		additionalClaims: Map<String, Any> = emptyMap(),
 	) {
-		val claims = JWTClaimsSet.Builder().subject(subject).apply {
-			if (azp != null) claim("azp", azp)
-			if (objectId != null) claim("oid", objectId)
-			additionalClaims.forEach { (key, value) -> claim(key, value) }
-		}.build()
-		every { contextHolder.getTokenValidationContext() } returns context
-		every { context.hasTokenFor(AZURE) } returns true
-		every { context.getClaims(AZURE) } returns JwtTokenClaims(claims)
+		val claims = buildMap<String, Any?> {
+			put("sub", subject)
+			if (azp != null) put("azp", azp)
+			if (objectId != null) put("oid", objectId)
+			putAll(additionalClaims)
+		}
+		SecurityContextHolder.getContext().authentication = TokenAuthentication(TokenIssuer.AZURE, claims, "token")
 	}
 }

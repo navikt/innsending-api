@@ -1,18 +1,17 @@
 package no.nav.soknad.innsending.rest.ekstern
 
-import no.nav.security.token.support.core.api.ProtectedWithClaims
 import no.nav.soknad.innsending.api.EksternoppgaveApi
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
+import no.nav.soknad.innsending.security.RequiresAzureTask
 import no.nav.soknad.innsending.security.TaskOwnerAuthorization
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.EttersendingService
 import no.nav.soknad.innsending.service.NotificationService
 import no.nav.soknad.innsending.service.SoknadService
-import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.logging.CombinedLogger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -20,9 +19,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@ProtectedWithClaims(
-	issuer = Constants.AZURE,
-)
+@RequiresAzureTask
 class InternInitiertOppgaver(
 	private val taskOwnerAuthorization: TaskOwnerAuthorization,
 	private val ettersendingService: EttersendingService,

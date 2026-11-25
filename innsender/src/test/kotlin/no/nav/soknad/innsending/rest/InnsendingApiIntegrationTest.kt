@@ -427,14 +427,13 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 			OpplastingsStatusDto.SendSenere,
 			submissionResponse.attachments?.first { it.attachmentCode == "M5" }?.uploadStatus
 		)
-		assertNotNull(submissionResponse.ettersendingsId)
+		val ettersendingsId = submissionResponse.ettersendingsId?.toString()
+		assertNotNull(ettersendingsId)
 
 		// verify notifications
-		val ettersendingsId = checkNotNull(submissionResponse.ettersendingsId).toString()
-		listOf(innsendingsId, ettersendingsId).forEach { expectedId ->
-			verify(timeout = 5000, exactly = 1) {
-				brukernotifikasjonPublisher.createNotification(match { it.innsendingsid == expectedId }, any())
-			}
+		verify(timeout = 5000, exactly = 1) {
+			brukernotifikasjonPublisher.createNotification(match { it.innsendingsid == innsendingsId }, any())
+			brukernotifikasjonPublisher.createNotification(match { it.innsendingsid == ettersendingsId }, any())
 		}
 		verify(timeout = 5000, exactly = 1) { brukernotifikasjonPublisher.closeNotification(match { it.innsendingsid == innsendingsId }) }
 

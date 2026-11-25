@@ -373,14 +373,34 @@ class EttersendingService(
 		}
 	}
 
-	fun getInnsendteSoknader(skjemanr: String, brukerId: String, erNavInitiert: Boolean = false): List<DokumentSoknadDto> {
-		val idents = tilgangskontroll.hentPersonIdents(brukerId)
-		val submitted = if (erNavInitiert) soknadService.findSubmittedApplicationsForTask(idents)
-		else soknadService.hentInnsendteSoknader(idents)
-		return submitted
-			.filter { it.skjemanr == skjemanr }
-			.filter { it.innsendtDato!!.isAfter(OffsetDateTime.now().minusDays(Constants.MAX_AKTIVE_DAGER)) }
-			.sortedByDescending { it.innsendtDato }
+	private fun kanKoblesTilBruker(
+		soknad: SoknadDbData,
+		kandidater: Map<String, SoknadDbData>,
+		personIdenter: List<String>,
+		allowLegacyAffectedUserFallback: Boolean,
+	): Boolean {
+		if (soknad.visningstype.isUnauthenticatedSubmission() || !gjelderBruker(soknad, personIdenter, allowLegacyAffectedUserFallback)) return false
+		val koblingsId = soknad.ettersendingsid ?: return true
+		if (koblingsId == soknad.innsendingsid) return true
+		val original = kandidater[koblingsId] ?: return false
+		return !original.visningstype.isUnauthenticatedSubmission() &&
+			gjelderBruker(original, personIdenter, allowLegacyAffectedUserFallback) &&
+			(original.ettersendingsid == null || original.ettersendingsid == original.innsendingsid)
+	}
+
+	private fun gjelderBruker(
+		soknad: SoknadDbData,
+		personIdenter: List<String>,
+		allowLegacyAffectedUserFallback: Boolean,
+	): Boolean {
+		val berortPerson = soknad.affecteduser ?: if (allowLegacyAffectedUserFallback) {
+			soknad.brukerid
+				?.takeIf { soknad.brukertype == null || soknad.brukertype == BrukerDto.IdType.FNR }
+				?.let { BrukerDto(id = it, idType = BrukerDto.IdType.FNR) }
+		} else {
+			null
+		}
+		return berortPerson?.idType == BrukerDto.IdType.FNR && berortPerson.id in personIdenter
 	}
 
 	@Transactional(timeout = TRANSACTION_TIMEOUT)
@@ -428,9 +448,26 @@ class EttersendingService(
 		ettersending: OpprettEttersending,
 		erNavInitiert: Boolean = false
 	): DokumentSoknadDto {
-		val innsendteSoknader = getInnsendteSoknader(ettersending.skjemanr, brukerId, erNavInitiert)
-			.filterNot { it.visningsType.isUnauthenticatedSubmission() }
+		val personIdenter = tilgangskontroll.hentPersonIdents(brukerId)
+		val innsendtEtter = LocalDateTime.now().minusDays(Constants.MAX_AKTIVE_DAGER)
+		val submitted = if (erNavInitiert) {
+			repo.findTaskApplicationsByAffectedPersonAndStatus(personIdenter, SoknadsStatus.Innsendt)
+		} else {
+			repo.findApplicationsByOwnerAndStatus(personIdenter, SoknadsStatus.Innsendt)
+		}
+		val kandidater = submitted
+			.filter { it.skjemanr == ettersending.skjemanr && it.innsendtdato?.isAfter(innsendtEtter) == true }
+			.sortedByDescending { it.innsendtdato }
+			.associateBy { it.innsendingsid }
+		val allowLegacyAffectedUserFallback = !erNavInitiert
+		val innsendteSoknader = kandidater.values.filter {
+			kanKoblesTilBruker(it, kandidater, personIdenter, allowLegacyAffectedUserFallback)
+		}.take(1).map { vedleggService.hentAlleVedlegg(it) }
+		val avvisteReferanser = kandidater.values.filterNot {
+			gjelderBruker(it, personIdenter, allowLegacyAffectedUserFallback)
+		}.flatMap { listOfNotNull(it.innsendingsid, it.ettersendingsid) }.toSet()
 		val arkiverteSoknader = getArkiverteEttersendinger(ettersending.skjemanr, brukerId)
+			.filter { it.innsendingsId !in avvisteReferanser }
 			.filterNot { archived ->
 				archived.innsendingsId?.let { repo.finnSoknadDb(it) }?.visningstype.isUnauthenticatedSubmission()
 			}

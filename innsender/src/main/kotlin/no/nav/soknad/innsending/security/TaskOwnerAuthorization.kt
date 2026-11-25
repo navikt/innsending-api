@@ -2,16 +2,15 @@ package no.nav.soknad.innsending.security
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.nav.security.token.support.core.context.TokenValidationContextHolder
-import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
-import no.nav.soknad.innsending.util.Constants.AZURE
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.core.Authentication
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 
 @Component
 class TaskOwnerAuthorization(
-	private val contextHolder: TokenValidationContextHolder,
 	objectMapper: ObjectMapper,
 	@Value("\${task-authorization.pre-authorized-apps:[]}") preAuthorizedApps: String,
 	@Value("\${task-authorization.allowed-applications:}") allowedApplications: String,
@@ -44,18 +43,23 @@ class TaskOwnerAuthorization(
 	}
 
 	// Called only after the controller's Azure issuer, signature and audience validation.
-	fun requireAuthorizedApplication(): String {
-		val context = contextHolder.getTokenValidationContext()
-		if (!context.hasTokenFor(AZURE)) deny()
-		val claims = context.getClaims(AZURE)
-		val subject = claims.get("sub") as? String
-		val objectId = claims.get("oid") as? String
-		val clientId = claims.get("azp") as? String
-		if (subject.isNullOrBlank() || subject != objectId || clientId !in authorizedClientIds) deny()
-		return clientId ?: deny()
+	fun isAuthorizedApplication(authentication: Authentication?): Boolean =
+		authorizedClientId(authentication) != null
+
+	fun requireAuthorizedApplication(): String =
+		authorizedClientId(SecurityContextHolder.getContext().authentication) ?: deny()
+
+	private fun authorizedClientId(authentication: Authentication?): String? {
+		val tokenAuth = authentication as? TokenAuthentication ?: return null
+		val azure = tokenAuth.token(TokenIssuer.AZURE) ?: return null
+		val subject = azure.stringClaim("sub")
+		val objectId = azure.stringClaim("oid")
+		val clientId = azure.stringClaim("azp")
+		if (subject.isNullOrBlank() || subject != objectId || clientId !in authorizedClientIds) return null
+		return clientId
 	}
 
-	private fun deny(): Nothing = throw JwtTokenUnauthorizedException("Caller is not authorized for the task API")
+	private fun deny(): Nothing = throw AccessDeniedException("Caller is not authorized for the task API")
 
 	companion object {
 		private val APPLICATION_NAME = Regex("[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*")

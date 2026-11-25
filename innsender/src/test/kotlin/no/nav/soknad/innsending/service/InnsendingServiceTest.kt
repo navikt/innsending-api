@@ -492,10 +492,10 @@ class InnsendingServiceTest : ApplicationTest() {
 
 	@Test
 	fun vedleggBrukerLabelIkkeTittelVedOversettingTilArkivering() {
-		val hovedDokument = VedleggDtoTestBuilder(tittel = "Hoveddokument tittel", label = "Hoveddokument label")
+		val hovedDokument = VedleggDtoTestBuilder(vedleggsnr = "NAV 10-07.01", tittel = "Hoveddokument tittel", label = "Hoveddokument label")
 			.asHovedDokument()
 			.build()
-		val n6Vedlegg = VedleggDtoTestBuilder(tittel = "N6 tittel", label = "Annen dokumentasjon")
+		val n6Vedlegg = VedleggDtoTestBuilder(vedleggsnr = "N6", tittel = "N6 tittel", label = "Annen dokumentasjon")
 			.asDefaultVedlegg()
 			.build()
 
@@ -508,10 +508,10 @@ class InnsendingServiceTest : ApplicationTest() {
 
 	@Test
 	fun vedleggFallerTilbakePaaTittelNarLabelIkkeErSatt() {
-		val hovedDokument = VedleggDtoTestBuilder(tittel = "Hoveddokument tittel", label = "Hoveddokument label")
+		val hovedDokument = VedleggDtoTestBuilder(vedleggsnr = "NAV 10-07.01", tittel = "Hoveddokument tittel", label = "Hoveddokument label")
 			.asHovedDokument()
 			.build()
-		val vedleggUtenLabel = VedleggDtoTestBuilder(tittel = "Vedlegg tittel", label = "")
+		val vedleggUtenLabel = VedleggDtoTestBuilder(vedleggsnr = "N6", tittel = "Vedlegg tittel", label = "")
 			.asDefaultVedlegg()
 			.build()
 
