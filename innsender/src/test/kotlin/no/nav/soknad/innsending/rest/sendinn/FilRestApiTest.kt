@@ -10,6 +10,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
+import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
@@ -23,7 +24,6 @@ import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.officeFileTypes
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -178,22 +178,20 @@ class FilRestApiTest : ApplicationTest() {
 
 	@Test
 	fun verifiserAvvisningAvUlovligeFiltyper() {
-		val skjemanr = defaultSkjemanr
-		val spraak = "nb_NO"
-		val vedlegg = listOf("N6", "W2")
-		val bildeNavnPrefix = "bilde"
-		val filPath = "/__files/$bildeNavnPrefix"
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-
-		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
-
+		val soknadDto = opprettEnSoknad(defaultSkjemanr, "nb_NO", listOf("N6", "W2"))
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
 
-		assertThrows<Exception> {
-			lastOppFil(token, soknadDto.innsendingsId!!, vedleggN6.id!!, filPath+ ".heic")
-		}
+		api.uploadFile(
+			soknadDto.innsendingsId!!,
+			vedleggN6.id!!,
+			Hjelpemetoder.getBytesFromFile("/__files/bilde.heic"),
+			fileName = "bilde.heic",
+		)
+			.assertHttpStatus(HttpStatus.BAD_REQUEST)
+			.assertErrorCode(ErrorCode.NOT_SUPPORTED_FILE_FORMAT)
 
+		assertVedleggIkkeValgt(soknadDto.innsendingsId!!, vedleggN6.id!!)
 	}
 
 	private fun testOpplastingAvBildeFormater() {
@@ -316,98 +314,69 @@ class FilRestApiTest : ApplicationTest() {
 
 	@Test
 	fun sjekkAtOpplastingAvForStorFilGirFeilTest() {
-		val skjemanr = defaultSkjemanr
-		val spraak = "nb_NO"
-		val vedlegg = listOf("N6", "W2")
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-
-		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
-
+		val soknadDto = opprettEnSoknad(defaultSkjemanr, "nb_NO", listOf("N6", "W2"))
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
+		val fil = Hjelpemetoder.getBytesFromFile("/pdfs/acroform-fields-tom-array.pdf")
 
-		val multipart = LinkedMultiValueMap<Any, Any>()
-		multipart.add("file", ClassPathResource("/pdfs/acroform-fields-tom-array.pdf"))
+		// The limit applies to the stored, converted size. Upload the same file until the attachment exceeds 15 MB.
+		val responses = generateSequence {
+			api.uploadFile(soknadDto.innsendingsId!!, vedleggN6.id!!, fil, fileName = "acroform-fields-tom-array.pdf")
+		}.take(20).takeWhileInclusive { it.statusCode.is2xxSuccessful }.toList()
 
-		val postFilRequestN6 = HttpEntity(multipart, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
-
-		assertThrows(Exception::class.java) {
-			for (i in 1..50) {
-				val postFilResponseN6 = restTestClient.exchange(
-					"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil",
-					HttpMethod.POST,
-					postFilRequestN6,
-					FilDto::class.java
-				)
-
-				assertEquals(HttpStatus.CREATED, postFilResponseN6.statusCode)
-				assertNotNull(postFilResponseN6.body)
-				assertEquals(Mimetype.applicationSlashPdf, postFilResponseN6.body!!.mimetype)
-			}
-		}
-
+		responses.dropLast(1).forEach { it.assertHttpStatus(HttpStatus.CREATED) }
+		assertFalse(responses.last().statusCode.is2xxSuccessful, "Expected the upload to be rejected within 20 attempts")
+		responses.last()
+			.assertHttpStatus(HttpStatus.BAD_REQUEST)
+			.assertErrorCode(ErrorCode.VEDLEGG_FILE_SIZE_SUM_TOO_LARGE)
 	}
 
 	@Test
 	fun sjekkAtOpplastingAvUlovligFilformatGirFeilTest() {
-		val skjemanr = defaultSkjemanr
-		val spraak = "nb_NO"
-		val vedlegg = listOf("N6", "W2")
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-
-		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
-
+		val soknadDto = opprettEnSoknad(defaultSkjemanr, "nb_NO", listOf("N6", "W2"))
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
 
-		val multipart = LinkedMultiValueMap<Any, Any>()
-		multipart.add("file", ClassPathResource("/ikke.jpg"))
+		// ikke.jpg is a JPEG 2000 file with a .jpg extension
+		api.uploadFile(
+			soknadDto.innsendingsId!!,
+			vedleggN6.id!!,
+			Hjelpemetoder.getBytesFromFile("/ikke.jpg"),
+			fileName = "ikke.jpg",
+		)
+			.assertHttpStatus(HttpStatus.BAD_REQUEST)
+			.assertErrorCode(ErrorCode.NOT_SUPPORTED_FILE_FORMAT)
 
-		val postFilRequestN6 = HttpEntity(multipart, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
-
-		var ok = true
-		assertThrows(Exception::class.java) {
-			restTestClient.exchange(
-				"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil",
-				HttpMethod.POST,
-				postFilRequestN6,
-				FilDto::class.java
-			)
-			ok = false
-		}
-		assertTrue(ok)
+		assertVedleggIkkeValgt(soknadDto.innsendingsId!!, vedleggN6.id!!)
 	}
 
 	@Test
 	fun sjekkAtOpplastingAvKryptertFilGirFeilTest() {
-		val skjemanr = defaultSkjemanr
-		val spraak = "nb_NO"
-		val vedlegg = listOf("N6", "W2")
-		val token = TokenGenerator(mockOAuth2Server).lagTokenXToken()
-
-		val soknadDto = opprettEnSoknad(skjemanr, spraak, vedlegg)
-
+		val soknadDto = opprettEnSoknad(defaultSkjemanr, "nb_NO", listOf("N6", "W2"))
 		val vedleggN6 = soknadDto.vedleggsListe.first { it.vedleggsnr == "N6" }
 		assertEquals(OpplastingsStatusDto.IkkeValgt, vedleggN6.opplastingsStatus)
 
-		val multipart = LinkedMultiValueMap<Any, Any>()
-		multipart.add("file", ClassPathResource("/skjema-passordbeskyttet.pdf"))
+		api.uploadFile(
+			soknadDto.innsendingsId!!,
+			vedleggN6.id!!,
+			Hjelpemetoder.getBytesFromFile("/skjema-passordbeskyttet.pdf"),
+			fileName = "skjema-passordbeskyttet.pdf",
+		)
+			.assertHttpStatus(HttpStatus.BAD_REQUEST)
+			.assertErrorCode(ErrorCode.FILE_CANNOT_BE_READ)
 
-		val postFilRequestN6 = HttpEntity(multipart, Hjelpemetoder.createHeaders(token, MediaType.MULTIPART_FORM_DATA))
+		assertVedleggIkkeValgt(soknadDto.innsendingsId!!, vedleggN6.id!!)
+	}
 
-		assertThrows(Exception::class.java) {
-			for (i in 1..100) {
-				val postFilResponseN6 = restTestClient.exchange(
-					"http://localhost:${serverPort}/frontend/v1/soknad/${soknadDto.innsendingsId!!}/vedlegg/${vedleggN6.id}/fil",
-					HttpMethod.POST,
-					postFilRequestN6,
-					FilDto::class.java
-				)
+	private fun assertVedleggIkkeValgt(innsendingsId: String, vedleggsId: Long) {
+		val vedlegg = api.getSoknadSendinn(innsendingsId).assertSuccess().body.vedleggsListe.first { it.id == vedleggsId }
+		assertEquals(OpplastingsStatusDto.IkkeValgt, vedlegg.opplastingsStatus)
+	}
 
-				assertEquals(HttpStatus.CREATED, postFilResponseN6.statusCode)
-				assertNotNull(postFilResponseN6.body)
-				assertEquals(Mimetype.applicationSlashPdf, postFilResponseN6.body!!.mimetype)
-			}
+	private fun <T> Sequence<T>.takeWhileInclusive(predicate: (T) -> Boolean): Sequence<T> = sequence {
+		for (item in this@takeWhileInclusive) {
+			yield(item)
+			if (!predicate(item)) break
 		}
 	}
 

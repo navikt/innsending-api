@@ -93,6 +93,8 @@ class SoknadRestApiTest : ApplicationTest() {
 	fun setup() {
 		testApi = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearAllMocks()
+		// Submissions in this class archive in the background. Without a stub the strict mock throws there.
+		justRun { soknadsmottakerAPI.sendInnSoknad(any(), any(), any(), any(), any()) }
 	}
 
 	companion object {

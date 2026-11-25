@@ -1,34 +1,35 @@
 package no.nav.soknad.innsending.cleanup
 
 import io.mockk.every
-import io.mockk.mockk
+import io.mockk.spyk
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import no.nav.soknad.innsending.ApplicationTest
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
+import java.net.InetAddress
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
-class LeaderSelectionTest : ApplicationTest() {
+class LeaderSelectionTest {
 
 	@OptIn(ExperimentalSerializationApi::class)
-	val format = Json { explicitNulls = false; ignoreUnknownKeys = true }
+	private val format = Json { explicitNulls = false; ignoreUnknownKeys = true }
+
+	private fun electorResponse(leader: String) = format.encodeToString(LeaderElection(leader))
 
 	@Test
-	fun testLeaderSelection() {
-		val leaderElection = LeaderElection("localhost", LocalDateTime.now().toString())
-		val jsonString = format.encodeToString(leaderElection)
-		System.setProperty("ELECTOR_PATH", "localhost")
+	fun `this pod is leader when the elector names its host`() {
+		val leaderSelection = spyk(LeaderSelectionUtility())
+		every { leaderSelection.fetchLeaderSelection() } returns electorResponse(InetAddress.getLocalHost().hostName.uppercase())
 
-		val leaderSelector = mockk<LeaderSelectionUtility>()
-		every { leaderSelector.fetchLeaderSelection() } returns jsonString
-		every { leaderSelector.logger.warn(any()) } returns Unit
-		every { leaderSelector.logger.info(any()) } returns Unit
-		every { leaderSelector.format.decodeFromString<LeaderElection>(any()) } returns leaderElection
-		every { leaderSelector.isLeader() } answers { callOriginal() }
-
-		leaderSelector.isLeader()
-
+		assertTrue(leaderSelection.isLeader())
 	}
 
+	@Test
+	fun `this pod is not leader when the elector names another host`() {
+		val leaderSelection = spyk(LeaderSelectionUtility())
+		every { leaderSelection.fetchLeaderSelection() } returns electorResponse("another-pod")
+
+		assertFalse(leaderSelection.isLeader())
+	}
 }

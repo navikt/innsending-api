@@ -42,6 +42,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.MediaType
+import org.springframework.http.MediaTypeFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.http.client.MultipartBodyBuilder
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -288,11 +289,12 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 		vedleggsId: Long,
 		file: ByteArray = Hjelpemetoder.getBytesFromFile("/litenPdf.pdf"),
 		authToken: String? = TokenGenerator(mockOAuth2Server).lagTokenXToken(),
+		fileName: String = "litenPdf.pdf",
 	): InnsendingApiResponse<FilDto> {
 		val builder = MultipartBodyBuilder()
 		builder.part("file", file)
-			.filename("litenPdf.pdf")
-			.contentType(MediaType.APPLICATION_PDF)
+			.filename(fileName)
+			.contentType(MediaTypeFactory.getMediaType(fileName).orElse(MediaType.APPLICATION_OCTET_STREAM))
 
 		val response = webTestClient.post()
 			.uri("$baseUrl/frontend/v1/soknad/$innsendingsId/vedlegg/$vedleggsId/fil")

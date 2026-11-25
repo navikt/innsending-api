@@ -23,9 +23,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.lang.Thread.sleep
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -309,7 +312,9 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		soknadRepository.save(ettersending)
 
 		// When
+		val dateBefore = LocalDate.now()
 		brukernotifikasjonPublisher.createNotification(ettersending, NotificationOptions(erSystemGenerert = true))
+		val dateAfter = LocalDate.now()
 
 		// Then
 		val messages = mutableListOf<AddNotification>()
@@ -320,6 +325,9 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		val message = messages.filter { it.soknadRef.innsendingId == ettersending.innsendingsid }.first()
 
 		assertEquals(true, message.soknadRef.erSystemGenerert)
+		// A system generated notification is postponed until 09:00 the next day. Both dates are accepted around midnight.
+		val expectedPostponedUntil = setOf(dateBefore, dateAfter).map { it.plusDays(1).atTime(9, 0).atOffset(ZoneOffset.UTC) }
+		assertTrue(message.brukernotifikasjonInfo.utsettSendingTil?.truncatedTo(ChronoUnit.MINUTES) in expectedPostponedUntil)
 	}
 
 	@Test

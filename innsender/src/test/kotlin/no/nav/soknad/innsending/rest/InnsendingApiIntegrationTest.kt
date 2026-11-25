@@ -952,7 +952,7 @@ class InnsendingApiIntegrationTest: ApplicationTest()
 
 		val innsendtM3 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "M3" }
 		assertNotNull(innsendtM3)
-		assertEquals(OpplastingsStatusDto.KlarForInnsending, innsendtM2.opplastingsStatus)
+		assertEquals(OpplastingsStatusDto.KlarForInnsending, innsendtM3.opplastingsStatus)
 
 		val vedleggM4 = innsendteDokumenter.firstOrNull { it.vedleggsnr == "M4" }
 		assertNull(vedleggM4)
