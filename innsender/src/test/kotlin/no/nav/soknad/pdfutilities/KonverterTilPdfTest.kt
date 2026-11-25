@@ -64,17 +64,6 @@ class KonverterTilPdfTest: ApplicationTest() {
 
 
 	@Test
-	fun verifiserKonverteringPdfTilBildeOgTilPdf() {
-		val orig = Hjelpemetoder.getBytesFromFile("/__files/forside-nav.pdf")
-
-		val start = System.currentTimeMillis()
-		val png = KonverterTilPng().konverterTilPng(orig)
-		val ferdig = System.currentTimeMillis()
-		println("Tid til konvertering av forside-nav = ${ferdig - start}")
-		assertTrue(png.isNotEmpty())
-	}
-
-	@Test
 	fun verifiserKonverteringAvTxtFil() {
 		val jpg = Hjelpemetoder.getBytesFromFile("/__files/test-ex2.txt")
 

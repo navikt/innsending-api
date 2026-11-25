@@ -60,6 +60,7 @@ class VedleggRestApiTest : ApplicationTest() {
 		val nyttVedleggDto = postVedleggResponse.body
 		assertTrue(nyttVedleggDto != null)
 		assertEquals("Nytt vedlegg", nyttVedleggDto!!.tittel)
+		assertEquals("N6", nyttVedleggDto.vedleggsnr)
 	}
 
 	@Test

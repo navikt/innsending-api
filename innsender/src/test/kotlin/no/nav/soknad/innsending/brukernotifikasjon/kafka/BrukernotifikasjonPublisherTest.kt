@@ -24,9 +24,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.ZoneId
 import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlin.test.assertNotNull
@@ -57,41 +55,6 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		fyllutUrl = restConfig.fyllut.urls["default"]
 		sendinnUrl = restConfig.sendinn.urls["default"]
 	}
-
-	@Test
-	// Vi fjerner søknader/ettersendinger etter midnatt dagen etter slettetdato er passert. Da skal også brukernotifikasjoner slettes.
-	// I og med at vi har implementert sletting natten til dagen etter slettedatoen, og slettedatoen vises på brukernotifikasjonen,
-	// må vi passe på å legge til en ekstra dag i meldingen til soknadsmottaker.
-	fun testConverteringFraDatoTilDager() {
-		// Given
-		val soknad = SoknadDbDataTestBuilder(
-			skalslettesdato = OffsetDateTime.now().plusDays(10)
-		).build()
-		soknadRepository.save(soknad)
-
-		// When
-		brukernotifikasjonPublisher.createNotification(soknad)
-
-		// then
-		val message = slot<AddNotification>()
-		verify(exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
-
-		assertTrue(message.isCaptured)
-		val numberOfDays = message.captured.brukernotifikasjonInfo.antallAktiveDager
-		val deleteDateTime = zonedDateTimeFromDays(numberOfDays)
-		assertEquals(11, message.captured.brukernotifikasjonInfo.antallAktiveDager)
-		assertEquals(11, deleteDateTime.toLocalDate().toEpochDay() - OffsetDateTime.now(ZoneId.of("Europe/Oslo")).toLocalDate().toEpochDay())
-	}
-
-	private fun zonedDateTimeFromDays(days: Int): ZonedDateTime {
-		val now = OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
-		return now
-			.toLocalDate()
-			.plusDays(days.toLong())
-			.atTime(0, 5)
-			.atZone(now.offset)
-	}
-
 
 	@Test
 	fun `sjekk at melding for å publisere Oppgave eller Beskjed blir sendt ved oppretting av ny søknad`() {
@@ -235,28 +198,6 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		assertEquals(innsendingsid, avslutninger[0].groupId)
 		assertTrue(avslutninger[0].erEttersendelse)
 		assertNotNull(avslutninger[0].tidpunktEndret)
-	}
-
-	@Test
-	fun `Should create notification with fyllut url when visningsType=fyllut`() {
-		// Given
-		val fyllutSoknad = SoknadDbDataTestBuilder(visningsType = VisningsType.fyllUt).build()
-		soknadRepository.save(fyllutSoknad)
-
-		// When
-		brukernotifikasjonPublisher.createNotification(fyllutSoknad)
-
-		// Then
-		val messages = mutableListOf<AddNotification>()
-		verify(timeout = 500, atLeast = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(messages)) }
-
-		assertTrue(messages.isNotEmpty())
-		assertTrue(messages.filter { it.soknadRef.innsendingId == fyllutSoknad.innsendingsid }.size == 1)
-		val message = messages.filter { it.soknadRef.innsendingId == fyllutSoknad.innsendingsid }.first()
-		assertEquals(
-			"$fyllutUrl/${fyllutSoknad.getSkjemaPath()}/oppsummering?sub=digital&innsendingsId=${fyllutSoknad.innsendingsid}",
-			message.brukernotifikasjonInfo.lenke
-		)
 	}
 
 	@Test

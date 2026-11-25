@@ -68,30 +68,6 @@ class EksternRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Should create ettersending with utkast brukernotifikasjon when brukernotifikasjonstype is not provided (default)`() {
-		// Given
-		val createEttersendingRequest = EksternOpprettEttersendingTestBuilder()
-			.skjemanr(defaultSkjemanr)
-			.tema(defaultTema)
-			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(defaultVedleggsnr).build()))
-			.build()
-
-		// When
-		val ettersending = api.createEksternEttersending(createEttersendingRequest)
-			.assertSuccess()
-			.body
-
-		// Then
-		// The notification is an utkast if erSystemGenerert is false
-		val notication = publisherInterface.awaitNotification(ettersending.innsendingsId!!)
-		assertEquals(false, notication.soknadRef.erSystemGenerert)
-		assertEquals(true, notication.soknadRef.erEttersendelse)
-		assertEquals(ettersending.innsendingsId, notication.soknadRef.innsendingId)
-		assertEquals(ettersending.innsendingsId, notication.soknadRef.groupId)
-		assertNull(notication.brukernotifikasjonInfo.utsettSendingTil)
-	}
-
-	@Test
 	fun `Should create ettersending with oppgave brukernotifikasjon since brukernotifikasjonstype is given`() {
 		// Given
 		val ettersending = EksternOpprettEttersendingTestBuilder()

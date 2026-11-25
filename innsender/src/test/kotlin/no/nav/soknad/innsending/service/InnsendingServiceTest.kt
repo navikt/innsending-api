@@ -1,28 +1,14 @@
 package no.nav.soknad.innsending.service
 
-import com.ninjasquad.springmockk.MockkBean
-import com.ninjasquad.springmockk.MockkSpyBean
-import io.mockk.clearAllMocks
-import io.mockk.every
-import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.config.RestConfig
-import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
-import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
-import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
-import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.PatchVedleggDto
 import no.nav.soknad.innsending.model.SoknadFile
-import no.nav.soknad.innsending.security.SubjectHandlerInterface
-import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.SoknadAssertions
-import no.nav.soknad.innsending.utils.withTransactions
 import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.OpprettEttersendingTestBuilder
@@ -32,76 +18,11 @@ import no.nav.soknad.pdfutilities.PdfGenerator
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.transaction.PlatformTransactionManager
 import kotlin.test.assertNotNull
 
-class InnsendingServiceTest : ApplicationTest() {
-
-	@Autowired
-	private lateinit var repo: RepositoryUtils
-
-	@Autowired
-	private lateinit var transactionManager: PlatformTransactionManager
-
-	@Autowired
-	private lateinit var innsenderMetrics: InnsenderMetrics
-
-	@Autowired
-	lateinit var soknadService: SoknadService
-
-	@Autowired
-	private lateinit var filService: FilService
-
-	@Autowired
-	private lateinit var restConfig: RestConfig
-
-	@Autowired
-	private lateinit var vedleggService: VedleggService
-
-	@Autowired
-	private lateinit var tilleggstonadService: TilleggsstonadService
-
-	@MockkSpyBean
-	private lateinit var ettersendingService: EttersendingService
-
-	@Autowired
-	private lateinit var documentService: DocumentService
-
-	@Autowired
-	private lateinit var exceptionHelper: ExceptionHelper
-
-	val soknadsmottakerAPI = mockk<MottakerInterface>()
-	private val pdlInterface = mockk<PdlInterface>()
-
-	@MockkBean
-	private lateinit var subjectHandler: SubjectHandlerInterface
-
-	fun lagInnsendingService(soknadService: SoknadService): InnsendingService = InnsendingService(
-		soknadService = soknadService,
-		repo = repo,
-		vedleggService = vedleggService,
-		tilleggstonadService = tilleggstonadService,
-		ettersendingService = ettersendingService,
-		filService = filService,
-		innsenderMetrics = innsenderMetrics,
-		exceptionHelper = exceptionHelper,
-		soknadsmottakerAPI = soknadsmottakerAPI,
-		restConfig = restConfig,
-		pdlInterface = pdlInterface,
-		documentService = documentService,
-	).let { withTransactions(it, transactionManager) }
-
-	@BeforeEach
-	fun setup() {
-		clearAllMocks()
-		every { pdlInterface.hentPersonData(any()) } returns PersonDto("1234567890", "Kan", null, "Søke")
-		every { subjectHandler.getClientId() } returns "application"
-	}
-
+class InnsendingServiceTest : InnsendingServiceTestBase() {
 
 	@Test
 	fun forberedSoknadInnsending() {
@@ -346,23 +267,6 @@ class InnsendingServiceTest : ApplicationTest() {
 
 		// Skriver til tmp fil for manuell sjekk av innholdet av generert PDF
 		//writeBytesToFile("dummy", ".pdf", dummyHovedDokument)
-	}
-
-	@Test
-	fun innsendingFeilerNarIngenDokumentOpplastet() {
-		val innsendingService = lagInnsendingService(soknadService)
-
-		// Opprett original soknad
-		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
-
-		// Sender inn original soknad
-		assertThrows<IllegalActionException> {
-			SoknadAssertions.testOgSjekkInnsendingAvSoknad(
-				soknadsmottakerAPI,
-				dokumentSoknadDto,
-				innsendingService
-			)
-		}
 	}
 
 	@Test

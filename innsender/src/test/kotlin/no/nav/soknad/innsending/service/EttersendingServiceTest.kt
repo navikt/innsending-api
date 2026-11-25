@@ -3,8 +3,6 @@ package no.nav.soknad.innsending.service
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.spyk
-import io.mockk.verify
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.config.RestConfig
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
@@ -24,7 +22,6 @@ import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
-import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.mapping.lagDokumentSoknadDto
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.Hjelpemetoder
@@ -280,6 +277,8 @@ class EttersendingServiceTest : ApplicationTest() {
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "N6" && it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
 		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
 
+		val hendelser = hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
+		assertEquals(HendelseType.Opprettet, hendelser.firstOrNull()?.hendelsetype)
 	}
 
 	@Test
@@ -557,51 +556,5 @@ class EttersendingServiceTest : ApplicationTest() {
 		assertTrue(hendelseDbDatasEttersending.isNotEmpty())
 		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending[0].hendelsetype)
 
-	}
-
-
-	@Test
-	fun opprettEttersendingGittArkivertSoknadOgVedleggTest() {
-		val ettersendingService = lagEttersendingService()
-
-		val brukerid = testpersonid
-		val skjemanr = "NAV 10-07.20"
-		val arkivertSoknad = AktivSakDto(
-			skjemanr,
-			"Tittel",
-			"Tema",
-			OffsetDateTime.now(),
-			false,
-			listOf(InnsendtVedleggDto(skjemanr, "Tittel")),
-			Utilities.laginnsendingsId()
-		)
-
-		val ettersending = OpprettEttersendingTestBuilder()
-			.skjemanr(skjemanr)
-			.vedleggsListe(
-				listOf(
-					InnsendtVedleggDtoTestBuilder().vedleggsnr("C1").tittel("Vedlegg1").build(),
-					InnsendtVedleggDtoTestBuilder().vedleggsnr("L8").tittel("Vedlegg2").build(),
-				)
-			).build()
-
-		val dokumentSoknadDto = ettersendingService.createEttersendingFromArchivedSoknad(
-			brukerId = brukerid,
-			archivedSoknad = arkivertSoknad,
-			ettersending = ettersending,
-			null
-		)
-
-		assertTrue(dokumentSoknadDto.innsendingsId != null && VisningsType.ettersending == dokumentSoknadDto.visningsType && dokumentSoknadDto.ettersendingsId == arkivertSoknad.innsendingsId)
-		assertTrue(dokumentSoknadDto.vedleggsListe.isNotEmpty())
-		assertEquals(2, dokumentSoknadDto.vedleggsListe.size)
-		assertTrue(!dokumentSoknadDto.vedleggsListe.any { it.erHoveddokument && it.vedleggsnr == skjemanr })
-		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "C1" && it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
-		assertTrue(dokumentSoknadDto.vedleggsListe.any { !it.erHoveddokument && it.vedleggsnr == "L8" && it.opplastingsStatus == OpplastingsStatusDto.IkkeValgt })
-
-		val hendelseDbDatasEttersending2 =
-			hendelseRepository.findAllByInnsendingsidOrderByTidspunkt(dokumentSoknadDto.innsendingsId!!)
-		assertTrue(hendelseDbDatasEttersending2.isNotEmpty())
-		assertEquals(HendelseType.Opprettet, hendelseDbDatasEttersending2[0].hendelsetype)
 	}
 }

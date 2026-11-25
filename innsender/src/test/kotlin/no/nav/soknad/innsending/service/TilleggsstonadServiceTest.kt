@@ -16,7 +16,7 @@ import no.nav.soknad.innsending.utils.SoknadAssertions
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
-class TilleggsstonadServiceTest : InnsendingServiceTest() {
+class TilleggsstonadServiceTest : InnsendingServiceTestBase() {
 
 
 	@Test

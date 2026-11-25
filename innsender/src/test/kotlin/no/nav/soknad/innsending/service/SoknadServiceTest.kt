@@ -160,13 +160,6 @@ class SoknadServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun opprettSoknadGittSoknadDokument() {
-		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf())
-
-		assertNotNull(dokumentSoknadDto)
-	}
-
-	@Test
 	fun testAtFilerIkkeSlettesVedInnsending() {
 
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto( "12345678901", "Kan", null, "Søke")

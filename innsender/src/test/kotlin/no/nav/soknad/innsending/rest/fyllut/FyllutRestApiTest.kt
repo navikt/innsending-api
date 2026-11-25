@@ -38,7 +38,6 @@ import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
@@ -1076,30 +1075,6 @@ class FyllutRestApiTest : ApplicationTest() {
 			skalSlettesDato,
 			getSoknad?.body?.skalSlettesDato?.toLocalDate()
 		)
-	}
-
-	@Test
-	@Disabled("Ytelse på oppretting av flere søknader samtidig blir gjort i testen FilRestApiTest.verifiserOpplastingAvUlikeFiltyperTest")
-	fun testOpprettSoknaderOgHentingYtelse() {
-		// Gitt
-		val t7Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build()
-		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
-
-		val noOfRepeats = 100
-		val soknader = mutableListOf<SkjemaDto>()
-		repeat(noOfRepeats, {
-			val soknad = SkjemaDtoTestBuilder(vedleggsListe = listOf(t7Vedlegg, n6Vedlegg)).build()
-
-			// Når
-			val opprettetSoknadResponse = api.createSoknad(soknad).assertSuccess()
-			soknader.add(opprettetSoknadResponse.body)
-
-		})
-
-
-		// Så
-		soknader.forEach { testHentSoknadOgSendInn(it, TokenGenerator(mockOAuth2Server).lagTokenXToken()) }
-
 	}
 
 	// Opprett søknad med et hoveddokument, en hoveddokumentvariant og to vedlegg
