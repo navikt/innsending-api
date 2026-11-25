@@ -6,6 +6,8 @@ import org.apache.pdfbox.Loader
 import org.apache.pdfbox.rendering.ImageType
 import org.apache.pdfbox.rendering.PDFRenderer
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 
@@ -126,6 +128,20 @@ class KonverterTilPdfTest {
 		assertTrue(validation.isPdfACompliant)
 	}
 
+
+	// The same files as the REST upload tests. bilde.jpeg and bilde.tif have the same content as bilde.jpg and bilde.tiff,
+	// so ValiderFilformatTest covers those extensions without converting the files twice.
+	@ParameterizedTest
+	@ValueSource(strings = ["bilde.jpg", "bilde.png", "bilde.bmp", "bilde.tiff", "bilde.gif", "office.docx", "office.doc", "office.odt", "office.rtf"])
+	fun `every supported image and office type is converted to PDF`(filnavn: String) {
+		val fil = Hjelpemetoder.getBytesFromFile("/__files/$filnavn")
+		val filtype = Validerer().validereFilformat(soknadDto.innsendingsId!!, fil, filnavn)
+
+		val (pdf, antallSider) = konverterTilPdf.tilPdf(fil, soknadDto.innsendingsId!!, filtype, "Vedleggstittel", "nb-NO")
+
+		assertTrue(antallSider >= 1, "Expected at least one page for $filnavn")
+		assertEquals(antallSider, AntallSider().finnAntallSider(pdf))
+	}
 
 	private fun harSynligInnhold(pdf: ByteArray): Boolean {
 		Loader.loadPDF(pdf).use { document ->

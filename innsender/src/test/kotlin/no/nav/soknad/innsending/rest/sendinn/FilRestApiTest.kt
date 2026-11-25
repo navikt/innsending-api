@@ -3,11 +3,6 @@ package no.nav.soknad.innsending.rest.sendinn
 import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
 import io.mockk.verify
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.exceptions.ErrorCode
@@ -19,8 +14,6 @@ import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.builders.SkjemaDokumentDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
-import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.imageFileTypes
-import no.nav.soknad.pdfutilities.FiltypeSjekker.Companion.officeFileTypes
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -162,18 +155,16 @@ class FilRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun verifiserOpplastingAvUlikeFiltyperTest() =
-		runBlocking {
-			val awaits: MutableList<Deferred<Unit>> = mutableListOf()
-			awaits.add(async(Dispatchers.IO) {	testOpplastingAvOfficeFormater() })
-			awaits.add(async(Dispatchers.IO) {	testOpplastingAvBildeFormater()	})
-			awaits.awaitAll()
+	fun verifiserOpplastingAvUlikeFiltyperTest() {
+		// One image and one office document through REST. KonverterTilPdfTest converts every supported type directly.
+		lastOppOgSjekk("/__files/bilde", ".jpeg")
+		lastOppOgSjekk("/__files/office", ".docx")
 
-			val filePages = innsenderMetrics.fileNumberOfPagesSummary
-			val fileSize = innsenderMetrics.fileSizeSummary
-			assertTrue(filePages.collect().dataPoints[0].sum > 1.0)
-			assertTrue(fileSize.collect().dataPoints[0].sum > 30000.0)
-		}
+		val filePages = innsenderMetrics.fileNumberOfPagesSummary
+		val fileSize = innsenderMetrics.fileSizeSummary
+		assertTrue(filePages.collect().dataPoints[0].sum > 1.0)
+		assertTrue(fileSize.collect().dataPoints[0].sum > 30000.0)
+	}
 
 
 	@Test
@@ -192,33 +183,6 @@ class FilRestApiTest : ApplicationTest() {
 			.assertErrorCode(ErrorCode.NOT_SUPPORTED_FILE_FORMAT)
 
 		assertVedleggIkkeValgt(soknadDto.innsendingsId!!, vedleggN6.id!!)
-	}
-
-	private fun testOpplastingAvBildeFormater() {
-		val bildeNavnPrefix = "bilde"
-		val filPath = "/__files/$bildeNavnPrefix"
-
-		runBlocking {
-			val awaits: MutableList<Deferred<Unit>> = mutableListOf()
-			val start = System.currentTimeMillis()
-			imageFileTypes.keys.forEach { awaits.add(async(Dispatchers.IO) { lastOppOgSjekk(filPath, it) }) }
-			awaits.awaitAll()
-			val time = System.currentTimeMillis() - start
-			System.out.println("Time for lastOppOgSjekk for $bildeNavnPrefix: $time")
-		}
-	}
-
-	private suspend fun testOpplastingAvOfficeFormater() {
-		val officeNavnPrefix = "office"
-		val filPath = "/__files/$officeNavnPrefix"
-
-		runBlocking {
-			val awaits: MutableList<Deferred<Unit>> = mutableListOf()
-			val start = System.currentTimeMillis()
-			officeFileTypes.keys.forEach { awaits.add(async(Dispatchers.IO) { lastOppOgSjekk(filPath, it) }) }
-			val time = System.currentTimeMillis() - start
-			System.out.println("Time for lastOppOgSjekk for $officeNavnPrefix: $time")
-		}
 	}
 
 	private fun lastOppOgSjekk( filSti: String, type: String) {

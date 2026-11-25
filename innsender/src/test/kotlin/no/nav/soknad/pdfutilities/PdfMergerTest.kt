@@ -1,7 +1,6 @@
 package no.nav.soknad.pdfutilities
 
 import no.nav.soknad.innsending.utils.Hjelpemetoder
-import no.nav.soknad.innsending.utils.Hjelpemetoder.Companion.writeBytesToFile
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.Assertions.*
@@ -12,7 +11,6 @@ class PdfMergerTest {
 	private val pdfMerger: PdfMergerInterface = GotenbergTestConverters.pdfMerger
 
 	private val antallSider = AntallSider()
-	private val validerer = VeraPDFValidator()
 
 	@Test
 	fun `sjekk at pdf filer blir merget`() {
@@ -30,11 +28,7 @@ class PdfMergerTest {
 
 		val antallSider = antallSider.finnAntallSider(mergedPdf)
 		assertEquals(antallFiler, antallSider)
-
-		checkPdfACompliance(mergedPdf)
-
 	}
-
 
 	@Test
 	fun `sjekk at mellomstore pdf filer blir merget`() {
@@ -53,8 +47,6 @@ class PdfMergerTest {
 
 		val antallSider = antallSider.finnAntallSider(mergedPdf)
 		assertEquals(sideSum, antallSider)
-
-		checkPdfACompliance(mergedPdf)
 	}
 
 	@Test
@@ -75,8 +67,6 @@ class PdfMergerTest {
 
 		val antallSider = antallSider.finnAntallSider(mergedPdf)
 		assertEquals(antallFiler, antallSider)
-
-		checkPdfACompliance(mergedPdf)
 	}
 
 	@Test
@@ -95,8 +85,6 @@ class PdfMergerTest {
 		println("Tid brukt for å merge ${pdfFiler.size} PDFer = ${ferdig2 - start2}")
 
 		assertEquals(pdfFiler.size, AntallSider().finnAntallSider(mergedPdf2))
-		checkPdfACompliance(mergedPdf2)
-
 	}
 
 	@Test
@@ -117,9 +105,6 @@ class PdfMergerTest {
 		println("Tid brukt for å merge ${pdfFiler.size} PDFer der en av PDFene består av mange sider = ${ferdig - start}")
 
 		assertEquals(antallFiler + (antallSider.finnAntallSider(storPdf) ?: 0), AntallSider().finnAntallSider(mergedPdf))
-		// Dropper PDF/A validering da dette er gjort i andre tester og denne testen tar veldig lang tid når vi generert PDF inneholder over 1000 sider.
-		//checkPdfACompliance(mergedPdf)
-
 	}
 
 	@Test
@@ -141,10 +126,7 @@ class PdfMergerTest {
 		println("Tid brukt for å merge ${pdfFiler.size} PDFer der en av PDFene består av mange sider = ${ferdig - start}")
 
 		assertEquals(antallFiler + (antallSider.finnAntallSider(soknad) ?: 0), AntallSider().finnAntallSider(mergedPdfFixed))
-		checkPdfACompliance(mergedPdfFixed)
-
 	}
-
 
 	@Test
 	fun `Sjekk merging av filer med UU støtte`() {
@@ -165,8 +147,6 @@ class PdfMergerTest {
 		println("Tid brukt for å merge ${pdfFiler.size} PDFer der en av PDFene består av mange sider = ${ferdig - start}")
 
 		assertEquals(antallFiler + (antallSider.finnAntallSider(soknad) ?: 0), AntallSider().finnAntallSider(mergedPdfFixed))
-		checkPdfACompliance(mergedPdfFixed)
-
 	}
 
 	@Test
@@ -183,24 +163,6 @@ class PdfMergerTest {
 		val ferdig = System.currentTimeMillis()
 		println("Tid brukt for å merge ${pdfFiler.size} PDFer der en av PDFene består av mange sider = ${ferdig - start}")
 		assertTrue(mergedPdf.size > 0)
-		checkPdfACompliance(mergedPdf)
-
-	}
-
-	private fun checkPdfACompliance(pdf: ByteArray) {
-		// Skriver til fil for manuell verifisering av sammenslåtte PDFer.
-		writeBytesToFile(pdf, "../target/delme-merged.pdf")
-		val erPdfa2 = validerer.validatePdf(pdf)
-		if (erPdfa2.isPdfACompliant) {
-			println("Filen er PDF/A compliant")
-		} else {
-			println("Filen er ikke PDF/A compliant")
-		}
-		if (erPdfa2.hasPdfUaSupport) {
-			println("Filen har ua-støtte compliant")
-		}
-		// Foreløpi slått av merging av PDFer med PDF/A resultat
-		//assertTrue(erPdfa2.isPdfACompliant)
 	}
 
 }
