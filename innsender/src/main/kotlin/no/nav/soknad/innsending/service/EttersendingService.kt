@@ -6,6 +6,7 @@ import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
@@ -17,6 +18,7 @@ import no.nav.soknad.innsending.util.Constants.KVITTERINGS_NR
 import no.nav.soknad.innsending.util.Constants.TRANSACTION_TIMEOUT
 import no.nav.soknad.innsending.util.Utilities
 import no.nav.soknad.innsending.util.dokumentsoknad.getMissingRequiredAttachments
+import no.nav.soknad.innsending.util.dokumentsoknad.isUnauthenticatedSubmission
 import no.nav.soknad.innsending.util.finnSpraakFraInput
 import no.nav.soknad.innsending.util.mapping.*
 import org.slf4j.LoggerFactory
@@ -58,6 +60,7 @@ class EttersendingService(
 		avsender: AvsenderDto? = null,
 		affectedUser: BrukerDto? = null,
 		grantUserDigitalAccess: Boolean? = null,
+		owner: ApplicationOwner? = ApplicationOwner.person(brukerId),
 	)
 		: SoknadDbData {
 		val innsendingsId = Utilities.laginnsendingsId()
@@ -92,6 +95,7 @@ class EttersendingService(
 				avsender = avsender,
 				affecteduser = affectedUser,
 				grantuserdigitalaccess = grantUserDigitalAccess,
+				owner = owner,
 			)
 		)
 	}
@@ -134,6 +138,7 @@ class EttersendingService(
 				avsender = nyesteSoknadDb.avsender,
 				affectedUser = nyesteSoknadDb.affecteduser,
 				grantUserDigitalAccess = nyesteSoknadDb.grantuserdigitalaccess,
+				owner = nyesteSoknadDb.owner,
 			)
 
 			// Lagre vedlegg i DB
@@ -222,6 +227,7 @@ class EttersendingService(
 				fristForEttersendelse = existingSoknad.fristForEttersendelse ?: Constants.DEFAULT_FRIST_FOR_ETTERSENDELSE,
 				ernavopprettet = erNavInitiert,
 				grantUserDigitalAccess = existingSoknadDb.grantuserdigitalaccess,
+				owner = if (erNavInitiert) existingSoknadDb.owner else ApplicationOwner.person(brukerId),
 			)
 
 			val combinedVedleggList =
@@ -253,6 +259,7 @@ class EttersendingService(
 
 		logger.info("Oppretter ettersending fra arkivert søknad fra ${archivedSoknad.innsendingsId} for skjemanr=${archivedSoknad.skjemanr}")
 		try {
+			val original = archivedSoknad.innsendingsId?.let { repo.finnSoknadDb(it) }
 			val ettersendingDb = saveEttersending(
 				brukerId = brukerId,
 				ettersendingsId = archivedSoknad.innsendingsId,
@@ -262,6 +269,7 @@ class EttersendingService(
 				sprak = ettersending.sprak,
 				forsteInnsendingsDato = forsteInnsendingsDato ?: archivedSoknad.innsendtDato,
 				ernavopprettet = erNavInitiert,
+				owner = if (erNavInitiert && original != null) original.owner else ApplicationOwner.person(brukerId),
 			)
 
 			val combinedVedleggList =
@@ -357,11 +365,11 @@ class EttersendingService(
 		kandidater: Map<String, SoknadDbData>,
 		personIdenter: List<String>,
 	): Boolean {
-		if (!gjelderBruker(soknad, personIdenter)) return false
+		if (soknad.visningstype.isUnauthenticatedSubmission() || !gjelderBruker(soknad, personIdenter)) return false
 		val koblingsId = soknad.ettersendingsid ?: return true
 		if (koblingsId == soknad.innsendingsid) return true
 		val original = kandidater[koblingsId] ?: return false
-		return gjelderBruker(original, personIdenter) &&
+		return !original.visningstype.isUnauthenticatedSubmission() && gjelderBruker(original, personIdenter) &&
 			(original.ettersendingsid == null || original.ettersendingsid == original.innsendingsid)
 	}
 
@@ -428,6 +436,9 @@ class EttersendingService(
 			.flatMap { listOfNotNull(it.innsendingsid, it.ettersendingsid) }.toSet()
 		val arkiverteSoknader = getArkiverteEttersendinger(ettersending.skjemanr, brukerId)
 			.filter { it.innsendingsId !in avvisteReferanser }
+			.filterNot { archived ->
+				archived.innsendingsId?.let { repo.finnSoknadDb(it) }?.visningstype.isUnauthenticatedSubmission()
+			}
 
 		return createEttersendingWithExistingSoknader(
 			innsendteSoknader = innsendteSoknader,
