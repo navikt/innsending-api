@@ -65,6 +65,7 @@ class AccessMatrixTest : ApplicationTest() {
 		PUBLIC,
 		TOKENX_HIGH_ACR,
 		AZURE,
+		AZURE_TASK,
 		AZURE_ADMIN,
 		AZURE_NOLOGIN,
 	}
@@ -91,7 +92,7 @@ class AccessMatrixTest : ApplicationTest() {
 		"LospostRestApi" to AccessPolicy.TOKENX_HIGH_ACR,
 		"EksternRestApi" to AccessPolicy.TOKENX_HIGH_ACR,
 		"EndToEndRestApi" to AccessPolicy.TOKENX_HIGH_ACR,
-		"InternInitiertOppgaver" to AccessPolicy.AZURE,
+		"InternInitiertOppgaver" to AccessPolicy.AZURE_TASK,
 		"FyllutMerge" to AccessPolicy.AZURE,
 		"InnsendtListeApi" to AccessPolicy.AZURE,
 		"NologinApplicationRestApi" to AccessPolicy.AZURE_NOLOGIN,
@@ -161,6 +162,7 @@ class AccessMatrixTest : ApplicationTest() {
 			tokens.lagAzureOBOTokenWithScp(scp = "defaultaccess", navIdent = "Z123456")
 		},
 		TestToken("Azure M2M", true, setOf(AccessPolicy.AZURE)) { tokens.lagAzureM2MToken() },
+		TestToken("Azure M2M oppgaveklient", true, setOf(AccessPolicy.AZURE, AccessPolicy.AZURE_TASK)) { tokens.taskApplicationToken() },
 		TestToken("Azure M2M roles=nologin-access", true, setOf(AccessPolicy.AZURE, AccessPolicy.AZURE_NOLOGIN)) {
 			tokens.lagAzureM2MToken(roles = listOf("nologin-access"))
 		},
@@ -222,6 +224,7 @@ class AccessMatrixTest : ApplicationTest() {
 		val expectedRule = mapOf(
 			AccessPolicy.TOKENX_HIGH_ACR to RequiresCitizen::class.java,
 			AccessPolicy.AZURE to RequiresAzure::class.java,
+			AccessPolicy.AZURE_TASK to RequiresAzureTask::class.java,
 			AccessPolicy.AZURE_ADMIN to RequiresAzureAdmin::class.java,
 			AccessPolicy.AZURE_NOLOGIN to RequiresAzureNologin::class.java,
 		).mapValues { (_, annotation) -> AnnotationUtils.findAnnotation(annotation, PreAuthorize::class.java)!!.value }

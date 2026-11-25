@@ -7,6 +7,7 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.soknad.innsending.model.VisningsType
+import no.nav.soknad.innsending.model.BrukerDto
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
@@ -60,6 +61,8 @@ class LospostServiceTest {
 
 		val soknad = captorSoknad.captured
 		assertEquals(defaultUser, soknad.owner?.id)
+		assertEquals(defaultUser, soknad.affecteduser?.id)
+		assertEquals(BrukerDto.IdType.FNR, soknad.affecteduser?.idType)
 		assertEquals(defaultUser, soknad.brukerid)
 		assertEquals(VisningsType.lospost, soknad.visningstype)
 		assertEquals(Constants.LOSPOST_SKJEMANUMMER, soknad.skjemanr)

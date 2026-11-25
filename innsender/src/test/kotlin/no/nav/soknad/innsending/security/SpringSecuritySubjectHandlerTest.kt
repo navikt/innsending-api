@@ -89,6 +89,18 @@ class SpringSecuritySubjectHandlerTest {
 	}
 
 	@Test
+	fun `Azure caller identity prefers the authorized azp over a different client_id`() {
+		authenticatedAs(TokenIssuer.AZURE, "azp" to "authorized-application", "client_id" to "different-application")
+		assertEquals("authorized-application", handler.getClientId())
+	}
+
+	@Test
+	fun `non-task Azure routes retain legacy caller identity when azp is absent`() {
+		authenticatedAs(TokenIssuer.AZURE, "client_id" to "legacy-application")
+		assertEquals("legacy-application", handler.getClientId())
+	}
+
+	@Test
 	fun `with both a TokenX and an Azure token each identity is read from its own token`() {
 		SecurityContextHolder.getContext().authentication = TokenAuthentication(
 			mapOf(

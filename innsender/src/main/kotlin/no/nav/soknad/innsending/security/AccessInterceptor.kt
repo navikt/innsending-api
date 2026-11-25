@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import no.nav.soknad.innsending.consumerapis.token.TokenServiceUnavailableException
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationContext
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler
 import org.springframework.security.authentication.AnonymousAuthenticationToken
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException
 import org.springframework.security.authorization.AuthorizationDeniedException
@@ -30,9 +32,16 @@ import java.util.concurrent.atomic.AtomicBoolean
 class AccessInterceptor(
 	private val recorder: TokenValidationRecorder,
 	private val clientLabels: ClientLabels = ClientLabels(),
+	applicationContext: ApplicationContext? = null,
 ) : HandlerInterceptor {
 
-	private val preAuthorize = PreAuthorizeAuthorizationManager()
+	private val preAuthorize = PreAuthorizeAuthorizationManager().apply {
+		if (applicationContext != null) {
+			setExpressionHandler(DefaultMethodSecurityExpressionHandler().apply {
+				setApplicationContext(applicationContext)
+			})
+		}
+	}
 	private val logger = LoggerFactory.getLogger(javaClass)
 	private val recordFailureLogged = AtomicBoolean(false)
 

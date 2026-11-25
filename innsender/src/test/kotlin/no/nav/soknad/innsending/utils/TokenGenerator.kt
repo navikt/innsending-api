@@ -9,6 +9,7 @@ import com.nimbusds.jose.jwk.gen.RSAKeyGenerator
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.PlainJWT
 import com.nimbusds.jwt.SignedJWT
+import com.nimbusds.oauth2.sdk.TokenRequest
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import no.nav.security.mock.oauth2.token.KeyProvider
@@ -23,6 +24,7 @@ class TokenGenerator(
 ) {
 	companion object {
 		val subject = "12345678901"
+		const val TASK_CLIENT_ID = "task-client-id"
 		const val ACCEPTED_AUDIENCE = "aud-localhost"
 
 		// Ulik audience for Azure, slik at testene oppdager om et token for den ene utstederen godtas for den andre
@@ -89,6 +91,32 @@ class TokenGenerator(
 			tokenCallback = oAuth2TokenCallback
 		).serialize()
 	}
+
+	fun taskApplicationToken(
+		azp: Any? = TASK_CLIENT_ID,
+		subject: String = "task-service-principal",
+		objectId: Any? = subject,
+		additionalClaims: Map<String, Any> = emptyMap(),
+		audience: String = AZURE_AUDIENCE,
+		expiry: Long = defaultExpiry,
+	): String = mockOAuth2Server.issueToken(
+		issuerId = AZURE,
+		clientId = AZURE_CLIENT_ID,
+		tokenCallback = object : DefaultOAuth2TokenCallback(
+			issuerId = AZURE,
+			subject = subject,
+			typeHeader = JOSEObjectType.JWT.type,
+			audience = listOf(audience),
+			expiry = expiry,
+		) {
+			override fun addClaims(tokenRequest: TokenRequest): Map<String, Any> = buildMap {
+				put("roles", listOf("access_as_application"))
+				if (azp != null) put("azp", azp)
+				if (objectId != null) put("oid", objectId)
+				putAll(additionalClaims)
+			}
+		},
+	).serialize()
 
 	// Gir scp="<scopes> defaultaccess", samme rekkefølge som innsending-admin sender i dag
 	fun lagAzureOBOToken(scopes: String? = null, navIdent: String? = null): String =

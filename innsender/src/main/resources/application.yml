@@ -8,6 +8,12 @@ server:
 defaultMaxFileSize: 150
 defaultMaxFileSizeSum: 300
 
+task-authorization:
+  pre-authorized-apps: ${AZURE_APP_PRE_AUTHORIZED_APPS:[]}
+  # Comma-separated exact cluster:namespace:application names from the Nais pre-authorized apps.
+  # No task caller is authorized until task-specific permissions have been approved and configured.
+  allowed-applications: ${TASK_API_ALLOWED_APPLICATIONS:}
+
 restconfig:
   safMaxInMemorySize: ${SAF_MAX_IN_MEMORY_SIZE:4MB}
 

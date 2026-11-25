@@ -5,6 +5,8 @@ import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.DokumentSoknadDto
+import no.nav.soknad.innsending.repository.SoknadRepository
+import no.nav.soknad.innsending.util.soknaddbdata.validPersonOwnerId
 import no.nav.soknad.innsending.util.models.kanGjoreEndringer
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -12,7 +14,8 @@ import org.springframework.stereotype.Component
 @Component
 class Tilgangskontroll(
 	val subjectHandler: SubjectHandlerInterface,
-	val pdlService: PdlInterface
+	val pdlService: PdlInterface,
+	private val soknadRepository: SoknadRepository,
 ) {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -39,8 +42,10 @@ class Tilgangskontroll(
 			throw ResourceNotFoundException("Søknad finnes ikke eller er ikke tilgjengelig for innlogget bruker")
 		}
 
-		val idents = hentPersonIdents(hentBrukerFraToken())
-		if (idents.contains(soknadDto.brukerId)) return true
+		// Read the internal owner from persistence, never from a public/request DTO.
+		val stored = soknadDto.innsendingsId?.let { soknadRepository.findByInnsendingsid(it) }
+		val ownerId = stored?.validPersonOwnerId()
+		if (ownerId != null && brukerId != null && hentPersonIdents(brukerId).contains(ownerId)) return true
 
 		logger.info("Bruker har ikke tilgang til soknad ${soknadDto.innsendingsId}")
 		throw ResourceNotFoundException("Søknad finnes ikke eller er ikke tilgjengelig for innlogget bruker") //FIXME: Bytte til 403?

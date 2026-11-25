@@ -5,8 +5,9 @@ import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.IllegalActionException
 import no.nav.soknad.innsending.model.*
-import no.nav.soknad.innsending.security.RequiresAzure
-import no.nav.soknad.innsending.security.SubjectHandlerInterface
+import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
+import no.nav.soknad.innsending.security.RequiresAzureTask
+import no.nav.soknad.innsending.security.TaskOwnerAuthorization
 import no.nav.soknad.innsending.security.Tilgangskontroll
 import no.nav.soknad.innsending.service.EttersendingService
 import no.nav.soknad.innsending.service.NotificationService
@@ -18,14 +19,13 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequiresAzure
-// TODO strengere tilgang, for eksempel scp=defaultaccess oppgave-initiering. Utenfor migreringen i #461
+@RequiresAzureTask
 class InternInitiertOppgaver(
-	private val tilgangskontroll: Tilgangskontroll,
+	private val taskOwnerAuthorization: TaskOwnerAuthorization,
 	private val ettersendingService: EttersendingService,
 	private val soknadService: SoknadService,
-	private var subjectHandler: SubjectHandlerInterface,
 	private val notificationService: NotificationService,
+	private val tilgangskontroll: Tilgangskontroll,
 ): EksternoppgaveApi {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
@@ -35,17 +35,20 @@ class InternInitiertOppgaver(
 		eksternEttersendingsOppgave: EksternEttersendingsOppgave,
 		navCallId: String?): ResponseEntity<DokumentSoknadDto> {
 
+		val applikasjon = taskOwnerAuthorization.requireAuthorizedApplication()
 		val brukerId = eksternEttersendingsOppgave.brukerId
-		val applikasjon = subjectHandler.getClientId()
+		if (ApplicationOwner.person(brukerId).personId == null) {
+			throw IllegalActionException("Task owner identity must contain 11 digits", errorCode = ErrorCode.ILLEGAL_ARGUMENT)
+		}
 
 		combinedLogger.log(
 			"[${applikasjon}] - Kall for å opprette ettersending fra ekstern applikasjon på skjema ${eksternEttersendingsOppgave.skjemanr}",
 			brukerId
 		)
 
-		ettersendingService.logWarningForExistingEttersendelse(
-			brukerId = brukerId,
-			skjemanr = eksternEttersendingsOppgave.skjemanr,
+		ettersendingService.logWarningForExistingTask(
+			affectedPersonId = brukerId,
+			formNumber = eksternEttersendingsOppgave.skjemanr,
 		)
 
 		val eksternOpprettEttersending = EksternOpprettEttersending(
@@ -85,7 +88,7 @@ class InternInitiertOppgaver(
 	}
 
 	override fun eksternOppgaveSlett(innsendingsId: String, navCallId: String?): ResponseEntity<BodyStatusResponseDto> {
-		val applikasjon = subjectHandler.getClientId()
+		val applikasjon = taskOwnerAuthorization.requireAuthorizedApplication()
 		logger.info("[${applikasjon}] - Kall for å slette søknad/ettersending $innsendingsId")
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 
@@ -114,9 +117,9 @@ class InternInitiertOppgaver(
 
 	override fun oppgaveHentSoknaderForSkjemanr( brukerSoknadRequest: BrukerSoknadRequest, navCallId: String?)
 	: ResponseEntity<List<DokumentSoknadDto>> {
+		val applikasjon = taskOwnerAuthorization.requireAuthorizedApplication()
 		val brukerId = brukerSoknadRequest.brukerId
 		val skjemanr = brukerSoknadRequest.skjemanr
-		val applikasjon = subjectHandler.getClientId()
 
 		combinedLogger.log(
 			"[${applikasjon}] - Henter søknader/ettersendinger med $skjemanr for bruker",
@@ -128,7 +131,7 @@ class InternInitiertOppgaver(
 				"[${applikasjon}] - Henter søknader med søknadstyper=${typeFilter ?: "<alle>"} for $skjemanr",
 				brukerId
 			)
-		val soknader = soknadService.hentAktiveSoknader(brukerId, skjemanr, *typeFilter)
+		val soknader = soknadService.findActiveApplicationsForTask(tilgangskontroll.hentPersonIdents(brukerId), skjemanr, *typeFilter)
 
 		return ResponseEntity.status(HttpStatus.OK).body(soknader)
 	}

@@ -55,14 +55,20 @@ fun mapTilSoknadDb(
 		ernavopprettet = dokumentSoknadDto.erNavOpprettet,
 		brukertype = bruker?.idType ?: if (dokumentSoknadDto.brukerId != null) BrukerDto.IdType.FNR else null,
 		avsender = avsender,
-		affecteduser = null,
+		affecteduser = dokumentSoknadDto.brukerId?.let { BrukerDto(id = it, idType = BrukerDto.IdType.FNR) },
 		grantuserdigitalaccess = null,
 		owner = owner,
 	)
 
 // Keeps the stored row identity and owner, which the DTO does not carry.
 fun SoknadDbData.withUpdatedData(application: DokumentSoknadDto, status: SoknadsStatus): SoknadDbData =
-	mapTilSoknadDb(application, innsendingsid, status, id = id, owner = owner)
+	mapTilSoknadDb(application, innsendingsid, status, id = id, owner = owner).copy(
+		brukerid = brukerid,
+		brukertype = brukertype,
+		avsender = avsender,
+		affecteduser = affecteduser,
+		grantuserdigitalaccess = grantuserdigitalaccess,
+	)
 
 fun lagDokumentSoknadDto(
 	soknadDbData: SoknadDbData,
@@ -211,7 +217,7 @@ fun SubmitApplicationRequest.toDokumentSoknadDto(innsendingsId: UUID, clientId: 
 		ernavopprettet = false,
 		brukertype = if (this.bruker != null) BrukerDto.IdType.FNR else null,
 		avsender = this.avsender,
-		affecteduser = null,
+		affecteduser = this.bruker?.let { BrukerDto(id = it, idType = BrukerDto.IdType.FNR) },
 		grantuserdigitalaccess = this.grantUserDigitalAccess,
 		owner = null,
 	)

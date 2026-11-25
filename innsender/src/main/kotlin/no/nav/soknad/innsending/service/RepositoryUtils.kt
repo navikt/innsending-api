@@ -99,17 +99,16 @@ class RepositoryUtils(
 		throw BackendErrorException("Feil ved henting av alle soknader opprettet før $opprettetFor", ex)
 	}
 
-	fun finnAlleSoknaderGittBrukerIdOgStatus(brukerId: String, status: SoknadsStatus) = try {
-		soknadRepository.findByBrukeridAndStatus(brukerId, status)
+	fun findApplicationsByOwnerAndStatus(idents: List<String>, status: SoknadsStatus) = try {
+		if (idents.isEmpty()) emptyList() else soknadRepository.findByOwnerAndStatus(idents.distinct(), status.name)
 	} catch (ex: Exception) {
 		throw BackendErrorException("Feil ved henting av alle soknader for bruker xxxx med status $status", ex)
 	}
 
-	fun finnKandidaterForEttersending(brukerIds: List<String>, skjemanr: String, innsendtEtter: LocalDateTime): List<SoknadDbData> = try {
-		if (brukerIds.isEmpty()) emptyList()
-		else soknadRepository.finnKandidaterForEttersending(brukerIds, SoknadsStatus.Innsendt, skjemanr, innsendtEtter)
+	fun findTaskApplicationsByAffectedPersonAndStatus(idents: List<String>, status: SoknadsStatus) = try {
+		if (idents.isEmpty()) emptyList() else soknadRepository.findByAffectedPersonAndStatus(idents.distinct(), status.name)
 	} catch (ex: Exception) {
-		throw BackendErrorException("Henting av kandidater for ettersending feilet", ex)
+		throw BackendErrorException("Failed to find task applications by affected person and status $status", ex)
 	}
 
 	fun findAllSoknadBySoknadsstatusAndArkiveringsstatusAndBetweenInnsendtdatos(

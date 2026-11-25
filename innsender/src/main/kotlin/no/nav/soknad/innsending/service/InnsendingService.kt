@@ -53,7 +53,7 @@ class InnsendingService(
 	private val logger = LoggerFactory.getLogger(javaClass)
 
 	@Transactional(timeout=TRANSACTION_TIMEOUT)
-	fun sendInnSoknadStart(innsendingsId: String, avsenderDto: AvsenderDto?, brukerDto: BrukerDto?): Pair<List<VedleggDto>, List<VedleggDto>> {
+	fun sendInnSoknadStart(innsendingsId: String, avsenderDto: AvsenderDto?): Pair<List<VedleggDto>, List<VedleggDto>> {
 
 		// Anta at filene til et vedlegg allerede er konvertert til PDF ved lagring.
 		// Eventuell varianter av hoveddokument skal være på annet format enn PDF, da formatet vil bli brukt for å mappe til arkivformat ved lagring, og for arkivformatet på variantene på et dokument må være ulike.
@@ -81,7 +81,7 @@ class InnsendingService(
 					status = SoknadsStatus.KlarForInnsending,
 					innsendtdato = LocalDateTime.now(),
 					avsender = eksisterendeSoknad.avsender ?: avsenderDto,
-					affecteduser = eksisterendeSoknad.affecteduser ?: brukerDto,
+					affecteduser = eksisterendeSoknad.affecteduser,
 				)
 			)
 		)
@@ -179,8 +179,7 @@ class InnsendingService(
 		val soknadsDb = repo.hentSoknadDb(innsendingsId)
 		if (soknadsDb.status != SoknadsStatus.KlarForInnsending) return
 		val avsender = soknadsDb.avsender ?: AvsenderDto(id = soknadsDb.brukerid, idType = IdType.FNR)
-		val brukerId = soknadsDb.brukerid
-		val bruker = soknadsDb.affecteduser ?: if (brukerId != null) BrukerDto(id = brukerId, idType = BrukerDto.IdType.FNR) else null
+		val bruker = soknadsDb.affecteduser
 
 		val soknadDto = soknadService.hentSoknad(innsendingsId)
 		val opplastedeVedlegg = soknadDto.vedleggsListe.filter{(it.erHoveddokument && it.opplastingsStatus != OpplastingsStatusDto.SendesIkke) || it.opplastingsStatus == OpplastingsStatusDto.KlarForInnsending }
@@ -289,8 +288,8 @@ class InnsendingService(
 
 		val soknad = soknadService.prepareSubmit(innsendingsId, affectedUser, avsender, grantUserDigitalAccess)
 		logger.info("$innsendingsId: preSubmitApplication, satt soknad.status=${soknad.status}")
-		val brukerDto = affectedUser ?: if (soknad.brukerId.isNullOrEmpty()) null else BrukerDto(id = soknad.brukerId!!, idType = BrukerDto.IdType.FNR)
-		if (brukerDto == null && avsender == null) {
+		val storedParties = repo.hentSoknadDb(innsendingsId)
+		if (storedParties.affecteduser == null && storedParties.avsender == null && soknad.brukerId.isNullOrEmpty()) {
 			throw IllegalActionException(
 				message = "Hverken bruker eller avsender er satt",
 				errorCode = ErrorCode.PROPERTY_NOT_SET
@@ -497,8 +496,7 @@ class InnsendingService(
 
 		try {
 			val avsenderDto = AvsenderDto(id= brukerId, idType = IdType.FNR)
-			val brukerDto = BrukerDto(id= brukerId, idType = BrukerDto.IdType.FNR)
-			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput.innsendingsId!!, avsenderDto, brukerDto)
+			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput.innsendingsId!!, avsenderDto)
 
 			val innsendtSoknadDto = soknadService.hentSoknad(soknadDtoInput.innsendingsId!!)
 
@@ -520,7 +518,7 @@ class InnsendingService(
 		val startSendInn = System.currentTimeMillis()
 
 		try {
-			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput.innsendingsId!!, avsenderDto, brukerDto)
+			val (opplastet, manglende) = sendInnSoknadStart(soknadDtoInput.innsendingsId!!, avsenderDto)
 
 			val innsendtSoknadDto = soknadService.hentSoknad(soknadDtoInput.innsendingsId!!)
 

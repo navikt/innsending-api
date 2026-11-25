@@ -100,7 +100,13 @@ components:
           default: false
           description: Angir om det er mulig å laste opp annet-vedlegg sammen med søknaden
         bruker:
-          $ref: "../common/components.yaml#/components/schemas/BrukerId"
+          type: string
+          nullable: true
+          description: >-
+            National identity number of the person the application concerns (11 digits).
+            The submission request replaces the stored affected user. When omitted or null,
+            no affected user is stored or sent to archiving. For an identified person, including
+            the logged-in person, the caller must provide the identity explicitly. Never changes owner.
         avsender:
           $ref: "../common/components.yaml#/components/schemas/AvsenderDto"
         grantUserDigitalAccess:

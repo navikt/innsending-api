@@ -86,9 +86,9 @@ class SoknadServiceUnitTest {
 		assertEquals(storedApplication.brukerid, savedApplication.captured.brukerid)
 		assertEquals(SoknadsStatus.Utfylt, savedApplication.captured.status)
 		assertEquals("Updated title", savedApplication.captured.tittel)
-		assertNull(savedApplication.captured.avsender)
-		assertNull(savedApplication.captured.affecteduser)
-		assertNull(savedApplication.captured.grantuserdigitalaccess)
+		assertEquals(storedApplication.avsender, savedApplication.captured.avsender)
+		assertEquals(storedApplication.affecteduser, savedApplication.captured.affecteduser)
+		assertEquals(true, savedApplication.captured.grantuserdigitalaccess)
 	}
 
 	@ParameterizedTest(name = "owner present: {0}")
@@ -113,9 +113,9 @@ class SoknadServiceUnitTest {
 		assertEquals(storedApplication.brukerid, savedApplication.captured.brukerid)
 		assertEquals(SoknadsStatus.AutomatiskSlettet, savedApplication.captured.status)
 		assertEquals(application.tittel, savedApplication.captured.tittel)
-		assertNull(savedApplication.captured.avsender)
-		assertNull(savedApplication.captured.affecteduser)
-		assertNull(savedApplication.captured.grantuserdigitalaccess)
+		assertEquals(storedApplication.avsender, savedApplication.captured.avsender)
+		assertEquals(storedApplication.affecteduser, savedApplication.captured.affecteduser)
+		assertEquals(true, savedApplication.captured.grantuserdigitalaccess)
 	}
 
 	@Test
@@ -166,7 +166,7 @@ class SoknadServiceUnitTest {
 			visningsType = VisningsType.dokumentinnsending
 		).build()
 
-		every { repo.finnAlleSoknaderGittBrukerIdOgStatus(defaultUser, SoknadsStatus.Opprettet) } returns listOf(
+		every { repo.findApplicationsByOwnerAndStatus(listOf(defaultUser), SoknadsStatus.Opprettet) } returns listOf(
 			soknadDb,
 			dokumentInnsendingSoknad
 		)
@@ -180,7 +180,7 @@ class SoknadServiceUnitTest {
 
 		// Then
 		// hentAktiveSoknader is called 3 times
-		verify(exactly = 3) { repo.finnAlleSoknaderGittBrukerIdOgStatus(defaultUser, SoknadsStatus.Opprettet) }
+		verify(exactly = 3) { repo.findApplicationsByOwnerAndStatus(listOf(defaultUser), SoknadsStatus.Opprettet) }
 		verify(exactly = 3) { vedleggService.hentAlleVedlegg(soknadDb) }
 
 		assertEquals(1, soknader.size)

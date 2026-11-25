@@ -16,6 +16,7 @@ import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.mapping.toOffsetDateTime
 import no.nav.soknad.innsending.util.soknaddbdata.getSkjemaPath
 import no.nav.soknad.innsending.util.soknaddbdata.isEttersending
+import no.nav.soknad.innsending.util.soknaddbdata.validPersonOwnerId
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.resilience.annotation.Retryable
@@ -62,8 +63,9 @@ class BrukernotifikasjonPublisher(
 			logger.info("Fant ikke søknad med innsendingsId ${inputSoknad.innsendingsid} i databasen, kan ikke publisere brukernotifikasjon")
 			return false
 		}
-		if (soknad.brukerid.isNullOrEmpty()) {
-			logger.info("${soknad.innsendingsid}: Brukerid mangler, kan ikke publisere brukernotifikasjon")
+		val ownerId = soknad.validPersonOwnerId()
+		if (ownerId == null) {
+			logger.info("${soknad.innsendingsid}: No valid person owner for notification")
 			return false
 		}
 		if (soknad.status != SoknadsStatus.Opprettet && soknad.status != SoknadsStatus.Utfylt ) {
@@ -87,7 +89,7 @@ class BrukernotifikasjonPublisher(
 				soknad.innsendingsid,
 				soknad.isEttersending(),
 				groupId,
-				soknad.brukerid!!,
+				ownerId,
 				soknad.opprettetdato.toOffsetDateTime(),
 				opts.erSystemGenerert
 			)
@@ -110,8 +112,9 @@ class BrukernotifikasjonPublisher(
 		if (!notifikasjonConfig.publisereEndringer) {
 			return true
 		}
-		if (soknad.brukerid.isNullOrEmpty()) {
-			logger.info("${soknad.innsendingsid}: Brukerid mangler, kan ikke avslutte brukernotifikasjon")
+		val ownerId = soknad.validPersonOwnerId()
+		if (ownerId == null) {
+			logger.info("${soknad.innsendingsid}: No valid person owner for notification")
 			return false
 		}
 		logger.debug("${soknad.innsendingsid}: Skal avslutte Brukernotifikasjon")
@@ -120,7 +123,7 @@ class BrukernotifikasjonPublisher(
 				soknad.innsendingsid,
 				soknad.isEttersending(),
 				soknad.ettersendingsid ?: soknad.innsendingsid,
-				soknad.brukerid!!,
+				ownerId,
 				soknad.opprettetdato.toOffsetDateTime(),
 			)
 			sendTilKafkaPublisher.avsluttBrukernotifikasjon(soknadRef)

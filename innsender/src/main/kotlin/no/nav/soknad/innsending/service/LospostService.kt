@@ -63,6 +63,7 @@ class LospostService(
 				ernavopprettet = false,
 				brukertype = BrukerDto.IdType.FNR,
 				avsender = avsender,
+				affecteduser = BrukerDto(id = brukerId, idType = BrukerDto.IdType.FNR),
 				owner = ApplicationOwner.person(brukerId),
 			)
 		)

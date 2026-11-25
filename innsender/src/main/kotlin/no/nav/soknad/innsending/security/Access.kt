@@ -77,3 +77,9 @@ annotation class RequiresAzureAdmin
 @Retention(AnnotationRetention.RUNTIME)
 @PreAuthorize("hasAuthority('" + Access.AZURE_NOLOGIN + "')")
 annotation class RequiresAzureNologin
+
+/** Forhåndsautorisert Azure M2M-applikasjon med oppgaverett. */
+@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+@PreAuthorize("hasAuthority('" + Access.AZURE + "') and @taskOwnerAuthorization.isAuthorizedApplication(authentication)")
+annotation class RequiresAzureTask

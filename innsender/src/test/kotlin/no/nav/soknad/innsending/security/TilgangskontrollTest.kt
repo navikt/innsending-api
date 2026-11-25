@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
+import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.util.testpersonid
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -15,7 +16,8 @@ class TilgangskontrollTest {
 
 	private val subjectHandler = mockk<SubjectHandlerInterface>()
 	private val pdlService = mockk<PdlInterface>()
-	private val tilgangskontroll = Tilgangskontroll(subjectHandler, pdlService)
+	private val repository = mockk<SoknadRepository>()
+	private val tilgangskontroll = Tilgangskontroll(subjectHandler, pdlService, repository)
 
 	@Test
 	fun `identity extraction failure is propagated without looking up a fallback identity`() {
@@ -37,7 +39,7 @@ class TilgangskontrollTest {
 
 	@Test
 	fun `local handler still supplies its explicit test identity`() {
-		val localTilgangskontroll = Tilgangskontroll(SubjectHandlerTestImpl(), pdlService)
+		val localTilgangskontroll = Tilgangskontroll(SubjectHandlerTestImpl(), pdlService, repository)
 
 		assertEquals(testpersonid, localTilgangskontroll.hentBrukerFraToken())
 	}

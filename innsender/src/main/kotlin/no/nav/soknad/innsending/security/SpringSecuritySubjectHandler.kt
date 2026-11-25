@@ -35,14 +35,19 @@ class SpringSecuritySubjectHandler : SubjectHandlerInterface {
 
 	override fun getConsumerId(): String = "srvinnsending-api"
 
-	// TokenX først, ellers Azure, som før. MockOAuth2Server setter klient-ID i azp, mens ekte token bruker client_id
+	// TokenX først, ellers Azure. Azure foretrekker azp (oppgaveautorisasjon krever azp separat).
 	override fun getClientId(): String {
 		val authentication = authentication() ?: throw BackendErrorException("Autentisering kunne ikke fullføres")
-		val token = authentication.token(TokenIssuer.TOKENX) ?: authentication.token(TokenIssuer.AZURE)
+		authentication.token(TokenIssuer.TOKENX)?.let { token ->
+			return token.stringClaim(CLIENT_ID)
+				?: token.stringClaim(AZP)
+				?: throw BackendErrorException("Fant ikke klient-ID i tokenet")
+		}
+		val azure = authentication.token(TokenIssuer.AZURE)
 			?: throw BackendErrorException("Autentisering kunne ikke fullføres")
-		return token.stringClaim(CLIENT_ID)
-			?: token.stringClaim(AZP)
-			?: throw BackendErrorException("Fant ikke klient-ID i tokenet")
+		return azure.stringClaim(AZP)
+			?: azure.stringClaim(CLIENT_ID)
+			?: throw BackendErrorException("Azure caller identity is missing")
 	}
 
 	override fun getNavIdent(): String {
