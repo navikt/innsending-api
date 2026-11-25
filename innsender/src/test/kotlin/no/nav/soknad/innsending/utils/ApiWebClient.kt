@@ -257,6 +257,18 @@ class ApiWebClient(val webTestClient_: WebTestClient, val serverPort: Int, val m
 	}
 
 
+	fun getFilesForVedlegg(innsendingsId: String, vedleggsId: Long): InnsendingApiResponse<List<FilDto>> {
+		val response = webTestClient.get()
+			.uri("http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}/vedlegg/${vedleggsId}/fil")
+			.headers({ httpHeaders ->
+				httpHeaders.setAll(Hjelpemetoder.createHeaders(TokenGenerator(mockOAuth2Server).lagTokenXToken(), null).toSingleValueMap())
+			})
+			.exchange()
+
+		val body = parseListResponse(response, FilDto::class.java)
+		return InnsendingApiResponse(response.returnResult().status, body, response.returnResult().responseHeaders)
+	}
+
 	fun addVedlegg(innsendingsId: String, postVedleggDto: PostVedleggDto): InnsendingApiResponse<VedleggDto> {
 		val response = webTestClient.post()
 			.uri("${baseUrl}/frontend/v1/soknad/${innsendingsId}/vedlegg")
