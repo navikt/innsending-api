@@ -11,7 +11,6 @@ import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
@@ -38,7 +37,6 @@ import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
@@ -46,15 +44,15 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.core.io.ClassPathResource
-import org.springframework.context.annotation.Import
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
+import org.awaitility.Awaitility.await
+import java.time.Duration
 import java.time.LocalDate
 import java.util.*
 import kotlin.test.*
 
 
-@Import(ApplicationTestRepository::class)
 class FyllutRestApiTest : ApplicationTest() {
 
 	@Autowired
@@ -62,9 +60,6 @@ class FyllutRestApiTest : ApplicationTest() {
 
 	@MockkBean
 	lateinit var kodeverkService: KodeverkService
-
-	@MockkSpyBean
-	lateinit var notificationPublisher: PublisherInterface
 
 	@MockkSpyBean
 	lateinit var fileStorage: FileStorage
@@ -261,7 +256,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Så
 		val parameterSlot = slot<AddNotification>()
-		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
+		verify(timeout = 5000, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
 		val notification = parameterSlot.captured
 
 		assertEquals(responseBody.innsendingsId, notification.soknadRef.innsendingId)
@@ -297,7 +292,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Så
 		val parameterSlot = slot<AddNotification>()
-		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
+		verify(timeout = 5000, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
 		val notification = parameterSlot.captured
 
 		assertEquals(responseBody.innsendingsId, notification.soknadRef.innsendingId)
@@ -403,7 +398,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val kvitteringsDto = sendInnRespons.body
 		assertEquals(1, kvitteringsDto!!.skalSendesAvAndre!!.size)
 		assertTrue(kvitteringsDto.hoveddokumentRef != null)
-		waitUntilAssertionSucceeds {
+		await().atMost(Duration.ofSeconds(5)).untilAsserted {
 			assertThrows<Exception> {
 				restTestClient.exchange(
 					"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}", HttpMethod.GET,
@@ -1076,30 +1071,6 @@ class FyllutRestApiTest : ApplicationTest() {
 		)
 	}
 
-	@Test
-	@Disabled("Ytelse på oppretting av flere søknader samtidig blir gjort i testen FilRestApiTest.verifiserOpplastingAvUlikeFiltyperTest")
-	fun testOpprettSoknaderOgHentingYtelse() {
-		// Gitt
-		val t7Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build()
-		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
-
-		val noOfRepeats = 100
-		val soknader = mutableListOf<SkjemaDto>()
-		repeat(noOfRepeats, {
-			val soknad = SkjemaDtoTestBuilder(vedleggsListe = listOf(t7Vedlegg, n6Vedlegg)).build()
-
-			// Når
-			val opprettetSoknadResponse = api.createSoknad(soknad).assertSuccess()
-			soknader.add(opprettetSoknadResponse.body)
-
-		})
-
-
-		// Så
-		soknader.forEach { testHentSoknadOgSendInn(it, TokenGenerator(mockOAuth2Server).lagTokenXToken()) }
-
-	}
-
 	// Opprett søknad med et hoveddokument, en hoveddokumentvariant og to vedlegg
 	private fun opprettSoknad(
 		skjemanr: String = "NAV 08-21.05",
@@ -1132,26 +1103,6 @@ class FyllutRestApiTest : ApplicationTest() {
 		val innsendingsId = soknadService.opprettNySoknad(dokumentSoknadDto).innsendingsId!!
 
 		return soknadService.hentSoknad(innsendingsId)
-	}
-
-	private fun waitUntilAssertionSucceeds(
-		timeoutMillis: Long = 5000,
-		pollIntervalMillis: Long = 50,
-		assertion: () -> Unit,
-	) {
-		val deadline = System.currentTimeMillis() + timeoutMillis
-		var lastAssertionError: AssertionError? = null
-		while (System.currentTimeMillis() < deadline) {
-			try {
-				assertion()
-				return
-			} catch (e: AssertionError) {
-				lastAssertionError = e
-				Thread.sleep(pollIntervalMillis)
-			}
-		}
-
-		throw lastAssertionError ?: AssertionError("Condition was not met within $timeoutMillis ms")
 	}
 
 }

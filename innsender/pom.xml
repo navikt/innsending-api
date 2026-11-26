@@ -12,6 +12,12 @@
 	<artifactId>innsender</artifactId>
 	<name>innsender</name>
 
+	<properties>
+		<!-- Surefire runs the test classes in four JVMs. Each JVM starts its own containers and Spring contexts.
+		     Override with -DforkCount=1 to run all tests in one JVM. -->
+		<forkCount>4</forkCount>
+	</properties>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>

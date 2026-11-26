@@ -81,6 +81,19 @@ brukernotifikasjonconfig:
 
 ettersendingsfrist: 14
 
+# The fake-gcs container is shared by every Spring context in the JVM. A new bucket per context keeps their files apart.
+# random.uuid gives a new value on every lookup, so read the name only through CloudStorageConfig.
+gcp:
+  buckets:
+    fillagerBucketNavn: innsending-test-${random.uuid}
+
+# Testene sjekker antall forsøk, ikke ventetiden mellom dem. Produksjon bruker standardverdiene i @Retryable.
+retry:
+  soknadsmottaker:
+    delay-ms: 1
+  brukernotifikasjon:
+    delay-ms: 1
+
 status_log_url: "https://logs.adeo.no"
 
 texas:

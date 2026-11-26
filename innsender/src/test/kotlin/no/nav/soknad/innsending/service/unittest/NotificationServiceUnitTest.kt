@@ -22,7 +22,6 @@ import no.nav.soknad.innsending.supervision.InnsenderMetrics
 import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import java.lang.Thread.sleep
 import kotlin.test.assertEquals
 
 
@@ -74,8 +73,8 @@ class NotificationServiceUnitTest {
 		notificationService.create(soknadDb.innsendingsid)
 
 		// Then
-		verify(timeout = 100, exactly = 2) { soknadRepository.findByInnsendingsid(soknadDb.innsendingsid) }
-		verify(timeout = 100, exactly = 1) { kafkaPublisher.opprettBrukernotifikasjon(capture(captorNotification)) }
+		verify(exactly = 2) { soknadRepository.findByInnsendingsid(soknadDb.innsendingsid) }
+		verify(exactly = 1) { kafkaPublisher.opprettBrukernotifikasjon(capture(captorNotification)) }
 
 		val expectedLink = "https://fyllut.intern.nav.no/fyllut/${soknadDb.innsendingsid}/nav207413/oppsummering?sub=digital&innsendingsId=${soknadDb.innsendingsid}"
 		val addNotification = captorNotification.captured
@@ -100,8 +99,8 @@ class NotificationServiceUnitTest {
 		notificationService.create(soknadDb.innsendingsid)
 
 		// Then
-		verify(timeout = 100, exactly = 2) { soknadRepository.findByInnsendingsid(soknadDb.innsendingsid) }
-		verify(timeout = 100, exactly = 0) { kafkaPublisher.opprettBrukernotifikasjon(any()) }
+		verify(exactly = 2) { soknadRepository.findByInnsendingsid(soknadDb.innsendingsid) }
+		verify(exactly = 0) { kafkaPublisher.opprettBrukernotifikasjon(any()) }
 
 	}
 
@@ -120,8 +119,8 @@ class NotificationServiceUnitTest {
 		notificationService.create(soknadDb.innsendingsid)
 
 		// Then
-		verify(timeout = 100, exactly = 2) { soknadRepository.findByInnsendingsid(soknadDb.innsendingsid) }
-		verify(timeout = 100, exactly = 0) { kafkaPublisher.opprettBrukernotifikasjon(any()) }
+		verify(exactly = 2) { soknadRepository.findByInnsendingsid(soknadDb.innsendingsid) }
+		verify(exactly = 0) { kafkaPublisher.opprettBrukernotifikasjon(any()) }
 
 	}
 
@@ -164,8 +163,8 @@ class NotificationServiceUnitTest {
 		notificationService.close(soknadDb.innsendingsid)
 
 		// Then
-		verify(timeout = 100, exactly = 1) { soknadRepository.findByInnsendingsid(soknadDb.innsendingsid) }
-		verify(timeout = 100, exactly = 0) { kafkaPublisher.avsluttBrukernotifikasjon(any()) }
+		verify(exactly = 1) { soknadRepository.findByInnsendingsid(soknadDb.innsendingsid) }
+		verify(exactly = 0) { kafkaPublisher.avsluttBrukernotifikasjon(any()) }
 
 	}
 

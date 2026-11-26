@@ -2,7 +2,6 @@ package no.nav.soknad.innsending.rest
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.tomakehurst.wiremock.client.WireMock.*
-import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
@@ -32,7 +31,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
 import org.springframework.test.util.AopTestUtils
 import java.time.LocalDateTime
@@ -41,7 +39,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-@Import(ApplicationTestRepository::class)
 class SupplementaryApplicationOwnerIntegrationTest : ApplicationTest() {
 
 	@Autowired
@@ -53,21 +50,15 @@ class SupplementaryApplicationOwnerIntegrationTest : ApplicationTest() {
 	@Autowired
 	lateinit var storedApplications: ApplicationTestRepository
 
-	@MockkSpyBean
-	lateinit var notifications: PublisherInterface
-
-	@MockkSpyBean
-	lateinit var receiver: MottakerAPITest
-
 	@LocalServerPort
 	var serverPort: Int = 0
 
 	private lateinit var api: ApiWebClient
 	private val fixtureIds = mutableListOf<String>()
 	private val notificationTarget: PublisherInterface
-		get() = AopTestUtils.getUltimateTargetObject(notifications)
+		get() = AopTestUtils.getUltimateTargetObject(notificationPublisher)
 	private val receiverTarget: MottakerAPITest
-		get() = AopTestUtils.getUltimateTargetObject(receiver)
+		get() = AopTestUtils.getUltimateTargetObject(soknadsmottaker)
 	private val otherPerson = "10987654321"
 	private val formNumber = "NAV 55-00.60"
 

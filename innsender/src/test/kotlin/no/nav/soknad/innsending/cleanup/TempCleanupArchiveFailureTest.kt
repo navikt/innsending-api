@@ -6,7 +6,6 @@ import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.pdl.PdlAPI
 import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
 import no.nav.soknad.innsending.consumerapis.pdl.dto.PersonDto
-import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.model.VedleggDto
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
@@ -46,9 +45,6 @@ class TempCleanupArchiveFailureTest : ApplicationTest() {
 	private lateinit var repositoryUtils: RepositoryUtils
 
 	@MockkBean
-	private lateinit var soknadsmottakerAPI: MottakerAPITest
-
-	@MockkBean
 	private lateinit var pdlInterface: PdlAPI
 
 	@MockkBean
@@ -56,7 +52,7 @@ class TempCleanupArchiveFailureTest : ApplicationTest() {
 
 	@BeforeEach
 	fun setup() {
-		every { soknadsmottakerAPI.sendInnSoknad(any(), any(), any(), any()) } returns Unit
+		every { soknadsmottaker.sendInnSoknad(any(), any(), any(), any()) } returns Unit
 		every { pdlInterface.hentPersonIdents(any()) } returns listOf(IdentDto("123456789", "FOLKEREGISTERIDENT", false))
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto("123456789", "Fornavn", null, "Etternavn")
 		every { subjectHandler.getClientId() } returns "application"
@@ -73,20 +69,17 @@ class TempCleanupArchiveFailureTest : ApplicationTest() {
 		val eksisterendeVedleggMedFil = repo.hentAlleVedleggGittSoknadsid(soknadDb.id!!)
 			.first { repo.countFiles(innsendingsId, it.id!!) > 0 }
 
-		clearMocks(soknadsmottakerAPI)
-		every { soknadsmottakerAPI.sendInnSoknad(any(), any(), any(), any()) } returns Unit
-
 		val job = TempCleanupArchiveFailure(
 			repo = repo,
 			soknadService = soknadService,
-			mottakerApi = soknadsmottakerAPI,
+			mottakerApi = soknadsmottaker,
 			innsendingsids = innsendingsId,
 		)
 		job.fixAttachmentStatusAndResubmit()
 
 		val slotVedleggsliste = slot<List<VedleggDto>>()
 		verify(exactly = 1) {
-			soknadsmottakerAPI.sendInnSoknad(any(), capture(slotVedleggsliste), any(), any())
+			soknadsmottaker.sendInnSoknad(match { it.innsendingsId == innsendingsId }, capture(slotVedleggsliste), any(), any())
 		}
 		assertEquals(1, slotVedleggsliste.captured.size)
 		assertTrue(slotVedleggsliste.captured.none { it.vedleggsnr == eksisterendeVedleggUtenFil.vedleggsnr })
@@ -98,18 +91,15 @@ class TempCleanupArchiveFailureTest : ApplicationTest() {
 		val innsendingsId = opprettInnsendtSoknad()
 		simulerArkiveringsRespons(innsendingsId, ArkiveringsStatus.Arkivert)
 
-		clearMocks(soknadsmottakerAPI)
-		every { soknadsmottakerAPI.sendInnSoknad(any(), any(), any(), any()) } returns Unit
-
 		val job = TempCleanupArchiveFailure(
 			repo = repo,
 			soknadService = soknadService,
-			mottakerApi = soknadsmottakerAPI,
+			mottakerApi = soknadsmottaker,
 			innsendingsids = innsendingsId,
 		)
 		job.fixAttachmentStatusAndResubmit()
 
-		verify(exactly = 0) { soknadsmottakerAPI.sendInnSoknad(any(), any(), any(), any()) }
+		verify(exactly = 0) { soknadsmottaker.sendInnSoknad(match { it.innsendingsId == innsendingsId }, any(), any(), any()) }
 	}
 
 	private fun opprettInnsendtSoknad(): String {

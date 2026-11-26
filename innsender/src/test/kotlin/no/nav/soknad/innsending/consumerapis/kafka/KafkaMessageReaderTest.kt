@@ -1,8 +1,9 @@
-import com.ninjasquad.springmockk.MockkBean
+package no.nav.soknad.innsending.consumerapis.kafka
+
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.soknad.innsending.consumerapis.kafka.KafkaMessageReader
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.HendelseType
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
@@ -11,20 +12,17 @@ import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.service.RepositoryUtils
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.kafka.support.Acknowledgment
-import org.springframework.test.context.junit.jupiter.SpringExtension
 
-@ExtendWith(SpringExtension::class)
 class KafkaMessageReaderTest {
 
 	var kafkaMessageReader: KafkaMessageReader? = null
 
-	@MockkBean
-	lateinit var repo: RepositoryUtils
+	private val repo = mockk<RepositoryUtils>()
 
 	@BeforeEach
 	fun setup() {
+		clearMocks(repo)
 		kafkaMessageReader = KafkaMessageReader(repo)
 	}
 

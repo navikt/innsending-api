@@ -19,14 +19,20 @@ import java.net.http.HttpResponse
 @Configuration
 class GoogleStorage {
 
-	final val gcsServer: Container = Container()
+	// The container is shared and stopped when the JVM exits, not when a Spring context closes.
+	// In tests every context uses its own bucket, see gcp.buckets.fillagerBucketNavn in application-test.yml.
+	@Bean(destroyMethod = "")
+	fun embeddedGcs(): Container = shared
 
-	init {
-		gcsServer.start()
+	companion object {
+		// One fake-gcs container per JVM, shared by every Spring context.
+		val shared: Container by lazy {
+			Container().apply {
+				start()
+				Runtime.getRuntime().addShutdownHook(Thread { stop() })
+			}
+		}
 	}
-
-	@Bean(destroyMethod = "stop")
-	fun embeddedGcs(): Container = gcsServer
 
 	class Container(private val gcsPort: Int = 4443) : GenericContainer<Container>(
 		DockerImageName.parse("fsouza/fake-gcs-server:1")

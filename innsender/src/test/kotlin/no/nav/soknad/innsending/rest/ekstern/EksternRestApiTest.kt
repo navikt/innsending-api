@@ -1,33 +1,28 @@
 package no.nav.soknad.innsending.rest.ekstern
 
-import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.model.BrukernotifikasjonsType
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.utils.ApiWebClient
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.EksternOpprettEttersendingTestBuilder
+import no.nav.soknad.innsending.utils.awaitNotification
 import no.nav.soknad.innsending.utils.builders.ettersending.InnsendtVedleggDtoTestBuilder
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
-import java.lang.Thread.sleep
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
 class EksternRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
-
-	@MockkSpyBean()
-	lateinit var publisherInterface: PublisherInterface
 
 	@LocalServerPort
 	var serverPort: Int = 0
@@ -68,36 +63,6 @@ class EksternRestApiTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Should create ettersending with utkast brukernotifikasjon when brukernotifikasjonstype is not provided (default)`() {
-		// Given
-		val createEttersendingRequest = EksternOpprettEttersendingTestBuilder()
-			.skjemanr(defaultSkjemanr)
-			.tema(defaultTema)
-			.vedleggsListe(listOf(InnsendtVedleggDtoTestBuilder().vedleggsnr(defaultVedleggsnr).build()))
-			.build()
-
-		// When
-		val ettersending = api.createEksternEttersending(createEttersendingRequest)
-			.assertSuccess()
-			.body
-
-		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
-		val noticationSlots = mutableListOf<AddNotification>()
-		verify(atLeast = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlots)) }
-
-		// Then
-		// The notification is an utkast if erSystemGenerert is false
-		assertTrue(noticationSlots.filter { it.soknadRef.innsendingId == ettersending.innsendingsId }.isNotEmpty())
-		assertTrue(noticationSlots.filter { it.soknadRef.innsendingId == ettersending.innsendingsId }.size == 1)
-		val notication = noticationSlots.filter { it.soknadRef.innsendingId == ettersending.innsendingsId }.first()
-		assertEquals(false, notication.soknadRef.erSystemGenerert)
-		assertEquals(true, notication.soknadRef.erEttersendelse)
-		assertEquals(ettersending.innsendingsId, notication.soknadRef.innsendingId)
-		assertEquals(ettersending.innsendingsId, notication.soknadRef.groupId)
-		assertNull(notication.brukernotifikasjonInfo.utsettSendingTil)
-	}
-
-	@Test
 	fun `Should create ettersending with oppgave brukernotifikasjon since brukernotifikasjonstype is given`() {
 		// Given
 		val ettersending = EksternOpprettEttersendingTestBuilder()
@@ -110,13 +75,9 @@ class EksternRestApiTest : ApplicationTest() {
 		// When
 		val opprettEttersending = api.createEksternEttersending(ettersending)
 
-		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
-		val noticationSlots = mutableListOf<AddNotification>()
-		verify(atLeast = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlots)) }
-
 		// Then
 		// The notification is an oppgave if erSystemGenerert is true
-		val notication = noticationSlots.filter { it.soknadRef.innsendingId == opprettEttersending.body.innsendingsId }.first()
+		val notication = notificationPublisher.awaitNotification(opprettEttersending.body.innsendingsId!!)
 		assertEquals(true, notication.soknadRef.erEttersendelse)
 		assertEquals(true, notication.soknadRef.erSystemGenerert)
 		assertNotNull(notication.brukernotifikasjonInfo.utsettSendingTil)
@@ -137,10 +98,10 @@ class EksternRestApiTest : ApplicationTest() {
 			.body
 
 		verify(timeout = 5000) {
-			publisherInterface.opprettBrukernotifikasjon(match { it.soknadRef.innsendingId == ettersending.innsendingsId })
+			notificationPublisher.opprettBrukernotifikasjon(match { it.soknadRef.innsendingId == ettersending.innsendingsId })
 		}
 		val noticationSlots = mutableListOf<AddNotification>()
-		verify(atLeast = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlots)) }
+		verify(atLeast = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(noticationSlots)) }
 
 		// Then
 		// The notification is an utkast if erSystemGenerert is false

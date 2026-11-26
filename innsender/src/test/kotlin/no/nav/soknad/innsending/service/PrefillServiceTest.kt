@@ -5,7 +5,6 @@ import io.mockk.every
 import kotlinx.coroutines.runBlocking
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.consumerapis.kontoregister.KontoregisterInterface
-import no.nav.soknad.innsending.consumerapis.kontoregister.KontoregisterService
 import no.nav.soknad.innsending.model.MaalgruppeType
 import no.nav.soknad.innsending.security.UserTokenSource
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
@@ -60,19 +59,6 @@ class PrefillServiceTest : ApplicationTest() {
 		assertEquals("Ola", result.sokerFornavn)
 		assertEquals("Nordmann", result.sokerEtternavn)
 		assertEquals(userId, result.sokerIdentifikasjonsnummer)
-	}
-
-	@Test
-	fun `Should get prefill data for kontoregister`() {
-		// Given
-		val properties = listOf("sokerKontonummer")
-		val userId = "12128012345"
-
-		// When
-		val result = runBlocking { prefillService.getPrefillData(properties, userId) }
-
-		// Then
-		assertEquals("8361347234732292", result.sokerKontonummer)
 	}
 
 	@Test

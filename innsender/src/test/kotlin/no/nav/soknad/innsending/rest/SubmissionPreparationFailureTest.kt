@@ -10,7 +10,6 @@ import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.cleanup.LeaderSelectionLocalImpl
-import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.AttachmentDto
 import no.nav.soknad.innsending.model.DokumentSoknadDto
@@ -56,9 +55,6 @@ class SubmissionPreparationFailureTest : ApplicationTest() {
 
 	@Autowired
 	lateinit var innsendingService: InnsendingService
-
-	@MockkSpyBean
-	private lateinit var soknadsmottakerApi: MottakerAPITest
 
 	@MockkSpyBean
 	private lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher
@@ -170,7 +166,7 @@ class SubmissionPreparationFailureTest : ApplicationTest() {
 		val innsendingsId = soknad.innsendingsId!!
 		val mottakerAvailable = AtomicBoolean(false)
 		every {
-			soknadsmottakerApi.sendInnSoknad(match { it.innsendingsId == innsendingsId }, any(), any(), any(), any())
+			soknadsmottaker.sendInnSoknad(match { it.innsendingsId == innsendingsId }, any(), any(), any(), any())
 		} answers {
 			if (!mottakerAvailable.get()) throw IllegalStateException("soknadsmottaker er midlertidig utilgjengelig")
 			callOriginal()
@@ -180,7 +176,7 @@ class SubmissionPreparationFailureTest : ApplicationTest() {
 			.assertHttpStatus(HttpStatus.OK)
 		// Await every attempt of the asynchronous forwarding, including the client's retries, before recovery.
 		verify(timeout = 20_000, exactly = FORWARDING_ATTEMPTS) {
-			soknadsmottakerApi.sendInnSoknad(match { it.innsendingsId == innsendingsId }, any(), any(), any(), any())
+			soknadsmottaker.sendInnSoknad(match { it.innsendingsId == innsendingsId }, any(), any(), any(), any())
 		}
 		assertTrue(scheduledOperationsService.findNotSentInApplications(0).contains(innsendingsId))
 
@@ -189,7 +185,7 @@ class SubmissionPreparationFailureTest : ApplicationTest() {
 
 		val documents = mutableListOf<List<VedleggDto>>()
 		verify(timeout = 20_000, exactly = FORWARDING_ATTEMPTS + 1) {
-			soknadsmottakerApi.sendInnSoknad(
+			soknadsmottaker.sendInnSoknad(
 				match { it.innsendingsId == innsendingsId },
 				capture(documents),
 				any(),
@@ -263,7 +259,7 @@ class SubmissionPreparationFailureTest : ApplicationTest() {
 	private fun assertArchivedOnceWithCompleteDocuments(innsendingsId: String) {
 		val documents = slot<List<VedleggDto>>()
 		verify(timeout = 5000, exactly = 1) {
-			soknadsmottakerApi.sendInnSoknad(
+			soknadsmottaker.sendInnSoknad(
 				match { it.innsendingsId == innsendingsId },
 				capture(documents),
 				any(),

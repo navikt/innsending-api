@@ -1,22 +1,19 @@
 package no.nav.soknad.innsending.supervision
 
-import no.nav.soknad.innsending.ApplicationTest
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.soknad.innsending.security.TokenValidationOutcome
 import no.nav.soknad.innsending.security.TokenValidationResult
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 
-class InnsenderMetricsTest : ApplicationTest() {
+class InnsenderMetricsTest {
 
-	@Autowired
-	lateinit var innsenderMetrics: InnsenderMetrics
+	private lateinit var innsenderMetrics: InnsenderMetrics
 
 	@BeforeEach
 	fun init() {
-		innsenderMetrics.unregisterMetrics()
-		innsenderMetrics.registerMetrics()
+		innsenderMetrics = InnsenderMetrics(PrometheusRegistry())
 	}
 
 	@Test

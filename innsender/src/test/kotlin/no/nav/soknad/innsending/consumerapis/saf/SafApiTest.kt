@@ -1,10 +1,9 @@
 package no.nav.soknad.innsending.consumerapis.saf
 
-import no.nav.soknad.innsending.ApplicationTest
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
-class SafApiTest : ApplicationTest() {
+class SafApiTest {
 
 	@Test
 	fun brevkodeKontrollSjekk() {

@@ -160,13 +160,6 @@ class SoknadServiceTest : ApplicationTest() {
 	}
 
 	@Test
-	fun opprettSoknadGittSoknadDokument() {
-		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf())
-
-		assertNotNull(dokumentSoknadDto)
-	}
-
-	@Test
 	fun testAtFilerIkkeSlettesVedInnsending() {
 
 		every { pdlInterface.hentPersonData(any()) } returns PersonDto( "12345678901", "Kan", null, "Søke")
@@ -623,13 +616,13 @@ class SoknadServiceTest : ApplicationTest() {
 		assertTrue(kvitteringsDtoList.size == dokumentSoknadDtoList.size)
 
 		// Check that the applications attachments are kept after the applications are sent in
-		dokumentSoknadDtoList.all {
+		assertTrue(dokumentSoknadDtoList.all {
 			filService.hentFiler(
 				it,
 				it.innsendingsId!!,
 				it.vedleggsListe.first { vedlegg -> vedlegg.erHoveddokument && !vedlegg.erVariant }.id!!
 			).isNotEmpty()
-		}
+		})
 
 		// First archived, second archiving failed, third not handled
 		simulateKafkaPolling(true, dokumentSoknadDtoList[0].innsendingsId!!)

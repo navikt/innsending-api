@@ -1,13 +1,11 @@
 package no.nav.soknad.innsending.cleanup
 
 import com.ninjasquad.springmockk.MockkBean
-import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerInterface
 import no.nav.soknad.innsending.model.SoknadsStatusDto
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
@@ -19,7 +17,6 @@ import no.nav.soknad.innsending.utils.Hjelpemetoder
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import java.lang.Thread.sleep
 import java.time.OffsetDateTime
 import kotlin.test.assertEquals
 
@@ -40,9 +37,6 @@ class FjernGamleSoknaderTest : ApplicationTest() {
 
 	@MockkBean
 	private lateinit var subjectHandler: SubjectHandlerInterface
-
-	@MockkSpyBean
-	lateinit var notificationPublisher: PublisherInterface
 
 	private val defaultSkjemanr = "NAV 55-00.60"
 
