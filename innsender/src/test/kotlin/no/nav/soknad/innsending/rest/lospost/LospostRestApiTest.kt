@@ -1,18 +1,19 @@
 package no.nav.soknad.innsending.rest.lospost
 
-import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearAllMocks
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.model.EnvQualifier
 import no.nav.soknad.innsending.model.OpplastingsStatusDto
 import no.nav.soknad.innsending.model.OpprettLospost
 import no.nav.soknad.innsending.model.PostVedleggDto
 import no.nav.soknad.innsending.utils.ApiWebClient
+import no.nav.soknad.innsending.utils.ApplicationTestRepository
 import no.nav.soknad.innsending.utils.Hjelpemetoder
+import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.awaitNotification
+import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -28,8 +29,8 @@ class LospostRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
-	@MockkSpyBean
-	lateinit var notificationPublisher: PublisherInterface
+	@Autowired
+	lateinit var storedApplications: ApplicationTestRepository
 
 	@LocalServerPort
 	var serverPort: Int = 0
@@ -56,6 +57,14 @@ class LospostRestApiTest : ApplicationTest() {
 			.assertSuccess()
 
 		val body = response.body
+		val notification = notificationPublisher.awaitNotification(body.innsendingsId!!)
+		assertTrue(notification.soknadRef.personId == TokenGenerator.subject, "Notifications must use the authenticated user")
+		val fetched = api.getSoknadSendinn(body.innsendingsId!!).assertSuccess().body
+		assertTrue(fetched.brukerId == TokenGenerator.subject, "The application must remain readable by the authenticated user")
+		// Owner is not exposed through REST. Inspect only this internal field in the database.
+		val stored = storedApplications.findBySubmissionId(body.innsendingsId!!)
+		assertTrue(stored.owner == ApplicationOwner.person(TokenGenerator.subject), "The application must persist the logged-in owner")
+		assertEquals(false, stored.ownerIsSqlNull)
 		assertEquals(request.soknadTittel, body.tittel)
 		assertEquals(request.tema, body.tema)
 		assertEquals(request.sprak, body.spraak)

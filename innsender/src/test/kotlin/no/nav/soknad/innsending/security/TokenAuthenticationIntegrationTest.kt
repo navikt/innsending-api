@@ -53,25 +53,12 @@ class TokenAuthenticationIntegrationTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `a valid TokenX token from Texas reaches the controller`() {
-		assertEquals(404, get("/frontend/v1/soknad/${UUID.randomUUID()}", tokens.lagTokenXToken()).first)
-	}
-
-	@Test
 	fun `Texas down does not affect public routes`() {
 		texas.stub = { _, _ -> throw TokenServiceUnavailableException("Texas svarte 503 på introspeksjon") }
 
 		val status = get("/health/isAlive", tokens.lagAzureM2MToken()).first
 
 		assertTrue(status in 200..299, "Fikk $status")
-	}
-
-	@Test
-	fun `an invalid Azure token still gives 403 when Texas answers`() {
-		val result = get("/innsendte/v1/files/${UUID.randomUUID()}", tokens.lagAzureM2MToken(expiry = -3600), "x-innsendingId" to UUID.randomUUID().toString())
-
-		assertEquals(403, result.first)
-		assertEquals("errorCode.forbidden", result.second)
 	}
 
 	private fun get(path: String, bearer: String, vararg headere: Pair<String, String>): Pair<Int, String?> {

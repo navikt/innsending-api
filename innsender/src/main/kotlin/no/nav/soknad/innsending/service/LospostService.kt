@@ -7,6 +7,7 @@ import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.domain.enums.ArkiveringsStatus
 import no.nav.soknad.innsending.repository.domain.enums.OpplastingsStatus
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
 import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.repository.domain.models.VedleggDbData
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
@@ -62,6 +63,7 @@ class LospostService(
 				ernavopprettet = false,
 				brukertype = BrukerDto.IdType.FNR,
 				avsender = avsender,
+				owner = ApplicationOwner.person(brukerId),
 			)
 		)
 		val vedlegg = repo.lagreVedlegg(

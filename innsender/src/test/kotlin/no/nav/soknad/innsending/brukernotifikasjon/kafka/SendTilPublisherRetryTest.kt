@@ -8,10 +8,8 @@ import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
-import no.nav.soknad.innsending.service.NotificationService
 import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.assertThrows
@@ -27,24 +25,18 @@ class SendTilPublisherRetryTest : ApplicationTest() {
 	lateinit var soknadRepository: SoknadRepository
 
 	@MockkSpyBean
-	private lateinit var sendTilPublisher: PublisherInterface
-
-	@MockkSpyBean
 	private lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher
-
-	@MockkSpyBean
-	private lateinit var notificationService: NotificationService
 
 	@BeforeEach
 	fun setUp() = clearAllMocks()
 
 	@Test
-	fun `attempts to send notification three times before giving up`() {
+	fun `gives up after the first attempt and five retries`() {
 		// Given
 		val innsendingsid = UUID.randomUUID().toString()
 		val soknad = SoknadDbDataTestBuilder(brukerId = "12345678901", innsendingsId = innsendingsid, skjemanr ="NAV 20-74.13", status = SoknadsStatus.Opprettet).build()
 		soknadRepository.save(soknad)
-		every { sendTilPublisher.opprettBrukernotifikasjon(any()) } throws RuntimeException("Feil ved sending av brukernotifikasjon")
+		every { notificationPublisher.opprettBrukernotifikasjon(any()) } throws RuntimeException("Feil ved sending av brukernotifikasjon")
 
 		// When
 		assertThrows<Exception> {
@@ -53,7 +45,7 @@ class SendTilPublisherRetryTest : ApplicationTest() {
 
 		// Then
 		val capturedNotification = mutableListOf<AddNotification>()
-		verify(exactly = 6) { sendTilPublisher.opprettBrukernotifikasjon(capture(capturedNotification)) }
+		verify(exactly = 6) { notificationPublisher.opprettBrukernotifikasjon(capture(capturedNotification)) }
 
 		assertTrue { capturedNotification.all { it.soknadRef.innsendingId == soknad.innsendingsid } }
 	}
@@ -65,7 +57,7 @@ class SendTilPublisherRetryTest : ApplicationTest() {
 		val soknad = SoknadDbDataTestBuilder(brukerId = "12345678901", innsendingsId = innsendingsid, skjemanr ="NAV 20-74.13", status = SoknadsStatus.Opprettet).build()
 		soknadRepository.save(soknad)
 
-		every { sendTilPublisher.opprettBrukernotifikasjon(any()) }
+		every { notificationPublisher.opprettBrukernotifikasjon(any()) }
 			.throws(RuntimeException("First failure"))
 			.andThen(Unit)
 
@@ -74,7 +66,7 @@ class SendTilPublisherRetryTest : ApplicationTest() {
 
 		// Then
 		val notifications = mutableListOf<AddNotification>()
-		verify(exactly = 2) { sendTilPublisher.opprettBrukernotifikasjon(capture(notifications)) }
+		verify(exactly = 2) { notificationPublisher.opprettBrukernotifikasjon(capture(notifications)) }
 
 		assertTrue { notificationCreated }
 		assertEquals(2, notifications.size)
@@ -88,7 +80,7 @@ class SendTilPublisherRetryTest : ApplicationTest() {
 		val soknad = SoknadDbDataTestBuilder(brukerId = "12345678901", innsendingsId = innsendingsid, skjemanr ="NAV 20-74.13", status = SoknadsStatus.Innsendt).build()
 		soknadRepository.save(soknad)
 
-		every { sendTilPublisher.avsluttBrukernotifikasjon(any()) }
+		every { notificationPublisher.avsluttBrukernotifikasjon(any()) }
 			.throws(RuntimeException("First failure"))
 			.andThenThrows(RuntimeException("Second failure"))
 			.andThen(Unit)
@@ -98,7 +90,7 @@ class SendTilPublisherRetryTest : ApplicationTest() {
 
 		// Then
 		val notifications = mutableListOf<SoknadRef>()
-		verify(exactly = 3) { sendTilPublisher.avsluttBrukernotifikasjon(capture(notifications)) }
+		verify(exactly = 3) { notificationPublisher.avsluttBrukernotifikasjon(capture(notifications)) }
 
 		assertTrue { notificationCreated }
 		assertEquals(3, notifications.size)

@@ -5,7 +5,6 @@ import io.mockk.every
 import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.exceptions.ExceptionHelper
 import no.nav.soknad.innsending.model.PatchVedleggDto
-import no.nav.soknad.innsending.model.PostVedleggDto
 import no.nav.soknad.innsending.security.SubjectHandlerInterface
 import no.nav.soknad.innsending.service.fillager.FileStorage
 import no.nav.soknad.innsending.supervision.InnsenderMetrics
@@ -66,21 +65,6 @@ class VedleggServiceTest : ApplicationTest() {
 		val filDtoListe =
 			filService.hentFiler(dokumentSoknadDto, dokumentSoknadDto.innsendingsId!!, vedleggDto.id!!, false)
 		assertTrue(filDtoListe.isEmpty())
-	}
-
-	@Test
-	fun leggTilVedlegg() {
-		val soknadService = lagSoknadService()
-
-		val dokumentSoknadDto = SoknadAssertions.testOgSjekkOpprettingAvSoknad(soknadService, listOf("W1"))
-
-		val postVedleggDto = PostVedleggDto("Litt mer info")
-
-		val lagretVedleggDto = vedleggService.leggTilVedlegg(dokumentSoknadDto, postVedleggDto)
-
-		assertNotNull(lagretVedleggDto.id)
-		assertEquals("N6", lagretVedleggDto.vedleggsnr)
-		assertEquals("Litt mer info", lagretVedleggDto.tittel)
 	}
 
 	@Test

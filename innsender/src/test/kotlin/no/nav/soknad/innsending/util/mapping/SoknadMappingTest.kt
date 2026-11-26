@@ -5,6 +5,7 @@ import no.nav.soknad.innsending.model.BrukerDto
 import no.nav.soknad.innsending.model.DokumentSoknadDto
 import no.nav.soknad.innsending.model.SubmitApplicationRequest
 import no.nav.soknad.innsending.model.SoknadsStatusDto
+import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -12,6 +13,18 @@ import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
 
 class SoknadMappingTest {
+	@Test
+	fun `maps a verified digital owner without changing the legacy user`() {
+		val application = DokumentSoknadDtoTestBuilder(brukerId = "12345678901", id = 1).build()
+		val owner = ApplicationOwner.person("10987654321")
+
+		val storedApplication = mapTilSoknadDb(application, java.util.UUID.randomUUID().toString(), owner = owner)
+
+		assertEquals(owner, storedApplication.owner)
+		assertEquals(application.brukerId, storedApplication.brukerid)
+		assertEquals(application.brukerId, lagDokumentSoknadDto(storedApplication, emptyList()).brukerId)
+	}
+
 	@Test
 	fun `forwards grant user digital access only when true`() {
 		val soknad = DokumentSoknadDtoTestBuilder(status = SoknadsStatusDto.Opprettet).build()
@@ -34,8 +47,28 @@ class SoknadMappingTest {
 			mainDocument = byteArrayOf(),
 			mainDocumentAlt = byteArrayOf(),
 			grantUserDigitalAccess = true,
+			bruker = "12345678901",
 		)
 
-		assertEquals(true, request.toDokumentSoknadDto(java.util.UUID.randomUUID(), "test").grantuserdigitalaccess)
+		val storedApplication = request.toDokumentSoknadDto(java.util.UUID.randomUUID(), "test")
+		assertEquals(true, storedApplication.grantuserdigitalaccess)
+		assertEquals(null, storedApplication.owner)
+		assertEquals(request.bruker, storedApplication.brukerid)
+	}
+
+	@Test
+	fun `keeps nologin owner absent when the request has no user`() {
+		val request = SubmitApplicationRequest(
+			formNumber = "NAV 00-00.00",
+			title = "Test application",
+			tema = "BIL",
+			language = "nb",
+			mainDocument = byteArrayOf(),
+			mainDocumentAlt = byteArrayOf(),
+		)
+
+		val storedApplication = request.toDokumentSoknadDto(java.util.UUID.randomUUID(), "test")
+		assertEquals(null, storedApplication.owner)
+		assertEquals(null, storedApplication.brukerid)
 	}
 }

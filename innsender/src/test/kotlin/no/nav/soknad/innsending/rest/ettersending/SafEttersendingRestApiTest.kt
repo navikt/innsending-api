@@ -2,22 +2,20 @@ package no.nav.soknad.innsending.rest.ettersending
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.tomakehurst.wiremock.client.WireMock.*
-import com.ninjasquad.springmockk.MockkBean
-import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
-import no.nav.soknad.innsending.consumerapis.soknadsmottaker.MottakerAPITest
 import no.nav.soknad.innsending.model.SkjemaDto
 import no.nav.soknad.innsending.repository.FilRepository
 import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.repository.VedleggRepository
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.utils.ApiWebClient
+import no.nav.soknad.innsending.utils.ApplicationTestRepository
 import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.ettersending.EksternOpprettEttersendingTestBuilder
@@ -41,11 +39,8 @@ class SafEttersendingRestApiTest : ApplicationTest() {
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
 
-	@MockkSpyBean
-	lateinit var notificationPublisher: PublisherInterface
-
-	@MockkBean(relaxed = true)
-	lateinit var soknadsmottaker: MottakerAPITest
+	@Autowired
+	lateinit var storedApplications: ApplicationTestRepository
 
 	@Autowired
 	lateinit var repo: RepositoryUtils
@@ -71,7 +66,6 @@ class SafEttersendingRestApiTest : ApplicationTest() {
 		soknadRepository.deleteAll()
 		api = ApiWebClient(webTestClient, serverPort, mockOAuth2Server)
 		clearMocks(notificationPublisher)
-		clearMocks(soknadsmottaker)
 	}
 
 	@Test
@@ -510,6 +504,10 @@ class SafEttersendingRestApiTest : ApplicationTest() {
 			.assertHttpStatus(HttpStatus.OK)
 			.body
 		assertEquals(archiveReference, fromRest.ettersendingsId)
+		// Owner is not exposed through REST. Inspect only this internal field in the database.
+		val stored = storedApplications.findBySubmissionId(created.innsendingsId!!)
+		assertTrue(stored.owner == ApplicationOwner.person(TokenGenerator.subject), "The supplementary application must persist the logged-in owner")
+		assertEquals(false, stored.ownerIsSqlNull)
 
 		wireMock.verify(2, postRequestedFor(urlPathEqualTo("/saf-api/graphql")))
 		verify(timeout = 5000, exactly = 1) {

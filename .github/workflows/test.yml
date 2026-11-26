@@ -1,13 +1,7 @@
 name: Install and test
+# Runs once for each push to a pull request. Pushes to main are built and tested in main.yml.
 on:
   pull_request:
-    paths-ignore:
-      - '**.md'
-      - '**/**.md'
-      - '.github/workflows/**.yml'
-  push:
-    branches-ignore:
-      - main
     paths-ignore:
       - '**.md'
       - '**/**.md'

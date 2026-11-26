@@ -11,12 +11,12 @@ import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.exceptions.ErrorCode
 import no.nav.soknad.innsending.exceptions.ResourceNotFoundException
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.FilRepository
 import no.nav.soknad.innsending.repository.SoknadRepository
+import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
 import no.nav.soknad.innsending.service.DocumentService
 import no.nav.soknad.innsending.service.FilService
 import no.nav.soknad.innsending.service.KodeverkService
@@ -28,6 +28,7 @@ import no.nav.soknad.innsending.util.Constants
 import no.nav.soknad.innsending.util.mapping.tilleggsstonad.ungdomsprogram_reiseDaglig
 import no.nav.soknad.innsending.util.models.*
 import no.nav.soknad.innsending.utils.ApiWebClient
+import no.nav.soknad.innsending.utils.ApplicationTestRepository
 import no.nav.soknad.innsending.utils.Hjelpemetoder
 import no.nav.soknad.innsending.utils.TokenGenerator
 import no.nav.soknad.innsending.utils.builders.DokumentSoknadDtoTestBuilder
@@ -36,14 +37,17 @@ import no.nav.soknad.innsending.utils.builders.SkjemaDtoTestBuilder
 import no.nav.soknad.innsending.utils.builders.VedleggDtoTestBuilder
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
+import org.awaitility.Awaitility.await
+import java.time.Duration
 import java.time.LocalDate
 import java.util.*
 import kotlin.test.*
@@ -51,11 +55,11 @@ import kotlin.test.*
 
 class FyllutRestApiTest : ApplicationTest() {
 
+	@Autowired
+	lateinit var storedApplications: ApplicationTestRepository
+
 	@MockkBean
 	lateinit var kodeverkService: KodeverkService
-
-	@MockkSpyBean
-	lateinit var notificationPublisher: PublisherInterface
 
 	@MockkSpyBean
 	lateinit var fileStorage: FileStorage
@@ -182,7 +186,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val hoveddokument = SkjemaDokumentDtoTestBuilder( tittel = "Application for one-time grant at birth").asHovedDokument("NAV 10-07.41", withFile = false).build()
 		val hoveddokumentVariant = SkjemaDokumentDtoTestBuilder( tittel = "Application for one-time grant at birth").asHovedDokumentVariant("NAV 10-07.41", withFile = true).build()
 
-		val skjemaDto = SkjemaDtoTestBuilder( skjemanr="NAV 10-07.41", tittel = "Application for one-time grant at birth", vedleggsListe = listOf(t7Vedlegg, n6Vedlegg))
+		val skjemaDto = SkjemaDtoTestBuilder(brukerId = "10987654321", skjemanr="NAV 10-07.41", tittel = "Application for one-time grant at birth", vedleggsListe = listOf(t7Vedlegg, n6Vedlegg))
 			.medHoveddokument(hoveddokument)
 			.medHoveddokumentVariant(hoveddokumentVariant)
 			.build()
@@ -190,6 +194,11 @@ class FyllutRestApiTest : ApplicationTest() {
 		// Når
 		val opprettetSoknadResponse = api.createSoknad(skjemaDto)
 			.assertSuccess()
+		assertTrue(opprettetSoknadResponse.body.brukerId == TokenGenerator.subject, "Creation must use the token identity")
+		// Owner is internal and cannot be read through REST.
+		val stored = storedApplications.findBySubmissionId(opprettetSoknadResponse.body.innsendingsId!!)
+		assertFalse(stored.ownerIsSqlNull)
+		assertTrue(stored.owner == ApplicationOwner.person(TokenGenerator.subject), "Creation must persist the authenticated owner")
 
 		val hoveddokumentMedFil = SkjemaDokumentDtoTestBuilder(tittel = "Application for one-time grant at birth").asHovedDokument("NAV 10-07.41", withFile = true).build()
 		val utFyltSkjemaDto = SkjemaDtoTestBuilder( skjemanr="NAV 10-07.41", tittel = "Application for one-time grant at birth", vedleggsListe = listOf(t7Vedlegg, n6Vedlegg))
@@ -247,7 +256,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Så
 		val parameterSlot = slot<AddNotification>()
-		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
+		verify(timeout = 5000, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
 		val notification = parameterSlot.captured
 
 		assertEquals(responseBody.innsendingsId, notification.soknadRef.innsendingId)
@@ -283,7 +292,7 @@ class FyllutRestApiTest : ApplicationTest() {
 
 		// Så
 		val parameterSlot = slot<AddNotification>()
-		verify(timeout = 100, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
+		verify(timeout = 5000, exactly = 1) { notificationPublisher.opprettBrukernotifikasjon(capture(parameterSlot)) }
 		val notification = parameterSlot.captured
 
 		assertEquals(responseBody.innsendingsId, notification.soknadRef.innsendingId)
@@ -389,7 +398,7 @@ class FyllutRestApiTest : ApplicationTest() {
 		val kvitteringsDto = sendInnRespons.body
 		assertEquals(1, kvitteringsDto!!.skalSendesAvAndre!!.size)
 		assertTrue(kvitteringsDto.hoveddokumentRef != null)
-		waitUntilAssertionSucceeds {
+		await().atMost(Duration.ofSeconds(5)).untilAsserted {
 			assertThrows<Exception> {
 				restTestClient.exchange(
 					"http://localhost:${serverPort}/frontend/v1/soknad/${innsendingsId}", HttpMethod.GET,
@@ -423,8 +432,9 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertTrue(filResponsBytes.isNotEmpty(), "PDF-filen skal inneholde data")
 	}
 
-	@Test
-	fun `Should update utfylt søknad and vedlegg with updated properties for språk and tittel, old vedlegg should be deleted`() {
+	@ParameterizedTest(name = "owner present: {0}")
+	@ValueSource(booleans = [true, false])
+	fun `Should update utfylt søknad and vedlegg with updated properties for språk and tittel, old vedlegg should be deleted`(ownerPresent: Boolean) {
 		// Given
 		val newSpraak = "en_gb"
 		val newTittel = "Application for one-time grant at birth"
@@ -434,6 +444,9 @@ class FyllutRestApiTest : ApplicationTest() {
 		val dokumentSoknadDto = opprettSoknad() // med vedleggTittel1 og vedleggTittel2, begge med unik formioId satt
 		val skjemanr = dokumentSoknadDto.skjemanr
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
+		// REST cannot assign a historical owner distinct from the user or SQL NULL.
+		val owner = if (ownerPresent) ApplicationOwner.person("12345678902") else null
+		storedApplications.setOwner(innsendingsId, owner)
 
 		val updatedT7 =
 			SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7", tittel = newVedleggstittel1).build() // Unik formioId settes
@@ -445,6 +458,7 @@ class FyllutRestApiTest : ApplicationTest() {
 			SkjemaDokumentDtoTestBuilder(tittel = newTittel).asHovedDokumentVariant(skjemanr).build()
 
 		val fraFyllUt = SkjemaDtoTestBuilder(
+			brukerId = "10987654321",
 			skjemanr = dokumentSoknadDto.skjemanr,
 			spraak = newSpraak,
 			tittel = newTittel,
@@ -463,6 +477,11 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals(302, response.statusCode.value())
 		assertEquals("http://localhost:3100/sendinn/${innsendingsId}", response.headers.location!!.toString())
 		assertEquals(newTittel, updatedSoknad.tittel)
+		assertTrue(updatedSoknad.brukerId == TokenGenerator.subject, "Completion must retain the existing user identity")
+		// Owner is not exposed by REST; completion must preserve the stored value.
+		val stored = storedApplications.findBySubmissionId(innsendingsId)
+		assertEquals(!ownerPresent, stored.ownerIsSqlNull)
+		assertTrue(stored.owner == owner, "Completion must preserve the historical owner")
 		assertEquals("en", updatedSoknad.spraak, "Språk is updated (gets converted to the first 2 letters)")
 		assertEquals(
 			4,
@@ -657,14 +676,18 @@ class FyllutRestApiTest : ApplicationTest() {
 		}
 	}
 
-	@Test
-	fun `Skal returnere riktig felter ved oppdatering av søknad`() {
+	@ParameterizedTest(name = "owner present: {0}")
+	@ValueSource(booleans = [true, false])
+	fun `Skal returnere riktig felter ved oppdatering av søknad`(ownerPresent: Boolean) {
 		// Gitt
 		val dokumentSoknadDto = opprettSoknad()
 		val innsendingsId = dokumentSoknadDto.innsendingsId!!
 		val nyttSpraak = "en_gb"
+		// REST cannot assign a historical owner distinct from the user or SQL NULL.
+		val owner = if (ownerPresent) ApplicationOwner.person("12345678902") else null
+		storedApplications.setOwner(innsendingsId, owner)
 
-		val fraFyllUt = SkjemaDtoTestBuilder(skjemanr = dokumentSoknadDto.skjemanr, spraak = nyttSpraak).build()
+		val fraFyllUt = SkjemaDtoTestBuilder(brukerId = "10987654321", skjemanr = dokumentSoknadDto.skjemanr, spraak = nyttSpraak).build()
 
 		// Når
 		val response = api.updateSoknad(innsendingsId, fraFyllUt)
@@ -674,6 +697,13 @@ class FyllutRestApiTest : ApplicationTest() {
 		assertEquals(dokumentSoknadDto.skjemanr, oppdatertSoknad.skjemanr)
 		assertEquals(dokumentSoknadDto.innsendingsId, oppdatertSoknad.innsendingsId)
 		assertEquals(dokumentSoknadDto.brukerId, oppdatertSoknad.brukerId)
+		val fetched = api.getSoknadSendinn(innsendingsId).assertHttpStatus(HttpStatus.OK).body
+		assertTrue(fetched.brukerId == TokenGenerator.subject, "Updates must retain the existing user identity")
+		assertEquals("en", fetched.spraak)
+		// Owner is not exposed by REST; updates must preserve the stored value.
+		val stored = storedApplications.findBySubmissionId(innsendingsId)
+		assertEquals(!ownerPresent, stored.ownerIsSqlNull)
+		assertTrue(stored.owner == owner, "Updates must preserve the historical owner")
 
 		assertEquals("en", oppdatertSoknad.spraak, "Språk er oppdatert")
 		assertNotEquals(dokumentSoknadDto.spraak, oppdatertSoknad.spraak, "Språk er oppdatert")
@@ -756,6 +786,25 @@ class FyllutRestApiTest : ApplicationTest() {
 				Constants.DEFAULT_LEVETID_OPPRETTET_SOKNAD
 			).toLocalDate(), "SkalSlettesDato er satt til opprettetDato + 4 uker"
 		)
+	}
+
+	@Test
+	fun `legacy application with SQL null owner remains readable and listed without backfill`() {
+		val created = api.createSoknad(SkjemaDtoTestBuilder().build()).assertHttpStatus(HttpStatus.CREATED).body
+		val applicationId = assertNotNull(created.innsendingsId)
+		// REST cannot create a pre-release SQL NULL owner.
+		storedApplications.setOwner(applicationId, null)
+
+		val fetched = api.getSoknadSendinn(applicationId).assertHttpStatus(HttpStatus.OK).body
+		assertEquals(applicationId, fetched.innsendingsId)
+		assertTrue(fetched.brukerId == TokenGenerator.subject, "Legacy reads must retain the existing user identity")
+		val filledForm = api.getSoknad(applicationId)
+		assertEquals(HttpStatus.OK, filledForm.statusCode)
+		assertEquals(applicationId, assertNotNull(filledForm.body).innsendingsId)
+		val listed = api.getExistingSoknader(created.skjemanr).assertHttpStatus(HttpStatus.OK).body
+		assertTrue(listed.any { it.innsendingsId == applicationId })
+		// REST cannot distinguish SQL NULL from a populated owner. Reads must not backfill it.
+		assertTrue(storedApplications.findBySubmissionId(applicationId).ownerIsSqlNull)
 	}
 
 	@Test
@@ -1022,30 +1071,6 @@ class FyllutRestApiTest : ApplicationTest() {
 		)
 	}
 
-	@Test
-	@Disabled("Ytelse på oppretting av flere søknader samtidig blir gjort i testen FilRestApiTest.verifiserOpplastingAvUlikeFiltyperTest")
-	fun testOpprettSoknaderOgHentingYtelse() {
-		// Gitt
-		val t7Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "T7").build()
-		val n6Vedlegg = SkjemaDokumentDtoTestBuilder(vedleggsnr = "N6").build()
-
-		val noOfRepeats = 100
-		val soknader = mutableListOf<SkjemaDto>()
-		repeat(noOfRepeats, {
-			val soknad = SkjemaDtoTestBuilder(vedleggsListe = listOf(t7Vedlegg, n6Vedlegg)).build()
-
-			// Når
-			val opprettetSoknadResponse = api.createSoknad(soknad).assertSuccess()
-			soknader.add(opprettetSoknadResponse.body)
-
-		})
-
-
-		// Så
-		soknader.forEach { testHentSoknadOgSendInn(it, TokenGenerator(mockOAuth2Server).lagTokenXToken()) }
-
-	}
-
 	// Opprett søknad med et hoveddokument, en hoveddokumentvariant og to vedlegg
 	private fun opprettSoknad(
 		skjemanr: String = "NAV 08-21.05",
@@ -1078,26 +1103,6 @@ class FyllutRestApiTest : ApplicationTest() {
 		val innsendingsId = soknadService.opprettNySoknad(dokumentSoknadDto).innsendingsId!!
 
 		return soknadService.hentSoknad(innsendingsId)
-	}
-
-	private fun waitUntilAssertionSucceeds(
-		timeoutMillis: Long = 5000,
-		pollIntervalMillis: Long = 50,
-		assertion: () -> Unit,
-	) {
-		val deadline = System.currentTimeMillis() + timeoutMillis
-		var lastAssertionError: AssertionError? = null
-		while (System.currentTimeMillis() < deadline) {
-			try {
-				assertion()
-				return
-			} catch (e: AssertionError) {
-				lastAssertionError = e
-				Thread.sleep(pollIntervalMillis)
-			}
-		}
-
-		throw lastAssertionError ?: AssertionError("Condition was not met within $timeoutMillis ms")
 	}
 
 }

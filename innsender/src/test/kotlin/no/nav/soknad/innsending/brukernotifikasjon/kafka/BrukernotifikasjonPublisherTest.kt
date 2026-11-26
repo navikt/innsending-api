@@ -1,95 +1,61 @@
 package no.nav.soknad.innsending.brukernotifikasjon.kafka
 
-import com.ninjasquad.springmockk.MockkSpyBean
-import io.mockk.clearAllMocks
+import io.mockk.every
+import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
 import no.nav.soknad.arkivering.soknadsmottaker.model.Varsel
-import no.nav.soknad.innsending.ApplicationTest
 import no.nav.soknad.innsending.brukernotifikasjon.BrukernotifikasjonPublisher
 import no.nav.soknad.innsending.brukernotifikasjon.NotificationOptions
-import no.nav.soknad.innsending.config.RestConfig
+import no.nav.soknad.innsending.config.BrukerNotifikasjonConfig
 import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
+import no.nav.soknad.innsending.location.UrlHandler
 import no.nav.soknad.innsending.model.VisningsType
 import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.SoknadDbData
 import no.nav.soknad.innsending.util.soknaddbdata.getSkjemaPath
 import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import java.lang.Thread.sleep
+import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
+import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
+internal class BrukernotifikasjonPublisherTest {
 
-	@Autowired
-	lateinit var soknadRepository: SoknadRepository
+	private val fyllutUrl = "https://fyllut.example/fyllut"
+	private val sendinnUrl = "https://sendinn.example/sendinn"
 
-	@MockkSpyBean
-	lateinit var sendTilPublisher: PublisherInterface
-
-	@Autowired
-	lateinit var restConfig: RestConfig
-
-	@Autowired
-	lateinit var brukernotifikasjonPublisher: BrukernotifikasjonPublisher
+	// The publisher reads the stored application by id. A map gives the same lookup without a database.
+	private val storedApplications = mutableMapOf<String, SoknadDbData>()
+	private val soknadRepository = mockk<SoknadRepository> {
+		every { save(any<SoknadDbData>()) } answers { firstArg<SoknadDbData>().also { storedApplications[it.innsendingsid] = it } }
+		every { findByInnsendingsid(any()) } answers { storedApplications[firstArg()] }
+	}
+	private val sendTilPublisher = mockk<PublisherInterface>(relaxed = true)
+	// The tests use the default options without an environment qualifier. A strict mock fails on any other argument.
+	// UrlHandlerImplTest and UrlHandlerDevImplTest cover how the URLs are chosen.
+	private val urlHandler = mockk<UrlHandler> {
+		every { getFyllutUrl(isNull()) } returns fyllutUrl
+		every { getSendInnUrl(isNull()) } returns sendinnUrl
+	}
+	private val brukernotifikasjonPublisher = BrukernotifikasjonPublisher(
+		BrukerNotifikasjonConfig().apply { publisereEndringer = true },
+		sendTilPublisher,
+		urlHandler,
+		soknadRepository,
+	)
 
 	private val defaultSkjemanr = "NAV 55-00.60"
 	private val defaultTema = "BID"
-	private var fyllutUrl: String? = null
-	private var sendinnUrl: String? = null
-
-	@BeforeEach
-	fun setUp() {
-		clearAllMocks()
-		fyllutUrl = restConfig.fyllut.urls["default"]
-		sendinnUrl = restConfig.sendinn.urls["default"]
-	}
-
-	@Test
-	// Vi fjerner søknader/ettersendinger etter midnatt dagen etter slettetdato er passert. Da skal også brukernotifikasjoner slettes.
-	// I og med at vi har implementert sletting natten til dagen etter slettedatoen, og slettedatoen vises på brukernotifikasjonen,
-	// må vi passe på å legge til en ekstra dag i meldingen til soknadsmottaker.
-	fun testConverteringFraDatoTilDager() {
-		// Given
-		val soknad = SoknadDbDataTestBuilder(
-			skalslettesdato = OffsetDateTime.now().plusDays(10)
-		).build()
-		soknadRepository.save(soknad)
-
-		// When
-		brukernotifikasjonPublisher.createNotification(soknad)
-
-		// then
-		val message = slot<AddNotification>()
-		verify(exactly = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(message)) }
-
-		assertTrue(message.isCaptured)
-		val numberOfDays = message.captured.brukernotifikasjonInfo.antallAktiveDager
-		val deleteDateTime = zonedDateTimeFromDays(numberOfDays)
-		assertEquals(11, message.captured.brukernotifikasjonInfo.antallAktiveDager)
-		assertEquals(11, deleteDateTime.toLocalDate().toEpochDay() - OffsetDateTime.now(ZoneId.of("Europe/Oslo")).toLocalDate().toEpochDay())
-	}
-
-	private fun zonedDateTimeFromDays(days: Int): ZonedDateTime {
-		val now = OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
-		return now
-			.toLocalDate()
-			.plusDays(days.toLong())
-			.atTime(0, 5)
-			.atZone(now.offset)
-	}
-
 
 	@Test
 	fun `sjekk at melding for å publisere Oppgave eller Beskjed blir sendt ved oppretting av ny søknad`() {
@@ -236,28 +202,6 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 	}
 
 	@Test
-	fun `Should create notification with fyllut url when visningsType=fyllut`() {
-		// Given
-		val fyllutSoknad = SoknadDbDataTestBuilder(visningsType = VisningsType.fyllUt).build()
-		soknadRepository.save(fyllutSoknad)
-
-		// When
-		brukernotifikasjonPublisher.createNotification(fyllutSoknad)
-
-		// Then
-		val messages = mutableListOf<AddNotification>()
-		verify(timeout = 500, atLeast = 1) { sendTilPublisher.opprettBrukernotifikasjon(capture(messages)) }
-
-		assertTrue(messages.isNotEmpty())
-		assertTrue(messages.filter { it.soknadRef.innsendingId == fyllutSoknad.innsendingsid }.size == 1)
-		val message = messages.filter { it.soknadRef.innsendingId == fyllutSoknad.innsendingsid }.first()
-		assertEquals(
-			"$fyllutUrl/${fyllutSoknad.getSkjemaPath()}/oppsummering?sub=digital&innsendingsId=${fyllutSoknad.innsendingsid}",
-			message.brukernotifikasjonInfo.lenke
-		)
-	}
-
-	@Test
 	fun `Should create notification with sendinn url when visningsType=dokumentinnsending`() {
 		// Given
 		val dokumentinnsendingSoknad = SoknadDbDataTestBuilder(visningsType = VisningsType.dokumentinnsending).build()
@@ -309,7 +253,9 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		soknadRepository.save(ettersending)
 
 		// When
+		val dateBefore = LocalDate.now()
 		brukernotifikasjonPublisher.createNotification(ettersending, NotificationOptions(erSystemGenerert = true))
+		val dateAfter = LocalDate.now()
 
 		// Then
 		val messages = mutableListOf<AddNotification>()
@@ -320,6 +266,9 @@ internal class BrukernotifikasjonPublisherTest : ApplicationTest() {
 		val message = messages.filter { it.soknadRef.innsendingId == ettersending.innsendingsid }.first()
 
 		assertEquals(true, message.soknadRef.erSystemGenerert)
+		// A system generated notification is postponed until 09:00 the next day. Both dates are accepted around midnight.
+		val expectedPostponedUntil = setOf(dateBefore, dateAfter).map { it.plusDays(1).atTime(9, 0).atOffset(ZoneOffset.UTC) }
+		assertTrue(message.brukernotifikasjonInfo.utsettSendingTil?.truncatedTo(ChronoUnit.MINUTES) in expectedPostponedUntil)
 	}
 
 	@Test

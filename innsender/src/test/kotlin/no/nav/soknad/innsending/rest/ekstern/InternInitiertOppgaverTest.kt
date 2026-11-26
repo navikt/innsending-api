@@ -6,51 +6,40 @@ import io.mockk.every
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.security.mock.oauth2.MockOAuth2Server
-import no.nav.soknad.InnsendingApiApplication
-import no.nav.soknad.arkivering.soknadsmottaker.model.AddNotification
 import no.nav.soknad.arkivering.soknadsmottaker.model.SoknadRef
 import no.nav.soknad.innsending.ApplicationTest
-import no.nav.soknad.innsending.consumerapis.brukernotifikasjonpublisher.PublisherInterface
 import no.nav.soknad.innsending.consumerapis.pdl.PdlInterface
 import no.nav.soknad.innsending.consumerapis.pdl.dto.IdentDto
 import no.nav.soknad.innsending.model.*
 import no.nav.soknad.innsending.repository.SoknadRepository
 import no.nav.soknad.innsending.repository.VedleggRepository
 import no.nav.soknad.innsending.repository.domain.enums.SoknadsStatus
+import no.nav.soknad.innsending.repository.domain.models.ApplicationOwner
 import no.nav.soknad.innsending.service.RepositoryUtils
 import no.nav.soknad.innsending.util.testpersonid
 import no.nav.soknad.innsending.utils.ApiWebClient
+import no.nav.soknad.innsending.utils.ApplicationTestRepository
+import no.nav.soknad.innsending.utils.awaitNotification
 import no.nav.soknad.innsending.utils.builders.SoknadDbDataTestBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.util.AopTestUtils
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.*
-import java.lang.Thread.sleep
 import java.time.LocalDateTime
 import kotlin.test.assertNull
 
 
-@SpringBootTest(
-	webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
-	properties = ["spring.main.allow-bean-definition-overriding=true"],
-	classes = [InnsendingApiApplication::class]
-)
-@ExtendWith(SpringExtension::class)
 class InternInitiertOppgaverTest: ApplicationTest() {
 
 	@Autowired
 	lateinit var mockOAuth2Server: MockOAuth2Server
-
-	@MockkSpyBean()
-	lateinit var publisherInterface: PublisherInterface
 
 	@MockkSpyBean
 	lateinit var pdlInterface: PdlInterface
@@ -63,6 +52,9 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 
 	@Autowired
 	private lateinit var vedleggRepository: VedleggRepository
+
+	@Autowired
+	private lateinit var storedApplications: ApplicationTestRepository
 
 	@LocalServerPort
 	var serverPort: Int = 0
@@ -79,21 +71,24 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		soknadRepository.deleteAll()
 	}
 
-	@Test
-	fun `Azure task uses explicit user when another user has a newer application`() {
+	@ParameterizedTest(name = "source owner present: {0}")
+	@ValueSource(booleans = [true, false])
+	fun `Azure task uses explicit user when another user has a newer application`(ownerPresent: Boolean) {
 		val brukerId = "10987654321"
 		val skjemanr = "NAV 55-00.60"
+		val sourceOwner = if (ownerPresent) ApplicationOwner.person(testpersonid) else null
 		val pdl = AopTestUtils.getUltimateTargetObject<PdlInterface>(pdlInterface)
 		every { pdl.hentPersonIdents(any()) } answers {
 			listOf(IdentDto(firstArg(), "FOLKEREGISTERIDENT", false))
 		}
+		// REST cannot create a source with a different stored owner or a historical SQL NULL owner.
 		val ownApplication = repo.lagreSoknad(
 			SoknadDbDataTestBuilder(
 				brukerId = brukerId,
 				skjemanr = skjemanr,
 				status = SoknadsStatus.Innsendt,
 				innsendtdato = LocalDateTime.now().minusDays(2),
-			).build()
+			).build().copy(owner = sourceOwner)
 		)
 		repo.lagreSoknad(
 			SoknadDbDataTestBuilder(
@@ -123,6 +118,18 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		val stored = repo.hentSoknadDb(ettersending.innsendingsId!!)
 		assertEquals(brukerId, stored.brukerid)
 		assertEquals(ownApplication.innsendingsid, stored.ettersendingsid)
+		val listed = api.oppgaveHentSoknaderForSkjemanr(skjemanr, brukerId, null, null)
+		assertEquals(HttpStatus.OK, listed.statusCode)
+		val fetched = listed.body!!.single { it.innsendingsId == ettersending.innsendingsId }
+		assertTrue(fetched.brukerId == brukerId, "The task must retain the request user, not the owner")
+		assertEquals(true, fetched.erNavOpprettet)
+		val notification = notificationPublisher.awaitNotification(ettersending.innsendingsId!!)
+		assertTrue(notification.soknadRef.personId == brukerId, "Notifications must retain the request recipient, not the owner")
+		assertEquals(ownApplication.innsendingsid, notification.soknadRef.groupId)
+		// Owner is not exposed through REST. Inspect only this internal field in the database.
+		val storedOwner = storedApplications.findBySubmissionId(ettersending.innsendingsId!!)
+		assertTrue(storedOwner.owner == sourceOwner, "The supplementary application must inherit the source owner")
+		assertEquals(sourceOwner == null, storedOwner.ownerIsSqlNull)
 	}
 
 	@Test
@@ -134,6 +141,12 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 
 		assertEquals(brukerId, soknadDto.brukerId)
 		assertEquals(skjemanr, soknadDto.skjemanr)
+		val notification = notificationPublisher.awaitNotification(soknadDto.innsendingsId!!)
+		assertTrue(notification.soknadRef.personId == brukerId, "Notifications must use the explicit request user")
+		// Owner is not exposed through REST. Inspect only this internal field in the database.
+		val stored = storedApplications.findBySubmissionId(soknadDto.innsendingsId!!)
+		assertTrue(stored.owner == ApplicationOwner.person(brukerId), "The task owner must match the request user")
+		assertEquals(false, stored.ownerIsSqlNull)
 	}
 
 	@Test
@@ -147,10 +160,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr)
 
 		// Then
-		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
-		val noticationSlot = slot<AddNotification>()
-		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlot)) }
-		val notication = noticationSlot.captured
+		val notication = notificationPublisher.awaitNotification(soknadDto.innsendingsId!!)
 		assertEquals(true, notication.soknadRef.erSystemGenerert)
 		assertTrue(notication.soknadRef.erEttersendelse)
 		assertEquals(soknadDto.innsendingsId, notication.soknadRef.innsendingId)
@@ -170,10 +180,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		val soknadDto = opprettSoknad(brukerId, vedlegg, skjemanr, brukernotifikasjonstype = BrukernotifikasjonsType.utkast )
 
 		// Then
-		sleep(50) // Liten delay for å sikre at asynkrone operasjoner er fullført før verifisering
-		val noticationSlot = slot<AddNotification>()
-		verify(exactly = 1) { publisherInterface.opprettBrukernotifikasjon(capture(noticationSlot)) }
-		val notication = noticationSlot.captured
+		val notication = notificationPublisher.awaitNotification(soknadDto.innsendingsId!!)
 		assertEquals(false, notication.soknadRef.erSystemGenerert)
 		assertTrue(notication.soknadRef.erEttersendelse)
 		assertEquals(soknadDto.innsendingsId, notication.soknadRef.innsendingId)
@@ -195,7 +202,7 @@ class InternInitiertOppgaverTest: ApplicationTest() {
 		assertEquals(HttpStatus.OK, response.statusCode)
 
 		val noticationSlot = slot<SoknadRef>()
-		verify(exactly = 1) { publisherInterface.avsluttBrukernotifikasjon(capture(noticationSlot)) }
+		verify(exactly = 1) { notificationPublisher.avsluttBrukernotifikasjon(capture(noticationSlot)) }
 		assertEquals(soknadDto.innsendingsId, noticationSlot.captured.innsendingId)
 	}
 
